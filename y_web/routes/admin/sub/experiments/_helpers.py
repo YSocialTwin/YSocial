@@ -129,6 +129,14 @@ DEFAULT_STRESS_REWARD_SYSTEM = {
         "min_probability": 0.0,
         "max_probability": 0.95,
     },
+    "activity_impact": {
+        "enabled": True,
+        "stress_weight": 1.1,
+        "reward_weight": 0.35,
+        "baseline_buffer": 0.10,
+        "min_action_multiplier": 0.15,
+        "max_skip_probability": 0.65,
+    },
     "events": {
         "reaction": {
             "like": {"stress": -0.005, "reward": 0.03},

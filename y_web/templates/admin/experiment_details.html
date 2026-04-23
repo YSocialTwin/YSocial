@@ -697,6 +697,22 @@
                                     </span>
                                     <span class="ys-analytics-page-action">Open</span>
                                 </a>
+                                <a href="/admin/hashtag_evolution/{{ experiment.idexp }}" class="ys-analytics-page-card is-primary">
+                                    <span class="ys-analytics-page-icon"><i class="mdi mdi-pound"></i></span>
+                                    <span class="ys-analytics-page-body">
+                                        <span class="ys-analytics-page-title">Hashtag Evolution</span>
+                                        <span class="ys-analytics-page-meta">Diffusion, emergence, reach</span>
+                                    </span>
+                                    <span class="ys-analytics-page-action">Open</span>
+                                </a>
+                                <a href="/admin/recsys_evolution/{{ experiment.idexp }}" class="ys-analytics-page-card is-link">
+                                    <span class="ys-analytics-page-icon"><i class="mdi mdi-view-dashboard-outline"></i></span>
+                                    <span class="ys-analytics-page-body">
+                                        <span class="ys-analytics-page-title">Recsys Evolution</span>
+                                        <span class="ys-analytics-page-meta">Recommendation exposure and reach</span>
+                                    </span>
+                                    <span class="ys-analytics-page-action">Open</span>
+                                </a>
                                 {% if experiment.annotations and 'opinions' in experiment.annotations %}
                                 <a href="/admin/opinion_evolution/{{ experiment.idexp }}" class="ys-analytics-page-card is-info">
                                     <span class="ys-analytics-page-icon"><i class="mdi mdi-chart-line"></i></span>

@@ -48,19 +48,19 @@
                                     </div>
                                 </div>
                             </div>
-                            {% elif page_key == "topic" %}
+                            {% elif page_key == "topic" or page_key == "hashtag" %}
                             <div class="annotation-control-row ys-mb-15">
                                 <div class="annotation-control-group ys-topic-select-group">
                                     <div class="annotation-compact-control">
                                         <div class="annotation-compact-control-head">
-                                            <label class="annotation-control-label" for="annotation-topic-select">Topics to Visualize</label>
-                                            <span class="annotation-control-hint">Cmd/Ctrl for multi-select</span>
+                                            <label class="annotation-control-label" for="annotation-topic-select">{{ analytics.selector_label or 'Topics to Visualize' }}</label>
+                                            <span class="annotation-control-hint">{{ analytics.selector_hint or 'Cmd/Ctrl for multi-select' }}</span>
                                         </div>
                                         <div class="annotation-topic-select-wrapper">
                                             <select id="annotation-topic-select" class="annotation-topic-select" multiple size="6">
-                                                {% for option in analytics.topic_options %}
-                                                <option value="{{ option.topic_id }}" {% if option.topic_id in analytics.selected_topic_ids %}selected{% endif %}>
-                                                    {{ option.topic_name }} ({{ option.total_volume }})
+                                                {% for option in (analytics.selector_options or []) %}
+                                                <option value="{{ option.value }}" {% if option.value in (analytics.selected_ids or []) %}selected{% endif %}>
+                                                    {{ option.label }}
                                                 </option>
                                                 {% endfor %}
                                             </select>
@@ -248,7 +248,7 @@
                                 <i class="mdi mdi-fullscreen"></i>
                             </button>
                         </div>
-                        <div class="chart-container ys-chart-fullscreen-target{% if page_key == 'topic' %} ys-topic-heatmap-chart-container{% endif %}" id="annotationTrendChartContainer" data-chart-filename="{{ page_key }}-trend">
+                        <div class="chart-container ys-chart-fullscreen-target{% if page_key == 'topic' or page_key == 'hashtag' %} ys-topic-heatmap-chart-container{% endif %}" id="annotationTrendChartContainer" data-chart-filename="{{ page_key }}-trend">
                             <canvas id="annotationTrendChart" height="250"></canvas>
                         </div>
                         <p class="ys-text-xs-center-mt" id="annotation-trend-description">
@@ -279,7 +279,7 @@
                                    value="{{ '%.2f'|format(threshold or 0.1) }}">
                         </div>
                         {% endif %}
-                        <div class="chart-container ys-chart-fullscreen-target{% if page_key == 'topic' %} ys-topic-heatmap-chart-container{% endif %}" id="annotationSecondaryChartContainer" data-chart-filename="{{ page_key }}-secondary">
+                        <div class="chart-container ys-chart-fullscreen-target{% if page_key == 'topic' or page_key == 'hashtag' %} ys-topic-heatmap-chart-container{% endif %}" id="annotationSecondaryChartContainer" data-chart-filename="{{ page_key }}-secondary">
                             <canvas id="annotationSecondaryChart" height="250"></canvas>
                         </div>
                         <p class="ys-text-xs-center-mt" id="annotation-secondary-description">
@@ -288,7 +288,7 @@
                     </div>
                 </div>
             </div>
-            {% if page_key == "topic" %}
+            {% if page_key == "topic" or page_key == "hashtag" %}
             <div class="columns">
                 <div class="column is-12">
                     <div class="dashboard-box chart-box-container">
@@ -310,7 +310,247 @@
             {% endif %}
             {% endif %}
 
-            {% if page_key != "network" %}
+            {% if page_key == "toxicity" and analytics.moderator_targets and analytics.moderator_targets.available %}
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
+                            <div>
+                                <h3 class="title is-5 is-thin ys-mb-10">Moderator Target Drill-down</h3>
+                                <p style="margin: 0; color: #6b7280;">
+                                    Inspect one moderated target at a time using their toxicity trend and the timing of moderator interventions.
+                                </p>
+                            </div>
+                            <div class="stat-box" style="min-width: 180px; background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);">
+                                <div class="stat-value"><span id="tox-moderator-deployed">{{ analytics.moderator_targets.deployed_agents }}</span></div>
+                                <div class="stat-label">Deployed Moderators</div>
+                            </div>
+                        </div>
+
+                        <div id="tox-moderator-target-panel" style="margin-top: 20px;">
+                            <div class="columns">
+                                <div class="column is-4">
+                                    <label class="label" for="tox-moderator-target-select">Moderated Target</label>
+                                    <div class="select is-fullwidth">
+                                        <select id="tox-moderator-target-select">
+                                            {% for option in analytics.moderator_targets.options %}
+                                            <option value="{{ option.uid }}" {% if option.uid == analytics.moderator_targets.selected_uid %}selected{% endif %}>
+                                                {{ option.username }} ({{ option.moderation_count }} interventions)
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="column is-8">
+                                    <div class="stats-row" style="margin-top: 0;">
+                                        <div class="stat-box" style="background: linear-gradient(135deg, #334155 0%, #1e293b 100%);">
+                                            <div class="stat-value" id="tox-moderator-target-name">{{ analytics.moderator_targets.selected_username }}</div>
+                                            <div class="stat-label">Selected Target</div>
+                                        </div>
+                                        <div class="stat-box" style="background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);">
+                                            <div class="stat-value" id="tox-moderator-interaction-count">{{ analytics.moderator_targets.moderation_count }}</div>
+                                            <div class="stat-label">Moderator Actions</div>
+                                        </div>
+                                        <div class="stat-box" style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);">
+                                            <div class="stat-value" id="tox-moderator-agent-names">{{ analytics.moderator_targets.moderator_usernames|join(', ') if analytics.moderator_targets.moderator_usernames else '—' }}</div>
+                                            <div class="stat-label">Moderator Agents</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <article id="tox-moderator-empty-state" class="message is-info" style="margin-top: 16px; {% if analytics.moderator_targets.options %}display:none;{% endif %}">
+                                <div class="message-body">
+                                    Moderator agents are deployed, but no moderated targets have been recorded up to the selected time.
+                                </div>
+                            </article>
+
+                            <div class="columns">
+                                <div class="column is-7" id="tox-moderator-chart-column" {% if not analytics.moderator_targets.options %}style="display:none;"{% endif %}>
+                                    <div class="dashboard-box chart-box-container" style="margin-bottom: 0;">
+                                        <div class="annotation-chart-head ys-mb-15">
+                                            <h3 class="title is-6 is-thin">Selected Target Toxicity Trend</h3>
+                                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="toxModeratorTargetTrendChartContainer" title="Expand plot">
+                                                <i class="mdi mdi-fullscreen"></i>
+                                            </button>
+                                        </div>
+                                        <div class="chart-container ys-chart-fullscreen-target" id="toxModeratorTargetTrendChartContainer" data-chart-filename="moderator-target-toxicity-trend">
+                                            <canvas id="toxModeratorTargetTrendChart" height="280"></canvas>
+                                        </div>
+                                        <p class="ys-text-xs-center-mt">
+                                            Daily target toxicity, with moderator intervention volume shown on the secondary axis.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="column is-5" id="tox-moderator-events-column" {% if not analytics.moderator_targets.options %}style="display:none;"{% endif %}>
+                                    <div class="dashboard-box" style="margin-bottom: 0;">
+                                        <h3 class="title is-6 is-thin ys-mb-15">Recent Moderator Interventions</h3>
+                                        <div style="max-height: 360px; overflow-y: auto;">
+                                            <table class="table is-fullwidth is-striped is-hoverable is-size-7">
+                                                <thead>
+                                                <tr>
+                                                    <th>When</th>
+                                                    <th>Type</th>
+                                                    <th>Count</th>
+                                                    <th>Moderators</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody id="tox-moderator-events-body">
+                                                {% for event in analytics.moderator_targets.interaction_events %}
+                                                <tr>
+                                                    <td>Day {{ event.day }}, Hour {{ event.hour }}</td>
+                                                    <td>{{ event.moderation_type|replace('_', ' ')|title }}</td>
+                                                    <td>{{ event.moderation_count }}</td>
+                                                    <td>{{ event.moderator_usernames|join(', ') if event.moderator_usernames else '—' }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if page_key == "recsys" and analytics.recsys_author and analytics.recsys_author.available %}
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
+                            <div>
+                                <h3 class="title is-5 is-thin ys-mb-10">Author Recommendation Drill-down</h3>
+                                <p style="margin: 0; color: #6b7280;">
+                                    Inspect how recommendations of one author’s posts spread across the population over time.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div id="recsys-author-panel" style="margin-top: 20px;">
+                            <div class="columns">
+                                <div class="column is-4">
+                                    <label class="label" for="annotation-recsys-author-select">Author Drill-down</label>
+                                    <div class="select is-fullwidth">
+                                        <select id="annotation-recsys-author-select">
+                                            <option value="" {% if not analytics.recsys_author.selected_uid %}selected{% endif %}>Choose an author…</option>
+                                            {% for option in analytics.recsys_author.options %}
+                                            <option value="{{ option.uid }}" {% if option.uid == analytics.recsys_author.selected_uid %}selected{% endif %}>
+                                                {{ option.username }} ({{ option.recommendation_count }} recs)
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <article id="recsys-author-empty-state" class="message is-info" {% if analytics.recsys_author.selected_uid %}style="display:none;"{% endif %}>
+                                <div class="message-body">
+                                    Select an author to inspect the reach and recommendation distribution of their posts.
+                                </div>
+                            </article>
+
+                            <div class="stats-row" id="recsys-author-stats-row" {% if not analytics.recsys_author.selected_uid %}style="display:none;"{% endif %}>
+                                <div class="stat-box" style="background: linear-gradient(135deg, #334155 0%, #1e293b 100%);">
+                                    <div class="stat-value" id="recsys-author-name">{{ analytics.recsys_author.selected_username }}</div>
+                                    <div class="stat-label">Selected Author</div>
+                                </div>
+                                <div class="stat-box" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);">
+                                    <div class="stat-value" id="recsys-author-unique-recipients">{{ analytics.recsys_author.unique_recipients }}</div>
+                                    <div class="stat-label">Unique Recipients</div>
+                                </div>
+                                <div class="stat-box" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
+                                    <div class="stat-value" id="recsys-author-total-recommendations">{{ analytics.recsys_author.total_recommendations }}</div>
+                                    <div class="stat-label">Total Recommendations</div>
+                                </div>
+                                <div class="stat-box" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                                    <div class="stat-value" id="recsys-author-recommended-posts">{{ analytics.recsys_author.recommended_posts }}</div>
+                                    <div class="stat-label">Recommended Posts</div>
+                                </div>
+                            </div>
+
+                            <div class="columns">
+                                <div class="column is-4" id="recsys-author-reach-column" {% if not analytics.recsys_author.selected_uid %}style="display:none;"{% endif %}>
+                                    <div class="dashboard-box chart-box-container" style="margin-bottom: 0;">
+                                        <div class="annotation-chart-head ys-mb-15">
+                                            <h3 class="title is-6 is-thin" id="recsys-author-reach-title">{{ analytics.recsys_author.reach_trend.title }}</h3>
+                                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="recsysAuthorReachChartContainer" title="Expand plot">
+                                                <i class="mdi mdi-fullscreen"></i>
+                                            </button>
+                                        </div>
+                                        <div class="chart-container ys-chart-fullscreen-target" id="recsysAuthorReachChartContainer" data-chart-filename="recsys-author-reach">
+                                            <canvas id="recsysAuthorReachChart" height="280"></canvas>
+                                        </div>
+                                        <p class="ys-text-xs-center-mt" id="recsys-author-reach-description">{{ analytics.recsys_author.reach_trend.description }}</p>
+                                    </div>
+                                </div>
+                                <div class="column is-4" id="recsys-author-receiver-diversity-column" {% if not analytics.recsys_author.selected_uid %}style="display:none;"{% endif %}>
+                                    <div class="dashboard-box chart-box-container" style="margin-bottom: 0;">
+                                        <div class="annotation-chart-head ys-mb-15">
+                                            <h3 class="title is-6 is-thin" id="recsys-author-receiver-diversity-title">{{ analytics.recsys_author.receiver_diversity_trend.title }}</h3>
+                                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="recsysAuthorReceiverDiversityChartContainer" title="Expand plot">
+                                                <i class="mdi mdi-fullscreen"></i>
+                                            </button>
+                                        </div>
+                                        <div class="chart-container ys-chart-fullscreen-target" id="recsysAuthorReceiverDiversityChartContainer" data-chart-filename="recsys-author-receiver-diversity">
+                                            <canvas id="recsysAuthorReceiverDiversityChart" height="280"></canvas>
+                                        </div>
+                                        <p class="ys-text-xs-center-mt" id="recsys-author-receiver-diversity-description">{{ analytics.recsys_author.receiver_diversity_trend.description }}</p>
+                                    </div>
+                                </div>
+                                <div class="column is-4" id="recsys-author-distribution-column" {% if not analytics.recsys_author.selected_uid %}style="display:none;"{% endif %}>
+                                    <div class="dashboard-box chart-box-container" style="margin-bottom: 0;">
+                                        <div class="annotation-chart-head ys-mb-15">
+                                            <h3 class="title is-6 is-thin" id="recsys-author-distribution-title">{{ analytics.recsys_author.post_distribution.title }}</h3>
+                                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="recsysAuthorDistributionChartContainer" title="Expand plot">
+                                                <i class="mdi mdi-fullscreen"></i>
+                                            </button>
+                                        </div>
+                                        <div class="chart-container ys-chart-fullscreen-target" id="recsysAuthorDistributionChartContainer" data-chart-filename="recsys-author-distribution">
+                                            <canvas id="recsysAuthorDistributionChart" height="280"></canvas>
+                                        </div>
+                                        <p class="ys-text-xs-center-mt" id="recsys-author-distribution-description">{{ analytics.recsys_author.post_distribution.description }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="columns" id="recsys-author-table-row" {% if not analytics.recsys_author.selected_uid %}style="display:none;"{% endif %}>
+                                <div class="column is-12">
+                                    <div class="dashboard-box" style="margin-bottom: 0;">
+                                        <h3 class="title is-6 is-thin ys-mb-15">Selected Author Recommended Posts</h3>
+                                        <div style="max-height: 320px; overflow-y: auto;">
+                                            <table class="table is-fullwidth is-striped is-hoverable is-size-7">
+                                                <thead>
+                                                <tr>
+                                                    <th>Post ID</th>
+                                                    <th>Excerpt</th>
+                                                    <th>Total Recs</th>
+                                                    <th>Unique Recipients</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody id="recsys-author-summary-body">
+                                                {% for row in analytics.recsys_author.summary_rows %}
+                                                <tr>
+                                                    {% for cell in row %}
+                                                    <td>{{ cell }}</td>
+                                                    {% endfor %}
+                                                </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if page_key != "network" and page_key != "recsys" %}
             <div class="columns">
                 <div class="column is-12">
                     <div class="dashboard-box">

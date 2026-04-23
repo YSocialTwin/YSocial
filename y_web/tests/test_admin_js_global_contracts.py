@@ -265,6 +265,10 @@ def test_experiment_details_pages_expose_configuration_block_consistently():
     assert "/admin/network_analysis/{{ experiment.idexp }}" in forum
     assert "/admin/topic_evolution/{{ experiment.idexp }}" in standard
     assert "/admin/topic_evolution/{{ experiment.idexp }}" in forum
+    assert "/admin/hashtag_evolution/{{ experiment.idexp }}" in standard
+    assert "/admin/hashtag_evolution/{{ experiment.idexp }}" in forum
+    assert "/admin/recsys_evolution/{{ experiment.idexp }}" in standard
+    assert "/admin/recsys_evolution/{{ experiment.idexp }}" in forum
     assert "/admin/toxicity_evolution/{{ experiment.idexp }}" in standard
     assert "/admin/toxicity_evolution/{{ experiment.idexp }}" in forum
     assert "/admin/sentiment_evolution/{{ experiment.idexp }}" in standard
@@ -363,11 +367,17 @@ def test_annotation_analytics_pages_exist_as_dedicated_admin_views():
     assert '"/admin/emotion_statistics/<int:expid>"' in route_source
     assert '"/admin/emotion_statistics_data/<int:expid>"' in route_source
     assert "_build_toxicity_analytics_payload" in route_source
+    assert "_build_moderator_target_panel" in route_source
     assert "_build_sentiment_analytics_payload" in route_source
     assert "_build_emotion_analytics_payload" in route_source
+    assert "Moderator Target Drill-down" in template
+    assert 'id="tox-moderator-target-select"' in template
+    assert 'id="toxModeratorTargetTrendChart"' in template
     assert "annotationDistributionChart" in script
     assert "annotationTrendChart" in script
     assert "annotationSecondaryChart" in script
+    assert "tox-moderator-target-select" in script
+    assert "toxModeratorTargetTrendChart" in script
 
 
 def test_opinion_evolution_page_exposes_propaganda_target_drilldown():

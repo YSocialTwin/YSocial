@@ -1800,6 +1800,11 @@
     grid-auto-columns: minmax(0, 1fr);
     gap: 8px;
     margin-top: 10px;
+    margin-bottom: 16px;
+}
+
+.dashboard-box > .stats-row + .columns {
+    margin-top: 0;
 }
 
 @media (max-width: 768px) {
@@ -1807,6 +1812,7 @@
         grid-template-columns: repeat(2, 1fr);
         grid-auto-flow: row;
         grid-auto-columns: unset;
+        margin-bottom: 12px;
     }
 }
 

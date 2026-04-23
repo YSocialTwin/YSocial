@@ -3477,6 +3477,247 @@ def _build_stress_attacker_target_panel(
         }
 
 
+def _build_moderator_target_trend(conn, target_uid, filter_day, filter_hour):
+    """Return per-day toxicity trends and moderation counts for one moderated target."""
+    display_rounds = _get_stress_reward_display_rounds(conn, filter_day)
+    if not display_rounds or not target_uid:
+        return {"timestamps": [], "timestamp_mapping": {}, "datasets": []}
+
+    toxicity_rows = conn.execute(
+        """
+        SELECT
+            r.day AS day,
+            AVG(pt.toxicity) AS average_toxicity,
+            MAX(pt.toxicity) AS peak_toxicity,
+            COUNT(*) AS annotated_posts
+        FROM post_toxicity pt
+        JOIN post p
+          ON p.id = pt.post_id
+        JOIN rounds r
+          ON r.id = p.round
+        WHERE p.user_id = ?
+          AND (r.day < ? OR (r.day = ? AND r.hour <= ?))
+        GROUP BY r.day
+        ORDER BY r.day
+        """,
+        (target_uid, filter_day, filter_day, filter_hour),
+    ).fetchall()
+    toxicity_by_day = {
+        int(row["day"]): {
+            "average_toxicity": _safe_float(row["average_toxicity"], digits=6),
+            "peak_toxicity": _safe_float(row["peak_toxicity"], digits=6),
+            "annotated_posts": _safe_int(row["annotated_posts"]),
+        }
+        for row in toxicity_rows
+    }
+
+    moderation_rows = conn.execute(
+        """
+        SELECT
+            r.day AS day,
+            COUNT(*) AS moderation_count
+        FROM plugin_moderation_actions ma
+        JOIN rounds r
+          ON r.id = ma.round_id
+        WHERE ma.moderated_agent_id = ?
+          AND (r.day < ? OR (r.day = ? AND r.hour <= ?))
+        GROUP BY r.day
+        ORDER BY r.day
+        """,
+        (target_uid, filter_day, filter_day, filter_hour),
+    ).fetchall()
+    moderation_by_day = {
+        int(row["day"]): _safe_int(row["moderation_count"]) for row in moderation_rows
+    }
+
+    timestamps = []
+    timestamp_mapping = {}
+    average_series = []
+    peak_series = []
+    moderation_series = []
+
+    for round_row in display_rounds:
+        target_day = int(round_row["day"])
+        target_hour = int(round_row["hour"])
+        timestamps.append(float(target_day))
+        timestamp_mapping[float(target_day)] = {
+            "day": target_day,
+            "hour": target_hour,
+            "absolute": target_day * 24 + target_hour,
+        }
+        daily_toxicity = toxicity_by_day.get(target_day, {})
+        average_series.append(float(daily_toxicity.get("average_toxicity", 0.0)))
+        peak_series.append(float(daily_toxicity.get("peak_toxicity", 0.0)))
+        moderation_series.append(int(moderation_by_day.get(target_day, 0)))
+
+    return {
+        "timestamps": timestamps,
+        "timestamp_mapping": timestamp_mapping,
+        "datasets": [
+            {"label": "Average Target Toxicity", "data": average_series},
+            {"label": "Peak Target Toxicity", "data": peak_series},
+            {"label": "Moderator Actions", "data": moderation_series},
+        ],
+    }
+
+
+def _build_moderator_target_panel(
+    db_path, filter_day, filter_hour, selected_target_uid=None
+):
+    """Return moderator target options and selected-target toxicity analytics."""
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        moderator_count = (
+            conn.execute(
+                """
+                SELECT COUNT(*)
+                FROM user_mgmt
+                WHERE user_type = 'moderator'
+                """
+            ).fetchone()[0]
+            or 0
+        )
+        if moderator_count <= 0:
+            return {
+                "available": False,
+                "deployed_agents": 0,
+                "options": [],
+                "selected_uid": None,
+                "selected_username": None,
+                "moderation_count": 0,
+                "moderator_usernames": [],
+                "trend_data": {"timestamps": [], "timestamp_mapping": {}, "datasets": []},
+                "interaction_events": [],
+            }
+
+        if not _experiment_db_has_required_tables(
+            db_path, {"plugin_moderation_actions", "post_toxicity", "post", "rounds"}
+        ):
+            return {
+                "available": True,
+                "deployed_agents": int(moderator_count),
+                "options": [],
+                "selected_uid": None,
+                "selected_username": None,
+                "moderation_count": 0,
+                "moderator_usernames": [],
+                "trend_data": {"timestamps": [], "timestamp_mapping": {}, "datasets": []},
+                "interaction_events": [],
+            }
+
+        option_rows = conn.execute(
+            """
+            SELECT
+                ma.moderated_agent_id AS uid,
+                u.username AS username,
+                COUNT(*) AS moderation_count,
+                GROUP_CONCAT(DISTINCT moderator.username) AS moderator_usernames
+            FROM plugin_moderation_actions ma
+            JOIN rounds r
+              ON r.id = ma.round_id
+            JOIN user_mgmt u
+              ON u.id = ma.moderated_agent_id
+            JOIN user_mgmt moderator
+              ON moderator.id = ma.moderator_agent_id
+            WHERE (r.day < ? OR (r.day = ? AND r.hour <= ?))
+            GROUP BY ma.moderated_agent_id, u.username
+            ORDER BY moderation_count DESC, u.username ASC
+            """,
+            (filter_day, filter_day, filter_hour),
+        ).fetchall()
+
+        options = [
+            {
+                "uid": str(row["uid"]),
+                "username": row["username"],
+                "moderation_count": int(row["moderation_count"] or 0),
+                "moderator_usernames": sorted(
+                    {
+                        item.strip()
+                        for item in str(row["moderator_usernames"] or "").split(",")
+                        if item and item.strip()
+                    }
+                ),
+            }
+            for row in option_rows
+            if row["uid"] is not None
+        ]
+
+        if not options:
+            return {
+                "available": True,
+                "deployed_agents": int(moderator_count),
+                "options": [],
+                "selected_uid": None,
+                "selected_username": None,
+                "moderation_count": 0,
+                "moderator_usernames": [],
+                "trend_data": {"timestamps": [], "timestamp_mapping": {}, "datasets": []},
+                "interaction_events": [],
+            }
+
+        valid_target_ids = {option["uid"] for option in options}
+        if selected_target_uid not in valid_target_ids:
+            selected_target_uid = options[0]["uid"]
+
+        selected_option = next(
+            option for option in options if option["uid"] == selected_target_uid
+        )
+
+        interaction_rows = conn.execute(
+            """
+            SELECT
+                r.day AS day,
+                r.hour AS hour,
+                ma.moderation_type AS moderation_type,
+                COUNT(*) AS moderation_count,
+                GROUP_CONCAT(DISTINCT moderator.username) AS moderator_usernames
+            FROM plugin_moderation_actions ma
+            JOIN rounds r
+              ON r.id = ma.round_id
+            JOIN user_mgmt moderator
+              ON moderator.id = ma.moderator_agent_id
+            WHERE ma.moderated_agent_id = ?
+              AND (r.day < ? OR (r.day = ? AND r.hour <= ?))
+            GROUP BY r.day, r.hour, ma.moderation_type
+            ORDER BY r.day DESC, r.hour DESC, ma.moderation_type ASC
+            LIMIT 50
+            """,
+            (selected_target_uid, filter_day, filter_day, filter_hour),
+        ).fetchall()
+
+        interaction_events = [
+            {
+                "day": int(row["day"]),
+                "hour": int(row["hour"]),
+                "moderation_type": row["moderation_type"],
+                "moderation_count": int(row["moderation_count"] or 0),
+                "moderator_usernames": sorted(
+                    {
+                        item.strip()
+                        for item in str(row["moderator_usernames"] or "").split(",")
+                        if item and item.strip()
+                    }
+                ),
+            }
+            for row in interaction_rows
+        ]
+
+        return {
+            "available": True,
+            "deployed_agents": int(moderator_count),
+            "options": options,
+            "selected_uid": selected_option["uid"],
+            "selected_username": selected_option["username"],
+            "moderation_count": selected_option["moderation_count"],
+            "moderator_usernames": selected_option["moderator_usernames"],
+            "trend_data": _build_moderator_target_trend(
+                conn, selected_option["uid"], filter_day, filter_hour
+            ),
+            "interaction_events": interaction_events,
+        }
+
+
 @experiments.route("/admin/stress_reward_evolution/<int:expid>")
 @login_required
 def stress_reward_evolution(expid):
@@ -3660,6 +3901,62 @@ def _safe_int(value):
     if value in (None, ""):
         return 0
     return int(value)
+
+
+def _parse_recommendation_post_ids(raw_value):
+    if raw_value in (None, ""):
+        return []
+    if isinstance(raw_value, (list, tuple)):
+        return [str(item) for item in raw_value if str(item).strip()]
+    text = str(raw_value).strip()
+    if not text:
+        return []
+    if text.startswith("[") and text.endswith("]"):
+        try:
+            data = json.loads(text)
+            if isinstance(data, list):
+                return [str(item) for item in data if str(item).strip()]
+        except Exception:
+            pass
+    if "|" in text:
+        return [part.strip() for part in text.split("|") if part.strip()]
+    if "," in text:
+        return [part.strip() for part in text.split(",") if part.strip()]
+    return [text]
+
+
+def _gaussian_kde_series(values):
+    numeric_values = [float(value) for value in values if value is not None]
+    if not numeric_values:
+        return [], []
+    if len(numeric_values) == 1:
+        value = numeric_values[0]
+        return [round(value, 3)], [1.0]
+
+    mean = sum(numeric_values) / len(numeric_values)
+    variance = sum((value - mean) ** 2 for value in numeric_values) / max(
+        len(numeric_values) - 1, 1
+    )
+    std_dev = variance ** 0.5
+    bandwidth = max(0.35, 1.06 * std_dev * (len(numeric_values) ** (-1 / 5)))
+    x_min = max(0.0, min(numeric_values) - bandwidth)
+    x_max = max(numeric_values) + bandwidth
+    if x_max <= x_min:
+        x_max = x_min + 1.0
+
+    num_points = min(80, max(24, len(numeric_values) * 12))
+    step = (x_max - x_min) / max(num_points - 1, 1)
+    xs = [x_min + (index * step) for index in range(num_points)]
+    coefficient = 1.0 / ((2.0 * 3.141592653589793) ** 0.5)
+    ys = []
+    for x_value in xs:
+        density = 0.0
+        for sample in numeric_values:
+            z = (x_value - sample) / bandwidth
+            density += coefficient * (2.718281828459045 ** (-0.5 * z * z))
+        density /= len(numeric_values) * bandwidth
+        ys.append(round(density, 6))
+    return [round(x_value, 3) for x_value in xs], ys
 
 
 def _truncate_text(text, max_len=96):
@@ -4718,9 +5015,19 @@ def _build_topic_evolution_payload(
         "description": "Track topic diffusion, emergence, and disappearance through content and interaction activity.",
         "stats": stats,
         "trend_mode": trend_mode,
+        "selector_label": "Topics to Visualize",
+        "selector_hint": "Cmd/Ctrl for multi-select",
         "trend_mode_options": [
             {"value": "daily", "label": "Daily Heatmap"},
             {"value": "cumulative", "label": "Cumulative Trends"},
+        ],
+        "selected_ids": selected_topic_ids,
+        "selector_options": [
+            {
+                "value": option["topic_id"],
+                "label": f"{option['topic_name']} ({option['total_volume']})",
+            }
+            for option in topic_options
         ],
         "selected_topic_ids": selected_topic_ids,
         "topic_options": topic_options,
@@ -4829,7 +5136,546 @@ def _build_topic_evolution_payload(
     }
 
 
-def _build_toxicity_analytics_payload(db_path, filter_day, filter_hour, threshold=0.1):
+def _build_hashtag_evolution_payload(
+    db_path, filter_day, filter_hour, selected_hashtag_ids=None, trend_mode="daily"
+):
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        table_names = {
+            row["name"] if isinstance(row, sqlite3.Row) else row[0]
+            for row in conn.execute("SELECT name FROM sqlite_master WHERE type = 'table'").fetchall()
+        }
+        reported_round_column = _table_round_column(conn, "reported") if "reported" in table_names else None
+        total_population = _safe_int(
+            conn.execute("SELECT COUNT(*) AS c FROM user_mgmt").fetchone()["c"]
+        )
+
+        event_queries = [
+            """
+            SELECT
+                ph.hashtag_id AS hashtag_id,
+                p.user_id AS actor_id,
+                r.day AS day,
+                r.hour AS hour,
+                'content' AS event_type
+            FROM post_hashtags ph
+            JOIN post p ON p.id = ph.post_id
+            JOIN rounds r ON r.id = p.round
+            WHERE (r.day < ? OR (r.day = ? AND r.hour <= ?))
+            """
+        ]
+        params = [filter_day, filter_day, filter_hour]
+
+        if "reactions" in table_names:
+            event_queries.append(
+                """
+                SELECT
+                    ph.hashtag_id AS hashtag_id,
+                    re.user_id AS actor_id,
+                    r.day AS day,
+                    r.hour AS hour,
+                    'reaction' AS event_type
+                FROM post_hashtags ph
+                JOIN reactions re ON re.post_id = ph.post_id
+                JOIN rounds r ON r.id = re.round
+                WHERE (r.day < ? OR (r.day = ? AND r.hour <= ?))
+                """
+            )
+            params.extend([filter_day, filter_day, filter_hour])
+
+        if "reported" in table_names and reported_round_column:
+            event_queries.append(
+                f"""
+                SELECT
+                    ph.hashtag_id AS hashtag_id,
+                    rp.from_uid AS actor_id,
+                    r.day AS day,
+                    r.hour AS hour,
+                    'report' AS event_type
+                FROM post_hashtags ph
+                JOIN reported rp ON rp.to_post = ph.post_id
+                JOIN rounds r ON r.id = rp.{reported_round_column}
+                WHERE (r.day < ? OR (r.day = ? AND r.hour <= ?))
+                """
+            )
+            params.extend([filter_day, filter_day, filter_hour])
+
+        hashtag_events_sql = " UNION ALL ".join(event_queries)
+
+        current_volume_rows = conn.execute(
+            f"""
+            WITH hashtag_events AS (
+                {hashtag_events_sql}
+            )
+            SELECT
+                he.hashtag_id,
+                h.hashtag,
+                COUNT(*) AS total_volume
+            FROM hashtag_events he
+            JOIN hashtags h ON h.id = he.hashtag_id
+            GROUP BY he.hashtag_id, h.hashtag
+            ORDER BY total_volume DESC, h.hashtag ASC
+            """,
+            tuple(params),
+        ).fetchall()
+
+        hashtag_options = [
+            {
+                "hashtag_id": str(row["hashtag_id"]),
+                "hashtag_name": str(row["hashtag"]),
+                "total_volume": _safe_int(row["total_volume"]),
+            }
+            for row in current_volume_rows
+        ]
+
+        selected_hashtag_ids = [
+            str(hashtag_id)
+            for hashtag_id in (selected_hashtag_ids or [])
+            if str(hashtag_id) in {option["hashtag_id"] for option in hashtag_options}
+        ]
+        if not selected_hashtag_ids:
+            selected_hashtag_ids = [option["hashtag_id"] for option in hashtag_options[:5]]
+
+        if selected_hashtag_ids:
+            placeholders = ",".join(["?"] * len(selected_hashtag_ids))
+            selected_clause = f" WHERE hashtag_id IN ({placeholders}) "
+            selected_params = tuple(selected_hashtag_ids)
+        else:
+            selected_clause = " WHERE 1 = 0 "
+            selected_params = tuple()
+
+        selected_volume_rows = conn.execute(
+            f"""
+            WITH hashtag_events AS (
+                {hashtag_events_sql}
+            )
+            SELECT hashtag_id, day, COUNT(*) AS total_volume
+            FROM hashtag_events
+            {selected_clause}
+            GROUP BY hashtag_id, day
+            ORDER BY day ASC, hashtag_id ASC
+            """,
+            tuple(params) + selected_params,
+        ).fetchall()
+
+        participant_rows = conn.execute(
+            f"""
+            WITH hashtag_events AS (
+                {hashtag_events_sql}
+            )
+            SELECT hashtag_id, day, COUNT(DISTINCT actor_id) AS participants
+            FROM hashtag_events
+            {selected_clause}
+            GROUP BY hashtag_id, day
+            ORDER BY day ASC, hashtag_id ASC
+            """,
+            tuple(params) + selected_params,
+        ).fetchall()
+
+        actor_day_rows = conn.execute(
+            f"""
+            WITH hashtag_events AS (
+                {hashtag_events_sql}
+            )
+            SELECT DISTINCT hashtag_id, actor_id, day
+            FROM hashtag_events
+            {selected_clause}
+            ORDER BY day ASC, hashtag_id ASC
+            """,
+            tuple(params) + selected_params,
+        ).fetchall()
+
+        lifecycle_rows = conn.execute(
+            f"""
+            WITH hashtag_events AS (
+                {hashtag_events_sql}
+            ),
+            daily AS (
+                SELECT hashtag_id, day, COUNT(*) AS total_volume
+                FROM hashtag_events
+                GROUP BY hashtag_id, day
+            ),
+            first_last AS (
+                SELECT hashtag_id, MIN(day) AS first_day, MAX(day) AS last_day
+                FROM daily
+                GROUP BY hashtag_id
+            )
+            SELECT
+                d.day AS day,
+                COUNT(DISTINCT d.hashtag_id) AS active_topics,
+                SUM(CASE WHEN fl.first_day = d.day THEN 1 ELSE 0 END) AS new_topics,
+                SUM(CASE WHEN fl.last_day = d.day THEN 1 ELSE 0 END) AS vanished_topics
+            FROM daily d
+            JOIN first_last fl ON fl.hashtag_id = d.hashtag_id
+            GROUP BY d.day
+            ORDER BY d.day ASC
+            """,
+            tuple(params),
+        ).fetchall()
+
+        summary_rows = conn.execute(
+            f"""
+            WITH hashtag_events AS (
+                {hashtag_events_sql}
+            )
+            SELECT
+                he.hashtag_id AS hashtag_id,
+                h.hashtag AS hashtag,
+                COUNT(*) AS total_volume,
+                COUNT(DISTINCT he.actor_id) AS participants,
+                MIN(he.day) AS first_day,
+                MAX(he.day) AS last_day,
+                SUM(CASE WHEN he.day = ? THEN 1 ELSE 0 END) AS current_day_volume
+            FROM hashtag_events he
+            JOIN hashtags h ON h.id = he.hashtag_id
+            {selected_clause}
+            GROUP BY he.hashtag_id, h.hashtag
+            ORDER BY total_volume DESC, h.hashtag ASC
+            """,
+            tuple(params) + ((filter_day,) + selected_params),
+        ).fetchall()
+
+    trend_mode = str(trend_mode or "daily").strip().lower()
+    if trend_mode not in {"daily", "cumulative"}:
+        trend_mode = "daily"
+
+    days = sorted({int(row["day"]) for row in lifecycle_rows} | {int(row["day"]) for row in selected_volume_rows})
+    volume_by_hashtag_day = defaultdict(dict)
+    for row in selected_volume_rows:
+        volume_by_hashtag_day[str(row["hashtag_id"])][int(row["day"])] = _safe_int(row["total_volume"])
+    participants_by_hashtag_day = defaultdict(dict)
+    for row in participant_rows:
+        participants_by_hashtag_day[str(row["hashtag_id"])][int(row["day"])] = _safe_int(row["participants"])
+
+    if trend_mode == "cumulative":
+        for hashtag_id in selected_hashtag_ids:
+            running_volume = 0
+            for day in days:
+                running_volume += volume_by_hashtag_day[hashtag_id].get(day, 0)
+                volume_by_hashtag_day[hashtag_id][day] = running_volume
+        seen_by_hashtag = defaultdict(set)
+        for row in actor_day_rows:
+            hashtag_id = str(row["hashtag_id"])
+            seen_by_hashtag[hashtag_id].add(str(row["actor_id"]))
+            participants_by_hashtag_day[hashtag_id][int(row["day"])] = len(seen_by_hashtag[hashtag_id])
+        for hashtag_id in selected_hashtag_ids:
+            last_value = 0
+            for day in days:
+                if day in participants_by_hashtag_day[hashtag_id]:
+                    last_value = participants_by_hashtag_day[hashtag_id][day]
+                participants_by_hashtag_day[hashtag_id][day] = last_value
+
+    active_hashtag_count = max((_safe_int(row["active_topics"]) for row in lifecycle_rows), default=0)
+    new_hashtag_count = sum(_safe_int(row["new_topics"]) for row in lifecycle_rows)
+    vanished_hashtag_count = sum(_safe_int(row["vanished_topics"]) for row in lifecycle_rows)
+
+    hashtag_palette = [
+        "#2563eb",
+        "#7c3aed",
+        "#0f766e",
+        "#ea580c",
+        "#db2777",
+        "#0891b2",
+        "#65a30d",
+        "#b45309",
+    ]
+
+    def _hashtag_color(hashtag_id):
+        if hashtag_id in selected_hashtag_ids:
+            return hashtag_palette[selected_hashtag_ids.index(hashtag_id) % len(hashtag_palette)]
+        return hashtag_palette[0]
+
+    hashtag_labels = [
+        next(
+            (option["hashtag_name"] for option in hashtag_options if option["hashtag_id"] == hashtag_id),
+            hashtag_id,
+        )
+        for hashtag_id in selected_hashtag_ids
+    ]
+
+    if trend_mode == "cumulative":
+        trend_definition = {
+            "title": "Hashtag Volume Cumulative Trend",
+            "description": "Cumulative hashtag-related activity volume for the selected hashtags.",
+            "type": "line",
+            "labels": [f"Day {day}" for day in days],
+            "datasets": [
+                {
+                    "label": hashtag_labels[index],
+                    "data": [volume_by_hashtag_day[hashtag_id].get(day, 0) for day in days],
+                    "borderColor": _hashtag_color(hashtag_id),
+                    "backgroundColor": "transparent",
+                    "pointRadius": 0,
+                    "pointHoverRadius": 4,
+                    "borderWidth": 2.5,
+                    "tension": 0.28,
+                }
+                for index, hashtag_id in enumerate(selected_hashtag_ids)
+            ],
+            "options": {"beginAtZero": True, "legendPosition": "bottom"},
+        }
+        secondary_definition = {
+            "title": "Hashtag Reach Cumulative Trend",
+            "description": "Cumulative share of the population that has been involved with each selected hashtag.",
+            "type": "line",
+            "labels": [f"Day {day}" for day in days],
+            "datasets": [
+                {
+                    "label": hashtag_labels[index],
+                    "data": [
+                        round(
+                            100.0 * participants_by_hashtag_day[hashtag_id].get(day, 0) / max(total_population, 1),
+                            2,
+                        )
+                        for day in days
+                    ],
+                    "borderColor": _hashtag_color(hashtag_id),
+                    "backgroundColor": "transparent",
+                    "fill": False,
+                    "pointRadius": 0,
+                    "pointHoverRadius": 4,
+                    "borderWidth": 2.25,
+                    "tension": 0.28,
+                }
+                for index, hashtag_id in enumerate(selected_hashtag_ids)
+            ],
+            "options": {"beginAtZero": True, "max": 100, "legendPosition": "bottom"},
+        }
+    else:
+        trend_cells = []
+        secondary_cells = []
+        for row_index, hashtag_id in enumerate(selected_hashtag_ids):
+            row_daily_values = [volume_by_hashtag_day[hashtag_id].get(day, 0) for day in days]
+            row_max = max(row_daily_values) if row_daily_values else 0
+            for col_index, day in enumerate(days):
+                actual_volume = volume_by_hashtag_day[hashtag_id].get(day, 0)
+                participants = participants_by_hashtag_day[hashtag_id].get(day, 0)
+                reach_pct = round(100.0 * participants / max(total_population, 1), 2)
+                trend_cells.append(
+                    {
+                        "x": col_index,
+                        "y": row_index,
+                        "actual": actual_volume,
+                        "intensity": round(actual_volume / row_max, 4) if row_max else 0.0,
+                        "topic_label": hashtag_labels[row_index],
+                        "time_label": f"Day {day}",
+                    }
+                )
+                secondary_cells.append(
+                    {
+                        "x": col_index,
+                        "y": row_index,
+                        "actual": participants,
+                        "percent": reach_pct,
+                        "intensity": round(reach_pct / 100.0, 4),
+                        "topic_label": hashtag_labels[row_index],
+                        "time_label": f"Day {day}",
+                    }
+                )
+        trend_definition = {
+            "title": "Hashtag Volume Heatmap",
+            "description": "Each row is a selected hashtag, each column is a day, and color depth is normalized within each hashtag row. Tooltips report actual daily volume.",
+            "type": "heatmap",
+            "labels": [f"Day {day}" for day in days],
+            "row_labels": hashtag_labels,
+            "cells": trend_cells,
+            "options": {
+                "colorStart": [239, 246, 255],
+                "colorEnd": [37, 99, 235],
+                "legendDisplay": False,
+                "tooltipMode": "volume",
+            },
+        }
+        secondary_definition = {
+            "title": "Population Reach Heatmap",
+            "description": "Each row is a selected hashtag, each column is a day, and color depth reflects the share of the population reached that day.",
+            "type": "heatmap",
+            "labels": [f"Day {day}" for day in days],
+            "row_labels": hashtag_labels,
+            "cells": secondary_cells,
+            "options": {
+                "colorStart": [240, 253, 244],
+                "colorEnd": [21, 128, 61],
+                "legendDisplay": False,
+                "tooltipMode": "reach",
+            },
+        }
+
+    stats = [
+        {
+            "key": "selected_topics",
+            "label": "Selected Hashtags",
+            "value": len(selected_hashtag_ids),
+            "color": "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+        },
+        {
+            "key": "active_topics",
+            "label": "Active Hashtags",
+            "value": active_hashtag_count,
+            "color": "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
+        },
+        {
+            "key": "emerged_topics",
+            "label": "Emerging Hashtags",
+            "value": new_hashtag_count,
+            "color": "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+        },
+        {
+            "key": "vanished_topics",
+            "label": "Vanishing Hashtags",
+            "value": vanished_hashtag_count,
+            "color": "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+        },
+        {
+            "key": "current_day",
+            "label": "Current Day",
+            "value": f"Day {filter_day}",
+            "color": "linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)",
+        },
+        {
+            "key": "current_hour",
+            "label": "Current Hour",
+            "value": f"Hour {filter_hour}",
+            "color": "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)",
+        },
+    ]
+
+    return {
+        "page_title": "Hashtag Evolution",
+        "title": "Hashtag Evolution",
+        "description": "Track hashtag diffusion, emergence, and disappearance through content and interaction activity.",
+        "stats": stats,
+        "trend_mode": trend_mode,
+        "selector_label": "Hashtags to Visualize",
+        "selector_hint": "Cmd/Ctrl for multi-select",
+        "trend_mode_options": [
+            {"value": "daily", "label": "Daily Heatmap"},
+            {"value": "cumulative", "label": "Cumulative Trends"},
+        ],
+        "selected_ids": selected_hashtag_ids,
+        "selector_options": [
+            {
+                "value": option["hashtag_id"],
+                "label": f"#{option['hashtag_name']} ({option['total_volume']})",
+            }
+            for option in hashtag_options
+        ],
+        "selected_topic_ids": selected_hashtag_ids,
+        "topic_options": [
+            {
+                "topic_id": option["hashtag_id"],
+                "topic_name": f"#{option['hashtag_name']}",
+                "total_volume": option["total_volume"],
+            }
+            for option in hashtag_options
+        ],
+        "distribution": {
+            "title": "Hashtag Footprint at Selected Time",
+            "description": "Cumulative hashtag-related volume up to the selected time, including content and downstream interactions.",
+            "type": "bar",
+            "labels": [
+                next(
+                    (f"#{option['hashtag_name']}" for option in hashtag_options if option["hashtag_id"] == hashtag_id),
+                    hashtag_id,
+                )
+                for hashtag_id in selected_hashtag_ids
+            ],
+            "datasets": [
+                {
+                    "label": "Total Volume",
+                    "data": [
+                        next(
+                            (option["total_volume"] for option in hashtag_options if option["hashtag_id"] == hashtag_id),
+                            0,
+                        )
+                        for hashtag_id in selected_hashtag_ids
+                    ],
+                    "backgroundColor": [_hashtag_color(hashtag_id) for hashtag_id in selected_hashtag_ids],
+                    "borderRadius": 8,
+                    "maxBarThickness": 24,
+                }
+            ],
+            "options": {"beginAtZero": True, "indexAxis": "y", "legendDisplay": False},
+        },
+        "trend": trend_definition,
+        "secondary": secondary_definition,
+        "topic_lifecycle": {
+            "title": "Hashtag Lifecycle Over Time",
+            "description": "Compact view of how many hashtags remain active, emerge, and disappear across the observed horizon.",
+            "type": "line",
+            "labels": [f"Day {int(row['day'])}" for row in lifecycle_rows],
+            "datasets": [
+                {
+                    "label": "Active Hashtags",
+                    "data": [_safe_int(row["active_topics"]) for row in lifecycle_rows],
+                    "borderColor": "#8b5cf6",
+                    "backgroundColor": "rgba(124, 58, 237, 0.10)",
+                    "fill": True,
+                    "pointRadius": 0,
+                    "pointHoverRadius": 4,
+                    "borderWidth": 2.5,
+                    "tension": 0.28,
+                },
+                {
+                    "label": "New Hashtags",
+                    "data": [_safe_int(row["new_topics"]) for row in lifecycle_rows],
+                    "borderColor": "#10b981",
+                    "backgroundColor": "transparent",
+                    "borderDash": [6, 4],
+                    "pointRadius": 0,
+                    "pointHoverRadius": 4,
+                    "borderWidth": 2,
+                    "tension": 0.25,
+                },
+                {
+                    "label": "Vanished Hashtags",
+                    "data": [_safe_int(row["vanished_topics"]) for row in lifecycle_rows],
+                    "borderColor": "#f59e0b",
+                    "backgroundColor": "transparent",
+                    "borderDash": [3, 3],
+                    "pointRadius": 0,
+                    "pointHoverRadius": 4,
+                    "borderWidth": 2,
+                    "tension": 0.25,
+                },
+            ],
+            "options": {"beginAtZero": True, "legendPosition": "bottom"},
+        },
+        "summary": {
+            "title": "Selected Hashtag Summary",
+            "columns": [
+                "Hashtag",
+                "First Seen",
+                "Last Seen",
+                "Total Volume",
+                "Distinct Participants",
+                "Population Share",
+                "Current Day Volume",
+            ],
+            "rows": [
+                [
+                    f"#{str(row['hashtag'])}",
+                    f"Day {_safe_int(row['first_day'])}",
+                    f"Day {_safe_int(row['last_day'])}",
+                    _safe_int(row["total_volume"]),
+                    _safe_int(row["participants"]),
+                    f"{round(100.0 * _safe_int(row['participants']) / max(total_population, 1), 2)}%",
+                    _safe_int(row["current_day_volume"]),
+                ]
+                for row in summary_rows
+            ],
+            "empty_message": "No hashtag activity has been recorded up to the selected time.",
+        },
+    }
+
+
+def _build_toxicity_analytics_payload(
+    db_path,
+    filter_day,
+    filter_hour,
+    threshold=0.1,
+    selected_target_uid=None,
+):
     """Aggregate toxicity annotations up to a selected simulation time."""
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = sqlite3.Row
@@ -5120,6 +5966,12 @@ def _build_toxicity_analytics_payload(db_path, filter_day, filter_hour, threshol
             ],
             "empty_message": "No toxicity annotations have been recorded up to the selected time.",
         },
+        "moderator_targets": _build_moderator_target_panel(
+            db_path,
+            filter_day,
+            filter_hour,
+            selected_target_uid=selected_target_uid,
+        ),
     }
 
 
@@ -5500,6 +6352,622 @@ def _build_emotion_analytics_payload(db_path, filter_day, filter_hour):
     }
 
 
+def _build_recsys_evolution_payload(
+    db_path, filter_day, filter_hour, selected_author_uid=None
+):
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        table_names = {
+            row["name"] if isinstance(row, sqlite3.Row) else row[0]
+            for row in conn.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'table'"
+            ).fetchall()
+        }
+        user_rows = conn.execute(
+            """
+            SELECT id, username, COALESCE(NULLIF(TRIM(recsys_type), ''), 'unknown') AS recsys_type
+            FROM user_mgmt
+            ORDER BY username ASC
+            """
+        ).fetchall()
+        usernames = {str(row["id"]): str(row["username"]) for row in user_rows}
+        recsys_by_user = {
+            str(row["id"]): str(row["recsys_type"] or "unknown") for row in user_rows
+        }
+        recommendation_rows = conn.execute(
+            """
+            SELECT rec.user_id, rec.post_ids, rec.round, r.day, r.hour
+            FROM recommendations rec
+            JOIN rounds r ON r.id = rec.round
+            WHERE (r.day < ? OR (r.day = ? AND r.hour <= ?))
+            ORDER BY r.day ASC, r.hour ASC, rec.id ASC
+            """,
+            (filter_day, filter_day, filter_hour),
+        ).fetchall()
+
+        post_ids = []
+        expanded_rows = []
+        for row in recommendation_rows:
+            receiver_uid = str(row["user_id"])
+            parsed_post_ids = _parse_recommendation_post_ids(row["post_ids"])
+            if not parsed_post_ids:
+                continue
+            post_ids.extend(parsed_post_ids)
+            expanded_rows.append(
+                {
+                    "receiver_uid": receiver_uid,
+                    "round": row["round"],
+                    "day": _safe_int(row["day"]),
+                    "hour": _safe_int(row["hour"]),
+                    "post_ids": parsed_post_ids,
+                }
+            )
+
+        unique_post_ids = sorted(set(post_ids))
+        post_rows = []
+        if unique_post_ids:
+            placeholders = ",".join(["?"] * len(unique_post_ids))
+            post_rows = conn.execute(
+                f"""
+                SELECT id, user_id, COALESCE(tweet, '') AS tweet
+                FROM post
+                WHERE id IN ({placeholders})
+                """,
+                tuple(unique_post_ids),
+            ).fetchall()
+        post_authors = {str(row["id"]): str(row["user_id"]) for row in post_rows}
+        post_texts = {str(row["id"]): str(row["tweet"] or "") for row in post_rows}
+
+        recommendation_events_by_recsys = defaultdict(int)
+        recommendation_count_by_post = defaultdict(int)
+        recommendation_count_by_author = defaultdict(int)
+        unique_recipients_by_author = defaultdict(set)
+        per_post_recipients_by_author = defaultdict(lambda: defaultdict(set))
+        daily_unique_reach_by_author = defaultdict(lambda: defaultdict(set))
+        daily_reach_series_by_author = {}
+        daily_unique_authors_seen_by_receiver = defaultdict(lambda: defaultdict(set))
+
+        for event in expanded_rows:
+            recommendation_events_by_recsys[
+                recsys_by_user.get(event["receiver_uid"], "unknown")
+            ] += 1
+            for post_id in event["post_ids"]:
+                recommendation_count_by_post[post_id] += 1
+                author_uid = post_authors.get(post_id)
+                if not author_uid:
+                    continue
+                recommendation_count_by_author[author_uid] += 1
+                unique_recipients_by_author[author_uid].add(event["receiver_uid"])
+                per_post_recipients_by_author[author_uid][post_id].add(
+                    event["receiver_uid"]
+                )
+                daily_unique_reach_by_author[author_uid][_safe_int(event["day"])].add(
+                    event["receiver_uid"]
+                )
+                if author_uid != event["receiver_uid"]:
+                    daily_unique_authors_seen_by_receiver[event["receiver_uid"]][
+                        _safe_int(event["day"])
+                    ].add(author_uid)
+
+        sorted_recsys = sorted(
+            recommendation_events_by_recsys.items(),
+            key=lambda item: (-item[1], item[0]),
+        )
+        sorted_post_counts = sorted(recommendation_count_by_post.values())
+        sorted_author_counts = sorted(recommendation_count_by_author.values())
+        author_option_rows = sorted(
+            recommendation_count_by_author.keys(),
+            key=lambda uid: (
+                -recommendation_count_by_author[uid],
+                usernames.get(uid, str(uid)).lower(),
+            ),
+        )
+
+        if selected_author_uid and selected_author_uid not in recommendation_count_by_author:
+            selected_author_uid = None
+        if selected_author_uid:
+            selected_author_uid = str(selected_author_uid)
+
+        distribution_counts_by_post_frequency = defaultdict(int)
+        for count in recommendation_count_by_post.values():
+            distribution_counts_by_post_frequency[int(count)] += 1
+
+        def _frequency_histogram(distribution_map, value_label, color):
+            keys = sorted(distribution_map.keys())
+            return {
+                "type": "bar",
+                "labels": [str(key) for key in keys],
+                "datasets": [
+                    {
+                        "label": value_label,
+                        "data": [distribution_map[key] for key in keys],
+                        "backgroundColor": color,
+                        "borderRadius": 8,
+                    }
+                ],
+                "options": {"beginAtZero": True},
+            }
+
+        selected_author_panel = {
+            "available": bool(author_option_rows),
+            "selected_uid": selected_author_uid,
+            "selected_username": usernames.get(selected_author_uid, "—")
+            if selected_author_uid
+            else "—",
+            "options": [
+                {
+                    "uid": uid,
+                    "username": usernames.get(uid, str(uid)),
+                    "recommendation_count": recommendation_count_by_author[uid],
+                    "unique_recipients": len(unique_recipients_by_author.get(uid, set())),
+                }
+                for uid in author_option_rows[:250]
+            ],
+            "unique_recipients": 0,
+            "total_recommendations": 0,
+            "recommended_posts": 0,
+            "followers_count": 0,
+            "followees_count": 0,
+            "reach_trend": {
+                "title": "Cumulative Unique Recipients Reached",
+                "description": "Select an author to inspect how many unique agents received recommendations for their posts over time.",
+                "type": "line",
+                "labels": [],
+                "datasets": [],
+                "options": {"beginAtZero": True},
+            },
+            "receiver_diversity_trend": {
+                "title": "Unique Authors Recommended to Selected User",
+                "description": "Cumulative number of distinct authors whose contents have been recommended to the selected user.",
+                "type": "line",
+                "labels": [],
+                "datasets": [],
+                "options": {"beginAtZero": True},
+            },
+            "post_distribution": {
+                "title": "Recommendation Distribution for Selected Author",
+                "description": "Per-post distribution of how often the selected author’s posts have been recommended.",
+                "type": "bar",
+                "labels": [],
+                "datasets": [],
+                "options": {"beginAtZero": True},
+            },
+            "summary_rows": [],
+        }
+
+        if selected_author_uid:
+            distinct_days = [
+                _safe_int(row["day"])
+                for row in conn.execute(
+                    """
+                    SELECT DISTINCT day
+                    FROM rounds
+                    WHERE (day < ? OR (day = ? AND hour <= ?))
+                    ORDER BY day ASC
+                    """,
+                    (filter_day, filter_day, filter_hour),
+                ).fetchall()
+            ]
+            def _author_cumulative_reach_series(author_uid):
+                author_uid = str(author_uid)
+                if author_uid in daily_reach_series_by_author:
+                    return daily_reach_series_by_author[author_uid]
+                running_recipients = set()
+                reach_series = []
+                for day in distinct_days:
+                    running_recipients.update(
+                        daily_unique_reach_by_author.get(author_uid, {}).get(day, set())
+                    )
+                    reach_series.append(len(running_recipients))
+                daily_reach_series_by_author[author_uid] = reach_series
+                return reach_series
+
+            reach_series = _author_cumulative_reach_series(selected_author_uid)
+
+            followers = set()
+            followees = set()
+            if "follow" in table_names:
+                round_column = _table_round_column(conn, "follow")
+                if round_column:
+                    follow_rows = conn.execute(
+                        f"""
+                        SELECT f.user_id, f.follower_id, COALESCE(f.action, 'follow') AS action
+                        FROM follow f
+                        JOIN rounds r ON r.id = f.{round_column}
+                        WHERE (r.day < ? OR (r.day = ? AND r.hour <= ?))
+                        ORDER BY r.day ASC, r.hour ASC, f.rowid ASC
+                        """,
+                        (filter_day, filter_day, filter_hour),
+                    ).fetchall()
+                    following_map = defaultdict(set)
+                    for row in follow_rows:
+                        source_uid = str(row["user_id"])
+                        target_uid = str(row["follower_id"])
+                        action = str(row["action"] or "follow").strip().lower()
+                        if action == "follow":
+                            following_map[source_uid].add(target_uid)
+                        elif action == "unfollow":
+                            following_map[source_uid].discard(target_uid)
+                    followees = set(following_map.get(selected_author_uid, set()))
+                    followers = {
+                        source_uid
+                        for source_uid, targets in following_map.items()
+                        if selected_author_uid in targets
+                    }
+
+            def _average_series_for_authors(author_uids):
+                ordered = [str(uid) for uid in sorted(set(author_uids))]
+                if not ordered:
+                    return []
+                all_series = [_author_cumulative_reach_series(uid) for uid in ordered]
+                if not all_series:
+                    return []
+                return [
+                    round(
+                        sum(series[index] for series in all_series) / len(all_series),
+                        2,
+                    )
+                    for index in range(len(distinct_days))
+                ]
+
+            running_seen_authors = set()
+            receiver_diversity_series = []
+            for day in distinct_days:
+                running_seen_authors.update(
+                    daily_unique_authors_seen_by_receiver.get(selected_author_uid, {}).get(
+                        day, set()
+                    )
+                )
+                receiver_diversity_series.append(len(running_seen_authors))
+
+            follower_avg_series = _average_series_for_authors(followers)
+            followee_avg_series = _average_series_for_authors(followees)
+
+            def _receiver_cumulative_diversity_series(receiver_uid):
+                receiver_uid = str(receiver_uid)
+                running_authors = set()
+                diversity_series = []
+                for day in distinct_days:
+                    running_authors.update(
+                        daily_unique_authors_seen_by_receiver.get(receiver_uid, {}).get(
+                            day, set()
+                        )
+                    )
+                    diversity_series.append(len(running_authors))
+                return diversity_series
+
+            def _average_receiver_diversity_series(receiver_uids):
+                ordered = [str(uid) for uid in sorted(set(receiver_uids))]
+                if not ordered:
+                    return []
+                all_series = [
+                    _receiver_cumulative_diversity_series(uid) for uid in ordered
+                ]
+                if not all_series:
+                    return []
+                return [
+                    round(
+                        sum(series[index] for series in all_series) / len(all_series),
+                        2,
+                    )
+                    for index in range(len(distinct_days))
+                ]
+
+            follower_receiver_diversity_avg_series = _average_receiver_diversity_series(
+                followers
+            )
+            followee_receiver_diversity_avg_series = _average_receiver_diversity_series(
+                followees
+            )
+
+            selected_post_counts = {
+                post_id: recommendation_count_by_post[post_id]
+                for post_id, author_uid in post_authors.items()
+                if author_uid == selected_author_uid and recommendation_count_by_post.get(post_id, 0) > 0
+            }
+            kde_xs, kde_ys = _gaussian_kde_series(selected_post_counts.values())
+            selected_author_panel.update(
+                {
+                    "selected_username": usernames.get(
+                        selected_author_uid, str(selected_author_uid)
+                    ),
+                    "unique_recipients": len(
+                        unique_recipients_by_author.get(selected_author_uid, set())
+                    ),
+                    "total_recommendations": recommendation_count_by_author.get(
+                        selected_author_uid, 0
+                    ),
+                    "recommended_posts": len(selected_post_counts),
+                    "followers_count": len(followers),
+                    "followees_count": len(followees),
+                    "reach_trend": {
+                        "title": "Unique Agents Reached by Recommendations",
+                        "description": "Cumulative reach of the selected author, plus the average cumulative reach of the authors following them and the authors they follow.",
+                        "type": "line",
+                        "labels": [f"Day {day}" for day in distinct_days],
+                        "datasets": (
+                            [
+                                {
+                                    "label": "Selected Author",
+                                    "data": reach_series,
+                                    "borderColor": "#2563eb",
+                                    "backgroundColor": "rgba(37, 99, 235, 0.14)",
+                                    "fill": True,
+                                    "pointRadius": 0,
+                                    "pointHoverRadius": 4,
+                                    "borderWidth": 2.5,
+                                    "tension": 0.28,
+                                }
+                            ]
+                            + (
+                                [
+                                    {
+                                        "label": "Avg. Reach of People Following This Author",
+                                        "data": follower_avg_series,
+                                        "borderColor": "#8b5cf6",
+                                        "backgroundColor": "transparent",
+                                        "fill": False,
+                                        "pointRadius": 0,
+                                        "pointHoverRadius": 4,
+                                        "borderWidth": 2.0,
+                                        "borderDash": [6, 4],
+                                        "tension": 0.28,
+                                    }
+                                ]
+                                if follower_avg_series
+                                else []
+                            )
+                            + (
+                                [
+                                    {
+                                        "label": "Avg. Reach of People This Author Follows",
+                                        "data": followee_avg_series,
+                                        "borderColor": "#10b981",
+                                        "backgroundColor": "transparent",
+                                        "fill": False,
+                                        "pointRadius": 0,
+                                        "pointHoverRadius": 4,
+                                        "borderWidth": 2.0,
+                                        "borderDash": [3, 3],
+                                        "tension": 0.28,
+                                    }
+                                ]
+                                if followee_avg_series
+                                else []
+                            )
+                        ),
+                        "options": {"beginAtZero": True},
+                    },
+                    "receiver_diversity_trend": {
+                        "title": "Unique Authors Recommended to Selected User",
+                        "description": "Cumulative number of distinct authors recommended to the selected user, plus the average cumulative diversity seen by the people following them and the people they follow.",
+                        "type": "line",
+                        "labels": [f"Day {day}" for day in distinct_days],
+                        "datasets": (
+                            [
+                                {
+                                    "label": "Selected User",
+                                    "data": receiver_diversity_series,
+                                    "borderColor": "#f59e0b",
+                                    "backgroundColor": "rgba(245, 158, 11, 0.14)",
+                                    "fill": True,
+                                    "pointRadius": 0,
+                                    "pointHoverRadius": 4,
+                                    "borderWidth": 2.5,
+                                    "tension": 0.28,
+                                }
+                            ]
+                            + (
+                                [
+                                    {
+                                        "label": "Avg. Diversity of People Following This Author",
+                                        "data": follower_receiver_diversity_avg_series,
+                                        "borderColor": "#8b5cf6",
+                                        "backgroundColor": "transparent",
+                                        "fill": False,
+                                        "pointRadius": 0,
+                                        "pointHoverRadius": 4,
+                                        "borderWidth": 2.0,
+                                        "borderDash": [6, 4],
+                                        "tension": 0.28,
+                                    }
+                                ]
+                                if follower_receiver_diversity_avg_series
+                                else []
+                            )
+                            + (
+                                [
+                                    {
+                                        "label": "Avg. Diversity of People This Author Follows",
+                                        "data": followee_receiver_diversity_avg_series,
+                                        "borderColor": "#10b981",
+                                        "backgroundColor": "transparent",
+                                        "fill": False,
+                                        "pointRadius": 0,
+                                        "pointHoverRadius": 4,
+                                        "borderWidth": 2.0,
+                                        "borderDash": [3, 3],
+                                        "tension": 0.28,
+                                    }
+                                ]
+                                if followee_receiver_diversity_avg_series
+                                else []
+                            )
+                        ),
+                        "options": {"beginAtZero": True},
+                    },
+                    "post_distribution": {
+                        "title": "Recommendation Distribution for Selected Author",
+                        "description": "Kernel density estimate of recommendation counts across the selected author’s posts.",
+                        "type": "line",
+                        "labels": [],
+                        "datasets": [
+                            {
+                                "label": "Density",
+                                "data": [
+                                    {"x": kde_xs[index], "y": kde_ys[index]}
+                                    for index in range(len(kde_xs))
+                                ],
+                                "borderColor": "#7c3aed",
+                                "backgroundColor": "rgba(124, 58, 237, 0.14)",
+                                "fill": True,
+                                "pointRadius": 0,
+                                "pointHoverRadius": 4,
+                                "borderWidth": 2.5,
+                                "tension": 0.28,
+                            }
+                        ],
+                        "options": {
+                            "beginAtZero": True,
+                            "legendDisplay": False,
+                            "xType": "linear",
+                            "xTitle": "Recommendation Count",
+                            "yTitle": "Density",
+                        },
+                    },
+                    "summary_rows": [
+                        [
+                            post_id,
+                            _truncate_text(post_texts.get(post_id, "")),
+                            count,
+                            len(
+                                per_post_recipients_by_author[selected_author_uid].get(
+                                    post_id, set()
+                                )
+                            ),
+                        ]
+                        for post_id, count in sorted(
+                            selected_post_counts.items(),
+                            key=lambda item: (-item[1], item[0]),
+                        )[:25]
+                    ],
+                }
+            )
+
+    stats = [
+        {
+            "key": "recommendation_events",
+            "label": "Recommendation Events",
+            "value": len(expanded_rows),
+            "color": "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+        },
+        {
+            "key": "recommended_slots",
+            "label": "Recommended Slots",
+            "value": sum(recommendation_count_by_post.values()),
+            "color": "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
+        },
+        {
+            "key": "distinct_posts",
+            "label": "Distinct Recommended Posts",
+            "value": len(recommendation_count_by_post),
+            "color": "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+        },
+        {
+            "key": "distinct_authors",
+            "label": "Authors Reached",
+            "value": len(recommendation_count_by_author),
+            "color": "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+        },
+        {
+            "key": "current_day",
+            "label": "Current Day",
+            "value": f"Day {filter_day}",
+            "color": "linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)",
+        },
+        {
+            "key": "current_hour",
+            "label": "Current Hour",
+            "value": f"Hour {filter_hour}",
+            "color": "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)",
+        },
+    ]
+
+    summary_rows = []
+    for uid in author_option_rows[:25]:
+        summary_rows.append(
+            [
+                usernames.get(uid, str(uid)),
+                recommendation_count_by_author[uid],
+                len(unique_recipients_by_author.get(uid, set())),
+                len(
+                    {
+                        post_id
+                        for post_id, author_uid in post_authors.items()
+                        if author_uid == uid and recommendation_count_by_post.get(post_id, 0) > 0
+                    }
+                ),
+                recsys_by_user.get(uid, "unknown"),
+            ]
+        )
+
+    return {
+        "page_title": "Recommendation System Evolution",
+        "title": "Recommendation System Evolution",
+        "description": "Analyze how content recommendation exposure is distributed across posts, authors, and recommender configurations.",
+        "stats": stats,
+        "distribution": {
+            "title": "Content Recsys Used",
+            "description": "Number of recommendation events served to receivers grouped by their configured content recommender.",
+            "type": "bar",
+            "labels": [item[0] for item in sorted_recsys],
+            "datasets": [
+                {
+                    "label": "Recommendation Events",
+                    "data": [item[1] for item in sorted_recsys],
+                    "backgroundColor": "#2563eb",
+                    "borderRadius": 8,
+                }
+            ],
+            "options": {"beginAtZero": True},
+        },
+        "trend": {
+            "title": "Distribution of Content Recommendation Counts",
+            "description": "Histogram of how many times individual posts have been recommended.",
+            **_frequency_histogram(
+                distribution_counts_by_post_frequency,
+                "Posts",
+                "#8b5cf6",
+            ),
+        },
+        "secondary": {
+            "title": "Distribution of Author Recommendation Counts",
+            "description": "Each bar is one author, and its height is the total number of times that author’s posts appeared in recommendation sets.",
+            "type": "bar",
+            "labels": [
+                usernames.get(uid, str(uid))
+                for uid in author_option_rows[:25]
+            ],
+            "datasets": [
+                {
+                    "label": "Recommendation Appearances",
+                    "data": [
+                        recommendation_count_by_author[uid]
+                        for uid in author_option_rows[:25]
+                    ],
+                    "backgroundColor": "#10b981",
+                    "borderRadius": 8,
+                    "maxBarThickness": 28,
+                }
+            ],
+            "options": {"beginAtZero": True, "legendDisplay": False},
+        },
+        "summary": {
+            "title": "Most Reached Authors",
+            "columns": [
+                "Author",
+                "Total Recommendations",
+                "Unique Recipients",
+                "Recommended Posts",
+                "Own Recsys",
+            ],
+            "rows": summary_rows,
+            "empty_message": "No recommendation events have been recorded up to the selected time.",
+        },
+        "recsys_author": selected_author_panel,
+    }
+
+
 _ANNOTATION_ANALYTICS_REGISTRY = {
     "toxicity": {
         "label": "toxicity",
@@ -5541,9 +7009,18 @@ def _render_annotation_analytics_page(expid, annotation_key):
     filter_day = request.args.get("day", type=int, default=max_day)
     filter_hour = request.args.get("hour", type=int, default=max_hour)
     threshold = request.args.get("threshold", type=float, default=0.1)
+    selected_target_uid = (
+        str(request.args.get("target_uid", "") or "").strip() or None
+    )
     if annotation_key == "toxicity":
         threshold = max(0.0, min(1.0, threshold))
-        analytics = config["builder"](db_path, filter_day, filter_hour, threshold)
+        analytics = config["builder"](
+            db_path,
+            filter_day,
+            filter_hour,
+            threshold,
+            selected_target_uid=selected_target_uid,
+        )
     else:
         analytics = config["builder"](db_path, filter_day, filter_hour)
 
@@ -5576,9 +7053,18 @@ def _annotation_analytics_json(expid, annotation_key):
     filter_day = request.args.get("day", type=int, default=1)
     filter_hour = request.args.get("hour", type=int, default=1)
     threshold = request.args.get("threshold", type=float, default=0.1)
+    selected_target_uid = (
+        str(request.args.get("target_uid", "") or "").strip() or None
+    )
     if annotation_key == "toxicity":
         threshold = max(0.0, min(1.0, threshold))
-        analytics = config["builder"](db_path, filter_day, filter_hour, threshold)
+        analytics = config["builder"](
+            db_path,
+            filter_day,
+            filter_hour,
+            threshold,
+            selected_target_uid=selected_target_uid,
+        )
     else:
         analytics = config["builder"](db_path, filter_day, filter_hour)
     return jsonify(
@@ -5709,6 +7195,172 @@ def topic_evolution_data(expid):
         filter_hour,
         selected_topic_ids=selected_topic_ids,
         trend_mode=trend_mode,
+    )
+    return jsonify(
+        {
+            "filter_day": filter_day,
+            "filter_hour": filter_hour,
+            "threshold": 0.1,
+            "analytics": analytics,
+        }
+    )
+
+
+@experiments.route("/admin/hashtag_evolution/<int:expid>")
+@login_required
+def hashtag_evolution(expid):
+    experiment, db_path, error_response = _load_network_experiment_context(
+        expid, require_manage=False
+    )
+    if error_response is not None:
+        return error_response
+
+    required_tables = {"post_hashtags", "hashtags", "post", "rounds", "user_mgmt"}
+    if not _experiment_db_has_required_tables(db_path, required_tables):
+        flash(
+            "The current experiment database does not contain hashtag-evolution tables.",
+            "warning",
+        )
+        return redirect(url_for("experiments.experiment_details", uid=expid))
+
+    max_day, max_hour = _get_annotation_max_round(db_path)
+    filter_day = request.args.get("day", type=int, default=max_day)
+    filter_hour = request.args.get("hour", type=int, default=max_hour)
+    trend_mode = str(request.args.get("trend_mode", "daily") or "").strip().lower()
+    selected_hashtag_ids = [
+        str(hashtag_id)
+        for hashtag_id in request.args.getlist("topic_ids")
+        if str(hashtag_id).strip()
+    ]
+    analytics = _build_hashtag_evolution_payload(
+        db_path,
+        filter_day,
+        filter_hour,
+        selected_hashtag_ids=selected_hashtag_ids,
+        trend_mode=trend_mode,
+    )
+
+    return render_template(
+        "admin/annotation_analytics.html",
+        experiment=experiment,
+        page_key="hashtag",
+        page_title="Hashtag Evolution",
+        max_day=max_day,
+        max_hour=max_hour,
+        filter_day=filter_day,
+        filter_hour=filter_hour,
+        threshold=0.1,
+        analytics=analytics,
+        data_url=url_for("experiments.hashtag_evolution_data", expid=expid),
+    )
+
+
+@experiments.route("/admin/hashtag_evolution_data/<int:expid>")
+@login_required
+def hashtag_evolution_data(expid):
+    experiment, db_path, error_response = _load_network_experiment_context(
+        expid, require_manage=False
+    )
+    if error_response is not None:
+        return jsonify({"error": "Hashtag evolution not available"}), 400
+
+    required_tables = {"post_hashtags", "hashtags", "post", "rounds", "user_mgmt"}
+    if not _experiment_db_has_required_tables(db_path, required_tables):
+        return jsonify({"error": "Hashtag-evolution tables not available"}), 400
+
+    filter_day = request.args.get("day", type=int, default=1)
+    filter_hour = request.args.get("hour", type=int, default=1)
+    trend_mode = str(request.args.get("trend_mode", "daily") or "").strip().lower()
+    selected_hashtag_ids = [
+        str(hashtag_id)
+        for hashtag_id in request.args.getlist("topic_ids")
+        if str(hashtag_id).strip()
+    ]
+    analytics = _build_hashtag_evolution_payload(
+        db_path,
+        filter_day,
+        filter_hour,
+        selected_hashtag_ids=selected_hashtag_ids,
+        trend_mode=trend_mode,
+    )
+    return jsonify(
+        {
+            "filter_day": filter_day,
+            "filter_hour": filter_hour,
+            "threshold": 0.1,
+            "analytics": analytics,
+        }
+    )
+
+
+@experiments.route("/admin/recsys_evolution/<int:expid>")
+@login_required
+def recsys_evolution(expid):
+    experiment, db_path, error_response = _load_network_experiment_context(
+        expid, require_manage=False
+    )
+    if error_response is not None:
+        return error_response
+
+    required_tables = {"recommendations", "post", "rounds", "user_mgmt"}
+    if not _experiment_db_has_required_tables(db_path, required_tables):
+        flash(
+            "The current experiment database does not contain recommendation-tracking tables.",
+            "warning",
+        )
+        return redirect(url_for("experiments.experiment_details", uid=expid))
+
+    max_day, max_hour = _get_annotation_max_round(db_path)
+    filter_day = request.args.get("day", type=int, default=max_day)
+    filter_hour = request.args.get("hour", type=int, default=max_hour)
+    selected_author_uid = (
+        str(request.args.get("target_uid", "") or "").strip() or None
+    )
+    analytics = _build_recsys_evolution_payload(
+        db_path,
+        filter_day,
+        filter_hour,
+        selected_author_uid=selected_author_uid,
+    )
+
+    return render_template(
+        "admin/annotation_analytics.html",
+        experiment=experiment,
+        page_key="recsys",
+        page_title="Recommendation System Evolution",
+        max_day=max_day,
+        max_hour=max_hour,
+        filter_day=filter_day,
+        filter_hour=filter_hour,
+        threshold=0.1,
+        analytics=analytics,
+        data_url=url_for("experiments.recsys_evolution_data", expid=expid),
+    )
+
+
+@experiments.route("/admin/recsys_evolution_data/<int:expid>")
+@login_required
+def recsys_evolution_data(expid):
+    experiment, db_path, error_response = _load_network_experiment_context(
+        expid, require_manage=False
+    )
+    if error_response is not None:
+        return jsonify({"error": "Recommendation analytics not available"}), 400
+
+    required_tables = {"recommendations", "post", "rounds", "user_mgmt"}
+    if not _experiment_db_has_required_tables(db_path, required_tables):
+        return jsonify({"error": "Recommendation-tracking tables not available"}), 400
+
+    filter_day = request.args.get("day", type=int, default=1)
+    filter_hour = request.args.get("hour", type=int, default=1)
+    selected_author_uid = (
+        str(request.args.get("target_uid", "") or "").strip() or None
+    )
+    analytics = _build_recsys_evolution_payload(
+        db_path,
+        filter_day,
+        filter_hour,
+        selected_author_uid=selected_author_uid,
     )
     return jsonify(
         {

@@ -21,6 +21,10 @@
   var networkStructureChart = null;
   var egoNetworkChart = null;
   var topicLifecycleChart = null;
+  var moderatorTargetChart = null;
+  var recsysAuthorReachChart = null;
+  var recsysAuthorReceiverDiversityChart = null;
+  var recsysAuthorDistributionChart = null;
 
   function allCharts() {
     return [
@@ -30,7 +34,11 @@
       componentShareChart,
       networkStructureChart,
       egoNetworkChart,
-      topicLifecycleChart
+      topicLifecycleChart,
+      moderatorTargetChart,
+      recsysAuthorReachChart,
+      recsysAuthorReceiverDiversityChart,
+      recsysAuthorDistributionChart
     ].filter(Boolean);
   }
 
@@ -227,6 +235,8 @@
     if (typeof extra.max === 'number') yScale.max = extra.max;
     if (typeof extra.xMin === 'number') xScale.min = extra.xMin;
     if (typeof extra.xMax === 'number') xScale.max = extra.xMax;
+    if (extra.xTitle) xScale.title = { display: true, text: extra.xTitle };
+    if (extra.yTitle) yScale.title = { display: true, text: extra.yTitle };
     if (stacked) yScale.stacked = true;
     if (stacked) xScale.stacked = true;
     if (extra.indexAxis === 'y') {
@@ -240,6 +250,8 @@
       };
       if (typeof extra.min === 'number') xScale.min = extra.min;
       if (typeof extra.max === 'number') xScale.max = extra.max;
+      if (extra.xTitle) xScale.title = { display: true, text: extra.xTitle };
+      if (extra.yTitle) yScale.title = { display: true, text: extra.yTitle };
     }
 
     return {
@@ -288,6 +300,183 @@
 
   function renderTopicLifecycleChart(definition) {
     return renderChart(topicLifecycleChart, 'annotationTopicLifecycleChart', definition);
+  }
+
+  function renderModeratorTargetChart(definition) {
+    var canvas = document.getElementById('toxModeratorTargetTrendChart');
+    if (!canvas || !definition) return moderatorTargetChart;
+    if (moderatorTargetChart) moderatorTargetChart.destroy();
+    var ctx = canvas.getContext('2d');
+    moderatorTargetChart = new Chart(ctx, {
+      data: {
+        labels: definition.timestamps || [],
+        datasets: [
+          {
+            type: 'line',
+            label: 'Average Target Toxicity',
+            data: ((definition.datasets || [])[0] || {}).data || [],
+            borderColor: 'rgba(14, 165, 233, 1)',
+            backgroundColor: 'rgba(14, 165, 233, 0.16)',
+            fill: false,
+            tension: 0.25,
+            yAxisID: 'y'
+          },
+          {
+            type: 'line',
+            label: 'Peak Target Toxicity',
+            data: ((definition.datasets || [])[1] || {}).data || [],
+            borderColor: 'rgba(239, 68, 68, 1)',
+            backgroundColor: 'rgba(239, 68, 68, 0.16)',
+            borderDash: [6, 4],
+            fill: false,
+            tension: 0.25,
+            yAxisID: 'y'
+          },
+          {
+            type: 'bar',
+            label: 'Moderator Actions',
+            data: ((definition.datasets || [])[2] || {}).data || [],
+            borderColor: 'rgba(16, 185, 129, 1)',
+            backgroundColor: 'rgba(16, 185, 129, 0.35)',
+            borderWidth: 1,
+            yAxisID: 'y1'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 0 },
+        plugins: {
+          legend: { display: true, position: 'bottom' },
+          tooltip: {
+            callbacks: {
+              title: function (context) {
+                var key = context[0].label;
+                var mapping = (definition.timestamp_mapping || {})[key];
+                if (mapping) return 'Day ' + mapping.day + ', Hour ' + mapping.hour;
+                return 'Step ' + key;
+              },
+              label: function (context) {
+                if (context.dataset.label === 'Moderator Actions') {
+                  return context.dataset.label + ': ' + Number(context.parsed.y || 0).toFixed(0);
+                }
+                return context.dataset.label + ': ' + Number(context.parsed.y || 0).toFixed(3);
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 1,
+            title: { display: true, text: 'Toxicity' }
+          },
+          y1: {
+            beginAtZero: true,
+            position: 'right',
+            grid: { drawOnChartArea: false },
+            ticks: { precision: 0 },
+            title: { display: true, text: 'Moderator Actions' }
+          },
+          x: {
+            title: { display: true, text: 'Simulation Days' }
+          }
+        }
+      }
+    });
+    return moderatorTargetChart;
+  }
+
+  function updateRecsysAuthorSection(panel) {
+    var select = document.getElementById('annotation-recsys-author-select');
+    if (select) {
+      var selected = panel.selected_uid || '';
+      var placeholderHtml = '<option value=""' + (selected ? '' : ' selected') + '>Choose an author…</option>';
+      select.innerHTML = placeholderHtml + (panel.options || []).map(function (option) {
+        var sel = option.uid === selected ? ' selected' : '';
+        return '<option value="' + option.uid + '"' + sel + '>' +
+          option.username + ' (' + option.recommendation_count + ' recs)' +
+          '</option>';
+      }).join('');
+    }
+
+    var emptyState = document.getElementById('recsys-author-empty-state');
+    var statsRow = document.getElementById('recsys-author-stats-row');
+    var reachColumn = document.getElementById('recsys-author-reach-column');
+    var receiverDiversityColumn = document.getElementById('recsys-author-receiver-diversity-column');
+    var distributionColumn = document.getElementById('recsys-author-distribution-column');
+    var tableRow = document.getElementById('recsys-author-table-row');
+    var hasSelection = !!panel.selected_uid;
+
+    if (emptyState) emptyState.style.display = hasSelection ? 'none' : '';
+    if (statsRow) statsRow.style.display = hasSelection ? '' : 'none';
+    if (reachColumn) reachColumn.style.display = hasSelection ? '' : 'none';
+    if (receiverDiversityColumn) receiverDiversityColumn.style.display = hasSelection ? '' : 'none';
+    if (distributionColumn) distributionColumn.style.display = hasSelection ? '' : 'none';
+    if (tableRow) tableRow.style.display = hasSelection ? '' : 'none';
+
+    var nameNode = document.getElementById('recsys-author-name');
+    var uniqueNode = document.getElementById('recsys-author-unique-recipients');
+    var totalNode = document.getElementById('recsys-author-total-recommendations');
+    var postsNode = document.getElementById('recsys-author-recommended-posts');
+    if (nameNode) nameNode.textContent = panel.selected_username || '—';
+    if (uniqueNode) uniqueNode.textContent = panel.unique_recipients || 0;
+    if (totalNode) totalNode.textContent = panel.total_recommendations || 0;
+    if (postsNode) postsNode.textContent = panel.recommended_posts || 0;
+
+    var reachTitle = document.getElementById('recsys-author-reach-title');
+    var reachDescription = document.getElementById('recsys-author-reach-description');
+    if (reachTitle && panel.reach_trend) reachTitle.textContent = panel.reach_trend.title || '';
+    if (reachDescription && panel.reach_trend) reachDescription.textContent = panel.reach_trend.description || '';
+    var distTitle = document.getElementById('recsys-author-distribution-title');
+    var distDescription = document.getElementById('recsys-author-distribution-description');
+    if (distTitle && panel.post_distribution) distTitle.textContent = panel.post_distribution.title || '';
+    if (distDescription && panel.post_distribution) distDescription.textContent = panel.post_distribution.description || '';
+    var receiverTitle = document.getElementById('recsys-author-receiver-diversity-title');
+    var receiverDescription = document.getElementById('recsys-author-receiver-diversity-description');
+    if (receiverTitle && panel.receiver_diversity_trend) receiverTitle.textContent = panel.receiver_diversity_trend.title || '';
+    if (receiverDescription && panel.receiver_diversity_trend) receiverDescription.textContent = panel.receiver_diversity_trend.description || '';
+
+    var summaryBody = document.getElementById('recsys-author-summary-body');
+    if (summaryBody) {
+      summaryBody.innerHTML = (panel.summary_rows || []).map(function (row) {
+        return '<tr>' + row.map(function (cell) {
+          return '<td>' + String(cell == null ? '' : cell) + '</td>';
+        }).join('') + '</tr>';
+      }).join('');
+    }
+
+    if (hasSelection) {
+      recsysAuthorReachChart = renderChart(
+        recsysAuthorReachChart,
+        'recsysAuthorReachChart',
+        panel.reach_trend || null
+      );
+      recsysAuthorReceiverDiversityChart = renderChart(
+        recsysAuthorReceiverDiversityChart,
+        'recsysAuthorReceiverDiversityChart',
+        panel.receiver_diversity_trend || null
+      );
+      recsysAuthorDistributionChart = renderChart(
+        recsysAuthorDistributionChart,
+        'recsysAuthorDistributionChart',
+        panel.post_distribution || null
+      );
+    } else {
+      if (recsysAuthorReachChart) {
+        recsysAuthorReachChart.destroy();
+        recsysAuthorReachChart = null;
+      }
+      if (recsysAuthorDistributionChart) {
+        recsysAuthorDistributionChart.destroy();
+        recsysAuthorDistributionChart = null;
+      }
+      if (recsysAuthorReceiverDiversityChart) {
+        recsysAuthorReceiverDiversityChart.destroy();
+        recsysAuthorReceiverDiversityChart = null;
+      }
+    }
   }
 
   function renderHeatmapChart(instance, canvasId, definition) {
@@ -549,6 +738,62 @@
     }
   }
 
+  function updateModeratorTargetSection(targets) {
+    var panel = document.getElementById('tox-moderator-target-panel');
+    if (!panel) return;
+
+    var options = targets.options || [];
+    var select = document.getElementById('tox-moderator-target-select');
+    var emptyState = document.getElementById('tox-moderator-empty-state');
+    var chartColumn = document.getElementById('tox-moderator-chart-column');
+    var eventsColumn = document.getElementById('tox-moderator-events-column');
+    var deployed = document.getElementById('tox-moderator-deployed');
+    if (deployed) deployed.textContent = targets.deployed_agents || 0;
+    if (!select) return;
+
+    var hasOptions = options.length > 0;
+    select.disabled = !hasOptions;
+    if (emptyState) emptyState.style.display = hasOptions ? 'none' : '';
+    if (chartColumn) chartColumn.style.display = hasOptions ? '' : 'none';
+    if (eventsColumn) eventsColumn.style.display = hasOptions ? '' : 'none';
+
+    var currentSelection = targets.selected_uid || '';
+    select.innerHTML = options.map(function (option) {
+      var selected = option.uid === currentSelection ? ' selected' : '';
+      return '<option value="' + option.uid + '"' + selected + '>' +
+        option.username + ' (' + option.moderation_count + ' interventions)</option>';
+    }).join('');
+
+    var targetName = document.getElementById('tox-moderator-target-name');
+    var interactionCount = document.getElementById('tox-moderator-interaction-count');
+    var moderatorNames = document.getElementById('tox-moderator-agent-names');
+    if (targetName) targetName.textContent = hasOptions ? (targets.selected_username || '—') : '—';
+    if (interactionCount) interactionCount.textContent = hasOptions ? (targets.moderation_count || 0) : 0;
+    if (moderatorNames) moderatorNames.textContent = hasOptions ? ((targets.moderator_usernames || []).join(', ') || '—') : '—';
+
+    var eventTable = document.getElementById('tox-moderator-events-body');
+    if (eventTable) {
+      var events = targets.interaction_events || [];
+      eventTable.innerHTML = events.length
+        ? events.map(function (event) {
+            return '<tr>' +
+              '<td>Day ' + event.day + ', Hour ' + event.hour + '</td>' +
+              '<td>' + String(event.moderation_type || '').replace(/_/g, ' ').replace(/\b\w/g, function (ch) { return ch.toUpperCase(); }) + '</td>' +
+              '<td>' + event.moderation_count + '</td>' +
+              '<td>' + (((event.moderator_usernames || []).join(', ')) || '—') + '</td>' +
+              '</tr>';
+          }).join('')
+        : '<tr><td colspan="4" class="has-text-centered has-text-grey">No moderation actions recorded.</td></tr>';
+    }
+
+    if (hasOptions) {
+      renderModeratorTargetChart(targets.trend_data || { timestamps: [], timestamp_mapping: {}, datasets: [] });
+    } else if (moderatorTargetChart) {
+      moderatorTargetChart.destroy();
+      moderatorTargetChart = null;
+    }
+  }
+
   function renderTexts(analytics) {
     var mappings = [
       ['annotation-distribution-title', analytics.distribution.title],
@@ -569,7 +814,7 @@
   }
 
   function syncTopicHeatmapContainers(analytics) {
-    if (config.pageKey !== 'topic') return;
+    if (config.pageKey !== 'topic' && config.pageKey !== 'hashtag') return;
     var rowCount = Math.max(
       (((analytics || {}).trend || {}).row_labels || []).length,
       (((analytics || {}).secondary || {}).row_labels || []).length,
@@ -625,28 +870,39 @@
       if (egoTitle && analytics.ego_network) egoTitle.textContent = analytics.ego_network.title || '';
       if (egoDescription && analytics.ego_network) egoDescription.textContent = analytics.ego_network.description || '';
     }
-    if (config.pageKey === 'topic') {
+    if (config.pageKey === 'topic' || config.pageKey === 'hashtag') {
       topicLifecycleChart = renderTopicLifecycleChart(analytics.topic_lifecycle || null);
       var topicLifecycleTitle = document.getElementById('annotation-topic-lifecycle-title');
       var topicLifecycleDescription = document.getElementById('annotation-topic-lifecycle-description');
       if (topicLifecycleTitle && analytics.topic_lifecycle) topicLifecycleTitle.textContent = analytics.topic_lifecycle.title || '';
       if (topicLifecycleDescription && analytics.topic_lifecycle) topicLifecycleDescription.textContent = analytics.topic_lifecycle.description || '';
       var topicSelect = document.getElementById('annotation-topic-select');
-      if (topicSelect && Array.isArray(analytics.topic_options)) {
+      if (topicSelect && Array.isArray(analytics.selector_options || analytics.topic_options)) {
         var selectedMap = {};
-        (analytics.selected_topic_ids || []).forEach(function (topicId) {
+        (analytics.selected_ids || analytics.selected_topic_ids || []).forEach(function (topicId) {
           selectedMap[String(topicId)] = true;
         });
-        topicSelect.innerHTML = analytics.topic_options.map(function (option) {
-          var selected = selectedMap[String(option.topic_id)] ? ' selected' : '';
-          var label = String(option.topic_name) + ' (' + String(option.total_volume || 0) + ')';
-          return '<option value="' + String(option.topic_id) + '"' + selected + '>' + label + '</option>';
+        (analytics.selector_options || analytics.topic_options || []).forEach(function (option) {
+          if (option.topic_id != null && option.value == null) {
+            option.value = option.topic_id;
+            option.label = String(option.topic_name) + ' (' + String(option.total_volume || 0) + ')';
+          }
+        });
+        topicSelect.innerHTML = (analytics.selector_options || analytics.topic_options).map(function (option) {
+          var selected = selectedMap[String(option.value)] ? ' selected' : '';
+          return '<option value="' + String(option.value) + '"' + selected + '>' + String(option.label) + '</option>';
         }).join('');
       }
       var topicTrendModeSelect = document.getElementById('annotation-topic-trend-mode-select');
       if (topicTrendModeSelect && analytics.trend_mode) {
         topicTrendModeSelect.value = analytics.trend_mode;
       }
+    }
+    if (config.pageKey === 'toxicity' && analytics.moderator_targets) {
+      updateModeratorTargetSection(analytics.moderator_targets);
+    }
+    if (config.pageKey === 'recsys' && analytics.recsys_author) {
+      updateRecsysAuthorSection(analytics.recsys_author);
     }
     renderSummary(analytics.summary || { columns: [], rows: [], empty_message: '' });
     resizeAllCharts();
@@ -699,6 +955,8 @@
     var granularitySelect = document.getElementById('annotation-network-granularity-select');
     var topicSelect = document.getElementById('annotation-topic-select');
     var topicTrendModeSelect = document.getElementById('annotation-topic-trend-mode-select');
+    var moderatorTargetSelect = document.getElementById('tox-moderator-target-select');
+    var recsysAuthorSelect = document.getElementById('annotation-recsys-author-select');
     setLoading(true);
     var url = config.dataUrl + '?day=' + day + '&hour=' + hour;
     if (thresholdInput) {
@@ -713,13 +971,19 @@
     if (config.pageKey === 'network' && egoSelect && egoSelect.value) {
       url += '&target_uid=' + encodeURIComponent(String(egoSelect.value));
     }
-    if (config.pageKey === 'topic' && topicSelect) {
+    if ((config.pageKey === 'topic' || config.pageKey === 'hashtag') && topicSelect) {
       Array.prototype.slice.call(topicSelect.selectedOptions || []).forEach(function (option) {
         url += '&topic_ids=' + encodeURIComponent(String(option.value));
       });
     }
-    if (config.pageKey === 'topic' && topicTrendModeSelect && topicTrendModeSelect.value) {
+    if ((config.pageKey === 'topic' || config.pageKey === 'hashtag') && topicTrendModeSelect && topicTrendModeSelect.value) {
       url += '&trend_mode=' + encodeURIComponent(String(topicTrendModeSelect.value));
+    }
+    if (config.pageKey === 'toxicity' && moderatorTargetSelect && moderatorTargetSelect.value) {
+      url += '&target_uid=' + encodeURIComponent(String(moderatorTargetSelect.value));
+    }
+    if (config.pageKey === 'recsys' && recsysAuthorSelect && recsysAuthorSelect.value) {
+      url += '&target_uid=' + encodeURIComponent(String(recsysAuthorSelect.value));
     }
     fetch(url)
       .then(function (response) { return response.json(); })
@@ -855,6 +1119,20 @@
     var topicTrendModeSelect = document.getElementById('annotation-topic-trend-mode-select');
     if (topicTrendModeSelect) {
       topicTrendModeSelect.addEventListener('change', function () {
+        fetchAnnotationAnalytics(state.currentDay, state.currentHour);
+      });
+    }
+
+    var moderatorTargetSelect = document.getElementById('tox-moderator-target-select');
+    if (moderatorTargetSelect) {
+      moderatorTargetSelect.addEventListener('change', function () {
+        fetchAnnotationAnalytics(state.currentDay, state.currentHour);
+      });
+    }
+
+    var recsysAuthorSelect = document.getElementById('annotation-recsys-author-select');
+    if (recsysAuthorSelect) {
+      recsysAuthorSelect.addEventListener('change', function () {
         fetchAnnotationAnalytics(state.currentDay, state.currentHour);
       });
     }
