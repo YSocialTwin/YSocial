@@ -4,7 +4,6 @@ import pytest
 
 from y_web.src.data_access import users as users_module
 
-
 pytestmark = pytest.mark.unit
 
 

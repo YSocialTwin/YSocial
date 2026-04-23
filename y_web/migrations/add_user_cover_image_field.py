@@ -114,13 +114,11 @@ def migrate_postgresql_server(db_config):
     try:
         conn = psycopg2.connect(**db_config)
         cursor = conn.cursor()
-        cursor.execute(
-            """
+        cursor.execute("""
             SELECT column_name
             FROM information_schema.columns
             WHERE table_name = 'user_mgmt' AND column_name = 'cover_image'
-            """
-        )
+            """)
 
         if cursor.fetchone() is None:
             print("Adding 'cover_image' column to user_mgmt table in PostgreSQL...")

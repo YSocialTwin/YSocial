@@ -158,12 +158,12 @@ def create_postgresql_db(app):
                     "joined_on": 0,
                     "frecsys_type": "default",
                     "round_actions": 3,
-                            "toxicity": "none",
-                            "is_page": 0,
-                            "daily_activity_level": 1,
-                            "cover_image": random_cover_image_url(),
-                        },
-                    )
+                    "toxicity": "none",
+                    "is_page": 0,
+                    "daily_activity_level": 1,
+                    "cover_image": random_cover_image_url(),
+                },
+            )
 
         dummy_engine.dispose()
 

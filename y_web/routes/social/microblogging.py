@@ -20,11 +20,11 @@ from y_web.routes.social.helpers import (
     is_admin,
 )
 from y_web.src.data_access import (
-    get_safe_profile_pic,
     get_posts_associated_to_emotion,
     get_posts_associated_to_hashtags,
     get_posts_associated_to_interest,
     get_report_count,
+    get_safe_profile_pic,
     get_trending_emotions,
     get_trending_hashtags,
     get_trending_topics,
@@ -532,7 +532,9 @@ def get_friends(exp_id, user_id, page=1):
     except (ValueError, TypeError):
         # Keep as string if it's a UUID
         pass
-    active_tab = str(request.args.get("tab", "followers") or "followers").strip().lower()
+    active_tab = (
+        str(request.args.get("tab", "followers") or "followers").strip().lower()
+    )
     if active_tab not in {"followers", "followees"}:
         active_tab = "followers"
 
@@ -548,7 +550,9 @@ def get_friends(exp_id, user_id, page=1):
 
     logged_id = cu.id if cu else current_user.id
     viewed_profile_pic = (
-        get_safe_profile_pic(viewed_user.username, getattr(viewed_user, "is_page", 0) or 0)
+        get_safe_profile_pic(
+            viewed_user.username, getattr(viewed_user, "is_page", 0) or 0
+        )
         if viewed_user
         else ""
     )
@@ -596,7 +600,9 @@ def api_friends(exp_id, user_id, page=1):
     except (ValueError, TypeError):
         pass
 
-    active_tab = str(request.args.get("tab", "followers") or "followers").strip().lower()
+    active_tab = (
+        str(request.args.get("tab", "followers") or "followers").strip().lower()
+    )
     if active_tab not in {"followers", "followees"}:
         active_tab = "followers"
 

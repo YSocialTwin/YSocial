@@ -38,7 +38,10 @@ def test_profile_follow_button_targets_viewed_user():
     assert ".ys-profile-hero-stat__value" in css
     assert ".ys-profile-hero-actions-row {\n  position: absolute;" in css
     assert "ys-profile-hero-kicker" not in template
-    assert "data-demo-src=\"{{ cover_image if cover_image else url_for('static', filename='assets/img/demo/bg/4.png') }}\"" in template
+    assert (
+        "data-demo-src=\"{{ cover_image if cover_image else url_for('static', filename='assets/img/demo/bg/4.png') }}\""
+        in template
+    )
     assert "Unfollow" in template
     assert "Follow" in template
 
@@ -153,13 +156,15 @@ def test_friends_template_uses_compact_cards_and_tab_aware_pagination():
     assert 'data-friends-api="/{{exp_id}}/api/friends/{{ user_id }}"' in template
     assert "?tab=followers" in panel_template
     assert "?tab=followees" in panel_template
-    assert '?tab={{ active_tab }}' in panel_template
-    assert "active_tab = str(request.args.get(\"tab\", \"followers\")" in source
+    assert "?tab={{ active_tab }}" in panel_template
+    assert 'active_tab = str(request.args.get("tab", "followers")' in source
     assert "def _build_friends_view_model(user_id, page, active_tab):" in source
-    assert 'active_cards = followers if active_tab == "followers" else followees' in source
-    assert 'has_next_page = current_page < total_pages' in source
-    assert 'def api_friends(exp_id, user_id, page=1):' in source
-    assert 'data-friends-url=' in panel_template
+    assert (
+        'active_cards = followers if active_tab == "followers" else followees' in source
+    )
+    assert "has_next_page = current_page < total_pages" in source
+    assert "def api_friends(exp_id, user_id, page=1):" in source
+    assert "data-friends-url=" in panel_template
     assert "window.history.pushState" in js
     assert "fetch(apiUrl" in js
     assert ".ys-friends-grid" in css

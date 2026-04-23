@@ -24,7 +24,9 @@ def migrate_sqlite(db_path):
         columns = [column[1] for column in cursor.fetchall()]
 
         if "cover_image" not in columns:
-            cursor.execute("ALTER TABLE agents ADD COLUMN cover_image VARCHAR(400) DEFAULT ''")
+            cursor.execute(
+                "ALTER TABLE agents ADD COLUMN cover_image VARCHAR(400) DEFAULT ''"
+            )
             conn.commit()
 
         conn.close()
@@ -42,15 +44,15 @@ def migrate_postgresql(host, port, database, user, password):
             host=host, port=port, dbname=database, user=user, password=password
         )
         cursor = conn.cursor()
-        cursor.execute(
-            """
+        cursor.execute("""
             SELECT column_name
             FROM information_schema.columns
             WHERE table_name = 'agents' AND column_name = 'cover_image'
-            """
-        )
+            """)
         if cursor.fetchone() is None:
-            cursor.execute("ALTER TABLE agents ADD COLUMN cover_image VARCHAR(400) DEFAULT ''")
+            cursor.execute(
+                "ALTER TABLE agents ADD COLUMN cover_image VARCHAR(400) DEFAULT ''"
+            )
             conn.commit()
         conn.close()
         return True

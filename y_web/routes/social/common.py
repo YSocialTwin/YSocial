@@ -153,7 +153,9 @@ def _latest_stress_reward_indicator(user_id):
 
     for variable in ("stress", "reward"):
         row = (
-            StressReward.query.filter_by(uid=user_id, variable=variable, type="aggregate")
+            StressReward.query.filter_by(
+                uid=user_id, variable=variable, type="aggregate"
+            )
             .order_by(StressReward.tid.desc())
             .first()
         )
