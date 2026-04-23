@@ -651,22 +651,23 @@
  <div class="help-block ys-flex-1">
 
                             <p>
-                                <b>Server & Analysis Controls</b><br>
-                                Unified control panel for managing the simulation server, web interface, and data analysis tools.<br><br>
- <i class="mdi mdi-tune ys-icon-md"></i> First update <b>Experiment Configuration</b> to unlock execution controls<br>
- <i class="mdi mdi-select-all ys-icon-md"></i> Load experiment's web interface is available before the unlock step<br>
- <i class="mdi mdi-play-box-outline ys-icon-md"></i> Start the experiment server only after configuration is updated<br>
- <i class="mdi mdi-stop ys-icon-md"></i> Stop the experiment server only after configuration is updated<br>
- <i class="mdi mdi-plus-box ys-icon-md"></i> Create/run clients only after configuration is updated<br>
-                                {% if notebooks %}
- <i class="mdi mdi-flask-outline ys-icon-md"></i> Start/open JupyterLab remains available during the configuration step<br>
-                                {% endif %}
+                                <b>Experiment Overview</b><br>
+                                Use the left column to inspect metadata, update topics, toggle annotations, and open advanced configuration such as prompts, embeddings, and stress/reward settings.<br><br>
+ <i class="mdi mdi-tune ys-icon-md"></i> Update runtime annotations and memory in <b>Experiment Configuration</b><br>
+ <i class="mdi mdi-shape-outline ys-icon-md"></i> Maintain the active simulation topics from the overview card<br>
+ <i class="mdi mdi-credit-card ys-icon-md"></i> Open prompt and embedding settings from <b>Additional Configuration</b><br>
+ <i class="mdi mdi-download ys-icon-md"></i> Use <b>Management</b> to download or remove the experiment
                             </p>
                             <hr>
                             <p>
-                                <b>LLM Prompts</b><br>
-                                Define the instructions that LLM agents follow during the experiment.<br><br>
- <i class="mdi mdi-credit-card ys-icon-md"></i> Edit prompts to customize agent behavior
+                                <b>Server, Clients, and Analytics</b><br>
+                                The center column controls execution and the lower sections expose logs and diagnostics for both the server and active clients.<br><br>
+ <i class="mdi mdi-play-box-outline ys-icon-md"></i> Start or stop the server from <b>Server & Analysis Controls</b><br>
+ <i class="mdi mdi-plus-box ys-icon-md"></i> Launch clients and open the web interface from the same control panel<br>
+ <i class="mdi mdi-chart-line ys-icon-md"></i> Use <b>Request Logs Analysis</b> and <b>Client Logs Analysis</b> to inspect runtime behavior
+                                {% if notebooks %}
+ <br><i class="mdi mdi-flask-outline ys-icon-md"></i> Open JupyterLab for ad hoc inspection and notebook-based analysis
+                                {% endif %}
                             </p>
 
                         </div>

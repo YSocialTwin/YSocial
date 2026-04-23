@@ -430,7 +430,7 @@ def test_forum_experiment_details_uses_supported_switch_markup_for_avatar_toggle
     assert '<span class="check"></span>' not in forum
 
 
-def test_experiment_details_quick_guide_mentions_configuration_first_pipeline():
+def test_experiment_details_quick_guide_mentions_current_page_sections():
     standard = Path(
         "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/experiment_details.html"
     ).read_text(encoding="utf-8")
@@ -438,11 +438,13 @@ def test_experiment_details_quick_guide_mentions_configuration_first_pipeline():
         "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/experiment_details_forum.html"
     ).read_text(encoding="utf-8")
 
-    expected = (
-        "First update <b>Experiment Configuration</b> to unlock execution controls"
-    )
-    assert expected in standard
-    assert expected in forum
+    assert "<b>Experiment Overview</b>" in standard
+    assert "<b>Server, Clients, and Analytics</b>" in standard
+    assert "Use <b>Request Logs Analysis</b> and <b>Client Logs Analysis</b>" in standard
+
+    assert "<b>Experiment Overview</b>" in forum
+    assert "<b>Server, Clients, and Analytics</b>" in forum
+    assert "Configure RSS/image feeds and retrieval limits" in forum
 
 
 def test_client_creation_pages_use_experiment_memory_gate():
