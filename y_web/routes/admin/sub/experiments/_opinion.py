@@ -3979,8 +3979,6 @@ def _build_network_analytics_payload(
         selected_uid = str(selected_uid or "").strip() or None
         if selected_uid and selected_uid not in graph:
             selected_uid = None
-        if not selected_uid and ego_candidates:
-            selected_uid = ego_candidates[0]
 
         active_neighbors = set()
         appeared_neighbors_current = set()

@@ -363,6 +363,7 @@
                             <div class="annotation-ego-actions">
                                 <div class="select annotation-ego-select-wrap">
                                     <select id="annotation-network-ego-select">
+                                        <option value="" {% if not analytics.ego_network.selected_uid %}selected{% endif %}>Choose an account…</option>
                                         {% for option in analytics.ego_network.options %}
                                         <option value="{{ option.uid }}" {% if option.uid == analytics.ego_network.selected_uid %}selected{% endif %}>
                                             {{ option.username }} (deg {{ option.degree }})

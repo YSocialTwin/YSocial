@@ -95,6 +95,8 @@
     id: 'ysEgoLabelPlugin',
     afterDatasetsDraw: function (chart, args, pluginOptions) {
       if (!pluginOptions || !pluginOptions.nodes || !pluginOptions.nodes.length) return;
+      var maxVisibleLabels = Number(pluginOptions.maxVisibleLabels || 18);
+      if ((pluginOptions.nodes || []).length > maxVisibleLabels) return;
       var xScale = chart.scales.x;
       var yScale = chart.scales.y;
       if (!xScale || !yScale) return;
@@ -502,7 +504,8 @@
             nodeLookup: nodeLookup
           },
           ysEgoLabelPlugin: {
-            nodes: nodes
+            nodes: nodes,
+            maxVisibleLabels: 18
           }
         },
         scales: {
@@ -601,7 +604,8 @@
       var egoSelect = document.getElementById('annotation-network-ego-select');
       if (egoSelect && analytics.ego_network) {
         var selected = analytics.ego_network.selected_uid || '';
-        egoSelect.innerHTML = (analytics.ego_network.options || []).map(function (option) {
+        var placeholderHtml = '<option value=""' + (selected ? '' : ' selected') + '>Choose an account…</option>';
+        egoSelect.innerHTML = placeholderHtml + (analytics.ego_network.options || []).map(function (option) {
           var sel = option.uid === selected ? ' selected' : '';
           return '<option value="' + option.uid + '"' + sel + '>' +
             option.username + ' (deg ' + option.degree + ')' +
