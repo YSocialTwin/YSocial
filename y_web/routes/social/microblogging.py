@@ -13,9 +13,9 @@ from flask_login import current_user, login_required
 from y_web import db
 from y_web.routes.social._blueprint import main
 from y_web.routes.social.helpers import (
-    build_thread_tree,
     _forum_logged_user,
     _get_discussions,
+    build_thread_tree,
     get_adhoc_agent_badge,
     is_admin,
 )
@@ -736,9 +736,7 @@ def get_thread(exp_id, post_id):
             list(Reactions.query.filter_by(post_id=root_post.id, type="like").all())
         ),
         "dislikes": len(
-            list(
-                Reactions.query.filter_by(post_id=root_post.id, type="dislike").all()
-            )
+            list(Reactions.query.filter_by(post_id=root_post.id, type="dislike").all())
         ),
         "is_liked": Reactions.query.filter_by(
             post_id=root_post.id, user_id=exp_user_id, type="like"

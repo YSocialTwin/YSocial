@@ -257,20 +257,20 @@ def test_experiment_details_pages_expose_configuration_block_consistently():
     assert 'name="stress_reward_enabled"' in standard
     assert 'name="stress_reward_enabled"' in forum
     assert "Additional Configuration" in standard
-    assert '/admin/stress_reward_settings/{{ experiment.idexp }}' in standard
-    assert '/admin/stress_reward_settings/{{ experiment.idexp }}' in forum
-    assert '/admin/stress_reward_evolution/{{ experiment.idexp }}' in standard
-    assert '/admin/stress_reward_evolution/{{ experiment.idexp }}' in forum
-    assert '/admin/network_analysis/{{ experiment.idexp }}' in standard
-    assert '/admin/network_analysis/{{ experiment.idexp }}' in forum
-    assert '/admin/topic_evolution/{{ experiment.idexp }}' in standard
-    assert '/admin/topic_evolution/{{ experiment.idexp }}' in forum
-    assert '/admin/toxicity_evolution/{{ experiment.idexp }}' in standard
-    assert '/admin/toxicity_evolution/{{ experiment.idexp }}' in forum
-    assert '/admin/sentiment_evolution/{{ experiment.idexp }}' in standard
-    assert '/admin/sentiment_evolution/{{ experiment.idexp }}' in forum
-    assert '/admin/emotion_statistics/{{ experiment.idexp }}' in standard
-    assert '/admin/emotion_statistics/{{ experiment.idexp }}' in forum
+    assert "/admin/stress_reward_settings/{{ experiment.idexp }}" in standard
+    assert "/admin/stress_reward_settings/{{ experiment.idexp }}" in forum
+    assert "/admin/stress_reward_evolution/{{ experiment.idexp }}" in standard
+    assert "/admin/stress_reward_evolution/{{ experiment.idexp }}" in forum
+    assert "/admin/network_analysis/{{ experiment.idexp }}" in standard
+    assert "/admin/network_analysis/{{ experiment.idexp }}" in forum
+    assert "/admin/topic_evolution/{{ experiment.idexp }}" in standard
+    assert "/admin/topic_evolution/{{ experiment.idexp }}" in forum
+    assert "/admin/toxicity_evolution/{{ experiment.idexp }}" in standard
+    assert "/admin/toxicity_evolution/{{ experiment.idexp }}" in forum
+    assert "/admin/sentiment_evolution/{{ experiment.idexp }}" in standard
+    assert "/admin/sentiment_evolution/{{ experiment.idexp }}" in forum
+    assert "/admin/emotion_statistics/{{ experiment.idexp }}" in standard
+    assert "/admin/emotion_statistics/{{ experiment.idexp }}" in forum
     assert 'name="sr_churn_enabled"' not in standard
     assert 'name="memory_enabled"' in standard
     assert 'name="memory_enabled"' in forum
@@ -300,7 +300,10 @@ def test_stress_reward_settings_page_exists_as_dedicated_admin_view():
     ).read_text(encoding="utf-8")
 
     assert "Stress / Reward Settings" in template
-    assert 'action="/admin/update_stress_reward_settings/{{ experiment.idexp }}"' in template
+    assert (
+        'action="/admin/update_stress_reward_settings/{{ experiment.idexp }}"'
+        in template
+    )
     assert 'name="sr_churn_enabled"' in template
     assert 'name="sr_coupling_reward_buffers_stress_alpha"' in template
     assert 'name="sr_event_{{ family }}_{{ subtype }}_stress"' in template
@@ -315,9 +318,7 @@ def test_stress_reward_evolution_page_exists_as_dedicated_admin_view():
     route_source = Path(
         "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_opinion.py"
     ).read_text(encoding="utf-8")
-    script = (
-        STATIC_JS_DIR / "admin-stress-reward.js"
-    ).read_text(encoding="utf-8")
+    script = (STATIC_JS_DIR / "admin-stress-reward.js").read_text(encoding="utf-8")
 
     assert "Stress / Reward Evolution" in template
     assert 'id="stressDistributionChart"' in template
@@ -345,9 +346,9 @@ def test_annotation_analytics_pages_exist_as_dedicated_admin_views():
     route_source = Path(
         "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_opinion.py"
     ).read_text(encoding="utf-8")
-    script = (
-        STATIC_JS_DIR / "admin-annotation-analytics.js"
-    ).read_text(encoding="utf-8")
+    script = (STATIC_JS_DIR / "admin-annotation-analytics.js").read_text(
+        encoding="utf-8"
+    )
 
     assert "YS_DATA_ANNOTATION_ANALYTICS" in template
     assert 'id="annotationDistributionChart"' in template

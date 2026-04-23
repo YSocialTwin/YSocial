@@ -4,15 +4,13 @@ import pytest
 
 from y_web.routes.admin.sub.experiments._opinion import _build_network_analytics_payload
 
-
 pytestmark = pytest.mark.unit
 
 
 def test_network_analysis_extends_flat_timeline_after_last_follow_event(tmp_path):
     db_path = tmp_path / "network.db"
     with sqlite3.connect(db_path) as conn:
-        conn.executescript(
-            """
+        conn.executescript("""
             CREATE TABLE user_mgmt (
                 id TEXT PRIMARY KEY,
                 username TEXT NOT NULL
@@ -29,8 +27,7 @@ def test_network_analysis_extends_flat_timeline_after_last_follow_event(tmp_path
                 action TEXT,
                 round TEXT
             );
-            """
-        )
+            """)
         conn.executemany(
             "INSERT INTO user_mgmt(id, username) VALUES (?, ?)",
             [("u1", "alice"), ("u2", "bob")],
@@ -45,7 +42,9 @@ def test_network_analysis_extends_flat_timeline_after_last_follow_event(tmp_path
         )
         conn.commit()
 
-    analytics = _build_network_analytics_payload(str(db_path), filter_day=3, filter_hour=1)
+    analytics = _build_network_analytics_payload(
+        str(db_path), filter_day=3, filter_hour=1
+    )
 
     assert analytics["secondary"]["labels"] == ["Day 1", "Day 2", "Day 3"]
     assert analytics["secondary"]["datasets"][1]["data"] == [1, 1, 1]
@@ -59,8 +58,7 @@ def test_network_analysis_extends_flat_timeline_after_last_follow_event(tmp_path
 def test_network_analysis_supports_mention_network(tmp_path):
     db_path = tmp_path / "mention_network.db"
     with sqlite3.connect(db_path) as conn:
-        conn.executescript(
-            """
+        conn.executescript("""
             CREATE TABLE user_mgmt (
                 id TEXT PRIMARY KEY,
                 username TEXT NOT NULL
@@ -82,8 +80,7 @@ def test_network_analysis_supports_mention_network(tmp_path):
                 round TEXT NOT NULL,
                 answered INTEGER
             );
-            """
-        )
+            """)
         conn.executemany(
             "INSERT INTO user_mgmt(id, username) VALUES (?, ?)",
             [("u1", "alice"), ("u2", "bob"), ("u3", "carol")],
@@ -107,7 +104,10 @@ def test_network_analysis_supports_mention_network(tmp_path):
     )
 
     assert analytics["network_type"] == "mention"
-    assert analytics["description"] == "Track how the mention network evolves across the experiment."
+    assert (
+        analytics["description"]
+        == "Track how the mention network evolves across the experiment."
+    )
     assert analytics["secondary"]["datasets"][1]["label"] == "Mention Edges"
     assert analytics["secondary"]["datasets"][1]["data"] == [1, 2, 2]
     assert analytics["ego_network"]["title"] == "Mention Network Ego Network Over Time"
@@ -116,8 +116,7 @@ def test_network_analysis_supports_mention_network(tmp_path):
 def test_network_analysis_supports_hourly_granularity(tmp_path):
     db_path = tmp_path / "hourly_network.db"
     with sqlite3.connect(db_path) as conn:
-        conn.executescript(
-            """
+        conn.executescript("""
             CREATE TABLE user_mgmt (
                 id TEXT PRIMARY KEY,
                 username TEXT NOT NULL
@@ -134,8 +133,7 @@ def test_network_analysis_supports_hourly_granularity(tmp_path):
                 action TEXT,
                 round TEXT
             );
-            """
-        )
+            """)
         conn.executemany(
             "INSERT INTO user_mgmt(id, username) VALUES (?, ?)",
             [("u1", "alice"), ("u2", "bob")],
@@ -155,15 +153,18 @@ def test_network_analysis_supports_hourly_granularity(tmp_path):
     )
 
     assert analytics["granularity"] == "hour"
-    assert analytics["secondary"]["labels"] == ["Day 1, Hour 1", "Day 1, Hour 2", "Day 1, Hour 3"]
+    assert analytics["secondary"]["labels"] == [
+        "Day 1, Hour 1",
+        "Day 1, Hour 2",
+        "Day 1, Hour 3",
+    ]
     assert analytics["secondary"]["datasets"][1]["data"] == [1, 1, 2]
 
 
 def test_ego_network_includes_alter_alter_edges(tmp_path):
     db_path = tmp_path / "ego_network.db"
     with sqlite3.connect(db_path) as conn:
-        conn.executescript(
-            """
+        conn.executescript("""
             CREATE TABLE user_mgmt (
                 id TEXT PRIMARY KEY,
                 username TEXT NOT NULL
@@ -180,8 +181,7 @@ def test_ego_network_includes_alter_alter_edges(tmp_path):
                 action TEXT,
                 round TEXT
             );
-            """
-        )
+            """)
         conn.executemany(
             "INSERT INTO user_mgmt(id, username) VALUES (?, ?)",
             [("u1", "alice"), ("u2", "bob"), ("u3", "carol")],

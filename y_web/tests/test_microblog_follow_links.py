@@ -36,7 +36,7 @@ def test_profile_follow_button_targets_viewed_user():
     assert "People I Follow" in template
     assert ".ys-profile-hero-actions-row" in css
     assert ".ys-profile-hero-stat__value" in css
-    assert '.ys-profile-hero-actions-row {\n  position: absolute;' in css
+    assert ".ys-profile-hero-actions-row {\n  position: absolute;" in css
     assert "ys-profile-hero-kicker" not in template
     assert "data-demo-src=\"{{ cover_image if cover_image else url_for('static', filename='assets/img/demo/bg/4.png') }}\"" in template
     assert "Unfollow" in template
@@ -118,7 +118,10 @@ def test_profile_template_uses_shared_ranked_card_and_profile_panels():
         "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/css/social-components.css"
     ).read_text(encoding="utf-8")
 
-    assert '{% include "microblogging/components/sidebar_ranked_list_card.html" %}' in template
+    assert (
+        '{% include "microblogging/components/sidebar_ranked_list_card.html" %}'
+        in template
+    )
     assert 'ranked_card_title = "Frequently Used Hashtags"' in template
     assert "ys-profile-section-heading__subtitle" in template
     assert "{% if username != logged_username and is_page!=1 and mutual %}" in template
@@ -258,11 +261,26 @@ def test_sidebar_ranked_list_card_is_shared_and_styled():
         "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/css/social-components.css"
     ).read_text(encoding="utf-8")
 
-    assert '{% include "microblogging/components/sidebar_ranked_list_card.html" %}' in feed_template
-    assert '{% include "microblogging/components/sidebar_ranked_list_card.html" %}' in thread_template
-    assert '{% include "microblogging/components/sidebar_ranked_list_card.html" %}' in hashtag_template
-    assert '{% include "microblogging/components/sidebar_ranked_list_card.html" %}' in interest_template
-    assert '{% include "microblogging/components/sidebar_ranked_list_card.html" %}' in emotions_template
+    assert (
+        '{% include "microblogging/components/sidebar_ranked_list_card.html" %}'
+        in feed_template
+    )
+    assert (
+        '{% include "microblogging/components/sidebar_ranked_list_card.html" %}'
+        in thread_template
+    )
+    assert (
+        '{% include "microblogging/components/sidebar_ranked_list_card.html" %}'
+        in hashtag_template
+    )
+    assert (
+        '{% include "microblogging/components/sidebar_ranked_list_card.html" %}'
+        in interest_template
+    )
+    assert (
+        '{% include "microblogging/components/sidebar_ranked_list_card.html" %}'
+        in emotions_template
+    )
     assert "ranked_card_title" in component
     assert "ys-trending-row" in component
     assert ".ys-trending-card" in css
@@ -292,11 +310,26 @@ def test_sidebar_user_card_is_shared_and_styled():
         "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/css/social-components.css"
     ).read_text(encoding="utf-8")
 
-    assert '{% include "microblogging/components/sidebar_user_card.html" %}' in feed_template
-    assert '{% include "microblogging/components/sidebar_user_card.html" %}' in thread_template
-    assert '{% include "microblogging/components/sidebar_user_card.html" %}' in hashtag_template
-    assert '{% include "microblogging/components/sidebar_user_card.html" %}' in interest_template
-    assert '{% include "microblogging/components/sidebar_user_card.html" %}' in emotions_template
+    assert (
+        '{% include "microblogging/components/sidebar_user_card.html" %}'
+        in feed_template
+    )
+    assert (
+        '{% include "microblogging/components/sidebar_user_card.html" %}'
+        in thread_template
+    )
+    assert (
+        '{% include "microblogging/components/sidebar_user_card.html" %}'
+        in hashtag_template
+    )
+    assert (
+        '{% include "microblogging/components/sidebar_user_card.html" %}'
+        in interest_template
+    )
+    assert (
+        '{% include "microblogging/components/sidebar_user_card.html" %}'
+        in emotions_template
+    )
     assert "Your Profile" in component
     assert "sidebar-current-date" in component
     assert ".ys-sidebar-user-card" in css
@@ -323,10 +356,22 @@ def test_context_hero_is_shared_and_styled():
         "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/css/social-components.css"
     ).read_text(encoding="utf-8")
 
-    assert '{% include "microblogging/components/context_hero_card.html" %}' in thread_template
-    assert '{% include "microblogging/components/context_hero_card.html" %}' in hashtag_template
-    assert '{% include "microblogging/components/context_hero_card.html" %}' in interest_template
-    assert '{% include "microblogging/components/context_hero_card.html" %}' in emotions_template
+    assert (
+        '{% include "microblogging/components/context_hero_card.html" %}'
+        in thread_template
+    )
+    assert (
+        '{% include "microblogging/components/context_hero_card.html" %}'
+        in hashtag_template
+    )
+    assert (
+        '{% include "microblogging/components/context_hero_card.html" %}'
+        in interest_template
+    )
+    assert (
+        '{% include "microblogging/components/context_hero_card.html" %}'
+        in emotions_template
+    )
     assert "ys-context-hero__eyebrow" in component
     assert "ys-context-hero__focus" in component
     assert ".ys-context-hero" in css
@@ -354,7 +399,10 @@ def test_microblog_feed_supports_live_refresh_with_existing_recsys_api():
     assert "function probeForNewPosts()" in js
     assert "function startAutoRefresh()" in js
     assert "state.liveRefreshEnabled = Number(config.page || 1) === 1;" in js
-    assert "return '/' + config.expId + '/api/feed/' + config.userId + '/' + config.timeline + '/' + config.mode;" in js
+    assert (
+        "return '/' + config.expId + '/api/feed/' + config.userId + '/' + config.timeline + '/' + config.mode;"
+        in js
+    )
     assert "InfiniteScroll.init({" in js
     assert "ys-feed-refresh-notice" in js
     assert ".ys-feed-refresh-notice" in css
@@ -388,4 +436,6 @@ def test_build_thread_tree_handles_uuid_out_of_order_replies():
     tree = build_thread_tree(root_id, post_to_data, parent_lookup)
 
     assert [child["post_id"] for child in tree["children"]] == ["child-a", "child-c"]
-    assert [child["post_id"] for child in tree["children"][0]["children"]] == ["child-b"]
+    assert [child["post_id"] for child in tree["children"][0]["children"]] == [
+        "child-b"
+    ]

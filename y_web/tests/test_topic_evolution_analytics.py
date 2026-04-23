@@ -3,19 +3,18 @@ import sqlite3
 
 import pytest
 
-opinion_module = importlib.import_module(
-    "y_web.routes.admin.sub.experiments._opinion"
-)
+opinion_module = importlib.import_module("y_web.routes.admin.sub.experiments._opinion")
 
 
 pytestmark = pytest.mark.unit
 
 
-def test_topic_evolution_tracks_volume_population_share_and_lifecycle(tmp_path, monkeypatch):
+def test_topic_evolution_tracks_volume_population_share_and_lifecycle(
+    tmp_path, monkeypatch
+):
     db_path = tmp_path / "topic_evolution.db"
     with sqlite3.connect(db_path) as conn:
-        conn.executescript(
-            """
+        conn.executescript("""
             CREATE TABLE user_mgmt (
                 id TEXT PRIMARY KEY,
                 username TEXT NOT NULL
@@ -51,8 +50,7 @@ def test_topic_evolution_tracks_volume_population_share_and_lifecycle(tmp_path, 
                 iid TEXT PRIMARY KEY,
                 interest TEXT NOT NULL
             );
-            """
-        )
+            """)
         conn.executemany(
             "INSERT INTO user_mgmt(id, username) VALUES (?, ?)",
             [("u1", "alice"), ("u2", "bob"), ("u3", "carol"), ("u4", "dave")],
@@ -134,8 +132,7 @@ def test_topic_evolution_tracks_volume_population_share_and_lifecycle(tmp_path, 
 def test_topic_evolution_supports_cumulative_trends(tmp_path, monkeypatch):
     db_path = tmp_path / "topic_evolution_cumulative.db"
     with sqlite3.connect(db_path) as conn:
-        conn.executescript(
-            """
+        conn.executescript("""
             CREATE TABLE user_mgmt (
                 id TEXT PRIMARY KEY,
                 username TEXT NOT NULL
@@ -155,8 +152,7 @@ def test_topic_evolution_supports_cumulative_trends(tmp_path, monkeypatch):
                 post_id TEXT NOT NULL,
                 topic_id TEXT NOT NULL
             );
-            """
-        )
+            """)
         conn.executemany(
             "INSERT INTO user_mgmt(id, username) VALUES (?, ?)",
             [("u1", "alice"), ("u2", "bob"), ("u3", "carol"), ("u4", "dave")],

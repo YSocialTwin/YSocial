@@ -45,7 +45,6 @@ from y_web.src.models import (
 )
 from y_web.src.system.path_utils import get_writable_path
 
-
 _ADHOC_AGENT_BADGE_LABELS = {
     "hello_world": "Hello World",
     "moderator": "Moderator Agent",

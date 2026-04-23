@@ -36,7 +36,6 @@ from y_web.src.models import (
 from .trends import _compute_last_round  # noqa: F401 — re-used by augment_text
 from .profiles import get_safe_profile_pic
 
-
 _ADHOC_AGENT_BADGE_LABELS = {
     "hello_world": "Hello World",
     "moderator": "Moderator Agent",
