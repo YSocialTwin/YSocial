@@ -115,6 +115,28 @@
             </a>
         </div>
         <div class="navbar-menu">
+            <div class="navbar-item ys-mb-header-search-shell">
+                <form
+                        class="ys-mb-header-search"
+                        data-mb-global-search
+                        data-search-endpoint="/{{ exp_id }}/api/header_search"
+                        action="/{{ exp_id }}/feed/{{ logged_id }}/feed/rf/1"
+                        method="get"
+                        autocomplete="off"
+                >
+                    <div class="ys-mb-header-search__field">
+                        <i class="mdi mdi-magnify ys-mb-header-search__icon"></i>
+                        <input
+                                type="search"
+                                name="q"
+                                class="ys-mb-header-search__input"
+                                placeholder="Search profiles, hashtags, topics"
+                                aria-label="Search profiles, hashtags, and topics"
+                        />
+                    </div>
+                    <div class="ys-mb-header-search__results" data-search-results hidden></div>
+                </form>
+            </div>
             <div class="navbar-end">
 
                 <div class="navbar-item is-account drop-trigger has-caret"
@@ -316,6 +338,28 @@
     </div>
     <!-- Navbar mobile menu -->
     <div class="navbar-menu">
+        <div class="navbar-item ys-mb-header-mobile-search-item">
+            <form
+                    class="ys-mb-header-search ys-mb-header-search--mobile"
+                    data-mb-global-search
+                    data-search-endpoint="/{{ exp_id }}/api/header_search"
+                    action="/{{ exp_id }}/feed/{{ logged_id }}/feed/rf/1"
+                    method="get"
+                    autocomplete="off"
+            >
+                <div class="ys-mb-header-search__field">
+                    <i class="mdi mdi-magnify ys-mb-header-search__icon"></i>
+                    <input
+                            type="search"
+                            name="q"
+                            class="ys-mb-header-search__input"
+                            placeholder="Search profiles, hashtags, topics"
+                            aria-label="Search profiles, hashtags, and topics"
+                    />
+                </div>
+                <div class="ys-mb-header-search__results" data-search-results hidden></div>
+            </form>
+        </div>
         <!-- Account -->
         <div class="navbar-item has-dropdown is-active">
             <a href="/{{exp_id}}/profile/{{ logged_id }}/recent/1" class="navbar-link">
@@ -408,3 +452,4 @@
     </div>
 </nav>
 <script src="{{ url_for('static', filename='assets/js/mb-header.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/mb-header-search.js') }}"></script>

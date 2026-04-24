@@ -532,9 +532,7 @@ def get_friends(exp_id, user_id, page=1):
     except (ValueError, TypeError):
         # Keep as string if it's a UUID
         pass
-    active_tab = (
-        str(request.args.get("tab", "followers") or "followers").strip().lower()
-    )
+    active_tab = str(request.args.get("tab", "followers") or "followers").strip().lower()
     if active_tab not in {"followers", "followees"}:
         active_tab = "followers"
 
@@ -600,9 +598,7 @@ def api_friends(exp_id, user_id, page=1):
     except (ValueError, TypeError):
         pass
 
-    active_tab = (
-        str(request.args.get("tab", "followers") or "followers").strip().lower()
-    )
+    active_tab = str(request.args.get("tab", "followers") or "followers").strip().lower()
     if active_tab not in {"followers", "followees"}:
         active_tab = "followers"
 
@@ -633,6 +629,84 @@ def api_friends(exp_id, user_id, page=1):
             "active_tab": view_model["active_tab"],
         }
     )
+
+
+@main.get("/<int:exp_id>/api/header_search")
+@login_required
+def api_header_search(exp_id):
+    query = str(request.args.get("q", "") or "").strip()
+    if len(query) < 2:
+        return jsonify({"results": []})
+
+    normalized_query = query.lstrip("@#").strip()
+    if len(normalized_query) < 2:
+        return jsonify({"results": []})
+
+    user_matches = (
+        User_mgmt.query.filter(User_mgmt.username.ilike(f"%{normalized_query}%"))
+        .order_by(User_mgmt.username.asc())
+        .limit(5)
+        .all()
+    )
+    hashtag_matches = (
+        Hashtags.query.filter(Hashtags.hashtag.ilike(f"%{normalized_query}%"))
+        .order_by(Hashtags.hashtag.asc())
+        .limit(5)
+        .all()
+    )
+    interest_matches = (
+        Interests.query.filter(Interests.interest.ilike(f"%{normalized_query}%"))
+        .order_by(Interests.interest.asc())
+        .limit(5)
+        .all()
+    )
+
+    def _rank_key(label):
+        lowered = label.lower()
+        normalized_lower = normalized_query.lower()
+        exact = lowered == normalized_lower
+        starts = lowered.startswith(normalized_lower)
+        contains = normalized_lower in lowered
+        return (0 if exact else 1, 0 if starts else 1, 0 if contains else 1, lowered)
+
+    results = [
+        {
+            "type": "profile",
+            "title": match.username,
+            "subtitle": "Page" if getattr(match, "is_page", 0) == 1 else "Profile",
+            "url": f"/{exp_id}/profile/{match.id}/recent/1",
+        }
+        for match in user_matches
+    ]
+    results.extend(
+        {
+            "type": "hashtag",
+            "title": f"#{match.hashtag}",
+            "subtitle": "Hashtag",
+            "url": f"/{exp_id}/hashtag_posts/{match.id}/1",
+        }
+        for match in hashtag_matches
+    )
+    results.extend(
+        {
+            "type": "topic",
+            "title": match.interest,
+            "subtitle": "Topic",
+            "url": f"/{exp_id}/interest/{match.iid}/1",
+        }
+        for match in interest_matches
+    )
+
+    type_priority = {"profile": 0, "hashtag": 1, "topic": 2}
+    results = sorted(
+        results,
+        key=lambda item: (
+            *_rank_key(item["title"].lstrip("@#")),
+            type_priority.get(item["type"], 99),
+        ),
+    )[:10]
+
+    return jsonify({"results": results})
 
 
 @main.get("/<int:exp_id>/thread/<post_id>")

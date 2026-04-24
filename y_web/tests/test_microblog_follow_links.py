@@ -67,6 +67,39 @@ def test_profile_activity_tabs_are_single_row_async_controls():
     assert "flex-wrap: nowrap" in css
 
 
+def test_microblog_header_search_wires_profiles_hashtags_and_topics():
+    template = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/header.html"
+    ).read_text(encoding="utf-8")
+    source = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/microblogging.py"
+    ).read_text(encoding="utf-8")
+    js = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/js/mb-header-search.js"
+    ).read_text(encoding="utf-8")
+    css = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/css/social-components.css"
+    ).read_text(encoding="utf-8")
+
+    assert 'data-mb-global-search' in template
+    assert 'data-search-endpoint="/{{ exp_id }}/api/header_search"' in template
+    assert "Search profiles, hashtags, topics" in template
+    assert "mb-header-search.js" in template
+    assert 'def api_header_search(exp_id):' in source
+    assert 'User_mgmt.username.ilike' in source
+    assert "User_mgmt.is_page != 1" not in source
+    assert 'Hashtags.hashtag.ilike' in source
+    assert 'Interests.interest.ilike' in source
+    assert '"/{exp_id}/profile/{match.id}/recent/1"' in source
+    assert '"Page" if getattr(match, "is_page", 0) == 1 else "Profile"' in source
+    assert '"/{exp_id}/hashtag_posts/{match.id}/1"' in source
+    assert '"/{exp_id}/interest/{match.iid}/1"' in source
+    assert 'window.location.href = selected.url' in js
+    assert "data-search-url" in js
+    assert ".ys-mb-header-search__results" in css
+    assert ".ys-mb-header-search__option" in css
+
+
 def test_profile_template_renders_stress_reward_indicators():
     template = Path(
         "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/profile.html"

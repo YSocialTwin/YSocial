@@ -386,76 +386,17 @@ def create_app(db_type="sqlite", desktop_mode=False):
 
     @app.context_processor
     def inject_experiment_memory_enabled():
-        """Inject whether the active Standard/Forum experiment has memory enabled."""
-        from y_web.src.experiment.helpers import get_experiment_uid_from_db_name
-        from y_web.src.models import Exps
-        from y_web.src.system.path_utils import get_writable_path
+        """Inject whether the active experiment has memory-enabled chat."""
+        from y_web.routes.social.helpers import _experiment_memory_enabled
 
         try:
             exp_id = get_current_experiment_id()
             if exp_id is None:
                 return dict(experiment_memory_enabled=False)
 
-            exp = Exps.query.filter_by(idexp=int(exp_id)).first()
-            if not exp or getattr(exp, "platform_type", "") not in {
-                "forum",
-                "microblogging",
-            }:
-                return dict(experiment_memory_enabled=False)
-
-            uid = get_experiment_uid_from_db_name(
-                str(getattr(exp, "db_name", "") or "")
+            return dict(
+                experiment_memory_enabled=bool(_experiment_memory_enabled(exp_id))
             )
-            if not uid:
-                return dict(experiment_memory_enabled=False)
-
-            config_path = os.path.join(
-                get_writable_path(),
-                "y_web",
-                "experiments",
-                str(uid),
-                "config_server.json",
-            )
-            if not os.path.exists(config_path):
-                return dict(experiment_memory_enabled=False)
-
-            with open(config_path, "r", encoding="utf-8") as handle:
-                config = json.load(handle) or {}
-            memory_cfg = config.get("memory")
-            enabled = (
-                bool(memory_cfg.get("enabled"))
-                if isinstance(memory_cfg, dict)
-                else False
-            )
-            if enabled:
-                return dict(experiment_memory_enabled=True)
-
-            # Also handle flat format written by client config routes: {"memory_enabled": true, ...}
-            if bool(config.get("memory_enabled", False)):
-                return dict(experiment_memory_enabled=True)
-
-            platform_type = getattr(exp, "platform_type", "")
-            if platform_type in {"microblogging", "forum"}:
-                exp_dir = os.path.dirname(config_path)
-                for entry in os.listdir(exp_dir):
-                    if not entry.startswith("client_") or not entry.endswith(".json"):
-                        continue
-                    client_path = os.path.join(exp_dir, entry)
-                    try:
-                        with open(client_path, "r", encoding="utf-8") as client_handle:
-                            client_config = json.load(client_handle) or {}
-                        # Microblogging client configs nest under "agents"
-                        agents_cfg = client_config.get("agents")
-                        if isinstance(agents_cfg, dict) and bool(
-                            agents_cfg.get("memory_enabled")
-                        ):
-                            return dict(experiment_memory_enabled=True)
-                        # Forum client configs use a flat "memory_enabled" key
-                        if bool(client_config.get("memory_enabled", False)):
-                            return dict(experiment_memory_enabled=True)
-                    except Exception:
-                        continue
-            return dict(experiment_memory_enabled=False)
         except Exception:
             return dict(experiment_memory_enabled=False)
 

@@ -48,6 +48,19 @@ def test_forum_profile_route_allows_stress_reward_context():
     assert "stress_reward_indicator=stress_reward_indicator" in source
 
 
+def test_forum_interview_route_supports_uuid_backed_users():
+    source = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/forum.py"
+    ).read_text(encoding="utf-8")
+
+    assert (
+        'logged_id = exp_user.id if exp_user else (getattr(current_user, "id", 0) or 0)'
+        in source
+    )
+    assert "mentions = get_unanswered_mentions(mention_username)" in source
+    assert "int(exp_user.id)" not in source
+
+
 def test_stress_reward_scale_marks_any_positive_value():
     from y_web.routes.social.common import _stress_reward_scale_level
 

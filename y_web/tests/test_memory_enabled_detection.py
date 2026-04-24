@@ -363,3 +363,26 @@ class TestMemoryEnabledLogicDirect:
         assert self._is_memory_enabled_in_client(
             user_config
         ), "User-reported config detected as client file flat format"
+
+
+def test_global_template_injector_reuses_shared_memory_detector():
+    """The global template context must expose HPC-aware memory detection too."""
+    from y_web import create_app  # noqa: PLC0415
+
+    with patch(
+        "y_web.src.experiment.context.get_current_experiment_id", return_value=4
+    ):
+        app = create_app(db_type="sqlite")
+        injector = next(
+            fn
+            for fn in app.template_context_processors[None]
+            if fn.__name__ == "inject_experiment_memory_enabled"
+        )
+
+        with app.app_context():
+            with patch(
+                "y_web.routes.social.helpers._experiment_memory_enabled",
+                return_value=True,
+            ) as memory_detector:
+                assert injector() == {"experiment_memory_enabled": True}
+                memory_detector.assert_called_once_with(4)

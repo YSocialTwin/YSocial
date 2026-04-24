@@ -168,13 +168,12 @@ def interview(exp_id):
         return redirect(f"/{exp_id}/feed/{feed_user_id}/feed/rf/1")
 
     exp_user = User_mgmt.query.filter_by(username=current_user.username).first()
-    logged_id = (
-        int(exp_user.id) if exp_user else int(getattr(current_user, "id", 0) or 0)
-    )
+    logged_id = exp_user.id if exp_user else (getattr(current_user, "id", 0) or 0)
 
     mentions = []
     try:
-        mentions = get_unanswered_mentions(logged_id)
+        mention_username = exp_user.username if exp_user else current_user.username
+        mentions = get_unanswered_mentions(mention_username)
     except Exception:
         mentions = []
 
