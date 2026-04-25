@@ -81,20 +81,20 @@ def test_microblog_header_search_wires_profiles_hashtags_and_topics():
         "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/css/social-components.css"
     ).read_text(encoding="utf-8")
 
-    assert 'data-mb-global-search' in template
+    assert "data-mb-global-search" in template
     assert 'data-search-endpoint="/{{ exp_id }}/api/header_search"' in template
     assert "Search profiles, hashtags, topics" in template
     assert "mb-header-search.js" in template
-    assert 'def api_header_search(exp_id):' in source
-    assert 'User_mgmt.username.ilike' in source
+    assert "def api_header_search(exp_id):" in source
+    assert "User_mgmt.username.ilike" in source
     assert "User_mgmt.is_page != 1" not in source
-    assert 'Hashtags.hashtag.ilike' in source
-    assert 'Interests.interest.ilike' in source
+    assert "Hashtags.hashtag.ilike" in source
+    assert "Interests.interest.ilike" in source
     assert '"/{exp_id}/profile/{match.id}/recent/1"' in source
     assert '"Page" if getattr(match, "is_page", 0) == 1 else "Profile"' in source
     assert '"/{exp_id}/hashtag_posts/{match.id}/1"' in source
     assert '"/{exp_id}/interest/{match.iid}/1"' in source
-    assert 'window.location.href = selected.url' in js
+    assert "window.location.href = selected.url" in js
     assert "data-search-url" in js
     assert ".ys-mb-header-search__results" in css
     assert ".ys-mb-header-search__option" in css

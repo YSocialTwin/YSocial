@@ -486,7 +486,10 @@ def _build_memory_snapshot_legacy(
         ctx = _post_server_json(
             exp,
             "/memory/get_context",
-            {"run_id": run_id, "agent_user_id": _coerce_experiment_user_id(agent_user_id)},
+            {
+                "run_id": run_id,
+                "agent_user_id": _coerce_experiment_user_id(agent_user_id),
+            },
             timeout_s=3.0,
         )
     except Exception as exc:
@@ -690,7 +693,10 @@ def _build_memory_snapshot_semantic(
         ctx = _post_server_json(
             exp,
             "/memory/get_context",
-            {"run_id": run_id, "agent_user_id": _coerce_experiment_user_id(agent_user_id)},
+            {
+                "run_id": run_id,
+                "agent_user_id": _coerce_experiment_user_id(agent_user_id),
+            },
             timeout_s=3.0,
         )
     except Exception:
