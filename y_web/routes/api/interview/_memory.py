@@ -32,6 +32,7 @@ from ._blueprint import (
 from ._helpers import (
     _INTERVIEW_MEMORY_EVENTS_TIMEOUTS,
     _INTERVIEW_MEMORY_SEARCH_TIMEOUTS,
+    _coerce_experiment_user_id,
     _get_experiment_uid_from_db_name,
     _normalize_memory_mode,
     _truncate_middle,
@@ -109,7 +110,9 @@ def _iter_run_ids_from_server_log(
             continue
         if agent_user_id is not None:
             try:
-                if int(obj.get("agent_user_id")) != int(agent_user_id):
+                if str(_coerce_experiment_user_id(obj.get("agent_user_id"))) != str(
+                    _coerce_experiment_user_id(agent_user_id)
+                ):
                     continue
             except Exception:
                 continue
@@ -150,7 +153,7 @@ def _probe_run_memory_coverage(
             "/memory/search",
             {
                 "run_id": rid,
-                "agent_user_id": int(agent_user_id),
+                "agent_user_id": _coerce_experiment_user_id(agent_user_id),
                 "query_text": str(query_text or _INTERVIEW_MEMORY_DEFAULT_QUERY),
                 "types": ["event", "reflection", "summary"],
                 "k": 2,
@@ -216,7 +219,7 @@ def _detect_run_id_from_server_log(
             best = {"run_id": rid}
             break
         cov = _probe_run_memory_coverage(
-            exp, run_id=rid, agent_user_id=int(agent_user_id)
+            exp, run_id=rid, agent_user_id=_coerce_experiment_user_id(agent_user_id)
         )
         candidates_checked.append(cov)
         if (
@@ -281,12 +284,12 @@ def _detect_run_id_from_experiment_db(
             [
                 (
                     "select run_id, count(*) as cnt from memory_items where agent_user_id=? and run_id is not null and trim(run_id) != '' group by run_id order by cnt desc, max(round_id) desc",
-                    (int(agent_user_id),),
+                    (_coerce_experiment_user_id(agent_user_id),),
                     "memory_items_by_agent",
                 ),
                 (
                     "select run_id, count(*) as cnt from memory_interaction_events where actor_user_id=? and run_id is not null and trim(run_id) != '' group by run_id order by cnt desc, max(round_id) desc",
-                    (int(agent_user_id),),
+                    (_coerce_experiment_user_id(agent_user_id),),
                     "memory_events_by_actor",
                 ),
             ]
@@ -362,10 +365,11 @@ def _get_current_round_id() -> int:
 
 
 def _get_top_interests_for_user(
-    user_id: int, *, window_rounds: int = 50, limit: int = 10
+    user_id: Any, *, window_rounds: int = 50, limit: int = 10
 ) -> List[str]:
     cur = _get_current_round_id()
     base = max(0, cur - int(window_rounds))
+    normalized_user_id = _coerce_experiment_user_id(user_id)
 
     try:
         q = (
@@ -376,7 +380,7 @@ def _get_top_interests_for_user(
             )
             .join(Interests, User_interest.interest_id == Interests.iid)
             .filter(
-                User_interest.user_id == int(user_id),
+                User_interest.user_id == normalized_user_id,
                 User_interest.round_id >= int(base),
                 User_interest.round_id <= int(cur),
             )
@@ -469,7 +473,7 @@ def _build_memory_snapshot_legacy(
 ) -> Dict[str, Any]:
     snap: Dict[str, Any] = {
         "run_id": run_id,
-        "agent_user_id": int(agent_user_id),
+        "agent_user_id": _coerce_experiment_user_id(agent_user_id),
         "fetched_at": datetime.now(timezone.utc).isoformat(),
     }
     if not run_id:
@@ -482,7 +486,7 @@ def _build_memory_snapshot_legacy(
         ctx = _post_server_json(
             exp,
             "/memory/get_context",
-            {"run_id": run_id, "agent_user_id": int(agent_user_id)},
+            {"run_id": run_id, "agent_user_id": _coerce_experiment_user_id(agent_user_id)},
             timeout_s=3.0,
         )
     except Exception as exc:
@@ -565,7 +569,7 @@ def _build_memory_snapshot_legacy(
                 "/memory/get_context",
                 {
                     "run_id": run_id,
-                    "agent_user_id": int(agent_user_id),
+                    "agent_user_id": _coerce_experiment_user_id(agent_user_id),
                     "other_user_id": int(other_id),
                     "pair_limit": 8,
                 },
@@ -618,7 +622,7 @@ def _build_memory_snapshot_legacy(
                 "/memory/get_context",
                 {
                     "run_id": run_id,
-                    "agent_user_id": int(agent_user_id),
+                    "agent_user_id": _coerce_experiment_user_id(agent_user_id),
                     "thread_root_id": int(thread_root_id),
                 },
                 timeout_s=3.0,
@@ -652,7 +656,7 @@ def _build_memory_snapshot_semantic(
 ) -> Dict[str, Any]:
     snap: Dict[str, Any] = {
         "run_id": run_id,
-        "agent_user_id": int(agent_user_id),
+        "agent_user_id": _coerce_experiment_user_id(agent_user_id),
         "fetched_at": datetime.now(timezone.utc).isoformat(),
         "query_text": _default_memory_query(query_text),
         "relationships": [],
@@ -665,7 +669,7 @@ def _build_memory_snapshot_semantic(
 
     search_payload = {
         "run_id": run_id,
-        "agent_user_id": int(agent_user_id),
+        "agent_user_id": _coerce_experiment_user_id(agent_user_id),
         "query_text": _default_memory_query(query_text),
         "types": ["event", "reflection", "summary"],
         "k": int(k),
@@ -686,7 +690,7 @@ def _build_memory_snapshot_semantic(
         ctx = _post_server_json(
             exp,
             "/memory/get_context",
-            {"run_id": run_id, "agent_user_id": int(agent_user_id)},
+            {"run_id": run_id, "agent_user_id": _coerce_experiment_user_id(agent_user_id)},
             timeout_s=3.0,
         )
     except Exception:
@@ -718,7 +722,7 @@ def _build_deferred_memory_snapshot(
     requested_mode = _normalize_memory_mode(memory_mode)
     return {
         "run_id": run_id,
-        "agent_user_id": int(agent_user_id),
+        "agent_user_id": _coerce_experiment_user_id(agent_user_id),
         "fetched_at": datetime.now(timezone.utc).isoformat(),
         "memory_mode_requested": requested_mode,
         "memory_mode_used": "",

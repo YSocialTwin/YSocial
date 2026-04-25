@@ -53,7 +53,7 @@ class AdminInterviewSession(db.Model):
     exp_id = db.Column(db.Integer, nullable=False, index=True)
     admin_username = db.Column(db.String(50), nullable=False, index=True)
 
-    agent_user_id = db.Column(db.Integer, nullable=False)
+    agent_user_id = db.Column(db.String(64), nullable=False)
     agent_username = db.Column(db.String(50), nullable=False)
 
     run_id = db.Column(db.Text, nullable=True, index=True)

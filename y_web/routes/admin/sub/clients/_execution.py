@@ -353,6 +353,8 @@ def run_client(uid, idexp):
     except FileNotFoundError as e:
         # Display the error message to the user
         flash(f"Error starting client: {str(e)}", "error")
+    except RuntimeError as e:
+        flash(str(e), "warning")
     except Exception as e:
         # Catch any other errors
         flash(f"Unexpected error starting client: {str(e)}", "error")
@@ -403,6 +405,8 @@ def resume_client(uid, idexp):
     except FileNotFoundError as e:
         # Display the error message to the user
         flash(f"Error starting client: {str(e)}", "error")
+    except RuntimeError as e:
+        flash(str(e), "warning")
     except Exception as e:
         # Catch any other errors
         flash(f"Unexpected error starting client: {str(e)}", "error")

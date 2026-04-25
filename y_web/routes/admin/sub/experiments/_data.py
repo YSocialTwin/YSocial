@@ -373,6 +373,11 @@ def experiment_clients(exp_id):
             return jsonify({"error": "Invalid experiment path format"}), 400
 
         exp_folder = os.path.join(BASE_DIR, "y_web", "experiments", uid)
+        log_folder = (
+            os.path.join(exp_folder, "logs")
+            if experiment.simulator_type == "HPC"
+            else exp_folder
+        )
 
         # Get clients for this experiment
         clients = Client.query.filter_by(id_exp=exp_id).all()
@@ -381,7 +386,7 @@ def experiment_clients(exp_id):
         for client in clients:
             # Update client log metrics before reading execution data
             # This ensures we have the latest progress information
-            client_log_file = os.path.join(exp_folder, f"{client.name}_client.log")
+            client_log_file = os.path.join(log_folder, f"{client.name}_client.log")
             if os.path.exists(client_log_file):
                 try:
                     # Pass is_hpc flag for HPC experiments to use correct log format
@@ -1429,10 +1434,12 @@ def experiment_logs(exp_id):
             return jsonify({"error": "Invalid experiment path format"}), 400
 
         exp_folder = os.path.join(BASE_DIR, "y_web", "experiments", uid)
-        # For HPC experiments, logs are stored in /logs subfolder
-        if experiment.simulator_type == "HPC":
-            exp_folder = os.path.join(exp_folder, "logs")
-        log_file = os.path.join(exp_folder, "_server.log")
+        log_folder = (
+            os.path.join(exp_folder, "logs")
+            if experiment.simulator_type == "HPC"
+            else exp_folder
+        )
+        log_file = os.path.join(log_folder, "_server.log")
 
         # Check if any log files exist (main or rotated)
         if not has_server_log_files(log_file):
@@ -1667,7 +1674,7 @@ def experiment_trends(exp_id):
         client_hourly_compute = {}
 
         for client in clients:
-            client_log_file = os.path.join(exp_folder, f"{client.name}_client.log")
+            client_log_file = os.path.join(log_folder, f"{client.name}_client.log")
 
             # Update client metrics if log file exists
             if os.path.exists(client_log_file):

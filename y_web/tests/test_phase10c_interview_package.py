@@ -2,6 +2,7 @@
 
 import importlib
 import types
+from pathlib import Path
 
 import pytest
 
@@ -72,3 +73,36 @@ def test_is_package():
     import y_web.routes.api.interview as pkg
 
     assert hasattr(pkg, "__path__"), "interview should be a package"
+
+
+def test_interview_routes_and_helpers_support_uuid_user_ids():
+    routes = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/api/interview/_routes.py"
+    ).read_text(encoding="utf-8")
+    helpers = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/api/interview/_helpers.py"
+    ).read_text(encoding="utf-8")
+    memory = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/api/interview/_memory.py"
+    ).read_text(encoding="utf-8")
+    facts = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/api/interview/_facts.py"
+    ).read_text(encoding="utf-8")
+
+    assert "def _coerce_experiment_user_id(value: Any) -> Any:" in helpers
+    assert 'return _json_error("agent_user_id must be an int"' not in routes
+    assert '"user_id": _coerce_experiment_user_id(u.id)' in routes
+    assert "agent_user_id = _coerce_experiment_user_id(agent_user_id)" in routes
+    assert "str(_coerce_experiment_user_id(obj.get(\"agent_user_id\")))" in memory
+    assert "normalized_agent_user_id = _coerce_experiment_user_id(agent_user_id)" in facts
+
+
+def test_interview_session_creation_binds_experiment_db_before_agent_lookup():
+    routes = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/api/interview/_routes.py"
+    ).read_text(encoding="utf-8")
+
+    assert "_ensure_experiment_db_bind(exp)" in routes
+    assert routes.index("_ensure_experiment_db_bind(exp)") < routes.index(
+        "agent_user = User_mgmt.query.get(agent_user_id)"
+    )

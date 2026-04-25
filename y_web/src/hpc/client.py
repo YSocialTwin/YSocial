@@ -14,10 +14,23 @@ import time
 from copy import deepcopy
 from pathlib import Path
 
+import ray
+
 from y_web import db
 from y_web.src.models import Client_Execution
 from y_web.src.simulation.subprocess_env import build_subprocess_env
 from y_web.src.system.path_utils import get_base_path, get_writable_path
+
+
+def _tracked_process_is_alive(pid):
+    """Return whether a tracked subprocess PID is still alive."""
+    if not pid:
+        return False
+    try:
+        os.kill(int(pid), 0)
+    except (OSError, ValueError, TypeError):
+        return False
+    return True
 
 
 def _sync_stress_reward_into_hpc_client_config(exp_folder, client_config_path):
@@ -81,6 +94,12 @@ def start_hpc_client(exp, cli, population):
 
     # Get base path - this will be bundle location when frozen, repo root otherwise
     base_path = get_base_path()
+
+    if _tracked_process_is_alive(getattr(cli, "pid", None)):
+        raise RuntimeError(
+            f"HPC client '{cli.name}' is already running with PID {cli.pid}. "
+            "Stop or pause it before starting another instance."
+        )
 
     # Get writable path for experiments directory
     writable_base = get_writable_path()
@@ -322,6 +341,44 @@ def stop_hpc_client(cli):
         if not cli.pid:
             print(f"No tracked HPC client process found for client {cli.name}")
             return False
+
+        try:
+            exp = getattr(cli, "experiment", None)
+            exp_db_name = getattr(exp, "db_name", None)
+            if exp_db_name:
+                writable_base = get_writable_path()
+                y_web_dir = os.path.join(writable_base, "y_web")
+                if "database_server.db" in exp_db_name:
+                    exp_folder = os.path.join(
+                        y_web_dir, exp_db_name.split("database_server.db")[0].rstrip("/\\")
+                    )
+                else:
+                    uid = exp_db_name.removeprefix("experiments_")
+                    exp_folder = os.path.join(y_web_dir, "experiments", uid)
+
+                ray_addr_path = os.path.join(exp_folder, "ray_config.temp")
+                ray_ns_path = os.path.join(exp_folder, "ray_namespace.temp")
+                if os.path.exists(ray_addr_path):
+                    address = Path(ray_addr_path).read_text(encoding="utf-8").strip()
+                    namespace = "social_sim"
+                    if os.path.exists(ray_ns_path):
+                        namespace = (
+                            Path(ray_ns_path).read_text(encoding="utf-8").strip() or namespace
+                        )
+                    if address:
+                        connected_here = False
+                        if not ray.is_initialized():
+                            ray.init(address=address, namespace=namespace, ignore_reinit_error=True)
+                            connected_here = True
+                        try:
+                            orchestrator = ray.get_actor("Orchestrator", namespace=namespace)
+                            ray.get(orchestrator.deregister_client.remote(cli.name), timeout=5)
+                            print(f"Deregistered HPC client {cli.name} from orchestrator before stop.")
+                        finally:
+                            if connected_here:
+                                ray.shutdown()
+        except Exception as exc:
+            print(f"Warning: failed to deregister HPC client {cli.name} before stop: {exc}")
 
         pid = cli.pid
         print(f"Terminating HPC client process with PID {pid}...")

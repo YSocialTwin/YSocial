@@ -17,7 +17,7 @@ from y_web.src.models import (
     User_mgmt,
 )
 
-from ._helpers import _truncate_middle
+from ._helpers import _coerce_experiment_user_id, _truncate_middle
 from ._memory import (
     _INTERVIEW_QUERY_TERM_ALIASES,
     _INTERVIEW_TERM_STOPWORDS,
@@ -264,7 +264,7 @@ def _post_to_fact(
 
 def _build_facts_snapshot(
     *,
-    agent_user_id: int,
+    agent_user_id: Any,
     admin_text: str,
     top_posts_limit: int = 3,
     recent_comments_limit: int = 5,
@@ -276,8 +276,9 @@ def _build_facts_snapshot(
     Purpose: reduce hallucination in interviews by giving the model a short list
     of concrete things it actually posted/commented on, plus query-matched hits.
     """
+    normalized_agent_user_id = _coerce_experiment_user_id(agent_user_id)
     snap: Dict[str, Any] = {
-        "agent_user_id": int(agent_user_id),
+        "agent_user_id": normalized_agent_user_id,
         "generated_at": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -295,7 +296,9 @@ def _build_facts_snapshot(
         # Reading signal: replies up to this cursor were seen in notifications inbox.
         last_seen_reply_id = 0
         try:
-            st = ReplyInboxState.query.filter_by(user_id=int(agent_user_id)).first()
+            st = ReplyInboxState.query.filter_by(
+                user_id=normalized_agent_user_id
+            ).first()
             if st is not None:
                 last_seen_reply_id = int(getattr(st, "last_seen_reply_id", 0) or 0)
         except Exception:
@@ -309,7 +312,7 @@ def _build_facts_snapshot(
                     func.count(Post.id).label("cnt"),
                 )
                 .filter(Post.comment_to.in_(parent_ids))
-                .filter(Post.user_id != int(agent_user_id))
+                .filter(Post.user_id != normalized_agent_user_id)
                 .group_by(Post.comment_to)
             )
             for row in q_total.all():
@@ -322,7 +325,7 @@ def _build_facts_snapshot(
         try:
             reply_posts = (
                 Post.query.filter(Post.comment_to.in_(parent_ids))
-                .filter(Post.user_id != int(agent_user_id))
+                .filter(Post.user_id != normalized_agent_user_id)
                 .order_by(desc(Post.id))
                 .limit(120)
                 .all()
@@ -342,7 +345,7 @@ def _build_facts_snapshot(
             try:
                 reacted_rows = (
                     Reactions.query.with_entities(Reactions.post_id)
-                    .filter(Reactions.user_id == int(agent_user_id))
+                    .filter(Reactions.user_id == normalized_agent_user_id)
                     .filter(Reactions.post_id.in_(reply_ids))
                     .all()
                 )
@@ -357,7 +360,7 @@ def _build_facts_snapshot(
             try:
                 replied_rows = (
                     Post.query.with_entities(Post.comment_to)
-                    .filter(Post.user_id == int(agent_user_id))
+                    .filter(Post.user_id == normalized_agent_user_id)
                     .filter(Post.comment_to.in_(reply_ids))
                     .all()
                 )
@@ -456,7 +459,7 @@ def _build_facts_snapshot(
     # Root posts (threads started by the agent).
     try:
         q_top = (
-            Post.query.filter(Post.user_id == int(agent_user_id))
+            Post.query.filter(Post.user_id == normalized_agent_user_id)
             .filter(Post.comment_to == -1)
             .order_by(desc(Post.reaction_count), desc(Post.id))
             .limit(int(top_posts_limit))
@@ -468,7 +471,7 @@ def _build_facts_snapshot(
     # Most recent authored root posts (for "last post/tweet" questions).
     try:
         q_recent_roots = (
-            Post.query.filter(Post.user_id == int(agent_user_id))
+            Post.query.filter(Post.user_id == normalized_agent_user_id)
             .filter(Post.comment_to == -1)
             .order_by(desc(Post.id))
             .limit(max(int(top_posts_limit), 5))
@@ -480,7 +483,7 @@ def _build_facts_snapshot(
     # Recent comments.
     try:
         q_recent = (
-            Post.query.filter(Post.user_id == int(agent_user_id))
+            Post.query.filter(Post.user_id == normalized_agent_user_id)
             .filter(Post.comment_to != -1)
             .order_by(desc(Post.id))
             .limit(int(recent_comments_limit))
@@ -515,7 +518,7 @@ def _build_facts_snapshot(
             ]
             if conds:
                 q_hits = (
-                    Post.query.filter(Post.user_id == int(agent_user_id))
+                    Post.query.filter(Post.user_id == normalized_agent_user_id)
                     .filter(or_(*conds))
                     .order_by(desc(Post.id))
                     .limit(int(query_hits_limit))
@@ -546,7 +549,7 @@ def _build_facts_snapshot(
                 id_conds.append(Post.comment_to.in_(comment_ids))
             if id_conds:
                 q_id_hits = (
-                    Post.query.filter(Post.user_id == int(agent_user_id))
+                    Post.query.filter(Post.user_id == normalized_agent_user_id)
                     .filter(or_(*id_conds))
                     .order_by(desc(Post.id))
                     .limit(max(int(query_hits_limit), 8))

@@ -28,6 +28,7 @@ from ._facts import (
     _try_direct_recent_activity_reply,
 )
 from ._helpers import (
+    _coerce_experiment_user_id,
     _json_error,
     _json_success,
     _normalize_memory_mode,
@@ -87,7 +88,7 @@ def api_interview_agents(exp_id: int):
     for u in users:
         data.append(
             {
-                "user_id": int(u.id),
+                "user_id": _coerce_experiment_user_id(u.id),
                 "username": u.username,
                 "user_type": getattr(u, "user_type", None),
                 "language": getattr(u, "language", None),
@@ -113,20 +114,19 @@ def api_interview_create_session(exp_id: int):
     if agent_user_id is None:
         return _json_error("agent_user_id required", 400, code="bad_request")
 
-    try:
-        agent_user_id = int(agent_user_id)
-    except Exception:
-        return _json_error("agent_user_id must be an int", 400, code="bad_request")
-
-    agent_user = User_mgmt.query.get(agent_user_id)
-    if not agent_user:
-        return _json_error("Agent not found", 404, code="not_found")
+    agent_user_id = _coerce_experiment_user_id(agent_user_id)
+    if agent_user_id is None:
+        return _json_error("agent_user_id required", 400, code="bad_request")
 
     exp = Exps.query.filter_by(idexp=int(exp_id)).first()
     if not exp:
         return _json_error("Experiment not found", 404, code="not_found")
     _ensure_experiment_db_bind(exp)
     db_binding = _ensure_experiment_server_db_binding(exp)
+
+    agent_user = User_mgmt.query.get(agent_user_id)
+    if not agent_user:
+        return _json_error("Agent not found", 404, code="not_found")
 
     backend_mode = (payload.get("backend_mode") or "agent_runtime").strip().lower()
     if backend_mode not in {"agent_runtime", "admin"}:
@@ -141,7 +141,7 @@ def api_interview_create_session(exp_id: int):
     if not run_id:
         run_pick = _detect_run_id_from_server_log(
             exp,
-            agent_user_id=int(agent_user_id),
+            agent_user_id=agent_user_id,
             probe_memory_coverage=preload_memory,
         )
         run_id = str(run_pick.get("run_id") or "").strip() or None
@@ -152,7 +152,7 @@ def api_interview_create_session(exp_id: int):
             run_id_candidates_checked = [c for c in checked if isinstance(c, dict)]
         if not run_id:
             run_pick = _detect_run_id_from_experiment_db(
-                exp, agent_user_id=int(agent_user_id)
+                exp, agent_user_id=agent_user_id
             )
             run_id = str(run_pick.get("run_id") or "").strip() or None
             run_id_source = str(run_pick.get("source") or "none")
@@ -200,7 +200,7 @@ def api_interview_create_session(exp_id: int):
     ):
         run_pick = _detect_run_id_from_server_log(
             exp,
-            agent_user_id=int(agent_user_id),
+            agent_user_id=agent_user_id,
             probe_memory_coverage=True,
         )
         retry_run_id = str(run_pick.get("run_id") or "").strip() or None
@@ -228,7 +228,7 @@ def api_interview_create_session(exp_id: int):
     sess = AdminInterviewSession(
         exp_id=int(exp_id),
         admin_username=getattr(current_user, "username", "") or "",
-        agent_user_id=int(agent_user_id),
+        agent_user_id=agent_user_id,
         agent_username=getattr(agent_user, "username", "") or "",
         run_id=run_id,
         backend_mode=mode,
@@ -386,14 +386,14 @@ def api_interview_refresh_context(exp_id: int, session_id: int):
     if _memory_server_unavailable(db_binding):
         memory_snapshot = _build_unavailable_memory_snapshot(
             run_id=(sess.run_id or "").strip() or None,
-            agent_user_id=int(sess.agent_user_id),
+            agent_user_id=_coerce_experiment_user_id(sess.agent_user_id),
             memory_mode=memory_mode,
         )
     else:
         memory_snapshot = _build_memory_snapshot(
             exp,
             run_id=(sess.run_id or "").strip() or None,
-            agent_user_id=int(sess.agent_user_id),
+            agent_user_id=_coerce_experiment_user_id(sess.agent_user_id),
             memory_mode=memory_mode,
             query_text=query_text,
         )
@@ -445,7 +445,7 @@ def api_interview_send_message(exp_id: int, session_id: int):
         _ensure_experiment_db_bind(exp)
         db_binding = _ensure_experiment_server_db_binding(exp)
 
-        agent_user = User_mgmt.query.get(int(sess.agent_user_id))
+        agent_user = User_mgmt.query.get(_coerce_experiment_user_id(sess.agent_user_id))
         if not agent_user:
             return _json_error("Agent not found", 404, code="not_found")
 
@@ -457,14 +457,14 @@ def api_interview_send_message(exp_id: int, session_id: int):
             if _memory_server_unavailable(db_binding):
                 memory_snapshot = _build_unavailable_memory_snapshot(
                     run_id=(sess.run_id or "").strip() or None,
-                    agent_user_id=int(sess.agent_user_id),
+                    agent_user_id=_coerce_experiment_user_id(sess.agent_user_id),
                     memory_mode=memory_mode,
                 )
             else:
                 memory_snapshot = _build_memory_snapshot(
                     exp,
                     run_id=(sess.run_id or "").strip() or None,
-                    agent_user_id=int(sess.agent_user_id),
+                    agent_user_id=_coerce_experiment_user_id(sess.agent_user_id),
                     memory_mode=memory_mode,
                     query_text=contextual_query_text,
                 )
@@ -480,7 +480,7 @@ def api_interview_send_message(exp_id: int, session_id: int):
 
         memory_pack = _format_memory_pack(memory_snapshot or {})
         facts_snapshot = _build_facts_snapshot(
-            agent_user_id=int(sess.agent_user_id),
+            agent_user_id=_coerce_experiment_user_id(sess.agent_user_id),
             admin_text=contextual_query_text,
         )
         facts_pack = _format_facts_pack(facts_snapshot)

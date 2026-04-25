@@ -118,3 +118,25 @@ def _truncate_middle(text: str, max_len: int) -> str:
     left = max(0, keep // 2)
     right = max(0, keep - left)
     return (s[:left] + "..." + s[-right:]).strip()
+
+
+def _coerce_experiment_user_id(value: Any) -> Any:
+    """
+    Preserve experiment user ids as opaque keys.
+
+    Standard/forum runs usually use integer ids, while HPC can use UUID strings.
+    Return ints for clean integer-like values and raw strings otherwise.
+    """
+    if value is None:
+        return None
+    if isinstance(value, int):
+        return value
+    text = str(value).strip()
+    if not text:
+        return None
+    if re.fullmatch(r"-?\d+", text):
+        try:
+            return int(text)
+        except Exception:
+            pass
+    return text
