@@ -4,11 +4,12 @@ import pytest
 
 from y_web.routes.admin.sub.experiments._opinion import _build_recsys_evolution_payload
 
-
 pytestmark = pytest.mark.unit
 
 
-def test_recsys_evolution_tracks_recommendation_distributions_and_author_reach(tmp_path):
+def test_recsys_evolution_tracks_recommendation_distributions_and_author_reach(
+    tmp_path,
+):
     db_path = tmp_path / "recsys_evolution.db"
     with sqlite3.connect(db_path) as conn:
         conn.executescript("""
@@ -109,21 +110,50 @@ def test_recsys_evolution_tracks_recommendation_distributions_and_author_reach(t
     assert author_panel["followees_count"] == 1
     assert author_panel["reach_trend"]["labels"] == ["Day 1", "Day 2", "Day 3"]
     assert author_panel["reach_trend"]["datasets"][0]["data"] == [1, 2, 3]
-    assert author_panel["reach_trend"]["datasets"][1]["label"] == "Avg. Reach of People Following This Author"
+    assert (
+        author_panel["reach_trend"]["datasets"][1]["label"]
+        == "Avg. Reach of People Following This Author"
+    )
     assert author_panel["reach_trend"]["datasets"][1]["data"] == [1.0, 1.0, 1.0]
-    assert author_panel["reach_trend"]["datasets"][2]["label"] == "Avg. Reach of People This Author Follows"
+    assert (
+        author_panel["reach_trend"]["datasets"][2]["label"]
+        == "Avg. Reach of People This Author Follows"
+    )
     assert author_panel["reach_trend"]["datasets"][2]["data"] == [0.0, 0.0, 0.0]
-    assert author_panel["receiver_diversity_trend"]["labels"] == ["Day 1", "Day 2", "Day 3"]
-    assert author_panel["receiver_diversity_trend"]["datasets"][0]["label"] == "Selected User"
+    assert author_panel["receiver_diversity_trend"]["labels"] == [
+        "Day 1",
+        "Day 2",
+        "Day 3",
+    ]
+    assert (
+        author_panel["receiver_diversity_trend"]["datasets"][0]["label"]
+        == "Selected User"
+    )
     assert author_panel["receiver_diversity_trend"]["datasets"][0]["data"] == [0, 0, 0]
-    assert author_panel["receiver_diversity_trend"]["datasets"][1]["label"] == "Avg. Diversity of People Following This Author"
-    assert author_panel["receiver_diversity_trend"]["datasets"][1]["data"] == [0.0, 0.0, 1.0]
-    assert author_panel["receiver_diversity_trend"]["datasets"][2]["label"] == "Avg. Diversity of People This Author Follows"
-    assert author_panel["receiver_diversity_trend"]["datasets"][2]["data"] == [2.0, 2.0, 2.0]
+    assert (
+        author_panel["receiver_diversity_trend"]["datasets"][1]["label"]
+        == "Avg. Diversity of People Following This Author"
+    )
+    assert author_panel["receiver_diversity_trend"]["datasets"][1]["data"] == [
+        0.0,
+        0.0,
+        1.0,
+    ]
+    assert (
+        author_panel["receiver_diversity_trend"]["datasets"][2]["label"]
+        == "Avg. Diversity of People This Author Follows"
+    )
+    assert author_panel["receiver_diversity_trend"]["datasets"][2]["data"] == [
+        2.0,
+        2.0,
+        2.0,
+    ]
     assert author_panel["post_distribution"]["type"] == "line"
     assert author_panel["post_distribution"]["labels"] == []
     assert author_panel["post_distribution"]["options"]["xType"] == "linear"
-    assert author_panel["post_distribution"]["options"]["xTitle"] == "Recommendation Count"
+    assert (
+        author_panel["post_distribution"]["options"]["xTitle"] == "Recommendation Count"
+    )
     assert author_panel["post_distribution"]["options"]["yTitle"] == "Density"
     assert author_panel["post_distribution"]["datasets"][0]["label"] == "Density"
     assert author_panel["post_distribution"]["datasets"][0]["data"]

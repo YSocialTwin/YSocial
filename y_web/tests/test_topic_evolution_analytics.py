@@ -281,12 +281,14 @@ def test_hashtag_evolution_tracks_volume_population_share_and_lifecycle(tmp_path
     assert analytics["secondary"]["type"] == "heatmap"
     assert analytics["trend"]["row_labels"] == ["ClimateNow", "RoboticsFuture"]
     climate_day_2 = next(
-        cell for cell in analytics["trend"]["cells"]
+        cell
+        for cell in analytics["trend"]["cells"]
         if cell["topic_label"] == "ClimateNow" and cell["time_label"] == "Day 2"
     )
     assert climate_day_2["actual"] == 3
     reach_day_2 = next(
-        cell for cell in analytics["secondary"]["cells"]
+        cell
+        for cell in analytics["secondary"]["cells"]
         if cell["topic_label"] == "ClimateNow" and cell["time_label"] == "Day 2"
     )
     assert reach_day_2["actual"] == 3
