@@ -125,7 +125,9 @@ def test_interview_unavailable_memory_snapshot_preserves_uuid_agent_ids():
         "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/api/interview/_server.py"
     ).read_text(encoding="utf-8")
 
-    assert "normalized_agent_user_id = _coerce_experiment_user_id(agent_user_id)" in server
+    assert (
+        "normalized_agent_user_id = _coerce_experiment_user_id(agent_user_id)" in server
+    )
     assert '"agent_user_id": normalized_agent_user_id' in server
     assert '"agent_user_id": int(agent_user_id)' not in server
 
@@ -138,9 +140,9 @@ def test_interview_facts_and_legacy_memory_preserve_uuid_user_ids():
         "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/api/interview/_memory.py"
     ).read_text(encoding="utf-8")
 
-    assert "_coerce_experiment_user_id(getattr(rp, \"user_id\", None))" in facts
-    assert "_coerce_experiment_user_id(getattr(pp, \"user_id\", None))" in facts
-    assert "_coerce_experiment_user_id(getattr(op, \"user_id\", None))" in facts
-    assert "actor = _coerce_experiment_user_id(ev.get(\"actor_user_id\"))" in memory
-    assert "target = _coerce_experiment_user_id(ev.get(\"target_user_id\"))" in memory
+    assert '_coerce_experiment_user_id(getattr(rp, "user_id", None))' in facts
+    assert '_coerce_experiment_user_id(getattr(pp, "user_id", None))' in facts
+    assert '_coerce_experiment_user_id(getattr(op, "user_id", None))' in facts
+    assert 'actor = _coerce_experiment_user_id(ev.get("actor_user_id"))' in memory
+    assert 'target = _coerce_experiment_user_id(ev.get("target_user_id"))' in memory
     assert '"other_user_id": _coerce_experiment_user_id(other_id)' in memory

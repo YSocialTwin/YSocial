@@ -28,7 +28,10 @@ def migrate_sqlite_server(db_path, quiet=False):
 
         cursor.execute("PRAGMA table_info(forum_chat_sessions)")
         columns = {row[1]: str(row[2] or "").upper() for row in cursor.fetchall()}
-        if columns.get("owner_user_id") == "TEXT" and columns.get("target_user_id") == "TEXT":
+        if (
+            columns.get("owner_user_id") == "TEXT"
+            and columns.get("target_user_id") == "TEXT"
+        ):
             conn.close()
             return True
 
@@ -36,9 +39,10 @@ def migrate_sqlite_server(db_path, quiet=False):
             print("Migrating forum_chat_sessions user id columns to TEXT...")
 
         cursor.execute("PRAGMA foreign_keys=OFF")
-        cursor.execute("ALTER TABLE forum_chat_sessions RENAME TO forum_chat_sessions_old")
         cursor.execute(
-            """
+            "ALTER TABLE forum_chat_sessions RENAME TO forum_chat_sessions_old"
+        )
+        cursor.execute("""
             CREATE TABLE forum_chat_sessions (
                 id INTEGER PRIMARY KEY,
                 owner_user_id TEXT NOT NULL REFERENCES user_mgmt(id),
@@ -56,10 +60,8 @@ def migrate_sqlite_server(db_path, quiet=False):
                 created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
-            """
-        )
-        cursor.execute(
-            """
+            """)
+        cursor.execute("""
             INSERT INTO forum_chat_sessions (
                 id, owner_user_id, owner_username, target_user_id, target_username,
                 target_profile_pic, run_id, llm_model, llm_base_url, persona_snapshot,
@@ -73,8 +75,7 @@ def migrate_sqlite_server(db_path, quiet=False):
                 memory_snapshot_json, last_message_preview, last_message_at,
                 created_at, updated_at
             FROM forum_chat_sessions_old
-            """
-        )
+            """)
         cursor.execute("DROP TABLE forum_chat_sessions_old")
         cursor.execute(
             "CREATE INDEX IF NOT EXISTS ix_forum_chat_sessions_owner_user_id "
@@ -139,27 +140,23 @@ def migrate_postgresql_server(db_config):
     try:
         conn = psycopg2.connect(**db_config)
         cursor = conn.cursor()
-        cursor.execute(
-            """
+        cursor.execute("""
             SELECT EXISTS (
                 SELECT 1
                 FROM information_schema.tables
                 WHERE table_name = 'forum_chat_sessions'
             )
-            """
-        )
+            """)
         if not cursor.fetchone()[0]:
             cursor.close()
             conn.close()
             return True
 
-        cursor.execute(
-            """
+        cursor.execute("""
             ALTER TABLE forum_chat_sessions
             ALTER COLUMN owner_user_id TYPE TEXT USING owner_user_id::text,
             ALTER COLUMN target_user_id TYPE TEXT USING target_user_id::text
-            """
-        )
+            """)
         conn.commit()
         cursor.close()
         conn.close()
