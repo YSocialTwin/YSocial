@@ -42,9 +42,10 @@ def migrate_sqlite(db_path):
             conn.close()
             return True
 
-        cursor.execute("ALTER TABLE admin_interview_sessions RENAME TO admin_interview_sessions_old")
         cursor.execute(
-            """
+            "ALTER TABLE admin_interview_sessions RENAME TO admin_interview_sessions_old"
+        )
+        cursor.execute("""
             CREATE TABLE admin_interview_sessions (
                 id INTEGER PRIMARY KEY,
                 exp_id INTEGER NOT NULL,
@@ -61,10 +62,8 @@ def migrate_sqlite(db_path):
                 created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
-            """
-        )
-        cursor.execute(
-            """
+            """)
+        cursor.execute("""
             INSERT INTO admin_interview_sessions (
                 id, exp_id, admin_username, agent_user_id, agent_username, run_id,
                 backend_mode, llm_model, llm_base_url, persona_snapshot,
@@ -75,8 +74,7 @@ def migrate_sqlite(db_path):
                 backend_mode, llm_model, llm_base_url, persona_snapshot,
                 interests_snapshot_json, memory_snapshot_json, created_at, updated_at
             FROM admin_interview_sessions_old
-            """
-        )
+            """)
         cursor.execute(
             "CREATE INDEX IF NOT EXISTS idx_admin_interview_sessions_exp_id ON admin_interview_sessions(exp_id)"
         )
@@ -103,14 +101,12 @@ def migrate_postgresql(host, port, database, user, password):
             host=host, port=port, database=database, user=user, password=password
         )
         cursor = conn.cursor()
-        cursor.execute(
-            """
+        cursor.execute("""
             SELECT data_type
             FROM information_schema.columns
             WHERE table_name = 'admin_interview_sessions'
               AND column_name = 'agent_user_id'
-            """
-        )
+            """)
         row = cursor.fetchone()
         if row is None:
             conn.close()
@@ -121,13 +117,11 @@ def migrate_postgresql(host, port, database, user, password):
             conn.close()
             return True
 
-        cursor.execute(
-            """
+        cursor.execute("""
             ALTER TABLE admin_interview_sessions
             ALTER COLUMN agent_user_id TYPE VARCHAR(64)
             USING agent_user_id::text
-            """
-        )
+            """)
         conn.commit()
         conn.close()
         return True

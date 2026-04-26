@@ -93,8 +93,10 @@ def test_interview_routes_and_helpers_support_uuid_user_ids():
     assert 'return _json_error("agent_user_id must be an int"' not in routes
     assert '"user_id": _coerce_experiment_user_id(u.id)' in routes
     assert "agent_user_id = _coerce_experiment_user_id(agent_user_id)" in routes
-    assert "str(_coerce_experiment_user_id(obj.get(\"agent_user_id\")))" in memory
-    assert "normalized_agent_user_id = _coerce_experiment_user_id(agent_user_id)" in facts
+    assert 'str(_coerce_experiment_user_id(obj.get("agent_user_id")))' in memory
+    assert (
+        "normalized_agent_user_id = _coerce_experiment_user_id(agent_user_id)" in facts
+    )
 
 
 def test_interview_session_creation_binds_experiment_db_before_agent_lookup():

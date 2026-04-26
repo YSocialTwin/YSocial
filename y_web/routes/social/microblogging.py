@@ -532,7 +532,9 @@ def get_friends(exp_id, user_id, page=1):
     except (ValueError, TypeError):
         # Keep as string if it's a UUID
         pass
-    active_tab = str(request.args.get("tab", "followers") or "followers").strip().lower()
+    active_tab = (
+        str(request.args.get("tab", "followers") or "followers").strip().lower()
+    )
     if active_tab not in {"followers", "followees"}:
         active_tab = "followers"
 
@@ -598,7 +600,9 @@ def api_friends(exp_id, user_id, page=1):
     except (ValueError, TypeError):
         pass
 
-    active_tab = str(request.args.get("tab", "followers") or "followers").strip().lower()
+    active_tab = (
+        str(request.args.get("tab", "followers") or "followers").strip().lower()
+    )
     if active_tab not in {"followers", "followees"}:
         active_tab = "followers"
 

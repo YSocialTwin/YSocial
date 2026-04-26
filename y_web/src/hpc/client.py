@@ -350,7 +350,8 @@ def stop_hpc_client(cli):
                 y_web_dir = os.path.join(writable_base, "y_web")
                 if "database_server.db" in exp_db_name:
                     exp_folder = os.path.join(
-                        y_web_dir, exp_db_name.split("database_server.db")[0].rstrip("/\\")
+                        y_web_dir,
+                        exp_db_name.split("database_server.db")[0].rstrip("/\\"),
                     )
                 else:
                     uid = exp_db_name.removeprefix("experiments_")
@@ -363,22 +364,36 @@ def stop_hpc_client(cli):
                     namespace = "social_sim"
                     if os.path.exists(ray_ns_path):
                         namespace = (
-                            Path(ray_ns_path).read_text(encoding="utf-8").strip() or namespace
+                            Path(ray_ns_path).read_text(encoding="utf-8").strip()
+                            or namespace
                         )
                     if address:
                         connected_here = False
                         if not ray.is_initialized():
-                            ray.init(address=address, namespace=namespace, ignore_reinit_error=True)
+                            ray.init(
+                                address=address,
+                                namespace=namespace,
+                                ignore_reinit_error=True,
+                            )
                             connected_here = True
                         try:
-                            orchestrator = ray.get_actor("Orchestrator", namespace=namespace)
-                            ray.get(orchestrator.deregister_client.remote(cli.name), timeout=5)
-                            print(f"Deregistered HPC client {cli.name} from orchestrator before stop.")
+                            orchestrator = ray.get_actor(
+                                "Orchestrator", namespace=namespace
+                            )
+                            ray.get(
+                                orchestrator.deregister_client.remote(cli.name),
+                                timeout=5,
+                            )
+                            print(
+                                f"Deregistered HPC client {cli.name} from orchestrator before stop."
+                            )
                         finally:
                             if connected_here:
                                 ray.shutdown()
         except Exception as exc:
-            print(f"Warning: failed to deregister HPC client {cli.name} before stop: {exc}")
+            print(
+                f"Warning: failed to deregister HPC client {cli.name} before stop: {exc}"
+            )
 
         pid = cli.pid
         print(f"Terminating HPC client process with PID {pid}...")

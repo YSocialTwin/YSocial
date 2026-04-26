@@ -130,7 +130,9 @@ def test_stop_hpc_client_deregisters_from_orchestrator(tmp_path):
         patch("y_web.src.hpc.client.get_writable_path", return_value=str(tmp_path)),
         patch("y_web.src.hpc.client.ray.is_initialized", return_value=False),
         patch("y_web.src.hpc.client.ray.init") as mock_ray_init,
-        patch("y_web.src.hpc.client.ray.get_actor", return_value=mock_actor) as mock_get_actor,
+        patch(
+            "y_web.src.hpc.client.ray.get_actor", return_value=mock_actor
+        ) as mock_get_actor,
         patch("y_web.src.hpc.client.ray.get", return_value=True) as mock_ray_get,
         patch("y_web.src.hpc.client.ray.shutdown") as mock_ray_shutdown,
         patch("y_web.src.hpc.client.os.kill", side_effect=OSError("no such process")),
