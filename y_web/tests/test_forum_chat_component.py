@@ -185,7 +185,7 @@ def test_profile_route_uses_latest_follow_event_for_forum_state():
     ).read_text()
 
     assert "def _latest_follow_action" in source
-    assert "Follow.query.filter_by(follower_id=follower_id, user_id=user_id)" in source
+    assert "Follow.user_id == follower_id, Follow.follower_id == user_id" in source
     assert "_latest_follow_action(follower_id=logged_id, user_id=user.id)" in source
 
 

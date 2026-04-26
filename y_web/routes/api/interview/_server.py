@@ -14,6 +14,7 @@ from y_web.src.models import Exps
 from y_web.src.system.path_utils import get_writable_path
 
 from ._helpers import (
+    _coerce_experiment_user_id,
     _get_experiment_uid_from_db_name,
     _normalize_memory_mode,
     _safe_json_loads,
@@ -285,14 +286,15 @@ def _memory_server_unavailable(db_binding: Optional[Dict[str, Any]]) -> bool:
 def _build_unavailable_memory_snapshot(
     *,
     run_id: Optional[str],
-    agent_user_id: int,
+    agent_user_id: Any,
     memory_mode: Optional[str] = None,
     reason: str = "experiment_server_unavailable",
 ) -> Dict[str, Any]:
     requested_mode = _normalize_memory_mode(memory_mode)
+    normalized_agent_user_id = _coerce_experiment_user_id(agent_user_id)
     return {
         "run_id": run_id,
-        "agent_user_id": int(agent_user_id),
+        "agent_user_id": normalized_agent_user_id,
         "fetched_at": datetime.now(timezone.utc).isoformat(),
         "memory_mode_requested": requested_mode,
         "memory_mode_used": "unavailable",

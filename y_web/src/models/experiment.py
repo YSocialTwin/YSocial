@@ -166,11 +166,11 @@ class ForumChatSession(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     owner_user_id = db.Column(
-        db.Integer, db.ForeignKey("user_mgmt.id"), nullable=False, index=True
+        db.String(64), db.ForeignKey("user_mgmt.id"), nullable=False, index=True
     )
     owner_username = db.Column(db.String(50), nullable=False, index=True)
     target_user_id = db.Column(
-        db.Integer, db.ForeignKey("user_mgmt.id"), nullable=False, index=True
+        db.String(64), db.ForeignKey("user_mgmt.id"), nullable=False, index=True
     )
     target_username = db.Column(db.String(50), nullable=False, index=True)
     target_profile_pic = db.Column(db.String(400), nullable=True)

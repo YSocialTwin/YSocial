@@ -473,7 +473,7 @@
 
   async function startSession () {
     if (busy) return
-    const agentUserId = parseInt(agentSelect.value, 10)
+    const agentUserId = String(agentSelect.value || '').trim()
     if (!agentUserId) {
       setStatus('Pick an agent first.', true)
       return
@@ -481,7 +481,7 @@
     busy = true
     setStatus('Starting session…')
     try {
-      currentAgentRecord = availableAgents.find(a => parseInt(a.user_id, 10) === agentUserId) || currentAgentRecord
+      currentAgentRecord = availableAgents.find(a => String(a.user_id) === agentUserId) || currentAgentRecord
       renderPersonaHeader()
       const runId = (runIdInput && runIdInput.value ? runIdInput.value.trim() : '')
       const res = await apiPost(`/api/interview/${expId}/session`, {

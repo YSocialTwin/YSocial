@@ -4,6 +4,7 @@ import json
 import os
 import sqlite3
 from datetime import datetime, timezone
+from types import SimpleNamespace
 from typing import Any, Dict, List, Optional
 
 from flask import current_app
@@ -79,10 +80,12 @@ def _iter_run_ids_from_server_log(
     if not uid:
         return []
 
-    log_path = get_writable_path(
-        os.path.join("y_web", "experiments", uid, "_server.log")
-    )
-    if not os.path.exists(log_path):
+    log_candidates = [
+        get_writable_path(os.path.join("y_web", "experiments", uid, "logs", "_server.log")),
+        get_writable_path(os.path.join("y_web", "experiments", uid, "_server.log")),
+    ]
+    log_path = next((path for path in log_candidates if os.path.exists(path)), "")
+    if not log_path:
         return []
 
     try:
@@ -266,6 +269,62 @@ def _experiment_sqlite_db_path(exp: Exps) -> Optional[Any]:
     return Path(get_writable_path(os.path.join("y_web", db_name)))
 
 
+def _load_experiment_user_sqlite(exp: Exps, user_id: Any) -> Optional[Any]:
+    db_path = _experiment_sqlite_db_path(exp)
+    normalized_user_id = _coerce_experiment_user_id(user_id)
+    if db_path is None or not db_path.exists() or normalized_user_id is None:
+        return None
+
+    try:
+        conn = sqlite3.connect(str(db_path))
+        conn.row_factory = sqlite3.Row
+        try:
+            row = conn.execute(
+                "select * from user_mgmt where id = ? limit 1",
+                (str(normalized_user_id),),
+            ).fetchone()
+        finally:
+            conn.close()
+    except Exception:
+        return None
+
+    if row is None:
+        return None
+
+    payload = {k: row[k] for k in row.keys()}
+    return SimpleNamespace(**payload)
+
+
+def _list_experiment_agents_sqlite(exp: Exps) -> List[Any]:
+    db_path = _experiment_sqlite_db_path(exp)
+    if db_path is None or not db_path.exists():
+        return []
+
+    try:
+        conn = sqlite3.connect(str(db_path))
+        conn.row_factory = sqlite3.Row
+        try:
+            rows = conn.execute(
+                """
+                select *
+                from user_mgmt
+                where coalesce(is_page, 0) = 0
+                  and coalesce(user_type, 'user') != 'user'
+                order by username asc, id asc
+                """
+            ).fetchall()
+        finally:
+            conn.close()
+    except Exception:
+        return []
+
+    out: List[Any] = []
+    for row in rows or []:
+        payload = {k: row[k] for k in row.keys()}
+        out.append(SimpleNamespace(**payload))
+    return out
+
+
 def _detect_run_id_from_experiment_db(
     exp: Exps, *, agent_user_id: Optional[int] = None
 ) -> Dict[str, Any]:
@@ -393,6 +452,41 @@ def _get_top_interests_for_user(
         return []
 
 
+def _get_top_interests_for_user_in_exp(
+    exp: Exps, user_id: Any, *, window_rounds: int = 50, limit: int = 10
+) -> List[str]:
+    normalized_user_id = _coerce_experiment_user_id(user_id)
+    if not isinstance(normalized_user_id, str):
+        return _get_top_interests_for_user(
+            normalized_user_id, window_rounds=window_rounds, limit=limit
+        )
+
+    db_path = _experiment_sqlite_db_path(exp)
+    if db_path is None or not db_path.exists():
+        return []
+
+    try:
+        conn = sqlite3.connect(str(db_path))
+        try:
+            rows = conn.execute(
+                """
+                select i.interest, count(ui.interest_id) as cnt
+                from user_interest ui
+                join interests i on ui.interest_id = i.iid
+                where ui.user_id = ?
+                group by ui.interest_id, i.interest
+                order by cnt desc, i.interest asc
+                limit ?
+                """,
+                (normalized_user_id, int(limit)),
+            ).fetchall()
+        finally:
+            conn.close()
+        return [row[0] for row in rows if row and row[0]]
+    except Exception:
+        return []
+
+
 def _build_persona_snapshot(user: User_mgmt, interests: List[str], exp: Exps) -> str:
     vibe = (getattr(exp, "exp_descr", "") or "").strip()
     if not vibe and getattr(exp, "platform_type", "") == "forum":
@@ -471,9 +565,10 @@ def _interview_debug_enabled(payload: Optional[Dict[str, Any]] = None) -> bool:
 def _build_memory_snapshot_legacy(
     exp: Exps, *, run_id: Optional[str], agent_user_id: int
 ) -> Dict[str, Any]:
+    normalized_agent_user_id = _coerce_experiment_user_id(agent_user_id)
     snap: Dict[str, Any] = {
         "run_id": run_id,
-        "agent_user_id": _coerce_experiment_user_id(agent_user_id),
+        "agent_user_id": normalized_agent_user_id,
         "fetched_at": datetime.now(timezone.utc).isoformat(),
     }
     if not run_id:
@@ -486,7 +581,7 @@ def _build_memory_snapshot_legacy(
         ctx = _post_server_json(
             exp,
             "/memory/get_context",
-            {"run_id": run_id, "agent_user_id": _coerce_experiment_user_id(agent_user_id)},
+            {"run_id": run_id, "agent_user_id": normalized_agent_user_id},
             timeout_s=3.0,
         )
     except Exception as exc:
@@ -517,9 +612,9 @@ def _build_memory_snapshot_legacy(
     relevant = []
     for ev in events:
         try:
-            actor = ev.get("actor_user_id")
-            target = ev.get("target_user_id")
-            if actor == agent_user_id or target == agent_user_id:
+            actor = _coerce_experiment_user_id(ev.get("actor_user_id"))
+            target = _coerce_experiment_user_id(ev.get("target_user_id"))
+            if actor == normalized_agent_user_id or target == normalized_agent_user_id:
                 relevant.append(ev)
         except Exception:
             continue
@@ -528,18 +623,18 @@ def _build_memory_snapshot_legacy(
     snap["agent_events_tail"] = relevant[-30:]
 
     # Relationships: pick top counterpart user_ids by count, then recency.
-    pair_counts: Dict[int, int] = {}
-    pair_last_round: Dict[int, int] = {}
+    pair_counts: Dict[Any, int] = {}
+    pair_last_round: Dict[Any, int] = {}
     for ev in relevant:
         other = None
         try:
-            actor = ev.get("actor_user_id")
-            target = ev.get("target_user_id")
+            actor = _coerce_experiment_user_id(ev.get("actor_user_id"))
+            target = _coerce_experiment_user_id(ev.get("target_user_id"))
             rid = int(ev.get("round_id") or 0)
-            if actor == agent_user_id and target is not None:
-                other = int(target)
-            elif target == agent_user_id and actor is not None:
-                other = int(actor)
+            if actor == normalized_agent_user_id and target is not None:
+                other = target
+            elif target == normalized_agent_user_id and actor is not None:
+                other = actor
         except Exception:
             other = None
         if other is None:
@@ -557,7 +652,7 @@ def _build_memory_snapshot_legacy(
     for other_id in other_ids:
         other_username = None
         try:
-            u = User_mgmt.query.get(int(other_id))
+            u = User_mgmt.query.get(_coerce_experiment_user_id(other_id))
             other_username = getattr(u, "username", None) if u else None
         except Exception:
             other_username = None
@@ -569,8 +664,8 @@ def _build_memory_snapshot_legacy(
                 "/memory/get_context",
                 {
                     "run_id": run_id,
-                    "agent_user_id": _coerce_experiment_user_id(agent_user_id),
-                    "other_user_id": int(other_id),
+                    "agent_user_id": normalized_agent_user_id,
+                    "other_user_id": _coerce_experiment_user_id(other_id),
                     "pair_limit": 8,
                 },
                 timeout_s=3.0,
@@ -580,7 +675,7 @@ def _build_memory_snapshot_legacy(
 
         relationships.append(
             {
-                "other_user_id": int(other_id),
+                "other_user_id": _coerce_experiment_user_id(other_id),
                 "other_username": other_username,
                 "social_card": (
                     other_ctx.get("social_card")

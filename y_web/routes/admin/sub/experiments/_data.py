@@ -1544,9 +1544,12 @@ def experiment_trends(exp_id):
 
         exp_folder = os.path.join(BASE_DIR, "y_web", "experiments", uid)
         # For HPC experiments, logs are stored in /logs subfolder
-        if experiment.simulator_type == "HPC":
-            exp_folder = os.path.join(exp_folder, "logs")
-        log_file = os.path.join(exp_folder, "_server.log")
+        log_folder = (
+            os.path.join(exp_folder, "logs")
+            if experiment.simulator_type == "HPC"
+            else exp_folder
+        )
+        log_file = os.path.join(log_folder, "_server.log")
 
         # Check if any log files exist (main or rotated)
         if not has_server_log_files(log_file):
@@ -1672,6 +1675,11 @@ def experiment_trends(exp_id):
         # Update and retrieve client log metrics
         client_daily_compute = {}
         client_hourly_compute = {}
+        log_folder = (
+            os.path.join(exp_folder, "logs")
+            if os.path.isdir(os.path.join(exp_folder, "logs"))
+            else exp_folder
+        )
 
         for client in clients:
             client_log_file = os.path.join(log_folder, f"{client.name}_client.log")

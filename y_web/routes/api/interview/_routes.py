@@ -48,8 +48,11 @@ from ._memory import (
     _detect_run_id_from_server_log,
     _extract_requested_memory_mode,
     _format_memory_pack,
+    _get_top_interests_for_user_in_exp,
     _get_top_interests_for_user,
     _interview_debug_enabled,
+    _list_experiment_agents_sqlite,
+    _load_experiment_user_sqlite,
     _memory_snapshot_has_structured_content,
     _resolve_interview_profile_pic,
 )
@@ -75,12 +78,14 @@ def api_interview_agents(exp_id: int):
 
     # LLM agents register their model name in user_type (anything other than "user").
     try:
-        q = (
-            User_mgmt.query.filter(User_mgmt.is_page == 0)
-            .filter(User_mgmt.user_type != "user")
-            .order_by(User_mgmt.id.asc())
-        )
-        users = q.all()
+        users = _list_experiment_agents_sqlite(exp)
+        if not users:
+            q = (
+                User_mgmt.query.filter(User_mgmt.is_page == 0)
+                .filter(User_mgmt.user_type != "user")
+                .order_by(User_mgmt.id.asc())
+            )
+            users = q.all()
     except Exception as exc:
         return _json_error(f"Failed to load agents: {exc}", 500, code="db_error")
 
@@ -124,7 +129,13 @@ def api_interview_create_session(exp_id: int):
     _ensure_experiment_db_bind(exp)
     db_binding = _ensure_experiment_server_db_binding(exp)
 
-    agent_user = User_mgmt.query.get(agent_user_id)
+    agent_user = (
+        _load_experiment_user_sqlite(exp, agent_user_id)
+        if isinstance(agent_user_id, str)
+        else None
+    )
+    if agent_user is None:
+        agent_user = User_mgmt.query.get(agent_user_id)
     if not agent_user:
         return _json_error("Agent not found", 404, code="not_found")
 
@@ -168,7 +179,7 @@ def api_interview_create_session(exp_id: int):
                 run_id_source = "none"
                 run_id_selected_reason = "no_run_detected"
 
-    interests = _get_top_interests_for_user(agent_user_id)
+    interests = _get_top_interests_for_user_in_exp(exp, agent_user_id)
     persona = _build_persona_snapshot(agent_user, interests, exp)
     if _memory_server_unavailable(db_binding):
         memory_snapshot = _build_unavailable_memory_snapshot(
@@ -445,7 +456,14 @@ def api_interview_send_message(exp_id: int, session_id: int):
         _ensure_experiment_db_bind(exp)
         db_binding = _ensure_experiment_server_db_binding(exp)
 
-        agent_user = User_mgmt.query.get(_coerce_experiment_user_id(sess.agent_user_id))
+        normalized_agent_user_id = _coerce_experiment_user_id(sess.agent_user_id)
+        agent_user = (
+            _load_experiment_user_sqlite(exp, normalized_agent_user_id)
+            if isinstance(normalized_agent_user_id, str)
+            else None
+        )
+        if agent_user is None:
+            agent_user = User_mgmt.query.get(normalized_agent_user_id)
         if not agent_user:
             return _json_error("Agent not found", 404, code="not_found")
 
@@ -457,14 +475,14 @@ def api_interview_send_message(exp_id: int, session_id: int):
             if _memory_server_unavailable(db_binding):
                 memory_snapshot = _build_unavailable_memory_snapshot(
                     run_id=(sess.run_id or "").strip() or None,
-                    agent_user_id=_coerce_experiment_user_id(sess.agent_user_id),
+                    agent_user_id=normalized_agent_user_id,
                     memory_mode=memory_mode,
                 )
             else:
                 memory_snapshot = _build_memory_snapshot(
                     exp,
                     run_id=(sess.run_id or "").strip() or None,
-                    agent_user_id=_coerce_experiment_user_id(sess.agent_user_id),
+                    agent_user_id=normalized_agent_user_id,
                     memory_mode=memory_mode,
                     query_text=contextual_query_text,
                 )
@@ -480,7 +498,8 @@ def api_interview_send_message(exp_id: int, session_id: int):
 
         memory_pack = _format_memory_pack(memory_snapshot or {})
         facts_snapshot = _build_facts_snapshot(
-            agent_user_id=_coerce_experiment_user_id(sess.agent_user_id),
+            exp=exp,
+            agent_user_id=normalized_agent_user_id,
             admin_text=contextual_query_text,
         )
         facts_pack = _format_facts_pack(facts_snapshot)

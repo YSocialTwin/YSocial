@@ -418,6 +418,50 @@ def _run_all_migrations(app, db_type, db):
         print(f"Failed to run moderation schema migration: {e}")
 
     # ------------------------------------------------------------------
+    # forum/private chat session user ids (UUID-compatible)
+    # ------------------------------------------------------------------
+    try:
+        if db_type == "sqlite":
+            from y_web.migrations.forum_chat_uuid_user_ids import (
+                migrate_experiment_databases as migrate_chat_uuid_experiment_databases,
+            )
+            from y_web.migrations.forum_chat_uuid_user_ids import (
+                migrate_sqlite_server as migrate_chat_uuid_sqlite_server,
+            )
+
+            if dummy_db_path:
+                migrate_chat_uuid_sqlite_server(dummy_db_path, quiet=True)
+
+            from y_web.src.system.path_utils import get_writable_path
+
+            experiments_dir = os.path.join(get_writable_path(), "y_web", "experiments")
+            if os.path.exists(experiments_dir):
+                print("Migrating chat session UUID-compatible user ids...")
+                success, total = migrate_chat_uuid_experiment_databases(
+                    experiments_dir, quiet=False
+                )
+                if total > 0:
+                    print(f"✓ Migrated {success}/{total} experiment databases")
+        elif db_type == "postgresql":
+            from y_web.migrations.forum_chat_uuid_user_ids import (
+                migrate_postgresql_server as migrate_chat_uuid_postgresql_server,
+            )
+
+            if pg["password"]:
+                pg_dummy_db = os.getenv("PG_DBNAME_DUMMY", "dummy")
+                migrate_chat_uuid_postgresql_server(
+                    {
+                        "host": pg["host"],
+                        "port": pg["port"],
+                        "database": pg_dummy_db,
+                        "user": pg["user"],
+                        "password": pg["password"],
+                    }
+                )
+    except Exception as e:
+        print(f"Failed to run chat session UUID user id migration: {e}")
+
+    # ------------------------------------------------------------------
     # opinion evolution cache tables
     # ------------------------------------------------------------------
     try:

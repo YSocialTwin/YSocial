@@ -17,12 +17,15 @@ from y_web.routes.api.interview._llm import (
     _resolve_llm_backend,
     _sanitize_interview_reply,
 )
+from y_web.routes.api.interview._helpers import _coerce_experiment_user_id
 from y_web.routes.api.interview._memory import (
     _build_memory_snapshot,
     _build_persona_snapshot,
     _detect_run_id_from_server_log,
+    _experiment_sqlite_db_path,
     _format_memory_pack,
-    _get_top_interests_for_user,
+    _get_top_interests_for_user_in_exp,
+    _load_experiment_user_sqlite,
     _resolve_interview_profile_pic,
 )
 from y_web.routes.api.interview._server import (
@@ -56,27 +59,75 @@ def _json_error(message: str, status: int = 400):
     return jsonify({"success": False, "error": message}), status
 
 
-def _social_chat_owner_user() -> User_mgmt | None:
-    return User_mgmt.query.filter_by(
-        username=getattr(current_user, "username", "") or ""
-    ).first()
+def _social_chat_owner_user(exp: Exps) -> User_mgmt | None:
+    username = getattr(current_user, "username", "") or ""
+    db_path = _experiment_sqlite_db_path(exp)
+    if db_path is not None and db_path.exists():
+        try:
+            import sqlite3
+
+            conn = sqlite3.connect(str(db_path))
+            conn.row_factory = sqlite3.Row
+            try:
+                row = conn.execute(
+                    "select id from user_mgmt where username = ? limit 1",
+                    (username,),
+                ).fetchone()
+            finally:
+                conn.close()
+            if row is not None:
+                return _load_experiment_user_sqlite(exp, row["id"])
+        except Exception:
+            pass
+
+    return User_mgmt.query.filter_by(username=username).first()
 
 
-def _social_chat_followed_agent_ids(owner_user_id: int) -> set[int]:
-    followed_ids: set[int] = set()
-    latest_actions: dict[int, str] = {}
-    follow_events = (
-        Follow.query.filter_by(follower_id=int(owner_user_id))
-        .order_by(Follow.id.desc())
-        .all()
-    )
-    for event in follow_events:
-        target_id = int(getattr(event, "user_id", 0) or 0)
-        if not target_id or target_id in latest_actions:
-            continue
-        latest_actions[target_id] = (
-            str(getattr(event, "action", "") or "").strip().lower()
+def _social_chat_followed_agent_ids(exp: Exps, owner_user_id) -> set:
+    owner_id = _coerce_experiment_user_id(owner_user_id)
+    followed_ids: set = set()
+    latest_actions: dict = {}
+    db_path = _experiment_sqlite_db_path(exp)
+
+    if isinstance(owner_id, str) and db_path is not None and db_path.exists():
+        try:
+            import sqlite3
+
+            conn = sqlite3.connect(str(db_path))
+            conn.row_factory = sqlite3.Row
+            try:
+                rows = conn.execute(
+                    """
+                    select f.follower_id as target_id, f.action
+                    from follow f
+                    left join rounds r on f.round = r.id
+                    where f.user_id = ?
+                    order by coalesce(r.day, 0) desc, coalesce(r.hour, 0) desc, f.rowid desc
+                    """,
+                    (owner_id,),
+                ).fetchall()
+            finally:
+                conn.close()
+            for row in rows:
+                target_id = _coerce_experiment_user_id(row["target_id"])
+                if target_id is None or target_id in latest_actions:
+                    continue
+                latest_actions[target_id] = str(row["action"] or "").strip().lower()
+        except Exception:
+            latest_actions = {}
+    else:
+        follow_events = (
+            Follow.query.filter(Follow.user_id == owner_id)
+            .order_by(Follow.id.desc())
+            .all()
         )
+        for event in follow_events:
+            target_id = _coerce_experiment_user_id(getattr(event, "follower_id", None))
+            if target_id is None or target_id in latest_actions:
+                continue
+            latest_actions[target_id] = (
+                str(getattr(event, "action", "") or "").strip().lower()
+            )
 
     for target_id, action in latest_actions.items():
         if action == "follow":
@@ -114,7 +165,7 @@ def _social_chat_session_payload(
 ) -> dict:
     payload = {
         "id": int(session.id),
-        "target_user_id": int(session.target_user_id),
+        "target_user_id": _coerce_experiment_user_id(session.target_user_id),
         "target_username": str(session.target_username or ""),
         "target_profile_pic": str(session.target_profile_pic or ""),
         "last_message_preview": str(session.last_message_preview or ""),
@@ -186,8 +237,8 @@ def _social_chat_upsert_session(
 ) -> ForumChatSession:
     session = (
         ForumChatSession.query.filter_by(
-            owner_user_id=int(owner_user.id),
-            target_user_id=int(target_user.id),
+            owner_user_id=_coerce_experiment_user_id(owner_user.id),
+            target_user_id=_coerce_experiment_user_id(target_user.id),
         )
         .order_by(ForumChatSession.updated_at.desc(), ForumChatSession.id.desc())
         .first()
@@ -199,11 +250,11 @@ def _social_chat_upsert_session(
             )
         return session
 
-    interests = _get_top_interests_for_user(int(target_user.id))
+    interests = _get_top_interests_for_user_in_exp(exp, target_user.id)
     session = ForumChatSession(
-        owner_user_id=int(owner_user.id),
+        owner_user_id=_coerce_experiment_user_id(owner_user.id),
         owner_username=str(owner_user.username or ""),
-        target_user_id=int(target_user.id),
+        target_user_id=_coerce_experiment_user_id(target_user.id),
         target_username=str(target_user.username or ""),
         target_profile_pic=_resolve_interview_profile_pic(target_user, exp),
         persona_snapshot=_build_persona_snapshot(target_user, interests, exp),
@@ -217,13 +268,15 @@ def _social_chat_refresh_runtime_context(
     *, exp: Exps, target_user: User_mgmt, session: ForumChatSession, query_text: str
 ) -> dict:
     if not session.persona_snapshot:
-        interests = _get_top_interests_for_user(int(target_user.id))
+        interests = _get_top_interests_for_user_in_exp(exp, target_user.id)
         session.persona_snapshot = _build_persona_snapshot(target_user, interests, exp)
 
     run_id = str(session.run_id or "").strip() or None
     if not run_id:
         detected = _detect_run_id_from_server_log(
-            exp, agent_user_id=int(target_user.id), probe_memory_coverage=True
+            exp,
+            agent_user_id=_coerce_experiment_user_id(target_user.id),
+            probe_memory_coverage=True,
         )
         run_id = str(detected.get("run_id") or "").strip() or None
         session.run_id = run_id
@@ -235,7 +288,7 @@ def _social_chat_refresh_runtime_context(
             snapshot = _build_memory_snapshot(
                 exp,
                 run_id=run_id,
-                agent_user_id=int(target_user.id),
+                agent_user_id=_coerce_experiment_user_id(target_user.id),
                 memory_mode="semantic",
                 query_text=query_text,
             )
@@ -263,7 +316,8 @@ def _social_chat_generate_reply(
     )
     memory_pack = _social_chat_render_memory_pack(memory_snapshot)
     facts_snapshot = _build_facts_snapshot(
-        agent_user_id=int(target_user.id),
+        exp=exp,
+        agent_user_id=_coerce_experiment_user_id(target_user.id),
         admin_text=memory_query,
     )
     facts_pack = _format_facts_pack(facts_snapshot, max_chars=2200).strip()
@@ -356,21 +410,36 @@ def api_social_chat_bootstrap(exp_id: int):
         )
     _ensure_experiment_db_bind(exp)
 
-    owner_user = _social_chat_owner_user()
+    owner_user = _social_chat_owner_user(exp)
     if owner_user is None:
         return _json_error("Experiment user not found for current session.", 404)
-    followed_agent_ids = _social_chat_followed_agent_ids(int(owner_user.id))
+    owner_id = _coerce_experiment_user_id(owner_user.id)
+    followed_agent_ids = _social_chat_followed_agent_ids(exp, owner_id)
 
-    agents = (
-        User_mgmt.query.filter(User_mgmt.is_page == 0)
-        .filter(User_mgmt.user_type != "user")
-        .filter(User_mgmt.id != int(owner_user.id))
-        .filter(User_mgmt.id.in_(followed_agent_ids or {-1}))
-        .order_by(User_mgmt.username.asc())
-        .all()
-    )
+    if isinstance(owner_id, str):
+        agents = [
+            _load_experiment_user_sqlite(exp, agent_id)
+            for agent_id in sorted(followed_agent_ids, key=lambda value: str(value))
+        ]
+        agents = [
+            agent
+            for agent in agents
+            if agent is not None
+            and int(getattr(agent, "is_page", 0) or 0) == 0
+            and str(getattr(agent, "user_type", "user") or "user") != "user"
+            and _coerce_experiment_user_id(getattr(agent, "id", None)) != owner_id
+        ]
+    else:
+        agents = (
+            User_mgmt.query.filter(User_mgmt.is_page == 0)
+            .filter(User_mgmt.user_type != "user")
+            .filter(User_mgmt.id != owner_id)
+            .filter(User_mgmt.id.in_(followed_agent_ids or {-1}))
+            .order_by(User_mgmt.username.asc())
+            .all()
+        )
     sessions = (
-        ForumChatSession.query.filter_by(owner_user_id=int(owner_user.id))
+        ForumChatSession.query.filter_by(owner_user_id=owner_id)
         .order_by(
             ForumChatSession.last_message_at.desc(),
             ForumChatSession.updated_at.desc(),
@@ -379,16 +448,21 @@ def api_social_chat_bootstrap(exp_id: int):
         .all()
     )
     sessions = [
-        sess for sess in sessions if int(sess.target_user_id) in followed_agent_ids
+        sess
+        for sess in sessions
+        if _coerce_experiment_user_id(sess.target_user_id) in followed_agent_ids
     ]
 
-    session_map = {int(sess.target_user_id): sess for sess in sessions}
+    session_map = {
+        _coerce_experiment_user_id(sess.target_user_id): sess for sess in sessions
+    }
     agent_payload = []
     for agent in agents:
-        sess = session_map.get(int(agent.id))
+        agent_id = _coerce_experiment_user_id(agent.id)
+        sess = session_map.get(agent_id)
         agent_payload.append(
             {
-                "user_id": int(agent.id),
+                "user_id": agent_id,
                 "username": str(agent.username or ""),
                 "profile_pic": _resolve_interview_profile_pic(agent, exp),
                 "profession": str(getattr(agent, "profession", "") or ""),
@@ -405,7 +479,7 @@ def api_social_chat_bootstrap(exp_id: int):
     return _json_success(
         {
             "owner": {
-                "user_id": int(owner_user.id),
+                "user_id": owner_id,
                 "username": str(owner_user.username or ""),
             },
             "agents": agent_payload,
@@ -426,27 +500,29 @@ def api_social_chat_open_session(exp_id: int):
         )
     _ensure_experiment_db_bind(exp)
 
-    owner_user = _social_chat_owner_user()
+    owner_user = _social_chat_owner_user(exp)
     if owner_user is None:
         return _json_error("Experiment user not found for current session.", 404)
-    followed_agent_ids = _social_chat_followed_agent_ids(int(owner_user.id))
+    owner_id = _coerce_experiment_user_id(owner_user.id)
+    followed_agent_ids = _social_chat_followed_agent_ids(exp, owner_id)
 
     payload = request.get_json(silent=True) or {}
-    agent_user_id = payload.get("agent_user_id")
-    try:
-        agent_user_id = int(agent_user_id)
-    except Exception:
-        return _json_error("agent_user_id must be an integer.", 400)
-
+    agent_user_id = _coerce_experiment_user_id(payload.get("agent_user_id"))
     target_user = (
-        User_mgmt.query.filter(User_mgmt.is_page == 0)
-        .filter(User_mgmt.user_type != "user")
-        .filter(User_mgmt.id == int(agent_user_id))
-        .first()
+        _load_experiment_user_sqlite(exp, agent_user_id)
+        if isinstance(agent_user_id, str)
+        else None
     )
     if target_user is None:
+        target_user = (
+            User_mgmt.query.filter(User_mgmt.is_page == 0)
+            .filter(User_mgmt.user_type != "user")
+            .filter(User_mgmt.id == agent_user_id)
+            .first()
+        )
+    if target_user is None:
         return _json_error("Target agent not found.", 404)
-    if int(target_user.id) not in followed_agent_ids:
+    if _coerce_experiment_user_id(target_user.id) not in followed_agent_ids:
         return _json_error("You can chat only with followed agents.", 403)
 
     session = _social_chat_upsert_session(
@@ -468,17 +544,18 @@ def api_social_chat_get_session(exp_id: int, session_id: int):
         )
     _ensure_experiment_db_bind(exp)
 
-    owner_user = _social_chat_owner_user()
+    owner_user = _social_chat_owner_user(exp)
     if owner_user is None:
         return _json_error("Experiment user not found for current session.", 404)
-    followed_agent_ids = _social_chat_followed_agent_ids(int(owner_user.id))
+    owner_id = _coerce_experiment_user_id(owner_user.id)
+    followed_agent_ids = _social_chat_followed_agent_ids(exp, owner_id)
 
     session = ForumChatSession.query.filter_by(
-        id=int(session_id), owner_user_id=int(owner_user.id)
+        id=int(session_id), owner_user_id=owner_id
     ).first()
     if session is None:
         return _json_error("Chat session not found.", 404)
-    if int(session.target_user_id) not in followed_agent_ids:
+    if _coerce_experiment_user_id(session.target_user_id) not in followed_agent_ids:
         return _json_error("You can chat only with followed agents.", 403)
 
     return _json_success(_social_chat_session_payload(session, include_messages=True))
@@ -496,20 +573,28 @@ def api_social_chat_send_message(exp_id: int, session_id: int):
         )
     _ensure_experiment_db_bind(exp)
 
-    owner_user = _social_chat_owner_user()
+    owner_user = _social_chat_owner_user(exp)
     if owner_user is None:
         return _json_error("Experiment user not found for current session.", 404)
-    followed_agent_ids = _social_chat_followed_agent_ids(int(owner_user.id))
+    owner_id = _coerce_experiment_user_id(owner_user.id)
+    followed_agent_ids = _social_chat_followed_agent_ids(exp, owner_id)
 
     session = ForumChatSession.query.filter_by(
-        id=int(session_id), owner_user_id=int(owner_user.id)
+        id=int(session_id), owner_user_id=owner_id
     ).first()
     if session is None:
         return _json_error("Chat session not found.", 404)
-    if int(session.target_user_id) not in followed_agent_ids:
+    target_id = _coerce_experiment_user_id(session.target_user_id)
+    if target_id not in followed_agent_ids:
         return _json_error("You can chat only with followed agents.", 403)
 
-    target_user = User_mgmt.query.filter_by(id=int(session.target_user_id)).first()
+    target_user = (
+        _load_experiment_user_sqlite(exp, target_id)
+        if isinstance(target_id, str)
+        else None
+    )
+    if target_user is None:
+        target_user = User_mgmt.query.filter_by(id=target_id).first()
     if target_user is None:
         return _json_error("Target agent not found.", 404)
 

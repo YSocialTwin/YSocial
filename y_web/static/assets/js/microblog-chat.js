@@ -149,13 +149,13 @@
 
   function renderList () {
     const query = String(searchInput.value || '').trim().toLowerCase()
-    const sessionsByTarget = new Map(state.sessions.map(session => [Number(session.target_user_id), session]))
+    const sessionsByTarget = new Map(state.sessions.map(session => [String(session.target_user_id), session]))
 
     const items = state.agents
       .filter(agent => !query || String(agent.username || '').toLowerCase().includes(query))
       .sort((a, b) => {
-        const aTime = sessionsByTarget.get(Number(a.user_id))?.last_message_at || ''
-        const bTime = sessionsByTarget.get(Number(b.user_id))?.last_message_at || ''
+        const aTime = sessionsByTarget.get(String(a.user_id))?.last_message_at || ''
+        const bTime = sessionsByTarget.get(String(b.user_id))?.last_message_at || ''
         return String(bTime).localeCompare(String(aTime))
       })
 
@@ -166,7 +166,7 @@
     }
 
     listEl.innerHTML = items.map(agent => {
-      const session = sessionsByTarget.get(Number(agent.user_id))
+      const session = sessionsByTarget.get(String(agent.user_id))
       const preview = session?.last_message_preview || agent.preview || agent.profession || 'Start a conversation'
       const stamp = session?.last_message_at ? new Date(session.last_message_at).toLocaleDateString() : ''
       return `
@@ -184,7 +184,7 @@
     }).join('')
 
     listEl.querySelectorAll('.microblog-chat-list-item').forEach(btn => {
-      btn.addEventListener('click', () => openSession(Number(btn.dataset.agentId)))
+      btn.addEventListener('click', () => openSession(String(btn.dataset.agentId || '').trim()))
     })
 
     if (window.feather && typeof window.feather.replace === 'function') {
@@ -243,7 +243,7 @@
   async function openSession (agentId) {
     try {
       const session = await apiPost(`/api/social/${expId}/chat/session`, { agent_user_id: agentId })
-      const idx = state.sessions.findIndex(item => Number(item.id) === Number(session.id))
+      const idx = state.sessions.findIndex(item => String(item.id) === String(session.id))
       if (idx >= 0) state.sessions[idx] = session
       else state.sessions.unshift(session)
       setCurrentSession(session)
@@ -265,7 +265,7 @@
       const nextSession = Object.assign({}, state.currentSession, data.session)
       nextSession.messages = [...(state.currentSession.messages || []), data.user_message, data.assistant_message]
       state.currentSession = nextSession
-      const idx = state.sessions.findIndex(item => Number(item.id) === Number(nextSession.id))
+      const idx = state.sessions.findIndex(item => String(item.id) === String(nextSession.id))
       if (idx >= 0) state.sessions[idx] = nextSession
       else state.sessions.unshift(nextSession)
       markSessionRead(nextSession)

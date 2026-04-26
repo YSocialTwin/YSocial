@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import sqlite3
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -9,6 +10,7 @@ from sqlalchemy import case, desc, func, or_
 from y_web import db
 from y_web.src.models import (
     AdminInterviewMessage,
+    Exps,
     Interests,
     Post,
     Reactions,
@@ -22,6 +24,7 @@ from ._memory import (
     _INTERVIEW_QUERY_TERM_ALIASES,
     _INTERVIEW_TERM_STOPWORDS,
     _INTERVIEW_WEAK_QUERY_TERMS,
+    _experiment_sqlite_db_path,
 )
 
 
@@ -262,8 +265,287 @@ def _post_to_fact(
     return out
 
 
+def _build_facts_snapshot_sqlite(
+    *,
+    exp: Exps,
+    agent_user_id: str,
+    admin_text: str,
+    top_posts_limit: int = 3,
+    recent_comments_limit: int = 5,
+    query_hits_limit: int = 5,
+) -> Dict[str, Any]:
+    db_path = _experiment_sqlite_db_path(exp)
+    snap: Dict[str, Any] = {
+        "agent_user_id": agent_user_id,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    if db_path is None or not db_path.exists():
+        snap.update(
+            {
+                "query_terms": [],
+                "query_id_filters": {"thread_ids": [], "post_ids": [], "comment_ids": []},
+                "query_hit_evaluations": [],
+                "query_hits_viable_count": 0,
+                "top_posts": [],
+                "recent_root_posts": [],
+                "recent_comments": [],
+                "replies_to_recent_comments": [],
+                "replies_to_top_posts": [],
+                "query_hits": [],
+            }
+        )
+        return snap
+
+    terms = _extract_query_terms(admin_text)
+    query_ids = _extract_query_ids(admin_text)
+    snap["query_terms"] = terms
+    snap["query_id_filters"] = query_ids
+
+    try:
+        conn = sqlite3.connect(str(db_path))
+        conn.row_factory = sqlite3.Row
+        try:
+            def _fetch_posts(where_sql: str, params: Tuple[Any, ...], limit: int) -> List[sqlite3.Row]:
+                sql = f"""
+                    select id, tweet, thread_id, comment_to, round, reaction_count, user_id
+                    from post
+                    where {where_sql}
+                    order by reaction_count desc, id desc
+                    limit ?
+                """
+                return conn.execute(sql, tuple(params) + (int(limit),)).fetchall()
+
+            def _fetch_recent_posts(where_sql: str, params: Tuple[Any, ...], limit: int) -> List[sqlite3.Row]:
+                sql = f"""
+                    select id, tweet, thread_id, comment_to, round, reaction_count, user_id
+                    from post
+                    where {where_sql}
+                    order by id desc
+                    limit ?
+                """
+                return conn.execute(sql, tuple(params) + (int(limit),)).fetchall()
+
+            top_posts = _fetch_posts(
+                "user_id = ? and coalesce(comment_to, '-1') = '-1'",
+                (agent_user_id,),
+                int(top_posts_limit),
+            )
+            recent_root_posts = _fetch_recent_posts(
+                "user_id = ? and coalesce(comment_to, '-1') = '-1'",
+                (agent_user_id,),
+                max(int(top_posts_limit), 5),
+            )
+            recent_comments = _fetch_recent_posts(
+                "user_id = ? and coalesce(comment_to, '-1') != '-1'",
+                (agent_user_id,),
+                int(recent_comments_limit),
+            )
+
+            all_posts = list(top_posts) + list(recent_root_posts) + list(recent_comments)
+
+            query_hits_rows: List[sqlite3.Row] = []
+            if terms:
+                conds = []
+                params: List[Any] = [agent_user_id]
+                for term in terms[:8]:
+                    conds.append("lower(tweet) like ?")
+                    params.append(f"%{str(term).lower()}%")
+                sql = f"""
+                    select id, tweet, thread_id, comment_to, round, reaction_count, user_id
+                    from post
+                    where user_id = ? and ({' or '.join(conds)})
+                    order by id desc
+                    limit ?
+                """
+                query_hits_rows.extend(
+                    conn.execute(sql, tuple(params) + (max(int(query_hits_limit), 8),)).fetchall()
+                )
+
+            explicit_rows: List[sqlite3.Row] = []
+            thread_ids = [str(x) for x in (query_ids.get("thread_ids") or []) if str(x).strip()]
+            post_ids = [str(x) for x in (query_ids.get("post_ids") or []) if str(x).strip()]
+            comment_ids = [str(x) for x in (query_ids.get("comment_ids") or []) if str(x).strip()]
+            explicit_conds = []
+            explicit_params: List[Any] = [agent_user_id]
+            if thread_ids:
+                explicit_conds.append(f"thread_id in ({','.join(['?']*len(thread_ids))})")
+                explicit_params.extend(thread_ids)
+            if post_ids:
+                explicit_conds.append(f"id in ({','.join(['?']*len(post_ids))})")
+                explicit_params.extend(post_ids)
+            if comment_ids:
+                explicit_conds.append(f"comment_to in ({','.join(['?']*len(comment_ids))})")
+                explicit_params.extend(comment_ids)
+            if explicit_conds:
+                sql = f"""
+                    select id, tweet, thread_id, comment_to, round, reaction_count, user_id
+                    from post
+                    where user_id = ? and ({' or '.join(explicit_conds)})
+                    order by id desc
+                    limit ?
+                """
+                explicit_rows = conn.execute(
+                    sql,
+                    tuple(explicit_params) + (max(int(query_hits_limit), 8),),
+                ).fetchall()
+
+            merged_by_id: Dict[str, sqlite3.Row] = {}
+            for row in list(explicit_rows) + list(query_hits_rows):
+                rid = str(row["id"])
+                if rid not in merged_by_id:
+                    merged_by_id[rid] = row
+            query_hits = list(merged_by_id.values())[: max(int(query_hits_limit), 8)]
+            all_posts.extend(query_hits)
+
+            post_ids_all = sorted({str(row["id"]) for row in all_posts if row is not None})
+            reaction_counts: Dict[str, Dict[str, int]] = {
+                pid: {"likes": 0, "dislikes": 0} for pid in post_ids_all
+            }
+            if post_ids_all:
+                sql = f"""
+                    select post_id,
+                           sum(case when lower(type) in ('like','love','laugh') then 1 else 0 end) as likes,
+                           sum(case when lower(type) in ('dislike','angry','sad') then 1 else 0 end) as dislikes
+                    from reactions
+                    where post_id in ({','.join(['?']*len(post_ids_all))})
+                    group by post_id
+                """
+                for row in conn.execute(sql, tuple(post_ids_all)).fetchall():
+                    reaction_counts[str(row["post_id"])] = {
+                        "likes": int(row["likes"] or 0),
+                        "dislikes": int(row["dislikes"] or 0),
+                    }
+
+            parent_ids = sorted(
+                {
+                    str(row["comment_to"])
+                    for row in list(recent_comments) + list(query_hits)
+                    if str(row["comment_to"] or "").strip() not in {"", "-1", "None"}
+                }
+            )
+            thread_ids_for_context = sorted(
+                {
+                    str(row["thread_id"])
+                    for row in list(recent_comments) + list(query_hits)
+                    if str(row["thread_id"] or "").strip() not in {"", "0", "None"}
+                }
+            )
+
+            parent_map: Dict[str, sqlite3.Row] = {}
+            if parent_ids:
+                sql = f"select id, tweet, user_id from post where id in ({','.join(['?']*len(parent_ids))})"
+                for row in conn.execute(sql, tuple(parent_ids)).fetchall():
+                    parent_map[str(row["id"])] = row
+
+            op_map: Dict[str, sqlite3.Row] = {}
+            if thread_ids_for_context:
+                sql = f"select id, tweet, user_id from post where id in ({','.join(['?']*len(thread_ids_for_context))})"
+                for row in conn.execute(sql, tuple(thread_ids_for_context)).fetchall():
+                    op_map[str(row["id"])] = row
+
+            user_ids = sorted(
+                {
+                    str(row["user_id"])
+                    for row in list(parent_map.values()) + list(op_map.values())
+                    if str(row["user_id"] or "").strip()
+                }
+            )
+            usernames: Dict[str, str] = {}
+            if user_ids:
+                sql = f"select id, username from user_mgmt where id in ({','.join(['?']*len(user_ids))})"
+                for row in conn.execute(sql, tuple(user_ids)).fetchall():
+                    usernames[str(row["id"])] = str(row["username"] or "")
+
+            def _row_to_fact(row: sqlite3.Row) -> Dict[str, Any]:
+                pid = str(row["id"])
+                parent_id = str(row["comment_to"] or "")
+                thread_id = str(row["thread_id"] or "")
+                parent_post = parent_map.get(parent_id)
+                thread_post = op_map.get(thread_id)
+                return {
+                    "post_id": pid,
+                    "thread_root_id": thread_id or None,
+                    "comment_to": parent_id if parent_id and parent_id != "-1" else None,
+                    "round": str(row["round"] or "") or None,
+                    "reaction_count": int(row["reaction_count"] or 0),
+                    "likes": int((reaction_counts.get(pid) or {}).get("likes", 0) or 0),
+                    "dislikes": int((reaction_counts.get(pid) or {}).get("dislikes", 0) or 0),
+                    "text": _truncate_middle(str(row["tweet"] or ""), 240),
+                    "parent_post_id": parent_id if parent_id and parent_id != "-1" else None,
+                    "parent_user_id": (
+                        str(parent_post["user_id"]) if parent_post is not None else None
+                    ),
+                    "parent_username": (
+                        usernames.get(str(parent_post["user_id"])) if parent_post is not None else None
+                    ),
+                    "parent_text": (
+                        _truncate_middle(str(parent_post["tweet"] or ""), 220)
+                        if parent_post is not None
+                        else None
+                    ),
+                    "thread_op_post_id": thread_id or None,
+                    "thread_op_user_id": (
+                        str(thread_post["user_id"]) if thread_post is not None else None
+                    ),
+                    "thread_op_username": (
+                        usernames.get(str(thread_post["user_id"])) if thread_post is not None else None
+                    ),
+                    "thread_op_text": (
+                        _truncate_middle(str(thread_post["tweet"] or ""), 180)
+                        if thread_post is not None
+                        else None
+                    ),
+                }
+
+            hit_eval_rows: List[Dict[str, Any]] = []
+            for row in query_hits:
+                ev = _evaluate_query_hit_text(str(row["tweet"] or ""), terms)
+                hit_eval_rows.append(
+                    {
+                        "post_id": str(row["id"]),
+                        "thread_root_id": str(row["thread_id"] or "") or None,
+                        "score": int(ev.get("score") or 0),
+                        "term_matches": int(ev.get("term_matches") or 0),
+                        "informative_matches": int(ev.get("informative_matches") or 0),
+                        "matched_terms": ev.get("matched_terms") or [],
+                        "informative_terms": ev.get("informative_terms") or [],
+                    }
+                )
+            hit_eval_rows.sort(
+                key=lambda r: (
+                    int(r.get("informative_matches") or 0),
+                    int(r.get("score") or 0),
+                ),
+                reverse=True,
+            )
+
+            snap["query_hit_evaluations"] = hit_eval_rows[:8]
+            snap["query_hits_viable_count"] = sum(
+                1 for row in hit_eval_rows if int(row.get("informative_matches") or 0) > 0
+            )
+            snap["top_posts"] = [_row_to_fact(row) for row in top_posts]
+            snap["recent_root_posts"] = [_row_to_fact(row) for row in recent_root_posts]
+            snap["recent_comments"] = [_row_to_fact(row) for row in recent_comments]
+            snap["replies_to_recent_comments"] = []
+            snap["replies_to_top_posts"] = []
+            snap["query_hits"] = [_row_to_fact(row) for row in query_hits]
+        finally:
+            conn.close()
+    except Exception:
+        snap["query_hit_evaluations"] = []
+        snap["query_hits_viable_count"] = 0
+        snap["top_posts"] = []
+        snap["recent_root_posts"] = []
+        snap["recent_comments"] = []
+        snap["replies_to_recent_comments"] = []
+        snap["replies_to_top_posts"] = []
+        snap["query_hits"] = []
+    return snap
+
+
 def _build_facts_snapshot(
     *,
+    exp: Optional[Exps] = None,
     agent_user_id: Any,
     admin_text: str,
     top_posts_limit: int = 3,
@@ -277,6 +559,15 @@ def _build_facts_snapshot(
     of concrete things it actually posted/commented on, plus query-matched hits.
     """
     normalized_agent_user_id = _coerce_experiment_user_id(agent_user_id)
+    if isinstance(normalized_agent_user_id, str) and exp is not None:
+        return _build_facts_snapshot_sqlite(
+            exp=exp,
+            agent_user_id=normalized_agent_user_id,
+            admin_text=admin_text,
+            top_posts_limit=top_posts_limit,
+            recent_comments_limit=recent_comments_limit,
+            query_hits_limit=query_hits_limit,
+        )
     snap: Dict[str, Any] = {
         "agent_user_id": normalized_agent_user_id,
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -375,10 +666,12 @@ def _build_facts_snapshot(
         try:
             author_ids = sorted(
                 {
-                    int(getattr(rp, "user_id", 0) or 0)
+                    _coerce_experiment_user_id(getattr(rp, "user_id", None))
                     for rp in reply_posts
-                    if int(getattr(rp, "user_id", 0) or 0) > 0
-                }
+                    if _coerce_experiment_user_id(getattr(rp, "user_id", None))
+                    is not None
+                },
+                key=lambda value: str(value),
             )
             users = (
                 User_mgmt.query.filter(User_mgmt.id.in_(author_ids)).all()
@@ -386,7 +679,9 @@ def _build_facts_snapshot(
                 else []
             )
             author_name_by_id = {
-                int(u.id): getattr(u, "username", None) for u in users if u is not None
+                _coerce_experiment_user_id(u.id): getattr(u, "username", None)
+                for u in users
+                if u is not None
             }
         except Exception:
             author_name_by_id = {}
@@ -402,7 +697,7 @@ def _build_facts_snapshot(
         for rp in reply_posts:
             rid = int(getattr(rp, "id", 0) or 0)
             parent_id = int(getattr(rp, "comment_to", -1) or -1)
-            author_id = int(getattr(rp, "user_id", 0) or 0)
+            author_id = _coerce_experiment_user_id(getattr(rp, "user_id", None))
             if rid <= 0 or parent_id not in seen_examples_map:
                 continue
 
@@ -426,7 +721,7 @@ def _build_facts_snapshot(
             seen_examples_map[parent_id].append(
                 {
                     "reply_post_id": rid,
-                    "user_id": author_id or None,
+                    "user_id": author_id,
                     "username": author_name_by_id.get(author_id),
                     "round": int(getattr(rp, "round", 0) or 0) or None,
                     "text": _truncate_middle(str(getattr(rp, "tweet", "") or ""), 200),
@@ -682,24 +977,26 @@ def _build_facts_snapshot(
             user_ids = set()
             for pp in parent_map.values():
                 try:
-                    uid = int(getattr(pp, "user_id", 0) or 0)
-                    if uid > 0:
+                    uid = _coerce_experiment_user_id(getattr(pp, "user_id", None))
+                    if uid is not None:
                         user_ids.add(uid)
                 except Exception:
                     continue
             for op in op_map.values():
                 try:
-                    uid = int(getattr(op, "user_id", 0) or 0)
-                    if uid > 0:
+                    uid = _coerce_experiment_user_id(getattr(op, "user_id", None))
+                    if uid is not None:
                         user_ids.add(uid)
                 except Exception:
                     continue
 
-            username_by_id: Dict[int, Optional[str]] = {}
+            username_by_id: Dict[Any, Optional[str]] = {}
             if user_ids:
-                users = User_mgmt.query.filter(User_mgmt.id.in_(sorted(user_ids))).all()
+                users = User_mgmt.query.filter(
+                    User_mgmt.id.in_(sorted(user_ids, key=lambda value: str(value)))
+                ).all()
                 username_by_id = {
-                    int(u.id): getattr(u, "username", None)
+                    _coerce_experiment_user_id(u.id): getattr(u, "username", None)
                     for u in users
                     if u is not None
                 }
@@ -711,20 +1008,18 @@ def _build_facts_snapshot(
                 thread_op_post = op_map.get(thread_root_id)
 
                 parent_user_id = (
-                    int(getattr(parent_post, "user_id", 0) or 0)
+                    _coerce_experiment_user_id(getattr(parent_post, "user_id", None))
                     if parent_post is not None
                     else None
                 )
-                if parent_user_id is not None and parent_user_id <= 0:
-                    parent_user_id = None
 
                 thread_op_user_id = (
-                    int(getattr(thread_op_post, "user_id", 0) or 0)
+                    _coerce_experiment_user_id(
+                        getattr(thread_op_post, "user_id", None)
+                    )
                     if thread_op_post is not None
                     else None
                 )
-                if thread_op_user_id is not None and thread_op_user_id <= 0:
-                    thread_op_user_id = None
 
                 comment_context[pid] = {
                     "parent_post_id": int(parent_id) if parent_id > 0 else None,

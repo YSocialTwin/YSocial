@@ -27,9 +27,9 @@ _SQLITE_TABLES = {
     "forum_chat_sessions": """
         CREATE TABLE IF NOT EXISTS forum_chat_sessions (
             id INTEGER PRIMARY KEY,
-            owner_user_id INTEGER NOT NULL REFERENCES user_mgmt(id),
+            owner_user_id TEXT NOT NULL REFERENCES user_mgmt(id),
             owner_username TEXT NOT NULL,
-            target_user_id INTEGER NOT NULL REFERENCES user_mgmt(id),
+            target_user_id TEXT NOT NULL REFERENCES user_mgmt(id),
             target_username TEXT NOT NULL,
             target_profile_pic TEXT,
             run_id TEXT,
@@ -112,9 +112,9 @@ _POSTGRES_TABLES = {
     "forum_chat_sessions": """
         CREATE TABLE IF NOT EXISTS forum_chat_sessions (
             id SERIAL PRIMARY KEY,
-            owner_user_id INTEGER NOT NULL REFERENCES user_mgmt(id) ON DELETE CASCADE,
+            owner_user_id TEXT NOT NULL REFERENCES user_mgmt(id) ON DELETE CASCADE,
             owner_username VARCHAR(50) NOT NULL,
-            target_user_id INTEGER NOT NULL REFERENCES user_mgmt(id) ON DELETE CASCADE,
+            target_user_id TEXT NOT NULL REFERENCES user_mgmt(id) ON DELETE CASCADE,
             target_username VARCHAR(50) NOT NULL,
             target_profile_pic TEXT,
             run_id TEXT,

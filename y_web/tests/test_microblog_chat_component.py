@@ -105,8 +105,8 @@ def test_microblog_chat_refresh_runtime_context_uses_semantic_memory(monkeypatch
 
     monkeypatch.setattr(
         social,
-        "_get_top_interests_for_user",
-        lambda user_id: ["policy", "education"],
+        "_get_top_interests_for_user_in_exp",
+        lambda exp, user_id: ["policy", "education"],
     )
     monkeypatch.setattr(
         social,
@@ -254,6 +254,18 @@ def test_microblog_chat_generate_reply_injects_memory_facts_and_transcript(monke
     assert meta["facts_snapshot_present"] is True
 
 
+def test_microblog_chat_backend_preserves_uuid_user_ids():
+    from y_web.routes.api import social
+
+    route_source = Path(social.__file__).read_text()
+
+    assert "_coerce_experiment_user_id" in route_source
+    assert "_load_experiment_user_sqlite" in route_source
+    assert "int(owner_user.id)" not in route_source
+    assert "int(target_user.id)" not in route_source
+    assert "int(session.target_user_id)" not in route_source
+
+
 def test_microblog_chat_routes_are_exposed():
     from y_web.routes.api import social
 
@@ -343,3 +355,6 @@ def test_microblog_chat_js_escapes_rendered_content():
     assert "${escapeHtml(preview)}" in js_source
     assert "${formatMessageHtml(msg.content)}" in js_source
     assert "`/api/social/${expId}/chat/bootstrap`" in js_source
+    assert "Number(session.target_user_id)" not in js_source
+    assert "Number(agent.user_id)" not in js_source
+    assert "openSession(String" in js_source
