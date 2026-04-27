@@ -33,6 +33,35 @@ from y_web.src.models import (
 
 logger = logging.getLogger(__name__)
 
+# Per-process monitor session state.
+# Only auto-stop an HPC server after this monitor has observed at least one
+# running client for the experiment in the current session.
+_HPC_EXP_HAS_SEEN_RUNNING_CLIENT = {}
+
+
+def _mark_hpc_experiment_seen_running_client(exp_id: int) -> None:
+    """Record that an experiment has had at least one running client in this session."""
+    try:
+        _HPC_EXP_HAS_SEEN_RUNNING_CLIENT[int(exp_id)] = True
+    except Exception:
+        pass
+
+
+def _has_hpc_experiment_seen_running_client(exp_id: int) -> bool:
+    """Return whether this experiment had a running client in this monitor session."""
+    try:
+        return bool(_HPC_EXP_HAS_SEEN_RUNNING_CLIENT.get(int(exp_id)))
+    except Exception:
+        return False
+
+
+def _clear_hpc_experiment_seen_running_client(exp_id: int) -> None:
+    """Clear the per-session running-client marker for an experiment."""
+    try:
+        _HPC_EXP_HAS_SEEN_RUNNING_CLIENT.pop(int(exp_id), None)
+    except Exception:
+        pass
+
 
 def update_server_log_metrics(exp_id, log_file_path, is_hpc=False):
     """
@@ -571,13 +600,18 @@ def check_and_terminate_hpc_experiment(exp_id):
         print(
             f"[HPC Monitor] Experiment {exp.exp_name}: {truly_completed_count} completed, {running_count} running, {not_started_count} not started (total: {total_count})"
         )
+        if running_count > 0:
+            _mark_hpc_experiment_seen_running_client(exp_id)
+        seen_running_this_session = _has_hpc_experiment_seen_running_client(exp_id)
 
         # Only terminate if:
         # 1. There are no running clients
-        # 2. At least one client was truly completed (to avoid terminating when nothing has started)
-        # 3. All non-running clients are truly completed (not just stopped)
+        # 2. This session has observed at least one running client
+        # 3. At least one client was truly completed (to avoid terminating when nothing has started)
+        # 4. All non-running clients are truly completed (not just stopped)
         should_terminate = (
             running_count == 0
+            and seen_running_this_session
             and truly_completed_count > 0
             and truly_completed_count == (total_count - running_count)
         )
@@ -606,11 +640,16 @@ def check_and_terminate_hpc_experiment(exp_id):
             )
 
             logger.info(f"HPC experiment {exp_id} terminated successfully")
+            _clear_hpc_experiment_seen_running_client(exp_id)
             return True
         else:
             if running_count > 0:
                 print(
                     f"[HPC Monitor] Not terminating: {running_count} client(s) still running"
+                )
+            elif not seen_running_this_session:
+                print(
+                    "[HPC Monitor] Not terminating: no running client observed in this server session"
                 )
             elif truly_completed_count == 0:
                 print(
@@ -652,6 +691,11 @@ def monitor_hpc_client_execution_logs():
     try:
         # Get all running HPC experiments
         hpc_experiments = Exps.query.filter_by(simulator_type="HPC", running=1).all()
+        active_exp_ids = {int(exp.idexp) for exp in hpc_experiments}
+        # Drop session markers for experiments that are no longer running.
+        for tracked_exp_id in list(_HPC_EXP_HAS_SEEN_RUNNING_CLIENT.keys()):
+            if tracked_exp_id not in active_exp_ids:
+                _clear_hpc_experiment_seen_running_client(tracked_exp_id)
 
         if not hpc_experiments:
             # print("[HPC Monitor] No active HPC experiments found")
@@ -695,6 +739,8 @@ def monitor_hpc_client_execution_logs():
                 # Get all running clients for this experiment
                 clients = Client.query.filter_by(id_exp=exp.idexp, status=1).all()
                 print(f"[HPC Monitor] Found {len(clients)} running client(s)")
+                if clients:
+                    _mark_hpc_experiment_seen_running_client(exp.idexp)
 
                 for client in clients:
                     print(

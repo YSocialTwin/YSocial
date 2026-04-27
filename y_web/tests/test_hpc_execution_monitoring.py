@@ -286,7 +286,10 @@ class TestHPCExecutionLogMonitoring:
     @patch("y_web.src.hpc.server.stop_hpc_server")
     def test_check_and_terminate_all_clients_completed(self, mock_stop, app, db):
         """Test terminating experiment when all clients are completed."""
-        from y_web.src.hpc.log_metrics import check_and_terminate_hpc_experiment
+        from y_web.src.hpc.log_metrics import (
+            _mark_hpc_experiment_seen_running_client,
+            check_and_terminate_hpc_experiment,
+        )
         from y_web.src.models import Client, Exps, Population
 
         with app.app_context():
@@ -336,6 +339,7 @@ class TestHPCExecutionLogMonitoring:
                 )
                 db.session.add(client_exec)
             db.session.commit()
+            _mark_hpc_experiment_seen_running_client(exp.idexp)
 
             # Check and terminate
             result = check_and_terminate_hpc_experiment(exp.idexp)
@@ -391,6 +395,63 @@ class TestHPCExecutionLogMonitoring:
             assert result is False
 
             # Verify experiment was NOT terminated
+            updated_exp = Exps.query.filter_by(idexp=exp.idexp).first()
+            assert updated_exp.running == 1
+            mock_stop.assert_not_called()
+
+    @patch("y_web.src.hpc.server.stop_hpc_server")
+    def test_check_and_terminate_does_not_stop_without_session_running_marker(
+        self, mock_stop, app, db
+    ):
+        """Completed clients should not auto-stop if no client ran in this session."""
+        from y_web.src.hpc.log_metrics import (
+            _clear_hpc_experiment_seen_running_client,
+            check_and_terminate_hpc_experiment,
+        )
+        from y_web.src.models import Client, Client_Execution, Exps, Population
+
+        with app.app_context():
+            exp = Exps(
+                exp_name="Test HPC Session Gate",
+                exp_descr="Test",
+                platform_type="microblogging",
+                owner="test",
+                status=1,
+                running=1,
+                port=5001,
+                db_name="experiments_test_gate",
+                simulator_type="HPC",
+                exp_status="active",
+            )
+            db.session.add(exp)
+            db.session.commit()
+
+            pop = Population(name="test_pop_gate", descr="Test population", size=10)
+            db.session.add(pop)
+            db.session.commit()
+
+            client = Client(
+                name="client_gate",
+                descr="Test client gate",
+                id_exp=exp.idexp,
+                population_id=pop.id,
+                status=0,
+            )
+            db.session.add(client)
+            db.session.commit()
+
+            client_exec = Client_Execution(
+                client_id=client.id,
+                elapsed_time=10,
+                expected_duration_rounds=10,
+            )
+            db.session.add(client_exec)
+            db.session.commit()
+
+            _clear_hpc_experiment_seen_running_client(exp.idexp)
+            result = check_and_terminate_hpc_experiment(exp.idexp)
+            assert result is False
+
             updated_exp = Exps.query.filter_by(idexp=exp.idexp).first()
             assert updated_exp.running == 1
             mock_stop.assert_not_called()
