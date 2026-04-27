@@ -53,6 +53,22 @@ from y_web.src.models import (
 )
 
 
+def _simulation_time_index_expr():
+    """Return sortable simulation-time index based on Rounds.day/hour."""
+    return (
+        func.coalesce(Rounds.day, -1) * 24
+        + func.coalesce(Rounds.hour, -1)
+    )
+
+
+def _order_by_simulation_time_desc(query):
+    """Order posts by simulation day/hour descending with stable fallback."""
+    return query.outerjoin(Rounds, Post.round == Rounds.id).order_by(
+        _simulation_time_index_expr().desc(),
+        Post.id.desc(),
+    )
+
+
 def _normalize_sidebar_slug(value: str) -> str:
     raw = str(value or "").strip().lower()
     if not raw:
@@ -328,7 +344,8 @@ def fetch_available_communities() -> List[Dict[str, str]]:
 def fetch_recent_active_communities(limit: int = 8) -> List[Dict[str, str]]:
     recent_posts = (
         db.session.query(Post.id, Post.thread_id)
-        .order_by(Post.id.desc())
+        .outerjoin(Rounds, Post.round == Rounds.id)
+        .order_by(_simulation_time_index_expr().desc(), Post.id.desc())
         .limit(max(limit * 12, 96))
         .all()
     )
@@ -341,7 +358,8 @@ def fetch_user_communities(user_id: int, limit: int = 8) -> List[Dict[str, str]]
     user_posts = (
         db.session.query(Post.id, Post.thread_id)
         .filter(Post.user_id == int(user_id))
-        .order_by(Post.id.desc())
+        .outerjoin(Rounds, Post.round == Rounds.id)
+        .order_by(_simulation_time_index_expr().desc(), Post.id.desc())
         .limit(max(limit * 12, 96))
         .all()
     )
@@ -758,7 +776,8 @@ def build_user_feed_posts(
             Post.user_id == target_user_id,
             Post.comment_to == -1,
         )
-        .order_by(Post.id.desc())
+        .outerjoin(Rounds, Post.round == Rounds.id)
+        .order_by(_simulation_time_index_expr().desc(), Post.id.desc())
         .limit(per_page)
         .all()
     )
@@ -767,6 +786,19 @@ def build_user_feed_posts(
     combined.extend(own_posts)
 
     normalized = _normalize_posts(combined)
+    time_map_rows = (
+        db.session.query(Post.id, Rounds.day, Rounds.hour)
+        .outerjoin(Rounds, Post.round == Rounds.id)
+        .filter(Post.id.in_([p.id for p in normalized]))
+        .all()
+        if normalized
+        else []
+    )
+    post_time_idx = {
+        int(pid): (int(day) if day is not None else -1) * 24
+        + (int(hour) if hour is not None else -1)
+        for pid, day, hour in time_map_rows
+    }
 
     # Apply sorting based on feed_type
     if feed_type == "top":
@@ -775,6 +807,7 @@ def build_user_feed_posts(
         normalized.sort(
             key=lambda p: (
                 reaction_map.get(p.id, (0, 0))[0] - reaction_map.get(p.id, (0, 0))[1],
+                post_time_idx.get(p.id, -1),
                 p.id,
             ),
             reverse=True,
@@ -784,11 +817,16 @@ def build_user_feed_posts(
         thread_ids = [p.thread_id or p.id for p in normalized]
         comment_map = _fetch_comment_map(thread_ids)
         normalized.sort(
-            key=lambda p: (comment_map.get(p.thread_id or p.id, 0), p.id), reverse=True
+            key=lambda p: (
+                comment_map.get(p.thread_id or p.id, 0),
+                post_time_idx.get(p.id, -1),
+                p.id,
+            ),
+            reverse=True,
         )
     else:
-        # Default: Sort by post ID descending (newest first)
-        normalized.sort(key=lambda p: p.id, reverse=True)
+        # Default: Sort by simulation day/hour descending (newest first)
+        normalized.sort(key=lambda p: (post_time_idx.get(p.id, -1), p.id), reverse=True)
 
     total_posts = len(normalized)
     start_idx = max((page - 1) * per_page, 0)
@@ -851,10 +889,14 @@ def fetch_feed_page(
         )
         base_query = base_query.outerjoin(
             reaction_sub, reaction_sub.c.post_id == Post.id
-        ).order_by(score_expr.desc(), Post.id.desc())
+        ).outerjoin(Rounds, Post.round == Rounds.id).order_by(
+            score_expr.desc(),
+            _simulation_time_index_expr().desc(),
+            Post.id.desc(),
+        )
     elif feed_type == "hot":
         # Reddit-style hot with logarithmic scoring
-        # Base formula: log10(|score| + 1) + sign(score) * round / round_decay
+        # Base formula: log10(|score| + 1) + sign(score) * sim_time_index / round_decay
         # Every round_decay rounds, a post needs ~10x more votes to maintain position
         round_decay = 12.0
         reaction_sub = _reaction_aggregates_subquery()
@@ -871,8 +913,9 @@ def fetch_feed_page(
         abs_score = func.abs(net_score)
         log_order = func.log(abs_score + 1) / func.log(10.0)
 
-        # Hot score: logarithmic order + sign * time_boost
-        hot_score = log_order + sign_expr * (Post.round / round_decay)
+        # Hot score: logarithmic order + sign * time_boost based on simulation day/hour
+        sim_time_idx = _simulation_time_index_expr()
+        hot_score = log_order + sign_expr * (sim_time_idx / round_decay)
 
         longtail_enabled = os.getenv(
             "YSOCIAL_FORUM_HOT_LONGTAIL", "1"
@@ -897,7 +940,8 @@ def fetch_feed_page(
 
             candidates = (
                 base_query.outerjoin(reaction_sub, reaction_sub.c.post_id == Post.id)
-                .order_by(hot_score.desc(), Post.id.desc())
+                .outerjoin(Rounds, Post.round == Rounds.id)
+                .order_by(hot_score.desc(), sim_time_idx.desc(), Post.id.desc())
                 .limit(limit)
                 .all()
             )
@@ -910,13 +954,32 @@ def fetch_feed_page(
 
             post_ids = [p.id for p in candidates]
             reaction_map = _fetch_reaction_map(post_ids)
-            current_round_id = db.session.query(func.max(Rounds.id)).scalar() or 0
+            post_time_rows = (
+                db.session.query(Post.id, Rounds.day, Rounds.hour)
+                .outerjoin(Rounds, Post.round == Rounds.id)
+                .filter(Post.id.in_(post_ids))
+                .all()
+            )
+            post_time_map = {
+                int(pid): (int(day) if day is not None else -1) * 24
+                + (int(hour) if hour is not None else -1)
+                for pid, day, hour in post_time_rows
+            }
+            current_round = (
+                db.session.query(Rounds.day, Rounds.hour)
+                .order_by(Rounds.day.desc(), Rounds.hour.desc())
+                .first()
+            )
+            current_time_idx = 0
+            if current_round:
+                current_time_idx = (int(current_round[0]) * 24) + int(current_round[1])
 
             ranked = rank_posts_longtail(
                 candidates,
                 reaction_map,
                 viewer_id=viewer_id,
-                current_round_id=int(current_round_id),
+                current_time_index=int(current_time_idx),
+                post_time_index_map=post_time_map,
                 round_decay=round_decay,
             )
 
@@ -930,15 +993,23 @@ def fetch_feed_page(
 
         base_query = base_query.outerjoin(
             reaction_sub, reaction_sub.c.post_id == Post.id
-        ).order_by(hot_score.desc(), Post.id.desc())
+        ).outerjoin(Rounds, Post.round == Rounds.id).order_by(
+            hot_score.desc(),
+            sim_time_idx.desc(),
+            Post.id.desc(),
+        )
     elif feed_type == "most_commented":
         comment_sub = _comment_count_subquery()
         comment_expr = func.coalesce(comment_sub.c.comment_count, 0)
         base_query = base_query.outerjoin(
             comment_sub, comment_sub.c.thread_id == Post.id
-        ).order_by(comment_expr.desc(), Post.id.desc())
+        ).outerjoin(Rounds, Post.round == Rounds.id).order_by(
+            comment_expr.desc(),
+            _simulation_time_index_expr().desc(),
+            Post.id.desc(),
+        )
     else:
-        base_query = base_query.order_by(Post.id.desc())
+        base_query = _order_by_simulation_time_desc(base_query)
 
     pagination = base_query.paginate(page=page, per_page=per_page, error_out=False)
 

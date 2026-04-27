@@ -230,7 +230,7 @@ def get_user_recent_interests(user_id, limit=5):
     Returns:
         List of tuples containing (interest_name, interest_id, engagement_count)
     """
-    last_round = Rounds.query.order_by(desc(Rounds.id)).first()
+    last_round = Rounds.query.order_by(desc(Rounds.day), desc(Rounds.hour)).first()
     last_round_id = _compute_last_round(last_round)
 
     interests = (

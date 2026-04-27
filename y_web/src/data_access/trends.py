@@ -45,7 +45,7 @@ def get_trending_emotions(limit=10, window=120):
     Returns:
         List of dicts with keys ``emotion``, ``count``, ``id``
     """
-    last_round_obj = Rounds.query.order_by(desc(Rounds.id)).first()
+    last_round_obj = Rounds.query.order_by(desc(Rounds.day), desc(Rounds.hour)).first()
     last_round = _compute_last_round(last_round_obj)
 
     em = (
@@ -75,7 +75,7 @@ def get_trending_hashtags(limit=10, window=120):
     Returns:
         List of dicts with keys ``hashtag``, ``count``, ``id``
     """
-    last_round_obj = Rounds.query.order_by(desc(Rounds.id)).first()
+    last_round_obj = Rounds.query.order_by(desc(Rounds.day), desc(Rounds.hour)).first()
     last_round = _compute_last_round(last_round_obj)
 
     ht = (
@@ -107,7 +107,7 @@ def get_trending_topics(limit=10, window=120):
     Returns:
         List of dicts with keys ``id``, ``topic``, ``count``
     """
-    last_round_obj = Rounds.query.order_by(desc(Rounds.id)).first()
+    last_round_obj = Rounds.query.order_by(desc(Rounds.day), desc(Rounds.hour)).first()
     last_round = _compute_last_round(last_round_obj)
 
     tp = (

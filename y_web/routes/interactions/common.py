@@ -39,7 +39,7 @@ def follow(exp_id, user_id, follower_id):
         Redirect to referrer page
     """
     # get the last round id from Rounds
-    current_round = Rounds.query.order_by(Rounds.id.desc()).first()
+    current_round = Rounds.query.order_by(Rounds.day.desc(), Rounds.hour.desc()).first()
 
     acting_user = User_mgmt.query.filter_by(
         username=getattr(current_user, "username", "") or ""
@@ -139,7 +139,7 @@ def share_content(exp_id):
 
     # get the post
     original = Post.query.filter_by(id=post_id).first()
-    current_round = Rounds.query.order_by(Rounds.id.desc()).first()
+    current_round = Rounds.query.order_by(Rounds.day.desc(), Rounds.hour.desc()).first()
 
     try:
         post = Post(
@@ -200,7 +200,7 @@ def react(exp_id):
         )
     exp_user_id = exp_user.id
 
-    current_round = Rounds.query.order_by(Rounds.id.desc()).first()
+    current_round = Rounds.query.order_by(Rounds.day.desc(), Rounds.hour.desc()).first()
 
     record = Reactions.query.filter_by(
         post_id=post_id, user_id=exp_user_id, round=current_round.id
@@ -276,7 +276,7 @@ def report_content(exp_id):
         post_id_converted = post_id
 
     target_post = Post.query.filter_by(id=post_id_converted).first()
-    current_round = Rounds.query.order_by(Rounds.id.desc()).first()
+    current_round = Rounds.query.order_by(Rounds.day.desc(), Rounds.hour.desc()).first()
     if target_post is None or current_round is None:
         if is_ajax:
             return jsonify({"message": "Content not found.", "status": 404}), 404

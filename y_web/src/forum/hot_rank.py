@@ -22,11 +22,11 @@ def stable_uniform_0_1(*parts: object, salt: str = "forum-hot-longtail-v1") -> f
 
 
 def base_hot_score(
-    net_score: int, post_round: int, *, round_decay: float = 12.0
+    net_score: int, post_time_index: int, *, round_decay: float = 12.0
 ) -> float:
     """
     Match the current forum Hot base used in `reddit/service.py`:
-      log10(abs(net)+1) + sign(net) * (post_round / round_decay)
+      log10(abs(net)+1) + sign(net) * (post_time_index / round_decay)
     """
     if net_score > 0:
         sign = 1.0
@@ -35,7 +35,7 @@ def base_hot_score(
     else:
         sign = 0.0
     return math.log10(abs(net_score) + 1.0) + sign * (
-        float(post_round) / float(round_decay)
+        float(post_time_index) / float(round_decay)
     )
 
 
@@ -75,7 +75,9 @@ def rank_posts_longtail(
     reaction_map: Dict[int, Tuple[int, int]],
     *,
     viewer_id: int,
-    current_round_id: int,
+    current_time_index: int | None = None,
+    current_round_id: int | None = None,
+    post_time_index_map: Dict[int, int] | None = None,
     round_decay: float = 12.0,
     vote_thresh1: int = 3,
     vote_thresh2: int = 8,
@@ -84,17 +86,28 @@ def rank_posts_longtail(
 ) -> List[TPost]:
     """
     Rank candidate posts by (base_hot + longtail_boost), tie-breaking by post.id.
-
-    Expects each post to have `.id` (int) and `.round` (int).
     """
+    if current_time_index is None:
+        current_time_index = int(current_round_id or 0)
+
     ranked: List[Tuple[float, int, TPost]] = []
     for p in posts:
         post_id = int(getattr(p, "id"))
-        post_round = int(getattr(p, "round"))
+        if post_time_index_map and post_id in post_time_index_map:
+            post_time_index = int(post_time_index_map[post_id])
+        else:
+            post_day = getattr(p, "day", None)
+            post_hour = getattr(p, "hour", None)
+            if post_day is not None and post_hour is not None:
+                post_time_index = (int(post_day) * 24) + int(post_hour)
+            else:
+                # Fallback for callers that pass bare Post rows without day/hour.
+                # Kept for compatibility; preferred path is day/hour map.
+                post_time_index = int(getattr(p, "round", 0))
         likes, dislikes = reaction_map.get(post_id, (0, 0))
         net = int(likes) - int(dislikes)
-        base = base_hot_score(net, post_round, round_decay=round_decay)
-        u = stable_uniform_0_1(viewer_id, current_round_id, post_id)
+        base = base_hot_score(net, post_time_index, round_decay=round_decay)
+        u = stable_uniform_0_1(viewer_id, current_time_index, post_id)
         boost = longtail_boost(
             likes,
             dislikes,

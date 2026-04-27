@@ -540,6 +540,7 @@ def _forum_paginate_posts(page, per_page, feed_type, search_query=""):
     if normalized_feed in {"top", "hot"}:
         query = (
             base_query.outerjoin(Reactions, Post.id == Reactions.post_id)
+            .outerjoin(Rounds, Post.round == Rounds.id)
             .add_columns(
                 Post,
                 func.sum(
@@ -548,12 +549,25 @@ def _forum_paginate_posts(page, per_page, feed_type, search_query=""):
                 ).label("score"),
             )
             .group_by(Post.id)
-            .order_by(desc("score"), desc(Post.id))
+            .order_by(
+                desc("score"),
+                desc(func.coalesce(Rounds.day, -1)),
+                desc(func.coalesce(Rounds.hour, -1)),
+                desc(Post.id),
+            )
         )
     elif normalized_feed == "most_commented":
-        query = base_query.order_by(desc(Post.id))
+        query = base_query.outerjoin(Rounds, Post.round == Rounds.id).order_by(
+            desc(func.coalesce(Rounds.day, -1)),
+            desc(func.coalesce(Rounds.hour, -1)),
+            desc(Post.id),
+        )
     else:
-        query = base_query.order_by(desc(Post.id))
+        query = base_query.outerjoin(Rounds, Post.round == Rounds.id).order_by(
+            desc(func.coalesce(Rounds.day, -1)),
+            desc(func.coalesce(Rounds.hour, -1)),
+            desc(Post.id),
+        )
 
     return normalized_feed, query.paginate(
         page=page, per_page=per_page, error_out=False

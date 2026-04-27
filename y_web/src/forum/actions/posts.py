@@ -151,7 +151,7 @@ def _resolve_experiment_actor(user):
 
 def _get_current_round() -> int:
     """Get the current round ID, defaulting to 1 if none exist."""
-    current_round = Rounds.query.order_by(Rounds.id.desc()).first()
+    current_round = Rounds.query.order_by(Rounds.day.desc(), Rounds.hour.desc()).first()
     return current_round.id if current_round else 1
 
 
