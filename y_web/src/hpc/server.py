@@ -13,6 +13,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from typing import Optional
 
 import requests
 from flask import current_app
@@ -23,6 +24,122 @@ from y_web import db
 from y_web.src.models import Exps
 from y_web.src.simulation.subprocess_env import build_subprocess_env
 from y_web.src.system.path_utils import get_base_path, get_writable_path
+
+
+def _tracked_process_is_alive(pid):
+    """Return whether a tracked subprocess PID is still alive."""
+    if not pid:
+        return False
+    try:
+        os.kill(int(pid), 0)
+    except (OSError, ValueError, TypeError):
+        return False
+    return True
+
+
+def _is_hpc_server_process(pid: int) -> bool:
+    """Return whether PID looks like an HPC server subprocess."""
+    if not pid:
+        return False
+    try:
+        import psutil
+
+        proc = psutil.Process(int(pid))
+        if proc.status() == psutil.STATUS_ZOMBIE:
+            return False
+        cmdline = " ".join(proc.cmdline()).lower()
+        return (
+            "run_server.py" in cmdline
+            or "--run-server-subprocess" in cmdline
+            or ("gunicorn" in cmdline and "wsgi:app" in cmdline)
+        )
+    except Exception:
+        # Fallback to basic liveness signal check.
+        return _tracked_process_is_alive(pid)
+
+
+def _hpc_server_process_matches_experiment(
+    pid: int, *, exp_folder: Optional[str] = None, port: Optional[int] = None
+) -> bool:
+    """
+    Best-effort check that PID belongs to this specific HPC server instance.
+
+    Returns True when unsure (conservative) to avoid duplicate starts.
+    """
+    if not pid:
+        return False
+    try:
+        import psutil
+
+        proc = psutil.Process(int(pid))
+        if proc.status() == psutil.STATUS_ZOMBIE:
+            return False
+        cmdline = " ".join(proc.cmdline())
+        cmdline_l = cmdline.lower()
+
+        if exp_folder:
+            try:
+                norm_folder = str(Path(exp_folder).resolve()).replace("\\", "/")
+            except Exception:
+                norm_folder = str(exp_folder).replace("\\", "/")
+            norm_folder_l = norm_folder.lower()
+            # gunicorn mode can omit config path in argv; allow port-only match there.
+            if (
+                norm_folder_l
+                and norm_folder_l not in cmdline_l
+                and "gunicorn" not in cmdline_l
+            ):
+                return False
+
+        if port is not None:
+            port_token = f":{int(port)}"
+            if port_token not in cmdline and f"--port {int(port)}" not in cmdline:
+                if "gunicorn" in cmdline_l:
+                    # gunicorn binds with --bind host:port; if missing, likely not ours.
+                    return False
+
+        return True
+    except Exception:
+        return True
+
+
+def _resolve_hpc_experiment_folder(exp) -> str:
+    """Resolve experiment folder path for HPC runtime artifacts."""
+    writable_base = get_writable_path()
+    y_web_dir = os.path.join(writable_base, "y_web")
+    if "database_server.db" in exp.db_name:
+        # db_name format: "experiments/uid/database_server.db"
+        return os.path.join(
+            y_web_dir, exp.db_name.split("database_server.db")[0].rstrip("/\\")
+        )
+    uid = exp.db_name.removeprefix("experiments_")
+    return os.path.join(y_web_dir, "experiments", uid)
+
+
+def _clear_stale_hpc_server_pid(exp, *, exp_folder: Optional[str] = None) -> bool:
+    """
+    Clear stale/recycled server PID from DB tracking.
+
+    Returns True when a stale PID was cleared.
+    """
+    pid = getattr(exp, "server_pid", None)
+    if not pid:
+        return False
+    if not _tracked_process_is_alive(pid):
+        exp.server_pid = None
+        db.session.commit()
+        return True
+    if not _is_hpc_server_process(int(pid)):
+        exp.server_pid = None
+        db.session.commit()
+        return True
+    if not _hpc_server_process_matches_experiment(
+        int(pid), exp_folder=exp_folder, port=getattr(exp, "port", None)
+    ):
+        exp.server_pid = None
+        db.session.commit()
+        return True
+    return False
 
 
 def start_hpc_server(exp):
@@ -49,20 +166,32 @@ def start_hpc_server(exp):
     yserver_path = base_path
     sys.path.append(os.path.join(yserver_path, "external", "YSimulator"))
 
-    # Get writable path for experiments directory
-    writable_base = get_writable_path()
-    # Define y_web directory path (replaces old BASE_DIR)
-    y_web_dir = os.path.join(writable_base, "y_web")
+    exp_folder = _resolve_hpc_experiment_folder(exp)
+
+    # Clear stale/recycled PID entries before checking for duplicates.
+    _clear_stale_hpc_server_pid(exp, exp_folder=exp_folder)
+    tracked_pid = getattr(exp, "server_pid", None)
+    if (
+        tracked_pid
+        and _tracked_process_is_alive(tracked_pid)
+        and _hpc_server_process_matches_experiment(
+            int(tracked_pid), exp_folder=exp_folder, port=getattr(exp, "port", None)
+        )
+    ):
+        raise RuntimeError(
+            f"HPC server for experiment {exp.idexp} is already running with PID {tracked_pid}. "
+            "Stop it before starting another instance."
+        )
 
     if "database_server.db" in exp.db_name:
         # Extract experiment uid from db_name path
         # db_name format: "experiments/uid/database_server.db"
-        config = os.path.join(y_web_dir, exp.db_name.split("database_server.db")[0])
+        config = exp_folder
         exp_uid = exp.db_name.split(os.sep)[1]
     else:
         uid = exp.db_name.removeprefix("experiments_")
         exp_uid = f"{uid}{os.sep}"
-        config = os.path.join(y_web_dir, "experiments", uid)
+        config = exp_folder
 
     # Determine the server directory and script path based on platform type
     if exp.platform_type == "microblogging":
@@ -301,7 +430,7 @@ def start_hpc_server(exp):
             print(f"Config file: {config}")
 
             # Add detailed debugging information
-            full_path = os.path.join(y_web_dir, exp.db_name)
+            full_path = os.path.join(get_writable_path(), "y_web", exp.db_name)
             if len(full_path) > 2 and full_path[1] == ":":
                 # Windows - strip "C:\" (drive + separator)
                 if len(full_path) > 3 and full_path[2] in ("/", "\\"):
@@ -332,7 +461,7 @@ def start_hpc_server(exp):
     if db_type == "sqlite":
         # Construct the database URI properly for both Windows and Unix
         # YServer prepends the system drive, so we need to strip it from our path
-        full_path = os.path.join(y_web_dir, exp.db_name)
+        full_path = os.path.join(get_writable_path(), "y_web", exp.db_name)
 
         # On Windows, strip the drive letter AND the following separator (e.g., "C:\")
         # On Unix, strip the leading "/"
@@ -393,6 +522,7 @@ def stop_hpc_server(exp_id):
     """
     # Import here to avoid circular import issues.
     from y_web.src.simulation.port_manager import (
+        _force_terminate_process_tree,
         __terminate_process as _terminate_process,
     )
 
@@ -403,6 +533,15 @@ def stop_hpc_server(exp_id):
             print(f"No tracked HPC server process found for experiment {exp_id}")
             return False
 
+        exp_folder = _resolve_hpc_experiment_folder(exp)
+
+        # Clear stale PID state early (PID recycled or non-HPC process).
+        if _clear_stale_hpc_server_pid(exp, exp_folder=exp_folder):
+            print(
+                f"Cleared stale PID state for HPC server experiment {exp_id}; nothing to terminate."
+            )
+            return True
+
         pid = exp.server_pid
         print(f"Terminating HPC server process with PID {pid}...")
 
@@ -412,38 +551,29 @@ def stop_hpc_server(exp_id):
 
             # Wait up to 5 seconds for graceful shutdown
             for _ in range(50):  # 50 * 0.1s = 5 seconds
-                try:
-                    os.kill(pid, 0)  # Check if process still exists
-                    time.sleep(0.1)
-                except OSError:
-                    # Process no longer exists
+                if not _tracked_process_is_alive(pid) or not _is_hpc_server_process(pid):
                     print(f"HPC server process {pid} terminated gracefully.")
                     break
+                time.sleep(0.1)
             else:
                 # If we get here, process is still running after timeout
                 print(
                     f"HPC server process {pid} did not terminate gracefully, forcing kill..."
                 )
-                _terminate_process(pid)
+                _force_terminate_process_tree(pid)
+                if _tracked_process_is_alive(pid):
+                    _terminate_process(pid)
                 time.sleep(0.5)
-                print(f"HPC server process {pid} killed.")
+                if _tracked_process_is_alive(pid):
+                    print(
+                        f"Warning: HPC server process {pid} is still alive after forced termination attempt."
+                    )
+                else:
+                    print(f"HPC server process {pid} killed.")
 
         except OSError as e:
             # Process doesn't exist
             print(f"HPC server process {pid} no longer exists: {e}")
-
-        # Get experiment folder path to clean up ray_config.log
-        writable_base = get_writable_path()
-        y_web_dir = os.path.join(writable_base, "y_web")
-
-        if "database_server.db" in exp.db_name:
-            # db_name format: "experiments/uid/database_server.db"
-            exp_folder = os.path.join(
-                y_web_dir, exp.db_name.split("database_server.db")[0]
-            )
-        else:
-            uid = exp.db_name.removeprefix("experiments_")
-            exp_folder = os.path.join(y_web_dir, "experiments", uid)
 
         # Delete ray_config.log if present
         ray_config_log = os.path.join(exp_folder, "ray_config.log")

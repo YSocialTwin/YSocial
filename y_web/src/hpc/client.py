@@ -13,6 +13,7 @@ import sys
 import time
 from copy import deepcopy
 from pathlib import Path
+from typing import Optional
 
 import ray
 
@@ -31,6 +32,104 @@ def _tracked_process_is_alive(pid):
     except (OSError, ValueError, TypeError):
         return False
     return True
+
+
+def _is_hpc_client_process(pid: int) -> bool:
+    """Return whether PID looks like an HPC client subprocess."""
+    if not pid:
+        return False
+    try:
+        import psutil
+
+        proc = psutil.Process(int(pid))
+        if proc.status() == psutil.STATUS_ZOMBIE:
+            return False
+        cmdline = " ".join(proc.cmdline()).lower()
+        return (
+            "run_client.py" in cmdline
+            or "--run-hpc-client-subprocess" in cmdline
+        )
+    except Exception:
+        # Fallback to basic liveness signal check.
+        return _tracked_process_is_alive(pid)
+
+
+def _hpc_process_matches_client(
+    pid: int, *, cli_name: Optional[str] = None, exp_folder: Optional[str] = None
+) -> bool:
+    """
+    Best-effort check that PID belongs to this specific HPC client instance.
+
+    Returns True when unsure (conservative) to avoid launching duplicates.
+    """
+    if not pid:
+        return False
+    try:
+        import psutil
+
+        proc = psutil.Process(int(pid))
+        if proc.status() == psutil.STATUS_ZOMBIE:
+            return False
+        cmdline = " ".join(proc.cmdline())
+        cmdline_l = cmdline.lower()
+
+        if exp_folder:
+            try:
+                norm_folder = str(Path(exp_folder).resolve()).replace("\\", "/")
+            except Exception:
+                norm_folder = str(exp_folder).replace("\\", "/")
+            if norm_folder and norm_folder.lower() not in cmdline_l:
+                return False
+
+        if cli_name:
+            cli_l = str(cli_name).strip().lower()
+            if cli_l:
+                # Client names are included in HPC config files as client_<name>-<population>.json
+                if f"client_{cli_l}-" not in cmdline_l and cli_l not in cmdline_l:
+                    return False
+
+        return True
+    except Exception:
+        return True
+
+
+def _clear_stale_hpc_pid(cli, *, exp_folder: Optional[str] = None) -> bool:
+    """
+    Clear stale/recycled PID from DB tracking.
+
+    Returns True when a stale PID was cleared.
+    """
+    pid = getattr(cli, "pid", None)
+    if not pid:
+        return False
+    if not _tracked_process_is_alive(pid):
+        cli.pid = None
+        db.session.commit()
+        return True
+    if not _is_hpc_client_process(int(pid)):
+        cli.pid = None
+        db.session.commit()
+        return True
+    if not _hpc_process_matches_client(
+        int(pid), cli_name=getattr(cli, "name", None), exp_folder=exp_folder
+    ):
+        cli.pid = None
+        db.session.commit()
+        return True
+    return False
+
+
+def _resolve_hpc_experiment_folder(exp) -> str:
+    """Resolve experiment folder path for HPC runtime artifacts."""
+    writable_base = get_writable_path()
+    y_web_dir = os.path.join(writable_base, "y_web")
+    if "database_server.db" in exp.db_name:
+        # db_name format: "experiments/uid/database_server.db"
+        return os.path.join(
+            y_web_dir, exp.db_name.split("database_server.db")[0].rstrip("/\\")
+        )
+    uid = exp.db_name.removeprefix("experiments_")
+    return os.path.join(y_web_dir, "experiments", uid)
 
 
 def _sync_stress_reward_into_hpc_client_config(exp_folder, client_config_path):
@@ -95,25 +194,18 @@ def start_hpc_client(exp, cli, population):
     # Get base path - this will be bundle location when frozen, repo root otherwise
     base_path = get_base_path()
 
-    if _tracked_process_is_alive(getattr(cli, "pid", None)):
+    exp_folder = _resolve_hpc_experiment_folder(exp)
+
+    # Clear stale/recycled PID entries first.
+    _clear_stale_hpc_pid(cli, exp_folder=exp_folder)
+    tracked_pid = getattr(cli, "pid", None)
+    if tracked_pid and _tracked_process_is_alive(tracked_pid) and _hpc_process_matches_client(
+        int(tracked_pid), cli_name=getattr(cli, "name", None), exp_folder=exp_folder
+    ):
         raise RuntimeError(
             f"HPC client '{cli.name}' is already running with PID {cli.pid}. "
             "Stop or pause it before starting another instance."
         )
-
-    # Get writable path for experiments directory
-    writable_base = get_writable_path()
-    y_web_dir = os.path.join(writable_base, "y_web")
-
-    # Construct experiment folder path
-    if "database_server.db" in exp.db_name:
-        # db_name format: "experiments/uid/database_server.db"
-        exp_folder = os.path.join(
-            y_web_dir, exp.db_name.split("database_server.db")[0].rstrip("/\\")
-        )
-    else:
-        uid = exp.db_name.removeprefix("experiments_")
-        exp_folder = os.path.join(y_web_dir, "experiments", uid)
 
     # Construct paths for config, agents, and prompts files
     client_config = os.path.join(
@@ -334,6 +426,7 @@ def stop_hpc_client(cli):
     """
     # Import here to avoid circular import issues.
     from y_web.src.simulation.port_manager import (
+        _force_terminate_process_tree,
         __terminate_process as _terminate_process,
     )
 
@@ -341,6 +434,13 @@ def stop_hpc_client(cli):
         if not cli.pid:
             print(f"No tracked HPC client process found for client {cli.name}")
             return False
+
+        # Clear stale PID state early (PID recycled or non-HPC process).
+        if _clear_stale_hpc_pid(cli):
+            print(
+                f"Cleared stale PID state for HPC client {cli.name}; nothing to terminate."
+            )
+            return True
 
         try:
             exp = getattr(cli, "experiment", None)
@@ -404,19 +504,18 @@ def stop_hpc_client(cli):
 
             # Wait up to 5 seconds for graceful shutdown
             for _ in range(50):  # 50 * 0.1s = 5 seconds
-                try:
-                    os.kill(pid, 0)  # Check if process still exists
-                    time.sleep(0.1)
-                except OSError:
-                    # Process no longer exists
+                if not _tracked_process_is_alive(pid) or not _is_hpc_client_process(pid):
                     print(f"HPC client process {pid} terminated gracefully.")
                     break
+                time.sleep(0.1)
             else:
                 # If we get here, process is still running after timeout
                 print(
                     f"HPC client process {pid} did not terminate gracefully, forcing kill..."
                 )
-                _terminate_process(pid)
+                _force_terminate_process_tree(pid)
+                if _tracked_process_is_alive(pid):
+                    _terminate_process(pid)
                 time.sleep(0.5)
                 print(f"HPC client process {pid} killed.")
 

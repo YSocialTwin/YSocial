@@ -127,6 +127,7 @@ def test_stop_hpc_client_deregisters_from_orchestrator(tmp_path):
     mock_actor.deregister_client.remote.return_value = "ok"
 
     with (
+        patch("y_web.src.hpc.client._clear_stale_hpc_pid", return_value=False),
         patch("y_web.src.hpc.client.get_writable_path", return_value=str(tmp_path)),
         patch("y_web.src.hpc.client.ray.is_initialized", return_value=False),
         patch("y_web.src.hpc.client.ray.init") as mock_ray_init,
@@ -158,6 +159,7 @@ def test_start_hpc_client_refuses_duplicate_live_pid():
 
     mock_exp = MagicMock()
     mock_exp.platform_type = "microblogging"
+    mock_exp.db_name = "experiments_exp123"
 
     mock_cli = MagicMock()
     mock_cli.name = "standard_pop"
@@ -165,14 +167,88 @@ def test_start_hpc_client_refuses_duplicate_live_pid():
 
     with (
         patch("y_web.src.hpc.client.get_base_path", return_value="/tmp"),
+        patch("y_web.src.hpc.client.get_writable_path", return_value="/tmp"),
         patch("y_web.src.hpc.client.os.kill") as mock_kill,
         patch("y_web.src.hpc.client.subprocess.Popen") as mock_popen,
     ):
         with pytest.raises(RuntimeError, match="already running"):
             start_hpc_client(mock_exp, mock_cli, MagicMock())
 
-    mock_kill.assert_called_once_with(4321, 0)
+    assert mock_kill.call_count >= 1
+    mock_kill.assert_any_call(4321, 0)
     mock_popen.assert_not_called()
+
+
+def test_start_hpc_client_clears_stale_recycled_pid_and_restarts(monkeypatch):
+    """A recycled/non-HPC PID should be cleared so restart can proceed."""
+    from y_web.src.hpc.client import start_hpc_client
+
+    mock_exp = MagicMock()
+    mock_exp.idexp = 6
+    mock_exp.platform_type = "microblogging"
+    mock_exp.db_name = "experiments_exp123"
+
+    mock_cli = MagicMock()
+    mock_cli.id = 9
+    mock_cli.name = "pos"
+    mock_cli.pid = 74950
+    mock_cli.days = 10
+
+    mock_population = MagicMock()
+    mock_population.name = "exp_new"
+
+    mock_process = MagicMock()
+    mock_process.pid = 88888
+
+    existing_exec = MagicMock()
+    existing_exec_q = MagicMock()
+    existing_exec_q.first.return_value = existing_exec
+
+    # PID appears alive but is not an HPC client process (recycled/stale).
+    monkeypatch.setattr("y_web.src.hpc.client._tracked_process_is_alive", lambda pid: True)
+    monkeypatch.setattr("y_web.src.hpc.client._is_hpc_client_process", lambda pid: False)
+    monkeypatch.setattr(
+        "y_web.src.hpc.client._hpc_process_matches_client",
+        lambda pid, cli_name=None, exp_folder=None: False,
+    )
+    monkeypatch.setattr("y_web.src.hpc.client.get_base_path", lambda: "/tmp")
+    monkeypatch.setattr("y_web.src.hpc.client.get_writable_path", lambda: "/tmp")
+    monkeypatch.setattr("y_web.src.hpc.client.Path.exists", lambda *_args, **_kwargs: True)
+    monkeypatch.setattr("y_web.src.simulation.server.detect_env_handler", lambda: "python")
+    monkeypatch.setattr("y_web.src.hpc.client.build_subprocess_env", lambda: {})
+    monkeypatch.setattr("y_web.src.hpc.client.subprocess.Popen", lambda *a, **k: mock_process)
+    monkeypatch.setattr("y_web.src.hpc.client.db.session.commit", lambda: None)
+    class _FakeClientExecution:
+        query = MagicMock()
+
+    _FakeClientExecution.query.filter_by.return_value = existing_exec_q
+    monkeypatch.setattr("y_web.src.hpc.client.Client_Execution", _FakeClientExecution)
+
+    process = start_hpc_client(mock_exp, mock_cli, mock_population)
+
+    assert process.pid == 88888
+    assert mock_cli.pid == 88888
+
+
+def test_stop_hpc_client_clears_stale_recycled_pid(monkeypatch):
+    """Stop should clear stale PID state instead of failing restart later."""
+    from y_web.src.hpc.client import stop_hpc_client
+
+    mock_cli = MagicMock()
+    mock_cli.name = "pos"
+    mock_cli.pid = 74950
+
+    # PID is alive but does not belong to an HPC client anymore.
+    monkeypatch.setattr("y_web.src.hpc.client._tracked_process_is_alive", lambda pid: True)
+    monkeypatch.setattr("y_web.src.hpc.client._is_hpc_client_process", lambda pid: False)
+    monkeypatch.setattr(
+        "y_web.src.hpc.client._hpc_process_matches_client",
+        lambda pid, cli_name=None, exp_folder=None: False,
+    )
+    monkeypatch.setattr("y_web.src.hpc.client.db.session.commit", lambda: None)
+
+    assert stop_hpc_client(mock_cli) is True
+    assert mock_cli.pid is None
 
 
 if __name__ == "__main__":
