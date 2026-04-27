@@ -81,7 +81,9 @@ def _iter_run_ids_from_server_log(
         return []
 
     log_candidates = [
-        get_writable_path(os.path.join("y_web", "experiments", uid, "logs", "_server.log")),
+        get_writable_path(
+            os.path.join("y_web", "experiments", uid, "logs", "_server.log")
+        ),
         get_writable_path(os.path.join("y_web", "experiments", uid, "_server.log")),
     ]
     log_path = next((path for path in log_candidates if os.path.exists(path)), "")
@@ -304,15 +306,13 @@ def _list_experiment_agents_sqlite(exp: Exps) -> List[Any]:
         conn = sqlite3.connect(str(db_path))
         conn.row_factory = sqlite3.Row
         try:
-            rows = conn.execute(
-                """
+            rows = conn.execute("""
                 select *
                 from user_mgmt
                 where coalesce(is_page, 0) = 0
                   and coalesce(user_type, 'user') != 'user'
                 order by username asc, id asc
-                """
-            ).fetchall()
+                """).fetchall()
         finally:
             conn.close()
     except Exception:
@@ -785,7 +785,10 @@ def _build_memory_snapshot_semantic(
         ctx = _post_server_json(
             exp,
             "/memory/get_context",
-            {"run_id": run_id, "agent_user_id": _coerce_experiment_user_id(agent_user_id)},
+            {
+                "run_id": run_id,
+                "agent_user_id": _coerce_experiment_user_id(agent_user_id),
+            },
             timeout_s=3.0,
         )
     except Exception:

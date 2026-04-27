@@ -283,7 +283,11 @@ def _build_facts_snapshot_sqlite(
         snap.update(
             {
                 "query_terms": [],
-                "query_id_filters": {"thread_ids": [], "post_ids": [], "comment_ids": []},
+                "query_id_filters": {
+                    "thread_ids": [],
+                    "post_ids": [],
+                    "comment_ids": [],
+                },
                 "query_hit_evaluations": [],
                 "query_hits_viable_count": 0,
                 "top_posts": [],
@@ -305,7 +309,10 @@ def _build_facts_snapshot_sqlite(
         conn = sqlite3.connect(str(db_path))
         conn.row_factory = sqlite3.Row
         try:
-            def _fetch_posts(where_sql: str, params: Tuple[Any, ...], limit: int) -> List[sqlite3.Row]:
+
+            def _fetch_posts(
+                where_sql: str, params: Tuple[Any, ...], limit: int
+            ) -> List[sqlite3.Row]:
                 sql = f"""
                     select id, tweet, thread_id, comment_to, round, reaction_count, user_id
                     from post
@@ -315,7 +322,9 @@ def _build_facts_snapshot_sqlite(
                 """
                 return conn.execute(sql, tuple(params) + (int(limit),)).fetchall()
 
-            def _fetch_recent_posts(where_sql: str, params: Tuple[Any, ...], limit: int) -> List[sqlite3.Row]:
+            def _fetch_recent_posts(
+                where_sql: str, params: Tuple[Any, ...], limit: int
+            ) -> List[sqlite3.Row]:
                 sql = f"""
                     select id, tweet, thread_id, comment_to, round, reaction_count, user_id
                     from post
@@ -341,7 +350,9 @@ def _build_facts_snapshot_sqlite(
                 int(recent_comments_limit),
             )
 
-            all_posts = list(top_posts) + list(recent_root_posts) + list(recent_comments)
+            all_posts = (
+                list(top_posts) + list(recent_root_posts) + list(recent_comments)
+            )
 
             query_hits_rows: List[sqlite3.Row] = []
             if terms:
@@ -358,23 +369,35 @@ def _build_facts_snapshot_sqlite(
                     limit ?
                 """
                 query_hits_rows.extend(
-                    conn.execute(sql, tuple(params) + (max(int(query_hits_limit), 8),)).fetchall()
+                    conn.execute(
+                        sql, tuple(params) + (max(int(query_hits_limit), 8),)
+                    ).fetchall()
                 )
 
             explicit_rows: List[sqlite3.Row] = []
-            thread_ids = [str(x) for x in (query_ids.get("thread_ids") or []) if str(x).strip()]
-            post_ids = [str(x) for x in (query_ids.get("post_ids") or []) if str(x).strip()]
-            comment_ids = [str(x) for x in (query_ids.get("comment_ids") or []) if str(x).strip()]
+            thread_ids = [
+                str(x) for x in (query_ids.get("thread_ids") or []) if str(x).strip()
+            ]
+            post_ids = [
+                str(x) for x in (query_ids.get("post_ids") or []) if str(x).strip()
+            ]
+            comment_ids = [
+                str(x) for x in (query_ids.get("comment_ids") or []) if str(x).strip()
+            ]
             explicit_conds = []
             explicit_params: List[Any] = [agent_user_id]
             if thread_ids:
-                explicit_conds.append(f"thread_id in ({','.join(['?']*len(thread_ids))})")
+                explicit_conds.append(
+                    f"thread_id in ({','.join(['?']*len(thread_ids))})"
+                )
                 explicit_params.extend(thread_ids)
             if post_ids:
                 explicit_conds.append(f"id in ({','.join(['?']*len(post_ids))})")
                 explicit_params.extend(post_ids)
             if comment_ids:
-                explicit_conds.append(f"comment_to in ({','.join(['?']*len(comment_ids))})")
+                explicit_conds.append(
+                    f"comment_to in ({','.join(['?']*len(comment_ids))})"
+                )
                 explicit_params.extend(comment_ids)
             if explicit_conds:
                 sql = f"""
@@ -397,7 +420,9 @@ def _build_facts_snapshot_sqlite(
             query_hits = list(merged_by_id.values())[: max(int(query_hits_limit), 8)]
             all_posts.extend(query_hits)
 
-            post_ids_all = sorted({str(row["id"]) for row in all_posts if row is not None})
+            post_ids_all = sorted(
+                {str(row["id"]) for row in all_posts if row is not None}
+            )
             reaction_counts: Dict[str, Dict[str, int]] = {
                 pid: {"likes": 0, "dislikes": 0} for pid in post_ids_all
             }
@@ -465,18 +490,26 @@ def _build_facts_snapshot_sqlite(
                 return {
                     "post_id": pid,
                     "thread_root_id": thread_id or None,
-                    "comment_to": parent_id if parent_id and parent_id != "-1" else None,
+                    "comment_to": (
+                        parent_id if parent_id and parent_id != "-1" else None
+                    ),
                     "round": str(row["round"] or "") or None,
                     "reaction_count": int(row["reaction_count"] or 0),
                     "likes": int((reaction_counts.get(pid) or {}).get("likes", 0) or 0),
-                    "dislikes": int((reaction_counts.get(pid) or {}).get("dislikes", 0) or 0),
+                    "dislikes": int(
+                        (reaction_counts.get(pid) or {}).get("dislikes", 0) or 0
+                    ),
                     "text": _truncate_middle(str(row["tweet"] or ""), 240),
-                    "parent_post_id": parent_id if parent_id and parent_id != "-1" else None,
+                    "parent_post_id": (
+                        parent_id if parent_id and parent_id != "-1" else None
+                    ),
                     "parent_user_id": (
                         str(parent_post["user_id"]) if parent_post is not None else None
                     ),
                     "parent_username": (
-                        usernames.get(str(parent_post["user_id"])) if parent_post is not None else None
+                        usernames.get(str(parent_post["user_id"]))
+                        if parent_post is not None
+                        else None
                     ),
                     "parent_text": (
                         _truncate_middle(str(parent_post["tweet"] or ""), 220)
@@ -488,7 +521,9 @@ def _build_facts_snapshot_sqlite(
                         str(thread_post["user_id"]) if thread_post is not None else None
                     ),
                     "thread_op_username": (
-                        usernames.get(str(thread_post["user_id"])) if thread_post is not None else None
+                        usernames.get(str(thread_post["user_id"]))
+                        if thread_post is not None
+                        else None
                     ),
                     "thread_op_text": (
                         _truncate_middle(str(thread_post["tweet"] or ""), 180)
@@ -521,7 +556,9 @@ def _build_facts_snapshot_sqlite(
 
             snap["query_hit_evaluations"] = hit_eval_rows[:8]
             snap["query_hits_viable_count"] = sum(
-                1 for row in hit_eval_rows if int(row.get("informative_matches") or 0) > 0
+                1
+                for row in hit_eval_rows
+                if int(row.get("informative_matches") or 0) > 0
             )
             snap["top_posts"] = [_row_to_fact(row) for row in top_posts]
             snap["recent_root_posts"] = [_row_to_fact(row) for row in recent_root_posts]
@@ -1014,9 +1051,7 @@ def _build_facts_snapshot(
                 )
 
                 thread_op_user_id = (
-                    _coerce_experiment_user_id(
-                        getattr(thread_op_post, "user_id", None)
-                    )
+                    _coerce_experiment_user_id(getattr(thread_op_post, "user_id", None))
                     if thread_op_post is not None
                     else None
                 )
