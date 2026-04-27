@@ -128,12 +128,17 @@ def _forum_chat_followed_agent_ids(owner_user_id: int) -> set[int]:
     followed_ids: set[int] = set()
     latest_actions: dict[int, str] = {}
     follow_events = (
-        Follow.query.filter_by(follower_id=int(owner_user_id))
-        .order_by(Follow.id.desc())
+        Follow.query.filter(Follow.user_id == int(owner_user_id))
+        .outerjoin(Rounds, Follow.round == Rounds.id)
+        .order_by(
+            Rounds.day.desc(),
+            Rounds.hour.desc(),
+            Follow.id.desc(),
+        )
         .all()
     )
     for event in follow_events:
-        target_id = int(getattr(event, "user_id", 0) or 0)
+        target_id = int(getattr(event, "follower_id", 0) or 0)
         if not target_id or target_id in latest_actions:
             continue
         latest_actions[target_id] = (
