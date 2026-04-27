@@ -21,6 +21,13 @@ from ._helpers import (
 )
 
 
+_RAY_MEMORY_METHODS = {
+    "/memory/search": "memory_search",
+    "/memory/get_context": "memory_get_context",
+    "/memory/events_recent": "memory_events_recent",
+}
+
+
 def _pick_listening_port(
     ports: List[int], *, preferred_port: Optional[int] = None
 ) -> Optional[int]:
@@ -163,11 +170,97 @@ def _server_base_url(exp: Exps) -> str:
     return f"http://{host}:{port}"
 
 
+def _experiment_runtime_dir(exp: Exps) -> str:
+    uid = _get_experiment_uid_from_db_name(getattr(exp, "db_name", "") or "")
+    if not uid:
+        return ""
+    return get_writable_path(os.path.join("y_web", "experiments", uid))
+
+
+def _read_experiment_ray_runtime(exp: Exps) -> Dict[str, str]:
+    base = _experiment_runtime_dir(exp)
+    if not base:
+        return {}
+    ray_cfg = os.path.join(base, "ray_config.temp")
+    ray_ns = os.path.join(base, "ray_namespace.temp")
+    try:
+        with open(ray_cfg, "r", encoding="utf-8") as f:
+            address = str(f.read() or "").strip()
+    except Exception:
+        address = ""
+    try:
+        with open(ray_ns, "r", encoding="utf-8") as f:
+            namespace = str(f.read() or "").strip()
+    except Exception:
+        namespace = ""
+    if not address or not namespace:
+        return {}
+    return {"address": address, "namespace": namespace}
+
+
+def _call_server_via_ray(exp: Exps, path: str, payload: dict) -> Dict[str, Any]:
+    if path == "/change_db":
+        # YSimulator runs directly against its experiment DB; no change_db RPC needed.
+        return {"status": 200, "transport": "ray", "note": "change_db_not_required"}
+    method_name = _RAY_MEMORY_METHODS.get(path)
+    if not method_name:
+        raise RuntimeError(f"unsupported_ray_path:{path}")
+
+    runtime = _read_experiment_ray_runtime(exp)
+    if not runtime:
+        raise RuntimeError("ray_runtime_config_missing")
+
+    try:
+        import ray
+    except Exception as exc:
+        raise RuntimeError(f"ray_import_failed:{exc}") from exc
+
+    try:
+        if ray.is_initialized():
+            ray.shutdown()
+        ray.init(
+            address=runtime["address"],
+            namespace=runtime["namespace"],
+            log_to_driver=False,
+        )
+        orchestrator = ray.get_actor("Orchestrator", namespace=runtime["namespace"])
+        method = getattr(orchestrator, method_name, None)
+        if method is None:
+            raise RuntimeError(f"orchestrator_method_missing:{method_name}")
+        res = ray.get(method.remote(payload or {}, client_id="interview"))
+    finally:
+        try:
+            if ray.is_initialized():
+                ray.shutdown()
+        except Exception:
+            pass
+
+    if not isinstance(res, dict):
+        raise RuntimeError(f"ray_invalid_response:{type(res).__name__}")
+    if "status" not in res:
+        res["status"] = 200
+    return res
+
+
 def _post_server_json(exp: Exps, path: str, payload: dict, *, timeout_s: float = 4.0):
-    base = _server_base_url(exp)
-    url = f"{base}{path}"
-    resp = requests.post(url, json=payload, timeout=timeout_s)
-    return _safe_json_loads(resp.text)
+    http_err: Optional[Exception] = None
+    try:
+        base = _server_base_url(exp)
+        url = f"{base}{path}"
+        resp = requests.post(url, json=payload, timeout=timeout_s)
+        out = _safe_json_loads(resp.text)
+        if isinstance(out, dict):
+            return out
+        http_err = RuntimeError("invalid_json_response")
+    except Exception as exc:
+        http_err = exc
+
+    try:
+        return _call_server_via_ray(exp, path, payload)
+    except Exception as ray_exc:
+        if http_err is not None:
+            raise RuntimeError(f"http_failed:{http_err}; ray_failed:{ray_exc}") from ray_exc
+        raise
 
 
 def _post_server_json_with_retries(
@@ -230,7 +323,7 @@ def _ensure_experiment_server_db_binding(exp: Exps) -> Dict[str, Any]:
     """
     Best-effort /change_db call so memory/search is scoped to the selected experiment DB.
     """
-    out = {"ok": False, "change_db_url": "", "path": "", "error": ""}
+    out = {"ok": False, "change_db_url": "", "path": "", "error": "", "transport": ""}
     try:
         path_payload = _build_change_db_path_for_exp(exp)
     except Exception as exc:
@@ -243,15 +336,31 @@ def _ensure_experiment_server_db_binding(exp: Exps) -> Dict[str, Any]:
     out["change_db_url"] = url
     try:
         resp = requests.post(url, json={"path": path_payload}, timeout=4.0)
-        txt = resp.text or ""
-        if resp.status_code == 200 and ("status" in txt):
+        body = _safe_json_loads(resp.text or "")
+        status = None
+        if isinstance(body, dict):
+            status = int(body.get("status") or 0)
+        if resp.status_code == 200 and (status == 200 or bool(body)):
             out["ok"] = True
+            out["transport"] = "http"
             return out
         out["error"] = f"status={resp.status_code}"
-        return out
     except Exception as exc:
         out["error"] = str(exc)
-        return out
+
+    try:
+        ray_resp = _call_server_via_ray(exp, "/change_db", {"path": path_payload})
+        if int(ray_resp.get("status") or 0) == 200:
+            out["ok"] = True
+            out["transport"] = "ray"
+            out["error"] = ""
+            return out
+    except Exception as ray_exc:
+        if out.get("error"):
+            out["error"] = f"{out['error']}; ray:{ray_exc}"
+        else:
+            out["error"] = f"ray:{ray_exc}"
+    return out
 
 
 def _ensure_experiment_db_bind(exp: Exps) -> bool:
