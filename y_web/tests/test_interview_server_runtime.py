@@ -85,8 +85,14 @@ def test_ensure_db_binding_falls_back_to_ray_when_http_fails(monkeypatch):
 
     exp = SimpleNamespace(idexp=39, server="127.0.0.1", port=5014, server_pid=7777)
 
-    monkeypatch.setattr(interview_server, "_build_change_db_path_for_exp", lambda current: "tmp/db.sqlite")
-    monkeypatch.setattr(interview_server, "_server_base_url", lambda current: "http://127.0.0.1:5014")
+    monkeypatch.setattr(
+        interview_server,
+        "_build_change_db_path_for_exp",
+        lambda current: "tmp/db.sqlite",
+    )
+    monkeypatch.setattr(
+        interview_server, "_server_base_url", lambda current: "http://127.0.0.1:5014"
+    )
 
     def _raise_http(*args, **kwargs):
         raise RuntimeError("http down")
