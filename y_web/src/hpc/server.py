@@ -522,8 +522,10 @@ def stop_hpc_server(exp_id):
     """
     # Import here to avoid circular import issues.
     from y_web.src.simulation.port_manager import (
-        _force_terminate_process_tree,
         __terminate_process as _terminate_process,
+    )
+    from y_web.src.simulation.port_manager import (
+        _force_terminate_process_tree,
     )
 
     try:
@@ -551,7 +553,9 @@ def stop_hpc_server(exp_id):
 
             # Wait up to 5 seconds for graceful shutdown
             for _ in range(50):  # 50 * 0.1s = 5 seconds
-                if not _tracked_process_is_alive(pid) or not _is_hpc_server_process(pid):
+                if not _tracked_process_is_alive(pid) or not _is_hpc_server_process(
+                    pid
+                ):
                     print(f"HPC server process {pid} terminated gracefully.")
                     break
                 time.sleep(0.1)

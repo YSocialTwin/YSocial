@@ -23,9 +23,7 @@ def _normalize_content_recsys_mode(mode):
     if not raw:
         return "Random"
 
-    compact = (
-        raw.replace("_", "").replace("-", "").replace(" ", "").strip().lower()
-    )
+    compact = raw.replace("_", "").replace("-", "").replace(" ", "").strip().lower()
     mode_aliases = {
         "reversechrono": "ReverseChrono",
         "rc": "ReverseChrono",
@@ -103,12 +101,16 @@ def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6):
         posts_query = db.session.query(Post).filter(
             Post.user_id != uid, Post.comment_to == -1
         )
-        posts = posts_query.outerjoin(Rounds, Post.round == Rounds.id).order_by(
-            desc(func.coalesce(Rounds.day, -1)),
-            desc(func.coalesce(Rounds.hour, -1)),
-            desc(Post.reaction_count),
-            desc(Post.id),
-        ).paginate(page=page, per_page=per_page, error_out=False)
+        posts = (
+            posts_query.outerjoin(Rounds, Post.round == Rounds.id)
+            .order_by(
+                desc(func.coalesce(Rounds.day, -1)),
+                desc(func.coalesce(Rounds.hour, -1)),
+                desc(Post.reaction_count),
+                desc(Post.id),
+            )
+            .paginate(page=page, per_page=per_page, error_out=False)
+        )
         additional_posts = None
 
     elif mode == "ReverseChronoFollowers":
@@ -140,12 +142,18 @@ def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6):
         posts_query = db.session.query(Post).filter(
             Post.user_id.in_(follower_ids), Post.comment_to == -1
         )
-        posts = posts_query.outerjoin(Rounds, Post.round == Rounds.id).order_by(
-            desc(func.coalesce(Rounds.day, -1)),
-            desc(func.coalesce(Rounds.hour, -1)),
-            desc(Post.reaction_count),
-            desc(Post.id),
-        ).paginate(page=page, per_page=int(per_page * follower_ratio), error_out=False)
+        posts = (
+            posts_query.outerjoin(Rounds, Post.round == Rounds.id)
+            .order_by(
+                desc(func.coalesce(Rounds.day, -1)),
+                desc(func.coalesce(Rounds.hour, -1)),
+                desc(Post.reaction_count),
+                desc(Post.id),
+            )
+            .paginate(
+                page=page, per_page=int(per_page * follower_ratio), error_out=False
+            )
+        )
         additional_query = Post.query.filter(Post.user_id != uid, Post.comment_to == -1)
         additional_posts = _order_query_by_simulation_time(additional_query).paginate(
             page=page,
