@@ -1226,6 +1226,15 @@ def _apply_population_attributes_to_client_config(config, population_id):
     return True
 
 
+def _exclude_adhoc_populations(populations):
+    """Hide ad-hoc/custom populations from standard client creation pages."""
+    return [
+        pop
+        for pop in populations
+        if getattr(pop, "pop_type", None) in (None, "")
+    ]
+
+
 def _build_client_creation_context(idexp, recsys_mode):
     """Build the shared context used by client creation pages."""
     ensure_population_username_type_column()
@@ -1240,6 +1249,7 @@ def _build_client_creation_context(idexp, recsys_mode):
         else Population.query.all()
     )
     all_unassigned_pops = list(pops)
+    pops = _exclude_adhoc_populations(pops)
     pops = [p for p in pops if population_matches_platform(p, exp.platform_type)]
     incompatible_population_count = max(0, len(all_unassigned_pops) - len(pops))
 
