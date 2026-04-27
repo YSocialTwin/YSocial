@@ -205,19 +205,30 @@ def test_start_hpc_client_clears_stale_recycled_pid_and_restarts(monkeypatch):
     existing_exec_q.first.return_value = existing_exec
 
     # PID appears alive but is not an HPC client process (recycled/stale).
-    monkeypatch.setattr("y_web.src.hpc.client._tracked_process_is_alive", lambda pid: True)
-    monkeypatch.setattr("y_web.src.hpc.client._is_hpc_client_process", lambda pid: False)
+    monkeypatch.setattr(
+        "y_web.src.hpc.client._tracked_process_is_alive", lambda pid: True
+    )
+    monkeypatch.setattr(
+        "y_web.src.hpc.client._is_hpc_client_process", lambda pid: False
+    )
     monkeypatch.setattr(
         "y_web.src.hpc.client._hpc_process_matches_client",
         lambda pid, cli_name=None, exp_folder=None: False,
     )
     monkeypatch.setattr("y_web.src.hpc.client.get_base_path", lambda: "/tmp")
     monkeypatch.setattr("y_web.src.hpc.client.get_writable_path", lambda: "/tmp")
-    monkeypatch.setattr("y_web.src.hpc.client.Path.exists", lambda *_args, **_kwargs: True)
-    monkeypatch.setattr("y_web.src.simulation.server.detect_env_handler", lambda: "python")
+    monkeypatch.setattr(
+        "y_web.src.hpc.client.Path.exists", lambda *_args, **_kwargs: True
+    )
+    monkeypatch.setattr(
+        "y_web.src.simulation.server.detect_env_handler", lambda: "python"
+    )
     monkeypatch.setattr("y_web.src.hpc.client.build_subprocess_env", lambda: {})
-    monkeypatch.setattr("y_web.src.hpc.client.subprocess.Popen", lambda *a, **k: mock_process)
+    monkeypatch.setattr(
+        "y_web.src.hpc.client.subprocess.Popen", lambda *a, **k: mock_process
+    )
     monkeypatch.setattr("y_web.src.hpc.client.db.session.commit", lambda: None)
+
     class _FakeClientExecution:
         query = MagicMock()
 
@@ -239,8 +250,12 @@ def test_stop_hpc_client_clears_stale_recycled_pid(monkeypatch):
     mock_cli.pid = 74950
 
     # PID is alive but does not belong to an HPC client anymore.
-    monkeypatch.setattr("y_web.src.hpc.client._tracked_process_is_alive", lambda pid: True)
-    monkeypatch.setattr("y_web.src.hpc.client._is_hpc_client_process", lambda pid: False)
+    monkeypatch.setattr(
+        "y_web.src.hpc.client._tracked_process_is_alive", lambda pid: True
+    )
+    monkeypatch.setattr(
+        "y_web.src.hpc.client._is_hpc_client_process", lambda pid: False
+    )
     monkeypatch.setattr(
         "y_web.src.hpc.client._hpc_process_matches_client",
         lambda pid, cli_name=None, exp_folder=None: False,

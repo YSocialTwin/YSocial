@@ -19,4 +19,3 @@ def test_exclude_adhoc_populations_hides_custom_pop_types():
     visible_ids = [p.id for p in visible]
 
     assert visible_ids == [1, 2]
-

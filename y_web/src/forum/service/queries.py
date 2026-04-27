@@ -55,10 +55,7 @@ from y_web.src.models import (
 
 def _simulation_time_index_expr():
     """Return sortable simulation-time index based on Rounds.day/hour."""
-    return (
-        func.coalesce(Rounds.day, -1) * 24
-        + func.coalesce(Rounds.hour, -1)
-    )
+    return func.coalesce(Rounds.day, -1) * 24 + func.coalesce(Rounds.hour, -1)
 
 
 def _order_by_simulation_time_desc(query):
@@ -887,12 +884,14 @@ def fetch_feed_page(
         score_expr = func.coalesce(reaction_sub.c.like_count, 0) - func.coalesce(
             reaction_sub.c.dislike_count, 0
         )
-        base_query = base_query.outerjoin(
-            reaction_sub, reaction_sub.c.post_id == Post.id
-        ).outerjoin(Rounds, Post.round == Rounds.id).order_by(
-            score_expr.desc(),
-            _simulation_time_index_expr().desc(),
-            Post.id.desc(),
+        base_query = (
+            base_query.outerjoin(reaction_sub, reaction_sub.c.post_id == Post.id)
+            .outerjoin(Rounds, Post.round == Rounds.id)
+            .order_by(
+                score_expr.desc(),
+                _simulation_time_index_expr().desc(),
+                Post.id.desc(),
+            )
         )
     elif feed_type == "hot":
         # Reddit-style hot with logarithmic scoring
@@ -991,22 +990,26 @@ def fetch_feed_page(
                 total=total,
             )
 
-        base_query = base_query.outerjoin(
-            reaction_sub, reaction_sub.c.post_id == Post.id
-        ).outerjoin(Rounds, Post.round == Rounds.id).order_by(
-            hot_score.desc(),
-            sim_time_idx.desc(),
-            Post.id.desc(),
+        base_query = (
+            base_query.outerjoin(reaction_sub, reaction_sub.c.post_id == Post.id)
+            .outerjoin(Rounds, Post.round == Rounds.id)
+            .order_by(
+                hot_score.desc(),
+                sim_time_idx.desc(),
+                Post.id.desc(),
+            )
         )
     elif feed_type == "most_commented":
         comment_sub = _comment_count_subquery()
         comment_expr = func.coalesce(comment_sub.c.comment_count, 0)
-        base_query = base_query.outerjoin(
-            comment_sub, comment_sub.c.thread_id == Post.id
-        ).outerjoin(Rounds, Post.round == Rounds.id).order_by(
-            comment_expr.desc(),
-            _simulation_time_index_expr().desc(),
-            Post.id.desc(),
+        base_query = (
+            base_query.outerjoin(comment_sub, comment_sub.c.thread_id == Post.id)
+            .outerjoin(Rounds, Post.round == Rounds.id)
+            .order_by(
+                comment_expr.desc(),
+                _simulation_time_index_expr().desc(),
+                Post.id.desc(),
+            )
         )
     else:
         base_query = _order_by_simulation_time_desc(base_query)

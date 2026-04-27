@@ -1228,11 +1228,7 @@ def _apply_population_attributes_to_client_config(config, population_id):
 
 def _exclude_adhoc_populations(populations):
     """Hide ad-hoc/custom populations from standard client creation pages."""
-    return [
-        pop
-        for pop in populations
-        if getattr(pop, "pop_type", None) in (None, "")
-    ]
+    return [pop for pop in populations if getattr(pop, "pop_type", None) in (None, "")]
 
 
 def _build_client_creation_context(idexp, recsys_mode):

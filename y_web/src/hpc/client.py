@@ -45,10 +45,7 @@ def _is_hpc_client_process(pid: int) -> bool:
         if proc.status() == psutil.STATUS_ZOMBIE:
             return False
         cmdline = " ".join(proc.cmdline()).lower()
-        return (
-            "run_client.py" in cmdline
-            or "--run-hpc-client-subprocess" in cmdline
-        )
+        return "run_client.py" in cmdline or "--run-hpc-client-subprocess" in cmdline
     except Exception:
         # Fallback to basic liveness signal check.
         return _tracked_process_is_alive(pid)
@@ -199,8 +196,12 @@ def start_hpc_client(exp, cli, population):
     # Clear stale/recycled PID entries first.
     _clear_stale_hpc_pid(cli, exp_folder=exp_folder)
     tracked_pid = getattr(cli, "pid", None)
-    if tracked_pid and _tracked_process_is_alive(tracked_pid) and _hpc_process_matches_client(
-        int(tracked_pid), cli_name=getattr(cli, "name", None), exp_folder=exp_folder
+    if (
+        tracked_pid
+        and _tracked_process_is_alive(tracked_pid)
+        and _hpc_process_matches_client(
+            int(tracked_pid), cli_name=getattr(cli, "name", None), exp_folder=exp_folder
+        )
     ):
         raise RuntimeError(
             f"HPC client '{cli.name}' is already running with PID {cli.pid}. "
@@ -426,8 +427,10 @@ def stop_hpc_client(cli):
     """
     # Import here to avoid circular import issues.
     from y_web.src.simulation.port_manager import (
-        _force_terminate_process_tree,
         __terminate_process as _terminate_process,
+    )
+    from y_web.src.simulation.port_manager import (
+        _force_terminate_process_tree,
     )
 
     try:
@@ -504,7 +507,9 @@ def stop_hpc_client(cli):
 
             # Wait up to 5 seconds for graceful shutdown
             for _ in range(50):  # 50 * 0.1s = 5 seconds
-                if not _tracked_process_is_alive(pid) or not _is_hpc_client_process(pid):
+                if not _tracked_process_is_alive(pid) or not _is_hpc_client_process(
+                    pid
+                ):
                     print(f"HPC client process {pid} terminated gracefully.")
                     break
                 time.sleep(0.1)
