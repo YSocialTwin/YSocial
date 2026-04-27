@@ -20,7 +20,6 @@ from ._helpers import (
     _safe_json_loads,
 )
 
-
 _RAY_MEMORY_METHODS = {
     "/memory/search": "memory_search",
     "/memory/get_context": "memory_get_context",
@@ -259,7 +258,9 @@ def _post_server_json(exp: Exps, path: str, payload: dict, *, timeout_s: float =
         return _call_server_via_ray(exp, path, payload)
     except Exception as ray_exc:
         if http_err is not None:
-            raise RuntimeError(f"http_failed:{http_err}; ray_failed:{ray_exc}") from ray_exc
+            raise RuntimeError(
+                f"http_failed:{http_err}; ray_failed:{ray_exc}"
+            ) from ray_exc
         raise
 
 
