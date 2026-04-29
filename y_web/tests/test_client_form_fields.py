@@ -182,13 +182,16 @@ class TestClientFormFields:
             pytest.skip(f"Could not import Flask: {e}")
 
     def test_follow_back_field_is_wired_in_all_client_forms(self):
+        import os
+        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+
         templates = [
-            "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients.html",
-            "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_forum.html",
-            "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_hpc.html",
+            os.path.join(base_dir, "y_web", "templates", "admin", "clients.html"),
+            os.path.join(base_dir, "y_web", "templates", "admin", "clients_forum.html"),
+            os.path.join(base_dir, "y_web", "templates", "admin", "clients_hpc.html"),
         ]
         crud_source = open(
-            "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_crud.py",
+            os.path.join(base_dir, "y_web", "routes", "admin", "sub", "clients", "_crud.py"),
             "r",
         ).read()
 
@@ -199,8 +202,10 @@ class TestClientFormFields:
         assert crud_source.count("probability_of_follow_back") >= 8
 
     def test_hpc_follow_defaults_enable_network_growth(self):
+        import os
+        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
         template_source = open(
-            "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_hpc.html",
+            os.path.join(base_dir, "y_web", "templates", "admin", "clients_hpc.html"),
             "r",
         ).read()
 
