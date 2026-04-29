@@ -211,6 +211,7 @@ def dashboard():
 
         # Group clients by experiment ID
         from collections import defaultdict
+
         clients_by_exp = defaultdict(list)
         client_ids = []
         for client in all_clients:
@@ -220,7 +221,9 @@ def dashboard():
         # Batch fetch all client executions
         executions_by_client = {}
         if client_ids:
-            all_executions = Client_Execution.query.filter(Client_Execution.client_id.in_(client_ids)).all()
+            all_executions = Client_Execution.query.filter(
+                Client_Execution.client_id.in_(client_ids)
+            ).all()
             for execution in all_executions:
                 executions_by_client[execution.client_id] = execution
 
@@ -411,6 +414,7 @@ def dashboard_experiments_by_status(status):
 
         # Group clients by experiment ID
         from collections import defaultdict
+
         clients_by_exp = defaultdict(list)
         client_ids = []
         for client in all_clients:
@@ -420,7 +424,9 @@ def dashboard_experiments_by_status(status):
         # Batch fetch all client executions
         executions_by_client = {}
         if client_ids:
-            all_executions = Client_Execution.query.filter(Client_Execution.client_id.in_(client_ids)).all()
+            all_executions = Client_Execution.query.filter(
+                Client_Execution.client_id.in_(client_ids)
+            ).all()
             for execution in all_executions:
                 executions_by_client[execution.client_id] = execution
 
