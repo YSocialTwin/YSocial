@@ -183,6 +183,7 @@ class TestClientFormFields:
 
     def test_follow_back_field_is_wired_in_all_client_forms(self):
         import os
+
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 
         templates = [
@@ -191,7 +192,9 @@ class TestClientFormFields:
             os.path.join(base_dir, "y_web", "templates", "admin", "clients_hpc.html"),
         ]
         crud_source = open(
-            os.path.join(base_dir, "y_web", "routes", "admin", "sub", "clients", "_crud.py"),
+            os.path.join(
+                base_dir, "y_web", "routes", "admin", "sub", "clients", "_crud.py"
+            ),
             "r",
         ).read()
 
@@ -203,6 +206,7 @@ class TestClientFormFields:
 
     def test_hpc_follow_defaults_enable_network_growth(self):
         import os
+
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
         template_source = open(
             os.path.join(base_dir, "y_web", "templates", "admin", "clients_hpc.html"),
