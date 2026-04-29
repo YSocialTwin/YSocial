@@ -200,11 +200,36 @@ def dashboard():
     # Helper function to build experiment data with clients
     def build_experiment_data(experiments_list):
         result = {}
+        if not experiments_list:
+            return result
+
+        # Get all experiment IDs
+        exp_ids = [e.idexp for e in experiments_list]
+
+        # Batch fetch all clients for these experiments
+        all_clients = Client.query.filter(Client.id_exp.in_(exp_ids)).all()
+
+        # Group clients by experiment ID
+        from collections import defaultdict
+        clients_by_exp = defaultdict(list)
+        client_ids = []
+        for client in all_clients:
+            clients_by_exp[client.id_exp].append(client)
+            client_ids.append(client.id)
+
+        # Batch fetch all client executions
+        executions_by_client = {}
+        if client_ids:
+            all_executions = Client_Execution.query.filter(Client_Execution.client_id.in_(client_ids)).all()
+            for execution in all_executions:
+                executions_by_client[execution.client_id] = execution
+
+        # Build the final result
         for e in experiments_list:
-            clients = Client.query.filter_by(id_exp=e.idexp).all()
+            clients = clients_by_exp.get(e.idexp, [])
             client_data = []
             for client in clients:
-                cl = Client_Execution.query.filter_by(client_id=client.id).first()
+                cl = executions_by_client.get(client.id)
                 client_executions = cl if cl is not None else -1
                 client_data.append((client, client_executions))
             result[e.idexp] = {"experiment": e, "clients": client_data}
@@ -376,11 +401,34 @@ def dashboard_experiments_by_status(status):
 
     # Build experiment data with clients
     result = []
+
+    if paginated_experiments:
+        # Get all experiment IDs
+        exp_ids = [exp.idexp for exp in paginated_experiments]
+
+        # Batch fetch all clients for these experiments
+        all_clients = Client.query.filter(Client.id_exp.in_(exp_ids)).all()
+
+        # Group clients by experiment ID
+        from collections import defaultdict
+        clients_by_exp = defaultdict(list)
+        client_ids = []
+        for client in all_clients:
+            clients_by_exp[client.id_exp].append(client)
+            client_ids.append(client.id)
+
+        # Batch fetch all client executions
+        executions_by_client = {}
+        if client_ids:
+            all_executions = Client_Execution.query.filter(Client_Execution.client_id.in_(client_ids)).all()
+            for execution in all_executions:
+                executions_by_client[execution.client_id] = execution
+
     for exp in paginated_experiments:
-        clients = Client.query.filter_by(id_exp=exp.idexp).all()
+        clients = clients_by_exp.get(exp.idexp, [])
         client_data = []
         for client in clients:
-            cl = Client_Execution.query.filter_by(client_id=client.id).first()
+            cl = executions_by_client.get(client.id)
             elapsed = cl.elapsed_time if cl else 0
             expected = cl.expected_duration_rounds if cl else 0
             progress = min(100, int((elapsed / expected) * 100)) if expected > 0 else 0
