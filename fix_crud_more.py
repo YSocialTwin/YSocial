@@ -39,7 +39,7 @@ old8 = """        agents = Agent_Population.query.filter(
         # get agent ids for all agents in populations
         agent_ids = [Agent.query.filter_by(id=a.agent_id).first().name for a in agents]"""
 
-content = content.replace(old8, new7) # Replace all occurrences
+content = content.replace(old8, new7)  # Replace all occurrences
 
 with open("y_web/routes/admin/sub/clients/_crud.py", "w") as f:
     f.write(content)

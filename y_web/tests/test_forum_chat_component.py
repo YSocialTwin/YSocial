@@ -125,15 +125,9 @@ def test_chat_component_is_reusable_and_mounted_on_feed_and_thread():
     panel_template = Path(
         "/app/y_web/templates/forum/components/chat_panel.html"
     ).read_text()
-    feed_template = Path(
-        "/app/y_web/templates/forum/feed.html"
-    ).read_text()
-    thread_template = Path(
-        "/app/y_web/templates/forum/thread.html"
-    ).read_text()
-    profile_template = Path(
-        "/app/y_web/templates/forum/profile.html"
-    ).read_text()
+    feed_template = Path("/app/y_web/templates/forum/feed.html").read_text()
+    thread_template = Path("/app/y_web/templates/forum/thread.html").read_text()
+    profile_template = Path("/app/y_web/templates/forum/profile.html").read_text()
     notifications_template = Path(
         "/app/y_web/templates/forum/notifications.html"
     ).read_text()
@@ -162,9 +156,7 @@ def test_chat_component_is_reusable_and_mounted_on_feed_and_thread():
 
 
 def test_forum_chat_js_escapes_rendered_content():
-    js_source = Path(
-        "/app/y_web/static/assets/js/reddit/forum-chat.js"
-    ).read_text()
+    js_source = Path("/app/y_web/static/assets/js/reddit/forum-chat.js").read_text()
 
     assert "function escapeHtml" in js_source
     assert "function formatMessageHtml" in js_source
@@ -180,9 +172,7 @@ def test_forum_chat_js_escapes_rendered_content():
 
 
 def test_profile_route_uses_latest_follow_event_for_forum_state():
-    source = Path(
-        "/app/y_web/routes/social/common.py"
-    ).read_text()
+    source = Path("/app/y_web/routes/social/common.py").read_text()
 
     assert "def _latest_follow_action" in source
     assert "Follow.user_id == follower_id, Follow.follower_id == user_id" in source
@@ -190,12 +180,8 @@ def test_profile_route_uses_latest_follow_event_for_forum_state():
 
 
 def test_forum_profile_posts_include_community_metadata_and_feed_type():
-    posts_source = Path(
-        "/app/y_web/src/data_access/posts.py"
-    ).read_text()
-    common_source = Path(
-        "/app/y_web/routes/social/common.py"
-    ).read_text()
+    posts_source = Path("/app/y_web/src/data_access/posts.py").read_text()
+    common_source = Path("/app/y_web/routes/social/common.py").read_text()
 
     assert '"primary_community": primary_community' in posts_source
     assert '"display_time": display_time if is_forum else None' in posts_source

@@ -2,9 +2,7 @@ import importlib.util
 import sys
 from pathlib import Path
 
-MODULE_PATH = Path(
-    "/app/external/YClientReddit/y_client/classes/base_agent.py"
-)
+MODULE_PATH = Path("/app/external/YClientReddit/y_client/classes/base_agent.py")
 PACKAGE_ROOT = Path("/app/external/YClientReddit")
 
 

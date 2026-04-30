@@ -6,9 +6,7 @@ pytestmark = pytest.mark.unit
 
 
 def test_base_agent_restores_opinion_runtime_path():
-    source = Path(
-        "/app/external/YClient/y_client/classes/base_agent.py"
-    ).read_text()
+    source = Path("/app/external/YClient/y_client/classes/base_agent.py").read_text()
     assert "def _llm_agents_enabled_from_config(config):" in source
     assert "def _seed_initial_opinions_if_needed(self):" in source
     assert 'def new_opinions(self, post_id, tid, text=""):' in source
@@ -24,9 +22,7 @@ def test_base_agent_restores_opinion_runtime_path():
 
 
 def test_client_web_passes_experiment_db_path_and_opinions():
-    source = Path(
-        "/app/external/YClient/y_client/clients/client_web.py"
-    ).read_text()
+    source = Path("/app/external/YClient/y_client/clients/client_web.py").read_text()
     assert 'opinions=ag.get("opinions")' in source
     assert (
         'experiment_db_path=os.path.join(self.base_path, "database_server.db")'
@@ -55,9 +51,7 @@ def test_fake_agent_keeps_opinion_write_hooks():
 
 
 def test_generate_user_uses_fake_agent_for_non_llm_configs():
-    source = Path(
-        "/app/external/YClient/y_client/utils.py"
-    ).read_text()
+    source = Path("/app/external/YClient/y_client/utils.py").read_text()
     assert "def _rule_based_agents_enabled(config):" in source
     assert "len(llm_agents) == 1" in source
     assert "llm_agents[0] is None" in source
@@ -72,18 +66,14 @@ def test_generate_user_uses_fake_agent_for_non_llm_configs():
 
 
 def test_client_web_rule_based_detection_matches_legacy_null_only_contract():
-    source = Path(
-        "/app/external/YClient/y_client/clients/client_web.py"
-    ).read_text()
+    source = Path("/app/external/YClient/y_client/clients/client_web.py").read_text()
     assert "def _rule_based_agents_enabled(self):" in source
     assert "len(llm_agents) == 1" in source
     assert "llm_agents[0] is None" in source
 
 
 def test_web_init_restores_fake_agent_follow_probabilities():
-    source = Path(
-        "/app/external/YClient/y_client/classes/base_agent.py"
-    ).read_text()
+    source = Path("/app/external/YClient/y_client/classes/base_agent.py").read_text()
     assert "self.probability_of_daily_follow = float(" in source
     assert 'config["agents"].get("probability_of_daily_follow", 0)' in source
     assert "self.probability_of_secondary_follow = float(" in source

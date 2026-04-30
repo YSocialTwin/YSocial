@@ -217,20 +217,14 @@ class TestHPCLLMVConfig:
             pytest.skip(f"Could not import Flask: {e}")
 
     def test_hpc_ollama_config_source_contains_auto_api_fields(self):
-        source = open(
-            "/app/y_web/routes/admin/sub/clients/_crud.py"
-        ).read()
+        source = open("/app/y_web/routes/admin/sub/clients/_crud.py").read()
 
         assert '"api_format": "auto"' in source
         assert '"batching_policy": "auto"' in source
 
     def test_hpc_template_uses_selectable_vision_model_fetch(self):
-        template = open(
-            "/app/y_web/templates/admin/clients_hpc.html"
-        ).read()
-        js = open(
-            "/app/y_web/static/assets/js/admin-clients.js"
-        ).read()
+        template = open("/app/y_web/templates/admin/clients_hpc.html").read()
+        js = open("/app/y_web/static/assets/js/admin-clients.js").read()
 
         assert 'select name="llm_v_agent" id="llm_v_agent"' in template
         assert "Fetch Vision Models" in template
@@ -239,9 +233,7 @@ class TestHPCLLMVConfig:
         assert "function isVisionModelName(modelName)" in js
 
     def test_create_hpc_client_source_persists_memory_contract(self):
-        source = open(
-            "/app/y_web/routes/admin/sub/clients/_crud.py"
-        ).read()
+        source = open("/app/y_web/routes/admin/sub/clients/_crud.py").read()
         create_block = source.split("def create_hpc_client(", 1)[1].split(
             "def generate_hpc_client_config(", 1
         )[0]
@@ -252,9 +244,7 @@ class TestHPCLLMVConfig:
         assert '"memory_backend": (' in create_block
 
     def test_hpc_template_exposes_memory_configuration_section(self):
-        template = open(
-            "/app/y_web/templates/admin/clients_hpc.html"
-        ).read()
+        template = open("/app/y_web/templates/admin/clients_hpc.html").read()
 
         assert "Agent Memory (Run-Scoped)" in template
         assert 'id="standard_memory_enabled"' in template
@@ -262,17 +252,13 @@ class TestHPCLLMVConfig:
         assert 'name="memory_embedding_async"' in template
 
     def test_hpc_client_creation_context_supports_memory_gate(self):
-        source = open(
-            "/app/y_web/routes/admin/sub/clients/_crud.py"
-        ).read()
+        source = open("/app/y_web/routes/admin/sub/clients/_crud.py").read()
 
         assert '"server_config.json"' in source
         assert "memory_configuration_supported = bool(llm_agents_enabled)" in source
 
     def test_create_hpc_client_initializes_ollama_vision_fields_before_use(self):
-        source = open(
-            "/app/y_web/routes/admin/sub/clients/_crud.py"
-        ).read()
+        source = open("/app/y_web/routes/admin/sub/clients/_crud.py").read()
 
         create_block = source.split("def create_hpc_client(", 1)[1].split(
             "# Get activity profiles for population", 1

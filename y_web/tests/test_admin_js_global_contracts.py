@@ -5,9 +5,7 @@ import pytest
 pytestmark = pytest.mark.unit
 
 STATIC_JS_DIR = Path("/app/y_web/static/assets/js")
-ADMIN_HEAD = Path(
-    "/app/y_web/templates/admin/head.html"
-)
+ADMIN_HEAD = Path("/app/y_web/templates/admin/head.html")
 
 
 def _contains_any(path: Path, snippets):
@@ -74,18 +72,18 @@ def test_admin_experiments_exports_template_handlers():
 
 
 def test_forum_client_logs_support_legacy_shared_log_fallback():
-    route_source = Path(
-        "/app/y_web/routes/admin/sub/experiments/_data.py"
-    ).read_text(encoding="utf-8")
+    route_source = Path("/app/y_web/routes/admin/sub/experiments/_data.py").read_text(
+        encoding="utf-8"
+    )
 
     assert 'platform_type", "") == "forum"' in route_source
     assert "agent_execution.log" in route_source
 
 
 def test_forum_process_runner_passes_per_client_log_file_to_reddit_client():
-    source = Path(
-        "/app/y_web/src/simulation/process_runner.py"
-    ).read_text(encoding="utf-8")
+    source = Path("/app/y_web/src/simulation/process_runner.py").read_text(
+        encoding="utf-8"
+    )
 
     assert 'if exp.platform_type == "forum":' in source
     assert 'client_kwargs["log_file"] = log_file' in source
@@ -180,9 +178,9 @@ def test_admin_notifications_page_uses_dedicated_actions_and_download_links():
 
 
 def test_visibility_settings_uses_grid_table_for_current_researcher_visibility():
-    template = Path(
-        "/app/y_web/templates/admin/visibility_settings.html"
-    ).read_text(encoding="utf-8")
+    template = Path("/app/y_web/templates/admin/visibility_settings.html").read_text(
+        encoding="utf-8"
+    )
     script = (STATIC_JS_DIR / "admin-visibility.js").read_text(encoding="utf-8")
 
     assert "assets/vendor/js/gridjs.umd.js" in template
@@ -201,12 +199,12 @@ def test_admin_head_loads_shared_admin_component_and_icon_css():
 
 
 def test_agents_grid_bootstrap_uses_data_attributes_instead_of_route_matching():
-    template = Path(
-        "/app/y_web/templates/admin/agents.html"
-    ).read_text(encoding="utf-8")
-    route_source = Path(
-        "/app/y_web/routes/admin/sub/agents.py"
-    ).read_text(encoding="utf-8")
+    template = Path("/app/y_web/templates/admin/agents.html").read_text(
+        encoding="utf-8"
+    )
+    route_source = Path("/app/y_web/routes/admin/sub/agents.py").read_text(
+        encoding="utf-8"
+    )
     script = (STATIC_JS_DIR / "admin-pages.js").read_text(encoding="utf-8")
 
     assert (
@@ -232,15 +230,15 @@ def test_admin_nav_unhides_notification_badge_with_bootstrap_class_toggle():
 
 
 def test_experiment_details_pages_expose_configuration_block_consistently():
-    standard = Path(
-        "/app/y_web/templates/admin/experiment_details.html"
-    ).read_text(encoding="utf-8")
-    forum = Path(
-        "/app/y_web/templates/admin/experiment_details_forum.html"
-    ).read_text(encoding="utf-8")
-    route_source = Path(
-        "/app/y_web/routes/admin/sub/experiments/_data.py"
-    ).read_text(encoding="utf-8")
+    standard = Path("/app/y_web/templates/admin/experiment_details.html").read_text(
+        encoding="utf-8"
+    )
+    forum = Path("/app/y_web/templates/admin/experiment_details_forum.html").read_text(
+        encoding="utf-8"
+    )
+    route_source = Path("/app/y_web/routes/admin/sub/experiments/_data.py").read_text(
+        encoding="utf-8"
+    )
 
     assert "<b>Experiment Configuration</b>" in standard
     assert "<b>Experiment Configuration</b>" in forum
@@ -296,12 +294,12 @@ def test_experiment_details_pages_expose_configuration_block_consistently():
 
 
 def test_stress_reward_settings_page_exists_as_dedicated_admin_view():
-    template = Path(
-        "/app/y_web/templates/admin/stress_reward_settings.html"
-    ).read_text(encoding="utf-8")
-    route_source = Path(
-        "/app/y_web/routes/admin/sub/experiments/_data.py"
-    ).read_text(encoding="utf-8")
+    template = Path("/app/y_web/templates/admin/stress_reward_settings.html").read_text(
+        encoding="utf-8"
+    )
+    route_source = Path("/app/y_web/routes/admin/sub/experiments/_data.py").read_text(
+        encoding="utf-8"
+    )
 
     assert "Stress / Reward Settings" in template
     assert (
@@ -344,9 +342,9 @@ def test_stress_reward_evolution_page_exists_as_dedicated_admin_view():
 
 
 def test_annotation_analytics_pages_exist_as_dedicated_admin_views():
-    template = Path(
-        "/app/y_web/templates/admin/annotation_analytics.html"
-    ).read_text(encoding="utf-8")
+    template = Path("/app/y_web/templates/admin/annotation_analytics.html").read_text(
+        encoding="utf-8"
+    )
     route_source = Path(
         "/app/y_web/routes/admin/sub/experiments/_opinion.py"
     ).read_text(encoding="utf-8")
@@ -381,9 +379,9 @@ def test_annotation_analytics_pages_exist_as_dedicated_admin_views():
 
 
 def test_opinion_evolution_page_exposes_propaganda_target_drilldown():
-    template = Path(
-        "/app/y_web/templates/admin/opinion_evolution.html"
-    ).read_text(encoding="utf-8")
+    template = Path("/app/y_web/templates/admin/opinion_evolution.html").read_text(
+        encoding="utf-8"
+    )
     route_source = Path(
         "/app/y_web/routes/admin/sub/experiments/_opinion.py"
     ).read_text(encoding="utf-8")
@@ -401,9 +399,9 @@ def test_opinion_evolution_page_exposes_propaganda_target_drilldown():
 
 
 def test_opinion_evolution_page_exposes_mop_target_drilldown():
-    template = Path(
-        "/app/y_web/templates/admin/opinion_evolution.html"
-    ).read_text(encoding="utf-8")
+    template = Path("/app/y_web/templates/admin/opinion_evolution.html").read_text(
+        encoding="utf-8"
+    )
     route_source = Path(
         "/app/y_web/routes/admin/sub/experiments/_opinion.py"
     ).read_text(encoding="utf-8")
@@ -421,9 +419,9 @@ def test_opinion_evolution_page_exposes_mop_target_drilldown():
 
 
 def test_forum_experiment_details_uses_supported_switch_markup_for_avatar_toggle():
-    forum = Path(
-        "/app/y_web/templates/admin/experiment_details_forum.html"
-    ).read_text(encoding="utf-8")
+    forum = Path("/app/y_web/templates/admin/experiment_details_forum.html").read_text(
+        encoding="utf-8"
+    )
 
     assert '<label class="switch-small">' in forum
     assert '<span class="slider-small round"></span>' in forum
@@ -431,12 +429,12 @@ def test_forum_experiment_details_uses_supported_switch_markup_for_avatar_toggle
 
 
 def test_experiment_details_quick_guide_mentions_current_page_sections():
-    standard = Path(
-        "/app/y_web/templates/admin/experiment_details.html"
-    ).read_text(encoding="utf-8")
-    forum = Path(
-        "/app/y_web/templates/admin/experiment_details_forum.html"
-    ).read_text(encoding="utf-8")
+    standard = Path("/app/y_web/templates/admin/experiment_details.html").read_text(
+        encoding="utf-8"
+    )
+    forum = Path("/app/y_web/templates/admin/experiment_details_forum.html").read_text(
+        encoding="utf-8"
+    )
 
     assert "<b>Experiment Overview</b>" in standard
     assert "<b>Server, Clients, and Analytics</b>" in standard
@@ -450,15 +448,15 @@ def test_experiment_details_quick_guide_mentions_current_page_sections():
 
 
 def test_client_creation_pages_use_experiment_memory_gate():
-    standard = Path(
-        "/app/y_web/templates/admin/clients.html"
-    ).read_text(encoding="utf-8")
-    forum = Path(
-        "/app/y_web/templates/admin/clients_forum.html"
-    ).read_text(encoding="utf-8")
-    hpc = Path(
-        "/app/y_web/templates/admin/clients_hpc.html"
-    ).read_text(encoding="utf-8")
+    standard = Path("/app/y_web/templates/admin/clients.html").read_text(
+        encoding="utf-8"
+    )
+    forum = Path("/app/y_web/templates/admin/clients_forum.html").read_text(
+        encoding="utf-8"
+    )
+    hpc = Path("/app/y_web/templates/admin/clients_hpc.html").read_text(
+        encoding="utf-8"
+    )
 
     assert "experimentMemoryEnabled" in standard
     assert "memoryConfigurationSupported" in standard
@@ -478,15 +476,15 @@ def test_client_creation_pages_use_experiment_memory_gate():
 
 
 def test_client_forms_use_fetch_based_vision_model_selection():
-    standard = Path(
-        "/app/y_web/templates/admin/clients.html"
-    ).read_text(encoding="utf-8")
-    forum = Path(
-        "/app/y_web/templates/admin/clients_forum.html"
-    ).read_text(encoding="utf-8")
-    hpc = Path(
-        "/app/y_web/templates/admin/clients_hpc.html"
-    ).read_text(encoding="utf-8")
+    standard = Path("/app/y_web/templates/admin/clients.html").read_text(
+        encoding="utf-8"
+    )
+    forum = Path("/app/y_web/templates/admin/clients_forum.html").read_text(
+        encoding="utf-8"
+    )
+    hpc = Path("/app/y_web/templates/admin/clients_hpc.html").read_text(
+        encoding="utf-8"
+    )
     admin_clients_js = (STATIC_JS_DIR / "admin-clients.js").read_text(encoding="utf-8")
 
     for template in (standard, forum, hpc):
@@ -498,9 +496,9 @@ def test_client_forms_use_fetch_based_vision_model_selection():
 
 
 def test_create_experiment_enforces_external_repo_availability():
-    source = Path(
-        "/app/y_web/routes/admin/sub/experiments/_crud.py"
-    ).read_text(encoding="utf-8")
+    source = Path("/app/y_web/routes/admin/sub/experiments/_crud.py").read_text(
+        encoding="utf-8"
+    )
 
     assert "def _external_repo_availability():" in source
     assert 'get_runtime_status("microblogging_server").installed' in source
@@ -519,9 +517,9 @@ def test_create_experiment_enforces_external_repo_availability():
 
 
 def test_external_runtime_panel_sidebar_link_and_templates_exist():
-    head_template = Path(
-        "/app/y_web/templates/admin/head.html"
-    ).read_text(encoding="utf-8")
+    head_template = Path("/app/y_web/templates/admin/head.html").read_text(
+        encoding="utf-8"
+    )
     panel_template = Path(
         "/app/y_web/templates/admin/external_runtimes.html"
     ).read_text(encoding="utf-8")
@@ -559,12 +557,12 @@ def test_external_runtime_panel_sidebar_link_and_templates_exist():
 
 
 def test_hpc_clients_template_disables_embedded_vllm_when_unavailable():
-    template = Path(
-        "/app/y_web/templates/admin/clients_hpc.html"
-    ).read_text(encoding="utf-8")
-    route_source = Path(
-        "/app/y_web/routes/admin/sub/clients/_crud.py"
-    ).read_text(encoding="utf-8")
+    template = Path("/app/y_web/templates/admin/clients_hpc.html").read_text(
+        encoding="utf-8"
+    )
+    route_source = Path("/app/y_web/routes/admin/sub/clients/_crud.py").read_text(
+        encoding="utf-8"
+    )
 
     assert (
         'option value="vllm" {% if not embedded_vllm_available %}disabled{% endif %}'
@@ -576,15 +574,15 @@ def test_hpc_clients_template_disables_embedded_vllm_when_unavailable():
 
 
 def test_embedding_settings_template_and_routes_support_hpc_memory_embeddings():
-    template = Path(
-        "/app/y_web/templates/admin/embedding_settings.html"
-    ).read_text(encoding="utf-8")
+    template = Path("/app/y_web/templates/admin/embedding_settings.html").read_text(
+        encoding="utf-8"
+    )
     helper_source = Path(
         "/app/y_web/routes/admin/sub/experiments/_helpers.py"
     ).read_text(encoding="utf-8")
-    route_source = Path(
-        "/app/y_web/routes/admin/sub/experiments/_feeds.py"
-    ).read_text(encoding="utf-8")
+    route_source = Path("/app/y_web/routes/admin/sub/experiments/_feeds.py").read_text(
+        encoding="utf-8"
+    )
 
     assert "Experiments do not assume any embedding backend." in template
     assert "server_config.json" in helper_source

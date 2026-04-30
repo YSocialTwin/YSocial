@@ -297,12 +297,8 @@ def test_microblog_chat_component_is_reusable_and_mounted():
     panel_template = Path(
         "/app/y_web/templates/microblogging/components/chat_panel.html"
     ).read_text()
-    feed_template = Path(
-        "/app/y_web/templates/microblogging/feed.html"
-    ).read_text()
-    thread_template = Path(
-        "/app/y_web/templates/microblogging/thread.html"
-    ).read_text()
+    feed_template = Path("/app/y_web/templates/microblogging/feed.html").read_text()
+    thread_template = Path("/app/y_web/templates/microblogging/thread.html").read_text()
     profile_template = Path(
         "/app/y_web/templates/microblogging/profile.html"
     ).read_text()
@@ -339,9 +335,7 @@ def test_microblog_chat_component_is_reusable_and_mounted():
 
 
 def test_microblog_chat_js_escapes_rendered_content():
-    js_source = Path(
-        "/app/y_web/static/assets/js/microblog-chat.js"
-    ).read_text()
+    js_source = Path("/app/y_web/static/assets/js/microblog-chat.js").read_text()
 
     assert "function escapeHtml" in js_source
     assert "function formatMessageHtml" in js_source
