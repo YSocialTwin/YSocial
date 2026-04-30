@@ -123,19 +123,19 @@ def test_forum_chat_routes_are_exposed():
 
 def test_chat_component_is_reusable_and_mounted_on_feed_and_thread():
     panel_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/forum/components/chat_panel.html"
+        "/app/y_web/templates/forum/components/chat_panel.html"
     ).read_text()
     feed_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/forum/feed.html"
+        "/app/y_web/templates/forum/feed.html"
     ).read_text()
     thread_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/forum/thread.html"
+        "/app/y_web/templates/forum/thread.html"
     ).read_text()
     profile_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/forum/profile.html"
+        "/app/y_web/templates/forum/profile.html"
     ).read_text()
     notifications_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/forum/notifications.html"
+        "/app/y_web/templates/forum/notifications.html"
     ).read_text()
 
     assert 'id="forum-chat-panel"' in panel_template
@@ -163,7 +163,7 @@ def test_chat_component_is_reusable_and_mounted_on_feed_and_thread():
 
 def test_forum_chat_js_escapes_rendered_content():
     js_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/js/reddit/forum-chat.js"
+        "/app/y_web/static/assets/js/reddit/forum-chat.js"
     ).read_text()
 
     assert "function escapeHtml" in js_source
@@ -181,7 +181,7 @@ def test_forum_chat_js_escapes_rendered_content():
 
 def test_profile_route_uses_latest_follow_event_for_forum_state():
     source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/common.py"
+        "/app/y_web/routes/social/common.py"
     ).read_text()
 
     assert "def _latest_follow_action" in source
@@ -191,10 +191,10 @@ def test_profile_route_uses_latest_follow_event_for_forum_state():
 
 def test_forum_profile_posts_include_community_metadata_and_feed_type():
     posts_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/src/data_access/posts.py"
+        "/app/y_web/src/data_access/posts.py"
     ).read_text()
     common_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/common.py"
+        "/app/y_web/routes/social/common.py"
     ).read_text()
 
     assert '"primary_community": primary_community' in posts_source

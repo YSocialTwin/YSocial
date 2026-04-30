@@ -3,9 +3,9 @@ import sys
 from pathlib import Path
 
 MODULE_PATH = Path(
-    "/Users/rossetti/PycharmProjects/YWeb/external/YClientReddit/y_client/classes/base_agent.py"
+    "/app/external/YClientReddit/y_client/classes/base_agent.py"
 )
-PACKAGE_ROOT = Path("/Users/rossetti/PycharmProjects/YWeb/external/YClientReddit")
+PACKAGE_ROOT = Path("/app/external/YClientReddit")
 
 
 def _load_module():

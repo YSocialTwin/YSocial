@@ -1,0 +1,3 @@
+## 2024-04-29 - N+1 Queries in Population Management
+**Learning:** The `y_web/routes/admin/sub/clients/_crud.py` file contains widespread N+1 query patterns for fetching `Agent` and `Page` objects related to populations, often using list comprehensions like `[Agent.query.filter_by(id=a.agent_id).first() for a in agents]`. This is highly inefficient for large populations.
+**Action:** Proactively replace these with `.in_()` batch fetches, such as `agent_ids = [a.agent_id for a in agents]; fetched_agents = Agent.query.filter(Agent.id.in_(agent_ids)).all()`, and handle None values / maintain mapping correctly to resolve these common bottlenecks.

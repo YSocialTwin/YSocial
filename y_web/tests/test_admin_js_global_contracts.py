@@ -4,9 +4,9 @@ import pytest
 
 pytestmark = pytest.mark.unit
 
-STATIC_JS_DIR = Path("/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/js")
+STATIC_JS_DIR = Path("/app/y_web/static/assets/js")
 ADMIN_HEAD = Path(
-    "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/head.html"
+    "/app/y_web/templates/admin/head.html"
 )
 
 
@@ -75,7 +75,7 @@ def test_admin_experiments_exports_template_handlers():
 
 def test_forum_client_logs_support_legacy_shared_log_fallback():
     route_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_data.py"
+        "/app/y_web/routes/admin/sub/experiments/_data.py"
     ).read_text(encoding="utf-8")
 
     assert 'platform_type", "") == "forum"' in route_source
@@ -84,7 +84,7 @@ def test_forum_client_logs_support_legacy_shared_log_fallback():
 
 def test_forum_process_runner_passes_per_client_log_file_to_reddit_client():
     source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/src/simulation/process_runner.py"
+        "/app/y_web/src/simulation/process_runner.py"
     ).read_text(encoding="utf-8")
 
     assert 'if exp.platform_type == "forum":' in source
@@ -164,7 +164,7 @@ def test_admin_miscellanea_and_feeds_export_template_handlers():
 
 def test_admin_notifications_page_uses_dedicated_actions_and_download_links():
     notifications_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/download_notifications.html"
+        "/app/y_web/templates/admin/download_notifications.html"
     ).read_text(encoding="utf-8")
     notifications_js = (STATIC_JS_DIR / "admin-notifications.js").read_text(
         encoding="utf-8"
@@ -181,7 +181,7 @@ def test_admin_notifications_page_uses_dedicated_actions_and_download_links():
 
 def test_visibility_settings_uses_grid_table_for_current_researcher_visibility():
     template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/visibility_settings.html"
+        "/app/y_web/templates/admin/visibility_settings.html"
     ).read_text(encoding="utf-8")
     script = (STATIC_JS_DIR / "admin-visibility.js").read_text(encoding="utf-8")
 
@@ -202,10 +202,10 @@ def test_admin_head_loads_shared_admin_component_and_icon_css():
 
 def test_agents_grid_bootstrap_uses_data_attributes_instead_of_route_matching():
     template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/agents.html"
+        "/app/y_web/templates/admin/agents.html"
     ).read_text(encoding="utf-8")
     route_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/agents.py"
+        "/app/y_web/routes/admin/sub/agents.py"
     ).read_text(encoding="utf-8")
     script = (STATIC_JS_DIR / "admin-pages.js").read_text(encoding="utf-8")
 
@@ -233,13 +233,13 @@ def test_admin_nav_unhides_notification_badge_with_bootstrap_class_toggle():
 
 def test_experiment_details_pages_expose_configuration_block_consistently():
     standard = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/experiment_details.html"
+        "/app/y_web/templates/admin/experiment_details.html"
     ).read_text(encoding="utf-8")
     forum = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/experiment_details_forum.html"
+        "/app/y_web/templates/admin/experiment_details_forum.html"
     ).read_text(encoding="utf-8")
     route_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_data.py"
+        "/app/y_web/routes/admin/sub/experiments/_data.py"
     ).read_text(encoding="utf-8")
 
     assert "<b>Experiment Configuration</b>" in standard
@@ -297,10 +297,10 @@ def test_experiment_details_pages_expose_configuration_block_consistently():
 
 def test_stress_reward_settings_page_exists_as_dedicated_admin_view():
     template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/stress_reward_settings.html"
+        "/app/y_web/templates/admin/stress_reward_settings.html"
     ).read_text(encoding="utf-8")
     route_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_data.py"
+        "/app/y_web/routes/admin/sub/experiments/_data.py"
     ).read_text(encoding="utf-8")
 
     assert "Stress / Reward Settings" in template
@@ -317,10 +317,10 @@ def test_stress_reward_settings_page_exists_as_dedicated_admin_view():
 
 def test_stress_reward_evolution_page_exists_as_dedicated_admin_view():
     template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/stress_reward_evolution.html"
+        "/app/y_web/templates/admin/stress_reward_evolution.html"
     ).read_text(encoding="utf-8")
     route_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_opinion.py"
+        "/app/y_web/routes/admin/sub/experiments/_opinion.py"
     ).read_text(encoding="utf-8")
     script = (STATIC_JS_DIR / "admin-stress-reward.js").read_text(encoding="utf-8")
 
@@ -345,10 +345,10 @@ def test_stress_reward_evolution_page_exists_as_dedicated_admin_view():
 
 def test_annotation_analytics_pages_exist_as_dedicated_admin_views():
     template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/annotation_analytics.html"
+        "/app/y_web/templates/admin/annotation_analytics.html"
     ).read_text(encoding="utf-8")
     route_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_opinion.py"
+        "/app/y_web/routes/admin/sub/experiments/_opinion.py"
     ).read_text(encoding="utf-8")
     script = (STATIC_JS_DIR / "admin-annotation-analytics.js").read_text(
         encoding="utf-8"
@@ -382,10 +382,10 @@ def test_annotation_analytics_pages_exist_as_dedicated_admin_views():
 
 def test_opinion_evolution_page_exposes_propaganda_target_drilldown():
     template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/opinion_evolution.html"
+        "/app/y_web/templates/admin/opinion_evolution.html"
     ).read_text(encoding="utf-8")
     route_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_opinion.py"
+        "/app/y_web/routes/admin/sub/experiments/_opinion.py"
     ).read_text(encoding="utf-8")
     script = (STATIC_JS_DIR / "admin-opinion.js").read_text(encoding="utf-8")
 
@@ -402,10 +402,10 @@ def test_opinion_evolution_page_exposes_propaganda_target_drilldown():
 
 def test_opinion_evolution_page_exposes_mop_target_drilldown():
     template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/opinion_evolution.html"
+        "/app/y_web/templates/admin/opinion_evolution.html"
     ).read_text(encoding="utf-8")
     route_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_opinion.py"
+        "/app/y_web/routes/admin/sub/experiments/_opinion.py"
     ).read_text(encoding="utf-8")
     script = (STATIC_JS_DIR / "admin-opinion.js").read_text(encoding="utf-8")
 
@@ -422,7 +422,7 @@ def test_opinion_evolution_page_exposes_mop_target_drilldown():
 
 def test_forum_experiment_details_uses_supported_switch_markup_for_avatar_toggle():
     forum = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/experiment_details_forum.html"
+        "/app/y_web/templates/admin/experiment_details_forum.html"
     ).read_text(encoding="utf-8")
 
     assert '<label class="switch-small">' in forum
@@ -432,10 +432,10 @@ def test_forum_experiment_details_uses_supported_switch_markup_for_avatar_toggle
 
 def test_experiment_details_quick_guide_mentions_current_page_sections():
     standard = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/experiment_details.html"
+        "/app/y_web/templates/admin/experiment_details.html"
     ).read_text(encoding="utf-8")
     forum = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/experiment_details_forum.html"
+        "/app/y_web/templates/admin/experiment_details_forum.html"
     ).read_text(encoding="utf-8")
 
     assert "<b>Experiment Overview</b>" in standard
@@ -451,13 +451,13 @@ def test_experiment_details_quick_guide_mentions_current_page_sections():
 
 def test_client_creation_pages_use_experiment_memory_gate():
     standard = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients.html"
+        "/app/y_web/templates/admin/clients.html"
     ).read_text(encoding="utf-8")
     forum = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_forum.html"
+        "/app/y_web/templates/admin/clients_forum.html"
     ).read_text(encoding="utf-8")
     hpc = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_hpc.html"
+        "/app/y_web/templates/admin/clients_hpc.html"
     ).read_text(encoding="utf-8")
 
     assert "experimentMemoryEnabled" in standard
@@ -479,13 +479,13 @@ def test_client_creation_pages_use_experiment_memory_gate():
 
 def test_client_forms_use_fetch_based_vision_model_selection():
     standard = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients.html"
+        "/app/y_web/templates/admin/clients.html"
     ).read_text(encoding="utf-8")
     forum = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_forum.html"
+        "/app/y_web/templates/admin/clients_forum.html"
     ).read_text(encoding="utf-8")
     hpc = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_hpc.html"
+        "/app/y_web/templates/admin/clients_hpc.html"
     ).read_text(encoding="utf-8")
     admin_clients_js = (STATIC_JS_DIR / "admin-clients.js").read_text(encoding="utf-8")
 
@@ -499,7 +499,7 @@ def test_client_forms_use_fetch_based_vision_model_selection():
 
 def test_create_experiment_enforces_external_repo_availability():
     source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_crud.py"
+        "/app/y_web/routes/admin/sub/experiments/_crud.py"
     ).read_text(encoding="utf-8")
 
     assert "def _external_repo_availability():" in source
@@ -520,13 +520,13 @@ def test_create_experiment_enforces_external_repo_availability():
 
 def test_external_runtime_panel_sidebar_link_and_templates_exist():
     head_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/head.html"
+        "/app/y_web/templates/admin/head.html"
     ).read_text(encoding="utf-8")
     panel_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/external_runtimes.html"
+        "/app/y_web/templates/admin/external_runtimes.html"
     ).read_text(encoding="utf-8")
     logs_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/external_runtime_logs.html"
+        "/app/y_web/templates/admin/external_runtime_logs.html"
     ).read_text(encoding="utf-8")
 
     assert "sidebar-external-runtimes" in head_template
@@ -560,10 +560,10 @@ def test_external_runtime_panel_sidebar_link_and_templates_exist():
 
 def test_hpc_clients_template_disables_embedded_vllm_when_unavailable():
     template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_hpc.html"
+        "/app/y_web/templates/admin/clients_hpc.html"
     ).read_text(encoding="utf-8")
     route_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_crud.py"
+        "/app/y_web/routes/admin/sub/clients/_crud.py"
     ).read_text(encoding="utf-8")
 
     assert (
@@ -577,13 +577,13 @@ def test_hpc_clients_template_disables_embedded_vllm_when_unavailable():
 
 def test_embedding_settings_template_and_routes_support_hpc_memory_embeddings():
     template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/embedding_settings.html"
+        "/app/y_web/templates/admin/embedding_settings.html"
     ).read_text(encoding="utf-8")
     helper_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_helpers.py"
+        "/app/y_web/routes/admin/sub/experiments/_helpers.py"
     ).read_text(encoding="utf-8")
     route_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_feeds.py"
+        "/app/y_web/routes/admin/sub/experiments/_feeds.py"
     ).read_text(encoding="utf-8")
 
     assert "Experiments do not assume any embedding backend." in template

@@ -198,7 +198,7 @@ def test_stop_server_for_forum_falls_back_to_port_termination(monkeypatch):
 
 def test_server_watchdog_syncs_stress_reward_for_forum_clients():
     source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/src/simulation/server.py",
+        "/app/y_web/src/simulation/server.py",
         "r",
     ).read()
 

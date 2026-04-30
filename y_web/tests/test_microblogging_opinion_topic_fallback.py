@@ -5,7 +5,7 @@ pytestmark = pytest.mark.unit
 
 def test_microblogging_server_get_post_topics_falls_back_to_thread_root():
     source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/external/YServer/y_server/routes/content_management.py",
+        "/app/external/YServer/y_server/routes/content_management.py",
         "r",
     ).read()
 

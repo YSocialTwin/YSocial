@@ -3,7 +3,7 @@ from pathlib import Path
 
 def test_suggested_friend_follow_link_targets_profile_owner():
     template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/components/suggested_friends.html"
+        "/app/y_web/templates/microblogging/components/suggested_friends.html"
     ).read_text(encoding="utf-8")
     assert "/follow/{{ friend['id'] }}/{{ user_id }}" in template
     assert "ys-suggestion-card" in template
@@ -12,7 +12,7 @@ def test_suggested_friend_follow_link_targets_profile_owner():
 
 def test_suggested_page_follow_link_targets_page_owner():
     template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/components/suggested_pages.html"
+        "/app/y_web/templates/microblogging/components/suggested_pages.html"
     ).read_text(encoding="utf-8")
     assert "/follow/{{ page['id'] }}/{{ user_id }}" in template
     assert "ys-suggestion-card" in template
@@ -21,10 +21,10 @@ def test_suggested_page_follow_link_targets_page_owner():
 
 def test_profile_follow_button_targets_viewed_user():
     template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/profile.html"
+        "/app/y_web/templates/microblogging/profile.html"
     ).read_text(encoding="utf-8")
     css = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/css/social-components.css"
+        "/app/y_web/static/assets/css/social-components.css"
     ).read_text(encoding="utf-8")
     assert 'method="post"' in template
     assert 'action="/{{exp_id}}/follow/{{ user_id }}/{{ logged_id }}"' in template
@@ -48,13 +48,13 @@ def test_profile_follow_button_targets_viewed_user():
 
 def test_profile_activity_tabs_are_single_row_async_controls():
     template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/profile.html"
+        "/app/y_web/templates/microblogging/profile.html"
     ).read_text(encoding="utf-8")
     js = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/js/mb-profile.js"
+        "/app/y_web/static/assets/js/mb-profile.js"
     ).read_text(encoding="utf-8")
     css = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/css/social-components.css"
+        "/app/y_web/static/assets/css/social-components.css"
     ).read_text(encoding="utf-8")
 
     assert "ys-profile-activity-tabs" in template
@@ -69,16 +69,16 @@ def test_profile_activity_tabs_are_single_row_async_controls():
 
 def test_microblog_header_search_wires_profiles_hashtags_and_topics():
     template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/header.html"
+        "/app/y_web/templates/microblogging/header.html"
     ).read_text(encoding="utf-8")
     source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/microblogging.py"
+        "/app/y_web/routes/social/microblogging.py"
     ).read_text(encoding="utf-8")
     js = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/js/mb-header-search.js"
+        "/app/y_web/static/assets/js/mb-header-search.js"
     ).read_text(encoding="utf-8")
     css = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/css/social-components.css"
+        "/app/y_web/static/assets/css/social-components.css"
     ).read_text(encoding="utf-8")
 
     assert "data-mb-global-search" in template
@@ -102,7 +102,7 @@ def test_microblog_header_search_wires_profiles_hashtags_and_topics():
 
 def test_profile_template_renders_stress_reward_indicators():
     template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/profile.html"
+        "/app/y_web/templates/microblogging/profile.html"
     ).read_text(encoding="utf-8")
 
     assert "Stress / Reward" in template
@@ -117,7 +117,7 @@ def test_profile_template_renders_stress_reward_indicators():
 
 def test_profile_route_wires_latest_stress_reward_aggregate_context():
     source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/common.py"
+        "/app/y_web/routes/social/common.py"
     ).read_text(encoding="utf-8")
 
     assert "def _stress_reward_enabled_for_exp(exp):" in source
@@ -131,10 +131,10 @@ def test_profile_route_wires_latest_stress_reward_aggregate_context():
 
 def test_profile_about_me_supports_agent_custom_feature_rows():
     template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/profile.html"
+        "/app/y_web/templates/microblogging/profile.html"
     ).read_text(encoding="utf-8")
     source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/common.py"
+        "/app/y_web/routes/social/common.py"
     ).read_text(encoding="utf-8")
 
     assert (
@@ -148,10 +148,10 @@ def test_profile_about_me_supports_agent_custom_feature_rows():
 
 def test_profile_template_uses_shared_ranked_card_and_profile_panels():
     template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/profile.html"
+        "/app/y_web/templates/microblogging/profile.html"
     ).read_text(encoding="utf-8")
     css = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/css/social-components.css"
+        "/app/y_web/static/assets/css/social-components.css"
     ).read_text(encoding="utf-8")
 
     assert (
@@ -169,19 +169,19 @@ def test_profile_template_uses_shared_ranked_card_and_profile_panels():
 
 def test_friends_template_uses_compact_cards_and_tab_aware_pagination():
     template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/friends.html"
+        "/app/y_web/templates/microblogging/friends.html"
     ).read_text(encoding="utf-8")
     panel_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/components/friends_panel.html"
+        "/app/y_web/templates/microblogging/components/friends_panel.html"
     ).read_text(encoding="utf-8")
     source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/microblogging.py"
+        "/app/y_web/routes/social/microblogging.py"
     ).read_text(encoding="utf-8")
     js = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/js/mb-friends.js"
+        "/app/y_web/static/assets/js/mb-friends.js"
     ).read_text(encoding="utf-8")
     css = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/css/social-components.css"
+        "/app/y_web/static/assets/css/social-components.css"
     ).read_text(encoding="utf-8")
 
     assert "ys-friends-hero-card" in template
@@ -206,13 +206,13 @@ def test_friends_template_uses_compact_cards_and_tab_aware_pagination():
 
 def test_edit_profile_template_uses_shared_profile_style_sections():
     template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/edit_profile.html"
+        "/app/y_web/templates/microblogging/edit_profile.html"
     ).read_text(encoding="utf-8")
     source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/common.py"
+        "/app/y_web/routes/social/common.py"
     ).read_text(encoding="utf-8")
     css = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/css/social-components.css"
+        "/app/y_web/static/assets/css/social-components.css"
     ).read_text(encoding="utf-8")
 
     assert "ys-edit-profile-page" in template
@@ -242,10 +242,10 @@ def test_edit_profile_template_uses_shared_profile_style_sections():
 
 def test_microblog_templates_render_adhoc_agent_badges():
     posts_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/components/posts.html"
+        "/app/y_web/templates/microblogging/components/posts.html"
     ).read_text(encoding="utf-8")
     thread_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/components/thread-post.html"
+        "/app/y_web/templates/microblogging/components/thread-post.html"
     ).read_text(encoding="utf-8")
 
     assert "item.get('adhoc_agent_badge')" in posts_template
@@ -256,13 +256,13 @@ def test_microblog_templates_render_adhoc_agent_badges():
 
 def test_microblog_helper_wires_adhoc_agent_badges():
     source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/helpers.py"
+        "/app/y_web/routes/social/helpers.py"
     ).read_text(encoding="utf-8")
     thread_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/microblogging.py"
+        "/app/y_web/routes/social/microblogging.py"
     ).read_text(encoding="utf-8")
     posts_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/src/data_access/posts.py"
+        "/app/y_web/src/data_access/posts.py"
     ).read_text(encoding="utf-8")
 
     assert "_ADHOC_AGENT_BADGE_LABELS" in source
@@ -278,25 +278,25 @@ def test_microblog_helper_wires_adhoc_agent_badges():
 
 def test_sidebar_ranked_list_card_is_shared_and_styled():
     component = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/components/sidebar_ranked_list_card.html"
+        "/app/y_web/templates/microblogging/components/sidebar_ranked_list_card.html"
     ).read_text(encoding="utf-8")
     feed_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/feed.html"
+        "/app/y_web/templates/microblogging/feed.html"
     ).read_text(encoding="utf-8")
     thread_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/thread.html"
+        "/app/y_web/templates/microblogging/thread.html"
     ).read_text(encoding="utf-8")
     hashtag_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/hashtag.html"
+        "/app/y_web/templates/microblogging/hashtag.html"
     ).read_text(encoding="utf-8")
     interest_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/interest.html"
+        "/app/y_web/templates/microblogging/interest.html"
     ).read_text(encoding="utf-8")
     emotions_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/emotions.html"
+        "/app/y_web/templates/microblogging/emotions.html"
     ).read_text(encoding="utf-8")
     css = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/css/social-components.css"
+        "/app/y_web/static/assets/css/social-components.css"
     ).read_text(encoding="utf-8")
 
     assert (
@@ -327,25 +327,25 @@ def test_sidebar_ranked_list_card_is_shared_and_styled():
 
 def test_sidebar_user_card_is_shared_and_styled():
     component = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/components/sidebar_user_card.html"
+        "/app/y_web/templates/microblogging/components/sidebar_user_card.html"
     ).read_text(encoding="utf-8")
     feed_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/feed.html"
+        "/app/y_web/templates/microblogging/feed.html"
     ).read_text(encoding="utf-8")
     thread_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/thread.html"
+        "/app/y_web/templates/microblogging/thread.html"
     ).read_text(encoding="utf-8")
     hashtag_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/hashtag.html"
+        "/app/y_web/templates/microblogging/hashtag.html"
     ).read_text(encoding="utf-8")
     interest_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/interest.html"
+        "/app/y_web/templates/microblogging/interest.html"
     ).read_text(encoding="utf-8")
     emotions_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/emotions.html"
+        "/app/y_web/templates/microblogging/emotions.html"
     ).read_text(encoding="utf-8")
     css = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/css/social-components.css"
+        "/app/y_web/static/assets/css/social-components.css"
     ).read_text(encoding="utf-8")
 
     assert (
@@ -376,22 +376,22 @@ def test_sidebar_user_card_is_shared_and_styled():
 
 def test_context_hero_is_shared_and_styled():
     component = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/components/context_hero_card.html"
+        "/app/y_web/templates/microblogging/components/context_hero_card.html"
     ).read_text(encoding="utf-8")
     thread_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/thread.html"
+        "/app/y_web/templates/microblogging/thread.html"
     ).read_text(encoding="utf-8")
     hashtag_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/hashtag.html"
+        "/app/y_web/templates/microblogging/hashtag.html"
     ).read_text(encoding="utf-8")
     interest_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/interest.html"
+        "/app/y_web/templates/microblogging/interest.html"
     ).read_text(encoding="utf-8")
     emotions_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/emotions.html"
+        "/app/y_web/templates/microblogging/emotions.html"
     ).read_text(encoding="utf-8")
     css = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/css/social-components.css"
+        "/app/y_web/static/assets/css/social-components.css"
     ).read_text(encoding="utf-8")
 
     assert (
@@ -418,7 +418,7 @@ def test_context_hero_is_shared_and_styled():
 
 def test_infinite_scroll_supports_profile_mode_reset():
     js = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/js/infinite-scroll.js"
+        "/app/y_web/static/assets/js/infinite-scroll.js"
     ).read_text(encoding="utf-8")
 
     assert "destroyInfiniteScroll" in js
@@ -428,10 +428,10 @@ def test_infinite_scroll_supports_profile_mode_reset():
 
 def test_microblog_feed_supports_live_refresh_with_existing_recsys_api():
     js = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/js/mb-feed.js"
+        "/app/y_web/static/assets/js/mb-feed.js"
     ).read_text(encoding="utf-8")
     css = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/css/social-components.css"
+        "/app/y_web/static/assets/css/social-components.css"
     ).read_text(encoding="utf-8")
 
     assert "function probeForNewPosts()" in js
@@ -449,7 +449,7 @@ def test_microblog_feed_supports_live_refresh_with_existing_recsys_api():
 
 def test_build_thread_tree_handles_uuid_out_of_order_replies():
     source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/helpers.py"
+        "/app/y_web/routes/social/helpers.py"
     ).read_text(encoding="utf-8")
     expand_start = source.index("def _expand_tree(")
     recursive_start = source.index("def recursive_visit(")

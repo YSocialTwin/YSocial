@@ -183,12 +183,12 @@ class TestClientFormFields:
 
     def test_follow_back_field_is_wired_in_all_client_forms(self):
         templates = [
-            "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients.html",
-            "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_forum.html",
-            "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_hpc.html",
+            "/app/y_web/templates/admin/clients.html",
+            "/app/y_web/templates/admin/clients_forum.html",
+            "/app/y_web/templates/admin/clients_hpc.html",
         ]
         crud_source = open(
-            "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_crud.py",
+            "/app/y_web/routes/admin/sub/clients/_crud.py",
             "r",
         ).read()
 
@@ -200,7 +200,7 @@ class TestClientFormFields:
 
     def test_hpc_follow_defaults_enable_network_growth(self):
         template_source = open(
-            "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_hpc.html",
+            "/app/y_web/templates/admin/clients_hpc.html",
             "r",
         ).read()
 

@@ -77,16 +77,16 @@ def test_is_package():
 
 def test_interview_routes_and_helpers_support_uuid_user_ids():
     routes = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/api/interview/_routes.py"
+        "/app/y_web/routes/api/interview/_routes.py"
     ).read_text(encoding="utf-8")
     helpers = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/api/interview/_helpers.py"
+        "/app/y_web/routes/api/interview/_helpers.py"
     ).read_text(encoding="utf-8")
     memory = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/api/interview/_memory.py"
+        "/app/y_web/routes/api/interview/_memory.py"
     ).read_text(encoding="utf-8")
     facts = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/api/interview/_facts.py"
+        "/app/y_web/routes/api/interview/_facts.py"
     ).read_text(encoding="utf-8")
 
     assert "def _coerce_experiment_user_id(value: Any) -> Any:" in helpers
@@ -101,7 +101,7 @@ def test_interview_routes_and_helpers_support_uuid_user_ids():
 
 def test_interview_session_creation_binds_experiment_db_before_agent_lookup():
     routes = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/api/interview/_routes.py"
+        "/app/y_web/routes/api/interview/_routes.py"
     ).read_text(encoding="utf-8")
 
     assert "_ensure_experiment_db_bind(exp)" in routes
@@ -112,7 +112,7 @@ def test_interview_session_creation_binds_experiment_db_before_agent_lookup():
 
 def test_interview_frontend_preserves_uuid_agent_ids():
     script = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/js/interview.js"
+        "/app/y_web/static/assets/js/interview.js"
     ).read_text(encoding="utf-8")
 
     assert "const agentUserId = String(agentSelect.value || '').trim()" in script
@@ -122,7 +122,7 @@ def test_interview_frontend_preserves_uuid_agent_ids():
 
 def test_interview_unavailable_memory_snapshot_preserves_uuid_agent_ids():
     server = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/api/interview/_server.py"
+        "/app/y_web/routes/api/interview/_server.py"
     ).read_text(encoding="utf-8")
 
     assert (
@@ -134,10 +134,10 @@ def test_interview_unavailable_memory_snapshot_preserves_uuid_agent_ids():
 
 def test_interview_facts_and_legacy_memory_preserve_uuid_user_ids():
     facts = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/api/interview/_facts.py"
+        "/app/y_web/routes/api/interview/_facts.py"
     ).read_text(encoding="utf-8")
     memory = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/api/interview/_memory.py"
+        "/app/y_web/routes/api/interview/_memory.py"
     ).read_text(encoding="utf-8")
 
     assert '_coerce_experiment_user_id(getattr(rp, "user_id", None))' in facts

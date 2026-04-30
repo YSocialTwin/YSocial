@@ -7,7 +7,7 @@ pytestmark = pytest.mark.unit
 
 def test_base_agent_restores_opinion_runtime_path():
     source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/external/YClient/y_client/classes/base_agent.py"
+        "/app/external/YClient/y_client/classes/base_agent.py"
     ).read_text()
     assert "def _llm_agents_enabled_from_config(config):" in source
     assert "def _seed_initial_opinions_if_needed(self):" in source
@@ -25,7 +25,7 @@ def test_base_agent_restores_opinion_runtime_path():
 
 def test_client_web_passes_experiment_db_path_and_opinions():
     source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/external/YClient/y_client/clients/client_web.py"
+        "/app/external/YClient/y_client/clients/client_web.py"
     ).read_text()
     assert 'opinions=ag.get("opinions")' in source
     assert (
@@ -45,7 +45,7 @@ def test_client_web_passes_experiment_db_path_and_opinions():
 
 def test_fake_agent_keeps_opinion_write_hooks():
     source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/external/YClient/y_client/classes/fake_base_agent.py"
+        "/app/external/YClient/y_client/classes/fake_base_agent.py"
     ).read_text()
     assert (
         "self._record_self_post_opinions(topic_ids=interests_id, tid=int(tid))"
@@ -56,7 +56,7 @@ def test_fake_agent_keeps_opinion_write_hooks():
 
 def test_generate_user_uses_fake_agent_for_non_llm_configs():
     source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/external/YClient/y_client/utils.py"
+        "/app/external/YClient/y_client/utils.py"
     ).read_text()
     assert "def _rule_based_agents_enabled(config):" in source
     assert "len(llm_agents) == 1" in source
@@ -73,7 +73,7 @@ def test_generate_user_uses_fake_agent_for_non_llm_configs():
 
 def test_client_web_rule_based_detection_matches_legacy_null_only_contract():
     source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/external/YClient/y_client/clients/client_web.py"
+        "/app/external/YClient/y_client/clients/client_web.py"
     ).read_text()
     assert "def _rule_based_agents_enabled(self):" in source
     assert "len(llm_agents) == 1" in source
@@ -82,7 +82,7 @@ def test_client_web_rule_based_detection_matches_legacy_null_only_contract():
 
 def test_web_init_restores_fake_agent_follow_probabilities():
     source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/external/YClient/y_client/classes/base_agent.py"
+        "/app/external/YClient/y_client/classes/base_agent.py"
     ).read_text()
     assert "self.probability_of_daily_follow = float(" in source
     assert 'config["agents"].get("probability_of_daily_follow", 0)' in source

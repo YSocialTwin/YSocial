@@ -980,8 +980,9 @@ def _adhoc_activity_profiles_for_population(population_id: int) -> dict[str, str
 
 def _export_adhoc_population_json(population, spec: dict, *, owner: str | None) -> dict:
     agent_links = Agent_Population.query.filter_by(population_id=population.id).all()
-    agents = [Agent.query.filter_by(id=link.agent_id).first() for link in agent_links]
-    agents = [agent for agent in agents if agent is not None]
+    # ⚡ Bolt: Fix N+1 query by batch fetching agents
+    agent_ids = [link.agent_id for link in agent_links]
+    agents = Agent.query.filter(Agent.id.in_(agent_ids)).all() if agent_ids else []
     ext_entries = (
         Agent_Ext.query.filter(
             Agent_Ext.agent_id.in_([agent.id for agent in agents])
@@ -1151,11 +1152,9 @@ def _adhoc_stress_reward_config_for_experiment(exp) -> dict:
 def _collect_population_agent_attributes(population_id):
     """Return normalized per-agent attributes for a population, skipping broken rows."""
     agent_links = Agent_Population.query.filter_by(population_id=population_id).all()
-    agents = []
-    for link in agent_links:
-        agent = Agent.query.filter_by(id=link.agent_id).first()
-        if agent is not None:
-            agents.append(agent)
+    # ⚡ Bolt: Fix N+1 query by batch fetching agents
+    agent_ids = [link.agent_id for link in agent_links]
+    agents = Agent.query.filter(Agent.id.in_(agent_ids)).all() if agent_ids else []
 
     return {
         "agents": agents,
@@ -2532,8 +2531,10 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
     population_filename = f"{exp_dir}{os.sep}{population.name}.json"
 
     # Get agents for this population
-    agents = Agent_Population.query.filter_by(population_id=population.id).all()
-    agents = [Agent.query.filter_by(id=a.agent_id).first() for a in agents]
+    # ⚡ Bolt: Fix N+1 query by batch fetching agents
+    agent_pops = Agent_Population.query.filter_by(population_id=population.id).all()
+    agent_ids = [a.agent_id for a in agent_pops]
+    agents = Agent.query.filter(Agent.id.in_(agent_ids)).all() if agent_ids else []
 
     # Assign archetypes to agents based on distribution probabilities
     num_agents = len(agents)
@@ -2651,8 +2652,10 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
         population_data["agents"].append(agent_data)
 
     # Add pages to population data
-    pages = Page_Population.query.filter_by(population_id=population.id).all()
-    pages = [Page.query.filter_by(id=p.page_id).first() for p in pages]
+    page_pops = Page_Population.query.filter_by(population_id=population.id).all()
+    # ⚡ Bolt: Fix N+1 query by batch fetching pages
+    p_ids = [p.page_id for p in page_pops]
+    pages = Page.query.filter(Page.id.in_(p_ids)).all() if p_ids else []
 
     for page in pages:
         # Get page topics
@@ -2805,12 +2808,16 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
 
     if network_model or (network_file and network_file.filename):
         # Get agents and pages for the population (same logic as Standard)
+        # ⚡ Bolt: Fix N+1 query by batch fetching agents
         agent_pops = Agent_Population.query.filter_by(population_id=population_id).all()
-        agents = [Agent.query.filter_by(id=ap.agent_id).first() for ap in agent_pops]
+        agent_ids = [ap.agent_id for ap in agent_pops]
+        agents = Agent.query.filter(Agent.id.in_(agent_ids)).all() if agent_ids else []
         agent_ids = [a.name for a in agents if a]
 
         page_pops = Page_Population.query.filter_by(population_id=population_id).all()
-        pages_list = [Page.query.filter_by(id=pp.page_id).first() for pp in page_pops]
+        # ⚡ Bolt: Fix N+1 query by batch fetching pages
+        page_ids = [pp.page_id for pp in page_pops]
+        pages_list = Page.query.filter(Page.id.in_(page_ids)).all() if page_ids else []
         page_ids = [p.name for p in pages_list if p]
 
         # Combine agent and page IDs
@@ -3870,9 +3877,10 @@ def _create_standard_client_internal():
             f"{population.name.replace(' ', '')}.json",
         )
 
-    agents = Agent_Population.query.filter_by(population_id=population.id).all()
-    # get the agent details
-    agents = [Agent.query.filter_by(id=a.agent_id).first() for a in agents]
+    # ⚡ Bolt: Fix N+1 query by batch fetching agents
+    agent_pops = Agent_Population.query.filter_by(population_id=population.id).all()
+    agent_ids = [a.agent_id for a in agent_pops]
+    agents = Agent.query.filter(Agent.id.in_(agent_ids)).all() if agent_ids else []
 
     # Assign archetypes to agents based on distribution probabilities
     num_agents = len(agents)
@@ -3972,8 +3980,10 @@ def _create_standard_client_internal():
         res["agents"].append(agent_payload)
 
     # get the pages associated with the population
-    pages = Page_Population.query.filter_by(population_id=population.id).all()
-    pages = [Page.query.filter_by(id=p.page_id).first() for p in pages]
+    page_pops = Page_Population.query.filter_by(population_id=population.id).all()
+    # ⚡ Bolt: Fix N+1 query by batch fetching pages
+    p_ids = [p.page_id for p in page_pops]
+    pages = Page.query.filter(Page.id.in_(p_ids)).all() if p_ids else []
 
     for p in pages:
         # get pages topics
@@ -4034,7 +4044,10 @@ def _create_standard_client_internal():
             Agent_Population.population_id.in_([p.id for p in populations])
         ).all()
         # get agent ids for all agents in populations
-        agent_ids = [Agent.query.filter_by(id=a.agent_id).first().name for a in agents]
+        # ⚡ Bolt: Fix N+1 query by batch fetching agents
+        a_ids = [a.agent_id for a in agents]
+        fetched_agents = Agent.query.filter(Agent.id.in_(a_ids)).all() if a_ids else []
+        agent_ids = [a.name for a in fetched_agents if a]
 
         from y_web.src.system.path_utils import get_writable_path
 
@@ -5146,9 +5159,10 @@ def _create_forum_client_internal():
             f"{population.name.replace(' ', '')}.json",
         )
 
-    agents = Agent_Population.query.filter_by(population_id=population.id).all()
-    # get the agent details
-    agents = [Agent.query.filter_by(id=a.agent_id).first() for a in agents]
+    # ⚡ Bolt: Fix N+1 query by batch fetching agents
+    agent_pops = Agent_Population.query.filter_by(population_id=population.id).all()
+    agent_ids = [a.agent_id for a in agent_pops]
+    agents = Agent.query.filter(Agent.id.in_(agent_ids)).all() if agent_ids else []
 
     # Assign archetypes to agents based on distribution probabilities
     num_agents = len(agents)
@@ -5250,8 +5264,10 @@ def _create_forum_client_internal():
         res["agents"].append(agent_payload)
 
     # get the pages associated with the population
-    pages = Page_Population.query.filter_by(population_id=population.id).all()
-    pages = [Page.query.filter_by(id=p.page_id).first() for p in pages]
+    page_pops = Page_Population.query.filter_by(population_id=population.id).all()
+    # ⚡ Bolt: Fix N+1 query by batch fetching pages
+    p_ids = [p.page_id for p in page_pops]
+    pages = Page.query.filter(Page.id.in_(p_ids)).all() if p_ids else []
 
     for p in pages:
         # get pages topics
@@ -5312,7 +5328,10 @@ def _create_forum_client_internal():
             Agent_Population.population_id.in_([p.id for p in populations])
         ).all()
         # get agent ids for all agents in populations
-        agent_ids = [Agent.query.filter_by(id=a.agent_id).first().name for a in agents]
+        # ⚡ Bolt: Fix N+1 query by batch fetching agents
+        a_ids = [a.agent_id for a in agents]
+        fetched_agents = Agent.query.filter(Agent.id.in_(a_ids)).all() if a_ids else []
+        agent_ids = [a.name for a in fetched_agents if a]
 
         from y_web.src.system.path_utils import get_writable_path
 

@@ -41,7 +41,7 @@ def test_stress_reward_client_sync_preserves_structured_system_config():
 
 def test_standard_and_hpc_experiment_configs_persist_opinion_toggle():
     source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_crud.py",
+        "/app/y_web/routes/admin/sub/experiments/_crud.py",
         "r",
     ).read()
     assert '"opinion_dynamics_enabled": opinion_dynamics_enabled' in source
@@ -54,11 +54,11 @@ def test_standard_and_hpc_experiment_configs_persist_opinion_toggle():
 
 def test_experiment_configuration_confirmation_flag_is_persisted():
     crud_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_crud.py",
+        "/app/y_web/routes/admin/sub/experiments/_crud.py",
         "r",
     ).read()
     data_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_data.py",
+        "/app/y_web/routes/admin/sub/experiments/_data.py",
         "r",
     ).read()
 
@@ -68,11 +68,11 @@ def test_experiment_configuration_confirmation_flag_is_persisted():
 
 def test_experiment_configuration_helpers_are_explicitly_imported():
     data_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_data.py",
+        "/app/y_web/routes/admin/sub/experiments/_data.py",
         "r",
     ).read()
     crud_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_crud.py",
+        "/app/y_web/routes/admin/sub/experiments/_crud.py",
         "r",
     ).read()
 
@@ -85,7 +85,7 @@ def test_experiment_configuration_helpers_are_explicitly_imported():
 
 def test_experiment_topics_update_route_reuses_exp_topic_and_config_storage():
     data_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_data.py",
+        "/app/y_web/routes/admin/sub/experiments/_data.py",
         "r",
     ).read()
 
@@ -96,11 +96,11 @@ def test_experiment_topics_update_route_reuses_exp_topic_and_config_storage():
 
 def test_memory_support_is_resolved_and_enforced_across_experiment_and_client_routes():
     data_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_data.py",
+        "/app/y_web/routes/admin/sub/experiments/_data.py",
         "r",
     ).read()
     clients_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_crud.py",
+        "/app/y_web/routes/admin/sub/clients/_crud.py",
         "r",
     ).read()
 
@@ -138,15 +138,15 @@ def test_memory_support_is_resolved_and_enforced_across_experiment_and_client_ro
 
 def test_hpc_server_config_generation_and_embedding_routes_support_memory():
     crud_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_crud.py",
+        "/app/y_web/routes/admin/sub/experiments/_crud.py",
         "r",
     ).read()
     helpers_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_helpers.py",
+        "/app/y_web/routes/admin/sub/experiments/_helpers.py",
         "r",
     ).read()
     feeds_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_feeds.py",
+        "/app/y_web/routes/admin/sub/experiments/_feeds.py",
         "r",
     ).read()
 
@@ -159,7 +159,7 @@ def test_hpc_server_config_generation_and_embedding_routes_support_memory():
 
 def test_forum_opinion_dynamics_is_not_forced_off_for_rule_based_runs():
     data_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_data.py",
+        "/app/y_web/routes/admin/sub/experiments/_data.py",
         "r",
     ).read()
 
@@ -173,7 +173,7 @@ def test_forum_opinion_dynamics_is_not_forced_off_for_rule_based_runs():
 
 def test_forum_experiments_always_require_configuration_box_for_lock_workflow():
     helpers_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_helpers.py",
+        "/app/y_web/routes/admin/sub/experiments/_helpers.py",
         "r",
     ).read()
 

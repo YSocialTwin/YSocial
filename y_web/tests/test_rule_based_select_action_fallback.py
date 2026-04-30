@@ -5,7 +5,7 @@ pytestmark = pytest.mark.unit
 
 def test_rule_based_select_action_fallback_present():
     source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/external/YClient/y_client/classes/base_agent.py",
+        "/app/external/YClient/y_client/classes/base_agent.py",
         "r",
     ).read()
 
@@ -23,19 +23,19 @@ def test_rule_based_select_action_fallback_present():
 
 def test_forum_rule_based_runtime_uses_fake_agents():
     client_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/external/YClientReddit/y_client/clients/client_web.py",
+        "/app/external/YClientReddit/y_client/clients/client_web.py",
         "r",
     ).read()
     utils_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/external/YClientReddit/y_client/utils.py",
+        "/app/external/YClientReddit/y_client/utils.py",
         "r",
     ).read()
     package_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/external/YClientReddit/y_client/__init__.py",
+        "/app/external/YClientReddit/y_client/__init__.py",
         "r",
     ).read()
     classes_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/external/YClientReddit/y_client/classes/__init__.py",
+        "/app/external/YClientReddit/y_client/classes/__init__.py",
         "r",
     ).read()
 
@@ -72,11 +72,11 @@ def test_forum_rule_based_runtime_uses_fake_agents():
 
 def test_forum_rule_based_fake_agent_supports_forum_share_aliases():
     fake_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/external/YClientReddit/y_client/classes/fake_base_agent.py",
+        "/app/external/YClientReddit/y_client/classes/fake_base_agent.py",
         "r",
     ).read()
     crud_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_crud.py",
+        "/app/y_web/routes/admin/sub/clients/_crud.py",
         "r",
     ).read()
 
@@ -91,11 +91,11 @@ def test_forum_rule_based_fake_agent_supports_forum_share_aliases():
 
 def test_forum_rule_based_fake_agent_records_opinion_updates():
     fake_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/external/YClientReddit/y_client/classes/fake_base_agent.py",
+        "/app/external/YClientReddit/y_client/classes/fake_base_agent.py",
         "r",
     ).read()
     server_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/external/YServerReddit/y_server/routes/user_managment.py",
+        "/app/external/YServerReddit/y_server/routes/user_managment.py",
         "r",
     ).read()
 
@@ -117,7 +117,7 @@ def test_forum_rule_based_fake_agent_records_opinion_updates():
 
 def test_forum_web_init_restores_fake_agent_follow_probabilities():
     reddit_base_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/external/YClientReddit/y_client/classes/base_agent.py",
+        "/app/external/YClientReddit/y_client/classes/base_agent.py",
         "r",
     ).read()
 
@@ -134,7 +134,7 @@ def test_forum_web_init_restores_fake_agent_follow_probabilities():
 
 def test_forum_fake_agent_uses_runtime_db_session_for_news_and_images():
     fake_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/external/YClientReddit/y_client/classes/fake_base_agent.py",
+        "/app/external/YClientReddit/y_client/classes/fake_base_agent.py",
         "r",
     ).read()
 
@@ -152,11 +152,11 @@ def test_forum_fake_agent_uses_runtime_db_session_for_news_and_images():
 
 def test_forum_new_opinions_resolves_numeric_author_id():
     reddit_base_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/external/YClientReddit/y_client/classes/base_agent.py",
+        "/app/external/YClientReddit/y_client/classes/base_agent.py",
         "r",
     ).read()
     server_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/external/YServerReddit/y_server/routes/user_managment.py",
+        "/app/external/YServerReddit/y_server/routes/user_managment.py",
         "r",
     ).read()
 
@@ -171,11 +171,11 @@ def test_forum_new_opinions_resolves_numeric_author_id():
 
 def test_process_runner_forum_rule_based_daily_follow_uses_fake_agent():
     runner_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/src/simulation/process_runner.py",
+        "/app/y_web/src/simulation/process_runner.py",
         "r",
     ).read()
     sampler_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/src/simulation/agent_sampler.py",
+        "/app/y_web/src/simulation/agent_sampler.py",
         "r",
     ).read()
 

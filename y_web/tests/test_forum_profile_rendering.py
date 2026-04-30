@@ -3,10 +3,10 @@ from pathlib import Path
 
 def test_forum_profile_template_renders_stress_reward_card():
     template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/forum/profile.html"
+        "/app/y_web/templates/forum/profile.html"
     ).read_text(encoding="utf-8")
     css = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/css/reddit/forum-components.css"
+        "/app/y_web/static/assets/css/reddit/forum-components.css"
     ).read_text(encoding="utf-8")
 
     assert "Stress / Reward" in template
@@ -22,10 +22,10 @@ def test_forum_profile_template_renders_stress_reward_card():
 
 def test_forum_profile_template_renders_agent_custom_feature_rows():
     template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/forum/profile.html"
+        "/app/y_web/templates/forum/profile.html"
     ).read_text(encoding="utf-8")
     source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/common.py"
+        "/app/y_web/routes/social/common.py"
     ).read_text(encoding="utf-8")
 
     assert (
@@ -38,7 +38,7 @@ def test_forum_profile_template_renders_agent_custom_feature_rows():
 
 def test_forum_profile_route_allows_stress_reward_context():
     source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/common.py"
+        "/app/y_web/routes/social/common.py"
     ).read_text(encoding="utf-8")
 
     assert (
@@ -50,7 +50,7 @@ def test_forum_profile_route_allows_stress_reward_context():
 
 def test_forum_interview_route_supports_uuid_backed_users():
     source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/forum.py"
+        "/app/y_web/routes/social/forum.py"
     ).read_text(encoding="utf-8")
 
     assert (
