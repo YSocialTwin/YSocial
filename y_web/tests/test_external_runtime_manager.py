@@ -10,6 +10,8 @@ import pytest
 
 from y_web.src.external_runtime import manager, registry
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.fixture()
 def runtime_repo_spec(tmp_path, monkeypatch):

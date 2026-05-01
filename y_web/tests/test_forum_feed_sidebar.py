@@ -1,3 +1,7 @@
+import pytest
+
+pytestmark = pytest.mark.unit
+
 from pathlib import Path
 
 from y_web.routes.social.forum import _build_forum_sidebar_communities

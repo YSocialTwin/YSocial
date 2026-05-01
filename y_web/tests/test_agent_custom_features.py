@@ -1,3 +1,7 @@
+import pytest
+
+pytestmark = pytest.mark.unit
+
 from y_web import db
 from y_web.routes.admin.sub.agents import _ensure_interest_topics_exist
 from y_web.routes.admin.sub.clients._crud import _export_adhoc_population_json
