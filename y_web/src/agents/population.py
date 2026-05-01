@@ -121,7 +121,9 @@ def __sample_age(mean, std_dev, min_age, max_age):
             return int(round(age))
 
 
-def __sample_age_degree_profession(age_class, edu_classes, profession_category=None):
+def __sample_age_degree_profession(
+    age_class, edu_classes, preloaded_data, profession_category=None
+):
     probs = [v[0] for v in age_class.values()]
     total = sum(probs)
     weights = [p / total for p in probs]
@@ -135,29 +137,28 @@ def __sample_age_degree_profession(age_class, edu_classes, profession_category=N
     age = random.randint(age_class.age_start, age_class.age_end)
 
     if age < 18:
-        profession = Profession.query.filter_by(profession="Student").first()
+        profession = preloaded_data["professions_by_name"].get("Student")
     else:
         # If a profession category is provided, sample from professions in that category
         if profession_category:
-            # Get professions matching the category (background column)
-            category_professions = Profession.query.filter_by(
-                background=profession_category
-            ).all()
+            category_professions = preloaded_data["professions_by_category"].get(
+                profession_category, []
+            )
             if category_professions:
                 profession = random.choice(category_professions)
             else:
                 # Fallback to random if no professions found for category
-                profession = Profession.query.order_by(func.random()).first()
+                profession = random.choice(preloaded_data["all_professions"])
         else:
-            profession = Profession.query.order_by(func.random()).first()
+            profession = random.choice(preloaded_data["all_professions"])
 
     sampled = random.choices(
         population=list(edu_classes.keys()), weights=list(edu_classes.values()), k=1
     )[0]
-    education_level = int(sampled)
+    education_level_id = int(sampled)
     # get education level object
-    education_level = (
-        Education.query.filter_by(id=education_level).first().education_level
+    education_level = preloaded_data["education_by_id"].get(
+        education_level_id, "High School"
     )
 
     return age, profession, education_level
@@ -313,6 +314,26 @@ def generate_population(
     existing_agents = db.session.query(Agent.name).all()
     used_names = {agent.name for agent in existing_agents}
 
+    # Preload database lookups to avoid N+1 queries during generation
+    all_professions = Profession.query.all()
+    from collections import defaultdict
+
+    professions_by_category = defaultdict(list)
+    for p in all_professions:
+        professions_by_category[p.background].append(p)
+
+    preloaded_data = {
+        "all_professions": all_professions,
+        "professions_by_category": professions_by_category,
+        "professions_by_name": {p.profession: p for p in all_professions},
+        "education_by_id": {e.id: e.education_level for e in Education.query.all()},
+        "toxicity_by_id": {t.id: t.toxicity_level for t in Toxicity_Levels.query.all()},
+        "leanings_by_id": {l.id: l.leaning for l in Leanings.query.all()},
+    }
+
+    # Cache Faker instances to avoid CPU-intensive instantiation
+    faker_instances = {}
+
     # Collect agents to insert in bulk
     agents_to_insert = []
 
@@ -323,7 +344,7 @@ def generate_population(
             profession_category = random.choice(profession_backgrounds)
 
         age, profession, education_level = __sample_age_degree_profession(
-            age_classes, edu_classes, profession_category
+            age_classes, edu_classes, preloaded_data, profession_category
         )
 
         # sample attributes based on provided percentages
@@ -334,20 +355,13 @@ def generate_population(
             for attr, values in percentages.items()
         }
 
-        toxicity = int(sampled["toxicity_levels"])
-        # get toxicity level object
-        toxicity = (
-            db.session.query(Toxicity_Levels)
-            .filter_by(id=toxicity)
-            .first()
-            .toxicity_level
-        )
+        toxicity_id = int(sampled["toxicity_levels"])
+        # get toxicity level object from cache
+        toxicity = preloaded_data["toxicity_by_id"].get(toxicity_id)
 
-        political_leaning = int(sampled["political_leanings"])
-        # get political leaning object
-        political_leaning = (
-            db.session.query(Leanings).filter_by(id=political_leaning).first().leaning
-        )
+        leaning_id = int(sampled["political_leanings"])
+        # get political leaning object from cache
+        political_leaning = preloaded_data["leanings_by_id"].get(leaning_id)
 
         try:
             nationality = random.sample(population.nationalities.split(","), 1)[
@@ -366,7 +380,10 @@ def generate_population(
             # Default to equal probability if no gender distribution provided
             gender = random.sample(["male", "female"], 1)[0]
 
-        fake = faker.Faker(__locales[nationality])
+        locale = __locales.get(nationality, "en_US")
+        if locale not in faker_instances:
+            faker_instances[locale] = faker.Faker(locale)
+        fake = faker_instances[locale]
 
         # Generate a unique name
         name = _generate_unique_name(
