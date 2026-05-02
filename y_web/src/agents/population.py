@@ -10,12 +10,25 @@ import json
 import math
 import random
 import re
+from typing import Dict
 
 import faker
 import numpy as np
 from sqlalchemy.sql import func
 
 from y_web import db
+
+# Cache Faker instances by locale to improve population generation performance
+# Instantiating Faker is CPU-intensive, so this avoids O(n) instantiations.
+_faker_cache: Dict[str, faker.Faker] = {}
+
+
+def _get_faker(locale: str) -> faker.Faker:
+    if locale not in _faker_cache:
+        _faker_cache[locale] = faker.Faker(locale)
+    return _faker_cache[locale]
+
+
 from y_web.src.content.cover_images import random_cover_image_url
 from y_web.src.models import (
     AgeClass,
@@ -366,7 +379,8 @@ def generate_population(
             # Default to equal probability if no gender distribution provided
             gender = random.sample(["male", "female"], 1)[0]
 
-        fake = faker.Faker(__locales[nationality])
+        # Use cached Faker instance for performance
+        fake = _get_faker(__locales[nationality])
 
         # Generate a unique name
         name = _generate_unique_name(
