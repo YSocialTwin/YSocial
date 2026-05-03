@@ -185,14 +185,18 @@ class TestClientFormFields:
         import os
 
         # Use absolute path based on project root dynamically rather than hardcoded path
-        base_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        base_path = os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        )
 
         templates = [
             os.path.join(base_path, "y_web/templates/admin/clients.html"),
             os.path.join(base_path, "y_web/templates/admin/clients_forum.html"),
             os.path.join(base_path, "y_web/templates/admin/clients_hpc.html"),
         ]
-        crud_source_path = os.path.join(base_path, "y_web/routes/admin/sub/clients/_crud.py")
+        crud_source_path = os.path.join(
+            base_path, "y_web/routes/admin/sub/clients/_crud.py"
+        )
 
         try:
             with open(crud_source_path, "r") as f:
@@ -210,8 +214,12 @@ class TestClientFormFields:
     def test_hpc_follow_defaults_enable_network_growth(self):
         import os
 
-        base_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        template_path = os.path.join(base_path, "y_web/templates/admin/clients_hpc.html")
+        base_path = os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        )
+        template_path = os.path.join(
+            base_path, "y_web/templates/admin/clients_hpc.html"
+        )
 
         try:
             with open(template_path, "r") as f:
@@ -220,7 +228,8 @@ class TestClientFormFields:
             assert 'name="probability_of_daily_follow"' in template_source
             assert 'value="0.1"' in template_source
             assert (
-                'input type="hidden" name="follow" id="follow" value="1"' in template_source
+                'input type="hidden" name="follow" id="follow" value="1"'
+                in template_source
             )
         except FileNotFoundError as e:
             pytest.skip(f"Test file missing: {e}")
