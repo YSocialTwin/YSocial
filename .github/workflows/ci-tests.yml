@@ -35,7 +35,7 @@ jobs:
     
     - name: Run tests with coverage
       run: |
-        python -m pytest y_web/tests/ -v --tb=short --cov=y_web --cov-report=xml --cov-report=term-missing
+        python run_tests.py
     
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5
