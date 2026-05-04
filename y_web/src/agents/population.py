@@ -316,6 +316,10 @@ def generate_population(
     # Collect agents to insert in bulk
     agents_to_insert = []
 
+    # Instantiating `faker.Faker` objects is heavily CPU-intensive.
+    # Caching `Faker` instances by locale significantly improves performance during bulk agent generation.
+    _faker_cache = {}
+
     for _ in range(population.size):
         # Sample a profession category if provided
         profession_category = None
@@ -366,7 +370,10 @@ def generate_population(
             # Default to equal probability if no gender distribution provided
             gender = random.sample(["male", "female"], 1)[0]
 
-        fake = faker.Faker(__locales[nationality])
+        locale = __locales[nationality]
+        if locale not in _faker_cache:
+            _faker_cache[locale] = faker.Faker(locale)
+        fake = _faker_cache[locale]
 
         # Generate a unique name
         name = _generate_unique_name(
