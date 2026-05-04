@@ -34,6 +34,7 @@ except ImportError:
                 "are not available in this environment."
             )
 
+
 try:
     from y_web.src.llm.url_summarizer import UrlSummarizer  # noqa: F401
 except ImportError:

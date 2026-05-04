@@ -588,8 +588,7 @@ def check_and_terminate_hpc_experiment(exp_id):
         bool: True if experiment was terminated, False otherwise
     """
     try:
-        from y_web.src.hpc.server import stop_hpc_server
-        from y_web.src.hpc.server import _resolve_hpc_experiment_folder
+        from y_web.src.hpc.server import _resolve_hpc_experiment_folder, stop_hpc_server
         from y_web.src.models import Exps
 
         # Get the experiment
