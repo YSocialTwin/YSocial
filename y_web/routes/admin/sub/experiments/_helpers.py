@@ -401,7 +401,13 @@ def _normalize_image_feeds_payload(feeds):
         normalized = _normalize_image_feed_item(item)
         if normalized is None:
             continue
-        subreddit = normalized["subreddit"]
+        subreddit = (
+            str(normalized.get("subreddit")).strip().lower()
+            if isinstance(normalized, dict)
+            else ""
+        )
+        if not subreddit:
+            continue
         if subreddit in seen_subreddits:
             continue
         seen_subreddits.add(subreddit)

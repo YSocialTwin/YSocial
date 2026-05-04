@@ -39,6 +39,61 @@ logger = logging.getLogger(__name__)
 _HPC_EXP_HAS_SEEN_RUNNING_CLIENT = {}
 
 
+def _is_hpc_client_tracked_process_alive(client: Client, *, exp_folder: str) -> bool:
+    """
+    Return True when the tracked PID still belongs to this HPC client process.
+
+    The check validates both process liveness and command-line ownership to avoid
+    treating recycled PIDs as active client processes.
+    """
+    pid = getattr(client, "pid", None)
+    if not pid:
+        return False
+
+    try:
+        from y_web.src.hpc.client import (
+            _hpc_process_matches_client,
+            _is_hpc_client_process,
+            _tracked_process_is_alive,
+        )
+
+        pid_int = int(pid)
+        if not _tracked_process_is_alive(pid_int):
+            return False
+        if not _is_hpc_client_process(pid_int):
+            return False
+        return bool(
+            _hpc_process_matches_client(
+                pid_int,
+                cli_name=getattr(client, "name", None),
+                exp_folder=exp_folder,
+            )
+        )
+    except Exception:
+        return False
+
+
+def _recover_stale_running_client_statuses(exp: Exps, *, exp_folder: str) -> int:
+    """
+    Heal stale client statuses where status=0 but tracked process is still alive.
+
+    Returns:
+        int: Number of clients promoted back to running status.
+    """
+    recovered = 0
+    clients = Client.query.filter_by(id_exp=exp.idexp).all()
+    for client in clients:
+        if int(getattr(client, "status", 0) or 0) == 1:
+            continue
+        if _is_hpc_client_tracked_process_alive(client, exp_folder=exp_folder):
+            client.status = 1
+            recovered += 1
+
+    if recovered > 0:
+        _commit_with_retry(db.session)
+    return recovered
+
+
 def _mark_hpc_experiment_seen_running_client(exp_id: int) -> None:
     """Record that an experiment has had at least one running client in this session."""
     try:
@@ -534,6 +589,7 @@ def check_and_terminate_hpc_experiment(exp_id):
     """
     try:
         from y_web.src.hpc.server import stop_hpc_server
+        from y_web.src.hpc.server import _resolve_hpc_experiment_folder
         from y_web.src.models import Exps
 
         # Get the experiment
@@ -554,6 +610,20 @@ def check_and_terminate_hpc_experiment(exp_id):
         if not clients:
             print(f"[HPC Monitor] No clients found for experiment {exp.exp_name}")
             return False
+
+        # Reconcile stale DB flags (status=0) against live tracked PIDs.
+        try:
+            exp_folder = _resolve_hpc_experiment_folder(exp)
+            recovered = _recover_stale_running_client_statuses(
+                exp, exp_folder=exp_folder
+            )
+            if recovered > 0:
+                print(
+                    f"[HPC Monitor] Recovered {recovered} client(s) with stale stopped status for experiment {exp.exp_name}"
+                )
+                clients = Client.query.filter_by(id_exp=exp_id).all()
+        except Exception:
+            pass
 
         # Check if all clients are properly completed
         # A client is considered completed ONLY if:
@@ -735,6 +805,19 @@ def monitor_hpc_client_execution_logs():
                     continue
 
                 print(f"[HPC Monitor] Experiment folder: {exp_folder}")
+
+                try:
+                    recovered = _recover_stale_running_client_statuses(
+                        exp, exp_folder=exp_folder
+                    )
+                    if recovered > 0:
+                        print(
+                            f"[HPC Monitor] Recovered {recovered} stale stopped client(s) for experiment {exp.exp_name}"
+                        )
+                except Exception as recovery_exc:
+                    print(
+                        f"[HPC Monitor] Failed stale status recovery for {exp.exp_name}: {recovery_exc}"
+                    )
 
                 # Get all running clients for this experiment
                 clients = Client.query.filter_by(id_exp=exp.idexp, status=1).all()

@@ -184,7 +184,7 @@ def terminate_client(cli, pause=False):
         else:
             # If we get here, process is still running after timeout
             print(f"Client process {pid} did not terminate gracefully, forcing kill...")
-            __terminate_process(pid)
+            _force_terminate_process_tree(pid)
 
             time.sleep(0.5)
             print(f"Client process {pid} killed.")

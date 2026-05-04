@@ -93,10 +93,6 @@ def run_server_main():
     app.run(debug=debug, port=int(config["port"]), host=config["host"])
 
 
-if __name__ == "__main__":
-    main()
-
-
 # ============================================================
 # Client runner
 # ============================================================
@@ -926,6 +922,15 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
 
     session.close()
     engine.dispose()
+
+
+def main():
+    """Dispatch to server or client runner when invoked as a script."""
+    argv = sys.argv[1:]
+    if "--platform" in argv:
+        run_server_main()
+        return
+    run_client_main()
 
 
 if __name__ == "__main__":

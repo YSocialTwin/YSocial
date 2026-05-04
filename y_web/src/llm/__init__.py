@@ -34,6 +34,17 @@ except ImportError:
                 "are not available in this environment."
             )
 
+try:
+    from y_web.src.llm.url_summarizer import UrlSummarizer  # noqa: F401
+except ImportError:
+
+    class UrlSummarizer:  # type: ignore[no-redef]
+        def __init__(self, *args, **kwargs):
+            raise ImportError(
+                "UrlSummarizer requires optional LLM dependencies that are not "
+                "available in this environment."
+            )
+
 
 from y_web.src.llm.ollama_manager import (  # noqa: F401
     delete_model_pull,

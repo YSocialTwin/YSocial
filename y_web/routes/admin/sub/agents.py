@@ -59,6 +59,8 @@ from y_web.src.system.miscellanea import (
 
 agents = Blueprint("agents", __name__)
 
+HELLO_WORLD_DAILY_BUDGET_FEATURE = "daily_budget"
+
 
 PLUGIN_REGISTRY_RELATIVE_PATHS = (
     Path("meta") / "registry.json",

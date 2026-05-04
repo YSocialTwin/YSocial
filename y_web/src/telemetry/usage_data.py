@@ -15,6 +15,7 @@ from y_web.pyinstaller_utils import installation_id
 
 # Support contact email for telemetry issues
 SUPPORT_EMAIL = "support@y-not.social"
+_HTTP_TIMEOUT_SECONDS = 3
 
 
 class Telemetry(object):
@@ -79,12 +80,16 @@ class Telemetry(object):
                 if action == "register":
                     data["action"] = "register"
                     response = requests.post(
-                        f"http://{self.host}:{self.port}/api/register", json=data
+                        f"http://{self.host}:{self.port}/api/register",
+                        json=data,
+                        timeout=_HTTP_TIMEOUT_SECONDS,
                     )
                 elif action == "update":
                     data["action"] = "update"
                     response = requests.post(
-                        f"http://{self.host}:{self.port}/api/register", json=data
+                        f"http://{self.host}:{self.port}/api/register",
+                        json=data,
+                        timeout=_HTTP_TIMEOUT_SECONDS,
                     )
                     return True
         except:
@@ -109,7 +114,9 @@ class Telemetry(object):
 
         try:
             response = requests.post(
-                f"http://{self.host}:{self.port}/api/log_event", json=data
+                f"http://{self.host}:{self.port}/api/log_event",
+                json=data,
+                timeout=_HTTP_TIMEOUT_SECONDS,
             )
             return True
         except:
@@ -134,7 +141,9 @@ class Telemetry(object):
 
         try:
             response = requests.post(
-                f"http://{self.host}:{self.port}/api/log_stack_trace", json=data
+                f"http://{self.host}:{self.port}/api/log_stack_trace",
+                json=data,
+                timeout=_HTTP_TIMEOUT_SECONDS,
             )
             return True
         except:

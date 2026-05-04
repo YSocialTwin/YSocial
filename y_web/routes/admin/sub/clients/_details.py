@@ -375,6 +375,7 @@ def get_adhoc_progress(idexp, client_key):
 def set_network(uid):
     """Handle set network operation."""
     check_privileges(current_user.username)
+    import networkx as nx
 
     # get client
     client = Client.query.filter_by(id=uid).first()

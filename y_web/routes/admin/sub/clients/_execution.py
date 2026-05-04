@@ -28,6 +28,36 @@ from y_web.src.system.path_utils import get_resource_path
 from ._blueprint import clientsr
 
 
+def _hpc_client_process_still_running(exp, client) -> bool:
+    """Return whether the tracked HPC client PID is still active for this client."""
+    try:
+        from y_web.src.hpc.client import (
+            _hpc_process_matches_client,
+            _is_hpc_client_process,
+            _resolve_hpc_experiment_folder,
+            _tracked_process_is_alive,
+        )
+
+        pid = getattr(client, "pid", None)
+        if not pid:
+            return False
+        pid = int(pid)
+        if not _tracked_process_is_alive(pid):
+            return False
+        if not _is_hpc_client_process(pid):
+            return False
+        exp_folder = _resolve_hpc_experiment_folder(exp)
+        return bool(
+            _hpc_process_matches_client(
+                pid,
+                cli_name=getattr(client, "name", None),
+                exp_folder=exp_folder,
+            )
+        )
+    except Exception:
+        return False
+
+
 @clientsr.route("/admin/reset_client/<int:uid>")
 @login_required
 def reset_client(uid):
@@ -430,14 +460,32 @@ def pause_client(uid, idexp):
         )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
 
-    # get population_experiment and update the client_running status
-    db.session.query(Client).filter_by(id=uid).update({Client.status: 0})
-    db.session.commit()
-
     # get client and experiment
     client = Client.query.filter_by(id=uid).first()
+    if client is None:
+        flash("Client not found.", "error")
+        return redirect(url_for("experiments.experiment_details", uid=idexp))
 
-    stop_client_for_experiment(exp, client, pause=True)
+    stop_result = stop_client_for_experiment(exp, client, pause=True)
+
+    if exp.simulator_type == "HPC":
+        if _hpc_client_process_still_running(exp, client):
+            client.status = 1
+            flash(
+                f"HPC client '{client.name}' is still running; status kept as running.",
+                "warning",
+            )
+        elif stop_result is False:
+            flash(
+                f"Unable to confirm stop for HPC client '{client.name}'.",
+                "warning",
+            )
+        else:
+            client.status = 0
+        db.session.commit()
+    else:
+        client.status = 0
+        db.session.commit()
 
     # For remote experiments, check if all clients are stopped
     if exp.is_remote == 1:
@@ -461,15 +509,36 @@ def stop_client(uid, idexp):
 
     check_privileges(current_user.username)
 
-    # get population_experiment and update the client_running status
-    db.session.query(Client).filter_by(id=uid).update({Client.status: 0})
-    db.session.commit()
-
     # get client and experiment
     client = Client.query.filter_by(id=uid).first()
     exp = Exps.query.filter_by(idexp=idexp).first()
+    if client is None:
+        flash("Client not found.", "error")
+        return redirect(url_for("experiments.experiment_details", uid=idexp))
+    if exp is None:
+        flash("Experiment not found.", "error")
+        return redirect(request.referrer)
 
-    stop_client_for_experiment(exp, client, pause=False)
+    stop_result = stop_client_for_experiment(exp, client, pause=False)
+
+    if exp.simulator_type == "HPC":
+        if _hpc_client_process_still_running(exp, client):
+            client.status = 1
+            flash(
+                f"HPC client '{client.name}' is still running; status kept as running.",
+                "warning",
+            )
+        elif stop_result is False:
+            flash(
+                f"Unable to confirm stop for HPC client '{client.name}'.",
+                "warning",
+            )
+        else:
+            client.status = 0
+        db.session.commit()
+    else:
+        client.status = 0
+        db.session.commit()
 
     # For remote experiments, check if all clients are stopped
     if exp.is_remote == 1:

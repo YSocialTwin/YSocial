@@ -399,6 +399,48 @@ class TestHPCExecutionLogMonitoring:
             assert updated_exp.running == 1
             mock_stop.assert_not_called()
 
+    def test_recover_stale_running_client_statuses_promotes_client(self, app):
+        """Stale stopped clients with live tracked PIDs should be promoted to running."""
+        from y_web.src.hpc import log_metrics
+
+        exp = MagicMock()
+        exp.idexp = 42
+
+        stale_client = MagicMock()
+        stale_client.status = 0
+        stale_client.name = "stale"
+        stale_client.pid = 1234
+
+        already_running_client = MagicMock()
+        already_running_client.status = 1
+        already_running_client.name = "running"
+        already_running_client.pid = 5678
+
+        with app.app_context():
+            with (
+                patch.object(log_metrics.Client, "query") as mock_query,
+                patch.object(
+                    log_metrics, "_is_hpc_client_tracked_process_alive"
+                ) as mock_alive,
+                patch.object(log_metrics, "_commit_with_retry") as mock_commit,
+            ):
+                mock_query.filter_by.return_value.all.return_value = [
+                    stale_client,
+                    already_running_client,
+                ]
+                mock_alive.side_effect = (
+                    lambda client, exp_folder: client is stale_client
+                )
+
+                recovered = log_metrics._recover_stale_running_client_statuses(
+                    exp, exp_folder="/tmp/exp"
+                )
+
+                assert recovered == 1
+                assert stale_client.status == 1
+                assert already_running_client.status == 1
+                mock_commit.assert_called_once()
+
     @patch("y_web.src.hpc.server.stop_hpc_server")
     def test_check_and_terminate_does_not_stop_without_session_running_marker(
         self, mock_stop, app, db

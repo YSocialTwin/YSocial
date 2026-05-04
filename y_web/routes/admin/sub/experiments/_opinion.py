@@ -398,13 +398,29 @@ def _build_propaganda_target_panel(
                 "interaction_events": [],
             }
 
-        valid_target_ids = {option["uid"] for option in options}
+        valid_target_ids = {
+            str(option.get("uid"))
+            for option in options
+            if isinstance(option, dict) and option.get("uid") is not None
+        }
         if selected_target_uid not in valid_target_ids:
-            selected_target_uid = options[0]["uid"]
+            selected_target_uid = (
+                str(options[0].get("uid")) if isinstance(options[0], dict) else None
+            )
 
         selected_option = next(
-            option for option in options if option["uid"] == selected_target_uid
+            (
+                option
+                for option in options
+                if isinstance(option, dict)
+                and str(option.get("uid")) == str(selected_target_uid)
+            ),
+            options[0],
         )
+        selected_uid = str(selected_option.get("uid")) if selected_option else None
+        selected_username = str(selected_option.get("username") or "")
+        selected_attackers = selected_option.get("attacker_usernames") or []
+        selected_interaction_count = int(selected_option.get("interaction_count") or 0)
         event_rows = conn.execute(
             """
             SELECT
@@ -449,12 +465,12 @@ def _build_propaganda_target_panel(
         "active_topics": active_topics,
         "selected_topic_has_data": True,
         "options": options,
-        "selected_uid": selected_option["uid"],
-        "selected_username": selected_option["username"],
-        "attacker_usernames": selected_option["attacker_usernames"],
-        "interaction_count": selected_option["interaction_count"],
+        "selected_uid": selected_uid,
+        "selected_username": selected_username,
+        "attacker_usernames": selected_attackers,
+        "interaction_count": selected_interaction_count,
         "trend_data": _build_propaganda_target_opinion_trend(
-            db_path, filter_day, filter_hour, topic_id, selected_option["uid"]
+            db_path, filter_day, filter_hour, topic_id, selected_uid
         ),
         "interaction_events": interaction_events,
     }
@@ -806,13 +822,29 @@ def _build_mop_target_panel(
                 "interaction_events": [],
             }
 
-        valid_target_ids = {option["uid"] for option in options}
+        valid_target_ids = {
+            str(option.get("uid"))
+            for option in options
+            if isinstance(option, dict) and option.get("uid") is not None
+        }
         if selected_target_uid not in valid_target_ids:
-            selected_target_uid = options[0]["uid"]
+            selected_target_uid = (
+                str(options[0].get("uid")) if isinstance(options[0], dict) else None
+            )
 
         selected_option = next(
-            option for option in options if option["uid"] == selected_target_uid
+            (
+                option
+                for option in options
+                if isinstance(option, dict)
+                and str(option.get("uid")) == str(selected_target_uid)
+            ),
+            options[0],
         )
+        selected_uid = str(selected_option.get("uid")) if selected_option else None
+        selected_username = str(selected_option.get("username") or "")
+        selected_attackers = selected_option.get("attacker_usernames") or []
+        selected_interaction_count = int(selected_option.get("interaction_count") or 0)
         event_rows = conn.execute(
             """
             WITH mop_users AS (
@@ -930,12 +962,12 @@ def _build_mop_target_panel(
         "available": True,
         "deployed_agents": int(mop_count),
         "options": options,
-        "selected_uid": selected_option["uid"],
-        "selected_username": selected_option["username"],
-        "attacker_usernames": selected_option["attacker_usernames"],
-        "interaction_count": selected_option["interaction_count"],
+        "selected_uid": selected_uid,
+        "selected_username": selected_username,
+        "attacker_usernames": selected_attackers,
+        "interaction_count": selected_interaction_count,
         "trend_data": _build_mop_target_opinion_trend(
-            db_path, filter_day, filter_hour, topic_id, selected_option["uid"]
+            db_path, filter_day, filter_hour, topic_id, selected_uid
         ),
         "interaction_events": interaction_events,
     }
@@ -2557,6 +2589,50 @@ def opinion_evolution(expid):
     opinion_db_path = _resolve_experiment_db_path(experiment)
     register_experiment_database(current_app, expid, opinion_db_name)
 
+    # Initialize defaults before entering the DB-bound section so all early-return
+    # and fallback paths can safely render without undefined locals.
+    topics = []
+    max_day = 1
+    max_hour = 1
+    filter_day = 1
+    filter_hour = 1
+    filter_topic_id = None
+    opinion_data = []
+    social_interactions = 0
+    unique_agents = 0
+    group_trends_data = []
+    timeseries_data = []
+    propaganda_targets = {
+        "available": False,
+        "deployed_agents": 0,
+        "options": [],
+        "selected_uid": None,
+        "selected_username": None,
+        "attacker_usernames": [],
+        "interaction_count": 0,
+        "trend_data": {
+            "timestamps": [],
+            "timestamp_mapping": {},
+            "datasets": [],
+        },
+        "interaction_events": [],
+    }
+    mop_targets = {
+        "available": False,
+        "deployed_agents": 0,
+        "options": [],
+        "selected_uid": None,
+        "selected_username": None,
+        "attacker_usernames": [],
+        "interaction_count": 0,
+        "trend_data": {
+            "timestamps": [],
+            "timestamp_mapping": {},
+            "datasets": [],
+        },
+        "interaction_events": [],
+    }
+
     # Temporarily switch to experiment database
     old_bind = current_app.config["SQLALCHEMY_BINDS"].get("db_exp")
     current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = current_app.config[
@@ -2574,48 +2650,20 @@ def opinion_evolution(expid):
                 "admin/opinion_evolution.html",
                 experiment=experiment,
                 topics=topics,
-                max_day=1,
-                max_hour=1,
-                filter_day=1,
-                filter_hour=1,
+                max_day=max_day,
+                max_hour=max_hour,
+                filter_day=filter_day,
+                filter_hour=filter_hour,
                 filter_topic_id=(topics[0]["iid"] if topics else None),
                 chart_labels=[],
                 chart_values=[],
                 total_opinions=0,
-                social_interactions=0,
-                unique_agents=0,
-                group_trends_data=[],
-                timeseries_data=[],
-                propaganda_targets={
-                    "available": False,
-                    "deployed_agents": 0,
-                    "options": [],
-                    "selected_uid": None,
-                    "selected_username": None,
-                    "attacker_usernames": [],
-                    "interaction_count": 0,
-                    "trend_data": {
-                        "timestamps": [],
-                        "timestamp_mapping": {},
-                        "datasets": [],
-                    },
-                    "interaction_events": [],
-                },
-                mop_targets={
-                    "available": False,
-                    "deployed_agents": 0,
-                    "options": [],
-                    "selected_uid": None,
-                    "selected_username": None,
-                    "attacker_usernames": [],
-                    "interaction_count": 0,
-                    "trend_data": {
-                        "timestamps": [],
-                        "timestamp_mapping": {},
-                        "datasets": [],
-                    },
-                    "interaction_events": [],
-                },
+                social_interactions=social_interactions,
+                unique_agents=unique_agents,
+                group_trends_data=group_trends_data,
+                timeseries_data=timeseries_data,
+                propaganda_targets=propaganda_targets,
+                mop_targets=mop_targets,
             )
 
         _invalidate_stale_opinion_evolution_cache(expid)
@@ -3427,13 +3475,29 @@ def _build_stress_attacker_target_panel(
                 "interaction_events": [],
             }
 
-        valid_target_ids = {option["uid"] for option in options}
+        valid_target_ids = {
+            str(option.get("uid"))
+            for option in options
+            if isinstance(option, dict) and option.get("uid") is not None
+        }
         if selected_target_uid not in valid_target_ids:
-            selected_target_uid = options[0]["uid"]
+            selected_target_uid = (
+                str(options[0].get("uid")) if isinstance(options[0], dict) else None
+            )
 
         selected_option = next(
-            option for option in options if option["uid"] == selected_target_uid
+            (
+                option
+                for option in options
+                if isinstance(option, dict)
+                and str(option.get("uid")) == str(selected_target_uid)
+            ),
+            options[0],
         )
+        selected_uid = str(selected_option.get("uid")) if selected_option else None
+        selected_username = str(selected_option.get("username") or "")
+        selected_attackers = selected_option.get("attacker_usernames") or []
+        selected_interaction_count = int(selected_option.get("interaction_count") or 0)
         interaction_rows = conn.execute(
             _stress_reward_sa_interaction_cte() + """
             SELECT
@@ -3472,12 +3536,12 @@ def _build_stress_attacker_target_panel(
             "available": True,
             "deployed_agents": int(stress_attacker_count),
             "options": options,
-            "selected_uid": selected_option["uid"],
-            "selected_username": selected_option["username"],
-            "attacker_usernames": selected_option["attacker_usernames"],
-            "interaction_count": selected_option["interaction_count"],
+            "selected_uid": selected_uid,
+            "selected_username": selected_username,
+            "attacker_usernames": selected_attackers,
+            "interaction_count": selected_interaction_count,
             "trend_data": _build_sa_target_trend(
-                conn, selected_option["uid"], filter_day, filter_hour
+                conn, selected_uid, filter_day, filter_hour
             ),
             "interaction_events": interaction_events,
         }
@@ -3669,13 +3733,29 @@ def _build_moderator_target_panel(
                 "interaction_events": [],
             }
 
-        valid_target_ids = {option["uid"] for option in options}
+        valid_target_ids = {
+            str(option.get("uid"))
+            for option in options
+            if isinstance(option, dict) and option.get("uid") is not None
+        }
         if selected_target_uid not in valid_target_ids:
-            selected_target_uid = options[0]["uid"]
+            selected_target_uid = (
+                str(options[0].get("uid")) if isinstance(options[0], dict) else None
+            )
 
         selected_option = next(
-            option for option in options if option["uid"] == selected_target_uid
+            (
+                option
+                for option in options
+                if isinstance(option, dict)
+                and str(option.get("uid")) == str(selected_target_uid)
+            ),
+            options[0],
         )
+        selected_uid = str(selected_option.get("uid")) if selected_option else None
+        selected_username = str(selected_option.get("username") or "")
+        selected_moderation_count = int(selected_option.get("moderation_count") or 0)
+        selected_moderators = selected_option.get("moderator_usernames") or []
 
         interaction_rows = conn.execute(
             """
@@ -3720,12 +3800,12 @@ def _build_moderator_target_panel(
             "available": True,
             "deployed_agents": int(moderator_count),
             "options": options,
-            "selected_uid": selected_option["uid"],
-            "selected_username": selected_option["username"],
-            "moderation_count": selected_option["moderation_count"],
-            "moderator_usernames": selected_option["moderator_usernames"],
+            "selected_uid": selected_uid,
+            "selected_username": selected_username,
+            "moderation_count": selected_moderation_count,
+            "moderator_usernames": selected_moderators,
             "trend_data": _build_moderator_target_trend(
-                conn, selected_option["uid"], filter_day, filter_hour
+                conn, selected_uid, filter_day, filter_hour
             ),
             "interaction_events": interaction_events,
         }

@@ -19,10 +19,19 @@ def start_app(
     os.environ["YSOCIAL_REGISTER_ATEXIT_CLEANUP"] = "1"
     from y_web import create_app, db
 
-    # Download NLTK data only when not running from PyInstaller bundle
-    # In PyInstaller mode, NLTK data is bundled and the runtime hook sets up the path
+    # Ensure required NLTK data only when not running from PyInstaller bundle.
+    # Avoid blocking startup on network: if already present, skip download;
+    # if download fails, continue with a warning.
     if not getattr(sys, "frozen", False):
-        nltk.download("vader_lexicon")
+        try:
+            nltk.data.find("sentiment/vader_lexicon.zip")
+        except LookupError:
+            try:
+                nltk.download("vader_lexicon", quiet=True, raise_on_error=False)
+            except Exception as exc:
+                print(
+                    f"Warning: could not download NLTK vader_lexicon ({exc}). Continuing startup."
+                )
 
     # Parse and validate LLM backend
     llm_url = None

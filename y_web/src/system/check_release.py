@@ -5,6 +5,8 @@ import requests
 
 import y_web.pyinstaller_utils.installation_id as installation_id
 
+_HTTP_TIMEOUT_SECONDS = 5
+
 
 def check_for_updates():
     """
@@ -97,7 +99,15 @@ def __get_latest_release():
         dict: Release information (tag, name, assets, etc.) or None if not found.
     """
     url = f"https://api.github.com/repos/YSocialTwin/YSocial/releases/latest"
-    response = requests.get(url, headers={"Accept": "application/vnd.github+json"})
+    try:
+        response = requests.get(
+            url,
+            headers={"Accept": "application/vnd.github+json"},
+            timeout=_HTTP_TIMEOUT_SECONDS,
+        )
+    except requests.RequestException as exc:
+        print(f"Error checking latest release: {exc}")
+        return None
 
     if response.status_code == 200:
         data = response.json()
@@ -124,7 +134,15 @@ def __get_release_link_by_platform(release_data, platform_keyword):
 
     tag = release_data["tag"].removeprefix("v")
     url = f"https://releases.y-not.social/latest/release.json"
-    response = requests.get(url, headers={"Accept": "application/json"})
+    try:
+        response = requests.get(
+            url,
+            headers={"Accept": "application/json"},
+            timeout=_HTTP_TIMEOUT_SECONDS,
+        )
+    except requests.RequestException as exc:
+        print(f"Error fetching release manifest: {exc}")
+        return None, None, None, None
     if response.status_code == 200:
         data = response.json()
         version = data["version"].removeprefix("v")
