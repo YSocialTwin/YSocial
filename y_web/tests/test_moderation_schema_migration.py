@@ -1,3 +1,7 @@
+import pytest
+
+pytestmark = pytest.mark.unit
+
 import sqlite3
 
 from y_web.migrations.add_moderation_schema import migrate_sqlite_server
