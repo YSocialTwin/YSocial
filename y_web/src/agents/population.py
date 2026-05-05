@@ -313,6 +313,15 @@ def generate_population(
     existing_agents = db.session.query(Agent.name).all()
     used_names = {agent.name for agent in existing_agents}
 
+    # Pre-fetch Toxicity_Levels and Leanings to prevent N+1 queries in the loop
+    toxicity_levels_map = {
+        tl.id: tl.toxicity_level for tl in db.session.query(Toxicity_Levels).all()
+    }
+    leanings_map = {l.id: l.leaning for l in db.session.query(Leanings).all()}
+
+    # Cache faker instances by locale
+    faker_cache = {}
+
     # Collect agents to insert in bulk
     agents_to_insert = []
 
@@ -334,20 +343,13 @@ def generate_population(
             for attr, values in percentages.items()
         }
 
-        toxicity = int(sampled["toxicity_levels"])
-        # get toxicity level object
-        toxicity = (
-            db.session.query(Toxicity_Levels)
-            .filter_by(id=toxicity)
-            .first()
-            .toxicity_level
-        )
+        toxicity_id = int(sampled["toxicity_levels"])
+        # get toxicity level object from pre-fetched map
+        toxicity = toxicity_levels_map.get(toxicity_id)
 
-        political_leaning = int(sampled["political_leanings"])
-        # get political leaning object
-        political_leaning = (
-            db.session.query(Leanings).filter_by(id=political_leaning).first().leaning
-        )
+        political_leaning_id = int(sampled["political_leanings"])
+        # get political leaning object from pre-fetched map
+        political_leaning = leanings_map.get(political_leaning_id)
 
         try:
             nationality = random.sample(population.nationalities.split(","), 1)[
@@ -366,7 +368,11 @@ def generate_population(
             # Default to equal probability if no gender distribution provided
             gender = random.sample(["male", "female"], 1)[0]
 
-        fake = faker.Faker(__locales[nationality])
+        # Use cached faker instance for this locale
+        locale = __locales.get(nationality, "en_US")
+        if locale not in faker_cache:
+            faker_cache[locale] = faker.Faker(locale)
+        fake = faker_cache[locale]
 
         # Generate a unique name
         name = _generate_unique_name(
