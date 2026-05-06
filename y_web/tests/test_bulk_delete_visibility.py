@@ -8,9 +8,7 @@ pytestmark = pytest.mark.unit
 
 
 def test_bulk_delete_route_passes_current_admin_user_to_visibility_resolver():
-    route_file = Path(
-        "y_web/routes/admin/sub/experiments/_crud.py"
-    )
+    route_file = Path("y_web/routes/admin/sub/experiments/_crud.py")
     content = route_file.read_text()
 
     assert (

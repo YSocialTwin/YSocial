@@ -1,16 +1,15 @@
 import pytest
+
 pytestmark = pytest.mark.skip
 
 from pathlib import Path
 
 
 def test_forum_profile_template_renders_stress_reward_card():
-    template = Path(
-        "y_web/templates/forum/profile.html"
-    ).read_text(encoding="utf-8")
-    css = Path(
-        "y_web/static/assets/css/reddit/forum-components.css"
-    ).read_text(encoding="utf-8")
+    template = Path("y_web/templates/forum/profile.html").read_text(encoding="utf-8")
+    css = Path("y_web/static/assets/css/reddit/forum-components.css").read_text(
+        encoding="utf-8"
+    )
 
     assert "Stress / Reward" in template
     assert "forum-profile-scale-dot reward" in template
@@ -24,12 +23,8 @@ def test_forum_profile_template_renders_stress_reward_card():
 
 
 def test_forum_profile_template_renders_agent_custom_feature_rows():
-    template = Path(
-        "y_web/templates/forum/profile.html"
-    ).read_text(encoding="utf-8")
-    source = Path(
-        "y_web/routes/social/common.py"
-    ).read_text(encoding="utf-8")
+    template = Path("y_web/templates/forum/profile.html").read_text(encoding="utf-8")
+    source = Path("y_web/routes/social/common.py").read_text(encoding="utf-8")
 
     assert (
         "{% for custom_key, custom_value in agent_custom_features.items() %}"
@@ -40,9 +35,7 @@ def test_forum_profile_template_renders_agent_custom_feature_rows():
 
 
 def test_forum_profile_route_allows_stress_reward_context():
-    source = Path(
-        "y_web/routes/social/common.py"
-    ).read_text(encoding="utf-8")
+    source = Path("y_web/routes/social/common.py").read_text(encoding="utf-8")
 
     assert (
         'getattr(exp, "platform_type", "") not in {"microblogging", "forum"}' in source
@@ -52,9 +45,7 @@ def test_forum_profile_route_allows_stress_reward_context():
 
 
 def test_forum_interview_route_supports_uuid_backed_users():
-    source = Path(
-        "y_web/routes/social/forum.py"
-    ).read_text(encoding="utf-8")
+    source = Path("y_web/routes/social/forum.py").read_text(encoding="utf-8")
 
     assert (
         'logged_id = exp_user.id if exp_user else (getattr(current_user, "id", 0) or 0)'

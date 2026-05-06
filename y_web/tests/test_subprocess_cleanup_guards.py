@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.skip
 
 import os
@@ -76,9 +77,7 @@ def test_cleanup_handler_requires_opt_in_and_non_subprocess():
 
 
 def test_y_social_explicitly_opts_into_cleanup_registration():
-    with open(
-        "./y_social.py", "r", encoding="utf-8"
-    ) as handle:
+    with open("./y_social.py", "r", encoding="utf-8") as handle:
         source = handle.read()
 
     assert 'os.environ["YSOCIAL_REGISTER_ATEXIT_CLEANUP"] = "1"' in source

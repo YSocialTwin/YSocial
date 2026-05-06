@@ -76,18 +76,10 @@ def test_is_package():
 
 
 def test_interview_routes_and_helpers_support_uuid_user_ids():
-    routes = Path(
-        "y_web/routes/api/interview/_routes.py"
-    ).read_text(encoding="utf-8")
-    helpers = Path(
-        "y_web/routes/api/interview/_helpers.py"
-    ).read_text(encoding="utf-8")
-    memory = Path(
-        "y_web/routes/api/interview/_memory.py"
-    ).read_text(encoding="utf-8")
-    facts = Path(
-        "y_web/routes/api/interview/_facts.py"
-    ).read_text(encoding="utf-8")
+    routes = Path("y_web/routes/api/interview/_routes.py").read_text(encoding="utf-8")
+    helpers = Path("y_web/routes/api/interview/_helpers.py").read_text(encoding="utf-8")
+    memory = Path("y_web/routes/api/interview/_memory.py").read_text(encoding="utf-8")
+    facts = Path("y_web/routes/api/interview/_facts.py").read_text(encoding="utf-8")
 
     assert "def _coerce_experiment_user_id(value: Any) -> Any:" in helpers
     assert 'return _json_error("agent_user_id must be an int"' not in routes
@@ -100,9 +92,7 @@ def test_interview_routes_and_helpers_support_uuid_user_ids():
 
 
 def test_interview_session_creation_binds_experiment_db_before_agent_lookup():
-    routes = Path(
-        "y_web/routes/api/interview/_routes.py"
-    ).read_text(encoding="utf-8")
+    routes = Path("y_web/routes/api/interview/_routes.py").read_text(encoding="utf-8")
 
     assert "_ensure_experiment_db_bind(exp)" in routes
     assert routes.index("_ensure_experiment_db_bind(exp)") < routes.index(
@@ -111,9 +101,7 @@ def test_interview_session_creation_binds_experiment_db_before_agent_lookup():
 
 
 def test_interview_frontend_preserves_uuid_agent_ids():
-    script = Path(
-        "y_web/static/assets/js/interview.js"
-    ).read_text(encoding="utf-8")
+    script = Path("y_web/static/assets/js/interview.js").read_text(encoding="utf-8")
 
     assert "const agentUserId = String(agentSelect.value || '').trim()" in script
     assert "parseInt(agentSelect.value, 10)" not in script
@@ -121,9 +109,7 @@ def test_interview_frontend_preserves_uuid_agent_ids():
 
 
 def test_interview_unavailable_memory_snapshot_preserves_uuid_agent_ids():
-    server = Path(
-        "y_web/routes/api/interview/_server.py"
-    ).read_text(encoding="utf-8")
+    server = Path("y_web/routes/api/interview/_server.py").read_text(encoding="utf-8")
 
     assert (
         "normalized_agent_user_id = _coerce_experiment_user_id(agent_user_id)" in server
@@ -133,12 +119,8 @@ def test_interview_unavailable_memory_snapshot_preserves_uuid_agent_ids():
 
 
 def test_interview_facts_and_legacy_memory_preserve_uuid_user_ids():
-    facts = Path(
-        "y_web/routes/api/interview/_facts.py"
-    ).read_text(encoding="utf-8")
-    memory = Path(
-        "y_web/routes/api/interview/_memory.py"
-    ).read_text(encoding="utf-8")
+    facts = Path("y_web/routes/api/interview/_facts.py").read_text(encoding="utf-8")
+    memory = Path("y_web/routes/api/interview/_memory.py").read_text(encoding="utf-8")
 
     assert '_coerce_experiment_user_id(getattr(rp, "user_id", None))' in facts
     assert '_coerce_experiment_user_id(getattr(pp, "user_id", None))' in facts
