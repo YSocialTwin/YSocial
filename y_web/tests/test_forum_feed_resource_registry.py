@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.unit
+
 import json
 from types import SimpleNamespace
 

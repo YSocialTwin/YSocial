@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.unit
+
 import sqlite3
 
 from y_web.migrations.add_user_cover_image_field import migrate_sqlite_server

@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.unit
+
 from y_web.routes.admin.sub.agents import (
     _custom_agent_parameter_sections,
     _normalize_custom_agent_parameter_value,

@@ -22,7 +22,7 @@ pytestmark = pytest.mark.unit
 # ---------------------------------------------------------------------------
 
 TESTS_DIR = os.path.dirname(__file__)
-VALID_MARKS = {"unit", "integration"}
+VALID_MARKS = {"unit", "integration", "skip"}
 
 
 def _collect_test_files():

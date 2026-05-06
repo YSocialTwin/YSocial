@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.unit
+
 from y_web.routes.admin.sub.clients._crud import (
     _adhoc_agent_specs,
     _adhoc_stress_reward_config_for_experiment,

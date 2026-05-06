@@ -159,7 +159,7 @@ def test_agent_ext_migration_module_exists():
 
 def test_agent_ext_migration_registered_in_startup_runner():
     """run_migrations must invoke the agent_ext migration."""
-    path = Path("/Users/rossetti/PycharmProjects/YWeb/y_web/db_init/migrations.py")
+    path = Path("y_web/db_init/migrations.py")
     content = path.read_text(encoding="utf-8")
     assert "add_agent_ext_table" in content
     assert "Failed to run agent_ext table migration" in content
@@ -174,7 +174,7 @@ def test_population_pop_type_migration_module_exists():
 
 def test_population_pop_type_migration_registered_in_startup_runner():
     """run_migrations must invoke the population pop_type migration."""
-    path = Path("/Users/rossetti/PycharmProjects/YWeb/y_web/db_init/migrations.py")
+    path = Path("y_web/db_init/migrations.py")
     content = path.read_text(encoding="utf-8")
     assert "add_population_pop_type" in content
     assert "Failed to run population pop_type migration" in content
@@ -189,7 +189,7 @@ def test_agents_custom_features_migration_module_exists():
 
 def test_agents_custom_features_migration_registered_in_startup_runner():
     """run_migrations must invoke the agents_custom_features migration."""
-    path = Path("/Users/rossetti/PycharmProjects/YWeb/y_web/db_init/migrations.py")
+    path = Path("y_web/db_init/migrations.py")
     content = path.read_text(encoding="utf-8")
     assert "add_agents_custom_features_table" in content
     assert "Failed to run agents_custom_features table migration" in content

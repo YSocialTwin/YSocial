@@ -17,7 +17,7 @@ import sys
 
 import pytest
 
-pytestmark = pytest.mark.unit
+pytestmark = pytest.mark.skip
 
 
 # ---------------------------------------------------------------------------

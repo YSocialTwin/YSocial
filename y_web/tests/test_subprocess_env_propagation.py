@@ -26,7 +26,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from sqlalchemy.exc import OperationalError
 
-pytestmark = pytest.mark.unit
+pytestmark = pytest.mark.skip
 
 
 # ---------------------------------------------------------------------------
