@@ -316,6 +316,9 @@ def generate_population(
     # Collect agents to insert in bulk
     agents_to_insert = []
 
+    # Cache Faker instances by locale to avoid massive CPU overhead of instantiating in the loop
+    faker_instances = {}
+
     for _ in range(population.size):
         # Sample a profession category if provided
         profession_category = None
@@ -366,7 +369,10 @@ def generate_population(
             # Default to equal probability if no gender distribution provided
             gender = random.sample(["male", "female"], 1)[0]
 
-        fake = faker.Faker(__locales[nationality])
+        locale = __locales.get(nationality, "en_US")
+        if locale not in faker_instances:
+            faker_instances[locale] = faker.Faker(locale)
+        fake = faker_instances[locale]
 
         # Generate a unique name
         name = _generate_unique_name(
