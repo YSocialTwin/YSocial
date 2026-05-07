@@ -51,3 +51,6 @@ ysights
 gunicorn
 gevent
 jupyterlab
+
+pytest
+pytest-cov
