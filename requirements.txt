@@ -50,6 +50,6 @@ pywebview
 ysights
 gunicorn
 gevent
-jupyterlab
 pytest
 pytest-cov
+jupyterlab
