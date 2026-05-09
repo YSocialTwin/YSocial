@@ -199,15 +199,38 @@ def dashboard():
 
     # Helper function to build experiment data with clients
     def build_experiment_data(experiments_list):
+        from collections import defaultdict
+
         result = {}
+        exp_ids = [e.idexp for e in experiments_list]
+
+        # Batch fetch all clients for these experiments
+        all_clients = []
+        if exp_ids:
+            all_clients = Client.query.filter(Client.id_exp.in_(exp_ids)).all()
+
+        client_ids = [c.id for c in all_clients]
+
+        # Batch fetch all client executions for these clients
+        all_executions = []
+        if client_ids:
+            all_executions = Client_Execution.query.filter(Client_Execution.client_id.in_(client_ids)).all()
+
+        # Group executions by client_id
+        executions_by_client = {ex.client_id: ex for ex in all_executions}
+
+        # Group clients by experiment_id
+        clients_by_exp = defaultdict(list)
+        for client in all_clients:
+            cl = executions_by_client.get(client.id)
+            client_executions = cl if cl is not None else -1
+            clients_by_exp[client.id_exp].append((client, client_executions))
+
         for e in experiments_list:
-            clients = Client.query.filter_by(id_exp=e.idexp).all()
-            client_data = []
-            for client in clients:
-                cl = Client_Execution.query.filter_by(client_id=client.id).first()
-                client_executions = cl if cl is not None else -1
-                client_data.append((client, client_executions))
-            result[e.idexp] = {"experiment": e, "clients": client_data}
+            result[e.idexp] = {
+                "experiment": e,
+                "clients": clients_by_exp.get(e.idexp, [])
+            }
         return result
 
     # Helper function to group experiments by exp_group
@@ -375,26 +398,47 @@ def dashboard_experiments_by_status(status):
     paginated_experiments = experiments[start:end]
 
     # Build experiment data with clients
+    from collections import defaultdict
+
+    exp_ids = [e.idexp for e in paginated_experiments]
+
+    # Batch fetch all clients for these experiments
+    all_clients = []
+    if exp_ids:
+        all_clients = Client.query.filter(Client.id_exp.in_(exp_ids)).all()
+
+    client_ids = [c.id for c in all_clients]
+
+    # Batch fetch all client executions for these clients
+    all_executions = []
+    if client_ids:
+        all_executions = Client_Execution.query.filter(Client_Execution.client_id.in_(client_ids)).all()
+
+    # Group executions by client_id
+    executions_by_client = {ex.client_id: ex for ex in all_executions}
+
+    # Group clients by experiment_id with progress computed
+    clients_by_exp = defaultdict(list)
+    for client in all_clients:
+        cl = executions_by_client.get(client.id)
+        elapsed = cl.elapsed_time if cl else 0
+        expected = cl.expected_duration_rounds if cl else 0
+        progress = min(100, int((elapsed / expected) * 100)) if expected > 0 else 0
+
+        clients_by_exp[client.id_exp].append(
+            {
+                "id": client.id,
+                "name": client.name,
+                "status": client.status,
+                "progress": progress,
+                "elapsed": elapsed,
+                "expected": expected,
+                "days": client.days,
+            }
+        )
+
     result = []
     for exp in paginated_experiments:
-        clients = Client.query.filter_by(id_exp=exp.idexp).all()
-        client_data = []
-        for client in clients:
-            cl = Client_Execution.query.filter_by(client_id=client.id).first()
-            elapsed = cl.elapsed_time if cl else 0
-            expected = cl.expected_duration_rounds if cl else 0
-            progress = min(100, int((elapsed / expected) * 100)) if expected > 0 else 0
-            client_data.append(
-                {
-                    "id": client.id,
-                    "name": client.name,
-                    "status": client.status,
-                    "progress": progress,
-                    "elapsed": elapsed,
-                    "expected": expected,
-                    "days": client.days,
-                }
-            )
         result.append(
             {
                 "idexp": exp.idexp,
@@ -406,7 +450,7 @@ def dashboard_experiments_by_status(status):
                     exp.simulator_type if hasattr(exp, "simulator_type") else "Standard"
                 ),
                 "can_manage": user_can_manage_experiment(user, exp),
-                "clients": client_data,
+                "clients": clients_by_exp.get(exp.idexp, []),
             }
         )
 
