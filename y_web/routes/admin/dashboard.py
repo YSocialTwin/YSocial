@@ -214,7 +214,9 @@ def dashboard():
         # Batch fetch all client executions for these clients
         all_executions = []
         if client_ids:
-            all_executions = Client_Execution.query.filter(Client_Execution.client_id.in_(client_ids)).all()
+            all_executions = Client_Execution.query.filter(
+                Client_Execution.client_id.in_(client_ids)
+            ).all()
 
         # Group executions by client_id
         executions_by_client = {ex.client_id: ex for ex in all_executions}
@@ -229,7 +231,7 @@ def dashboard():
         for e in experiments_list:
             result[e.idexp] = {
                 "experiment": e,
-                "clients": clients_by_exp.get(e.idexp, [])
+                "clients": clients_by_exp.get(e.idexp, []),
             }
         return result
 
@@ -412,7 +414,9 @@ def dashboard_experiments_by_status(status):
     # Batch fetch all client executions for these clients
     all_executions = []
     if client_ids:
-        all_executions = Client_Execution.query.filter(Client_Execution.client_id.in_(client_ids)).all()
+        all_executions = Client_Execution.query.filter(
+            Client_Execution.client_id.in_(client_ids)
+        ).all()
 
     # Group executions by client_id
     executions_by_client = {ex.client_id: ex for ex in all_executions}
