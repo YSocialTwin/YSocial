@@ -301,6 +301,30 @@
     return tree
   }
 
+  function summarizeMemoryIssue (snapshot) {
+    const note = String(snapshot && snapshot.note ? snapshot.note : '').trim()
+    if (note) return note
+
+    const raw = String(
+      (snapshot && (snapshot.fallback_reason || snapshot.error)) || ''
+    ).trim().toLowerCase()
+    if (!raw) return ''
+
+    if (raw.includes('experiment_not_running') || raw.includes('ray_skipped')) {
+      return 'Live runtime retrieval is unavailable for this experiment state. Using database-backed fallback memory.'
+    }
+    if (raw.includes('http_failed') || raw.includes('connection refused') || raw.includes('max retries exceeded')) {
+      return 'Live memory service is temporarily unreachable. Using fallback memory.'
+    }
+    if (raw.includes('run_id_missing')) {
+      return 'No compatible run identifier was found yet. Using available database context.'
+    }
+    if (raw.includes('context_fetch_failed') || raw.includes('events_fetch_failed')) {
+      return 'Live memory context could not be refreshed right now. Using fallback memory.'
+    }
+    return 'Memory retrieval used fallback mode.'
+  }
+
   function setMemorySnapshot (snap) {
     if (!memoryEl) return
     const snapshot = (snap && typeof snap === 'object') ? snap : {}
@@ -312,7 +336,7 @@
       const modeRequested = snapshot.memory_mode_requested || 'n/a'
       const modeUsed = snapshot.memory_mode_used || 'n/a'
       const runId = snapshot.run_id || 'none'
-      const extra = snapshot.note || snapshot.fallback_reason || snapshot.error || ''
+      const extra = summarizeMemoryIssue(snapshot)
       memoryStatusEl.innerHTML = `
         <strong>Run:</strong> ${escapeHtml(String(runId))}<br>
         <strong>Requested:</strong> ${escapeHtml(String(modeRequested))}<br>

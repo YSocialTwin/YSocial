@@ -42,6 +42,7 @@ from ._llm import (
 from ._memory import (
     _as_bool,
     _build_deferred_memory_snapshot,
+    _build_memory_snapshot_local_db,
     _build_memory_snapshot,
     _build_persona_snapshot,
     _detect_run_id_from_experiment_db,
@@ -56,12 +57,7 @@ from ._memory import (
     _memory_snapshot_has_structured_content,
     _resolve_interview_profile_pic,
 )
-from ._server import (
-    _build_unavailable_memory_snapshot,
-    _ensure_experiment_db_bind,
-    _ensure_experiment_server_db_binding,
-    _memory_server_unavailable,
-)
+from ._server import _ensure_experiment_db_bind, _ensure_experiment_server_db_binding, _memory_server_unavailable
 
 
 @api_interview.get("/<int:exp_id>/agents")
@@ -182,10 +178,13 @@ def api_interview_create_session(exp_id: int):
     interests = _get_top_interests_for_user_in_exp(exp, agent_user_id)
     persona = _build_persona_snapshot(agent_user, interests, exp)
     if _memory_server_unavailable(db_binding):
-        memory_snapshot = _build_unavailable_memory_snapshot(
+        memory_snapshot = _build_memory_snapshot_local_db(
+            exp,
             run_id=run_id,
             agent_user_id=agent_user_id,
             memory_mode=memory_mode,
+            query_text=_INTERVIEW_MEMORY_DEFAULT_QUERY,
+            reason="experiment_server_unavailable",
         )
     elif preload_memory:
         memory_snapshot = _build_memory_snapshot(
@@ -395,10 +394,13 @@ def api_interview_refresh_context(exp_id: int, session_id: int):
     memory_mode = _extract_requested_memory_mode(sess.memory_snapshot_json)
 
     if _memory_server_unavailable(db_binding):
-        memory_snapshot = _build_unavailable_memory_snapshot(
+        memory_snapshot = _build_memory_snapshot_local_db(
+            exp,
             run_id=(sess.run_id or "").strip() or None,
             agent_user_id=_coerce_experiment_user_id(sess.agent_user_id),
             memory_mode=memory_mode,
+            query_text=query_text,
+            reason="experiment_server_unavailable",
         )
     else:
         memory_snapshot = _build_memory_snapshot(
@@ -473,10 +475,13 @@ def api_interview_send_message(exp_id: int, session_id: int):
 
         if auto_refresh:
             if _memory_server_unavailable(db_binding):
-                memory_snapshot = _build_unavailable_memory_snapshot(
+                memory_snapshot = _build_memory_snapshot_local_db(
+                    exp,
                     run_id=(sess.run_id or "").strip() or None,
                     agent_user_id=normalized_agent_user_id,
                     memory_mode=memory_mode,
+                    query_text=contextual_query_text,
+                    reason="experiment_server_unavailable",
                 )
             else:
                 memory_snapshot = _build_memory_snapshot(

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import socket
 import sys as _sys
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
@@ -25,6 +26,46 @@ _RAY_MEMORY_METHODS = {
     "/memory/get_context": "memory_get_context",
     "/memory/events_recent": "memory_events_recent",
 }
+
+
+def _parse_host_port(value: str) -> Tuple[Optional[str], Optional[int]]:
+    raw = str(value or "").strip()
+    if not raw:
+        return None, None
+    cleaned = raw
+    if "://" in cleaned:
+        cleaned = cleaned.split("://", 1)[1]
+    cleaned = cleaned.strip("/")
+    if ":" not in cleaned:
+        return cleaned or None, None
+    host, port_text = cleaned.rsplit(":", 1)
+    try:
+        port = int(port_text)
+    except Exception:
+        return host or None, None
+    return host or None, port
+
+
+def _is_tcp_endpoint_reachable(
+    host: Optional[str], port: Optional[int], *, timeout_s: float = 0.45
+) -> bool:
+    if not host or not port:
+        return False
+    try:
+        with socket.create_connection((host, int(port)), timeout=timeout_s):
+            return True
+    except Exception:
+        return False
+
+
+def _ray_runtime_available_now(exp: Exps) -> Tuple[bool, str]:
+    runtime = _read_experiment_ray_runtime(exp)
+    if not runtime:
+        return False, "ray_runtime_config_missing"
+    host, port = _parse_host_port(runtime.get("address", ""))
+    if not _is_tcp_endpoint_reachable(host, port):
+        return False, "ray_runtime_unreachable"
+    return True, ""
 
 
 def _pick_listening_port(
@@ -208,6 +249,9 @@ def _call_server_via_ray(exp: Exps, path: str, payload: dict) -> Dict[str, Any]:
     runtime = _read_experiment_ray_runtime(exp)
     if not runtime:
         raise RuntimeError("ray_runtime_config_missing")
+    host, port = _parse_host_port(runtime.get("address", ""))
+    if not _is_tcp_endpoint_reachable(host, port):
+        raise RuntimeError("ray_runtime_unreachable")
 
     try:
         import ray
@@ -254,8 +298,20 @@ def _post_server_json(exp: Exps, path: str, payload: dict, *, timeout_s: float =
     except Exception as exc:
         http_err = exc
 
+    latest = _get_latest_experiment_runtime(exp)
+    if int(getattr(latest, "running", 0) or 0) != 1:
+        if http_err is not None:
+            raise RuntimeError(f"http_failed:{http_err}; ray_skipped:experiment_not_running")
+        raise RuntimeError("ray_skipped:experiment_not_running")
+
+    ray_ok, ray_reason = _ray_runtime_available_now(latest)
+    if not ray_ok:
+        if http_err is not None:
+            raise RuntimeError(f"http_failed:{http_err}; ray_skipped:{ray_reason}")
+        raise RuntimeError(f"ray_skipped:{ray_reason}")
+
     try:
-        return _call_server_via_ray(exp, path, payload)
+        return _call_server_via_ray(latest, path, payload)
     except Exception as ray_exc:
         if http_err is not None:
             raise RuntimeError(

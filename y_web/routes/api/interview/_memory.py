@@ -8,7 +8,7 @@ from types import SimpleNamespace
 from typing import Any, Dict, List, Optional
 
 from flask import current_app
-from sqlalchemy import desc, func
+from sqlalchemy import desc, func, text
 
 from y_web import db
 from y_web.src.content.avatars import resolve_forum_profile_pic
@@ -17,6 +17,9 @@ from y_web.src.models import (
     Agent,
     Exps,
     Interests,
+    Mentions,
+    Post,
+    Reactions,
     Page,
     Rounds,
     User_interest,
@@ -262,13 +265,25 @@ def _detect_run_id_from_server_log(
 def _experiment_sqlite_db_path(exp: Exps) -> Optional[Any]:
     from pathlib import Path
 
-    db_uri_main = str(current_app.config.get("SQLALCHEMY_DATABASE_URI", "") or "")
-    if db_uri_main.startswith("postgresql"):
-        return None
     db_name = str(getattr(exp, "db_name", "") or "").strip()
     if not db_name:
         return None
-    return Path(get_writable_path(os.path.join("y_web", db_name)))
+    candidate = Path(get_writable_path(os.path.join("y_web", db_name)))
+    if candidate.exists():
+        return candidate
+
+    # Even when the dashboard runs on PostgreSQL, many experiments (notably HPC)
+    # still persist their runtime data in experiment-local SQLite files.
+    uid = _get_experiment_uid_from_db_name(db_name)
+    if uid:
+        exp_db = Path(
+            get_writable_path(
+                os.path.join("y_web", "experiments", uid, "database_server.db")
+            )
+        )
+        if exp_db.exists():
+            return exp_db
+    return None
 
 
 def _load_experiment_user_sqlite(exp: Exps, user_id: Any) -> Optional[Any]:
@@ -739,6 +754,491 @@ def _build_memory_snapshot_legacy(
     return snap
 
 
+def _build_memory_snapshot_local_db(
+    exp: Exps,
+    *,
+    run_id: Optional[str],
+    agent_user_id: int,
+    memory_mode: Optional[str] = None,
+    query_text: Optional[str] = None,
+    reason: str = "experiment_server_unavailable",
+) -> Dict[str, Any]:
+    """Build a best-effort memory snapshot directly from experiment DB tables."""
+    normalized_agent_user_id = _coerce_experiment_user_id(agent_user_id)
+    requested_mode = _normalize_memory_mode(memory_mode)
+    snap: Dict[str, Any] = {
+        "run_id": run_id,
+        "agent_user_id": normalized_agent_user_id,
+        "fetched_at": datetime.now(timezone.utc).isoformat(),
+        "query_text": _default_memory_query(query_text),
+        "memory_mode_requested": requested_mode,
+        "memory_mode_used": _MEMORY_MODE_LEGACY_FALLBACK,
+        "load_state": "degraded",
+        "fallback_reason": str(reason or "experiment_server_unavailable"),
+        "relationships": [],
+        "threads": [],
+        "recent_events_tail": [],
+        "agent_events_tail": [],
+        "retrieval_meta": {
+            "candidate_count": 0,
+            "returned_k": 0,
+            "degraded_mode": True,
+            "source": "local_db",
+        },
+    }
+
+    if normalized_agent_user_id is None:
+        return snap
+
+    try:
+        agent_user = User_mgmt.query.get(normalized_agent_user_id)
+        if agent_user is not None:
+            snap["agent_username"] = str(getattr(agent_user, "username", "") or "")
+    except Exception:
+        pass
+
+    pair_counts: Dict[Any, int] = {}
+    pair_last_round: Dict[Any, int] = {}
+    thread_seen = set()
+    threads: List[Dict[str, Any]] = []
+    events: List[Dict[str, Any]] = []
+    normalized_agent_user_id_text = str(normalized_agent_user_id)
+    usernames_by_id: Dict[str, str] = {}
+
+    def _register_other(other_id: Any, round_id: int) -> None:
+        if other_id is None:
+            return
+        pair_counts[other_id] = pair_counts.get(other_id, 0) + 1
+        pair_last_round[other_id] = max(pair_last_round.get(other_id, 0), int(round_id or 0))
+
+    def _to_int(value: Any, default: int = 0) -> int:
+        try:
+            return int(value)
+        except Exception:
+            return int(default)
+
+    def _to_int_or_none(value: Any) -> Optional[int]:
+        try:
+            return int(value)
+        except Exception:
+            return None
+
+    db_path = _experiment_sqlite_db_path(exp)
+    if db_path is not None and db_path.exists():
+        try:
+            with sqlite3.connect(str(db_path)) as conn:
+                conn.row_factory = sqlite3.Row
+                user_rows = conn.execute(
+                    "SELECT id, username FROM user_mgmt"
+                ).fetchall()
+                usernames_by_id = {
+                    str(row["id"]): str(row["username"] or "") for row in user_rows
+                }
+
+                def _username(uid: Any) -> str:
+                    return str(usernames_by_id.get(str(uid), "") or "")
+
+                post_rows = conn.execute(
+                    """
+                    SELECT id, round, thread_id, tweet
+                    FROM post
+                    WHERE CAST(user_id AS TEXT) = ?
+                    ORDER BY id DESC
+                    LIMIT 20
+                    """,
+                    (normalized_agent_user_id_text,),
+                ).fetchall()
+                for row in reversed(post_rows):
+                    round_id = _to_int(row["round"], 0)
+                    post_id = _to_int(row["id"], 0)
+                    thread_root_id = _to_int_or_none(row["thread_id"])
+                    if thread_root_id is None or thread_root_id <= 0:
+                        thread_root_id = post_id if post_id > 0 else None
+                    ev = {
+                        "round_id": round_id,
+                        "event_type": "post",
+                        "relation_label": "",
+                        "tone_label": "",
+                        "thread_root_id": thread_root_id,
+                        "target_post_id": post_id,
+                        "salient_claim": _truncate_middle(
+                            str(row["tweet"] or "").strip(), 180
+                        ),
+                    }
+                    events.append(ev)
+                    tr = ev.get("thread_root_id")
+                    if tr and tr not in thread_seen and len(threads) < 3:
+                        thread_seen.add(tr)
+                        threads.append(
+                            {
+                                "thread_root_id": int(tr),
+                                "thread_card": {
+                                    "gist_text": _truncate_middle(
+                                        str(row["tweet"] or "").strip(), 220
+                                    ),
+                                    "my_role": "author",
+                                    "last_seen_round_id": round_id,
+                                },
+                            }
+                        )
+
+                mention_rows = conn.execute(
+                    """
+                    SELECT
+                      m.post_id,
+                      p.id AS source_post_id,
+                      p.user_id AS actor_user_id,
+                      p.round AS round_id,
+                      p.thread_id AS thread_id,
+                      p.tweet AS tweet
+                    FROM mentions m
+                    JOIN post p ON p.id = m.post_id
+                    WHERE CAST(m.user_id AS TEXT) = ?
+                    ORDER BY m.id DESC
+                    LIMIT 20
+                    """,
+                    (normalized_agent_user_id_text,),
+                ).fetchall()
+                for row in reversed(mention_rows):
+                    actor_id = _coerce_experiment_user_id(row["actor_user_id"])
+                    round_id = _to_int(row["round_id"], 0)
+                    _register_other(actor_id, round_id)
+                    events.append(
+                        {
+                            "round_id": round_id,
+                            "event_type": "mention",
+                            "relation_label": "",
+                            "tone_label": "",
+                            "thread_root_id": _to_int_or_none(row["thread_id"]),
+                            "target_post_id": _to_int(row["source_post_id"], 0),
+                            "actor_user_id": actor_id,
+                            "actor_username": _username(actor_id),
+                            "salient_claim": _truncate_middle(
+                                str(row["tweet"] or "").strip(), 180
+                            ),
+                        }
+                    )
+
+                reaction_rows = conn.execute(
+                    """
+                    SELECT
+                      r.post_id,
+                      r.round AS round_id,
+                      r.type AS reaction_type,
+                      p.user_id AS target_user_id,
+                      p.thread_id AS thread_id
+                    FROM reactions r
+                    LEFT JOIN post p ON p.id = r.post_id
+                    WHERE CAST(r.user_id AS TEXT) = ?
+                    ORDER BY r.id DESC
+                    LIMIT 20
+                    """,
+                    (normalized_agent_user_id_text,),
+                ).fetchall()
+                for row in reversed(reaction_rows):
+                    target_user_id = _coerce_experiment_user_id(row["target_user_id"])
+                    round_id = _to_int(row["round_id"], 0)
+                    _register_other(target_user_id, round_id)
+                    events.append(
+                        {
+                            "round_id": round_id,
+                            "event_type": f"reaction:{str(row['reaction_type'] or '').strip()}",
+                            "relation_label": "",
+                            "tone_label": "",
+                            "thread_root_id": _to_int_or_none(row["thread_id"]),
+                            "target_post_id": _to_int(row["post_id"], 0),
+                            "target_user_id": target_user_id,
+                            "salient_claim": "",
+                        }
+                    )
+        except Exception:
+            pass
+
+    # Fallback to currently bound Flask SQLAlchemy DB only when experiment-local
+    # SQLite did not yield any rows. This avoids false "success" against dashboard DB.
+    if not events:
+        try:
+            user_rows = db.session.execute(
+                text("SELECT id, username FROM user_mgmt")
+            ).fetchall()
+            usernames_by_id = {str(row[0]): str(row[1] or "") for row in user_rows}
+
+            def _username(uid: Any) -> str:
+                return str(usernames_by_id.get(str(uid), "") or "")
+
+            post_rows = db.session.execute(
+                text(
+                    """
+                    SELECT id, round, thread_id, tweet
+                    FROM post
+                    WHERE CAST(user_id AS TEXT) = :uid
+                    ORDER BY id DESC
+                    LIMIT 20
+                    """
+                ),
+                {"uid": normalized_agent_user_id_text},
+            ).fetchall()
+            for row in reversed(post_rows):
+                round_id = _to_int(row[1], 0)
+                post_id = _to_int(row[0], 0)
+                thread_root_id = _to_int_or_none(row[2])
+                if thread_root_id is None or thread_root_id <= 0:
+                    thread_root_id = post_id if post_id > 0 else None
+                ev = {
+                    "round_id": round_id,
+                    "event_type": "post",
+                    "relation_label": "",
+                    "tone_label": "",
+                    "thread_root_id": thread_root_id,
+                    "target_post_id": post_id,
+                    "salient_claim": _truncate_middle(str(row[3] or "").strip(), 180),
+                }
+                events.append(ev)
+                tr = ev.get("thread_root_id")
+                if tr and tr not in thread_seen and len(threads) < 3:
+                    thread_seen.add(tr)
+                    threads.append(
+                        {
+                            "thread_root_id": int(tr),
+                            "thread_card": {
+                                "gist_text": _truncate_middle(
+                                    str(row[3] or "").strip(), 220
+                                ),
+                                "my_role": "author",
+                                "last_seen_round_id": round_id,
+                            },
+                        }
+                    )
+
+            mention_rows = db.session.execute(
+                text(
+                    """
+                    SELECT
+                      m.post_id,
+                      p.id AS source_post_id,
+                      p.user_id AS actor_user_id,
+                      p.round AS round_id,
+                      p.thread_id AS thread_id,
+                      p.tweet AS tweet
+                    FROM mentions m
+                    JOIN post p ON p.id = m.post_id
+                    WHERE CAST(m.user_id AS TEXT) = :uid
+                    ORDER BY m.id DESC
+                    LIMIT 20
+                    """
+                ),
+                {"uid": normalized_agent_user_id_text},
+            ).fetchall()
+            for row in reversed(mention_rows):
+                actor_id = _coerce_experiment_user_id(row[2])
+                round_id = _to_int(row[3], 0)
+                _register_other(actor_id, round_id)
+                events.append(
+                    {
+                        "round_id": round_id,
+                        "event_type": "mention",
+                        "relation_label": "",
+                        "tone_label": "",
+                        "thread_root_id": _to_int_or_none(row[4]),
+                        "target_post_id": _to_int(row[1], 0),
+                        "actor_user_id": actor_id,
+                        "actor_username": _username(actor_id),
+                        "salient_claim": _truncate_middle(str(row[5] or "").strip(), 180),
+                    }
+                )
+
+            reaction_rows = db.session.execute(
+                text(
+                    """
+                    SELECT
+                      r.post_id,
+                      r.round AS round_id,
+                      r.type AS reaction_type,
+                      p.user_id AS target_user_id,
+                      p.thread_id AS thread_id
+                    FROM reactions r
+                    LEFT JOIN post p ON p.id = r.post_id
+                    WHERE CAST(r.user_id AS TEXT) = :uid
+                    ORDER BY r.id DESC
+                    LIMIT 20
+                    """
+                ),
+                {"uid": normalized_agent_user_id_text},
+            ).fetchall()
+            for row in reversed(reaction_rows):
+                target_user_id = _coerce_experiment_user_id(row[3])
+                round_id = _to_int(row[1], 0)
+                _register_other(target_user_id, round_id)
+                events.append(
+                    {
+                        "round_id": round_id,
+                        "event_type": f"reaction:{str(row[2] or '').strip()}",
+                        "relation_label": "",
+                        "tone_label": "",
+                        "thread_root_id": _to_int_or_none(row[4]),
+                        "target_post_id": _to_int(row[0], 0),
+                        "target_user_id": target_user_id,
+                        "salient_claim": "",
+                    }
+                )
+        except Exception:
+            pass
+
+    if not events:
+        # Recent posts created by the agent (ORM fallback when no sqlite path is available).
+        try:
+            posts = (
+                Post.query.filter_by(user_id=normalized_agent_user_id)
+                .order_by(Post.id.desc())
+                .limit(20)
+                .all()
+            )
+            for p in reversed(posts):
+                thread_root_id = int(getattr(p, "thread_id", -1) or -1)
+                if thread_root_id <= 0:
+                    thread_root_id = int(getattr(p, "id", -1) or -1)
+                ev = {
+                    "round_id": int(getattr(p, "round", 0) or 0),
+                    "event_type": "post",
+                    "relation_label": "",
+                    "tone_label": "",
+                    "thread_root_id": thread_root_id if thread_root_id > 0 else None,
+                    "target_post_id": int(getattr(p, "id", 0) or 0),
+                    "salient_claim": _truncate_middle(
+                        str(getattr(p, "tweet", "") or "").strip(), 180
+                    ),
+                }
+                events.append(ev)
+                tr = ev.get("thread_root_id")
+                if tr and tr not in thread_seen and len(threads) < 3:
+                    thread_seen.add(tr)
+                    threads.append(
+                        {
+                            "thread_root_id": int(tr),
+                            "thread_card": {
+                                "gist_text": _truncate_middle(
+                                    str(getattr(p, "tweet", "") or "").strip(), 220
+                                ),
+                                "my_role": "author",
+                                "last_seen_round_id": int(getattr(p, "round", 0) or 0),
+                            },
+                        }
+                    )
+        except Exception:
+            pass
+
+        # Mentions of this agent by others.
+        try:
+            mention_rows = (
+                Mentions.query.filter_by(user_id=normalized_agent_user_id)
+                .order_by(Mentions.id.desc())
+                .limit(20)
+                .all()
+            )
+            for m in reversed(mention_rows):
+                post_obj = Post.query.get(int(getattr(m, "post_id", 0) or 0))
+                if post_obj is None:
+                    continue
+                actor_id = _coerce_experiment_user_id(getattr(post_obj, "user_id", None))
+                actor_username = ""
+                try:
+                    actor_user = User_mgmt.query.get(actor_id)
+                    actor_username = str(getattr(actor_user, "username", "") or "")
+                except Exception:
+                    actor_username = ""
+                _register_other(actor_id, int(getattr(post_obj, "round", 0) or 0))
+                events.append(
+                    {
+                        "round_id": int(getattr(post_obj, "round", 0) or 0),
+                        "event_type": "mention",
+                        "relation_label": "",
+                        "tone_label": "",
+                        "thread_root_id": int(getattr(post_obj, "thread_id", -1) or -1),
+                        "target_post_id": int(getattr(post_obj, "id", 0) or 0),
+                        "actor_user_id": actor_id,
+                        "actor_username": actor_username,
+                        "salient_claim": _truncate_middle(
+                            str(getattr(post_obj, "tweet", "") or "").strip(), 180
+                        ),
+                    }
+                )
+        except Exception:
+            pass
+
+        # Reactions made by this agent (recent social interactions).
+        try:
+            reaction_rows = (
+                Reactions.query.filter_by(user_id=normalized_agent_user_id)
+                .order_by(Reactions.id.desc())
+                .limit(20)
+                .all()
+            )
+            for r in reversed(reaction_rows):
+                target_post = Post.query.get(int(getattr(r, "post_id", 0) or 0))
+                target_user_id = (
+                    _coerce_experiment_user_id(getattr(target_post, "user_id", None))
+                    if target_post is not None
+                    else None
+                )
+                _register_other(target_user_id, int(getattr(r, "round", 0) or 0))
+                events.append(
+                    {
+                        "round_id": int(getattr(r, "round", 0) or 0),
+                        "event_type": f"reaction:{str(getattr(r, 'type', '') or '').strip()}",
+                        "relation_label": "",
+                        "tone_label": "",
+                        "thread_root_id": (
+                            int(getattr(target_post, "thread_id", -1) or -1)
+                            if target_post is not None
+                            else None
+                        ),
+                        "target_post_id": int(getattr(r, "post_id", 0) or 0),
+                        "target_user_id": target_user_id,
+                        "salient_claim": "",
+                    }
+                )
+        except Exception:
+            pass
+
+    events = sorted(events, key=lambda e: int(e.get("round_id") or 0))
+    snap["agent_events_tail"] = events[-30:]
+    snap["recent_events_tail"] = events[-50:]
+    snap["threads"] = threads
+
+    # Build lightweight relationship cards from interaction counts.
+    ranked_others = sorted(
+        pair_counts.keys(),
+        key=lambda oid: (pair_counts.get(oid, 0), pair_last_round.get(oid, 0)),
+        reverse=True,
+    )[:5]
+    relationships = []
+    for other_id in ranked_others:
+        other_username = str(usernames_by_id.get(str(other_id), "") or "")
+        if not other_username:
+            try:
+                u = User_mgmt.query.get(other_id)
+                other_username = str(getattr(u, "username", "") or "")
+            except Exception:
+                other_username = ""
+        relationships.append(
+            {
+                "other_user_id": other_id,
+                "other_username": other_username or None,
+                "social_card": {
+                    "summary_text": (
+                        f"{pair_counts.get(other_id, 0)} recent interactions"
+                    ),
+                    "last_relation_label": "interaction",
+                },
+                "recent_pair_events": [],
+            }
+        )
+    snap["relationships"] = relationships
+    snap["retrieval_meta"]["candidate_count"] = len(events)
+    snap["retrieval_meta"]["returned_k"] = min(len(events), 30)
+    return snap
+
+
 def _build_memory_snapshot_semantic(
     exp: Exps,
     *,
@@ -884,13 +1384,15 @@ def _build_memory_snapshot(
         semantic["memory_mode_used"] = _MEMORY_MODE_SEMANTIC
         return semantic
     except Exception as exc:
-        legacy = _build_memory_snapshot_legacy(
-            exp, run_id=run_id, agent_user_id=agent_user_id
+        local = _build_memory_snapshot_local_db(
+            exp,
+            run_id=run_id,
+            agent_user_id=agent_user_id,
+            memory_mode=requested_mode,
+            query_text=query_text,
+            reason=str(exc),
         )
-        legacy["memory_mode_requested"] = requested_mode
-        legacy["memory_mode_used"] = _MEMORY_MODE_LEGACY_FALLBACK
-        legacy["fallback_reason"] = str(exc)
-        return legacy
+        return local
 
 
 def _format_memory_pack(snapshot: Dict[str, Any], *, max_chars: int = 4500) -> str:
