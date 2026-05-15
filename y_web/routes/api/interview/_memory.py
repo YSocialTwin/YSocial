@@ -18,9 +18,9 @@ from y_web.src.models import (
     Exps,
     Interests,
     Mentions,
+    Page,
     Post,
     Reactions,
-    Page,
     Rounds,
     User_interest,
     User_mgmt,
@@ -809,7 +809,9 @@ def _build_memory_snapshot_local_db(
         if other_id is None:
             return
         pair_counts[other_id] = pair_counts.get(other_id, 0) + 1
-        pair_last_round[other_id] = max(pair_last_round.get(other_id, 0), int(round_id or 0))
+        pair_last_round[other_id] = max(
+            pair_last_round.get(other_id, 0), int(round_id or 0)
+        )
 
     def _to_int(value: Any, default: int = 0) -> int:
         try:
@@ -967,15 +969,13 @@ def _build_memory_snapshot_local_db(
                 return str(usernames_by_id.get(str(uid), "") or "")
 
             post_rows = db.session.execute(
-                text(
-                    """
+                text("""
                     SELECT id, round, thread_id, tweet
                     FROM post
                     WHERE CAST(user_id AS TEXT) = :uid
                     ORDER BY id DESC
                     LIMIT 20
-                    """
-                ),
+                    """),
                 {"uid": normalized_agent_user_id_text},
             ).fetchall()
             for row in reversed(post_rows):
@@ -1011,8 +1011,7 @@ def _build_memory_snapshot_local_db(
                     )
 
             mention_rows = db.session.execute(
-                text(
-                    """
+                text("""
                     SELECT
                       m.post_id,
                       p.id AS source_post_id,
@@ -1025,8 +1024,7 @@ def _build_memory_snapshot_local_db(
                     WHERE CAST(m.user_id AS TEXT) = :uid
                     ORDER BY m.id DESC
                     LIMIT 20
-                    """
-                ),
+                    """),
                 {"uid": normalized_agent_user_id_text},
             ).fetchall()
             for row in reversed(mention_rows):
@@ -1043,13 +1041,14 @@ def _build_memory_snapshot_local_db(
                         "target_post_id": _to_int(row[1], 0),
                         "actor_user_id": actor_id,
                         "actor_username": _username(actor_id),
-                        "salient_claim": _truncate_middle(str(row[5] or "").strip(), 180),
+                        "salient_claim": _truncate_middle(
+                            str(row[5] or "").strip(), 180
+                        ),
                     }
                 )
 
             reaction_rows = db.session.execute(
-                text(
-                    """
+                text("""
                     SELECT
                       r.post_id,
                       r.round AS round_id,
@@ -1061,8 +1060,7 @@ def _build_memory_snapshot_local_db(
                     WHERE CAST(r.user_id AS TEXT) = :uid
                     ORDER BY r.id DESC
                     LIMIT 20
-                    """
-                ),
+                    """),
                 {"uid": normalized_agent_user_id_text},
             ).fetchall()
             for row in reversed(reaction_rows):
@@ -1139,7 +1137,9 @@ def _build_memory_snapshot_local_db(
                 post_obj = Post.query.get(int(getattr(m, "post_id", 0) or 0))
                 if post_obj is None:
                     continue
-                actor_id = _coerce_experiment_user_id(getattr(post_obj, "user_id", None))
+                actor_id = _coerce_experiment_user_id(
+                    getattr(post_obj, "user_id", None)
+                )
                 actor_username = ""
                 try:
                     actor_user = User_mgmt.query.get(actor_id)
