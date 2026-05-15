@@ -29,6 +29,7 @@ from y_web.routes.social.helpers import (
     _forum_logged_user,
     _forum_memory_enabled,
     _forum_profile_pic,
+    get_safe_profile_pic,
     is_admin,
 )
 from y_web.src.agents.custom_features import summarize_agent_custom_features
@@ -438,6 +439,9 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
         mode=mode,
         user_id=user_id,
         logged_username=current_user.username,
+        logged_profile_pic=get_safe_profile_pic(
+            current_user.username, getattr(current_user, "is_page", 0)
+        ),
         hashtags=hashtags_top,
         str=str,
         logged_id=logged_id,

@@ -32,6 +32,7 @@
 </head>
 <body>
 {% include 'shared/browser_sync.html' %}
+{% set header_logged_profile_pic = logged_profile_pic if logged_profile_pic is defined else profile_pic %}
 
 <!-- Google Tag Manager (noscript) -->
 <noscript
@@ -193,10 +194,10 @@
                     <div class="user-image">
                         <img
                                 src="https://via.placeholder.com/400x400"
-                                {% if profile_pic =="" %}
+                                {% if header_logged_profile_pic =="" %}
                                         data-demo-src="{{ url_for('static', filename='assets/img/users/'+ logged_id|user_image_id +'.png') }}"
                                     {% else %}
-                                        data-demo-src="{{ profile_pic }}"
+                                        data-demo-src="{{ header_logged_profile_pic }}"
                                     {% endif %}
                                 alt=""
                         />
@@ -226,10 +227,10 @@
                                             <div class="image">
                                                 <img
                                                         src="https://via.placeholder.com/400x400"
-                                                         {% if profile_pic =="" %}
+                                                         {% if header_logged_profile_pic =="" %}
                                                         data-demo-src="{{ url_for('static', filename='assets/img/users/'+ logged_id|user_image_id +'.png') }}"
                                                     {% else %}
-                                                        data-demo-src="{{ profile_pic }}"
+                                                        data-demo-src="{{ header_logged_profile_pic }}"
                                                     {% endif %}
                                                         alt=""
                                                 />
@@ -365,10 +366,10 @@
             <a href="/{{exp_id}}/profile/{{ logged_id }}/recent/1" class="navbar-link">
                 <img
                         src="https://via.placeholder.com/150x150"
-                         {% if profile_pic =="" %}
+                         {% if header_logged_profile_pic =="" %}
                                         data-demo-src="{{ url_for('static', filename='assets/img/users/'+ logged_id|user_image_id +'.png') }}"
                                     {% else %}
-                                        data-demo-src="{{ profile_pic }}"
+                                        data-demo-src="{{ header_logged_profile_pic }}"
                                     {% endif %}
                         alt=""
                 />
