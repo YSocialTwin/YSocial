@@ -42,8 +42,8 @@ from ._llm import (
 from ._memory import (
     _as_bool,
     _build_deferred_memory_snapshot,
-    _build_memory_snapshot_local_db,
     _build_memory_snapshot,
+    _build_memory_snapshot_local_db,
     _build_persona_snapshot,
     _detect_run_id_from_experiment_db,
     _detect_run_id_from_server_log,
@@ -57,7 +57,11 @@ from ._memory import (
     _memory_snapshot_has_structured_content,
     _resolve_interview_profile_pic,
 )
-from ._server import _ensure_experiment_db_bind, _ensure_experiment_server_db_binding, _memory_server_unavailable
+from ._server import (
+    _ensure_experiment_db_bind,
+    _ensure_experiment_server_db_binding,
+    _memory_server_unavailable,
+)
 
 
 @api_interview.get("/<int:exp_id>/agents")

@@ -301,7 +301,9 @@ def _post_server_json(exp: Exps, path: str, payload: dict, *, timeout_s: float =
     latest = _get_latest_experiment_runtime(exp)
     if int(getattr(latest, "running", 0) or 0) != 1:
         if http_err is not None:
-            raise RuntimeError(f"http_failed:{http_err}; ray_skipped:experiment_not_running")
+            raise RuntimeError(
+                f"http_failed:{http_err}; ray_skipped:experiment_not_running"
+            )
         raise RuntimeError("ray_skipped:experiment_not_running")
 
     ray_ok, ray_reason = _ray_runtime_available_now(latest)
