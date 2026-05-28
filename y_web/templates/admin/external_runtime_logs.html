@@ -1,0 +1,47 @@
+{% include "admin/head.html" %}
+
+<div class="view-wrapper is-dashboard">
+    <div id="creator-dashboard" class="dashboard-container">
+        {% include "admin/dash_head.html" %}
+
+        <div class="dashboard-body">
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">{{ runtime_repo.label }} Operation Log</h3>
+                        <div class="box-content">
+                            <p class="ys-text-sm-muted" style="margin-bottom: 16px;">
+                                <strong>Path:</strong> {{ runtime_repo.path }}
+                            </p>
+                            <div style="margin-bottom: 16px;">
+                                <a href="{{ url_for('experiments.external_runtimes') }}" class="button is-light">Back to Plugins</a>
+                            </div>
+                            {% if runtime_logs %}
+                            <div style="display: grid; gap: 10px;">
+                                {% for entry in runtime_logs %}
+                                <div style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px 14px; background: #fff;">
+                                    <div class="ys-flex-gap-8" style="flex-wrap: wrap; align-items: center; margin-bottom: 8px;">
+                                        <strong>{{ entry.action }}</strong>
+                                        <span class="badge {% if entry.success %}badge-success{% else %}badge-danger{% endif %}">{{ 'success' if entry.success else 'failure' }}</span>
+                                        <span class="ys-text-xs-hint">{{ entry.timestamp }}</span>
+                                        <span class="ys-text-xs-hint">{{ entry.actor }}</span>
+                                        {% if entry.branch %}
+                                        <span class="ys-text-xs-hint">branch {{ entry.branch }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <pre style="margin: 0; white-space: pre-wrap; font-size: 12px; color: #374151; background: #f8fafc; border-radius: 8px; padding: 10px;">{{ entry.output }}</pre>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <p class="ys-text-sm-muted">No logs available for this repository.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% include "admin/footer.html" %}

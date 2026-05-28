@@ -11,6 +11,8 @@ from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def app():
@@ -128,7 +130,7 @@ def test_delete_orphaned_agents_route_exists(app):
     """Test that the delete orphaned agents route exists"""
     # This test verifies the route exists in the codebase
     try:
-        from y_web.routes_admin.agents_routes import agents
+        from y_web.routes.admin.sub.agents import agents
 
         # Check that the blueprint has the new route
         route_found = False

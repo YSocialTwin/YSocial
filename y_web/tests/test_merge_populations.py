@@ -11,6 +11,8 @@ from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def app():
@@ -124,7 +126,7 @@ class TestMergePopulations:
     def test_merge_populations_route_exists(self):
         """Test that merge populations route exists"""
         try:
-            from y_web.routes_admin import populations_routes
+            from y_web.routes.admin.sub import populations as populations_routes
 
             assert populations_routes is not None
             assert hasattr(populations_routes, "merge_populations")
@@ -134,7 +136,7 @@ class TestMergePopulations:
     def test_merge_populations_endpoint_structure(self):
         """Test that merge populations endpoint has correct structure"""
         try:
-            from y_web.routes_admin.populations_routes import merge_populations
+            from y_web.routes.admin.sub.populations import merge_populations
 
             # Check function exists and is callable
             assert callable(merge_populations)

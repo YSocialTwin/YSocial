@@ -162,13 +162,11 @@ def migrate_postgresql_dashboard(db_config):
         cursor = conn.cursor()
 
         # Check if column already exists
-        cursor.execute(
-            """
+        cursor.execute("""
             SELECT column_name 
             FROM information_schema.columns 
             WHERE table_name = 'agents' AND column_name = 'archetype'
-        """
-        )
+        """)
 
         if cursor.fetchone() is None:
             print(
@@ -207,13 +205,11 @@ def migrate_postgresql_server(db_config):
         cursor = conn.cursor()
 
         # Check if column already exists
-        cursor.execute(
-            """
+        cursor.execute("""
             SELECT column_name 
             FROM information_schema.columns 
             WHERE table_name = 'user_mgmt' AND column_name = 'archetype'
-        """
-        )
+        """)
 
         if cursor.fetchone() is None:
             print(

@@ -28,7 +28,8 @@
         currentPage: 1,
         apiEndpoint: null,
         postsContainer: null,
-        sentinel: null
+        sentinel: null,
+        observer: null
     };
 
     /**
@@ -44,8 +45,12 @@
             return;
         }
 
+        destroyInfiniteScroll();
+
         state.apiEndpoint = options.apiEndpoint;
         state.currentPage = options.initialPage || 1;
+        state.hasMore = true;
+        state.isLoading = false;
         state.postsContainer = document.getElementById(options.postsContainerId);
 
         if (!state.postsContainer) {
@@ -84,7 +89,29 @@
             });
         }, options);
 
+        state.observer = observer;
         observer.observe(state.sentinel);
+    }
+
+    function destroyInfiniteScroll() {
+        if (state.observer) {
+            state.observer.disconnect();
+            state.observer = null;
+        }
+
+        const sentinel = document.getElementById('infinite-scroll-sentinel');
+        if (sentinel) {
+            sentinel.remove();
+        }
+
+        document.querySelectorAll('.infinite-scroll-loader, .infinite-scroll-end, .infinite-scroll-error').forEach(function(node) {
+            node.remove();
+        });
+
+        state.isLoading = false;
+        state.hasMore = true;
+        state.currentPage = 1;
+        state.sentinel = null;
     }
 
     /**
@@ -424,7 +451,8 @@
 
     // Expose to global scope
     window.InfiniteScroll = {
-        init: initInfiniteScroll
+        init: initInfiniteScroll,
+        destroy: destroyInfiniteScroll
     };
 
 })();

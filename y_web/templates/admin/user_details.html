@@ -1,58 +1,5 @@
 {% include "admin/head.html" %}
-
-<style>
-/* Toggle switch styles */
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 50px;
-  height: 24px;
-}
-
-.switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  transition: .4s;
-}
-
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 18px;
-  width: 18px;
-  left: 3px;
-  bottom: 3px;
-  background-color: white;
-  transition: .4s;
-}
-
-input:checked + .slider {
-  background-color: #039be5;
-}
-
-input:checked + .slider:before {
-  transform: translateX(26px);
-}
-
-.slider.round {
-  border-radius: 24px;
-}
-
-.slider.round:before {
-  border-radius: 50%;
-}
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-components.css') }}"/>
 
 <div class="view-wrapper is-dashboard">
     <!--Dashboard container-->
@@ -63,8 +10,6 @@ input:checked + .slider:before {
         <div class="dashboard-body">
 
              <div class="columns">
-
-
 
                 <div class="column is-12">
                     <div class="dashboard-box">
@@ -102,37 +47,28 @@ input:checked + .slider:before {
             </div> -->
 
             <!-- Row 1: User box (1 column), Experiments (1 column), Add to Experiments (1 column) -->
-            <div class="columns" style="align-items: stretch;">
-                 {% for message in get_flashed_messages() %}
-                <div class="column is-12" style="display: flex;">
-                <div class="alert alert-warning column is-12">
-                    <button type="button" class="close" data-dismiss="alert">&times;</button>
-                    {{ message }}
-                </div>
-                </div>
-                {% endfor %}
+ <div class="columns ys-align-stretch">
             </div>
 
-            <div class="columns is-multiline" style="align-items: stretch;">
-
+ <div class="columns is-multiline ys-align-stretch">
 
                 <!--Dashboard column-->
-                <div class="column is-12-mobile is-4-tablet" style="display: flex;">
-                    <div class="dashboard-box" id="box-user-profile" style="flex: 1; display: flex; flex-direction: column;">
+ <div class="column is-12-mobile is-4-tablet d-flex">
+ <div class="dashboard-box ys-flex-col-1" id="box-user-profile">
                         <h3 class="title is-5 is-thin">User Profile</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+ <p class="ys-text-small">
                             Account information and API configurations for this user.
                         </p>
 
                         <div class="box-content">
                             {% if user.profile_pic != "" %}
-                            <div class="box-lines" style="display: flex; justify-content: center">
+ <div class="box-lines ys-flex-center">
                                 <img src="{{ user.profile_pic }}" alt="Profile Picture" style="width: 40%; height: auto; border-radius: 8px;">
                             </div>
                             {% endif %}
                             <div class="box-lines">
                                 <b>Account Details</b>
-                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Basic user information and role.</p>
+ <p class="ys-label-hint">Basic user information and role.</p>
                                 <div class="box-line">
                                     <span class="left">Username</span>
                                     <span class="right">{{ user.username }}</span>
@@ -147,35 +83,31 @@ input:checked + .slider:before {
                                 </div>
                                 <hr>
                                 <b>API Configuration</b>
-                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">LLM and toxicity analysis settings.</p>
+ <p class="ys-label-hint">LLM and toxicity analysis settings.</p>
                                 <div class="box-line">
                                     <span class="left">LLM Model</span>
                                     <span class="right">{{ user.llm }}</span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">LLM Server URL</span>
-                                    <span class="right" style="word-break: break-all;">{{ user.llm_url if user.llm_url else (llm_backend['url'] if llm_backend else 'Not configured') }}</span>
-                                </div>
-                                <div class="box-line">
-                                    <span class="left">Perspective API</span>
-                                    <span class="right">{% if user.perspective_api is none %} Not {% endif %} Configured </span>
+ <span class="right ys-word-break">{{ user.llm_url if user.llm_url else (llm_backend['url'] if llm_backend else 'Not configured') }}</span>
                                 </div>
                             </div>
 
-                            <div class="buttons" style="display: flex; justify-content: right">
+ <div class="buttons ys-flex-right">
                                 <a class="link-tooltip" href="/admin/delete_user/{{ user.id }}" title="Delete"><i
-                                     class="mdi mdi-delete" style="font-size: 24px;"></i></a>
+ class="mdi mdi-delete ys-icon-lg"></i></a>
                             </div>
 
                         </div>
                     </div>
                 </div>
 
-                 <div class="column is-12-mobile is-8-tablet" style="display: flex;">
+ <div class="column is-12-mobile is-8-tablet d-flex">
 
-                    <div class="dashboard-box" id="box-update-llm" style="flex: 1; display: flex; flex-direction: column;">
+ <div class="dashboard-box ys-flex-col-1" id="box-update-llm">
                         <h3 class="title is-5 is-thin">Update LLM Configuration</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+ <p class="ys-text-small">
                             Configure the LLM server URL and select a model for text generation tasks.
                         </p>
                         <div class="box-content">
@@ -183,7 +115,7 @@ input:checked + .slider:before {
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <span class="left">
-                                            <small style="color: #666;">ℹ️ Update the LLM server and model for this user.</small>
+ <small class="ys-text-gray">ℹ️ Update the LLM server and model for this user.</small>
                                         </span>
                                     </div>
                                     <div class="box-line">
@@ -220,12 +152,12 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <!-- Row 2: Update Password, Update Email, Add Perspective API (3 columns) -->
-            <div class="columns is-multiline" style="align-items: stretch;">
-                <div class="column is-12-mobile is-4-tablet" style="display: flex;">
-                    <div class="dashboard-box" id="box-update-password" style="flex: 1; display: flex; flex-direction: column;">
+            <!-- Row 2: Update Password, Update Email -->
+ <div class="columns is-multiline ys-align-stretch">
+ <div class="column is-12-mobile is-4-tablet d-flex">
+ <div class="dashboard-box ys-flex-col-1" id="box-update-password">
                         <h3 class="title is-5 is-thin">Update Password</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+ <p class="ys-text-small">
                             Change the user's password with secure validation.
                         </p>
                         <div class="box-content">
@@ -233,7 +165,7 @@ input:checked + .slider:before {
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <span class="left">
-                                            <small style="color: #666;">
+ <small class="ys-text-gray">
                                             ℹ️ Password must be at least 8 characters long and include:
                                             <ul style="margin-top: 0.5em; margin-left: 1em;">
                                                 <li>At least one uppercase letter</li>
@@ -265,10 +197,10 @@ input:checked + .slider:before {
                     </div>
                 </div>
 
-                <div class="column is-12-mobile is-4-tablet" style="display: flex;">
-                    <div class="dashboard-box" id="box-update-email" style="flex: 1; display: flex; flex-direction: column;">
+ <div class="column is-12-mobile is-4-tablet d-flex">
+ <div class="dashboard-box ys-flex-col-1" id="box-update-email">
                         <h3 class="title is-5 is-thin">Update Email</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+ <p class="ys-text-small">
                             Change the user's email address.
                         </p>
                         <div class="box-content">
@@ -276,7 +208,7 @@ input:checked + .slider:before {
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <span class="left">
-                                            <small style="color: #666;">
+ <small class="ys-text-gray">
                                             ℹ️ Enter a valid email address. Email must be unique across all users.
                                             </small>
                                         </span>
@@ -303,54 +235,23 @@ input:checked + .slider:before {
                     </div>
                 </div>
 
-                <div class="column is-12-mobile is-4-tablet" style="display: flex;">
-                    <div class="dashboard-box" id="box-perspective-api" style="flex: 1; display: flex; flex-direction: column;">
-                        <h3 class="title is-5 is-thin">Add Perspective API</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
-                            Configure Google's Perspective API for text toxicity analysis.
-                        </p>
-                        <div class="box-content">
-                            <form action="/admin/set_perspective_api_user" enctype="multipart/form-data" method="POST">
-                                <div class="box-lines">
-                                    <div class="box-line">
-                                        <span class="left">
-                                            <small style="color: #666;">
-                                            Personal API key for the <a href="https://www.perspectiveapi.com/" target="_blank">Perspective API</a>. <br><br>
-                                            ℹ️ This tool evaluates text toxicity and enables toxicity analysis in hybrid simulations.
-                                            </small>
-                                        </span>
-                                    </div>
-                                    <div class="box-line">
-                                        <input type="hidden" name="user_id" value="{{ user.id }}">
-                                        <input type="text" name="perspective_api" class="input">
-                                    </div>
-                                </div>
-                                <div class="button-wrap">
-                                    <button class="button is-solid primary-button is-fullwidth">
-                                        Update
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <!-- Row 3: Experiment Participation and Add to Experiment -->
-            <div class="columns is-multiline" style="align-items: stretch;">
+ <div class="columns is-multiline ys-align-stretch">
                 <!-- Experiment Participation -->
-                <div class="column is-12-mobile is-6-tablet" style="display: flex;">
+ <div class="column is-12-mobile is-6-tablet d-flex">
                     <!--Box-->
-                     <div class="dashboard-box" id="box-experiment-participation" style="flex: 1; display: flex; flex-direction: column;">
+ <div class="dashboard-box ys-flex-col-1" id="box-experiment-participation">
                         <h3 class="title is-5 is-thin">Experiment Participation</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+ <p class="ys-text-small">
                             Experiments this user owns or participates in.
                         </p>
-                        <div class="box-content" style="flex: 1;">
+ <div class="box-content ys-flex-1">
                             <div class="box-lines">
-                                <div style="margin-bottom: 15px;">
-                                    <b style="display: block; margin-bottom: 8px;">Owned Experiments</b>
-                                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+ <div class="ys-mb-15">
+ <b class="ys-block-mb8">Owned Experiments</b>
+ <div class="ys-flex-wrap-gap-8">
                                         {% if user_experiments %}
                                         {% for exp in user_experiments %}
                                             <a href="/admin/experiment_details/{{ exp.idexp }}" 
@@ -359,14 +260,14 @@ input:checked + .slider:before {
                                             </a>
                                         {% endfor %}
                                         {% else %}
-                                        <span style="color: #999; font-size: 0.9em; font-style: italic;">Not owning any experiments</span>
+ <span class="ys-text-italic-sm">Not owning any experiments</span>
                                         {% endif %}
                                     </div>
                                 </div>
                                 <hr style="margin: 15px 0;">
                                 <div>
-                                    <b style="display: block; margin-bottom: 8px;">Joined Experiments</b>
-                                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+ <b class="ys-block-mb8">Joined Experiments</b>
+ <div class="ys-flex-wrap-gap-8">
                                         {% if user_experiments_joined %}
                                         {% for exp in user_experiments_joined %}
                                             <a href="/admin/experiment_details/{{ exp[0] }}" 
@@ -375,7 +276,7 @@ input:checked + .slider:before {
                                             </a>
                                         {% endfor %}
                                         {% else %}
-                                        <span style="color: #999; font-size: 0.9em; font-style: italic;">Not participating in any experiments</span>
+ <span class="ys-text-italic-sm">Not participating in any experiments</span>
                                         {% endif %}
                                     </div>
                                 </div>
@@ -387,13 +288,13 @@ input:checked + .slider:before {
 
                 {% if current_user_role == "admin" %}
                 <!-- Add to Experiment section (admin only) -->
-                <div class="column is-12-mobile is-6-tablet" style="display: flex;">
-                    <div class="dashboard-box" id="box-add-to-experiment" style="flex: 1; display: flex; flex-direction: column;">
+ <div class="column is-12-mobile is-6-tablet d-flex">
+ <div class="dashboard-box ys-flex-col-1" id="box-add-to-experiment">
                         <h3 class="title is-5 is-thin">Add to Experiment</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+ <p class="ys-text-small">
                             Grant this user access to participate in an experiment.
                         </p>
-                        <div class="box-content" style="flex: 1;">
+ <div class="box-content ys-flex-1">
                             <form action="/admin/add_user_to_experiment" enctype="multipart/form-data" method="POST">
                                 <div class="box-lines">
                                     <div class="box-line">
@@ -421,53 +322,13 @@ input:checked + .slider:before {
 
             </div>
 
-
         </div>
     </div>
 
 </div>
 
-<script>
-function fetchModelsForUser() {
-    const urlInput = document.getElementById('custom_llm_url');
-    const statusDiv = document.getElementById('fetch-status-user');
-    const selectElement = document.getElementById('llm_model_select');
-    const llmUrl = urlInput.value.trim();
-    
-    if (!llmUrl) {
-        statusDiv.innerHTML = '<span style="color: #ff6b6b;">Please enter an LLM URL</span>';
-        return;
-    }
-    
-    statusDiv.innerHTML = '<span style="color: #4a90e2;">Fetching models...</span>';
-    
-    fetch('/admin/api/fetch_models?llm_url=' + encodeURIComponent(llmUrl))
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success && data.models && data.models.length > 0) {
-                selectElement.innerHTML = '';
-                data.models.forEach(model => {
-                    const option = document.createElement('option');
-                    option.value = model;
-                    option.textContent = model;
-                    selectElement.appendChild(option);
-                });
-                statusDiv.innerHTML = '<span style="color: #28a745;">✓ Loaded ' + data.models.length + ' models</span>';
-            } else {
-                statusDiv.innerHTML = '<span style="color: #ff6b6b;">✗ ' + (data.message || 'No models found') + '</span>';
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            statusDiv.innerHTML = '<span style="color: #ff6b6b;">✗ Error: Could not fetch models. Check if server is reachable.</span>';
-        });
-}
-</script>
+
 
 {% include "admin/tutorials/user_details_tutorial.html" %}
+<script src="{{ url_for('static', filename='assets/js/admin-users.js') }}"></script>
 {% include "admin/footer.html" %}

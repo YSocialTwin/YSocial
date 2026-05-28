@@ -15,7 +15,7 @@ As a plus, YSocial allows you to analyze simulation data with an embedded **Jupy
 
 For more information, visit the [project website](https://y-not.social/) or read our [research paper](https://arxiv.org/abs/2408.00818).
 
-![Logo](./images/header.png)
+![Logo](./y_web/static/assets/images/platform/header.png)
 
 
 ---
@@ -105,7 +105,7 @@ The **Y Social** supports a wide range of simulation configurations and automate
 
 **Y Social** has been tested on **GNU/Linux**, **MacOS** and **Windows**. 
 
-[![os](./images/os_support.png)](https://y-not.social/download)
+[![os](./y_web/static/assets/images/platform/os_support.png)](https://y-not.social/download)
 
 ### 🎯 **Quick Start - Standalone Executable** *(Recommended for non-developers)*
 
@@ -135,7 +135,7 @@ To avoid conflicts with the Python environment, we recommend using a virtual env
 Assuming you have [Anaconda](https://www.anaconda.com/) installed, you can create a new environment with the following command:
 
   ```bash
-  conda create --name Y python=3.11
+  conda create --name Y python=3.12
   conda activate Y
   ```
 
@@ -144,10 +144,12 @@ Assuming you have [Anaconda](https://www.anaconda.com/) installed, you can creat
    git clone https://github.com/YSocialTwin/YSocial.git
    cd YSocial
    ```
-2. **Sync submodules:**  
-   ```bash
-   git submodule update --init --recursive
-   ```
+2. **Clone the required external runtimes into `external/` (or add them using the plugin interface in the admin panel):**
+   - `external/YClient`
+   - `external/YServer`
+   - `external/YClientReddit`
+   - `external/YServerReddit`
+   - `external/YSimulator`
 3. **Install dependencies:**  
    ```bash
    pip install -r requirements.txt
@@ -280,14 +282,14 @@ Don't want to deal with dependencies? `Y Social` provides a **Dockerized setup**
 
 ### 📦 **Building & Running the Docker Container**
 ```bash
-docker-compose -f docker-compose.yml build
-docker-compose up
+docker compose -f deployment/docker/compose/docker-compose.yml build
+docker compose -f deployment/docker/compose/docker-compose.yml up
 ```
 
 #### ⚡ **Enable GPU Support (NVIDIA Only)**
 ```bash
-docker-compose -f docker-compose.yml -f docker-compose_gpu.yml build
-docker-compose up --gpus all
+docker compose -f deployment/docker/compose/docker-compose.yml -f deployment/docker/compose/docker-compose_gpu.yml build
+docker compose -f deployment/docker/compose/docker-compose.yml -f deployment/docker/compose/docker-compose_gpu.yml up --gpus all
 ```
 💡 **Ensure you have the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) installed.**
 
@@ -328,7 +330,7 @@ The Template license is the one of the creators ([Friendkit](https://cssninja.io
   title={Y Social: an LLM-powered Social Media Digital Twin},
   author={Rossetti, Giulio and Stella, Massimo and Cazabet, Rémy and
   Abramski, Katherine and Cau, Erica and Citraro, Salvatore and
-  Failla, Andrea and Improta, Riccardo and Morini, Virginia and
+  Failla, Andrea and Morini, Virginia and
   Pansanella, Virginia},
   journal={arXiv preprint arXiv:2408.00818},
   year={2024}
@@ -336,4 +338,3 @@ The Template license is the one of the creators ([Friendkit](https://cssninja.io
 ```
 
 🚀 **Start your social simulation journey with Y Social today!** 🎭
-

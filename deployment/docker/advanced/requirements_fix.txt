@@ -1,0 +1,79 @@
+# --------------------
+# Web Core - Loosened to prevent "Resolution-too-deep"
+# --------------------
+Flask>=2.2.5
+Flask-Login>=0.6.2
+Flask-SQLAlchemy>=3.0.0
+WTForms>=3.0.0
+flask_wtf
+Jinja2>=3.1.2
+Werkzeug>=2.2.3
+MarkupSafe>=2.1.1
+email_validator
+bs4
+colorama>=0.4.4
+cryptography>=37.0.2
+faker
+feedparser
+greenlet
+importlib-metadata>=4.11.4
+itsdangerous>=2.1.2
+perspective
+pillow
+pyOpenSSL>=22.0.0
+pycparser>=2.21
+pygments
+pywebview
+
+# --------------------
+# AI Stack - Let Dockerfile handle the GPU-heavy vLLM/OpenAI
+# These are unpinned here because we pre-install them in the Dockerfile
+# --------------------
+bitsandbytes>=0.46.1
+# openai
+# vllm
+transformers
+langchain>=0.1.0,<1.0.0
+langchain-core>=0.1.0,<1.0.0
+langchain-ollama>=0.1.0,<1.0.0
+langchain-openai>=0.2,<1.0.0
+ollama
+flaml[automl]
+
+# --------------------
+# HPC
+# --------------------
+ray[default]>=2.0.0,<3.0.0
+redis>=4.0.0,<6.0.0
+psutil
+
+# --------------------
+# Database
+# --------------------
+psycopg2-binary
+SQLAlchemy>=1.4.31
+sqlalchemy_utils
+
+# --------------------
+# Utils & System
+# --------------------
+python-json-logger
+requests
+tqdm
+numpy
+networkx
+nltk
+ysights
+gunicorn
+gevent
+jupyterlab
+
+# --------------------
+# Dev / Testing
+# --------------------
+pytest>=7.0.0
+pytest-flask>=1.2.0
+pytest-cov>=4.0.0
+black>=23.0.0
+isort>=5.12.0
+zipp>=3.8.0

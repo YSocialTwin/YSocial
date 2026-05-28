@@ -46,23 +46,19 @@ def migrate_sqlite(db_path):
         table_exists = cursor.fetchone() is not None
 
         if not table_exists:
-            cursor.execute(
-                """
+            cursor.execute("""
                 CREATE TABLE log_sync_settings (
                     id                    INTEGER PRIMARY KEY AUTOINCREMENT,
                     enabled               INTEGER NOT NULL DEFAULT 1,
                     sync_interval_minutes INTEGER NOT NULL DEFAULT 10,
                     last_sync             TEXT
                 )
-            """
-            )
+            """)
             # Insert default settings row
-            cursor.execute(
-                """
+            cursor.execute("""
                 INSERT INTO log_sync_settings (enabled, sync_interval_minutes)
                 VALUES (1, 10)
-            """
-            )
+            """)
             print("✓ Created log_sync_settings table in SQLite database")
         else:
             print("○ log_sync_settings table already exists in SQLite database")
@@ -102,34 +98,28 @@ def migrate_postgresql(host, port, database, user, password):
         cursor = conn.cursor()
 
         # Check if table already exists
-        cursor.execute(
-            """
+        cursor.execute("""
             SELECT table_name 
             FROM information_schema.tables 
             WHERE table_schema = 'public' 
               AND table_name = 'log_sync_settings'
-        """
-        )
+        """)
         table_exists = cursor.fetchone() is not None
 
         if not table_exists:
-            cursor.execute(
-                """
+            cursor.execute("""
                 CREATE TABLE log_sync_settings (
                     id                    SERIAL PRIMARY KEY,
                     enabled               BOOLEAN NOT NULL DEFAULT TRUE,
                     sync_interval_minutes INTEGER NOT NULL DEFAULT 10,
                     last_sync             TIMESTAMP
                 )
-            """
-            )
+            """)
             # Insert default settings row
-            cursor.execute(
-                """
+            cursor.execute("""
                 INSERT INTO log_sync_settings (enabled, sync_interval_minutes)
                 VALUES (TRUE, 10)
-            """
-            )
+            """)
             print("✓ Created log_sync_settings table in PostgreSQL database")
         else:
             print("○ log_sync_settings table already exists in PostgreSQL database")

@@ -1,0 +1,466 @@
+{% for index, item in enumerate(items) %}
+{% set item_vote = 'neutral' %}
+{% if item.get('is_liked', False) %}
+    {% set item_vote = 'like' %}
+{% elif item.get('is_disliked', False) %}
+    {% set item_vote = 'dislike' %}
+{% endif %}
+<div id="feed-post-{{ item['post_id'] }}" class="card is-post reddit-post"
+     data-reddit-post
+     data-post-id="{{ item['post_id'] }}"
+     data-thread-id="{{ item.get('thread_id', item['post_id']) }}"
+     data-vote="{{ item_vote }}"
+     data-likes="{{ item.get('likes', 0) }}"
+     data-dislikes="{{ item.get('dislikes', 0) }}"
+     data-score="{{ item.get('likes', 0) - item.get('dislikes', 0) }}"
+     data-comment-count="{{ item.get('t_comments', 0) }}"
+     data-thread-url="/{{exp_id}}/rthread/{{ item['post_id'] }}"
+     style="margin-bottom: 20px; border: 1px solid #e1e8ed; border-radius: 8px;">
+
+ <div class="content-wrap p-0" id="post-{{ item['post_id'] }}">
+        <!-- Post header -->
+        <div class="card-heading" style="padding: 12px 16px 0 16px;">
+            <!-- User meta -->
+            <div class="user-block">
+                <div class="image">
+                    <img
+                            src=""
+                            data-demo-src="{{ item['profile_pic'] or '' }}"
+                            data-author-name="{{ item['author'] }}"
+                            data-user-popover="1"
+                            alt=""
+                    />
+
+                </div>
+                <div class="user-info">
+                    <a href="/{{exp_id}}/profile/{{ item['author_id'] }}/recent/1">{{ item["author"] }}</a>
+                    <span class="time">
+                        {{ item.get("display_time", "") }}
+                        {% if item.get("primary_community") %}
+                        <span class="forum-post-community-separator">·</span>
+                        <a
+                            class="forum-post-community-link"
+                            href="/{{ exp_id }}/subforum/{{ item['primary_community']['slug'] }}?feed_type={{ feed_type }}"
+                            onclick="event.stopPropagation()"
+                        >
+                            <i data-feather="hash" class="forum-post-community-icon"></i>
+                            <span>{{ item['primary_community']['label'] }}</span>
+                        </a>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+            <!-- Right side dropdown -->
+            <!-- /partials/pages/feed/dropdowns/feed-post-dropdown.html -->
+            <div class="dropdown is-spaced is-right is-neutral dropdown-trigger"
+                 onclick="{% if profile_delete_inline %}return window.redditProfileToggleDropdown ? window.redditProfileToggleDropdown(event, this) : false;{% else %}event.stopPropagation(){% endif %}">
+                <div>
+                    <div class="button">
+                        <i data-feather="more-vertical"></i>
+                    </div>
+                </div>
+                <div class="dropdown-menu" role="menu">
+                    <div class="dropdown-content">
+                        <a href="/{{exp_id}}/rthread/{{ item['post_id'] }}" class="dropdown-item">
+                            <div class="media">
+                                <i data-feather="bookmark"></i>
+                                <div class="media-content">
+                                    <h3>Discussion</h3>
+                                    <small>See full discussion thread</small>
+                                </div>
+                            </div>
+                        </a>
+                        {% if item['author_id'] == logged_id or is_admin %}
+                        <a class="dropdown-item delete-post-trigger" data-post-id="{{ item['post_id'] }}" href="#"
+                           onclick="{% if profile_delete_inline %}return window.redditProfileDeletePost ? window.redditProfileDeletePost(event, this) : false;{% else %}return window.redditInlineDeletePost ? window.redditInlineDeletePost(event, this) : false;{% endif %}">
+                            <div class="media">
+                                <i data-feather="trash-2"></i>
+                                <div class="media-content">
+                                    <h3>Delete</h3>
+                                    <small>Remove this post</small>
+                                </div>
+                            </div>
+                        </a>
+                        {% endif %}
+                        <!-- <a href="#" class="dropdown-item">
+                            <div class="media">
+                                <i data-feather="flag"></i>
+                                <div class="media-content">
+                                    <h3>Flag</h3>
+                                    <small>In case of inappropriate content.</small>
+                                </div>
+
+                            </div>
+                        </a> -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- /Post header -->
+
+        <!-- Post body -->
+        <div class="card-body" style="padding: 12px 16px;">
+            <!-- Post body text -->
+            <div class="post-text">
+                {% if item["shared_from"] != -1 %}
+ <div class="ys-text-right-border">
+                    <p><small>Shared from: <a href="/{{exp_id}}/rthread/{{ item['shared_from'][0] }}">{{ item['shared_from'][1] }}</a></small></p>
+                </div>
+                {% endif %}
+                {% if item.get("title") %}
+                <h3 style="font-size: 1.2em; font-weight: bold; margin-bottom: 4px; color: #1c1c1c;">
+                    <a href="/{{exp_id}}/rthread/{{ item['post_id'] }}" style="text-decoration: none; color: #1c1c1c;">
+                        {{ item["title"] }}
+                    </a>
+                </h3>
+                {% endif %}
+                {% if item["post"] %}
+                <div style="color: #1c1c1c; font-size: 16px; line-height: 1.5; margin-top: 0; margin-bottom: 12px; font-family: 'Reddit Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif; text-indent: 0 !important; margin-left: 0 !important; padding-left: 0 !important;">
+                    <div class="feed-content" style="white-space: pre-wrap; word-wrap: break-word; text-indent: 0 !important; margin-left: 0 !important; padding-left: 0 !important;">{{- item["post"]|safe -}}</div>
+                </div>
+                {% endif %}
+                {% if item['image'] != "" and item["article"] == 0  %}
+                <div class="post-image" style="text-align: center; width: 100%">
+                    <img src="{{ item['image'].url }}" style="width: 80%; height: auto; margin: auto; display: block;" alt="{{ item['image'].description }}"/>
+                 </div>
+                {% endif %}
+                {% if item["article"] != 0 %}
+                <!-- Reddit-style link preview -->
+ <div class="article-preview ys-card-border">
+ <a href="{{ item['article']['url'] }}" target="_blank" class="ys-link-block">
+                        {% if item['image'] != "" %}
+ <div class="article-image ys-img-container">
+ <img src="{{ item['image'].url }}" class="ys-img-cover" alt="{{ item['image'].description }}"/>
+                        </div>
+                        {% endif %}
+ <div class="ys-p-12">
+ <h4 class="ys-post-title">
+                                {{ item["article"]["title"] }}
+                            </h4>
+ <p class="ys-post-excerpt">
+                                {{ item["article"]["summary"] }}
+                            </p>
+ <div class="ys-text-tiny-gray2">
+                                {{ item['article']['url'].replace('https://', '').replace('http://', '').replace('www.', '') | truncate(50) }}
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            {% endif %}
+            </div>
+            <!-- Featured image -->
+
+        </div>
+        <!-- /Post body -->
+
+        <!-- Reddit-style post footer -->
+        <div style="display: flex; padding: 4px; border-top: 1px solid #e1e8ed;">
+            <!-- Left side voting box (Reddit style gray box) -->
+            <div style="background: #f8f9fa; border-radius: 4px; display: flex; flex-direction: column; align-items: center; padding: 4px; margin-right: 8px; min-width: 40px;">
+                <button class="vote-button ys-icon-btn-xs" type="button" data-action="like">
+ <i data-feather="arrow-up" class="ys-icon-xs"></i>
+                </button>
+                <span data-role="score" style="font-size: 12px; font-weight: bold; color: #1c1c1c; margin: 1px 0; line-height: 1;">
+                    {{ item.get('likes', 0) - item.get('dislikes', 0) }}
+                </span>
+                <button class="vote-button ys-icon-btn-xs" type="button" data-action="dislike">
+ <i data-feather="arrow-down" class="ys-icon-xs"></i>
+                </button>
+            </div>
+            
+            <!-- Comments button (right side) -->
+            <a class="open-thread-button" data-role="open-thread" href="/{{exp_id}}/rthread/{{ item['post_id'] }}" style="background: none; border: none; cursor: pointer; padding: 6px 8px; border-radius: 4px; color: #878a8c; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 4px; text-decoration: none;">
+ <i data-feather="message-square" class="ys-icon-xs"></i>
+                <span><span data-role="comment-count">{{ item.get("t_comments", 0) }}</span> Comments</span>
+            </a>
+            {% if item['author_id'] != logged_id %}
+            <a href="/{{exp_id}}/report_content?post_id={{ item['post_id'] }}&type=offensive"
+               class="forum-report-button{% if item.get('is_reported') %} is-active{% endif %}"
+               style="background: none; border: none; cursor: pointer; padding: 6px 8px; border-radius: 4px; color: #878a8c; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 4px; text-decoration: none;">
+ <i data-feather="flag" class="ys-icon-xs"></i>
+                <span>Report</span>
+                <span>{{ item.get("report_count", 0) }}</span>
+            </a>
+            {% endif %}
+            
+            {% if len(item['emotions']) > 0 or len(item['topics']) > 0 %}
+            <div style="margin-left: auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end;">
+                {% if len(item['emotions']) > 0 %}
+                <div class="forum-meta-group">
+                    <span class="forum-meta-label">Emotions</span>
+                    {% for em in item['emotions'] %}
+                    <a class="forum-meta-chip forum-emotion-chip"
+                       href="/{{exp_id}}/emotion/{{ em[2] }}/1"
+                       onclick="event.stopPropagation()">
+                        <i class="mdi {{ em[1] }}"></i>
+                        <span>{{ em[0] }}</span>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% if len(item['topics']) > 0 %}
+                <div class="forum-meta-group">
+                    <span class="forum-meta-label">Topics</span>
+                    {% for tp in item['topics'] %}
+                        {% if tp[2] == 'positive' %}
+                        <a href="/{{exp_id}}/interest/{{ tp[0] }}/1"
+                           class="forum-meta-chip forum-topic-chip is-positive"
+                           onclick="event.stopPropagation()">{{ tp[1] }}</a>
+                        {% elif tp[2] == 'negative' %}
+                        <a href="/{{exp_id}}/interest/{{ tp[0] }}/1"
+                           class="forum-meta-chip forum-topic-chip is-negative"
+                           onclick="event.stopPropagation()">{{ tp[1] }}</a>
+                        {% else %}
+                        <a href="/{{exp_id}}/interest/{{ tp[0] }}/1"
+                           class="forum-meta-chip forum-topic-chip is-neutral"
+                           onclick="event.stopPropagation()">{{ tp[1] }}</a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        <!-- /Post footer -->
+    </div>
+    <!-- /Main wrap -->
+
+    <!-- Post #1 Comments -->
+
+    <div class="comments-wrap is-hidden">
+        <!-- Header -->
+        <div class="comments-heading">
+            <h4>Comments <small>({{ item["t_comments"] }})</small></h4>
+            <div class="close-comments">
+                <i data-feather="x"></i>
+            </div>
+        </div>
+        <!-- /Header -->
+        <!-- Post  -->
+        <!-- Comments body -->
+        <div class="comments-body">
+            <!-- Comment -->
+            <div class="original-post{% if item.get('is_moderation_comment') %} moderation-comment{% endif %}"
+                 style="{% if item.get('is_moderation_comment') %}background: #fff4d6; border-left: 4px solid #f0b429; padding: 0.75rem; border-radius: 10px;{% endif %}">
+                <div class="media-content">
+                    <a href="/{{exp_id}}/profile/{{ item['author_id'] }}/recent/1">{{ item["author"] }}</a><br/>
+                    <span class="time">{{ item.get("display_time", "") }}</span>
+ <div class="post-text ys-pre-wrap-lh">
+                        {{ item["post"]|safe }}
+                    </div>
+                    <div class="controls">
+                        <div class="like-count" id="like-count-{{ item['post_id'] }}">
+ <i data-feather="thumbs-up" {% if not bool(item["is_liked"]) %}class="ys-stroke-blue"{% endif %}></i>
+ <span {% if not bool(item["is_liked"]) %}class="ys-text-light-blue"{% endif %}>{{ item["likes"] }}</span>
+                        </div>
+                        <div class="dislike-count" id="dislike-count-{{ item['post_id'] }}">
+ <i data-feather="thumbs-down" {% if not bool(item["is_disliked"]) %}class="ys-stroke-blue"{% endif %}></i>
+ <span {% if not bool(item["is_disliked"]) %} class="ys-text-light-blue"{% endif %}>{{ item["dislikes"] }}</span>
+                        </div>
+                        <div class="share-count" id="share-count-{{ item['post_id'] }}">
+                            <i data-feather="repeat"></i>
+                            <span>{{ item["is_shared"] }}</span>
+                        </div>
+                        {% if item['author_id'] != logged_id %}
+                        <a href="/{{exp_id}}/report_content?post_id={{ item['post_id'] }}&type=offensive"
+                           class="report-count forum-report-button{% if item.get('is_reported') %} is-active{% endif %}"
+                           title="Report this post"
+                           aria-label="Report this post">
+                            <i data-feather="flag"></i>
+                            <span>{{ item.get("report_count", 0) }}</span>
+                        </a>
+                        {% endif %}
+                    </div>
+ <div class="card-footer d-flex">
+ <div class="forum-meta-group">
+                            {% if len(item['emotions']) > 0 %}
+                            <span class="forum-meta-label">Emotions</span>
+                            {% for em in item['emotions'] %}
+                            <a class="forum-meta-chip forum-emotion-chip" title="{{ em[0] }}" href="/{{exp_id}}/emotion/{{ em[2] }}/1">
+                                <i class="mdi {{ em[1] }}"></i>
+                                <span>{{ em[0] }}</span>
+                            </a>
+                            {% endfor %}
+                            {% endif %}
+                        </div>
+ <div class="forum-meta-group">
+                            {% if len(item['topics']) > 0 %}
+                            <span class="forum-meta-label">Topics</span>
+                            {% for tp in item['topics'] %}
+                                {% if tp[2] == 'positive' %}
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="forum-meta-chip forum-topic-chip is-positive">{{ tp[1] }}</a>
+                                {% elif tp[2] == 'negative' %}
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="forum-meta-chip forum-topic-chip is-negative">{{ tp[1] }}</a>
+                                {% else %}
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="forum-meta-chip forum-topic-chip is-neutral">{{ tp[1] }}</a>
+                                {% endif %}
+                            {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+
+ <div class="reply text-end">
+                        <a id='{{ item["post_id"] }}' onClick="editLink(this.id)">Reply</a>
+                    </div>
+                    <p id="message-{{ item['post_id']}}"></p>
+                    <form class="comment_form" id="comment_form-{{item['post_id']}}">
+                    <textarea rows="3" class="reply_comment" id="comment-{{ item['post_id'] }}">@{{ item["author"]}} </textarea>
+                    <button
+                            id="add_comment"
+                            type="button"
+                            class="button is-solid accent-button is-fullwidth"
+                            val="{{ item['post_id'] }}"
+                    >
+                    Comment
+                    </button>
+                    </form>
+
+                </div>
+                <hr>
+            </div>
+            {% for id1, cm in enumerate(item["comments"]) %}
+            <div class="media is-comment{% if cm.get('is_moderation_comment') %} moderation-comment{% endif %}"
+                 style="{% if cm.get('is_moderation_comment') %}background: #fff4d6; border-left: 4px solid #f0b429; padding: 0.75rem; border-radius: 10px;{% endif %}">
+                <!-- User image -->
+                <div class="media-left">
+                    <div class="image">
+                        <img
+                                src=""
+                                data-demo-src="{{ cm['profile_pic'] or '' }}"
+                                data-author-name="{{ cm['author'] }}"
+                                   data-user-popover="1"
+                                alt=""
+                        />
+                    </div>
+                </div>
+                <!-- Content -->
+                <div class="media-content">
+                    <a href="/{{exp_id}}/profile/{{ cm['author_id'] }}/recent/1">{{ cm["author"] }}</a>
+                    <span class="time">{{ cm.get("display_time", "") }}</span>
+ <div class="ys-pre-wrap-lh">
+                        {{ cm["post"]|safe }}
+                    </div>
+                    <!-- Actions -->
+ <div class="card-footer d-flex">
+ <div class="forum-meta-group">
+                            {% if len(cm['emotions']) > 0 %}
+                            <span class="forum-meta-label">Emotions</span>
+                            {% for em in cm['emotions'] %}
+                            <a class="forum-meta-chip forum-emotion-chip" title="{{ em[0] }}" href="/{{exp_id}}/emotion/{{ em[2] }}/1">
+                                <i class="mdi {{ em[1] }}"></i>
+                                <span>{{ em[0] }}</span>
+                            </a>
+                            {% endfor %}
+                            {% endif %}
+                        </div>
+ <div class="forum-meta-group">
+                            {% if len(cm['topics']) > 0 %}
+                            <span class="forum-meta-label">Topics</span>
+                            {% for tp in cm['topics'] %}
+                                {% if tp[2] == 'positive' %}
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="forum-meta-chip forum-topic-chip is-positive">{{ tp[1] }}</a>
+                                {% elif tp[2] == 'negative' %}
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="forum-meta-chip forum-topic-chip is-negative">{{ tp[1] }}</a>
+                                {% else %}
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="forum-meta-chip forum-topic-chip is-neutral">{{ tp[1] }}</a>
+                                {% endif %}
+                            {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="controls">
+                        <div class="like-count" id="like-count-{{cm['post_id']}}">
+ <i data-feather="thumbs-up" {% if not bool(cm["is_liked"]) %}class="ys-stroke-blue"{% endif %}></i>
+ <span {% if not bool(cm["is_liked"]) %}class="ys-text-light-blue"{% endif %}>{{ cm["likes"] }}</span>
+                        </div>
+
+                        <div class="dislike-count" id="dislike-count-{{ cm['post_id'] }}">
+ <i data-feather="thumbs-down" {% if not bool(cm["is_disliked"]) %}class="ys-stroke-blue"{% endif %}></i>
+ <span {% if not bool(cm["is_disliked"]) %} class="ys-text-light-blue"{% endif %}>{{ cm["dislikes"] }}</span>
+                        </div>
+                        <div class="share-count" id="share-count-{{ cm['post_id'] }}">
+                            <i data-feather="repeat"></i>
+                            <span>{{ cm["is_shared"] }}</span>
+                        </div>
+                        {% if cm['author_id'] != logged_id %}
+                        <a href="/{{exp_id}}/report_content?post_id={{ cm['post_id'] }}&type=offensive"
+                           class="report-count forum-report-button{% if cm.get('is_reported') %} is-active{% endif %}"
+                           title="Report this comment"
+                           aria-label="Report this comment">
+                            <i data-feather="flag"></i>
+                            <span>{{ cm.get("report_count", 0) }}</span>
+                        </a>
+                        {% endif %}
+
+ <!-- <div class="reply text-end">
+                   <a href="#">Reply</a>
+                 </div> -->
+                <!-- <div class="edit">
+                  <a href="#">Edit</a>
+                </div> -->
+            </div>
+ <div class="reply text-end">
+                <a id='{{ cm["post_id"] }}' onClick="editLink(this.id)">Reply</a>
+            </div>
+            <p id="message-{{ cm['post_id'] }}"></p>
+            <form class="comment_form" id="comment_form-{{cm['post_id']}}">
+            <textarea rows="3" class="reply_comment" id="comment-{{ cm['post_id'] }}">@{{ cm["author"] }} </textarea>
+            <button
+                    id="add_comment"
+                    type="button"
+                    class="button is-solid accent-button is-fullwidth"
+                    val="{{cm['post_id']}}"
+            >
+            Comment
+            </button>
+            </form>
+        </div>
+        <!-- Right side dropdown -->
+        <div class="media-right">
+            <!-- /partials/pages/feed/dropdowns/comment-dropdown.html -->
+            <div class="dropdown is-spaced is-right is-neutral dropdown-trigger">
+                <div>
+                    <div class="button">
+                        <i data-feather="more-vertical"></i>
+                    </div>
+                </div>
+                <div class="dropdown-menu" role="menu">
+                    <div class="dropdown-content">
+                        <!-- <a class="dropdown-item">
+                           <div class="media">
+                             <i data-feather="x"></i>
+                             <div class="media-content">
+                               <h3>Hide</h3>
+                               <small>Hide this comment.</small>
+                             </div>
+                           </div>
+                         </a>
+                         <div class="dropdown-divider"></div> -->
+                        <!-- <a href="#" class="dropdown-item">
+                            <div class="media">
+                                <i data-feather="flag"></i>
+                                <div class="media-content">
+                                    <h3>Report</h3>
+                                    <small>Report this comment.</small>
+                                </div>
+                            </div>
+                        </a> -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    {% endfor %}
+
+
+    <!-- /Comment -->
+
+</div>
+
+</div>
+
+<!-- /Post #1 Comments -->
+</div>
+{% endfor %}

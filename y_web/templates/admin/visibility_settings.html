@@ -1,0 +1,125 @@
+{% include "admin/head.html" %}
+<script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
+
+<div class="view-wrapper is-dashboard">
+    <div id="creator-dashboard" class="dashboard-container">
+        {% include "admin/dash_head.html" %}
+
+        <div class="dashboard-body">
+            <div class="columns">
+                <div class="column is-12">
+                </div>
+            </div>
+
+            <div class="columns is-multiline">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Share Experiments</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-top: 8px;">
+                            Grant or revoke experiment visibility for selected researcher users. Shared researchers can view and manage stop/delete actions for those experiments.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="column is-12-tablet is-6-desktop">
+                    <div class="dashboard-box">
+                        <h4 class="title is-6 is-thin">Share Single Experiment</h4>
+                        <form method="POST" action="/admin/visibility_settings/experiment">
+ <div class="field ys-mb-12">
+ <label class="label ys-text-sm">Experiment</label>
+                                <div class="control">
+                                    <div class="select is-fullwidth">
+                                        <select name="exp_id" required>
+                                            <option value="">Select experiment...</option>
+                                            {% for exp in manageable_experiments %}
+                                            <option value="{{ exp.idexp }}">{{ exp.exp_name }} ({{ exp.owner }})</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+ <div class="field ys-mb-12">
+ <label class="label ys-text-sm">Researcher Users</label>
+                                <div class="control">
+                                    <div class="select is-multiple is-fullwidth">
+                                        <select name="researcher_ids" multiple size="8" required>
+                                            {% for ru in researcher_users %}
+                                            <option value="{{ ru.id }}">{{ ru.username }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+ <p class="ys-text-tiny-mt6">Hold Ctrl (Windows/Linux) or Cmd (Mac) to select multiple users.</p>
+                            </div>
+
+ <div class="ys-flex-wrap-gap-8b">
+                                <button class="button is-solid is-info" type="submit" name="action" value="grant">Grant Visibility</button>
+                                <button class="button is-solid is-danger" type="submit" name="action" value="revoke">Revoke Visibility</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="column is-12-tablet is-6-desktop">
+                    <div class="dashboard-box">
+                        <h4 class="title is-6 is-thin">Share Entire Group</h4>
+                        <form method="POST" action="/admin/visibility_settings/group">
+ <div class="field ys-mb-12">
+ <label class="label ys-text-sm">Group</label>
+                                <div class="control">
+                                    <div class="select is-fullwidth">
+                                        <select name="group_name" required>
+                                            <option value="">Select group...</option>
+                                            {% for group_name in group_names %}
+                                            <option value="{{ group_name }}">{{ group_name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+ <div class="field ys-mb-12">
+ <label class="label ys-text-sm">Researcher Users</label>
+                                <div class="control">
+                                    <div class="select is-multiple is-fullwidth">
+                                        <select name="researcher_ids" multiple size="8" required>
+                                            {% for ru in researcher_users %}
+                                            <option value="{{ ru.id }}">{{ ru.username }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+ <p class="ys-text-tiny-mt6">Hold Ctrl (Windows/Linux) or Cmd (Mac) to select multiple users.</p>
+                            </div>
+
+ <div class="ys-flex-wrap-gap-8b">
+                                <button class="button is-solid is-info" type="submit" name="action" value="grant">Grant Group Visibility</button>
+                                <button class="button is-solid is-danger" type="submit" name="action" value="revoke">Revoke Group Visibility</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <h4 class="title is-6 is-thin">Current Researcher Visibility</h4>
+                        {% if shared_rows %}
+                        <div id="researcher-visibility-table"></div>
+                        {% else %}
+                        <p style="font-size: 0.9em; color: #666;">No visibility grants configured yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+var YS_DATA_VISIBILITY = {
+    rows: {{ shared_visibility_rows | tojson }}
+};
+</script>
+<script src="{{ url_for('static', filename='assets/js/admin-visibility.js') }}"></script>
+{% include "admin/footer.html" %}

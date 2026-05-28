@@ -16,13 +16,15 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 
 class TestProcessWatchdog:
     """Tests for the ProcessWatchdog class."""
 
     def test_watchdog_initialization(self):
         """Test watchdog initializes with correct default values."""
-        from y_web.utils.process_watchdog import ProcessWatchdog
+        from y_web.src.simulation.watchdog import ProcessWatchdog
 
         watchdog = ProcessWatchdog()
 
@@ -34,7 +36,7 @@ class TestProcessWatchdog:
 
     def test_watchdog_custom_initialization(self):
         """Test watchdog initializes with custom values."""
-        from y_web.utils.process_watchdog import ProcessWatchdog
+        from y_web.src.simulation.watchdog import ProcessWatchdog
 
         watchdog = ProcessWatchdog(
             run_interval_minutes=30,
@@ -50,7 +52,7 @@ class TestProcessWatchdog:
 
     def test_register_process(self):
         """Test registering a process for monitoring."""
-        from y_web.utils.process_watchdog import ProcessWatchdog
+        from y_web.src.simulation.watchdog import ProcessWatchdog
 
         watchdog = ProcessWatchdog()
         restart_callback = MagicMock(return_value=12345)
@@ -72,7 +74,7 @@ class TestProcessWatchdog:
 
     def test_unregister_process(self):
         """Test unregistering a process from monitoring."""
-        from y_web.utils.process_watchdog import ProcessWatchdog
+        from y_web.src.simulation.watchdog import ProcessWatchdog
 
         watchdog = ProcessWatchdog()
         restart_callback = MagicMock()
@@ -93,7 +95,7 @@ class TestProcessWatchdog:
 
     def test_update_pid(self):
         """Test updating the PID of a registered process."""
-        from y_web.utils.process_watchdog import ProcessWatchdog
+        from y_web.src.simulation.watchdog import ProcessWatchdog
 
         watchdog = ProcessWatchdog()
         restart_callback = MagicMock()
@@ -112,7 +114,7 @@ class TestProcessWatchdog:
 
     def test_start_stop_watchdog(self):
         """Test starting and stopping the watchdog scheduler."""
-        from y_web.utils.process_watchdog import ProcessWatchdog
+        from y_web.src.simulation.watchdog import ProcessWatchdog
 
         # Use short run interval for faster test
         watchdog = ProcessWatchdog(run_interval_minutes=1)
@@ -129,7 +131,7 @@ class TestProcessWatchdog:
 
     def test_get_status_empty(self):
         """Test getting status with no registered processes."""
-        from y_web.utils.process_watchdog import ProcessWatchdog
+        from y_web.src.simulation.watchdog import ProcessWatchdog
 
         watchdog = ProcessWatchdog()
         status = watchdog.get_status()
@@ -142,7 +144,7 @@ class TestProcessWatchdog:
 
     def test_get_status_with_processes(self):
         """Test getting status with registered processes."""
-        from y_web.utils.process_watchdog import ProcessWatchdog
+        from y_web.src.simulation.watchdog import ProcessWatchdog
 
         watchdog = ProcessWatchdog()
         restart_callback = MagicMock()
@@ -166,7 +168,7 @@ class TestProcessWatchdog:
 
     def test_is_process_running_with_valid_pid(self):
         """Test checking if a process is running with the current process."""
-        from y_web.utils.process_watchdog import ProcessWatchdog
+        from y_web.src.simulation.watchdog import ProcessWatchdog
 
         watchdog = ProcessWatchdog()
 
@@ -176,7 +178,7 @@ class TestProcessWatchdog:
 
     def test_is_process_running_with_invalid_pid(self):
         """Test checking if a process is running with an invalid PID."""
-        from y_web.utils.process_watchdog import ProcessWatchdog
+        from y_web.src.simulation.watchdog import ProcessWatchdog
 
         watchdog = ProcessWatchdog()
 
@@ -185,7 +187,7 @@ class TestProcessWatchdog:
 
     def test_is_process_running_with_none(self):
         """Test checking if a process is running with None PID."""
-        from y_web.utils.process_watchdog import ProcessWatchdog
+        from y_web.src.simulation.watchdog import ProcessWatchdog
 
         watchdog = ProcessWatchdog()
 
@@ -193,7 +195,7 @@ class TestProcessWatchdog:
 
     def test_get_log_mtime_existing_file(self):
         """Test getting modification time of an existing file."""
-        from y_web.utils.process_watchdog import ProcessWatchdog
+        from y_web.src.simulation.watchdog import ProcessWatchdog
 
         watchdog = ProcessWatchdog()
 
@@ -210,7 +212,7 @@ class TestProcessWatchdog:
 
     def test_get_log_mtime_nonexistent_file(self):
         """Test getting modification time of a nonexistent file."""
-        from y_web.utils.process_watchdog import ProcessWatchdog
+        from y_web.src.simulation.watchdog import ProcessWatchdog
 
         watchdog = ProcessWatchdog()
 
@@ -219,7 +221,7 @@ class TestProcessWatchdog:
 
     def test_heartbeat_detection_via_log_mtime(self):
         """Test that log file modification is used as heartbeat."""
-        from y_web.utils.process_watchdog import ProcessWatchdog
+        from y_web.src.simulation.watchdog import ProcessWatchdog
 
         watchdog = ProcessWatchdog(heartbeat_timeout=5)
         restart_callback = MagicMock(return_value=9999)
@@ -255,7 +257,7 @@ class TestProcessWatchdog:
 
     def test_restart_on_dead_process(self):
         """Test that restart is called when process is dead."""
-        from y_web.utils.process_watchdog import ProcessWatchdog
+        from y_web.src.simulation.watchdog import ProcessWatchdog
 
         watchdog = ProcessWatchdog(restart_cooldown=0)
         new_pid = 54321
@@ -295,9 +297,95 @@ class TestProcessWatchdog:
         finally:
             os.unlink(temp_path)
 
+    @patch("y_web.src.simulation.watchdog.check_server_status", return_value=True)
+    def test_running_server_uses_status_endpoint_as_heartbeat(self, mock_status):
+        """A healthy server should not restart just because its log is quiet."""
+        from y_web.src.simulation.watchdog import ProcessWatchdog
+
+        watchdog = ProcessWatchdog(heartbeat_timeout=5, restart_cooldown=0)
+        restart_callback = MagicMock(return_value=9999)
+
+        with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
+            f.write("initial log entry\n")
+            temp_path = f.name
+
+        try:
+            stale_time = time.time() - 120
+            os.utime(temp_path, (stale_time, stale_time))
+
+            watchdog.register_process(
+                process_id="server_process",
+                pid=os.getpid(),
+                log_file=temp_path,
+                restart_callback=restart_callback,
+                process_type="server",
+                server_url="http://localhost:5999",
+            )
+
+            process_info = watchdog._processes["server_process"]
+            process_info.last_heartbeat = datetime.now() - timedelta(seconds=120)
+            results = {
+                "processes_checked": 0,
+                "processes_restarted": 0,
+                "processes_healthy": 0,
+                "details": [],
+            }
+
+            watchdog._check_process(process_info, results)
+
+            restart_callback.assert_not_called()
+            mock_status.assert_called_once_with("http://localhost:5999")
+            assert results["processes_healthy"] == 1
+        finally:
+            os.unlink(temp_path)
+
+    @patch("y_web.src.simulation.watchdog.check_server_status", return_value=False)
+    def test_running_server_restarts_when_status_fails_and_log_is_stale(
+        self, mock_status
+    ):
+        """A running server with stale heartbeat and failing /status should restart."""
+        from y_web.src.simulation.watchdog import ProcessWatchdog
+
+        watchdog = ProcessWatchdog(heartbeat_timeout=5, restart_cooldown=0)
+        restart_callback = MagicMock(return_value=9999)
+
+        with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
+            f.write("initial log entry\n")
+            temp_path = f.name
+
+        try:
+            stale_time = time.time() - 120
+            os.utime(temp_path, (stale_time, stale_time))
+
+            watchdog.register_process(
+                process_id="server_process",
+                pid=os.getpid(),
+                log_file=temp_path,
+                restart_callback=restart_callback,
+                process_type="server",
+                server_url="http://localhost:5999",
+            )
+
+            process_info = watchdog._processes["server_process"]
+            process_info.last_heartbeat = datetime.now() - timedelta(seconds=120)
+            results = {
+                "processes_checked": 0,
+                "processes_restarted": 0,
+                "processes_healthy": 0,
+                "details": [],
+            }
+
+            watchdog._check_process(process_info, results)
+
+            restart_callback.assert_called_once()
+            mock_status.assert_called_once_with("http://localhost:5999")
+            assert results["processes_restarted"] == 1
+        finally:
+            os.unlink(temp_path)
+
     def test_max_restart_attempts(self):
         """Test that restart stops after max attempts."""
-        from y_web.utils.process_watchdog import ProcessWatchdog
+        from y_web.src.simulation.watchdog import ProcessWatchdog
 
         watchdog = ProcessWatchdog(max_restart_attempts=2, restart_cooldown=0)
         restart_callback = MagicMock(return_value=None)  # Always fails
@@ -342,7 +430,7 @@ class TestProcessWatchdog:
 
     def test_restart_cooldown(self):
         """Test that restart respects cooldown period."""
-        from y_web.utils.process_watchdog import ProcessWatchdog
+        from y_web.src.simulation.watchdog import ProcessWatchdog
 
         watchdog = ProcessWatchdog(restart_cooldown=60)  # 60 second cooldown
         restart_callback = MagicMock(return_value=12345)
@@ -382,7 +470,7 @@ class TestProcessWatchdog:
 
     def test_servers_checked_before_clients(self):
         """Test that servers are checked and restarted before clients."""
-        from y_web.utils.process_watchdog import ProcessWatchdog
+        from y_web.src.simulation.watchdog import ProcessWatchdog
 
         watchdog = ProcessWatchdog(restart_cooldown=0)
         check_order = []
@@ -450,7 +538,7 @@ class TestGlobalWatchdog:
 
     def test_get_watchdog_singleton(self):
         """Test that get_watchdog returns the same instance."""
-        from y_web.utils.process_watchdog import get_watchdog, stop_watchdog
+        from y_web.src.simulation.watchdog import get_watchdog, stop_watchdog
 
         # Clean up any existing watchdog
         stop_watchdog()
@@ -465,7 +553,7 @@ class TestGlobalWatchdog:
 
     def test_stop_watchdog(self):
         """Test stopping the global watchdog."""
-        from y_web.utils.process_watchdog import (
+        from y_web.src.simulation.watchdog import (
             _watchdog,
             get_watchdog,
             stop_watchdog,
@@ -483,7 +571,7 @@ class TestGlobalWatchdog:
 
         # After stop, getting watchdog should return None initially
         # but get_watchdog creates a new one
-        import y_web.utils.process_watchdog as pw
+        import y_web.src.simulation.watchdog as pw
 
         assert pw._watchdog is None
 
@@ -493,7 +581,7 @@ class TestProcessInfo:
 
     def test_process_info_creation(self):
         """Test creating ProcessInfo objects."""
-        from y_web.utils.process_watchdog import ProcessInfo
+        from y_web.src.simulation.watchdog import ProcessInfo
 
         now = datetime.now()
         callback = MagicMock()
@@ -523,7 +611,7 @@ class TestWatchdogRunOnce:
 
     def test_run_once_returns_results(self):
         """Test that run_once returns a results dictionary."""
-        from y_web.utils.process_watchdog import ProcessWatchdog
+        from y_web.src.simulation.watchdog import ProcessWatchdog
 
         watchdog = ProcessWatchdog()
 
@@ -538,7 +626,7 @@ class TestWatchdogRunOnce:
 
     def test_run_once_checks_registered_processes(self):
         """Test that run_once checks all registered processes."""
-        from y_web.utils.process_watchdog import ProcessWatchdog
+        from y_web.src.simulation.watchdog import ProcessWatchdog
 
         watchdog = ProcessWatchdog()
         restart_callback = MagicMock(return_value=None)
@@ -568,7 +656,7 @@ class TestWatchdogRunOnce:
 
     def test_run_interval_property(self):
         """Test that run_interval_minutes can be get and set."""
-        from y_web.utils.process_watchdog import ProcessWatchdog
+        from y_web.src.simulation.watchdog import ProcessWatchdog
 
         watchdog = ProcessWatchdog(run_interval_minutes=15)
 
@@ -587,7 +675,7 @@ class TestGlobalWatchdogFunctions:
 
     def test_run_watchdog_once(self):
         """Test run_watchdog_once function."""
-        from y_web.utils.process_watchdog import run_watchdog_once, stop_watchdog
+        from y_web.src.simulation.watchdog import run_watchdog_once, stop_watchdog
 
         # Clean up first
         stop_watchdog()
@@ -602,7 +690,7 @@ class TestGlobalWatchdogFunctions:
 
     def test_set_watchdog_interval(self):
         """Test set_watchdog_interval function."""
-        from y_web.utils.process_watchdog import (
+        from y_web.src.simulation.watchdog import (
             get_watchdog,
             set_watchdog_interval,
             stop_watchdog,
@@ -621,7 +709,7 @@ class TestGlobalWatchdogFunctions:
 
     def test_get_watchdog_status(self):
         """Test get_watchdog_status function."""
-        from y_web.utils.process_watchdog import get_watchdog_status, stop_watchdog
+        from y_web.src.simulation.watchdog import get_watchdog_status, stop_watchdog
 
         # Clean up first
         stop_watchdog()

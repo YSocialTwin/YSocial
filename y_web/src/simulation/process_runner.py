@@ -1,0 +1,937 @@
+#!/usr/bin/env python3
+"""
+Process runner module for YSocial simulation.
+
+Merged from y_web/utils/y_server_process_runner.py and
+y_web/utils/y_client_process_runner.py.
+
+Entry points:
+  run_server_main() — start a YServer subprocess (formerly main() in y_server_process_runner)
+  run_client_main() — start a YClient subprocess (formerly main() in y_client_process_runner)
+
+Both legacy modules are kept as thin shims for backward compatibility.
+"""
+
+# ============================================================
+# Server runner
+# ============================================================
+
+import argparse
+import json
+import os
+import sys
+from copy import deepcopy
+
+
+def run_server_main():
+    """Main entry point for server process runner."""
+    parser = argparse.ArgumentParser(
+        description="Run YSocial server simulation process"
+    )
+    parser.add_argument(
+        "-c",
+        "--config",
+        required=True,
+        help="Path to server configuration JSON file",
+    )
+    parser.add_argument(
+        "--platform",
+        required=True,
+        choices=["microblogging", "forum"],
+        help="Platform type (microblogging or forum)",
+    )
+
+    args = parser.parse_args()
+
+    # Determine the correct server module based on platform
+    if args.platform == "microblogging":
+        # Add YServer to sys.path for imports
+        from y_web.src.system.path_utils import get_base_path
+
+        base_path = get_base_path()
+        yserver_path = os.path.join(base_path, "external", "YServer")
+        sys.path.insert(0, yserver_path)
+    elif args.platform == "forum":
+        # Add YServerReddit to sys.path for imports
+        from y_web.src.system.path_utils import get_base_path
+
+        base_path = get_base_path()
+        yserver_path = os.path.join(base_path, "external", "YServerReddit")
+        sys.path.insert(0, yserver_path)
+    else:
+        raise NotImplementedError(f"Unsupported platform {args.platform}")
+
+    # Load configuration
+    config = json.load(open(args.config, "r"))
+
+    # Calculate log file path using the same pattern as client runner
+    # The config file is at: {writable_path}/y_web/experiments/{uid}/config_server.json
+    # So the log file should be at: {writable_path}/y_web/experiments/{uid}/_server.log
+    config_dir = os.path.dirname(os.path.abspath(args.config))
+    log_file = os.path.join(config_dir, "_server.log")
+
+    print(f"Server log file: {log_file}", file=sys.stderr)
+    os.environ["YSERVER_LOG_FILE"] = log_file
+    try:
+        os.makedirs(os.path.dirname(log_file), exist_ok=True)
+        with open(log_file, "a", encoding="utf-8"):
+            pass
+    except Exception:
+        pass
+
+    # Import and start the server
+    print(f"Starting YServer for {args.platform}...", config)
+    from y_server import app
+
+    debug = False
+    app.config["perspective_api"] = config["perspective_api"]
+    app.config["toxicity_annotation"] = config.get("toxicity_annotation", False)
+    app.config["sentiment_annotation"] = config["sentiment_annotation"]
+    app.config["emotion_annotation"] = config["emotion_annotation"]
+    # Pass the log file path to the server via app.config
+    app.config["log_file"] = log_file
+    app.run(debug=debug, port=int(config["port"]), host=config["host"])
+
+
+# ============================================================
+# Client runner
+# ============================================================
+
+"""
+Client process runner script for YSocial.
+This script is invoked as a subprocess to run client simulations.
+It's designed to be called by start_client using subprocess.Popen.
+"""
+
+import argparse
+import json
+import math
+import os
+import random
+import re
+import sqlite3
+import sys
+import traceback
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+from y_web.src.simulation.agent_sampler import (
+    ensure_agents_have_archetype,
+    get_users_per_hour,
+    process_agent,
+    sample_agents,
+)
+
+
+def _sync_experiment_stress_reward_into_client_config(
+    client_config: dict, server_config: dict, platform_type: str
+) -> tuple[dict, bool]:
+    if platform_type not in {"microblogging", "forum", "hpc"}:
+        return client_config, False
+    if not isinstance(client_config, dict) or not isinstance(server_config, dict):
+        return client_config, False
+
+    server_sr = server_config.get("stress_reward")
+    if not isinstance(server_sr, dict):
+        enabled = bool(
+            server_config.get(
+                "stress_reward_enabled",
+                server_config.get("stress_reward_annotation", False),
+            )
+        )
+        server_sr = {"enabled": enabled, "backward_rounds": 24}
+
+    client_sr = client_config.get("stress_reward")
+    normalized_server_sr = deepcopy(server_sr)
+    normalized_server_sr["enabled"] = bool(server_sr.get("enabled", False))
+    normalized_server_sr["backward_rounds"] = int(
+        server_sr.get("backward_rounds", 24) or 24
+    )
+    if client_sr == normalized_server_sr:
+        return client_config, False
+
+    client_config["stress_reward"] = normalized_server_sr
+    return client_config, True
+
+
+# Number of days to run an infinite client per iteration before checking for termination
+# Infinite clients run for this many days, then loop back to continue running
+INFINITE_CLIENT_ITERATION_DAYS = 365
+
+
+def _get_client_archetypes(client):
+    """Return a normalized archetype config for clients that may not implement it."""
+    archetypes = getattr(client, "agent_archetypes", None)
+    if archetypes:
+        return archetypes
+    return {
+        "enabled": False,
+        "distribution": {},
+        "transitions": {},
+    }
+
+
+def _resolve_client_package_dir(base_path, platform_type):
+    """Resolve the external client package directory for a platform."""
+    if platform_type == "microblogging":
+        return os.path.join(base_path, "external", "YClient")
+    if platform_type == "forum":
+        return os.path.join(base_path, "external", "YClientReddit")
+    raise NotImplementedError(f"Unsupported platform {platform_type}")
+
+
+def _candidate_memory_package_dirs(base_path, client_package_dir):
+    """Return candidate y_memory_subsystem/src directories for memory-enabled clients."""
+    candidates = []
+
+    if client_package_dir:
+        candidates.append(os.path.join(client_package_dir, "y_memory_subsystem", "src"))
+
+    if base_path:
+        project_root = os.path.abspath(os.path.join(base_path, os.pardir))
+        candidates.append(os.path.join(project_root, "y_memory_subsystem", "src"))
+
+    seen = []
+    for path in candidates:
+        norm = os.path.abspath(path)
+        if norm not in seen:
+            seen.append(norm)
+    return seen
+
+
+def _repair_legacy_agent_file(agent_file_path, platform_type):
+    """Backfill agent-file fields expected by the current client runtime."""
+    try:
+        with open(agent_file_path, "r", encoding="utf-8") as fh:
+            payload = json.load(fh)
+    except Exception:
+        return
+
+    agents = payload.get("agents")
+    if not isinstance(agents, list):
+        return
+
+    changed = False
+    default_activity_profile = "Always On"
+
+    for agent in agents:
+        if not isinstance(agent, dict):
+            continue
+
+        defaults = {
+            "prompts": None,
+            "daily_activity_level": 1,
+            "profession": None,
+            "archetype": None,
+        }
+        if platform_type == "microblogging":
+            defaults["activity_profile"] = default_activity_profile
+
+        for key, default_value in defaults.items():
+            if key not in agent or agent.get(key) is None:
+                agent[key] = default_value
+                changed = True
+
+    if changed:
+        with open(agent_file_path, "w", encoding="utf-8") as fh:
+            json.dump(payload, fh, indent=4)
+
+
+def _load_population_usernames(population_filename):
+    """Return non-page usernames declared in a population JSON file."""
+    try:
+        with open(population_filename, "r", encoding="utf-8") as handle:
+            payload = json.load(handle)
+    except Exception:
+        return []
+
+    usernames = []
+    for agent in payload.get("agents", []):
+        if int(agent.get("is_page", 0) or 0) == 1:
+            continue
+        username = str(agent.get("name") or "").strip()
+        if username:
+            usernames.append(username)
+    return usernames
+
+
+def _population_bootstrap_completed(experiment_db_path, population_filename):
+    """
+    Return whether all declared non-page population users are already registered.
+
+    A failed first boot can leave a Client_Execution row behind before the
+    underlying users exist in the experiment DB. In that case the next launch
+    must still be treated as a first run.
+    """
+    usernames = _load_population_usernames(population_filename)
+    if not usernames or not os.path.exists(experiment_db_path):
+        return False
+
+    try:
+        with sqlite3.connect(experiment_db_path) as connection:
+            tables = {
+                row[0]
+                for row in connection.execute(
+                    "select name from sqlite_master where type='table'"
+                ).fetchall()
+            }
+            if "user_mgmt" not in tables:
+                return False
+
+            placeholders = ",".join("?" for _ in usernames)
+            rows = connection.execute(
+                f"select username from user_mgmt where username in ({placeholders})",
+                usernames,
+            ).fetchall()
+    except Exception:
+        return False
+
+    registered = {str(row[0]) for row in rows}
+    return all(username in registered for username in usernames)
+
+
+def run_client_main():
+    """Main entry point for client process runner."""
+    parser = argparse.ArgumentParser(
+        description="Run YSocial client simulation process"
+    )
+    parser.add_argument("--exp-id", required=True, type=int, help="Experiment ID")
+    parser.add_argument("--client-id", required=True, type=int, help="Client ID")
+    parser.add_argument(
+        "--population-id", required=True, type=int, help="Population ID"
+    )
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        default=False,
+        help="Resume from last state (default: False)",
+    )
+    parser.add_argument(
+        "--no-resume",
+        dest="resume",
+        action="store_false",
+        help="Do not resume from last state",
+    )
+    parser.add_argument(
+        "--db-type", default="sqlite", help="Database type (sqlite or postgresql)"
+    )
+
+    args = parser.parse_args()
+
+    # Create minimal objects with just the IDs needed by start_client_process
+    # The function will re-fetch the full objects from the database
+    class MinimalObject:
+        pass
+
+    exp = MinimalObject()
+    exp.idexp = args.exp_id
+
+    cli = MinimalObject()
+    cli.id = args.client_id
+
+    population = MinimalObject()
+    population.id = args.population_id
+
+    # Call start_client_process with the parameters
+    try:
+        start_client_process(exp, cli, population, args.resume, args.db_type)
+    except Exception as e:
+        print(f"ERROR in client process: {e}", file=sys.stderr)
+
+        traceback.print_exc(file=sys.stderr)
+        sys.exit(1)
+
+
+def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
+    """
+    Start client simulation without pushing Flask app context.
+    Independent of the main Flask runtime.
+    """
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+
+    from y_web import create_app, db  # only to reuse URI config
+    from y_web.src.models import Client, Client_Execution, Exps, Population
+    from y_web.src.system.path_utils import get_base_path, get_writable_path
+
+    # Create app only to get DB URI, but don't push its context
+    app2 = create_app(db_type)
+    db_uri = app2.config["SQLALCHEMY_DATABASE_URI"]
+
+    # Build an independent SQLAlchemy engine/session
+    engine = create_engine(db_uri, pool_pre_ping=True)
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    try:
+        # Retrieve data fresh from DB (no app context)
+        exp = session.query(Exps).get(exp.idexp)
+        cli = session.query(Client).get(cli.id)
+        population = session.query(Population).get(population.id)
+
+        # Get base path (PyInstaller-aware) for reading bundled resources
+        base_path = get_base_path()
+
+        # Get writable path for experiment data (where experiments are stored)
+        writable_base = get_writable_path()
+
+        # Add platform-specific external client modules ahead of any other y_client package.
+        client_package_dir = _resolve_client_package_dir(base_path, exp.platform_type)
+        if client_package_dir in sys.path:
+            sys.path.remove(client_package_dir)
+        sys.path.insert(0, client_package_dir)
+        for memory_src in reversed(
+            _candidate_memory_package_dirs(base_path, client_package_dir)
+        ):
+            if os.path.isdir(memory_src) and memory_src not in sys.path:
+                sys.path.insert(0, memory_src)
+        from y_client.clients import YClientWeb
+
+        # Base directory for experiment data (writable location)
+        BASE_DIR = os.path.join(writable_base, "y_web")
+
+        if "experiments_" in exp.db_name:
+            uid = exp.db_name.removeprefix("experiments_")
+        else:
+            # db_name format: "experiments/uid/database_server.db" or with backslashes
+            # Split on both / and \ to handle cross-platform path separators
+            parts = re.split(r"[/\\]", exp.db_name)
+            if len(parts) >= 2:
+                uid = parts[1]  # Extract UID from path: experiments/{uid}/...
+            else:
+                raise ValueError(f"Invalid db_name format: {exp.db_name}")
+
+        data_base_path = os.path.join(BASE_DIR, "experiments", uid) + os.sep
+
+        from y_web.src.experiment.schema import ensure_experiment_schema_for_uri
+
+        ensure_experiment_schema_for_uri(
+            f"sqlite:///{data_base_path}database_server.db"
+        )
+
+        # Try to find the population file
+        # The expected filename is {population.name}.json
+        # However, due to population renaming during upload, the file may have
+        # a different name (e.g., without the _2 suffix if uploaded before fix)
+        expected_pop_file = os.path.join(
+            data_base_path, f"{population.name.replace(' ', '')}.json"
+        )
+
+        if os.path.exists(expected_pop_file):
+            filename = expected_pop_file
+        else:
+            # Fallback: search for a matching population file
+            # Population files don't start with "client_" and end with ".json"
+            filename = None
+            pop_name_base = population.name.replace(" ", "")
+            # Remove any _N suffix to find the base name
+            base_match = re.match(r"^(.+?)(?:_\d+)?$", pop_name_base)
+            if base_match:
+                base_name = base_match.group(1)
+                for f in os.listdir(data_base_path):
+                    if (
+                        f.endswith(".json")
+                        and not f.startswith("client_")
+                        and not f.startswith("config_")
+                        and not f.startswith("prompts")
+                        and f.startswith(base_name)
+                    ):
+                        filename = os.path.join(data_base_path, f)
+                        print(
+                            f"Warning: Expected population file not found. Using fallback: {f}",
+                            file=sys.stderr,
+                        )
+                        break
+
+            if filename is None:
+                # Use the expected path (will fail when saving if not exists)
+                filename = expected_pop_file
+
+        # Try to find the client config file
+        # The expected filename is client_{cli.name}-{population.name}.json
+        # However, due to population renaming during upload, the file may have
+        # a different name (e.g., without the _2 suffix if uploaded before fix)
+        expected_client_file = os.path.join(
+            data_base_path, f"client_{cli.name}-{population.name}.json"
+        )
+
+        print(
+            f"Looking for client config file at: {expected_client_file}",
+            file=sys.stderr,
+        )
+
+        if os.path.exists(expected_client_file):
+            client_config_path = expected_client_file
+        else:
+            # Fallback: search for a matching client file by client name
+            # This handles cases where population was renamed but files weren't
+            client_config_path = None
+            for f in os.listdir(data_base_path):
+                if f.startswith(f"client_{cli.name}-") and f.endswith(".json"):
+                    client_config_path = os.path.join(data_base_path, f)
+                    print(
+                        f"Warning: Expected file not found. Using fallback: {f}",
+                        file=sys.stderr,
+                    )
+                    break
+
+            if client_config_path is None:
+                raise FileNotFoundError(
+                    f"No client config file found for client '{cli.name}' in {data_base_path}, file=sys.stderr"
+                )
+
+        config_file = json.load(open(client_config_path))
+        server_config_path = os.path.join(data_base_path, "config_server.json")
+        if os.path.exists(server_config_path):
+            try:
+                with open(server_config_path, "r") as handle:
+                    server_config = json.load(handle)
+                config_file, changed = (
+                    _sync_experiment_stress_reward_into_client_config(
+                        config_file, server_config, exp.platform_type
+                    )
+                )
+                if changed:
+                    with open(client_config_path, "w") as handle:
+                        json.dump(config_file, handle, indent=4)
+                    print(
+                        f"Synchronized stress_reward from experiment config into {os.path.basename(client_config_path)}",
+                        file=sys.stderr,
+                    )
+            except Exception:
+                print(
+                    f"Warning: failed to synchronize stress_reward into {client_config_path}",
+                    file=sys.stderr,
+                )
+                traceback.print_exc(file=sys.stderr)
+
+        print("Starting client process...", file=sys.stderr)
+
+        print(f"Looking up Client_Execution for client_id={cli.id}", file=sys.stderr)
+        ce = session.query(Client_Execution).filter_by(client_id=cli.id).first()
+        print(
+            f"Client {cli.name} (id={cli.id}) execution record: {ce}", file=sys.stderr
+        )
+        if ce:
+            print(
+                f"  Execution record details: elapsed_time={ce.elapsed_time}, expected_duration={ce.expected_duration_rounds}",
+                file=sys.stderr,
+            )
+
+        bootstrap_completed = _population_bootstrap_completed(
+            os.path.join(data_base_path, "database_server.db"),
+            filename,
+        )
+
+        if ce and bootstrap_completed:
+            first_run = False
+        elif ce:
+            print(
+                "Detected stale client execution state before population bootstrap; "
+                "restarting as first run.",
+                file=sys.stderr,
+            )
+            ce.elapsed_time = 0
+            ce.last_active_hour = -1
+            ce.last_active_day = -1
+            session.add(ce)
+            session.commit()
+            first_run = True
+        else:
+            print(f"Client {cli.name} first execution.")
+            first_run = True
+            # For infinite clients (days = -1), set expected_duration_rounds to -1
+            expected_rounds = -1 if cli.days == -1 else cli.days * 24
+            ce = Client_Execution(
+                client_id=cli.id,
+                elapsed_time=0,
+                expected_duration_rounds=expected_rounds,
+                last_active_hour=-1,
+                last_active_day=-1,
+            )
+            session.add(ce)
+            session.commit()
+
+        log_file = f"{data_base_path}{cli.name}_client.log"
+        os.environ["YCLIENT_LOG_FILE"] = log_file
+        try:
+            os.makedirs(os.path.dirname(log_file), exist_ok=True)
+            with open(log_file, "a", encoding="utf-8"):
+                pass
+        except Exception:
+            pass
+
+        print(f"Log file for client {cli.name}: {log_file}", file=sys.stderr)
+        print(f"Data base path: {data_base_path}", file=sys.stderr)
+
+        # Check if this is an infinite client
+        is_infinite = cli.days == -1 or ce.expected_duration_rounds == -1
+
+        client_kwargs = {
+            "config_file": config_file,
+            "data_base_path": data_base_path,
+            "first_run": first_run,
+        }
+        if exp.platform_type == "forum":
+            client_kwargs["log_file"] = log_file
+
+        if first_run and cli.network_type:
+            path = f"{cli.name}_network.csv"
+            client_kwargs["network"] = path
+            cl = YClientWeb(**client_kwargs)
+            print(f"First run (with network)", file=sys.stderr)
+        else:
+            cl = YClientWeb(**client_kwargs)
+            if first_run:
+                print(f"First run (without network)", file=sys.stderr)
+            else:
+                print(f"Resuming run", file=sys.stderr)
+
+        if resume and not is_infinite:
+            remaining_rounds = ce.expected_duration_rounds - ce.elapsed_time
+            # If we've already reached or exceeded expected duration, don't run
+            if remaining_rounds <= 0:
+                print(
+                    f"Client already completed (elapsed: {ce.elapsed_time}, expected: {ce.expected_duration_rounds})",
+                    file=sys.stderr,
+                )
+                return
+            # Use math.ceil to ensure at least 1 day is processed when there are
+            # remaining rounds. Using int() would result in 0 days when remaining
+            # rounds < 24, causing the simulation to skip the final hours.
+            cl.days = max(1, math.ceil(remaining_rounds / 24))
+        elif is_infinite:
+            # For infinite clients, run for a longer period per iteration
+            # The client will continue running until manually stopped
+            print(f"Infinite client - running until manually stopped", file=sys.stderr)
+            cl.days = INFINITE_CLIENT_ITERATION_DAYS
+
+        _repair_legacy_agent_file(filename, exp.platform_type)
+        cl.read_agents()
+        if first_run and cli.network_type and hasattr(cl, "add_network"):
+            cl.add_network()
+        cl.add_feeds()
+
+        print(f"Loaded {len(cl.agents.agents)} agents.", file=sys.stderr)
+
+        if not os.path.exists(filename):
+            # Ensure all agents have archetype before saving
+            ensure_agents_have_archetype(cl.agents.agents, _get_client_archetypes(cl))
+            cl.save_agents(filename)
+
+        run_simulation(cl, cli.id, filename, exp, population, db_type)
+
+    finally:
+        session.close()
+        engine.dispose()
+
+
+def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
+    """
+    Run the simulation
+    """
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+
+    from y_web import create_app  # only to reuse URI config
+    from y_web.src.models import Client_Execution
+    from y_web.src.system.path_utils import get_base_path
+
+    base_path = get_base_path()
+    FakeAgent = None
+    if exp.platform_type == "microblogging":
+        sys.path.append(os.path.join(base_path, "external", "YClient"))
+        from y_client.classes import FakeAgent
+    elif exp.platform_type == "forum":
+        sys.path.append(os.path.join(base_path, "external", "YClientReddit"))
+        from y_client.classes.fake_base_agent import FakeAgent
+
+    # Create app only to get DB URI, but don't push its context
+    app2 = create_app(db_type)
+    db_uri = app2.config["SQLALCHEMY_DATABASE_URI"]
+
+    # Build an independent SQLAlchemy engine/session
+    engine = create_engine(db_uri, pool_pre_ping=True)
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    platform_type = exp.platform_type
+
+    total_days = int(cl.days)
+    daily_slots = int(cl.slots)
+
+    page_agents = [p for p in cl.agents.agents if p.is_page]
+
+    hour_to_page = get_users_per_hour(population, page_agents, session)
+
+    archetypes = _get_client_archetypes(cl)
+
+    for d1 in range(total_days):
+        common_agents = [p for p in cl.agents.agents if not p.is_page]
+        hour_to_users = get_users_per_hour(population, common_agents, session)
+
+        daily_active = {}
+        tid, _, _ = cl.sim_clock.get_current_slot()
+
+        for _ in range(daily_slots):
+            tid, d, h = cl.sim_clock.get_current_slot()
+
+            # get expected active users for this time slot considering the global population (at least 1)
+            expected_active_users = max(
+                int(len(cl.agents.agents) * cl.hourly_activity[str(h)]), 1
+            )
+
+            # take the minimum between expected active over the whole population and available users at time h
+            expected_active_users = min(expected_active_users, len(hour_to_users[h]))
+
+            # get active pages at this hour
+            active_pages = hour_to_page[h]
+
+            if platform_type == "microblogging":
+                # pages post all the time their activity profile is active
+                for page in active_pages:
+                    page.select_action(
+                        tid=tid,
+                        actions=None,
+                    )
+
+            # check whether there are agents left
+            if len(cl.agents.agents) == 0:
+                break
+
+            # get the daily activities of each agent (stratified on archetypes if enabled)
+            try:
+                sagents = sample_agents(
+                    hour_to_users[h], expected_active_users, archetypes
+                )
+            except Exception as e:
+                print(f"Error sampling agents: {e}", file=sys.stderr)
+                sagents = []
+
+            # shuffle agents
+            random.shuffle(sagents)
+
+            # Process agents in parallel using ThreadPoolExecutor
+            # Only proceed if there are agents to process
+            if len(sagents) > 0:
+                # Use max_workers based on available CPUs, but cap it for resource management
+                max_workers = min(
+                    len(sagents), 10
+                )  # Cap at 10 workers to avoid resource exhaustion
+
+                # Process agents in parallel (FakeAgent was imported at function start)
+                with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                    # Submit all agent processing tasks with thread-local random instances
+                    # Create properly seeded Random instances for thread safety
+                    future_to_agent = {
+                        executor.submit(
+                            process_agent,
+                            g,
+                            archetypes,
+                            cl,
+                            exp,
+                            tid,
+                            FakeAgent,
+                            random.Random(random.randint(0, 2**32 - 1)),
+                        ): g
+                        for g in sagents
+                    }
+
+                    # Collect results as they complete
+                    # Track all agents in daily_active, not just successful ones (preserves original behavior)
+                    churned_ids = []
+                    for future in as_completed(future_to_agent):
+                        agent_name, success, churned_id = future.result()
+                        # Add to daily_active regardless of success to maintain original behavior
+                        daily_active[agent_name] = None
+                        if churned_id:
+                            churned_ids.append(int(churned_id))
+                    if churned_ids:
+                        cl.agents.remove_agent_by_ids(churned_ids)
+
+            # increment slot
+            cl.sim_clock.increment_slot()
+
+            # update client execution object
+            ce = session.query(Client_Execution).filter_by(client_id=cli_id).first()
+            if ce:
+                ce.elapsed_time += 1
+                ce.last_active_hour = h
+                ce.last_active_day = d
+                session.add(ce)  # Explicitly mark as modified for PostgreSQL
+                session.commit()
+
+                # Check if we've reached 100% completion (skip for infinite clients)
+                # Infinite clients have expected_duration_rounds = -1
+                if (
+                    ce.expected_duration_rounds > 0
+                    and ce.elapsed_time >= ce.expected_duration_rounds
+                ):
+                    print(
+                        f"Client {cli_id} reached 100% completion (elapsed: {ce.elapsed_time}, expected: {ce.expected_duration_rounds})",
+                        file=sys.stderr,
+                    )
+
+                    # Check if all clients in this experiment have completed
+                    # Import Client model to check other clients
+                    from y_web.src.models import Client, Exps
+
+                    # Get current client to find experiment ID
+                    client = session.query(Client).filter_by(id=cli_id).first()
+                    if client:
+                        client.status = 0
+                        client.pid = None
+                        session.add(client)
+
+                        # Use a single JOIN query to get all client execution records
+                        # for this experiment. Exclude infinite clients (expected_duration_rounds = -1)
+                        incomplete_clients = (
+                            session.query(Client)
+                            .join(
+                                Client_Execution,
+                                Client.id == Client_Execution.client_id,
+                            )
+                            .filter(Client.id_exp == client.id_exp)
+                            .filter(
+                                Client_Execution.expected_duration_rounds
+                                > 0,  # Exclude infinite clients
+                                Client_Execution.elapsed_time
+                                < Client_Execution.expected_duration_rounds,
+                            )
+                            .count()
+                        )
+
+                        # Also check for clients without execution records
+                        clients_without_exec = (
+                            session.query(Client)
+                            .outerjoin(
+                                Client_Execution,
+                                Client.id == Client_Execution.client_id,
+                            )
+                            .filter(Client.id_exp == client.id_exp)
+                            .filter(Client_Execution.id == None)
+                            .count()
+                        )
+
+                        # Check if there are any infinite clients still running
+                        infinite_clients = (
+                            session.query(Client)
+                            .join(
+                                Client_Execution,
+                                Client.id == Client_Execution.client_id,
+                            )
+                            .filter(Client.id_exp == client.id_exp)
+                            .filter(Client_Execution.expected_duration_rounds == -1)
+                            .count()
+                        )
+
+                        all_completed = (
+                            incomplete_clients == 0
+                            and clients_without_exec == 0
+                            and infinite_clients == 0
+                        )
+
+                        # If all clients are completed (no infinite clients), update experiment status to "completed"
+                        if all_completed:
+                            exp = (
+                                session.query(Exps)
+                                .filter_by(idexp=client.id_exp)
+                                .first()
+                            )
+                            if exp:
+                                exp.exp_status = "completed"
+                                exp.running = 0
+                                session.commit()
+                                print(
+                                    f"Experiment {client.id_exp} marked as completed",
+                                    file=sys.stderr,
+                                )
+                        else:
+                            session.commit()
+
+                    # Clean up and exit
+                    session.close()
+                    engine.dispose()
+                    return
+
+        # evaluate follows (once per day, only for a random sample of daily active agents)
+        if float(cl.config["agents"]["probability_of_daily_follow"]) > 0:
+            da = [
+                agent
+                for agent in cl.agents.agents
+                if agent.name in daily_active
+                and agent not in cl.pages
+                and random.random()
+                < float(cl.config["agents"]["probability_of_daily_follow"])
+            ]
+
+            # Evaluating new friendship ties
+            for agent in da:
+                if agent not in cl.pages:
+                    try:
+                        if agent.evaluate_stress_reward_churn(tid):
+                            cl.agents.remove_agent_by_ids([agent.user_id])
+                            continue
+                    except Exception:
+                        pass
+                    llm_agents = cl.config.get("agents", {}).get("llm_agents")
+                    if (
+                        FakeAgent is not None
+                        and isinstance(llm_agents, list)
+                        and len(llm_agents) == 1
+                        and llm_agents[0] is None
+                        and not getattr(agent, "is_page", 0)
+                    ):
+                        agent.__class__ = FakeAgent
+                    agent.select_action(tid=tid, actions=["FOLLOW", "NONE"])
+
+        # daily churn and new agents
+        if len(daily_active) > 0:
+            # daily churn
+            cl.churn(tid)
+
+            # daily new agents
+            if cl.percentage_new_agents_iteration > 0:
+                for _ in range(
+                    max(
+                        1,
+                        int(len(daily_active) * cl.percentage_new_agents_iteration),
+                    )
+                ):
+                    cl.add_agent()
+
+        # change the archetypes if enabled
+        if d1 % 7 == 0 and d1 > 0:  # weekly changes
+            if archetypes["enabled"]:
+                for agent in cl.agents.agents:
+                    # Use getattr with default to handle agents without archetype attribute
+                    # Default to 'broadcaster' as it's the most permissive archetype with full action capabilities
+                    current_archetype = getattr(agent, "archetype", "broadcaster")
+                    probabilities = archetypes["transitions"][current_archetype]
+                    choice = random.choices(
+                        population=list(probabilities.keys()),
+                        weights=list(probabilities.values()),
+                        k=1,
+                    )[0]
+                    agent.archetype = choice
+
+        # Ensure all agents have archetype before saving (handles new agents added during simulation)
+        ensure_agents_have_archetype(cl.agents.agents, archetypes)
+
+        # saving "living" agents at the end of the day
+        cl.save_agents(agent_file)
+
+    session.close()
+    engine.dispose()
+
+
+def main():
+    """Dispatch to server or client runner when invoked as a script."""
+    argv = sys.argv[1:]
+    if "--platform" in argv:
+        run_server_main()
+        return
+    run_client_main()
+
+
+if __name__ == "__main__":
+    main()

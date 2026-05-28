@@ -1,0 +1,109 @@
+from types import SimpleNamespace
+
+import pytest
+
+from y_web.routes.api import interview
+
+pytestmark = pytest.mark.unit
+
+
+def test_pick_listening_port_prefers_configured_port():
+    chosen = interview._pick_listening_port([5016, 5022, 5030], preferred_port=5022)
+    assert chosen == 5022
+
+
+def test_server_base_url_prefers_runtime_port(monkeypatch):
+    exp = SimpleNamespace(idexp=39, server="127.0.0.1", port=5014, server_pid=7777)
+
+    monkeypatch.setattr(
+        interview, "_get_latest_experiment_runtime", lambda current: current
+    )
+    monkeypatch.setattr(
+        interview,
+        "_discover_runtime_port_for_experiment_process",
+        lambda current, preferred_port=None: 5091,
+    )
+
+    assert interview._server_base_url(exp) == "http://127.0.0.1:5091"
+
+
+def test_server_base_url_falls_back_to_configured_port(monkeypatch):
+    exp = SimpleNamespace(idexp=39, server="127.0.0.1", port=5014, server_pid=None)
+
+    monkeypatch.setattr(
+        interview, "_get_latest_experiment_runtime", lambda current: current
+    )
+    monkeypatch.setattr(
+        interview,
+        "_discover_runtime_port_for_experiment_process",
+        lambda current, preferred_port=None: None,
+    )
+
+    assert interview._server_base_url(exp) == "http://127.0.0.1:5014"
+
+
+def test_discover_runtime_port_uses_server_pid_connections(monkeypatch):
+    exp = SimpleNamespace(
+        idexp=39, db_name="experiments/demo/database_server.db", server_pid=8888
+    )
+
+    monkeypatch.setattr(
+        interview,
+        "_listening_ports_for_pid",
+        lambda pid: [5044, 6010] if pid == 8888 else [],
+    )
+
+    chosen = interview._discover_runtime_port_for_experiment_process(
+        exp, preferred_port=5014
+    )
+
+    assert chosen == 5044
+
+
+def test_post_server_json_falls_back_to_ray_transport(monkeypatch):
+    from y_web.routes.api.interview import _server as interview_server
+
+    exp = SimpleNamespace(idexp=39, server="127.0.0.1", port=5014, server_pid=7777)
+
+    def _raise_http(*args, **kwargs):
+        raise RuntimeError("http down")
+
+    monkeypatch.setattr(interview_server.requests, "post", _raise_http)
+    monkeypatch.setattr(
+        interview_server,
+        "_call_server_via_ray",
+        lambda exp_obj, path, payload: {"status": 200, "transport": "ray", "items": []},
+    )
+
+    out = interview_server._post_server_json(exp, "/memory/search", {"run_id": "r"})
+    assert out["status"] == 200
+    assert out["transport"] == "ray"
+
+
+def test_ensure_db_binding_falls_back_to_ray_when_http_fails(monkeypatch):
+    from y_web.routes.api.interview import _server as interview_server
+
+    exp = SimpleNamespace(idexp=39, server="127.0.0.1", port=5014, server_pid=7777)
+
+    monkeypatch.setattr(
+        interview_server,
+        "_build_change_db_path_for_exp",
+        lambda current: "tmp/db.sqlite",
+    )
+    monkeypatch.setattr(
+        interview_server, "_server_base_url", lambda current: "http://127.0.0.1:5014"
+    )
+
+    def _raise_http(*args, **kwargs):
+        raise RuntimeError("http down")
+
+    monkeypatch.setattr(interview_server.requests, "post", _raise_http)
+    monkeypatch.setattr(
+        interview_server,
+        "_call_server_via_ray",
+        lambda exp_obj, path, payload: {"status": 200, "transport": "ray"},
+    )
+
+    out = interview_server._ensure_experiment_server_db_binding(exp)
+    assert out["ok"] is True
+    assert out["transport"] == "ray"

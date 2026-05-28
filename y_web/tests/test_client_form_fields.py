@@ -6,6 +6,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+pytestmark = pytest.mark.integration
+
 
 class TestClientFormFields:
     """Test client form optional fields"""
@@ -13,7 +15,7 @@ class TestClientFormFields:
     def test_clients_routes_has_create_client(self):
         """Test that create_client route exists"""
         try:
-            from y_web.routes_admin import clients_routes
+            from y_web.routes.admin.sub import clients as clients_routes
 
             assert clients_routes is not None
             assert hasattr(clients_routes, "create_client")
@@ -178,3 +180,32 @@ class TestClientFormFields:
 
         except ImportError as e:
             pytest.skip(f"Could not import Flask: {e}")
+
+    def test_follow_back_field_is_wired_in_all_client_forms(self):
+        templates = [
+            "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients.html",
+            "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_forum.html",
+            "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_hpc.html",
+        ]
+        crud_source = open(
+            "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_crud.py",
+            "r",
+        ).read()
+
+        for template_path in templates:
+            template_source = open(template_path, "r").read()
+            assert 'name="probability_of_follow_back"' in template_source
+
+        assert crud_source.count("probability_of_follow_back") >= 8
+
+    def test_hpc_follow_defaults_enable_network_growth(self):
+        template_source = open(
+            "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_hpc.html",
+            "r",
+        ).read()
+
+        assert 'name="probability_of_daily_follow"' in template_source
+        assert 'value="0.1"' in template_source
+        assert (
+            'input type="hidden" name="follow" id="follow" value="1"' in template_source
+        )

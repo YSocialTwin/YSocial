@@ -1,0 +1,39 @@
+{% if username != "" %}
+{% set sidebar_target_id = logged_id if logged_id is defined else user_id %}
+{% set sidebar_avatar = profile_pic_feed if profile_pic_feed is defined else profile_pic if profile_pic is defined else "" %}
+<div class="card ys-card-mb ys-sidebar-user-card">
+    <div class="card-body ys-sidebar-user-card__body">
+        <a href="/{{exp_id}}/profile/{{ sidebar_target_id }}/recent/1" class="ys-sidebar-user-card__link">
+            <div class="ys-sidebar-user-card__avatar-shell">
+                <img
+                    id="user-avatar"
+                    class="ys-sidebar-user-card__avatar-image"
+                    {% if sidebar_avatar == "" %}
+                        data-demo-src="{{ url_for('static', filename='assets/img/users/'+ sidebar_target_id|user_image_id +'.png') }}"
+                    {% else %}
+                        data-demo-src="{{ sidebar_avatar }}"
+                    {% endif %}
+                    alt=""
+                />
+            </div>
+        </a>
+        <div class="ys-sidebar-user-card__meta">
+            <div class="ys-sidebar-user-card__eyebrow">Your Profile</div>
+            <div class="ys-sidebar-user-card__name">{{ username }}</div>
+            <a href="/{{exp_id}}/profile/{{ sidebar_target_id }}/recent/1" class="ys-sidebar-user-card__cta">Open profile</a>
+        </div>
+        <div class="ys-sidebar-user-card__time">
+            <span class="ys-sidebar-user-card__time-label">Current local time</span>
+            <span class="ys-sidebar-user-card__time-value" id="sidebar-current-date"></span>
+        </div>
+        <script>
+            (function () {
+                var target = document.getElementById("sidebar-current-date");
+                if (target) {
+                    target.textContent = new Date().toLocaleString();
+                }
+            })();
+        </script>
+    </div>
+</div>
+{% endif %}

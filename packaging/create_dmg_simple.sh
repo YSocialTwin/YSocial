@@ -24,7 +24,7 @@ fi
 DMG_NAME="${APP_NAME}-${VERSION}"
 SOURCE_APP="dist/${APP_NAME}"
 BACKGROUND_IMAGE="y_web/static/assets/img/installer/background.png"
-ICON_FILE="images/YSocial_ico.png"
+ICON_FILE="y_web/static/assets/images/platform/YSocial_ico.png"
 
 # Directories
 STAGING_DIR="${PROJECT_ROOT}/dmg_staging"

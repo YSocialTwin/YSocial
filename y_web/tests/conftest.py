@@ -8,18 +8,22 @@ import tempfile
 import pytest
 from flask import Flask
 from flask_login import LoginManager
-from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.pool import NullPool
 from werkzeug.security import generate_password_hash
 
-# Create minimal Flask app for testing without importing full y_web
-db = SQLAlchemy()
+# Use the actual y_web database instance so that all registered models
+# (Admin_users, User_mgmt, Exps, …) are included when create_all() runs.
+from y_web import db
 
 
 @pytest.fixture
 def app():
     """Create and configure a new app instance for each test."""
-    # Use a temporary database for testing
+    # Use separate temporary databases for each SQLAlchemy bind to avoid
+    # SQLite write-lock conflicts when multiple engines target the same file.
     db_fd, db_path = tempfile.mkstemp()
+    db_fd_admin, db_path_admin = tempfile.mkstemp()
+    db_fd_exp, db_path_exp = tempfile.mkstemp()
 
     # Create minimal Flask app
     app = Flask(__name__)
@@ -29,8 +33,18 @@ def app():
             "WTF_CSRF_ENABLED": False,
             "SECRET_KEY": "test-secret-key",
             "SQLALCHEMY_DATABASE_URI": f"sqlite:///{db_path}",
+            "SQLALCHEMY_BINDS": {
+                "db_admin": f"sqlite:///{db_path_admin}",
+                "db_exp": f"sqlite:///{db_path_exp}",
+            },
             "SQLALCHEMY_TRACK_MODIFICATIONS": False,
-            "SQLALCHEMY_ENGINE_OPTIONS": {"connect_args": {"check_same_thread": False}},
+            # NullPool closes connections immediately after use, preventing
+            # "database is locked" errors when y_web.db is re-initialised across
+            # multiple test apps in the same pytest session.
+            "SQLALCHEMY_ENGINE_OPTIONS": {
+                "connect_args": {"check_same_thread": False},
+                "poolclass": NullPool,
+            },
         }
     )
 
@@ -41,19 +55,9 @@ def app():
     login_manager.login_view = "auth.login"
 
     with app.app_context():
-        # Import models here to avoid circular imports
-        # We need to patch the y_web.db reference to use our test db
-        import y_web.models
-
-        y_web.models.db = db
-
-        from y_web.models import Admin_users, User_mgmt
-
-        # Override the bind_key for testing - use same db for all tables
-        Admin_users.__bind_key__ = None
-        User_mgmt.__bind_key__ = None
-
         db.create_all()
+
+        from y_web.src.models import Admin_users, User_mgmt
 
         # Create test admin user
         admin_user = Admin_users(
@@ -85,6 +89,10 @@ def app():
 
     os.close(db_fd)
     os.unlink(db_path)
+    os.close(db_fd_admin)
+    os.unlink(db_path_admin)
+    os.close(db_fd_exp)
+    os.unlink(db_path_exp)
 
 
 @pytest.fixture

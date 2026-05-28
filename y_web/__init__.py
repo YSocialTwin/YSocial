@@ -7,188 +7,105 @@ manages application lifecycle including subprocess cleanup on shutdown.
 
 Key components:
 - Flask app factory pattern (create_app)
-- Database initialization and schema management
+- Database initialization and schema management via y_web.db_init
 - Flask-Login user session management
 - Blueprint registration for all routes
 - Subprocess management for simulation clients
 """
 
 import atexit
+import json
 import os
-import shutil
 import sys
 
+import flask_sqlalchemy
+import sqlalchemy
+import sqlalchemy.orm
 from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+
+def _ensure_flask_sqlalchemy_legacy_compat() -> None:
+    """
+    Flask-SQLAlchemy 2.x expects sqlalchemy.__all__ and sqlalchemy.orm.__all__,
+    which were removed in SQLAlchemy 2.x.
+
+    Recreate only the legacy symbol subset that Flask-SQLAlchemy commonly copies
+    onto the extension object, instead of mirroring every public SQLAlchemy 2.x
+    attribute. A broad copy drags in names like ``engine`` that trigger runtime
+    errors during bootstrap.
+    """
+
+    if not hasattr(sqlalchemy.orm, "relation") and hasattr(
+        sqlalchemy.orm, "relationship"
+    ):
+        sqlalchemy.orm.relation = sqlalchemy.orm.relationship
+
+    sqlalchemy_public = [
+        "Column",
+        "Integer",
+        "BigInteger",
+        "REAL",
+        "Float",
+        "Boolean",
+        "String",
+        "Text",
+        "DateTime",
+        "ForeignKey",
+        "Index",
+        "Table",
+        "func",
+        "text",
+        "or_",
+    ]
+    orm_public = [
+        "relationship",
+        "relation",
+        "dynamic_loader",
+        "backref",
+    ]
+
+    if not hasattr(sqlalchemy, "__all__"):
+        sqlalchemy.__all__ = [
+            name for name in sqlalchemy_public if hasattr(sqlalchemy, name)
+        ]
+    if not hasattr(sqlalchemy.orm, "__all__"):
+        sqlalchemy.orm.__all__ = [
+            name for name in orm_public if hasattr(sqlalchemy.orm, name)
+        ]
+
+    session_base = getattr(flask_sqlalchemy, "SessionBase", None)
+    signalling_session = getattr(flask_sqlalchemy, "SignallingSession", None)
+    if session_base is not None and signalling_session is not None:
+        original_get_bind = signalling_session.get_bind
+        if not getattr(original_get_bind, "_ysocial_sa2_compat", False):
+
+            def _compat_get_bind(self, mapper=None, clause=None):
+                if mapper is not None:
+                    try:
+                        persist_selectable = mapper.persist_selectable
+                    except AttributeError:
+                        persist_selectable = mapper.mapped_table
+
+                    info = getattr(persist_selectable, "info", {})
+                    bind_key = info.get("bind_key")
+                    if bind_key is not None:
+                        state = flask_sqlalchemy.get_state(self.app)
+                        return state.db.get_engine(self.app, bind=bind_key)
+                return session_base.get_bind(self, mapper, clause=clause)
+
+            _compat_get_bind._ysocial_sa2_compat = True
+            signalling_session.get_bind = _compat_get_bind
+
+
+_ensure_flask_sqlalchemy_legacy_compat()
+
 db = SQLAlchemy()
 login_manager = LoginManager()
 login_manager.login_view = "auth.login"
-
-
-def create_postgresql_db(app):
-    """
-    Create and initialize PostgreSQL database for the application.
-
-    Sets up PostgreSQL connection, creates databases if they don't exist,
-    and loads initial schema and admin user data.
-
-    Args:
-        app: Flask application instance to configure
-
-    Raises:
-        RuntimeError: If PostgreSQL is not installed or not running
-    """
-    user = os.getenv("PG_USER", "postgres")
-    password = os.getenv("PG_PASSWORD", "password")
-    host = os.getenv("PG_HOST", "localhost")
-    port = os.getenv("PG_PORT", "5432")
-    dbname = os.getenv("PG_DBNAME", "dashboard")
-    dbname_dummy = os.getenv("PG_DBNAME_DUMMY", "dummy")
-
-    app.config["SQLALCHEMY_DATABASE_URI"] = (
-        f"postgresql://{user}:{password}@{host}:{port}/{dbname}"
-    )
-
-    app.config["SQLALCHEMY_BINDS"] = {
-        "db_admin": app.config["SQLALCHEMY_DATABASE_URI"],
-        "db_exp": f"postgresql://{user}:{password}@{host}:{port}/{dbname_dummy}",  # change if needed
-    }
-    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {}
-
-    # is postgresql installed and running?
-    try:
-        from sqlalchemy import create_engine
-
-        engine = create_engine(
-            app.config["SQLALCHEMY_DATABASE_URI"].replace("dashboard", "postgres")
-        )
-        engine.connect()
-    except Exception as e:
-        raise RuntimeError(
-            "PostgreSQL is not installed or running. Please check your configuration."
-        ) from e
-
-    # does dbname exist? if not, create it and load schema
-    from sqlalchemy import create_engine, text
-    from werkzeug.security import generate_password_hash
-
-    # Connect to a default admin DB (typically 'postgres') to check for existence of target DBs
-    admin_engine = create_engine(
-        f"postgresql://{user}:{password}@{host}:{port}/postgres"
-    )
-
-    # --- Check and create dashboard DB if needed ---
-    with admin_engine.connect() as conn:
-        result = conn.execute(
-            text(f"SELECT 1 FROM pg_database WHERE datname = '{dbname}'")
-        )
-        db_exists = result.scalar() is not None
-
-    if not db_exists:
-        # Create the database (requires AUTOCOMMIT mode)
-        with admin_engine.connect().execution_options(
-            isolation_level="AUTOCOMMIT"
-        ) as conn:
-            conn.execute(text(f"CREATE DATABASE {dbname}"))
-
-        # Connect to the new DB and load schema
-        dashboard_engine = create_engine(app.config["SQLALCHEMY_BINDS"]["db_admin"])
-        with dashboard_engine.connect() as db_conn:
-            # Load SQL schema
-            from y_web.utils.path_utils import get_resource_path
-
-            schema_path = get_resource_path(
-                os.path.join("data_schema", "postgre_dashboard.sql")
-            )
-            schema_sql = open(schema_path, "r").read()
-            db_conn.execute(text(schema_sql))
-
-            # Generate hashed password
-            hashed_pw = generate_password_hash("admin", method="pbkdf2:sha256")
-
-            # Insert initial admin user
-            db_conn.execute(
-                text(
-                    """
-                     INSERT INTO admin_users (username, email, password, role)
-                     VALUES (:username, :email, :password, :role)
-                     """
-                ),
-                {
-                    "username": "Admin",
-                    "email": "admin@y-not.social",
-                    "password": hashed_pw,
-                    "role": "admin",
-                },
-            )
-
-        dashboard_engine.dispose()
-
-    # --- Check and create dummy DB if needed ---
-    with admin_engine.connect() as conn:
-        result = conn.execute(
-            text(f"SELECT 1 FROM pg_database WHERE datname = '{dbname_dummy}'")
-        )
-        dummy_exists = result.scalar() is not None
-
-    if not dummy_exists:
-        with admin_engine.connect().execution_options(
-            isolation_level="AUTOCOMMIT"
-        ) as conn:
-            conn.execute(text(f"CREATE DATABASE {dbname_dummy}"))
-
-        dummy_engine = create_engine(app.config["SQLALCHEMY_BINDS"]["db_exp"])
-        with dummy_engine.connect() as dummy_conn:
-            from y_web.utils.path_utils import get_resource_path
-
-            schema_path = get_resource_path(
-                os.path.join("data_schema", "postgre_server.sql")
-            )
-            schema_sql = open(schema_path, "r").read()
-            dummy_conn.execute(text(schema_sql))
-
-            # Generate hashed password
-            hashed_pw = generate_password_hash("admin", method="pbkdf2:sha256")
-
-            # Insert initial admin user
-            stmt = text(
-                """
-                        INSERT INTO user_mgmt (username, email, password, user_type, leaning, age,
-                                               language, owner, joined_on, frecsys_type,
-                                               round_actions, toxicity, is_page, daily_activity_level)
-                        VALUES (:username, :email, :password, :user_type, :leaning, :age,
-                                :language, :owner, :joined_on, :frecsys_type,
-                                :round_actions, :toxicity, :is_page, :daily_activity_level)
-                        """
-            )
-
-            dummy_conn.execute(
-                stmt,
-                {
-                    "username": "Admin",
-                    "email": "admin@y-not.social",
-                    "password": hashed_pw,
-                    "user_type": "user",
-                    "leaning": "none",
-                    "age": 0,
-                    "language": "en",
-                    "owner": "admin",
-                    "joined_on": 0,
-                    "frecsys_type": "default",
-                    "round_actions": 3,
-                    "toxicity": "none",
-                    "is_page": 0,
-                    "daily_activity_level": 1,
-                },
-            )
-
-        dummy_engine.dispose()
-
-    admin_engine.dispose()
 
 
 def cleanup_db_jupyter_with_new_app():
@@ -200,7 +117,7 @@ def cleanup_db_jupyter_with_new_app():
 
     # Stop the log sync scheduler
     try:
-        from y_web.utils.log_sync_scheduler import stop_log_sync_scheduler
+        from y_web.src.hpc.log_sync_scheduler import stop_log_sync_scheduler
 
         stop_log_sync_scheduler()
         print("Log sync scheduler stopped")
@@ -209,7 +126,7 @@ def cleanup_db_jupyter_with_new_app():
 
     # Log service stop event
     try:
-        from y_web.telemetry import Telemetry
+        from y_web.src.telemetry import Telemetry
 
         telemetry = Telemetry()
         telemetry.log_event({"action": "stop"})
@@ -233,8 +150,8 @@ def cleanup_db_jupyter_with_new_app():
         if app_context_exists:
             # Use existing context
             from y_web import db
-            from y_web.utils.external_processes import stop_all_exps
-            from y_web.utils.jupyter_utils import stop_all_jupyter_instances
+            from y_web.src.simulation.process_registry import stop_all_exps
+            from y_web.src.system.jupyter_utils import stop_all_jupyter_instances
 
             stop_all_jupyter_instances()
             stop_all_exps()
@@ -255,8 +172,10 @@ def cleanup_db_jupyter_with_new_app():
                     app = create_app(dbms)
                     with app.app_context():
                         from y_web import db
-                        from y_web.utils.external_processes import stop_all_exps
-                        from y_web.utils.jupyter_utils import stop_all_jupyter_instances
+                        from y_web.src.simulation.process_registry import stop_all_exps
+                        from y_web.src.system.jupyter_utils import (
+                            stop_all_jupyter_instances,
+                        )
 
                         stop_all_jupyter_instances()
                         stop_all_exps()
@@ -277,9 +196,31 @@ def cleanup_db_jupyter_with_new_app():
         traceback.print_exc()
 
 
-# Only register atexit handler for the main application process, not subprocesses
-# Client subprocesses set Y_CLIENT_SUBPROCESS=1 to indicate they should not run cleanup
-if os.environ.get("Y_CLIENT_SUBPROCESS") != "1":
+def _is_simulation_subprocess():
+    """Return True when running in a spawned simulation subprocess."""
+    return (
+        os.environ.get("Y_CLIENT_SUBPROCESS") == "1"
+        or os.environ.get("Y_SERVER_SUBPROCESS") == "1"
+        or os.environ.get("Y_SOCIAL_SUBPROCESS") == "1"
+    )
+
+
+def _should_register_cleanup_handler():
+    """
+    Register shutdown cleanup only for the real top-level YSocial app process.
+
+    Importing ``y_web`` from tests, maintenance scripts, or ad hoc validation
+    helpers must not implicitly arm a global atexit hook that stops active
+    experiments.
+    """
+    return (
+        os.environ.get("YSOCIAL_REGISTER_ATEXIT_CLEANUP") == "1"
+        and not _is_simulation_subprocess()
+    )
+
+
+# Only register atexit handler for the opted-in main application process.
+if _should_register_cleanup_handler():
     atexit.register(cleanup_db_jupyter_with_new_app)
 
 
@@ -300,66 +241,18 @@ def create_app(db_type="sqlite", desktop_mode=False):
     Raises:
         ValueError: If unsupported db_type is provided
     """
-    import os
-
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
     app = Flask(__name__, static_url_path="/static")
 
     app.config["SECRET_KEY"] = "4323432nldsf"
     app.config["DESKTOP_MODE"] = desktop_mode
 
+    # ------------------------------------------------------------------ #
+    # Database engine configuration                                        #
+    # ------------------------------------------------------------------ #
+    from y_web.db_init import create_postgresql_db, create_sqlite_db
+
     if db_type == "sqlite":
-        # Determine the database directory based on execution mode
-        if getattr(sys, "frozen", False):
-            # Running from PyInstaller - use writable location for database
-            from y_web.utils.path_utils import get_writable_path
-
-            db_dir = os.path.join(get_writable_path(), "y_web", "db")
-        else:
-            # Running from source - use BASE_DIR
-            db_dir = f"{BASE_DIR}{os.sep}db"
-
-        # Ensure db directory exists
-        os.makedirs(db_dir, exist_ok=True)
-
-        # Copy databases if missing in the target location
-        dashboard_db_path = os.path.join(db_dir, "dashboard.db")
-        dummy_db_path = os.path.join(db_dir, "dummy.db")
-
-        if not os.path.exists(dashboard_db_path):
-            from y_web.utils.path_utils import get_resource_path
-
-            dashboard_src = get_resource_path(
-                os.path.join("data_schema", "database_dashboard.db")
-            )
-            server_src = get_resource_path(
-                os.path.join("data_schema", "database_clean_server.db")
-            )
-            shutil.copyfile(dashboard_src, dashboard_db_path)
-            shutil.copyfile(server_src, dummy_db_path)
-
-        # Use the database paths in the appropriate location
-        app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{dashboard_db_path}"
-        app.config["SQLALCHEMY_BINDS"] = {
-            "db_admin": f"sqlite:///{dashboard_db_path}",
-            "db_exp": f"sqlite:///{dummy_db_path}",
-        }
-
-        # Use NullPool for SQLite to avoid connection pooling issues
-        # This ensures each request gets a fresh connection and prevents hangs
-        from sqlalchemy.pool import NullPool
-
-        app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-            "connect_args": {"check_same_thread": False, "timeout": 10},
-            "pool_pre_ping": True,
-            "poolclass": NullPool,
-        }
-
-        # Store the database paths for migrations
-        app.config["DASHBOARD_DB_PATH"] = dashboard_db_path
-        app.config["DUMMY_DB_PATH"] = dummy_db_path
-
+        create_sqlite_db(app)
     elif db_type == "postgresql":
         create_postgresql_db(app)
     else:
@@ -379,7 +272,11 @@ def create_app(db_type="sqlite", desktop_mode=False):
 
     app.config["SESSION_COOKIE_NAME"] = "YSocial_session"
 
-    from .models import Admin_users, User_mgmt
+    from y_web.src.agents.platform import ensure_population_username_type_column
+    from y_web.src.models import Admin_users, User_mgmt
+
+    with app.app_context():
+        ensure_population_username_type_column()
 
     @login_manager.user_loader
     def load_user(user_id):
@@ -395,17 +292,17 @@ def create_app(db_type="sqlite", desktop_mode=False):
         Returns:
             Admin_users or User_mgmt object if found, None otherwise
         """
-        user_id_str = str(user_id)
+        user_id_str = user_id
         if user_id_str.startswith("admin_"):
             # Admin or researcher user
-            admin_id = int(user_id_str.replace("admin_", ""))
+            admin_id = user_id_str.replace("admin_", "")
             return Admin_users.query.get(admin_id)
         else:
             # Regular experiment participant
-            return User_mgmt.query.get(int(user_id))
+            return User_mgmt.query.get(user_id)
 
     # Setup experiment context handler
-    from .experiment_context import (
+    from y_web.src.experiment.context import (
         get_current_experiment_id,
         initialize_active_experiment_databases,
         setup_experiment_context,
@@ -442,12 +339,89 @@ def create_app(db_type="sqlite", desktop_mode=False):
         return dict(exp_id=get_current_experiment_id())
 
     @app.context_processor
-    def inject_active_experiments():
-        """Inject active experiments into all admin templates."""
-        from .models import Exps
+    def inject_feed_home_url():
+        """Inject the canonical home URL for the active experiment feed."""
+        from flask_login import current_user
+
+        from y_web.src.models import Exps, User_mgmt
 
         try:
-            active_exps = Exps.query.filter_by(status=1).all()
+            if not current_user.is_authenticated:
+                return dict(feed_home_url="/")
+
+            exp = None
+            exp_id = get_current_experiment_id()
+            if exp_id is not None:
+                exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+
+            if exp is None:
+                active_exps = Exps.query.filter(Exps.status != 0).all()
+                if not active_exps:
+                    return dict(feed_home_url="/")
+                if len(active_exps) > 1:
+                    return dict(feed_home_url="/admin/join_simulation")
+                exp = active_exps[0]
+
+            if exp.platform_type == "forum":
+                return dict(
+                    feed_home_url=f"/{exp.idexp}/rfeed/all/feed/rf/1?feed_type=new"
+                )
+
+            feed_user_id = None
+            user_id_str = str(current_user.get_id() or "")
+            if user_id_str.isdigit():
+                feed_user_id = int(user_id_str)
+            else:
+                exp_user = User_mgmt.query.filter_by(
+                    username=getattr(current_user, "username", None)
+                ).first()
+                if exp_user is not None:
+                    feed_user_id = int(exp_user.id)
+
+            if feed_user_id is None:
+                return dict(feed_home_url=f"/{exp.idexp}/feed/all/feed/rf/1")
+            return dict(feed_home_url=f"/{exp.idexp}/feed/{feed_user_id}/feed/rf/1")
+        except Exception:
+            return dict(feed_home_url="/feed")
+
+    @app.context_processor
+    def inject_experiment_memory_enabled():
+        """Inject whether the active experiment has memory-enabled chat."""
+        from y_web.routes.social.helpers import _experiment_memory_enabled
+
+        try:
+            exp_id = get_current_experiment_id()
+            if exp_id is None:
+                return dict(experiment_memory_enabled=False)
+
+            return dict(
+                experiment_memory_enabled=bool(_experiment_memory_enabled(exp_id))
+            )
+        except Exception:
+            return dict(experiment_memory_enabled=False)
+
+    @app.context_processor
+    def inject_active_experiments():
+        """Inject active experiments into all admin templates."""
+        from flask_login import current_user
+
+        from y_web.src.experiment.access import get_visible_experiment_query
+        from y_web.src.models import Admin_users, Exps
+
+        try:
+            if not current_user.is_authenticated:
+                return dict(active_experiments=[])
+            admin_user = Admin_users.query.filter_by(
+                username=current_user.username
+            ).first()
+            if not admin_user:
+                return dict(active_experiments=[])
+            if admin_user.role in ("admin", "researcher"):
+                active_exps = (
+                    get_visible_experiment_query(admin_user).filter_by(status=1).all()
+                )
+            else:
+                active_exps = Exps.query.filter_by(status=1).all()
             return dict(active_experiments=active_exps)
         except Exception:
             return dict(active_experiments=[])
@@ -457,7 +431,7 @@ def create_app(db_type="sqlite", desktop_mode=False):
         """Inject current user role information into templates."""
         from flask_login import current_user
 
-        from .models import Admin_users
+        from y_web.src.models import Admin_users
 
         if current_user.is_authenticated:
             try:
@@ -477,7 +451,7 @@ def create_app(db_type="sqlite", desktop_mode=False):
         """Inject release update information for admin users."""
         from flask_login import current_user
 
-        from .models import Admin_users, ReleaseInfo
+        from y_web.src.models import Admin_users, ReleaseInfo
 
         if current_user.is_authenticated:
             try:
@@ -500,7 +474,7 @@ def create_app(db_type="sqlite", desktop_mode=False):
         """Inject latest blog post information for admin users."""
         from flask_login import current_user
 
-        from .models import Admin_users, BlogPost
+        from y_web.src.models import Admin_users, BlogPost
 
         if current_user.is_authenticated:
             try:
@@ -520,51 +494,40 @@ def create_app(db_type="sqlite", desktop_mode=False):
                 print(f"Error injecting blog post info: {e}")
         return dict(new_blog_post_available=False, blog_post=None)
 
-    # Register your blueprints here as before
-    from .auth import auth as auth_blueprint
+    # Add custom Jinja filter for user ID to image mapping
+    # This supports both int IDs (Standard experiments) and UUID IDs (HPC experiments)
+    @app.template_filter("user_image_id")
+    def user_image_id_filter(user_id):
+        """
+        Convert user ID to a consistent image ID for profile pictures.
 
-    app.register_blueprint(auth_blueprint)
-    from .main import main as main_blueprint
+        For integer IDs (Standard experiments): returns the ID as string
+        For UUID strings (HPC experiments): returns a hash-based consistent numeric ID as string
 
-    app.register_blueprint(main_blueprint)
-    from .user_interaction import user as user_blueprint
+        Args:
+            user_id: User ID (int or UUID string)
 
-    app.register_blueprint(user_blueprint)
-    from .admin_dashboard import admin as admin_blueprint
+        Returns:
+            String numeric ID for image filename (1-1000 range for UUIDs)
+        """
+        if user_id is None:
+            return "1"  # Default fallback
 
-    app.register_blueprint(admin_blueprint)
-    from .routes_admin.ollama_routes import ollama as ollama_blueprint
+        # Try to use as integer (Standard experiments)
+        try:
+            return str(int(user_id))
+        except (ValueError, TypeError):
+            # UUID string (HPC experiments) - create consistent hash
+            import hashlib
 
-    app.register_blueprint(ollama_blueprint)
-    from .routes_admin.populations_routes import population as population_blueprint
+            # Use MD5 hash for consistent mapping
+            hash_value = int(hashlib.md5(str(user_id).encode()).hexdigest(), 16)
+            # Map to range 1-1000 for available profile images
+            return str((hash_value % 1000) + 1)
 
-    app.register_blueprint(population_blueprint)
-    from .routes_admin.pages_routes import pages as pages_blueprint
+    from y_web.routes import register_blueprints
 
-    app.register_blueprint(pages_blueprint)
-    from .routes_admin.agents_routes import agents as agents_blueprint
-
-    app.register_blueprint(agents_blueprint)
-    from .routes_admin.users_routes import users as users_blueprint
-
-    app.register_blueprint(users_blueprint)
-    from .routes_admin.experiments_routes import experiments as experiments_blueprint
-
-    app.register_blueprint(experiments_blueprint)
-    from .routes_admin.clients_routes import clientsr as clients_blueprint
-
-    app.register_blueprint(clients_blueprint)
-    from .error_routes import errors as errors_blueprint
-
-    app.register_blueprint(errors_blueprint)
-
-    from .routes_admin.jupyterlab_routes import lab as lab_blueprint
-
-    app.register_blueprint(lab_blueprint)
-
-    from .routes_admin.tutorial_routes import tutorial as tutorial_blueprint
-
-    app.register_blueprint(tutorial_blueprint)
+    register_blueprints(app)
 
     # Add context processor to detect PyInstaller mode
     @app.context_processor
@@ -574,356 +537,16 @@ def create_app(db_type="sqlite", desktop_mode=False):
 
         return dict(is_pyinstaller=getattr(sys, "frozen", False))
 
-    # Run database migrations at startup
-    with app.app_context():
-        try:
-            # Run migration to add blog_posts table if needed
-            if db_type == "sqlite":
-                from y_web.migrations.add_blog_posts_table import migrate_dashboard_db
+    # ------------------------------------------------------------------ #
+    # Database migrations + startup checks                                 #
+    # ------------------------------------------------------------------ #
+    from y_web.db_init.migrations import run_migrations
 
-                migrate_dashboard_db()
-            # For PostgreSQL, the table is created via the schema file
-        except Exception as e:
-            print(f"Failed to run blog_posts table migration: {e}")
-
-        try:
-            # Run migration to add telemetry columns if needed
-            if db_type == "sqlite":
-                from y_web.migrations.add_telemetry_columns import migrate_sqlite
-
-                dashboard_db_path = app.config.get("DASHBOARD_DB_PATH")
-                if dashboard_db_path:
-                    migrate_sqlite(dashboard_db_path)
-            elif db_type == "postgresql":
-                from y_web.migrations.add_telemetry_columns import migrate_postgresql
-
-                # Get PostgreSQL connection details from environment variables (same as create_postgresql_db)
-                pg_host = os.getenv("PG_HOST", "localhost")
-                pg_port = os.getenv("PG_PORT", "5432")
-                pg_database = os.getenv("PG_DBNAME", "dashboard")
-                pg_user = os.getenv("PG_USER", "postgres")
-                pg_password = os.getenv("PG_PASSWORD", "")
-                if pg_password:
-                    migrate_postgresql(
-                        pg_host, pg_port, pg_database, pg_user, pg_password
-                    )
-        except Exception as e:
-            print(f"Failed to run telemetry columns migration: {e}")
-
-        try:
-            # Run migration to add log metrics tables if needed
-            if db_type == "sqlite":
-                from y_web.migrations.add_log_metrics_tables import migrate_sqlite
-
-                dashboard_db_path = app.config.get("DASHBOARD_DB_PATH")
-                if dashboard_db_path:
-                    migrate_sqlite(dashboard_db_path)
-            elif db_type == "postgresql":
-                from y_web.migrations.add_log_metrics_tables import migrate_postgresql
-
-                # Get PostgreSQL connection details from environment variables (same as create_postgresql_db)
-                pg_host = os.getenv("PG_HOST", "localhost")
-                pg_port = os.getenv("PG_PORT", "5432")
-                pg_database = os.getenv("PG_DBNAME", "dashboard")
-                pg_user = os.getenv("PG_USER", "postgres")
-                pg_password = os.getenv("PG_PASSWORD", "")
-                if pg_password:
-                    migrate_postgresql(
-                        pg_host, pg_port, pg_database, pg_user, pg_password
-                    )
-        except Exception as e:
-            print(f"Failed to run log metrics tables migration: {e}")
-
-        try:
-            # Run migration to add log sync settings table if needed
-            if db_type == "sqlite":
-                from y_web.migrations.add_log_sync_settings import (
-                    migrate_sqlite as migrate_log_sync_sqlite,
-                )
-
-                dashboard_db_path = app.config.get("DASHBOARD_DB_PATH")
-                if dashboard_db_path:
-                    migrate_log_sync_sqlite(dashboard_db_path)
-            elif db_type == "postgresql":
-                from y_web.migrations.add_log_sync_settings import (
-                    migrate_postgresql as migrate_log_sync_postgresql,
-                )
-
-                # Get PostgreSQL connection details from environment variables (same as create_postgresql_db)
-                pg_host = os.getenv("PG_HOST", "localhost")
-                pg_port = os.getenv("PG_PORT", "5432")
-                pg_database = os.getenv("PG_DBNAME", "dashboard")
-                pg_user = os.getenv("PG_USER", "postgres")
-                pg_password = os.getenv("PG_PASSWORD", "")
-                if pg_password:
-                    migrate_log_sync_postgresql(
-                        pg_host, pg_port, pg_database, pg_user, pg_password
-                    )
-        except Exception as e:
-            print(f"Failed to run log sync settings migration: {e}")
-
-        try:
-            # Run migration to add exp_status column to exps table if needed
-            if db_type == "sqlite":
-                from y_web.migrations.add_exp_status_column import (
-                    migrate_sqlite as migrate_exp_status_sqlite,
-                )
-
-                dashboard_db_path = app.config.get("DASHBOARD_DB_PATH")
-                if dashboard_db_path:
-                    migrate_exp_status_sqlite(dashboard_db_path)
-            elif db_type == "postgresql":
-                from y_web.migrations.add_exp_status_column import (
-                    migrate_postgresql as migrate_exp_status_postgresql,
-                )
-
-                # Get PostgreSQL connection details from environment variables (same as create_postgresql_db)
-                pg_host = os.getenv("PG_HOST", "localhost")
-                pg_port = os.getenv("PG_PORT", "5432")
-                pg_database = os.getenv("PG_DBNAME", "dashboard")
-                pg_user = os.getenv("PG_USER", "postgres")
-                pg_password = os.getenv("PG_PASSWORD", "")
-                if pg_password:
-                    migrate_exp_status_postgresql(
-                        pg_host, pg_port, pg_database, pg_user, pg_password
-                    )
-        except Exception as e:
-            print(f"Failed to run exp_status column migration: {e}")
-
-        try:
-            # Run migration to add experiment schedule tables if needed
-            if db_type == "sqlite":
-                from y_web.migrations.add_experiment_schedule_tables import (
-                    migrate_sqlite as migrate_schedule_sqlite,
-                )
-
-                dashboard_db_path = app.config.get("DASHBOARD_DB_PATH")
-                if dashboard_db_path:
-                    migrate_schedule_sqlite(dashboard_db_path)
-            elif db_type == "postgresql":
-                from y_web.migrations.add_experiment_schedule_tables import (
-                    migrate_postgresql as migrate_schedule_postgresql,
-                )
-
-                # Get PostgreSQL connection details from environment variables (same as create_postgresql_db)
-                pg_host = os.getenv("PG_HOST", "localhost")
-                pg_port = os.getenv("PG_PORT", "5432")
-                pg_database = os.getenv("PG_DBNAME", "dashboard")
-                pg_user = os.getenv("PG_USER", "postgres")
-                pg_password = os.getenv("PG_PASSWORD", "")
-                if pg_password:
-                    migrate_schedule_postgresql(
-                        pg_host, pg_port, pg_database, pg_user, pg_password
-                    )
-        except Exception as e:
-            print(f"Failed to run experiment schedule tables migration: {e}")
-
-        # Run watchdog settings migration
-        try:
-            if db_type == "sqlite":
-                from y_web.migrations.add_watchdog_settings import (
-                    migrate_sqlite as migrate_watchdog_sqlite,
-                )
-
-                dashboard_db_path = app.config.get("DASHBOARD_DB_PATH")
-                if dashboard_db_path:
-                    migrate_watchdog_sqlite(dashboard_db_path)
-            elif db_type == "postgresql":
-                from y_web.migrations.add_watchdog_settings import (
-                    migrate_postgresql as migrate_watchdog_postgresql,
-                )
-
-                # Get PostgreSQL connection details from environment variables (same as create_postgresql_db)
-                pg_host = os.getenv("PG_HOST", "localhost")
-                pg_port = os.getenv("PG_PORT", "5432")
-                pg_database = os.getenv("PG_DBNAME", "dashboard")
-                pg_user = os.getenv("PG_USER", "postgres")
-                pg_password = os.getenv("PG_PASSWORD", "")
-                if pg_password:
-                    migrate_watchdog_postgresql(
-                        pg_host, pg_port, pg_database, pg_user, pg_password
-                    )
-        except Exception as e:
-            print(f"Failed to run watchdog settings migration: {e}")
-
-        # Run tutorial_shown column migration
-        try:
-            if db_type == "sqlite":
-                from y_web.migrations.add_tutorial_shown_column import (
-                    migrate_sqlite as migrate_tutorial_sqlite,
-                )
-
-                dashboard_db_path = app.config.get("DASHBOARD_DB_PATH")
-                if dashboard_db_path:
-                    migrate_tutorial_sqlite(dashboard_db_path)
-            elif db_type == "postgresql":
-                from y_web.migrations.add_tutorial_shown_column import (
-                    migrate_postgresql as migrate_tutorial_postgresql,
-                )
-
-                # Get PostgreSQL connection details from environment variables (same as create_postgresql_db)
-                pg_host = os.getenv("PG_HOST", "localhost")
-                pg_port = os.getenv("PG_PORT", "5432")
-                pg_database = os.getenv("PG_DBNAME", "dashboard")
-                pg_user = os.getenv("PG_USER", "postgres")
-                pg_password = os.getenv("PG_PASSWORD", "")
-                if pg_password:
-                    migrate_tutorial_postgresql(
-                        pg_host, pg_port, pg_database, pg_user, pg_password
-                    )
-        except Exception as e:
-            print(f"Failed to run tutorial_shown column migration: {e}")
-
-        # Run exp_details_tutorial_shown column migration
-        try:
-            if db_type == "sqlite":
-                from y_web.migrations.add_exp_details_tutorial_column import (
-                    migrate_sqlite as migrate_exp_details_tutorial_sqlite,
-                )
-
-                dashboard_db_path = app.config.get("DASHBOARD_DB_PATH")
-                if dashboard_db_path:
-                    migrate_exp_details_tutorial_sqlite(dashboard_db_path)
-            elif db_type == "postgresql":
-                from y_web.migrations.add_exp_details_tutorial_column import (
-                    migrate_postgresql as migrate_exp_details_tutorial_postgresql,
-                )
-
-                # Get PostgreSQL connection details from environment variables (same as create_postgresql_db)
-                pg_host = os.getenv("PG_HOST", "localhost")
-                pg_port = os.getenv("PG_PORT", "5432")
-                pg_database = os.getenv("PG_DBNAME", "dashboard")
-                pg_user = os.getenv("PG_USER", "postgres")
-                pg_password = os.getenv("PG_PASSWORD", "")
-                if pg_password:
-                    migrate_exp_details_tutorial_postgresql(
-                        pg_host, pg_port, pg_database, pg_user, pg_password
-                    )
-        except Exception as e:
-            print(f"Failed to run exp_details_tutorial_shown column migration: {e}")
-
-        # Run agent archetypes migration
-        try:
-            if db_type == "sqlite":
-                from y_web.migrations.add_agent_archetypes import (
-                    migrate_sqlite as migrate_agent_archetypes_sqlite,
-                )
-
-                dashboard_db_path = app.config.get("DASHBOARD_DB_PATH")
-                if dashboard_db_path:
-                    migrate_agent_archetypes_sqlite(dashboard_db_path)
-            elif db_type == "postgresql":
-                from y_web.migrations.add_agent_archetypes import (
-                    migrate_postgresql as migrate_agent_archetypes_postgresql,
-                )
-
-                # Get PostgreSQL connection details from environment variables (same as create_postgresql_db)
-                pg_host = os.getenv("PG_HOST", "localhost")
-                pg_port = os.getenv("PG_PORT", "5432")
-                pg_database = os.getenv("PG_DBNAME", "dashboard")
-                pg_user = os.getenv("PG_USER", "postgres")
-                pg_password = os.getenv("PG_PASSWORD", "")
-                if pg_password:
-                    migrate_agent_archetypes_postgresql(
-                        pg_host, pg_port, pg_database, pg_user, pg_password
-                    )
-        except Exception as e:
-            print(f"Failed to run agent archetypes migration: {e}")
-
-        # Run agent archetype field migration (for agents and user_mgmt tables)
-        try:
-            if db_type == "sqlite":
-                from y_web.migrations.add_agent_archetype_field import (
-                    migrate_experiment_databases,
-                    migrate_sqlite_dashboard,
-                    migrate_sqlite_server,
-                )
-
-                dashboard_db_path = app.config.get("DASHBOARD_DB_PATH")
-                if dashboard_db_path:
-                    migrate_sqlite_dashboard(dashboard_db_path)
-
-                # Migrate the dummy server database
-                dummy_db_path = app.config.get("DUMMY_DB_PATH")
-                if dummy_db_path:
-                    migrate_sqlite_server(dummy_db_path, quiet=True)
-
-                # Migrate all existing experiment databases
-                from y_web.utils.path_utils import get_writable_path
-
-                BASE_DIR = get_writable_path()
-                experiments_dir = os.path.join(BASE_DIR, "y_web", "experiments")
-                if os.path.exists(experiments_dir):
-                    print("Migrating existing experiment databases...")
-                    success, total = migrate_experiment_databases(
-                        experiments_dir, quiet=False
-                    )
-                    if total > 0:
-                        print(f"✓ Migrated {success}/{total} experiment databases")
-
-            elif db_type == "postgresql":
-                from y_web.migrations.add_agent_archetype_field import (
-                    migrate_postgresql_dashboard,
-                    migrate_postgresql_server,
-                )
-
-                # Get PostgreSQL connection details for dashboard
-                pg_host = os.getenv("PG_HOST", "localhost")
-                pg_port = os.getenv("PG_PORT", "5432")
-                pg_database = os.getenv("PG_DBNAME", "dashboard")
-                pg_user = os.getenv("PG_USER", "postgres")
-                pg_password = os.getenv("PG_PASSWORD", "")
-
-                if pg_password:
-                    dashboard_config = {
-                        "host": pg_host,
-                        "port": pg_port,
-                        "database": pg_database,
-                        "user": pg_user,
-                        "password": pg_password,
-                    }
-                    migrate_postgresql_dashboard(dashboard_config)
-
-                    # Note: Server database migration will happen per experiment
-                    # The schema files are already updated for new installations
-        except Exception as e:
-            print(f"Failed to run agent archetype field migration: {e}")
-
-        # Ensure all tables defined in models exist (including release_info)
-        # This creates any missing tables that are defined in models.py
-        try:
-            db.create_all()
-            print("✓ Database tables verified/created")
-        except Exception as e:
-            print(f"Failed to create database tables: {e}")
-
-        # Initialize database bindings for all active experiments
-        # NOTE: This must run AFTER all migrations (especially add_exp_status_column)
-        # to ensure the exp_status column exists in the exps table before querying
-        try:
-            initialize_active_experiment_databases(app)
-        except Exception as e:
-            print(f"Failed to initialize active experiment databases: {e}")
-
-    # Check for updates at startup
-    with app.app_context():
-        try:
-            from y_web.utils.check_release import update_release_info_in_db
-
-            update_release_info_in_db()
-        except Exception as e:
-            print(f"Failed to check for updates at startup: {e}")
-
-        try:
-            from y_web.utils.check_blog import update_blog_info_in_db
-
-            update_blog_info_in_db()
-        except Exception as e:
-            print(f"Failed to check for blog posts at startup: {e}")
+    run_migrations(app, db_type, db)
 
     # Log service start event
     try:
-        from y_web.telemetry import Telemetry
+        from y_web.src.telemetry import Telemetry
 
         telemetry = Telemetry()
         telemetry.log_event({"action": "start"})
@@ -932,11 +555,22 @@ def create_app(db_type="sqlite", desktop_mode=False):
 
     # Start the log sync scheduler for automatic periodic log reading
     try:
-        from y_web.utils.log_sync_scheduler import init_log_sync_scheduler
+        from y_web.src.hpc.log_sync_scheduler import init_log_sync_scheduler
 
         init_log_sync_scheduler(app)
         print("✓ Log sync scheduler started")
     except Exception as e:
         print(f"Failed to start log sync scheduler: {e}")
+
+    # Start the experiment schedule monitor for automatic group advancement
+    try:
+        from y_web.src.experiment.schedule_monitor import (
+            init_experiment_schedule_monitor,
+        )
+
+        init_experiment_schedule_monitor(app)
+        print("✓ Experiment schedule monitor started")
+    except Exception as e:
+        print(f"Failed to start experiment schedule monitor: {e}")
 
     return app

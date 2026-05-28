@@ -1,0 +1,1160 @@
+{% include "admin/head.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-clients.css') }}"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-settings.css') }}"/>
+
+<div class="view-wrapper is-dashboard">
+    <!--Dashboard container-->
+    <div id="creator-dashboard" class="dashboard-container">
+        <!--Toolbar-->
+        {% include "admin/dash_head.html" %}
+
+        <div class="dashboard-body">
+
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <a href="/admin/experiments">Experiments</a> > Simulation: {{ experiment.exp_name }}
+                        {% if has_infinite_client %}
+ <span class="ys-badge-success2" title="This experiment has at least one client set to run until manually stopped">∞ Infinite</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+ <div class="columns is-multiline ys-flex-stretch">
+                <!--Dashboard column-->
+ <div class="column is-12-mobile is-4-tablet ys-flex-col">
+
+                    <!--Dashboard box-->
+ <div class="dashboard-box ys-flex-auto-col">
+                        <h3 class="title is-5 is-thin">Experiment Overview</h3>
+
+ <div class="box-content ys-flex-1">
+                            <div class="box-lines">
+                                <b>Basic Information</b>
+ <p class="ys-label-hint">Experiment identification and settings.</p>
+                                <div class="box-line">
+                                    <span class="left">Name</span>
+                                    <span class="right">
+                                        {{ experiment.exp_name }}
+                                        {% if has_infinite_client %}
+ <span class="ys-badge-success" title="This experiment has at least one client set to run until manually stopped">∞</span>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">Platform Type</span>
+                                    <span class="right">{{ experiment.platform_type }}</span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">Owner</span>
+                                    <span class="right">{{ experiment.owner }}</span>
+                                </div>
+                                <div class="ys-topic-block">
+                                    <div class="ys-topic-title">Simulation Topics</div>
+                                    <div class="ys-topic-body">
+                                        {% if can_manage_experiment %}
+                                        <form method="POST" action="/admin/update_experiment_topics/{{ experiment.idexp }}">
+                                            <div class="tags-input w-100 ys-topic-tags-input">
+                                                <ul id="experiment-topics-tags">
+                                                    {% for topic in experiment_topics %}
+                                                    <li>{{ topic }} <button type="button" class="delete-button">X</button></li>
+                                                    {% endfor %}
+                                                </ul>
+                                                <input type="hidden" id="experiment-topics-hidden" name="topics" value="{{ experiment_topics|join(',') }}">
+                                                <input type="text" id="experiment-topics-input" placeholder="Enter topic name" class="w-100"/>
+                                            </div>
+                                            <div class="ys-topic-actions">
+                                                <button type="submit" class="button is-small is-light">Save Topics</button>
+                                            </div>
+                                        </form>
+                                        {% else %}
+                                        <div class="ys-topic-readonly">
+                                            {% for topic in experiment_topics %}
+                                            <span class="tag is-light">{{ topic }}</span>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                        {% if can_manage_experiment %}
+                                <hr>
+                                <b>Experiment Configuration</b>
+                            <p style="font-size: 0.82em; color: #777; margin-bottom: 0.45em;">Enable or disable runtime annotations and memory. Update this configuration before starting or stopping the server and before managing clients.</p>
+                            <form method="POST" action="/admin/update_experiment_config/{{ experiment.idexp }}">
+                                <div class="exp-config-card">
+                                    <div class="exp-config-grid">
+                                        {% if llm_agents_enabled_effective %}
+                                        <div class="exp-config-item">
+                                            <label class="switch-small">
+                                                <input type="checkbox" id="toxicity_annotation_toggle_exp" name="toxicity_annotation" {% if toxicity_annotation_enabled %}checked{% endif %} {% if not detoxify_ready %}disabled{% endif %}>
+                                                <span class="slider-small round"></span>
+                                            </label>
+                                            <span>Toxicity</span>
+                                        </div>
+                                        <div class="exp-config-item">
+                                            <label class="switch-small">
+                                                <input type="checkbox" name="emotion_annotation" {% if emotion_annotation_enabled %}checked{% endif %}>
+                                                <span class="slider-small round"></span>
+                                            </label>
+                                            <span>Emotion</span>
+                                        </div>
+                                        <div class="exp-config-item">
+                                            <label class="switch-small">
+                                                <input type="checkbox" name="sentiment_annotation" {% if sentiment_annotation_enabled %}checked{% endif %}>
+                                                <span class="slider-small round"></span>
+                                            </label>
+                                            <span>Sentiment</span>
+                                        </div>
+                                        {% endif %}
+                                        <div class="exp-config-item">
+                                            <label class="switch-small">
+                                                <input type="checkbox" name="opinion_dynamics_enabled" {% if opinion_dynamics_enabled %}checked{% endif %}>
+                                                <span class="slider-small round"></span>
+                                            </label>
+                                            <span>Opinion Dynamics</span>
+                                        </div>
+                                        <div class="exp-config-item">
+                                            <label class="switch-small">
+                                                <input type="checkbox" name="stress_reward_enabled" {% if stress_reward_enabled %}checked{% endif %}>
+                                                <span class="slider-small round"></span>
+                                            </label>
+                                            <span>Stress/Reward</span>
+                                        </div>
+                                        {% if memory_configuration_supported %}
+                                        <div class="exp-config-item">
+                                            <label class="switch-small">
+                                                <input type="checkbox" name="memory_enabled" {% if memory_module_enabled %}checked{% endif %}>
+                                                <span class="slider-small round"></span>
+                                            </label>
+                                            <span>Memory</span>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    {% if llm_agents_enabled_effective %}
+                                    {# Perspective API support has been discontinued. Keep Detoxify as the implicit toxicity backend. #}
+                                    <div class="ys-mt-8" style="font-size: 0.76rem; color: #6b7280;">
+                                        {% if detoxify_ready %}
+                                        When <b>Toxicity</b> is enabled, Detoxify is used automatically.
+                                        {% else %}
+                                        Install Detoxify first from <a href="{{ url_for('experiments.miscellanea') }}">Miscellanea</a> to enable toxicity annotation.
+                                        {% endif %}
+                                    </div>
+                                    {% else %}
+                                    <div style="margin-top: 8px; font-size: 0.76rem; color: #6b7280;">
+                                        LLM annotations (toxicity, sentiment, emotion) are unavailable for rule-based forum experiments. Opinion dynamics remains available; memory is available only for LLM forum experiments.
+                                    </div>
+                                    {% endif %}
+                                </div>
+ <button type="submit" class="button is-small is-info ys-mt-8">Update Configuration</button>
+                            </form>
+                            {% endif %}
+                                <hr>
+                                <div id="actions-section">
+ <details class="ys-mb-20">
+ <summary class="ys-accordion-header">
+ <span class="ys-inline-flex-gap">
+ <svg class="details-arrow ys-chevron-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                            Additional Configuration
+                                        </span>
+                                    </summary>
+ <div class="ys-content-panel">
+ <p class="ys-label-hint">Adjust forum prompts, feeds, limits, embeddings, and avatar behavior.</p>
+
+                                {% if len(clients)>0 %}
+                                <div class="box-line">
+                                    <span class="left">Edit LLM Prompts</span>
+                                    <span class="right">
+                                        <a class="link-tooltip" href="/admin/prompts_forum/{{ experiment.idexp }}" title="Edit">
+ <i class="mdi mdi-credit-card ys-icon-lg"></i></a>
+                                    </span>
+                                </div>
+                                {% endif %}
+                                <div class="box-line">
+                                    <span class="left">Select RSS Feeds</span>
+                                    <span class="right">
+                                        {% if can_manage_experiment %}
+                                        <a class="link-tooltip" href="/admin/rss_feeds/{{ experiment.idexp }}" title="Select RSS Feeds">
+ <i class="mdi mdi-rss-box ys-icon-lg"></i>
+                                        </a>
+                                        {% else %}
+ <i class="mdi mdi-lock ys-icon-muted" title="Only owner/admin/shared researchers can edit forum feeds"></i>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">Select Image Feeds</span>
+                                    <span class="right">
+                                        {% if can_manage_experiment %}
+                                        <a class="link-tooltip" href="/admin/image_feeds/{{ experiment.idexp }}" title="Select Image Feeds">
+ <i class="mdi mdi-image-multiple ys-icon-lg"></i>
+                                        </a>
+                                        {% else %}
+ <i class="mdi mdi-lock ys-icon-muted" title="Only owner/admin/shared researchers can edit image feeds"></i>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">Feed Retrieval Limits</span>
+                                    <span class="right">
+                                        {% if can_manage_experiment %}
+                                        <a class="link-tooltip" href="/admin/feed_limits/{{ experiment.idexp }}" title="Configure Feed Limits">
+ <i class="mdi mdi-tune ys-icon-lg"></i>
+                                        </a>
+                                        {% else %}
+ <i class="mdi mdi-lock ys-icon-muted" title="Only owner/admin/shared researchers can edit feed limits"></i>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                {% if memory_configuration_supported and memory_module_enabled %}
+                                <div class="box-line">
+                                    <span class="left">Memory Embeddings</span>
+                                    <span class="right">
+                                        {% if can_manage_experiment %}
+                                        <a class="link-tooltip" href="/admin/embedding_settings/{{ experiment.idexp }}" title="Configure Memory Embeddings">
+ <i class="mdi mdi-tune ys-icon-lg"></i>
+                                        </a>
+                                        {% else %}
+ <i class="mdi mdi-lock ys-icon-muted" title="Only owner/admin/shared researchers can edit memory embeddings"></i>
+                                        {% endif %}
+                                    </span>
+                                </div>
+ <div class="ys-text-xs-meta">
+                                    {% if forum_embedding_settings.service and forum_embedding_settings.model %}
+                                    {{ forum_embedding_settings.service|upper }} · {{ forum_embedding_settings.model }}
+                                    {% else %}
+                                    Not configured. Semantic memory falls back to lexical retrieval.
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                                {% if stress_reward_enabled %}
+                                <div class="box-line">
+                                    <span class="left">Stress / Reward Settings</span>
+                                    <span class="right">
+                                        {% if can_manage_experiment %}
+                                        <a class="link-tooltip" href="/admin/stress_reward_settings/{{ experiment.idexp }}" title="Configure Stress / Reward">
+                                            <i class="mdi mdi-tune ys-icon-lg"></i>
+                                        </a>
+                                        {% else %}
+                                        <i class="mdi mdi-lock ys-icon-muted" title="Only owner/admin/shared researchers can edit stress/reward settings"></i>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                {% endif %}
+                                <form method="post" action="/admin/update_forum_avatar_mode/{{ experiment.idexp }}" style="margin: 0 0 0.9em 0;">
+                                    <div class="box-line" style="align-items: center;">
+                                        <span class="left">Actual Profile Pics</span>
+                                        <span class="right">
+                                        {% if can_manage_experiment %}
+ <label class="switch-small">
+                                            <input
+                                                type="checkbox"
+                                                name="use_actual_profile_pics"
+                                                    value="1"
+                                                {% if forum_avatar_settings.mode == 'actual' %}checked{% endif %}
+                                                onchange="this.form.submit()"
+                                            >
+                                            <span class="slider-small round"></span>
+                                        </label>
+                                        <input type="hidden" name="avatar_mode" value="{% if forum_avatar_settings.mode == 'actual' %}placeholder{% else %}actual{% endif %}">
+                                        {% else %}
+ <i class="mdi mdi-lock ys-icon-muted" title="Only owner/admin/shared researchers can edit avatar mode"></i>
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                </form>
+                                <div style="font-size: 0.8em; color: #777; margin: -0.8em 0 0.9em 0;">
+                                    {% if forum_avatar_settings.mode == 'actual' %}
+                                    Actual profile pictures are enabled across the forum interface.
+                                    {% else %}
+                                    Reddit-like placeholders are enabled across the forum interface.
+                                    {% endif %}
+                                </div>
+
+                                {% if forum_feed_health %}
+                                <div style="margin: 0.2em 0 1em 0; padding: 0.75em 0.85em; border: 1px solid #e4e7eb; border-radius: 10px; background: #fafbfc;">
+                                    <div style="font-size: 0.85em; font-weight: 600; color: #2f3a4a; margin-bottom: 0.55em;">Feed Health</div>
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.35em 0.75em; font-size: 0.78em; color: #5b6472;">
+ <span>Configured RSS feeds</span><span class="ys-text-right-dark">{{ forum_feed_health.rss_feed_count }}</span>
+ <span>Configured image feeds</span><span class="ys-text-right-dark">{{ forum_feed_health.image_feed_count }}</span>
+ <span>Loaded articles</span><span class="ys-text-right-dark">{{ forum_feed_health.article_count }}</span>
+ <span>Loaded image posts</span><span class="ys-text-right-dark">{{ forum_feed_health.image_post_count }}</span>
+ <span>RSS-derived posts emitted</span><span class="ys-text-right-dark">{{ forum_feed_health.rss_post_count }}</span>
+ <span>Image-share posts emitted</span><span class="ys-text-right-dark">{{ forum_feed_health.image_share_post_count }}</span>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                    </div>
+                                </details>
+
+                                <hr>
+                                <b>Management</b>
+ <p class="ys-label-hint">Download or remove this experiment.</p>
+                            <div class="box-line">
+                                <span class="left">Download Experiment</span>
+                                <span class="right"><a class="link-tooltip" href="/admin/download_experiment/{{ experiment.idexp }}" title="Download"><i
+ class="mdi mdi-download ys-icon-lg"></i></a></span>
+                            </div>
+                            <div class="box-line">
+                                <span class="left">Delete Experiment</span>
+                                <span class="right"> {% if can_manage_experiment and experiment.running != 1 %}<a class="link-tooltip" href="/admin/delete_simulation/{{ experiment.idexp }}" 
+                                                        title="Delete"><i
+ class="mdi mdi-delete ys-icon-lg ys-icon-muted"></i></a>{% elif can_manage_experiment %}<i class="mdi mdi-delete-off ys-icon-muted" title="Stop the experiment before deleting it"></i>{% else %}<i class="mdi mdi-lock" title="Only owner/admin/shared researchers can delete"></i>{% endif %}</span>
+                            </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+
+                <!--Dashboard box-->
+
+                <!--Dashboard column-->
+ <div class="column is-12-mobile is-4-tablet ys-flex-col">
+                    <!--Box-->
+
+                    <div id="server-controls-section" class="dashboard-box{% if configuration_update_required %} ys-config-locked-box{% endif %}">
+                        <h3 class="title is-5 is-thin">Server & Analysis Controls</h3>
+                        {% if configuration_update_required %}
+ <div class="ys-config-locked-note">
+                            Update <b>Experiment Configuration</b> first. Until then, server control actions and client workflows stay locked.
+                        </div>
+                        {% endif %}
+                        
+                        {% if experiment.is_remote == 1 %}
+                        <!-- Remote experiment info -->
+ <div id="remote-server-info" class="ys-info-banner">
+ <div class="ys-flex-row-mb8">
+ <i class="mdi mdi-cloud-outline ys-icon-primary"></i>
+ <div class="ys-flex-1">
+ <div class="ys-text-primary-bold">Remote Experiment</div>
+ <div class="ys-text-sm-primary-mt">YServer running on external machine</div>
+                                </div>
+ <button {% if configuration_update_required %}disabled{% else %}onclick="toggleRemoteServerEdit()"{% endif %} class="button is-small ys-badge-sm" title="Edit server settings">
+                                    <i class="mdi mdi-pencil"></i> Edit
+                                </button>
+                            </div>
+                            
+                            <!-- Display mode -->
+ <div id="remote-display-mode" class="ys-white-box">
+ <div class="ys-flex-between-mb6">
+ <span class="ys-label-555">Host:</span>
+ <span id="display-host" class="ys-mono-primary">{{ experiment.server }}</span>
+                                </div>
+ <div class="ys-flex-between">
+ <span class="ys-label-555">Port:</span>
+ <span id="display-port" class="ys-mono-primary">{{ experiment.port }}</span>
+                                </div>
+ <div class="ys-mt-center">
+ <button {% if configuration_update_required %}disabled{% else %}onclick="testRemoteServer()"{% endif %} class="button is-info is-small is-fullwidth ys-flex-center-gap">
+                                        <i class="mdi mdi-network-outline"></i>
+                                        <span>Test Connection</span>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Edit mode (initially hidden) -->
+ <div id="remote-edit-mode" class="ys-hidden-white-box">
+ <div class="ys-mb-10">
+ <label class="ys-label-555">Host:</label>
+                                    <input type="text" id="edit-host" value="{{ experiment.server }}" class="input is-small" placeholder="e.g., 192.168.1.100">
+                                </div>
+ <div class="ys-mb-10">
+ <label class="ys-label-555">Port:</label>
+                                    <input type="number" id="edit-port" value="{{ experiment.port }}" class="input is-small" min="1" max="65535" placeholder="8000">
+                                </div>
+ <div class="ys-flex-gap-8-only">
+ <button {% if configuration_update_required %}disabled{% else %}onclick="saveRemoteServer()"{% endif %} class="button is-success is-small ys-flex-1">
+                                        <i class="mdi mdi-check"></i> Save
+                                    </button>
+ <button {% if configuration_update_required %}disabled{% else %}onclick="cancelRemoteServerEdit()"{% endif %} class="button is-light is-small ys-flex-1">
+                                        <i class="mdi mdi-close"></i> Cancel
+                                    </button>
+                                </div>
+                            </div>
+                            {% if configuration_update_required %}
+ <div class="ys-mt-center">
+                                <a id="load-experiment-btn" class="link-tooltip" href="/admin/select_experiment/{{ experiment.idexp }}" onclick="showLoading('Loading experiment interface...');" title="Load Experiment">
+ <i class="mdi mdi-select-all ys-icon-lg"></i>
+                                </a>
+                                {% if notebooks %}
+                                    {% if jupyter_instance.status!='stopped' %}
+                                    <a class="link-tooltip" href="/admin/lab/{{ experiment.idexp }}" {% if not is_pyinstaller %}target="_blank"{% endif %} title="Open JupyterLab">
+ <i class="mdi mdi-open-in-new ys-icon-brand"></i>
+                                    </a>
+                                    {% else %}
+                                    <a id="start-jupyter-btn" class="link-tooltip" href="#" onclick="startJupyter('{{ experiment.idexp }}'); return false;" title="Start JupyterLab">
+ <i class="mdi mdi-flask-outline ys-icon-brand"></i>
+                                    </a>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Status message area -->
+ <div id="remote-status-message" class="ys-hidden-mt10"></div>
+                        </div>
+                        
+
+                        {% else %}
+                        <!-- Local experiment controls -->
+ <p class="ys-text-small">
+                            Control panel for simulation server, web interface, and data analysis environment.
+                        </p>
+                        
+ <div class="box-content ys-section-box">
+                            <div class="box-lines">
+ <div class="box-line ys-pb-mb-5">
+ <span class="left ys-flex-ai-center">
+                                        Server Controls
+                                    </span>
+ <span class="right ys-flex-gap-8">
+ <div class="ys-flex-gap-3">
+                                            {% if experiment.running == 0 %}
+                                            {% if configuration_update_required %}
+ <span class="link-tooltip" title="Update configuration first">
+ <i class="mdi mdi-play-box-outline ys-icon-muted"></i>
+                                            </span>
+                                            {% else %}
+                                            <a class="link-tooltip" href="/admin/start_experiment/{{ experiment.idexp }}" onclick="showLoading('Starting experiment server...');" title="Run Experiment">
+ <i class="mdi mdi-play-box-outline ys-icon-lg"></i>
+                                            </a>
+                                            {% endif %}
+                                            {% endif %}
+                                        {% if experiment.running == 1 and can_manage_experiment %}
+                                            {% if configuration_update_required %}
+ <span class="link-tooltip" title="Update configuration first">
+ <i class="mdi mdi-stop ys-icon-muted"></i>
+                                            </span>
+                                            {% else %}
+                                            <a class="link-tooltip" href="/admin/stop_experiment/{{ experiment.idexp }}" onclick="showLoading('Stopping experiment server...');" title="Stop Experiment">
+ <i class="mdi mdi-stop active ys-icon-lg"></i>
+                                            </a>
+                                            {% endif %}
+                                        {% endif %}
+                                            <a id="load-experiment-btn" class="link-tooltip" href="/admin/select_experiment/{{ experiment.idexp }}" onclick="showLoading('Loading experiment interface...');" title="Load Experiment">
+ <i class="mdi mdi-select-all {% if experiment.status == 1 %}active{%endif%} ys-icon-lg"></i>
+                                            </a>
+                                            {% if experiment.status == 1 %}
+                                            {% if configuration_update_required %}
+ <span class="link-tooltip" title="Update configuration first">
+ <i class="mdi mdi-login ys-icon-muted"></i>
+                                            </span>
+                                            {% else %}
+                                            <a class="link-tooltip" href="/admin/join_experiment/{{ experiment.idexp }}" onclick="showLoading('Joining experiment...');" title="Join This Experiment">
+ <i class="mdi mdi-login ys-icon-lg"></i>
+                                            </a>
+                                            {% endif %}
+                                            {% endif %}
+                                        </div>
+                                        {% if notebooks %}
+ <div id="jupyter-controls" class="ys-flex-divider">
+                                            {% if jupyter_instance.status!='stopped' %}
+                                            {% if configuration_update_required %}
+ <span class="link-tooltip" title="Update configuration first">
+ <i class="mdi mdi-flask-empty-outline ys-icon-muted"></i>
+                                            </span>
+                                            {% else %}
+                                            <a class="link-tooltip" href="#" onclick="stopJupyter('{{ jupyter_instance.exp_id }}'); return false;" title="Stop JupyterLab">
+ <i class="mdi mdi-flask-empty-outline ys-icon-danger"></i>
+                                            </a>
+                                            {% endif %}
+                                            <a class="link-tooltip" href="/admin/lab/{{ experiment.idexp }}" {% if not is_pyinstaller %}target="_blank"{% endif %} title="Open JupyterLab">
+ <i class="mdi mdi-open-in-new ys-icon-brand"></i>
+                                            </a>
+                                            {% else %}
+                                            <a id="start-jupyter-btn" class="link-tooltip" href="#" onclick="startJupyter('{{ experiment.idexp }}'); return false;" title="Start JupyterLab">
+ <i class="mdi mdi-flask-outline ys-icon-brand"></i>
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Server Information Box (for local experiments) -->
+ <div class="ys-code-sm">
+ <div class="ys-label-muted">Server Address</div>
+ <div class="ys-flex-between-sm">
+ <span class="ys-text-dark-gray">Host:</span>
+ <span class="ys-mono-bold">{{ experiment.server }}</span>
+                            </div>
+ <div class="ys-flex-between-sm-mt">
+ <span class="ys-text-dark-gray">Port:</span>
+ <span class="ys-mono-bold">{{ experiment.port }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+
+
+                    {% if notebooks %}
+
+                    {% endif %}
+
+                    <div id="simulation-clients-section" class="dashboard-box ys-flex-auto-col{% if configuration_update_required %} ys-config-locked-box{% endif %}">
+                        <h3 class="title is-5 is-thin">Simulation Clients</h3>
+ <p class="ys-text-small">
+                            Manage clients running agent populations for this experiment.
+                        </p>
+                        {% if configuration_update_required %}
+ <div class="ys-config-locked-note">
+                            Client creation and execution stay disabled until <b>Update Configuration</b> is executed.
+                        </div>
+                        {% endif %}
+ <div class="box-content ys-flex-1">
+                            {% if len(clients) == 0 %}
+                            <div class="box-line">
+                                <span class="left">No clients registered</span>
+                            </div>
+                            {% else %}
+                            {% for client in clients %}
+ <div class="box-content ys-section-box-sm">
+ <div class="box-line ys-cell-pad" style="align-items: center; gap: 14px; flex-wrap: nowrap;">
+ <div class="left" style="display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1 1 auto; overflow: hidden;">
+ <i class="mdi mdi-account-cog ys-icon-md-muted"></i>
+ <div class="ys-text-flex-sm" style="display: flex; align-items: center; gap: 6px; min-width: 0; flex: 1 1 auto; overflow: hidden;">
+                                        <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; min-width: 0; flex: 1 1 auto;" title="{{ client.name }}">{{ client.name }}</span>
+                                        {% if opinion_dynamics_enabled and not configuration_update_required %}
+                                        <a href="/admin/opinion_configuration_forum/{{ experiment.idexp }}?client_id={{ client.id }}" class="link-tooltip" title="Configure Opinion Dynamics">
+                                            <i class="mdi mdi-tune" style="font-size: 16px; color: #8b5cf6;"></i>
+                                        </a>
+                                        {% endif %}
+                                        {% if client_executions.get(client.id, False) and not configuration_update_required %}
+                                        <a href="/admin/client_details_forum/{{client.id}}" class="link-tooltip" title="View Client Details">
+ <i class="mdi mdi-open-in-new ys-icon-md-brand"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+ <div class="right ys-value-col-55 ys-detail-progress-wrap" style="flex: 1 1 38%; min-width: 160px;">
+ <div class="sleek-progress-container ys-progress-track ys-detail-progress-track">
+                                            <div id="progress-bar-{{client.id}}" class="sleek-progress-bar ys-progress-bar" data-progress-url="/admin/progress/{{ client.id }}">
+ <span class="ys-badge-text">0%</span>
+                                            </div>
+                                        </div>
+ <div class="ys-flex-gap-3 ys-detail-progress-actions">
+                                            {% if client.status == 0 and (experiment.running == 1 or experiment.is_remote == 1) %}
+                                            {% if configuration_update_required %}
+ <span class="link-tooltip" title="Update configuration first">
+ <i class="mdi mdi-play-box-outline ys-icon-muted"></i>
+                                            </span>
+                                            {% else %}
+                                            <a class="link-tooltip" href="/admin/run_client/{{ client.id }}/{{ experiment.idexp }}" title="Run Client" onclick="showLoading('Starting client...');">
+ <i class="mdi mdi-play-box-outline ys-icon-xl"></i>
+                                            </a>
+                                            {% endif %}
+                                            {% endif %}
+                                            {% if client.status == 1 %}
+                                            {% if configuration_update_required %}
+ <span class="link-tooltip" title="Update configuration first">
+ <i class="mdi mdi-pause ys-icon-muted"></i>
+                                            </span>
+                                            {% else %}
+                                            <a class="link-tooltip" href="/admin/pause_client/{{ client.id }}/{{ experiment.idexp }}" title="Pause Client" onclick="showLoading('Pausing client...');">
+ <i class="mdi mdi-pause active ys-icon-xl"></i>
+                                            </a>
+                                            {% endif %}
+                                            {% endif %}
+                                            {% if client.status == 0 %}
+                                            {% if configuration_update_required %}
+ <span class="link-tooltip" title="Update configuration first">
+ <i class="mdi mdi-delete ys-icon-muted"></i>
+                                            </span>
+                                            {% else %}
+                                            <a class="link-tooltip" href="/admin/delete_client/{{ client.id }}" 
+                                               onclick="showLoading('Deleting client...');" 
+                                               title="Delete Client">
+ <i class="mdi mdi-delete ys-icon-xl"></i>
+                                            </a>
+                                            {% endif %}
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+
+                            </div>
+                            {% endfor %}
+                            {% endif %}
+
+ <div class="ys-text-center-mt10">
+ <hr class="ys-my-5">
+                                {% if configuration_update_required %}
+ <span class="link-tooltip" title="Update configuration first">
+ <i class="mdi mdi-plus-circle-outline ys-icon-muted"></i>
+                                </span>
+                                {% else %}
+                                <a class="link-tooltip" href="/admin/clients_forum/{{ experiment.idexp }}" title="Add Client">
+ <i class="mdi mdi-plus-circle-outline ys-icon-lg"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if has_agent_plugins_installed %}
+                    <div id="adhoc-agent-clients-section" class="dashboard-box ys-flex-auto-col{% if configuration_update_required %} ys-config-locked-box{% endif %}" style="margin-top: 1.5rem;">
+                        <h3 class="title is-5 is-thin">AdHoc Agents' Clients</h3>
+                        <p class="ys-text-small">
+                            Manage agent-plugin runtimes that can extend this experiment with dedicated ad hoc agent execution flows.
+                        </p>
+                        {% if configuration_update_required %}
+                        <div class="ys-config-locked-note">
+                            Ad hoc agent client workflows stay disabled until <b>Update Configuration</b> is executed.
+                        </div>
+                        {% endif %}
+                        <div class="box-content ys-flex-1">
+                            {% if len(adhoc_clients) == 0 %}
+                            <div class="box-line">
+                                <span class="left">No ad hoc agents' clients registered yet</span>
+                            </div>
+                            {% else %}
+                            {% for agent_type_group in adhoc_clients|groupby('agent_type_display') %}
+                            <div class="box-line" style="padding-top: 10px; padding-bottom: 4px;">
+                                <span class="left">
+                                    <span class="tag is-info is-light">{{ agent_type_group.grouper }}</span>
+                                </span>
+                            </div>
+                            {% for adhoc_client in agent_type_group.list %}
+                            <div class="box-content ys-section-box-sm">
+                                <div class="box-line ys-cell-pad" style="align-items: center; gap: 14px; flex-wrap: nowrap;">
+                                    <div class="left" style="display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1 1 auto; overflow: hidden;">
+                                        <i class="mdi mdi-puzzle-outline ys-icon-md-muted"></i>
+                                        <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; overflow: hidden; flex: 1 1 auto;">
+                                            <div style="display: flex; align-items: center; gap: 6px; min-width: 0; width: 100%;">
+                                                <span style="font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; min-width: 0; flex: 1 1 auto;" title="{{ adhoc_client.name }}">{{ adhoc_client.name }}</span>
+                                                <span style="display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto;">
+                                                    <a href="/admin/edit_adhoc_client/{{ experiment.idexp }}/{{ adhoc_client.client_key }}" class="link-tooltip" title="Edit Client Settings">
+                                                        <i class="mdi mdi-tune ys-icon-md-brand"></i>
+                                                    </a>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="right ys-value-col-55 ys-detail-progress-wrap" style="flex: 1 1 38%; min-width: 160px;">
+                                        <div class="sleek-progress-container ys-progress-track ys-detail-progress-track">
+                                            <div
+                                                id="adhoc-progress-bar-{{ adhoc_client.client_key }}"
+                                                class="sleek-progress-bar ys-progress-bar adhoc-progress-bar"
+                                                data-progress-url="/admin/progress_adhoc/{{ experiment.idexp }}/{{ adhoc_client.client_key }}"
+                                            >
+                                                <span class="ys-badge-text">0%</span>
+                                            </div>
+                                        </div>
+                                        <div class="ys-flex-gap-3 ys-detail-progress-actions">
+                                            {% if adhoc_client.status == 0 and (experiment.running == 1 or experiment.is_remote == 1) %}
+                                            {% if configuration_update_required %}
+                                            <span class="link-tooltip" title="Update configuration first">
+                                                <i class="mdi mdi-play-box-outline ys-icon-muted"></i>
+                                            </span>
+                                            {% else %}
+                                            <a class="link-tooltip" href="/admin/run_adhoc_client/{{ experiment.idexp }}/{{ adhoc_client.client_key }}" title="Run Client" onclick="showLoading('Starting ad hoc client...');">
+                                                <i class="mdi mdi-play-box-outline ys-icon-xl"></i>
+                                            </a>
+                                            {% endif %}
+                                            {% endif %}
+                                            {% if adhoc_client.status == 1 %}
+                                            {% if configuration_update_required %}
+                                            <span class="link-tooltip" title="Update configuration first">
+                                                <i class="mdi mdi-pause ys-icon-muted"></i>
+                                            </span>
+                                            {% else %}
+                                            <a class="link-tooltip" href="/admin/pause_adhoc_client/{{ experiment.idexp }}/{{ adhoc_client.client_key }}" title="Pause Client" onclick="showLoading('Pausing ad hoc client...');">
+                                                <i class="mdi mdi-pause active ys-icon-xl"></i>
+                                            </a>
+                                            {% endif %}
+                                            {% endif %}
+                                            {% if adhoc_client.status == 0 %}
+                                            {% if configuration_update_required %}
+                                            <span class="link-tooltip" title="Update configuration first">
+                                                <i class="mdi mdi-delete ys-icon-muted"></i>
+                                            </span>
+                                            {% else %}
+                                            <a class="link-tooltip" href="/admin/delete_adhoc_client/{{ experiment.idexp }}/{{ adhoc_client.client_key }}" onclick="showLoading('Deleting ad hoc client...');" title="Delete Client">
+                                                <i class="mdi mdi-delete ys-icon-xl"></i>
+                                            </a>
+                                            {% endif %}
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% endfor %}
+                            {% endif %}
+                            <div class="ys-text-center-mt10">
+                                <hr class="ys-my-5">
+                                {% if configuration_update_required %}
+                                <span class="link-tooltip" title="Update configuration first">
+                                    <i class="mdi mdi-plus-circle-outline ys-icon-muted"></i>
+                                </span>
+                                {% else %}
+                                <a class="link-tooltip" href="/admin/clients_adhoc/{{ experiment.idexp }}" title="Create AdHoc Agent Client">
+                                    <i class="mdi mdi-plus-circle-outline ys-icon-lg"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+ <div class="column is-12-mobile is-4-tablet ys-flex-col">
+                    <!--Box-->
+ <div class="dashboard-box is-compact ys-flex-col-1">
+                        <h3 class="title is-5 is-thin">Quick Reference Guide</h3>
+ <div class="help-block ys-flex-1">
+
+                            <p>
+                                <b>Experiment Overview</b><br>
+                                Use the left column to inspect metadata, update topics, toggle annotations, and open forum-specific configuration such as prompts, feeds, limits, embeddings, and stress/reward settings.<br><br>
+ <i class="mdi mdi-tune ys-icon-md"></i> Update runtime annotations and memory in <b>Experiment Configuration</b><br>
+ <i class="mdi mdi-shape-outline ys-icon-md"></i> Maintain the active simulation topics from the overview card<br>
+ <i class="mdi mdi-rss-box ys-icon-md"></i> Configure RSS/image feeds and retrieval limits from <b>Additional Configuration</b><br>
+ <i class="mdi mdi-credit-card ys-icon-md"></i> Open prompt and embedding settings from the same panel
+                            </p>
+                            <hr>
+                            <p>
+                                <b>Server, Clients, and Analytics</b><br>
+                                The center column controls execution and the lower sections expose logs and diagnostics for both the server and active clients.<br><br>
+ <i class="mdi mdi-play-box-outline ys-icon-md"></i> Start or stop the server from <b>Server & Analysis Controls</b><br>
+ <i class="mdi mdi-plus-box ys-icon-md"></i> Launch clients and open the forum interface from the same control panel<br>
+ <i class="mdi mdi-chart-line ys-icon-md"></i> Use <b>Request Logs Analysis</b> and <b>Client Logs Analysis</b> to inspect runtime behavior
+                                {% if notebooks %}
+ <br><i class="mdi mdi-flask-outline ys-icon-md"></i> Open JupyterLab for ad hoc inspection and notebook-based analysis
+                                {% endif %}
+                            </p>
+
+                        </div>
+                    </div>
+
+                    {% set has_analytics_pages = experiment.is_remote == 0 %}
+                    {% if has_analytics_pages %}
+                    <div class="dashboard-box is-compact" style="flex: 0 0 auto; display: flex; flex-direction: column; margin-top: 1.5rem;">
+                        <h3 class="title is-5 is-thin">Analytics Pages</h3>
+                        <div class="box-content ys-flex-1">
+                            <p class="ys-analytics-pages-intro">
+                                Open the active experiment dashboards from a single compact panel.
+                            </p>
+                            <div class="ys-analytics-pages-grid">
+                                <a href="/admin/network_analysis/{{ experiment.idexp }}" class="ys-analytics-page-card is-link">
+                                    <span class="ys-analytics-page-icon"><i class="mdi mdi-graph-outline"></i></span>
+                                    <span class="ys-analytics-page-body">
+                                        <span class="ys-analytics-page-title">Network Analysis</span>
+                                        <span class="ys-analytics-page-meta">Structure, density, components</span>
+                                    </span>
+                                    <span class="ys-analytics-page-action">Open</span>
+                                </a>
+                                <a href="/admin/topic_evolution/{{ experiment.idexp }}" class="ys-analytics-page-card is-primary">
+                                    <span class="ys-analytics-page-icon"><i class="mdi mdi-shape-outline"></i></span>
+                                    <span class="ys-analytics-page-body">
+                                        <span class="ys-analytics-page-title">Topic Evolution</span>
+                                        <span class="ys-analytics-page-meta">Diffusion, emergence, reach</span>
+                                    </span>
+                                    <span class="ys-analytics-page-action">Open</span>
+                                </a>
+                                <a href="/admin/hashtag_evolution/{{ experiment.idexp }}" class="ys-analytics-page-card is-primary">
+                                    <span class="ys-analytics-page-icon"><i class="mdi mdi-pound"></i></span>
+                                    <span class="ys-analytics-page-body">
+                                        <span class="ys-analytics-page-title">Hashtag Evolution</span>
+                                        <span class="ys-analytics-page-meta">Diffusion, emergence, reach</span>
+                                    </span>
+                                    <span class="ys-analytics-page-action">Open</span>
+                                </a>
+                                <a href="/admin/recsys_evolution/{{ experiment.idexp }}" class="ys-analytics-page-card is-link">
+                                    <span class="ys-analytics-page-icon"><i class="mdi mdi-view-dashboard-outline"></i></span>
+                                    <span class="ys-analytics-page-body">
+                                        <span class="ys-analytics-page-title">Recsys Evolution</span>
+                                        <span class="ys-analytics-page-meta">Recommendation exposure and reach</span>
+                                    </span>
+                                    <span class="ys-analytics-page-action">Open</span>
+                                </a>
+                                {% if opinion_dynamics_enabled %}
+                                <a href="/admin/opinion_evolution/{{ experiment.idexp }}" class="ys-analytics-page-card is-info">
+                                    <span class="ys-analytics-page-icon"><i class="mdi mdi-chart-line"></i></span>
+                                    <span class="ys-analytics-page-body">
+                                        <span class="ys-analytics-page-title">Opinion Evolution</span>
+                                        <span class="ys-analytics-page-meta">Opinion groups and agent trends</span>
+                                    </span>
+                                    <span class="ys-analytics-page-action">Open</span>
+                                </a>
+                                {% endif %}
+                                {% if stress_reward_enabled %}
+                                <a href="/admin/stress_reward_evolution/{{ experiment.idexp }}" class="ys-analytics-page-card is-danger">
+                                    <span class="ys-analytics-page-icon"><i class="mdi mdi-heart-pulse"></i></span>
+                                    <span class="ys-analytics-page-body">
+                                        <span class="ys-analytics-page-title">Stress / Reward Evolution</span>
+                                        <span class="ys-analytics-page-meta">Aggregate state and attacker effects</span>
+                                    </span>
+                                    <span class="ys-analytics-page-action">Open</span>
+                                </a>
+                                {% endif %}
+                                {% if toxicity_annotation_enabled %}
+                                <a href="/admin/toxicity_evolution/{{ experiment.idexp }}" class="ys-analytics-page-card is-danger">
+                                    <span class="ys-analytics-page-icon"><i class="mdi mdi-alert-octagon-outline"></i></span>
+                                    <span class="ys-analytics-page-body">
+                                        <span class="ys-analytics-page-title">Toxicity Evolution</span>
+                                        <span class="ys-analytics-page-meta">Scores, trends, high-toxicity content</span>
+                                    </span>
+                                    <span class="ys-analytics-page-action">Open</span>
+                                </a>
+                                {% endif %}
+                                {% if sentiment_annotation_enabled %}
+                                <a href="/admin/sentiment_evolution/{{ experiment.idexp }}" class="ys-analytics-page-card is-success">
+                                    <span class="ys-analytics-page-icon"><i class="mdi mdi-chart-bell-curve"></i></span>
+                                    <span class="ys-analytics-page-body">
+                                        <span class="ys-analytics-page-title">Sentiment Evolution</span>
+                                        <span class="ys-analytics-page-meta">Polarity mix and compound trends</span>
+                                    </span>
+                                    <span class="ys-analytics-page-action">Open</span>
+                                </a>
+                                {% endif %}
+                                {% if emotion_annotation_enabled %}
+                                <a href="/admin/emotion_statistics/{{ experiment.idexp }}" class="ys-analytics-page-card is-warning">
+                                    <span class="ys-analytics-page-icon"><i class="mdi mdi-emoticon-outline"></i></span>
+                                    <span class="ys-analytics-page-body">
+                                        <span class="ys-analytics-page-title">Emotion Statistics</span>
+                                        <span class="ys-analytics-page-meta">Emotion tags and dominant patterns</span>
+                                    </span>
+                                    <span class="ys-analytics-page-action">Open</span>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+            <!-- Server Trends Visualization Section -->
+            <div class="columns">
+                <div class="column is-12">
+                    <div id="server-trends-section" class="dashboard-box">
+                        <div class="plot-section-header">
+                            <h3 class="title is-5 is-thin">Server Trends Analysis</h3>
+                            <div class="plot-section-controls">
+ <label class="ys-flex-click-sm">
+ <input type="checkbox" id="autoRefreshTrends" checked class="ys-pointer">
+                                    <span>Auto-refresh</span>
+                                </label>
+                                <input type="number" id="refreshIntervalTrends" min="5" max="300" value="30" 
+ class="ys-num-input"
+                                       title="Refresh interval in seconds (5-300)">
+ <span class="ys-text-sm">sec</span>
+ <button id="refreshTrendsBtn" class="button is-small is-info ys-flex-gap-half">
+                                    <i class="mdi mdi-refresh"></i> Refresh Data
+                                </button>
+                            </div>
+                        </div>
+ <p class="ys-text-small">
+                            Trend analysis of server compute time and simulation time progression.
+                        </p>
+
+ <div id="trends-error-message" class="ys-warning-panel">
+ <i class="mdi mdi-alert ys-text-warning-dark"></i>
+ <span id="trends-error-text" class="ys-text-warning-dark"></span>
+                        </div>
+
+                        <!-- Aggregation selector -->
+ <div class="ys-info-box">
+ <span class="ys-label-mr">Aggregation:</span>
+ <div class="d-inline-block">
+ <label class="ys-mr-click-em">
+                                    <input type="radio" name="aggregation" value="daily" checked> Daily
+                                </label>
+ <label class="ys-pointer">
+                                    <input type="radio" name="aggregation" value="hourly"> Hourly
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Trends Charts -->
+                        <div class="columns">
+                            <div class="column is-6">
+                                <!-- Server Compute Time (stacked) -->
+ <div class="box-content ys-mb-1em">
+ <h4 class="subtitle is-6 ys-mb-half-em">Server Compute Time</h4>
+ <div class="ys-chart-sm">
+                                        <canvas id="serverComputeTimeTrendChart"></canvas>
+                                    </div>
+                                </div>
+                                <!-- Client Compute Time (stacked) -->
+                                <div class="box-content">
+ <h4 class="subtitle is-6 ys-mb-half-em">Client Compute Time</h4>
+ <div class="ys-chart-sm">
+                                        <canvas id="clientComputeTimeTrendChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column is-6">
+                                <div class="box-content">
+ <h4 class="subtitle is-6 ys-mb-1em">Simulation Time Trend</h4>
+ <div class="ys-chart-container">
+                                        <canvas id="simulationTimeTrendChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Forecast Section -->
+ <div id="forecast-section" class="ys-info-highlight">
+ <h4 class="subtitle is-6 ys-mb-link">
+                                <i class="mdi mdi-clock-outline"></i> Remaining Time Forecast
+                            </h4>
+ <div id="forecast-content" class="ys-text-sm-body">
+ <p class="ys-my-quarter"><strong>Total simulation time so far:</strong> <span id="forecast-elapsed">-</span></p>
+ <p class="ys-my-quarter"><strong>Average time per slot:</strong> <span id="forecast-avg-slot">-</span></p>
+ <p class="ys-my-quarter"><strong>Remaining slots:</strong> <span id="forecast-remaining-slots">-</span></p>
+ <p class="ys-item-primary"><strong>Estimated remaining time:</strong> <span id="forecast-remaining-time">-</span></p>
+                            </div>
+                        </div>
+
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Server Logs Visualization Section -->
+            <div class="columns">
+                <div class="column is-12">
+                    <div id="server-logs-section" class="dashboard-box">
+                        <div class="plot-section-header">
+                            <h3 class="title is-5 is-thin">Server Logs Analysis</h3>
+                            <div class="plot-section-controls">
+ <label class="ys-flex-click-sm">
+ <input type="checkbox" id="autoRefreshLogs" checked class="ys-pointer">
+                                    <span>Auto-refresh</span>
+                                </label>
+                                <input type="number" id="refreshIntervalLogs" min="5" max="300" value="30" 
+ class="ys-num-input"
+                                       title="Refresh interval in seconds (5-300)">
+ <span class="ys-text-sm">sec</span>
+ <button id="refreshLogsBtn" class="button is-small is-info ys-flex-gap-half">
+                                    <i class="mdi mdi-refresh"></i> Refresh Data
+                                </button>
+                            </div>
+                        </div>
+ <p class="ys-text-small">
+                            Real-time analysis of server API calls from _server.log file.
+                        </p>
+
+ <div id="logs-error-message" class="ys-warning-panel">
+ <i class="mdi mdi-alert ys-text-warning-dark"></i>
+ <span id="logs-error-text" class="ys-text-warning-dark"></span>
+                        </div>
+
+                        <div class="columns">
+                            <div class="column is-6">
+                                <div class="box-content">
+ <h4 class="subtitle is-6 ys-mb-1em">Call Volume by Path</h4>
+ <div class="ys-chart-container">
+                                        <canvas id="callVolumeChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column is-6">
+                                <div class="box-content">
+ <h4 class="subtitle is-6 ys-mb-1em">Mean Duration by Path (seconds)</h4>
+ <div class="ys-chart-container">
+                                        <canvas id="meanDurationChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Path Filter Controls -->
+ <div class="box-content ys-info-box-top">
+ <div class="ys-flex-between-mb">
+ <h4 class="subtitle is-6 m-0">Filter Paths</h4>
+                                <div>
+ <button id="selectAllPaths" class="button is-small is-light ys-mr-half-em">Select All</button>
+                                    <button id="deselectAllPaths" class="button is-small is-light">Deselect All</button>
+                                </div>
+                            </div>
+ <div id="pathFilters" class="ys-flex-wrap-gap">
+                                <!-- Checkboxes will be dynamically generated here -->
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+
+
+            <!-- Client Logs Visualization Section -->
+            {% if len(clients) > 0 %}
+            <div class="columns">
+                <div class="column is-12">
+                    <div id="client-logs-section" class="dashboard-box">
+                        <div class="plot-section-header">
+                            <h3 class="title is-5 is-thin">Client Logs Analysis</h3>
+                            <div class="plot-section-controls">
+ <label class="ys-flex-click-sm">
+ <input type="checkbox" id="autoRefreshClientLogs" checked class="ys-pointer">
+                                    <span>Auto-refresh</span>
+                                </label>
+                                <input type="number" id="refreshIntervalClientLogs" min="5" max="300" value="30" 
+ class="ys-num-input"
+                                       title="Refresh interval in seconds (5-300)">
+ <span class="ys-text-sm">sec</span>
+ <button id="refreshClientLogsBtn" class="button is-small is-info ys-flex-gap-half">
+                                    <i class="mdi mdi-refresh"></i> Refresh Data
+                                </button>
+                            </div>
+                        </div>
+ <p class="ys-text-small">
+                            Analysis of client(s) execution.
+                        </p>
+
+                        <!-- Client selector -->
+ <div class="box-content ys-info-box">
+ <label for="clientSelector" class="ys-label-block">Select Client:</label>
+                            <div class="select is-fullwidth">
+ <select id="clientSelector" class="w-100">
+                                    <option value="">-- Select a client --</option>
+                                    {% for client in clients %}
+                                    <option value="{{ client.id }}">{{ client.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+ <div id="client-logs-error-message" class="ys-warning-panel">
+ <i class="mdi mdi-alert ys-text-warning-dark"></i>
+ <span id="client-logs-error-text" class="ys-text-warning-dark"></span>
+                        </div>
+
+ <div id="client-logs-content" class="d-none">
+                            <div class="columns">
+                                <div class="column is-6">
+                                    <div class="box-content">
+ <h4 class="subtitle is-6 ys-mb-1em">Call Volume by Method</h4>
+ <div class="ys-chart-container">
+                                            <canvas id="clientCallVolumeChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="column is-6">
+                                    <div class="box-content">
+ <h4 class="subtitle is-6 ys-mb-1em">Mean Execution Time by Method (seconds)</h4>
+ <div class="ys-chart-container">
+                                            <canvas id="clientMeanExecutionTimeChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Method Filter Controls -->
+ <div class="box-content ys-info-box-top">
+ <div class="ys-flex-between-mb">
+ <h4 class="subtitle is-6 m-0">Filter Methods</h4>
+                                    <div>
+ <button id="selectAllMethods" class="button is-small is-light ys-mr-half-em">Select All</button>
+                                        <button id="deselectAllMethods" class="button is-small is-light">Deselect All</button>
+                                    </div>
+                                </div>
+ <div id="methodFilters" class="ys-flex-wrap-gap">
+                                    <!-- Checkboxes will be dynamically generated here -->
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+
+            {% endif %}
+
+            <!-- Additional Row for Registered Users and Error Reporting -->
+            <div class="columns is-multiline">
+                {% if len(users) > 0 %}
+                <div class="column is-12-mobile is-6-tablet is-6-desktop">
+ <div class="dashboard-box ys-h-100">
+                        <h3 class="title is-5 is-thin">Registered Users</h3>
+ <p class="ys-text-small">
+                            Users with access to participate in this experiment.
+                        </p>
+
+                        <div class="box-content">
+                            <div class="box-lines">
+                                <div class="box-line">
+                                    <span class="left">
+                                        {% for reg_user, user_exp in users %}
+                                            <a href="/admin/user_details/{{ reg_user.id }}"
+ class="ys-tag-info">{{ reg_user.username }}</a>
+                                        {% endfor %}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if telemetry_enabled %}
+                <div class="column is-12-mobile is-6-tablet is-6-desktop">
+ <div class="dashboard-box ys-h-100">
+                        <h3 class="title is-5 is-thin">Something went wrong?</h3>
+ <p class="ys-text-small">
+                            Help us improve YSocial: submit the experiment log!
+                        </p>
+
+                        <div class="box-content">
+                            <div class="box-lines">
+ <p class="ys-label-hint2">
+                                    This will compress and send your experiment's log files and configuration to help us diagnose issues and improve the platform.
+                                </p>
+ <div class="field ys-mb-1em">
+ <label class="label ys-text-090">Describe the problem (optional):</label>
+                                    <div class="control">
+                                        <textarea 
+                                            id="problem-description-{{ experiment.idexp }}"
+                                            class="textarea ys-text-sm" 
+                                            placeholder="What issue did you encounter? What were you trying to do when the error occurred?"
+                                            rows="3"></textarea>
+                                    </div>
+ <p class="help ys-text-080">Please describe what you were doing and what went wrong. This helps us understand and fix the issue faster.</p>
+                                </div>
+                                <button 
+                                    id="submit-logs-btn-{{ experiment.idexp }}"
+                                    class="button is-info is-small w-100" 
+                                    onclick="submitExperimentLogs({{ experiment.idexp }})">
+                                    <span class="icon"><i class="mdi mdi-upload"></i></span>
+                                    <span>Submit Logs</span>
+                                </button>
+ <div id="submit-logs-message-{{ experiment.idexp }}" class="ys-hidden-note"></div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% include "admin/tutorials/exp_details_tutorial.html" %}
+
+<script>
+var YS_DATA_EXP_FORUM = {
+    expId: {{ experiment.idexp | tojson }},
+    clientId: null
+};
+</script>
+<script src="{{ url_for('static', filename='assets/js/admin-experiments.js') }}"></script>
+{% include "admin/footer.html" %}    

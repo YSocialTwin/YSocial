@@ -1,0 +1,129 @@
+{% include "admin/head.html" %}
+
+<div class="view-wrapper is-dashboard">
+    <div id="creator-dashboard" class="dashboard-container">
+        {% include "admin/dash_head.html" %}
+
+        <div class="dashboard-body">
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <a href="/admin/agents_dashboard">Agent Resources Dashboard</a> > Forum Image Resources
+                    </div>
+                </div>
+            </div>
+
+            <div class="columns">
+                <div class="column is-7">
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Reusable Forum Image Resources</h3>
+                        <p class="ys-text-small">
+                            Validate subreddit-based image feeds once, store them centrally, and assign them to any forum experiment as needed.
+                        </p>
+                        <p class="ys-label-hint">
+                            Use a subreddit name, <code>r/name</code>, or a Reddit subreddit URL such as <code>https://www.reddit.com/r/memes/</code>. The parse step previews sample images before saving.
+                        </p>
+
+                        <form action="/admin/create_forum_image_resource" method="POST" class="box-content">
+                            <div class="box-line">
+                                <span class="left">Subreddit</span>
+                                <span class="right ys-w-70">
+                                    <div style="display: flex; gap: 10px;">
+                                        <input type="text" id="subreddit_name" name="subreddit" class="input ys-flex-1" placeholder="memes or https://www.reddit.com/r/memes/" required>
+                                        <button type="button" class="button is-solid primary-button" onclick="parseSubreddit()">Parse</button>
+                                    </div>
+                                </span>
+                            </div>
+                            <div id="parse_result" style="margin-bottom: 1em; display: none;">
+                                <div class="box-line">
+                                    <span class="left">Status</span>
+                                    <span class="right ys-w-70" id="parse_status"></span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">Sample Images</span>
+                                    <span class="right ys-w-70">
+                                        <div id="sample_images" style="display: flex; gap: 5px; flex-wrap: wrap;"></div>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="box-line">
+                                <span class="left">Interests</span>
+                                <span class="right ys-w-70">
+                                    <select name="interests" class="input" multiple size="8" style="min-height: 160px;">
+                                        {% for interest in available_interests %}
+                                        <option value="{{ interest }}">{{ interest }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <p class="ys-label-hint" style="margin-top: 6px;">Hold Ctrl/Cmd to select multiple interests.</p>
+                                </span>
+                            </div>
+                            <div class="button-wrap ys-mt-1em">
+                                <button type="submit" class="button is-solid primary-button">Validate And Save Image Resource</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="column is-5">
+                    <div class="dashboard-box is-compact">
+                        <h3 class="title is-5 is-thin">Usage</h3>
+                        <div class="help-block">
+                            <p>
+                                <b>Central catalog</b><br>
+                                These subreddit definitions are stored in the dashboard DB and can be assigned from <code>admin/image_feeds</code>.
+                            </p>
+                            <hr>
+                            <p>
+                                <b>Validation</b><br>
+                                Saving here verifies the subreddit feed can be parsed before it becomes available to experiments.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <h4 class="title is-6 is-thin">Saved Image Resources ({{ resources|length }})</h4>
+                        <div class="box-content">
+                            {% if resources %}
+                            <table class="table is-fullwidth is-striped ys-text-090">
+                                <thead>
+                                    <tr>
+                                        <th>Subreddit</th>
+                                        <th>Interests</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for resource in resources %}
+                                    <tr>
+                                        <td>r/{{ resource.subreddit }}</td>
+                                        <td>
+                                            {% for interest in resource.interests %}
+                                            <span class="tag is-info is-light" style="margin: 2px;">{{ interest }}</span>
+                                            {% endfor %}
+                                        </td>
+                                        <td>
+                                            <form action="/admin/delete_forum_image_resource/{{ resource.id }}" method="POST" onsubmit="return confirm('Delete this reusable image resource?');">
+                                                <button type="submit" class="button is-small is-danger is-light">Delete</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            {% else %}
+                            <p class="ys-text-light">No reusable image resources stored yet.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='assets/js/admin-feeds.js') }}"></script>
+{% include "admin/footer.html" %}

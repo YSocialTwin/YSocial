@@ -12,6 +12,8 @@ from unittest.mock import patch
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 
 class TestPlatformSpecificPaths:
     """Test platform-specific path detection for Python executables"""

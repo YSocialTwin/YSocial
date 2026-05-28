@@ -1,0 +1,692 @@
+{%  include "forum/header.html" %}
+
+<div class="view-wrapper">
+    <!-- Container -->
+    <div id="main-feed" class="container">
+        <!-- Content placeholders at page load -->
+        <!-- this holds the animated content placeholders that show up before content -->
+        <div id="shadow-dom" class="view-wrap">
+            <div class="columns">
+                <div class="column is-8 is-offset-2">
+                    <!-- Placeload element -->
+                    <div class="placeload compose-placeload">
+                        <div class="header">
+                            <div class="content-shape is-lg loads"></div>
+                            <div class="content-shape is-lg loads"></div>
+                            <div class="content-shape is-lg loads"></div>
+                        </div>
+                        <div class="body">
+                            <div class="img loads"></div>
+                            <div class="inner-wrap">
+                                <div class="content-shape loads"></div>
+                                <div class="content-shape loads"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Placeload element -->
+                    <div class="placeload post-placeload">
+                        <div class="header">
+                            <div class="img loads"></div>
+                            <div class="header-content">
+                                <div class="content-shape loads"></div>
+                                <div class="content-shape loads"></div>
+                            </div>
+                        </div>
+                        <div class="image-placeholder loads"></div>
+                        <div class="placeholder-footer">
+                            <div class="footer-block">
+                                <div class="img loads"></div>
+                                <div class="inner-wrap">
+                                    <div class="content-shape loads"></div>
+                                    <div class="content-shape loads"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Placeload element -->
+                    <div class="placeload post-placeload">
+                        <div class="header">
+                            <div class="img loads"></div>
+                            <div class="header-content">
+                                <div class="content-shape loads"></div>
+                                <div class="content-shape loads"></div>
+                            </div>
+                        </div>
+                        <div class="image-placeholder loads"></div>
+                        <div class="placeholder-footer">
+                            <div class="footer-block">
+                                <div class="img loads"></div>
+                                <div class="inner-wrap">
+                                    <div class="content-shape loads"></div>
+                                    <div class="content-shape loads"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Placeload element -->
+                    <div class="placeload post-placeload">
+                        <div class="header">
+                            <div class="img loads"></div>
+                            <div class="header-content">
+                                <div class="content-shape loads"></div>
+                                <div class="content-shape loads"></div>
+                            </div>
+                        </div>
+                        <div class="image-placeholder loads"></div>
+                        <div class="placeholder-footer">
+                            <div class="footer-block">
+                                <div class="img loads"></div>
+                                <div class="inner-wrap">
+                                    <div class="content-shape loads"></div>
+                                    <div class="content-shape loads"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Placeload element -->
+                    <div class="placeload post-placeload">
+                        <div class="header">
+                            <div class="img loads"></div>
+                            <div class="header-content">
+                                <div class="content-shape loads"></div>
+                                <div class="content-shape loads"></div>
+                            </div>
+                        </div>
+                        <div class="image-placeholder loads"></div>
+                        <div class="placeholder-footer">
+                            <div class="footer-block">
+                                <div class="img loads"></div>
+                                <div class="inner-wrap">
+                                    <div class="content-shape loads"></div>
+                                    <div class="content-shape loads"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feed page main wrapper -->
+        <div id="activity-feed" class="view-wrap true-dom is-hidden">
+            <div class="columns forum-feed-layout">
+                <div class="column is-3 is-hidden-touch">
+                    {% include "forum/components/sidebar.html" %}
+                </div>
+
+                <div class="column is-9-tablet is-6-desktop">
+                    <!-- Publishing Area -->
+                    <!-- /partials/pages/feed/compose-card.html -->
+                    <!-- Create Post Button -->
+                    <div class="forum-feed-toolbar ys-mb-20">
+                        <div class="forum-feed-toolbar-left">
+                            <div class="select forum-feed-sort-select">
+                                <select id="feed-type-select">
+                                    <option value="new" {% if feed_type == 'new' %}selected{% endif %}>New</option>
+                                    <option value="hot" {% if feed_type == 'hot' %}selected{% endif %}>Hot</option>
+                                    <option value="top" {% if feed_type == 'top' %}selected{% endif %}>Top</option>
+                                    <option value="most_commented" {% if feed_type == 'most_commented' %}selected{% endif %}>Most Commented</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="forum-feed-toolbar-main">
+                            <form
+                                id="feed-search-form"
+                                action="{{ url_for('main.search_reddit', exp_id=exp_id) }}"
+                                method="get"
+                                class="forum-feed-search"
+                            >
+                                <input
+                                    id="feed-search-input"
+                                    name="q"
+                                    class="input"
+                                    type="search"
+                                    placeholder="Search posts, users, links..."
+                                    value="{{ search_query|default('', true) }}"
+                                />
+                                <input
+                                    id="feed-search-feed-type"
+                                    type="hidden"
+                                    name="feed_type"
+                                    value="{{ feed_type }}"
+                                />
+                                <button id="feed-search-button" class="button forum-feed-search-button" type="submit">
+                                    Search
+                                </button>
+                            </form>
+                        </div>
+                        {% if view_mode == 'search' %}
+                        <div class="forum-feed-toolbar-right">
+                            <a class="button forum-feed-secondary-button" href="/{{ exp_id }}/rfeed/all/feed/rf/1?feed_type={{ feed_type }}">
+                                Back to Feed
+                            </a>
+                        </div>
+                        {% else %}
+                        <div class="forum-feed-toolbar-right">
+                            <button id="create-post-trigger" class="forum-feed-create-trigger" type="button">
+                                <div class="create-post-prompt">
+                                    <i data-feather="plus" class="ys-mr-8"></i>
+                                    <span>Create Post</span>
+                                </div>
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% if view_mode == 'search' %}
+ <div id="search-summary" class="notification is-light ys-mb-16">
+ <span id="search-summary-results" {% if not search_query %}class="d-none"{% endif %}>
+                            Search results for <strong>"<span id="search-summary-query">{{ search_query }}</span>"</strong><span id="search-summary-total">{% if search_total is not none %} ({{ search_total }}){% endif %}</span>
+                        </span>
+ <span id="search-summary-empty" {% if search_query %}class="d-none"{% endif %}>
+                            Enter a query to search posts, users, and shared links.
+                        </span>
+                    </div>
+                    {% endif %}
+
+                    {% if view_mode == 'subforum' and current_subforum_label %}
+                    <div class="forum-subforum-banner ys-mb-16">
+                        <div>
+                            <span class="forum-subforum-kicker">Subforum</span>
+                            <h2>{{ current_subforum_label }}</h2>
+                            <p>Posts associated with this community, sorted with the same feed modes as /rfeed.</p>
+                        </div>
+                        <a class="button is-light" href="/{{ exp_id }}/rfeed/all/feed/rf/1?feed_type={{ feed_type }}">
+                            Back to Feed
+                        </a>
+                    </div>
+                    {% endif %}
+
+                    {% if view_mode != 'search' %}
+                    <div id="new-posts-indicator" class="notification is-link is-light" style="display: none; margin-bottom: 16px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                            <span>New posts available</span>
+                            <button id="new-posts-refresh-button" class="button is-small is-link" type="button">
+                                Refresh
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Expandable Compose Card (initially hidden) -->
+                    <div id="compose-card" class="card is-new-content" style="display: none; position: relative;">
+                        <!-- Top tabs -->
+                        <div class="tabs-wrapper">
+                            <div class="tabs is-boxed is-fullwidth">
+                                <ul>
+                                    <li class="is-active" data-post-type-tab="text">
+                                        <a href="#" role="button">
+                                            <span class="icon is-small"><i data-feather="edit-3"></i></span>
+                                            <span>Text</span>
+                                        </a>
+                                    </li>
+                                    <li data-post-type-tab="link">
+                                        <a href="#" role="button">
+                                            <span class="icon is-small"><i data-feather="link-2"></i></span>
+                                            <span>Link</span>
+                                        </a>
+                                    </li>
+                                    <li data-post-type-tab="image">
+                                        <a href="#" role="button">
+                                            <span class="icon is-small"><i data-feather="image"></i></span>
+                                            <span>Media</span>
+                                        </a>
+                                    </li>
+                                    <!-- Close X button always visible -->
+                                    <li class="close-wrap">
+                    <span class="close-publish" style="cursor:pointer;">
+                    <i data-feather="x"></i>
+                  </span>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <!-- Tab content -->
+                            <div class="tab-content">
+                                <!-- Compose form -->
+                                <div class="compose">
+                                    <div class="compose-form">
+                                        <img
+                                                src="https://via.placeholder.com/300x300"
+                                                data-demo-src="{{ profile_pic or 'https://via.placeholder.com/300x300' }}"
+                                                alt=""
+                                        />
+                                        <!-- Reddit-style form fields -->
+                                        <div class="reddit-form-fields">
+                                            <!-- Title Field -->
+                                            <div class="reddit-field">
+                                                <input
+                                                    id="post-title"
+                                                    type="text"
+                                                    class="reddit-input title-input"
+                                                    placeholder="Title*"
+                                                    maxlength="300"
+                                                    required
+                                                />
+                                            </div>
+                                            
+                                            <!-- Body Text Field -->
+                                            <div class="reddit-field">
+                                                <textarea
+                                                    id="publish"
+                                                    class="reddit-textarea body-textarea"
+                                                    placeholder="Text (optional)"
+                                                    rows="4"
+                                                ></textarea>
+                                            </div>
+
+                                            <div class="reddit-field forum-compose-community-field">
+                                                <label class="forum-compose-community-label" for="post-community">
+                                                    Community
+                                                </label>
+                                                <div class="select forum-compose-community-select">
+                                                    <select id="post-community" name="community_slug">
+                                                        <option value="" {% if not current_subforum_slug %}selected{% endif %} disabled>
+                                                            Select community
+                                                        </option>
+                                                        {% for community in available_communities %}
+                                                        <option value="{{ community.slug }}" {% if current_subforum_slug == community.slug %}selected{% endif %}>
+                                                            {{ community.label }}
+                                                        </option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <!-- Link URL Field (Link posts) -->
+                                            <div id="link-url-wrapper" class="reddit-field is-hidden">
+                                                <input
+                                                    id="link-url"
+                                                    type="url"
+                                                    class="reddit-input url-input"
+                                                    placeholder="Link URL*"
+                                                />
+                                            </div>
+
+                                            <!-- Media attachment controls (Media posts) -->
+                                            <div id="image-source-toggle" class="reddit-field is-hidden" style="display: flex; gap: 10px; flex-wrap: wrap;">
+ <label class="ys-inline-flex-bold">
+                                                    <input type="radio" name="image-source" value="url" />
+                                                    <span>Media URL</span>
+                                                </label>
+ <label class="ys-inline-flex-bold">
+                                                    <input type="radio" name="image-source" value="upload" checked />
+                                                    <span>Upload</span>
+                                                </label>
+                                            </div>
+
+                                            <div id="image-url-wrapper" class="reddit-field is-hidden">
+                                                <input
+                                                    id="image-url"
+                                                    type="url"
+                                                    class="reddit-input image-input"
+                                                    placeholder="Media URL*"
+                                                />
+                                            </div>
+
+                                            <div id="image-upload-wrapper" class="reddit-field is-hidden">
+                                                <input
+                                                    id="image-file"
+                                                    type="file"
+                                                    accept="image/*,video/mp4"
+                                                    class="reddit-input image-input"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="feed-upload" class="feed-upload"></div>
+
+                                    <div id="options-summary" class="options-summary"></div>
+
+                                    <div id="tag-suboption" class="is-autocomplete is-suboption is-hidden">
+                                        <!-- Tag friends suboption -->
+                                        <div id="tag-list" class="tag-list"></div>
+                                        <div class="control">
+                                            <input
+                                                    id="users-autocpl"
+                                                    type="text"
+                                                    class="input"
+                                                    placeholder="Who are you with?"
+                                            />
+                                            <div class="icon">
+                                                <i data-feather="search"></i>
+                                            </div>
+                                            <div class="close-icon is-main">
+                                                <i data-feather="x"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- /Tag friends suboption -->
+
+                                    <!-- Activities suboption -->
+                                    <div
+                                            id="activities-suboption"
+                                            class="is-autocomplete is-suboption is-hidden"
+                                    >
+                                        <div id="activities-autocpl-wrapper" class="control has-margin">
+                    <textarea
+                            id="activities"
+                            rows="1"
+                            class="textarea"
+                            placeholder="Enter the link to the website you want to share..."
+                    ></textarea>
+                                            <!-- <div class="icon">
+                                               <i data-feather="search"></i>
+                                             </div> -->
+                                            <div class="close-icon is-main">
+                                                <i data-feather="x"></i>
+                                            </div>
+                                        </div>
+
+                                        <!-- Mood suboption -->
+                                        <div
+                                                id="mood-autocpl-wrapper"
+                                                class="is-autocomplete is-activity is-hidden"
+                                        >
+                                            <div class="control has-margin">
+                                                <input
+                                                        id="mood-autocpl"
+                                                        type="text"
+                                                        class="input is-subactivity"
+                                                        placeholder="How do you feel?"
+                                                />
+                                                <div class="input-block">Feels</div>
+                                                <div class="close-icon is-subactivity">
+                                                    <i data-feather="x"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Drinking suboption child -->
+                                        <div
+                                                id="drinking-autocpl-wrapper"
+                                                class="is-autocomplete is-activity is-hidden"
+                                        >
+                                            <div class="control has-margin">
+                                                <input
+                                                        id="drinking-autocpl"
+                                                        type="text"
+                                                        class="input is-subactivity"
+                                                        placeholder="What are you drinking?"
+                                                />
+                                                <div class="input-block">Drinks</div>
+                                                <div class="close-icon is-subactivity">
+                                                    <i data-feather="x"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Eating suboption child -->
+                                        <div
+                                                id="eating-autocpl-wrapper"
+                                                class="is-autocomplete is-activity is-hidden"
+                                        >
+                                            <div class="control has-margin">
+                                                <input
+                                                        id="eating-autocpl"
+                                                        type="text"
+                                                        class="input is-subactivity"
+                                                        placeholder="What are you eating?"
+                                                />
+                                                <div class="input-block">Eats</div>
+                                                <div class="close-icon is-subactivity">
+                                                    <i data-feather="x"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Reading suboption child -->
+                                        <div
+                                                id="reading-autocpl-wrapper"
+                                                class="is-autocomplete is-activity is-hidden"
+                                        >
+                                            <div class="control has-margin">
+                                                <input
+                                                        id="reading-autocpl"
+                                                        type="text"
+                                                        class="input is-subactivity"
+                                                        placeholder="What are you reading?"
+                                                />
+                                                <div class="input-block">Reads</div>
+                                                <div class="close-icon is-subactivity">
+                                                    <i data-feather="x"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Watching suboption child -->
+                                        <div
+                                                id="watching-autocpl-wrapper"
+                                                class="is-autocomplete is-activity is-hidden"
+                                        >
+                                            <div class="control has-margin">
+                                                <input
+                                                        id="watching-autocpl"
+                                                        type="text"
+                                                        class="input is-subactivity"
+                                                        placeholder="What are you watching?"
+                                                />
+                                                <div class="input-block">Watches</div>
+                                                <div class="close-icon is-subactivity">
+                                                    <i data-feather="x"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Travel suboption child -->
+                                        <div
+                                                id="travel-autocpl-wrapper"
+                                                class="is-autocomplete is-activity is-hidden"
+                                        >
+                                            <div class="control has-margin">
+                                                <input
+                                                        id="travel-autocpl"
+                                                        type="text"
+                                                        class="input is-subactivity"
+                                                        placeholder="Where are you going?"
+                                                />
+                                                <div class="input-block">Travels</div>
+                                                <div class="close-icon is-subactivity">
+                                                    <i data-feather="x"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- /Activities suboption -->
+
+                                    <!-- Location suboption -->
+                                    <!--
+                                    <div
+                                      id="location-suboption"
+                                      class="is-autocomplete is-suboption is-hidden"
+                                    >
+
+                                      <div
+                                        id="location-autocpl-wrapper"
+                                        class="control is-location-wrapper has-margin"
+                                      >
+                                        <input
+                                          id="location-autocpl"
+                                          type="text"
+                                          class="input"
+                                          placeholder="Where are you now?"
+                                        />
+                                        <div class="icon">
+                                          <i data-feather="map-pin"></i>
+                                        </div>
+                                        <div class="close-icon is-main">
+                                          <i data-feather="x"></i>
+                                        </div>
+                                      </div>
+
+                                    </div>
+                                    -->
+
+                                    <!-- Link suboption -->
+                                    <div id="link-suboption" class="is-autocomplete is-suboption is-hidden">
+                                        <div
+                                                id="link-autocpl-wrapper"
+                                                class="control is-location-wrapper has-margin">
+                    <textarea
+                            id="link_post"
+                            rows="1"
+                            class="textarea"
+                            placeholder="Enter the link to the immage you are commenting on..."
+                    ></textarea>
+                                            <!--<div class="icon">
+                                              <i data-feather="link-2"></i>
+                                            </div> -->
+                                            <div class="close-icon is-main">
+                                                <i data-feather="x"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- /Compose form -->
+
+                                <!-- Add Post button immediately below fields -->
+                                <div class="reddit-field" style="text-align: right; margin-top: 1rem;">
+                                    <button id="publish-button" type="button" class="button is-solid accent-button" disabled>Post</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div
+                            id="feed-container"
+                            class="reddit-feed-container"
+                            data-current-page="{{ page }}"
+                            data-per-page="{{ per_page }}"
+                            data-feed-type="{{ feed_type }}"
+                            data-user-id="{{ '' if not feed_user_id else feed_user_id }}"
+                            data-has-more="{{ 'true' if has_more else 'false' }}"
+                    >
+                        {% include "forum/components/posts.html" %}
+                    </div>
+ <div id="loading-indicator" class="feed-loading-indicator has-text-centered d-none">
+                        <p>Loading more posts...</p>
+                    </div>
+ <div id="end-of-feed" class="feed-end-indicator has-text-centered d-none">
+                        <p>You've reached the end!</p>
+                    </div>
+                </div>
+                <!-- /Middle column -->
+
+                {% if forum_memory_enabled %}
+                <div class="column is-3 is-hidden-touch">
+                    {% set forum_chat_page_kind = view_mode|default('feed', true) %}
+                    {% include "forum/components/chat_panel.html" %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        <!-- /Feed page main wrapper -->
+    </div>
+
+</div>
+
+
+<script>
+window.redditContext = Object.freeze({
+    loggedUserId: {{ logged_id }},
+    isAdmin: {{ 'true' if is_admin else 'false' }},
+    loggedUsername: {{ logged_username|tojson }},
+    profilePic: {{ profile_pic|tojson }},
+    profilePicFeed: {{ profile_pic_feed|tojson }}
+});
+window.redditFeedConfig = Object.freeze({
+    currentPage: {{ page }},
+    perPage: {{ per_page }},
+    feedType: {{ feed_type|tojson }},
+    searchQuery: {{ search_query|default('', true)|tojson }},
+    userId: {{ feed_user_id|tojson }},
+    communitySlug: {{ current_subforum_slug|tojson }},
+    defaultCommunitySlug: {{ current_subforum_slug|tojson }},
+    hasMore: {{ has_more|tojson }},
+    viewMode: {{ view_mode|default('feed', true)|tojson }},
+    expId: {{ exp_id }}
+});
+</script>
+
+<!-- Concatenated js plugins and jQuery -->
+<script src="{{ url_for('static', filename='assets/js/reddit/app.js') }}"></script>
+<script src="https://js.stripe.com/v3/"></script>
+
+<!-- Core js -->
+<script src="{{ url_for('static', filename='assets/js/global.js') }}"></script>
+
+<!-- Navigation options js -->
+<script src="{{ url_for('static', filename='assets/js/navbar-v1.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-v2.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-mobile.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-options.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/sidebar-v1.js') }}"></script>
+
+<!-- Core instance js -->
+<script src="{{ url_for('static', filename='assets/js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/chat.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/touch.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/tour.js') }}"></script>
+
+<!-- Components js -->
+<script src="{{ url_for('static', filename='assets/js/explorer.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/widgets.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/modal-uploader.js') }}"></script>
+<!--<script src="{{ url_for('static', filename='assets/js/popovers-users.js') }}"></script> -->
+<script src="{{ url_for('static', filename='assets/js/popovers-pages.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/lightbox.js') }}"></script>
+
+<!-- Landing page js -->
+
+<!-- Signup page js -->
+
+<!-- Feed pages js -->
+<script src="{{ url_for('static', filename='assets/js/feed.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/webcam.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/reddit/compose.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/autocompletes.js') }}"></script>
+<script>
+window.redditContext = Object.freeze({
+    loggedUserId: {{ logged_id }},
+    isAdmin: {{ 'true' if is_admin else 'false' }}
+});
+window.redditFeedConfig = Object.freeze({
+    expId: {{ exp_id }},
+    loggedUserId: {{ logged_id }},
+    viewMode: '{{ 'subforum' if active_community else 'feed' }}'
+});
+</script>
+<script src="{{ url_for('static', filename='assets/js/reddit/api_client.js') }}"></script>
+{% if forum_memory_enabled %}
+<script src="{{ url_for('static', filename='assets/js/reddit/forum-chat.js') }}"></script>
+{% endif %}
+
+<!-- profile js -->
+
+<!-- stories js -->
+
+<!-- friends js -->
+
+<!-- questions js -->
+
+<!-- video js -->
+
+<!-- events js -->
+
+<!-- news js -->
+
+<!-- shop js -->
+
+<!-- inbox js -->
+<script src="{{ url_for('static', filename='assets/js/reddit/async_updates.js') }}"></script>
+<!-- settings js -->
+
+<!-- map page js -->
+
+<!-- elements page js -->
+</body>
+</html>

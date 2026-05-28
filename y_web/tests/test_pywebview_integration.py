@@ -7,6 +7,10 @@ import sys
 import unittest
 from unittest.mock import MagicMock, patch
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
 
 class TestDesktopModeImport(unittest.TestCase):
     """Test that desktop mode module can be imported."""

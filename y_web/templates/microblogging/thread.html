@@ -1,0 +1,351 @@
+{%  include "microblogging/header.html" %}
+
+<div class="view-wrapper">
+    <!-- Container -->
+    <div id="main-feed" class="container">
+
+        <!-- Content placeholders at page load -->
+        <!-- this holds the animated content placeholders that show up before content -->
+        <div id="shadow-dom" class="view-wrap">
+            <div class="columns">
+                <div class="column is-3">
+                    <!-- Placeload element -->
+                    <div class="placeload weather-widget-placeload">
+                        <div class="header">
+                            <div class="inner-wrap">
+                                <div class="img loads"></div>
+                                <div class="content-shape loads"></div>
+                                <div class="content-shape loads"></div>
+                            </div>
+                        </div>
+                        <div class="body">
+                            <div class="inner-wrap">
+                                <div class="rect loads"></div>
+                                <div class="content-shape loads"></div>
+                                <div class="content-shape loads"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Placeload element -->
+                    <div class="placeload list-placeload">
+                        <div class="header">
+                            <div class="content-shape loads"></div>
+                        </div>
+                        <div class="body">
+                            <div class="flex-block">
+                                <div class="img loads"></div>
+                                <div class="inner-wrap">
+                                    <div class="content-shape loads"></div>
+                                    <div class="content-shape loads"></div>
+                                </div>
+                            </div>
+                            <div class="flex-block">
+                                <div class="img loads"></div>
+                                <div class="inner-wrap">
+                                    <div class="content-shape loads"></div>
+                                    <div class="content-shape loads"></div>
+                                </div>
+                            </div>
+                            <div class="flex-block">
+                                <div class="img loads"></div>
+                                <div class="inner-wrap">
+                                    <div class="content-shape loads"></div>
+                                    <div class="content-shape loads"></div>
+                                </div>
+                            </div>
+                            <div class="flex-block">
+                                <div class="img loads"></div>
+                                <div class="inner-wrap">
+                                    <div class="content-shape loads"></div>
+                                    <div class="content-shape loads"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="column is-6">
+                    <!-- Placeload element -->
+                    <div class="placeload compose-placeload">
+                        <div class="header">
+                            <div class="content-shape is-lg loads"></div>
+                            <div class="content-shape is-lg loads"></div>
+                            <div class="content-shape is-lg loads"></div>
+                        </div>
+                        <div class="body">
+                            <div class="img loads"></div>
+                            <div class="inner-wrap">
+                                <div class="content-shape loads"></div>
+                                <div class="content-shape loads"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Placeload element -->
+                    <div class="placeload post-placeload">
+                        <div class="header">
+                            <div class="img loads"></div>
+                            <div class="header-content">
+                                <div class="content-shape loads"></div>
+                                <div class="content-shape loads"></div>
+                            </div>
+                        </div>
+                        <div class="image-placeholder loads"></div>
+                        <div class="placeholder-footer">
+                            <div class="footer-block">
+                                <div class="img loads"></div>
+                                <div class="inner-wrap">
+                                    <div class="content-shape loads"></div>
+                                    <div class="content-shape loads"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Placeload element -->
+                    <div class="placeload post-placeload">
+                        <div class="header">
+                            <div class="img loads"></div>
+                            <div class="header-content">
+                                <div class="content-shape loads"></div>
+                                <div class="content-shape loads"></div>
+                            </div>
+                        </div>
+                        <div class="image-placeholder loads"></div>
+                        <div class="placeholder-footer">
+                            <div class="footer-block">
+                                <div class="img loads"></div>
+                                <div class="inner-wrap">
+                                    <div class="content-shape loads"></div>
+                                    <div class="content-shape loads"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Placeload element -->
+                    <div class="placeload post-placeload">
+                        <div class="header">
+                            <div class="img loads"></div>
+                            <div class="header-content">
+                                <div class="content-shape loads"></div>
+                                <div class="content-shape loads"></div>
+                            </div>
+                        </div>
+                        <div class="image-placeholder loads"></div>
+                        <div class="placeholder-footer">
+                            <div class="footer-block">
+                                <div class="img loads"></div>
+                                <div class="inner-wrap">
+                                    <div class="content-shape loads"></div>
+                                    <div class="content-shape loads"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Placeload element -->
+                    <div class="placeload post-placeload">
+                        <div class="header">
+                            <div class="img loads"></div>
+                            <div class="header-content">
+                                <div class="content-shape loads"></div>
+                                <div class="content-shape loads"></div>
+                            </div>
+                        </div>
+                        <div class="image-placeholder loads"></div>
+                        <div class="placeholder-footer">
+                            <div class="footer-block">
+                                <div class="img loads"></div>
+                                <div class="inner-wrap">
+                                    <div class="content-shape loads"></div>
+                                    <div class="content-shape loads"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="column is-3">
+                    <!-- Placeload element -->
+                    <div class="placeload stories-placeload">
+                        <div class="header">
+                            <div class="content-shape loads"></div>
+                        </div>
+                        <div class="body">
+                            <div class="flex-block">
+                                <div class="img loads"></div>
+                                <div class="inner-wrap">
+                                    <div class="content-shape loads"></div>
+                                    <div class="content-shape loads"></div>
+                                </div>
+                            </div>
+                            <div class="flex-block">
+                                <div class="img loads"></div>
+                                <div class="inner-wrap">
+                                    <div class="content-shape loads"></div>
+                                    <div class="content-shape loads"></div>
+                                </div>
+                            </div>
+                            <div class="flex-block">
+                                <div class="img loads"></div>
+                                <div class="inner-wrap">
+                                    <div class="content-shape loads"></div>
+                                    <div class="content-shape loads"></div>
+                                </div>
+                            </div>
+                            <div class="flex-block">
+                                <div class="img loads"></div>
+                                <div class="inner-wrap">
+                                    <div class="content-shape loads"></div>
+                                    <div class="content-shape loads"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Placeload element -->
+                    <div class="placeload mini-widget-placeload">
+                        <div class="body">
+                            <div class="inner-wrap">
+                                <div class="img loads"></div>
+                                <div class="content-shape loads"></div>
+                                <div class="content-shape loads"></div>
+                                <div class="content-shape loads"></div>
+                                <div class="button-shape loads"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Placeload element -->
+                    <div class="placeload list-placeload">
+                        <div class="header">
+                            <div class="content-shape loads"></div>
+                        </div>
+                        <div class="body">
+                            <div class="flex-block">
+                                <div class="img loads"></div>
+                                <div class="inner-wrap">
+                                    <div class="content-shape loads"></div>
+                                    <div class="content-shape loads"></div>
+                                </div>
+                            </div>
+                            <div class="flex-block">
+                                <div class="img loads"></div>
+                                <div class="inner-wrap">
+                                    <div class="content-shape loads"></div>
+                                    <div class="content-shape loads"></div>
+                                </div>
+                            </div>
+                            <div class="flex-block">
+                                <div class="img loads"></div>
+                                <div class="inner-wrap">
+                                    <div class="content-shape loads"></div>
+                                    <div class="content-shape loads"></div>
+                                </div>
+                            </div>
+                            <div class="flex-block">
+                                <div class="img loads"></div>
+                                <div class="inner-wrap">
+                                    <div class="content-shape loads"></div>
+                                    <div class="content-shape loads"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feed page main wrapper -->
+        <div id="profile-main" class="view-wrap is-headless">
+            <!-- <div id="activity-feed" class="view-wrap true-dom is-hidden"> -->
+ <div class="columns ys-mx-neg-half">
+                <!-- Left side column -->
+ <div class="column is-3 is-hidden-mobile ys-px-half">
+                    <!-- Weather widget -->
+                    <!-- /partials/widgets/weather-widget.html -->
+                    {% include "microblogging/components/sidebar_user_card.html" %}
+
+
+                    {% set ranked_card_title = "Trending Hashtags" %}
+                    {% set ranked_card_subtitle = "Live signals from the current conversation" %}
+                    {% set ranked_card_items = trending_ht %}
+                    {% set ranked_card_href_prefix = "hashtag_posts" %}
+                    {% set ranked_card_label_key = "hashtag" %}
+                    {% set ranked_card_meta_label = "mentions" %}
+                    {% set ranked_card_prefix = "#" %}
+                    {% set ranked_card_empty = "No hashtags are trending yet." %}
+                    {% include "microblogging/components/sidebar_ranked_list_card.html" %}
+
+                </div>
+                <!-- /Left side column -->
+
+                <!-- Middle column -->
+ <div class="column is-8 ys-px-half">
+                    {% set hero_eyebrow = "Thread Focus" %}
+                    {% set hero_prefix = "Following the" %}
+                    {% set hero_focus = "full discussion thread" %}
+                    {% set hero_suffix = "in context." %}
+                    {% include "microblogging/components/context_hero_card.html" %}
+
+                    <div class="profile-timeline">
+
+                        <!-- inizio -->
+                        {% include "microblogging/components/thread-post.html" %}
+                        <div id="child-{{ thread['post_id'] }}">
+                            {% set data = thread['children'] %}
+                            {% for c in data %}
+ <div class="ys-pl-20">
+                                {% with thread=c %}
+                                {% include "microblogging/components/list.html" %}
+                                {% endwith %}
+                            </div>
+
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- fine -->
+
+                </div>
+                <!-- POST #1 -->
+            </div>
+        </div>
+    </div>
+    <!-- /Feed page main wrapper -->
+</div>
+
+{% if experiment_memory_enabled %}
+{% include "microblogging/components/chat_panel.html" %}
+{% endif %}
+
+<!-- Experiment context -->
+<script>
+    window.EXP_ID = {{ exp_id if exp_id else 'null' }};
+    window.EXP_PREFIX = window.EXP_ID ? '/' + window.EXP_ID : '';
+</script>
+
+<!-- Concatenated js plugins and jQuery -->
+<script src="{{ url_for('static', filename='assets/js/app.js') }}"></script>
+<script src="https://js.stripe.com/v3/"></script>
+<script src="{{ url_for('static', filename='assets/js/global.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-v1.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-v2.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-mobile.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-options.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/sidebar-v1.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/touch.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/widgets.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/popovers-pages.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/lightbox.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/profile.js') }}"></script>
+
+<script src="{{ url_for('static', filename='assets/js/async_updates.js') }}"></script>
+{% if experiment_memory_enabled %}
+<script src="{{ url_for('static', filename='assets/js/microblog-chat.js') }}"></script>
+{% endif %}
+</body>
+</html>

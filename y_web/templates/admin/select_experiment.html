@@ -1,56 +1,5 @@
 {% include "admin/head.html" %}
-
-<style>
-    .experiment-card {
-        background: #fff;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        padding: 20px;
-        margin-bottom: 16px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        transition: all 0.2s;
-    }
-    .experiment-card:hover {
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        border-color: #22c55e;
-    }
-    .experiment-card h3 {
-        font-size: 1.25em;
-        font-weight: 600;
-        color: #1f2937;
-        margin: 0 0 8px 0;
-    }
-    .experiment-card .experiment-info {
-        font-size: 0.9em;
-        color: #6b7280;
-        margin-bottom: 12px;
-    }
-    .experiment-card .experiment-info span {
-        margin-right: 16px;
-        display: inline-block;
-    }
-    .experiment-card .experiment-info .mdi {
-        margin-right: 4px;
-    }
-    .experiment-card .join-button {
-        width: 100%;
-        margin-top: 8px;
-    }
-    .page-header {
-        margin-bottom: 24px;
-    }
-    .page-header h2 {
-        font-size: 1.75em;
-        font-weight: 600;
-        color: #1f2937;
-        margin: 0 0 8px 0;
-    }
-    .page-header p {
-        font-size: 0.95em;
-        color: #6b7280;
-        margin: 0;
-    }
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-components.css') }}"/>
 
 <body class="is-theme-core">
     <div class="pageloader"></div>

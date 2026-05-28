@@ -46,23 +46,19 @@ def migrate_sqlite(db_path):
         table_exists = cursor.fetchone() is not None
 
         if not table_exists:
-            cursor.execute(
-                """
+            cursor.execute("""
                 CREATE TABLE watchdog_settings (
                     id                   INTEGER PRIMARY KEY AUTOINCREMENT,
                     enabled              INTEGER NOT NULL DEFAULT 1,
                     run_interval_minutes INTEGER NOT NULL DEFAULT 15,
                     last_run             TEXT
                 )
-            """
-            )
+            """)
             # Insert default settings row
-            cursor.execute(
-                """
+            cursor.execute("""
                 INSERT INTO watchdog_settings (enabled, run_interval_minutes)
                 VALUES (1, 15)
-            """
-            )
+            """)
             print("✓ Created watchdog_settings table in SQLite database")
         else:
             print("○ watchdog_settings table already exists in SQLite database")
@@ -102,34 +98,28 @@ def migrate_postgresql(host, port, database, user, password):
         cursor = conn.cursor()
 
         # Check if table already exists
-        cursor.execute(
-            """
+        cursor.execute("""
             SELECT table_name 
             FROM information_schema.tables 
             WHERE table_schema = 'public' 
               AND table_name = 'watchdog_settings'
-        """
-        )
+        """)
         table_exists = cursor.fetchone() is not None
 
         if not table_exists:
-            cursor.execute(
-                """
+            cursor.execute("""
                 CREATE TABLE watchdog_settings (
                     id                   SERIAL PRIMARY KEY,
                     enabled              BOOLEAN NOT NULL DEFAULT TRUE,
                     run_interval_minutes INTEGER NOT NULL DEFAULT 15,
                     last_run             TIMESTAMP
                 )
-            """
-            )
+            """)
             # Insert default settings row
-            cursor.execute(
-                """
+            cursor.execute("""
                 INSERT INTO watchdog_settings (enabled, run_interval_minutes)
                 VALUES (TRUE, 15)
-            """
-            )
+            """)
             print("✓ Created watchdog_settings table in PostgreSQL database")
         else:
             print("○ watchdog_settings table already exists in PostgreSQL database")

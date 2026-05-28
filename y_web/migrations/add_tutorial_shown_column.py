@@ -85,23 +85,19 @@ def migrate_postgresql(host, port, database, user, password):
         cursor = conn.cursor()
 
         # Check if columns already exist
-        cursor.execute(
-            """
+        cursor.execute("""
             SELECT column_name 
             FROM information_schema.columns 
             WHERE table_name = 'admin_users'
-        """
-        )
+        """)
         columns = [row[0] for row in cursor.fetchall()]
 
         # Add tutorial_shown column if it doesn't exist
         if "tutorial_shown" not in columns:
-            cursor.execute(
-                """
+            cursor.execute("""
                 ALTER TABLE admin_users 
                 ADD COLUMN tutorial_shown BOOLEAN DEFAULT FALSE
-            """
-            )
+            """)
             print("✓ Added tutorial_shown column to PostgreSQL database")
         else:
             print("○ tutorial_shown column already exists in PostgreSQL database")

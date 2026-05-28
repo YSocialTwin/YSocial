@@ -44,8 +44,7 @@ def migrate_sqlite(db_path):
         )
         if cursor.fetchone() is None:
             # Create experiment_schedule_groups table
-            cursor.execute(
-                """
+            cursor.execute("""
                 CREATE TABLE experiment_schedule_groups (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT NOT NULL,
@@ -53,8 +52,7 @@ def migrate_sqlite(db_path):
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     is_completed INTEGER NOT NULL DEFAULT 0
                 )
-            """
-            )
+            """)
             print("✓ Created experiment_schedule_groups table")
         else:
             # Check if is_completed column exists, add if not
@@ -71,8 +69,7 @@ def migrate_sqlite(db_path):
         )
         if cursor.fetchone() is None:
             # Create experiment_schedule_items table
-            cursor.execute(
-                """
+            cursor.execute("""
                 CREATE TABLE experiment_schedule_items (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     group_id INTEGER NOT NULL,
@@ -81,8 +78,7 @@ def migrate_sqlite(db_path):
                     FOREIGN KEY (group_id) REFERENCES experiment_schedule_groups(id),
                     FOREIGN KEY (experiment_id) REFERENCES exps(idexp)
                 )
-            """
-            )
+            """)
             print("✓ Created experiment_schedule_items table")
 
         cursor.execute(
@@ -90,16 +86,14 @@ def migrate_sqlite(db_path):
         )
         if cursor.fetchone() is None:
             # Create experiment_schedule_status table
-            cursor.execute(
-                """
+            cursor.execute("""
                 CREATE TABLE experiment_schedule_status (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     is_running INTEGER NOT NULL DEFAULT 0,
                     current_group_id INTEGER,
                     started_at DATETIME
                 )
-            """
-            )
+            """)
             # Insert initial status row
             cursor.execute(
                 "INSERT INTO experiment_schedule_status (is_running) VALUES (0)"
@@ -111,16 +105,14 @@ def migrate_sqlite(db_path):
             "SELECT name FROM sqlite_master WHERE type='table' AND name='experiment_schedule_logs'"
         )
         if cursor.fetchone() is None:
-            cursor.execute(
-                """
+            cursor.execute("""
                 CREATE TABLE experiment_schedule_logs (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     message TEXT NOT NULL,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     log_type TEXT NOT NULL DEFAULT 'info'
                 )
-            """
-            )
+            """)
             print("✓ Created experiment_schedule_logs table")
 
         conn.commit()
@@ -158,69 +150,57 @@ def migrate_postgresql(host, port, database, user, password):
         cursor = conn.cursor()
 
         # Check and create experiment_schedule_groups table
-        cursor.execute(
-            """
+        cursor.execute("""
             SELECT EXISTS (
                 SELECT FROM information_schema.tables 
                 WHERE table_name = 'experiment_schedule_groups'
             )
-        """
-        )
+        """)
         if not cursor.fetchone()[0]:
-            cursor.execute(
-                """
+            cursor.execute("""
                 CREATE TABLE experiment_schedule_groups (
                     id SERIAL PRIMARY KEY,
                     name VARCHAR(100) NOT NULL,
                     order_index INTEGER NOT NULL DEFAULT 0,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
-            """
-            )
+            """)
             print("✓ Created experiment_schedule_groups table")
 
         # Check and create experiment_schedule_items table
-        cursor.execute(
-            """
+        cursor.execute("""
             SELECT EXISTS (
                 SELECT FROM information_schema.tables 
                 WHERE table_name = 'experiment_schedule_items'
             )
-        """
-        )
+        """)
         if not cursor.fetchone()[0]:
-            cursor.execute(
-                """
+            cursor.execute("""
                 CREATE TABLE experiment_schedule_items (
                     id SERIAL PRIMARY KEY,
                     group_id INTEGER NOT NULL REFERENCES experiment_schedule_groups(id),
                     experiment_id INTEGER NOT NULL REFERENCES exps(idexp),
                     order_index INTEGER NOT NULL DEFAULT 0
                 )
-            """
-            )
+            """)
             print("✓ Created experiment_schedule_items table")
 
         # Check and create experiment_schedule_status table
-        cursor.execute(
-            """
+        cursor.execute("""
             SELECT EXISTS (
                 SELECT FROM information_schema.tables 
                 WHERE table_name = 'experiment_schedule_status'
             )
-        """
-        )
+        """)
         if not cursor.fetchone()[0]:
-            cursor.execute(
-                """
+            cursor.execute("""
                 CREATE TABLE experiment_schedule_status (
                     id SERIAL PRIMARY KEY,
                     is_running INTEGER NOT NULL DEFAULT 0,
                     current_group_id INTEGER,
                     started_at TIMESTAMP
                 )
-            """
-            )
+            """)
             # Insert initial status row
             cursor.execute(
                 "INSERT INTO experiment_schedule_status (is_running) VALUES (0)"

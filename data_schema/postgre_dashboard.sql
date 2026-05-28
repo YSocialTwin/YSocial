@@ -40,7 +40,10 @@ CREATE TABLE exps (
     annotations        TEXT DEFAULT '' NOT NULL,
     server_pid         INTEGER DEFAULT NULL,
     llm_agents_enabled INTEGER DEFAULT 1 NOT NULL,
-    exp_status         VARCHAR(20) DEFAULT 'stopped' NOT NULL
+    exp_status         VARCHAR(20) DEFAULT 'stopped' NOT NULL,
+    simulator_type     VARCHAR(20) DEFAULT 'Standard' NOT NULL,
+    is_remote          INTEGER DEFAULT 0 NOT NULL,
+    exp_group          VARCHAR(100) DEFAULT ''
 );
 
 CREATE TABLE exp_stats (
@@ -157,6 +160,20 @@ CREATE TABLE agent_population (
     population_id INTEGER NOT NULL REFERENCES population(id) ON DELETE CASCADE
 );
 
+CREATE TABLE agents_custom_features (
+    id           SERIAL PRIMARY KEY,
+    agent_id     INTEGER NOT NULL REFERENCES agents(id) ON DELETE CASCADE,
+    feature_type VARCHAR(20) NOT NULL,
+    key          VARCHAR(200) NOT NULL,
+    value        TEXT
+);
+
+CREATE INDEX idx_agents_custom_features_agent_id
+    ON agents_custom_features(agent_id);
+
+CREATE INDEX idx_agents_custom_features_type
+    ON agents_custom_features(feature_type);
+
 -- -----------------------------
 -- Pages
 -- -----------------------------
@@ -178,6 +195,33 @@ CREATE TABLE page_population (
     page_id       INTEGER NOT NULL REFERENCES pages(id) ON DELETE CASCADE,
     population_id INTEGER NOT NULL REFERENCES population(id) ON DELETE CASCADE
 );
+
+-- -----------------------------
+-- Reusable forum feed resources
+-- -----------------------------
+CREATE TABLE forum_rss_feed_resources (
+    id          SERIAL PRIMARY KEY,
+    name        VARCHAR(200) NOT NULL,
+    feed_url    VARCHAR(500) NOT NULL UNIQUE,
+    url_site    VARCHAR(500) NOT NULL DEFAULT '',
+    description TEXT NOT NULL DEFAULT '',
+    created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_forum_rss_feed_resources_name
+    ON forum_rss_feed_resources(name);
+
+CREATE TABLE forum_image_feed_resources (
+    id         SERIAL PRIMARY KEY,
+    subreddit  VARCHAR(200) NOT NULL UNIQUE,
+    interests  TEXT NOT NULL DEFAULT '[]',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_forum_image_feed_resources_subreddit
+    ON forum_image_feed_resources(subreddit);
 
 -- -----------------------------
 -- Clients
@@ -217,6 +261,7 @@ CREATE TABLE client (
     network_type                        TEXT,
     probability_of_secondary_follow     REAL DEFAULT 0,
     share_link                          REAL DEFAULT 0,
+    follow                              REAL DEFAULT 0,
     crecsys                             TEXT,
     frecsys                             TEXT,
     pid                                 INTEGER DEFAULT NULL,
@@ -247,15 +292,19 @@ CREATE TABLE client_execution (
 -- Recommendation systems
 -- -----------------------------
 CREATE TABLE content_recsys (
-    id    SERIAL PRIMARY KEY,
-    name  TEXT NOT NULL,
-    value TEXT NOT NULL
+    id       SERIAL PRIMARY KEY,
+    name     TEXT NOT NULL,
+    value    TEXT NOT NULL,
+    category TEXT,
+    enabled  TEXT
 );
 
 CREATE TABLE follow_recsys (
-    id    SERIAL PRIMARY KEY,
-    name  TEXT NOT NULL,
-    value TEXT NOT NULL
+    id       SERIAL PRIMARY KEY,
+    name     TEXT NOT NULL,
+    value    TEXT NOT NULL,
+    category TEXT,
+    enabled  TEXT
 );
 
 -- -----------------------------
@@ -356,7 +405,7 @@ CREATE TABLE jupyter_instances (
     port         INTEGER NOT NULL,
     notebook_dir VARCHAR(300) NOT NULL,
     process      INTEGER,
-    status       VARCHAR(10) NOT NULL DEFAULT 'active'
+    status       VARCHAR(10) NOT NULL DEFAULT 'stopped'
 );
 
 -- -----------------------------
@@ -389,24 +438,35 @@ CREATE TABLE blog_posts (
 -- DATA INSERTIONS
 -- ================================================
 
-INSERT INTO content_recsys (name, value) VALUES
-  ('ContentRecSys', 'Random'),
-  ('ReverseChrono', '(RC) Reverse Chrono'),
-  ('ReverseChronoPopularity', '(RCP) Popularity'),
-  ('ReverseChronoFollowers', '(RCF) Followers'),
-  ('ReverseChronoFollowersPopularity', '(FP) Followers-Popularity'),
-  ('ReverseChronoComments', '(RCC) Reverse Chrono Comments'),
-  ('CommonInterests', '(CI) Common Interests'),
-  ('CommonUserInterests', '(CUI) Common User Interests'),
-  ('SimilarUsersReactions', '(SIR) Similar Users Reactions'),
-  ('SimilarUsersPosts', '(SIP) Similar Users Posts');
+INSERT INTO content_recsys (name, value, enabled, category) VALUES
+  ('ContentRecSys', 'Random', 'HPC,Standard', 'Global'),
+  ('ReverseChrono', '(RC) Reverse Chrono', 'HPC,Standard', 'Global'),
+  ('ReverseChronoPopularity', '(RCP) Popularity', 'HPC,Standard', 'Global'),
+  ('ReverseChronoFollowers', '(RCF) Followers', 'HPC,Standard', 'Social Timeline'),
+  ('ReverseChronoFollowersPopularity', '(FP) Followers-Popularity', 'HPC,Standard', 'Social Timeline'),
+  ('ReverseChronoComments', '(RCC) Reverse Chrono Comments', 'HPC,Standard', 'Global'),
+  ('CommonInterests', '(CI) Common Interests', 'HPC,Standard', 'Content-Based Filtering'),
+  ('CommonUserInterests', '(CUI) Common User Interests', 'HPC,Standard', 'Profile-Based User Similarity'),
+  ('SimilarUsersReactions', '(SIR) Similar Users Reactions', 'HPC,Standard', 'Behavioral User Modeling'),
+  ('SimilarUsersPosts', '(SIP) Similar Users Posts', 'HPC,Standard', 'Demographic-Based'),
+  ('ContentBasedFeatures', '(CBF) ContentBasedFeatures', 'HPC', 'Content-Based Filtering'),
+  ('ContentBasedVector', '(CBV) ContentBasedVector', 'HPC', 'Content-Based Filtering'),
+  ('CollaborativeUserUser', '(CUU) CollaborativeUserUser', 'HPC', 'Collaborative Filtering'),
+  ('CollaborativeItemItem', '(CII) CollaborativeItemItem', 'HPC', 'Collaborative Filtering');
 
-INSERT INTO follow_recsys (name, value) VALUES
-('FollowRecSys', 'Random'),
-('CommonNeighbors', 'Common Neighbors'),
-('Jaccard', 'Jaccard'),
-('AdamicAdar', 'Adamic Adar'),
-('PreferentialAttachment', 'Preferential Attachment');
+INSERT INTO follow_recsys (name, value, category, enabled) VALUES
+('FollowRecSys', 'Random', 'Baseline & Exploration', 'HPC,Standard'),
+('CommonNeighbors', 'Common Neighbors', 'Local Triadic Closure', 'HPC,Standard'),
+('Jaccard', 'Jaccard', 'Local Triadic Closure', 'HPC,Standard'),
+('AdamicAdar', 'Adamic Adar', 'Local Triadic Closure', 'HPC,Standard'),
+('PreferentialAttachment', 'Preferential Attachment', 'Popularity & Activity Bias', 'HPC,Standard'),
+('Activity', 'Activity', 'Popularity & Activity Bias', 'HPC'),
+('ResourceAllocation', 'ResourceAllocation', 'Local Triadic Closure', 'HPC'),
+('CosineSimilarity', 'CosineSimilarity', 'Profile & Attribute Homophily', 'HPC'),
+('CoEngagement', 'CoEngagement', 'Behavioral Homophily', 'HPC'),
+('RandomWalkRestart', 'RandomWalkRestart', 'Graph Proximity', 'HPC'),
+('ReactionsOnContent', 'ReactionsOnContent', 'Behavioral Homophily', 'HPC'),
+('TwoHopEgoSampling', 'TwoHopEgoSampling', 'Community Approximation', 'HPC');
 
 INSERT INTO leanings (leaning) VALUES
 ('democrat'),
@@ -723,13 +783,13 @@ CREATE TABLE client_log_metrics (
 CREATE INDEX idx_client_log_metrics_lookup ON client_log_metrics(exp_id, client_id, aggregation_level, day, hour, method_name);
 
 -- -----------------------------
--- Log Sync Settings
+-- HPC Monitor Settings
 -- -----------------------------
-CREATE TABLE log_sync_settings (
-    id                    SERIAL PRIMARY KEY,
-    enabled               BOOLEAN NOT NULL DEFAULT TRUE,
-    sync_interval_minutes INTEGER NOT NULL DEFAULT 10,
-    last_sync             TIMESTAMP DEFAULT NULL
+CREATE TABLE hpc_monitor_settings (
+    id                       SERIAL PRIMARY KEY,
+    enabled                  BOOLEAN NOT NULL DEFAULT TRUE,
+    check_interval_seconds   INTEGER NOT NULL DEFAULT 5,
+    last_check               TIMESTAMP DEFAULT NULL
 );
 
 -- -----------------------------

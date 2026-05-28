@@ -100,14 +100,16 @@ CREATE TABLE voting (
 -- Content sources
 -- -----------------------------
 CREATE TABLE websites (
-    id           SERIAL PRIMARY KEY,
-    name         TEXT,
-    rss          TEXT,
-    leaning      TEXT,
-    category     TEXT,
-    last_fetched INTEGER,
-    country      TEXT,
-    language     TEXT
+    id                    SERIAL PRIMARY KEY,
+    name                  TEXT,
+    rss                   TEXT,
+    leaning               TEXT,
+    category              TEXT,
+    last_fetched          INTEGER,
+    country               TEXT,
+    language              TEXT,
+    fetch_images_from_url BOOLEAN DEFAULT FALSE,
+    fetch_images_timeout  INTEGER DEFAULT 10
 );
 
 CREATE TABLE articles (
@@ -130,7 +132,21 @@ CREATE TABLE images (
     id          SERIAL PRIMARY KEY,
     url         TEXT,
     description TEXT,
-    article_id  INTEGER REFERENCES articles(id) ON DELETE CASCADE
+    article_id  INTEGER REFERENCES articles(id) ON DELETE CASCADE,
+    remote_article_id INTEGER
+);
+
+CREATE TABLE image_posts (
+    id SERIAL PRIMARY KEY,
+    url VARCHAR(500) NOT NULL,
+    source_url VARCHAR(500),
+    title VARCHAR(300),
+    subreddit VARCHAR(100),
+    description TEXT,
+    fetched_on VARCHAR(20),
+    used BOOLEAN DEFAULT FALSE,
+    local_path VARCHAR(500),
+    high_res_url VARCHAR(500)
 );
 
 -- -----------------------------
@@ -147,7 +163,36 @@ CREATE TABLE post (
     news_id        INTEGER DEFAULT -1 REFERENCES articles(id) ON DELETE CASCADE,
     shared_from    INTEGER DEFAULT -1,
     image_id       INTEGER REFERENCES images(id) ON DELETE CASCADE,
-    reaction_count INTEGER DEFAULT 0
+    image_post_id  INTEGER REFERENCES image_posts(id) ON DELETE SET NULL,
+    dedupe_key     VARCHAR(64),
+    client_action_id VARCHAR(96),
+    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    reaction_count INTEGER DEFAULT 0,
+    moderated INTEGER DEFAULT 0,
+    is_moderation_comment INTEGER DEFAULT 0
+);
+
+CREATE TABLE sys_messages (
+    id SERIAL PRIMARY KEY,
+    type TEXT NOT NULL,
+    to_uid INTEGER REFERENCES user_mgmt(id),
+    message TEXT NOT NULL,
+    from_round INTEGER REFERENCES rounds(id),
+    duration INTEGER
+);
+
+CREATE TABLE reported (
+    id SERIAL PRIMARY KEY,
+    type TEXT NOT NULL,
+    to_uid INTEGER REFERENCES user_mgmt(id),
+    to_post INTEGER REFERENCES post(id),
+    from_uid INTEGER NOT NULL REFERENCES user_mgmt(id),
+    tid INTEGER NOT NULL REFERENCES rounds(id)
+);
+
+CREATE TABLE reply_inbox_state (
+    user_id INTEGER PRIMARY KEY REFERENCES user_mgmt(id) ON DELETE CASCADE,
+    last_seen_reply_id INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE mentions (

@@ -1,60 +1,5 @@
 {% include "admin/head.html" %}
-
-<style>
-    .sidebar-box {
-        background: #fff;
-        border: 1px solid #e5e7eb;
-        border-radius: 6px;
-        padding: 16px;
-        margin-bottom: 16px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    }
-    .sidebar-box h3 {
-        font-size: 1em;
-        font-weight: 600;
-        color: #1f2937;
-        margin: 0 0 12px 0;
-        padding-bottom: 8px;
-        border-bottom: 1px solid #e5e7eb;
-    }
-    .sidebar-box .help-block {
-        font-size: 0.85em;
-        line-height: 1.5;
-        color: #6b7280;
-    }
-    .sidebar-box .help-block p {
-        margin: 0 0 10px 0;
-    }
-    .sidebar-box .help-block p:last-child {
-        margin-bottom: 0;
-    }
-    .sidebar-box .help-block b {
-        color: #374151;
-        font-weight: 600;
-    }
-    .sidebar-box .input {
-        width: 100%;
-        padding: 8px 10px;
-        border: 1px solid #d1d5db;
-        border-radius: 4px;
-        font-size: 0.9em;
-        transition: border-color 0.2s;
-    }
-    .sidebar-box .input:focus {
-        outline: none;
-        border-color: #22c55e;
-        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
-    }
-    .sidebar-box .button-wrap {
-        margin-top: 12px;
-    }
-    .sidebar-box .button {
-        width: 100%;
-        padding: 8px 16px;
-        font-size: 0.9em;
-        font-weight: 500;
-    }
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-settings.css') }}"/>
 
 <div class="view-wrapper is-dashboard">
     <!--Dashboard container-->
@@ -66,1188 +11,79 @@
             <div class="columns">
                 <div class="column is-12">
 
-                    {% for message in get_flashed_messages() %}
-                    <div class="alert alert-warning">
-                        <button type="button" class="close" data-dismiss="alert">&times;</button>
-                        {{ message }}
-                    </div>
-                    {% endfor %}
-
                     <!-- Three experiment sections in a row (responsive) -->
                     <div class="experiments-row">
                         <!-- Active Experiments Section -->
-                        <div id="box-active" class="dashboard-box experiment-box" style="display: none;">
+ <div id="box-active" class="dashboard-box experiment-box d-none">
                             <h3 class="title is-6 is-thin" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
                                 <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #28a745;"></span>
                                 Running
                             </h3>
-                            <div class="box-content" style="flex: 1;">
-                                <div id="table-active" class="experiment-table compact-table"></div>
+ <div class="box-content ys-flex-1">
+                                <div id="groups-active" class="experiment-groups"></div>
                             </div>
                         </div>
 
                         <!-- Completed Experiments Section -->
-                        <div id="box-completed" class="dashboard-box experiment-box" style="display: none;">
-                            <h3 class="title is-6 is-thin" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px;">
-                                <span style="display: flex; align-items: center; gap: 8px;">
-                                    <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #17a2b8;"></span>
+ <div id="box-completed" class="dashboard-box experiment-box d-none">
+ <h3 class="title is-6 is-thin ys-flex-between-mb10">
+ <span class="ys-flex-gap-8">
+ <span class="ys-dot-info"></span>
                                     Completed
                                 </span>
-                                <span style="display: flex; gap: 8px;">
-                                    <button id="download-all-btn" onclick="downloadAllExperiments()" 
+ <span class="ys-flex-gap-8-only">
+                                    <button id="download-all-btn" onclick="downloadAllExperiments()" class="exp-action-btn"
                                             style="background-color: #28a745; color: white; padding: 4px 10px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.75rem;"
                                             title="Download all completed experiments as a ZIP file">
-                                        <i class="mdi mdi-download-multiple"></i> Download All
+                                        <i class="mdi mdi-download-multiple"></i><span class="exp-btn-label"> Download All</span>
                                     </button>
-                                    <button id="download-selected-btn" onclick="downloadSelectedExperiments()" 
+                                    <button id="delete-all-completed-btn" onclick="deleteAllExperiments('completed', 'delete-all-completed-btn', 'completed')" class="exp-action-btn ys-btn-danger-sm"
+                                            title="Delete all completed experiments">
+                                        <i class="mdi mdi-delete-sweep"></i><span class="exp-btn-label"> Delete All</span>
+                                    </button>
+                                    <button id="download-selected-btn" onclick="downloadSelectedExperiments()" class="exp-action-btn"
                                             style="background-color: #17a2b8; color: white; padding: 4px 10px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.75rem; display: none;"
                                             title="Download selected experiments as a ZIP file">
-                                        <i class="mdi mdi-download"></i> Download Selected
+                                        <i class="mdi mdi-download"></i><span class="exp-btn-label"> Download Selected</span>
                                     </button>
                                 </span>
                             </h3>
-                            <div class="box-content" style="flex: 1;">
-                                <div id="table-completed" class="experiment-table compact-table"></div>
+ <div class="box-content ys-flex-1">
+                                <div id="groups-completed" class="experiment-groups"></div>
                             </div>
                         </div>
 
                         <!-- Stopped/Scheduled Experiments Section -->
-                        <div id="box-stopped" class="dashboard-box experiment-box" style="display: none;">
-                            <h3 class="title is-6 is-thin" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-                                <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #6c757d;"></span>
-                                Stopped / Scheduled
+ <div id="box-stopped" class="dashboard-box experiment-box d-none">
+ <h3 class="title is-6 is-thin ys-flex-between-mb10">
+ <span class="ys-flex-gap-8">
+ <span class="ys-dot-secondary"></span>
+                                    Stopped / Scheduled
+                                </span>
+                                <button id="delete-all-stopped-btn" onclick="deleteAllExperiments('stopped_scheduled', 'delete-all-stopped-btn', 'stopped/scheduled')" class="exp-action-btn ys-btn-danger-sm"
+                                        title="Delete all stopped/scheduled experiments">
+                                    <i class="mdi mdi-delete-sweep"></i><span class="exp-btn-label"> Delete All</span>
+                                </button>
                             </h3>
-                            <div class="box-content" style="flex: 1;">
-                                <div id="table-stopped" class="experiment-table compact-table"></div>
+ <div class="box-content ys-flex-1">
+                                <div id="groups-stopped" class="experiment-groups"></div>
                             </div>
                         </div>
                     </div>
 
                     <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
 
-                    <style>
-                      /* Responsive row layout for experiment boxes */
-                      .experiments-row {
-                        display: flex;
-                        flex-wrap: wrap;
-                        gap: 15px;
-                        margin-bottom: 20px;
-                        align-items: stretch;
-                      }
-                      .experiment-box {
-                        flex: 1 1 300px;
-                        min-width: 300px;
-                        display: flex;
-                        flex-direction: column;
-                      }
-                      .experiment-box .box-content {
-                        flex: 1;
-                      }
-                      @media (max-width: 992px) {
-                        .experiment-box {
-                          flex: 1 1 100%;
-                          min-width: 100%;
-                        }
-                      }
-                      .experiment-table td {
-                        vertical-align: middle !important;
-                        text-align: center !important;
-                      }
-                      .experiment-table th {
-                        text-align: center !important;
-                      }
-                      .compact-table .gridjs-wrapper {
-                        font-size: 0.85em;
-                      }
-                      .compact-table .gridjs-th {
-                        padding: 8px 4px !important;
-                        font-size: 0.8em;
-                        text-align: center !important;
-                      }
-                      .compact-table .gridjs-td {
-                        padding: 6px 3px !important;
-                        text-align: center !important;
-                      }
-                      .compact-table .gridjs-search {
-                        width: 100% !important;
-                      }
-                      .compact-table .gridjs-search-input {
-                        width: 100% !important;
-                        font-size: 0.85em;
-                        padding: 6px 8px;
-                      }
-                      .status-indicators {
-                        display: flex;
-                        gap: 4px;
-                        justify-content: center;
-                        align-items: center;
-                      }
-                      .status-dot {
-                        width: 10px;
-                        height: 10px;
-                        border-radius: 50%;
-                        display: inline-block;
-                      }
-                    </style>
 
-<script>
-    // Status configuration
-    const EXP_STATUS = {
-        ACTIVE: 'active',
-        COMPLETED: 'completed',
-        STOPPED_SCHEDULED: 'stopped_scheduled'
-    };
-
-    // Store grid instances for refresh
-    const gridInstances = {};
-    const DATA_REFRESH_INTERVAL = 30000; // 30 seconds
-
-    const updateUrl = (prev, query) => {
-        return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
-    };
-
-    const editableCellAttributes = (data, row, col) => {
-        if (row) {
-            return {
-                contentEditable: 'true',
-                'data-element-id': row.cells[0].data,
-                'data-column-id': col.id
-            };
-        } else {
-            return {};
-        }
-    };
-
-    // Function to create compact table columns configuration for Running Experiments
-    function getRunningTableColumns() {
-        return [
-            { id: 'idexp', hidden: true },
-            { id: 'has_infinite_client', hidden: true },
-            { 
-                id: 'exp_name', 
-                name: 'Name', 
-                attributes: editableCellAttributes, 
-                width: '100px',
-                formatter: (cell, row) => {
-                    const hasInfinite = row.cells[1].data;
-                    const infiniteTag = hasInfinite ? 
-                        '<span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.65em; padding: 1px 4px; border-radius: 8px; font-weight: 600; margin-left: 5px;" title="This experiment has at least one client set to run until manually stopped">∞</span>' : '';
-                    return gridjs.html(`<span>${cell}${infiniteTag}</span>`);
-                }
-            },
-            { id: 'owner', name: 'Owner', sort: false, width: '50px' },
-            {
-                id: 'progress',
-                name: 'Progress',
-                sort: false,
-                width: '100px',
-                formatter: (cell, row) => {
-                    const progress = cell || 0;
-                    const expId = row.cells[0].data;
-                    // Gradient colors based on progress
-                    let bgColor = 'linear-gradient(90deg, #039be5 0%, #4facfe 100%)';
-                    let shadowColor = 'rgba(3,155,229,0.3)';
-                    if (progress >= 75) {
-                        bgColor = 'linear-gradient(90deg, #039be5 0%, #00d1b2 100%)';
-                        shadowColor = 'rgba(0,209,178,0.3)';
-                    } else if (progress >= 50) {
-                        bgColor = 'linear-gradient(90deg, #039be5 0%, #5596e6 100%)';
-                        shadowColor = 'rgba(85,150,230,0.3)';
-                    }
-                    return gridjs.html(`
-                        <div style="position: relative; background: linear-gradient(to right, #f5f5f5 0%, #e8e8e8 100%); border-radius: 12px; height: 18px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.08);">
-                            <div class="exp-progress-bar" data-exp-id="${expId}" 
-                                 style="position: absolute; left: 0; top: 0; height: 100%; width: ${progress}%; background: ${bgColor}; border-radius: 12px; transition: width 0.4s ease-in-out; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 4px ${shadowColor};">
-                                <span style="font-size: 0.65em; font-weight: 600; color: white; text-shadow: 0 1px 1px rgba(0,0,0,0.2);">${progress}%</span>
-                            </div>
-                        </div>
-                    `);
-                }
-            },
-            {
-                id: 'status_combined',
-                name: 'Status',
-                sort: false,
-                width: '40px',
-                formatter: (cell, row) => {
-                    // Get the web value from hidden cell (shifted by 1 due to has_infinite_client column)
-                    const web = row.cells[5].data;      // web is at index 5
-                    {% if enable_notebook %}
-                    const jupyter = row.cells[6].data;  // jupyter_status is at index 6
-                    {% endif %}
-                    
-                    const webColor = web === 'Loaded' ? '#28a745' : '#6c757d';
-                    {% if enable_notebook %}
-                    const jupyterColor = jupyter === 'Active' ? '#28a745' : '#6c757d';
-                    {% endif %}
-                    
-                    return gridjs.html(`
-                        <div class="status-indicators">
-                            <span class="status-dot" style="background-color: ${webColor};" title="Web: ${web}"></span>
-                            {% if enable_notebook %}
-                            <span class="status-dot" style="background-color: ${jupyterColor};" title="Lab: ${jupyter}"></span>
-                            {% endif %}
-                        </div>
-                    `);
-                }
-            },
-            { id: 'web', hidden: true },
-            {% if enable_notebook %}
-            { id: 'jupyter_status', hidden: true },
-            {% endif %}
-            {
-                id: 'details',
-                name: '',
-                sort: false,
-                width: '45px',
-                formatter: (cell, row) => {
-                    const id = row.cells[0].data;
-                    return gridjs.html(`
-                        <div style="display: flex; flex-direction: column; gap: 3px; align-items: center;">
-                            <a href="/admin/experiment_details/${id}"
-                               style="background-color: #28a745; color: white; padding: 3px 6px; border-radius: 3px; text-decoration: none; font-size: 0.7rem; width: 100%; text-align: center;">
-                                View
-                            </a>
-                            <a href="/admin/delete_simulation/${id}"
-                               style="background-color: #dc3545; color: white; padding: 3px 6px; border-radius: 3px; text-decoration: none; font-size: 0.7rem; width: 100%; text-align: center;">
-                                Delete
-                            </a>
-                        </div>
-                    `);
-                }
-            },
-        ];
-    }
-
-    // Function to create compact table columns configuration for non-running experiments
-    function getTableColumns() {
-        return [
-            { id: 'idexp', hidden: true },
-            { id: 'has_infinite_client', hidden: true },
-            { 
-                id: 'exp_name', 
-                name: 'Name', 
-                attributes: editableCellAttributes, 
-                width: '100px',
-                formatter: (cell, row) => {
-                    const hasInfinite = row.cells[1].data;
-                    const infiniteTag = hasInfinite ? 
-                        '<span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.65em; padding: 1px 4px; border-radius: 8px; font-weight: 600; margin-left: 5px;" title="This experiment has at least one client set to run until manually stopped">∞</span>' : '';
-                    return gridjs.html(`<span>${cell}${infiniteTag}</span>`);
-                }
-            },
-            { id: 'owner', name: 'Owner', sort: false, width: '50px' },
-            {
-                id: 'annotations',
-                name: 'Tags',
-                sort: false,
-                width: '70px',
-                formatter: (cell) => {
-                    if (!cell || cell === '') {
-                        return gridjs.html('<div style="text-align: center;">-</div>');
-                    }
-                    const annotations = cell.split(',').filter(a => a.trim());
-                    const tags = annotations.map(annotation => {
-                        const colors = {
-                            'toxicity': '#dc3545',
-                            'sentiment': '#28a745',
-                            'emotion': '#17a2b8'
-                        };
-                        const color = colors[annotation.trim()] || '#6c757d';
-                        const shortName = annotation.trim().substring(0, 3);
-                        return `<span style="display: inline-block; background-color: ${color}; color: white; padding: 1px 4px; margin: 1px; border-radius: 8px; font-size: 0.65rem;" title="${annotation.trim()}">${shortName}</span>`;
-                    }).join('');
-                    return gridjs.html(`<div style="display: flex; justify-content: center; flex-wrap: wrap;">${tags}</div>`);
-                }
-            },
-            {
-                id: 'status_combined',
-                name: 'Status',
-                sort: false,
-                width: '40px',
-                formatter: (cell, row) => {
-                    // Get the web value from hidden cell (shifted by 1 due to has_infinite_client column)
-                    const web = row.cells[5].data;      // web is at index 5
-                    {% if enable_notebook %}
-                    const jupyter = row.cells[6].data;  // jupyter_status is at index 6
-                    {% endif %}
-                    
-                    const webColor = web === 'Loaded' ? '#28a745' : '#6c757d';
-                    {% if enable_notebook %}
-                    const jupyterColor = jupyter === 'Active' ? '#28a745' : '#6c757d';
-                    {% endif %}
-                    
-                    return gridjs.html(`
-                        <div class="status-indicators">
-                            <span class="status-dot" style="background-color: ${webColor};" title="Web: ${web}"></span>
-                            {% if enable_notebook %}
-                            <span class="status-dot" style="background-color: ${jupyterColor};" title="Lab: ${jupyter}"></span>
-                            {% endif %}
-                        </div>
-                    `);
-                }
-            },
-            { id: 'web', hidden: true },
-            {% if enable_notebook %}
-            { id: 'jupyter_status', hidden: true },
-            {% endif %}
-            {
-                id: 'details',
-                name: '',
-                sort: false,
-                width: '45px',
-                formatter: (cell, row) => {
-                    const id = row.cells[0].data;
-                    return gridjs.html(`
-                        <div style="display: flex; flex-direction: column; gap: 3px; align-items: center;">
-                            <a href="/admin/experiment_details/${id}"
-                               style="background-color: #28a745; color: white; padding: 3px 6px; border-radius: 3px; text-decoration: none; font-size: 0.7rem; width: 100%; text-align: center;">
-                                View
-                            </a>
-                            <a href="/admin/delete_simulation/${id}"
-                               style="background-color: #dc3545; color: white; padding: 3px 6px; border-radius: 3px; text-decoration: none; font-size: 0.7rem; width: 100%; text-align: center;">
-                                Delete
-                            </a>
-                        </div>
-                    `);
-                }
-            },
-        ];
-    }
-
-    // Track selected experiments for download
-    const selectedExperiments = new Set();
-
-    // Function to update the download button visibility
-    function updateDownloadButton() {
-        const btn = document.getElementById('download-selected-btn');
-        if (btn) {
-            if (selectedExperiments.size > 0) {
-                btn.style.display = 'inline-block';
-                btn.innerHTML = `<i class="mdi mdi-download"></i> Download Selected (${selectedExperiments.size})`;
-            } else {
-                btn.style.display = 'none';
-            }
-        }
-    }
-
-    // Function to toggle experiment selection
-    function toggleExperimentSelection(expId, checkbox) {
-        if (checkbox.checked) {
-            selectedExperiments.add(expId);
-        } else {
-            selectedExperiments.delete(expId);
-        }
-        updateDownloadButton();
-        updateSelectAllCheckbox();
-    }
-
-    // Function to toggle all experiments selection
-    function toggleAllExperiments(masterCheckbox) {
-        const checkboxes = document.querySelectorAll('.exp-checkbox');
-        checkboxes.forEach(cb => {
-            cb.checked = masterCheckbox.checked;
-            const expId = parseInt(cb.dataset.expId);
-            if (masterCheckbox.checked) {
-                selectedExperiments.add(expId);
-            } else {
-                selectedExperiments.delete(expId);
-            }
-        });
-        updateDownloadButton();
-    }
-
-    // Function to update select all checkbox state
-    function updateSelectAllCheckbox() {
-        const masterCheckbox = document.getElementById('select-all-completed');
-        const checkboxes = document.querySelectorAll('.exp-checkbox');
-        if (masterCheckbox && checkboxes.length > 0) {
-            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-            const someChecked = Array.from(checkboxes).some(cb => cb.checked);
-            masterCheckbox.checked = allChecked;
-            masterCheckbox.indeterminate = someChecked && !allChecked;
-        }
-    }
-
-    // Function to download selected experiments
-    function downloadSelectedExperiments() {
-        if (selectedExperiments.size === 0) {
-            alert('Please select at least one experiment to download.');
-            return;
-        }
-
-        const expIds = Array.from(selectedExperiments);
-        
-        // Show loading indicator
-        const btn = document.getElementById('download-selected-btn');
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Preparing...';
-        btn.disabled = true;
-
-        // Submit a form to download (to properly handle file download)
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/admin/download_experiments_bulk';
-        
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'exp_ids';
-        input.value = JSON.stringify(expIds);
-        form.appendChild(input);
-        
-        document.body.appendChild(form);
-        form.submit();
-        document.body.removeChild(form);
-
-        // Reset button after a delay
-        setTimeout(() => {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-        }, 3000);
-    }
-
-    // Function to download all completed experiments
-    function downloadAllExperiments() {
-        // Show loading indicator
-        const btn = document.getElementById('download-all-btn');
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Preparing...';
-        btn.disabled = true;
-
-        // Submit a form to download all (empty array or 'all' signal to backend)
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/admin/download_experiments_bulk';
-        
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'exp_ids';
-        input.value = JSON.stringify('all');  // Signal to download all completed experiments
-        form.appendChild(input);
-        
-        document.body.appendChild(form);
-        form.submit();
-        document.body.removeChild(form);
-
-        // Reset button after a delay
-        setTimeout(() => {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-        }, 3000);
-    }
-
-    // Function to create compact table columns configuration for Completed Experiments (with checkbox)
-    function getCompletedTableColumns() {
-        return [
-            { id: 'idexp', hidden: true },
-            { id: 'has_infinite_client', hidden: true },
-            {
-                id: 'checkbox',
-                name: gridjs.html('<input type="checkbox" id="select-all-completed" onchange="toggleAllExperiments(this)" title="Select all"/>'),
-                sort: false,
-                width: '30px',
-                formatter: (cell, row) => {
-                    const id = row.cells[0].data;
-                    const isChecked = selectedExperiments.has(id) ? 'checked' : '';
-                    return gridjs.html(`
-                        <input type="checkbox" class="exp-checkbox" data-exp-id="${id}" 
-                               onchange="toggleExperimentSelection(${id}, this)" ${isChecked}
-                               style="cursor: pointer;"/>
-                    `);
-                }
-            },
-            { 
-                id: 'exp_name', 
-                name: 'Name', 
-                attributes: editableCellAttributes, 
-                width: '100px',
-                formatter: (cell, row) => {
-                    const hasInfinite = row.cells[1].data;
-                    const infiniteTag = hasInfinite ? 
-                        '<span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.65em; padding: 1px 4px; border-radius: 8px; font-weight: 600; margin-left: 5px;" title="This experiment has at least one client set to run until manually stopped">∞</span>' : '';
-                    return gridjs.html(`<span>${cell}${infiniteTag}</span>`);
-                }
-            },
-            { id: 'owner', name: 'Owner', sort: false, width: '50px' },
-            {
-                id: 'annotations',
-                name: 'Tags',
-                sort: false,
-                width: '70px',
-                formatter: (cell) => {
-                    if (!cell || cell === '') {
-                        return gridjs.html('<div style="text-align: center;">-</div>');
-                    }
-                    const annotations = cell.split(',').filter(a => a.trim());
-                    const tags = annotations.map(annotation => {
-                        const colors = {
-                            'toxicity': '#dc3545',
-                            'sentiment': '#28a745',
-                            'emotion': '#17a2b8'
-                        };
-                        const color = colors[annotation.trim()] || '#6c757d';
-                        const shortName = annotation.trim().substring(0, 3);
-                        return `<span style="display: inline-block; background-color: ${color}; color: white; padding: 1px 4px; margin: 1px; border-radius: 8px; font-size: 0.65rem;" title="${annotation.trim()}">${shortName}</span>`;
-                    }).join('');
-                    return gridjs.html(`<div style="display: flex; justify-content: center; flex-wrap: wrap;">${tags}</div>`);
-                }
-            },
-            {
-                id: 'status_combined',
-                name: 'Status',
-                sort: false,
-                width: '40px',
-                formatter: (cell, row) => {
-                    // Get the web value from hidden cell (shifted by 1 due to checkbox and has_infinite_client column)
-                    const web = row.cells[6].data;      // web is at index 6 (shifted +1)
-                    {% if enable_notebook %}
-                    const jupyter = row.cells[7].data;  // jupyter_status is at index 7 (shifted +1)
-                    {% endif %}
-                    
-                    const webColor = web === 'Loaded' ? '#28a745' : '#6c757d';
-                    {% if enable_notebook %}
-                    const jupyterColor = jupyter === 'Active' ? '#28a745' : '#6c757d';
-                    {% endif %}
-                    
-                    return gridjs.html(`
-                        <div class="status-indicators">
-                            <span class="status-dot" style="background-color: ${webColor};" title="Web: ${web}"></span>
-                            {% if enable_notebook %}
-                            <span class="status-dot" style="background-color: ${jupyterColor};" title="Lab: ${jupyter}"></span>
-                            {% endif %}
-                        </div>
-                    `);
-                }
-            },
-            { id: 'web', hidden: true },
-            {% if enable_notebook %}
-            { id: 'jupyter_status', hidden: true },
-            {% endif %}
-            {
-                id: 'details',
-                name: '',
-                sort: false,
-                width: '45px',
-                formatter: (cell, row) => {
-                    const id = row.cells[0].data;
-                    return gridjs.html(`
-                        <div style="display: flex; flex-direction: column; gap: 3px; align-items: center;">
-                            <a href="/admin/experiment_details/${id}"
-                               style="background-color: #28a745; color: white; padding: 3px 6px; border-radius: 3px; text-decoration: none; font-size: 0.7rem; width: 100%; text-align: center;">
-                                View
-                            </a>
-                            <a href="/admin/delete_simulation/${id}"
-                               style="background-color: #dc3545; color: white; padding: 3px 6px; border-radius: 3px; text-decoration: none; font-size: 0.7rem; width: 100%; text-align: center;">
-                                Delete
-                            </a>
-                        </div>
-                    `);
-                }
-            },
-        ];
-    }
-
-    // Create table for a specific status
-    function createTable(tableId, statusFilter, boxId) {
-        const tableDiv = document.getElementById(tableId);
-        const boxDiv = document.getElementById(boxId);
-        
-        // Use progress bar columns for running experiments, completed columns for completed (with checkboxes), tags for others
-        let columns;
-        if (statusFilter === EXP_STATUS.ACTIVE) {
-            columns = getRunningTableColumns();
-        } else if (statusFilter === EXP_STATUS.COMPLETED) {
-            columns = getCompletedTableColumns();
-        } else {
-            columns = getTableColumns();
-        }
-        
-        const grid = new gridjs.Grid({
-            columns: columns,
-            server: {
-                url: `/admin/experiments_data?exp_status=${statusFilter}`,
-                then: results => {
-                    // Show/hide box based on whether there are results
-                    if (results.total > 0) {
-                        boxDiv.style.display = 'flex';
-                    } else {
-                        boxDiv.style.display = 'none';
-                    }
-                    return results.data;
-                },
-                total: results => results.total,
-            },
-            search: {
-                enabled: true,
-                server: {
-                    url: (prev, search) => {
-                        return updateUrl(prev, { search });
-                    },
-                },
-            },
-            sort: {
-                enabled: true,
-                multiColumn: true,
-                server: {
-                    url: (prev, columns) => {
-                        const columnIds = ['idexp', 'exp_name', 'platform_type', 'exp_descr', 'owner', 'web', 'running'];
-                        const sort = columns.map(col => (col.direction === 1 ? '+' : '-') + columnIds[col.index]);
-                        return updateUrl(prev, { sort });
-                    },
-                },
-            },
-            pagination: {
-                enabled: true,
-                limit: 5,
-                server: {
-                    url: (prev, page, limit) => {
-                        return updateUrl(prev, { start: page * limit, length: limit });
-                    },
-                },
-            },
-            language: {
-                noRecordsFound: 'No experiments in this category'
-            }
-        });
-        
-        grid.render(tableDiv);
-        gridInstances[statusFilter] = grid;
-        
-        return grid;
-    }
-
-    // Function to refresh all tables with fresh data from server
-    function refreshAllTables() {
-        // Refresh each grid by triggering a new server request
-        Object.entries(gridInstances).forEach(([statusFilter, grid]) => {
-            if (grid && typeof grid.updateConfig === 'function') {
-                // Get box visibility element
-                const boxId = statusFilter === EXP_STATUS.ACTIVE ? 'box-active' : 
-                              statusFilter === EXP_STATUS.COMPLETED ? 'box-completed' : 'box-stopped';
-                const boxDiv = document.getElementById(boxId);
-                
-                // Re-apply the same server config to trigger a fresh fetch
-                grid.updateConfig({
-                    server: {
-                        url: `/admin/experiments_data?exp_status=${statusFilter}`,
-                        then: results => {
-                            // Show/hide box based on whether there are results
-                            if (results.total > 0) {
-                                boxDiv.style.display = 'flex';
-                            } else {
-                                boxDiv.style.display = 'none';
-                            }
-                            return results.data;
-                        },
-                        total: results => results.total,
-                    }
-                }).forceRender();
-            }
-        });
-    }
-
-    // Create all three tables using status constants
-    createTable('table-active', EXP_STATUS.ACTIVE, 'box-active');
-    createTable('table-completed', EXP_STATUS.COMPLETED, 'box-completed');
-    createTable('table-stopped', EXP_STATUS.STOPPED_SCHEDULED, 'box-stopped');
-
-    // Delay for Grid.js to complete rendering before equalizing heights
-    const EQUALIZATION_DELAY = 500;
-
-    // Function to equalize heights of visible experiment boxes
-    function equalizeBoxHeights() {
-        const boxes = ['box-active', 'box-completed', 'box-stopped'];
-        const visibleBoxes = boxes.map(id => document.getElementById(id))
-            .filter(box => box && getComputedStyle(box).display !== 'none');
-        
-        if (visibleBoxes.length <= 1) return;
-        
-        // Reset heights to auto to get natural heights
-        visibleBoxes.forEach(box => box.style.height = 'auto');
-        
-        // Wait a frame for layout recalculation
-        requestAnimationFrame(() => {
-            // Find the maximum height
-            const maxHeight = Math.max(...visibleBoxes.map(box => box.offsetHeight));
-            
-            // Apply the maximum height to all visible boxes
-            visibleBoxes.forEach(box => {
-                box.style.height = maxHeight + 'px';
-            });
-        });
-    }
-
-    // Equalize heights after initial tables load (with delay for Grid.js render)
-    setTimeout(equalizeBoxHeights, EQUALIZATION_DELAY);
-
-    // Also equalize after each refresh
-    if (typeof refreshAllTables === 'function') {
-        const originalRefreshAllTables = refreshAllTables;
-        refreshAllTables = function() {
-            originalRefreshAllTables();
-            // Re-equalize after the async refresh completes
-            setTimeout(equalizeBoxHeights, EQUALIZATION_DELAY);
-        };
-    }
-
-    // Set up periodic refresh
-    setInterval(refreshAllTables, DATA_REFRESH_INTERVAL);
-
-    let savedValue;
-
-    // Inline editing support for all tables (using document-level delegation)
-    document.addEventListener('focusin', ev => {
-        if (ev.target.tagName === 'TD' && ev.target.hasAttribute('data-element-id')) {
-            savedValue = ev.target.textContent;
-        }
-    });
-
-    document.addEventListener('focusout', ev => {
-        if (ev.target.tagName === 'TD' && ev.target.hasAttribute('data-element-id')) {
-            if (savedValue !== ev.target.textContent) {
-                fetch('/admin/experiments_data', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        id: ev.target.dataset.elementId,
-                        [ev.target.dataset.columnId]: ev.target.textContent
-                    }),
-                });
-            }
-            savedValue = undefined;
-        }
-    });
-
-    document.addEventListener('keydown', ev => {
-        if (ev.target.tagName === 'TD' && ev.target.hasAttribute('data-element-id')) {
-            if (ev.key === 'Escape') {
-                ev.target.textContent = savedValue;
-                ev.target.blur();
-            } else if (ev.key === 'Enter') {
-                ev.preventDefault();
-                ev.target.blur();
-            }
-        }
-    });
-
-    // Handle Delete Button
-    document.addEventListener('click', function (event) {
-        const target = event.target;
-        if (target.classList.contains('delete-button')) {
-            const id = target.getAttribute('data-id');
-            if (confirm('Are you sure you want to delete this experiment?')) {
-                fetch(`/admin/delete_simulation/${id}`, {
-                    method: 'DELETE',
-                })
-                .then(response => {
-                    if (!response.ok) throw new Error('Failed to delete');
-                    // Refresh table after deletion
-                    location.reload();
-                })
-                .catch(err => {
-                    alert('Error deleting experiment.');
-                    console.error(err);
-                });
-            }
-        }
-    });
-</script>
 
 <!-- Schedule JavaScript -->
-<script>
-    let scheduleCheckInterval = null;
-    let currentRunningGroupId = null;
-
-    // Load schedule data on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        loadAvailableExperiments();
-        loadScheduleGroups();
-        loadPersistentLogs();
-        checkScheduleStatus();
-    });
-
-    function loadPersistentLogs() {
-        fetch('/admin/schedule/logs')
-            .then(response => response.json())
-            .then(data => {
-                const logDiv = document.getElementById('schedule-log');
-                if (logDiv && data.logs && data.logs.length > 0) {
-                    logDiv.innerHTML = data.logs.map(log => {
-                        const timestamp = log.created_at ? new Date(log.created_at).toLocaleTimeString() : '';
-                        const colorClass = log.log_type === 'success' ? 'color: #28a745;' : 
-                                           log.log_type === 'error' ? 'color: #dc3545;' :
-                                           log.log_type === 'warning' ? 'color: #ffc107;' : '';
-                        return `<div><span style="color: #6c757d;">[${timestamp}]</span> <span style="${colorClass}">${log.message}</span></div>`;
-                    }).join('');
-                    logDiv.scrollTop = logDiv.scrollHeight;
-                } else if (logDiv) {
-                    logDiv.innerHTML = '<p style="color: #999; text-align: center; margin: 0;">No logs yet</p>';
-                }
-            })
-            .catch(err => console.error('Error loading logs:', err));
-    }
-
-    function clearLogs() {
-        fetch('/admin/schedule/logs/clear', { method: 'POST' })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const logDiv = document.getElementById('schedule-log');
-                    if (logDiv) {
-                        logDiv.innerHTML = '<p style="color: #999; text-align: center; margin: 0;">No logs yet</p>';
-                    }
-                }
-            })
-            .catch(err => console.error('Error clearing logs:', err));
-    }
-
-    function autoCreateGroups() {
-        const inputField = document.getElementById('exps-per-group');
-        const experimentsPerGroup = parseInt(inputField ? inputField.value : 2);
-        
-        if (isNaN(experimentsPerGroup) || experimentsPerGroup < 1) {
-            alert('Please enter a valid number (1 or more)');
-            return;
-        }
-
-        fetch('/admin/schedule/auto_create_groups', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ experiments_per_group: experimentsPerGroup })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                loadScheduleGroups();
-                loadAvailableExperiments();
-                loadPersistentLogs();
-            } else {
-                alert(data.message || 'Failed to create groups');
-            }
-        })
-        .catch(err => alert('Error creating groups'));
-    }
-
-    function loadAvailableExperiments() {
-        fetch('/admin/schedule/available_experiments')
-            .then(response => response.json())
-            .then(data => {
-                const container = document.getElementById('available-experiments');
-                if (!container) return;
-                if (data.experiments && data.experiments.length > 0) {
-                    container.innerHTML = data.experiments.map(exp => `
-                        <div class="draggable-experiment" draggable="true" data-exp-id="${exp.id}" 
-                             style="padding: 8px 10px; margin: 4px 0; background: #f8f9fa; border: 1px solid #dee2e6; 
-                                    border-radius: 4px; cursor: grab; font-size: 0.85em; display: flex; justify-content: space-between; align-items: center;"
-                             ondragstart="handleDragStart(event)">
-                             <span><strong>${exp.name}</strong> <span style="color: #6c757d;">(${exp.owner})</span></span>
-                        </div>
-                    `).join('');
-                } else {
-                    container.innerHTML = '<p style="color: #999; font-size: 0.85em; text-align: center; padding: 20px;">No available experiments</p>';
-                }
-            })
-            .catch(err => console.error('Error loading experiments:', err));
-    }
-
-    function loadScheduleGroups() {
-        fetch('/admin/schedule/groups')
-            .then(response => response.json())
-            .then(data => {
-                const container = document.getElementById('schedule-groups');
-                if (!container) return;
-                if (data.groups && data.groups.length > 0) {
-                    container.innerHTML = data.groups.map((group, idx) => {
-                        const isRunning = currentRunningGroupId === group.id;
-                        const headerBg = isRunning ? '#28a745' : '#e9ecef';
-                        const headerColor = isRunning ? 'white' : 'inherit';
-                        const borderColor = isRunning ? '#28a745' : '#dee2e6';
-                        const runningBadge = isRunning ? '<span style="background: white; color: #28a745; padding: 2px 8px; border-radius: 10px; font-size: 0.75em; margin-left: 8px;">RUNNING</span>' : '';
-                        
-                        // Filter out completed experiments from running group display
-                        const activeExperiments = isRunning 
-                            ? group.experiments.filter(exp => exp.exp_status !== 'completed')
-                            : group.experiments;
-                        
-                        // Count completed experiments for display
-                        const completedCount = isRunning 
-                            ? group.experiments.filter(exp => exp.exp_status === 'completed').length
-                            : 0;
-                        const completedBadge = completedCount > 0 
-                            ? `<span style="background: #17a2b8; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75em; margin-left: 4px;">${completedCount} done</span>` 
-                            : '';
-                        
-                        return `
-                        <div class="schedule-group" data-group-id="${group.id}" 
-                             style="margin-bottom: 15px; border: 2px solid ${borderColor}; border-radius: 6px; background: #fff; ${isRunning ? 'box-shadow: 0 0 10px rgba(40, 167, 69, 0.3);' : ''}">
-                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: ${headerBg}; color: ${headerColor}; border-radius: 4px 4px 0 0;">
-                                <span style="font-weight: 600; font-size: 0.85em; display: flex; align-items: center;">
-                                    <i class="mdi mdi-numeric-${idx + 1}-circle" style="color: ${isRunning ? 'white' : '#6c757d'};"></i> 
-                                    ${group.name}
-                                    ${runningBadge}
-                                    ${completedBadge}
-                                </span>
-                                <button onclick="deleteScheduleGroup(${group.id})" style="background: none; border: none; color: ${isRunning ? 'rgba(255,255,255,0.7)' : '#dc3545'}; cursor: ${isRunning ? 'not-allowed' : 'pointer'}; font-size: 1em;" ${isRunning ? 'disabled title="Cannot delete running group"' : ''}>
-                                    <i class="mdi mdi-delete"></i>
-                                </button>
-                            </div>
-                            <div class="group-experiments" data-group-id="${group.id}" 
-                                 style="min-height: 50px; padding: 8px; background: ${isRunning ? '#f0fff4' : '#fafafa'}; display: flex; flex-wrap: wrap; gap: 6px; align-items: flex-start;"
-                                 ondragover="handleDragOver(event)" ondrop="handleDrop(event, ${group.id})">
-                                ${activeExperiments.length > 0 ? activeExperiments.map(exp => `
-                                    <span class="experiment-tag" style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: ${isRunning ? '#28a745' : '#6c757d'}; color: white; border-radius: 15px; font-size: 0.75em; white-space: nowrap;">
-                                        <i class="mdi mdi-flask"></i>
-                                        ${exp.name}
-                                        ${!isRunning ? `<button onclick="removeExperimentFromGroup(${exp.item_id})" style="background: none; border: none; color: rgba(255,255,255,0.8); cursor: pointer; padding: 0; margin-left: 4px; font-size: 1.1em; line-height: 1;">
-                                            <i class="mdi mdi-close-circle"></i>
-                                        </button>` : ''}
-                                    </span>
-                                `).join('') : (isRunning && completedCount > 0 ? '<p style="color: #28a745; font-size: 0.8em; text-align: center; margin: 0; width: 100%;"><i class="mdi mdi-check-circle"></i> All experiments completed!</p>' : '<p style="color: #999; font-size: 0.8em; text-align: center; margin: 0; width: 100%;">Drag experiments here</p>')}
-                            </div>
-                        </div>
-                    `}).join('');
-                } else {
-                    container.innerHTML = '<p style="color: #999; font-size: 0.85em; text-align: center; padding: 20px;">No groups created yet. Click "Add Group" to start.</p>';
-                }
-            })
-            .catch(err => console.error('Error loading groups:', err));
-    }
-
-    function addScheduleGroup() {
-        // Auto-generate incremental group name
-        const container = document.getElementById('schedule-groups-container');
-        const existingGroups = container ? container.querySelectorAll('.schedule-group').length : 0;
-        const name = 'Group ' + (existingGroups + 1);
-
-        fetch('/admin/schedule/groups', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: name })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                loadScheduleGroups();
-            } else {
-                alert(data.message || 'Failed to create group');
-            }
-        })
-        .catch(err => alert('Error creating group'));
-    }
-
-    function deleteScheduleGroup(groupId) {
-        if (currentRunningGroupId === groupId) {
-            alert('Cannot delete a running group. Stop the schedule first.');
-            return;
-        }
-
-        fetch(`/admin/schedule/groups/${groupId}`, { method: 'DELETE' })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    loadScheduleGroups();
-                    loadAvailableExperiments();
-                } else {
-                    alert(data.message || 'Failed to delete group');
-                }
-            })
-            .catch(err => console.error('Error deleting group:', err));
-    }
-
-    function handleDragStart(event) {
-        event.dataTransfer.setData('text/plain', event.target.dataset.expId);
-        event.target.style.opacity = '0.5';
-    }
-
-    function handleDragOver(event) {
-        event.preventDefault();
-        event.currentTarget.style.background = '#e8f4e8';
-    }
-
-    function handleDrop(event, groupId) {
-        event.preventDefault();
-        event.currentTarget.style.background = currentRunningGroupId === groupId ? '#f0fff4' : '#fafafa';
-        
-        const expId = event.dataTransfer.getData('text/plain');
-        if (!expId) return;
-
-        fetch(`/admin/schedule/groups/${groupId}/experiments`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ experiment_id: parseInt(expId) })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                loadScheduleGroups();
-                loadAvailableExperiments();
-            } else {
-                alert(data.message || 'Failed to add experiment');
-            }
-        })
-        .catch(err => alert('Error adding experiment to group'));
-    }
-
-    function removeExperimentFromGroup(itemId) {
-        fetch(`/admin/schedule/items/${itemId}`, { method: 'DELETE' })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    loadScheduleGroups();
-                    loadAvailableExperiments();
-                } else {
-                    alert(data.message || 'Cannot remove experiment');
-                }
-            })
-            .catch(err => console.error('Error removing experiment:', err));
-    }
-
-    function addLogMessage(message) {
-        const logDiv = document.getElementById('schedule-log');
-        if (!logDiv) return;
-        // Clear "No logs yet" placeholder if present
-        if (logDiv.querySelector('p')) {
-            logDiv.innerHTML = '';
-        }
-        
-        const timestamp = new Date().toLocaleTimeString();
-        const msgDiv = document.createElement('div');
-        msgDiv.innerHTML = `<span style="color: #6c757d;">[${timestamp}]</span> ${message}`;
-        logDiv.appendChild(msgDiv);
-        logDiv.scrollTop = logDiv.scrollHeight;
-    }
-
-    function displayLogs(logs) {
-        if (logs && logs.length > 0) {
-            logs.forEach(log => addLogMessage(log));
-        }
-    }
-
-    function startSchedule() {
-        // Clear previous logs display
-        const logDiv = document.getElementById('schedule-log');
-        if (logDiv) {
-            logDiv.innerHTML = '';
-            addLogMessage('Starting schedule...');
-        }
-
-        fetch('/admin/schedule/start', { method: 'POST' })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Reload persistent logs after start
-                    loadPersistentLogs();
-                    currentRunningGroupId = data.current_group_id;
-                    checkScheduleStatus();
-                    loadScheduleGroups();
-                    // Start polling for progress
-                    scheduleCheckInterval = setInterval(checkScheduleProgress, 30000);
-                } else {
-                    addLogMessage(`<strong style="color: #dc3545;">✗ ${data.message}</strong>`);
-                }
-            })
-            .catch(err => {
-                addLogMessage(`<strong style="color: #dc3545;">✗ Error starting schedule</strong>`);
-            });
-    }
-
-    function stopSchedule() {
-        if (!confirm('Stop the schedule? This will stop all running experiments.')) return;
-
-        addLogMessage('Stopping schedule...');
-
-        fetch('/admin/schedule/stop', { method: 'POST' })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    addLogMessage(`<strong style="color: #dc3545;">Schedule stopped</strong>`);
-                    currentRunningGroupId = null;
-                    checkScheduleStatus();
-                    loadScheduleGroups();
-                    if (scheduleCheckInterval) {
-                        clearInterval(scheduleCheckInterval);
-                    }
-                } else {
-                    addLogMessage(`<strong style="color: #dc3545;">✗ ${data.message}</strong>`);
-                }
-            })
-            .catch(err => addLogMessage('<strong style="color: #dc3545;">✗ Error stopping schedule</strong>'));
-    }
-
-    function checkScheduleStatus() {
-        fetch('/admin/schedule/status')
-            .then(response => response.json())
-            .then(data => {
-                const startBtn = document.getElementById('start-schedule-btn');
-                const stopBtn = document.getElementById('stop-schedule-btn');
-                const badge = document.getElementById('schedule-status-badge');
-
-                if (data.is_running) {
-                    if (startBtn) startBtn.style.display = 'none';
-                    if (stopBtn) stopBtn.style.display = 'inline-block';
-                    if (badge) {
-                        badge.style.display = 'inline-block';
-                        badge.style.background = '#28a745';
-                        badge.style.color = 'white';
-                        badge.textContent = 'Running';
-                    }
-                    currentRunningGroupId = data.current_group_id;
-                    // Start progress check if not already running
-                    if (!scheduleCheckInterval) {
-                        scheduleCheckInterval = setInterval(checkScheduleProgress, 30000);
-                    }
-                } else {
-                    if (startBtn) startBtn.style.display = 'inline-block';
-                    if (stopBtn) stopBtn.style.display = 'none';
-                    if (badge) badge.style.display = 'none';
-                    currentRunningGroupId = null;
-                    if (scheduleCheckInterval) {
-                        clearInterval(scheduleCheckInterval);
-                        scheduleCheckInterval = null;
-                    }
-                }
-                loadScheduleGroups();
-            })
-            .catch(err => console.error('Error checking status:', err));
-    }
-
-    function checkScheduleProgress() {
-        fetch('/admin/schedule/check_progress', { method: 'POST' })
-            .then(response => response.json())
-            .then(data => {
-                // Reload persistent logs to get latest
-                loadPersistentLogs();
-                
-                // Always reload schedule groups to update completed experiment tags
-                loadScheduleGroups();
-                
-                if (data.schedule_complete) {
-                    if (scheduleCheckInterval) {
-                        clearInterval(scheduleCheckInterval);
-                        scheduleCheckInterval = null;
-                    }
-                    currentRunningGroupId = null;
-                    checkScheduleStatus();
-                    loadAvailableExperiments();
-                    // Refresh DataTables to show updated statuses
-                    refreshAllTables();
-                } else if (data.next_group) {
-                    currentRunningGroupId = data.next_group_id;
-                }
-            })
-            .catch(err => console.error('Error checking progress:', err));
-    }
-</script>
 
 
                 </div>
 
             </div>
 
-            <!-- ROW 2: New Experiment + Guide -->
-            <div class="columns is-layout-row">
-                <!--Dashboard column-->
-                <!--Dashboard column-->
+            <!-- ROW 2: New Experiment (left 2/3) + Upload Experiment (right 1/3) -->
+            <div class="columns">
                 <div class="column is-8">
                     <!--Dashboard box-->
 
@@ -1259,137 +95,163 @@
 
                                     <div class="box-line">
                                         <span class="left">Platform Type</span>
-                                        <span class="right" style="width: 70%;">
-                                            <div class="select">
-                                                <select name="platform_type" style="width: 100%">
+ <span class="right ys-w-70" style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px;">
+                                            <input type="hidden" id="simulator_type_input" name="simulator_type" value="Standard">
+                                            <div class="select" style="flex: 1 1 280px; min-width: 240px;">
+ <select id="platform_type_select" name="platform_type" class="w-100">
                                                     <option value="microblogging">Microblogging (i.e., X/BlueSky)</option>
-                                                    <option value="forum" disabled>Forum (i.e., Reddit)</option>
+                                                    <option value="forum" {% if not repo_availability.forum %}disabled{% endif %}>Forum (i.e., Reddit){% if not repo_availability.forum %} - Unavailable{% endif %}</option>
                                                 </select>
+                                            </div>
+                                            <div id="hpc-toggle-container" style="display: flex; align-items: center; gap: 8px; min-width: 140px; flex-shrink: 0;">
+                                                <span class="ys-text-sm-muted" style="font-weight: 500; color: #374151;">HPC</span>
+                                                <label class="switch-small">
+                                                    <input type="checkbox" id="hpc_toggle">
+                                                    <span class="slider-small round"></span>
+                                                </label>
+ <span id="hpc-toggle-label" class="ys-text-sm-muted">Disabled</span>
+                                            </div>
+                                            <div id="hpc-info-inline" style="display: none; flex: 1 1 100%; background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); border-left: 4px solid #ffc107; padding: 8px 10px; border-radius: 6px; font-size: 0.75em; line-height: 1.3; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                                                <div style="display: flex; align-items: flex-start; gap: 6px;">
+                                                    <i class="mdi mdi-information" style="color: #ff9800; font-size: 1.1em; flex-shrink: 0; margin-top: 1px;"></i>
+                                                    <div>
+                                                        <strong style="color: #e65100; display: block; margin-bottom: 1px; font-size: 0.95em;">HPC Simulator</strong>
+                                                        <span style="color: #5d4037;">This is an experimental simulator that guarantees higher simulation scalability at the cost of more fine-grained configuration and setting complexity.</span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </span>
                                     </div>
 
                                     <div class="box-line">
                                         <span class="left">Name</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="exp_name"
-                                                                                       class="input"></span>
-                                    </div>
-                                    <div class="box-line">
-                                        <span class="left">Description</span>
-                                        <span class="right" style="width: 70%;"><input type="textarea" name="exp_descr"
+ <span class="right ys-w-70"><input type="text" name="exp_name"
                                                                                        class="input"></span>
                                     </div>
 
                                     <div class="box-line">
                                         <span class="left">Enable LLM Agents</span>
-                                        <span class="right" style="width: 70%;">
-                                            <div style="display: flex; align-items: center; gap: 8px;">
+ <span class="right ys-w-70">
+ <div class="ys-flex-gap-8">
                                                 <label class="switch-small">
                                                     <input type="checkbox" id="llm_agents_toggle" name="llm_agents_enabled" value="true" checked>
                                                     <span class="slider-small round"></span>
                                                 </label>
-                                                <span style="font-size: 0.9rem; color: #6b7280;">Enable AI-driven agents in the simulation</span>
+ <span class="ys-text-sm-muted">Enable AI-driven agents in the simulation</span>
+                                            </div>
+                                        </span>
+                                    </div>
+
+                                    <input type="hidden" name="is_remote" value="false">
+
+                                    <!-- Remote Experiment Configuration (shown only when remote is enabled) -->
+ <div id="remote-config-box" class="box-line d-none">
+                                        <span class="left">Remote Server</span>
+ <span class="right ys-w-70">
+                                            <div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 16px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
+ <div class="ys-mb-12">
+ <label class="ys-field-label">Host Address</label>
+ <input type="text" id="remote_host" name="remote_host" value="" placeholder="e.g., 192.168.1.100 or example.com" class="input w-100">
+                                                </div>
+
+ <div class="mb-0">
+ <label class="ys-field-label">Port</label>
+                                                    <!-- Default: 8000 (common for YSocial experiment servers) -->
+ <input type="number" id="remote_port" name="remote_port" value="8000" placeholder="8000" class="input w-100" min="1" max="65535">
+                                                </div>
                                             </div>
                                         </span>
                                     </div>
 
                                     <div class="box-line">
                                         <span class="left">Simulation Topics</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
 
-                                            <div class="tags-input" style="width: 100%;">
+ <div class="tags-input w-100">
                                             <ul id="tags"></ul>
                                             <input type="hidden" id="tags-hidden" name="tags">
-                                            <input type="text" id="input-tag" placeholder="Enter topic name" style="width: 100%;"/>
+ <input type="text" id="input-tag" placeholder="Enter topic name" class="w-100"/>
+                                        </div>
+                                        
+                                        <!-- Numeric input for number of topics when LLM agents are disabled -->
+ <div id="topic-count-input" class="ys-hidden-mt">
+                                            <label for="topic-count" style="font-size: 0.9rem; color: #374151; display: block; margin-bottom: 4px;">Number of topics:</label>
+                                            <input type="number" id="topic-count" min="1" max="100" value="10" style="width: 100px; padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 4px;"/>
+                                            <button type="button" id="generate-topics-btn" title="Generate topics based on the specified count" aria-label="Generate topics" style="margin-left: 8px; padding: 4px 12px; background: #039be5; color: white; border: none; border-radius: 4px; cursor: pointer;">Generate</button>
                                         </div>
 
-                                        <script>
-                                            const tags = document.getElementById('tags');
-    const input = document.getElementById('input-tag');
-    const hiddenInput = document.getElementById('tags-hidden');
-    const tagList = [];
 
-    function updateButtonState() {
-        const createBtn = document.getElementById('create-experiment-btn');
-        if (createBtn) {
-            if (tagList.length > 0) {
-                createBtn.disabled = false;
-            } else {
-                createBtn.disabled = true;
-            }
-        }
-    }
-
-    input.addEventListener('keydown', function (event) {
-        if (event.key === 'Enter') {
-            event.preventDefault();
-            const tagContent = input.value.trim();
-            if (tagContent !== '' && !tagList.includes(tagContent)) {
-                tagList.push(tagContent);
-                const tag = document.createElement('li');
-                tag.innerHTML = `${tagContent} <button class="delete-button">X</button>`;
-                tags.appendChild(tag);
-                hiddenInput.value = tagList.join(',');
-                input.value = '';
-                updateButtonState();
-            }
-        }
-    });
-
-    tags.addEventListener('click', function (event) {
-        if (event.target.classList.contains('delete-button') && !event.target.disabled) {
-            const tagText = event.target.parentNode.textContent.slice(0, -1).trim();
-            tagList.splice(tagList.indexOf(tagText), 1);
-            hiddenInput.value = tagList.join(',');
-            event.target.parentNode.remove();
-            updateButtonState();
-        }
-    });
-                                        </script>
                                         </span>
                                     </div>
 
-                                    <div class="box-line">
-                                        <span class="left">Generated Content Annotation</span>
-                                        <span class="right" style="width: 70%;">
-                                            <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
-                                                <div style="display: flex; align-items: center; gap: 8px;">
-                                                    <label class="switch-small">
-                                                        <input type="checkbox" id="toxicity_annotation_toggle" name="toxicity_annotation" value="true">
-                                                        <span class="slider-small round"></span>
-                                                    </label>
-                                                    <span style="font-size: 0.9rem;">Toxicity</span>
+                                    <!-- Redis Configuration Box (shown only for HPC, collapsed by default) -->
+ <div id="redis-config-box" class="box-line d-none">
+                                        <span class="left">Advanced Settings</span>
+ <span class="right ys-w-70">
+                                            <div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 6px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
+                                                <!-- Collapsible header -->
+                                                <div id="redis-config-header" style="padding: 12px 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: #f9fafb; border-radius: 6px 6px 0 0; transition: background 0.2s;">
+                                                    <span style="font-size: 0.9em; color: #374151; font-weight: 600;">
+                                                        <i class="mdi mdi-cog-outline" style="margin-right: 6px;"></i>
+                                                        Redis Configuration
+                                                    </span>
+                                                    <i id="redis-config-icon" class="mdi mdi-chevron-down" style="font-size: 1.2em; color: #6b7280; transition: transform 0.3s;"></i>
                                                 </div>
-                                                <div style="display: flex; align-items: center; gap: 8px;">
-                                                    <label class="switch-small">
-                                                        <input type="checkbox" id="sentiment_annotation_toggle" name="sentiment_annotation" value="true" checked>
-                                                        <span class="slider-small round"></span>
-                                                    </label>
-                                                    <span style="font-size: 0.9rem;">Sentiment</span>
-                                                </div>
-                                                <div style="display: flex; align-items: center; gap: 8px;">
-                                                    <label class="switch-small">
-                                                        <input type="checkbox" id="emotion_annotation_toggle" name="emotion_annotation" value="true" checked>
-                                                        <span class="slider-small round"></span>
-                                                    </label>
-                                                    <span style="font-size: 0.9rem;">Emotion</span>
-                                                </div>
-                                                <div style="display: flex; align-items: center; gap: 8px;">
-                                                    <label class="switch-small">
-                                                        <input type="checkbox" id="opinion_annotation_toggle" name="opinion_annotation" value="true" checked>
-                                                        <span class="slider-small round"></span>
-                                                    </label>
-                                                    <span style="font-size: 0.9rem;">Opinion Dynamics</span>
+                                                
+                                                <!-- Collapsible content -->
+                                                <div id="redis-config-content" style="display: none; padding: 16px; border-top: 1px solid #e5e7eb;">
+ <div class="ys-mb-16">
+ <label class="ys-flex-gap-8">
+ <input type="checkbox" id="redis_enabled" name="redis_enabled" value="true" class="ys-w-auto">
+                                                            <span style="font-size: 0.9em; color: #374151; font-weight: 500;">Enable Redis</span>
+                                                        </label>
+                                                    </div>
+
+ <div class="ys-mb-12">
+ <label class="ys-field-label">Host</label>
+ <input type="text" name="redis_host" value="localhost" class="input w-100">
+                                                    </div>
+
+ <div class="ys-mb-12">
+ <label class="ys-field-label">Port</label>
+ <input type="number" name="redis_port" value="6379" class="input w-100" min="1" max="65535">
+                                                    </div>
+
+ <div class="ys-mb-12">
+ <label class="ys-field-label">Password <span style="color: #6b7280; font-weight: normal;">(optional)</span></label>
+ <input type="password" name="redis_password" value="" placeholder="Leave empty for no password" class="input w-100">
+                                                    </div>
+
+ <div class="mb-0">
+ <label class="ys-field-label">Sliding Window Days</label>
+ <input type="number" name="redis_sliding_window_days" value="2" class="input w-100" min="1" max="365">
+                                                    </div>
                                                 </div>
                                             </div>
                                         </span>
                                     </div>
 
-                                    <div class="box-line" id="perspective_api_field" style="display: none;">
-                                        <span class="left">Perspective API Key<br> <small>(Required for toxicity)</small></span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="perspective_api"
-                                                                                       class="input"
-                                                                                       value=""></span>
+                                    <div class="box-line">
+                                        <span class="left">Experiment Group</span>
+ <span class="right ys-w-70">
+ <div class="ys-flex-gap-8">
+                                                <input type="text" 
+                                                       id="exp_group_input" 
+                                                       name="exp_group" 
+                                                       list="exp_groups_datalist" 
+                                                       class="input" 
+                                                       placeholder="Enter or select a group..."
+ class="ys-flex-1">
+                                                <datalist id="exp_groups_datalist">
+                                                    {% for group in exp_groups %}
+                                                    <option value="{{ group }}">
+                                                    {% endfor %}
+                                                </datalist>
+                                            </div>
+ <p class="ys-text-tiny-gray-mt">
+                                                Optional: Group experiments together (e.g., "Project A", "Study B")
+                                            </p>
+                                        </span>
                                     </div>
                                 </div>
                                 <div class="button-wrap">
@@ -1401,187 +263,7 @@
                         </div>
                     </div>
 
-                    <style>
-                        /* Toggle Switch Styles */
-                        .switch {
-                            position: relative;
-                            display: inline-block;
-                            width: 60px;
-                            height: 34px;
-                        }
 
-                        .switch input {
-                            opacity: 0;
-                            width: 0;
-                            height: 0;
-                        }
-
-                        .slider {
-                            position: absolute;
-                            cursor: pointer;
-                            top: 0;
-                            left: 0;
-                            right: 0;
-                            bottom: 0;
-                            background-color: #ccc;
-                            transition: .4s;
-                        }
-
-                        .slider:before {
-                            position: absolute;
-                            content: "";
-                            height: 26px;
-                            width: 26px;
-                            left: 4px;
-                            bottom: 4px;
-                            background-color: white;
-                            transition: .4s;
-                        }
-
-                        input:checked + .slider {
-                            background-color: #5596e6;
-                        }
-
-                        input:focus + .slider {
-                            box-shadow: 0 0 1px #5596e6;
-                        }
-
-                        input:checked + .slider:before {
-                            transform: translateX(26px);
-                        }
-
-                        .slider.round {
-                            border-radius: 34px;
-                        }
-
-                        .slider.round:before {
-                            border-radius: 50%;
-                        }
-
-                        /* Small Toggle Switch Styles */
-                        .switch-small {
-                            position: relative;
-                            display: inline-block;
-                            width: 40px;
-                            height: 22px;
-                        }
-
-                        .switch-small input {
-                            opacity: 0;
-                            width: 0;
-                            height: 0;
-                        }
-
-                        .slider-small {
-                            position: absolute;
-                            cursor: pointer;
-                            top: 0;
-                            left: 0;
-                            right: 0;
-                            bottom: 0;
-                            background-color: #ccc;
-                            transition: .4s;
-                        }
-
-                        .slider-small:before {
-                            position: absolute;
-                            content: "";
-                            height: 16px;
-                            width: 16px;
-                            left: 3px;
-                            bottom: 3px;
-                            background-color: white;
-                            transition: .4s;
-                        }
-
-                        input:checked + .slider-small {
-                            background-color: #5596e6;
-                        }
-
-                        input:focus + .slider-small {
-                            box-shadow: 0 0 1px #5596e6;
-                        }
-
-                        input:checked + .slider-small:before {
-                            transform: translateX(18px);
-                        }
-
-                        .slider-small.round {
-                            border-radius: 22px;
-                        }
-
-                        .slider-small.round:before {
-                            border-radius: 50%;
-                        }
-                    </style>
-
-                    <script>
-                        // Show/hide Perspective API field based on toxicity annotation toggle
-                        document.addEventListener('DOMContentLoaded', function() {
-                            const toxicityToggle = document.getElementById('toxicity_annotation_toggle');
-                            const perspectiveApiField = document.getElementById('perspective_api_field');
-                            const llmAgentsToggle = document.getElementById('llm_agents_toggle');
-                            const sentimentToggle = document.getElementById('sentiment_annotation_toggle');
-                            const emotionToggle = document.getElementById('emotion_annotation_toggle');
-                            const inputTag = document.getElementById('input-tag');
-
-                            toxicityToggle.addEventListener('change', function() {
-                                if (this.checked) {
-                                    perspectiveApiField.style.display = 'flex';
-                                } else {
-                                    perspectiveApiField.style.display = 'none';
-                                }
-                            });
-
-                            // Handle LLM agents toggle
-                            llmAgentsToggle.addEventListener('change', function() {
-                                if (!this.checked) {
-                                    // Disable all annotation toggles
-                                    toxicityToggle.checked = false;
-                                    toxicityToggle.disabled = true;
-                                    sentimentToggle.checked = false;
-                                    sentimentToggle.disabled = true;
-                                    emotionToggle.checked = false;
-                                    emotionToggle.disabled = true;
-                                    perspectiveApiField.style.display = 'none';
-
-                                    // Clear and disable topics input, set to 10 default topics
-                                    tagList.length = 0;
-                                    while (tags.firstChild) {
-                                        tags.removeChild(tags.firstChild);
-                                    }
-                                    const defaultTopics = ['Topic1', 'Topic2', 'Topic3', 'Topic4', 'Topic5', 'Topic6', 'Topic7', 'Topic8', 'Topic9', 'Topic10'];
-                                    defaultTopics.forEach(function(topicName) {
-                                        tagList.push(topicName);
-                                        const tag = document.createElement('li');
-                                        tag.innerHTML = `${topicName} <button class="delete-button" disabled style="cursor: not-allowed; opacity: 0.5;">X</button>`;
-                                        tags.appendChild(tag);
-                                    });
-                                    hiddenInput.value = defaultTopics.join(',');
-                                    inputTag.disabled = true;
-                                    inputTag.placeholder = 'Topics disabled when LLM agents are off';
-                                    updateButtonState();
-                                } else {
-                                    // Re-enable all annotation toggles
-                                    toxicityToggle.disabled = false;
-                                    sentimentToggle.checked = true;
-                                    sentimentToggle.disabled = false;
-                                    emotionToggle.checked = true;
-                                    emotionToggle.disabled = false;
-
-                                    // Re-enable topics input and clear default
-                                    tagList.length = 0;
-                                    while (tags.firstChild) {
-                                        tags.removeChild(tags.firstChild);
-                                    }
-                                    hiddenInput.value = '';
-                                    inputTag.disabled = false;
-                                    inputTag.placeholder = 'Enter topic name';
-                                    updateButtonState();
-                                }
-                            });
-                        });
-                    </script>
 
                     <!--Dashboard box-->
                     <!-- <div class="dashboard-box">
@@ -1600,7 +282,7 @@
                                         <span class="meta-title">
                                             {{ exp.exp_name }}
                                             {% if exp_has_infinite.get(exp.idexp, false) %}
-                                            <span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600; margin-left: 5px;" title="This experiment has at least one client set to run until manually stopped">∞</span>
+ <span class="ys-badge-success" title="This experiment has at least one client set to run until manually stopped">∞</span>
                                             {% endif %}
                                         </span>
                                         <span class="meta-content">Description: {{ exp.exp_descr }}</span>
@@ -1645,78 +327,101 @@
                         </div>
                     </div> -->
                 </div>
-
-
-                <!--Dashboard column-->
+                <!-- End of New Experiment column -->
+                
+                <!-- Upload Experiment Column (right 1/3) -->
                 <div class="column is-4">
-                    <!--Box-->
-                    <div class="sidebar-box">
-                        <h3>Guide</h3>
-                        <div class="help-block">
-
-                            <p>
-                                <b>Experiments Overview</b><br>
-                                View and manage your experiments organized by status: Running (active), Completed, and Stopped/Scheduled.
-                            </p>
-                            <br>
-
-                            <p>
-                               <b>Create New Experiment</b><br>
-                                Decide whether to use LLM agent or standard ones, provide experiment name, description, simulation topics.
-                            </p>
-                            <br>
-
-                            <p>
-                                <b>Experiment Schedule</b><br>
-                                Create groups to run experiments in batches. Experiments in a group run in parallel; groups run sequentially.
-                            </p>
-                            <br>
-
-                            <p>
-                                <b>Copy & Upload</b><br>
-                                Copy existing experiments or upload previously exported experiment ones.
-                                Copied experiment start from scratch. Uploaded ones retain their status.
-                            </p>
+                    <div id="box-upload-experiment" class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Upload Experiment</h3>
+                        <div class="box-content">
+                            <form action="/admin/upload_experiment" enctype="multipart/form-data" method="POST" onsubmit="showLoading('Uploading experiment...');">
+                                <div class="box-lines">
+                                    <div class="box-line">
+                                        <span class="left">Experiment Name</span>
+ <span class="right ys-w-70">
+                                            <input type="text" 
+                                                   id="exp_name" 
+                                                   name="exp_name" 
+                                                   class="input" 
+                                                   placeholder="Leave empty to use name from config...">
+                                        </span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">Experiment Group</span>
+ <span class="right ys-w-70">
+                                            <input type="text" 
+                                                   id="upload_exp_group" 
+                                                   name="exp_group" 
+                                                   list="exp_groups_datalist_upload" 
+                                                   class="input" 
+                                                   placeholder="Enter or select a group...">
+                                            <datalist id="exp_groups_datalist_upload">
+                                                {% for group in exp_groups %}
+                                                <option value="{{ group }}">
+                                                {% endfor %}
+                                            </datalist>
+                                        </span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">ZIP File</span>
+ <span class="right ys-w-70">
+                                            <div class="file-upload-wrapper-exp">
+                                                <input type="file" id="experiment" name="experiment" accept=".zip" onchange="displayExperimentFileName(this)" required>
+                                                <label for="experiment" class="file-upload-label-exp">
+                                                    <span class="file-upload-icon-exp">📦</span>
+                                                    <span class="file-upload-text-exp">Choose ZIP file...</span>
+                                                </label>
+                                                <div id="experiment-file-name-display" class="file-name-display-exp"></div>
+                                            </div>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth">
+                                        Upload Experiment
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
 
                 </div>
+
             </div>
 
-            <!-- ROW 3: Experiment Schedule + Copy Experiment -->
+            <!-- ROW 3: Experiment Schedule (left 2/3) + Copy Experiment (right 1/3) -->
             <div class="columns">
-                <!-- Experiment Schedule Column (is-8) -->
                 <div class="column is-8">
                     <div id="box-schedule" class="dashboard-box">
                         <h3 class="title is-5 is-thin" style="display: flex; align-items: center; justify-content: space-between;">
-                            <span style="display: flex; align-items: center; gap: 10px;">
+ <span class="ys-flex-gap-10-ai">
                                 <i class="mdi mdi-calendar-clock" style="font-size: 20px; color: #6c757d;"></i>
                                 Experiment Schedule
                             </span>
                             <span id="schedule-status-badge" style="display: none; padding: 4px 12px; border-radius: 12px; font-size: 0.8em; font-weight: 500;"></span>
                         </h3>
                         <p style="font-size: 0.85em; color: #666; margin-bottom: 15px;">
-                            Create experiment groups for sequential batch execution. Experiments within a group run in parallel; groups run sequentially.
+                            Create experiment groups for sequential batch execution. Experiments within a group run in parallel; groups run sequentially. HPC experiments can be grouped up to 4 per group (cannot mix with Standard experiments).
                         </p>
 
-                        <div style="display: flex; gap: 20px; margin-bottom: 15px;">
+                        <div style="display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 15px;">
                             <!-- Available Experiments -->
-                            <div style="flex: 1; border: 1px solid #ddd; border-radius: 8px; padding: 10px; min-height: 150px;">
+                            <div style="flex: 1 1 150px; border: 1px solid #ddd; border-radius: 8px; padding: 10px; min-height: 150px;">
                                 <h4 style="font-size: 0.9em; font-weight: 600; margin-bottom: 10px; color: #333;">
                                     <i class="mdi mdi-flask-outline"></i> Available
                                 </h4>
-                                <div id="available-experiments" style="min-height: 100px; max-height: 200px; overflow-y: auto;">
-                                    <p style="color: #999; font-size: 0.85em; text-align: center; padding: 20px;">Loading...</p>
+ <div id="available-experiments" class="ys-scroll-sm">
+ <p class="ys-empty-state">Loading...</p>
                                 </div>
                             </div>
 
                             <!-- Schedule Groups -->
-                            <div style="flex: 2; border: 1px solid #ddd; border-radius: 8px; padding: 10px; min-height: 150px;">
+                            <div style="flex: 2 1 200px; border: 1px solid #ddd; border-radius: 8px; padding: 10px; min-height: 150px;">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 5px;">
                                     <h4 style="font-size: 0.9em; font-weight: 600; color: #333;">
                                         <i class="mdi mdi-playlist-play"></i> Groups
                                     </h4>
-                                    <div style="display: flex; gap: 5px; align-items: center;">
+                                    <div style="display: flex; flex-wrap: wrap; gap: 5px; align-items: center;">
                                         <button id="add-group-btn" onclick="addScheduleGroup()" style="background: #28a745; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8em;">
                                             <i class="mdi mdi-plus"></i> Add
                                         </button>
@@ -1724,21 +429,29 @@
                                             <i class="mdi mdi-auto-fix"></i> Auto
                                         </button>
                                         <input type="number" id="exps-per-group" value="2" min="1" max="10" style="width: 45px; padding: 3px 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.8em; text-align: center;" title="Experiments per group">
+ <div class="select ys-text-080">
+                                            <select id="group-filter" aria-label="Filter experiments by group" title="Filter by group (all = all groups)">
+                                                <option value="">All Groups</option>
+                                                {% for group in exp_groups %}
+                                                <option value="{{ group }}">{{ group }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
-                                <div id="schedule-groups" style="min-height: 100px; max-height: 200px; overflow-y: auto;">
-                                    <p style="color: #999; font-size: 0.85em; text-align: center; padding: 20px;">No groups created yet</p>
+ <div id="schedule-groups" class="ys-scroll-sm">
+ <p class="ys-empty-state">No groups created yet</p>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Execution Log with Start/Stop buttons on same row -->
                         <div id="schedule-log-container" style="border: 1px solid #ddd; border-radius: 8px; padding: 10px; background: #f8f9fa;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 5px;">
                                 <h4 style="font-size: 0.9em; font-weight: 600; color: #333; margin: 0;">
                                     <i class="mdi mdi-console"></i> Log
                                 </h4>
-                                <div style="display: flex; gap: 8px; align-items: center;">
+ <div class="ys-flex-gap-8">
                                     <button onclick="clearLogs()" style="background: none; border: none; color: #6c757d; cursor: pointer; font-size: 0.8em;">
                                         <i class="mdi mdi-delete-sweep"></i> Clear
                                     </button>
@@ -1757,159 +470,80 @@
                     </div>
                 </div>
                 
-                <!-- Copy Experiment Column (is-4) -->
+                <!-- Copy Experiment Column (right 1/3) -->
                 <div class="column is-4">
-                    <div id="box-copy-experiment" class="sidebar-box">
-                        <h3>Copy Experiment</h3>
-                        <form action="/admin/copy_experiment" method="POST" onsubmit="showLoading('Copying experiment...');">
-                            <div style="margin-bottom: 12px;">
-                                <label for="new_exp_name" style="display: block; font-size: 0.85em; color: #374151; margin-bottom: 4px; font-weight: 500;">
-                                    New Experiment Name
-                                </label>
-                                <input type="text" 
-                                       id="new_exp_name" 
-                                       name="new_exp_name" 
-                                       class="input" 
-                                       placeholder="Enter new name..." 
-                                       required>
-                            </div>
-                            <div style="margin-bottom: 12px;">
-                                <label for="source_exp_id" style="display: block; font-size: 0.85em; color: #374151; margin-bottom: 4px; font-weight: 500;">
-                                    Source Experiment
-                                </label>
-                                <div class="select" style="width: 100%;">
-                                    <select id="source_exp_id" name="source_exp_id" style="width: 100%;" required>
-                                        <option value="">Select experiment...</option>
-                                        {% for exp in all_experiments %}
-                                        <option value="{{ exp.idexp }}">{{ exp.exp_name }}</option>
-                                        {% endfor %}
-                                    </select>
+                    <div id="box-copy-experiment" class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Copy Experiment</h3>
+                        <div class="box-content">
+                            <form action="/admin/copy_experiment" method="POST" onsubmit="showLoading('Copying experiment...');">
+                                <div class="box-lines">
+                                    <div class="box-line">
+                                        <span class="left">New Name</span>
+ <span class="right ys-w-70">
+                                            <input type="text" 
+                                                   id="new_exp_name" 
+                                                   name="new_exp_name" 
+                                                   class="input" 
+                                                   placeholder="Enter new name..." 
+                                                   required>
+                                        </span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">Source Experiment</span>
+ <span class="right ys-w-70">
+ <div class="select w-100">
+ <select id="source_exp_id" name="source_exp_id" class="w-100" required>
+                                                    <option value="">Select experiment...</option>
+                                                    {% for exp in all_experiments %}
+                                                    <option value="{{ exp.idexp }}">{{ exp.exp_name }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">Number of Copies</span>
+ <span class="right ys-w-70">
+                                            <input type="number" 
+                                                   id="num_copies" 
+                                                   name="num_copies" 
+                                                   class="input" 
+                                                   value="1" 
+                                                   min="1"
+                                                   max="20"
+ class="w-100">
+ <p class="ys-text-tiny-gray-mt">
+                                                If &gt;1, creates copies named: name_1, name_2, etc.
+                                            </p>
+                                        </span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">Experiment Group</span>
+ <span class="right ys-w-70">
+                                            <input type="text" 
+                                                   id="copy_exp_group" 
+                                                   name="exp_group" 
+                                                   list="exp_groups_datalist_copy" 
+                                                   class="input" 
+                                                   placeholder="Enter or select a group...">
+                                            <datalist id="exp_groups_datalist_copy">
+                                                {% for group in exp_groups %}
+                                                <option value="{{ group }}">
+                                                {% endfor %}
+                                            </datalist>
+ <p class="ys-text-tiny-gray-mt">
+                                                Optional: Group experiments together
+                                            </p>
+                                        </span>
+                                    </div>
                                 </div>
-                            </div>
-                            <div style="margin-bottom: 12px;">
-                                <label for="num_copies" style="display: block; font-size: 0.85em; color: #374151; margin-bottom: 4px; font-weight: 500;">
-                                    Number of Copies
-                                </label>
-                                <input type="number" 
-                                       id="num_copies" 
-                                       name="num_copies" 
-                                       class="input" 
-                                       value="1" 
-                                       min="1"
-                                       max="20"
-                                       style="width: 100%;">
-                                <p style="font-size: 0.75em; color: #6b7280; margin-top: 4px;">
-                                    If &gt;1, creates copies named: name_1, name_2, etc.
-                                </p>
-                            </div>
-                            <div class="help-block" style="margin-bottom: 12px;">
-                                <p style="font-size: 0.8em; color: #6b7280; line-height: 1.4;">
-                                    Creates a complete copy of an experiment that will be ready to start immediately.
-                                </p>
-                            </div>
-                            <div class="button-wrap">
-                                <button type="submit" class="button is-solid primary-button is-fullwidth">
-                                    Copy Experiment
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ROW 4: Empty + Upload Experiment -->
-            <div class="columns">
-                <!-- Empty Column (is-8) -->
-                <div class="column is-8">
-                    <!-- Empty space under Experiment Schedule -->
-                </div>
-                
-                <!-- Upload Experiment Column (is-4) -->
-                <div class="column is-4">
-                    <div id="box-upload-experiment" class="sidebar-box">
-                        <h3>Upload Experiment</h3>
-                        <form action="/admin/upload_experiment" enctype="multipart/form-data" method="POST" onsubmit="showLoading('Uploading experiment...');">
-                            <style>
-                                .file-upload-wrapper-exp {
-                                    position: relative;
-                                    overflow: hidden;
-                                    display: block;
-                                    margin-bottom: 12px;
-                                }
-                                .file-upload-wrapper-exp input[type=file] {
-                                    position: absolute;
-                                    left: -9999px;
-                                }
-                                .file-upload-label-exp {
-                                    display: flex;
-                                    align-items: center;
-                                    justify-content: center;
-                                    padding: 10px 12px;
-                                    background: #f9fafb;
-                                    border: 1px dashed #d1d5db;
-                                    border-radius: 4px;
-                                    cursor: pointer;
-                                    transition: all 0.2s;
-                                    font-size: 0.85em;
-                                }
-                                .file-upload-label-exp:hover {
-                                    background: #f3f4f6;
-                                    border-color: #22c55e;
-                                }
-                                .file-upload-icon-exp {
-                                    margin-right: 8px;
-                                    font-size: 1.1em;
-                                }
-                                .file-upload-text-exp {
-                                    color: #6b7280;
-                                }
-                                .file-name-display-exp {
-                                    margin-top: 6px;
-                                    font-size: 0.8em;
-                                    color: #22c55e;
-                                    font-weight: 500;
-                                    text-align: center;
-                                }
-                            </style>
-                            <div style="margin-bottom: 12px;">
-                                <label for="exp_name" style="display: block; font-size: 0.85em; color: #374151; margin-bottom: 4px; font-weight: 500;">
-                                    Experiment Name (optional)
-                                </label>
-                                <input type="text" 
-                                       id="exp_name" 
-                                       name="exp_name" 
-                                       class="input" 
-                                       placeholder="Leave empty to use name from config...">
-                            </div>
-                            <div class="file-upload-wrapper-exp">
-                                <input type="file" id="experiment" name="experiment" accept=".zip" onchange="displayExperimentFileName(this)" required>
-                                <label for="experiment" class="file-upload-label-exp">
-                                    <span class="file-upload-icon-exp">📦</span>
-                                    <span class="file-upload-text-exp">Choose ZIP file...</span>
-                                </label>
-                                <div id="experiment-file-name-display" class="file-name-display-exp"></div>
-                            </div>
-                            <div class="help-block" style="margin-bottom: 12px;">
-                                <p style="font-size: 0.8em; color: #6b7280; line-height: 1.4;">
-                                    Upload a ZIP file containing experiment data.
-                                </p>
-                            </div>
-                            <div class="button-wrap">
-                                <button class="button is-solid primary-button is-fullwidth">
-                                    Upload Experiment
-                                </button>
-                            </div>
-                        </form>
-                        <script>
-                            function displayExperimentFileName(input) {
-                                const display = document.getElementById('experiment-file-name-display');
-                                if (input.files && input.files[0]) {
-                                    display.textContent = '✓ ' + input.files[0].name;
-                                } else {
-                                    display.textContent = '';
-                                }
-                            }
-                        </script>
+                                <div class="button-wrap">
+                                    <button type="submit" class="button is-solid primary-button is-fullwidth">
+                                        Copy Experiment
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1919,4 +553,11 @@
 </div>
 
 {% include "admin/tutorials/experiments_tutorial.html" %}
+<script>
+var YS_DATA_SETTINGS = {
+    enableNotebook: {{ enable_notebook | tojson }},
+    repoAvailability: {{ repo_availability | tojson }}
+};
+</script>
+<script src="{{ url_for('static', filename='assets/js/admin-settings.js') }}"></script>
 {% include "admin/footer.html" %}

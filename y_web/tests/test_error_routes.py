@@ -5,6 +5,8 @@ Tests for error routes and error page rendering.
 import pytest
 from flask import Blueprint
 
+pytestmark = pytest.mark.unit
+
 
 class TestErrorRoutesStructure:
     """Test error routes module structure"""
@@ -12,7 +14,7 @@ class TestErrorRoutesStructure:
     def test_error_routes_import(self):
         """Test that error_routes module can be imported"""
         try:
-            from y_web import error_routes
+            from y_web.routes import errors as error_routes
 
             assert hasattr(error_routes, "errors")
         except ImportError as e:
@@ -21,7 +23,7 @@ class TestErrorRoutesStructure:
     def test_errors_blueprint(self):
         """Test that errors blueprint exists and is properly configured"""
         try:
-            from y_web.error_routes import errors
+            from y_web.routes.errors import errors
 
             assert isinstance(errors, Blueprint)
             assert errors.name == "errors"
@@ -31,7 +33,7 @@ class TestErrorRoutesStructure:
     def test_error_handler_functions_exist(self):
         """Test that error handler functions exist"""
         try:
-            from y_web.error_routes import (
+            from y_web.routes.errors.handlers import (
                 bad_request,
                 forbidden,
                 internal_server_error,
@@ -202,9 +204,8 @@ class TestErrorRouteCount:
     def test_error_handlers_count(self):
         """Test that errors blueprint has correct number of error handlers"""
         try:
-            from y_web.error_routes import errors
+            from y_web.routes.errors import errors
 
-            # Count registered routes/handlers
             handler_count = len(errors.deferred_functions)
 
             # Should have 4 error handlers (400, 403, 404, 500)

@@ -12,6 +12,8 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 
 class TestPathDetectionLogic:
     """Test the path detection logic that fixes Windows compatibility"""

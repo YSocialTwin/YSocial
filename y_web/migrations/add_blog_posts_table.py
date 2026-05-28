@@ -15,7 +15,7 @@ def migrate_dashboard_db():
     # Determine the database path based on execution mode
     if getattr(sys, "frozen", False):
         # Running from PyInstaller - use writable location
-        from y_web.utils.path_utils import get_writable_path
+        from y_web.src.system.path_utils import get_writable_path
 
         db_dir = os.path.join(get_writable_path(), "y_web", "db")
     else:
@@ -43,8 +43,7 @@ def migrate_dashboard_db():
             return True
 
         # Create the blog_posts table
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE TABLE blog_posts (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 title TEXT,
@@ -53,8 +52,7 @@ def migrate_dashboard_db():
                 is_read INTEGER DEFAULT 0,
                 latest_check_on TEXT
             )
-        """
-        )
+        """)
 
         conn.commit()
         conn.close()

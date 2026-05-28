@@ -46,16 +46,14 @@ def migrate_sqlite(db_path):
         groups_exists = cursor.fetchone() is not None
 
         if not groups_exists:
-            cursor.execute(
-                """
+            cursor.execute("""
                 CREATE TABLE opinion_groups (
                     id          INTEGER PRIMARY KEY AUTOINCREMENT,
                     name        VARCHAR(100) NOT NULL,
                     lower_bound REAL NOT NULL,
                     upper_bound REAL NOT NULL
                 )
-            """
-            )
+            """)
             print("✓ Created opinion_groups table in SQLite database")
         else:
             print("○ opinion_groups table already exists in SQLite database")
@@ -68,16 +66,14 @@ def migrate_sqlite(db_path):
 
         distributions_created = False
         if not distributions_exists:
-            cursor.execute(
-                """
+            cursor.execute("""
                 CREATE TABLE opinion_distributions (
                     id                INTEGER PRIMARY KEY AUTOINCREMENT,
                     name              VARCHAR(100) NOT NULL,
                     distribution_type VARCHAR(50) NOT NULL,
                     parameters        TEXT NOT NULL
                 )
-            """
-            )
+            """)
             print("✓ Created opinion_distributions table in SQLite database")
             distributions_created = True
         else:
@@ -160,54 +156,46 @@ def migrate_postgresql(host, port, database, user, password):
         cursor = conn.cursor()
 
         # Check if opinion_groups table already exists
-        cursor.execute(
-            """
+        cursor.execute("""
             SELECT table_name 
             FROM information_schema.tables 
             WHERE table_schema = 'public' 
               AND table_name = 'opinion_groups'
-        """
-        )
+        """)
         groups_exists = cursor.fetchone() is not None
 
         if not groups_exists:
-            cursor.execute(
-                """
+            cursor.execute("""
                 CREATE TABLE opinion_groups (
                     id          SERIAL PRIMARY KEY,
                     name        VARCHAR(100) NOT NULL,
                     lower_bound DOUBLE PRECISION NOT NULL,
                     upper_bound DOUBLE PRECISION NOT NULL
                 )
-            """
-            )
+            """)
             print("✓ Created opinion_groups table in PostgreSQL database")
         else:
             print("○ opinion_groups table already exists in PostgreSQL database")
 
         # Check if opinion_distributions table already exists
-        cursor.execute(
-            """
+        cursor.execute("""
             SELECT table_name 
             FROM information_schema.tables 
             WHERE table_schema = 'public' 
               AND table_name = 'opinion_distributions'
-        """
-        )
+        """)
         distributions_exists = cursor.fetchone() is not None
 
         distributions_created = False
         if not distributions_exists:
-            cursor.execute(
-                """
+            cursor.execute("""
                 CREATE TABLE opinion_distributions (
                     id                SERIAL PRIMARY KEY,
                     name              VARCHAR(100) NOT NULL,
                     distribution_type VARCHAR(50) NOT NULL,
                     parameters        TEXT NOT NULL
                 )
-            """
-            )
+            """)
             print("✓ Created opinion_distributions table in PostgreSQL database")
             distributions_created = True
         else:

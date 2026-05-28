@@ -1,0 +1,91 @@
+{% include "admin/head.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-components.css') }}"/>
+
+<div class="view-wrapper is-dashboard">
+    <div id="creator-dashboard" class="dashboard-container">
+        {% include "admin/dash_head.html" %}
+
+        <div class="dashboard-body">
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box" style="background: linear-gradient(135deg, #f8fafc 0%, #ffffff 45%, #eef4ff 100%); border: 1px solid #dbe3ef;">
+                        <div class="box-content" style="padding: 14px 16px;">
+                            <div style="display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; flex-wrap: wrap;">
+                                <div style="max-width: 760px;">
+                                    <div class="ys-text-xs-hint" style="letter-spacing: 0.08em; text-transform: uppercase; color: #2563eb; font-weight: 700;">Agent Workspace</div>
+                                    <h2 class="title is-4" style="margin: 4px 0 6px 0; color: #0f172a;">Agent Resources Dashboard</h2>
+                                    <p class="ys-text-sm-muted" style="max-width: 720px; line-height: 1.5; margin-bottom: 0;">
+                                        Use this page as the single entry point for building the entities that populate and influence your simulations.
+                                        Synthetic agents define user behavior, while content pages define the information sources and institutional actors that shape exposure.
+                                    </p>
+                                </div>
+                                <div style="display: grid; gap: 6px; min-width: 220px;">
+                                    <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
+                                        <span class="badge badge-info">{{ agent_resources_summary.total_populations }} populations</span>
+                                        <span class="badge badge-success">{{ agent_resources_summary.activity_profiles }} activity profiles</span>
+                                        <span class="badge badge-warning">{{ agent_resources_summary.plugin_agent_types }} plugin types</span>
+                                        <span class="badge badge-secondary">{{ agent_resources_summary.resource_cards }} visible resources</span>
+                                    </div>
+                                    <div class="ys-text-xs-hint" style="text-align: right;">
+                                        Choose the construction flow below based on whether you are creating actors or information sources.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% for group in agent_resource_groups %}
+            <div class="columns">
+                <div class="column is-12">
+                    <details {% if group.key == 'all' %}open{% endif %} class="dashboard-box" style="border: 1px solid #e2e8f0; overflow: hidden;">
+                        <summary style="list-style: none; cursor: pointer; padding: 11px 14px; display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; flex-wrap: wrap; background: #f8fafc;">
+                            <div>
+                                <div class="ys-text-sm-dark" style="font-weight: 700;">{{ group.label }}</div>
+                                <div class="ys-text-xs-hint" style="margin-top: 2px;">{{ group.description }}</div>
+                            </div>
+                            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                                <span class="badge badge-info">{{ group.cards|length }} resources</span>
+                                <span class="ys-text-xs-hint">{% if group.key == 'all' %}Expanded{% else %}Click to expand{% endif %}</span>
+                            </div>
+                        </summary>
+                        <div class="box-content" style="padding: 10px 12px 8px 12px;">
+                            <div class="columns is-multiline" style="margin-top: -0.35rem;">
+                                {% for card in group.cards %}
+                                <div class="column is-4">
+                                    <div class="dashboard-box" style="height: 100%; border: 1px solid {{ card.border }}; background: {{ card.surface }}; box-shadow: 0 10px 20px rgba(15, 23, 42, 0.045);">
+                                        <div class="box-content" style="padding: 11px 12px;">
+                                            <div style="display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; margin-bottom: 8px;">
+                                                <div>
+                                                    <div style="display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 9px; background: {{ card.accent }}; margin-bottom: 7px; box-shadow: 0 4px 10px rgba(15, 23, 42, 0.07);">
+                                                        <i data-feather="{{ card.icon }}" style="width: 14px; height: 14px; color: white;"></i>
+                                                    </div>
+                                                    <div class="ys-text-xs-hint" style="margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.05em; color: {{ card.accent }}; font-weight: 700;">{{ card.subtitle }}</div>
+                                                    <h3 class="title is-6" style="margin-bottom: 4px; color: #0f172a; line-height: 1.25;">{{ card.title }}</h3>
+                                                    <p class="ys-text-sm-muted" style="line-height: 1.38; margin-bottom: 0; font-size: 0.88rem;">{{ card.description }}</p>
+                                                </div>
+                                            </div>
+
+                                            <div style="display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap;">
+                                                <a href="{{ card.cta_href }}" class="button is-solid primary-button" style="min-width: 142px; padding-top: 0.5rem; padding-bottom: 0.5rem;">
+                                                    {{ card.cta_label }}
+                                                </a>
+                                                <span class="ys-text-xs-hint">{% if card.is_plugin %}Plugin-backed resource{% else %}Dedicated creation interface{% endif %}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </details>
+                </div>
+            </div>
+            {% endfor %}
+
+        </div>
+    </div>
+</div>
+
+{% include "admin/footer.html" %}

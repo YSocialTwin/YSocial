@@ -1,0 +1,107 @@
+{% include "admin/head.html" %}
+
+<div class="view-wrapper is-dashboard">
+    <div id="creator-dashboard" class="dashboard-container">
+        {% include "admin/dash_head.html" %}
+
+        <div class="dashboard-body">
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <a href="/admin/experiments">Experiments</a> > Simulation: <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }}</a> > Memory Embeddings
+                    </div>
+                </div>
+            </div>
+
+            <div class="columns">
+                <div class="column is-8">
+
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">{{ platform_label }} Memory Embeddings</h3>
+ <p class="ys-text-small">
+                            Configure the embedding backend used by {{ server_label }} for semantic memory indexing and retrieval. If left unconfigured, memory falls back to lexical retrieval only.
+                        </p>
+
+                        <form action="/admin/update_embedding_settings/{{ experiment.idexp }}" method="POST">
+                            <div class="box-content">
+                                <div class="box-line">
+                                    <span class="left">Embedding Service</span>
+ <span class="right ys-w-50">
+                                        <div class="select is-fullwidth">
+                                            <select name="embedding_service" id="embedding_service" class="input" onchange="window.syncEmbeddingSettingsControls && window.syncEmbeddingSettingsControls()">
+                                                <option value="" {% if not embedding_settings.service %}selected{% endif %}>Disabled</option>
+                                                <option value="ollama" {% if embedding_settings.service == 'ollama' %}selected{% endif %}>Ollama</option>
+                                            </select>
+                                        </div>
+                                    </span>
+                                </div>
+ <p class="ys-text-xs-hint2">Only Ollama is currently supported for memory embeddings.</p>
+
+                                <div class="box-line">
+                                    <span class="left">Ollama Host</span>
+ <span class="right ys-w-50">
+                                        <input type="text" name="embedding_host" id="embedding_host" class="input" value="{{ embedding_settings.host }}" placeholder="http://127.0.0.1:11434" oninput="window.syncEmbeddingSettingsControls && window.syncEmbeddingSettingsControls()" onchange="window.syncEmbeddingSettingsControls && window.syncEmbeddingSettingsControls()">
+                                    </span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 0.75em; margin-bottom: 0.5em;">
+                                    <button type="button" id="fetch_embedding_models" class="button is-light is-small" onclick="return window.fetchEmbeddingModels ? window.fetchEmbeddingModels() : false;">
+                                        <i class="mdi mdi-download"></i>
+                                        <span>Fetch Embedding Models</span>
+                                    </button>
+                                    <span id="embedding_fetch_status" style="font-size: 0.85em; color: #666;"></span>
+                                </div>
+ <p class="ys-text-xs-hint2">Model discovery is enabled only after an Ollama host is provided.</p>
+
+                                <div class="box-line">
+                                    <span class="left">Embedding Model</span>
+ <span class="right ys-w-50">
+                                        <div class="select is-fullwidth">
+                                            <select name="embedding_model" id="embedding_model" class="input">
+                                                <option value="">Select an embedding model</option>
+                                                {% if embedding_settings.model %}
+                                                <option value="{{ embedding_settings.model }}" selected>{{ embedding_settings.model }}</option>
+                                                {% endif %}
+                                            </select>
+                                        </div>
+                                    </span>
+                                </div>
+ <p class="ys-text-xs-hint2">Only embedding-capable models are shown in this selector.</p>
+
+ <div class="button-wrap ys-mt-15em">
+                                    <button type="submit" class="button is-solid primary-button is-fullwidth">Save Embedding Settings</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="column is-4">
+                    <div class="dashboard-box is-compact">
+                        <h3 class="title is-5 is-thin">Quick Reference Guide</h3>
+                        <div class="help-block">
+                            <p>
+                                <b>Disabled by default</b><br>
+                                Experiments do not assume any embedding backend. Without this configuration, semantic memory features degrade gracefully to lexical retrieval.
+                            </p>
+                            <hr>
+                            <p>
+                                <b>Host format</b><br>
+                                Use the Ollama base address, for example <code>http://127.0.0.1:11434</code>. The admin page will query the compatible models endpoint automatically.
+                            </p>
+                            <hr>
+                            <p>
+                                <b>Model selection</b><br>
+                                Only embedding models are listed. Choose one that is actually installed on the target Ollama instance before saving.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script src="{{ url_for('static', filename='assets/js/admin-settings.js') }}"></script>
+{% include "admin/footer.html" %}

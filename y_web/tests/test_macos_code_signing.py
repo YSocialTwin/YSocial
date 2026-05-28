@@ -9,6 +9,10 @@ import os
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
 
 def test_entitlements_file_exists():
     """Test that entitlements.plist file exists in the packaging directory."""

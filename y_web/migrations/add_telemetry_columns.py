@@ -95,35 +95,29 @@ def migrate_postgresql(host, port, database, user, password):
         cursor = conn.cursor()
 
         # Check if columns already exist
-        cursor.execute(
-            """
+        cursor.execute("""
             SELECT column_name 
             FROM information_schema.columns 
             WHERE table_name = 'admin_users'
-        """
-        )
+        """)
         columns = [row[0] for row in cursor.fetchall()]
 
         # Add telemetry_enabled column if it doesn't exist
         if "telemetry_enabled" not in columns:
-            cursor.execute(
-                """
+            cursor.execute("""
                 ALTER TABLE admin_users 
                 ADD COLUMN telemetry_enabled BOOLEAN DEFAULT TRUE
-            """
-            )
+            """)
             print("✓ Added telemetry_enabled column to PostgreSQL database")
         else:
             print("○ telemetry_enabled column already exists in PostgreSQL database")
 
         # Add telemetry_notice_shown column if it doesn't exist
         if "telemetry_notice_shown" not in columns:
-            cursor.execute(
-                """
+            cursor.execute("""
                 ALTER TABLE admin_users 
                 ADD COLUMN telemetry_notice_shown BOOLEAN DEFAULT FALSE
-            """
-            )
+            """)
             print("✓ Added telemetry_notice_shown column to PostgreSQL database")
         else:
             print(

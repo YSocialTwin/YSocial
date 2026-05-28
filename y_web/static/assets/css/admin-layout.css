@@ -83,7 +83,7 @@
 
 .dashboard-toolbar .dropdown.is-hoverable .dropdown-item:hover {
     background-color: #f0f7ff;
-    transform: translateX(2px);
+    transform: none;
 }
 
 /* Active/Selected state for dropdown items */
@@ -104,7 +104,7 @@
 }
 
 .dashboard-toolbar .actions .buttons .live-button:hover {
-    transform: translateY(-1px);
+    transform: none;
     box-shadow: 0 4px 12px rgba(61, 112, 178, 0.2);
     background-color: #f0f7ff;
 }
@@ -165,4 +165,21 @@ body.is-dark .dashboard-toolbar .actions .buttons .live-button.is-disabled {
 
 body.is-dark .dashboard-toolbar .actions .buttons .live-button.is-disabled:hover {
     background-color: #2a2a2a !important;
+}
+
+/* Shared admin flash strip: always below the toolbar, full width of the
+   content area, never overlapping the sidebar. */
+.ys-admin-flash-strip {
+    width: 100%;
+    margin: 0 0 1rem 0;
+}
+
+.ys-admin-flash-alert {
+    margin: 0 0 0.75rem 0;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+
+.ys-admin-flash-alert:last-child {
+    margin-bottom: 0;
 }

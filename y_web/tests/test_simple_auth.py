@@ -17,6 +17,8 @@ from flask_login import (
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import check_password_hash, generate_password_hash
 
+pytestmark = pytest.mark.integration
+
 
 def test_password_security():
     """Test password hashing and verification"""
@@ -170,15 +172,13 @@ def test_auth_integration():
                 login_user(user)
                 return "Login successful"
             return "Login failed"
-        return render_template_string(
-            """
+        return render_template_string("""
             <form method="post">
                 <input name="username" type="text" placeholder="Username">
                 <input name="password" type="password" placeholder="Password">
                 <button type="submit">Login</button>
             </form>
-        """
-        )
+        """)
 
     @auth_bp.route("/protected")
     @login_required

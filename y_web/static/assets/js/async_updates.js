@@ -1,22 +1,3 @@
-$(document).on('click','#follow',function(e)
-                   {
-      e.preventDefault();
-      $.ajax({
-        type:'GET',
-        url:(window.EXP_PREFIX || '') + '/follow/'+  document.getElementById("follow").getAttribute("res"),
-        //data:{
-        //  todo:$("#follow").val()
-        //},
-        //success:function()
-        //{
-        //  window.location.reload();
-        //}
-      })
-    });
-
-
-
-
 $(document).on('click','#publish-button',function(e) {
     $(document).ajaxStop(function (){
         window.location.reload();
@@ -33,54 +14,95 @@ $(document).on('click','#publish-button',function(e) {
       })
     });
 
-$(document).on('click','.dropdown-item',function(e) {
-      var post_id = e.target.getAttribute('val');
-      var elem = document.getElementById("post-"+post_id);
-      elem.parentElement.style.visibility='hidden';
-      elem.parentElement.style.display = 'none'
+$(document).on('click', '.dropdown-item#delete_post', function(e) {
       e.preventDefault();
+
+      var action = e.currentTarget;
+      var post_id = action.getAttribute('val');
+      if (!post_id) {
+          return;
+      }
+
+      var elem = document.getElementById("post-" + post_id) || document.getElementById("feed-post-" + post_id);
+      if (elem && elem.parentElement) {
+          elem.parentElement.style.visibility = 'hidden';
+          elem.parentElement.style.display = 'none';
+      } else if (elem) {
+          elem.style.visibility = 'hidden';
+          elem.style.display = 'none';
+      }
+
       $.ajax({
         type:'GET',
         url:(window.EXP_PREFIX || '') + '/delete_post',
         data:{
           post_id: post_id,
         },
+        error: function () {
+            if (elem && elem.parentElement) {
+                elem.parentElement.style.visibility = '';
+                elem.parentElement.style.display = '';
+            } else if (elem) {
+                elem.style.visibility = '';
+                elem.style.display = '';
+            }
+        }
       })
     });
 
 $(document).on('click','.child_sub',function(e) {
-      var post_id = e.target.getAttribute('val');
+      var toggle = e.currentTarget;
+      var post_id = toggle.getAttribute('val');
       var elem = document.getElementById("child-"+post_id);
-      if (e.target.textContent === "Less") {
-          e.target.textContent = "More"
+      if (!elem) {
+          return;
+      }
+      if (toggle.textContent.trim() === "Less") {
+          toggle.textContent = "More"
           elem.style.visibility = 'hidden';
           elem.style.display = 'none'
       }
       else {
-          e.target.textContent = "Less"
+          toggle.textContent = "Less"
           elem.style.visibility = 'visible';
           elem.style.display = 'block'
       }
       e.preventDefault();
     });
 
-$(document).on('click','#add_comment',function(e) {
-    $(document).ajaxStop(function (){
-        window.location.reload();
-    });
-    var elem_id = e.target.getAttribute('val');
-      var content = document.getElementById(`comment-${elem_id}`);
+$(document).on('click','#add_comment, .add-comment-button',function(e) {
+    e.preventDefault();
 
-      e.preventDefault();
-      $.ajax({
+    var button = e.currentTarget;
+    if (!button || button.dataset.pending === '1') {
+        return;
+    }
+
+    var elem_id = button.getAttribute('val');
+    var content = document.getElementById(`comment-${elem_id}`);
+    if (!elem_id || !content) {
+        return;
+    }
+
+    button.dataset.pending = '1';
+    button.disabled = true;
+
+    $.ajax({
         type:'GET',
         url:(window.EXP_PREFIX || '') + '/publish_comment',
         data: {
             post: content.value,
             parent: elem_id,
         },
-      })
+        success: function () {
+            window.location.reload();
+        },
+        complete: function () {
+            delete button.dataset.pending;
+            button.disabled = false;
+        }
     });
+});
 
 $(document).on('click','.share-button',function(e) {
 
@@ -114,13 +136,18 @@ $(document).on('click','.share-button',function(e) {
 
 $(document).on('click','.like-button',function(e)
                    {
+      e.preventDefault();
+      var button = e.currentTarget || e.target.closest('.like-button');
+      if (!button || !button.getAttribute('id')) {
+          return;
+      }
 
-      var col = rgbToHex(e.target.style.background);
+      var col = rgbToHex(button.style.background);
 
-      if (rgbToHex(e.target.style.background) !== "#6aa3e7"){
-          var elem_id = e.target.getAttribute('id').slice(1);
-          e.target.style.background = '#6aa3e7';
-          e.target.style.color = '#ffffff';
+      if (rgbToHex(button.style.background) !== "#6aa3e7"){
+          var elem_id = button.getAttribute('id').slice(1);
+          button.style.background = '#6aa3e7';
+          button.style.color = '#ffffff';
 
           var p = document.getElementById(`likes-count-${elem_id}`);
           p.firstElementChild.firstElementChild.firstElementChild.style.stroke = "#ffffff";
@@ -145,7 +172,6 @@ $(document).on('click','.like-button',function(e)
               count_opp.textContent = opp_currentValue;
           }
         }
-      e.preventDefault();
       $.ajax({
         type:'GET',
         url:(window.EXP_PREFIX || '') + '/react_to_content',
@@ -159,12 +185,17 @@ $(document).on('click','.like-button',function(e)
 
 $(document).on('click','.dislike-button',function(e)
                    {
+      e.preventDefault();
+      var button = e.currentTarget || e.target.closest('.dislike-button');
+      if (!button || !button.getAttribute('id')) {
+          return;
+      }
 
-      if (rgbToHex(e.target.style.background) !== "#6aa3e7"){
-          var elem_id = e.target.getAttribute('id').slice(1);
+      if (rgbToHex(button.style.background) !== "#6aa3e7"){
+          var elem_id = button.getAttribute('id').slice(1);
 
-          e.target.style.background = '#6aa3e7';
-          e.target.style.color = '#ffffff';
+          button.style.background = '#6aa3e7';
+          button.style.color = '#ffffff';
 
           var p = document.getElementById(`dislikes-count-${elem_id}`);
           p.firstElementChild.firstElementChild.firstElementChild.style.stroke = "#ffffff";
@@ -188,7 +219,6 @@ $(document).on('click','.dislike-button',function(e)
               count_opp.textContent = opp_currentValue;
           }
         }
-      e.preventDefault();
       $.ajax({
         type:'GET',
         url:(window.EXP_PREFIX || '') + '/react_to_content',
@@ -199,21 +229,81 @@ $(document).on('click','.dislike-button',function(e)
       })
     });
 
+$(document).on('click', '.report-fab, .report-count', function (e) {
+    e.preventDefault();
+
+    var button = e.currentTarget;
+    if (button.dataset.pending === '1' || button.dataset.reported === '1') {
+        return;
+    }
+
+    button.dataset.pending = '1';
+
+    $.ajax({
+        type: 'GET',
+        url: button.getAttribute('href'),
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        success: function (response) {
+            var nextCount = parseInt(response && response.report_count, 10);
+            if (!Number.isNaN(nextCount)) {
+                var countEl = button.querySelector('span');
+                if (countEl) {
+                    countEl.textContent = nextCount;
+                }
+            }
+            button.dataset.reported = '1';
+            button.classList.add('is-active');
+        },
+        complete: function () {
+            delete button.dataset.pending;
+        }
+    });
+});
+
 
 function editLink(id){
-    var here = document.getElementById(id)
-    var test = document.getElementById(`comment_form-${id}`).style.display
-    if (!test || test==="none"){
-        document.getElementById(`comment_form-${id}`).style.display = "block"; //getElementById
-        document.getElementById(`message-${id}`).style.display = "none"
-        var message = document.getElementById(`message-${id}`).innerHTML;
-        document.getElementById(`add_comment-${id}`).value = message;
+    var commentForm = document.getElementById(`comment_form-${id}`);
+    var messageEl = document.getElementById(`message-${id}`);
+
+    if (!commentForm) {
+        return false;
+    }
+
+    var test = commentForm.style.display;
+    if (!test || test === "none"){
+        commentForm.style.display = "block";
+        if (messageEl) {
+            messageEl.style.display = "none";
+        }
     }
     else {
-        document.getElementById(`comment_form-${id}`).style.display = "none"; //getElementById
-        document.getElementById(`message-${id}`).style.display = "block"
+        commentForm.style.display = "none";
+        if (messageEl) {
+            messageEl.style.display = "block";
+        }
     }
+    return false;
 }
+
+$(document).on('click', '.meta-chip-toggle', function (e) {
+    e.preventDefault();
+
+    var button = e.currentTarget;
+    var targetId = button.getAttribute('data-target');
+    var target = targetId ? document.getElementById(targetId) : null;
+    if (!target) {
+        return;
+    }
+
+    var isHidden = target.classList.contains('is-hidden');
+    target.classList.toggle('is-hidden', !isHidden);
+    button.textContent = isHidden
+        ? (button.getAttribute('data-label-less') || 'Less')
+        : (button.getAttribute('data-label-more') || 'More');
+    button.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+});
 
 
 $(document).on('click','.like-count',function(e) {
@@ -365,4 +455,3 @@ $(document).on('click','.cancel-notification',function(e) {
         },
       })
     });
-

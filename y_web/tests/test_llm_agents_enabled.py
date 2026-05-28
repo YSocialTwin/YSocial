@@ -5,6 +5,10 @@ Verifies that when uploading an experiment, the llm_agents_enabled field
 is set correctly based on the client configuration files.
 """
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
 
 def test_llm_agents_enabled_with_null():
     """Test that llm_agents_enabled is 0 when llm_agents is [null]."""

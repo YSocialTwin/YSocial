@@ -61,7 +61,7 @@ python y_social.py --host 0.0.0.0 --port 5000 --llm-backend vllm
 
 ### Docker Compose with Ollama (Default)
 ```yaml
-# docker-compose.yml
+# deployment/docker/compose/docker-compose.yml
 services:
   ysocial:
     image: ysocial:latest
@@ -73,7 +73,7 @@ services:
 
 Start:
 ```bash
-docker-compose up
+docker compose -f deployment/docker/compose/docker-compose.yml up
 ```
 
 ## Troubleshooting

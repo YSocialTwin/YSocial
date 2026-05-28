@@ -6,6 +6,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 
 class TestRoutesAdminCoverage:
     """Test routes_admin coverage verification"""
@@ -13,7 +15,7 @@ class TestRoutesAdminCoverage:
     def test_populations_routes_exist(self):
         """Test that populations routes exist"""
         try:
-            from y_web.routes_admin import populations_routes
+            from y_web.routes.admin.sub import populations as populations_routes
 
             assert populations_routes is not None
 
@@ -27,7 +29,7 @@ class TestRoutesAdminCoverage:
     def test_experiments_routes_exist(self):
         """Test that experiments routes exist"""
         try:
-            from y_web.routes_admin import experiments_routes
+            from y_web.routes.admin.sub import experiments as experiments_routes
 
             assert experiments_routes is not None
 
@@ -41,7 +43,7 @@ class TestRoutesAdminCoverage:
     def test_users_routes_exist(self):
         """Test that users routes exist"""
         try:
-            from y_web.routes_admin import users_routes
+            from y_web.routes.admin.sub import users as users_routes
 
             assert users_routes is not None
 
@@ -55,7 +57,7 @@ class TestRoutesAdminCoverage:
     def test_agents_routes_exist(self):
         """Test that agents routes exist"""
         try:
-            from y_web.routes_admin import agents_routes
+            from y_web.routes.admin.sub import agents as agents_routes
 
             assert agents_routes is not None
 
@@ -69,7 +71,7 @@ class TestRoutesAdminCoverage:
     def test_clients_routes_exist(self):
         """Test that clients routes exist"""
         try:
-            from y_web.routes_admin import clients_routes
+            from y_web.routes.admin.sub import clients as clients_routes
 
             assert clients_routes is not None
 
@@ -83,7 +85,7 @@ class TestRoutesAdminCoverage:
     def test_pages_routes_exist(self):
         """Test that pages routes exist"""
         try:
-            from y_web.routes_admin import pages_routes
+            from y_web.routes.admin.sub import pages as pages_routes
 
             assert pages_routes is not None
 
@@ -97,7 +99,7 @@ class TestRoutesAdminCoverage:
     def test_ollama_routes_exist(self):
         """Test that ollama routes exist"""
         try:
-            from y_web.routes_admin import ollama_routes
+            from y_web.routes.admin.sub import ollama as ollama_routes
 
             assert ollama_routes is not None
 
@@ -115,9 +117,9 @@ class TestRoutesAdminStructure:
     def test_routes_admin_directory_exists(self):
         """Test that routes_admin directory can be imported"""
         try:
-            import y_web.routes_admin
+            import y_web.routes.admin.sub
 
-            assert y_web.routes_admin is not None
+            assert y_web.routes.admin.sub is not None
         except ImportError as e:
             pytest.skip(f"Could not import routes_admin: {e}")
 
@@ -127,7 +129,7 @@ class TestRoutesAdminStructure:
             # Check that it's a Blueprint
             from flask import Blueprint
 
-            from y_web.routes_admin.populations_routes import population
+            from y_web.routes.admin.sub.populations import population
 
             assert isinstance(population, Blueprint)
             assert population.name == "population"
@@ -141,7 +143,7 @@ class TestRoutesAdminStructure:
             # Check that it's a Blueprint
             from flask import Blueprint
 
-            from y_web.routes_admin.experiments_routes import experiments
+            from y_web.routes.admin.sub.experiments import experiments
 
             assert isinstance(experiments, Blueprint)
             assert experiments.name == "experiments"
@@ -155,7 +157,7 @@ class TestRoutesAdminStructure:
             # Check that it's a Blueprint
             from flask import Blueprint
 
-            from y_web.routes_admin.users_routes import users
+            from y_web.routes.admin.sub.users import users
 
             assert isinstance(users, Blueprint)
             assert users.name == "users"
@@ -169,7 +171,7 @@ class TestRoutesAdminStructure:
             # Check that it's a Blueprint
             from flask import Blueprint
 
-            from y_web.routes_admin.agents_routes import agents
+            from y_web.routes.admin.sub.agents import agents
 
             assert isinstance(agents, Blueprint)
             assert agents.name == "agents"
@@ -183,7 +185,7 @@ class TestRoutesAdminStructure:
             # Check that it's a Blueprint
             from flask import Blueprint
 
-            from y_web.routes_admin.clients_routes import clientsr
+            from y_web.routes.admin.sub.clients import clientsr
 
             assert isinstance(clientsr, Blueprint)
             assert clientsr.name == "clientsr"
@@ -197,7 +199,7 @@ class TestRoutesAdminStructure:
             # Check that it's a Blueprint
             from flask import Blueprint
 
-            from y_web.routes_admin.pages_routes import pages
+            from y_web.routes.admin.sub.pages import pages
 
             assert isinstance(pages, Blueprint)
             assert pages.name == "pages"
@@ -212,7 +214,7 @@ class TestRoutesAdminRouteCounts:
     def test_population_route_count(self):
         """Test population routes count"""
         try:
-            from y_web.routes_admin.populations_routes import population
+            from y_web.routes.admin.sub.populations import population
 
             # Count registered routes
             route_count = len(population.deferred_functions)
@@ -226,7 +228,7 @@ class TestRoutesAdminRouteCounts:
     def test_experiments_route_count(self):
         """Test experiments routes count"""
         try:
-            from y_web.routes_admin.experiments_routes import experiments
+            from y_web.routes.admin.sub.experiments import experiments
 
             # Count registered routes
             route_count = len(experiments.deferred_functions)
@@ -240,7 +242,7 @@ class TestRoutesAdminRouteCounts:
     def test_users_route_count(self):
         """Test users routes count"""
         try:
-            from y_web.routes_admin.users_routes import users
+            from y_web.routes.admin.sub.users import users
 
             # Count registered routes
             route_count = len(users.deferred_functions)
@@ -254,7 +256,7 @@ class TestRoutesAdminRouteCounts:
     def test_agents_route_count(self):
         """Test agents routes count"""
         try:
-            from y_web.routes_admin.agents_routes import agents
+            from y_web.routes.admin.sub.agents import agents
 
             # Count registered routes
             route_count = len(agents.deferred_functions)
@@ -268,7 +270,7 @@ class TestRoutesAdminRouteCounts:
     def test_clients_route_count(self):
         """Test clients routes count"""
         try:
-            from y_web.routes_admin.clients_routes import clientsr
+            from y_web.routes.admin.sub.clients import clientsr
 
             # Count registered routes
             route_count = len(clientsr.deferred_functions)
@@ -282,7 +284,7 @@ class TestRoutesAdminRouteCounts:
     def test_pages_route_count(self):
         """Test pages routes count"""
         try:
-            from y_web.routes_admin.pages_routes import pages
+            from y_web.routes.admin.sub.pages import pages
 
             # Count registered routes
             route_count = len(pages.deferred_functions)
@@ -300,12 +302,12 @@ class TestRoutesAdminFunctionality:
     def test_blueprint_url_prefixes(self):
         """Test that blueprints have reasonable URL prefixes"""
         blueprints_to_test = [
-            ("y_web.routes_admin.populations_routes", "population"),
-            ("y_web.routes_admin.experiments_routes", "experiments"),
-            ("y_web.routes_admin.users_routes", "users"),
-            ("y_web.routes_admin.agents_routes", "agents"),
-            ("y_web.routes_admin.clients_routes", "clientsr"),
-            ("y_web.routes_admin.pages_routes", "pages"),
+            ("y_web.routes.admin.sub.populations", "population"),
+            ("y_web.routes.admin.sub.experiments", "experiments"),
+            ("y_web.routes.admin.sub.users", "users"),
+            ("y_web.routes.admin.sub.agents", "agents"),
+            ("y_web.routes.admin.sub.clients", "clientsr"),
+            ("y_web.routes.admin.sub.pages", "pages"),
         ]
 
         for module_name, blueprint_name in blueprints_to_test:
@@ -326,7 +328,7 @@ class TestRoutesAdminFunctionality:
     def test_route_decorators_present(self):
         """Test that route decorators are properly used"""
         try:
-            from y_web.routes_admin.populations_routes import population
+            from y_web.routes.admin.sub.populations import population
 
             # Check that routes are registered
             assert len(population.deferred_functions) > 0
@@ -346,19 +348,21 @@ class TestRoutesAdminIntegration:
     def test_all_admin_routes_importable(self):
         """Test that all admin route modules can be imported"""
         admin_route_modules = [
-            "populations_routes",
-            "experiments_routes",
-            "users_routes",
-            "agents_routes",
-            "clients_routes",
-            "pages_routes",
-            "ollama_routes",
+            "populations",
+            "experiments",
+            "users",
+            "agents",
+            "clients",
+            "pages",
+            "ollama",
         ]
 
         importable_count = 0
         for module_name in admin_route_modules:
             try:
-                module = __import__(f"y_web.routes_admin.{module_name}", fromlist=[""])
+                module = __import__(
+                    f"y_web.routes.admin.sub.{module_name}", fromlist=[""]
+                )
                 assert module is not None
                 importable_count += 1
             except ImportError:
@@ -373,42 +377,42 @@ class TestRoutesAdminIntegration:
         blueprint_info = []
 
         try:
-            from y_web.routes_admin.populations_routes import population
+            from y_web.routes.admin.sub.populations import population
 
             blueprint_info.append(population.name)
         except ImportError:
             pass
 
         try:
-            from y_web.routes_admin.experiments_routes import experiments
+            from y_web.routes.admin.sub.experiments import experiments
 
             blueprint_info.append(experiments.name)
         except ImportError:
             pass
 
         try:
-            from y_web.routes_admin.users_routes import users
+            from y_web.routes.admin.sub.users import users
 
             blueprint_info.append(users.name)
         except ImportError:
             pass
 
         try:
-            from y_web.routes_admin.agents_routes import agents
+            from y_web.routes.admin.sub.agents import agents
 
             blueprint_info.append(agents.name)
         except ImportError:
             pass
 
         try:
-            from y_web.routes_admin.clients_routes import clientsr
+            from y_web.routes.admin.sub.clients import clientsr
 
             blueprint_info.append(clientsr.name)
         except ImportError:
             pass
 
         try:
-            from y_web.routes_admin.pages_routes import pages
+            from y_web.routes.admin.sub.pages import pages
 
             blueprint_info.append(pages.name)
         except ImportError:

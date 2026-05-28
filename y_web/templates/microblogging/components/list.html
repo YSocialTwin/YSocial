@@ -1,0 +1,16 @@
+<div>
+    {% include "microblogging/components/thread-post.html" %}
+    <div id="child-{{ thread['post_id'] }}">
+        {% if len(thread['children'])>0 %}
+        {% set data = thread['children'] %}
+        {% for c in data %}
+ <div class="ys-pl-20">
+            {% with thread=c %}
+            {% include "microblogging/components/list.html" %}
+            {% endwith %}
+        </div>
+        {% endfor %}
+        {% endif %}
+    </div>
+
+</div>

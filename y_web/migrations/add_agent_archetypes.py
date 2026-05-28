@@ -119,14 +119,12 @@ def migrate_postgresql(host, port, database, user, password):
         cursor = conn.cursor()
 
         # Check if columns already exist
-        cursor.execute(
-            """
+        cursor.execute("""
             SELECT column_name 
             FROM information_schema.columns 
             WHERE table_schema = 'public' 
               AND table_name = 'client'
-        """
-        )
+        """)
         existing_columns = [row[0] for row in cursor.fetchall()]
 
         columns_to_add = []

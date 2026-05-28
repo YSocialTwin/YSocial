@@ -11,6 +11,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 
 class TestConsoleSuppressionLogic:
     """Test console output suppression for PyInstaller executables"""

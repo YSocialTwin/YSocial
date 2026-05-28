@@ -16051,16 +16051,20 @@ button.button {
     position: relative;
     width: 43px;
     height: 43px;
-    border-radius: 50%;
+    border-radius: 999px;
     background: #fff;
-    box-shadow: 0px 5px 43px rgba(0,0,0,.18);
+    box-shadow: 0 4px 14px rgba(31, 45, 61, 0.08);
+    border: 1px solid #e8edf6;
     display: flex;
     justify-content: center;
     align-items: center;
+    gap: 6px;
+    padding: 0 12px;
     margin: 0 auto;
     text-decoration: none;
     opacity: 1 !important;
-    overflow: hidden
+    overflow: hidden;
+    color: #7d879c
 }
 
 .like-wrapper .like-button .like-overlay, .dislike-wrapper .dislike-button .dislike-overlay {
@@ -16114,8 +16118,8 @@ button.button {
 }
 
 .fab-wrapper.is-comment a, .fab-wrapper.is-comment-none a  {
-    background: #6ba4e9;
-    box-shadow: 0 14px 26px -12px rgba(85,150,230,.42),0 4px 23px 0px rgba(0,0,0,.12),0 8px 10px -5px rgba(85,150,230,.2) !important
+    background: linear-gradient(135deg, #6ba4e9, #4d8fe2);
+    box-shadow: 0 8px 18px rgba(85,150,230,.25) !important
 }
 
 
@@ -16131,9 +16135,12 @@ button.button {
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 43px;
+    width: auto;
+    min-width: 43px;
     height: 43px;
-    border-radius: 50%;
+    padding: 0 12px;
+    gap: 6px;
+    border-radius: 999px;
     color: #fcfcfc;
     opacity: 1;
     transition: all .3s
@@ -16145,8 +16152,54 @@ button.button {
     transition: all .3s
 }
 
+.fab-wrapper .small-fab span,
+.like-wrapper .like-button span,
+.dislike-wrapper .dislike-button span,
+.like-wrapper .share-button span {
+    font-size: .82rem;
+    font-weight: 600;
+    line-height: 1
+}
+
 .fab-wrapper .small-fab.is-active {
     background: #5596e6
+}
+
+.fab-wrapper .small-fab.report-fab {
+    background: #fff8eb;
+    border: 1px solid #f2ddb0;
+    color: #9a6a0a;
+    box-shadow: 0 4px 14px rgba(166, 121, 18, 0.10)
+}
+
+.fab-wrapper .small-fab.report-fab svg {
+    stroke: #9a6a0a
+}
+
+.fab-wrapper .small-fab.report-fab span {
+    font-size: .85rem;
+    line-height: 1;
+    color: #9a6a0a
+}
+
+.fab-wrapper .small-fab.report-fab:hover {
+    background: #f5d58c
+}
+
+.fab-wrapper .small-fab.report-fab:hover svg {
+    stroke: #fff
+}
+
+.fab-wrapper .small-fab.report-fab.is-active {
+    background: #f0b429;
+    border-color: #f0b429;
+    color: #fff
+}
+
+.fab-wrapper .small-fab.report-fab.is-active svg,
+.fab-wrapper .small-fab.report-fab.is-active span {
+    stroke: #fff;
+    color: #fff
 }
 
 .load-more-wrap {
@@ -25952,17 +26005,20 @@ position: absolute;
     display: flex;
     justify-content: flex-start;
     align-items: center;
-    margin-top: 10px
+    margin-top: 10px;
+    gap: 8px
 }
 
 .card.is-post .content-wrap .post-actions .like-wrapper,.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .post-actions .like-wrapper {
-    margin: 0 2px
+    margin: 0
 }
 
 .card.is-post .content-wrap .post-actions .like-wrapper .like-button,.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .post-actions .like-wrapper .like-button {
-    width: 36px;
+    width: auto;
+    min-width: 40px;
     height: 36px;
-    border: none
+    border: 1px solid #e8edf6;
+    padding: 0 10px
 }
 
 .card.is-post .content-wrap .post-actions .like-wrapper .like-overlay,.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .post-actions .like-wrapper .like-overlay {
@@ -25977,13 +26033,15 @@ position: absolute;
 }
 
 .card.is-post .content-wrap .post-actions .fab-wrapper,.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .post-actions .fab-wrapper {
-    margin: 0 2px
+    margin: 0
 }
 
 .card.is-post .content-wrap .post-actions .fab-wrapper .small-fab,.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .post-actions .fab-wrapper .small-fab {
-    width: 36px;
+    width: auto;
+    min-width: 40px;
     height: 36px;
-    border: none
+    border: 1px solid transparent;
+    padding: 0 10px
 }
 
 .card.is-post .content-wrap .post-actions .fab-wrapper .small-fab svg,.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .post-actions .fab-wrapper .small-fab svg {
@@ -25995,6 +26053,564 @@ position: absolute;
     display: flex;
     justify-content: flex-start;
     align-items: center
+}
+
+.card.is-post .content-wrap .card-footer .social-count,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .social-count {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap
+}
+
+.card.is-post .content-wrap .card-footer .social-count > div,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .social-count > div {
+    margin-right: 0 !important
+}
+
+.card.is-post .post-annotation-section .post-meta-group,
+.card.is-post .content-wrap .card-footer .post-meta-group,
+.card.is-post .comments-wrap .comments-body .post-meta-group,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .post-meta-group {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-right: 12px;
+    margin-bottom: 0
+}
+
+.card.is-post .post-annotation-section .post-meta-group.in-thread,
+.card.is-post .content-wrap .card-footer .post-meta-group.in-thread,
+.card.is-post .comments-wrap .comments-body .post-meta-group.in-thread {
+    margin-right: 10px;
+    margin-bottom: 0
+}
+
+.card.is-post .post-annotation-section .post-meta-label,
+.card.is-post .content-wrap .card-footer .post-meta-label,
+.card.is-post .comments-wrap .comments-body .post-meta-label,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .post-meta-label {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+    color: #8a94a8
+}
+
+.card.is-post .post-annotation-section .post-meta-chip,
+.card.is-post .content-wrap .card-footer .post-meta-chip,
+.card.is-post .comments-wrap .comments-body .post-meta-chip,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .post-meta-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 22px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    text-decoration: none;
+    font-size: .66rem;
+    font-weight: 600;
+    line-height: 1;
+    border: 1px solid #e1e8f5;
+    background: #f7f9fc;
+    color: #5f6c86;
+    transition: background-color .16s ease, border-color .16s ease, color .16s ease, transform .16s ease
+}
+
+.card.is-post .post-annotation-section .post-meta-chip:hover,
+.card.is-post .content-wrap .card-footer .post-meta-chip:hover,
+.card.is-post .comments-wrap .comments-body .post-meta-chip:hover,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .post-meta-chip:hover {
+    background: #eef4fd;
+    border-color: #d7e5fb;
+    color: #416fb8;
+    transform: translateY(-1px)
+}
+
+.card.is-post .post-annotation-section .emotion-chip i,
+.card.is-post .content-wrap .card-footer .emotion-chip i,
+.card.is-post .comments-wrap .comments-body .emotion-chip i,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .emotion-chip i {
+    font-size: .76rem
+}
+
+.card.is-post .post-annotation-section .post-meta-extra,
+.card.is-post .content-wrap .card-footer .post-meta-extra,
+.card.is-post .comments-wrap .comments-body .post-meta-extra,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .post-meta-extra {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px
+}
+
+.card.is-post .post-annotation-section .post-meta-extra.is-hidden,
+.card.is-post .content-wrap .card-footer .post-meta-extra.is-hidden,
+.card.is-post .comments-wrap .comments-body .post-meta-extra.is-hidden,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .post-meta-extra.is-hidden {
+    display: none
+}
+
+.card.is-post .post-annotation-section .meta-chip-toggle,
+.card.is-post .content-wrap .card-footer .meta-chip-toggle,
+.card.is-post .comments-wrap .comments-body .meta-chip-toggle,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .meta-chip-toggle {
+    display: inline-flex;
+    align-items: center;
+    min-height: 22px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    border: 1px dashed #d8e2f2;
+    background: #fff;
+    color: #6d84ad;
+    font-size: .64rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color .16s ease, border-color .16s ease, color .16s ease
+}
+
+.card.is-post .post-annotation-section .meta-chip-toggle:hover,
+.card.is-post .content-wrap .card-footer .meta-chip-toggle:hover,
+.card.is-post .comments-wrap .comments-body .meta-chip-toggle:hover,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .meta-chip-toggle:hover {
+    background: #f4f8ff;
+    border-color: #c6d7f2;
+    color: #416fb8
+}
+
+.reply-action-row {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-top: 8px
+}
+
+.post-content-section {
+    margin-bottom: 12px
+}
+
+.post-content-section.is-threaded {
+    margin-bottom: 10px;
+    padding: 2px 0 0
+}
+
+.post-content-section p,
+.post-content-section .feed-content {
+    margin-bottom: 0
+}
+
+.card.is-post.moderation-comment-card {
+    border: 1px solid #f2d8a6;
+    box-shadow: 0 14px 30px rgba(188, 132, 33, 0.12)
+}
+
+.card.is-post.moderation-comment-card .content-wrap {
+    background: linear-gradient(180deg, #fffaf0 0%, #fff4df 100%);
+    border-radius: inherit
+}
+
+.card.is-post.moderation-thread-shellless {
+    background: transparent;
+    border: 0;
+    box-shadow: none !important
+}
+
+.card.is-post.moderation-thread-shellless .comments-wrap,
+.card.is-post.moderation-thread-shellless .comments-body {
+    background: transparent;
+    padding: 0 !important
+}
+
+.moderation-comment {
+    position: relative;
+    padding: 14px 16px;
+    border: 1px solid #f2d8a6;
+    border-left: 4px solid #d8922f;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #fff7e8 0%, #fff2d8 100%);
+    box-shadow: 0 10px 24px rgba(188, 132, 33, 0.12)
+}
+
+.moderation-comment .post-content-section,
+.moderation-comment .post-content-section.is-threaded {
+    margin-bottom: 0;
+    padding-top: 4px
+}
+
+.moderation-comment .post-content-section p {
+    color: #6b5b33
+}
+
+.moderation-comment .time {
+    color: #9b7b3e
+}
+
+.moderation-comment a:not(.dropdown-item) {
+    color: #7b5b21
+}
+
+.moderation-comment .user-info a,
+.moderation-comment .media-content > a {
+    font-weight: 700
+}
+
+.moderation-comment hr {
+    display: none
+}
+
+.post-annotation-section {
+    margin-top: 12px;
+    padding: 12px 14px;
+    border: 1px solid #eceff5;
+    border-radius: 14px;
+    background: #f8fafc
+}
+
+.post-annotation-section.is-threaded {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 12px
+}
+
+.post-annotation-section .card-footer {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px 12px;
+    padding: 0 !important;
+    background: transparent !important;
+    border-top: 0 !important
+}
+
+.post-action-section {
+    margin-top: 12px;
+    padding-top: 2px
+}
+
+.post-action-section.is-threaded {
+    margin-top: 10px
+}
+
+.post-action-section .social-count {
+    display: flex !important;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-left: 0 !important
+}
+
+.post-action-section .social-count > div,
+.post-action-section .social-count > .fab-wrapper {
+    margin: 0 !important
+}
+
+.post-action-section .social-count .like-wrapper,
+.post-action-section .social-count .dislike-wrapper,
+.post-action-section .social-count .fab-wrapper {
+    display: flex;
+    align-items: center
+}
+
+.post-action-section .social-count .like-button,
+.post-action-section .social-count .dislike-button,
+.post-action-section .social-count .share-button,
+.post-action-section .social-count .small-fab {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto !important;
+    min-width: 46px;
+    height: 40px;
+    padding: 0 12px;
+    gap: 6px;
+    margin: 0;
+    overflow: visible !important;
+    border-radius: 999px;
+    border: 1px solid #e3e9f3;
+    background: #fff;
+    color: #7d879c;
+    box-shadow: 0 4px 14px rgba(31, 45, 61, 0.08);
+    text-decoration: none;
+    transition: transform .16s ease, box-shadow .16s ease, background-color .16s ease, border-color .16s ease, color .16s ease
+}
+
+.post-action-section .social-count .small-fab:not(.report-fab) {
+    color: #5d89d8;
+    border-color: #dbe7fb;
+    background: #fff
+}
+
+.post-action-section .social-count .like-button:hover,
+.post-action-section .social-count .dislike-button:hover,
+.post-action-section .social-count .share-button:hover,
+.post-action-section .social-count .small-fab:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(31, 45, 61, 0.12)
+}
+
+.post-action-section .social-count .like-button:hover,
+.post-action-section .social-count .dislike-button:hover,
+.post-action-section .social-count .share-button:hover {
+    border-color: #dbe7fb;
+    color: #4b79c8
+}
+
+.post-action-section .social-count .like-button svg,
+.post-action-section .social-count .dislike-button svg,
+.post-action-section .social-count .share-button svg,
+.post-action-section .social-count .small-fab svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    flex: 0 0 auto;
+    pointer-events: none
+}
+
+.post-action-section .social-count .like-button span,
+.post-action-section .social-count .dislike-button span,
+.post-action-section .social-count .share-button span,
+.post-action-section .social-count .small-fab span {
+    margin: 0;
+    color: inherit;
+    font-size: .82rem;
+    font-weight: 600;
+    line-height: 1
+}
+
+.post-action-section .social-count .like-button .ys-stroke-white,
+.post-action-section .social-count .dislike-button .ys-stroke-white {
+    stroke: #7d879c !important
+}
+
+.post-action-section .social-count .like-button .text-white,
+.post-action-section .social-count .dislike-button .text-white {
+    color: #7d879c !important
+}
+
+.post-thread-tools {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-top: 10px
+}
+
+.post-thread-tools--reply-only {
+    justify-content: flex-end
+}
+
+.thread-toggle-row {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin-top: 8px
+}
+
+.reply-toggle-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 32px;
+    padding: 0 11px;
+    border: 1px solid #d8e2f2;
+    border-radius: 999px;
+    background: #fff;
+    color: #5f6c86;
+    font-size: .76rem;
+    font-weight: 700;
+    line-height: 1;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color .16s ease, border-color .16s ease, color .16s ease, transform .16s ease
+}
+
+.reply-toggle-button:hover {
+    background: #f4f8ff;
+    border-color: #c6d7f2;
+    color: #416fb8;
+    transform: translateY(-1px)
+}
+
+.thread-toggle-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 32px;
+    padding: 0 11px;
+    border: 1px solid #d8e2f2;
+    border-radius: 999px;
+    background: #fff;
+    color: #5f6c86;
+    font-size: .76rem;
+    font-weight: 700;
+    line-height: 1;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color .16s ease, border-color .16s ease, color .16s ease, transform .16s ease
+}
+
+.thread-toggle-button:hover {
+    background: #f4f8ff;
+    border-color: #c6d7f2;
+    color: #416fb8;
+    transform: translateY(-1px)
+}
+
+.reply-form-shell {
+    margin-top: 10px;
+    padding: 14px;
+    border: 1px solid #e5eaf2;
+    border-radius: 16px;
+    background: #f8fafc;
+    box-shadow: none
+}
+
+.reply-form-shell .reply_comment {
+    min-height: 92px;
+    margin-bottom: 12px;
+    border-radius: 14px;
+    border-color: #d9e1ec;
+    background: #fff;
+    color: #53627c;
+    box-shadow: inset 0 1px 3px rgba(84, 110, 162, 0.05)
+}
+
+.reply-form-shell .reply_comment:focus {
+    border-color: #8fb3eb;
+    box-shadow: 0 0 0 4px rgba(106, 163, 231, 0.14);
+    background: #fff
+}
+
+.reply-form-shell .add-comment-button {
+    min-height: 40px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #6ea8ef 0%, #5d8fe0 100%);
+    border: 0;
+    box-shadow: 0 10px 22px rgba(93, 143, 224, 0.22)
+}
+
+.reply-form-shell .add-comment-button:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 26px rgba(93, 143, 224, 0.26)
+}
+
+.reply-form-shell .add-comment-button:disabled {
+    opacity: .75;
+    cursor: progress
+}
+
+.card.is-post .post-annotation-section .topic-chip.is-positive,
+.card.is-post .content-wrap .card-footer .topic-chip.is-positive,
+.card.is-post .comments-wrap .comments-body .topic-chip.is-positive,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .topic-chip.is-positive {
+    background: #eefbf3;
+    border-color: #ccefd8;
+    color: #1f8f52
+}
+
+.card.is-post .post-annotation-section .topic-chip.is-negative,
+.card.is-post .content-wrap .card-footer .topic-chip.is-negative,
+.card.is-post .comments-wrap .comments-body .topic-chip.is-negative,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .topic-chip.is-negative {
+    background: #fff1f1;
+    border-color: #f2cfcf;
+    color: #c04646
+}
+
+.card.is-post .post-annotation-section .topic-chip.is-neutral,
+.card.is-post .content-wrap .card-footer .topic-chip.is-neutral,
+.card.is-post .comments-wrap .comments-body .topic-chip.is-neutral,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .topic-chip.is-neutral {
+    background: #eef5ff;
+    border-color: #d4e3fb;
+    color: #3f72c5
+}
+
+.card.is-post .content-wrap .card-footer .social-count .like-button,
+.card.is-post .content-wrap .card-footer .social-count .dislike-button,
+.card.is-post .content-wrap .card-footer .social-count .share-button,
+.card.is-post .content-wrap .card-footer .social-count .small-fab,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .social-count .like-button,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .social-count .dislike-button,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .social-count .share-button,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .social-count .small-fab {
+    box-sizing: border-box;
+    width: auto;
+    min-width: 46px;
+    height: 40px;
+    padding: 0 12px;
+    gap: 6px;
+    overflow: visible;
+    border-radius: 999px;
+    border-width: 1px;
+    border-style: solid;
+    transition: transform .16s ease, box-shadow .16s ease, background-color .16s ease, border-color .16s ease, color .16s ease
+}
+
+.card.is-post .content-wrap .card-footer .social-count .small-fab:not(.report-fab),
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .social-count .small-fab:not(.report-fab) {
+    border-color: transparent
+}
+
+.card.is-post .content-wrap .card-footer .social-count .like-button:hover,
+.card.is-post .content-wrap .card-footer .social-count .dislike-button:hover,
+.card.is-post .content-wrap .card-footer .social-count .share-button:hover,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .social-count .like-button:hover,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .social-count .dislike-button:hover,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .social-count .share-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(31, 45, 61, 0.12);
+    border-color: #dbe7fb;
+    color: #4b79c8
+}
+
+.card.is-post .content-wrap .card-footer .social-count .like-button:hover svg,
+.card.is-post .content-wrap .card-footer .social-count .dislike-button:hover svg,
+.card.is-post .content-wrap .card-footer .social-count .share-button:hover svg,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .social-count .like-button:hover svg,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .social-count .dislike-button:hover svg,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .social-count .share-button:hover svg {
+    stroke: #4b79c8
+}
+
+.card.is-post .content-wrap .card-footer .social-count .like-button span,
+.card.is-post .content-wrap .card-footer .social-count .dislike-button span,
+.card.is-post .content-wrap .card-footer .social-count .share-button span,
+.card.is-post .content-wrap .card-footer .social-count .small-fab span,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .social-count .like-button span,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .social-count .dislike-button span,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .social-count .share-button span,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .social-count .small-fab span {
+    margin: 0;
+    color: inherit
+}
+
+.card.is-post .content-wrap .card-footer .social-count .like-button .ys-stroke-white,
+.card.is-post .content-wrap .card-footer .social-count .dislike-button .ys-stroke-white,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .social-count .like-button .ys-stroke-white,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .social-count .dislike-button .ys-stroke-white {
+    stroke: #7d879c !important
+}
+
+.card.is-post .content-wrap .card-footer .social-count .like-button .text-white,
+.card.is-post .content-wrap .card-footer .social-count .dislike-button .text-white,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .social-count .like-button .text-white,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .social-count .dislike-button .text-white {
+    color: #7d879c !important
+}
+
+.card.is-post .content-wrap .card-footer .social-count .like-button svg,
+.card.is-post .content-wrap .card-footer .social-count .dislike-button svg,
+.card.is-post .content-wrap .card-footer .social-count .share-button svg,
+.card.is-post .content-wrap .card-footer .social-count .small-fab svg,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .social-count .like-button svg,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .social-count .dislike-button svg,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .social-count .share-button svg,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .social-count .small-fab svg {
+    stroke: currentColor
 }
 
 .card.is-post .content-wrap .card-footer .likers-group,.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .content-wrap .card-footer .likers-group {
@@ -26194,44 +26810,157 @@ font-size: .8rem !important;
     color: #757a91
 }
 
-.card.is-post .comments-wrap .comments-body .is-comment .media-content .controls,.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .comments-wrap .comments-body .is-comment .media-content .controls {
+.card.is-post .comments-wrap .comments-body .is-comment .media-content .controls,
+.card.is-post .comments-wrap .comments-body .original-post .media-content .controls,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .comments-wrap .comments-body .is-comment .media-content .controls {
     padding: 8px 0;
     display: flex;
     justify-content: flex-start;
-    align-items: center
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap
 }
 
 .card.is-post .comments-wrap .comments-body .is-comment .media-content .controls .like-count,
 .card.is-post .comments-wrap .comments-body .is-comment .media-content .controls .dislike-count,
 .card.is-post .comments-wrap .comments-body .is-comment .media-content .controls .share-count,
+.card.is-post .comments-wrap .comments-body .is-comment .media-content .controls .report-count,
+.card.is-post .comments-wrap .comments-body .original-post .media-content .controls .like-count,
+.card.is-post .comments-wrap .comments-body .original-post .media-content .controls .dislike-count,
+.card.is-post .comments-wrap .comments-body .original-post .media-content .controls .share-count,
+.card.is-post .comments-wrap .comments-body .original-post .media-content .controls .report-count,
 .shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .comments-wrap .comments-body .is-comment .media-content .controls .like-count,
-.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .comments-wrap .comments-body .is-comment .media-content .controls .dislike-count
-.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .comments-wrap .comments-body .is-comment .media-content .controls .share-count{
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .comments-wrap .comments-body .is-comment .media-content .controls .dislike-count,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .comments-wrap .comments-body .is-comment .media-content .controls .share-count,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .comments-wrap .comments-body .is-comment .media-content .controls .report-count {
     display: flex;
     justify-content: flex-start;
     align-items: center;
-    cursor: pointer
+    cursor: pointer;
+    min-height: 28px;
+    padding: 4px 9px;
+    border-radius: 999px;
+    background: #f6f8fc;
+    border: 1px solid #e8edf6;
+    gap: 5px
+}
+
+.card.is-post .comments-wrap .comments-body .is-comment .media-content .controls .share-count .share-button,
+.card.is-post .comments-wrap .comments-body .original-post .media-content .controls .share-count .share-button,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .comments-wrap .comments-body .is-comment .media-content .controls .share-count .share-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: inherit;
+    text-decoration: none;
+    line-height: 1
+}
+
+.card.is-post .comments-wrap .comments-body .is-comment .media-content .controls .share-count .share-button span,
+.card.is-post .comments-wrap .comments-body .original-post .media-content .controls .share-count .share-button span,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .comments-wrap .comments-body .is-comment .media-content .controls .share-count .share-button span {
+    display: block;
+    font-size: .8rem;
+    color: #888da8;
+    margin: 0
+}
+
+.card.is-post .comments-wrap .comments-body .is-comment .media-content .controls .share-count .share-button svg,
+.card.is-post .comments-wrap .comments-body .original-post .media-content .controls .share-count .share-button svg,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .comments-wrap .comments-body .is-comment .media-content .controls .share-count .share-button svg {
+    position: relative;
+    top: -1px;
+    height: 12px;
+    width: 12px;
+    stroke: #888da8
+}
+
+.card.is-post .comments-wrap .comments-body .is-comment .media-content .controls .share-count:hover .share-button span,
+.card.is-post .comments-wrap .comments-body .original-post .media-content .controls .share-count:hover .share-button span,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .comments-wrap .comments-body .is-comment .media-content .controls .share-count:hover .share-button span {
+    color: #3d70b2
+}
+
+.card.is-post .comments-wrap .comments-body .is-comment .media-content .controls .share-count:hover .share-button svg,
+.card.is-post .comments-wrap .comments-body .original-post .media-content .controls .share-count:hover .share-button svg,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .comments-wrap .comments-body .is-comment .media-content .controls .share-count:hover .share-button svg {
+    stroke: #3d70b2
 }
 
 .card.is-post .comments-wrap .comments-body .is-comment .media-content .controls .like-count span,
 .card.is-post .comments-wrap .comments-body .is-comment .media-content .controls .dislike-count span,
 .card.is-post .comments-wrap .comments-body .is-comment .media-content .controls .share-count span,
+.card.is-post .comments-wrap .comments-body .original-post .media-content .controls .like-count span,
+.card.is-post .comments-wrap .comments-body .original-post .media-content .controls .dislike-count span,
+.card.is-post .comments-wrap .comments-body .original-post .media-content .controls .share-count span,
 .shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .comments-wrap .comments-body .is-comment .media-content .controls .like-count span {
     display: block;
     font-size: .8rem;
     color: #888da8;
-    margin: 0 5px
+    margin: 0
 }
 
 .card.is-post .comments-wrap .comments-body .is-comment .media-content .controls .like-count svg,
 .card.is-post .comments-wrap .comments-body .is-comment .media-content .controls .dislike-count svg,
 .card.is-post .comments-wrap .comments-body .is-comment .media-content .controls .share-count svg,
+.card.is-post .comments-wrap .comments-body .is-comment .media-content .controls .report-count svg,
+.card.is-post .comments-wrap .comments-body .original-post .media-content .controls .like-count svg,
+.card.is-post .comments-wrap .comments-body .original-post .media-content .controls .dislike-count svg,
+.card.is-post .comments-wrap .comments-body .original-post .media-content .controls .share-count svg,
+.card.is-post .comments-wrap .comments-body .original-post .media-content .controls .report-count svg,
 .shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .comments-wrap .comments-body .is-comment .media-content .controls .like-count svg {
     position: relative;
     top: -1px;
     height: 12px;
     width: 12px;
     stroke: #888da8
+}
+
+.card.is-post .comments-wrap .comments-body .is-comment .media-content .controls .report-count,
+.card.is-post .comments-wrap .comments-body .original-post .media-content .controls .report-count,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .comments-wrap .comments-body .is-comment .media-content .controls .report-count {
+    margin-left: 0;
+    text-decoration: none
+}
+
+.card.is-post .comments-wrap .comments-body .is-comment .media-content .controls .report-count:hover svg,
+.card.is-post .comments-wrap .comments-body .original-post .media-content .controls .report-count:hover svg,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .comments-wrap .comments-body .is-comment .media-content .controls .report-count:hover svg {
+    stroke: #3d70b2
+}
+
+.card.is-post .comments-wrap .comments-body .is-comment .media-content .controls .report-count.is-active,
+.card.is-post .comments-wrap .comments-body .original-post .media-content .controls .report-count.is-active,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .comments-wrap .comments-body .is-comment .media-content .controls .report-count.is-active {
+    background: #fff3d6;
+    border-color: #f0d48a
+}
+
+.card.is-post .comments-wrap .comments-body .is-comment .media-content .controls .like-count:hover,
+.card.is-post .comments-wrap .comments-body .is-comment .media-content .controls .dislike-count:hover,
+.card.is-post .comments-wrap .comments-body .is-comment .media-content .controls .share-count:hover,
+.card.is-post .comments-wrap .comments-body .is-comment .media-content .controls .report-count:hover,
+.card.is-post .comments-wrap .comments-body .original-post .media-content .controls .like-count:hover,
+.card.is-post .comments-wrap .comments-body .original-post .media-content .controls .dislike-count:hover,
+.card.is-post .comments-wrap .comments-body .original-post .media-content .controls .share-count:hover,
+.card.is-post .comments-wrap .comments-body .original-post .media-content .controls .report-count:hover {
+    background: #eef4fd;
+    border-color: #dbe7fb
+}
+
+.card.is-post .comments-wrap .comments-body .is-comment .media-content .controls .report-count span,
+.card.is-post .comments-wrap .comments-body .original-post .media-content .controls .report-count span,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .comments-wrap .comments-body .is-comment .media-content .controls .report-count span {
+    display: block;
+    font-size: .8rem;
+    color: #888da8;
+    margin: 0 1px
+}
+
+.card.is-post .comments-wrap .comments-body .is-comment .media-content .controls .report-count:hover span,
+.card.is-post .comments-wrap .comments-body .original-post .media-content .controls .report-count:hover span,
+.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .comments-wrap .comments-body .is-comment .media-content .controls .report-count:hover span {
+    color: #3d70b2
 }
 
 .card.is-post .comments-wrap .comments-body .is-comment .media-content .controls .like-count:hover span,.shop-wrapper .cart-container .cart-content .cart-summary .is-post.summary-card .comments-wrap .comments-body .is-comment .media-content .controls .like-count:hover span {
@@ -29157,6 +29886,70 @@ font-size: .8rem !important;
 
 .profile-timeline {
     padding: 10px 0
+}
+
+.profile-timeline .card.is-post {
+    margin-bottom: 20px !important;
+    border-radius: 16px !important;
+    box-shadow: 0 10px 28px rgba(31,45,61,.08) !important;
+    overflow: hidden
+}
+
+.profile-timeline .card.is-post .content-wrap {
+    padding: 20px !important
+}
+
+.profile-timeline .card.is-post .card-heading {
+    margin-bottom: 12px
+}
+
+.profile-timeline .card.is-post .post-content-section {
+    margin-bottom: 14px
+}
+
+.profile-timeline .card.is-post .post-annotation-section {
+    margin-top: 10px;
+    padding: 10px 14px;
+    border-radius: 14px;
+    background: #f8fafc;
+    border-color: #e8edf5
+}
+
+.profile-timeline .card.is-post .post-annotation-section .card-footer {
+    gap: 8px 10px
+}
+
+.profile-timeline .card.is-post .post-meta-label {
+    min-height: 22px;
+    display: inline-flex;
+    align-items: center
+}
+
+.profile-timeline .card.is-post .post-meta-group {
+    gap: 5px;
+    margin-right: 10px
+}
+
+.profile-timeline .card.is-post .post-meta-chip {
+    min-height: 22px;
+    padding: 2px 8px;
+    font-size: .68rem
+}
+
+.profile-timeline .card.is-post .post-action-section {
+    margin-top: 10px
+}
+
+.profile-timeline .card.is-post .social-count {
+    gap: 8px !important
+}
+
+.profile-timeline .card.is-post .post-thread-tools {
+    margin-top: 12px
+}
+
+.profile-timeline .card.is-post .reply-form-shell {
+    margin-top: 12px
 }
 
 .profile-timeline .profile-post {

@@ -1,0 +1,64 @@
+{
+  "plugins": [
+    {
+      "plugin_name": "YClient",
+      "category": "Simulation Runtime Stack",
+      "group": "Microblogging",
+      "description": "Client-side microblogging simulation runtime for YSocial experiments.",
+      "authors": [
+        "YSocialTwin"
+      ],
+      "repository_url": "https://github.com/YSocialTwin/YClient"
+    },
+    {
+      "plugin_name": "YClientReddit",
+      "category": "Simulation Runtime Stack",
+      "group": "Forum",
+      "description": "Client-side forum simulation runtime for Reddit-like YSocial scenarios.",
+      "authors": [
+        "YSocialTwin"
+      ],
+      "repository_url": "https://github.com/YSocialTwin/YClientReddit"
+    },
+    {
+      "plugin_name": "YServer",
+      "category": "Simulation Runtime Stack",
+      "group": "Microblogging",
+      "description": "Server-side microblogging simulation runtime for YSocial experiments.",
+      "authors": [
+        "YSocialTwin"
+      ],
+      "repository_url": "https://github.com/YSocialTwin/YServer"
+    },
+    {
+      "plugin_name": "YServerReddit",
+      "category": "Simulation Runtime Stack",
+      "group": "Forum",
+      "description": "Server-side forum simulation runtime for Reddit-like YSocial scenarios.",
+      "authors": [
+        "YSocialTwin"
+      ],
+      "repository_url": "https://github.com/YSocialTwin/YServerReddit"
+    },
+    {
+      "plugin_name": "YSimulator",
+      "category": "Simulation Runtime Stack",
+      "group": "HPC",
+      "description": "Distributed HPC simulation runtime for large-scale YSocial experiments.",
+      "authors": [
+        "YSocialTwin"
+      ],
+      "repository_url": "https://github.com/YSocialTwin/YSimulator"
+    },
+    {
+      "plugin_name": "y_agents_plugins",
+      "category": "Agent Extensions",
+      "group": "Agent Plugins",
+      "description": "Plugin-defined ad hoc agent families for YSocial experiments.",
+      "authors": [
+        "YSocialTwin"
+      ],
+      "repository_url": "https://github.com/YSocialTwin/y_agents_plugins"
+    }
+  ]
+}

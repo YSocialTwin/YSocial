@@ -2,10 +2,14 @@
 Simple test to verify blog post checking logic.
 """
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
 
 def test_fetch_latest_blog_post_handles_errors():
     """Test that fetch_latest_blog_post handles errors gracefully."""
-    from y_web.utils.check_blog import fetch_latest_blog_post
+    from y_web.src.system.check_blog import fetch_latest_blog_post
 
     # This should return None since the domain is unreachable in this environment
     result = fetch_latest_blog_post()

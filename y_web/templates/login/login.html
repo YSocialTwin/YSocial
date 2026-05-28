@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8"/>
+    <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <meta http-equiv="x-ua-compatible" content="ie=edge"/>
+
+    <title>Y Social | Login</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='assets/img/favicon.png') }}"/>
+
+    <!-- Google Tag Manager -->
+    <script>
+        ;(function (w, d, s, l, i) {
+            w[l] = w[l] || []
+            w[l].push({'gtm.start': new Date().getTime(), event: 'gtm.js'})
+            var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s),
+                dl = l != 'dataLayer' ? '&l=' + l : ''
+            j.async = true
+            j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl
+            f.parentNode.insertBefore(j, f)
+        })(window, document, 'script', 'dataLayer', 'GTM-KQHJPZP')
+    </script>
+    <!-- End Google Tag Manager -->
+
+    <!-- Fonts -->
+    <link
+            href="https://fonts.googleapis.com/css?family=Montserrat:600,700,800,900"
+            rel="stylesheet"
+    />
+    <link
+            href="https://fonts.googleapis.com/css?family=Roboto:400,500"
+            rel="stylesheet"
+    />
+    <!-- Core CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/app.css') }} "/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/core.css') }}"/>
+</head>
+
+<body class="is-white">
+{% include 'shared/browser_sync.html' %}
+
+<!-- Google Tag Manager (noscript) -->
+<noscript
+>
+    <iframe
+            src="https://www.googletagmanager.com/ns.html?id=GTM-KQHJPZP"
+            height="0"
+            width="0"
+ class="ys-invisible"
+    ></iframe
+    >
+</noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- Pageloader -->
+<div class="pageloader"></div>
+<div class="infraloader is-active"></div>
+
+<div class="login-wrapper">
+    <!-- Main Wrapper -->
+    <div class="login-wrapper columns is-gapless">
+        <!--Left Side (Desktop Only)-->
+        <div class="column is-6 is-hidden-mobile hero-banner">
+            <div class="hero is-fullheight is-login">
+                <div class="hero-body">
+                    <div class="container">
+ <div class="left-caption ys-p-2rem">
+ <h2 class="ys-hero-title">Y Social </h2>
+ <h4 class="ys-hero-sub">Where the Digital World comes to life.</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--Right Side-->
+        <div class="column is-6">
+            <div class="hero form-hero is-fullheight">
+                <!--Logo-->
+                <div class="logo-wrap">
+                    <div class="wrap-inner">
+                        <img src="{{ url_for('static', filename='assets/img/vector/logo/Ysocial_I_white.png') }}"
+                             alt=""/>
+                    </div>
+                </div>
+                <!--Login Form-->
+                <div class="hero-body">
+                    <div class="form-wrapper">
+                        <!--Avatar-->
+                        <div class="avatar">
+                            <div class="badge">
+                                <i data-feather="check"></i>
+                            </div>
+                            <img
+                                    src="https://placehold.it/128x128"
+                                    data-demo-src="{{ url_for('static', filename='assets/img/users/1.webp') }}"
+                                    alt=""
+                            />
+                        </div>
+                        <!--Form-->
+
+                        {% if show_exp_selection %}
+                        <!-- Experiment Selection Form (shown after credentials validated) -->
+                        <form method="POST" action="/select_experiment" style="width: 100%; max-width: 450px;">
+                            <input type="hidden" name="auth_token" value="{{ auth_token }}">
+                            <div class="login-form">
+                                <h3 style="text-align: center; margin-bottom: 2rem; font-size: 1.5rem; font-weight: 700; color: #2c3e50;">
+                                    Choose Your Experiment
+                                </h3>
+
+                                {% with messages = get_flashed_messages() %}
+                                {% if messages %}
+ <div class="notification is-danger ys-mb-6">
+                                    {{ messages[0] }}
+                                </div>
+                                {% endif %}
+                                {% endwith %}
+
+                                <div class="field" style="margin-bottom: 2rem;">
+                                    <label class="label" style="font-size: 0.9rem; color: #7f8c8d; margin-bottom: 0.75rem; font-weight: 500;">Select an active experiment to continue</label>
+                                    <div class="control">
+ <div class="position-relative">
+                                            <select name="experiment_id" required 
+                                                    style="width: 100%; 
+                                                           padding: 1rem 1.25rem; 
+                                                           border-radius: 12px; 
+                                                           border: 2px solid #e8e8e8; 
+                                                           font-size: 1.05rem; 
+                                                           font-weight: 500;
+                                                           color: #2c3e50;
+                                                           background: #ffffff;
+                                                           transition: all 0.3s ease;
+                                                           cursor: pointer;
+                                                           appearance: none;
+                                                           -webkit-appearance: none;
+                                                           -moz-appearance: none;
+                                                           background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M5%206l5%205%205-5%202%201-7%207-7-7%202-1z%22%20fill%3D%22%233273dc%22%2F%3E%3C%2Fsvg%3E');
+                                                           background-repeat: no-repeat;
+                                                           background-position: right 1rem center;
+                                                           padding-right: 3rem;"
+                                                    onmouseover="this.style.borderColor='#3273dc'; this.style.boxShadow='0 4px 12px rgba(50, 115, 220, 0.15)';"
+                                                    onmouseout="this.style.borderColor='#e8e8e8'; this.style.boxShadow='none';"
+                                                    onfocus="this.style.borderColor='#3273dc'; this.style.boxShadow='0 0 0 3px rgba(50, 115, 220, 0.1)';"
+                                                    onblur="this.style.borderColor='#e8e8e8'; this.style.boxShadow='none';">
+                                                <option value="" style="color: #95a5a6;">Choose an experiment...</option>
+                                                {% for exp in experiments %}
+ <option value="{{ exp.idexp }}" class="ys-p-1rem">{{ exp.exp_name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <p style="margin-top: 0.5rem; font-size: 0.85rem; color: #95a5a6;">
+                                        <i data-feather="info" style="width: 14px; height: 14px; vertical-align: middle;"></i>
+                                        You have access to {{ experiments|length }} active experiment{{ 's' if experiments|length > 1 else '' }}
+                                    </p>
+                                </div>
+
+ <div class="field ys-mt-10rem">
+                                    <div class="control">
+                                        <button
+                                                class="button is-solid primary-button raised is-rounded is-fullwidth"
+                                                style="padding: 1rem 1.5rem; 
+                                                       border-radius: 12px; 
+                                                       font-size: 1.05rem; 
+                                                       font-weight: 600; 
+                                                       transition: all 0.3s ease; 
+                                                       box-shadow: 0 6px 16px rgba(50, 115, 220, 0.3);
+                                                       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                                       border: none;"
+                                                onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px rgba(50, 115, 220, 0.4)';"
+                                                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 6px 16px rgba(50, 115, 220, 0.3)';"
+                                        >
+                                            <i data-feather="arrow-right" style="width: 18px; height: 18px; margin-right: 8px; vertical-align: middle;"></i>
+                                            Continue to Experiment
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                        {% else %}
+                        <!-- Normal Login Form -->
+ <form method="POST" action="/login" class="ys-w-max400">
+                            <div class="login-form">
+
+                                {% with messages = get_flashed_messages() %}
+                                {% if messages %}
+                                <div class="notification is-danger">
+                                    {{ messages[0] }}
+                                </div>
+                                {% endif %}
+                                {% endwith %}
+
+ <div class="field ys-mb-6">
+                                    <div class="control">
+                                        <input
+                                                class="input email-input"
+                                                type="email"
+                                                name="email"
+                                                placeholder="Your email"
+                                                autofocus=""
+ class="ys-search-input"
+                                        />
+ <div class="input-icon ys-abs-left-center">
+                                            <i data-feather="user"></i>
+                                        </div>
+                                    </div>
+                                </div>
+ <div class="field ys-mb-6">
+                                    <div class="control">
+                                        <input
+                                                class="input password-input"
+                                                type="password"
+                                                placeholder="Your Password"
+                                                name="password"
+ class="ys-search-input"
+                                        />
+ <div class="input-icon ys-abs-left-center">
+                                            <i data-feather="lock"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="checkbox">
+                                        <input type="checkbox" name="remember">
+                                        Remember me
+                                    </label>
+                                </div>
+ <div class="field ys-mt-8rem">
+                                    <div class="control">
+                                        <button
+                                                class="button is-solid primary-button raised is-rounded is-fullwidth"
+ class="ys-btn-primary"
+                                        >
+                                            Login
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Concatenated js plugins and jQuery -->
+<script src="{{ url_for('static', filename='assets/js/app.js') }}"></script>
+<script src="https://js.stripe.com/v3/"></script>
+
+<!-- Core js -->
+<script src="{{ url_for('static', filename='assets/js/global.js') }}"></script>
+
+<!-- Navigation options js -->
+<script src="{{ url_for('static', filename='assets/js/navbar-v1.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-v2.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-mobile.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-options.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/sidebar-v1.js') }}"></script>
+
+<!-- Core instance js -->
+<script src="{{ url_for('static', filename='assets/js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/chat.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/touch.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/tour.js') }}"></script>
+
+<!-- Components js -->
+<script src="{{ url_for('static', filename='assets/js/explorer.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/widgets.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/modal-uploader.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/popovers-users.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/popovers-pages.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/lightbox.js') }}"></script>
+
+<!-- Landing page js -->
+
+<!-- Signup page js -->
+
+<!-- Feed pages js -->
+
+<!-- profile js -->
+
+<!-- stories js -->
+
+<!-- friends js -->
+
+<!-- questions js -->
+
+<!-- video js -->
+
+<!-- events js -->
+
+<!-- news js -->
+
+<!-- shop js -->
+
+<!-- inbox js -->
+
+<!-- settings js -->
+
+<!-- map page js -->
+
+<!-- elements page js -->
+</body>
+</html>

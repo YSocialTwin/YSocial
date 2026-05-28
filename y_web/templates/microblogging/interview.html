@@ -1,0 +1,137 @@
+{% include "microblogging/header.html" %}
+
+
+<div class="view-wrapper">
+    <div class="container is-fluid interview-shell">
+        <div class="columns">
+            <div class="column is-3">
+                <div class="card interview-card">
+                    <header class="card-header">
+                        <p class="card-header-title">Interview</p>
+                    </header>
+                    <div class="card-content">
+                        <div class="field">
+                            <label class="label">Agent</label>
+                            <div class="control">
+                                <div class="select is-fullwidth">
+                                    <select id="interview-agent-select"></select>
+                                </div>
+                            </div>
+                            <p class="help">Only LLM agents are listed.</p>
+                        </div>
+                        <div class="field">
+                            <label class="label">Run ID (optional)</label>
+                            <div class="control">
+                                <input id="interview-run-id" class="input" placeholder="auto-detect from logs"/>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label class="label">Backend</label>
+                            <div class="control">
+                                <label class="radio">
+                                    <input type="radio" name="backend_mode" value="agent_runtime" checked>
+                                    Agent runtime
+                                </label>
+ <label class="radio ys-ml-10">
+                                    <input type="radio" name="backend_mode" value="admin">
+                                    Admin
+                                </label>
+                            </div>
+                        </div>
+ <div class="buttons w-100">
+                            <button id="interview-start-session" class="button is-primary is-fullwidth">Start Session</button>
+                            <button id="interview-refresh-memory" class="button is-light is-fullwidth" disabled>Refresh Memory</button>
+                        </div>
+                        <p id="interview-status" class="help"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="column is-6">
+                <div class="card interview-card">
+                    <header class="card-header">
+                        <p class="card-header-title">Conversation</p>
+                    </header>
+ <div class="card-content ys-scroll-lg">
+                        <div id="interview-messages"></div>
+                    </div>
+                    <div class="card-content" style="border-top: 1px solid #edf1f7;">
+                        <div class="field">
+                            <label class="label">Message</label>
+                            <div class="control">
+                                <textarea id="interview-input" class="textarea" rows="3" placeholder="Ask the agent about their experiences, decisions, or relationships..." disabled></textarea>
+                            </div>
+                        </div>
+                        <div class="field is-grouped is-grouped-right">
+                            <div class="control">
+                                <button id="interview-send" class="button is-link" disabled>Send</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="column is-3">
+                <div class="interview-side-stack">
+                    <div class="card interview-card">
+                        <header class="card-header">
+                            <p class="card-header-title">Persona</p>
+                        </header>
+                        <div class="card-content">
+                            <div class="interview-persona-head">
+                                <div id="interview-avatar" class="interview-avatar"></div>
+                                <div class="interview-persona-meta">
+                                    <div id="interview-persona-name" class="interview-persona-name">No agent selected</div>
+                                    <div id="interview-persona-subtitle" class="interview-persona-subtitle">Start an interview session to load persona details.</div>
+                                </div>
+                            </div>
+                            <div id="interview-persona" class="interview-persona-body"></div>
+                        </div>
+                    </div>
+                    <div class="card interview-card">
+                        <header class="card-header">
+                            <p class="card-header-title">Interests</p>
+                        </header>
+                        <div class="card-content">
+                            <div id="interview-interests" class="interview-interest-list"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="interview-memory-card" class="card interview-card interview-memory-card interview-memory-layout">
+            <header class="card-header">
+                <div class="card-header-title interview-panel-header">
+                    <span>Memory</span>
+                    <button id="interview-memory-collapse" type="button" class="interview-memory-toggle">Collapse</button>
+                </div>
+            </header>
+            <div class="card-content">
+                <div id="interview-memory-status" class="interview-memory-status"></div>
+                <div id="interview-memory"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.EXP_ID = {{ exp_id if exp_id else 'null' }};
+    window.EXP_PREFIX = window.EXP_ID ? '/' + window.EXP_ID : '';
+    window.INTERVIEW_EXP_ID = window.EXP_ID;
+    window.INTERVIEW_PLATFORM_LABEL = 'microblogging';
+</script>
+
+<script src="{{ url_for('static', filename='assets/js/app.js') }}"></script>
+<script src="https://js.stripe.com/v3/"></script>
+<script src="{{ url_for('static', filename='assets/js/global.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-v1.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-v2.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-mobile.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-options.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/sidebar-v1.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/chat.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/touch.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/interview.js') }}"></script>
+
+</body>
+</html>

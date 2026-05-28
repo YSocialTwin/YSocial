@@ -93,23 +93,19 @@ def migrate_postgresql(host, port, database, user, password):
         cursor = conn.cursor()
 
         # Check if column already exists
-        cursor.execute(
-            """
+        cursor.execute("""
             SELECT column_name 
             FROM information_schema.columns 
             WHERE table_name = 'exps'
-        """
-        )
+        """)
         columns = [row[0] for row in cursor.fetchall()]
 
         # Add exp_status column if it doesn't exist
         if "exp_status" not in columns:
-            cursor.execute(
-                """
+            cursor.execute("""
                 ALTER TABLE exps 
                 ADD COLUMN exp_status VARCHAR(20) DEFAULT 'stopped'
-            """
-            )
+            """)
             print("✓ Added exp_status column to PostgreSQL database")
 
             # Update existing experiments based on their running status

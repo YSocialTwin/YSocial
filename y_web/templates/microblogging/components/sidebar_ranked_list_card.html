@@ -1,0 +1,22 @@
+<div class="card ys-card-mb ys-trending-card">
+    <div class="card-heading is-bordered ys-p-1rem ys-trending-card__header">
+        <div>
+            <h4 class="ys-heading-tight">{{ ranked_card_title }}</h4>
+            <p class="ys-trending-card__subtitle">{{ ranked_card_subtitle }}</p>
+        </div>
+    </div>
+    <div class="card-body no-padding">
+        {% for entry in ranked_card_items %}
+        <a href="/{{exp_id}}/{{ ranked_card_href_prefix }}/{{ entry['id'] }}/1" class="ys-trending-row">
+            <span class="ys-trending-rank">{{ loop.index }}</span>
+            <span class="ys-trending-copy">
+                <span class="ys-trending-tag">{% if ranked_card_prefix %}{{ ranked_card_prefix }}{% endif %}{{ entry[ranked_card_label_key] }}</span>
+                <span class="ys-trending-meta">{{ entry['count'] }} {{ ranked_card_meta_label }}</span>
+            </span>
+            <span class="ys-trending-count">{{ entry['count'] }}</span>
+        </a>
+        {% else %}
+        <div class="ys-trending-empty">{{ ranked_card_empty }}</div>
+        {% endfor %}
+    </div>
+</div>
