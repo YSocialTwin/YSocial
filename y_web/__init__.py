@@ -93,8 +93,14 @@ def _ensure_flask_sqlalchemy_legacy_compat() -> None:
                     info = getattr(persist_selectable, "info", {})
                     bind_key = info.get("bind_key")
                     if bind_key is not None:
-                        state = flask_sqlalchemy.get_state(self.app)
-                        return state.db.get_engine(self.app, bind=bind_key)
+                        binds = {}
+                        try:
+                            binds = self.app.config.get("SQLALCHEMY_BINDS", {}) or {}
+                        except Exception:
+                            binds = {}
+                        if bind_key in binds:
+                            state = flask_sqlalchemy.get_state(self.app)
+                            return state.db.get_engine(self.app, bind=bind_key)
                 return session_base.get_bind(self, mapper, clause=clause)
 
             _compat_get_bind._ysocial_sa2_compat = True

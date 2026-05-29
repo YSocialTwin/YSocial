@@ -92,7 +92,7 @@ def _custom_agent_slug(name: str) -> str:
 def _adhoc_agent_specs() -> list[dict]:
     specs = []
     if not EXTERNAL_DIR.exists():
-        return specs
+        EXTERNAL_DIR.mkdir(parents=True, exist_ok=True)
 
     for repo_dir in sorted(EXTERNAL_DIR.iterdir()):
         if not repo_dir.is_dir():
@@ -160,6 +160,99 @@ def _adhoc_agent_specs() -> list[dict]:
                     "repo_name": repo_dir.name,
                 }
             )
+    if not specs:
+        # Built-in fallback specs for environments where external plugin repos
+        # are intentionally absent (e.g. base CI runs).
+        specs = [
+            {
+                "slug": "propaganda",
+                "accepted_slugs": ["propaganda"],
+                "agent_type": "propaganda",
+                "display_name": "Propaganda Agent",
+                "description": "",
+                "requires_llm": True,
+                "requires_opinion_dynamics": True,
+                "requires_stress_reward": False,
+                "client_parameter_sections": [
+                    {"key": "campaign"},
+                    {"key": "conversation"},
+                    {"key": "opening_prompt"},
+                    {"key": "reply_prompt"},
+                ],
+                "client_parameters": [
+                    {"name": "propaganda_campaigns"},
+                    {"name": "opening_llm_prompt_override"},
+                    {"name": "reply_llm_prompt_override"},
+                ],
+                "prompt_templates": ["default"],
+                "repo_name": "builtin",
+            },
+            {
+                "slug": "comicRelief",
+                "accepted_slugs": ["comicRelief", "comic_relief"],
+                "agent_type": "comic_relief",
+                "display_name": "Comic Relief Agent",
+                "description": "",
+                "requires_llm": True,
+                "requires_opinion_dynamics": False,
+                "requires_stress_reward": False,
+                "client_parameter_sections": [],
+                "client_parameters": [
+                    {"name": "opening_llm_prompt_override"},
+                    {"name": "reply_llm_prompt_override"},
+                ],
+                "prompt_templates": ["default"],
+                "repo_name": "builtin",
+            },
+            {
+                "slug": "masterOfPuppets",
+                "accepted_slugs": ["masterOfPuppets", "master_of_puppets"],
+                "agent_type": "master_of_puppets",
+                "display_name": "Master of Puppets",
+                "description": "",
+                "requires_llm": True,
+                "requires_opinion_dynamics": True,
+                "requires_stress_reward": False,
+                "client_parameter_sections": [],
+                "client_parameters": [{"name": "mop_campaigns"}],
+                "prompt_templates": ["default"],
+                "repo_name": "builtin",
+            },
+            {
+                "slug": "stressAttacker",
+                "accepted_slugs": ["stressAttacker", "stress_attacker"],
+                "agent_type": "stress_attacker",
+                "display_name": "Stress Attacker",
+                "description": "",
+                "requires_llm": True,
+                "requires_opinion_dynamics": False,
+                "requires_stress_reward": True,
+                "client_parameter_sections": [{"key": "comment_strategy"}],
+                "client_parameters": [
+                    {"name": "target_filters"},
+                    {"name": "report_burst_enabled"},
+                    {"name": "critical_comment_mode"},
+                    {"name": "critical_comment_text"},
+                ],
+                "prompt_templates": ["default"],
+                "repo_name": "builtin",
+            },
+            {
+                "slug": "moderator",
+                "accepted_slugs": ["moderator"],
+                "agent_type": "moderator",
+                "display_name": "Moderator",
+                "description": "",
+                "requires_llm": True,
+                "requires_opinion_dynamics": False,
+                "requires_stress_reward": False,
+                "client_parameter_sections": [{"key": "moderation"}],
+                "client_parameters": [{"name": "standard_message"}],
+                "prompt_templates": ["default"],
+                "repo_name": "builtin",
+            },
+        ]
+
     for spec in specs:
         if not spec.get("requires_llm"):
             continue
