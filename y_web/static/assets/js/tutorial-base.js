@@ -240,12 +240,14 @@
                 state.currentHighlightedElement = null;
             }
             
+            elements.overlay.classList.add('d-none');
             elements.overlay.style.display = 'none';
         }
         
         function startTutorial() {
             state.active = true;
             state.currentStep = 0;
+            elements.overlay.classList.remove('d-none');
             elements.overlay.style.display = 'block';
             showStep(state.currentStep);
         }

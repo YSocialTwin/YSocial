@@ -1,42 +1,71 @@
 (function() {
     // Tutorial configuration
     const tutorialSteps = [
+        // 1) General configuration
+        {
+            id: 'experiment-overview',
+            selector: '#experiment-overview-section',
+            title: '🧾 Experiment Overview',
+            description: `<p>This left-side box is the main configuration area for the experiment.</p>
+                <p style="margin-top: 8px;">From here you review metadata, edit topics, and update runtime feature toggles.</p>`,
+            position: 'right'
+        },
+        {
+            id: 'simulation-topics',
+            selector: '#experiment-topics-tags',
+            title: '🏷️ Simulation Topics',
+            description: `<p>Topics define the thematic space for content and interaction.</p>
+                <p style="margin-top: 8px;">Maintain this list before launching clients so their behavior is aligned with current experiment scope.</p>`,
+            position: 'right'
+        },
+        {
+            id: 'configuration-actions',
+            selector: '#actions-section',
+            title: '⚙️ Additional Configuration & Management',
+            description: `<p>Use this panel to open prompts, embedding settings, stress/reward controls, and lifecycle actions (download/delete).</p>`,
+            position: 'right'
+        },
+        // 2) Server controls
         {
             id: 'server-controls',
             selector: '#server-controls-section',
-            title: '🖥️ Server & Analysis Controls',
-            description: `<p>This is your <b>command center</b> for managing the experiment server and analysis tools:</p>
+            title: '🖥️ Server Controls',
+            description: `<p>This section controls experiment runtime services:</p>
                 <ul style="margin: 10px 0 0 18px; padding: 0; list-style: disc;">
-                    <li><b>Start/Stop Server</b> - Launch or terminate the experiment server</li>
-                    <li><b>Load Experiment</b> - Make this experiment's web interface accessible</li>
-                    <li><b>JupyterLab</b> - Start the analysis environment for exploring data</li>
+                    <li>Start/stop server processes.</li>
+                    <li>Load the experiment interface.</li>
+                    <li>Start JupyterLab for analysis.</li>
                 </ul>`,
             position: 'right'
         },
+        // 3) Client creation and execution
         {
             id: 'simulation-clients',
             selector: '#simulation-clients-section',
             title: '🤖 Simulation Clients',
-            description: `<p>Here you manage the <b>simulation clients</b> that run your agent populations:</p>
+            description: `<p>Manage standard clients that execute simulation rounds:</p>
                 <ul style="margin: 10px 0 0 18px; padding: 0; list-style: disc;">
-                    <li><b>Progress Bar</b> - Shows real-time simulation progress</li>
-                    <li><b>Play/Pause</b> - Start or pause individual clients</li>
-                    <li><b>Add Client</b> - Create new simulation configurations</li>
-                </ul>
-                <p style="margin-top: 10px; font-size: 0.9em; color: #888;">Each client can run different agent behaviors and parameters.</p>`,
+                    <li>Monitor progress bars and status.</li>
+                    <li>Start, pause, or stop client runs.</li>
+                    <li>Open client-specific configuration links.</li>
+                </ul>`,
             position: 'right'
         },
         {
-            id: 'actions',
-            selector: '#actions-section',
-            title: '⚡ Actions',
-            description: `<p>Quick actions to manage your experiment:</p>
-                <ul style="margin: 10px 0 0 18px; padding: 0; list-style: disc;">
-                    <li><b>Edit LLM Prompts</b> - Customize agent behavior instructions</li>
-                    <li><b>Download Experiment</b> - Export all data and configuration</li>
-                    <li><b>Delete Experiment</b> - Remove the experiment (use with caution!)</li>
-                </ul>`,
+            id: 'adhoc-clients',
+            selector: '#adhoc-agent-clients-section',
+            title: '🧩 Ad Hoc Agent Clients',
+            description: `<p>This section is dedicated to plugin-backed ad hoc clients.</p>
+                <p style="margin-top: 8px;">Use it to run specialized agent families independently from the standard client set.</p>`,
             position: 'right'
+        },
+        // 4) Runtime analysis and trends
+        {
+            id: 'analytics-cards',
+            selector: '.ys-analytics-page-card',
+            title: '📚 Analytics Shortcuts',
+            description: `<p>Use these cards to open dedicated analytics pages after runtime data starts accumulating.</p>`,
+            position: 'left'
         },
         {
             id: 'server-trends',
@@ -78,39 +107,29 @@
                 <p style="margin-top: 10px; font-size: 0.9em; color: #888;">Great for understanding agent behavior patterns.</p>`,
             position: 'overlay'
         },
+        // 5) Interface/evolution wrap-up
         {
             id: 'load-experiment',
             selector: '#load-experiment-btn',
             title: '🔄 Load Experiment Interface',
-            description: `<p>The <b>Load Experiment</b> button activates the web interface for this experiment.</p>
-                <p style="margin-top: 10px;">Once loaded, you can:</p>
-                <ul style="margin: 10px 0 0 18px; padding: 0; list-style: disc;">
-                    <li>Navigate the social network as a human participant</li>
-                    <li>View agent posts and interactions</li>
-                    <li>Join the simulation alongside synthetic agents</li>
-                </ul>
-                <p style="margin-top: 12px; padding: 10px; background: #e8f5e9; border-radius: 6px; font-size: 0.9em;">
-                    <b>💡 Try it now!</b> Click the button to load this experiment's interface, then use the <i class="mdi mdi-login"></i> button to join.
-                </p>`,
+            description: `<p>This button activates the user-facing interface for the selected experiment.</p>
+                <p style="margin-top: 10px;">After loading, you can inspect feeds, profiles, and live interaction behavior directly.</p>`,
             position: 'right',
             forceVisible: true
         },
         {
-            id: 'jupyter-controls',
-            selector: '#jupyter-controls',
-            title: '🔬 JupyterLab Analysis',
-            description: `<p>The <b>JupyterLab</b> button launches an interactive analysis environment.</p>
-                <p style="margin-top: 10px;">With JupyterLab, you can:</p>
-                <ul style="margin: 10px 0 0 18px; padding: 0; list-style: disc;">
-                    <li>Run Python notebooks to analyze experiment data</li>
-                    <li>Create custom visualizations and reports</li>
-                    <li>Access the raw database and logs</li>
-                </ul>
-                <p style="margin-top: 12px; padding: 10px; background: #e3f2fd; border-radius: 6px; font-size: 0.9em;">
-                    <b>💡 Tip:</b> Click the flask icon to start the JupyterLab server when you need advanced data analysis.
-                </p>`,
-            position: 'right',
-            forceVisible: true,
+            id: 'quick-reference',
+            selector: '#quick-reference-section',
+            title: '📌 Quick Reference',
+            description: `<p>This panel summarizes the recommended operational workflow: configure, run, inspect logs/trends, then analyze evolution pages.</p>`,
+            position: 'left'
+        },
+        {
+            id: 'evolution-pages',
+            selector: '#analytics-pages-section',
+            title: '📈 Experiment Evolution Pages',
+            description: `<p>Finalize your analysis from the evolution dashboards (network, topic/hashtag, recsys, opinion, stress/reward, and annotation trends).</p>`,
+            position: 'left',
             isLast: true
         }
     ];
@@ -151,7 +170,10 @@
     function startTutorial() {
         tutorialActive = true;
         currentStep = 0;
-        document.getElementById('exp-details-tutorial-overlay').style.display = 'block';
+        const overlay = document.getElementById('exp-details-tutorial-overlay');
+        if (!overlay) return;
+        overlay.classList.remove('d-none');
+        overlay.style.display = 'block';
         showStep(currentStep);
     }
     
@@ -345,7 +367,11 @@
             currentHighlightedElement = null;
         }
         
-        document.getElementById('exp-details-tutorial-overlay').style.display = 'none';
+        const overlay = document.getElementById('exp-details-tutorial-overlay');
+        if (overlay) {
+            overlay.classList.add('d-none');
+            overlay.style.display = 'none';
+        }
         
         // Mark tutorial as completed
         fetch('/admin/tutorial/exp_details/dismiss', {

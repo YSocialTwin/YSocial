@@ -26,7 +26,7 @@
  <div class="column is-12-mobile is-4-tablet ys-flex-col">
 
                     <!--Dashboard box-->
- <div class="dashboard-box ys-flex-auto-col">
+ <div id="experiment-overview-section" class="dashboard-box ys-flex-auto-col">
                         <h3 class="title is-5 is-thin">Experiment Overview</h3>
 
  <div class="box-content ys-flex-1">
@@ -646,7 +646,7 @@
 
  <div class="column is-12-mobile is-4-tablet ys-flex-col">
                     <!--Box-->
- <div class="dashboard-box is-compact ys-flex-col-1">
+ <div id="quick-reference-section" class="dashboard-box is-compact ys-flex-col-1">
                         <h3 class="title is-5 is-thin">Quick Reference Guide</h3>
  <div class="help-block ys-flex-1">
 
@@ -675,7 +675,7 @@
 
                     {% set has_analytics_pages = experiment.is_remote == 0 %}
                     {% if has_analytics_pages %}
-                    <div class="dashboard-box is-compact" style="flex: 0 0 auto; display: flex; flex-direction: column; margin-top: 1.5rem;">
+                    <div id="analytics-pages-section" class="dashboard-box is-compact" style="flex: 0 0 auto; display: flex; flex-direction: column; margin-top: 1.5rem;">
                         <h3 class="title is-5 is-thin">Analytics Pages</h3>
                         <div class="box-content ys-flex-1">
                             <p class="ys-analytics-pages-intro">

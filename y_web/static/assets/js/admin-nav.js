@@ -109,15 +109,28 @@ document.addEventListener('DOMContentLoaded', function() {
             'startPagesTutorial',
             'startClientDetailsTutorial',
             'startUserDetailsTutorial',
-            'startMiscellaneaTutorial'
+            'startMiscellaneaTutorial',
+            'startExternalRuntimesTutorial',
+            'startClientsAdhocTutorial',
+            'startAgentsDashboardTutorial',
+            'startGenericAdminTutorial'
         ];
 
         var hasTutorial = tutorialFunctions.some(function(fn) {
             return typeof window[fn] === 'function';
         });
 
+        var tutorialBtn = document.getElementById('tutorial-replay-btn');
+        if (!tutorialBtn) {
+            return;
+        }
+
         if (hasTutorial) {
-            document.getElementById('tutorial-replay-btn').style.display = 'inline-flex';
+            tutorialBtn.classList.remove('d-none');
+            tutorialBtn.style.display = 'inline-flex';
+        } else {
+            tutorialBtn.classList.add('d-none');
+            tutorialBtn.style.display = 'none';
         }
     }, 1500);
 });
@@ -146,6 +159,14 @@ function replayPageTutorial() {
         window.startUserDetailsTutorial();
     } else if (typeof window.startMiscellaneaTutorial === 'function') {
         window.startMiscellaneaTutorial();
+    } else if (typeof window.startExternalRuntimesTutorial === 'function') {
+        window.startExternalRuntimesTutorial();
+    } else if (typeof window.startClientsAdhocTutorial === 'function') {
+        window.startClientsAdhocTutorial();
+    } else if (typeof window.startAgentsDashboardTutorial === 'function') {
+        window.startAgentsDashboardTutorial();
+    } else if (typeof window.startGenericAdminTutorial === 'function') {
+        window.startGenericAdminTutorial();
     }
 }
 
