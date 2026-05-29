@@ -276,44 +276,50 @@ def experiments_data():
                 pass
         jupyter_status[jupyter.exp_id] = is_running
 
+    exp_ids = [exp.idexp for exp in res]
+    clients_by_exp = defaultdict(list)
+    client_ids = []
+    if exp_ids:
+        all_clients = Client.query.filter(Client.id_exp.in_(exp_ids)).all()
+        for client in all_clients:
+            clients_by_exp[client.id_exp].append(client)
+            client_ids.append(client.id)
+
+    client_exec_by_client_id = {}
+    if client_ids:
+        client_exec_rows = Client_Execution.query.filter(
+            Client_Execution.client_id.in_(client_ids)
+        ).all()
+        client_exec_by_client_id = {row.client_id: row for row in client_exec_rows}
+
     # Calculate average progress for running experiments
     exp_progress = {}
     # Track experiments with infinite clients
     exp_has_infinite = {}
     for exp in res:
-        # Check if any client has infinite duration (days = -1)
-        clients = Client.query.filter_by(id_exp=exp.idexp).all()
+        clients = clients_by_exp.get(exp.idexp, [])
         exp_has_infinite[exp.idexp] = any(client.days == -1 for client in clients)
 
         if exp.running == 1 or exp.exp_status == "active":
-            # Get all clients for this experiment
-            if clients:
-                total_progress = 0
-                count = 0
-                for client in clients:
-                    client_exec = Client_Execution.query.filter_by(
-                        client_id=client.id
-                    ).first()
-                    if client_exec and client_exec.expected_duration_rounds > 0:
-                        progress = min(
-                            100,
-                            max(
-                                0,
-                                int(
-                                    client_exec.elapsed_time
-                                    / client_exec.expected_duration_rounds
-                                    * 100
-                                ),
+            total_progress = 0
+            count = 0
+            for client in clients:
+                client_exec = client_exec_by_client_id.get(client.id)
+                if client_exec and client_exec.expected_duration_rounds > 0:
+                    progress = min(
+                        100,
+                        max(
+                            0,
+                            int(
+                                client_exec.elapsed_time
+                                / client_exec.expected_duration_rounds
+                                * 100
                             ),
-                        )
-                        total_progress += progress
-                        count += 1
-                if count > 0:
-                    exp_progress[exp.idexp] = int(total_progress / count)
-                else:
-                    exp_progress[exp.idexp] = 0
-            else:
-                exp_progress[exp.idexp] = 0
+                        ),
+                    )
+                    total_progress += progress
+                    count += 1
+            exp_progress[exp.idexp] = int(total_progress / count) if count > 0 else 0
 
     return {
         "data": [

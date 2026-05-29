@@ -171,22 +171,64 @@ def settings():
 
     users = Admin_users.query.all()
 
-    # Check and update status for stopped experiments that are actually completed
-    # Get all stopped experiments
+    # Check and update status for stopped experiments that are actually completed.
+    # Use batched queries to avoid per-experiment N+1 work on page load.
     stopped_experiments = Exps.query.filter_by(exp_status="stopped").all()
-    for exp in stopped_experiments:
-        # Use existing helper function to check if all clients completed
-        all_clients_completed, _ = _get_clients_to_start(exp)
-        if all_clients_completed:
-            # Update status to completed
-            exp.exp_status = "completed"
+    stopped_ids = [exp.idexp for exp in stopped_experiments]
+    if stopped_ids:
+        clients = Client.query.filter(Client.id_exp.in_(stopped_ids)).all()
+        clients_by_exp = defaultdict(list)
+        client_ids = []
+        for client in clients:
+            clients_by_exp[client.id_exp].append(client)
+            client_ids.append(client.id)
+
+        exec_by_client_id = {}
+        if client_ids:
+            exec_rows = Client_Execution.query.filter(
+                Client_Execution.client_id.in_(client_ids)
+            ).all()
+            exec_by_client_id = {row.client_id: row for row in exec_rows}
+
+        updated_any = False
+        for exp in stopped_experiments:
+            exp_clients = clients_by_exp.get(exp.idexp, [])
+            if not exp_clients:
+                continue
+
+            all_completed = True
+            for client in exp_clients:
+                client_exec = exec_by_client_id.get(client.id)
+                if client_exec is None:
+                    all_completed = False
+                    break
+                if client_exec.expected_duration_rounds == -1:
+                    all_completed = False
+                    break
+                if client_exec.elapsed_time < client_exec.expected_duration_rounds:
+                    all_completed = False
+                    break
+
+            if all_completed:
+                exp.exp_status = "completed"
+                updated_any = True
+
+        if updated_any:
             db.session.commit()
 
-    # Check which experiments have infinite clients
+    # Check which experiments have infinite clients (batched).
     exp_has_infinite = {}
+    preview_ids = [exp.idexp for exp in experiments]
+    preview_clients = []
+    if preview_ids:
+        preview_clients = Client.query.filter(Client.id_exp.in_(preview_ids)).all()
+    preview_clients_by_exp = defaultdict(list)
+    for client in preview_clients:
+        preview_clients_by_exp[client.id_exp].append(client)
     for exp in experiments:
-        clients = Client.query.filter_by(id_exp=exp.idexp).all()
-        exp_has_infinite[exp.idexp] = any(client.days == -1 for client in clients)
+        exp_has_infinite[exp.idexp] = any(
+            client.days == -1 for client in preview_clients_by_exp.get(exp.idexp, [])
+        )
 
     dbtype = current_app.config["SQLALCHEMY_DATABASE_URI"].split(":")[0]
 
