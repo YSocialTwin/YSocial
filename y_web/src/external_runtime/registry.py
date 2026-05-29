@@ -5,12 +5,16 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Sequence
 
-ROOT = Path(__file__).resolve().parents[3]
+from y_web.src.system.path_utils import get_resource_path, get_writable_path
+
+ROOT = Path(get_writable_path())
 EXTERNAL_DIR = ROOT / "external"
+RESOURCE_EXTERNAL_DIR = Path(get_resource_path("external"))
 PLUGINS_INDEX_PATH = EXTERNAL_DIR / "plugins.json"
 PLUGIN_INFO_RELATIVE_PATH = Path("meta") / "info.json"
 PLUGIN_REGISTRY_RELATIVE_PATH = Path("meta") / "registry.json"
@@ -18,6 +22,72 @@ LEGACY_PLUGIN_REGISTRY_PATHS = (
     Path("plugins_exposed") / "agent_types.json",
     Path("plugin_exposed") / "agent_types.json",
 )
+_BOOTSTRAP_REPORT = {
+    "writable_external_dir": str(EXTERNAL_DIR),
+    "resource_external_dir": str(RESOURCE_EXTERNAL_DIR),
+    "seeded_repos": [],
+    "existing_repos": [],
+    "missing_resource_repos": [],
+    "seed_errors": {},
+}
+
+
+def _seed_external_runtime_repo(repo_name: str) -> str:
+    """Copy bundled external runtime repo into writable storage on first run."""
+    target_dir = EXTERNAL_DIR / repo_name
+    if target_dir.exists():
+        return "existing"
+    source_dir = RESOURCE_EXTERNAL_DIR / repo_name
+    if not source_dir.exists() or not source_dir.is_dir():
+        return "missing_resource"
+    # In source mode writable/resource roots are the same; avoid self-copy.
+    if source_dir.resolve() == target_dir.resolve():
+        return "same_path"
+    target_dir.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(source_dir, target_dir, dirs_exist_ok=False)
+    return "seeded"
+
+
+def ensure_external_runtime_layout() -> None:
+    """
+    Ensure writable external runtime directory exists and seed it from bundled
+    resources when running a frozen build for the first time.
+    """
+    EXTERNAL_DIR.mkdir(parents=True, exist_ok=True)
+    for repo_name in (
+        "YClient",
+        "YServer",
+        "YClientReddit",
+        "YServerReddit",
+        "YSimulator",
+        "y_agents_plugins",
+    ):
+        try:
+            result = _seed_external_runtime_repo(repo_name)
+            if result == "seeded":
+                _BOOTSTRAP_REPORT["seeded_repos"].append(repo_name)
+            elif result in {"existing", "same_path"}:
+                _BOOTSTRAP_REPORT["existing_repos"].append(repo_name)
+            elif result == "missing_resource":
+                _BOOTSTRAP_REPORT["missing_resource_repos"].append(repo_name)
+        except Exception as exc:
+            # Keep startup resilient: failure to seed must not break import.
+            _BOOTSTRAP_REPORT["seed_errors"][repo_name] = str(exc)
+
+
+def external_runtime_bootstrap_report() -> dict:
+    """Return startup diagnostics for writable external runtime initialization."""
+    return {
+        "writable_external_dir": _BOOTSTRAP_REPORT["writable_external_dir"],
+        "resource_external_dir": _BOOTSTRAP_REPORT["resource_external_dir"],
+        "seeded_repos": list(_BOOTSTRAP_REPORT["seeded_repos"]),
+        "existing_repos": list(_BOOTSTRAP_REPORT["existing_repos"]),
+        "missing_resource_repos": list(_BOOTSTRAP_REPORT["missing_resource_repos"]),
+        "seed_errors": dict(_BOOTSTRAP_REPORT["seed_errors"]),
+    }
+
+
+ensure_external_runtime_layout()
 
 
 @dataclass(frozen=True)

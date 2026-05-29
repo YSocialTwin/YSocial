@@ -13,6 +13,7 @@ from y_web.src.external_runtime import (
     clone_runtime_repo,
     delete_runtime_repo,
     download_runtime_release,
+    external_runtime_bootstrap_report,
     fetch_runtime_repo,
     get_grouped_runtime_status,
     install_runtime_dependencies,
@@ -217,6 +218,7 @@ def external_runtimes():
         selected_repo_key=selected_repo_key,
         selected_repo_logs=selected_repo_logs,
         github_session_authenticated=bool(github_token),
+        external_runtime_bootstrap=external_runtime_bootstrap_report(),
     )
 
 

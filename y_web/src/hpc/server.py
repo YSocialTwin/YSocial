@@ -161,10 +161,19 @@ def start_hpc_server(exp):
     # These imports work because external_processes defines them before delegating here.
     from y_web.src.simulation.server import detect_env_handler
 
-    # Get base path - this will be bundle location when frozen, repo root otherwise
+    # Resolve external runtime roots: prefer writable (persistent) repos and
+    # fall back to bundled resources when writable copies are absent.
     base_path = get_base_path()
-    yserver_path = base_path
-    sys.path.append(os.path.join(yserver_path, "external", "YSimulator"))
+    writable_external = os.path.join(get_writable_path(), "external")
+    resource_external = os.path.join(base_path, "external")
+
+    def _external_repo_dir(repo_name):
+        candidate = os.path.join(writable_external, repo_name)
+        if os.path.isdir(candidate):
+            return candidate
+        return os.path.join(resource_external, repo_name)
+
+    sys.path.append(_external_repo_dir("YSimulator"))
 
     exp_folder = _resolve_hpc_experiment_folder(exp)
 
@@ -195,10 +204,8 @@ def start_hpc_server(exp):
 
     # Determine the server directory and script path based on platform type
     if exp.platform_type == "microblogging":
-        server_dir = os.path.join(yserver_path, "external", "YServer")
-        script_path = os.path.join(
-            yserver_path, "external", "YSimulator", "run_server.py"
-        )
+        server_dir = _external_repo_dir("YServer")
+        script_path = os.path.join(_external_repo_dir("YSimulator"), "run_server.py")
     else:
         raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
 
@@ -659,7 +666,7 @@ def start_server_screen(exp):
     if db_type == "sqlite":
         # Construct the database URI properly for both Windows and Unix
         # YServer prepends the system drive, so we need to strip it from our path
-        full_path = os.path.join(y_web_dir, exp.db_name)
+        full_path = os.path.join(_resolve_hpc_experiment_folder(exp), "database_server.db")
 
         # On Windows, strip the drive letter AND the following separator (e.g., "C:\")
         # On Unix, strip the leading "/"
