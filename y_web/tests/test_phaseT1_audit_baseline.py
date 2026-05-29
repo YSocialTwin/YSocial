@@ -99,6 +99,7 @@ class TestAuditScriptExists:
             os.path.join(REPO_ROOT, "scripts")
         ), "scripts/ directory not found at repo root"
 
+
 # ---------------------------------------------------------------------------
 # 2. Audit script runs successfully
 # ---------------------------------------------------------------------------
@@ -117,7 +118,7 @@ class TestBaselineFileExists:
             os.path.join(REPO_ROOT, "docs")
         ), "docs/ directory not found at repo root"
 
+
 # ---------------------------------------------------------------------------
 # 4. Live metrics match the baseline (reproducibility check)
 # ---------------------------------------------------------------------------
-

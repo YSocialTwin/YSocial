@@ -108,4 +108,3 @@ def test_exp_group_field_optional(app):
     finally:
         # Restore original bind_key
         Exps.__bind_key__ = original_bind_key
-

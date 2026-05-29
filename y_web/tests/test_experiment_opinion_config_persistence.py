@@ -93,6 +93,7 @@ def test_experiment_topics_update_route_reuses_exp_topic_and_config_storage():
     assert "db.session.query(Exp_Topic).filter_by(exp_id=uid).delete()" in data_source
     assert 'config["topics"] = topics' in data_source
 
+
 def test_hpc_server_config_generation_and_embedding_routes_support_memory():
     crud_source = open(
         "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_crud.py",
