@@ -2,10 +2,10 @@
 Pytest configuration and fixtures for y_web tests
 """
 
+import builtins
 import os
 import tempfile
 from pathlib import Path
-import builtins
 
 import pytest
 from flask import Flask
