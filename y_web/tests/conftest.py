@@ -112,6 +112,7 @@ def app():
 
     with app.app_context():
         from y_web.src.models import Admin_users, User_mgmt
+
         # Import models before create_all so SQLAlchemy metadata includes all tables.
         # Explicitly initialize all binds; some CI environments do not auto-create
         # non-default bind tables when create_all() is called without bind args.
