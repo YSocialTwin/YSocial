@@ -666,7 +666,9 @@ def start_server_screen(exp):
     if db_type == "sqlite":
         # Construct the database URI properly for both Windows and Unix
         # YServer prepends the system drive, so we need to strip it from our path
-        full_path = os.path.join(_resolve_hpc_experiment_folder(exp), "database_server.db")
+        full_path = os.path.join(
+            _resolve_hpc_experiment_folder(exp), "database_server.db"
+        )
 
         # On Windows, strip the drive letter AND the following separator (e.g., "C:\")
         # On Unix, strip the leading "/"
