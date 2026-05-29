@@ -113,7 +113,13 @@ def app():
     with app.app_context():
         from y_web.src.models import Admin_users, User_mgmt
         # Import models before create_all so SQLAlchemy metadata includes all tables.
-        db.create_all()
+        # Explicitly initialize all binds; some CI environments do not auto-create
+        # non-default bind tables when create_all() is called without bind args.
+        try:
+            db.create_all(bind_key="__all__")
+        except TypeError:
+            # Older Flask-SQLAlchemy variants without bind_key support.
+            db.create_all()
 
         # Create test admin user
         admin_user = Admin_users(
