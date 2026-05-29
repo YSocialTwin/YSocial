@@ -92,6 +92,7 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         ),
         validate_entrypoints=("y_client", "requirements_client.txt"),
         validate_import="y_client",
+        is_private=False,
     ),
     "forum_server": ExternalRuntimeSpec(
         key="forum_server",
@@ -109,6 +110,7 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         ),
         validate_entrypoints=("y_server", "requirements_server.txt"),
         validate_import="y_server",
+        is_private=False,
     ),
     "hpc_simulator": ExternalRuntimeSpec(
         key="hpc_simulator",
@@ -126,6 +128,7 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         ),
         validate_entrypoints=("run_server.py", "run_client.py"),
         validate_import="YSimulator",
+        is_private=False,
     ),
     "agent_plugins": ExternalRuntimeSpec(
         key="agent_plugins",
@@ -141,6 +144,7 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         install_commands=(),
         validate_entrypoints=(),
         validate_import=None,
+        is_private=False,
     ),
 }
 

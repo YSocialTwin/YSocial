@@ -7,10 +7,10 @@
         <div class="dashboard-body">
             <div class="columns">
                 <div class="column is-8">
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" id="external-runtimes-main">
                         <h3 class="title is-5 is-thin">External Runtime Plugins</h3>
                         <div class="box-content">
-                            <div style="border: 1px solid #e5e7eb; border-radius: 10px; background: #f8fafc; padding: 14px 16px; margin-bottom: 18px;">
+                            <div id="external-runtimes-github-session" style="border: 1px solid #e5e7eb; border-radius: 10px; background: #f8fafc; padding: 14px 16px; margin-bottom: 18px;">
                                 <div class="ys-text-sm-dark" style="font-weight: 700; margin-bottom: 6px;">GitHub session</div>
                                 <div class="ys-text-xs-hint" style="margin-bottom: 12px;">
                                     Optionally connect a GitHub token for this admin session to avoid anonymous API rate limits and access private release assets.
@@ -42,7 +42,7 @@
                             </p>
 
                             {% for category in runtime_categories %}
-                            <section class="ys-panel-card" style="margin-bottom: 22px; border: 1px solid #dbe3ef; border-radius: 14px; overflow: hidden; background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);">
+                            <section class="ys-panel-card" data-runtime-category style="margin-bottom: 22px; border: 1px solid #dbe3ef; border-radius: 14px; overflow: hidden; background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);">
                                 <div class="ys-panel-header" style="background: #eef4ff; border-bottom: 1px solid #dbe3ef; padding: 16px;">
                                     <div style="display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; flex-wrap: wrap;">
                                         <div>
@@ -86,7 +86,7 @@
 
                                         <div style="padding: 14px 16px; display: grid; gap: 16px;">
                                             {% for repo in group_info.repos %}
-                                            <details style="border: 1px solid #e5e7eb; border-radius: 10px; background: white;">
+                                            <details data-runtime-repo style="border: 1px solid #e5e7eb; border-radius: 10px; background: white;">
                                         <summary style="cursor: pointer; list-style: none; padding: 14px 16px; display: flex; justify-content: space-between; gap: 12px; align-items: center;">
                                             <div style="display: grid; gap: 8px; min-width: 280px; flex: 1 1 420px;">
                                                 <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
@@ -246,7 +246,7 @@
                 </div>
 
                 <div class="column is-4">
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" id="external-runtimes-operation-output">
                         <h3 class="title is-6 is-thin">Operation Output</h3>
                         <div class="box-content">
                             <p class="ys-text-sm-muted" style="margin-bottom: 16px;">
@@ -276,7 +276,7 @@
                         </div>
                     </div>
 
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" id="external-runtimes-recent-ops">
                         <h3 class="title is-6 is-thin">Recent Runtime Operations</h3>
                         <div class="box-content">
                             {% if recent_runtime_logs %}
@@ -303,4 +303,5 @@
     </div>
 </div>
 
+{% include "admin/tutorials/external_runtimes_tutorial.html" %}
 {% include "admin/footer.html" %}

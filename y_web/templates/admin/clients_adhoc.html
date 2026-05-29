@@ -23,11 +23,11 @@
                                 <div class="box-lines">
                                     <input type="hidden" name="id_exp" value="{{ experiment.idexp }}">
 
-                                    <div class="box-line">
+                                    <div class="box-line" id="adhoc-agent-type-line">
                                         <span class="left">Name</span>
                                         <span class="right ys-w-70"><input type="text" name="name" id="adhoc_client_name" class="input" value="{{ adhoc_initial_client.name if adhoc_initial_client else '' }}" {% if adhoc_form_readonly_identity %}readonly{% endif %} required></span>
                                     </div>
-                                    <div class="box-line">
+                                    <div class="box-line" id="adhoc-population-line">
                                         <span class="left">Description</span>
                                         <span class="right ys-w-70">
                                             <textarea name="descr" class="textarea" rows="3">{{ adhoc_initial_client.descr if adhoc_initial_client else '' }}</textarea>
@@ -188,7 +188,7 @@
                 </div>
 
                 <div class="column is-4">
-                    <div class="dashboard-box is-compact">
+                    <div class="dashboard-box is-compact" id="adhoc-quick-reference">
                         <h3 class="title is-5 is-thin">Quick Reference Guide</h3>
                         <div class="help-block">
                             <p>
@@ -1111,4 +1111,5 @@ const YS_ADHOC_CLIENTS = {
 })();
 </script>
 
+{% include "admin/tutorials/clients_adhoc_tutorial.html" %}
 {% include "admin/footer.html" %}

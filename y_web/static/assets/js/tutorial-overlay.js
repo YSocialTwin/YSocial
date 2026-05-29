@@ -522,14 +522,20 @@
     
     // Show the tutorial overlay
     function showTutorial() {
-        document.getElementById('tutorial-overlay').style.display = 'block';
+        const overlay = document.getElementById('tutorial-overlay');
+        if (!overlay) return;
+        overlay.classList.remove('d-none');
+        overlay.style.display = 'block';
         currentStep = 1;
         updateStepDisplay();
     }
     
     // Hide the tutorial overlay
     function hideTutorial() {
-        document.getElementById('tutorial-overlay').style.display = 'none';
+        const overlay = document.getElementById('tutorial-overlay');
+        if (!overlay) return;
+        overlay.classList.add('d-none');
+        overlay.style.display = 'none';
     }
     
     // Update step display
