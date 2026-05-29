@@ -32,7 +32,9 @@ try:
     from y_agents_plugins.runtime.executor import ActionExecutor  # noqa: E402
     from y_agents_plugins.runtime.loader import AgentSpecLoader  # noqa: E402
     from y_agents_plugins.runtime.manifest import load_agent_type_manifest  # noqa: E402
-    from y_agents_plugins.runtime.scheduler import ActivityProfileScheduler  # noqa: E402
+    from y_agents_plugins.runtime.scheduler import (  # noqa: E402
+        ActivityProfileScheduler,
+    )
 except ModuleNotFoundError:
     # External plugin runtime is optional in base installations and in CI test jobs.
     AppConfig = None
