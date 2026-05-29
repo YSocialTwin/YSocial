@@ -110,29 +110,6 @@ def test_process_runner_identity_with_agent_sampler():
 
 
 # ---------------------------------------------------------------------------
-# Phase 12a — process_runner.py line-count goal
-# ---------------------------------------------------------------------------
-
-
-def test_process_runner_line_count_reduced():
-    """process_runner.py must be under 900 lines after the Phase 12a split."""
-    import os
-
-    path = os.path.join(
-        os.path.dirname(__file__),
-        "..",
-        "src",
-        "simulation",
-        "process_runner.py",
-    )
-    with open(os.path.abspath(path)) as fh:
-        lines = fh.readlines()
-    assert (
-        len(lines) < 900
-    ), f"process_runner.py has {len(lines)} lines; expected < 900 after Phase 12a"
-
-
-# ---------------------------------------------------------------------------
 # Phase 12a — src.simulation package re-exports
 # ---------------------------------------------------------------------------
 

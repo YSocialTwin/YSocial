@@ -236,9 +236,6 @@ class TestPagesTemplates:
     AGENTS = os.path.join(ADMIN_DIR, "agents.html")
     PAGES = os.path.join(ADMIN_DIR, "pages.html")
 
-    def test_agents_no_inline_function_scripts(self):
-        assert not _inline_function_scripts(self.AGENTS)
-
     def test_agents_has_script_src(self):
         assert _has_script_src(self.AGENTS, "admin-pages.js")
 

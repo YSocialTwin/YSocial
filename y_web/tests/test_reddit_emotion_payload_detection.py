@@ -2,6 +2,10 @@ import importlib.util
 import sys
 from pathlib import Path
 
+import pytest
+
+pytestmark = [pytest.mark.unit, pytest.mark.external_repo]
+
 MODULE_PATH = Path(
     "/Users/rossetti/PycharmProjects/YWeb/external/YClientReddit/y_client/classes/base_agent.py"
 )

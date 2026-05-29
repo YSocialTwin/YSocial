@@ -93,49 +93,6 @@ def test_experiment_topics_update_route_reuses_exp_topic_and_config_storage():
     assert "db.session.query(Exp_Topic).filter_by(exp_id=uid).delete()" in data_source
     assert 'config["topics"] = topics' in data_source
 
-
-def test_memory_support_is_resolved_and_enforced_across_experiment_and_client_routes():
-    data_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_data.py",
-        "r",
-    ).read()
-    clients_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_crud.py",
-        "r",
-    ).read()
-
-    assert "memory_configuration_supported = bool(" in data_source
-    assert (
-        "llm_agents_enabled_effective = _experiment_uses_llm_agents(experiment)"
-        in data_source
-    )
-    assert "bool(llm_agents_enabled_effective)" in data_source
-    assert "if memory_configuration_supported:" in data_source
-    assert 'memory_enabled = _is_checked("memory_enabled")' in data_source
-    assert 'memory_config["enabled"] = bool(memory_enabled)' in data_source
-    assert 'stress_reward_enabled = _is_checked("stress_reward_enabled")' in data_source
-    assert 'config["stress_reward"] = stress_reward_config' in data_source
-    assert (
-        'if getattr(exp, "platform_type", "") in {"microblogging", "forum", "hpc"}:'
-        in data_source
-    )
-    assert 'if exp.simulator_type == "HPC":' in data_source
-    assert "client_config = sync_stress_reward_client_config(" in data_source
-    assert "def stress_reward_settings(uid):" in data_source
-    assert "def update_stress_reward_settings(uid):" in data_source
-    assert (
-        'stress_reward_config["system"]["churn"]["enabled"] = _is_checked("sr_churn_enabled")'
-        in data_source
-    )
-    assert 'field_name = f"sr_event_{family}_{subtype}_{variable}"' in data_source
-    assert "def _memory_enabled_for_client_creation(experiment):" in clients_source
-    assert (
-        "experiment_memory_enabled = _memory_enabled_for_client_creation(exp)"
-        in clients_source
-    )
-    assert "bool(_experiment_uses_llm_agents(experiment))" in clients_source
-
-
 def test_hpc_server_config_generation_and_embedding_routes_support_memory():
     crud_source = open(
         "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_crud.py",

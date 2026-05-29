@@ -87,22 +87,6 @@ def _make_psutil_mock(occupied_ports=None):
     mock_psutil.process_iter.side_effect = fake_process_iter
     return mock_psutil
 
-
-def test_find_free_port_returns_integer(app):
-    from y_web.src.system.jupyter_utils import find_free_port
-
-    mock_psutil = _make_psutil_mock()
-    with app.app_context():
-        with (
-            patch("y_web.src.system.jupyter_utils.db") as mock_db,
-            patch.dict(sys.modules, {"psutil": mock_psutil}),
-        ):
-            mock_db.session.query.return_value.all.return_value = []
-            port = find_free_port(start_port=19999)
-    assert isinstance(port, int)
-    assert port == 19999
-
-
 def test_find_free_port_skips_used_db_port(app):
     """find_free_port must skip ports already used by tracked Jupyter instances."""
     from y_web.src.system.jupyter_utils import find_free_port

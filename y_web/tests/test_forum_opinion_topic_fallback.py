@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.external_repo]
 
 
 def test_forum_server_topic_routes_fall_back_to_thread_root():

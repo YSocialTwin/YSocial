@@ -1,6 +1,6 @@
 import pytest
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.external_repo]
 
 
 def test_rule_based_select_action_fallback_present():

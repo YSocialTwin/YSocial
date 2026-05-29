@@ -19,11 +19,11 @@ from typing import Any
 
 import requests
 
-from y_web import BASE_DIR
+from y_web.src.system.path_utils import get_writable_path
 
 from .registry import grouped_runtime_specs, runtime_spec
 
-LOG_DIR = Path(BASE_DIR) / "logs"
+LOG_DIR = Path(get_writable_path()) / "logs"
 LOG_FILE = LOG_DIR / "external_runtime_operations.log"
 _GITHUB_TIMEOUT = 6
 

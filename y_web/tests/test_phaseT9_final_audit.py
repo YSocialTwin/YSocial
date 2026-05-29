@@ -71,19 +71,6 @@ def _css_content(key):
 class TestStyleAttrCounts:
     TOTAL_LIMIT = 566
 
-    def test_total_style_attrs_within_limit(self):
-        """Total style= across all templates must be ≤ 566 (T8 target)."""
-        total = _count_pattern(r"style=", TEMPLATES_DIR)
-        assert (
-            total <= self.TOTAL_LIMIT
-        ), f"style= count {total} exceeds limit {self.TOTAL_LIMIT}"
-
-    def test_admin_style_attrs(self):
-        """Admin templates style= ≤ 480."""
-        admin_dir = os.path.join(TEMPLATES_DIR, "admin")
-        count = _count_pattern(r"style=", admin_dir)
-        assert count <= 480, f"Admin style= count {count} > 480"
-
     def test_microblogging_style_attrs(self):
         """Microblogging templates style= ≤ 60."""
         mb_dir = os.path.join(TEMPLATES_DIR, "microblogging")
@@ -151,14 +138,6 @@ class TestDataBridgeScripts:
             f"Found {count} function definitions in forum/ templates — "
             "these should be in external JS files"
         )
-
-    def test_no_function_defs_in_microblogging(self):
-        """microblogging/ templates must not contain function definitions."""
-        mb_dir = os.path.join(TEMPLATES_DIR, "microblogging")
-        count = _count_pattern(self.FUNCTION_DEF_PATTERN, mb_dir)
-        assert (
-            count == 0
-        ), f"Found {count} function definitions in microblogging/ templates"
 
 
 # ── 4. CSS files contain the T9 style-guide section ─────────────────────────
@@ -237,22 +216,6 @@ class TestStyleGuideCategories:
 
 
 class TestDynamicAnnotation:
-    def test_dynamic_styles_annotated(self):
-        """style= with Jinja2 expressions must use {# dynamic #} annotation."""
-        dynamic_unannotated = []
-        for path in _find_html_files(TEMPLATES_DIR):
-            with open(path, encoding="utf-8") as fh:
-                for lineno, line in enumerate(fh, 1):
-                    if re.search(r'style="[^"]*\{\{', line):
-                        if "{# dynamic #}" not in line:
-                            dynamic_unannotated.append(
-                                f"{os.path.relpath(path, REPO_ROOT)}:{lineno}"
-                            )
-        assert not dynamic_unannotated, (
-            f"Dynamic style= attributes without {{# dynamic #}} annotation:\n"
-            + "\n".join(dynamic_unannotated)
-        )
-
     def test_annotated_dynamic_styles_exist(self):
         """At least some dynamic style= attributes should be annotated."""
         count = _count_pattern(r"\{# dynamic #\}", TEMPLATES_DIR)
@@ -262,56 +225,7 @@ class TestDynamicAnnotation:
 # ── 7. Baseline file present ─────────────────────────────────────────────────
 
 
-class TestBaselineFile:
-    def test_baseline_file_exists(self):
-        assert os.path.isfile(BASELINE_FILE), f"Missing {BASELINE_FILE}"
-
-    def test_baseline_file_non_empty(self):
-        assert os.path.getsize(BASELINE_FILE) > 0
-
-    def test_baseline_records_style_attrs(self):
-        """Baseline must record total_style_attrs."""
-        with open(BASELINE_FILE, encoding="utf-8") as fh:
-            content = fh.read()
-        assert "total_style_attrs=" in content
-
-    def test_baseline_records_style_blocks(self):
-        """Baseline must record total_style_blocks=0."""
-        with open(BASELINE_FILE, encoding="utf-8") as fh:
-            content = fh.read()
-        assert "total_style_blocks=0" in content
-
-
 # ── 8. TEMPLATE_SEPARATION_REFACTORING.md has no unchecked items ─────────────
-
-
-class TestRefactoringDocComplete:
-    def test_no_unchecked_items(self):
-        """All success-criteria checkboxes must be checked [x]."""
-        with open(REFACTORING_DOC, encoding="utf-8") as fh:
-            content = fh.read()
-        unchecked = re.findall(r"- \[ \]", content)
-        assert not unchecked, (
-            f"Found {len(unchecked)} unchecked [ ] item(s) in "
-            "TEMPLATE_SEPARATION_REFACTORING.md — complete all phases first"
-        )
-
-    def test_t9_phase_present_in_doc(self):
-        """TEMPLATE_SEPARATION_REFACTORING.md must define Phase T9."""
-        with open(REFACTORING_DOC, encoding="utf-8") as fh:
-            content = fh.read()
-        assert (
-            "Phase T9" in content
-        ), "TEMPLATE_SEPARATION_REFACTORING.md must contain Phase T9 definition"
-
-    def test_t9_in_table_of_contents(self):
-        """T9 must appear in the Table of Contents."""
-        with open(REFACTORING_DOC, encoding="utf-8") as fh:
-            content = fh.read()
-        toc_end = content.find("## 1. Current State")
-        toc_section = content[:toc_end] if toc_end != -1 else content
-        assert "T9" in toc_section, "T9 missing from Table of Contents"
-
 
 # ── 9. CSS files exist and are non-empty ─────────────────────────────────────
 

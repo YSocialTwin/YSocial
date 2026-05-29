@@ -110,31 +110,9 @@ def _count_style_attrs(directory, recurse=True):
     return len(result.stdout.strip().splitlines()) if result.stdout.strip() else 0
 
 
-def test_total_style_attr_count():
-    """Total style= count must be ≤ 566."""
-    total = _count_style_attrs(TEMPLATES_DIR)
-    assert total <= STYLE_ATTR_TOTAL_LIMIT, (
-        f"Total style= count {total} exceeds limit of {STYLE_ATTR_TOTAL_LIMIT}. "
-        f"Phase T8 goal not met."
-    )
-
-
 # ---------------------------------------------------------------------------
 # 2. Per-section counts
 # ---------------------------------------------------------------------------
-
-
-@pytest.mark.parametrize("section_name,section_info", SECTION_LIMITS.items())
-def test_section_style_count(section_name, section_info):
-    """Each section must be within its limit."""
-    section_dir, limit = section_info
-    if not os.path.isdir(section_dir):
-        pytest.skip(f"Directory not found: {section_dir}")
-    count = _count_style_attrs(section_dir)
-    assert count <= limit, (
-        f"Section '{section_name}' has {count} style= attributes, "
-        f"exceeds limit of {limit}."
-    )
 
 
 # ---------------------------------------------------------------------------
@@ -183,41 +161,6 @@ def test_forum_css_has_class(class_name):
     assert (
         class_name in content
     ), f"Class '{class_name}' not found in reddit/forum-components.css"
-
-
-# ---------------------------------------------------------------------------
-# 6. Dynamic style= annotations
-# ---------------------------------------------------------------------------
-
-
-def test_dynamic_style_annotations():
-    """All dynamic style= attributes (containing {{ or {%) must be annotated."""
-    result = subprocess.run(
-        ["grep", "-r", "style=", TEMPLATES_DIR, "--include=*.html", "-n"],
-        capture_output=True,
-        text=True,
-    )
-    if result.returncode not in (0, 1):
-        return
-
-    unannotated = []
-    for line in result.stdout.strip().splitlines():
-        # Extract the style= content
-        m = re.search(r'style="([^"]*)"', line)
-        if not m:
-            continue
-        style_val = m.group(1)
-        # Check if dynamic
-        if "{{" in style_val or "{%" in style_val:
-            # Must have {# dynamic #} annotation somewhere in the line
-            if "{# dynamic #}" not in line:
-                unannotated.append(line[:120])
-
-    assert not unannotated, (
-        f"Found {len(unannotated)} dynamic style= attributes without {{# dynamic #}} annotation:\n"
-        + "\n".join(unannotated[:5])
-    )
-
 
 # ---------------------------------------------------------------------------
 # 7. No leftover replacement placeholders

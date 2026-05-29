@@ -16,6 +16,27 @@ from werkzeug.security import generate_password_hash
 from y_web import db
 
 
+def pytest_collection_modifyitems(config, items):
+    """
+    Skip external-repository contract tests unless explicitly enabled.
+
+    Opt-in:
+      YSOCIAL_TEST_EXTERNAL_REPOS=1 pytest ...
+    """
+    enabled = str(os.environ.get("YSOCIAL_TEST_EXTERNAL_REPOS", "")).strip() == "1"
+    if enabled:
+        return
+    skip_marker = pytest.mark.skip(
+        reason=(
+            "external repository tests are disabled by default; "
+            "set YSOCIAL_TEST_EXTERNAL_REPOS=1 to enable"
+        )
+    )
+    for item in items:
+        if "external_repo" in item.keywords:
+            item.add_marker(skip_marker)
+
+
 @pytest.fixture
 def app():
     """Create and configure a new app instance for each test."""

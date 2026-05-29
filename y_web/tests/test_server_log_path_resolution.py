@@ -2,15 +2,11 @@ import os
 
 import pytest
 
-pytestmark = pytest.mark.unit
-
-
-y_server = pytest.importorskip(
-    "y_server", reason="y_server module not available in this environment"
-)
+pytestmark = [pytest.mark.unit, pytest.mark.external_repo]
 
 
 def test_server_log_path_prefers_config_then_env(monkeypatch):
+    pytest.importorskip("y_server", reason="y_server module not available in this environment")
     from y_server import _server_log_path, app
 
     with app.app_context():
@@ -20,6 +16,7 @@ def test_server_log_path_prefers_config_then_env(monkeypatch):
 
 
 def test_server_log_path_falls_back_to_env(monkeypatch):
+    pytest.importorskip("y_server", reason="y_server module not available in this environment")
     from y_server import _server_log_path, app
 
     with app.app_context():

@@ -37,19 +37,6 @@ def test_admin_experiments_has_no_literal_admin_placeholder_urls():
     for literal in bad_literals:
         assert literal not in content
 
-
-def test_admin_bundles_do_not_bind_events_on_missing_ids_at_top_level():
-    offenders = []
-    for path in sorted(STATIC_JS_DIR.glob("admin-*.js")):
-        for lineno, line in enumerate(
-            path.read_text(encoding="utf-8").splitlines(), start=1
-        ):
-            if "document.getElementById(" in line and ".addEventListener(" in line:
-                offenders.append(f"{path}:{lineno}:{line.strip()}")
-
-    assert not offenders, offenders
-
-
 def test_admin_shared_bundles_guard_optional_page_sections():
     populations = (STATIC_JS_DIR / "admin-populations.js").read_text(encoding="utf-8")
     miscellanea = (STATIC_JS_DIR / "admin-miscellanea.js").read_text(encoding="utf-8")

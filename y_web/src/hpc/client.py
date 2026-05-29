@@ -283,9 +283,20 @@ def start_hpc_client(exp, cli, population):
             # Log the error but don't fail the client start
             print(f"Warning: Could not clean actor log {actor_log_path}: {e}")
 
+    writable_external = os.path.join(get_writable_path(), "external")
+    resource_external = os.path.join(base_path, "external")
+
+    def _external_repo_dir(repo_name):
+        candidate = os.path.join(writable_external, repo_name)
+        if os.path.isdir(candidate):
+            return candidate
+        return os.path.join(resource_external, repo_name)
+
     # Determine the script path based on platform type
     if exp.platform_type == "microblogging":
-        script_path = os.path.join(base_path, "external", "YSimulator", "run_client.py")
+        script_path = os.path.join(
+            _external_repo_dir("YSimulator"), "run_client.py"
+        )
     else:
         raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
 

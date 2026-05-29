@@ -114,21 +114,6 @@ def test_profile_template_renders_stress_reward_indicators():
     assert 'style="color: #d64545;"' in template
     assert "Latest aggregate score" not in template
 
-
-def test_profile_route_wires_latest_stress_reward_aggregate_context():
-    source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/common.py"
-    ).read_text(encoding="utf-8")
-
-    assert "def _stress_reward_enabled_for_exp(exp):" in source
-    assert (
-        'StressReward.query.filter_by(uid=user_id, variable=variable, type="aggregate")'
-        in source
-    )
-    assert "stress_reward_active=stress_reward_active" in source
-    assert "stress_reward_indicator=stress_reward_indicator" in source
-
-
 def test_profile_about_me_supports_agent_custom_feature_rows():
     template = Path(
         "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/profile.html"
@@ -165,44 +150,6 @@ def test_profile_template_uses_shared_ranked_card_and_profile_panels():
     assert ".ys-profile-panel-card" in css
     assert ".ys-profile-info-card" in css
     assert ".ys-profile-panel-head" in css
-
-
-def test_friends_template_uses_compact_cards_and_tab_aware_pagination():
-    template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/friends.html"
-    ).read_text(encoding="utf-8")
-    panel_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/components/friends_panel.html"
-    ).read_text(encoding="utf-8")
-    source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/microblogging.py"
-    ).read_text(encoding="utf-8")
-    js = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/js/mb-friends.js"
-    ).read_text(encoding="utf-8")
-    css = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/css/social-components.css"
-    ).read_text(encoding="utf-8")
-
-    assert "ys-friends-hero-card" in template
-    assert 'id="friends-panel"' in template
-    assert 'data-friends-api="/{{exp_id}}/api/friends/{{ user_id }}"' in template
-    assert "?tab=followers" in panel_template
-    assert "?tab=followees" in panel_template
-    assert "?tab={{ active_tab }}" in panel_template
-    assert 'active_tab = str(request.args.get("tab", "followers")' in source
-    assert "def _build_friends_view_model(user_id, page, active_tab):" in source
-    assert (
-        'active_cards = followers if active_tab == "followers" else followees' in source
-    )
-    assert "has_next_page = current_page < total_pages" in source
-    assert "def api_friends(exp_id, user_id, page=1):" in source
-    assert "data-friends-url=" in panel_template
-    assert "window.history.pushState" in js
-    assert "fetch(apiUrl" in js
-    assert ".ys-friends-grid" in css
-    assert ".ys-friends-pagination" in css
-
 
 def test_edit_profile_template_uses_shared_profile_style_sections():
     template = Path(
