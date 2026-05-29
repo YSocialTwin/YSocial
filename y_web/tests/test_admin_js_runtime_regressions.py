@@ -37,6 +37,7 @@ def test_admin_experiments_has_no_literal_admin_placeholder_urls():
     for literal in bad_literals:
         assert literal not in content
 
+
 def test_admin_shared_bundles_guard_optional_page_sections():
     populations = (STATIC_JS_DIR / "admin-populations.js").read_text(encoding="utf-8")
     miscellanea = (STATIC_JS_DIR / "admin-miscellanea.js").read_text(encoding="utf-8")

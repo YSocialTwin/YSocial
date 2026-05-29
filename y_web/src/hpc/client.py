@@ -294,9 +294,7 @@ def start_hpc_client(exp, cli, population):
 
     # Determine the script path based on platform type
     if exp.platform_type == "microblogging":
-        script_path = os.path.join(
-            _external_repo_dir("YSimulator"), "run_client.py"
-        )
+        script_path = os.path.join(_external_repo_dir("YSimulator"), "run_client.py")
     else:
         raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
 

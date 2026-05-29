@@ -162,6 +162,7 @@ def test_forum_css_has_class(class_name):
         class_name in content
     ), f"Class '{class_name}' not found in reddit/forum-components.css"
 
+
 # ---------------------------------------------------------------------------
 # 7. No leftover replacement placeholders
 # ---------------------------------------------------------------------------

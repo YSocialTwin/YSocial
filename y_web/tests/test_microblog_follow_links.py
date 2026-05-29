@@ -114,6 +114,7 @@ def test_profile_template_renders_stress_reward_indicators():
     assert 'style="color: #d64545;"' in template
     assert "Latest aggregate score" not in template
 
+
 def test_profile_about_me_supports_agent_custom_feature_rows():
     template = Path(
         "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/profile.html"
@@ -150,6 +151,7 @@ def test_profile_template_uses_shared_ranked_card_and_profile_panels():
     assert ".ys-profile-panel-card" in css
     assert ".ys-profile-info-card" in css
     assert ".ys-profile-panel-head" in css
+
 
 def test_edit_profile_template_uses_shared_profile_style_sections():
     template = Path(

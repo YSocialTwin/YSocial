@@ -87,6 +87,7 @@ def _make_psutil_mock(occupied_ports=None):
     mock_psutil.process_iter.side_effect = fake_process_iter
     return mock_psutil
 
+
 def test_find_free_port_skips_used_db_port(app):
     """find_free_port must skip ports already used by tracked Jupyter instances."""
     from y_web.src.system.jupyter_utils import find_free_port

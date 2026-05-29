@@ -59,6 +59,7 @@ def test_discover_runtime_port_uses_server_pid_connections(monkeypatch):
 
     assert chosen == 5044
 
+
 def test_ensure_db_binding_falls_back_to_ray_when_http_fails(monkeypatch):
     from y_web.routes.api.interview import _server as interview_server
 
