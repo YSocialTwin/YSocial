@@ -111,9 +111,9 @@ def app():
     login_manager.login_view = "auth.login"
 
     with app.app_context():
-        db.create_all()
-
         from y_web.src.models import Admin_users, User_mgmt
+        # Import models before create_all so SQLAlchemy metadata includes all tables.
+        db.create_all()
 
         # Create test admin user
         admin_user = Admin_users(
