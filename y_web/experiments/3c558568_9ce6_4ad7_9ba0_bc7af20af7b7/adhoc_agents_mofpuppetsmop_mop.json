@@ -1,0 +1,40 @@
+{
+  "agents": [
+    {
+      "name": "MasterOfTheUniverse",
+      "username": "MasterOfTheUniverse",
+      "email": "MasterOfTheUniverse@ysocial.it",
+      "password": "MasterOfTheUniverse",
+      "agent_type": "master_of_puppets",
+      "activity_profile": "Always On",
+      "daily_budget": 24.0,
+      "language": "en",
+      "owner": "Admin",
+      "parameters": {
+        "puppet_count": "3",
+        "post_budget_percentage": "50.0",
+        "support_budget_percentage": "25.0",
+        "network_budget_percentage": "25.0",
+        "boost_lookback_hours": "12"
+      }
+    },
+    {
+      "name": "MasterOfTheUndead",
+      "username": "MasterOfTheUndead",
+      "email": "MasterOfTheUndead@ysocial.it",
+      "password": "MasterOfTheUndead",
+      "agent_type": "master_of_puppets",
+      "activity_profile": "Always On",
+      "daily_budget": 24.0,
+      "language": "en",
+      "owner": "Admin",
+      "parameters": {
+        "puppet_count": "3",
+        "post_budget_percentage": "50.0",
+        "support_budget_percentage": "25.0",
+        "network_budget_percentage": "25.0",
+        "boost_lookback_hours": "12"
+      }
+    }
+  ]
+}

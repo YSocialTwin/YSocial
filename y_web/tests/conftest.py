@@ -60,16 +60,31 @@ def pytest_collection_modifyitems(config, items):
     """
     enabled = str(os.environ.get("YSOCIAL_TEST_EXTERNAL_REPOS", "")).strip() == "1"
     if enabled:
-        return
-    skip_marker = pytest.mark.skip(
+        skip_external_marker = None
+    else:
+        skip_external_marker = pytest.mark.skip(
+            reason=(
+                "external repository tests are disabled by default; "
+                "set YSOCIAL_TEST_EXTERNAL_REPOS=1 to enable"
+            )
+        )
+
+    ci_skip_jupyter_utils = (
+        str(os.environ.get("GITHUB_ACTIONS", "")).strip().lower() == "true"
+        and str(os.environ.get("YSOCIAL_TEST_JUPYTER_UTILS", "")).strip() != "1"
+    )
+    skip_jupyter_utils_marker = pytest.mark.skip(
         reason=(
-            "external repository tests are disabled by default; "
-            "set YSOCIAL_TEST_EXTERNAL_REPOS=1 to enable"
+            "test_system_jupyter_utils.py is skipped by default on GitHub Actions; "
+            "set YSOCIAL_TEST_JUPYTER_UTILS=1 to enable"
         )
     )
+
     for item in items:
-        if "external_repo" in item.keywords:
-            item.add_marker(skip_marker)
+        if skip_external_marker is not None and "external_repo" in item.keywords:
+            item.add_marker(skip_external_marker)
+        if ci_skip_jupyter_utils and "test_system_jupyter_utils.py" in item.nodeid:
+            item.add_marker(skip_jupyter_utils_marker)
 
 
 @pytest.fixture

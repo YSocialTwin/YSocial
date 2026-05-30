@@ -40,6 +40,13 @@
                                 Dependency installation uses the same Python interpreter currently running YSocial:<br>
                                 <code>{{ current_python_executable }}</code>
                             </p>
+                            <div style="margin-bottom: 16px;">
+                                {% if remote_metadata_loaded %}
+                                <a class="button is-light" href="{{ url_for('experiments.external_runtimes') }}">Load Fast View</a>
+                                {% else %}
+                                <a class="button is-light" href="{{ url_for('experiments.external_runtimes', refresh_remote=1) }}">Refresh GitHub Metadata</a>
+                                {% endif %}
+                            </div>
                             {% if external_runtime_bootstrap %}
                             <div id="external-runtimes-bootstrap-info" style="border: 1px solid #e5e7eb; border-radius: 10px; background: #f8fafc; padding: 14px 16px; margin-bottom: 18px;">
                                 <div class="ys-text-sm-dark" style="font-weight: 700; margin-bottom: 6px;">Startup runtime diagnostics</div>

@@ -1,0 +1,18 @@
+{
+  "agents": [
+    {
+      "name": "Hoid",
+      "username": "Hoid",
+      "email": "Hoid@ysocial.it",
+      "password": "Hoid",
+      "agent_type": "comic_relief",
+      "activity_profile": "Always On",
+      "daily_budget": 12.0,
+      "language": "en",
+      "owner": "Admin",
+      "parameters": {
+        "humor_styles": "[\"nerdy\", \"wordplay\"]"
+      }
+    }
+  ]
+}

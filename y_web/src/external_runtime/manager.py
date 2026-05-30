@@ -447,7 +447,12 @@ def _download_release_archive(
     return response.content
 
 
-def get_runtime_status(repo_key: str, github_token: str | None = None) -> RuntimeStatus:
+def get_runtime_status(
+    repo_key: str,
+    github_token: str | None = None,
+    *,
+    include_remote_metadata: bool = True,
+) -> RuntimeStatus:
     spec = runtime_spec(repo_key)
     path = spec.path
     exists = path.exists()
@@ -480,10 +485,22 @@ def get_runtime_status(repo_key: str, github_token: str | None = None) -> Runtim
             dirty = False
         ahead, behind, tracking_branch = _ahead_behind(path)
 
-    releases, release_error = _list_releases(spec, github_token=github_token)
-    branches, branch_error = _branch_list_for_repo(
-        spec, git_managed, github_token=github_token
-    )
+    releases: list[dict[str, Any]] = []
+    release_error: str | None = None
+    branch_error: str | None = None
+    if include_remote_metadata:
+        releases, release_error = _list_releases(spec, github_token=github_token)
+        branches, branch_error = _branch_list_for_repo(
+            spec, git_managed, github_token=github_token
+        )
+    else:
+        branches = sorted(
+            {
+                str(spec.default_branch or "").strip() or "main",
+                str(current_branch or "").strip(),
+            }
+            - {""}
+        )
     path_kind = "missing"
     if exists:
         path_kind = "symlink" if path.is_symlink() else "directory"
@@ -522,7 +539,11 @@ def get_runtime_status(repo_key: str, github_token: str | None = None) -> Runtim
     )
 
 
-def get_grouped_runtime_status(github_token: str | None = None) -> list[dict[str, Any]]:
+def get_grouped_runtime_status(
+    github_token: str | None = None,
+    *,
+    include_remote_metadata: bool = True,
+) -> list[dict[str, Any]]:
     groups: list[dict[str, Any]] = []
     for group_key, group_label, specs in grouped_runtime_specs():
         groups.append(
@@ -530,7 +551,11 @@ def get_grouped_runtime_status(github_token: str | None = None) -> list[dict[str
                 "group": group_key,
                 "label": group_label,
                 "repos": [
-                    get_runtime_status(spec.key, github_token=github_token).to_dict()
+                    get_runtime_status(
+                        spec.key,
+                        github_token=github_token,
+                        include_remote_metadata=include_remote_metadata,
+                    ).to_dict()
                     for spec in specs
                 ],
             }

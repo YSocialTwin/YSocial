@@ -42,7 +42,7 @@ from y_web.src.experiment.access import (
     user_can_manage_experiment,
     user_can_view_experiment,
 )
-from y_web.src.external_runtime import get_runtime_status
+from y_web.src.external_runtime import runtime_spec
 from y_web.src.hpc.population_backup import restore_population_for_hpc_client
 from y_web.src.models import (
     ActivityProfile,
@@ -125,16 +125,24 @@ from ._helpers import (
 
 
 def _external_repo_availability():
-    """Detect which simulator repositories are available under external/."""
-    microblogging = (
-        get_runtime_status("microblogging_server").installed
-        and get_runtime_status("microblogging_client").installed
+    """
+    Detect simulator repository availability using local filesystem checks only.
+
+    This route is hit on every admin/experiments page load, so avoid
+    get_runtime_status() here because it performs remote GitHub API lookups.
+    """
+
+    def _installed(repo_key: str) -> bool:
+        try:
+            return bool(runtime_spec(repo_key).path.exists())
+        except Exception:
+            return False
+
+    microblogging = _installed("microblogging_server") and _installed(
+        "microblogging_client"
     )
-    hpc = get_runtime_status("hpc_simulator").installed
-    forum = (
-        get_runtime_status("forum_server").installed
-        and get_runtime_status("forum_client").installed
-    )
+    hpc = _installed("hpc_simulator")
+    forum = _installed("forum_server") and _installed("forum_client")
 
     return {
         "microblogging": microblogging,

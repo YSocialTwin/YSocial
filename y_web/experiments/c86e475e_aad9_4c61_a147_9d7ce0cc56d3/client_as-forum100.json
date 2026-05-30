@@ -1,0 +1,320 @@
+{
+    "name": "as",
+    "servers": {
+        "llm": "http://127.0.0.1:11434/v1",
+        "llm_api_key": "NULL",
+        "llm_max_tokens": -1,
+        "llm_temperature": 1.5,
+        "llm_v": "http://127.0.0.1:11434/v1",
+        "llm_v_api_key": "NULL",
+        "llm_v_max_tokens": 300,
+        "llm_v_temperature": 0.5,
+        "api": "http://127.0.0.1:5006/"
+    },
+    "simulation": {
+        "name": "as",
+        "population": "forum100",
+        "client": "YClientWeb",
+        "days": 30,
+        "slots": 24,
+        "initial_agents": null,
+        "clock_mode": "simulated",
+        "clock_timezone": "Europe/Rome",
+        "feed_refresh": "hourly",
+        "percentage_new_agents_iteration": 0.0,
+        "percentage_removed_agents_iteration": 0.0,
+        "activity_profiles": {
+            "Always On": "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23"
+        },
+        "hourly_activity": {
+            "0": 0.023,
+            "1": 0.021,
+            "2": 0.02,
+            "3": 0.02,
+            "4": 0.018,
+            "5": 0.017,
+            "6": 0.017,
+            "7": 0.018,
+            "8": 0.02,
+            "9": 0.02,
+            "10": 0.021,
+            "11": 0.022,
+            "12": 0.024,
+            "13": 0.027,
+            "14": 0.03,
+            "15": 0.032,
+            "16": 0.032,
+            "17": 0.032,
+            "18": 0.032,
+            "19": 0.031,
+            "20": 0.03,
+            "21": 0.029,
+            "22": 0.027,
+            "23": 0.025
+        },
+        "actions_likelihood": {
+            "post": 3.0,
+            "image": 0.0,
+            "news": 2.0,
+            "comment": 5.0,
+            "read": 2.0,
+            "share": 0.0,
+            "search": 0.0,
+            "cast": 0.0,
+            "share_link": 2.0,
+            "share_image": 2.0
+        },
+        "emotion_annotation": false,
+        "opinion_dynamics": {
+            "enabled": false
+        },
+        "agent_archetypes": {
+            "enabled": true,
+            "distribution": {
+                "validator": 0.52,
+                "broadcaster": 0.2,
+                "explorer": 0.28
+            },
+            "transitions": {
+                "validator": {
+                    "validator": 0.853,
+                    "broadcaster": 0.081,
+                    "explorer": 0.066
+                },
+                "broadcaster": {
+                    "validator": 0.195,
+                    "broadcaster": 0.7290000000000001,
+                    "explorer": 0.075
+                },
+                "explorer": {
+                    "validator": 0.364,
+                    "broadcaster": 0.146,
+                    "explorer": 0.49
+                }
+            }
+        }
+    },
+    "posts": {
+        "visibility_rounds": 36,
+        "emotions": {
+            "admiration": null,
+            "amusement": null,
+            "anger": null,
+            "annoyance": null,
+            "approval": null,
+            "caring": null,
+            "confusion": null,
+            "curiosity": null,
+            "desire": null,
+            "disappointment": null,
+            "disapproval": null,
+            "disgust": null,
+            "embarrassment": null,
+            "excitement": null,
+            "fear": null,
+            "gratitude": null,
+            "grief": null,
+            "joy": null,
+            "love": null,
+            "nervousness": null,
+            "optimism": null,
+            "pride": null,
+            "realization": null,
+            "relief": null,
+            "remorse": null,
+            "sadness": null,
+            "surprise": null,
+            "trust": null
+        }
+    },
+    "agents": {
+        "llm_v_agent": "qwen3-vl:8b",
+        "reading_from_follower_ratio": 0.6,
+        "max_length_thread_reading": 10,
+        "max_thread_context_chars": 3200,
+        "attention_window": 336,
+        "probability_of_daily_follow": 0.1,
+        "probability_of_secondary_follow": 0.0,
+        "probability_of_follow_back": 0.0,
+        "age": {
+            "min": 14,
+            "max": 86
+        },
+        "political_leaning": [],
+        "toxicity_levels": [
+            "none"
+        ],
+        "languages": [
+            "English"
+        ],
+        "llm_agents": [],
+        "education_levels": [
+            "high school"
+        ],
+        "round_actions": {
+            "min": 1,
+            "max": 3
+        },
+        "n_interests": {
+            "min": 1,
+            "max": 5
+        },
+        "interests": [],
+        "big_five": {
+            "oe": [
+                "inventive/curious",
+                "consistent/cautious"
+            ],
+            "co": [
+                "extravagant/careless",
+                "efficient/organized"
+            ],
+            "ex": [
+                "outgoing/energetic",
+                "solitary/reserved"
+            ],
+            "ag": [
+                "critical/judgmental",
+                "friendly/compassionate"
+            ],
+            "ne": [
+                "resilient/confident",
+                "sensitive/nervous"
+            ]
+        },
+        "max_replies_per_round": 2,
+        "reply_cooldown_rounds": 2,
+        "thread_browse_mode": "llm",
+        "thread_browse_order": "tree_dfs",
+        "thread_browse_max_nodes": 400,
+        "thread_browse_chunk_size": 20,
+        "thread_browse_top_k": 6,
+        "thread_browse_max_llm_steps": 3,
+        "thread_browse_snippet_chars": 220,
+        "thread_browse_context_window": 30,
+        "memory_enabled": true,
+        "memory_pair_limit": 5,
+        "memory_prompt_max_chars": 1600,
+        "memory_social_decay_lambda": 0.05,
+        "memory_social_corruption_rate": 0.02,
+        "memory_social_resummarize_every_events": 4,
+        "memory_thread_decay_lambda": 0.03,
+        "memory_thread_corruption_rate": 0.01,
+        "memory_thread_resummarize_every_events": 4,
+        "memory_evidence_tail_max": 8,
+        "memory_digest_update_cadence_rounds": 3,
+        "memory_digest_events_limit": 80,
+        "memory_cold_start_window": 5,
+        "memory_semantic_enabled": false,
+        "memory_search_k": 8,
+        "memory_search_max_chars": 900,
+        "memory_search_time_window_rounds": 40,
+        "memory_tier_a_max_chars": 350,
+        "memory_tier_b_max_chars": 900,
+        "memory_tier_c_max_chars": 900,
+        "memory_total_max_chars": 2200,
+        "memory_tier_c_uncertainty_threshold": 0.45,
+        "memory_reflection_cadence_rounds": 3,
+        "memory_reflection_min_events": 12,
+        "memory_reflection_trigger_importance_sum": 3.5,
+        "memory_reflection_max_items_per_run": 60,
+        "memory_embedding_model": "snowflake-arctic-embed:110m",
+        "memory_embedding_async": false,
+        "memory_importance_mode": "heuristic_then_batch_llm",
+        "memory_prompt_mode": "subtle_forum",
+        "memory_reply_context_max_chars": 280,
+        "memory_vote_signal_only": true,
+        "forum_post_structure_strict": true,
+        "memory_cross_thread_callback_min_score": 0.8,
+        "political_leanings": [
+            "democrat"
+        ]
+    },
+    "stress_reward": {
+        "enabled": false,
+        "backward_rounds": 24,
+        "system": {
+            "coupling": {
+                "reward_buffers_stress_alpha": 0.3,
+                "stress_reduces_reward_beta": 0.2
+            },
+            "churn": {
+                "enabled": false,
+                "stress_weight": 1.5,
+                "reward_weight": 1.0,
+                "bias": -2.2,
+                "temperature": 0.35,
+                "min_probability": 0.0,
+                "max_probability": 0.95
+            },
+            "activity_impact": {
+                "enabled": true,
+                "stress_weight": 1.1,
+                "reward_weight": 0.35,
+                "baseline_buffer": 0.1,
+                "min_action_multiplier": 0.15,
+                "max_skip_probability": 0.65
+            },
+            "events": {
+                "reaction": {
+                    "like": {
+                        "stress": -0.005,
+                        "reward": 0.03
+                    },
+                    "dislike": {
+                        "stress": 0.05,
+                        "reward": -0.03
+                    }
+                },
+                "report": {
+                    "mass_report": {
+                        "stress": 0.12,
+                        "reward": -0.05
+                    }
+                },
+                "comment": {
+                    "positive": {
+                        "stress": -0.02,
+                        "reward": 0.07
+                    },
+                    "neutral": {
+                        "stress": 0.0,
+                        "reward": 0.01
+                    },
+                    "critical": {
+                        "stress": 0.06,
+                        "reward": -0.02
+                    },
+                    "hostile": {
+                        "stress": 0.14,
+                        "reward": -0.07
+                    },
+                    "supportive": {
+                        "stress": -0.05,
+                        "reward": 0.08
+                    }
+                },
+                "share": {
+                    "positive": {
+                        "stress": -0.01,
+                        "reward": 0.08
+                    },
+                    "hostile": {
+                        "stress": 0.12,
+                        "reward": -0.06
+                    }
+                },
+                "moderation": {
+                    "protected": {
+                        "stress": -0.08,
+                        "reward": 0.03
+                    },
+                    "sanctioned": {
+                        "stress": 0.05,
+                        "reward": -0.06
+                    }
+                }
+            }
+        }
+    }
+}

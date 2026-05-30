@@ -1,0 +1,123 @@
+{
+    "platform_type": "forum",
+    "name": "frm",
+    "host": "127.0.0.1",
+    "port": 5006,
+    "debug": "False",
+    "reset_db": "False",
+    "modules": [
+        "news",
+        "voting",
+        "image",
+        "image_post"
+    ],
+    "perspective_api": null,
+    "toxicity_annotation": false,
+    "sentiment_annotation": false,
+    "emotion_annotation": false,
+    "opinion_dynamics_enabled": false,
+    "database_uri": "/Users/rossetti/PycharmProjects/YWeb/y_web/experiments/c86e475e_aad9_4c61_a147_9d7ce0cc56d3/database_server.db",
+    "topics": [
+        "comics",
+        "research"
+    ],
+    "data_path": "/Users/rossetti/PycharmProjects/YWeb/y_web/experiments/c86e475e_aad9_4c61_a147_9d7ce0cc56d3/",
+    "is_remote": 0,
+    "experiment_configuration_confirmed": true,
+    "memory": {
+        "enabled": true
+    },
+    "stress_reward": {
+        "enabled": false,
+        "backward_rounds": 24,
+        "system": {
+            "coupling": {
+                "reward_buffers_stress_alpha": 0.3,
+                "stress_reduces_reward_beta": 0.2
+            },
+            "churn": {
+                "enabled": false,
+                "stress_weight": 1.5,
+                "reward_weight": 1.0,
+                "bias": -2.2,
+                "temperature": 0.35,
+                "min_probability": 0.0,
+                "max_probability": 0.95
+            },
+            "activity_impact": {
+                "enabled": true,
+                "stress_weight": 1.1,
+                "reward_weight": 0.35,
+                "baseline_buffer": 0.1,
+                "min_action_multiplier": 0.15,
+                "max_skip_probability": 0.65
+            },
+            "events": {
+                "reaction": {
+                    "like": {
+                        "stress": -0.005,
+                        "reward": 0.03
+                    },
+                    "dislike": {
+                        "stress": 0.05,
+                        "reward": -0.03
+                    }
+                },
+                "report": {
+                    "mass_report": {
+                        "stress": 0.12,
+                        "reward": -0.05
+                    }
+                },
+                "comment": {
+                    "positive": {
+                        "stress": -0.02,
+                        "reward": 0.07
+                    },
+                    "neutral": {
+                        "stress": 0.0,
+                        "reward": 0.01
+                    },
+                    "critical": {
+                        "stress": 0.06,
+                        "reward": -0.02
+                    },
+                    "hostile": {
+                        "stress": 0.14,
+                        "reward": -0.07
+                    },
+                    "supportive": {
+                        "stress": -0.05,
+                        "reward": 0.08
+                    }
+                },
+                "share": {
+                    "positive": {
+                        "stress": -0.01,
+                        "reward": 0.08
+                    },
+                    "hostile": {
+                        "stress": 0.12,
+                        "reward": -0.06
+                    }
+                },
+                "moderation": {
+                    "protected": {
+                        "stress": -0.08,
+                        "reward": 0.03
+                    },
+                    "sanctioned": {
+                        "stress": 0.05,
+                        "reward": -0.06
+                    }
+                }
+            }
+        }
+    },
+    "stress_reward_enabled": false,
+    "clock": {
+        "mode": "simulated",
+        "timezone": "Europe/Rome",
+        "feed_refresh": "hourly"
+    }
+}
