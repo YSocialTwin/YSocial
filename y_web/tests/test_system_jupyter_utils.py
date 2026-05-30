@@ -87,6 +87,7 @@ def _make_psutil_mock(occupied_ports=None):
     mock_psutil.process_iter.side_effect = fake_process_iter
     return mock_psutil
 
+
 # ---------------------------------------------------------------------------
 # find_instance_by_notebook_dir (DB mocked)
 # The function returns the exp_id of the matching instance (not the ORM object)
