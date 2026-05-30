@@ -503,10 +503,19 @@ def test_create_experiment_enforces_external_repo_availability():
     ).read_text(encoding="utf-8")
 
     assert "def _external_repo_availability():" in source
-    assert 'runtime_spec("microblogging_server").path.exists()' in source or '"microblogging_server"' in source
+    assert (
+        'runtime_spec("microblogging_server").path.exists()' in source
+        or '"microblogging_server"' in source
+    )
     assert '"microblogging_client"' in source
-    assert 'runtime_spec("hpc_simulator").path.exists()' in source or '"hpc_simulator"' in source
-    assert 'runtime_spec("forum_server").path.exists()' in source or '"forum_server"' in source
+    assert (
+        'runtime_spec("hpc_simulator").path.exists()' in source
+        or '"hpc_simulator"' in source
+    )
+    assert (
+        'runtime_spec("forum_server").path.exists()' in source
+        or '"forum_server"' in source
+    )
     assert '"forum_client"' in source
     assert (
         "Forum experiments are unavailable because YServerReddit and YClientReddit are not both present."

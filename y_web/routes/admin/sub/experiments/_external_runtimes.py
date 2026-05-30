@@ -202,8 +202,8 @@ def external_runtimes():
 
     github_token = _session_github_token()
     include_remote_metadata = (
-        (request.args.get("refresh_remote") or "").strip().lower() == "1"
-    )
+        request.args.get("refresh_remote") or ""
+    ).strip().lower() == "1"
     grouped_status = _visible_runtime_groups(
         admin_user, github_token, include_remote_metadata=include_remote_metadata
     )
