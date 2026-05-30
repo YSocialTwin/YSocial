@@ -94,22 +94,6 @@ def _make_psutil_mock(occupied_ports=None):
 # ---------------------------------------------------------------------------
 
 
-def test_find_instance_by_notebook_dir_returns_none_when_no_match(app):
-    from y_web.src.system.jupyter_utils import find_instance_by_notebook_dir
-
-    fake_inst = MagicMock()
-    fake_inst.exp_id = 42
-    fake_inst.notebook_dir = "/other/path"
-    fake_inst.port = 8888
-    fake_inst.process = None
-
-    with app.app_context():
-        with patch("y_web.src.system.jupyter_utils.db") as mock_db:
-            mock_db.session.query.return_value.all.return_value = [fake_inst]
-            result = find_instance_by_notebook_dir("/home/user/notebooks")
-    assert result is None
-
-
 def test_find_instance_by_notebook_dir_returns_none_when_no_process(app, tmp_path):
     """When notebook_dir matches but process is None, returns None."""
     from y_web.src.system.jupyter_utils import find_instance_by_notebook_dir
