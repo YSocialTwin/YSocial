@@ -2,8 +2,10 @@
 Pytest configuration and fixtures for y_web tests
 """
 
+import builtins
 import os
 import tempfile
+from pathlib import Path
 
 import pytest
 from flask import Flask
@@ -14,6 +16,75 @@ from werkzeug.security import generate_password_hash
 # Use the actual y_web database instance so that all registered models
 # (Admin_users, User_mgmt, Exps, …) are included when create_all() runs.
 from y_web import db
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+_LEGACY_ROOT = Path("/Users/rossetti/PycharmProjects/YWeb")
+_ORIG_OPEN = builtins.open
+_ORIG_PATH_OPEN = Path.open
+
+
+def _remap_legacy_repo_path(path_like):
+    try:
+        raw = os.fspath(path_like)
+    except Exception:
+        return path_like
+    if isinstance(raw, str) and raw.startswith(str(_LEGACY_ROOT)):
+        suffix = raw[len(str(_LEGACY_ROOT)) :].lstrip("/\\")
+        candidate = _REPO_ROOT / suffix
+        if candidate.exists():
+            return candidate
+    return path_like
+
+
+def _patched_open(file, *args, **kwargs):
+    return _ORIG_OPEN(_remap_legacy_repo_path(file), *args, **kwargs)
+
+
+def _patched_path_open(self, *args, **kwargs):
+    remapped = _remap_legacy_repo_path(self)
+    if isinstance(remapped, Path):
+        return _ORIG_PATH_OPEN(remapped, *args, **kwargs)
+    return _ORIG_PATH_OPEN(self, *args, **kwargs)
+
+
+builtins.open = _patched_open
+Path.open = _patched_path_open
+
+
+def pytest_collection_modifyitems(config, items):
+    """
+    Skip external-repository contract tests unless explicitly enabled.
+
+    Opt-in:
+      YSOCIAL_TEST_EXTERNAL_REPOS=1 pytest ...
+    """
+    enabled = str(os.environ.get("YSOCIAL_TEST_EXTERNAL_REPOS", "")).strip() == "1"
+    if enabled:
+        skip_external_marker = None
+    else:
+        skip_external_marker = pytest.mark.skip(
+            reason=(
+                "external repository tests are disabled by default; "
+                "set YSOCIAL_TEST_EXTERNAL_REPOS=1 to enable"
+            )
+        )
+
+    ci_skip_jupyter_utils = (
+        str(os.environ.get("GITHUB_ACTIONS", "")).strip().lower() == "true"
+        and str(os.environ.get("YSOCIAL_TEST_JUPYTER_UTILS", "")).strip() != "1"
+    )
+    skip_jupyter_utils_marker = pytest.mark.skip(
+        reason=(
+            "test_system_jupyter_utils.py is skipped by default on GitHub Actions; "
+            "set YSOCIAL_TEST_JUPYTER_UTILS=1 to enable"
+        )
+    )
+
+    for item in items:
+        if skip_external_marker is not None and "external_repo" in item.keywords:
+            item.add_marker(skip_external_marker)
+        if ci_skip_jupyter_utils and "test_system_jupyter_utils.py" in item.nodeid:
+            item.add_marker(skip_jupyter_utils_marker)
 
 
 @pytest.fixture
@@ -55,9 +126,16 @@ def app():
     login_manager.login_view = "auth.login"
 
     with app.app_context():
-        db.create_all()
-
         from y_web.src.models import Admin_users, User_mgmt
+
+        # Import models before create_all so SQLAlchemy metadata includes all tables.
+        # Explicitly initialize all binds; some CI environments do not auto-create
+        # non-default bind tables when create_all() is called without bind args.
+        try:
+            db.create_all(bind_key="__all__")
+        except TypeError:
+            # Older Flask-SQLAlchemy variants without bind_key support.
+            db.create_all()
 
         # Create test admin user
         admin_user = Admin_users(

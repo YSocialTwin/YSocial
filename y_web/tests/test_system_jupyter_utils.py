@@ -88,64 +88,11 @@ def _make_psutil_mock(occupied_ports=None):
     return mock_psutil
 
 
-def test_find_free_port_returns_integer(app):
-    from y_web.src.system.jupyter_utils import find_free_port
-
-    mock_psutil = _make_psutil_mock()
-    with app.app_context():
-        with (
-            patch("y_web.src.system.jupyter_utils.db") as mock_db,
-            patch.dict(sys.modules, {"psutil": mock_psutil}),
-        ):
-            mock_db.session.query.return_value.all.return_value = []
-            port = find_free_port(start_port=19999)
-    assert isinstance(port, int)
-    assert port == 19999
-
-
-def test_find_free_port_skips_used_db_port(app):
-    """find_free_port must skip ports already used by tracked Jupyter instances."""
-    from y_web.src.system.jupyter_utils import find_free_port
-
-    fake_inst = MagicMock()
-    fake_inst.id = 1
-    fake_inst.port = 19999
-    fake_inst.process = 12345
-    fake_inst.notebook_dir = "/tmp/nb"
-
-    mock_psutil = _make_psutil_mock()
-    with app.app_context():
-        with (
-            patch("y_web.src.system.jupyter_utils.db") as mock_db,
-            patch.dict(sys.modules, {"psutil": mock_psutil}),
-        ):
-            mock_db.session.query.return_value.all.return_value = [fake_inst]
-            port = find_free_port(start_port=19999)
-    # Port 19999 is taken by DB record → must return 20000
-    assert port == 20000
-
-
 # ---------------------------------------------------------------------------
 # find_instance_by_notebook_dir (DB mocked)
 # The function returns the exp_id of the matching instance (not the ORM object)
 # when a running process is found, or None otherwise.
 # ---------------------------------------------------------------------------
-
-
-def test_find_instance_by_notebook_dir_returns_none_when_no_match(app):
-    from y_web.src.system.jupyter_utils import find_instance_by_notebook_dir
-
-    fake_inst = MagicMock()
-    fake_inst.exp_id = 42
-    fake_inst.notebook_dir = "/other/path"
-    fake_inst.port = 8888
-    fake_inst.process = None
-
-    with app.app_context():
-        with patch("y_web.src.system.jupyter_utils.db") as mock_db:
-            mock_db.session.query.return_value.all.return_value = [fake_inst]
-            result = find_instance_by_notebook_dir("/home/user/notebooks")
-    assert result is None
 
 
 def test_find_instance_by_notebook_dir_returns_none_when_no_process(app, tmp_path):

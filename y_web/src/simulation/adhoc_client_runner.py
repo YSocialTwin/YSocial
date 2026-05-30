@@ -22,16 +22,31 @@ for candidate in (ROOT, PLUGIN_SRC):
     if candidate.exists() and candidate_str not in sys.path:
         sys.path.insert(0, candidate_str)
 
-from y_agents_plugins.config import AppConfig  # noqa: E402
-from y_agents_plugins.core import AgentContext  # noqa: E402
-from y_agents_plugins.db import ExperimentDatabase  # noqa: E402
-from y_agents_plugins.llm import LangChainTextGenerator  # noqa: E402
-from y_agents_plugins.runtime.app import build_default_registry  # noqa: E402
-from y_agents_plugins.runtime.execution_logger import ExecutionLogger  # noqa: E402
-from y_agents_plugins.runtime.executor import ActionExecutor  # noqa: E402
-from y_agents_plugins.runtime.loader import AgentSpecLoader  # noqa: E402
-from y_agents_plugins.runtime.manifest import load_agent_type_manifest  # noqa: E402
-from y_agents_plugins.runtime.scheduler import ActivityProfileScheduler  # noqa: E402
+try:
+    from y_agents_plugins.config import AppConfig  # noqa: E402
+    from y_agents_plugins.core import AgentContext  # noqa: E402
+    from y_agents_plugins.db import ExperimentDatabase  # noqa: E402
+    from y_agents_plugins.llm import LangChainTextGenerator  # noqa: E402
+    from y_agents_plugins.runtime.app import build_default_registry  # noqa: E402
+    from y_agents_plugins.runtime.execution_logger import ExecutionLogger  # noqa: E402
+    from y_agents_plugins.runtime.executor import ActionExecutor  # noqa: E402
+    from y_agents_plugins.runtime.loader import AgentSpecLoader  # noqa: E402
+    from y_agents_plugins.runtime.manifest import load_agent_type_manifest  # noqa: E402
+    from y_agents_plugins.runtime.scheduler import (  # noqa: E402
+        ActivityProfileScheduler,
+    )
+except ModuleNotFoundError:
+    # External plugin runtime is optional in base installations and in CI test jobs.
+    AppConfig = None
+    AgentContext = None
+    ExperimentDatabase = None
+    LangChainTextGenerator = None
+    build_default_registry = None
+    ExecutionLogger = None
+    ActionExecutor = None
+    AgentSpecLoader = None
+    load_agent_type_manifest = None
+    ActivityProfileScheduler = None
 
 TERMINATE = False
 SQLITE_LOCK_MAX_RETRIES = 6
@@ -178,6 +193,10 @@ def _run_with_sqlite_retry(logger, connection, label: str, fn):
 
 
 def run(config_path: Path, state_path: Path) -> int:
+    if AppConfig is None:
+        raise RuntimeError(
+            "y_agents_plugins is not installed. Ad hoc plugin runner is unavailable."
+        )
     logger = logging.getLogger("adhoc_client_runner")
     execution_logger = ExecutionLogger()
     config = AppConfig.from_file(config_path)

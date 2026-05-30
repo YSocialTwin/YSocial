@@ -186,7 +186,14 @@ if os.path.exists(os.path.join(basedir, "y_web", "db")):
     datas += [(os.path.join(basedir, "y_web", "db"), "y_web/db")]
 
 # Add external submodules if they exist
-for submodule in ["YServer", "YClient", "YServerReddit", "YClientReddit"]:
+for submodule in [
+    "YServer",
+    "YClient",
+    "YServerReddit",
+    "YClientReddit",
+    "YSimulator",
+    "y_agents_plugins",
+]:
     submodule_path = os.path.join(basedir, "external", submodule)
     if os.path.exists(submodule_path) and os.listdir(submodule_path):
         datas += [(submodule_path, f"external/{submodule}")]

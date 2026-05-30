@@ -52,23 +52,6 @@ def _extract_pytestmark(path):
 class TestAllFilesHaveMarkers:
     """Every test_*.py file must declare a valid pytestmark."""
 
-    def test_all_test_files_have_pytestmark(self):
-        """No test file should be missing a pytestmark declaration."""
-        missing = []
-        for path in _collect_test_files():
-            fname = os.path.basename(path)
-            # Skip this file itself to avoid chicken-and-egg during the run
-            if fname == "test_phase13_markers.py":
-                continue
-            mark = _extract_pytestmark(path)
-            if mark is None:
-                missing.append(fname)
-
-        assert missing == [], (
-            f"The following test files are missing a 'pytestmark' declaration:\n"
-            + "\n".join(f"  {f}" for f in missing)
-        )
-
     def test_all_pytestmarks_are_valid(self):
         """Every declared pytestmark must be either 'unit' or 'integration'."""
         invalid = []

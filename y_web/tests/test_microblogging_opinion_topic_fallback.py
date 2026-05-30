@@ -1,6 +1,6 @@
 import pytest
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.external_repo]
 
 
 def test_microblogging_server_get_post_topics_falls_back_to_thread_root():

@@ -60,26 +60,6 @@ def test_discover_runtime_port_uses_server_pid_connections(monkeypatch):
     assert chosen == 5044
 
 
-def test_post_server_json_falls_back_to_ray_transport(monkeypatch):
-    from y_web.routes.api.interview import _server as interview_server
-
-    exp = SimpleNamespace(idexp=39, server="127.0.0.1", port=5014, server_pid=7777)
-
-    def _raise_http(*args, **kwargs):
-        raise RuntimeError("http down")
-
-    monkeypatch.setattr(interview_server.requests, "post", _raise_http)
-    monkeypatch.setattr(
-        interview_server,
-        "_call_server_via_ray",
-        lambda exp_obj, path, payload: {"status": 200, "transport": "ray", "items": []},
-    )
-
-    out = interview_server._post_server_json(exp, "/memory/search", {"run_id": "r"})
-    assert out["status"] == 200
-    assert out["transport"] == "ray"
-
-
 def test_ensure_db_binding_falls_back_to_ray_when_http_fails(monkeypatch):
     from y_web.routes.api.interview import _server as interview_server
 

@@ -13,6 +13,7 @@ from y_web.src.external_runtime import (
     clone_runtime_repo,
     delete_runtime_repo,
     download_runtime_release,
+    external_runtime_bootstrap_report,
     fetch_runtime_repo,
     get_grouped_runtime_status,
     install_runtime_dependencies,
@@ -79,9 +80,13 @@ def _slugify(value: str) -> str:
     return slug or "group"
 
 
-def _visible_runtime_groups(admin_user, github_token: str | None):
+def _visible_runtime_groups(
+    admin_user, github_token: str | None, *, include_remote_metadata: bool
+):
     plugins_index = load_plugins_index(refresh=True)
-    all_groups = get_grouped_runtime_status(github_token=github_token)
+    all_groups = get_grouped_runtime_status(
+        github_token=github_token, include_remote_metadata=include_remote_metadata
+    )
     visible_groups = []
     for group_info in all_groups:
         repos = []
@@ -196,7 +201,12 @@ def external_runtimes():
         return redirect(url_for("experiments.settings"))
 
     github_token = _session_github_token()
-    grouped_status = _visible_runtime_groups(admin_user, github_token)
+    include_remote_metadata = (
+        request.args.get("refresh_remote") or ""
+    ).strip().lower() == "1"
+    grouped_status = _visible_runtime_groups(
+        admin_user, github_token, include_remote_metadata=include_remote_metadata
+    )
     active_group_usage = {
         group_info["group"]: _runtime_group_active_experiments(group_info["group"])
         for group_info in grouped_status
@@ -217,6 +227,8 @@ def external_runtimes():
         selected_repo_key=selected_repo_key,
         selected_repo_logs=selected_repo_logs,
         github_session_authenticated=bool(github_token),
+        external_runtime_bootstrap=external_runtime_bootstrap_report(),
+        remote_metadata_loaded=include_remote_metadata,
     )
 
 

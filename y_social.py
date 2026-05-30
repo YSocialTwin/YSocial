@@ -18,6 +18,7 @@ def start_app(
 
     os.environ["YSOCIAL_REGISTER_ATEXIT_CLEANUP"] = "1"
     from y_web import create_app, db
+    from y_web.src.external_runtime import external_runtime_bootstrap_report
 
     # Ensure required NLTK data only when not running from PyInstaller bundle.
     # Avoid blocking startup on network: if already present, skip download;
@@ -88,6 +89,16 @@ def start_app(
         os.environ.pop("LLM_URL", None)
 
     app = create_app(db_type=db_type, desktop_mode=desktop_mode)
+    runtime_bootstrap = external_runtime_bootstrap_report()
+    print(
+        "External runtime writable path:",
+        runtime_bootstrap.get("writable_external_dir", "n/a"),
+    )
+    seeded_repos = runtime_bootstrap.get("seeded_repos") or []
+    print(
+        "External runtime startup seed:",
+        ", ".join(seeded_repos) if seeded_repos else "none",
+    )
 
     with app.app_context():
         from y_web.src.models import Exps

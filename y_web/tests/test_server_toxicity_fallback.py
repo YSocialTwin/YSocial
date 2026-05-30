@@ -3,6 +3,10 @@ import sys
 import types
 from pathlib import Path
 
+import pytest
+
+pytestmark = [pytest.mark.unit, pytest.mark.external_repo]
+
 
 def _load_module(module_path, module_name):
     fake_y_server = types.ModuleType("y_server")

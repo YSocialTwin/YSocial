@@ -42,7 +42,7 @@ from y_web.src.experiment.access import (
     user_can_manage_experiment,
     user_can_view_experiment,
 )
-from y_web.src.external_runtime import get_runtime_status
+from y_web.src.external_runtime import runtime_spec
 from y_web.src.hpc.population_backup import restore_population_for_hpc_client
 from y_web.src.models import (
     ActivityProfile,
@@ -125,16 +125,24 @@ from ._helpers import (
 
 
 def _external_repo_availability():
-    """Detect which simulator repositories are available under external/."""
-    microblogging = (
-        get_runtime_status("microblogging_server").installed
-        and get_runtime_status("microblogging_client").installed
+    """
+    Detect simulator repository availability using local filesystem checks only.
+
+    This route is hit on every admin/experiments page load, so avoid
+    get_runtime_status() here because it performs remote GitHub API lookups.
+    """
+
+    def _installed(repo_key: str) -> bool:
+        try:
+            return bool(runtime_spec(repo_key).path.exists())
+        except Exception:
+            return False
+
+    microblogging = _installed("microblogging_server") and _installed(
+        "microblogging_client"
     )
-    hpc = get_runtime_status("hpc_simulator").installed
-    forum = (
-        get_runtime_status("forum_server").installed
-        and get_runtime_status("forum_client").installed
-    )
+    hpc = _installed("hpc_simulator")
+    forum = _installed("forum_server") and _installed("forum_client")
 
     return {
         "microblogging": microblogging,
@@ -171,22 +179,64 @@ def settings():
 
     users = Admin_users.query.all()
 
-    # Check and update status for stopped experiments that are actually completed
-    # Get all stopped experiments
+    # Check and update status for stopped experiments that are actually completed.
+    # Use batched queries to avoid per-experiment N+1 work on page load.
     stopped_experiments = Exps.query.filter_by(exp_status="stopped").all()
-    for exp in stopped_experiments:
-        # Use existing helper function to check if all clients completed
-        all_clients_completed, _ = _get_clients_to_start(exp)
-        if all_clients_completed:
-            # Update status to completed
-            exp.exp_status = "completed"
+    stopped_ids = [exp.idexp for exp in stopped_experiments]
+    if stopped_ids:
+        clients = Client.query.filter(Client.id_exp.in_(stopped_ids)).all()
+        clients_by_exp = defaultdict(list)
+        client_ids = []
+        for client in clients:
+            clients_by_exp[client.id_exp].append(client)
+            client_ids.append(client.id)
+
+        exec_by_client_id = {}
+        if client_ids:
+            exec_rows = Client_Execution.query.filter(
+                Client_Execution.client_id.in_(client_ids)
+            ).all()
+            exec_by_client_id = {row.client_id: row for row in exec_rows}
+
+        updated_any = False
+        for exp in stopped_experiments:
+            exp_clients = clients_by_exp.get(exp.idexp, [])
+            if not exp_clients:
+                continue
+
+            all_completed = True
+            for client in exp_clients:
+                client_exec = exec_by_client_id.get(client.id)
+                if client_exec is None:
+                    all_completed = False
+                    break
+                if client_exec.expected_duration_rounds == -1:
+                    all_completed = False
+                    break
+                if client_exec.elapsed_time < client_exec.expected_duration_rounds:
+                    all_completed = False
+                    break
+
+            if all_completed:
+                exp.exp_status = "completed"
+                updated_any = True
+
+        if updated_any:
             db.session.commit()
 
-    # Check which experiments have infinite clients
+    # Check which experiments have infinite clients (batched).
     exp_has_infinite = {}
+    preview_ids = [exp.idexp for exp in experiments]
+    preview_clients = []
+    if preview_ids:
+        preview_clients = Client.query.filter(Client.id_exp.in_(preview_ids)).all()
+    preview_clients_by_exp = defaultdict(list)
+    for client in preview_clients:
+        preview_clients_by_exp[client.id_exp].append(client)
     for exp in experiments:
-        clients = Client.query.filter_by(id_exp=exp.idexp).all()
-        exp_has_infinite[exp.idexp] = any(client.days == -1 for client in clients)
+        exp_has_infinite[exp.idexp] = any(
+            client.days == -1 for client in preview_clients_by_exp.get(exp.idexp, [])
+        )
 
     dbtype = current_app.config["SQLALCHEMY_DATABASE_URI"].split(":")[0]
 

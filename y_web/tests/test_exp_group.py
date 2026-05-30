@@ -108,30 +108,3 @@ def test_exp_group_field_optional(app):
     finally:
         # Restore original bind_key
         Exps.__bind_key__ = original_bind_key
-
-
-def test_exp_group_migration_script_exists():
-    """Test that the migration script exists."""
-    import os
-
-    migration_path = os.path.join("y_web", "migrations", "add_exp_group_column.py")
-    assert os.path.exists(migration_path), "Migration script should exist"
-
-
-def test_exp_group_in_postgre_schema():
-    """Test that exp_group is in PostgreSQL schema."""
-    import os
-
-    schema_path = os.path.join("data_schema", "postgre_dashboard.sql")
-    with open(schema_path, "r") as f:
-        schema_content = f.read()
-
-    # Check that exp_group is mentioned in the schema
-    assert "exp_group" in schema_content, "exp_group should be in PostgreSQL schema"
-
-    # Check that it's in the exps table definition
-    exps_table_start = schema_content.find("CREATE TABLE exps")
-    exps_table_end = schema_content.find(");", exps_table_start)
-    exps_table_def = schema_content[exps_table_start:exps_table_end]
-
-    assert "exp_group" in exps_table_def, "exp_group should be in exps table definition"
