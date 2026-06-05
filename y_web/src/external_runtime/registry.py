@@ -119,7 +119,7 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         label="YClient",
         path=EXTERNAL_DIR / "YClient",
         github_repo="YSocialTwin/YClient",
-        repo_url="git@github.com:YSocialTwin/YClient.git",
+        repo_url="https://github.com/YSocialTwin/YClient.git",
         default_branch="main",
         install_commands=(
             ("python", "-m", "pip", "install", "-r", "requirements_client.txt"),
@@ -137,7 +137,7 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         label="YServer",
         path=EXTERNAL_DIR / "YServer",
         github_repo="YSocialTwin/YServer",
-        repo_url="git@github.com:YSocialTwin/YServer.git",
+        repo_url="https://github.com/YSocialTwin/YServer.git",
         default_branch="main",
         install_commands=(
             ("python", "-m", "pip", "install", "-r", "requirements_server.txt"),
@@ -155,7 +155,7 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         label="YClientReddit",
         path=EXTERNAL_DIR / "YClientReddit",
         github_repo="YSocialTwin/YClientReddit",
-        repo_url="git@github.com:YSocialTwin/YClientReddit.git",
+        repo_url="https://github.com/YSocialTwin/YClientReddit.git",
         default_branch="main",
         install_commands=(
             ("python", "-m", "pip", "install", "-r", "requirements_client.txt"),
@@ -173,7 +173,7 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         label="YServerReddit",
         path=EXTERNAL_DIR / "YServerReddit",
         github_repo="YSocialTwin/YServerReddit",
-        repo_url="git@github.com:YSocialTwin/YServerReddit.git",
+        repo_url="https://github.com/YSocialTwin/YServerReddit.git",
         default_branch="main",
         install_commands=(
             ("python", "-m", "pip", "install", "-r", "requirements_server.txt"),
@@ -191,7 +191,7 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         label="YSimulator",
         path=EXTERNAL_DIR / "YSimulator",
         github_repo="YSocialTwin/YSimulator",
-        repo_url="git@github.com:YSocialTwin/YSimulator.git",
+        repo_url="https://github.com/YSocialTwin/YSimulator.git",
         default_branch="main",
         install_commands=(
             ("python", "-m", "pip", "install", "-r", "requirements.txt"),
@@ -209,7 +209,7 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         label="y_agents_plugins",
         path=EXTERNAL_DIR / "y_agents_plugins",
         github_repo="YSocialTwin/y_agents_plugins",
-        repo_url="git@github.com:YSocialTwin/y_agents_plugins.git",
+        repo_url="https://github.com/YSocialTwin/y_agents_plugins.git",
         default_branch="main",
         install_commands=(),
         validate_entrypoints=(),
