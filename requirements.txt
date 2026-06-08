@@ -51,3 +51,4 @@ ysights
 gunicorn
 gevent
 jupyterlab
+yclient-memory
