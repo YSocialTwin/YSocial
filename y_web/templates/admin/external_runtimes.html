@@ -418,6 +418,9 @@
 
         const refreshUrl = payload.redirect_url || window.location.href;
         await refreshDashboard(refreshUrl);
+        if (payload.message && window.showToast) {
+            window.showToast(payload.message, 'success');
+        }
     }
 
     async function handleDeleteClick(event) {
@@ -439,22 +442,30 @@
 
         event.preventDefault();
         showLoading('Running external runtime action...');
-
-        const response = await fetch(deleteUrl, {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
+        try {
+            const response = await fetch(deleteUrl, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            });
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(payload.message || 'External runtime delete failed.');
             }
-        });
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok) {
-            throw new Error(payload.message || 'External runtime delete failed.');
-        }
 
-        removeRuntimeCard(repoKey);
-        await refreshDashboard(payload.redirect_url || '/admin/external_runtimes');
+            removeRuntimeCard(repoKey);
+            await refreshDashboard(payload.redirect_url || '/admin/external_runtimes');
+            if (payload.message && window.showToast) {
+                window.showToast(payload.message, 'success');
+            }
+        } finally {
+            if (window.hideLoading) {
+                window.hideLoading();
+            }
+        }
     }
 
     async function handleInstallClick(event) {
@@ -477,22 +488,30 @@
 
         event.preventDefault();
         showLoading('Running external runtime action...');
-
-        const response = await fetch(installUrl, {
-            method: 'POST',
-            body: new FormData(form),
-            credentials: 'same-origin',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
+        try {
+            const response = await fetch(installUrl, {
+                method: 'POST',
+                body: new FormData(form),
+                credentials: 'same-origin',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            });
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(payload.message || `Failed to install ${repoLabel}.`);
             }
-        });
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok) {
-            throw new Error(payload.message || `Failed to install ${repoLabel}.`);
-        }
 
-        await refreshDashboard(payload.redirect_url || '/admin/external_runtimes');
+            await refreshDashboard(payload.redirect_url || '/admin/external_runtimes');
+            if (payload.message && window.showToast) {
+                window.showToast(payload.message, 'success');
+            }
+        } finally {
+            if (window.hideLoading) {
+                window.hideLoading();
+            }
+        }
     }
 
     async function handleRuntimeActionClick(event) {
@@ -516,22 +535,30 @@
 
         event.preventDefault();
         showLoading('Running external runtime action...');
-
-        const response = await fetch(actionUrl, {
-            method: 'POST',
-            body: new FormData(form),
-            credentials: 'same-origin',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
+        try {
+            const response = await fetch(actionUrl, {
+                method: 'POST',
+                body: new FormData(form),
+                credentials: 'same-origin',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            });
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(payload.message || `Failed to run ${actionName} for ${repoLabel}.`);
             }
-        });
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok) {
-            throw new Error(payload.message || `Failed to run ${actionName} for ${repoLabel}.`);
-        }
 
-        await refreshDashboard(payload.redirect_url || '/admin/external_runtimes');
+            await refreshDashboard(payload.redirect_url || '/admin/external_runtimes');
+            if (payload.message && window.showToast) {
+                window.showToast(payload.message, 'success');
+            }
+        } finally {
+            if (window.hideLoading) {
+                window.hideLoading();
+            }
+        }
     }
 
     async function handleSessionClick(event) {
@@ -557,22 +584,30 @@
 
         event.preventDefault();
         showLoading('Updating GitHub session...');
-
-        const response = await fetch(form.action, {
-            method: 'POST',
-            body: new FormData(form),
-            credentials: 'same-origin',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                credentials: 'same-origin',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            });
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(payload.message || 'Failed to update GitHub session.');
             }
-        });
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok) {
-            throw new Error(payload.message || 'Failed to update GitHub session.');
-        }
 
-        await refreshDashboard(payload.redirect_url || '/admin/external_runtimes');
+            await refreshDashboard(payload.redirect_url || '/admin/external_runtimes');
+            if (payload.message && window.showToast) {
+                window.showToast(payload.message, 'success');
+            }
+        } finally {
+            if (window.hideLoading) {
+                window.hideLoading();
+            }
+        }
     }
 
     document.addEventListener('submit', function(event) {
