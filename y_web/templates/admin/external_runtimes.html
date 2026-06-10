@@ -191,16 +191,17 @@
                                                 </div>
                                             </div>
 
+                                            {% if not repo.installed %}
                                             <form method="POST" action="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='acquire') }}" style="display: grid; gap: 12px;" data-external-runtime-action-form="acquire" data-repo-key="{{ repo.key }}">
                                                 <div class="ys-text-sm-dark" style="font-weight: 700;">Installation source</div>
                                                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px;">
                                                     <label style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px; background: #f8fafc; display: grid; gap: 6px;">
                                                         <span style="display: flex; gap: 8px; align-items: center;">
-                                                            <input type="radio" name="install_source" value="release" {% if repo.releases_enabled %}checked{% endif %} {% if repo.installed %}disabled{% endif %}>
+                                                            <input type="radio" name="install_source" value="release" {% if repo.releases_enabled %}checked{% endif %}>
                                                             <strong>GitHub Release</strong>
                                                         </span>
                                                         <span class="ys-text-xs-hint">Standard option. Works without git if releases are published.</span>
-                                                        <select name="release_tag" class="input w-100" {% if not repo.releases_enabled or repo.installed %}disabled{% endif %}>
+                                                        <select name="release_tag" class="input w-100" {% if not repo.releases_enabled %}disabled{% endif %}>
                                                             {% if repo.available_releases %}
                                                                 {% for release in repo.available_releases %}
                                                                 <option value="{{ release.tag }}">{{ release.tag }}{% if release.prerelease %} · prerelease{% endif %}{% if release.name and release.name != release.tag %} · {{ release.name }}{% endif %}</option>
@@ -213,11 +214,11 @@
 
                                                     <label style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px; background: #f8fafc; display: grid; gap: 6px;">
                                                         <span style="display: flex; gap: 8px; align-items: center;">
-                                                            <input type="radio" name="install_source" value="git" {% if not repo.releases_enabled %}checked{% endif %} {% if repo.installed %}disabled{% endif %}>
+                                                            <input type="radio" name="install_source" value="git" {% if not repo.releases_enabled %}checked{% endif %}>
                                                             <strong>Git checkout</strong>
                                                         </span>
                                                         <span class="ys-text-xs-hint">Advanced option. Use when you need a specific branch.</span>
-                                                        <select name="branch" class="input w-100" {% if repo.installed %}disabled{% endif %}>
+                                                        <select name="branch" class="input w-100">
                                                             {% for branch_name in repo.available_branches %}
                                                             <option value="{{ branch_name }}" {% if branch_name == (repo.current_branch or repo.default_branch) %}selected{% endif %}>{{ branch_name }}</option>
                                                             {% endfor %}
@@ -228,23 +229,24 @@
                                                 <div style="display: flex; flex-wrap: wrap; gap: 8px;">
                                                     <button type="button"
                                                             class="button is-solid primary-button"
-                                                            {% if repo.installed %}disabled{% endif %}
                                                             data-external-runtime-install
                                                             data-install-url="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='acquire') }}"
                                                             data-repo-key="{{ repo.key }}"
                                                             data-repo-label="{{ repo.label }}">
                                                         Install Plugin
                                                     </button>
-                                                    {% if repo.installed %}
+                                                </div>
+                                            </form>
+                                            {% else %}
+                                                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
                                                     <button type="button" class="button is-solid primary-button" data-external-runtime-action-button="install" data-action-url="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='install') }}" data-repo-key="{{ repo.key }}" data-repo-label="{{ repo.label }}">
                                                         Install Dependencies
                                                     </button>
                                                     <button type="button" class="button is-solid primary-button" data-external-runtime-action-button="validate" data-action-url="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='validate') }}" data-repo-key="{{ repo.key }}" data-repo-label="{{ repo.label }}">
                                                         Validate
                                                     </button>
-                                                    {% endif %}
                                                 </div>
-                                            </form>
+                                            {% endif %}
 
                                             <details style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px 14px; background: #f8fafc;">
                                                 <summary style="cursor: pointer; font-weight: 700; color: #111827;">Advanced maintenance</summary>
