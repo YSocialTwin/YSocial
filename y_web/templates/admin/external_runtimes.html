@@ -15,7 +15,7 @@
                                 <div class="ys-text-xs-hint" style="margin-bottom: 12px;">
                                     Optionally connect a GitHub token for this admin session to avoid anonymous API rate limits and access private release assets.
                                 </div>
-                                <form method="POST" action="{{ url_for('experiments.external_runtime_github_session') }}" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;" onsubmit="showLoading('Updating GitHub session...');">
+                                <form method="POST" action="{{ url_for('experiments.external_runtime_github_session') }}" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;" data-external-runtime-async="1" data-external-runtime-refresh="1" onsubmit="showLoading('Updating GitHub session...');">
                                     <input type="hidden" name="github_session_action" value="connect">
                                     <input type="password" name="github_token" class="input" style="min-width: 320px; flex: 1 1 320px;" placeholder="{% if github_session_authenticated %}Token stored for this session{% else %}GitHub personal access token{% endif %}">
                                     <button type="submit" class="button is-solid primary-button">Connect</button>
@@ -23,7 +23,7 @@
                                 <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px;">
                                     {% if github_session_authenticated %}
                                     <span class="badge badge-success">Authenticated</span>
-                                    <form method="POST" action="{{ url_for('experiments.external_runtime_github_session') }}" onsubmit="showLoading('Updating GitHub session...');">
+                                    <form method="POST" action="{{ url_for('experiments.external_runtime_github_session') }}" data-external-runtime-async="1" data-external-runtime-refresh="1" onsubmit="showLoading('Updating GitHub session...');">
                                         <input type="hidden" name="github_session_action" value="disconnect">
                                         <button type="submit" class="button is-light">Disconnect</button>
                                     </form>
@@ -175,7 +175,7 @@
                                                     {% endif %}
                                                     <div style="display: flex; flex-wrap: wrap; gap: 8px;">
                                                         {% if repo.exists %}
-                                                        <form method="POST" action="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='delete') }}" onsubmit="showLoading('Running external runtime action...');">
+                                                        <form method="POST" action="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='delete') }}" data-external-runtime-async="1" data-external-runtime-refresh="1" onsubmit="showLoading('Running external runtime action...');">
                                                             <button type="submit"
                                                                     class="button is-light"
                                                                     onclick="return confirm('Delete {{ repo.label }} from external/? This removes the local plugin files.');">
@@ -190,7 +190,7 @@
                                                 </div>
                                             </div>
 
-                                            <form method="POST" action="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='acquire') }}" style="display: grid; gap: 12px;" onsubmit="showLoading('Running external runtime action...');">
+                                            <form method="POST" action="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='acquire') }}" style="display: grid; gap: 12px;" data-external-runtime-async="1" data-external-runtime-refresh="1" onsubmit="showLoading('Running external runtime action...');">
                                                 <div class="ys-text-sm-dark" style="font-weight: 700;">Installation source</div>
                                                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px;">
                                                     <label style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px; background: #f8fafc; display: grid; gap: 6px;">
@@ -243,7 +243,7 @@
                                                 <summary style="cursor: pointer; font-weight: 700; color: #111827;">Advanced maintenance</summary>
                                                 <div style="display: grid; gap: 10px; margin-top: 12px;">
                                                     <div class="ys-text-xs-hint">Available only for git-managed plugins. Release-installed plugins must be deleted and reinstalled if you want a git checkout.</div>
-                                                    <form method="POST" action="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='fetch') }}" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;" onsubmit="showLoading('Running external runtime action...');">
+                                                    <form method="POST" action="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='fetch') }}" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;" data-external-runtime-async="1" data-external-runtime-refresh="1" onsubmit="showLoading('Running external runtime action...');">
                                                         <select name="branch" class="input" style="min-width: 220px;">
                                                             {% for branch_name in repo.available_branches %}
                                                             <option value="{{ branch_name }}" {% if branch_name == (repo.current_branch or repo.default_branch) %}selected{% endif %}>{{ branch_name }}</option>
@@ -330,4 +330,89 @@
 </div>
 
 {% include "admin/tutorials/external_runtimes_tutorial.html" %}
+<script>
+(function() {
+    function getDashboardRoot() {
+        return document.querySelector('#creator-dashboard');
+    }
+
+    function getPageFragment(url) {
+        return fetch(url, {
+            credentials: 'same-origin',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'text/html'
+            }
+        }).then(async (response) => {
+            if (!response.ok) {
+                throw new Error('Failed to refresh external runtimes page.');
+            }
+            const html = await response.text();
+            return new DOMParser().parseFromString(html, 'text/html');
+        });
+    }
+
+    function replaceDashboardFromDocument(doc) {
+        const currentRoot = getDashboardRoot();
+        const nextRoot = doc.querySelector('#creator-dashboard');
+        if (currentRoot && nextRoot) {
+            currentRoot.replaceWith(nextRoot);
+        }
+    }
+
+    async function refreshDashboard(url) {
+        const doc = await getPageFragment(url);
+        replaceDashboardFromDocument(doc);
+    }
+
+    async function submitRuntimeForm(event) {
+        const form = event.target;
+        if (!(form instanceof HTMLFormElement)) {
+            return;
+        }
+
+        const submitter = event.submitter;
+        const isAsync = form.dataset.externalRuntimeAsync === '1';
+        if (!isAsync) {
+            return;
+        }
+
+        event.preventDefault();
+        const targetAction = (submitter && submitter.formAction) ? submitter.formAction : form.action;
+        const targetMethod = (submitter && submitter.formMethod) ? submitter.formMethod : (form.method || 'POST');
+
+        const response = await fetch(targetAction, {
+            method: targetMethod,
+            body: new FormData(form),
+            credentials: 'same-origin',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        });
+
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(payload.message || 'External runtime action failed.');
+        }
+
+        const refreshUrl = payload.redirect_url || window.location.href;
+        await refreshDashboard(refreshUrl);
+    }
+
+    document.addEventListener('submit', function(event) {
+        const form = event.target;
+        if (!(form instanceof HTMLFormElement)) {
+            return;
+        }
+        if (!form.matches('form[data-external-runtime-async="1"]')) {
+            return;
+        }
+        submitRuntimeForm(event).catch((error) => {
+            console.error(error);
+            window.location.reload();
+        });
+    }, true);
+})();
+</script>
 {% include "admin/footer.html" %}

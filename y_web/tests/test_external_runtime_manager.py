@@ -5,6 +5,7 @@ import json
 import subprocess
 import zipfile
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -227,6 +228,46 @@ def test_update_runtime_repo_rejects_release_archive_install(
 
     with pytest.raises(manager.ExternalRuntimeError, match="release archive"):
         manager.update_runtime_repo(runtime_repo_spec.key, "main", actor="tester")
+
+
+def test_external_runtime_action_returns_json_for_xhr(app, client, auth, monkeypatch):
+    auth.login()
+
+    from y_web.routes.admin.sub.experiments import _external_runtimes as route_mod
+
+    class _Spec:
+        key = "test_runtime"
+        group = "hpc"
+        group_label = "HPC"
+        label = "TestRuntime"
+        default_branch = "main"
+        repo_url = "https://example.test/repo.git"
+        github_repo = "YSocialTwin/TestRuntime"
+        releases_enabled = False
+
+    monkeypatch.setattr(route_mod, "_require_admin_user", lambda: SimpleNamespace(username="admin"))
+    monkeypatch.setattr(route_mod, "runtime_spec", lambda repo_key: _Spec())
+    monkeypatch.setattr(route_mod, "runtime_visible_to_user", lambda spec, user: True)
+    monkeypatch.setattr(route_mod, "_runtime_group_active_experiments", lambda group: [])
+    monkeypatch.setattr(route_mod, "update_runtime_repo", lambda repo_key, branch, actor: None)
+    monkeypatch.setattr(route_mod, "log_external_runtime_action", lambda *args, **kwargs: None)
+
+    with app.test_request_context(
+        "/admin/external_runtimes/test_runtime/update",
+        method="POST",
+        data={"branch": "main"},
+        headers={
+            "X-Requested-With": "XMLHttpRequest",
+            "Accept": "application/json",
+        },
+    ):
+        response = route_mod.external_runtime_action.__wrapped__("test_runtime", "update")
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["status"] == "ok"
+    assert payload["repo_key"] == "test_runtime"
+    assert payload["redirect_url"] == "/admin/external_runtimes?repo_key=test_runtime"
 
 
 def test_runtime_visibility_respects_private_allowlist(monkeypatch):

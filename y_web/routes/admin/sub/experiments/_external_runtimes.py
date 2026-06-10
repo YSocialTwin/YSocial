@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 import sys
 
-from flask import flash, redirect, render_template, request, session, url_for
+from flask import flash, jsonify, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_required
 
 from y_web.src.external_runtime import (
@@ -73,6 +73,27 @@ def _runtime_group_active_experiments(group_key: str) -> list[Exps]:
 def _session_github_token() -> str | None:
     token = (session.get(_GITHUB_TOKEN_SESSION_KEY) or "").strip()
     return token or None
+
+
+def _wants_json_response() -> bool:
+    accept = (request.headers.get("Accept") or "").lower()
+    requested_with = (request.headers.get("X-Requested-With") or "").lower()
+    return "application/json" in accept or requested_with == "xmlhttprequest"
+
+
+def _external_runtimes_response(*, repo_key: str | None = None, status: str = "ok", message: str = ""):
+    refresh_url = "/admin/external_runtimes"
+    if repo_key:
+        refresh_url = f"{refresh_url}?repo_key={repo_key}"
+    if _wants_json_response():
+        payload = {
+            "status": status,
+            "message": message,
+            "repo_key": repo_key or "",
+            "redirect_url": refresh_url,
+        }
+        return jsonify(payload)
+    return redirect(refresh_url)
 
 
 def _slugify(value: str) -> str:
@@ -198,7 +219,7 @@ def _runtime_categories(grouped_status, active_group_usage):
 def external_runtimes():
     admin_user = _require_admin_user()
     if admin_user is None:
-        return redirect(url_for("experiments.settings"))
+        return _external_runtimes_response(status="error", message="Unauthorized")
 
     github_token = _session_github_token()
     include_remote_metadata = (
@@ -237,7 +258,7 @@ def external_runtimes():
 def external_runtime_github_session():
     admin_user = _require_admin_user()
     if admin_user is None:
-        return redirect(url_for("experiments.settings"))
+        return _external_runtimes_response(status="error", message="Unauthorized")
 
     action = (request.form.get("github_session_action") or "").strip().lower()
     if action == "connect":
@@ -253,7 +274,7 @@ def external_runtime_github_session():
     else:
         flash("Unsupported GitHub session action.", "error")
 
-    return redirect(url_for("experiments.external_runtimes"))
+    return _external_runtimes_response(message="GitHub session updated.")
 
 
 @experiments.route("/admin/external_runtimes/<repo_key>/<action>", methods=["POST"])
@@ -261,21 +282,21 @@ def external_runtime_github_session():
 def external_runtime_action(repo_key: str, action: str):
     admin_user = _require_admin_user()
     if admin_user is None:
-        return redirect(url_for("experiments.settings"))
+        return _external_runtimes_response(repo_key=repo_key, status="error", message="Unauthorized")
 
     if action not in _MUTATING_ACTIONS:
         flash("Unsupported runtime action.", "error")
-        return redirect(url_for("experiments.external_runtimes"))
+        return _external_runtimes_response(repo_key=repo_key, status="error", message="Unsupported runtime action.")
 
     try:
         spec = runtime_spec(repo_key)
     except KeyError:
         flash("Unknown external runtime repository.", "error")
-        return redirect(url_for("experiments.external_runtimes"))
+        return _external_runtimes_response(repo_key=repo_key, status="error", message="Unknown external runtime repository.")
 
     if not runtime_visible_to_user(spec, admin_user):
         flash("You do not have visibility on this plugin repository.", "error")
-        return redirect(url_for("experiments.external_runtimes"))
+        return _external_runtimes_response(repo_key=repo_key, status="error", message="Not visible.")
 
     github_token = _session_github_token()
     branch = (request.form.get("branch") or spec.default_branch).strip()
@@ -302,7 +323,11 @@ def external_runtime_action(repo_key: str, action: str):
                 f"Stop active {spec.group_label.lower()} experiments before modifying {spec.label}: {names}{extra}.",
                 "error",
             )
-            return redirect(url_for("experiments.external_runtimes", repo_key=repo_key))
+            return _external_runtimes_response(
+                repo_key=repo_key,
+                status="error",
+                message=f"Stop active {spec.group_label.lower()} experiments before modifying {spec.label}.",
+            )
 
     try:
         if action == "acquire":
@@ -360,7 +385,10 @@ def external_runtime_action(repo_key: str, action: str):
         )
         flash(str(exc), "error")
 
-    return redirect(url_for("experiments.external_runtimes", repo_key=repo_key))
+    return _external_runtimes_response(
+        repo_key=repo_key,
+        message=f"{spec.label} action completed.",
+    )
 
 
 @experiments.route("/admin/external_runtimes/<repo_key>/logs")
