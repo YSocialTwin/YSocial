@@ -245,12 +245,20 @@ def test_external_runtime_action_returns_json_for_xhr(app, client, auth, monkeyp
         github_repo = "YSocialTwin/TestRuntime"
         releases_enabled = False
 
-    monkeypatch.setattr(route_mod, "_require_admin_user", lambda: SimpleNamespace(username="admin"))
+    monkeypatch.setattr(
+        route_mod, "_require_admin_user", lambda: SimpleNamespace(username="admin")
+    )
     monkeypatch.setattr(route_mod, "runtime_spec", lambda repo_key: _Spec())
     monkeypatch.setattr(route_mod, "runtime_visible_to_user", lambda spec, user: True)
-    monkeypatch.setattr(route_mod, "_runtime_group_active_experiments", lambda group: [])
-    monkeypatch.setattr(route_mod, "update_runtime_repo", lambda repo_key, branch, actor: None)
-    monkeypatch.setattr(route_mod, "log_external_runtime_action", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        route_mod, "_runtime_group_active_experiments", lambda group: []
+    )
+    monkeypatch.setattr(
+        route_mod, "update_runtime_repo", lambda repo_key, branch, actor: None
+    )
+    monkeypatch.setattr(
+        route_mod, "log_external_runtime_action", lambda *args, **kwargs: None
+    )
 
     with app.test_request_context(
         "/admin/external_runtimes/test_runtime/update",
@@ -261,7 +269,9 @@ def test_external_runtime_action_returns_json_for_xhr(app, client, auth, monkeyp
             "Accept": "application/json",
         },
     ):
-        response = route_mod.external_runtime_action.__wrapped__("test_runtime", "update")
+        response = route_mod.external_runtime_action.__wrapped__(
+            "test_runtime", "update"
+        )
 
     assert response.status_code == 200
     payload = response.get_json()
@@ -270,7 +280,9 @@ def test_external_runtime_action_returns_json_for_xhr(app, client, auth, monkeyp
     assert payload["redirect_url"] == "/admin/external_runtimes?repo_key=test_runtime"
 
 
-def test_external_runtime_delete_json_refreshes_base_page(app, client, auth, monkeypatch):
+def test_external_runtime_delete_json_refreshes_base_page(
+    app, client, auth, monkeypatch
+):
     auth.login()
 
     from y_web.routes.admin.sub.experiments import _external_runtimes as route_mod
@@ -285,12 +297,18 @@ def test_external_runtime_delete_json_refreshes_base_page(app, client, auth, mon
         github_repo = "YSocialTwin/TestRuntime"
         releases_enabled = False
 
-    monkeypatch.setattr(route_mod, "_require_admin_user", lambda: SimpleNamespace(username="admin"))
+    monkeypatch.setattr(
+        route_mod, "_require_admin_user", lambda: SimpleNamespace(username="admin")
+    )
     monkeypatch.setattr(route_mod, "runtime_spec", lambda repo_key: _Spec())
     monkeypatch.setattr(route_mod, "runtime_visible_to_user", lambda spec, user: True)
-    monkeypatch.setattr(route_mod, "_runtime_group_active_experiments", lambda group: [])
+    monkeypatch.setattr(
+        route_mod, "_runtime_group_active_experiments", lambda group: []
+    )
     monkeypatch.setattr(route_mod, "delete_runtime_repo", lambda repo_key, actor: None)
-    monkeypatch.setattr(route_mod, "log_external_runtime_action", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        route_mod, "log_external_runtime_action", lambda *args, **kwargs: None
+    )
 
     with app.test_request_context(
         "/admin/external_runtimes/test_runtime/delete",
@@ -300,7 +318,9 @@ def test_external_runtime_delete_json_refreshes_base_page(app, client, auth, mon
             "Accept": "application/json",
         },
     ):
-        response = route_mod.external_runtime_action.__wrapped__("test_runtime", "delete")
+        response = route_mod.external_runtime_action.__wrapped__(
+            "test_runtime", "delete"
+        )
 
     assert response.status_code == 200
     payload = response.get_json()
@@ -309,7 +329,9 @@ def test_external_runtime_delete_json_refreshes_base_page(app, client, auth, mon
     assert payload["redirect_url"] == "/admin/external_runtimes"
 
 
-def test_external_runtime_delete_is_not_blocked_by_active_experiments(app, client, auth, monkeypatch):
+def test_external_runtime_delete_is_not_blocked_by_active_experiments(
+    app, client, auth, monkeypatch
+):
     auth.login()
 
     from y_web.routes.admin.sub.experiments import _external_runtimes as route_mod
@@ -326,17 +348,25 @@ def test_external_runtime_delete_is_not_blocked_by_active_experiments(app, clien
 
     called = {}
 
-    monkeypatch.setattr(route_mod, "_require_admin_user", lambda: SimpleNamespace(username="admin"))
+    monkeypatch.setattr(
+        route_mod, "_require_admin_user", lambda: SimpleNamespace(username="admin")
+    )
     monkeypatch.setattr(route_mod, "runtime_spec", lambda repo_key: _Spec())
     monkeypatch.setattr(route_mod, "runtime_visible_to_user", lambda spec, user: True)
-    monkeypatch.setattr(route_mod, "_runtime_group_active_experiments", lambda group: [SimpleNamespace(exp_name="running-exp")])
+    monkeypatch.setattr(
+        route_mod,
+        "_runtime_group_active_experiments",
+        lambda group: [SimpleNamespace(exp_name="running-exp")],
+    )
 
     def _delete(repo_key, actor):
         called["repo_key"] = repo_key
         called["actor"] = actor
 
     monkeypatch.setattr(route_mod, "delete_runtime_repo", _delete)
-    monkeypatch.setattr(route_mod, "log_external_runtime_action", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        route_mod, "log_external_runtime_action", lambda *args, **kwargs: None
+    )
 
     with app.test_request_context(
         "/admin/external_runtimes/test_runtime/delete",
@@ -346,7 +376,9 @@ def test_external_runtime_delete_is_not_blocked_by_active_experiments(app, clien
             "Accept": "application/json",
         },
     ):
-        response = route_mod.external_runtime_action.__wrapped__("test_runtime", "delete")
+        response = route_mod.external_runtime_action.__wrapped__(
+            "test_runtime", "delete"
+        )
 
     assert response.status_code == 200
     payload = response.get_json()
@@ -354,7 +386,9 @@ def test_external_runtime_delete_is_not_blocked_by_active_experiments(app, clien
     assert called == {"repo_key": "test_runtime", "actor": "admin"}
 
 
-def test_external_runtime_acquire_json_uses_selected_source(app, client, auth, monkeypatch):
+def test_external_runtime_acquire_json_uses_selected_source(
+    app, client, auth, monkeypatch
+):
     auth.login()
 
     from y_web.routes.admin.sub.experiments import _external_runtimes as route_mod
@@ -371,13 +405,31 @@ def test_external_runtime_acquire_json_uses_selected_source(app, client, auth, m
 
     called = {}
 
-    monkeypatch.setattr(route_mod, "_require_admin_user", lambda: SimpleNamespace(username="admin"))
+    monkeypatch.setattr(
+        route_mod, "_require_admin_user", lambda: SimpleNamespace(username="admin")
+    )
     monkeypatch.setattr(route_mod, "runtime_spec", lambda repo_key: _Spec())
     monkeypatch.setattr(route_mod, "runtime_visible_to_user", lambda spec, user: True)
-    monkeypatch.setattr(route_mod, "_runtime_group_active_experiments", lambda group: [])
-    monkeypatch.setattr(route_mod, "clone_runtime_repo", lambda repo_key, branch, actor: called.update({"repo_key": repo_key, "branch": branch, "actor": actor}))
-    monkeypatch.setattr(route_mod, "download_runtime_release", lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("download should not be called")))
-    monkeypatch.setattr(route_mod, "log_external_runtime_action", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        route_mod, "_runtime_group_active_experiments", lambda group: []
+    )
+    monkeypatch.setattr(
+        route_mod,
+        "clone_runtime_repo",
+        lambda repo_key, branch, actor: called.update(
+            {"repo_key": repo_key, "branch": branch, "actor": actor}
+        ),
+    )
+    monkeypatch.setattr(
+        route_mod,
+        "download_runtime_release",
+        lambda *args, **kwargs: (_ for _ in ()).throw(
+            AssertionError("download should not be called")
+        ),
+    )
+    monkeypatch.setattr(
+        route_mod, "log_external_runtime_action", lambda *args, **kwargs: None
+    )
 
     with app.test_request_context(
         "/admin/external_runtimes/test_runtime/acquire",
@@ -388,7 +440,9 @@ def test_external_runtime_acquire_json_uses_selected_source(app, client, auth, m
             "Accept": "application/json",
         },
     ):
-        response = route_mod.external_runtime_action.__wrapped__("test_runtime", "acquire")
+        response = route_mod.external_runtime_action.__wrapped__(
+            "test_runtime", "acquire"
+        )
 
     assert response.status_code == 200
     payload = response.get_json()
@@ -405,7 +459,9 @@ def test_external_runtime_acquire_json_uses_selected_source(app, client, auth, m
         ("validate", "validate_runtime_repo", None),
     ],
 )
-def test_external_runtime_action_json_variants(app, client, auth, monkeypatch, action_name, callable_name, expected_branch):
+def test_external_runtime_action_json_variants(
+    app, client, auth, monkeypatch, action_name, callable_name, expected_branch
+):
     auth.login()
 
     from y_web.routes.admin.sub.experiments import _external_runtimes as route_mod
@@ -422,10 +478,14 @@ def test_external_runtime_action_json_variants(app, client, auth, monkeypatch, a
 
     called = {}
 
-    monkeypatch.setattr(route_mod, "_require_admin_user", lambda: SimpleNamespace(username="admin"))
+    monkeypatch.setattr(
+        route_mod, "_require_admin_user", lambda: SimpleNamespace(username="admin")
+    )
     monkeypatch.setattr(route_mod, "runtime_spec", lambda repo_key: _Spec())
     monkeypatch.setattr(route_mod, "runtime_visible_to_user", lambda spec, user: True)
-    monkeypatch.setattr(route_mod, "_runtime_group_active_experiments", lambda group: [])
+    monkeypatch.setattr(
+        route_mod, "_runtime_group_active_experiments", lambda group: []
+    )
 
     def _tracker(repo_key, *args, **kwargs):
         called["repo_key"] = repo_key
@@ -433,7 +493,9 @@ def test_external_runtime_action_json_variants(app, client, auth, monkeypatch, a
         called["kwargs"] = kwargs
 
     monkeypatch.setattr(route_mod, callable_name, _tracker)
-    monkeypatch.setattr(route_mod, "log_external_runtime_action", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        route_mod, "log_external_runtime_action", lambda *args, **kwargs: None
+    )
 
     request_data = {"branch": "develop"} if expected_branch is not None else {}
     with app.test_request_context(
@@ -445,7 +507,9 @@ def test_external_runtime_action_json_variants(app, client, auth, monkeypatch, a
             "Accept": "application/json",
         },
     ):
-        response = route_mod.external_runtime_action.__wrapped__("test_runtime", action_name)
+        response = route_mod.external_runtime_action.__wrapped__(
+            "test_runtime", action_name
+        )
 
     assert response.status_code == 200
     payload = response.get_json()
@@ -453,7 +517,9 @@ def test_external_runtime_action_json_variants(app, client, auth, monkeypatch, a
     assert called["repo_key"] == "test_runtime"
     if expected_branch is not None:
         assert called["args"][0] == expected_branch
-    assert (called["args"] and called["args"][-1] == "admin") or called["kwargs"].get("actor") == "admin"
+    assert (called["args"] and called["args"][-1] == "admin") or called["kwargs"].get(
+        "actor"
+    ) == "admin"
 
 
 def test_external_runtime_github_session_json_response(app, client, auth, monkeypatch):
@@ -461,7 +527,9 @@ def test_external_runtime_github_session_json_response(app, client, auth, monkey
 
     from y_web.routes.admin.sub.experiments import _external_runtimes as route_mod
 
-    monkeypatch.setattr(route_mod, "_require_admin_user", lambda: SimpleNamespace(username="admin"))
+    monkeypatch.setattr(
+        route_mod, "_require_admin_user", lambda: SimpleNamespace(username="admin")
+    )
 
     with app.test_request_context(
         "/admin/external_runtimes/github_session",
