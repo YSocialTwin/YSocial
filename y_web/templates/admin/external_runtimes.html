@@ -1,4 +1,21 @@
 {% include "admin/head.html" %}
+<style>
+    .external-runtime-action-button {
+        width: 100%;
+        min-width: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        box-sizing: border-box;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        padding: 0.45rem 0.5rem;
+        font-size: 0.8rem;
+        line-height: 1.1;
+        min-height: 2.5rem;
+    }
+</style>
 
 <div class="view-wrapper is-dashboard">
     <div id="creator-dashboard" class="dashboard-container">
@@ -180,7 +197,7 @@
                                                                     {% if repo.exists %}
                                                                     <button type="button"
                                                                             class="button is-light"
-                                                                            style="width: 100%; min-width: 0; display: flex; justify-content: center; align-items: center; text-align: center; box-sizing: border-box; white-space: normal; overflow-wrap: anywhere; padding: 0.45rem 0.5rem; font-size: 0.8rem; line-height: 1.1; min-height: 2.5rem;"
+                                                                            class="button is-light external-runtime-action-button"
                                                                             data-external-runtime-delete
                                                                             data-delete-url="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='delete') }}"
                                                                             data-repo-key="{{ repo.key }}"
@@ -188,7 +205,7 @@
                                                                         Delete
                                                                     </button>
                                                                     {% endif %}
-                                                                    <a href="{{ url_for('experiments.external_runtime_logs', repo_key=repo.key) }}" class="button is-light" style="width: 100%; min-width: 0; display: flex; justify-content: center; align-items: center; text-align: center; box-sizing: border-box; white-space: normal; overflow-wrap: anywhere; padding: 0.45rem 0.5rem; font-size: 0.8rem; line-height: 1.1; min-height: 2.5rem;">
+                                                                    <a href="{{ url_for('experiments.external_runtime_logs', repo_key=repo.key) }}" class="button is-light external-runtime-action-button">
                                                                         View Logs
                                                                     </a>
                                                                 </div>
@@ -197,10 +214,10 @@
                                                             <div style="display: grid; gap: 8px;">
                                                                 <div class="ys-text-xs-hint" style="text-transform: uppercase; letter-spacing: 0.04em;">Maintenance</div>
                                                                 <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;">
-                                                                    <button type="button" class="button is-light" style="width: 100%; min-width: 0; display: flex; justify-content: center; align-items: center; text-align: center; box-sizing: border-box; white-space: normal; overflow-wrap: anywhere; padding: 0.45rem 0.5rem; font-size: 0.8rem; line-height: 1.1; min-height: 2.5rem;" data-external-runtime-action-button="install" data-action-url="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='install') }}" data-repo-key="{{ repo.key }}" data-repo-label="{{ repo.label }}">
+                                                                    <button type="button" class="button is-light external-runtime-action-button" data-external-runtime-action-button="install" data-action-url="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='install') }}" data-repo-key="{{ repo.key }}" data-repo-label="{{ repo.label }}">
                                                                         Install Dependencies
                                                                     </button>
-                                                                    <button type="button" class="button is-light" style="width: 100%; min-width: 0; display: flex; justify-content: center; align-items: center; text-align: center; box-sizing: border-box; white-space: normal; overflow-wrap: anywhere; padding: 0.45rem 0.5rem; font-size: 0.8rem; line-height: 1.1; min-height: 2.5rem;" data-external-runtime-action-button="validate" data-action-url="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='validate') }}" data-repo-key="{{ repo.key }}" data-repo-label="{{ repo.label }}">
+                                                                    <button type="button" class="button is-light external-runtime-action-button" data-external-runtime-action-button="validate" data-action-url="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='validate') }}" data-repo-key="{{ repo.key }}" data-repo-label="{{ repo.label }}">
                                                                         Validate
                                                                     </button>
                                                                 </div>
@@ -246,8 +263,7 @@
 
                                                         <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;">
                                                             <button type="button"
-                                                                    class="button is-solid primary-button"
-                                                                    style="width: 100%; min-width: 0; display: flex; justify-content: center; align-items: center; text-align: center; box-sizing: border-box; white-space: normal; overflow-wrap: anywhere; padding: 0.45rem 0.5rem; font-size: 0.8rem; line-height: 1.1; min-height: 2.5rem;"
+                                                                    class="button is-solid primary-button external-runtime-action-button"
                                                                     data-external-runtime-install
                                                                     data-install-url="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='acquire') }}"
                                                                     data-repo-key="{{ repo.key }}"
@@ -271,10 +287,10 @@
                                                                         <option value="{{ branch_name }}" {% if branch_name == (repo.current_branch or repo.default_branch) %}selected{% endif %}>{{ branch_name }}</option>
                                                                         {% endfor %}
                                                                     </select>
-                                                                    <button type="button" class="button is-light" style="width: 100%; min-width: 0; display: flex; justify-content: center; align-items: center; text-align: center; box-sizing: border-box; white-space: normal; overflow-wrap: anywhere; padding: 0.45rem 0.5rem; font-size: 0.8rem; line-height: 1.1; min-height: 2.5rem;" data-external-runtime-action-button="fetch" data-action-url="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='fetch') }}" data-repo-key="{{ repo.key }}" data-repo-label="{{ repo.label }}">
+                                                                    <button type="button" class="button is-light external-runtime-action-button" data-external-runtime-action-button="fetch" data-action-url="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='fetch') }}" data-repo-key="{{ repo.key }}" data-repo-label="{{ repo.label }}">
                                                                         Fetch
                                                                     </button>
-                                                                    <button type="button" class="button is-light" style="width: 100%; min-width: 0; display: flex; justify-content: center; align-items: center; text-align: center; box-sizing: border-box; white-space: normal; overflow-wrap: anywhere; padding: 0.45rem 0.5rem; font-size: 0.8rem; line-height: 1.1; min-height: 2.5rem;" {% if repo.dirty %}disabled{% endif %} title="{% if repo.dirty %}Clean the worktree before updating.{% endif %}" data-external-runtime-action-button="update" data-action-url="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='update') }}" data-repo-key="{{ repo.key }}" data-repo-label="{{ repo.label }}">
+                                                                    <button type="button" class="button is-light external-runtime-action-button" {% if repo.dirty %}disabled{% endif %} title="{% if repo.dirty %}Clean the worktree before updating.{% endif %}" data-external-runtime-action-button="update" data-action-url="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='update') }}" data-repo-key="{{ repo.key }}" data-repo-label="{{ repo.label }}">
                                                                         Update
                                                                     </button>
                                                                 </div>
