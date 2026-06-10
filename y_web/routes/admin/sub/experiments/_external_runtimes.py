@@ -81,9 +81,15 @@ def _wants_json_response() -> bool:
     return "application/json" in accept or requested_with == "xmlhttprequest"
 
 
-def _external_runtimes_response(*, repo_key: str | None = None, status: str = "ok", message: str = ""):
+def _external_runtimes_response(
+    *,
+    repo_key: str | None = None,
+    status: str = "ok",
+    message: str = "",
+    preserve_repo_key: bool = True,
+):
     refresh_url = "/admin/external_runtimes"
-    if repo_key:
+    if repo_key and preserve_repo_key:
         refresh_url = f"{refresh_url}?repo_key={repo_key}"
     if _wants_json_response():
         payload = {
@@ -388,6 +394,7 @@ def external_runtime_action(repo_key: str, action: str):
     return _external_runtimes_response(
         repo_key=repo_key,
         message=f"{spec.label} action completed.",
+        preserve_repo_key=(action != "delete"),
     )
 
 
