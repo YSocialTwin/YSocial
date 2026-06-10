@@ -396,6 +396,90 @@ def test_external_runtime_acquire_json_uses_selected_source(app, client, auth, m
     assert called == {"repo_key": "test_runtime", "branch": "develop", "actor": "admin"}
 
 
+@pytest.mark.parametrize(
+    "action_name,callable_name,expected_branch",
+    [
+        ("fetch", "fetch_runtime_repo", "develop"),
+        ("update", "update_runtime_repo", "develop"),
+        ("install", "install_runtime_dependencies", None),
+        ("validate", "validate_runtime_repo", None),
+    ],
+)
+def test_external_runtime_action_json_variants(app, client, auth, monkeypatch, action_name, callable_name, expected_branch):
+    auth.login()
+
+    from y_web.routes.admin.sub.experiments import _external_runtimes as route_mod
+
+    class _Spec:
+        key = "test_runtime"
+        group = "hpc"
+        group_label = "HPC"
+        label = "TestRuntime"
+        default_branch = "main"
+        repo_url = "https://example.test/repo.git"
+        github_repo = "YSocialTwin/TestRuntime"
+        releases_enabled = False
+
+    called = {}
+
+    monkeypatch.setattr(route_mod, "_require_admin_user", lambda: SimpleNamespace(username="admin"))
+    monkeypatch.setattr(route_mod, "runtime_spec", lambda repo_key: _Spec())
+    monkeypatch.setattr(route_mod, "runtime_visible_to_user", lambda spec, user: True)
+    monkeypatch.setattr(route_mod, "_runtime_group_active_experiments", lambda group: [])
+
+    def _tracker(repo_key, *args, **kwargs):
+        called["repo_key"] = repo_key
+        called["args"] = args
+        called["kwargs"] = kwargs
+
+    monkeypatch.setattr(route_mod, callable_name, _tracker)
+    monkeypatch.setattr(route_mod, "log_external_runtime_action", lambda *args, **kwargs: None)
+
+    request_data = {"branch": "develop"} if expected_branch is not None else {}
+    with app.test_request_context(
+        f"/admin/external_runtimes/test_runtime/{action_name}",
+        method="POST",
+        data=request_data,
+        headers={
+            "X-Requested-With": "XMLHttpRequest",
+            "Accept": "application/json",
+        },
+    ):
+        response = route_mod.external_runtime_action.__wrapped__("test_runtime", action_name)
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["status"] == "ok"
+    assert called["repo_key"] == "test_runtime"
+    if expected_branch is not None:
+        assert called["args"][0] == expected_branch
+    assert (called["args"] and called["args"][-1] == "admin") or called["kwargs"].get("actor") == "admin"
+
+
+def test_external_runtime_github_session_json_response(app, client, auth, monkeypatch):
+    auth.login()
+
+    from y_web.routes.admin.sub.experiments import _external_runtimes as route_mod
+
+    monkeypatch.setattr(route_mod, "_require_admin_user", lambda: SimpleNamespace(username="admin"))
+
+    with app.test_request_context(
+        "/admin/external_runtimes/github_session",
+        method="POST",
+        data={"github_session_action": "disconnect"},
+        headers={
+            "X-Requested-With": "XMLHttpRequest",
+            "Accept": "application/json",
+        },
+    ):
+        response = route_mod.external_runtime_github_session.__wrapped__()
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["status"] == "ok"
+    assert payload["redirect_url"] == "/admin/external_runtimes"
+
+
 def test_runtime_visibility_respects_private_allowlist(monkeypatch):
     spec = registry.ExternalRuntimeSpec(
         key="private_runtime",
