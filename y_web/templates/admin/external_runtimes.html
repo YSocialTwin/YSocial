@@ -386,6 +386,26 @@
         }
     }
 
+    function buildRuntimeActionPayload(button) {
+        const form = button.closest('form');
+        if (form instanceof HTMLFormElement) {
+            const payload = new FormData(form);
+            const branchSelect = button.closest('details[data-runtime-repo]')?.querySelector('[data-external-runtime-branch-select]');
+            if (branchSelect instanceof HTMLSelectElement && !payload.has('branch')) {
+                payload.append('branch', branchSelect.value);
+            }
+            return payload;
+        }
+
+        const payload = new FormData();
+        const repoCard = button.closest('details[data-runtime-repo]');
+        const branchSelect = repoCard?.querySelector('[data-external-runtime-branch-select]');
+        if (branchSelect instanceof HTMLSelectElement) {
+            payload.set('branch', branchSelect.value);
+        }
+        return payload;
+    }
+
     async function submitRuntimeForm(event) {
         const form = event.target;
         if (!(form instanceof HTMLFormElement)) {
@@ -525,11 +545,6 @@
             return;
         }
 
-        const form = button.closest('form');
-        if (!(form instanceof HTMLFormElement)) {
-            return;
-        }
-
         const actionUrl = button.dataset.actionUrl || '';
         const actionName = button.dataset.externalRuntimeActionButton || '';
         const repoKey = button.dataset.repoKey || '';
@@ -543,7 +558,7 @@
         try {
             const response = await fetch(actionUrl, {
                 method: 'POST',
-                body: new FormData(form),
+                body: buildRuntimeActionPayload(button),
                 credentials: 'same-origin',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
