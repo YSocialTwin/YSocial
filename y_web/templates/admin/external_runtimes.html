@@ -175,13 +175,14 @@
                                                     {% endif %}
                                                     <div style="display: flex; flex-wrap: wrap; gap: 8px;">
                                                         {% if repo.exists %}
-                                                        <form method="POST" action="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='delete') }}" data-external-runtime-async="1" data-external-runtime-refresh="1" onsubmit="showLoading('Running external runtime action...');">
-                                                            <button type="submit"
-                                                                    class="button is-light"
-                                                                    onclick="return confirm('Delete {{ repo.label }} from external/? This removes the local plugin files.');">
-                                                                Delete
-                                                            </button>
-                                                        </form>
+                                                        <button type="button"
+                                                                class="button is-light"
+                                                                data-external-runtime-delete
+                                                                data-delete-url="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='delete') }}"
+                                                                data-repo-key="{{ repo.key }}"
+                                                                data-repo-label="{{ repo.label }}">
+                                                            Delete
+                                                        </button>
                                                         {% endif %}
                                                         <a href="{{ url_for('experiments.external_runtime_logs', repo_key=repo.key) }}" class="button is-light">
                                                             View Logs
@@ -190,7 +191,7 @@
                                                 </div>
                                             </div>
 
-                                            <form method="POST" action="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='acquire') }}" style="display: grid; gap: 12px;" data-external-runtime-async="1" data-external-runtime-refresh="1" onsubmit="showLoading('Running external runtime action...');">
+                                            <form method="POST" action="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='acquire') }}" style="display: grid; gap: 12px;" data-external-runtime-async="1" data-external-runtime-action="acquire" data-repo-key="{{ repo.key }}" onsubmit="showLoading('Running external runtime action...');">
                                                 <div class="ys-text-sm-dark" style="font-weight: 700;">Installation source</div>
                                                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px;">
                                                     <label style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px; background: #f8fafc; display: grid; gap: 6px;">
@@ -225,7 +226,13 @@
                                                 </div>
 
                                                 <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                                                    <button type="submit" class="button is-solid primary-button" {% if repo.installed %}disabled{% endif %}>
+                                                    <button type="button"
+                                                            class="button is-solid primary-button"
+                                                            {% if repo.installed %}disabled{% endif %}
+                                                            data-external-runtime-install
+                                                            data-install-url="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='acquire') }}"
+                                                            data-repo-key="{{ repo.key }}"
+                                                            data-repo-label="{{ repo.label }}">
                                                         Install Plugin
                                                     </button>
                                                     {% if repo.installed %}
@@ -243,7 +250,7 @@
                                                 <summary style="cursor: pointer; font-weight: 700; color: #111827;">Advanced maintenance</summary>
                                                 <div style="display: grid; gap: 10px; margin-top: 12px;">
                                                     <div class="ys-text-xs-hint">Available only for git-managed plugins. Release-installed plugins must be deleted and reinstalled if you want a git checkout.</div>
-                                                    <form method="POST" action="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='fetch') }}" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;" data-external-runtime-async="1" data-external-runtime-refresh="1" onsubmit="showLoading('Running external runtime action...');">
+                                                    <form method="POST" action="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='fetch') }}" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;" data-external-runtime-async="1" data-external-runtime-action="fetch" data-repo-key="{{ repo.key }}" onsubmit="showLoading('Running external runtime action...');">
                                                         <select name="branch" class="input" style="min-width: 220px;">
                                                             {% for branch_name in repo.available_branches %}
                                                             <option value="{{ branch_name }}" {% if branch_name == (repo.current_branch or repo.default_branch) %}selected{% endif %}>{{ branch_name }}</option>
@@ -365,6 +372,15 @@
         replaceDashboardFromDocument(doc);
     }
 
+    function removeRuntimeCard(repoKey) {
+        if (!repoKey) return;
+        const escapedKey = CSS && CSS.escape ? CSS.escape(repoKey) : repoKey;
+        const card = document.querySelector(`details[data-runtime-repo] form[data-repo-key="${escapedKey}"]`)?.closest('details[data-runtime-repo]');
+        if (card) {
+            card.remove();
+        }
+    }
+
     async function submitRuntimeForm(event) {
         const form = event.target;
         if (!(form instanceof HTMLFormElement)) {
@@ -396,8 +412,87 @@
             throw new Error(payload.message || 'External runtime action failed.');
         }
 
+        if ((form.dataset.externalRuntimeAction || '') === 'delete') {
+            removeRuntimeCard(form.dataset.repoKey || '');
+        }
+
         const refreshUrl = payload.redirect_url || window.location.href;
         await refreshDashboard(refreshUrl);
+    }
+
+    async function handleDeleteClick(event) {
+        const button = event.target.closest('[data-external-runtime-delete]');
+        if (!(button instanceof HTMLButtonElement)) {
+            return;
+        }
+
+        const deleteUrl = button.dataset.deleteUrl || '';
+        const repoKey = button.dataset.repoKey || '';
+        const repoLabel = button.dataset.repoLabel || repoKey || 'this runtime';
+        if (!deleteUrl) {
+            return;
+        }
+
+        if (!window.confirm(`Delete ${repoLabel} from external/? This removes the local plugin files.`)) {
+            return;
+        }
+
+        event.preventDefault();
+        showLoading('Running external runtime action...');
+
+        const response = await fetch(deleteUrl, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(payload.message || 'External runtime delete failed.');
+        }
+
+        removeRuntimeCard(repoKey);
+        await refreshDashboard(payload.redirect_url || '/admin/external_runtimes');
+    }
+
+    async function handleInstallClick(event) {
+        const button = event.target.closest('[data-external-runtime-install]');
+        if (!(button instanceof HTMLButtonElement)) {
+            return;
+        }
+
+        const form = button.closest('form');
+        if (!(form instanceof HTMLFormElement)) {
+            return;
+        }
+
+        const installUrl = button.dataset.installUrl || '';
+        const repoKey = button.dataset.repoKey || '';
+        const repoLabel = button.dataset.repoLabel || repoKey || 'this runtime';
+        if (!installUrl) {
+            return;
+        }
+
+        event.preventDefault();
+        showLoading('Running external runtime action...');
+
+        const response = await fetch(installUrl, {
+            method: 'POST',
+            body: new FormData(form),
+            credentials: 'same-origin',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(payload.message || `Failed to install ${repoLabel}.`);
+        }
+
+        await refreshDashboard(payload.redirect_url || '/admin/external_runtimes');
     }
 
     document.addEventListener('submit', function(event) {
@@ -409,6 +504,27 @@
             return;
         }
         submitRuntimeForm(event).catch((error) => {
+            console.error(error);
+            window.location.reload();
+        });
+    }, true);
+
+    document.addEventListener('click', function(event) {
+        const target = event.target;
+        if (!(target instanceof Element)) {
+            return;
+        }
+        if (target.closest('[data-external-runtime-install]')) {
+            handleInstallClick(event).catch((error) => {
+                console.error(error);
+                window.location.reload();
+            });
+            return;
+        }
+        if (!target.closest('[data-external-runtime-delete]')) {
+            return;
+        }
+        handleDeleteClick(event).catch((error) => {
             console.error(error);
             window.location.reload();
         });
