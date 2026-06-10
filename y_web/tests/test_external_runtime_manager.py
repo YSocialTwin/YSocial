@@ -309,6 +309,51 @@ def test_external_runtime_delete_json_refreshes_base_page(app, client, auth, mon
     assert payload["redirect_url"] == "/admin/external_runtimes"
 
 
+def test_external_runtime_delete_is_not_blocked_by_active_experiments(app, client, auth, monkeypatch):
+    auth.login()
+
+    from y_web.routes.admin.sub.experiments import _external_runtimes as route_mod
+
+    class _Spec:
+        key = "test_runtime"
+        group = "hpc"
+        group_label = "HPC"
+        label = "TestRuntime"
+        default_branch = "main"
+        repo_url = "https://example.test/repo.git"
+        github_repo = "YSocialTwin/TestRuntime"
+        releases_enabled = False
+
+    called = {}
+
+    monkeypatch.setattr(route_mod, "_require_admin_user", lambda: SimpleNamespace(username="admin"))
+    monkeypatch.setattr(route_mod, "runtime_spec", lambda repo_key: _Spec())
+    monkeypatch.setattr(route_mod, "runtime_visible_to_user", lambda spec, user: True)
+    monkeypatch.setattr(route_mod, "_runtime_group_active_experiments", lambda group: [SimpleNamespace(exp_name="running-exp")])
+
+    def _delete(repo_key, actor):
+        called["repo_key"] = repo_key
+        called["actor"] = actor
+
+    monkeypatch.setattr(route_mod, "delete_runtime_repo", _delete)
+    monkeypatch.setattr(route_mod, "log_external_runtime_action", lambda *args, **kwargs: None)
+
+    with app.test_request_context(
+        "/admin/external_runtimes/test_runtime/delete",
+        method="POST",
+        headers={
+            "X-Requested-With": "XMLHttpRequest",
+            "Accept": "application/json",
+        },
+    ):
+        response = route_mod.external_runtime_action.__wrapped__("test_runtime", "delete")
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["status"] == "ok"
+    assert called == {"repo_key": "test_runtime", "actor": "admin"}
+
+
 def test_runtime_visibility_respects_private_allowlist(monkeypatch):
     spec = registry.ExternalRuntimeSpec(
         key="private_runtime",

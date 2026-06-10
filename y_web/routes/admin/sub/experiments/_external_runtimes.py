@@ -315,7 +315,6 @@ def external_runtime_action(repo_key: str, action: str):
         "fetch",
         "update",
         "install",
-        "delete",
     }:
         active_experiments = _runtime_group_active_experiments(spec.group)
         if active_experiments:
