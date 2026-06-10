@@ -266,18 +266,18 @@
                                                     <div style="display: grid; gap: 8px;">
                                                         <div class="ys-text-xs-hint" style="text-transform: uppercase; letter-spacing: 0.04em;">Git controls</div>
                                                         <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
-                                                        <select name="branch" class="input" style="min-width: 220px;" data-external-runtime-branch-select="{{ repo.key }}">
-                                                            {% for branch_name in repo.available_branches %}
-                                                            <option value="{{ branch_name }}" {% if branch_name == (repo.current_branch or repo.default_branch) %}selected{% endif %}>{{ branch_name }}</option>
-                                                            {% endfor %}
-                                                        </select>
-                                                        <button type="button" class="button is-light" data-external-runtime-action-button="fetch" data-action-url="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='fetch') }}" data-repo-key="{{ repo.key }}" data-repo-label="{{ repo.label }}">
-                                                            Fetch
-                                                        </button>
-                                                        <button type="button" class="button is-light" {% if repo.dirty %}disabled{% endif %} title="{% if repo.dirty %}Clean the worktree before updating.{% endif %}" data-external-runtime-action-button="update" data-action-url="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='update') }}" data-repo-key="{{ repo.key }}" data-repo-label="{{ repo.label }}">
-                                                            Update
-                                                        </button>
-                                                    </div>
+                                                            <select name="branch" class="input" style="min-width: 220px;" data-external-runtime-branch-select="{{ repo.key }}">
+                                                                {% for branch_name in repo.available_branches %}
+                                                                <option value="{{ branch_name }}" {% if branch_name == (repo.current_branch or repo.default_branch) %}selected{% endif %}>{{ branch_name }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                            <button type="button" class="button is-light" data-external-runtime-action-button="fetch" data-action-url="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='fetch') }}" data-repo-key="{{ repo.key }}" data-repo-label="{{ repo.label }}">
+                                                                Fetch
+                                                            </button>
+                                                            <button type="button" class="button is-light" {% if repo.dirty %}disabled{% endif %} title="{% if repo.dirty %}Clean the worktree before updating.{% endif %}" data-external-runtime-action-button="update" data-action-url="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='update') }}" data-repo-key="{{ repo.key }}" data-repo-label="{{ repo.label }}">
+                                                                Update
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </details>
