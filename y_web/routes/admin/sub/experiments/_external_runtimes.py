@@ -288,21 +288,31 @@ def external_runtime_github_session():
 def external_runtime_action(repo_key: str, action: str):
     admin_user = _require_admin_user()
     if admin_user is None:
-        return _external_runtimes_response(repo_key=repo_key, status="error", message="Unauthorized")
+        return _external_runtimes_response(
+            repo_key=repo_key, status="error", message="Unauthorized"
+        )
 
     if action not in _MUTATING_ACTIONS:
         flash("Unsupported runtime action.", "error")
-        return _external_runtimes_response(repo_key=repo_key, status="error", message="Unsupported runtime action.")
+        return _external_runtimes_response(
+            repo_key=repo_key, status="error", message="Unsupported runtime action."
+        )
 
     try:
         spec = runtime_spec(repo_key)
     except KeyError:
         flash("Unknown external runtime repository.", "error")
-        return _external_runtimes_response(repo_key=repo_key, status="error", message="Unknown external runtime repository.")
+        return _external_runtimes_response(
+            repo_key=repo_key,
+            status="error",
+            message="Unknown external runtime repository.",
+        )
 
     if not runtime_visible_to_user(spec, admin_user):
         flash("You do not have visibility on this plugin repository.", "error")
-        return _external_runtimes_response(repo_key=repo_key, status="error", message="Not visible.")
+        return _external_runtimes_response(
+            repo_key=repo_key, status="error", message="Not visible."
+        )
 
     github_token = _session_github_token()
     branch = (request.form.get("branch") or spec.default_branch).strip()
