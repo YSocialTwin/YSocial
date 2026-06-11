@@ -215,7 +215,7 @@
                                                                 <div class="ys-text-xs-hint" style="text-transform: uppercase; letter-spacing: 0.04em;">Maintenance</div>
                                                                 <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;">
                                                                     <button type="button" class="button is-light external-runtime-action-button" data-external-runtime-action-button="install" data-action-url="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='install') }}" data-repo-key="{{ repo.key }}" data-repo-label="{{ repo.label }}">
-                                                                        Install Dependencies
+                                                                        Dependencies
                                                                     </button>
                                                                     <button type="button" class="button is-light external-runtime-action-button" data-external-runtime-action-button="validate" data-action-url="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='validate') }}" data-repo-key="{{ repo.key }}" data-repo-label="{{ repo.label }}">
                                                                         Validate
@@ -280,7 +280,7 @@
                                                         <div style="display: grid; gap: 10px; margin-top: 12px;">
                                                             <div class="ys-text-xs-hint">Available only for git-managed plugins. Release-installed plugins must be deleted and reinstalled if you want a git checkout.</div>
                                                             <div style="display: grid; gap: 8px;">
-                                                                <div class="ys-text-xs-hint" style="text-transform: uppercase; letter-spacing: 0.04em;">Git controls</div>
+                                                                <!--<div class="ys-text-xs-hint" style="text-transform: uppercase; letter-spacing: 0.04em;">Git controls</div>-->
                                                                 <div style="display: grid; grid-template-columns: minmax(220px, 1.3fr) repeat(2, minmax(0, 1fr)); gap: 8px; align-items: stretch;">
                                                                     <select name="branch" class="input" style="width: 100%; min-width: 0;" data-external-runtime-branch-select="{{ repo.key }}">
                                                                         {% for branch_name in repo.available_branches %}
