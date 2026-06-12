@@ -204,7 +204,9 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
                 profile_pic = _forum_profile_pic(user)
             else:
                 profile_pic = ""
-                if user.is_page == 1:
+                if user is None:
+                    profile_pic = ""
+                elif user.is_page == 1:
                     pg = Page.query.filter_by(name=user.username).first()
                     if page is not None and pg is not None:
                         profile_pic = pg.logo

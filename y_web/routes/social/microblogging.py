@@ -182,6 +182,13 @@ def feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     max_post_per_page = 10
     username = ""
     posts, additional = None, None
+    current_exp_user = User_mgmt.query.filter_by(username=current_user.username).first()
+    if current_exp_user is None:
+        flash(
+            "Your account is not registered in this experiment. Please contact the administrator.",
+            "error",
+        )
+        return redirect("/admin/experiments")
 
     if user_id == "all":
         posts, additional = get_suggested_posts("all", "", page, max_post_per_page)
@@ -207,8 +214,7 @@ def feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     res, res_additional = [], []
 
     # Get experiment user ID for reactions
-    exp_user = User_mgmt.query.filter_by(username=current_user.username).first()
-    exp_user_id = exp_user.id if exp_user else current_user.id
+    exp_user_id = current_exp_user.id
 
     if posts is not None:
         res = _get_discussions(posts, username, page, exp_id, exp_user_id)
@@ -243,9 +249,9 @@ def feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     except:
         profile_pic = ""
 
-    user = User_mgmt.query.filter_by(username=current_user.username).first()
+    user = current_exp_user
     profile_pic_feed = ""
-    if user.is_page == 1:
+    if getattr(user, "is_page", 0) == 1:
         pg = Page.query.filter_by(name=user.username).first()
         if pg is not None:
             profile_pic_feed = pg.logo
@@ -263,11 +269,7 @@ def feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
             profile_pic_feed = ""
 
     # Get experiment user (not admin user)
-    logged_user = User_mgmt.query.filter_by(username=current_user.username).first()
-    if not logged_user:
-        flash("User not found in experiment", "error")
-        return redirect(url_for("main.index"))
-    logged_id = logged_user.id
+    logged_id = current_exp_user.id
 
     return render_template(
         "microblogging/feed.html",

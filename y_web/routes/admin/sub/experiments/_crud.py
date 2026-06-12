@@ -2086,7 +2086,11 @@ def create_experiment():
         if db_type == "sqlite" and simulator_type == "Standard":
             ensure_experiment_schema_for_uri(f"sqlite:///{db_uri}")
         elif db_type == "sqlite" and simulator_type == "HPC":
-            pass  # HPC experiments: database is created automatically by the server on first startup
+            # HPC experiments still need a seeded local database so the admin
+            # account can join the feed immediately after creation. The remote
+            # server may later take over runtime execution, but the bootstrap DB
+            # must already contain the schema and initial user row.
+            ensure_experiment_schema_for_uri(f"sqlite:///{db_uri}")
         elif db_type == "postgresql":
             ensure_experiment_schema_for_uri(db_uri)
         else:
