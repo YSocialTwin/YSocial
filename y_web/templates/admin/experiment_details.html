@@ -335,18 +335,6 @@
                             <!-- Status message area -->
  <div id="remote-status-message" class="ys-hidden-mt10"></div>
                         </div>
-
-                        {% if experiment_db_debug %}
-                        <div class="ys-code-sm" style="margin-top: 12px;">
-                            <div class="ys-label-muted">Experiment DB debug</div>
-                            <div class="ys-text-xs-meta"><strong>Bind key:</strong> {{ experiment_db_debug.bind_key }}</div>
-                            <div class="ys-text-xs-meta"><strong>Bind present:</strong> {{ 'yes' if experiment_db_debug.bind_present else 'no' }}</div>
-                            <div class="ys-text-xs-meta"><strong>User table queryable:</strong> {{ 'yes' if experiment_db_debug.user_mgmt_queryable else 'no' }}</div>
-                            {% if experiment_db_debug.user_mgmt_error %}
-                            <div class="ys-text-xs-meta" style="white-space: pre-wrap;"><strong>Last error:</strong> {{ experiment_db_debug.user_mgmt_error }}</div>
-                            {% endif %}
-                        </div>
-                        {% endif %}
                         
 
                         {% else %}

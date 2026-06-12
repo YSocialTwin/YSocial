@@ -100,7 +100,6 @@ from y_web.src.system.miscellanea import (
     ollama_status,
     reload_current_user,
 )
-from sqlalchemy.exc import OperationalError
 from y_web.src.system.model_cache import (
     get_model_cache_root,
     refresh_detoxify_download_state,
@@ -543,32 +542,6 @@ def experiment_details(uid):
     # get jupyter instance for this experiment if exists
 
     jupyter_instance = Jupyter_instances.query.filter_by(exp_id=uid).first()
-    bind_key = f"db_exp_{uid}"
-    experiment_db_debug = {
-        "bind_key": bind_key,
-        "bind_present": bind_key in current_app.config.get("SQLALCHEMY_BINDS", {}),
-        "user_mgmt_queryable": None,
-        "user_mgmt_error": None,
-    }
-    if experiment_db_debug["bind_present"]:
-        original_bind = current_app.config["SQLALCHEMY_BINDS"].get("db_exp")
-        current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = current_app.config[
-            "SQLALCHEMY_BINDS"
-        ][bind_key]
-        try:
-            db.session.query(User_mgmt.id).limit(1).all()
-            experiment_db_debug["user_mgmt_queryable"] = True
-        except OperationalError as exc:
-            experiment_db_debug["user_mgmt_queryable"] = False
-            experiment_db_debug["user_mgmt_error"] = str(exc)
-        except Exception as exc:
-            experiment_db_debug["user_mgmt_queryable"] = False
-            experiment_db_debug["user_mgmt_error"] = str(exc)
-        finally:
-            if original_bind is not None:
-                current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = original_bind
-    else:
-        experiment_db_debug["user_mgmt_queryable"] = False
 
     # Pass telemetry flag independently to avoid issues with current_user object
     # User is already authenticated due to @login_required decorator
@@ -770,7 +743,6 @@ def experiment_details(uid):
         forum_avatar_settings=forum_avatar_settings,
         forum_feed_health=forum_feed_health,
         hpc_reset_available=hpc_reset_available,
-        experiment_db_debug=experiment_db_debug,
     )
 
 
