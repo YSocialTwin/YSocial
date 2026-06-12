@@ -216,6 +216,20 @@ def test_download_runtime_release_installs_non_git_runtime(
     assert (runtime_repo_spec.path / "testruntime" / "__init__.py").exists()
 
 
+def test_resolve_python_executable_prefers_conda_prefix(monkeypatch, tmp_path):
+    from y_web.src.external_runtime.manager import resolve_python_executable
+
+    candidate = tmp_path / "bin" / "python"
+    candidate.parent.mkdir(parents=True)
+    candidate.touch()
+
+    monkeypatch.setenv("CONDA_PREFIX", str(tmp_path))
+    monkeypatch.delenv("MAMBA_PREFIX", raising=False)
+    monkeypatch.setattr(manager.sys, "executable", "/opt/conda/envs/ysocial/bin/python")
+
+    assert resolve_python_executable() == str(candidate)
+
+
 def test_update_runtime_repo_rejects_release_archive_install(
     runtime_repo_spec, monkeypatch
 ):

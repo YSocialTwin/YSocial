@@ -36,6 +36,20 @@ def host_git_available() -> bool:
     return shutil.which("git") is not None
 
 
+def resolve_python_executable() -> str:
+    """Return the Python interpreter that matches the active conda/micromamba env."""
+    if getattr(sys, "frozen", False):
+        return str(Path(sys.executable).resolve())
+
+    conda_prefix = os.environ.get("CONDA_PREFIX") or os.environ.get("MAMBA_PREFIX")
+    if conda_prefix:
+        candidate = Path(conda_prefix).resolve() / "bin" / "python"
+        if candidate.exists():
+            return str(candidate)
+
+    return str(Path(sys.executable).resolve())
+
+
 @dataclass
 class RuntimeStatus:
     key: str
@@ -542,7 +556,7 @@ def get_runtime_status(
         releases_enabled=bool(releases),
         release_error=release_error or branch_error,
         path_kind=path_kind,
-        python_executable=sys.executable,
+        python_executable=resolve_python_executable(),
         is_private=spec.is_private,
     )
 
@@ -758,9 +772,10 @@ def install_runtime_dependencies(repo_key: str, actor: str) -> None:
     env = os.environ.copy()
     env.setdefault("PIP_DISABLE_PIP_VERSION_CHECK", "1")
     env.setdefault("PYTHONUNBUFFERED", "1")
-    output_parts.append(f"Using interpreter: {sys.executable}")
+    python_executable = resolve_python_executable()
+    output_parts.append(f"Using interpreter: {python_executable}")
     for command in install_commands:
-        resolved = [sys.executable if token == "python" else token for token in command]
+        resolved = [python_executable if token == "python" else token for token in command]
         output_parts.append(
             _run_command(resolved, cwd=spec.path, env=env, timeout=1800)
         )
@@ -800,7 +815,7 @@ def validate_runtime_repo(repo_key: str, actor: str) -> str:
             f"__import__({spec.validate_import!r}); "
             f"print('Imported {spec.validate_import}')"
         )
-        output_parts.append(_run_command([sys.executable, "-c", script], cwd=spec.path))
+        output_parts.append(_run_command([resolve_python_executable(), "-c", script], cwd=spec.path))
     output = "\n".join(part for part in output_parts if part)
     log_external_runtime_action(repo_key, "validate", actor, None, True, output)
     return output

@@ -12,6 +12,7 @@ from .manager import (
     install_runtime_dependencies,
     log_external_runtime_action,
     read_external_runtime_logs,
+    resolve_python_executable,
     update_runtime_repo,
     validate_runtime_repo,
 )
@@ -50,6 +51,7 @@ __all__ = [
     "log_external_runtime_action",
     "plugin_metadata_for_runtime",
     "read_external_runtime_logs",
+    "resolve_python_executable",
     "runtime_spec",
     "runtime_visible_to_user",
     "scan_plugin_info_files",
