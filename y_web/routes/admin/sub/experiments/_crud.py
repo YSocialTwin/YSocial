@@ -33,7 +33,6 @@ from flask import (
     url_for,
 )
 from flask_login import current_user, login_required, login_user
-from sqlalchemy.exc import OperationalError
 
 from y_web import db  # , app
 from y_web.src.content.avatars import normalize_forum_avatar_mode
@@ -612,27 +611,14 @@ def join_experiment(exp_id):
     ][bind_key]
 
     try:
-        try:
-            user = (
-                db.session.query(User_mgmt)
-                .filter_by(username=current_user.username)
-                .first()
-            )
-        except OperationalError as exc:
-            if exp.simulator_type == "HPC" and "no such table: user_mgmt" in str(
-                exc
-            ).lower():
-                flash(
-                    "The HPC experiment database is not ready yet. Try again after YSimulator creates the schema.",
-                    "warning",
-                )
-                return redirect("/admin/experiments")
-            raise
-
+        user = (
+            db.session.query(User_mgmt)
+            .filter_by(username=current_user.username)
+            .first()
+        )
         if not user:
             flash("User not found in experiment database.")
             return redirect("/admin/experiments")
-
         user_id = user.id
     finally:
         current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = old_bind
@@ -729,76 +715,58 @@ def change_active_experiment(exp_id):
                         .filter_by(username=current_user.username)
                         .first()
                     )
-                except OperationalError as exc:
-                    if exp.simulator_type == "HPC" and "no such table: user_mgmt" in str(
-                        exc
-                    ).lower():
-                        current_app.logger.warning(
-                            f"HPC experiment {exp_id} database is not ready yet; "
-                            "user registration will be deferred until YSimulator creates the schema."
-                        )
-                        user = None
-                        skip_user_registration = True
-                    else:
-                        raise
+
+                    if user is None:
+                        # For HPC experiments, we need to use UUID strings as IDs
+                        # Standard experiments use integer IDs with auto-increment
+                        if exp.simulator_type == "HPC":
+                            # Generate a UUID string for HPC user ID
+                            user_id = str(uuid.uuid4())
+                            current_app.logger.info(
+                                f"Assigning HPC user UUID {user_id} to {current_user.username} for experiment {exp_id}"
+                            )
+                        else:
+                            # For Standard experiments, use the admin user's ID (auto-increment behavior)
+                            user_id = current_user.id
+
+                        try:
+                            # Set recsys_type based on experiment type
+                            # HPC experiments use rchrono, Standard use default
+                            content_recsys = (
+                                "rchrono" if exp.simulator_type == "HPC" else "default"
+                            )
+
+                            new_user = User_mgmt(
+                                id=user_id,
+                                email=current_user.email,
+                                username=current_user.username,
+                                password=current_user.password,
+                                user_type="user",
+                                leaning="neutral",
+                                age=0,
+                                recsys_type=content_recsys,
+                                language="en",
+                                frecsys_type="default",
+                                round_actions=1,
+                                toxicity="no",
+                                joined_on=int(time.time()),
+                                cover_image=random_cover_image_url(),
+                            )
+                            db.session.add(new_user)
+                            db.session.commit()
+                        except Exception as e:
+                            db.session.rollback()
+                            # If IntegrityError due to duplicate ID, log and re-raise
+                            current_app.logger.error(
+                                f"Error adding user {current_user.username} to experiment {exp_id}: {e}"
+                            )
+                            flash(
+                                f"Error activating experiment: {str(e)}. Please try again."
+                            )
+                            raise
                 finally:
                     # Restore old bind
                     current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = old_bind
-
-            if user is None:
-                # For HPC experiments, we need to use UUID strings as IDs
-                # Standard experiments use integer IDs with auto-increment
-                if exp.simulator_type == "HPC":
-                    # Generate a UUID string for HPC user ID
-                    user_id = str(uuid.uuid4())
-                    current_app.logger.info(
-                        f"Assigning HPC user UUID {user_id} to {current_user.username} for experiment {exp_id}"
-                    )
-                else:
-                    # For Standard experiments, use the admin user's ID (auto-increment behavior)
-                    user_id = current_user.id
-
-                try:
-                    # Set recsys_type based on experiment type
-                    # HPC experiments use rchrono, Standard use default
-                    content_recsys = "rchrono" if exp.simulator_type == "HPC" else "default"
-
-                    new_user = User_mgmt(
-                        id=user_id,
-                        email=current_user.email,
-                        username=current_user.username,
-                        password=current_user.password,
-                        user_type="user",
-                        leaning="neutral",
-                        age=0,
-                        recsys_type=content_recsys,
-                        language="en",
-                        frecsys_type="default",
-                        round_actions=1,
-                        toxicity="no",
-                        joined_on=int(time.time()),
-                        cover_image=random_cover_image_url(),
-                    )
-                    db.session.add(new_user)
-                    db.session.commit()
-                except Exception as e:
-                    db.session.rollback()
-                    # If IntegrityError due to duplicate ID, log and re-raise
-                    current_app.logger.error(
-                        f"Error adding user {current_user.username} to experiment {exp_id}: {e}"
-                    )
-                    flash(f"Error activating experiment: {str(e)}. Please try again.")
-                    raise
-
-        if skip_user_registration:
-            flash(
-                "The HPC experiment database is not ready yet. The experiment was activated, but the account will be added once YSimulator creates the schema.",
-                "warning",
-            )
-            admin_user = Admin_users.query.filter_by(username=uname).first()
-            if admin_user:
-                login_user(admin_user, remember=True, force=True)
-            return redirect("/admin/dashboard")
 
         # Add user to experiment if not present
         user_exp = (
