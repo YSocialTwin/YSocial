@@ -326,7 +326,8 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
 
     total_posts = Post.query.filter_by(user_id=user_id, comment_to=-1).count()
     total_comments = Post.query.filter(
-        Post.user_id == user_id, and_(Post.comment_to.isnot(None), Post.comment_to != -1)
+        Post.user_id == user_id,
+        and_(Post.comment_to.isnot(None), Post.comment_to != -1),
     ).count()
     total_likes = Reactions.query.filter_by(user_id=user_id, type="like").count()
     total_dislikes = Reactions.query.filter_by(user_id=user_id, type="dislike").count()

@@ -6,8 +6,7 @@ the social media feed including reverse chronological, popularity-based,
 follower-based, and random sampling approaches.
 """
 
-from sqlalchemy import desc
-from sqlalchemy import or_
+from sqlalchemy import desc, or_
 from sqlalchemy.sql.expression import func
 
 from y_web import db

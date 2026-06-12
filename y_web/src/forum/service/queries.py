@@ -42,6 +42,8 @@ from y_web.src.forum.service.formatters import (
 
 def _root_post_filter(column):
     return or_(column.is_(None), column == -1)
+
+
 from y_web.src.models import (
     Articles,
     ImagePosts,
@@ -858,7 +860,9 @@ def fetch_feed_page(
         f"[DEBUG] fetch_feed_page called with feed_type={feed_type}, page={page}, per_page={per_page}\n"
     )
     sys.stderr.flush()
-    base_query = db.session.query(Post).filter(_root_post_filter(Post.comment_to)).options()
+    base_query = (
+        db.session.query(Post).filter(_root_post_filter(Post.comment_to)).options()
+    )
     base_query = _apply_community_filter(base_query, community_slug)
 
     if feed_user_id is not None:
@@ -1169,9 +1173,7 @@ def fetch_thread(post_id: int, viewer_id: int) -> Dict[str, Any]:
 
         post_payloads[thread_post.id] = payload
         parent_id = (
-            thread_post.comment_to
-            if thread_post.comment_to not in (-1, None)
-            else None
+            thread_post.comment_to if thread_post.comment_to not in (-1, None) else None
         )
 
         if thread_post.id not in post_children:
