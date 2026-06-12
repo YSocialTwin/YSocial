@@ -287,14 +287,12 @@ def run(config_path: Path, state_path: Path) -> int:
             return 0
 
         agent.setup_database(database, connection)
-        client_agent = _build_client_agent_spec(config)
-        combined_agents = tuple(managed_agents) + (client_agent,)
         _run_with_sqlite_retry(
             logger,
             connection,
             "register_agents",
             lambda: database.register_agents(
-                connection, combined_agents, joined_on=current_round.id
+                connection, managed_agents, joined_on=current_round.id
             ),
         )
 
