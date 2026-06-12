@@ -368,10 +368,12 @@ def external_runtime_action(repo_key: str, action: str):
         )
 
     try:
+        installed_now = False
         if action == "acquire":
             if install_source == "git":
                 clone_runtime_repo(repo_key, branch, admin_user.username)
                 flash(f"Cloned {spec.label} on branch {branch}.", "success")
+                installed_now = True
             else:
                 download_runtime_release(
                     repo_key,
@@ -383,6 +385,7 @@ def external_runtime_action(repo_key: str, action: str):
                     f"Installed {spec.label} from GitHub release {release_tag or 'latest available release'}.",
                     "success",
                 )
+                installed_now = True
         elif action == "download_release":
             download_runtime_release(
                 repo_key,
@@ -394,9 +397,11 @@ def external_runtime_action(repo_key: str, action: str):
                 f"Installed {spec.label} from GitHub release {release_tag or 'latest available release'}.",
                 "success",
             )
+            installed_now = True
         elif action == "clone":
             clone_runtime_repo(repo_key, branch, admin_user.username)
             flash(f"Cloned {spec.label} on branch {branch}.", "success")
+            installed_now = True
         elif action == "fetch":
             fetch_runtime_repo(repo_key, branch, admin_user.username)
             flash(f"Fetched {spec.label} from branch {branch}.", "success")
@@ -412,6 +417,12 @@ def external_runtime_action(repo_key: str, action: str):
         elif action == "delete":
             delete_runtime_repo(repo_key, admin_user.username)
             flash(f"Deleted {spec.label}.", "success")
+
+        if installed_now:
+            install_runtime_dependencies(repo_key, admin_user.username)
+            flash(f"Installed dependencies for {spec.label}.", "success")
+            validate_runtime_repo(repo_key, admin_user.username)
+            flash(f"Validated {spec.label}.", "success")
     except ExternalRuntimeError as exc:
         log_external_runtime_action(
             repo_key,

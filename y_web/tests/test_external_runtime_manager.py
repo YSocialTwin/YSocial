@@ -428,6 +428,16 @@ def test_external_runtime_acquire_json_uses_selected_source(
         ),
     )
     monkeypatch.setattr(
+        route_mod,
+        "install_runtime_dependencies",
+        lambda repo_key, actor: called.update({"install_repo_key": repo_key, "install_actor": actor}),
+    )
+    monkeypatch.setattr(
+        route_mod,
+        "validate_runtime_repo",
+        lambda repo_key, actor: called.update({"validate_repo_key": repo_key, "validate_actor": actor}),
+    )
+    monkeypatch.setattr(
         route_mod, "log_external_runtime_action", lambda *args, **kwargs: None
     )
 
@@ -447,7 +457,13 @@ def test_external_runtime_acquire_json_uses_selected_source(
     assert response.status_code == 200
     payload = response.get_json()
     assert payload["status"] == "ok"
-    assert called == {"repo_key": "test_runtime", "branch": "develop", "actor": "admin"}
+    assert called["repo_key"] == "test_runtime"
+    assert called["branch"] == "develop"
+    assert called["actor"] == "admin"
+    assert called["install_repo_key"] == "test_runtime"
+    assert called["install_actor"] == "admin"
+    assert called["validate_repo_key"] == "test_runtime"
+    assert called["validate_actor"] == "admin"
 
 
 @pytest.mark.parametrize(
@@ -494,6 +510,16 @@ def test_external_runtime_action_json_variants(
 
     monkeypatch.setattr(route_mod, callable_name, _tracker)
     monkeypatch.setattr(
+        route_mod,
+        "install_runtime_dependencies",
+        lambda repo_key, actor: called.update({"install_repo_key": repo_key, "install_actor": actor}),
+    )
+    monkeypatch.setattr(
+        route_mod,
+        "validate_runtime_repo",
+        lambda repo_key, actor: called.update({"validate_repo_key": repo_key, "validate_actor": actor}),
+    )
+    monkeypatch.setattr(
         route_mod, "log_external_runtime_action", lambda *args, **kwargs: None
     )
 
@@ -514,12 +540,16 @@ def test_external_runtime_action_json_variants(
     assert response.status_code == 200
     payload = response.get_json()
     assert payload["status"] == "ok"
-    assert called["repo_key"] == "test_runtime"
-    if expected_branch is not None:
-        assert called["args"][0] == expected_branch
-    assert (called["args"] and called["args"][-1] == "admin") or called["kwargs"].get(
-        "actor"
-    ) == "admin"
+    if action_name in {"install", "validate"}:
+        assert called[f"{action_name}_repo_key"] == "test_runtime"
+        assert called[f"{action_name}_actor"] == "admin"
+    else:
+        assert called["repo_key"] == "test_runtime"
+        if expected_branch is not None:
+            assert called["args"][0] == expected_branch
+        assert (called["args"] and called["args"][-1] == "admin") or called[
+            "kwargs"
+        ].get("actor") == "admin"
 
 
 def test_external_runtimes_page_hides_git_controls_when_git_is_unavailable(
