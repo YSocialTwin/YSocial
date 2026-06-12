@@ -147,6 +147,28 @@ class TestErrorTemplateContent:
             content = f.read()
             assert "500" in content or "Internal Server Error" in content
             assert "Y Social" in content
+            assert "Trace excerpt" in content
+            assert "Route args" in content
+
+
+def test_500_error_details_include_debug_context(app):
+    from y_web.routes.errors.handlers import _build_error_details
+
+    class DummyError(Exception):
+        pass
+
+    with app.test_request_context(
+        "/foo/bar",
+        method="GET",
+        query_string={"x": "1"},
+    ):
+        details = _build_error_details(500, "Internal Server Error", DummyError("boom"))
+
+    assert details["status_code"] == 500
+    assert details["path"] == "/foo/bar"
+    assert details["method"] == "GET"
+    assert details["exception_class"] == "DummyError"
+    assert "boom" in details["error_description"]
 
 
 class TestErrorHandlerIntegration:

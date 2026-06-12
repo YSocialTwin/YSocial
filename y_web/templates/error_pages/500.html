@@ -99,6 +99,31 @@
                                     <strong>Method:</strong> {{ error.method }}
                                 </p>
                                 {% endif %}
+                                {% if error.path %}
+ <p class="ys-item-sm2">
+                                    <strong>Path:</strong> {{ error.path }}
+                                </p>
+                                {% endif %}
+                                {% if error.endpoint %}
+ <p class="ys-item-sm2">
+                                    <strong>Endpoint:</strong> {{ error.endpoint }}
+                                </p>
+                                {% endif %}
+                                {% if error.view_args %}
+ <p class="ys-item-sm2">
+                                    <strong>Route args:</strong> {{ error.view_args }}
+                                </p>
+                                {% endif %}
+                                {% if error.exception_class %}
+ <p class="ys-item-sm2">
+                                    <strong>Exception:</strong> {{ error.exception_class }}
+                                </p>
+                                {% endif %}
+                                {% if error.traceback_excerpt %}
+ <p class="ys-item-sm2" style="white-space: pre-wrap;">
+                                    <strong>Trace excerpt:</strong><br>{{ error.traceback_excerpt }}
+                                </p>
+                                {% endif %}
                             </div>
                             {% endif %}
                             
