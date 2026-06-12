@@ -430,12 +430,16 @@ def test_external_runtime_acquire_json_uses_selected_source(
     monkeypatch.setattr(
         route_mod,
         "install_runtime_dependencies",
-        lambda repo_key, actor: called.update({"install_repo_key": repo_key, "install_actor": actor}),
+        lambda repo_key, actor: called.update(
+            {"install_repo_key": repo_key, "install_actor": actor}
+        ),
     )
     monkeypatch.setattr(
         route_mod,
         "validate_runtime_repo",
-        lambda repo_key, actor: called.update({"validate_repo_key": repo_key, "validate_actor": actor}),
+        lambda repo_key, actor: called.update(
+            {"validate_repo_key": repo_key, "validate_actor": actor}
+        ),
     )
     monkeypatch.setattr(
         route_mod, "log_external_runtime_action", lambda *args, **kwargs: None
@@ -512,12 +516,16 @@ def test_external_runtime_action_json_variants(
     monkeypatch.setattr(
         route_mod,
         "install_runtime_dependencies",
-        lambda repo_key, actor: called.update({"install_repo_key": repo_key, "install_actor": actor}),
+        lambda repo_key, actor: called.update(
+            {"install_repo_key": repo_key, "install_actor": actor}
+        ),
     )
     monkeypatch.setattr(
         route_mod,
         "validate_runtime_repo",
-        lambda repo_key, actor: called.update({"validate_repo_key": repo_key, "validate_actor": actor}),
+        lambda repo_key, actor: called.update(
+            {"validate_repo_key": repo_key, "validate_actor": actor}
+        ),
     )
     monkeypatch.setattr(
         route_mod, "log_external_runtime_action", lambda *args, **kwargs: None
@@ -597,7 +605,9 @@ def test_external_runtimes_page_hides_git_controls_when_git_is_unavailable(
                         "dependency_files_ready": False,
                         "validation_ready": False,
                         "available_branches": ["main"],
-                        "available_releases": [{"tag": "v1.0.0", "prerelease": False, "name": "v1.0.0"}],
+                        "available_releases": [
+                            {"tag": "v1.0.0", "prerelease": False, "name": "v1.0.0"}
+                        ],
                         "latest_release_tag": "v1.0.0",
                         "releases_enabled": True,
                         "release_error": None,
@@ -625,10 +635,10 @@ def test_external_runtimes_page_hides_git_controls_when_git_is_unavailable(
             }
         ],
     )
-    monkeypatch.setattr(route_mod, "read_external_runtime_logs", lambda *args, **kwargs: [])
     monkeypatch.setattr(
-        route_mod, "external_runtime_bootstrap_report", lambda: None
+        route_mod, "read_external_runtime_logs", lambda *args, **kwargs: []
     )
+    monkeypatch.setattr(route_mod, "external_runtime_bootstrap_report", lambda: None)
 
     def fake_render_template(template_name, **context):
         captured.update(context)
@@ -671,7 +681,11 @@ def test_external_runtime_action_rejects_git_operations_without_git(
     )
     monkeypatch.setattr(route_mod, "host_git_available", lambda: False)
     monkeypatch.setattr(
-        route_mod, "clone_runtime_repo", lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("clone should not be called"))
+        route_mod,
+        "clone_runtime_repo",
+        lambda *args, **kwargs: (_ for _ in ()).throw(
+            AssertionError("clone should not be called")
+        ),
     )
 
     with app.test_request_context(
