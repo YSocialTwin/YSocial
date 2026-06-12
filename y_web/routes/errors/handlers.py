@@ -41,7 +41,9 @@ def _build_error_details(status_code: int, error_name: str, e):
     except Exception:
         traceback_lines = []
     traceback_text = "".join(traceback_lines).strip() or traceback.format_exc().strip()
-    traceback_excerpt = "\n".join(traceback_text.splitlines()[-12:]) if traceback_text else ""
+    traceback_excerpt = (
+        "\n".join(traceback_text.splitlines()[-12:]) if traceback_text else ""
+    )
 
     return {
         "status_code": status_code,
@@ -51,8 +53,12 @@ def _build_error_details(status_code: int, error_name: str, e):
         "method": request.method if request else None,
         "path": request.path if request else None,
         "endpoint": request.endpoint if request else None,
-        "view_args": dict(request.view_args or {}) if request and request.view_args else {},
-        "exception_class": type(root_error).__name__ if root_error is not None else None,
+        "view_args": (
+            dict(request.view_args or {}) if request and request.view_args else {}
+        ),
+        "exception_class": (
+            type(root_error).__name__ if root_error is not None else None
+        ),
         "exception_message": str(root_error) if root_error is not None else "",
         "wrapped_exception_class": type(e).__name__ if e is not None else None,
         "traceback_excerpt": traceback_excerpt,
