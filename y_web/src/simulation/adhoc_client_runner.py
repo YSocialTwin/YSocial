@@ -144,7 +144,11 @@ def _build_client_agent_spec(config) -> AgentSpec:
         agent_type=agent_type,
         activity_profile=activity_profile,
         daily_budget=daily_budget,
-        owner=str(_client_field(config, "owner", "") or "experiment"),
+        owner=(
+            str(_client_field(config, "owner", "")).strip()
+            if _client_field(config, "owner", "") not in (None, "")
+            else None
+        ),
         parameters=dict(agent_settings) if isinstance(agent_settings, dict) else {},
     )
 
