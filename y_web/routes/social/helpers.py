@@ -15,6 +15,7 @@ from typing import Optional
 
 from flask import request
 from flask_login import current_user
+from sqlalchemy import or_
 
 from y_web import db
 from y_web.src.content.avatars import (
@@ -43,6 +44,10 @@ from y_web.src.models import (
     User_mgmt,
     Websites,
 )
+
+
+def _root_post_filter(column):
+    return or_(column.is_(None), column == -1)
 from y_web.src.system.path_utils import get_writable_path
 
 _ADHOC_AGENT_BADGE_LABELS = {
@@ -521,7 +526,7 @@ def _forum_paginate_posts(page, per_page, feed_type, search_query=""):
     if normalized_feed not in {"new", "hot", "top", "most_commented"}:
         normalized_feed = "new"
 
-    base_query = Post.query.filter(Post.comment_to == -1)
+    base_query = Post.query.filter(_root_post_filter(Post.comment_to))
     if search_query:
         like = f"%{search_query}%"
         base_query = (

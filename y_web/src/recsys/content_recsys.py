@@ -7,6 +7,7 @@ follower-based, and random sampling approaches.
 """
 
 from sqlalchemy import desc
+from sqlalchemy import or_
 from sqlalchemy.sql.expression import func
 
 from y_web import db
@@ -54,6 +55,10 @@ def _order_query_by_simulation_time(query):
     )
 
 
+def _root_post_filter():
+    return or_(Post.comment_to.is_(None), Post.comment_to == -1)
+
+
 def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6):
     """
     Get recommended posts for a user based on specified algorithm.
@@ -78,7 +83,7 @@ def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6):
 
     if uid == "all":
         # get posts in reverse chrono for all users
-        posts_query = db.session.query(Post).filter_by(comment_to=-1)
+        posts_query = db.session.query(Post).filter(_root_post_filter())
         posts = _order_query_by_simulation_time(posts_query).paginate(
             page=page, per_page=per_page, error_out=False
         )
@@ -88,7 +93,7 @@ def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6):
     if mode == "ReverseChrono":
         # get posts in reverse chronological order
         posts_query = db.session.query(Post).filter(
-            Post.user_id != uid, Post.comment_to == -1
+            Post.user_id != uid, _root_post_filter()
         )
         posts = _order_query_by_simulation_time(posts_query).paginate(
             page=page, per_page=per_page, error_out=False
@@ -99,7 +104,7 @@ def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6):
         # get posts ordered by likes in reverse chronological order
 
         posts_query = db.session.query(Post).filter(
-            Post.user_id != uid, Post.comment_to == -1
+            Post.user_id != uid, _root_post_filter()
         )
         posts = (
             posts_query.outerjoin(Rounds, Post.round == Rounds.id)
@@ -121,12 +126,12 @@ def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6):
         # get posts from followers in reverse chronological order
 
         posts_query = Post.query.filter(
-            Post.user_id.in_(follower_ids), Post.comment_to == -1
+            Post.user_id.in_(follower_ids), _root_post_filter()
         )
         posts = _order_query_by_simulation_time(posts_query).paginate(
             page=page, per_page=int(per_page * follower_ratio), error_out=False
         )
-        additional_query = Post.query.filter(Post.user_id != uid, Post.comment_to == -1)
+        additional_query = Post.query.filter(Post.user_id != uid, _root_post_filter())
         additional_posts = _order_query_by_simulation_time(additional_query).paginate(
             page=page,
             per_page=int(per_page * (1 - follower_ratio)),
@@ -140,7 +145,7 @@ def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6):
 
         # get posts from followers ordered by likes and reverse chronologically
         posts_query = db.session.query(Post).filter(
-            Post.user_id.in_(follower_ids), Post.comment_to == -1
+            Post.user_id.in_(follower_ids), _root_post_filter()
         )
         posts = (
             posts_query.outerjoin(Rounds, Post.round == Rounds.id)
@@ -154,7 +159,7 @@ def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6):
                 page=page, per_page=int(per_page * follower_ratio), error_out=False
             )
         )
-        additional_query = Post.query.filter(Post.user_id != uid, Post.comment_to == -1)
+        additional_query = Post.query.filter(Post.user_id != uid, _root_post_filter())
         additional_posts = _order_query_by_simulation_time(additional_query).paginate(
             page=page,
             per_page=int(per_page * (1 - follower_ratio)),
@@ -164,7 +169,7 @@ def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6):
     else:
         # get posts in random order
         posts = (
-            Post.query.filter(Post.user_id != uid, Post.comment_to == -1)
+            Post.query.filter(Post.user_id != uid, _root_post_filter())
             .order_by(func.random())
             .paginate(page=page, per_page=per_page, error_out=False)
         )

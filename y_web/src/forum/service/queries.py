@@ -38,6 +38,10 @@ from y_web.src.forum.service.formatters import (
     _resolve_image_post,
     _shared_from,
 )
+
+
+def _root_post_filter(column):
+    return or_(column.is_(None), column == -1)
 from y_web.src.models import (
     Articles,
     ImagePosts,
@@ -280,7 +284,7 @@ def fetch_available_communities() -> List[Dict[str, str]]:
         .join(Articles, Articles.website_id == Websites.id)
         .join(Post, Post.news_id == Articles.id)
         .filter(
-            Post.comment_to == -1,
+            _root_post_filter(Post.comment_to),
             Websites.rss.isnot(None),
             Websites.rss != "",
         )
@@ -293,7 +297,7 @@ def fetch_available_communities() -> List[Dict[str, str]]:
         db.session.query(func.lower(ImagePosts.subreddit).label("rss"))
         .join(Post, Post.image_post_id == ImagePosts.id)
         .filter(
-            Post.comment_to == -1,
+            _root_post_filter(Post.comment_to),
             ImagePosts.subreddit.isnot(None),
             ImagePosts.subreddit != "",
         )
@@ -307,7 +311,7 @@ def fetch_available_communities() -> List[Dict[str, str]]:
         .join(Post_topics, Post_topics.topic_id == Interests.iid)
         .join(Post, Post.id == Post_topics.post_id)
         .filter(
-            Post.comment_to == -1,
+            _root_post_filter(Post.comment_to),
             or_(Post.news_id.is_(None), Post.news_id.in_([-1, 0])),
             Interests.interest.isnot(None),
             Interests.interest != "",
@@ -383,7 +387,7 @@ def _comment_count_subquery():
             Post.thread_id.label("thread_id"),
             func.count(Post.id).label("comment_count"),
         )
-        .filter(Post.comment_to != -1)
+        .filter(and_(Post.comment_to.isnot(None), Post.comment_to != -1))
         .group_by(Post.thread_id)
         .subquery()
     )
@@ -395,7 +399,7 @@ def _share_count_subquery():
             Post.shared_from.label("post_id"),
             func.count(Post.id).label("share_count"),
         )
-        .filter(Post.shared_from != -1)
+        .filter(and_(Post.shared_from.isnot(None), Post.shared_from != -1))
         .group_by(Post.shared_from)
         .subquery()
     )
@@ -771,7 +775,7 @@ def build_user_feed_posts(
     own_posts = (
         Post.query.filter(
             Post.user_id == target_user_id,
-            Post.comment_to == -1,
+            _root_post_filter(Post.comment_to),
         )
         .outerjoin(Rounds, Post.round == Rounds.id)
         .order_by(_simulation_time_index_expr().desc(), Post.id.desc())
@@ -854,7 +858,7 @@ def fetch_feed_page(
         f"[DEBUG] fetch_feed_page called with feed_type={feed_type}, page={page}, per_page={per_page}\n"
     )
     sys.stderr.flush()
-    base_query = db.session.query(Post).filter(Post.comment_to == -1).options()
+    base_query = db.session.query(Post).filter(_root_post_filter(Post.comment_to)).options()
     base_query = _apply_community_filter(base_query, community_slug)
 
     if feed_user_id is not None:
@@ -1074,7 +1078,7 @@ def _post_with_aggregates(
     if article and article.summary:
         body, _ = strip_reproduced_article_content(body, article.summary)
 
-    if post.comment_to == -1 and _is_agent_or_page_author(author):
+    if post.comment_to in (-1, None) and _is_agent_or_page_author(author):
         if title:
             title = normalize_punctuation_spacing(title)
         if body:
@@ -1164,7 +1168,11 @@ def fetch_thread(post_id: int, viewer_id: int) -> Dict[str, Any]:
         payload["children"] = []
 
         post_payloads[thread_post.id] = payload
-        parent_id = thread_post.comment_to if thread_post.comment_to != -1 else None
+        parent_id = (
+            thread_post.comment_to
+            if thread_post.comment_to not in (-1, None)
+            else None
+        )
 
         if thread_post.id not in post_children:
             post_children[thread_post.id] = []

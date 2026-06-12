@@ -10,6 +10,7 @@ from urllib.parse import urlparse
 
 import requests
 from flask import current_app, g
+from sqlalchemy import and_
 from sqlalchemy.exc import IntegrityError
 
 from y_web import db
@@ -401,7 +402,7 @@ def create_post_reddit(
         Post.user_id == actor_user.id,
         Post.tweet == content,
         Post.round == round_id,
-        Post.comment_to == -1,
+        and_(Post.comment_to.isnot(None), Post.comment_to != -1),
     ).first()
 
     if existing:

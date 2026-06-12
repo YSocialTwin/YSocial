@@ -18,7 +18,7 @@ from flask import (
     url_for,
 )
 from flask_login import current_user, login_required
-from sqlalchemy import desc
+from sqlalchemy import and_, desc
 from sqlalchemy.sql.expression import func
 from werkzeug.security import generate_password_hash
 
@@ -326,7 +326,7 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
 
     total_posts = Post.query.filter_by(user_id=user_id, comment_to=-1).count()
     total_comments = Post.query.filter(
-        Post.user_id == user_id, Post.comment_to != -1
+        Post.user_id == user_id, and_(Post.comment_to.isnot(None), Post.comment_to != -1)
     ).count()
     total_likes = Reactions.query.filter_by(user_id=user_id, type="like").count()
     total_dislikes = Reactions.query.filter_by(user_id=user_id, type="dislike").count()

@@ -11,7 +11,7 @@ from urllib.parse import urlencode
 
 from flask import abort, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
-from sqlalchemy import desc
+from sqlalchemy import and_, desc
 from sqlalchemy.sql.expression import func
 
 from y_web import db
@@ -513,7 +513,7 @@ def rnotifications(exp_id):
     base_filters = (
         Parent.user_id == exp_user_id,
         Reply.user_id != exp_user_id,
-        Reply.comment_to != -1,
+        and_(Reply.comment_to.isnot(None), Reply.comment_to != -1),
     )
 
     unread_before_open = (
