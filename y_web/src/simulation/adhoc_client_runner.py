@@ -286,7 +286,16 @@ def run(config_path: Path, state_path: Path) -> int:
         else:
             return 0
 
-        agent.setup_database(database, connection)
+        try:
+            connection.commit()
+        except Exception:
+            connection.rollback()
+        _run_with_sqlite_retry(
+            logger,
+            connection,
+            "setup_database",
+            lambda: agent.setup_database(database, connection),
+        )
         _run_with_sqlite_retry(
             logger,
             connection,
@@ -307,7 +316,16 @@ def run(config_path: Path, state_path: Path) -> int:
                     settings=config.client.agent_settings,
                     llm_client=llm,
                 )
-                agent.setup_database(database, connection)
+                try:
+                    connection.commit()
+                except Exception:
+                    connection.rollback()
+                _run_with_sqlite_retry(
+                    logger,
+                    connection,
+                    "setup_database",
+                    lambda: agent.setup_database(database, connection),
+                )
                 scheduler = ActivityProfileScheduler(config.client.simulation)
                 expected_rounds = int(config.client.max_ticks or 0)
                 infinite = config.client.max_ticks is None or bool(
