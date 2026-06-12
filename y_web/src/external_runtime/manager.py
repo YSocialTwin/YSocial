@@ -775,7 +775,9 @@ def install_runtime_dependencies(repo_key: str, actor: str) -> None:
     python_executable = resolve_python_executable()
     output_parts.append(f"Using interpreter: {python_executable}")
     for command in install_commands:
-        resolved = [python_executable if token == "python" else token for token in command]
+        resolved = [
+            python_executable if token == "python" else token for token in command
+        ]
         output_parts.append(
             _run_command(resolved, cwd=spec.path, env=env, timeout=1800)
         )
@@ -815,7 +817,9 @@ def validate_runtime_repo(repo_key: str, actor: str) -> str:
             f"__import__({spec.validate_import!r}); "
             f"print('Imported {spec.validate_import}')"
         )
-        output_parts.append(_run_command([resolve_python_executable(), "-c", script], cwd=spec.path))
+        output_parts.append(
+            _run_command([resolve_python_executable(), "-c", script], cwd=spec.path)
+        )
     output = "\n".join(part for part in output_parts if part)
     log_external_runtime_action(repo_key, "validate", actor, None, True, output)
     return output
