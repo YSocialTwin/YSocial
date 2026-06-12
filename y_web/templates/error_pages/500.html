@@ -119,6 +119,16 @@
                                     <strong>Exception:</strong> {{ error.exception_class }}
                                 </p>
                                 {% endif %}
+                                {% if error.exception_message %}
+ <p class="ys-item-sm2">
+                                    <strong>Message:</strong> {{ error.exception_message }}
+                                </p>
+                                {% endif %}
+                                {% if error.wrapped_exception_class and error.wrapped_exception_class != error.exception_class %}
+ <p class="ys-item-sm2">
+                                    <strong>Wrapped exception:</strong> {{ error.wrapped_exception_class }}
+                                </p>
+                                {% endif %}
                                 {% if error.traceback_excerpt %}
  <p class="ys-item-sm2" style="white-space: pre-wrap;">
                                     <strong>Trace excerpt:</strong><br>{{ error.traceback_excerpt }}

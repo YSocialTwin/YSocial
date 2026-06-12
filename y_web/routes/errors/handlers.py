@@ -14,6 +14,7 @@ from y_web.routes.errors._blueprint import errors
 
 
 def _build_error_details(status_code: int, error_name: str, e):
+    root_error = getattr(e, "original_exception", None) or e
     raw_description = str(e) if e is not None else ""
     default_messages = {
         400: "The server could not understand the request due to invalid syntax.",
@@ -35,7 +36,7 @@ def _build_error_details(status_code: int, error_name: str, e):
     traceback_lines = []
     try:
         traceback_lines = traceback.format_exception(
-            type(e), e, getattr(e, "__traceback__", None)
+            type(root_error), root_error, getattr(root_error, "__traceback__", None)
         )
     except Exception:
         traceback_lines = []
@@ -51,7 +52,9 @@ def _build_error_details(status_code: int, error_name: str, e):
         "path": request.path if request else None,
         "endpoint": request.endpoint if request else None,
         "view_args": dict(request.view_args or {}) if request and request.view_args else {},
-        "exception_class": type(e).__name__ if e is not None else None,
+        "exception_class": type(root_error).__name__ if root_error is not None else None,
+        "exception_message": str(root_error) if root_error is not None else "",
+        "wrapped_exception_class": type(e).__name__ if e is not None else None,
         "traceback_excerpt": traceback_excerpt,
     }
 
@@ -166,8 +169,12 @@ def internal_server_error(e):
 
     telemetry = Telemetry(user=current_user)
 
-    # Capture full traceback as string
-    full_trace = traceback.format_exc()
+    root_error = getattr(e, "original_exception", None) or e
+    full_trace = "".join(
+        traceback.format_exception(
+            type(root_error), root_error, getattr(root_error, "__traceback__", None)
+        )
+    )
     telemetry.log_stack_trace(
         {
             "error_type": "500 Internal Server Error",

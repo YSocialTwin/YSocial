@@ -157,18 +157,27 @@ def test_500_error_details_include_debug_context(app):
     class DummyError(Exception):
         pass
 
+    class WrapperError(Exception):
+        def __init__(self, original_exception):
+            super().__init__("wrapper")
+            self.original_exception = original_exception
+
+    wrapped = WrapperError(DummyError("boom"))
+
     with app.test_request_context(
         "/foo/bar",
         method="GET",
         query_string={"x": "1"},
     ):
-        details = _build_error_details(500, "Internal Server Error", DummyError("boom"))
+        details = _build_error_details(500, "Internal Server Error", wrapped)
 
     assert details["status_code"] == 500
     assert details["path"] == "/foo/bar"
     assert details["method"] == "GET"
     assert details["exception_class"] == "DummyError"
-    assert "boom" in details["error_description"]
+    assert details["wrapped_exception_class"] == "WrapperError"
+    assert details["exception_message"] == "boom"
+    assert "wrapper" in details["error_description"]
 
 
 class TestErrorHandlerIntegration:
