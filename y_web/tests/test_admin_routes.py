@@ -484,3 +484,12 @@ class TestAdminDashboardContent:
         # Check system information
         assert b"Y_Web Admin Panel" in response.data
         assert b"Ollama Status: running" in response.data
+
+
+def test_experiment_details_template_shows_db_debug_panel():
+    template_path = "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/experiment_details.html"
+    with open(template_path, "r", encoding="utf-8") as handle:
+        content = handle.read()
+    assert "Experiment DB debug" in content
+    assert "Bind key:" in content
+    assert "User table queryable:" in content
