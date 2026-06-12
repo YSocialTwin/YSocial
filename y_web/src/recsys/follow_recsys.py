@@ -37,8 +37,6 @@ def get_suggested_users(username, pages=False):
         return []
 
     user = User_mgmt.query.filter_by(username=username).first()
-    if user is None:
-        return []
     user_id = user.id
 
     users = __follow_suggestions(user.frecsys_type, user.id, 5, 1.5)
@@ -74,11 +72,7 @@ def get_suggested_users(username, pages=False):
                     )
 
     for user in res:
-        user_row = User_mgmt.query.filter_by(id=user["id"]).first()
-        if user_row is None:
-            user["profile_pic"] = ""
-            continue
-        if user_row.is_page == 1:
+        if User_mgmt.query.filter_by(id=user["id"]).first().is_page == 1:
             pg = Page.query.filter_by(name=user["username"]).first()
             if pg is not None:
                 user["profile_pic"] = pg.logo

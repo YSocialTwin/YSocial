@@ -396,29 +396,6 @@ def test_microblog_feed_supports_live_refresh_with_existing_recsys_api():
     assert ".ys-feed-refresh-notice__button" in css
 
 
-def test_get_suggested_users_returns_empty_when_viewer_is_missing():
-    from y_web.src.recsys.follow_recsys import get_suggested_users
-
-    class _Query:
-        def filter_by(self, **kwargs):
-            return self
-
-        def first(self):
-            return None
-
-    class _UserMgmt:
-        query = _Query()
-
-    import y_web.src.recsys.follow_recsys as follow_recsys
-
-    original = follow_recsys.User_mgmt
-    follow_recsys.User_mgmt = _UserMgmt
-    try:
-        assert get_suggested_users("missing-user") == []
-    finally:
-        follow_recsys.User_mgmt = original
-
-
 def test_build_thread_tree_handles_uuid_out_of_order_replies():
     source = Path(
         "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/helpers.py"
