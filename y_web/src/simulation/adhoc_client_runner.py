@@ -24,7 +24,7 @@ for candidate in (ROOT, PLUGIN_SRC):
 
 try:
     from y_agents_plugins.config import AppConfig  # noqa: E402
-    from y_agents_plugins.core import AgentContext  # noqa: E402
+    from y_agents_plugins.core import AgentContext, AgentSpec  # noqa: E402
     from y_agents_plugins.db import ExperimentDatabase  # noqa: E402
     from y_agents_plugins.llm import LangChainTextGenerator  # noqa: E402
     from y_agents_plugins.runtime.app import build_default_registry  # noqa: E402
@@ -39,6 +39,7 @@ except ModuleNotFoundError:
     # External plugin runtime is optional in base installations and in CI test jobs.
     AppConfig = None
     AgentContext = None
+    AgentSpec = None
     ExperimentDatabase = None
     LangChainTextGenerator = None
     build_default_registry = None
@@ -123,6 +124,33 @@ def _client_field(config, field_name: str, default=None):
     if isinstance(client, dict):
         return client.get(field_name, default)
     return getattr(client, field_name, default)
+
+
+def _build_client_agent_spec(config) -> AgentSpec:
+    client_id = _client_field(config, "client_id", "") or ""
+    agent_type = _client_field(config, "agent_type", "") or ""
+    agent_settings = _client_field(config, "agent_settings", {}) or {}
+    email = str(
+        _client_field(config, "email", "") or f"{client_id}@example.org"
+    )
+    password = str(_client_field(config, "password", "") or client_id or "secret")
+    activity_profile = str(
+        _client_field(config, "activity_profile", "") or "Always On"
+    )
+    daily_budget = float(
+        _client_field(config, "daily_budget", 1) or 1
+    )
+    return AgentSpec(
+        name=str(_client_field(config, "name", "") or client_id or agent_type or "client"),
+        username=client_id or agent_type or "client",
+        email=email,
+        password=password,
+        agent_type=agent_type,
+        activity_profile=activity_profile,
+        daily_budget=daily_budget,
+        owner=str(_client_field(config, "owner", "") or "experiment"),
+        parameters=dict(agent_settings) if isinstance(agent_settings, dict) else {},
+    )
 
 
 def _apply_config_metadata_to_state(state: dict, config) -> dict:
@@ -259,12 +287,14 @@ def run(config_path: Path, state_path: Path) -> int:
             return 0
 
         agent.setup_database(database, connection)
+        client_agent = _build_client_agent_spec(config)
+        combined_agents = tuple(managed_agents) + (client_agent,)
         _run_with_sqlite_retry(
             logger,
             connection,
             "register_agents",
             lambda: database.register_agents(
-                connection, managed_agents, joined_on=current_round.id
+                connection, combined_agents, joined_on=current_round.id
             ),
         )
 
