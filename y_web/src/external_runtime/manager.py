@@ -32,6 +32,10 @@ class ExternalRuntimeError(RuntimeError):
     """Raised when an external runtime management action cannot complete."""
 
 
+def host_git_available() -> bool:
+    return shutil.which("git") is not None
+
+
 @dataclass
 class RuntimeStatus:
     key: str
@@ -181,6 +185,10 @@ def _run_command(
 
 
 def _safe_git(path: Path, args: list[str]) -> str:
+    if not host_git_available():
+        raise ExternalRuntimeError(
+            "Git is not available on this host. Use release-based installation instead."
+        )
     return _run_command(["git", *args], cwd=path)
 
 
@@ -598,6 +606,10 @@ def download_runtime_release(
 def clone_runtime_repo(repo_key: str, branch: str | None, actor: str) -> None:
     spec = runtime_spec(repo_key)
     branch_name = _resolve_branch(spec, branch)
+    if not host_git_available():
+        raise ExternalRuntimeError(
+            f"Git is not available on this host. Install {spec.label} from a GitHub release instead."
+        )
     if spec.path.exists():
         raise ExternalRuntimeError(f"{spec.label} already exists at {spec.path}")
     spec.path.parent.mkdir(parents=True, exist_ok=True)
@@ -611,6 +623,10 @@ def clone_runtime_repo(repo_key: str, branch: str | None, actor: str) -> None:
 def fetch_runtime_repo(repo_key: str, branch: str | None, actor: str) -> None:
     spec = runtime_spec(repo_key)
     status = get_runtime_status(repo_key)
+    if not host_git_available():
+        raise ExternalRuntimeError(
+            f"Git is not available on this host. Git-based fetch operations are unavailable for {spec.label}."
+        )
     if not status.installed:
         raise ExternalRuntimeError(f"{spec.label} is not installed")
     if not status.git_managed:
@@ -694,6 +710,10 @@ def _normalize_origin_remote(spec) -> str:
 def update_runtime_repo(repo_key: str, branch: str | None, actor: str) -> None:
     spec = runtime_spec(repo_key)
     status = get_runtime_status(repo_key)
+    if not host_git_available():
+        raise ExternalRuntimeError(
+            f"Git is not available on this host. Git-based update operations are unavailable for {spec.label}."
+        )
     if not status.installed:
         raise ExternalRuntimeError(f"{spec.label} is not installed")
     if not status.git_managed:

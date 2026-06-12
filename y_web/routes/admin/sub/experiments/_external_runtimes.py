@@ -16,6 +16,7 @@ from y_web.src.external_runtime import (
     external_runtime_bootstrap_report,
     fetch_runtime_repo,
     get_grouped_runtime_status,
+    host_git_available,
     install_runtime_dependencies,
     load_plugins_index,
     log_external_runtime_action,
@@ -256,6 +257,7 @@ def external_runtimes():
         github_session_authenticated=bool(github_token),
         external_runtime_bootstrap=external_runtime_bootstrap_report(),
         remote_metadata_loaded=include_remote_metadata,
+        host_git_available=host_git_available(),
     )
 
 
@@ -318,6 +320,7 @@ def external_runtime_action(repo_key: str, action: str):
     branch = (request.form.get("branch") or spec.default_branch).strip()
     release_tag = (request.form.get("release_tag") or "").strip() or None
     install_source = (request.form.get("install_source") or "release").strip().lower()
+    git_available = host_git_available()
     if action in {
         "acquire",
         "download_release",
@@ -343,6 +346,26 @@ def external_runtime_action(repo_key: str, action: str):
                 status="error",
                 message=f"Stop active {spec.group_label.lower()} experiments before modifying {spec.label}.",
             )
+    if action in {"clone", "fetch", "update"} and not git_available:
+        flash(
+            f"Git is not available on this host. Use the release install flow for {spec.label}.",
+            "error",
+        )
+        return _external_runtimes_response(
+            repo_key=repo_key,
+            status="error",
+            message=f"Git is not available on this host for {spec.label}.",
+        )
+    if action == "install" and not git_available and not spec.path.exists():
+        flash(
+            f"Git is not available on this host. Install {spec.label} from a GitHub release first.",
+            "error",
+        )
+        return _external_runtimes_response(
+            repo_key=repo_key,
+            status="error",
+            message=f"Git is not available on this host for {spec.label}.",
+        )
 
     try:
         if action == "acquire":

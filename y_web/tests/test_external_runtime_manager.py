@@ -522,6 +522,147 @@ def test_external_runtime_action_json_variants(
     ) == "admin"
 
 
+def test_external_runtimes_page_hides_git_controls_when_git_is_unavailable(
+    app, auth, monkeypatch
+):
+    auth.login()
+
+    from y_web.routes.admin.sub.experiments import _external_runtimes as route_mod
+
+    captured = {}
+
+    monkeypatch.setattr(
+        route_mod, "_require_admin_user", lambda: SimpleNamespace(username="admin")
+    )
+    monkeypatch.setattr(route_mod, "host_git_available", lambda: False)
+    monkeypatch.setattr(
+        route_mod,
+        "_visible_runtime_groups",
+        lambda admin_user, github_token, include_remote_metadata: [
+            {
+                "group": "hpc",
+                "label": "HPC",
+                "repos": [
+                    {
+                        "key": "test_runtime",
+                        "label": "TestRuntime",
+                        "group": "hpc",
+                        "group_label": "HPC",
+                        "category": "simulation_runtimes",
+                        "category_label": "Simulation Runtimes",
+                        "github_repo": "YSocialTwin/TestRuntime",
+                        "repo_url": "https://example.test/repo.git",
+                        "default_branch": "main",
+                        "installed": False,
+                        "exists": False,
+                        "git_managed": False,
+                        "is_private": False,
+                        "is_symlink": False,
+                        "dirty": False,
+                        "current_branch": None,
+                        "current_commit": None,
+                        "tracking_branch": None,
+                        "ahead": None,
+                        "behind": None,
+                        "dependency_files_ready": False,
+                        "validation_ready": False,
+                        "available_branches": ["main"],
+                        "available_releases": [{"tag": "v1.0.0", "prerelease": False, "name": "v1.0.0"}],
+                        "latest_release_tag": "v1.0.0",
+                        "releases_enabled": True,
+                        "release_error": None,
+                        "path_kind": "missing",
+                        "python_executable": manager.sys.executable,
+                        "plugin_description": "",
+                        "plugin_repository_url": "https://example.test/repo.git",
+                        "plugin_authors": [],
+                    }
+                ],
+            }
+        ],
+    )
+    monkeypatch.setattr(
+        route_mod,
+        "_runtime_categories",
+        lambda grouped_status, active_group_usage: [
+            {
+                "label": "Simulation Runtimes",
+                "description": "Repositories classified under Simulation Runtimes.",
+                "repo_count": 1,
+                "installed_count": 0,
+                "active_experiment_count": 0,
+                "groups": [],
+            }
+        ],
+    )
+    monkeypatch.setattr(route_mod, "read_external_runtime_logs", lambda *args, **kwargs: [])
+    monkeypatch.setattr(
+        route_mod, "external_runtime_bootstrap_report", lambda: None
+    )
+
+    def fake_render_template(template_name, **context):
+        captured.update(context)
+        return "rendered"
+
+    monkeypatch.setattr(route_mod, "render_template", fake_render_template)
+
+    with app.test_request_context("/admin/external_runtimes"):
+        response = route_mod.external_runtimes.__wrapped__()
+
+    assert response == "rendered"
+    assert captured["host_git_available"] is False
+
+
+def test_external_runtime_action_rejects_git_operations_without_git(
+    app, auth, monkeypatch
+):
+    auth.login()
+
+    from y_web.routes.admin.sub.experiments import _external_runtimes as route_mod
+
+    class _Spec:
+        key = "test_runtime"
+        group = "hpc"
+        group_label = "HPC"
+        label = "TestRuntime"
+        default_branch = "main"
+        repo_url = "https://example.test/repo.git"
+        github_repo = "YSocialTwin/TestRuntime"
+        releases_enabled = False
+        path = Path("/tmp/test-runtime")
+
+    monkeypatch.setattr(
+        route_mod, "_require_admin_user", lambda: SimpleNamespace(username="admin")
+    )
+    monkeypatch.setattr(route_mod, "runtime_spec", lambda repo_key: _Spec())
+    monkeypatch.setattr(route_mod, "runtime_visible_to_user", lambda spec, user: True)
+    monkeypatch.setattr(
+        route_mod, "_runtime_group_active_experiments", lambda group: []
+    )
+    monkeypatch.setattr(route_mod, "host_git_available", lambda: False)
+    monkeypatch.setattr(
+        route_mod, "clone_runtime_repo", lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("clone should not be called"))
+    )
+
+    with app.test_request_context(
+        "/admin/external_runtimes/test_runtime/clone",
+        method="POST",
+        data={"branch": "main"},
+        headers={
+            "X-Requested-With": "XMLHttpRequest",
+            "Accept": "application/json",
+        },
+    ):
+        response = route_mod.external_runtime_action.__wrapped__(
+            "test_runtime", "clone"
+        )
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["status"] == "error"
+    assert "Git is not available" in payload["message"]
+
+
 def test_external_runtime_github_session_json_response(app, client, auth, monkeypatch):
     auth.login()
 

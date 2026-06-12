@@ -51,7 +51,12 @@
                             </div>
 
                             <p class="ys-text-sm-muted" style="margin-bottom: 20px;">
-                                Install plugin runtimes from GitHub releases when available. Git clone and branch-based pulls remain available as advanced operations.
+                                Install plugin runtimes from GitHub releases when available.
+                                {% if host_git_available %}
+                                Git clone and branch-based pulls remain available as advanced operations.
+                                {% else %}
+                                Git-based install, fetch, and update controls are hidden because `git` is not available on this host.
+                                {% endif %}
                             </p>
                             <p class="ys-text-sm-muted" style="margin-bottom: 20px;">
                                 Dependency installation uses the same Python interpreter currently running YSocial:<br>
@@ -139,7 +144,7 @@
                                                             {% else %}
                                                             <span class="badge badge-secondary">Not installed</span>
                                                             {% endif %}
-                                                            {% if repo.git_managed %}
+                                                            {% if host_git_available and repo.git_managed %}
                                                             <span class="badge badge-info">Git</span>
                                                             {% elif repo.installed %}
                                                             <span class="badge badge-warning">Release</span>
@@ -162,7 +167,7 @@
                                                     </div>
                                                     <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
                                                         <span class="ys-text-xs-hint">{{ repo.github_repo }}</span>
-                                                        <span class="ys-text-xs-hint">{{ repo.current_branch or 'release archive' }}{% if repo.current_commit %} · {{ repo.current_commit }}{% endif %}</span>
+                                                        <span class="ys-text-xs-hint">{% if host_git_available and repo.git_managed %}{{ repo.current_branch or repo.default_branch }}{% if repo.current_commit %} · {{ repo.current_commit }}{% endif %}{% else %}release archive{% endif %}</span>
                                                     </div>
                                                 </summary>
 
@@ -176,7 +181,7 @@
                                                             {% if repo.plugin_authors %}
                                                             <div class="ys-text-xs-hint" style="margin-bottom: 4px;"><strong>Authors:</strong> {{ repo.plugin_authors|join(', ') }}</div>
                                                             {% endif %}
-                                                            {% if repo.git_managed %}
+                                                            {% if host_git_available and repo.git_managed %}
                                                             <div class="ys-text-xs-hint" style="margin-bottom: 4px;"><strong>Source state:</strong> {{ repo.current_branch or 'release archive' }}{% if repo.current_commit %} · {{ repo.current_commit }}{% endif %}</div>
                                                             <div class="ys-text-xs-hint" style="margin-bottom: 4px;"><strong>Tracking:</strong> {{ repo.tracking_branch or 'n/a' }}{% if repo.ahead is not none and repo.behind is not none %} · ahead {{ repo.ahead }} / behind {{ repo.behind }}{% endif %}</div>
                                                             {% endif %}
@@ -210,7 +215,7 @@
                                                                     </a>
                                                                 </div>
                                                             </div>
-                                                            {% if repo.installed and repo.git_managed %}
+                                                            {% if host_git_available and repo.installed and repo.git_managed %}
                                                             <div style="display: grid; gap: 8px;">
                                                                 <div class="ys-text-xs-hint" style="text-transform: uppercase; letter-spacing: 0.04em;">Maintenance</div>
                                                                 <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;">
@@ -247,6 +252,7 @@
                                                                 </select>
                                                             </label>
 
+                                                            {% if host_git_available %}
                                                             <label style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px; background: #f8fafc; display: grid; gap: 6px;">
                                                                 <span style="display: flex; gap: 8px; align-items: center;">
                                                                     <input type="radio" name="install_source" value="git" {% if not repo.releases_enabled %}checked{% endif %}>
@@ -259,6 +265,12 @@
                                                                     {% endfor %}
                                                                 </select>
                                                             </label>
+                                                            {% else %}
+                                                            <div style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px; background: #fff7ed; display: grid; gap: 6px;">
+                                                                <strong>Git checkout unavailable</strong>
+                                                                <span class="ys-text-xs-hint">This host does not provide the `git` command, so only release-based installation is available.</span>
+                                                            </div>
+                                                            {% endif %}
                                                         </div>
 
                                                         <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;">
@@ -274,7 +286,7 @@
                                                     </form>
                                                     {% endif %}
 
-                                                    {% if repo.installed and repo.git_managed %}
+                                                    {% if host_git_available and repo.installed and repo.git_managed %}
                                                     <details style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px 14px; background: #f8fafc;">
                                                         <summary style="cursor: pointer; font-weight: 700; color: #111827;">Advanced maintenance</summary>
                                                         <div style="display: grid; gap: 10px; margin-top: 12px;">
