@@ -8,7 +8,7 @@ sentiment, and unanswered @-mentions.
 
 from typing import Optional
 
-from sqlalchemy import desc
+from sqlalchemy import desc, or_
 
 from y_web import db
 from y_web.src.models import (
@@ -59,6 +59,31 @@ def _safe_author_profile_pic(author) -> str:
 def _adhoc_agent_badge(user) -> Optional[str]:
     user_type = str(getattr(user, "user_type", "") or "").strip().lower()
     return _ADHOC_AGENT_BADGE_LABELS.get(user_type)
+
+
+def _is_root_reference(column):
+    """Match both the legacy -1 sentinel and NULL root references."""
+    return or_(column.is_(None), column == -1)
+
+
+def _is_non_root_reference(column):
+    """Match any non-root reference, regardless of whether NULL is used."""
+    return or_(column.isnot(None), column != -1)
+
+
+def _render_shared_from(post):
+    shared_from = getattr(post, "shared_from", None)
+    if shared_from in (None, -1):
+        return -1
+
+    author = (
+        db.session.query(User_mgmt)
+        .join(Post, User_mgmt.id == Post.user_id)
+        .filter(Post.id == shared_from)
+        .first()
+    )
+    username = author.username if author else "Unknown"
+    return shared_from, username
 
 
 def _get_text_utils():
@@ -299,13 +324,17 @@ def get_user_recent_posts(
 
     if mode == "recent":
         posts = (
-            Post.query.filter_by(user_id=user_id, comment_to=-1).order_by(desc(Post.id))
+            Post.query.filter(
+                Post.user_id == user_id,
+                _is_root_reference(Post.comment_to),
+            ).order_by(desc(Post.id))
         ).paginate(page=page, per_page=per_page, error_out=False)
     elif mode == "comments":
         posts = (
-            Post.query.filter(Post.user_id == user_id, Post.comment_to != -1).order_by(
-                desc(Post.id)
-            )
+            Post.query.filter(
+                Post.user_id == user_id,
+                _is_non_root_reference(Post.comment_to),
+            ).order_by(desc(Post.id))
         ).paginate(page=page, per_page=per_page, error_out=False)
     elif mode == "liked":
         posts = (
@@ -321,13 +350,17 @@ def get_user_recent_posts(
         ).paginate(page=page, per_page=per_page, error_out=False)
     elif mode == "shares":
         posts = (
-            Post.query.filter(Post.user_id == user_id, Post.shared_from != -1).order_by(
-                desc(Post.id)
-            )
+            Post.query.filter(
+                Post.user_id == user_id,
+                _is_non_root_reference(Post.shared_from),
+            ).order_by(desc(Post.id))
         ).paginate(page=page, per_page=per_page, error_out=False)
     else:
         posts = (
-            Post.query.filter_by(user_id=user_id, comment_to=-1)
+            Post.query.filter(
+                Post.user_id == user_id,
+                _is_root_reference(Post.comment_to),
+            )
             .join(Reactions, Post.id == Reactions.post_id)
             .add_columns(func.count(Reactions.id).label("count"))
             .group_by(Post.id)
@@ -400,24 +433,7 @@ def get_user_recent_posts(
                     "post_id": c.id,
                     "author": author,
                     "profile_pic": profile_pic,
-                    "shared_from": (
-                        lambda: (
-                            -1
-                            if c.shared_from == -1
-                            else (
-                                lambda u: (
-                                    (c.shared_from, u.username)
-                                    if u
-                                    else (c.shared_from, "Unknown")
-                                )
-                            )(
-                                db.session.query(User_mgmt)
-                                .join(Post, User_mgmt.id == Post.user_id)
-                                .filter(Post.id == c.shared_from)
-                                .first()
-                            )
-                        )
-                    )(),
+                    "shared_from": _render_shared_from(c),
                     "author_id": c.user_id,
                     "title": comment_title if is_forum else "",
                     "post": processed_comment,
@@ -509,24 +525,7 @@ def get_user_recent_posts(
                 "article": art,
                 "image": image,
                 "thread_id": post.thread_id,
-                "shared_from": (
-                    lambda: (
-                        -1
-                        if post.shared_from == -1
-                        else (
-                            lambda u: (
-                                (post.shared_from, u.username)
-                                if u
-                                else (post.shared_from, "Unknown")
-                            )
-                        )(
-                            db.session.query(User_mgmt)
-                            .join(Post, User_mgmt.id == Post.user_id)
-                            .filter(Post.id == post.shared_from)
-                            .first()
-                        )
-                    )
-                )(),
+                "shared_from": _render_shared_from(post),
                 "post_id": post.id,
                 "profile_pic": profile_pic,
                 "author": (lambda u: u.username if u else "Unknown")(
@@ -629,24 +628,7 @@ def get_posts_associated_to_hashtags(
                     "post_id": c.id,
                     "author": author,
                     "profile_pic": profile_pic,
-                    "shared_from": (
-                        lambda: (
-                            -1
-                            if c.shared_from == -1
-                            else (
-                                lambda u: (
-                                    (c.shared_from, u.username)
-                                    if u
-                                    else (c.shared_from, "Unknown")
-                                )
-                            )(
-                                db.session.query(User_mgmt)
-                                .join(Post, User_mgmt.id == Post.user_id)
-                                .filter(Post.id == c.shared_from)
-                                .first()
-                            )
-                        )
-                    )(),
+                    "shared_from": _render_shared_from(c),
                     "author_id": c.user_id,
                     "post": augment_text(c.tweet.split(":")[-1], exp_id),
                     "round": c.round,
@@ -711,24 +693,7 @@ def get_posts_associated_to_hashtags(
                 "image": image,
                 "profile_pic": profile_pic,
                 "thread_id": post.thread_id,
-                "shared_from": (
-                    lambda: (
-                        -1
-                        if post.shared_from == -1
-                        else (
-                            lambda u: (
-                                (post.shared_from, u.username)
-                                if u
-                                else (post.shared_from, "Unknown")
-                            )
-                        )(
-                            db.session.query(User_mgmt)
-                            .join(Post, User_mgmt.id == Post.user_id)
-                            .filter(Post.id == post.shared_from)
-                            .first()
-                        )
-                    )
-                )(),
+                "shared_from": _render_shared_from(post),
                 "post_id": post.id,
                 "author": (lambda u: u.username if u else "Unknown")(
                     User_mgmt.query.filter_by(id=post.user_id).first()
@@ -822,24 +787,7 @@ def get_posts_associated_to_interest(
                     "post_id": c.id,
                     "author": author,
                     "profile_pic": profile_pic,
-                    "shared_from": (
-                        lambda: (
-                            -1
-                            if c.shared_from == -1
-                            else (
-                                lambda u: (
-                                    (c.shared_from, u.username)
-                                    if u
-                                    else (c.shared_from, "Unknown")
-                                )
-                            )(
-                                db.session.query(User_mgmt)
-                                .join(Post, User_mgmt.id == Post.user_id)
-                                .filter(Post.id == c.shared_from)
-                                .first()
-                            )
-                        )
-                    )(),
+                    "shared_from": _render_shared_from(c),
                     "author_id": c.user_id,
                     "post": augment_text(c.tweet.split(":")[-1], exp_id),
                     "round": c.round,
@@ -904,24 +852,7 @@ def get_posts_associated_to_interest(
                 "image": image,
                 "profile_pic": profile_pic,
                 "thread_id": post.thread_id,
-                "shared_from": (
-                    lambda: (
-                        -1
-                        if post.shared_from == -1
-                        else (
-                            lambda u: (
-                                (post.shared_from, u.username)
-                                if u
-                                else (post.shared_from, "Unknown")
-                            )
-                        )(
-                            db.session.query(User_mgmt)
-                            .join(Post, User_mgmt.id == Post.user_id)
-                            .filter(Post.id == post.shared_from)
-                            .first()
-                        )
-                    )
-                )(),
+                "shared_from": _render_shared_from(post),
                 "post_id": post.id,
                 "author": (lambda u: u.username if u else "Unknown")(
                     User_mgmt.query.filter_by(id=post.user_id).first()
@@ -1018,7 +949,7 @@ def get_posts_associated_to_emotion(
                     "shared_from": (
                         lambda: (
                             -1
-                            if c.shared_from == -1
+                            if c.shared_from in (None, -1)
                             else (
                                 lambda u: (
                                     (c.shared_from, u.username)
@@ -1099,7 +1030,7 @@ def get_posts_associated_to_emotion(
                 "shared_from": (
                     lambda: (
                         -1
-                        if post.shared_from == -1
+                        if post.shared_from in (None, -1)
                         else (
                             lambda u: (
                                 (post.shared_from, u.username)

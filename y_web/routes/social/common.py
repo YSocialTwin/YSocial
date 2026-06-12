@@ -18,7 +18,7 @@ from flask import (
     url_for,
 )
 from flask_login import current_user, login_required
-from sqlalchemy import and_, desc
+from sqlalchemy import and_, desc, or_
 from sqlalchemy.sql.expression import func
 from werkzeug.security import generate_password_hash
 
@@ -324,7 +324,10 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
         _latest_follow_action(follower_id=logged_id, user_id=user.id) == "follow"
     )
 
-    total_posts = Post.query.filter_by(user_id=user_id, comment_to=-1).count()
+    total_posts = Post.query.filter(
+        Post.user_id == user_id,
+        or_(Post.comment_to.is_(None), Post.comment_to == -1),
+    ).count()
     total_comments = Post.query.filter(
         Post.user_id == user_id,
         and_(Post.comment_to.isnot(None), Post.comment_to != -1),

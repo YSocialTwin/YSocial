@@ -13,6 +13,7 @@ Verifies that:
 import sys
 
 import pytest
+from sqlalchemy import column
 
 pytestmark = pytest.mark.unit
 
@@ -199,6 +200,15 @@ class TestCanonicalPostsImports:
             get_unanswered_mentions,
         ]:
             assert callable(fn), f"{fn} is not callable"
+
+    def test_root_reference_helper_treats_null_and_minus_one_as_root(self):
+        from y_web.src.data_access.posts import _is_root_reference
+
+        clause = _is_root_reference(column("comment_to"))
+        compiled = str(clause.compile(compile_kwargs={"literal_binds": True}))
+
+        assert "comment_to IS NULL" in compiled
+        assert "comment_to = -1" in compiled
 
 
 class TestSrcDataAccessPackageReExports:
