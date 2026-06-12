@@ -130,18 +130,14 @@ def _build_client_agent_spec(config) -> AgentSpec:
     client_id = _client_field(config, "client_id", "") or ""
     agent_type = _client_field(config, "agent_type", "") or ""
     agent_settings = _client_field(config, "agent_settings", {}) or {}
-    email = str(
-        _client_field(config, "email", "") or f"{client_id}@example.org"
-    )
+    email = str(_client_field(config, "email", "") or f"{client_id}@example.org")
     password = str(_client_field(config, "password", "") or client_id or "secret")
-    activity_profile = str(
-        _client_field(config, "activity_profile", "") or "Always On"
-    )
-    daily_budget = float(
-        _client_field(config, "daily_budget", 1) or 1
-    )
+    activity_profile = str(_client_field(config, "activity_profile", "") or "Always On")
+    daily_budget = float(_client_field(config, "daily_budget", 1) or 1)
     return AgentSpec(
-        name=str(_client_field(config, "name", "") or client_id or agent_type or "client"),
+        name=str(
+            _client_field(config, "name", "") or client_id or agent_type or "client"
+        ),
         username=client_id or agent_type or "client",
         email=email,
         password=password,
