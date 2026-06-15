@@ -35,6 +35,9 @@ from flask import (
 from flask_login import current_user, login_required, login_user
 
 from y_web import db  # , app
+from y_web.migrations.add_hpc_monitor_settings import (
+    ensure_hpc_monitor_settings_schema,
+)
 from y_web.src.content.avatars import normalize_forum_avatar_mode
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
@@ -113,9 +116,6 @@ from ._blueprint import (
     experiments,
 )
 from ._helpers import *  # noqa: F401,F403
-from y_web.migrations.add_hpc_monitor_settings import (
-    ensure_hpc_monitor_settings_schema,
-)
 
 
 @experiments.route("/admin/test_remote_server/<int:exp_id>", methods=["POST"])
