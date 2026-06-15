@@ -68,3 +68,16 @@ def test_stress_reward_scale_marks_any_positive_value():
     assert _stress_reward_scale_level(0.01) == 1
     assert _stress_reward_scale_level(0.06) == 1
     assert _stress_reward_scale_level(0.21) == 2
+
+
+def test_admin_schedule_no_longer_caps_hpc_groups():
+    schedule_source = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_schedule.py"
+    ).read_text(encoding="utf-8")
+    settings_template = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/settings.html"
+    ).read_text(encoding="utf-8")
+
+    assert "hpc_count >= MAX_HPC_PER_GROUP" not in schedule_source
+    assert "min(MAX_HPC_PER_GROUP, experiments_per_group)" not in schedule_source
+    assert "grouped up to 4 per group" not in settings_template

@@ -284,32 +284,10 @@ def add_experiment_to_group(group_id):
             400,
         )
 
-    # HPC experiment validation: Allow up to 4 HPC experiments per group
-    # Check if this is an HPC experiment or if the group already has experiments
+    # HPC experiment validation: keep HPC and Standard experiments separate.
     is_hpc = exp.simulator_type == "HPC"
 
     if is_hpc:
-        # Check how many HPC experiments are already in this group
-        hpc_count = (
-            db.session.query(ExperimentScheduleItem)
-            .join(Exps, ExperimentScheduleItem.experiment_id == Exps.idexp)
-            .filter(
-                ExperimentScheduleItem.group_id == group_id,
-                Exps.simulator_type == "HPC",
-            )
-            .count()
-        )
-        if hpc_count >= MAX_HPC_PER_GROUP:
-            return (
-                jsonify(
-                    {
-                        "success": False,
-                        "message": f"Maximum {MAX_HPC_PER_GROUP} HPC experiments allowed per group. This group already has {hpc_count} HPC experiments.",
-                    }
-                ),
-                400,
-            )
-
         # Check if there are any non-HPC (Standard) experiments in this group
         standard_count = (
             db.session.query(ExperimentScheduleItem)
@@ -1185,7 +1163,6 @@ def auto_create_groups():
         )
 
     # Separate HPC and Standard experiments
-    # HPC experiments can be grouped up to 4 per group
     hpc_exps = [exp for exp in available_exps if exp.simulator_type == "HPC"]
     standard_exps = [exp for exp in available_exps if exp.simulator_type != "HPC"]
 
@@ -1198,10 +1175,10 @@ def auto_create_groups():
     created_groups = []
     group_num = 1
 
-    # Calculate HPC experiments per group: min of MAX_HPC_PER_GROUP and user-specified value
-    hpc_per_group = min(MAX_HPC_PER_GROUP, experiments_per_group)
+    # Use the user-specified grouping size for HPC experiments as well.
+    hpc_per_group = max(1, experiments_per_group)
 
-    # First, create groups for HPC experiments (respecting user input, capped at 4)
+    # First, create groups for HPC experiments using the requested group size
     for i in range(0, len(hpc_exps), hpc_per_group):
         group_hpc_exps = hpc_exps[i : i + hpc_per_group]
 

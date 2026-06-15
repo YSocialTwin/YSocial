@@ -10,7 +10,7 @@ experiments = Blueprint("experiments", __name__)
 
 # Configuration constants
 OPINION_CACHE_EXPIRY_MINUTES = 5  # Cache expiry time for opinion evolution statistics
-MAX_HPC_PER_GROUP = 4  # Maximum number of HPC experiments allowed per schedule group
+MAX_HPC_PER_GROUP = None  # No fixed upper limit for HPC experiments per schedule group
 DEFAULT_FEED_LIMITS = {
     "rss_entries_per_feed": 100,
     "reddit_entries_per_feed": 200,

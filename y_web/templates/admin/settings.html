@@ -401,7 +401,7 @@
                             <span id="schedule-status-badge" style="display: none; padding: 4px 12px; border-radius: 12px; font-size: 0.8em; font-weight: 500;"></span>
                         </h3>
                         <p style="font-size: 0.85em; color: #666; margin-bottom: 15px;">
-                            Create experiment groups for sequential batch execution. Experiments within a group run in parallel; groups run sequentially. HPC experiments can be grouped up to 4 per group (cannot mix with Standard experiments).
+                            Create experiment groups for sequential batch execution. Experiments within a group run in parallel; groups run sequentially. HPC experiments can be grouped without a fixed per-group cap (cannot mix with Standard experiments).
                         </p>
 
                         <div style="display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 15px;">
@@ -428,7 +428,7 @@
                                         <button onclick="autoCreateGroups()" style="background: #17a2b8; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8em;">
                                             <i class="mdi mdi-auto-fix"></i> Auto
                                         </button>
-                                        <input type="number" id="exps-per-group" value="2" min="1" max="10" style="width: 45px; padding: 3px 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.8em; text-align: center;" title="Experiments per group">
+                                        <input type="number" id="exps-per-group" value="2" min="1" style="width: 45px; padding: 3px 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.8em; text-align: center;" title="Experiments per group">
  <div class="select ys-text-080">
                                             <select id="group-filter" aria-label="Filter experiments by group" title="Filter by group (all = all groups)">
                                                 <option value="">All Groups</option>
