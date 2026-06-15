@@ -1279,6 +1279,16 @@ var AdminMiscellanea = (function() {
         
           document.getElementById('hpc_monitor_enabled').checked = data.enabled;
           document.getElementById('hpc_check_interval_seconds').value = data.check_interval_seconds;
+          const hpcGroupLimitEnabled = document.getElementById('hpc_group_limit_enabled');
+          const hpcMaxPerGroup = document.getElementById('hpc_max_hpc_per_group');
+          const hasLimit = data.max_hpc_per_group !== null && data.max_hpc_per_group !== undefined;
+          if (hpcGroupLimitEnabled) {
+              hpcGroupLimitEnabled.checked = hasLimit;
+          }
+          if (hpcMaxPerGroup) {
+              hpcMaxPerGroup.value = hasLimit ? data.max_hpc_per_group : 4;
+              hpcMaxPerGroup.disabled = !hasLimit;
+          }
         
           updateHpcMonitorStatusIndicator(data.enabled);
         
@@ -1319,10 +1329,17 @@ var AdminMiscellanea = (function() {
       const enabled = document.getElementById('hpc_monitor_enabled').checked;
       const intervalValue = document.getElementById('hpc_check_interval_seconds').value;
       const interval = Number(intervalValue);
+      const groupLimitEnabled = document.getElementById('hpc_group_limit_enabled').checked;
+      const maxPerGroupValue = document.getElementById('hpc_max_hpc_per_group').value;
+      const maxPerGroup = groupLimitEnabled ? Number(maxPerGroupValue) : null;
     
       // Check for NaN or invalid values
       if (isNaN(interval) || interval < 1 || interval > 300) {
           showHpcMonitorMessage('Check interval must be a valid number between 1 and 300 seconds', true);
+          return;
+      }
+      if (groupLimitEnabled && (isNaN(maxPerGroup) || maxPerGroup < 1)) {
+          showHpcMonitorMessage('Max HPC experiments per group must be a valid number greater than 0, or disable the limit', true);
           return;
       }
     
@@ -1332,7 +1349,8 @@ var AdminMiscellanea = (function() {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                   enabled: enabled,
-                  check_interval_seconds: interval
+                  check_interval_seconds: interval,
+                  max_hpc_per_group: maxPerGroup
               })
           });
         
@@ -1353,6 +1371,13 @@ var AdminMiscellanea = (function() {
   // Update status indicator when toggle changes
   bindById('hpc_monitor_enabled', 'change', function() {
       updateHpcMonitorStatusIndicator(this.checked);
+  });
+
+  bindById('hpc_group_limit_enabled', 'change', function() {
+      const limitInput = document.getElementById('hpc_max_hpc_per_group');
+      if (limitInput) {
+          limitInput.disabled = !this.checked;
+      }
   });
 
   // Load settings on page load using data attribute to avoid duplicate initialization

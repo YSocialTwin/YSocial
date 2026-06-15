@@ -74,10 +74,19 @@ def test_admin_schedule_no_longer_caps_hpc_groups():
     schedule_source = Path(
         "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_schedule.py"
     ).read_text(encoding="utf-8")
+    hpc_source = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_hpc.py"
+    ).read_text(encoding="utf-8")
     settings_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/settings.html"
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/miscellanea.html"
+    ).read_text(encoding="utf-8")
+    js_source = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/js/admin-miscellanea.js"
     ).read_text(encoding="utf-8")
 
-    assert "hpc_count >= MAX_HPC_PER_GROUP" not in schedule_source
-    assert "min(MAX_HPC_PER_GROUP, experiments_per_group)" not in schedule_source
+    assert "max_hpc_per_group" in hpc_source
+    assert "max_hpc_per_group" in schedule_source
+    assert "hpc_group_limit_enabled" in settings_template
+    assert "hpc_max_hpc_per_group" in settings_template
+    assert "max_hpc_per_group" in js_source
     assert "grouped up to 4 per group" not in settings_template

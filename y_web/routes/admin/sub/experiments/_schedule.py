@@ -113,6 +113,9 @@ from ._blueprint import (
     experiments,
 )
 from ._helpers import *  # noqa: F401,F403
+from y_web.migrations.add_hpc_monitor_settings import (
+    ensure_hpc_monitor_settings_schema,
+)
 
 
 @experiments.route("/admin/schedule/groups", methods=["GET"])
@@ -260,6 +263,7 @@ def add_experiment_to_group(group_id):
     Returns:
         JSON with success status
     """
+    ensure_hpc_monitor_settings_schema()
     check_privileges(current_user.username)
 
     data = request.get_json()
@@ -286,6 +290,10 @@ def add_experiment_to_group(group_id):
 
     # HPC experiment validation: keep HPC and Standard experiments separate.
     is_hpc = exp.simulator_type == "HPC"
+    hpc_settings = HpcMonitorSettings.query.first()
+    max_hpc_per_group = (
+        getattr(hpc_settings, "max_hpc_per_group", 4) if hpc_settings else 4
+    )
 
     if is_hpc:
         # Check if there are any non-HPC (Standard) experiments in this group
@@ -308,6 +316,29 @@ def add_experiment_to_group(group_id):
                 ),
                 400,
             )
+        if max_hpc_per_group is not None:
+            hpc_count = (
+                db.session.query(ExperimentScheduleItem)
+                .join(Exps, ExperimentScheduleItem.experiment_id == Exps.idexp)
+                .filter(
+                    ExperimentScheduleItem.group_id == group_id,
+                    Exps.simulator_type == "HPC",
+                )
+                .count()
+            )
+            if hpc_count >= max_hpc_per_group:
+                return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "message": (
+                                f"Maximum {max_hpc_per_group} HPC experiments allowed per group. "
+                                f"This group already has {hpc_count} HPC experiments."
+                            ),
+                        }
+                    ),
+                    400,
+                )
     else:
         # Check if group already contains an HPC experiment (use join for efficiency)
         hpc_in_group = (
@@ -1162,6 +1193,12 @@ def auto_create_groups():
             400,
         )
 
+    ensure_hpc_monitor_settings_schema()
+    hpc_settings = HpcMonitorSettings.query.first()
+    max_hpc_per_group = (
+        getattr(hpc_settings, "max_hpc_per_group", 4) if hpc_settings else 4
+    )
+
     # Separate HPC and Standard experiments
     hpc_exps = [exp for exp in available_exps if exp.simulator_type == "HPC"]
     standard_exps = [exp for exp in available_exps if exp.simulator_type != "HPC"]
@@ -1175,8 +1212,12 @@ def auto_create_groups():
     created_groups = []
     group_num = 1
 
-    # Use the user-specified grouping size for HPC experiments as well.
-    hpc_per_group = max(1, experiments_per_group)
+    # Use the configured HPC grouping size when limited; otherwise honor user input.
+    hpc_per_group = (
+        max(1, min(max_hpc_per_group, experiments_per_group))
+        if max_hpc_per_group is not None
+        else max(1, experiments_per_group)
+    )
 
     # First, create groups for HPC experiments using the requested group size
     for i in range(0, len(hpc_exps), hpc_per_group):

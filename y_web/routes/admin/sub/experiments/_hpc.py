@@ -113,6 +113,9 @@ from ._blueprint import (
     experiments,
 )
 from ._helpers import *  # noqa: F401,F403
+from y_web.migrations.add_hpc_monitor_settings import (
+    ensure_hpc_monitor_settings_schema,
+)
 
 
 @experiments.route("/admin/test_remote_server/<int:exp_id>", methods=["POST"])
@@ -290,10 +293,14 @@ def get_hpc_monitor_settings():
     """
     check_privileges(current_user.username)
 
+    ensure_hpc_monitor_settings_schema()
+
     # Get or create default settings
     settings = HpcMonitorSettings.query.first()
     if not settings:
-        settings = HpcMonitorSettings(enabled=True, check_interval_seconds=5)
+        settings = HpcMonitorSettings(
+            enabled=True, check_interval_seconds=5, max_hpc_per_group=4
+        )
         db.session.add(settings)
         db.session.commit()
 
@@ -301,6 +308,7 @@ def get_hpc_monitor_settings():
         {
             "enabled": settings.enabled,
             "check_interval_seconds": settings.check_interval_seconds,
+            "max_hpc_per_group": settings.max_hpc_per_group,
             "last_check": (
                 settings.last_check.isoformat() + "Z" if settings.last_check else None
             ),
@@ -317,6 +325,7 @@ def update_hpc_monitor_settings():
     Expects JSON body with:
     - enabled (bool): Whether HPC monitoring is enabled
     - check_interval_seconds (int): Check frequency in seconds (1-300)
+    - max_hpc_per_group (int|null): Maximum HPC experiments per group, or null for unlimited
 
     Returns:
         JSON with success status
@@ -327,10 +336,14 @@ def update_hpc_monitor_settings():
     if not data:
         return jsonify({"success": False, "message": "No data provided"}), 400
 
+    ensure_hpc_monitor_settings_schema()
+
     # Get or create settings
     settings = HpcMonitorSettings.query.first()
     if not settings:
-        settings = HpcMonitorSettings(enabled=True, check_interval_seconds=5)
+        settings = HpcMonitorSettings(
+            enabled=True, check_interval_seconds=5, max_hpc_per_group=4
+        )
         db.session.add(settings)
 
     # Update enabled if provided
@@ -358,6 +371,35 @@ def update_hpc_monitor_settings():
                 jsonify({"success": False, "message": "Invalid check interval value"}),
                 400,
             )
+
+    if "max_hpc_per_group" in data:
+        raw_value = data["max_hpc_per_group"]
+        if raw_value in ("", None):
+            settings.max_hpc_per_group = None
+        else:
+            try:
+                max_value = int(raw_value)
+            except (ValueError, TypeError):
+                return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "message": "Invalid max HPC group value",
+                        }
+                    ),
+                    400,
+                )
+            if max_value < 1:
+                return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "message": "Max HPC experiments per group must be at least 1, or choose unlimited",
+                        }
+                    ),
+                    400,
+                )
+            settings.max_hpc_per_group = max_value
 
     db.session.commit()
 

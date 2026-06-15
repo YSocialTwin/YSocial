@@ -751,6 +751,9 @@ class HpcMonitorSettings(db.Model):
     check_interval_seconds = db.Column(
         db.Integer, nullable=False, default=5
     )  # Default 5 seconds
+    max_hpc_per_group = db.Column(
+        db.Integer, nullable=True, default=4
+    )  # NULL means unlimited
     last_check = db.Column(db.DateTime, nullable=True)  # Last time check was performed
 
 
