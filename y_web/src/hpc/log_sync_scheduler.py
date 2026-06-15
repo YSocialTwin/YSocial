@@ -107,14 +107,21 @@ class LogSyncScheduler:
         """Get HPC monitor settings from database with proper error handling."""
         from sqlalchemy.exc import IntegrityError
 
+        from y_web.migrations.add_hpc_monitor_settings import (
+            ensure_hpc_monitor_settings_schema,
+        )
         from y_web import db
         from y_web.src.models import HpcMonitorSettings
+
+        ensure_hpc_monitor_settings_schema()
 
         settings = HpcMonitorSettings.query.first()
         if not settings:
             # Use get_or_create pattern with proper exception handling
             try:
-                settings = HpcMonitorSettings(enabled=True, check_interval_seconds=5)
+                settings = HpcMonitorSettings(
+                    enabled=True, check_interval_seconds=5, max_hpc_per_group=4
+                )
                 db.session.add(settings)
                 db.session.commit()
             except IntegrityError:
@@ -125,10 +132,14 @@ class LogSyncScheduler:
 
     def _update_hpc_monitor_last_check(self):
         """Update the last check timestamp in database."""
+        from y_web.migrations.add_hpc_monitor_settings import (
+            ensure_hpc_monitor_settings_schema,
+        )
         from y_web import db
         from y_web.src.models import HpcMonitorSettings
 
         try:
+            ensure_hpc_monitor_settings_schema()
             settings = HpcMonitorSettings.query.first()
             if settings:
                 settings.last_check = datetime.now(timezone.utc)

@@ -5,6 +5,7 @@ This script:
 1. Adds the hpc_monitor_settings table which stores:
    - enabled: Whether HPC monitoring is enabled
    - check_interval_seconds: Frequency of checks in seconds (default 5)
+   - max_hpc_per_group: Maximum HPC experiments per group; NULL means unlimited
    - last_check: Timestamp of the last check operation
 
 2. Removes the old log_sync_settings table (replaced by HPC monitor)
@@ -54,6 +55,7 @@ def migrate_sqlite(db_path):
                     id                       INTEGER PRIMARY KEY AUTOINCREMENT,
                     enabled                  INTEGER NOT NULL DEFAULT 1,
                     check_interval_seconds   INTEGER NOT NULL DEFAULT 5,
+                    max_hpc_per_group       INTEGER,
                     last_check               TEXT
                 )
             """)
@@ -65,6 +67,16 @@ def migrate_sqlite(db_path):
             print("✓ Created hpc_monitor_settings table in SQLite database")
         else:
             print("○ hpc_monitor_settings table already exists in SQLite database")
+            cursor.execute("PRAGMA table_info(hpc_monitor_settings)")
+            existing_columns = {row[1] for row in cursor.fetchall()}
+            if "max_hpc_per_group" not in existing_columns:
+                cursor.execute(
+                    "ALTER TABLE hpc_monitor_settings ADD COLUMN max_hpc_per_group INTEGER"
+                )
+                cursor.execute(
+                    "UPDATE hpc_monitor_settings SET max_hpc_per_group = 4 WHERE max_hpc_per_group IS NULL"
+                )
+                print("✓ Added max_hpc_per_group column to SQLite database")
 
         # Drop old log_sync_settings table if it exists
         cursor.execute(
@@ -127,6 +139,7 @@ def migrate_postgresql(host, port, database, user, password):
                     id                       SERIAL PRIMARY KEY,
                     enabled                  BOOLEAN NOT NULL DEFAULT TRUE,
                     check_interval_seconds   INTEGER NOT NULL DEFAULT 5,
+                    max_hpc_per_group       INTEGER,
                     last_check               TIMESTAMP
                 )
             """)
@@ -138,6 +151,21 @@ def migrate_postgresql(host, port, database, user, password):
             print("✓ Created hpc_monitor_settings table in PostgreSQL database")
         else:
             print("○ hpc_monitor_settings table already exists in PostgreSQL database")
+            cursor.execute("""
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_schema = 'public'
+                  AND table_name = 'hpc_monitor_settings'
+            """)
+            existing_columns = {row[0] for row in cursor.fetchall()}
+            if "max_hpc_per_group" not in existing_columns:
+                cursor.execute(
+                    "ALTER TABLE hpc_monitor_settings ADD COLUMN max_hpc_per_group INTEGER"
+                )
+                cursor.execute(
+                    "UPDATE hpc_monitor_settings SET max_hpc_per_group = 4 WHERE max_hpc_per_group IS NULL"
+                )
+                print("✓ Added max_hpc_per_group column to PostgreSQL database")
 
         # Drop old log_sync_settings table if it exists
         cursor.execute("""
@@ -215,21 +243,17 @@ def main():
     return 0 if sqlite_success else 1
 
 
-if __name__ == "__main__":
-    sys.exit(main())
-
-
 def ensure_hpc_monitor_settings_schema():
-    """Add the max_hpc_per_group column if missing."""
+    """Ensure the hpc_monitor_settings table has the new max_hpc_per_group column."""
     from y_web import db
 
     engine = db.get_engine(bind="db_admin")
-    dialect = engine.dialect.name
+    dialect_name = engine.dialect.name
     with engine.begin() as conn:
-        if dialect == "sqlite":
+        if dialect_name == "sqlite":
             rows = conn.execute("PRAGMA table_info(hpc_monitor_settings)").fetchall()
-            columns = {str(row[1]) for row in rows}
-            if "max_hpc_per_group" not in columns:
+            existing_columns = {str(row[1]) for row in rows}
+            if "max_hpc_per_group" not in existing_columns:
                 conn.execute(
                     "ALTER TABLE hpc_monitor_settings ADD COLUMN max_hpc_per_group INTEGER"
                 )
@@ -237,13 +261,15 @@ def ensure_hpc_monitor_settings_schema():
                     "UPDATE hpc_monitor_settings SET max_hpc_per_group = 4 WHERE max_hpc_per_group IS NULL"
                 )
         else:
-            exists = conn.execute("""
+            exists = conn.execute(
+                """
                 SELECT 1
                 FROM information_schema.columns
                 WHERE table_schema = 'public'
                   AND table_name = 'hpc_monitor_settings'
                   AND column_name = 'max_hpc_per_group'
-                """).fetchone()
+                """
+            ).fetchone()
             if not exists:
                 conn.execute(
                     "ALTER TABLE hpc_monitor_settings ADD COLUMN max_hpc_per_group INTEGER"
@@ -251,3 +277,7 @@ def ensure_hpc_monitor_settings_schema():
                 conn.execute(
                     "UPDATE hpc_monitor_settings SET max_hpc_per_group = 4 WHERE max_hpc_per_group IS NULL"
                 )
+
+
+if __name__ == "__main__":
+    sys.exit(main())
