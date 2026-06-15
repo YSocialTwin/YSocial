@@ -2565,7 +2565,11 @@ def stop_experiment(uid):
     # Manual stop should not advance or reshuffle the schedule; the user can resume
     # or stop the whole schedule separately.
     schedule_status = ExperimentScheduleStatus.query.first()
-    if schedule_status and schedule_status.is_running and schedule_status.current_group_id:
+    if (
+        schedule_status
+        and schedule_status.is_running
+        and schedule_status.current_group_id
+    ):
         schedule_item = ExperimentScheduleItem.query.filter_by(
             experiment_id=uid, group_id=schedule_status.current_group_id
         ).first()

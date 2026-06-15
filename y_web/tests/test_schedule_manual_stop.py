@@ -31,7 +31,10 @@ def test_schedule_stop_marks_experiment_stopped_not_completed():
     ).read_text(encoding="utf-8")
 
     assert 'exp.exp_status = "stopped"' in schedule_source
-    assert 'final_status = "completed" if all_clients_completed else "stopped"' not in schedule_source
+    assert (
+        'final_status = "completed" if all_clients_completed else "stopped"'
+        not in schedule_source
+    )
 
 
 def test_schedule_progress_only_advances_on_completed_experiments():
@@ -50,8 +53,11 @@ def test_resume_client_is_local_to_the_target_experiment():
         "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_execution.py"
     ).read_text(encoding="utf-8")
 
-    assert 'db.session.query(Client).filter_by(id=uid).update({Client.status: 1})' in execution_source
-    assert 'db.session.query(Exps).filter_by(idexp=idexp).update(' in execution_source
+    assert (
+        "db.session.query(Client).filter_by(id=uid).update({Client.status: 1})"
+        in execution_source
+    )
+    assert "db.session.query(Exps).filter_by(idexp=idexp).update(" in execution_source
     assert "sibling" not in execution_source.lower()
 
 
