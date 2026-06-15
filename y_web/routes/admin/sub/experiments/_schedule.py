@@ -724,12 +724,8 @@ def stop_schedule():
                 # Stop server
                 stop_server_for_experiment(exp)
 
-                # Check if all clients have completed to determine final status
-                all_clients_completed, _ = _get_clients_to_start(exp)
-                final_status = "completed" if all_clients_completed else "stopped"
-
                 exp.running = 0
-                exp.exp_status = final_status
+                exp.exp_status = "stopped"
                 db.session.commit()
 
     # Reset status
