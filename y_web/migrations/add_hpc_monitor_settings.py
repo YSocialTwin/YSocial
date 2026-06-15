@@ -261,15 +261,13 @@ def ensure_hpc_monitor_settings_schema():
                     "UPDATE hpc_monitor_settings SET max_hpc_per_group = 4 WHERE max_hpc_per_group IS NULL"
                 )
         else:
-            exists = conn.execute(
-                """
+            exists = conn.execute("""
                 SELECT 1
                 FROM information_schema.columns
                 WHERE table_schema = 'public'
                   AND table_name = 'hpc_monitor_settings'
                   AND column_name = 'max_hpc_per_group'
-                """
-            ).fetchone()
+                """).fetchone()
             if not exists:
                 conn.execute(
                     "ALTER TABLE hpc_monitor_settings ADD COLUMN max_hpc_per_group INTEGER"
