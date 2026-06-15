@@ -251,28 +251,30 @@ def ensure_hpc_monitor_settings_schema():
     dialect_name = engine.dialect.name
     with engine.begin() as conn:
         if dialect_name == "sqlite":
-            rows = conn.execute("PRAGMA table_info(hpc_monitor_settings)").fetchall()
+            rows = conn.exec_driver_sql("PRAGMA table_info(hpc_monitor_settings)").fetchall()
             existing_columns = {str(row[1]) for row in rows}
             if "max_hpc_per_group" not in existing_columns:
-                conn.execute(
+                conn.exec_driver_sql(
                     "ALTER TABLE hpc_monitor_settings ADD COLUMN max_hpc_per_group INTEGER"
                 )
-                conn.execute(
+                conn.exec_driver_sql(
                     "UPDATE hpc_monitor_settings SET max_hpc_per_group = 4 WHERE max_hpc_per_group IS NULL"
                 )
         else:
-            exists = conn.execute("""
+            exists = conn.exec_driver_sql(
+                """
                 SELECT 1
                 FROM information_schema.columns
                 WHERE table_schema = 'public'
                   AND table_name = 'hpc_monitor_settings'
                   AND column_name = 'max_hpc_per_group'
-                """).fetchone()
+                """
+            ).fetchone()
             if not exists:
-                conn.execute(
+                conn.exec_driver_sql(
                     "ALTER TABLE hpc_monitor_settings ADD COLUMN max_hpc_per_group INTEGER"
                 )
-                conn.execute(
+                conn.exec_driver_sql(
                     "UPDATE hpc_monitor_settings SET max_hpc_per_group = 4 WHERE max_hpc_per_group IS NULL"
                 )
 
