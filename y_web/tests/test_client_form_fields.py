@@ -205,7 +205,21 @@ class TestClientFormFields:
         ).read()
 
         assert 'name="probability_of_daily_follow"' in template_source
-        assert 'value="0.1"' in template_source
+        assert 'value="0"' in template_source
+        assert 'value="0.45"' in template_source
+        assert 'value="0.35"' in template_source
+        assert 'value="72"' in template_source
         assert (
             'input type="hidden" name="follow" id="follow" value="1"' in template_source
+        )
+
+    def test_hpc_embedded_vllm_model_default_is_updated(self):
+        template_source = open(
+            "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_hpc.html",
+            "r",
+        ).read()
+
+        assert (
+            'name="llm_model"' in template_source
+            and 'value="huihui-ai/Llama-3.2-3B-Instruct-abliterated"' in template_source
         )

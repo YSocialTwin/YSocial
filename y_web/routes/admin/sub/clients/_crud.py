@@ -2143,16 +2143,16 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
         form_data.get("reading_from_follower_ratio", "0.8")
     )
     probability_of_daily_follow = float(
-        form_data.get("probability_of_daily_follow", "0.1")
+        form_data.get("probability_of_daily_follow", "0")
     )
     probability_of_secondary_follow = float(
-        form_data.get("probability_of_secondary_follow", "0.1")
+        form_data.get("probability_of_secondary_follow", "0.45")
     )
     probability_of_follow_back = float(
-        form_data.get("probability_of_follow_back", "0.0")
+        form_data.get("probability_of_follow_back", "0.35")
     )
     attention_window = int(form_data.get("attention_window", "336"))
-    visibility_rounds = int(form_data.get("visibility_rounds", "36"))
+    visibility_rounds = int(form_data.get("visibility_rounds", "72"))
     batch_size = int(form_data.get("batch_size", "100"))
     recommendations_default_limit = int(
         form_data.get("recommendations_default_limit", "12")
@@ -2329,7 +2329,9 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
     elif llm_backend == "vllm":
         llm_config = {
             "backend": "vllm",
-            "model": form_data.get("llm_model", "AMead10/Llama-3.2-3B-Instruct-AWQ"),
+            "model": form_data.get(
+                "llm_model", "huihui-ai/Llama-3.2-3B-Instruct-abliterated"
+            ),
             "temperature": float(form_data.get("llm_temperature", "0.9")),
             "max_tokens": int(form_data.get("llm_max_tokens", "256")),
             "max_model_len": int(form_data.get("llm_max_model_len", "4096")),

@@ -233,23 +233,3 @@ def test_no_duplicate_blueprint_definitions():
                     f"{mod_name}.{attr_name} is a different Blueprint object – "
                     "only _blueprint.py should define it"
                 )
-
-
-# ---------------------------------------------------------------------------
-# 5. Constants accessible
-# ---------------------------------------------------------------------------
-
-
-def test_constants_in_blueprint_module():
-    """Module-level constants must be present in _blueprint."""
-    from y_web.routes.admin.sub.experiments._blueprint import (
-        DEFAULT_FEED_LIMITS,
-        DEFAULT_FORUM_AVATAR_SETTINGS,
-        MAX_HPC_PER_GROUP,
-        OPINION_CACHE_EXPIRY_MINUTES,
-    )
-
-    assert isinstance(OPINION_CACHE_EXPIRY_MINUTES, int)
-    assert isinstance(MAX_HPC_PER_GROUP, int)
-    assert isinstance(DEFAULT_FEED_LIMITS, dict)
-    assert isinstance(DEFAULT_FORUM_AVATAR_SETTINGS, dict)

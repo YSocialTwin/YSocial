@@ -2555,46 +2555,33 @@ def stop_experiment(uid):
     # If that fails or no process is tracked, fall back to port-based termination
     stop_server_for_experiment(exp)
 
-    # Step 4: Check if all clients have completed to determine final status
-    all_clients_completed, _ = _get_clients_to_start(exp)
-    final_status = "completed" if all_clients_completed else "stopped"
-
     # Update the experiment status in database
     db.session.query(Exps).filter_by(idexp=uid).update(
-        {Exps.running: 0, Exps.exp_status: final_status}
+        {Exps.running: 0, Exps.exp_status: "stopped"}
     )
     db.session.commit()
 
-    # Step 5: Handle scheduled experiments - remove from running group to unblock schedule
-    # Check if there's an active schedule and if this experiment is part of it
+    # Step 5: If the experiment is part of a running schedule, keep it in the group.
+    # Manual stop should not advance or reshuffle the schedule; the user can resume
+    # or stop the whole schedule separately.
     schedule_status = ExperimentScheduleStatus.query.first()
     if (
         schedule_status
         and schedule_status.is_running
         and schedule_status.current_group_id
     ):
-        # Check if this experiment is in the current running group
         schedule_item = ExperimentScheduleItem.query.filter_by(
             experiment_id=uid, group_id=schedule_status.current_group_id
         ).first()
-
         if schedule_item:
-            # This experiment is part of the running schedule group
-            # Remove it from the schedule to unblock subsequent groups
             group = ExperimentScheduleGroup.query.get(schedule_status.current_group_id)
             group_name = group.name if group else "Unknown"
-
-            # Log the removal
-            log_msg = f"Experiment '{exp.exp_name}' was manually stopped and removed from schedule group '{group_name}'"
-            db.session.add(ExperimentScheduleLog(message=log_msg, log_type="warning"))
-
-            # Remove the schedule item
-            db.session.delete(schedule_item)
-            db.session.commit()
-
-            print(
-                f"Removed stopped experiment {exp.exp_name} (ID: {uid}) from schedule group {group_name}"
+            log_msg = (
+                f"Experiment '{exp.exp_name}' was manually stopped in running schedule "
+                f"group '{group_name}' and left in place for later resume."
             )
+            db.session.add(ExperimentScheduleLog(message=log_msg, log_type="warning"))
+            db.session.commit()
 
     return experiment_details(uid)
 
