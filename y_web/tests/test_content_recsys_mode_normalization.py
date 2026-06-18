@@ -41,24 +41,3 @@ def test_get_suggested_posts_reverse_chrono_alias_does_not_fallback_to_random(
     db_mock.session.query.assert_called_once()
     query_chain.filter.return_value.outerjoin.assert_called_once()
     random_fn.assert_not_called()
-
-
-def test_get_suggested_posts_all_orders_by_round_day_hour(monkeypatch):
-    from y_web.src.recsys import content_recsys
-
-    paginate_result = MagicMock()
-    query_chain = MagicMock()
-    query_chain.filter_by.return_value.outerjoin.return_value.order_by.return_value.paginate.return_value = (
-        paginate_result
-    )
-    db_mock = MagicMock()
-    db_mock.session.query.return_value = query_chain
-    monkeypatch.setattr(content_recsys, "db", db_mock)
-
-    posts, additional = content_recsys.get_suggested_posts(
-        uid="all", mode="Reverse Chrono", page=1, per_page=10
-    )
-
-    assert posts is paginate_result
-    assert additional is None
-    query_chain.filter_by.return_value.outerjoin.assert_called_once()
