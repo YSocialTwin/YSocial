@@ -66,7 +66,7 @@ class Post(db.Model):
 
     __bind_key__ = "db_exp"
     id = db.Column(db.Integer, primary_key=True)
-    tweet = db.Column(db.String(500), nullable=False)
+    tweet = db.Column(db.Text, nullable=False)
     round = db.Column(db.Integer, nullable=False)
     post_img = db.Column(db.String(20))
     user_id = db.Column(db.Integer, db.ForeignKey("user_mgmt.id"), nullable=False)
