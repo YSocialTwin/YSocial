@@ -11,11 +11,19 @@ def test_hpc_prompt_json_includes_output_contracts():
     news_prompt = data["generate_news_commentary"]["user_template"]
 
     assert "Output ONLY the comment text." in comment_prompt
-    assert "Do not explain, summarize, quote the prompt, add preambles, or wrap it in markdown." in comment_prompt
+    assert (
+        "Do not explain, summarize, quote the prompt, add preambles, or wrap it in markdown."
+        in comment_prompt
+    )
 
     assert "Output ONLY the commentary text." in share_prompt
-    assert "Do not explain, summarize, quote the prompt, add preambles, or wrap it in markdown." in share_prompt
+    assert (
+        "Do not explain, summarize, quote the prompt, add preambles, or wrap it in markdown."
+        in share_prompt
+    )
 
     assert "Output ONLY the tweet text." in news_prompt
-    assert "Do not explain, summarize, quote the prompt, add preambles, or wrap it in markdown." in news_prompt
-
+    assert (
+        "Do not explain, summarize, quote the prompt, add preambles, or wrap it in markdown."
+        in news_prompt
+    )
