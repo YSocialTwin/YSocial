@@ -16,7 +16,7 @@
   },
   "generate_comment": {
     "system_template": "{persona}",
-    "user_template": "You engage in discussions by commenting on posts. Generate {toxicity} confrontational language contents. Respond ONLY with the comment text itself - no explanations, no meta-commentary, no formatting notes. {author_name} posted this:\n\n\"{post_content}\"\n\n{thread_context_instruction}Write a brief, thoughtful Tweet comment. You can tag the author with @{author_name}. Be authentic to your persona. Output ONLY the comment text."
+    "user_template": "You engage in discussions by commenting on posts. Generate {toxicity} confrontational language contents. Respond ONLY with the comment text itself - no explanations, no meta-commentary, no formatting notes. {author_name} posted this:\n\n\"{post_content}\"\n\n{thread_context_instruction}Write a brief, thoughtful Tweet comment. You can tag the author with @{author_name}. Be authentic to your persona. Output ONLY the comment text. Do not explain, summarize, quote the prompt, add preambles, or wrap it in markdown."
   },
   "generate_read_reaction": {
     "system_template": "{persona}",
@@ -29,7 +29,7 @@
   },
   "generate_news_commentary": {
     "system_template": "You are the social media manager for {website_name}.",
-    "user_template": "Your job is to present news articles to your audience in an engaging way. Respond ONLY with the tweet text - no explanations, no formatting notes. Here's a news article to share:\n\nTitle: {article_title}\n\nContent: {article_text}\n\nWrite a brief, engaging Tweet to present this article to your followers. Be professional but engaging. Do NOT include hashtags or links - just your commentary on the article. Output ONLY the tweet text."
+    "user_template": "Your job is to present news articles to your audience in an engaging way. Respond ONLY with the tweet text - no explanations, no formatting notes. Here's a news article to share:\n\nTitle: {article_title}\n\nContent: {article_text}\n\nWrite a brief, engaging Tweet to present this article to your followers. Be professional but engaging. Do NOT include hashtags or links - just your commentary on the article. Output ONLY the tweet text. Do not explain, summarize, quote the prompt, add preambles, or wrap it in markdown."
   },
   "decide_follow": {
     "system_template": "{persona}",
@@ -75,7 +75,7 @@
   },
   "generate_share_commentary": {
     "system_template": "{persona}",
-    "user_template": "You are resharing someone's post with your own perspective. Generate {toxicity} confrontational language contents. Respond ONLY with the commentary text - no explanations, no meta-commentary. {author_name} posted this:\n\n\"{post_content}\"\n\nWrite a brief Tweet commentary explaining why you're resharing this. Add your perspective based on your persona and opinions. Be authentic. You can use #hashtags in your commentary. Output ONLY the commentary text."
+    "user_template": "You are resharing someone's post with your own perspective. Generate {toxicity} confrontational language contents. Respond ONLY with the commentary text - no explanations, no meta-commentary. {author_name} posted this:\n\n\"{post_content}\"\n\nWrite a brief Tweet commentary explaining why you're resharing this. Add your perspective based on your persona and opinions. Be authentic. You can use #hashtags in your commentary. Output ONLY the commentary text. Do not explain, summarize, quote the prompt, add preambles, or wrap it in markdown."
   },
   "agent_comment_stress_reward_annotation": "Extract structured interaction features. Return JSON with keys tone, directness, support_strength. tone must be one of positive, neutral, critical, hostile, supportive. directness and support_strength must be floats in [0,1]. Return JSON only.",
   "agent_post_stress_reward_annotation": "Extract structured interaction features. Return JSON with keys tone, directness, support_strength. tone must be one of hostile or supportive. directness and support_strength must be floats in [0,1]. Return JSON only."
