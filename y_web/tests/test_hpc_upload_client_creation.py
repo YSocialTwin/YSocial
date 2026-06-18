@@ -104,12 +104,12 @@ def test_client_record_structure():
         "agents": {
             "max_length_thread_reading": 10,
             "reading_from_follower_ratio": 0.5,
-            "probability_of_daily_follow": 0.1,
+            "probability_of_daily_follow": 0.0,
             "attention_window": 24,
             "llm_v_agent": 0,
         },
         "posts": {
-            "visibility_rounds": 36,
+            "visibility_rounds": 72,
         },
         "servers": {
             "llm": "",
