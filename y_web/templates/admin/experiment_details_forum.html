@@ -522,7 +522,7 @@
  <i class="mdi mdi-account-cog ys-icon-md-muted"></i>
  <div class="ys-text-flex-sm" style="display: flex; align-items: center; gap: 6px; min-width: 0; flex: 1 1 auto; overflow: hidden;">
                                         <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; min-width: 0; flex: 1 1 auto;" title="{{ client.name }}">{{ client.name }}</span>
-                                        {% if opinion_dynamics_enabled and not configuration_update_required %}
+                                        {% if opinion_dynamics_enabled and (not configuration_update_required or experiment.running == 0) %}
                                         <a href="/admin/opinion_configuration_forum/{{ experiment.idexp }}?client_id={{ client.id }}" class="link-tooltip" title="Configure Opinion Dynamics">
                                             <i class="mdi mdi-tune" style="font-size: 16px; color: #8b5cf6;"></i>
                                         </a>

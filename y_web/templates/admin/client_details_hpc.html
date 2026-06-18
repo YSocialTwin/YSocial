@@ -19,7 +19,7 @@
 
             <div class="columns">
                 <!--Dashboard column-->
-                <div class="column is-4">
+                <div class="column is-5">
 
                     <!--Dashboard box-->
                     <div class="dashboard-box" id="box-client-overview">
@@ -178,6 +178,37 @@
                         </div>
                     </div>
 
+                    <div class="dashboard-box" id="box-memory-config">
+                        <h3 class="title is-5 is-thin">Client Memory</h3>
+                        <form action="/admin/update_hpc_client_settings/{{ client.id }}" method="POST">
+                        <div class="box-content">
+                            <div class="box-lines">
+                                <div class="box-line"><span class="left">Enable Memory</span><span class="right"><input type="checkbox" name="memory_enabled" {% if config and config.agents and config.agents.memory_enabled %}checked{% endif %}></span></div>
+                                <div class="box-line"><span class="left">Enable Semantic Retrieval</span><span class="right"><input type="checkbox" name="memory_semantic_enabled" {% if config and config.agents and config.agents.memory_semantic_enabled %}checked{% endif %}></span></div>
+                                <div class="box-line"><span class="left">Pair Limit</span><span class="right"><input type="number" name="memory_pair_limit" class="input" value="{{ config.agents.memory_pair_limit if config and config.agents else 5 }}"></span></div>
+                                <div class="box-line"><span class="left">Prompt Max Chars</span><span class="right"><input type="number" name="memory_prompt_max_chars" class="input" value="{{ config.agents.memory_prompt_max_chars if config and config.agents else 1600 }}"></span></div>
+                                <div class="box-line"><span class="left">Embedding Model</span><span class="right"><input type="text" name="memory_embedding_model" class="input" value="{{ config.agents.memory_embedding_model if config and config.agents else 'embeddinggemma:latest' }}"></span></div>
+                            </div>
+                        </div>
+                        <div class="button-wrap"><button class="button is-solid primary-button is-fullwidth">Save Memory</button></div>
+                        </form>
+                    </div>
+
+                    <div class="dashboard-box" id="box-archetype-config">
+                        <h3 class="title is-5 is-thin">Agent Archetypes</h3>
+                        <form action="/admin/update_agent_archetypes/{{ client.id }}" method="POST">
+                        <div class="box-content">
+                            <div class="box-lines">
+                                <div class="box-line"><span class="left">Enable Archetypes</span><span class="right"><input type="checkbox" name="enable_archetypes" {% if config and config.simulation and config.simulation.agent_archetypes and config.simulation.agent_archetypes.enabled %}checked{% endif %}></span></div>
+                                <div class="box-line"><span class="left">Validator %</span><span class="right"><input type="number" name="archetype_validator" class="input" value="52"></span></div>
+                                <div class="box-line"><span class="left">Broadcaster %</span><span class="right"><input type="number" name="archetype_broadcaster" class="input" value="20"></span></div>
+                                <div class="box-line"><span class="left">Explorer %</span><span class="right"><input type="number" name="archetype_explorer" class="input" value="28"></span></div>
+                            </div>
+                        </div>
+                        <div class="button-wrap"><button class="button is-solid primary-button is-fullwidth">Save Archetypes</button></div>
+                        </form>
+                    </div>
+
                     <div class="dashboard-box" id="box-llm-config">
                           <h3 class="title is-5 is-thin">LLM</h3>
                         <div class="box-content">
@@ -264,9 +295,11 @@
                 <!--Dashboard box-->
 
                 <!--Dashboard column-->
-                <div class="column is-8">
+                <div class="column is-7">
+                    <div class="columns is-multiline">
                     <!--Box-->
 
+                    <div class="column is-12">
                     <div class="dashboard-box" id="box-agent-config">
                         <div class="box-content">
                             <div class="box-lines">
@@ -311,14 +344,14 @@
                                                 {% for category, items in categorized.items() %}
                                                 <optgroup label="{{ category }}">
                                                     {% for recsys in items %}
-                                                    <option value="{{ recsys.name }}">{{ recsys.value }}</option>
+                                                    <option value="{{ recsys.name }}" {% if client.crecsys == recsys.name %}selected{% endif %}>{{ recsys.value }}</option>
                                                     {% endfor %}
                                                 </optgroup>
                                                 {% endfor %}
                                                 
                                                 {% if uncategorized %}
                                                     {% for recsys in uncategorized %}
-                                                    <option value="{{ recsys.name }}">{{ recsys.value }}</option>
+                                                    <option value="{{ recsys.name }}" {% if client.frecsys == recsys.name %}selected{% endif %}>{{ recsys.value }}</option>
                                                     {% endfor %}
                                                 {% endif %}
                                             </select>
@@ -402,7 +435,7 @@
                                             <select name="user_type" id="models_select_client">
                                                 <option value=""></option>
                                                     {% for model in models %}
-                                                    <option value="{{ model }}">{{ model }}</option>
+                                                    <option value="{{ model }}" {% if config and config.llm and config.llm.model == model %}selected{% elif not config and llms and model in llms %}selected{% endif %}>{{ model }}</option>
                                                     {% endfor %}
                                             </select>
                                         </div>
@@ -421,7 +454,9 @@
 </div>
 
                     </div>
+                    </div>
 
+                    <div class="column is-6">
                      <div class="dashboard-box" id="box-social-network">
                         <div class="box-content">
                             <div class="box-lines">
@@ -569,8 +604,10 @@
                             </form>
                         </div>
                     </div>
+                    </div>
 
                     <!-- Hourly Activity Rates Box -->
+ <div class="column is-6">
  <div class="dashboard-box ys-section-body" id="box-hourly-activity">
                         <h3 class="title is-5 is-thin">Hourly Activity Rates</h3>
  <small class="ys-text-xs-muted ys-text-brand">Default values from <a href="https://zenodo.org/records/14669616" target="_blank">Bluesky Data</a></small>
@@ -614,7 +651,8 @@
                             </div>
                         </form>
                     </div>
-                    
+                    </div>
+                    </div>
                 </div>
 
             </div>

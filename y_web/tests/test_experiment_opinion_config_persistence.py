@@ -145,3 +145,92 @@ def test_forum_experiments_always_require_configuration_box_for_lock_workflow():
             "def _experiment_configuration_box_present(experiment):", 1
         )[1].split("def _experiment_uses_llm_agents", 1)[0]
     )
+
+
+def test_stopped_experiments_allow_client_configuration_updates():
+    template_paths = [
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/experiment_details.html",
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/experiment_details_forum.html",
+    ]
+
+    for template_path in template_paths:
+        content = open(template_path, "r").read()
+        assert "experiment.running == 0" in content
+        assert "configuration_update_required or experiment.running == 0" in content
+
+
+def test_client_details_pages_expose_editable_simulation_and_action_fields():
+    standard_template = open(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/client_details.html",
+        "r",
+    ).read()
+    forum_template = open(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/client_details_forum.html",
+        "r",
+    ).read()
+
+    expected_standard_field_names = [
+        'name="days"',
+        'name="percentage_new_agents_iteration"',
+        'name="percentage_removed_agents_iteration"',
+        'name="max_length_thread_reading"',
+        'name="reading_from_follower_ratio"',
+        'name="probability_of_daily_follow"',
+        'name="attention_window"',
+        'name="visibility_rounds"',
+        'name="post"',
+        'name="image"',
+        'name="news"',
+        'name="comment"',
+        'name="read"',
+        'name="share"',
+        'name="search"',
+        'name="vote"',
+    ]
+
+    expected_forum_field_names = [
+        'name="days"',
+        'name="percentage_new_agents_iteration"',
+        'name="percentage_removed_agents_iteration"',
+        'name="max_length_thread_reading"',
+        'name="reading_from_follower_ratio"',
+        'name="probability_of_daily_follow"',
+        'name="attention_window"',
+        'name="visibility_rounds"',
+        'name="post"',
+        'name="image"',
+        'name="comment"',
+        'name="read"',
+        'name="share"',
+        'name="search"',
+    ]
+
+    for field_name in expected_standard_field_names:
+        assert field_name in standard_template
+
+    for field_name in expected_forum_field_names:
+        assert field_name in forum_template
+
+
+def test_hpc_client_details_align_model_selection_with_active_vllm_model():
+    content = open(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/client_details_hpc.html",
+        "r",
+    ).read()
+
+    assert 'config.llm.model == model' in content
+    assert 'action="/admin/update_hpc_client_settings/{{ client.id }}"' in content
+
+
+def test_client_details_pages_expose_memory_and_archetype_editors():
+    for template_path in [
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/client_details.html",
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/client_details_forum.html",
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/client_details_hpc.html",
+    ]:
+        content = open(template_path, "r").read()
+        assert "box-memory-config" in content
+        assert "memory_enabled" in content
+        assert "memory_embedding_model" in content
+        assert "box-archetype-config" in content
+        assert "archetype_validator" in content
