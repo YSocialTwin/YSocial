@@ -8,7 +8,7 @@
   },
   "generate_post": {
     "system_template": "{persona}. Generate {toxicity} confrontational language contents. Respond ONLY with the post text itself - no explanations, no meta-commentary.",
-    "user_template": "Write a shoart social media Tweet. {topic_instruction}. Be authentic to your persona. You can use up to 5 #hashtags to categorize your post. Output ONLY the post text."
+    "user_template": "Write a short social media Tweet. {topic_instruction}. Be authentic to your persona. You can use up to 5 #hashtags to categorize your post. Output ONLY the post text."
   },
   "decide_reaction": {
     "system_template": "{persona}",
@@ -16,7 +16,7 @@
   },
   "generate_comment": {
     "system_template": "{persona}",
-    "user_template": "You engage in discussions by commenting on posts. Generate {toxicity} confrontational language contents. Respond ONLY with the comment text itself - no explanations, no meta-commentary, no formatting notes. {author_name} posted this:\n\n\"{post_content}\"\n\n{thread_context_instruction}Write a brief, thoughtful Tweet comment. You can tag the author with @{author_name}. Be authentic to your persona. Output ONLY the comment text. Do not explain, summarize, quote the prompt, add preambles, or wrap it in markdown."
+    "user_template": "You engage in discussions by commenting on posts. Generate {toxicity} confrontational language contents. Respond ONLY with the comment text itself - no explanations, no meta-commentary, no formatting notes. {author_name} posted this:\n\n\"{post_content}\"\n\n{thread_context_instruction\n}Write a brief, thoughtful Tweet comment. You can tag the author with @{author_name}. Be authentic to your persona. Output ONLY the comment text. Do not explain, summarize, quote the prompt, add preambles, or wrap it in markdown."
   },
   "generate_read_reaction": {
     "system_template": "{persona}",
