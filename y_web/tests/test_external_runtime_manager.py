@@ -783,6 +783,7 @@ def test_grouped_runtime_specs_include_agent_plugins():
     assert plugin_spec.github_repo == "YSocialTwin/y_agents_plugins"
     assert plugin_spec.category == "agent_extensions"
 
+
 def test_load_plugins_index_rebuilds_external_plugins_json(tmp_path, monkeypatch):
     external_dir = tmp_path / "external"
     meta_dir = external_dir / "sample_plugin" / "meta"
