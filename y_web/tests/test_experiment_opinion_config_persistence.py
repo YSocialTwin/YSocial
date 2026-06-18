@@ -218,7 +218,7 @@ def test_hpc_client_details_align_model_selection_with_active_vllm_model():
         "r",
     ).read()
 
-    assert 'config.llm.model == model' in content
+    assert "config.llm.model == model" in content
     assert 'action="/admin/update_hpc_client_settings/{{ client.id }}"' in content
 
 

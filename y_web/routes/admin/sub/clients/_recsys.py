@@ -10,8 +10,8 @@ from y_web import db
 from y_web.src.models import (
     Agent,
     Agent_Population,
-    Exp_Topic,
     Client,
+    Exp_Topic,
     Exps,
     Population,
     Topic_List,
@@ -119,7 +119,9 @@ def _update_client_simulation_internal(uid, expected_mode):
     memory_reflection_trigger_importance_sum = _float(
         "memory_reflection_trigger_importance_sum", 3.5
     )
-    memory_reflection_max_items_per_run = _int("memory_reflection_max_items_per_run", 60)
+    memory_reflection_max_items_per_run = _int(
+        "memory_reflection_max_items_per_run", 60
+    )
     memory_embedding_model = str(
         request.form.get("memory_embedding_model", "snowflake-arctic-embed:110m")
     ).strip()
@@ -152,7 +154,9 @@ def _update_client_simulation_internal(uid, expected_mode):
 
     topics = Exp_Topic.query.filter_by(exp_id=exp.idexp).all()
     topics_ids = [t.topic_id for t in topics]
-    topics_objs = db.session.query(Topic_List).filter(Topic_List.id.in_(topics_ids)).all()
+    topics_objs = (
+        db.session.query(Topic_List).filter(Topic_List.id.in_(topics_ids)).all()
+    )
     topics_by_name = {str(t.name): t for t in topics_objs}
     topics_by_id = {str(t.id): t for t in topics_objs}
     topic_percentages = {}
@@ -188,20 +192,20 @@ def _update_client_simulation_internal(uid, expected_mode):
         config.setdefault("posts", {})
         config.setdefault("topics", [])
         config["simulation"]["num_days"] = client.days
-        config["simulation"]["percentage_new_agents_iteration"] = (
-            client.percentage_new_agents_iteration
-        )
-        config["simulation"]["percentage_removed_agents_iteration"] = (
-            client.percentage_removed_agents_iteration
-        )
+        config["simulation"][
+            "percentage_new_agents_iteration"
+        ] = client.percentage_new_agents_iteration
+        config["simulation"][
+            "percentage_removed_agents_iteration"
+        ] = client.percentage_removed_agents_iteration
         config["simulation"]["visibility_rounds"] = client.visibility_rounds
         config["agents"]["max_length_thread_reading"] = client.max_length_thread_reading
-        config["agents"]["reading_from_follower_ratio"] = (
-            client.reading_from_follower_ratio
-        )
-        config["agents"]["probability_of_daily_follow"] = (
-            client.probability_of_daily_follow
-        )
+        config["agents"][
+            "reading_from_follower_ratio"
+        ] = client.reading_from_follower_ratio
+        config["agents"][
+            "probability_of_daily_follow"
+        ] = client.probability_of_daily_follow
         config["agents"]["attention_window"] = client.attention_window
         actions = config["simulation"].setdefault("actions_likelihood", {})
         actions.update(
