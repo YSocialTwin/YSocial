@@ -999,10 +999,7 @@ def get_available_experiments_for_schedule():
     else:
         experiments_query = Exps.query.filter_by(owner=user.username)
 
-    # Get experiments that are stopped
-    experiments_list = experiments_query.filter(
-        Exps.exp_status.in_(["stopped", "scheduled"])
-    ).all()
+    experiments_list = _get_schedulable_experiments(experiments_query)
 
     # Get experiments already in groups
     scheduled_exp_ids = set(
@@ -1041,6 +1038,22 @@ def get_available_experiments_for_schedule():
             )
 
     return jsonify({"success": True, "experiments": result})
+
+
+def _get_schedulable_experiments(experiments_query):
+    """Return schedule-eligible experiments in a deterministic order.
+
+    Older copied experiments can have a NULL exp_status if they were created
+    before the status column was consistently populated. Those experiments
+    should still be selectable for scheduling as long as they are not running.
+    """
+    experiments = experiments_query.all()
+    result = []
+    for exp in experiments:
+        if exp.exp_status in ("stopped", "scheduled") or exp.exp_status is None:
+            result.append(exp)
+
+    return sorted(result, key=lambda exp: (exp.idexp or 0, exp.exp_name or ""))
 
 
 def add_schedule_log(message, log_type="info"):
@@ -1151,15 +1164,12 @@ def auto_create_groups():
     # Get current user
     user = Admin_users.query.filter_by(username=current_user.username).first()
 
-    # Get available experiments (stopped, not in any group)
     if user.role == "admin":
         experiments_query = Exps.query
     else:
         experiments_query = Exps.query.filter_by(owner=user.username)
 
-    experiments_list = experiments_query.filter(
-        Exps.exp_status.in_(["stopped", "scheduled"])
-    ).all()
+    experiments_list = _get_schedulable_experiments(experiments_query)
 
     # Apply group filter if specified
     if group_filter:

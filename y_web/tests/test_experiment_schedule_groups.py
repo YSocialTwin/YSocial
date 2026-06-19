@@ -7,6 +7,7 @@ This test verifies that:
 3. Auto composition batches HPC experiments correctly (up to 4 per group)
 """
 
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
@@ -210,6 +211,28 @@ def test_mixed_experiments_auto_composition():
     # Total groups
     total_groups = len(hpc_groups) + len(standard_groups)
     assert total_groups == 6, "Should have 6 total groups (3 HPC + 3 Standard)"
+
+
+def test_schedulable_experiments_include_null_status_and_sort_by_id():
+    """Null-status experiments should still be selectable and ordered deterministically."""
+    from y_web.routes.admin.sub.experiments._schedule import _get_schedulable_experiments
+
+    experiments = [
+        SimpleNamespace(idexp=15, exp_name="RC_15", exp_status="stopped"),
+        SimpleNamespace(idexp=7, exp_name="RC_7", exp_status=None),
+        SimpleNamespace(idexp=9, exp_name="RC_9", exp_status="scheduled"),
+        SimpleNamespace(idexp=4, exp_name="RC_4", exp_status="active"),
+        SimpleNamespace(idexp=6, exp_name="RC_6", exp_status="stopped"),
+    ]
+
+    class FakeQuery:
+        def all(self):
+            return experiments
+
+    schedulable = _get_schedulable_experiments(FakeQuery())
+
+    assert [exp.idexp for exp in schedulable] == [6, 7, 9, 15]
+    assert all(exp.exp_status in ("stopped", "scheduled") or exp.exp_status is None for exp in schedulable)
 
 
 if __name__ == "__main__":
