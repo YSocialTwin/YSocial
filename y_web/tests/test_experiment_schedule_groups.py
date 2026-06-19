@@ -220,11 +220,16 @@ def test_schedulable_experiments_include_null_status_and_sort_by_id():
     )
 
     experiments = [
-        SimpleNamespace(idexp=15, exp_name="RC_15", exp_status="stopped"),
-        SimpleNamespace(idexp=7, exp_name="RC_7", exp_status=None),
-        SimpleNamespace(idexp=9, exp_name="RC_9", exp_status="scheduled"),
-        SimpleNamespace(idexp=4, exp_name="RC_4", exp_status="active"),
-        SimpleNamespace(idexp=6, exp_name="RC_6", exp_status="stopped"),
+        SimpleNamespace(
+            idexp=15, exp_name="RC_15", exp_status="stopped", running=0, status=0
+        ),
+        SimpleNamespace(idexp=7, exp_name="RC_7", exp_status=None, running=0, status=0),
+        SimpleNamespace(
+            idexp=9, exp_name="RC_9", exp_status="scheduled", running=0, status=0
+        ),
+        SimpleNamespace(idexp=10, exp_name="RC_10", exp_status="", running=0, status=0),
+        SimpleNamespace(idexp=4, exp_name="RC_4", exp_status="active", running=1, status=1),
+        SimpleNamespace(idexp=6, exp_name="RC_6", exp_status="stopped", running=0, status=0),
     ]
 
     class FakeQuery:
@@ -233,11 +238,8 @@ def test_schedulable_experiments_include_null_status_and_sort_by_id():
 
     schedulable = _get_schedulable_experiments(FakeQuery())
 
-    assert [exp.idexp for exp in schedulable] == [6, 7, 9, 15]
-    assert all(
-        exp.exp_status in ("stopped", "scheduled") or exp.exp_status is None
-        for exp in schedulable
-    )
+    assert [exp.idexp for exp in schedulable] == [6, 7, 9, 10, 15]
+    assert all(exp.running == 0 for exp in schedulable)
 
 
 if __name__ == "__main__":

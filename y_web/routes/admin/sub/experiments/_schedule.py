@@ -1043,14 +1043,20 @@ def get_available_experiments_for_schedule():
 def _get_schedulable_experiments(experiments_query):
     """Return schedule-eligible experiments in a deterministic order.
 
-    Older copied experiments can have a NULL exp_status if they were created
-    before the status column was consistently populated. Those experiments
-    should still be selectable for scheduling as long as they are not running.
+    Fresh clones should be selectable as long as they are not running.
+    Older copied experiments can also have a NULL or stale exp_status, so we
+    do not use exp_status as the primary gate here.
     """
     experiments = experiments_query.all()
     result = []
     for exp in experiments:
-        if exp.exp_status in ("stopped", "scheduled") or exp.exp_status is None:
+        if getattr(exp, "running", 0) != 0:
+            continue
+        if exp.exp_status == "active":
+            continue
+        if exp.exp_status == "completed" and getattr(exp, "status", 0) == 1:
+            continue
+        if exp.exp_status in ("stopped", "scheduled") or exp.exp_status is None or exp.exp_status == "completed":
             result.append(exp)
 
     return sorted(result, key=lambda exp: (exp.idexp or 0, exp.exp_name or ""))
