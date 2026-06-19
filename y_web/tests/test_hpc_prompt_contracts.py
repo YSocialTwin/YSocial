@@ -1,10 +1,12 @@
 import json
-from string import Formatter
 from pathlib import Path
+from string import Formatter
 
 
 def _get_placeholder_names(template: str) -> list[str]:
-    return [field_name for _, field_name, _, _ in Formatter().parse(template) if field_name]
+    return [
+        field_name for _, field_name, _, _ in Formatter().parse(template) if field_name
+    ]
 
 
 def test_hpc_prompt_json_includes_output_contracts():
