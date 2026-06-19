@@ -515,6 +515,13 @@ def get_runtime_status(
         branches, branch_error = _branch_list_for_repo(
             spec, git_managed, github_token=github_token
         )
+    elif git_managed:
+        # Git-managed runtimes need remote branch discovery even in fast view so
+        # branch selectors can expose remote-only branches such as feature or
+        # hotfix branches that are not yet present locally.
+        branches, branch_error = _branch_list_for_repo(
+            spec, git_managed, github_token=github_token
+        )
     else:
         branches = sorted(
             {
