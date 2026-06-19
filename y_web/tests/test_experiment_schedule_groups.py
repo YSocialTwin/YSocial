@@ -215,7 +215,9 @@ def test_mixed_experiments_auto_composition():
 
 def test_schedulable_experiments_include_null_status_and_sort_by_id():
     """Null-status experiments should still be selectable and ordered deterministically."""
-    from y_web.routes.admin.sub.experiments._schedule import _get_schedulable_experiments
+    from y_web.routes.admin.sub.experiments._schedule import (
+        _get_schedulable_experiments,
+    )
 
     experiments = [
         SimpleNamespace(idexp=15, exp_name="RC_15", exp_status="stopped"),
@@ -232,7 +234,10 @@ def test_schedulable_experiments_include_null_status_and_sort_by_id():
     schedulable = _get_schedulable_experiments(FakeQuery())
 
     assert [exp.idexp for exp in schedulable] == [6, 7, 9, 15]
-    assert all(exp.exp_status in ("stopped", "scheduled") or exp.exp_status is None for exp in schedulable)
+    assert all(
+        exp.exp_status in ("stopped", "scheduled") or exp.exp_status is None
+        for exp in schedulable
+    )
 
 
 if __name__ == "__main__":
