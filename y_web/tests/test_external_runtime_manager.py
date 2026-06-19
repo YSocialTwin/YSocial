@@ -105,7 +105,9 @@ def test_runtime_status_lists_remote_branches_in_fast_view_for_git_managed_repo(
     manager.clone_runtime_repo(runtime_repo_spec.key, "main", actor="tester")
 
     work = runtime_repo_spec.path.parent.parent / "work"
-    subprocess.run(["git", "-C", str(work), "checkout", "-b", "stop_failure_fix"], check=True)
+    subprocess.run(
+        ["git", "-C", str(work), "checkout", "-b", "stop_failure_fix"], check=True
+    )
     (work / "testruntime" / "__init__.py").write_text("VALUE = 4\n", encoding="utf-8")
     subprocess.run(["git", "-C", str(work), "add", "."], check=True)
     subprocess.run(
