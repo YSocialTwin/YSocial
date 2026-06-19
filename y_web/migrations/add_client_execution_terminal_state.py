@@ -43,7 +43,9 @@ def migrate_sqlite(db_path):
             )
             print("✓ Normalized existing client_execution terminal_state values")
         else:
-            print("○ terminal_state column already exists in SQLite client_execution table")
+            print(
+                "○ terminal_state column already exists in SQLite client_execution table"
+            )
 
         conn.commit()
         conn.close()
@@ -65,22 +67,18 @@ def migrate_postgresql(host, port, database, user, password):
             host=host, port=port, database=database, user=user, password=password
         )
         cursor = conn.cursor()
-        cursor.execute(
-            """
+        cursor.execute("""
             SELECT column_name
             FROM information_schema.columns
             WHERE table_name = 'client_execution'
-        """
-        )
+        """)
         columns = [row[0] for row in cursor.fetchall()]
 
         if "terminal_state" not in columns:
-            cursor.execute(
-                """
+            cursor.execute("""
                 ALTER TABLE client_execution
                 ADD COLUMN terminal_state VARCHAR(20) DEFAULT 'running'
-            """
-            )
+            """)
             print("✓ Added terminal_state column to PostgreSQL client_execution table")
             cursor.execute(
                 "UPDATE client_execution SET terminal_state = 'running' "
@@ -88,7 +86,9 @@ def migrate_postgresql(host, port, database, user, password):
             )
             print("✓ Normalized existing client_execution terminal_state values")
         else:
-            print("○ terminal_state column already exists in PostgreSQL client_execution table")
+            print(
+                "○ terminal_state column already exists in PostgreSQL client_execution table"
+            )
 
         conn.commit()
         conn.close()

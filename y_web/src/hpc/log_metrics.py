@@ -383,7 +383,9 @@ def check_hpc_client_execution_completion(exp_id, client_id, execution_log_path)
             client_exec = Client_Execution.query.filter_by(client_id=client_id).first()
         except Exception:
             client_exec = None
-        terminal_state = getattr(client_exec, "terminal_state", None) if client_exec else None
+        terminal_state = (
+            getattr(client_exec, "terminal_state", None) if client_exec else None
+        )
         if terminal_state in {"manual_stop", "paused"}:
             print(
                 f"[HPC Monitor] Client {client_id} is in terminal state '{terminal_state}', not counting as completed"
@@ -397,9 +399,7 @@ def check_hpc_client_execution_completion(exp_id, client_id, execution_log_path)
 
         if message == "Client shutdown complete":
             if _tail_contains_completion_marker(lines):
-                print(
-                    "[HPC Monitor] *** MATCH: natural completion marker found! ***"
-                )
+                print("[HPC Monitor] *** MATCH: natural completion marker found! ***")
                 logger.info(
                     f"HPC client {client_id} natural completion detected for experiment {exp_id}"
                 )

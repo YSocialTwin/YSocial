@@ -531,7 +531,9 @@ def stop_hpc_client(cli, *, terminal_state: Optional[str] = None):
                                 exp_folder, cli.name
                             )
                             ray.get(
-                                orchestrator.deregister_client.remote(runtime_client_id),
+                                orchestrator.deregister_client.remote(
+                                    runtime_client_id
+                                ),
                                 timeout=5,
                             )
                             print(

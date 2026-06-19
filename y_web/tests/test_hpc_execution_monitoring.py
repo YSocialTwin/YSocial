@@ -118,9 +118,7 @@ class TestHPCExecutionLogMonitoring:
         finally:
             os.unlink(log_path)
 
-    def test_check_shutdown_message_with_completed_progress_is_found(
-        self, app, db
-    ):
+    def test_check_shutdown_message_with_completed_progress_is_found(self, app, db):
         """If execution progress already reached the end, shutdown should still count as completion."""
         from y_web.src.hpc.log_metrics import check_hpc_client_execution_completion
         from y_web.src.models import Client, Client_Execution, Exps, Population
@@ -177,7 +175,9 @@ class TestHPCExecutionLogMonitoring:
                 )
 
             try:
-                result = check_hpc_client_execution_completion(exp.idexp, client.id, log_path)
+                result = check_hpc_client_execution_completion(
+                    exp.idexp, client.id, log_path
+                )
                 assert result is True
             finally:
                 os.unlink(log_path)
@@ -237,7 +237,9 @@ class TestHPCExecutionLogMonitoring:
                 )
 
             try:
-                result = check_hpc_client_execution_completion(exp.idexp, client.id, log_path)
+                result = check_hpc_client_execution_completion(
+                    exp.idexp, client.id, log_path
+                )
                 assert result is False
             finally:
                 os.unlink(log_path)
@@ -599,7 +601,9 @@ class TestHPCExecutionLogMonitoring:
             db.session.add(client_exec)
             db.session.commit()
 
-            from y_web.src.hpc.log_metrics import _mark_hpc_experiment_seen_running_client
+            from y_web.src.hpc.log_metrics import (
+                _mark_hpc_experiment_seen_running_client,
+            )
 
             _mark_hpc_experiment_seen_running_client(exp.idexp)
 
