@@ -228,8 +228,12 @@ def test_schedulable_experiments_include_null_status_and_sort_by_id():
             idexp=9, exp_name="RC_9", exp_status="scheduled", running=0, status=0
         ),
         SimpleNamespace(idexp=10, exp_name="RC_10", exp_status="", running=0, status=0),
-        SimpleNamespace(idexp=4, exp_name="RC_4", exp_status="active", running=1, status=1),
-        SimpleNamespace(idexp=6, exp_name="RC_6", exp_status="stopped", running=0, status=0),
+        SimpleNamespace(
+            idexp=4, exp_name="RC_4", exp_status="active", running=1, status=1
+        ),
+        SimpleNamespace(
+            idexp=6, exp_name="RC_6", exp_status="stopped", running=0, status=0
+        ),
     ]
 
     class FakeQuery:
