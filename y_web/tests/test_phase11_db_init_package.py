@@ -195,6 +195,23 @@ def test_agents_custom_features_migration_registered_in_startup_runner():
     assert "Failed to run agents_custom_features table migration" in content
 
 
+def test_client_execution_terminal_state_migration_module_exists():
+    """The client_execution terminal_state migration module must be present."""
+    mod = importlib.import_module(
+        "y_web.migrations.add_client_execution_terminal_state"
+    )
+    assert callable(getattr(mod, "migrate_sqlite", None))
+    assert callable(getattr(mod, "migrate_postgresql", None))
+
+
+def test_client_execution_terminal_state_migration_registered_in_startup_runner():
+    """run_migrations must invoke the client_execution terminal_state migration."""
+    path = Path("/Users/rossetti/PycharmProjects/YWeb/y_web/db_init/migrations.py")
+    content = path.read_text(encoding="utf-8")
+    assert "add_client_execution_terminal_state" in content
+    assert "Failed to run client_execution terminal_state migration" in content
+
+
 # ---------------------------------------------------------------------------
 # 6. y_web.__init__ still exposes core symbols
 # ---------------------------------------------------------------------------
