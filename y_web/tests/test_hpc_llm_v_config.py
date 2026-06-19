@@ -255,7 +255,7 @@ class TestHPCLLMVConfig:
         source = open(
             "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_crud.py"
         ).read()
-        create_block = source.split("elif llm_backend == \"vllm\":", 1)[1].split(
+        create_block = source.split('elif llm_backend == "vllm":', 1)[1].split(
             "else:  # ollama", 1
         )[0]
 
