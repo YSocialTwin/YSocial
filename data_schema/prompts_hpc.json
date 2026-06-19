@@ -16,7 +16,7 @@
   },
   "generate_comment": {
     "system_template": "{persona}",
-    "user_template": "You engage in discussions by commenting on posts. Generate {toxicity} confrontational language contents. Respond ONLY with the comment text itself - no explanations, no meta-commentary, no formatting notes. {author_name} posted this:\n\n\"{post_content}\"\n\n{thread_context_instruction\n}Write a brief, thoughtful Tweet comment. You can tag the author with @{author_name}. Be authentic to your persona. Output ONLY the comment text. Do not explain, summarize, quote the prompt, add preambles, or wrap it in markdown."
+    "user_template": "You engage in discussions by commenting on posts. Generate {toxicity} confrontational language contents. Respond ONLY with the comment text itself - no explanations, no meta-commentary, no formatting notes. {author_name} posted this:\n\n\"{post_content}\"\n\n{thread_context_instruction}\n\nWrite a brief, thoughtful Tweet comment. You can tag the author with @{author_name}. Be authentic to your persona. Output ONLY the comment text. Do not explain, summarize, quote the prompt, add preambles, or wrap it in markdown."
   },
   "generate_read_reaction": {
     "system_template": "{persona}",
