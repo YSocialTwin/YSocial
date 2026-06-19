@@ -1188,6 +1188,7 @@ var AdminSettings = (function() {
                                   border-radius: 4px; cursor: grab; font-size: 0.85em; display: flex; justify-content: space-between; align-items: center;"
                            ondragstart="handleDragStart(event)">
                            <span><strong>${exp.name}</strong> <span style="color: #6c757d;">(${exp.owner})</span></span>
+                           ${exp.has_infinite_client ? '<span style="margin-left: 8px; padding: 2px 6px; border-radius: 999px; background: #fff3cd; color: #856404; font-size: 0.72em;">∞ client</span>' : ''}
                       </div>
                   `).join('');
               } else {

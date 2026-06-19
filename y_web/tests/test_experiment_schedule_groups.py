@@ -246,5 +246,29 @@ def test_schedulable_experiments_include_null_status_and_sort_by_id():
     assert all(exp.running == 0 for exp in schedulable)
 
 
+def test_available_schedule_payload_keeps_infinite_clients_visible():
+    """Infinite-client experiments should remain visible in the schedule picker."""
+    from y_web.routes.admin.sub.experiments._schedule import (
+        _build_available_schedule_experiments,
+    )
+
+    experiments = [
+        SimpleNamespace(idexp=4, exp_name="RC_4", owner="Admin", exp_status="stopped"),
+        SimpleNamespace(
+            idexp=6, exp_name="RC_6", owner="Admin", exp_status="stopped"
+        ),
+    ]
+
+    payload = _build_available_schedule_experiments(
+        experiments,
+        scheduled_exp_ids={4},
+        experiments_with_infinite_clients={6},
+    )
+
+    assert [item["id"] for item in payload] == [6]
+    assert payload[0]["has_infinite_client"] is True
+    assert payload[0]["exp_status"] == "stopped"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

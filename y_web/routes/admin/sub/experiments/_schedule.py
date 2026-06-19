@@ -1007,7 +1007,9 @@ def get_available_experiments_for_schedule():
     )
 
     # Get experiment IDs that have infinite clients (clients with days = -1)
-    # Use a single query instead of nested loops for efficiency
+    # Use a single query instead of nested loops for efficiency.
+    # These experiments remain visible in the picker so they can be inspected
+    # or manually scheduled; auto-grouping still keeps the stricter rule below.
     exp_ids = [exp.idexp for exp in experiments_list]
     infinite_clients = (
         (
@@ -1021,23 +1023,33 @@ def get_available_experiments_for_schedule():
     )
     experiments_with_infinite_clients = set(c.id_exp for c in infinite_clients)
 
-    result = []
-    for exp in experiments_list:
-        # Exclude experiments that are already scheduled or have infinite clients
-        if (
-            exp.idexp not in scheduled_exp_ids
-            and exp.idexp not in experiments_with_infinite_clients
-        ):
-            result.append(
-                {
-                    "id": exp.idexp,
-                    "name": exp.exp_name,
-                    "owner": exp.owner,
-                    "exp_status": exp.exp_status,
-                }
-            )
+    result = _build_available_schedule_experiments(
+        experiments_list, scheduled_exp_ids, experiments_with_infinite_clients
+    )
 
     return jsonify({"success": True, "experiments": result})
+
+
+def _build_available_schedule_experiments(
+    experiments_list, scheduled_exp_ids, experiments_with_infinite_clients
+):
+    """Convert schedule-eligible experiments into the payload shown in the picker."""
+    result = []
+    for exp in experiments_list:
+        if exp.idexp in scheduled_exp_ids:
+            continue
+
+        result.append(
+            {
+                "id": exp.idexp,
+                "name": exp.exp_name,
+                "owner": exp.owner,
+                "exp_status": exp.exp_status,
+                "has_infinite_client": exp.idexp in experiments_with_infinite_clients,
+            }
+        )
+
+    return result
 
 
 def _get_schedulable_experiments(experiments_query):
