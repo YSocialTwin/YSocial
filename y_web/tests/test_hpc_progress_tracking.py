@@ -6,6 +6,7 @@ created to enable proper progress tracking for the scheduler, and that stop
 operations deregister clients cleanly from the orchestrator.
 """
 
+import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -271,6 +272,59 @@ def test_stop_hpc_client_clears_stale_recycled_pid(monkeypatch):
 
     assert stop_hpc_client(mock_cli) is True
     assert mock_cli.pid is None
+
+
+def test_admin_progress_refreshes_hpc_client_log_when_stale():
+    from y_web.routes.admin.sub.clients._details import get_progress
+
+    client = MagicMock()
+    client.id = 11
+    client.name = "hpc_client_1"
+    client.id_exp = 22
+
+    experiment = MagicMock()
+    experiment.simulator_type = "HPC"
+    experiment.db_name = "experiments_exp22"
+
+    client_execution = MagicMock()
+    client_execution.elapsed_time = 0
+    client_execution.expected_duration_rounds = 24
+    client_execution.last_active_day = -1
+    client_execution.last_active_hour = -1
+
+    refreshed_execution = MagicMock()
+    refreshed_execution.elapsed_time = 6
+    refreshed_execution.expected_duration_rounds = 24
+    refreshed_execution.last_active_day = 0
+    refreshed_execution.last_active_hour = 5
+
+    with (
+        patch("y_web.routes.admin.sub.clients._details.Client") as client_model,
+        patch("y_web.routes.admin.sub.clients._details.Client_Execution")
+        as execution_model,
+        patch("y_web.routes.admin.sub.clients._details.Exps") as exp_model,
+        patch(
+            "y_web.routes.admin.sub.clients._details._resolve_hpc_experiment_folder",
+            return_value="/tmp/exp22",
+        ),
+        patch("y_web.routes.admin.sub.clients._details.os.path.exists", return_value=True),
+        patch(
+            "y_web.routes.admin.sub.clients._details.update_client_execution_from_log",
+            side_effect=lambda *_args, **_kwargs: setattr(
+                client_execution, "elapsed_time", 6
+            ),
+        ),
+    ):
+        client_model.query.filter_by.return_value.first.return_value = client
+        execution_model.query.filter_by.return_value.first.side_effect = [
+            client_execution,
+            refreshed_execution,
+        ]
+        exp_model.query.filter_by.return_value.first.return_value = experiment
+
+        payload = get_progress(client.id)
+
+    assert json.loads(payload)["progress"] == 25
 
 
 if __name__ == "__main__":
