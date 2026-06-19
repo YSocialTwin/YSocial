@@ -465,12 +465,7 @@ def stop_hpc_client(cli, *, terminal_state: Optional[str] = None):
         bool: True if process was found and terminated, False otherwise
     """
     # Import here to avoid circular import issues.
-    from y_web.src.simulation.port_manager import (
-        __terminate_process as _terminate_process,
-    )
-    from y_web.src.simulation.port_manager import (
-        _force_terminate_process_tree,
-    )
+    from y_web.src.simulation.port_manager import __terminate_process as _terminate_process
 
     try:
         if not cli.pid:
@@ -530,6 +525,19 @@ def stop_hpc_client(cli, *, terminal_state: Optional[str] = None):
                             runtime_client_id = _build_hpc_runtime_client_id(
                                 exp_folder, cli.name
                             )
+                            try:
+                                runtime_client = ray.get_actor(
+                                    runtime_client_id, namespace=namespace
+                                )
+                                ray.kill(runtime_client, no_restart=True)
+                                print(
+                                    f"Killed HPC client actor {runtime_client_id} before stopping process."
+                                )
+                            except ValueError:
+                                print(
+                                    f"HPC client actor {runtime_client_id} not found before stop; "
+                                    "continuing with process shutdown."
+                                )
                             ray.get(
                                 orchestrator.deregister_client.remote(
                                     runtime_client_id
@@ -569,7 +577,6 @@ def stop_hpc_client(cli, *, terminal_state: Optional[str] = None):
                 print(
                     f"HPC client process {pid} did not terminate gracefully, forcing kill..."
                 )
-                _force_terminate_process_tree(pid)
                 if _tracked_process_is_alive(pid):
                     _terminate_process(pid)
                 time.sleep(0.5)
