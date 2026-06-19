@@ -11,6 +11,7 @@ import logging
 import os
 
 from y_web import db
+from y_web.src.hpc.client import resolve_hpc_client_log_path
 from y_web.src.hpc.log_offset import (
     _commit_with_retry,
     _ensure_session_clean,
@@ -23,7 +24,6 @@ from y_web.src.hpc.log_parser import (
     parse_client_log_incremental,
     parse_server_log_incremental,
 )
-from y_web.src.hpc.client import resolve_hpc_client_log_path
 from y_web.src.models import (
     Client,
     Client_Execution,
