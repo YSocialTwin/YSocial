@@ -594,6 +594,36 @@
                         </div>
                     </div>
                 </div>
+                <div class="misc-grid misc-grid-1col ys-mt-20">
+                    <div class="misc-compact-box" id="box-hpc-vllm-worker-cap">
+                        <h3>HPC vLLM Worker Pool</h3>
+                        <div class="help-block ys-mb-15">
+                            <p>Limit how many HPC simulations can share the same vLLM worker instance before a new one is created.</p>
+                        </div>
+                        <div id="hpc-vllm-worker-settings-container">
+                            <div class="box-lines">
+                                <div class="box-line ys-flex-row-border">
+                                    <span class="left ys-col-100">Max simulations</span>
+                                    <span class="right ys-flex-1-row ys-flex-gap-10-ai">
+                                        <input type="number" id="hpc_max_hpc_simulations_per_vllm_worker" class="input ys-w-60px" min="1" value="5">
+                                        <span class="ys-text-sm-gray">per worker</span>
+                                    </span>
+                                </div>
+                                <div class="box-line ys-flex-row-pad">
+                                    <span class="left ys-col-100">Default</span>
+                                    <span class="right ys-flex-1">
+                                        <span class="ys-text-sm-gray">5 simulations per vLLM worker instance</span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="ys-flex-gap-mt">
+                                <button id="save-hpc-monitor-settings-secondary" class="button is-solid primary-button ys-flex-input-sm">
+                                    Save with HPC Monitor
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- End System Settings Tab -->
 

@@ -755,6 +755,9 @@ class HpcMonitorSettings(db.Model):
     max_hpc_per_group = db.Column(
         db.Integer, nullable=True, default=4
     )  # NULL means unlimited
+    max_hpc_simulations_per_vllm_worker = db.Column(
+        db.Integer, nullable=False, default=5
+    )  # Default 5 simulations per worker
     last_check = db.Column(db.DateTime, nullable=True)  # Last time check was performed
 
 

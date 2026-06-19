@@ -47,6 +47,8 @@ def test_admin_shared_bundles_guard_optional_page_sections():
     assert "if (popDetails) {" in populations
     assert "if (tableDiv) {" in populations
     assert "if (llmModelsTableDiv) {" in miscellanea
+    assert "hpc_max_hpc_simulations_per_vllm_worker" in miscellanea
+    assert "save-hpc-monitor-settings-secondary" in miscellanea
     assert "boxDiv.classList.remove('d-none');" in settings
     assert "boxDiv.classList.add('d-none');" in settings
 

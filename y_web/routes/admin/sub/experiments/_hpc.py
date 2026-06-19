@@ -299,7 +299,10 @@ def get_hpc_monitor_settings():
     settings = HpcMonitorSettings.query.first()
     if not settings:
         settings = HpcMonitorSettings(
-            enabled=True, check_interval_seconds=5, max_hpc_per_group=4
+            enabled=True,
+            check_interval_seconds=5,
+            max_hpc_per_group=4,
+            max_hpc_simulations_per_vllm_worker=5,
         )
         db.session.add(settings)
         db.session.commit()
@@ -309,6 +312,9 @@ def get_hpc_monitor_settings():
             "enabled": settings.enabled,
             "check_interval_seconds": settings.check_interval_seconds,
             "max_hpc_per_group": settings.max_hpc_per_group,
+            "max_hpc_simulations_per_vllm_worker": (
+                settings.max_hpc_simulations_per_vllm_worker
+            ),
             "last_check": (
                 settings.last_check.isoformat() + "Z" if settings.last_check else None
             ),
@@ -342,7 +348,10 @@ def update_hpc_monitor_settings():
     settings = HpcMonitorSettings.query.first()
     if not settings:
         settings = HpcMonitorSettings(
-            enabled=True, check_interval_seconds=5, max_hpc_per_group=4
+            enabled=True,
+            check_interval_seconds=5,
+            max_hpc_per_group=4,
+            max_hpc_simulations_per_vllm_worker=5,
         )
         db.session.add(settings)
 
@@ -401,6 +410,31 @@ def update_hpc_monitor_settings():
                 )
             settings.max_hpc_per_group = max_value
 
+    if "max_hpc_simulations_per_vllm_worker" in data:
+        try:
+            worker_limit = int(data["max_hpc_simulations_per_vllm_worker"])
+            if worker_limit < 1:
+                return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "message": "Max simulations per vLLM worker must be at least 1",
+                        }
+                    ),
+                    400,
+                )
+            settings.max_hpc_simulations_per_vllm_worker = worker_limit
+        except (ValueError, TypeError):
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "message": "Invalid max simulations per vLLM worker value",
+                    }
+                ),
+                400,
+            )
+
     db.session.commit()
 
     return jsonify(
@@ -408,6 +442,10 @@ def update_hpc_monitor_settings():
             "success": True,
             "enabled": settings.enabled,
             "check_interval_seconds": settings.check_interval_seconds,
+            "max_hpc_per_group": settings.max_hpc_per_group,
+            "max_hpc_simulations_per_vllm_worker": (
+                settings.max_hpc_simulations_per_vllm_worker
+            ),
         }
     )
 
