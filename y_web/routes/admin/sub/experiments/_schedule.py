@@ -716,9 +716,15 @@ def stop_schedule():
                 clients = Client.query.filter_by(id_exp=exp.idexp).all()
                 for client in clients:
                     if client.status == 1:
-                        if client.pid:
-                            stop_client_for_experiment(exp, client, pause=False)
-                        client.status = 0
+                        stop_result = True
+                        if client.pid or exp.simulator_type == "HPC":
+                            stop_result = stop_client_for_experiment(
+                                exp, client, pause=False
+                            )
+                        if exp.simulator_type == "HPC" and stop_result is False:
+                            client.status = 1
+                        else:
+                            client.status = 0
                         db.session.commit()
 
                 # Stop server
@@ -814,9 +820,15 @@ def _do_check_schedule_progress():
                 clients = Client.query.filter_by(id_exp=exp.idexp).all()
                 for client in clients:
                     if client.status == 1:
-                        if client.pid:
-                            stop_client_for_experiment(exp, client, pause=False)
-                        client.status = 0
+                        stop_result = True
+                        if client.pid or exp.simulator_type == "HPC":
+                            stop_result = stop_client_for_experiment(
+                                exp, client, pause=False
+                            )
+                        if exp.simulator_type == "HPC" and stop_result is False:
+                            client.status = 1
+                        else:
+                            client.status = 0
                         db.session.commit()
 
                 # Stop server

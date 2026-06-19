@@ -1255,9 +1255,11 @@ def reset_hpc_experiment(uid):
 
     try:
         for client in clients:
-            if client.status == 1 and client.pid:
+            if client.status == 1 and (client.pid or exp.simulator_type == "HPC"):
                 try:
-                    stop_client_for_experiment(exp, client, pause=False)
+                    stop_result = stop_client_for_experiment(exp, client, pause=False)
+                    if exp.simulator_type == "HPC" and stop_result is False:
+                        continue
                 except Exception:
                     current_app.logger.warning(
                         f"Failed to stop HPC client {client.id} during reset.",

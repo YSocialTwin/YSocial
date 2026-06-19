@@ -151,6 +151,7 @@ def test_stop_hpc_client_deregisters_from_orchestrator(tmp_path):
     mock_ray_get.assert_called()
     mock_ray_shutdown.assert_called_once()
     assert mock_cli.pid is None
+    mock_actor.deregister_client.remote.assert_called_once_with("exp123:standard_pop")
 
 
 def test_start_hpc_client_refuses_duplicate_live_pid():

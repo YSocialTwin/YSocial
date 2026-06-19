@@ -38,6 +38,12 @@ logger = logging.getLogger(__name__)
 # running client for the experiment in the current session.
 _HPC_EXP_HAS_SEEN_RUNNING_CLIENT = {}
 
+_NATURAL_COMPLETION_MARKER = "Client natural completion reached"
+_SERVER_COMPLETION_MARKERS = {
+    "Notified server of completion",
+    "Simulation complete. Server notified.",
+}
+
 
 def _is_hpc_client_tracked_process_alive(client: Client, *, exp_folder: str) -> bool:
     """
@@ -116,6 +122,30 @@ def _clear_hpc_experiment_seen_running_client(exp_id: int) -> None:
         _HPC_EXP_HAS_SEEN_RUNNING_CLIENT.pop(int(exp_id), None)
     except Exception:
         pass
+
+
+def _tail_contains_completion_marker(lines) -> bool:
+    """Return whether the provided log tail includes a natural-completion marker."""
+    for raw_line in lines:
+        line = (raw_line or "").strip()
+        if not line:
+            continue
+
+        if _NATURAL_COMPLETION_MARKER in line:
+            return True
+
+        try:
+            entry = json.loads(line)
+        except Exception:
+            continue
+
+        message = entry.get("message", "")
+        if message == _NATURAL_COMPLETION_MARKER:
+            return True
+        if message in _SERVER_COMPLETION_MARKERS:
+            return True
+
+    return False
 
 
 def update_server_log_metrics(exp_id, log_file_path, is_hpc=False):
@@ -343,18 +373,50 @@ def check_hpc_client_execution_completion(exp_id, client_id, execution_log_path)
             print(f"[HPC Monitor] Failed to parse JSON: {e}")
             return False
 
-        # Check if the message indicates client shutdown complete
+        # Shutdown alone is not sufficient to declare completion: manual stops
+        # also emit a shutdown line. Require either the explicit completion
+        # marker emitted by the runtime, or a fully reached expected duration.
         message = log_entry.get("message", "")
         print(f"[HPC Monitor] Message field: '{message}'")
 
-        if message == "Client shutdown complete":
+        try:
+            client_exec = Client_Execution.query.filter_by(client_id=client_id).first()
+        except Exception:
+            client_exec = None
+        terminal_state = getattr(client_exec, "terminal_state", None) if client_exec else None
+        if terminal_state in {"manual_stop", "paused"}:
             print(
-                f"[HPC Monitor] *** MATCH: Client shutdown complete message found! ***"
+                f"[HPC Monitor] Client {client_id} is in terminal state '{terminal_state}', not counting as completed"
             )
-            logger.info(
-                f"HPC client {client_id} shutdown detected for experiment {exp_id}"
+            return False
+        if terminal_state == "completed":
+            print(
+                f"[HPC Monitor] Client {client_id} already marked completed in database"
             )
             return True
+
+        if message == "Client shutdown complete":
+            if _tail_contains_completion_marker(lines):
+                print(
+                    "[HPC Monitor] *** MATCH: natural completion marker found! ***"
+                )
+                logger.info(
+                    f"HPC client {client_id} natural completion detected for experiment {exp_id}"
+                )
+                return True
+
+            if (
+                client_exec
+                and client_exec.expected_duration_rounds > 0
+                and client_exec.elapsed_time >= client_exec.expected_duration_rounds
+            ):
+                print(
+                    "[HPC Monitor] Shutdown observed with elapsed time already at or beyond expected duration"
+                )
+                logger.info(
+                    f"HPC client {client_id} completed for experiment {exp_id} based on execution progress"
+                )
+                return True
 
         print(f"[HPC Monitor] Message does not match 'Client shutdown complete'")
         return False
@@ -546,6 +608,7 @@ def mark_hpc_client_as_completed(exp_id, client_id):
         client_exec.elapsed_time = client_exec.expected_duration_rounds
         client_exec.last_active_day = max_day
         client_exec.last_active_hour = max_hour
+        client_exec.terminal_state = "completed"
 
         print(
             f"[HPC Monitor] Setting: elapsed_time={client_exec.elapsed_time}, last_active_day={max_day}, last_active_hour={max_hour}"
@@ -632,16 +695,34 @@ def check_and_terminate_hpc_experiment(exp_id):
         truly_completed_count = 0
         running_count = 0
         not_started_count = 0
+        manually_stopped_count = 0
 
         for client in clients:
             if client.status == 1:
                 running_count += 1
             else:
                 # Check if this stopped client was properly completed
-                client_exec = Client_Execution.query.filter_by(
-                    client_id=client.id
-                ).first()
+                try:
+                    client_exec = Client_Execution.query.filter_by(
+                        client_id=client.id
+                    ).first()
+                except Exception:
+                    client_exec = None
                 if client_exec and client_exec.expected_duration_rounds > 0:
+                    terminal_state = getattr(client_exec, "terminal_state", None)
+                    if terminal_state in {"manual_stop", "paused"}:
+                        manually_stopped_count += 1
+                        print(
+                            f"[HPC Monitor] Client {client.name} stopped manually (state={terminal_state})"
+                        )
+                        continue
+                    if terminal_state == "completed":
+                        truly_completed_count += 1
+                        print(
+                            f"[HPC Monitor] Client {client.name} is completed via terminal state"
+                        )
+                        continue
+
                     # Use >= instead of == to handle cases where client ran slightly longer
                     # This can happen when:
                     # 1. Client was extended and log parsing shows extra time
@@ -667,7 +748,7 @@ def check_and_terminate_hpc_experiment(exp_id):
 
         total_count = len(clients)
         print(
-            f"[HPC Monitor] Experiment {exp.exp_name}: {truly_completed_count} completed, {running_count} running, {not_started_count} not started (total: {total_count})"
+            f"[HPC Monitor] Experiment {exp.exp_name}: {truly_completed_count} completed, {running_count} running, {not_started_count} not started, {manually_stopped_count} manually stopped (total: {total_count})"
         )
         if running_count > 0:
             _mark_hpc_experiment_seen_running_client(exp_id)

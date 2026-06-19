@@ -520,6 +520,7 @@ class Client_Execution(db.Model):
     expected_duration_rounds = db.Column(db.Integer, default=0)
     last_active_hour = db.Column(db.Integer, default=-1)
     last_active_day = db.Column(db.Integer, default=-1)
+    terminal_state = db.Column(db.String(20), nullable=False, default="running")
 
 
 class Ollama_Pull(db.Model):

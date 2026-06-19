@@ -129,6 +129,16 @@ def _resolve_hpc_experiment_folder(exp) -> str:
     return os.path.join(y_web_dir, "experiments", uid)
 
 
+def _build_hpc_runtime_client_id(exp_folder: str, client_name: str) -> str:
+    """Build a stable experiment-scoped client identifier for Ray registration."""
+    folder_name = ""
+    try:
+        folder_name = Path(exp_folder).resolve().name
+    except Exception:
+        folder_name = Path(str(exp_folder)).name
+    return f"{folder_name}:{str(client_name).strip()}"
+
+
 def _sync_stress_reward_into_hpc_client_config(exp_folder, client_config_path):
     """Keep HPC client stress/reward settings aligned with server_config.json."""
     if not exp_folder or not client_config_path:
@@ -168,6 +178,24 @@ def _sync_stress_reward_into_hpc_client_config(exp_folder, client_config_path):
     return True
 
 
+def _set_client_execution_terminal_state(cli, terminal_state: str) -> bool:
+    """Persist the terminal state for an HPC client execution record."""
+    if not terminal_state:
+        return False
+
+    client_id = getattr(cli, "id", None)
+    if client_id is None:
+        return False
+
+    client_exec = Client_Execution.query.filter_by(client_id=client_id).first()
+    if not client_exec:
+        return False
+
+    client_exec.terminal_state = terminal_state
+    db.session.commit()
+    return True
+
+
 def start_hpc_client(exp, cli, population):
     """
     Start an HPC client using subprocess.Popen.
@@ -192,7 +220,6 @@ def start_hpc_client(exp, cli, population):
     base_path = get_base_path()
 
     exp_folder = _resolve_hpc_experiment_folder(exp)
-
     # Clear stale/recycled PID entries first.
     _clear_stale_hpc_pid(cli, exp_folder=exp_folder)
     tracked_pid = getattr(cli, "pid", None)
@@ -407,6 +434,7 @@ def start_hpc_client(exp, cli, population):
             expected_duration_rounds=expected_rounds,
             last_active_hour=-1,
             last_active_day=-1,
+            terminal_state="running",
         )
         db.session.add(client_exec)
         db.session.commit()
@@ -414,12 +442,14 @@ def start_hpc_client(exp, cli, population):
             f"Created Client_Execution record for HPC client {cli.name} (expected rounds: {expected_rounds})"
         )
     else:
+        client_exec.terminal_state = "running"
+        db.session.commit()
         print(f"Client_Execution record already exists for HPC client {cli.name}")
 
     return process
 
 
-def stop_hpc_client(cli):
+def stop_hpc_client(cli, *, terminal_state: Optional[str] = None):
     """
     Terminate an HPC client process using the PID stored in the database.
 
@@ -445,6 +475,9 @@ def stop_hpc_client(cli):
     try:
         if not cli.pid:
             print(f"No tracked HPC client process found for client {cli.name}")
+            if terminal_state:
+                _set_client_execution_terminal_state(cli, terminal_state)
+                return True
             return False
 
         # Clear stale PID state early (PID recycled or non-HPC process).
@@ -452,6 +485,8 @@ def stop_hpc_client(cli):
             print(
                 f"Cleared stale PID state for HPC client {cli.name}; nothing to terminate."
             )
+            if terminal_state:
+                _set_client_execution_terminal_state(cli, terminal_state)
             return True
 
         try:
@@ -492,12 +527,15 @@ def stop_hpc_client(cli):
                             orchestrator = ray.get_actor(
                                 "Orchestrator", namespace=namespace
                             )
+                            runtime_client_id = _build_hpc_runtime_client_id(
+                                exp_folder, cli.name
+                            )
                             ray.get(
-                                orchestrator.deregister_client.remote(cli.name),
+                                orchestrator.deregister_client.remote(runtime_client_id),
                                 timeout=5,
                             )
                             print(
-                                f"Deregistered HPC client {cli.name} from orchestrator before stop."
+                                f"Deregistered HPC client {runtime_client_id} from orchestrator before stop."
                             )
                         finally:
                             if connected_here:
@@ -509,6 +547,7 @@ def stop_hpc_client(cli):
 
         pid = cli.pid
         print(f"Terminating HPC client process with PID {pid}...")
+        terminated = False
 
         try:
             # Try graceful termination first
@@ -520,6 +559,7 @@ def stop_hpc_client(cli):
                     pid
                 ):
                     print(f"HPC client process {pid} terminated gracefully.")
+                    terminated = True
                     break
                 time.sleep(0.1)
             else:
@@ -531,16 +571,31 @@ def stop_hpc_client(cli):
                 if _tracked_process_is_alive(pid):
                     _terminate_process(pid)
                 time.sleep(0.5)
-                print(f"HPC client process {pid} killed.")
+                terminated = not _tracked_process_is_alive(pid)
+                if terminated:
+                    print(f"HPC client process {pid} killed.")
+                else:
+                    print(
+                        f"Warning: HPC client process {pid} is still running after forced termination."
+                    )
 
         except OSError as e:
             # Process doesn't exist
             print(f"HPC client process {pid} no longer exists: {e}")
+            terminated = True
+
+        if not terminated:
+            print(
+                f"Warning: HPC client process {pid} could not be confirmed stopped; preserving PID tracking."
+            )
+            return False
 
         # Clear PID from database
         cli.pid = None
+        if terminal_state and terminated:
+            _set_client_execution_terminal_state(cli, terminal_state)
         db.session.commit()
-        return True
+        return terminated
 
     except Exception as e:
         print(f"Error terminating HPC client process: {e}")

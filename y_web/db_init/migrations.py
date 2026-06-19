@@ -158,6 +158,29 @@ def _run_all_migrations(app, db_type, db):
         print(f"Failed to run exp_status column migration: {e}")
 
     # ------------------------------------------------------------------
+    # client_execution terminal_state column
+    # ------------------------------------------------------------------
+    try:
+        if db_type == "sqlite":
+            from y_web.migrations.add_client_execution_terminal_state import (
+                migrate_sqlite as migrate_client_exec_state_sqlite,
+            )
+
+            if dashboard_db_path:
+                migrate_client_exec_state_sqlite(dashboard_db_path)
+        elif db_type == "postgresql":
+            from y_web.migrations.add_client_execution_terminal_state import (
+                migrate_postgresql as migrate_client_exec_state_postgresql,
+            )
+
+            if pg["password"]:
+                migrate_client_exec_state_postgresql(
+                    pg["host"], pg["port"], pg["database"], pg["user"], pg["password"]
+                )
+    except Exception as e:
+        print(f"Failed to run client_execution terminal_state migration: {e}")
+
+    # ------------------------------------------------------------------
     # experiment schedule tables
     # ------------------------------------------------------------------
     try:

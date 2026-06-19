@@ -39,7 +39,8 @@ def start_client_for_experiment(experiment, client, population, *, resume=True):
 def stop_client_for_experiment(experiment, client, *, pause=False):
     """Stop or pause a client using the backend associated with the experiment."""
     if uses_hpc_backend(experiment):
-        return stop_hpc_client(client)
+        terminal_state = "paused" if pause else "manual_stop"
+        return stop_hpc_client(client, terminal_state=terminal_state)
     return terminate_client(client, pause=pause)
 
 

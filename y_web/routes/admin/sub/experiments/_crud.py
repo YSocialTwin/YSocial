@@ -2536,19 +2536,32 @@ def stop_experiment(uid):
     # Step 1 & 2: Stop all running clients attached to this experiment first
     # This prevents clients from trying to communicate with a dead server
     clients = Client.query.filter_by(id_exp=uid).all()
+    all_clients_stopped = True
     for client in clients:
         # Only terminate clients that are marked as running (status=1)
         if client.status == 1:
+            stop_result = True
             # Terminate the client process if it has a PID
-            if client.pid:
+            if client.pid or exp.simulator_type == "HPC":
                 print(
                     f"Stopping client {client.name} (ID: {client.id}, PID: {client.pid}) for experiment {uid}"
                 )
-                stop_client_for_experiment(exp, client, pause=False)
+                stop_result = stop_client_for_experiment(exp, client, pause=False)
 
             # Update client status in database
-            client.status = 0
+            if exp.simulator_type == "HPC" and stop_result is False:
+                client.status = 1
+                all_clients_stopped = False
+            else:
+                client.status = 0
             db.session.commit()
+
+    if not all_clients_stopped:
+        flash(
+            "Unable to confirm stop for one or more HPC clients. Experiment remains active.",
+            "warning",
+        )
+        return experiment_details(uid)
 
     # Step 3: Now stop the yserver after all clients are terminated
     # Try the new subprocess-based termination first
