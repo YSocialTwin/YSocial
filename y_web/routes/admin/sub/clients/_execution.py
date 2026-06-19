@@ -253,10 +253,12 @@ def extend_simulation(id_client):
                     # Re-parse client log if it exists and client reset succeeded
                     # Population is needed to construct the client log file name
                     if reset_result_client and population:
-                        client_log_path = os.path.join(
-                            log_folder_path, f"{client.name}_client.log"
+                        from y_web.src.hpc.client import resolve_hpc_client_log_path
+
+                        client_log_path = resolve_hpc_client_log_path(
+                            exp, client.name, log_folder=log_folder_path
                         )
-                        if os.path.exists(client_log_path):
+                        if client_log_path and os.path.exists(client_log_path):
                             update_client_log_metrics(
                                 exp.idexp, id_client, client_log_path, is_hpc=True
                             )

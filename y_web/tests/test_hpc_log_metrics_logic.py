@@ -98,6 +98,24 @@ def test_get_latest_hourly_summary_file_with_only_non_hourly_returns_none(tmp_pa
     assert get_latest_hourly_summary_from_client_log(str(log_file)) is None
 
 
+def test_resolve_hpc_client_log_path_finds_runtime_prefixed_file(tmp_path):
+    from y_web.src.hpc.client import resolve_hpc_client_log_path
+
+    class _Exp:
+        db_name = "experiments_test_exp_123/database_server.db"
+
+    log_dir = tmp_path / "logs"
+    log_dir.mkdir()
+    prefixed_log = log_dir / "test_exp_123:TestClient_client.log"
+    prefixed_log.write_text(_HOURLY_ENTRY_2)
+
+    resolved = resolve_hpc_client_log_path(
+        _Exp(), "TestClient", log_folder=str(log_dir)
+    )
+
+    assert resolved == str(prefixed_log)
+
+
 # ---------------------------------------------------------------------------
 # update_client_execution_from_log
 # ---------------------------------------------------------------------------

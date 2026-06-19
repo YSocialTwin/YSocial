@@ -305,8 +305,8 @@ def test_admin_progress_refreshes_hpc_client_log_when_stale():
         ) as execution_model,
         patch("y_web.routes.admin.sub.clients._details.Exps") as exp_model,
         patch(
-            "y_web.routes.admin.sub.clients._details._resolve_hpc_experiment_folder",
-            return_value="/tmp/exp22",
+            "y_web.routes.admin.sub.clients._details.resolve_hpc_client_log_path",
+            return_value="/tmp/exp22/logs/bb2d6ed8_7fdd_4dca_b49c_0a079ea6f8c0:xcx_client.log",
         ),
         patch(
             "y_web.routes.admin.sub.clients._details.os.path.exists", return_value=True

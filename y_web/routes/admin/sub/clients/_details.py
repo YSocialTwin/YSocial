@@ -7,7 +7,7 @@ from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from y_web import db
-from y_web.src.hpc.client import _resolve_hpc_experiment_folder
+from y_web.src.hpc.client import resolve_hpc_client_log_path
 from y_web.src.hpc.log_metrics import update_client_execution_from_log
 from y_web.src.llm.vllm_manager import get_llm_models
 from y_web.src.models import (
@@ -332,11 +332,10 @@ def get_progress(client_id):
                     and client_execution.elapsed_time
                     < client_execution.expected_duration_rounds
                 ):
-                    exp_folder = _resolve_hpc_experiment_folder(experiment)
-                    client_log_path = os.path.join(
-                        exp_folder, "logs", f"{client.name}_client.log"
+                    client_log_path = resolve_hpc_client_log_path(
+                        experiment, client.name
                     )
-                    if os.path.exists(client_log_path):
+                    if client_log_path and os.path.exists(client_log_path):
                         update_client_execution_from_log(client.id, client_log_path)
                         client_execution = Client_Execution.query.filter_by(
                             client_id=client_id

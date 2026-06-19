@@ -139,6 +139,52 @@ def _build_hpc_runtime_client_id(exp_folder: str, client_name: str) -> str:
     return f"{folder_name}:{str(client_name).strip()}"
 
 
+def resolve_hpc_client_log_path(
+    exp,
+    client_name: str,
+    *,
+    log_folder: Optional[str] = None,
+) -> Optional[str]:
+    """
+    Resolve the on-disk client log path for an HPC experiment.
+
+    Newer HPC clients write logs using the runtime client id prefix, e.g.
+    ``<experiment-folder>:<client-name>_client.log``. Older runs used the plain
+    ``<client-name>_client.log`` name. This helper accepts both forms.
+    """
+    if not client_name:
+        return None
+
+    exp_folder = _resolve_hpc_experiment_folder(exp)
+    logs_dir = Path(log_folder or os.path.join(exp_folder, "logs"))
+    client_name = str(client_name).strip()
+    if not client_name:
+        return None
+
+    exact_match = logs_dir / f"{client_name}_client.log"
+    if exact_match.exists():
+        return str(exact_match)
+
+    if not logs_dir.exists():
+        return None
+
+    matches = []
+    for entry in logs_dir.iterdir():
+        if not entry.is_file() or not entry.name.endswith("_client.log"):
+            continue
+        stem = entry.name[: -len("_client.log")]
+        if stem == client_name:
+            return str(entry)
+        if stem.rsplit(":", 1)[-1] == client_name:
+            matches.append(entry)
+
+    if not matches:
+        return None
+
+    matches.sort(key=lambda path: (path.stat().st_mtime, path.name), reverse=True)
+    return str(matches[0])
+
+
 def _sync_stress_reward_into_hpc_client_config(exp_folder, client_config_path):
     """Keep HPC client stress/reward settings aligned with server_config.json."""
     if not exp_folder or not client_config_path:

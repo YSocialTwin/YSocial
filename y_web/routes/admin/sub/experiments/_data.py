@@ -42,6 +42,7 @@ from y_web.src.experiment.access import (
     user_can_view_experiment,
 )
 from y_web.src.external_runtime import load_plugins_index
+from y_web.src.hpc.client import resolve_hpc_client_log_path
 from y_web.src.hpc.population_backup import restore_population_for_hpc_client
 from y_web.src.models import (
     ActivityProfile,
@@ -392,8 +393,10 @@ def experiment_clients(exp_id):
         for client in clients:
             # Update client log metrics before reading execution data
             # This ensures we have the latest progress information
-            client_log_file = os.path.join(log_folder, f"{client.name}_client.log")
-            if os.path.exists(client_log_file):
+            client_log_file = resolve_hpc_client_log_path(
+                experiment, client.name, log_folder=log_folder
+            )
+            if client_log_file and os.path.exists(client_log_file):
                 try:
                     # Pass is_hpc flag for HPC experiments to use correct log format
                     is_hpc = experiment.simulator_type == "HPC"
@@ -1690,10 +1693,12 @@ def experiment_trends(exp_id):
         )
 
         for client in clients:
-            client_log_file = os.path.join(log_folder, f"{client.name}_client.log")
+            client_log_file = resolve_hpc_client_log_path(
+                experiment, client.name, log_folder=log_folder
+            )
 
             # Update client metrics if log file exists
-            if os.path.exists(client_log_file):
+            if client_log_file and os.path.exists(client_log_file):
                 try:
                     # Pass is_hpc flag for HPC experiments to use correct log format
                     is_hpc = experiment.simulator_type == "HPC"
@@ -1758,7 +1763,7 @@ def experiment_trends(exp_id):
                 "daily_simulation_count": len(result_data["daily_simulation"]),
                 "hourly_simulation_count": len(result_data["hourly_simulation"]),
                 "log_file_path": log_file,
-                "log_file_exists": os.path.exists(log_file),
+                "log_file_exists": bool(log_file and os.path.exists(log_file)),
             }
 
         return jsonify(result_data)
@@ -1822,15 +1827,20 @@ def client_logs(client_id):
         if experiment.simulator_type == "HPC":
             exp_folder = os.path.join(exp_folder, "logs")
 
-        # Client log file name format: {client_name}_client.log
-        log_file = os.path.join(exp_folder, f"{client.name}_client.log")
+        # Client log file may be named either client_name_client.log or
+        # <runtime_prefix>:client_name_client.log depending on the simulator run.
+        log_file = resolve_hpc_client_log_path(
+            experiment, client.name, log_folder=exp_folder
+        )
 
         # Forum regressions previously wrote structured metrics into a shared
         # agent_execution.log file instead of the per-client log file.
         # Preserve compatibility for those experiments while new runs use the
         # restored per-client sink again.
         if getattr(experiment, "platform_type", "") == "forum" and (
-            not os.path.exists(log_file) or os.path.getsize(log_file) == 0
+            not log_file
+            or not os.path.exists(log_file)
+            or os.path.getsize(log_file) == 0
         ):
             legacy_forum_log = os.path.join(exp_folder, "agent_execution.log")
             if (
@@ -1840,7 +1850,7 @@ def client_logs(client_id):
                 log_file = legacy_forum_log
 
         # Check if log file exists
-        if not os.path.exists(log_file):
+        if not log_file or not os.path.exists(log_file):
             return jsonify(
                 {
                     "call_volume": {},

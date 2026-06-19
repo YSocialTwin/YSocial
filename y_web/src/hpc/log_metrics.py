@@ -23,6 +23,7 @@ from y_web.src.hpc.log_parser import (
     parse_client_log_incremental,
     parse_server_log_incremental,
 )
+from y_web.src.hpc.client import resolve_hpc_client_log_path
 from y_web.src.models import (
     Client,
     Client_Execution,
@@ -911,13 +912,13 @@ def monitor_hpc_client_execution_logs():
                     )
 
                     # Update client execution progress from client log
-                    client_log_path = os.path.join(
-                        exp_folder, "logs", f"{client.name}_client.log"
+                    client_log_path = resolve_hpc_client_log_path(
+                        exp, client.name, log_folder=os.path.join(exp_folder, "logs")
                     )
 
                     print(f"[HPC Monitor] Looking for client log: {client_log_path}")
 
-                    if os.path.exists(client_log_path):
+                    if client_log_path and os.path.exists(client_log_path):
                         print(
                             f"[HPC Monitor] Client log found, updating execution progress..."
                         )
