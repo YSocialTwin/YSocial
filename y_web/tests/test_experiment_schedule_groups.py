@@ -254,9 +254,7 @@ def test_available_schedule_payload_keeps_infinite_clients_visible():
 
     experiments = [
         SimpleNamespace(idexp=4, exp_name="RC_4", owner="Admin", exp_status="stopped"),
-        SimpleNamespace(
-            idexp=6, exp_name="RC_6", owner="Admin", exp_status="stopped"
-        ),
+        SimpleNamespace(idexp=6, exp_name="RC_6", owner="Admin", exp_status="stopped"),
     ]
 
     payload = _build_available_schedule_experiments(
