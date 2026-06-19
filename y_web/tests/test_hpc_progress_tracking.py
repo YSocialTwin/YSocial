@@ -300,14 +300,17 @@ def test_admin_progress_refreshes_hpc_client_log_when_stale():
 
     with (
         patch("y_web.routes.admin.sub.clients._details.Client") as client_model,
-        patch("y_web.routes.admin.sub.clients._details.Client_Execution")
-        as execution_model,
+        patch(
+            "y_web.routes.admin.sub.clients._details.Client_Execution"
+        ) as execution_model,
         patch("y_web.routes.admin.sub.clients._details.Exps") as exp_model,
         patch(
             "y_web.routes.admin.sub.clients._details._resolve_hpc_experiment_folder",
             return_value="/tmp/exp22",
         ),
-        patch("y_web.routes.admin.sub.clients._details.os.path.exists", return_value=True),
+        patch(
+            "y_web.routes.admin.sub.clients._details.os.path.exists", return_value=True
+        ),
         patch(
             "y_web.routes.admin.sub.clients._details.update_client_execution_from_log",
             side_effect=lambda *_args, **_kwargs: setattr(

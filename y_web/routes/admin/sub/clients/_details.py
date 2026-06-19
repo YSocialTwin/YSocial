@@ -7,6 +7,8 @@ from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from y_web import db
+from y_web.src.hpc.client import _resolve_hpc_experiment_folder
+from y_web.src.hpc.log_metrics import update_client_execution_from_log
 from y_web.src.llm.vllm_manager import get_llm_models
 from y_web.src.models import (
     Agent,
@@ -21,8 +23,6 @@ from y_web.src.models import (
     Population,
     Population_Experiment,
 )
-from y_web.src.hpc.client import _resolve_hpc_experiment_folder
-from y_web.src.hpc.log_metrics import update_client_execution_from_log
 from y_web.src.simulation.adhoc_client import adhoc_progress_payload
 from y_web.src.system.desktop_file_handler import send_file_desktop
 from y_web.src.system.miscellanea import (
@@ -329,7 +329,8 @@ def get_progress(client_id):
             if experiment and getattr(experiment, "simulator_type", None) == "HPC":
                 if client_execution.elapsed_time <= 0 or (
                     client_execution.expected_duration_rounds > 0
-                    and client_execution.elapsed_time < client_execution.expected_duration_rounds
+                    and client_execution.elapsed_time
+                    < client_execution.expected_duration_rounds
                 ):
                     exp_folder = _resolve_hpc_experiment_folder(experiment)
                     client_log_path = os.path.join(
