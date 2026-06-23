@@ -197,9 +197,48 @@ def dashboard():
     total_completed = len(completed_experiments)
     total_stopped = len(stopped_experiments)
 
+    def _calculate_experiment_progress(experiments_list):
+        """Return average client execution progress per experiment id."""
+        progress_by_exp = {}
+        for exp in experiments_list:
+            clients = Client.query.filter_by(id_exp=exp.idexp).all()
+            client_ids = [client.id for client in clients]
+            if not client_ids:
+                continue
+
+            client_exec_rows = Client_Execution.query.filter(
+                Client_Execution.client_id.in_(client_ids)
+            ).all()
+            client_exec_by_id = {row.client_id: row for row in client_exec_rows}
+
+            total_progress = 0
+            count = 0
+            for client in clients:
+                client_exec = client_exec_by_id.get(client.id)
+                if not client_exec or client_exec.expected_duration_rounds <= 0:
+                    continue
+                progress = min(
+                    100,
+                    max(
+                        0,
+                        int(
+                            client_exec.elapsed_time
+                            / client_exec.expected_duration_rounds
+                            * 100
+                        ),
+                    ),
+                )
+                total_progress += progress
+                count += 1
+
+            if count > 0:
+                progress_by_exp[exp.idexp] = int(total_progress / count)
+        return progress_by_exp
+
     # Helper function to build experiment data with clients
     def build_experiment_data(experiments_list):
         result = {}
+        progress_by_exp = _calculate_experiment_progress(experiments_list)
         for e in experiments_list:
             clients = Client.query.filter_by(id_exp=e.idexp).all()
             client_data = []
@@ -207,7 +246,11 @@ def dashboard():
                 cl = Client_Execution.query.filter_by(client_id=client.id).first()
                 client_executions = cl if cl is not None else -1
                 client_data.append((client, client_executions))
-            result[e.idexp] = {"experiment": e, "clients": client_data}
+            result[e.idexp] = {
+                "experiment": e,
+                "clients": client_data,
+                "progress": progress_by_exp.get(e.idexp),
+            }
         return result
 
     # Helper function to group experiments by exp_group
