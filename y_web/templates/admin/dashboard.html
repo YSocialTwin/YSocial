@@ -147,16 +147,31 @@
 {% endmacro %}
 
 {# Compact macro for rendering experiment boxes (without client details - for completed/stopped experiments) #}
-{% macro render_compact_experiment_box(experiments, section_color) %}
+{% macro render_compact_experiment_box(experiments, section_color, status_name) %}
     {% for exp in experiments %}
     {# Check if any client in this experiment has infinite duration (days = -1) #}
-    {% set ns = namespace(has_infinite_client=false, client_count=0) %}
+    {% set ns = namespace(has_infinite_client=false, client_count=0, progress_sum=0, progress_count=0) %}
     {% for client in experiments[exp]["clients"] %}
         {% if client[0].days == -1 %}
             {% set ns.has_infinite_client = true %}
         {% endif %}
         {% set ns.client_count = ns.client_count + 1 %}
+        {% if client[1] != -1 and client[1].expected_duration_rounds > 0 %}
+            {% set progress = (client[1].elapsed_time / client[1].expected_duration_rounds * 100) | int %}
+            {% if progress < 0 %}
+                {% set progress = 0 %}
+            {% elif progress > 100 %}
+                {% set progress = 100 %}
+            {% endif %}
+            {% set ns.progress_sum = ns.progress_sum + progress %}
+            {% set ns.progress_count = ns.progress_count + 1 %}
+        {% endif %}
     {% endfor %}
+    {% if ns.progress_count > 0 %}
+        {% set ns.avg_progress = (ns.progress_sum / ns.progress_count) | int %}
+    {% else %}
+        {% set ns.avg_progress = none %}
+    {% endif %}
     <div class="box-content" style="background: #fafafa; border: 1px solid #e6e6e6; border-left: 2px solid {{ section_color }}; border-radius: 4px; padding: 4px 8px; margin-bottom: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);" {# dynamic #}>
         <div class="box-lines">
             <div class="box-line" style="padding: 0; display: flex; align-items: center; justify-content: space-between; gap: 4px;">
@@ -175,6 +190,9 @@
                     {% endif %}
                     {% if ns.client_count > 0 %}
                     <span style="background: #e0e0e0; color: #666; font-size: 0.6em; padding: 0 4px; border-radius: 6px; line-height: 1.4;" title="Clients">{{ ns.client_count }}</span>
+                    {% endif %}
+                    {% if status_name == 'stopped' and ns.avg_progress is not none %}
+                    <span style="background: linear-gradient(90deg, #039be5 0%, #00b4d8 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="Current execution progress">{{ ns.avg_progress }}%</span>
                     {% endif %}
                     {% if ns.has_infinite_client %}
                     <span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="Infinite">∞</span>
@@ -228,7 +246,7 @@
         </div>
         <div id="{{ group_id }}" class="group-content" style="margin-top: 8px; display: {% if collapsed %}none{% else %}block{% endif %};" {# dynamic #}>
             {% if is_compact %}
-                {{ render_compact_experiment_box(experiments, section_color) }}
+                {{ render_compact_experiment_box(experiments, section_color, status_name) }}
             {% else %}
                 {{ render_experiment_box(experiments, section_color) }}
             {% endif %}
