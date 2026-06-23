@@ -43,6 +43,7 @@ from y_web.src.system.miscellanea import (
     llm_backend_status,
     ollama_status,
 )
+from .sub.experiments._helpers import _experiment_has_started_once
 
 admin = Blueprint("admin", __name__)
 
@@ -202,8 +203,11 @@ def dashboard():
         progress_by_exp = {}
         for exp in experiments_list:
             clients = Client.query.filter_by(id_exp=exp.idexp).all()
+            has_started_once = _experiment_has_started_once(exp, clients=clients)
             client_ids = [client.id for client in clients]
             if not client_ids:
+                if has_started_once:
+                    progress_by_exp[exp.idexp] = 0
                 continue
 
             client_exec_rows = Client_Execution.query.filter(
@@ -233,6 +237,8 @@ def dashboard():
 
             if count > 0:
                 progress_by_exp[exp.idexp] = int(total_progress / count)
+            elif has_started_once:
+                progress_by_exp[exp.idexp] = 0
         return progress_by_exp
 
     # Helper function to build experiment data with clients
@@ -241,15 +247,21 @@ def dashboard():
         progress_by_exp = _calculate_experiment_progress(experiments_list)
         for e in experiments_list:
             clients = Client.query.filter_by(id_exp=e.idexp).all()
+            has_started_once = _experiment_has_started_once(e, clients=clients)
             client_data = []
             for client in clients:
                 cl = Client_Execution.query.filter_by(client_id=client.id).first()
                 client_executions = cl if cl is not None else -1
                 client_data.append((client, client_executions))
+            exp_progress = progress_by_exp.get(e.idexp)
+            if exp_progress is None and has_started_once:
+                exp_progress = 0
             result[e.idexp] = {
                 "experiment": e,
                 "clients": client_data,
-                "progress": progress_by_exp.get(e.idexp),
+                "progress": exp_progress,
+                "progress_label": "NA" if exp_progress is None else f"{exp_progress}%",
+                "has_started_once": has_started_once,
             }
         return result
 
@@ -421,6 +433,7 @@ def dashboard_experiments_by_status(status):
     result = []
     for exp in paginated_experiments:
         clients = Client.query.filter_by(id_exp=exp.idexp).all()
+        has_started_once = _experiment_has_started_once(exp, clients=clients)
         client_data = []
         progress_values = []
         for client in clients:
@@ -444,7 +457,7 @@ def dashboard_experiments_by_status(status):
         exp_progress = (
             int(sum(progress_values) / len(progress_values))
             if progress_values
-            else None
+            else (0 if has_started_once else None)
         )
         result.append(
             {
@@ -459,6 +472,8 @@ def dashboard_experiments_by_status(status):
                 ),
                 "can_manage": user_can_manage_experiment(user, exp),
                 "progress": exp_progress,
+                "progress_label": "NA" if exp_progress is None else f"{exp_progress}%",
+                "has_started_once": has_started_once,
                 "clients": client_data,
             }
         )

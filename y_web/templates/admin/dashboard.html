@@ -158,7 +158,14 @@
         {% set ns.client_count = ns.client_count + 1 %}
     {% endfor %}
     {% set exp_progress = experiments[exp].get('progress') %}
-    {% set display_progress = exp_progress if exp_progress is not none else 0 %}
+    {% set progress_label = experiments[exp].get('progress_label') %}
+    {% if progress_label is none %}
+        {% if experiments[exp].get('has_started_once') %}
+            {% set progress_label = (exp_progress if exp_progress is not none else 0) ~ '%' %}
+        {% else %}
+            {% set progress_label = 'NA' %}
+        {% endif %}
+    {% endif %}
     <div class="box-content" style="background: #fafafa; border: 1px solid #e6e6e6; border-left: 2px solid {{ section_color }}; border-radius: 4px; padding: 4px 8px; margin-bottom: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);" {# dynamic #}>
         <div class="box-lines">
             <div class="box-line" style="padding: 0; display: flex; align-items: center; justify-content: space-between; gap: 4px;">
@@ -183,6 +190,9 @@
                     {% endif %}
                 </span>
                 <span class="right" style="display: flex; gap: 2px; align-items: center; flex-shrink: 0;">
+                    <span style="background: linear-gradient(90deg, #039be5 0%, #00b4d8 100%); color: white; font-size: 0.65em; padding: 1px 6px; border-radius: 8px; font-weight: 600; line-height: 1.4; white-space: nowrap;" title="Current execution progress">
+                        Execution: {{ progress_label }}
+                    </span>
                     {% if experiments[exp]['experiment'].running == 0 %}
                     <a class="link-tooltip" href="#" onclick="startExperimentServer('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="Run">
  <i class="mdi mdi-play-box-outline ys-icon-md"></i>
@@ -208,13 +218,6 @@
                     {% endif %}
                 </span>
             </div>
-            {% if status_name == 'stopped' %}
-            <div class="box-line" style="padding: 0; margin-top: 2px; align-items: center; justify-content: flex-start; gap: 4px;">
-                <span style="background: linear-gradient(90deg, #039be5 0%, #00b4d8 100%); color: white; font-size: 0.65em; padding: 1px 6px; border-radius: 8px; font-weight: 600; line-height: 1.4;" title="Current execution progress">
-                    Execution: {{ display_progress }}%
-                </span>
-            </div>
-            {% endif %}
         </div>
     </div>
     {% endfor %}

@@ -227,8 +227,12 @@ var AdminDashboard = (function() {
   function renderCompactExperimentBoxFromData(exp, sectionColor) {
       const hasInfiniteClient = exp.clients.some(client => client.days === -1);
       const clientCount = exp.clients.length;
-      const expProgress = typeof exp.progress === 'number' ? exp.progress : null;
       const expStatus = exp.exp_status || '';
+      const hasStartedOnce = Boolean(exp.has_started_once);
+      const expProgress = typeof exp.progress === 'number' ? exp.progress : null;
+      const progressLabel = typeof exp.progress_label === 'string'
+          ? exp.progress_label
+          : (hasStartedOnce ? `${expProgress !== null ? expProgress : 0}%` : 'NA');
     
       const infiniteBadge = hasInfiniteClient ? 
           `<span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="Infinite">∞</span>` : '';
@@ -236,12 +240,10 @@ var AdminDashboard = (function() {
       const clientCountBadge = clientCount > 0 ?
           `<span style="background: #e0e0e0; color: #666; font-size: 0.6em; padding: 0 4px; border-radius: 6px; line-height: 1.4;" title="Clients">${clientCount}</span>` : '';
 
-      const progressLine = (expStatus === 'stopped' || expStatus === 'scheduled') && expProgress !== null ?
-          `<div class="box-line" style="padding: 0; margin-top: 2px; align-items: center; justify-content: flex-start; gap: 4px;">
-              <span style="background: linear-gradient(90deg, #039be5 0%, #00b4d8 100%); color: white; font-size: 0.65em; padding: 1px 6px; border-radius: 8px; font-weight: 600; line-height: 1.4;" title="Current execution progress">
-                  Execution: ${expProgress}%
-              </span>
-          </div>` : '';
+      const progressBadge = (expStatus === 'stopped' || expStatus === 'scheduled') ?
+          `<span style="background: linear-gradient(90deg, #039be5 0%, #00b4d8 100%); color: white; font-size: 0.65em; padding: 1px 6px; border-radius: 8px; font-weight: 600; line-height: 1.4; white-space: nowrap;" title="Current execution progress">
+              Execution: ${progressLabel}
+          </span>` : '';
     
       const runButton = exp.running === 0 ?
           `<a class="link-tooltip" href="#" onclick="startExperimentServer('${exp.idexp}'); return false;" title="Run">
@@ -283,6 +285,7 @@ var AdminDashboard = (function() {
                       ${infiniteBadge}
                   </span>
                   <span class="right" style="display: flex; gap: 2px; align-items: center; flex-shrink: 0;">
+                      ${progressBadge}
                       ${runButton}
                       <a class="link-tooltip" href="#" onclick="selectExperiment('${exp.idexp}'); return false;" title="Load">
                           <i class="mdi mdi-select-all ${exp.status === 1 ? 'active' : ''}" style="font-size: 16px;"></i>
@@ -293,7 +296,6 @@ var AdminDashboard = (function() {
                       ${deleteExpButton}
                   </span>
               </div>
-              ${progressLine}
           </div>
       </div>`;
   }
