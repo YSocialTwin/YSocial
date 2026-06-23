@@ -246,6 +246,34 @@ def test_schedulable_experiments_include_null_status_and_sort_by_id():
     assert all(exp.running == 0 for exp in schedulable)
 
 
+def test_schedulable_experiments_exclude_completed():
+    """Completed experiments must not be shown in the schedule picker."""
+    from y_web.routes.admin.sub.experiments._schedule import (
+        _get_schedulable_experiments,
+    )
+
+    experiments = [
+        SimpleNamespace(
+            idexp=3, exp_name="RC_3", exp_status="completed", running=0, status=1
+        ),
+        SimpleNamespace(
+            idexp=4, exp_name="RC_4", exp_status="stopped", running=0, status=0
+        ),
+        SimpleNamespace(
+            idexp=5, exp_name="RC_5", exp_status="completed", running=0, status=0
+        ),
+        SimpleNamespace(idexp=6, exp_name="RC_6", exp_status=None, running=0, status=0),
+    ]
+
+    class FakeQuery:
+        def all(self):
+            return experiments
+
+    schedulable = _get_schedulable_experiments(FakeQuery())
+
+    assert [exp.idexp for exp in schedulable] == [4, 6]
+
+
 def test_available_schedule_payload_keeps_infinite_clients_visible():
     """Infinite-client experiments should remain visible in the schedule picker."""
     from y_web.routes.admin.sub.experiments._schedule import (
@@ -266,6 +294,28 @@ def test_available_schedule_payload_keeps_infinite_clients_visible():
     assert [item["id"] for item in payload] == [6]
     assert payload[0]["has_infinite_client"] is True
     assert payload[0]["exp_status"] == "stopped"
+
+
+def test_available_schedule_payload_excludes_completed_experiments():
+    """Completed experiments must be filtered out from the schedule payload."""
+    from y_web.routes.admin.sub.experiments._schedule import (
+        _build_available_schedule_experiments,
+    )
+
+    experiments = [
+        SimpleNamespace(idexp=4, exp_name="RC_4", owner="Admin", exp_status="stopped"),
+        SimpleNamespace(
+            idexp=5, exp_name="RC_5", owner="Admin", exp_status="completed"
+        ),
+    ]
+
+    payload = _build_available_schedule_experiments(
+        experiments,
+        scheduled_exp_ids=set(),
+        experiments_with_infinite_clients=set(),
+    )
+
+    assert [item["id"] for item in payload] == [4]
 
 
 if __name__ == "__main__":

@@ -1038,6 +1038,8 @@ def _build_available_schedule_experiments(
     for exp in experiments_list:
         if exp.idexp in scheduled_exp_ids:
             continue
+        if str(getattr(exp, "exp_status", "") or "").lower() == "completed":
+            continue
 
         result.append(
             {
@@ -1056,6 +1058,7 @@ def _get_schedulable_experiments(experiments_query):
     """Return schedule-eligible experiments in a deterministic order.
 
     Fresh clones should be selectable as long as they are not running.
+    Completed experiments are excluded from the picker.
     Older copied experiments can also have a NULL, empty, or stale exp_status,
     so we do not require a specific status value here.
     """
@@ -1066,7 +1069,7 @@ def _get_schedulable_experiments(experiments_query):
             continue
         if exp.exp_status == "active":
             continue
-        if exp.exp_status == "completed" and getattr(exp, "status", 0) == 1:
+        if str(getattr(exp, "exp_status", "") or "").lower() == "completed":
             continue
         result.append(exp)
 
