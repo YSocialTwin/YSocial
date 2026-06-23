@@ -422,6 +422,7 @@ def dashboard_experiments_by_status(status):
     for exp in paginated_experiments:
         clients = Client.query.filter_by(id_exp=exp.idexp).all()
         client_data = []
+        progress_values = []
         for client in clients:
             cl = Client_Execution.query.filter_by(client_id=client.id).first()
             elapsed = cl.elapsed_time if cl else 0
@@ -438,17 +439,22 @@ def dashboard_experiments_by_status(status):
                     "days": client.days,
                 }
             )
+            if expected > 0:
+                progress_values.append(progress)
+        exp_progress = int(sum(progress_values) / len(progress_values)) if progress_values else None
         result.append(
             {
                 "idexp": exp.idexp,
                 "exp_name": exp.exp_name,
                 "running": exp.running,
                 "status": exp.status,
+                "exp_status": exp_status,
                 "owner": exp.owner,
                 "simulator_type": (
                     exp.simulator_type if hasattr(exp, "simulator_type") else "Standard"
                 ),
                 "can_manage": user_can_manage_experiment(user, exp),
+                "progress": exp_progress,
                 "clients": client_data,
             }
         )
