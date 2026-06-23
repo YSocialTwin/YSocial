@@ -16,6 +16,7 @@ def test_hpc_prompt_json_includes_output_contracts():
     comment_prompt = data["generate_comment"]["user_template"]
     share_prompt = data["generate_share_commentary"]["user_template"]
     news_prompt = data["generate_news_commentary"]["user_template"]
+    search_prompt = data["generate_search_action"]["user_template"]
 
     assert "Output ONLY the comment text." in comment_prompt
     assert (
@@ -28,6 +29,9 @@ def test_hpc_prompt_json_includes_output_contracts():
         "Do not explain, summarize, quote the prompt, add preambles, or wrap it in markdown."
         in share_prompt
     )
+
+    assert "Reply with ONLY ONE WORD" in search_prompt
+    assert "COMMENT, SHARE, LIKE, LOVE, LAUGH, ANGRY, SAD, or IGNORE" in search_prompt
 
     assert "Output ONLY the tweet text." in news_prompt
     assert (
