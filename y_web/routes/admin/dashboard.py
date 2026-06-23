@@ -441,7 +441,11 @@ def dashboard_experiments_by_status(status):
             )
             if expected > 0:
                 progress_values.append(progress)
-        exp_progress = int(sum(progress_values) / len(progress_values)) if progress_values else None
+        exp_progress = (
+            int(sum(progress_values) / len(progress_values))
+            if progress_values
+            else None
+        )
         result.append(
             {
                 "idexp": exp.idexp,
