@@ -76,16 +76,31 @@ def reset_client(uid):
     if os.path.exists(path):
         os.remove(path)
 
-    path = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}{os.sep}prompts.json"
-    if os.path.exists(path):
-        os.remove(path)
+    prompt_candidates = ["prompts.json"]
+    if exp.platform_type == "photo_sharing":
+        prompt_candidates.insert(0, "prompts_ygram.json")
+    for prompt_file in prompt_candidates:
+        path = (
+            f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}{os.sep}{prompt_file}"
+        )
+        if os.path.exists(path):
+            os.remove(path)
 
     # copy the original prompts.json file
-    if exp.platform_type == "microblogging":
+    if exp.platform_type in {"microblogging", "photo_sharing"}:
         prompts_src = get_resource_path(os.path.join("data_schema", "prompts.json"))
+        if exp.platform_type == "photo_sharing":
+            prompts_src = get_resource_path(
+                os.path.join("data_schema", "prompts_hpc.json")
+            )
+        prompts_dest = (
+            f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}{os.sep}prompts_ygram.json"
+            if exp.platform_type == "photo_sharing"
+            else f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}{os.sep}prompts.json"
+        )
         shutil.copy(
             prompts_src,
-            f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}{os.sep}prompts.json",
+            prompts_dest,
         )
     elif exp.platform_type == "forum":
         prompts_src = get_resource_path(

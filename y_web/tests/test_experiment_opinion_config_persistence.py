@@ -151,12 +151,43 @@ def test_stopped_experiments_allow_client_configuration_updates():
     template_paths = [
         "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/experiment_details.html",
         "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/experiment_details_forum.html",
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/experiment_details_photo.html",
     ]
 
     for template_path in template_paths:
         content = open(template_path, "r").read()
-        assert "experiment.running == 0" in content
-        assert "configuration_update_required or experiment.running == 0" in content
+        if template_path.endswith("experiment_details_photo.html"):
+            assert "experiment_details_variant = 'photo'" in content
+            assert "include \"admin/experiment_details.html\"" in content
+        else:
+            assert "experiment.running == 0" in content
+            assert "configuration_update_required or experiment.running == 0" in content
+
+
+def test_new_experiment_form_supports_photo_sharing_platform():
+    settings_template = open(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/settings.html",
+        "r",
+    ).read()
+    settings_js = open(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/js/admin-settings.js",
+        "r",
+    ).read()
+    crud_source = open(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_crud.py",
+        "r",
+    ).read()
+    data_source = open(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_data.py",
+        "r",
+    ).read()
+
+    assert 'value="photo_sharing"' in settings_template
+    assert "Photo Sharing (e.g., Instagram)" in settings_template
+    assert "photoSharingAvailable" in settings_js
+    assert "platform_type == \"photo_sharing\"" in crud_source
+    assert "simulator_type = \"HPC\"" in crud_source
+    assert "experiment_details_photo.html" in data_source
 
 
 def test_client_details_pages_expose_editable_simulation_and_action_fields():

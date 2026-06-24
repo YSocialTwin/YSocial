@@ -1644,6 +1644,7 @@ var AdminSettings = (function() {
       const microbloggingAvailable = !!repoAvailability.microblogging;
       const hpcAvailable = !!repoAvailability.hpc;
       const forumAvailable = !!repoAvailability.forum;
+      const photoSharingAvailable = !!repoAvailability.photo_sharing;
     
       // Handle Redis Configuration collapsible toggle
       const redisConfigHeader = document.getElementById('redis-config-header');
@@ -1675,17 +1676,25 @@ var AdminSettings = (function() {
           if (!simulatorTypeInput || !platformTypeSelect || !hpcToggle || !hpcToggleLabel || !hpcInfoInline || !redisConfigBox || !llmAgentsToggle) {
               return;
           }
+          const isPhotoSharing = platformTypeSelect.value === 'photo_sharing';
           if (!forumAvailable && platformTypeSelect.value === 'forum') {
               platformTypeSelect.value = 'microblogging';
           }
           const isForum = platformTypeSelect.value === 'forum';
-          let isHPC = !isForum && hpcToggle.checked;
+          let isHPC = isPhotoSharing || (!isForum && hpcToggle.checked);
           const remoteExperimentToggle = document.getElementById('remote_experiment_toggle');
           const remoteExperimentContainer = document.getElementById('remote-experiment-container');
           const remoteExperimentLabel = document.getElementById('remote-experiment-label');
           const llmEnabled = llmAgentsToggle.checked;
 
-          if (isForum) {
+          if (isPhotoSharing) {
+              hpcToggle.checked = true;
+              hpcToggle.disabled = true;
+              hpcToggleLabel.textContent = 'Required';
+              if (hpcToggleContainer) {
+                  hpcToggleContainer.style.opacity = '0.8';
+              }
+          } else if (isForum) {
               hpcToggle.checked = false;
               hpcToggle.disabled = true;
               hpcToggleLabel.textContent = 'Unavailable for Forum';
@@ -1738,7 +1747,7 @@ var AdminSettings = (function() {
               }
           }
 
-          if (!isForum && hpcToggleContainer) {
+          if ((!isForum && !isPhotoSharing) && hpcToggleContainer) {
               if (hpcAvailable || microbloggingAvailable) {
                   hpcToggleContainer.style.display = 'flex';
               } else {
@@ -1746,6 +1755,13 @@ var AdminSettings = (function() {
               }
           } else if (hpcToggleContainer) {
               hpcToggleContainer.style.display = 'flex';
+          }
+
+          if (platformTypeSelect) {
+              const photoSharingOption = platformTypeSelect.querySelector('option[value="photo_sharing"]');
+              if (photoSharingOption) {
+                  photoSharingOption.disabled = !photoSharingAvailable;
+              }
           }
 
           if (isHPC) {

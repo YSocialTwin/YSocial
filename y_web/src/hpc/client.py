@@ -286,7 +286,11 @@ def start_hpc_client(exp, cli, population):
         exp_folder, f"client_{cli.name}-{population.name}.json"
     )
     agents_file = os.path.join(exp_folder, f"{population.name}.json")
-    prompts_file = os.path.join(exp_folder, "prompts.json")
+    prompts_file = (
+        os.path.join(exp_folder, "prompts_ygram.json")
+        if exp.platform_type == "photo_sharing"
+        else os.path.join(exp_folder, "prompts.json")
+    )
 
     # Validate that required files exist
     for file_path, file_name in [
@@ -366,7 +370,26 @@ def start_hpc_client(exp, cli, population):
         return os.path.join(resource_external, repo_name)
 
     # Determine the script path based on platform type
-    if exp.platform_type == "microblogging":
+    runtime_config_dir = exp_folder
+    if exp.platform_type == "photo_sharing":
+        script_path = os.path.join(_external_repo_dir("YPhotoSharing"), "run_client.py")
+        runtime_config_dir = os.path.join(exp_folder, f"photo_runtime_{cli.name}")
+        os.makedirs(runtime_config_dir, exist_ok=True)
+        runtime_client_config = os.path.join(runtime_config_dir, "client_config.json")
+        shutil.copyfile(client_config, runtime_client_config)
+        shutil.copyfile(agents_file, os.path.join(runtime_config_dir, "agents.json"))
+        shutil.copyfile(prompts_file, os.path.join(runtime_config_dir, "prompts_ygram.json"))
+
+        try:
+            with open(runtime_client_config, "r", encoding="utf-8") as f:
+                photo_cfg = json.load(f)
+            photo_cfg.setdefault("agents_file", "agents.json")
+            photo_cfg.setdefault("users_file", "agents.json")
+            with open(runtime_client_config, "w", encoding="utf-8") as f:
+                json.dump(photo_cfg, f, indent=2)
+        except Exception:
+            pass
+    elif exp.platform_type == "microblogging":
         script_path = os.path.join(_external_repo_dir("YSimulator"), "run_client.py")
     else:
         raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
@@ -380,9 +403,10 @@ def start_hpc_client(exp, cli, population):
         not (is_frozen or has_meipass or is_bundle_exe)
         and not Path(script_path).exists()
     ):
+        expected_repo = "YPhotoSharing" if exp.platform_type == "photo_sharing" else "YSimulator"
         raise FileNotFoundError(
             f"Client script not found: {script_path}\n"
-            f"Please ensure YSimulator is cloned under external/YSimulator.\n"
+            f"Please ensure {expected_repo} is cloned under external/{expected_repo}.\n"
             f"You can install or update it from the Admin > Plugins panel."
         )
 
@@ -392,16 +416,24 @@ def start_hpc_client(exp, cli, population):
     # Build the command
     if is_frozen or has_meipass or is_bundle_exe:
         # Running from PyInstaller bundle
-        cmd = [
-            sys.executable,
-            "--run-hpc-client-subprocess",
-            "--config",
-            client_config,
-            "--agents",
-            agents_file,
-            "--prompts",
-            prompts_file,
-        ]
+        if exp.platform_type == "photo_sharing":
+            cmd = [
+                sys.executable,
+                script_path,
+                "--config",
+                runtime_config_dir,
+            ]
+        else:
+            cmd = [
+                sys.executable,
+                "--run-hpc-client-subprocess",
+                "--config",
+                client_config,
+                "--agents",
+                agents_file,
+                "--prompts",
+                prompts_file,
+            ]
     elif (
         isinstance(python_cmd, str)
         and " " in python_cmd
@@ -409,27 +441,42 @@ def start_hpc_client(exp, cli, population):
     ):
         # Handle commands like "pipenv run python"
         cmd_parts = python_cmd.split()
-        cmd = cmd_parts + [
-            script_path,
-            "--config",
-            client_config,
-            "--agents",
-            agents_file,
-            "--prompts",
-            prompts_file,
-        ]
+        if exp.platform_type == "photo_sharing":
+            cmd = cmd_parts + [
+                script_path,
+                "--config",
+                runtime_config_dir,
+            ]
+        else:
+            cmd = cmd_parts + [
+                script_path,
+                "--config",
+                client_config,
+                "--agents",
+                agents_file,
+                "--prompts",
+                prompts_file,
+            ]
     else:
         # Simple python executable path (may contain spaces on Windows)
-        cmd = [
-            python_cmd,
-            script_path,
-            "--config",
-            client_config,
-            "--agents",
-            agents_file,
-            "--prompts",
-            prompts_file,
-        ]
+        if exp.platform_type == "photo_sharing":
+            cmd = [
+                python_cmd,
+                script_path,
+                "--config",
+                runtime_config_dir,
+            ]
+        else:
+            cmd = [
+                python_cmd,
+                script_path,
+                "--config",
+                client_config,
+                "--agents",
+                agents_file,
+                "--prompts",
+                prompts_file,
+            ]
 
     print(f"Starting HPC client {cli.name} for experiment {exp.idexp}...")
     print(f"Config: {client_config}")

@@ -2820,12 +2820,15 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
     with open(population_filename, "w") as f:
         json.dump(population_data, f, indent=4)
 
-    # Copy prompts file into the experiment folder
-    # For HPC experiments, use prompts_hpc.json from data_schema and rename to prompts.json
-    # Always copy for HPC to ensure correct prompts file (overwrites if exists)
-    prompts_dest = f"{exp_dir}{os.sep}prompts.json"
+    # Copy prompts file into the experiment folder.
+    # Photo Sharing uses the YPhotoSharing prompt filename; other HPC paths keep prompts.json.
+    prompts_dest = (
+        f"{exp_dir}{os.sep}prompts_ygram.json"
+        if exp.platform_type == "photo_sharing"
+        else f"{exp_dir}{os.sep}prompts.json"
+    )
 
-    if exp.platform_type == "microblogging":
+    if exp.platform_type in {"microblogging", "photo_sharing"}:
         prompts_src = get_resource_path(os.path.join("data_schema", "prompts_hpc.json"))
         shutil.copyfile(prompts_src, prompts_dest)
     elif exp.platform_type == "forum":

@@ -98,8 +98,9 @@
  <span class="right ys-w-70" style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px;">
                                             <input type="hidden" id="simulator_type_input" name="simulator_type" value="Standard">
                                             <div class="select" style="flex: 1 1 280px; min-width: 240px;">
- <select id="platform_type_select" name="platform_type" class="w-100">
+                                                <select id="platform_type_select" name="platform_type" class="w-100">
                                                     <option value="microblogging">Microblogging (i.e., X/BlueSky)</option>
+                                                    <option value="photo_sharing" {% if not repo_availability.photo_sharing %}disabled{% endif %}>Photo Sharing (e.g., Instagram){% if not repo_availability.photo_sharing %} - Unavailable{% endif %}</option>
                                                     <option value="forum" {% if not repo_availability.forum %}disabled{% endif %}>Forum (i.e., Reddit){% if not repo_availability.forum %} - Unavailable{% endif %}</option>
                                                 </select>
                                             </div>

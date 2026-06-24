@@ -725,11 +725,11 @@ def experiment_details(uid):
         except Exception:
             forum_feed_health = None
 
-    template_name = (
-        "admin/experiment_details_forum.html"
-        if experiment.platform_type == "forum"
-        else "admin/experiment_details.html"
-    )
+    template_name = "admin/experiment_details.html"
+    if experiment.platform_type == "forum":
+        template_name = "admin/experiment_details_forum.html"
+    elif experiment.platform_type == "photo_sharing":
+        template_name = "admin/experiment_details_photo.html"
 
     return render_template(
         template_name,

@@ -143,11 +143,13 @@ def _external_repo_availability():
     )
     hpc = _installed("hpc_simulator")
     forum = _installed("forum_server") and _installed("forum_client")
+    photo_sharing = _installed("photo_sharing")
 
     return {
         "microblogging": microblogging,
         "hpc": hpc,
         "forum": forum,
+        "photo_sharing": photo_sharing,
     }
 
 
@@ -1852,6 +1854,13 @@ def create_experiment():
         )
         return redirect(url_for("experiments.settings"))
 
+    if platform_type == "photo_sharing" and not repo_availability["photo_sharing"]:
+        flash(
+            "Photo Sharing experiments are unavailable because YPhotoSharing is not present.",
+            "error",
+        )
+        return redirect(url_for("experiments.settings"))
+
     if platform_type == "microblogging":
         if simulator_type == "HPC":
             if not repo_availability["hpc"]:
@@ -1873,6 +1882,8 @@ def create_experiment():
                         "error",
                     )
                     return redirect(url_for("experiments.settings"))
+    elif platform_type == "photo_sharing":
+        simulator_type = "HPC"
 
     if platform_type == "forum":
         simulator_type = "Standard"

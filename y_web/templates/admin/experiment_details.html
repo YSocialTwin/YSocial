@@ -14,6 +14,9 @@
                 <div class="column is-12">
                     <div class="dashboard-box">
                         <a href="/admin/experiments">Experiments</a> > Simulation: {{ experiment.exp_name }}
+                        {% if experiment_details_variant == 'photo' %}
+ <span class="tag is-info">Photo Sharing</span>
+                        {% endif %}
                         {% if has_infinite_client %}
  <span class="ys-badge-success2" title="This experiment has at least one client set to run until manually stopped">∞ Infinite</span>
                         {% endif %}
