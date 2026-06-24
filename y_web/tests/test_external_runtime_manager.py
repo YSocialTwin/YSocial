@@ -99,6 +99,44 @@ def test_runtime_status_lists_remote_branches_before_clone(
     assert status.available_branches == ["develop", "main", "release"]
 
 
+def test_runtime_status_lists_remote_branches_in_fast_view_for_git_managed_repo(
+    runtime_repo_spec, monkeypatch
+):
+    manager.clone_runtime_repo(runtime_repo_spec.key, "main", actor="tester")
+
+    work = runtime_repo_spec.path.parent.parent / "work"
+    subprocess.run(
+        ["git", "-C", str(work), "checkout", "-b", "stop_failure_fix"], check=True
+    )
+    (work / "testruntime" / "__init__.py").write_text("VALUE = 4\n", encoding="utf-8")
+    subprocess.run(["git", "-C", str(work), "add", "."], check=True)
+    subprocess.run(
+        ["git", "-C", str(work), "commit", "-m", "stop_failure_fix"],
+        check=True,
+    )
+    subprocess.run(
+        ["git", "-C", str(work), "push", "-u", "origin", "stop_failure_fix"],
+        check=True,
+    )
+
+    monkeypatch.setattr(
+        manager,
+        "_list_remote_branches",
+        lambda spec, github_token=None: (
+            ["main", "stop_failure_fix"],
+            None,
+        ),
+    )
+
+    status = manager.get_runtime_status(
+        runtime_repo_spec.key, include_remote_metadata=False
+    )
+
+    assert status.git_managed is True
+    assert "stop_failure_fix" in status.available_branches
+    assert "main" in status.available_branches
+
+
 def test_update_runtime_repo_switches_branch(runtime_repo_spec):
     manager.clone_runtime_repo(runtime_repo_spec.key, "develop", actor="tester")
 

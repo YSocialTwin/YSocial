@@ -169,9 +169,9 @@ def settings():
     # Filter experiments based on role + visibility grants
     if user.role in ("admin", "researcher"):
         visible_query = get_visible_experiment_query(user)
-        experiments = visible_query.limit(5).all()
-        all_experiments = visible_query.all()
-        active_experiments = visible_query.filter_by(status=1).all()
+        experiments, all_experiments, active_experiments = (
+            _load_settings_experiment_lists(visible_query)
+        )
     else:
         # Regular users should not access this page
         flash("Access denied. Please use the experiment feed.")
@@ -2536,19 +2536,32 @@ def stop_experiment(uid):
     # Step 1 & 2: Stop all running clients attached to this experiment first
     # This prevents clients from trying to communicate with a dead server
     clients = Client.query.filter_by(id_exp=uid).all()
+    all_clients_stopped = True
     for client in clients:
         # Only terminate clients that are marked as running (status=1)
         if client.status == 1:
+            stop_result = True
             # Terminate the client process if it has a PID
-            if client.pid:
+            if client.pid or exp.simulator_type == "HPC":
                 print(
                     f"Stopping client {client.name} (ID: {client.id}, PID: {client.pid}) for experiment {uid}"
                 )
-                stop_client_for_experiment(exp, client, pause=False)
+                stop_result = stop_client_for_experiment(exp, client, pause=False)
 
             # Update client status in database
-            client.status = 0
+            if exp.simulator_type == "HPC" and stop_result is False:
+                client.status = 1
+                all_clients_stopped = False
+            else:
+                client.status = 0
             db.session.commit()
+
+    if not all_clients_stopped:
+        flash(
+            "Unable to confirm stop for one or more HPC clients. Experiment remains active.",
+            "warning",
+        )
+        return experiment_details(uid)
 
     # Step 3: Now stop the yserver after all clients are terminated
     # Try the new subprocess-based termination first
@@ -2843,8 +2856,6 @@ def copy_experiment():
         num_copies = int(num_copies)
         if num_copies < 1:
             num_copies = 1
-        elif num_copies > 20:
-            num_copies = 20
     except (ValueError, TypeError):
         num_copies = 1
 
@@ -2855,12 +2866,7 @@ def copy_experiment():
         return redirect(url_for("experiments.settings"))
 
     # Generate list of experiment names to create
-    exp_names_to_create = []
-    if num_copies == 1:
-        exp_names_to_create = [new_exp_name]
-    else:
-        for i in range(1, num_copies + 1):
-            exp_names_to_create.append(f"{new_exp_name}_{i}")
+    exp_names_to_create = _build_copy_experiment_names(new_exp_name, num_copies)
 
     # Validate that none of the names already exist
     for name in exp_names_to_create:
@@ -2906,6 +2912,21 @@ def copy_experiment():
             )
 
     return redirect(url_for("experiments.settings"))
+
+
+def _build_copy_experiment_names(new_exp_name, num_copies):
+    """Return the experiment names that should be created for a copy request."""
+    if num_copies == 1:
+        return [new_exp_name]
+
+    return [f"{new_exp_name}_{i}" for i in range(1, num_copies + 1)]
+
+
+def _load_settings_experiment_lists(visible_query):
+    """Load all experiments for the admin settings page without truncation."""
+    experiments = visible_query.all()
+    active_experiments = visible_query.filter_by(status=1).all()
+    return experiments, experiments, active_experiments
 
 
 def _create_single_experiment_copy(source_exp, new_exp_name, exp_group=""):

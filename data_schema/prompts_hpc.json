@@ -16,15 +16,19 @@
   },
   "generate_comment": {
     "system_template": "{persona}",
-    "user_template": "You engage in discussions by commenting on posts. Generate {toxicity} confrontational language contents. Respond ONLY with the comment text itself - no explanations, no meta-commentary, no formatting notes. {author_name} posted this:\n\n\"{post_content}\"\n\n{thread_context_instruction\n}Write a brief, thoughtful Tweet comment. You can tag the author with @{author_name}. Be authentic to your persona. Output ONLY the comment text. Do not explain, summarize, quote the prompt, add preambles, or wrap it in markdown."
+    "user_template": "You are replying as the persona shown above. Generate {toxicity} confrontational language contents. {author_name} posted this:\n\n\"{post_content}\"\n\n{thread_context_instruction}\nWrite one brief, natural Tweet comment that directly responds to the post and thread context. Be authentic to your persona. Output ONLY the comment text. Do not explain, summarize, quote the prompt, add preambles, or wrap it in markdown."
   },
   "generate_read_reaction": {
     "system_template": "{persona}",
-    "user_template": "You're deciding how to react to content you discovered. You found this post:\n\n\"{post_content}\"\n\nHow do you react? Reply with ONLY ONE WORD from these options:\n- LIKE (positive, agree)\n- LOVE (strongly positive)\n- LAUGH (funny, humorous)\n- ANGRY (negative, disagree, dislike)\n- SAD (disappointing, concerning)\n- IGNORE (not interested, skip)\n\nYour reaction:"
+    "user_template": "You found this post:\n\n\"{post_content}\"\n\nReply with ONLY ONE WORD from these options: LIKE, LOVE, LAUGH, ANGRY, SAD, or IGNORE. Choose the one reaction that best matches your persona and the post. Your reaction:"
+  },
+  "generate_search_action": {
+    "system_template": "{persona}",
+    "user_template": "You found this post while searching:\n\n\"{post_content}\"\n\nReply with ONLY ONE WORD from these options: COMMENT, SHARE, LIKE, LOVE, LAUGH, ANGRY, SAD, or IGNORE. Choose the one action that best matches your persona and the post. Your choice:"
   },
   "decide_search_action": {
     "system_template": "{persona}",
-    "user_template": "You searched for posts on a topic you're interested in and found relevant content. Decide how to engage with it. You found this post on your topic of interest:\n\n\"{post_content}\"\n\nHow do you want to engage? Reply with ONLY ONE WORD from these options:\n- COMMENT (engage in discussion, share your thoughts)\n- SHARE (reshare with your followers)\n- LIKE (positive, agree)\n- LOVE (strongly positive)\n- LAUGH (funny, humorous)\n- ANGRY (negative, disagree)\n- SAD (disappointing, concerning)\n- IGNORE (not interested, skip)\n\nYour choice:",
+    "user_template": "You searched for a topic and found this post:\n\n\"{post_content}\"\n\nReply with ONLY ONE WORD from these options: COMMENT, SHARE, LIKE, LOVE, LAUGH, ANGRY, SAD, or IGNORE. Choose the one action that best matches your persona and the post. Your choice:",
     "note": "Used when agents perform search action to decide engagement with discovered posts"
   },
   "generate_news_commentary": {
@@ -75,7 +79,7 @@
   },
   "generate_share_commentary": {
     "system_template": "{persona}",
-    "user_template": "You are resharing someone's post with your own perspective. Generate {toxicity} confrontational language contents. Respond ONLY with the commentary text - no explanations, no meta-commentary. {author_name} posted this:\n\n\"{post_content}\"\n\nWrite a brief Tweet commentary explaining why you're resharing this. Add your perspective based on your persona and opinions. Be authentic. You can use #hashtags in your commentary. Output ONLY the commentary text. Do not explain, summarize, quote the prompt, add preambles, or wrap it in markdown."
+    "user_template": "You are resharing someone's post with your own perspective. Generate {toxicity} confrontational language contents. {author_name} posted this:\n\n\"{post_content}\"\n\nWrite one brief Tweet commentary explaining why you're resharing it. Add your perspective based on your persona and opinions. Be authentic. Output ONLY the commentary text. Do not explain, summarize, quote the prompt, add preambles, or wrap it in markdown."
   },
   "agent_comment_stress_reward_annotation": "Extract structured interaction features. Return JSON with keys tone, directness, support_strength. tone must be one of positive, neutral, critical, hostile, supportive. directness and support_strength must be floats in [0,1]. Return JSON only.",
   "agent_post_stress_reward_annotation": "Extract structured interaction features. Return JSON with keys tone, directness, support_strength. tone must be one of hostile or supportive. directness and support_strength must be floats in [0,1]. Return JSON only."

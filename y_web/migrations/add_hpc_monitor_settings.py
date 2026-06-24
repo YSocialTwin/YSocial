@@ -6,6 +6,7 @@ This script:
    - enabled: Whether HPC monitoring is enabled
    - check_interval_seconds: Frequency of checks in seconds (default 5)
    - max_hpc_per_group: Maximum HPC experiments per group; NULL means unlimited
+   - max_hpc_simulations_per_vllm_worker: Maximum simulations per vLLM worker
    - last_check: Timestamp of the last check operation
 
 2. Removes the old log_sync_settings table (replaced by HPC monitor)
@@ -56,13 +57,14 @@ def migrate_sqlite(db_path):
                     enabled                  INTEGER NOT NULL DEFAULT 1,
                     check_interval_seconds   INTEGER NOT NULL DEFAULT 5,
                     max_hpc_per_group       INTEGER,
+                    max_hpc_simulations_per_vllm_worker INTEGER NOT NULL DEFAULT 5,
                     last_check               TEXT
                 )
             """)
             # Insert default settings row
             cursor.execute("""
-                INSERT INTO hpc_monitor_settings (enabled, check_interval_seconds)
-                VALUES (1, 5)
+                INSERT INTO hpc_monitor_settings (enabled, check_interval_seconds, max_hpc_simulations_per_vllm_worker)
+                VALUES (1, 5, 5)
             """)
             print("✓ Created hpc_monitor_settings table in SQLite database")
         else:
@@ -77,6 +79,16 @@ def migrate_sqlite(db_path):
                     "UPDATE hpc_monitor_settings SET max_hpc_per_group = 4 WHERE max_hpc_per_group IS NULL"
                 )
                 print("✓ Added max_hpc_per_group column to SQLite database")
+            if "max_hpc_simulations_per_vllm_worker" not in existing_columns:
+                cursor.execute(
+                    "ALTER TABLE hpc_monitor_settings ADD COLUMN max_hpc_simulations_per_vllm_worker INTEGER"
+                )
+                cursor.execute(
+                    "UPDATE hpc_monitor_settings SET max_hpc_simulations_per_vllm_worker = 5 WHERE max_hpc_simulations_per_vllm_worker IS NULL"
+                )
+                print(
+                    "✓ Added max_hpc_simulations_per_vllm_worker column to SQLite database"
+                )
 
         # Drop old log_sync_settings table if it exists
         cursor.execute(
@@ -140,13 +152,14 @@ def migrate_postgresql(host, port, database, user, password):
                     enabled                  BOOLEAN NOT NULL DEFAULT TRUE,
                     check_interval_seconds   INTEGER NOT NULL DEFAULT 5,
                     max_hpc_per_group       INTEGER,
+                    max_hpc_simulations_per_vllm_worker INTEGER NOT NULL DEFAULT 5,
                     last_check               TIMESTAMP
                 )
             """)
             # Insert default settings row
             cursor.execute("""
-                INSERT INTO hpc_monitor_settings (enabled, check_interval_seconds)
-                VALUES (TRUE, 5)
+                INSERT INTO hpc_monitor_settings (enabled, check_interval_seconds, max_hpc_simulations_per_vllm_worker)
+                VALUES (TRUE, 5, 5)
             """)
             print("✓ Created hpc_monitor_settings table in PostgreSQL database")
         else:
@@ -166,6 +179,16 @@ def migrate_postgresql(host, port, database, user, password):
                     "UPDATE hpc_monitor_settings SET max_hpc_per_group = 4 WHERE max_hpc_per_group IS NULL"
                 )
                 print("✓ Added max_hpc_per_group column to PostgreSQL database")
+            if "max_hpc_simulations_per_vllm_worker" not in existing_columns:
+                cursor.execute(
+                    "ALTER TABLE hpc_monitor_settings ADD COLUMN max_hpc_simulations_per_vllm_worker INTEGER"
+                )
+                cursor.execute(
+                    "UPDATE hpc_monitor_settings SET max_hpc_simulations_per_vllm_worker = 5 WHERE max_hpc_simulations_per_vllm_worker IS NULL"
+                )
+                print(
+                    "✓ Added max_hpc_simulations_per_vllm_worker column to PostgreSQL database"
+                )
 
         # Drop old log_sync_settings table if it exists
         cursor.execute("""
@@ -244,7 +267,7 @@ def main():
 
 
 def ensure_hpc_monitor_settings_schema():
-    """Ensure the hpc_monitor_settings table has the new max_hpc_per_group column."""
+    """Ensure the hpc_monitor_settings table has all expected columns."""
     from y_web import db
 
     engine = db.get_engine(bind="db_admin")
@@ -262,6 +285,13 @@ def ensure_hpc_monitor_settings_schema():
                 conn.exec_driver_sql(
                     "UPDATE hpc_monitor_settings SET max_hpc_per_group = 4 WHERE max_hpc_per_group IS NULL"
                 )
+            if "max_hpc_simulations_per_vllm_worker" not in existing_columns:
+                conn.exec_driver_sql(
+                    "ALTER TABLE hpc_monitor_settings ADD COLUMN max_hpc_simulations_per_vllm_worker INTEGER"
+                )
+                conn.exec_driver_sql(
+                    "UPDATE hpc_monitor_settings SET max_hpc_simulations_per_vllm_worker = 5 WHERE max_hpc_simulations_per_vllm_worker IS NULL"
+                )
         else:
             exists = conn.exec_driver_sql("""
                 SELECT 1
@@ -276,6 +306,20 @@ def ensure_hpc_monitor_settings_schema():
                 )
                 conn.exec_driver_sql(
                     "UPDATE hpc_monitor_settings SET max_hpc_per_group = 4 WHERE max_hpc_per_group IS NULL"
+                )
+            exists = conn.exec_driver_sql("""
+                SELECT 1
+                FROM information_schema.columns
+                WHERE table_schema = 'public'
+                  AND table_name = 'hpc_monitor_settings'
+                  AND column_name = 'max_hpc_simulations_per_vllm_worker'
+                """).fetchone()
+            if not exists:
+                conn.exec_driver_sql(
+                    "ALTER TABLE hpc_monitor_settings ADD COLUMN max_hpc_simulations_per_vllm_worker INTEGER"
+                )
+                conn.exec_driver_sql(
+                    "UPDATE hpc_monitor_settings SET max_hpc_simulations_per_vllm_worker = 5 WHERE max_hpc_simulations_per_vllm_worker IS NULL"
                 )
 
 

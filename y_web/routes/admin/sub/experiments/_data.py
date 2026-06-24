@@ -42,6 +42,7 @@ from y_web.src.experiment.access import (
     user_can_view_experiment,
 )
 from y_web.src.external_runtime import load_plugins_index
+from y_web.src.hpc.client import resolve_hpc_client_log_path
 from y_web.src.hpc.population_backup import restore_population_for_hpc_client
 from y_web.src.models import (
     ActivityProfile,
@@ -186,6 +187,41 @@ def _form_float(field_name, default):
         return float(default)
 
 
+def _client_execution_progress_percentage(client_exec):
+    """
+    Return the current execution percentage for a client execution row.
+
+    Finite executions are derived from elapsed_time / expected_duration_rounds.
+    Infinite or incomplete records that do not expose a finite target duration
+    are excluded from the average and reported as None.
+    """
+    if not client_exec:
+        return None
+
+    expected_rounds = getattr(client_exec, "expected_duration_rounds", 0) or 0
+    if expected_rounds <= 0:
+        return None
+
+    elapsed_rounds = getattr(client_exec, "elapsed_time", 0) or 0
+    progress = int((elapsed_rounds / expected_rounds) * 100)
+    return min(100, max(0, progress))
+
+
+def _average_experiment_progress(clients, client_exec_by_client_id):
+    """Average client progress across the executions assigned to one experiment."""
+    progress_values = []
+    for client in clients:
+        client_exec = client_exec_by_client_id.get(client.id)
+        progress = _client_execution_progress_percentage(client_exec)
+        if progress is not None:
+            progress_values.append(progress)
+
+    if not progress_values:
+        return None
+
+    return int(sum(progress_values) / len(progress_values))
+
+
 @experiments.route("/admin/experiments_data")
 @login_required
 def experiments_data():
@@ -292,34 +328,19 @@ def experiments_data():
         ).all()
         client_exec_by_client_id = {row.client_id: row for row in client_exec_rows}
 
-    # Calculate average progress for running experiments
+    # Calculate average progress for all experiments.
+    # Stopped/scheduled experiments use the same client_execution data to show
+    # a static progress badge in the schedule box.
     exp_progress = {}
+    exp_progress_label = {}
     # Track experiments with infinite clients
     exp_has_infinite = {}
     for exp in res:
         clients = clients_by_exp.get(exp.idexp, [])
         exp_has_infinite[exp.idexp] = any(client.days == -1 for client in clients)
-
-        if exp.running == 1 or exp.exp_status == "active":
-            total_progress = 0
-            count = 0
-            for client in clients:
-                client_exec = client_exec_by_client_id.get(client.id)
-                if client_exec and client_exec.expected_duration_rounds > 0:
-                    progress = min(
-                        100,
-                        max(
-                            0,
-                            int(
-                                client_exec.elapsed_time
-                                / client_exec.expected_duration_rounds
-                                * 100
-                            ),
-                        ),
-                    )
-                    total_progress += progress
-                    count += 1
-            exp_progress[exp.idexp] = int(total_progress / count) if count > 0 else 0
+        progress = _average_experiment_progress(clients, client_exec_by_client_id)
+        exp_progress[exp.idexp] = progress
+        exp_progress_label[exp.idexp] = "NA" if progress is None else f"{progress}%"
 
     return {
         "data": [
@@ -335,7 +356,8 @@ def experiments_data():
                     "Active" if jupyter_status.get(exp.idexp, False) else "Inactive"
                 ),
                 "annotations": exp.annotations if exp.annotations else "",
-                "progress": exp_progress.get(exp.idexp, 0),
+                "progress": exp_progress.get(exp.idexp),
+                "progress_label": exp_progress_label.get(exp.idexp, "NA"),
                 "has_infinite_client": exp_has_infinite.get(exp.idexp, False),
                 "exp_group": exp.exp_group if exp.exp_group else "No group",
                 "simulator_type": getattr(exp, "simulator_type", "Standard"),
@@ -392,8 +414,10 @@ def experiment_clients(exp_id):
         for client in clients:
             # Update client log metrics before reading execution data
             # This ensures we have the latest progress information
-            client_log_file = os.path.join(log_folder, f"{client.name}_client.log")
-            if os.path.exists(client_log_file):
+            client_log_file = resolve_hpc_client_log_path(
+                experiment, client.name, log_folder=log_folder
+            )
+            if client_log_file and os.path.exists(client_log_file):
                 try:
                     # Pass is_hpc flag for HPC experiments to use correct log format
                     is_hpc = experiment.simulator_type == "HPC"
@@ -1255,9 +1279,11 @@ def reset_hpc_experiment(uid):
 
     try:
         for client in clients:
-            if client.status == 1 and client.pid:
+            if client.status == 1 and (client.pid or exp.simulator_type == "HPC"):
                 try:
-                    stop_client_for_experiment(exp, client, pause=False)
+                    stop_result = stop_client_for_experiment(exp, client, pause=False)
+                    if exp.simulator_type == "HPC" and stop_result is False:
+                        continue
                 except Exception:
                     current_app.logger.warning(
                         f"Failed to stop HPC client {client.id} during reset.",
@@ -1688,10 +1714,12 @@ def experiment_trends(exp_id):
         )
 
         for client in clients:
-            client_log_file = os.path.join(log_folder, f"{client.name}_client.log")
+            client_log_file = resolve_hpc_client_log_path(
+                experiment, client.name, log_folder=log_folder
+            )
 
             # Update client metrics if log file exists
-            if os.path.exists(client_log_file):
+            if client_log_file and os.path.exists(client_log_file):
                 try:
                     # Pass is_hpc flag for HPC experiments to use correct log format
                     is_hpc = experiment.simulator_type == "HPC"
@@ -1756,7 +1784,7 @@ def experiment_trends(exp_id):
                 "daily_simulation_count": len(result_data["daily_simulation"]),
                 "hourly_simulation_count": len(result_data["hourly_simulation"]),
                 "log_file_path": log_file,
-                "log_file_exists": os.path.exists(log_file),
+                "log_file_exists": bool(log_file and os.path.exists(log_file)),
             }
 
         return jsonify(result_data)
@@ -1820,15 +1848,20 @@ def client_logs(client_id):
         if experiment.simulator_type == "HPC":
             exp_folder = os.path.join(exp_folder, "logs")
 
-        # Client log file name format: {client_name}_client.log
-        log_file = os.path.join(exp_folder, f"{client.name}_client.log")
+        # Client log file may be named either client_name_client.log or
+        # <runtime_prefix>:client_name_client.log depending on the simulator run.
+        log_file = resolve_hpc_client_log_path(
+            experiment, client.name, log_folder=exp_folder
+        )
 
         # Forum regressions previously wrote structured metrics into a shared
         # agent_execution.log file instead of the per-client log file.
         # Preserve compatibility for those experiments while new runs use the
         # restored per-client sink again.
         if getattr(experiment, "platform_type", "") == "forum" and (
-            not os.path.exists(log_file) or os.path.getsize(log_file) == 0
+            not log_file
+            or not os.path.exists(log_file)
+            or os.path.getsize(log_file) == 0
         ):
             legacy_forum_log = os.path.join(exp_folder, "agent_execution.log")
             if (
@@ -1838,7 +1871,7 @@ def client_logs(client_id):
                 log_file = legacy_forum_log
 
         # Check if log file exists
-        if not os.path.exists(log_file):
+        if not log_file or not os.path.exists(log_file):
             return jsonify(
                 {
                     "call_volume": {},

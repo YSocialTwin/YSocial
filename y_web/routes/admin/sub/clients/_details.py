@@ -7,6 +7,8 @@ from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from y_web import db
+from y_web.src.hpc.client import resolve_hpc_client_log_path
+from y_web.src.hpc.log_metrics import update_client_execution_from_log
 from y_web.src.llm.vllm_manager import get_llm_models
 from y_web.src.models import (
     Agent,
@@ -320,6 +322,26 @@ def get_progress(client_id):
     """
     # get client_execution
     client_execution = Client_Execution.query.filter_by(client_id=client_id).first()
+    client = Client.query.filter_by(id=client_id).first()
+    if client and client_execution:
+        try:
+            experiment = Exps.query.filter_by(idexp=client.id_exp).first()
+            if experiment and getattr(experiment, "simulator_type", None) == "HPC":
+                if client_execution.elapsed_time <= 0 or (
+                    client_execution.expected_duration_rounds > 0
+                    and client_execution.elapsed_time
+                    < client_execution.expected_duration_rounds
+                ):
+                    client_log_path = resolve_hpc_client_log_path(
+                        experiment, client.name
+                    )
+                    if client_log_path and os.path.exists(client_log_path):
+                        update_client_execution_from_log(client.id, client_log_path)
+                        client_execution = Client_Execution.query.filter_by(
+                            client_id=client_id
+                        ).first()
+        except Exception:
+            pass
 
     if client_execution is None:
         return json.dumps({"progress": 0, "infinite": False})

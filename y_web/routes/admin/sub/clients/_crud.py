@@ -48,6 +48,7 @@ from y_web.src.models import (
     Exp_Topic,
     Exps,
     Follow_Recsys,
+    HpcMonitorSettings,
     Languages,
     Leanings,
     OpinionGroup,
@@ -2300,6 +2301,18 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
         bool(exp.llm_agents_enabled) if hasattr(exp, "llm_agents_enabled") else True
     )
 
+    hpc_vllm_worker_limit = 5
+    try:
+        hpc_monitor_settings = HpcMonitorSettings.query.first()
+        if hpc_monitor_settings and getattr(
+            hpc_monitor_settings, "max_hpc_simulations_per_vllm_worker", None
+        ):
+            hpc_vllm_worker_limit = int(
+                hpc_monitor_settings.max_hpc_simulations_per_vllm_worker
+            )
+    except Exception:
+        pass
+
     # Check if Image Transcription is enabled
     enable_image_transcription = form_data.get("enable_image_transcription") == "true"
 
@@ -2345,6 +2358,10 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
             "gpu_per_actor": float(form_data.get("llm_gpu_per_actor", "1.0")),
             "reuse_actors": form_data.get("llm_reuse_actors") == "true",
             "actor_name_prefix": form_data.get("llm_actor_name_prefix", "ysim_llm"),
+            "shared_pool": {
+                "enabled": True,
+                "max_clients_per_worker": hpc_vllm_worker_limit,
+            },
         }
 
         # Only include llm_v_config if Image Transcription is enabled

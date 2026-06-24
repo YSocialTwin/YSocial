@@ -65,7 +65,7 @@ class TestHPCExecutionLogMonitoring:
     """Test HPC execution log monitoring functionality."""
 
     def test_check_shutdown_message_found(self, app, db):
-        """Test detecting 'Client shutdown complete' message in log."""
+        """Test detecting a natural completion marker in a shutdown log."""
         from y_web.src.hpc.log_metrics import check_hpc_client_execution_completion
 
         # Create a temporary log file with shutdown message
@@ -81,6 +81,9 @@ class TestHPCExecutionLogMonitoring:
                 '{"timestamp": "2026-02-04T14:44:02.000000", "level": "INFO", "message": "Processing round 1"}\n'
             )
             f.write(
+                '{"timestamp": "2026-02-04T14:44:03.000000", "level": "INFO", "message": "Client natural completion reached"}\n'
+            )
+            f.write(
                 '{"timestamp": "2026-02-04T14:44:03.082126", "level": "INFO", "message": "Client shutdown complete", "module": "run_client", "function": "<module>", "line": 526}\n'
             )
 
@@ -90,6 +93,156 @@ class TestHPCExecutionLogMonitoring:
                 assert result is True
         finally:
             os.unlink(log_path)
+
+    def test_check_shutdown_message_without_completion_marker_is_not_found(
+        self, app, db
+    ):
+        """Manual shutdown without the natural completion marker must not count as completion."""
+        from y_web.src.hpc.log_metrics import check_hpc_client_execution_completion
+
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix="_execution.log", delete=False
+        ) as f:
+            log_path = f.name
+            f.write(
+                '{"timestamp": "2026-02-04T14:44:01.000000", "level": "INFO", "message": "Client starting"}\n'
+            )
+            f.write(
+                '{"timestamp": "2026-02-04T14:44:03.082126", "level": "INFO", "message": "Client shutdown complete", "module": "run_client", "function": "<module>", "line": 526}\n'
+            )
+
+        try:
+            with app.app_context():
+                result = check_hpc_client_execution_completion(1, 1, log_path)
+                assert result is False
+        finally:
+            os.unlink(log_path)
+
+    def test_check_shutdown_message_with_completed_progress_is_found(self, app, db):
+        """If execution progress already reached the end, shutdown should still count as completion."""
+        from y_web.src.hpc.log_metrics import check_hpc_client_execution_completion
+        from y_web.src.models import Client, Client_Execution, Exps, Population
+
+        with app.app_context():
+            exp = Exps(
+                exp_name="Test HPC",
+                exp_descr="Test",
+                platform_type="microblogging",
+                owner="test",
+                status=1,
+                running=1,
+                port=5000,
+                db_name="experiments_test",
+                simulator_type="HPC",
+                exp_status="active",
+            )
+            db.session.add(exp)
+            db.session.commit()
+
+            pop = Population(name="test_pop", descr="Test population", size=10)
+            db.session.add(pop)
+            db.session.commit()
+
+            client = Client(
+                name="test_client",
+                descr="Test client",
+                id_exp=exp.idexp,
+                population_id=pop.id,
+                status=0,
+            )
+            db.session.add(client)
+            db.session.commit()
+
+            client_exec = Client_Execution(
+                client_id=client.id,
+                elapsed_time=24,
+                expected_duration_rounds=24,
+                last_active_day=0,
+                last_active_hour=23,
+            )
+            db.session.add(client_exec)
+            db.session.commit()
+
+            with tempfile.NamedTemporaryFile(
+                mode="w", suffix="_execution.log", delete=False
+            ) as f:
+                log_path = f.name
+                f.write(
+                    '{"timestamp": "2026-02-04T14:44:01.000000", "level": "INFO", "message": "Client starting"}\n'
+                )
+                f.write(
+                    '{"timestamp": "2026-02-04T14:44:03.082126", "level": "INFO", "message": "Client shutdown complete", "module": "run_client", "function": "<module>", "line": 526}\n'
+                )
+
+            try:
+                result = check_hpc_client_execution_completion(
+                    exp.idexp, client.id, log_path
+                )
+                assert result is True
+            finally:
+                os.unlink(log_path)
+
+    def test_manual_stop_terminal_state_blocks_completion(self, app, db):
+        """A manually stopped client must not be reclassified as completed."""
+        from y_web.src.hpc.log_metrics import check_hpc_client_execution_completion
+        from y_web.src.models import Client, Client_Execution, Exps, Population
+
+        with app.app_context():
+            exp = Exps(
+                exp_name="Manual Stop HPC",
+                exp_descr="Test",
+                platform_type="microblogging",
+                owner="test",
+                status=1,
+                running=1,
+                port=5000,
+                db_name="experiments_test_manual",
+                simulator_type="HPC",
+                exp_status="stopped",
+            )
+            db.session.add(exp)
+            db.session.commit()
+
+            pop = Population(name="manual_pop", descr="Test population", size=10)
+            db.session.add(pop)
+            db.session.commit()
+
+            client = Client(
+                name="manual_client",
+                descr="Test client",
+                id_exp=exp.idexp,
+                population_id=pop.id,
+                status=0,
+            )
+            db.session.add(client)
+            db.session.commit()
+
+            client_exec = Client_Execution(
+                client_id=client.id,
+                elapsed_time=23,
+                expected_duration_rounds=24,
+                last_active_day=0,
+                last_active_hour=22,
+                terminal_state="manual_stop",
+            )
+            db.session.add(client_exec)
+            db.session.commit()
+
+            with tempfile.NamedTemporaryFile(
+                mode="w", suffix="_execution.log", delete=False
+            ) as f:
+                log_path = f.name
+                f.write(
+                    '{"timestamp": "2026-02-04T14:44:03.082126", "level": "INFO", "message": "Client shutdown complete"}\n'
+                )
+
+            try:
+                result = check_hpc_client_execution_completion(
+                    exp.idexp, client.id, log_path
+                )
+                assert result is False
+            finally:
+                os.unlink(log_path)
 
     def test_check_shutdown_message_not_found(self, app, db):
         """Test when shutdown message is not present."""
@@ -221,6 +374,8 @@ class TestHPCExecutionLogMonitoring:
 
             updated_client = Client.query.filter_by(id=client.id).first()
             assert updated_client.status == 0
+            updated_exec = Client_Execution.query.filter_by(client_id=client.id).first()
+            assert updated_exec.terminal_state == "completed"
 
     def test_parse_client_log_incremental_does_not_complete_infinite_client(self, app):
         """Infinite HPC clients must not be auto-stopped from progress parsing."""
@@ -395,6 +550,65 @@ class TestHPCExecutionLogMonitoring:
             assert result is False
 
             # Verify experiment was NOT terminated
+            updated_exp = Exps.query.filter_by(idexp=exp.idexp).first()
+            assert updated_exp.running == 1
+            mock_stop.assert_not_called()
+
+    @patch("y_web.src.hpc.server.stop_hpc_server")
+    def test_check_and_terminate_does_not_treat_manual_stop_as_completed(
+        self, mock_stop, app, db
+    ):
+        """Manual stops must not satisfy experiment completion."""
+        from y_web.src.hpc.log_metrics import check_and_terminate_hpc_experiment
+        from y_web.src.models import Client, Client_Execution, Exps, Population
+
+        with app.app_context():
+            exp = Exps(
+                exp_name="Test HPC Manual Stop",
+                exp_descr="Test",
+                platform_type="microblogging",
+                owner="test",
+                status=1,
+                running=1,
+                port=5002,
+                db_name="experiments_test_manual",
+                simulator_type="HPC",
+                exp_status="active",
+            )
+            db.session.add(exp)
+            db.session.commit()
+
+            pop = Population(name="test_pop_manual", descr="Test population", size=10)
+            db.session.add(pop)
+            db.session.commit()
+
+            client = Client(
+                name="client_manual",
+                descr="Test client",
+                id_exp=exp.idexp,
+                population_id=pop.id,
+                status=0,
+            )
+            db.session.add(client)
+            db.session.commit()
+
+            client_exec = Client_Execution(
+                client_id=client.id,
+                elapsed_time=24,
+                expected_duration_rounds=24,
+                terminal_state="manual_stop",
+            )
+            db.session.add(client_exec)
+            db.session.commit()
+
+            from y_web.src.hpc.log_metrics import (
+                _mark_hpc_experiment_seen_running_client,
+            )
+
+            _mark_hpc_experiment_seen_running_client(exp.idexp)
+
+            result = check_and_terminate_hpc_experiment(exp.idexp)
+            assert result is False
             updated_exp = Exps.query.filter_by(idexp=exp.idexp).first()
             assert updated_exp.running == 1
             mock_stop.assert_not_called()

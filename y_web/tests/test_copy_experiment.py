@@ -259,10 +259,45 @@ def test_client_config_port_update():
     assert "5010" in old_client_config["servers"]["api"]
     assert "5000" not in old_client_config["servers"]["api"]
 
-    # Test with different URL format
-    test_api = "http://localhost:5001/"
-    new_api = re.sub(r":\d+/", f":{new_port}/", test_api)
-    assert new_api == "http://localhost:5010/"
+
+def test_copy_experiment_names_are_not_capped():
+    """Test that copy names scale to the requested number without a hard cap."""
+    from y_web.routes.admin.sub.experiments._crud import _build_copy_experiment_names
+
+    names = _build_copy_experiment_names("Demo Experiment", 25)
+
+    assert len(names) == 25
+    assert names[0] == "Demo Experiment_1"
+    assert names[-1] == "Demo Experiment_25"
+
+
+def test_settings_experiment_lists_are_not_truncated():
+    """Test that settings loading keeps all experiments visible."""
+    from y_web.routes.admin.sub.experiments._crud import (
+        _load_settings_experiment_lists,
+    )
+
+    class FakeVisibleQuery:
+        def __init__(self):
+            self.active_requested = False
+
+        def all(self):
+            if self.active_requested:
+                return ["active-1", "active-2"]
+            return ["exp-1", "exp-2", "exp-3", "exp-4", "exp-5", "exp-6"]
+
+        def filter_by(self, **kwargs):
+            assert kwargs == {"status": 1}
+            self.active_requested = True
+            return self
+
+    experiments, all_experiments, active_experiments = _load_settings_experiment_lists(
+        FakeVisibleQuery()
+    )
+
+    assert experiments == ["exp-1", "exp-2", "exp-3", "exp-4", "exp-5", "exp-6"]
+    assert all_experiments == experiments
+    assert active_experiments == ["active-1", "active-2"]
 
 
 def test_postgresql_database_deletion():

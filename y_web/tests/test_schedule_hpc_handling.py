@@ -90,6 +90,23 @@ def test_schedule_functions_hpc_handling_completeness():
     print("✓ All schedule operations have HPC-specific implementations")
 
 
+def test_stop_client_for_experiment_passes_terminal_state_for_hpc():
+    """HPC stop/pause operations should record distinct terminal states."""
+    from y_web.src.simulation.execution_backend import stop_client_for_experiment
+
+    exp = MagicMock()
+    exp.simulator_type = "HPC"
+
+    client = MagicMock()
+
+    with patch("y_web.src.simulation.execution_backend.stop_hpc_client") as mock_stop:
+        stop_client_for_experiment(exp, client, pause=False)
+        stop_client_for_experiment(exp, client, pause=True)
+
+    assert mock_stop.call_args_list[0].kwargs == {"terminal_state": "manual_stop"}
+    assert mock_stop.call_args_list[1].kwargs == {"terminal_state": "paused"}
+
+
 def test_simulator_type_check_patterns():
     """Test various simulator_type check patterns used in schedule functions."""
 

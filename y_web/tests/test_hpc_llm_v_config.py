@@ -251,6 +251,18 @@ class TestHPCLLMVConfig:
         assert '"memory_embedding_model": memory_embedding_model' in create_block
         assert '"memory_backend": (' in create_block
 
+    def test_create_hpc_client_source_persists_vllm_shared_pool_limit(self):
+        source = open(
+            "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_crud.py"
+        ).read()
+        create_block = source.split('elif llm_backend == "vllm":', 1)[1].split(
+            "else:  # ollama", 1
+        )[0]
+
+        assert '"shared_pool": {' in create_block
+        assert '"enabled": True' in create_block
+        assert '"max_clients_per_worker": hpc_vllm_worker_limit' in create_block
+
     def test_hpc_template_exposes_memory_configuration_section(self):
         template = open(
             "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_hpc.html"

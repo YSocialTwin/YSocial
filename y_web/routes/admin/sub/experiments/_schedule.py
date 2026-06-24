@@ -716,9 +716,15 @@ def stop_schedule():
                 clients = Client.query.filter_by(id_exp=exp.idexp).all()
                 for client in clients:
                     if client.status == 1:
-                        if client.pid:
-                            stop_client_for_experiment(exp, client, pause=False)
-                        client.status = 0
+                        stop_result = True
+                        if client.pid or exp.simulator_type == "HPC":
+                            stop_result = stop_client_for_experiment(
+                                exp, client, pause=False
+                            )
+                        if exp.simulator_type == "HPC" and stop_result is False:
+                            client.status = 1
+                        else:
+                            client.status = 0
                         db.session.commit()
 
                 # Stop server
@@ -814,9 +820,15 @@ def _do_check_schedule_progress():
                 clients = Client.query.filter_by(id_exp=exp.idexp).all()
                 for client in clients:
                     if client.status == 1:
-                        if client.pid:
-                            stop_client_for_experiment(exp, client, pause=False)
-                        client.status = 0
+                        stop_result = True
+                        if client.pid or exp.simulator_type == "HPC":
+                            stop_result = stop_client_for_experiment(
+                                exp, client, pause=False
+                            )
+                        if exp.simulator_type == "HPC" and stop_result is False:
+                            client.status = 1
+                        else:
+                            client.status = 0
                         db.session.commit()
 
                 # Stop server
@@ -987,10 +999,7 @@ def get_available_experiments_for_schedule():
     else:
         experiments_query = Exps.query.filter_by(owner=user.username)
 
-    # Get experiments that are stopped
-    experiments_list = experiments_query.filter(
-        Exps.exp_status.in_(["stopped", "scheduled"])
-    ).all()
+    experiments_list = _get_schedulable_experiments(experiments_query)
 
     # Get experiments already in groups
     scheduled_exp_ids = set(
@@ -998,7 +1007,9 @@ def get_available_experiments_for_schedule():
     )
 
     # Get experiment IDs that have infinite clients (clients with days = -1)
-    # Use a single query instead of nested loops for efficiency
+    # Use a single query instead of nested loops for efficiency.
+    # These experiments remain visible in the picker so they can be inspected
+    # or manually scheduled; auto-grouping still keeps the stricter rule below.
     exp_ids = [exp.idexp for exp in experiments_list]
     infinite_clients = (
         (
@@ -1012,23 +1023,57 @@ def get_available_experiments_for_schedule():
     )
     experiments_with_infinite_clients = set(c.id_exp for c in infinite_clients)
 
-    result = []
-    for exp in experiments_list:
-        # Exclude experiments that are already scheduled or have infinite clients
-        if (
-            exp.idexp not in scheduled_exp_ids
-            and exp.idexp not in experiments_with_infinite_clients
-        ):
-            result.append(
-                {
-                    "id": exp.idexp,
-                    "name": exp.exp_name,
-                    "owner": exp.owner,
-                    "exp_status": exp.exp_status,
-                }
-            )
+    result = _build_available_schedule_experiments(
+        experiments_list, scheduled_exp_ids, experiments_with_infinite_clients
+    )
 
     return jsonify({"success": True, "experiments": result})
+
+
+def _build_available_schedule_experiments(
+    experiments_list, scheduled_exp_ids, experiments_with_infinite_clients
+):
+    """Convert schedule-eligible experiments into the payload shown in the picker."""
+    result = []
+    for exp in experiments_list:
+        if exp.idexp in scheduled_exp_ids:
+            continue
+        if str(getattr(exp, "exp_status", "") or "").lower() == "completed":
+            continue
+
+        result.append(
+            {
+                "id": exp.idexp,
+                "name": exp.exp_name,
+                "owner": exp.owner,
+                "exp_status": exp.exp_status,
+                "has_infinite_client": exp.idexp in experiments_with_infinite_clients,
+            }
+        )
+
+    return result
+
+
+def _get_schedulable_experiments(experiments_query):
+    """Return schedule-eligible experiments in a deterministic order.
+
+    Fresh clones should be selectable as long as they are not running.
+    Completed experiments are excluded from the picker.
+    Older copied experiments can also have a NULL, empty, or stale exp_status,
+    so we do not require a specific status value here.
+    """
+    experiments = experiments_query.all()
+    result = []
+    for exp in experiments:
+        if getattr(exp, "running", 0) != 0:
+            continue
+        if exp.exp_status == "active":
+            continue
+        if str(getattr(exp, "exp_status", "") or "").lower() == "completed":
+            continue
+        result.append(exp)
+
+    return sorted(result, key=lambda exp: (exp.idexp or 0, exp.exp_name or ""))
 
 
 def add_schedule_log(message, log_type="info"):
@@ -1139,15 +1184,12 @@ def auto_create_groups():
     # Get current user
     user = Admin_users.query.filter_by(username=current_user.username).first()
 
-    # Get available experiments (stopped, not in any group)
     if user.role == "admin":
         experiments_query = Exps.query
     else:
         experiments_query = Exps.query.filter_by(owner=user.username)
 
-    experiments_list = experiments_query.filter(
-        Exps.exp_status.in_(["stopped", "scheduled"])
-    ).all()
+    experiments_list = _get_schedulable_experiments(experiments_query)
 
     # Apply group filter if specified
     if group_filter:

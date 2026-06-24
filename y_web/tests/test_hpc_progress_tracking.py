@@ -6,6 +6,7 @@ created to enable proper progress tracking for the scheduler, and that stop
 operations deregister clients cleanly from the orchestrator.
 """
 
+import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -125,20 +126,21 @@ def test_stop_hpc_client_deregisters_from_orchestrator(tmp_path):
 
     mock_actor = MagicMock()
     mock_actor.deregister_client.remote.return_value = "ok"
+    mock_runtime_client = MagicMock()
 
     with (
         patch("y_web.src.hpc.client._clear_stale_hpc_pid", return_value=False),
         patch("y_web.src.hpc.client.get_writable_path", return_value=str(tmp_path)),
         patch("y_web.src.hpc.client.ray.is_initialized", return_value=False),
         patch("y_web.src.hpc.client.ray.init") as mock_ray_init,
-        patch(
-            "y_web.src.hpc.client.ray.get_actor", return_value=mock_actor
-        ) as mock_get_actor,
+        patch("y_web.src.hpc.client.ray.get_actor") as mock_get_actor,
+        patch("y_web.src.hpc.client.ray.kill") as mock_ray_kill,
         patch("y_web.src.hpc.client.ray.get", return_value=True) as mock_ray_get,
         patch("y_web.src.hpc.client.ray.shutdown") as mock_ray_shutdown,
         patch("y_web.src.hpc.client.os.kill", side_effect=OSError("no such process")),
         patch("y_web.src.hpc.client.db.session.commit"),
     ):
+        mock_get_actor.side_effect = [mock_actor, mock_runtime_client]
         result = stop_hpc_client(mock_cli)
 
     assert result is True
@@ -147,10 +149,16 @@ def test_stop_hpc_client_deregisters_from_orchestrator(tmp_path):
         namespace="DigitAfrica_test",
         ignore_reinit_error=True,
     )
-    mock_get_actor.assert_called_once_with("Orchestrator", namespace="DigitAfrica_test")
+    assert mock_get_actor.call_args_list[0].args == ("Orchestrator",)
+    assert mock_get_actor.call_args_list[0].kwargs == {"namespace": "DigitAfrica_test"}
+    assert mock_get_actor.call_args_list[1].args == ("exp123:standard_pop",)
+    assert mock_get_actor.call_args_list[1].kwargs == {"namespace": "DigitAfrica_test"}
+    assert mock_ray_kill.call_args_list[0].args == (mock_runtime_client,)
+    assert mock_ray_kill.call_args_list[0].kwargs == {"no_restart": True}
     mock_ray_get.assert_called()
     mock_ray_shutdown.assert_called_once()
     assert mock_cli.pid is None
+    mock_actor.deregister_client.remote.assert_called_once_with("exp123:standard_pop")
 
 
 def test_start_hpc_client_refuses_duplicate_live_pid():
@@ -264,6 +272,62 @@ def test_stop_hpc_client_clears_stale_recycled_pid(monkeypatch):
 
     assert stop_hpc_client(mock_cli) is True
     assert mock_cli.pid is None
+
+
+def test_admin_progress_refreshes_hpc_client_log_when_stale():
+    from y_web.routes.admin.sub.clients._details import get_progress
+
+    client = MagicMock()
+    client.id = 11
+    client.name = "hpc_client_1"
+    client.id_exp = 22
+
+    experiment = MagicMock()
+    experiment.simulator_type = "HPC"
+    experiment.db_name = "experiments_exp22"
+
+    client_execution = MagicMock()
+    client_execution.elapsed_time = 0
+    client_execution.expected_duration_rounds = 24
+    client_execution.last_active_day = -1
+    client_execution.last_active_hour = -1
+
+    refreshed_execution = MagicMock()
+    refreshed_execution.elapsed_time = 6
+    refreshed_execution.expected_duration_rounds = 24
+    refreshed_execution.last_active_day = 0
+    refreshed_execution.last_active_hour = 5
+
+    with (
+        patch("y_web.routes.admin.sub.clients._details.Client") as client_model,
+        patch(
+            "y_web.routes.admin.sub.clients._details.Client_Execution"
+        ) as execution_model,
+        patch("y_web.routes.admin.sub.clients._details.Exps") as exp_model,
+        patch(
+            "y_web.routes.admin.sub.clients._details.resolve_hpc_client_log_path",
+            return_value="/tmp/exp22/logs/bb2d6ed8_7fdd_4dca_b49c_0a079ea6f8c0:xcx_client.log",
+        ),
+        patch(
+            "y_web.routes.admin.sub.clients._details.os.path.exists", return_value=True
+        ),
+        patch(
+            "y_web.routes.admin.sub.clients._details.update_client_execution_from_log",
+            side_effect=lambda *_args, **_kwargs: setattr(
+                client_execution, "elapsed_time", 6
+            ),
+        ),
+    ):
+        client_model.query.filter_by.return_value.first.return_value = client
+        execution_model.query.filter_by.return_value.first.side_effect = [
+            client_execution,
+            refreshed_execution,
+        ]
+        exp_model.query.filter_by.return_value.first.return_value = experiment
+
+        payload = get_progress(client.id)
+
+    assert json.loads(payload)["progress"] == 25
 
 
 if __name__ == "__main__":

@@ -597,80 +597,94 @@ def parse_client_log_incremental(
                 if expected_rounds > 0 and current_round >= expected_rounds:
                     # Get the client and mark as stopped
                     client = Client.query.filter_by(id=client_id).first()
-                    if client and client.status == 1:
+                    if not client:
+                        logger.warning(
+                            f"HPC client {client_id} not found while handling completion"
+                        )
+                        return new_offset, {
+                            "daily": daily_data,
+                            "hourly": hourly_data,
+                            "max_day": max_day,
+                            "max_hour": max_hour,
+                        }
+
+                    if client.status == 1:
                         client.status = 0
+                        client_exec.terminal_state = "completed"
                         logger.info(
                             f"HPC client {client_id} simulation complete at round {current_round}, marking as stopped"
                         )
 
-                        # Commit the client status change before checking other clients
-                        _commit_with_retry(db.session)
+                    # Commit the client status change before checking other clients
+                    _commit_with_retry(db.session)
 
-                        # Check if all clients for this experiment are now complete
-                        exp_id = client.id_exp
+                    # Check if all clients for this experiment are now complete
+                    exp_id = client.id_exp
 
-                        # Get the experiment first to check status
-                        exp = Exps.query.filter_by(idexp=exp_id).first()
+                    # Get the experiment first to check status
+                    exp = Exps.query.filter_by(idexp=exp_id).first()
 
-                        # Only proceed with auto-stop if experiment is not already completed
-                        # This prevents race conditions when multiple clients finish simultaneously
-                        if exp and exp.exp_status != "completed":
-                            all_clients = Client.query.filter_by(id_exp=exp_id).all()
+                    # Only proceed with auto-stop if experiment is not already completed
+                    # This prevents race conditions when multiple clients finish simultaneously
+                    if exp and exp.exp_status != "completed":
+                        all_clients = Client.query.filter_by(id_exp=exp_id).all()
 
-                            # Check if all clients are stopped (status = 0)
-                            all_stopped = all(c.status == 0 for c in all_clients)
+                        # Check if all clients are stopped (status = 0)
+                        all_stopped = all(c.status == 0 for c in all_clients)
 
-                            if all_stopped:
-                                logger.info(
-                                    f"All clients for HPC experiment {exp_id} are complete. Stopping server and updating status."
-                                )
+                        if all_stopped:
+                            logger.info(
+                                f"All clients for HPC experiment {exp_id} are complete. Stopping server and updating status."
+                            )
 
+                            try:
+                                # Import here to avoid circular import
+                                from y_web.src.hpc.client import stop_hpc_client
+                                from y_web.src.hpc.server import stop_hpc_server
+
+                                # Stop all clients that might still have running processes
+                                for c in all_clients:
+                                    if c.pid:
+                                        try:
+                                            logger.info(
+                                                f"Stopping HPC client {c.id} (PID: {c.pid})"
+                                            )
+                                            stop_hpc_client(
+                                                c, terminal_state="completed"
+                                            )
+                                        except Exception as e:
+                                            logger.error(
+                                                f"Error stopping HPC client {c.id}: {e}",
+                                                exc_info=True,
+                                            )
+
+                                # Stop the server
                                 try:
-                                    # Import here to avoid circular import
-                                    from y_web.src.hpc.client import stop_hpc_client
-                                    from y_web.src.hpc.server import stop_hpc_server
-
-                                    # Stop all clients that might still have running processes
-                                    for c in all_clients:
-                                        if c.pid:
-                                            try:
-                                                logger.info(
-                                                    f"Stopping HPC client {c.id} (PID: {c.pid})"
-                                                )
-                                                stop_hpc_client(c)
-                                            except Exception as e:
-                                                logger.error(
-                                                    f"Error stopping HPC client {c.id}: {e}",
-                                                    exc_info=True,
-                                                )
-
-                                    # Stop the server
-                                    try:
-                                        logger.info(
-                                            f"Stopping HPC server for experiment {exp_id}"
-                                        )
-                                        stop_hpc_server(exp_id)
-                                    except Exception as e:
-                                        logger.error(
-                                            f"Error stopping HPC server for experiment {exp_id}: {e}",
-                                            exc_info=True,
-                                        )
-
-                                    # Update experiment status to completed
-                                    # Re-query to get fresh instance
-                                    exp = Exps.query.filter_by(idexp=exp_id).first()
-                                    if exp:
-                                        exp.exp_status = "completed"
-                                        _commit_with_retry(db.session)
-                                        logger.info(
-                                            f"Experiment {exp_id} marked as completed"
-                                        )
-
+                                    logger.info(
+                                        f"Stopping HPC server for experiment {exp_id}"
+                                    )
+                                    stop_hpc_server(exp_id)
                                 except Exception as e:
                                     logger.error(
-                                        f"Error in auto-stop flow for HPC experiment {exp_id}: {e}",
+                                        f"Error stopping HPC server for experiment {exp_id}: {e}",
                                         exc_info=True,
                                     )
+
+                                # Update experiment status to completed
+                                # Re-query to get fresh instance
+                                exp = Exps.query.filter_by(idexp=exp_id).first()
+                                if exp:
+                                    exp.exp_status = "completed"
+                                    _commit_with_retry(db.session)
+                                    logger.info(
+                                        f"Experiment {exp_id} marked as completed"
+                                    )
+
+                            except Exception as e:
+                                logger.error(
+                                    f"Error in auto-stop flow for HPC experiment {exp_id}: {e}",
+                                    exc_info=True,
+                                )
                     else:
                         # Client was not running, just commit the execution update
                         _commit_with_retry(db.session)
