@@ -80,9 +80,7 @@ def reset_client(uid):
     if exp.platform_type == "photo_sharing":
         prompt_candidates.insert(0, "prompts_ygram.json")
     for prompt_file in prompt_candidates:
-        path = (
-            f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}{os.sep}{prompt_file}"
-        )
+        path = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}{os.sep}{prompt_file}"
         if os.path.exists(path):
             os.remove(path)
 

@@ -225,7 +225,9 @@ def start_hpc_server(exp):
         not (is_frozen or has_meipass or is_bundle_exe)
         and not Path(script_path).exists()
     ):
-        expected_repo = "YPhotoSharing" if exp.platform_type == "photo_sharing" else "YSimulator"
+        expected_repo = (
+            "YPhotoSharing" if exp.platform_type == "photo_sharing" else "YSimulator"
+        )
         raise FileNotFoundError(
             f"Server script not found: {script_path}\n"
             f"Please ensure {expected_repo} is cloned under external/{expected_repo}.\n"

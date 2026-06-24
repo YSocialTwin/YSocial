@@ -158,7 +158,7 @@ def test_stopped_experiments_allow_client_configuration_updates():
         content = open(template_path, "r").read()
         if template_path.endswith("experiment_details_photo.html"):
             assert "experiment_details_variant = 'photo'" in content
-            assert "include \"admin/experiment_details.html\"" in content
+            assert 'include "admin/experiment_details.html"' in content
         else:
             assert "experiment.running == 0" in content
             assert "configuration_update_required or experiment.running == 0" in content
@@ -185,8 +185,8 @@ def test_new_experiment_form_supports_photo_sharing_platform():
     assert 'value="photo_sharing"' in settings_template
     assert "Photo Sharing (e.g., Instagram)" in settings_template
     assert "photoSharingAvailable" in settings_js
-    assert "platform_type == \"photo_sharing\"" in crud_source
-    assert "simulator_type = \"HPC\"" in crud_source
+    assert 'platform_type == "photo_sharing"' in crud_source
+    assert 'simulator_type = "HPC"' in crud_source
     assert "experiment_details_photo.html" in data_source
 
 

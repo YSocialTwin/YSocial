@@ -378,7 +378,9 @@ def start_hpc_client(exp, cli, population):
         runtime_client_config = os.path.join(runtime_config_dir, "client_config.json")
         shutil.copyfile(client_config, runtime_client_config)
         shutil.copyfile(agents_file, os.path.join(runtime_config_dir, "agents.json"))
-        shutil.copyfile(prompts_file, os.path.join(runtime_config_dir, "prompts_ygram.json"))
+        shutil.copyfile(
+            prompts_file, os.path.join(runtime_config_dir, "prompts_ygram.json")
+        )
 
         try:
             with open(runtime_client_config, "r", encoding="utf-8") as f:
@@ -403,7 +405,9 @@ def start_hpc_client(exp, cli, population):
         not (is_frozen or has_meipass or is_bundle_exe)
         and not Path(script_path).exists()
     ):
-        expected_repo = "YPhotoSharing" if exp.platform_type == "photo_sharing" else "YSimulator"
+        expected_repo = (
+            "YPhotoSharing" if exp.platform_type == "photo_sharing" else "YSimulator"
+        )
         raise FileNotFoundError(
             f"Client script not found: {script_path}\n"
             f"Please ensure {expected_repo} is cloned under external/{expected_repo}.\n"
