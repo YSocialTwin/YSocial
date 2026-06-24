@@ -601,6 +601,27 @@ var AdminSettings = (function() {
           });
   }
 
+  function renderExperimentProgressBadge(exp, statusFilter) {
+      if (statusFilter === EXP_STATUS.ACTIVE) {
+          if (exp.progress === undefined || exp.progress === null) {
+              return '';
+          }
+          return `<span class="exp-tag" style="background: #039be5;">${exp.progress}%</span>`;
+      }
+
+      if (statusFilter !== EXP_STATUS.STOPPED_SCHEDULED) {
+          return '';
+      }
+
+      const progressLabel = exp.progress_label ?? (
+          exp.progress === undefined || exp.progress === null
+              ? 'NA'
+              : `${exp.progress}%`
+      );
+      const isNa = progressLabel === 'NA';
+      return `<span class="exp-tag" style="background: ${isNa ? '#6c757d' : '#039be5'};">${progressLabel}</span>`;
+  }
+
   // Function to create grouped experiment display with pagination
   function getVisibleExperimentBoxCount() {
       const boxes = ['box-active', 'box-completed', 'box-stopped'];
@@ -721,7 +742,7 @@ var AdminSettings = (function() {
                                       ${exp.simulator_type === 'HPC' ? '<span class="exp-tag hpc">HPC</span>' : ''}
                                       ${exp.is_remote === 1 ? '<span class="exp-tag remote">Remote</span>' : ''}
                                       ${exp.has_infinite_client ? '<span class="exp-tag infinite">∞</span>' : ''}
-                                      ${statusFilter === EXP_STATUS.ACTIVE && exp.progress !== undefined ? `<span class="exp-tag" style="background: #039be5;">${exp.progress}%</span>` : ''}
+                                      ${renderExperimentProgressBadge(exp, statusFilter)}
                                   </div>
                                   <div style="display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; flex-shrink: 0; max-width: 100%;">
                                       ${exp.running === 'Running' ? 

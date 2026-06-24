@@ -187,6 +187,41 @@ def _form_float(field_name, default):
         return float(default)
 
 
+def _client_execution_progress_percentage(client_exec):
+    """
+    Return the current execution percentage for a client execution row.
+
+    Finite executions are derived from elapsed_time / expected_duration_rounds.
+    Infinite or incomplete records that do not expose a finite target duration
+    are excluded from the average and reported as None.
+    """
+    if not client_exec:
+        return None
+
+    expected_rounds = getattr(client_exec, "expected_duration_rounds", 0) or 0
+    if expected_rounds <= 0:
+        return None
+
+    elapsed_rounds = getattr(client_exec, "elapsed_time", 0) or 0
+    progress = int((elapsed_rounds / expected_rounds) * 100)
+    return min(100, max(0, progress))
+
+
+def _average_experiment_progress(clients, client_exec_by_client_id):
+    """Average client progress across the executions assigned to one experiment."""
+    progress_values = []
+    for client in clients:
+        client_exec = client_exec_by_client_id.get(client.id)
+        progress = _client_execution_progress_percentage(client_exec)
+        if progress is not None:
+            progress_values.append(progress)
+
+    if not progress_values:
+        return None
+
+    return int(sum(progress_values) / len(progress_values))
+
+
 @experiments.route("/admin/experiments_data")
 @login_required
 def experiments_data():
@@ -293,34 +328,19 @@ def experiments_data():
         ).all()
         client_exec_by_client_id = {row.client_id: row for row in client_exec_rows}
 
-    # Calculate average progress for running experiments
+    # Calculate average progress for all experiments.
+    # Stopped/scheduled experiments use the same client_execution data to show
+    # a static progress badge in the schedule box.
     exp_progress = {}
+    exp_progress_label = {}
     # Track experiments with infinite clients
     exp_has_infinite = {}
     for exp in res:
         clients = clients_by_exp.get(exp.idexp, [])
         exp_has_infinite[exp.idexp] = any(client.days == -1 for client in clients)
-
-        if exp.running == 1 or exp.exp_status == "active":
-            total_progress = 0
-            count = 0
-            for client in clients:
-                client_exec = client_exec_by_client_id.get(client.id)
-                if client_exec and client_exec.expected_duration_rounds > 0:
-                    progress = min(
-                        100,
-                        max(
-                            0,
-                            int(
-                                client_exec.elapsed_time
-                                / client_exec.expected_duration_rounds
-                                * 100
-                            ),
-                        ),
-                    )
-                    total_progress += progress
-                    count += 1
-            exp_progress[exp.idexp] = int(total_progress / count) if count > 0 else 0
+        progress = _average_experiment_progress(clients, client_exec_by_client_id)
+        exp_progress[exp.idexp] = progress
+        exp_progress_label[exp.idexp] = "NA" if progress is None else f"{progress}%"
 
     return {
         "data": [
@@ -336,7 +356,8 @@ def experiments_data():
                     "Active" if jupyter_status.get(exp.idexp, False) else "Inactive"
                 ),
                 "annotations": exp.annotations if exp.annotations else "",
-                "progress": exp_progress.get(exp.idexp, 0),
+                "progress": exp_progress.get(exp.idexp),
+                "progress_label": exp_progress_label.get(exp.idexp, "NA"),
                 "has_infinite_client": exp_has_infinite.get(exp.idexp, False),
                 "exp_group": exp.exp_group if exp.exp_group else "No group",
                 "simulator_type": getattr(exp, "simulator_type", "Standard"),

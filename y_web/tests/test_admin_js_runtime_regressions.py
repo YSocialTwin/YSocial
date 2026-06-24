@@ -51,6 +51,10 @@ def test_admin_shared_bundles_guard_optional_page_sections():
     assert "save-hpc-monitor-settings-secondary" in miscellanea
     assert "boxDiv.classList.remove('d-none');" in settings
     assert "boxDiv.classList.add('d-none');" in settings
+    assert "function renderExperimentProgressBadge(exp, statusFilter)" in settings
+    assert "EXP_STATUS.STOPPED_SCHEDULED" in settings
+    assert "progress_label" in settings
+    assert "NA" in settings
 
 
 def test_admin_clients_network_parameter_rows_toggle_bootstrap_visibility():
