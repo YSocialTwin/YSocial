@@ -60,6 +60,7 @@ def ensure_external_runtime_layout() -> None:
         "YClientReddit",
         "YServerReddit",
         "YSimulator",
+        "YPhotoSharing",
         "y_agents_plugins",
     ):
         try:
@@ -115,7 +116,7 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         group="microblogging",
         group_label="Microblogging",
         category="simulation_runtimes",
-        category_label="Simulation Runtimes",
+        category_label="Simulation Runtime Stack",
         label="YClient",
         path=EXTERNAL_DIR / "YClient",
         github_repo="YSocialTwin/YClient",
@@ -133,7 +134,7 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         group="microblogging",
         group_label="Microblogging",
         category="simulation_runtimes",
-        category_label="Simulation Runtimes",
+        category_label="Simulation Runtime Stack",
         label="YServer",
         path=EXTERNAL_DIR / "YServer",
         github_repo="YSocialTwin/YServer",
@@ -151,7 +152,7 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         group="forum",
         group_label="Forum",
         category="simulation_runtimes",
-        category_label="Simulation Runtimes",
+        category_label="Simulation Runtime Stack",
         label="YClientReddit",
         path=EXTERNAL_DIR / "YClientReddit",
         github_repo="YSocialTwin/YClientReddit",
@@ -169,7 +170,7 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         group="forum",
         group_label="Forum",
         category="simulation_runtimes",
-        category_label="Simulation Runtimes",
+        category_label="Simulation Runtime Stack",
         label="YServerReddit",
         path=EXTERNAL_DIR / "YServerReddit",
         github_repo="YSocialTwin/YServerReddit",
@@ -187,7 +188,7 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         group="hpc",
         group_label="HPC",
         category="simulation_runtimes",
-        category_label="Simulation Runtimes",
+        category_label="Simulation Runtime Stack",
         label="YSimulator",
         path=EXTERNAL_DIR / "YSimulator",
         github_repo="YSocialTwin/YSimulator",
@@ -199,6 +200,23 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         validate_entrypoints=("run_server.py", "run_client.py"),
         validate_import="YSimulator",
         is_private=False,
+    ),
+    "photo_sharing": ExternalRuntimeSpec(
+        key="photo_sharing",
+        group="photo_sharing",
+        group_label="Photo Sharing",
+        category="simulation_runtimes",
+        category_label="Simulation Runtime Stack",
+        label="YPhotoSharing",
+        path=EXTERNAL_DIR / "YPhotoSharing",
+        github_repo="YSocialTwin/YPhotoSharing",
+        repo_url="https://github.com/YSocialTwin/YPhotoSharing.git",
+        default_branch="main",
+        install_commands=(
+            ("python", "-m", "pip", "install", "-r", "requirements.txt"),
+        ),
+        validate_entrypoints=("run_server.py", "run_client.py", "requirements.txt"),
+        validate_import="YPhotoSharing",
     ),
     "agent_plugins": ExternalRuntimeSpec(
         key="agent_plugins",
@@ -230,7 +248,7 @@ def grouped_runtime_specs() -> list[tuple[str, str, Sequence[ExternalRuntimeSpec
         groups.setdefault(spec.group, []).append(spec)
         labels[spec.group] = spec.group_label
 
-    ordered_groups = ["microblogging", "forum", "hpc", "agent_plugins"]
+    ordered_groups = ["microblogging", "forum", "photo_sharing", "hpc", "agent_plugins"]
     return [
         (group_key, labels[group_key], tuple(groups.get(group_key, [])))
         for group_key in ordered_groups

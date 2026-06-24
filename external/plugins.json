@@ -21,6 +21,16 @@
       "repository_url": "https://github.com/YSocialTwin/YClientReddit"
     },
     {
+      "plugin_name": "YPhotoSharing",
+      "category": "Simulation Runtime Stack",
+      "group": "HPC",
+      "description": "Instagram like photo-sharing simulation runtime for YSocial experiments.",
+      "authors": [
+        "YSocialTwin"
+      ],
+      "repository_url": "https://github.com/YSocialTwin/YPhotoSharing"
+    },
+    {
       "plugin_name": "YServer",
       "category": "Simulation Runtime Stack",
       "group": "Microblogging",
