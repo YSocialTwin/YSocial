@@ -526,9 +526,12 @@ def populations_data():
         for s in sort.split(","):
             direction = s[0]
             name = s[1:]
-            if name not in ["name", "descr", "size", "pop_type"]:
+            if name not in ["name", "descr", "size", "platform_type", "pop_type"]:
                 name = "name"
-            col = getattr(Population, name)
+            if name == "platform_type":
+                col = Population.username_type
+            else:
+                col = getattr(Population, name)
             if direction == "-":
                 col = col.desc()
             order.append(col)
@@ -585,6 +588,7 @@ def populations_data():
                     if t_id.strip()
                 ],
                 "username_type": infer_population_username_type(pop) or "microblogging",
+                "platform_type": infer_population_username_type(pop) or "microblogging",
                 "pop_type": pop.pop_type or "standard",
                 "activity_profiles": population_profiles.get(pop.id, []),
             }

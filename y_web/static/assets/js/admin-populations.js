@@ -428,8 +428,8 @@ var AdminPopulations = (function() {
       { id: 'id', hidden: true },
       { id: 'name', name: 'Name', attributes: editableCellAttributes },
       {
-        id: 'pop_type',
-        name: 'Type',
+        id: 'platform_type',
+        name: 'Platform',
         formatter: (cell) => platformLabel(cell),
       },
       { id: "size", name: 'Agents' },
@@ -528,7 +528,7 @@ var AdminPopulations = (function() {
       multiColumn: true,
       server: {
         url: (prev, columns) => {
-          const columnIds = ['id', 'name', 'pop_type', 'size', 'education', 'leanings', 'toxicity', 'activity_profiles'];
+          const columnIds = ['id', 'name', 'platform_type', 'size', 'education', 'leanings', 'toxicity', 'activity_profiles'];
           const sort = columns.map(col => (col.direction === 1 ? '+' : '-') + columnIds[col.index]);
           return updateUrl(prev, { sort });
         },
