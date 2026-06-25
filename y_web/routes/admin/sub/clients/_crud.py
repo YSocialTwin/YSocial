@@ -78,6 +78,8 @@ PLUGIN_REGISTRY_RELATIVE_PATHS = (
     Path("plugins_exposed") / "agent_types.json",
     Path("plugin_exposed") / "agent_types.json",
 )
+
+
 def _client_config_path_for_platform(
     exp_dir: str, exp, client_name: str, population_name: str
 ) -> str:

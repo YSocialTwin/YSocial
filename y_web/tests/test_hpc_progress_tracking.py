@@ -341,9 +341,7 @@ def test_start_hpc_client_photo_sharing_uses_top_level_hpc_layout(
     assert mock_cli.pid == 99999
     assert added_objects and added_objects[0].client_id == mock_cli.id
     top_level_config = exp_folder / "client_photo-population-photo-population.json"
-    rewritten_config = json.loads(
-        top_level_config.read_text(encoding="utf-8")
-    )
+    rewritten_config = json.loads(top_level_config.read_text(encoding="utf-8"))
     assert rewritten_config["namespace"] == "yphotosharing"
     assert rewritten_config["server_name"] == "orchestrator_server"
     assert rewritten_config["client_id"] == "exp44:photo-population"
