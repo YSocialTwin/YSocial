@@ -86,6 +86,8 @@ PHOTO_SHARING_LIKERT_SCALE = [
     "Agree",
     "Strongly agree",
 ]
+
+
 def _client_config_path_for_platform(
     exp_dir: str, exp, client_name: str, population_name: str
 ) -> str:
@@ -2702,12 +2704,14 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
         enable_memory_annotations = form_data.get(
             "enable_memory_annotations", "true"
         ) in {"on", "true", "1", "yes"}
-        opinion_model_name = str(
-            form_data.get("update_rule", "llm_evaluation")
-        ).strip() or "llm_evaluation"
-        llm_evaluation_scope = str(
-            form_data.get("llm_evaluation_scope", "interlocutor_only")
-        ).strip() or "interlocutor_only"
+        opinion_model_name = (
+            str(form_data.get("update_rule", "llm_evaluation")).strip()
+            or "llm_evaluation"
+        )
+        llm_evaluation_scope = (
+            str(form_data.get("llm_evaluation_scope", "interlocutor_only")).strip()
+            or "interlocutor_only"
+        )
         photo_action_defaults = {
             "post_photo": 0.15,
             "react": 0.20,
@@ -2731,13 +2735,15 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
             in {"on", "true", "1", "yes"},
             "enable_execution_log": form_data.get("enable_execution_log", "true")
             in {"on", "true", "1", "yes"},
-            "enable_action_log": form_data.get("enable_action_log") in {
+            "enable_action_log": form_data.get("enable_action_log")
+            in {
                 "on",
                 "true",
                 "1",
                 "yes",
             },
-            "enable_prompt_log": form_data.get("enable_prompt_log") in {
+            "enable_prompt_log": form_data.get("enable_prompt_log")
+            in {
                 "on",
                 "true",
                 "1",
@@ -2774,9 +2780,7 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
             "enable_memory_annotations": bool(enable_memory_annotations),
             "discussion_topics": discussion_topics,
             "opinion_dynamics": {
-                "enabled": bool(
-                    _opinion_dynamics_enabled_for_client_creation(exp)
-                ),
+                "enabled": bool(_opinion_dynamics_enabled_for_client_creation(exp)),
                 "model_name": opinion_model_name,
                 "evaluation_scope": llm_evaluation_scope,
                 "likert_scale": PHOTO_SHARING_LIKERT_SCALE,
@@ -2856,9 +2860,7 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
             "memory_embedding_async": bool(memory_embedding_async),
             "memory_importance_mode": memory_importance_mode,
             "memory_backend": (
-                "hybrid_semantic"
-                if bool(memory_semantic_enabled)
-                else "simple_recent"
+                "hybrid_semantic" if bool(memory_semantic_enabled) else "simple_recent"
             ),
         }
         simulation_config["agents"].update(agents_config)
