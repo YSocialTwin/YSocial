@@ -78,6 +78,14 @@ PLUGIN_REGISTRY_RELATIVE_PATHS = (
     Path("plugins_exposed") / "agent_types.json",
     Path("plugin_exposed") / "agent_types.json",
 )
+
+PHOTO_SHARING_LIKERT_SCALE = [
+    "Strongly disagree",
+    "Disagree",
+    "Neutral",
+    "Agree",
+    "Strongly agree",
+]
 def _client_config_path_for_platform(
     exp_dir: str, exp, client_name: str, population_name: str
 ) -> str:
@@ -137,6 +145,28 @@ def _photo_sharing_cluster_id(value) -> str:
     if text.isdigit():
         return text
     return "0"
+
+
+def _photo_sharing_activity_profiles(profiles: dict) -> dict:
+    """Convert stored activity profile hours to the list format used by YPhotoSharing."""
+    serialized = {}
+    for name, hours in (profiles or {}).items():
+        if isinstance(hours, str):
+            values = []
+            for item in hours.split(","):
+                item = item.strip()
+                if not item:
+                    continue
+                try:
+                    values.append(int(item))
+                except ValueError:
+                    continue
+            serialized[name] = values
+        elif isinstance(hours, (list, tuple)):
+            serialized[name] = [int(value) for value in hours]
+        else:
+            serialized[name] = []
+    return serialized
 
 
 def _custom_agent_slug(name: str) -> str:
@@ -1440,6 +1470,66 @@ def _build_client_creation_context(idexp, recsys_mode):
         "llm_v_max_tokens": 300,
         "llm_v_temperature": 0.5,
     }
+    photo_client_defaults = {
+        "start_day": 0,
+        "use_local_diffusion": True,
+        "local_diffusion_model": "segmind/tiny-sd",
+        "enable_memory_annotations": True,
+        "logging": {
+            "enable_console_log": True,
+            "enable_execution_log": True,
+            "enable_action_log": False,
+            "enable_prompt_log": False,
+        },
+        "actions": {
+            "post_photo": 0.15,
+            "react": 0.20,
+            "comment": 0.15,
+            "follow": 0.10,
+            "share": 0.05,
+            "report": 0.05,
+            "save": 0.10,
+            "reply_comment": 0.10,
+            "unfollow": 0.05,
+            "send_dm": 0.05,
+            "post_story": 0.05,
+            "watch_story": 0.05,
+        },
+        "hourly_activity": {
+            "0": 0.2,
+            "1": 0.1,
+            "2": 0.05,
+            "3": 0.05,
+            "4": 0.1,
+            "5": 0.2,
+            "6": 0.4,
+            "7": 0.6,
+            "8": 0.8,
+            "9": 0.9,
+            "10": 0.8,
+            "11": 0.8,
+            "12": 0.9,
+            "13": 0.9,
+            "14": 0.8,
+            "15": 0.8,
+            "16": 0.8,
+            "17": 0.9,
+            "18": 1.0,
+            "19": 1.0,
+            "20": 1.0,
+            "21": 0.9,
+            "22": 0.6,
+            "23": 0.4,
+        },
+    }
+    opinion_groups = [
+        {
+            "name": group.name,
+            "lower_bound": group.lower_bound,
+            "upper_bound": group.upper_bound,
+        }
+        for group in OpinionGroup.query.order_by(OpinionGroup.lower_bound.asc()).all()
+    ]
 
     if exp is not None:
         try:
@@ -1543,6 +1633,9 @@ def _build_client_creation_context(idexp, recsys_mode):
         "experiment_opinion_dynamics_enabled": experiment_opinion_dynamics_enabled,
         "experiment_embedding_settings": experiment_embedding_settings,
         "exp_llm_defaults": exp_llm_defaults,
+        "photo_client_defaults": photo_client_defaults,
+        "opinion_groups": opinion_groups,
+        "photo_likert_scale": PHOTO_SHARING_LIKERT_SCALE,
     }
 
 
@@ -1559,6 +1652,8 @@ def clients(idexp):
 
     experiment_mode = _get_experiment_mode(exp)
     if experiment_mode == "hpc":
+        if getattr(exp, "platform_type", None) == "photo_sharing":
+            return redirect(url_for("clientsr.clients_photo", idexp=idexp))
         return redirect(url_for("clientsr.clients_hpc", idexp=idexp))
     if experiment_mode == "forum":
         return redirect(url_for("clientsr.clients_forum", idexp=idexp))
@@ -1626,6 +1721,8 @@ def clients_hpc(idexp):
     if exp is None:
         flash("Experiment not found.", "error")
         return redirect(url_for("experiments.settings"))
+    if exp.platform_type == "photo_sharing":
+        return redirect(url_for("clientsr.clients_photo", idexp=idexp))
     if getattr(exp, "simulator_type", "Standard") != "HPC":
         if exp.platform_type == "forum":
             return redirect(url_for("clientsr.clients_forum", idexp=idexp))
@@ -1639,6 +1736,34 @@ def clients_hpc(idexp):
 
     context["embedded_vllm_available"] = bool(is_vllm_installed())
     return render_template("admin/clients_hpc.html", **context)
+
+
+@clientsr.route("/admin/clients_photo/<idexp>")
+@login_required
+def clients_photo(idexp):
+    """Render the dedicated photo-sharing HPC client creation page."""
+    check_privileges(current_user.username)
+
+    context = _build_client_creation_context(idexp, "HPC")
+    exp = context["experiment"]
+    if exp is None:
+        flash("Experiment not found.", "error")
+        return redirect(url_for("experiments.settings"))
+    if getattr(exp, "simulator_type", "Standard") != "HPC":
+        if exp.platform_type == "forum":
+            return redirect(url_for("clientsr.clients_forum", idexp=idexp))
+        return redirect(url_for("clientsr.clients_standard", idexp=idexp))
+    if exp.platform_type != "photo_sharing":
+        return redirect(url_for("clientsr.clients_hpc", idexp=idexp))
+    if _experiment_configuration_update_required(exp):
+        flash(
+            "Update Experiment Configuration before creating clients for this experiment.",
+            "warning",
+        )
+        return redirect(url_for("experiments.experiment_details", uid=idexp))
+
+    context["embedded_vllm_available"] = bool(is_vllm_installed())
+    return render_template("admin/clients_photo.html", **context)
 
 
 @clientsr.route("/admin/clients_adhoc/<idexp>")
@@ -2559,121 +2684,296 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
         exp.perspective_api if hasattr(exp, "perspective_api") else None
     )
 
-    # Build simulation config (with annotation fields inside)
-    simulation_config = {
-        "num_days": days,
-        "num_slots_per_day": 24,
-        "heartbeat_interval": 5,
-        "note": "num_days=0 means infinite simulation, set to a positive number to limit duration. heartbeat_interval in seconds (default: 5).",
-        "percentage_new_agents_iteration": percentage_new_agents_iteration,
-        "percentage_removed_agents_iteration": percentage_removed_agents_iteration,
-        "discussion_topics": discussion_topics,
-        "activity_profiles": profiles,
-        "hourly_activity": hourly_activity,
-        "actions_likelihood": {
-            "post": post,
-            "image": image,
-            "news": news,
-            "comment": comment,
-            "read": read,
-            "share": share,
-            "search": search,
-            "cast": vote,
-            "share_link": share_link,
-            "follow": follow,
-        },
-        "agent_archetypes": {
-            "enabled": enable_archetypes,
-            "agent_downcast": agent_downcast,
-            "distribution": {
-                "validator": archetype_validator,
-                "broadcaster": archetype_broadcaster,
-                "explorer": archetype_explorer,
-            },
-        },
-        "enable_sentiment": enable_sentiment,
-        "emotion_annotation": emotion_annotation,
-        "enable_toxicity": enable_toxicity,
-        "perspective_api_key": perspective_api_key,
-    }
-
     # Tie churn/new-agents runtime toggles and probabilities to HPC form inputs.
-    # The form exposes daily percentages for both dynamics; zero means disabled.
     churn_enabled = percentage_removed_agents_iteration > 0.0
     new_agents_enabled = percentage_new_agents_iteration > 0.0
 
-    # Build agents config
-    agents_config = {
-        "reading_from_follower_ratio": reading_from_follower_ratio,
-        "max_length_thread_reading": max_length_thread_reading,
-        "attention_window": attention_window,
-        "probability_of_daily_follow": probability_of_daily_follow,
-        "probability_of_secondary_follow": probability_of_secondary_follow,
-        "probability_of_follow_back": probability_of_follow_back,
-        "follow_action_decay": {
-            "enabled": follow_decay_enabled,
-            "decay_function": follow_decay_function,
-            "half_life_rounds": follow_decay_half_life,
-            "decay_rate": follow_decay_rate,
-            "min_probability_ratio": follow_decay_min_ratio,
-        },
-        "batch_size": batch_size,
-        "churn": {
-            "enabled": churn_enabled,
-            "churn_probability": percentage_removed_agents_iteration,
-            "inactivity_threshold": 5,
-            "churn_percentage": percentage_removed_agents_iteration,
-        },
-        "new_agents": {
-            "enabled": new_agents_enabled,
-            "probability_new_agents": percentage_new_agents_iteration,
-            "percentage_new_agents": percentage_new_agents_iteration,
-        },
-        "memory_enabled": bool(memory_enabled),
-        "memory_pair_limit": memory_pair_limit,
-        "memory_prompt_max_chars": memory_prompt_max_chars,
-        "memory_social_decay_lambda": memory_social_decay_lambda,
-        "memory_social_corruption_rate": memory_social_corruption_rate,
-        "memory_social_resummarize_every_events": memory_social_resummarize_every_events,
-        "memory_thread_decay_lambda": memory_thread_decay_lambda,
-        "memory_thread_corruption_rate": memory_thread_corruption_rate,
-        "memory_thread_resummarize_every_events": memory_thread_resummarize_every_events,
-        "memory_evidence_tail_max": memory_evidence_tail_max,
-        "memory_digest_update_cadence_rounds": memory_digest_update_cadence_rounds,
-        "memory_digest_events_limit": memory_digest_events_limit,
-        "memory_cold_start_window": memory_cold_start_window,
-        "memory_semantic_enabled": bool(memory_semantic_enabled),
-        "memory_search_k": memory_search_k,
-        "memory_search_max_chars": memory_search_max_chars,
-        "memory_search_time_window_rounds": memory_search_time_window_rounds,
-        "memory_tier_a_max_chars": memory_tier_a_max_chars,
-        "memory_tier_b_max_chars": memory_tier_b_max_chars,
-        "memory_tier_c_max_chars": memory_tier_c_max_chars,
-        "memory_total_max_chars": memory_total_max_chars,
-        "memory_tier_c_uncertainty_threshold": memory_tier_c_uncertainty_threshold,
-        "memory_reflection_cadence_rounds": memory_reflection_cadence_rounds,
-        "memory_reflection_min_events": memory_reflection_min_events,
-        "memory_reflection_trigger_importance_sum": memory_reflection_trigger_importance_sum,
-        "memory_reflection_max_items_per_run": memory_reflection_max_items_per_run,
-        "memory_embedding_model": memory_embedding_model,
-        "memory_embedding_async": bool(memory_embedding_async),
-        "memory_importance_mode": memory_importance_mode,
-        "memory_backend": (
-            "hybrid_semantic" if bool(memory_semantic_enabled) else "simple_recent"
-        ),
-        "memory_prompt_mode": "subtle_timeline",
-        "memory_reply_context_max_chars": max_length_thread_reading * 320,
-        "memory_vote_signal_only": False,
-    }
+    if exp.platform_type == "photo_sharing":
+        start_day = int(form_data.get("start_day", "0"))
+        use_local_diffusion = form_data.get("use_local_diffusion") in {
+            "on",
+            "true",
+            "1",
+            "yes",
+        }
+        local_diffusion_model = str(
+            form_data.get("local_diffusion_model", "segmind/tiny-sd")
+        ).strip()
+        enable_memory_annotations = form_data.get(
+            "enable_memory_annotations", "true"
+        ) in {"on", "true", "1", "yes"}
+        opinion_model_name = str(
+            form_data.get("update_rule", "llm_evaluation")
+        ).strip() or "llm_evaluation"
+        llm_evaluation_scope = str(
+            form_data.get("llm_evaluation_scope", "interlocutor_only")
+        ).strip() or "interlocutor_only"
+        photo_action_defaults = {
+            "post_photo": 0.15,
+            "react": 0.20,
+            "comment": 0.15,
+            "follow": 0.10,
+            "share": 0.05,
+            "report": 0.05,
+            "save": 0.10,
+            "reply_comment": 0.10,
+            "unfollow": 0.05,
+            "send_dm": 0.05,
+            "post_story": 0.05,
+            "watch_story": 0.05,
+        }
+        photo_actions_likelihood = {
+            key: float(form_data.get(key, str(default)))
+            for key, default in photo_action_defaults.items()
+        }
+        photo_logging_config = {
+            "enable_console_log": form_data.get("enable_console_log", "true")
+            in {"on", "true", "1", "yes"},
+            "enable_execution_log": form_data.get("enable_execution_log", "true")
+            in {"on", "true", "1", "yes"},
+            "enable_action_log": form_data.get("enable_action_log") in {
+                "on",
+                "true",
+                "1",
+                "yes",
+            },
+            "enable_prompt_log": form_data.get("enable_prompt_log") in {
+                "on",
+                "true",
+                "1",
+                "yes",
+            },
+            "enable_actor_log": True,
+            "enable_client_log": True,
+            "enable_llm_usage_log": True,
+        }
+        photo_opinion_groups = {
+            group.name: [group.lower_bound, group.upper_bound]
+            for group in OpinionGroup.query.order_by(
+                OpinionGroup.lower_bound.asc()
+            ).all()
+        }
+        if llm_backend == "ollama":
+            llm_config.setdefault("backend", "ollama")
+            llm_config.setdefault("use_vllm", False)
+            llm_config.setdefault("use_remote_batch", False)
+            if llm_v_config is not None:
+                llm_v_config.setdefault("backend", "ollama")
+        elif llm_v_config is not None:
+            llm_v_config.setdefault("backend", "vllm")
 
-    # Logging config
-    logging_config = {
-        "enable_execution_log": True,
-        "enable_actor_log": True,
-        "enable_client_log": True,
-        "enable_console_log": True,
-        "enable_llm_usage_log": True,
-    }
+        simulation_config = {
+            "num_rounds": max(days, 1) * 24,
+            "start_day": start_day,
+            "use_local_diffusion": bool(use_local_diffusion),
+            "local_diffusion_model": local_diffusion_model,
+            "enable_emotion_annotation": bool(emotion_annotation),
+            "enable_sentiment": bool(enable_sentiment),
+            "enable_toxicity": bool(enable_toxicity),
+            "perspective_api_key": perspective_api_key,
+            "enable_memory_annotations": bool(enable_memory_annotations),
+            "discussion_topics": discussion_topics,
+            "opinion_dynamics": {
+                "enabled": bool(
+                    _opinion_dynamics_enabled_for_client_creation(exp)
+                ),
+                "model_name": opinion_model_name,
+                "evaluation_scope": llm_evaluation_scope,
+                "likert_scale": PHOTO_SHARING_LIKERT_SCALE,
+                "opinion_groups": photo_opinion_groups,
+            },
+            "agents": {
+                "probability_of_secondary_follow": probability_of_secondary_follow,
+                "probability_of_follow_back": probability_of_follow_back,
+                "churn": {
+                    "enabled": churn_enabled,
+                    "churn_probability": percentage_removed_agents_iteration,
+                    "inactivity_threshold": 5,
+                    "churn_percentage": percentage_removed_agents_iteration,
+                },
+                "new_agents": {
+                    "enabled": new_agents_enabled,
+                    "probability_new_agents": percentage_new_agents_iteration,
+                    "percentage_new_agents": percentage_new_agents_iteration,
+                },
+            },
+            "actions_likelihood": photo_actions_likelihood,
+            "activity_profiles": _photo_sharing_activity_profiles(profiles),
+            "hourly_activity": hourly_activity,
+            "agent_archetypes": {
+                "enabled": enable_archetypes,
+                "agent_downcast": agent_downcast,
+                "distribution": {
+                    "validator": archetype_validator,
+                    "broadcaster": archetype_broadcaster,
+                    "explorer": archetype_explorer,
+                },
+            },
+        }
+        agents_config = {
+            "reading_from_follower_ratio": reading_from_follower_ratio,
+            "max_length_thread_reading": max_length_thread_reading,
+            "attention_window": attention_window,
+            "probability_of_daily_follow": probability_of_daily_follow,
+            "probability_of_secondary_follow": probability_of_secondary_follow,
+            "probability_of_follow_back": probability_of_follow_back,
+            "follow_action_decay": {
+                "enabled": follow_decay_enabled,
+                "decay_function": follow_decay_function,
+                "half_life_rounds": follow_decay_half_life,
+                "decay_rate": follow_decay_rate,
+                "min_probability_ratio": follow_decay_min_ratio,
+            },
+            "batch_size": batch_size,
+            "visibility_rounds": visibility_rounds,
+            "memory_enabled": bool(memory_enabled),
+            "memory_pair_limit": memory_pair_limit,
+            "memory_prompt_max_chars": memory_prompt_max_chars,
+            "memory_social_decay_lambda": memory_social_decay_lambda,
+            "memory_social_corruption_rate": memory_social_corruption_rate,
+            "memory_social_resummarize_every_events": memory_social_resummarize_every_events,
+            "memory_thread_decay_lambda": memory_thread_decay_lambda,
+            "memory_thread_corruption_rate": memory_thread_corruption_rate,
+            "memory_thread_resummarize_every_events": memory_thread_resummarize_every_events,
+            "memory_evidence_tail_max": memory_evidence_tail_max,
+            "memory_digest_update_cadence_rounds": memory_digest_update_cadence_rounds,
+            "memory_digest_events_limit": memory_digest_events_limit,
+            "memory_cold_start_window": memory_cold_start_window,
+            "memory_semantic_enabled": bool(memory_semantic_enabled),
+            "memory_search_k": memory_search_k,
+            "memory_search_max_chars": memory_search_max_chars,
+            "memory_search_time_window_rounds": memory_search_time_window_rounds,
+            "memory_tier_a_max_chars": memory_tier_a_max_chars,
+            "memory_tier_b_max_chars": memory_tier_b_max_chars,
+            "memory_tier_c_max_chars": memory_tier_c_max_chars,
+            "memory_total_max_chars": memory_total_max_chars,
+            "memory_tier_c_uncertainty_threshold": memory_tier_c_uncertainty_threshold,
+            "memory_reflection_cadence_rounds": memory_reflection_cadence_rounds,
+            "memory_reflection_min_events": memory_reflection_min_events,
+            "memory_reflection_trigger_importance_sum": memory_reflection_trigger_importance_sum,
+            "memory_reflection_max_items_per_run": memory_reflection_max_items_per_run,
+            "memory_embedding_model": memory_embedding_model,
+            "memory_embedding_async": bool(memory_embedding_async),
+            "memory_importance_mode": memory_importance_mode,
+            "memory_backend": (
+                "hybrid_semantic"
+                if bool(memory_semantic_enabled)
+                else "simple_recent"
+            ),
+        }
+        simulation_config["agents"].update(agents_config)
+        logging_config = photo_logging_config
+    else:
+        # Build simulation config (with annotation fields inside)
+        simulation_config = {
+            "num_days": days,
+            "num_slots_per_day": 24,
+            "heartbeat_interval": 5,
+            "note": "num_days=0 means infinite simulation, set to a positive number to limit duration. heartbeat_interval in seconds (default: 5).",
+            "percentage_new_agents_iteration": percentage_new_agents_iteration,
+            "percentage_removed_agents_iteration": percentage_removed_agents_iteration,
+            "discussion_topics": discussion_topics,
+            "activity_profiles": profiles,
+            "hourly_activity": hourly_activity,
+            "actions_likelihood": {
+                "post": post,
+                "image": image,
+                "news": news,
+                "comment": comment,
+                "read": read,
+                "share": share,
+                "search": search,
+                "cast": vote,
+                "share_link": share_link,
+                "follow": follow,
+            },
+            "agent_archetypes": {
+                "enabled": enable_archetypes,
+                "agent_downcast": agent_downcast,
+                "distribution": {
+                    "validator": archetype_validator,
+                    "broadcaster": archetype_broadcaster,
+                    "explorer": archetype_explorer,
+                },
+            },
+            "enable_sentiment": enable_sentiment,
+            "emotion_annotation": emotion_annotation,
+            "enable_toxicity": enable_toxicity,
+            "perspective_api_key": perspective_api_key,
+        }
+
+        # Build agents config
+        agents_config = {
+            "reading_from_follower_ratio": reading_from_follower_ratio,
+            "max_length_thread_reading": max_length_thread_reading,
+            "attention_window": attention_window,
+            "probability_of_daily_follow": probability_of_daily_follow,
+            "probability_of_secondary_follow": probability_of_secondary_follow,
+            "probability_of_follow_back": probability_of_follow_back,
+            "follow_action_decay": {
+                "enabled": follow_decay_enabled,
+                "decay_function": follow_decay_function,
+                "half_life_rounds": follow_decay_half_life,
+                "decay_rate": follow_decay_rate,
+                "min_probability_ratio": follow_decay_min_ratio,
+            },
+            "batch_size": batch_size,
+            "churn": {
+                "enabled": churn_enabled,
+                "churn_probability": percentage_removed_agents_iteration,
+                "inactivity_threshold": 5,
+                "churn_percentage": percentage_removed_agents_iteration,
+            },
+            "new_agents": {
+                "enabled": new_agents_enabled,
+                "probability_new_agents": percentage_new_agents_iteration,
+                "percentage_new_agents": percentage_new_agents_iteration,
+            },
+            "memory_enabled": bool(memory_enabled),
+            "memory_pair_limit": memory_pair_limit,
+            "memory_prompt_max_chars": memory_prompt_max_chars,
+            "memory_social_decay_lambda": memory_social_decay_lambda,
+            "memory_social_corruption_rate": memory_social_corruption_rate,
+            "memory_social_resummarize_every_events": memory_social_resummarize_every_events,
+            "memory_thread_decay_lambda": memory_thread_decay_lambda,
+            "memory_thread_corruption_rate": memory_thread_corruption_rate,
+            "memory_thread_resummarize_every_events": memory_thread_resummarize_every_events,
+            "memory_evidence_tail_max": memory_evidence_tail_max,
+            "memory_digest_update_cadence_rounds": memory_digest_update_cadence_rounds,
+            "memory_digest_events_limit": memory_digest_events_limit,
+            "memory_cold_start_window": memory_cold_start_window,
+            "memory_semantic_enabled": bool(memory_semantic_enabled),
+            "memory_search_k": memory_search_k,
+            "memory_search_max_chars": memory_search_max_chars,
+            "memory_search_time_window_rounds": memory_search_time_window_rounds,
+            "memory_tier_a_max_chars": memory_tier_a_max_chars,
+            "memory_tier_b_max_chars": memory_tier_b_max_chars,
+            "memory_tier_c_max_chars": memory_tier_c_max_chars,
+            "memory_total_max_chars": memory_total_max_chars,
+            "memory_tier_c_uncertainty_threshold": memory_tier_c_uncertainty_threshold,
+            "memory_reflection_cadence_rounds": memory_reflection_cadence_rounds,
+            "memory_reflection_min_events": memory_reflection_min_events,
+            "memory_reflection_trigger_importance_sum": memory_reflection_trigger_importance_sum,
+            "memory_reflection_max_items_per_run": memory_reflection_max_items_per_run,
+            "memory_embedding_model": memory_embedding_model,
+            "memory_embedding_async": bool(memory_embedding_async),
+            "memory_importance_mode": memory_importance_mode,
+            "memory_backend": (
+                "hybrid_semantic" if bool(memory_semantic_enabled) else "simple_recent"
+            ),
+            "memory_prompt_mode": "subtle_timeline",
+            "memory_reply_context_max_chars": max_length_thread_reading * 320,
+            "memory_vote_signal_only": False,
+        }
+
+        # Logging config
+        logging_config = {
+            "enable_execution_log": True,
+            "enable_actor_log": True,
+            "enable_client_log": True,
+            "enable_console_log": True,
+            "enable_llm_usage_log": True,
+        }
 
     # Generate HPC client config
     # For remote experiments, include server address and port
@@ -2696,7 +2996,6 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
         server_address=server_address,
         server_port=server_port,
     )
-    config["recommendations"] = {"default_limit": recommendations_default_limit}
 
     config_filename = _client_config_path_for_platform(
         exp_dir, exp, name, population.name
@@ -2717,9 +3016,14 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
         config["address"] = "auto"
         config["agents_file"] = f"{population.name}.json"
         config["users_file"] = f"{population.name}.json"
+        config["llm_vision"] = llm_v_config
+        config.pop("llm_v", None)
+        config.pop("agents", None)
         config.setdefault("logging", {})
         config["logging"]["log_dir"] = os.path.join(exp_dir, "logs")
         config["logging"]["instance_name"] = runtime_client_id
+    else:
+        config["recommendations"] = {"default_limit": recommendations_default_limit}
     with open(config_filename, "w") as f:
         json.dump(config, f, indent=2)
 
@@ -5849,6 +6153,9 @@ def create_hpc_client_route():
         if exp.platform_type == "forum":
             return redirect(url_for("clientsr.clients_forum", idexp=exp_id))
         return redirect(url_for("clientsr.clients_standard", idexp=exp_id))
+    if exp.platform_type == "photo_sharing" and not population_id:
+        flash("Select a valid population.", "error")
+        return redirect(url_for("clientsr.clients_photo", idexp=exp_id))
 
     return create_hpc_client(exp, name, descr, population_id, request.form)
 

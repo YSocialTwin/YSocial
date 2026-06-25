@@ -307,6 +307,29 @@ class TestHPCLLMVConfig:
             in create_block
         )
 
+    def test_photo_client_source_contains_yphotosharing_fields(self):
+        crud_source = open(
+            "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_crud.py",
+            "r",
+            encoding="utf-8",
+        ).read()
+        template_source = open(
+            "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_photo.html",
+            "r",
+            encoding="utf-8",
+        ).read()
+
+        assert 'url_for("clientsr.clients_photo"' in crud_source
+        assert '"llm_vision"' in crud_source
+        assert '"use_local_diffusion"' in crud_source
+        assert '"local_diffusion_model"' in crud_source
+        assert '"enable_memory_annotations"' in crud_source
+        assert 'name="use_local_diffusion"' in template_source
+        assert 'name="local_diffusion_model"' in template_source
+        assert 'name="enable_action_log"' in template_source
+        assert 'name="update_rule"' in template_source
+        assert "Recommendation Systems" not in template_source
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

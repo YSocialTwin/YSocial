@@ -89,7 +89,7 @@ def reset_client(uid):
         prompts_src = get_resource_path(os.path.join("data_schema", "prompts.json"))
         if exp.platform_type == "photo_sharing":
             prompts_src = get_resource_path(
-                os.path.join("data_schema", "prompts_hpc.json")
+                os.path.join("data_schema", "prompts_ygram.json")
             )
         prompts_dest = (
             f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}{os.sep}prompts_ygram.json"

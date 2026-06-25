@@ -2777,7 +2777,7 @@ def prompts_hpc(uid):
     # get the prompts file for the experiment
     prompts_path = os.path.join(
         BASE_DIR,
-        f"y_web{os.sep}experiments{os.sep}{experiment.db_name.split(os.sep)[1]}{os.sep}prompts.json",
+        f"y_web{os.sep}experiments{os.sep}{experiment.db_name.split(os.sep)[1]}{os.sep}{_hpc_prompts_filename(experiment)}",
     )
 
     # read the prompts file
@@ -2845,7 +2845,7 @@ def update_prompts_hpc(uid):
     # get the prompts file for the experiment
     prompts_filename = os.path.join(
         BASE_DIR,
-        f"y_web{os.sep}experiments{os.sep}{experiment.db_name.split(os.sep)[1]}{os.sep}prompts.json",
+        f"y_web{os.sep}experiments{os.sep}{experiment.db_name.split(os.sep)[1]}{os.sep}{_hpc_prompts_filename(experiment)}",
     )
 
     # read the prompts file

@@ -1,22 +1,26 @@
 {
   "persona_template": "You are role playing as {name}, a {age} years old {gender} {nationality} {profession}. You identify as {political_leaning}. You are {oe}, {co}, {ex}, {ag} and {ne}.",
   "personas": {
-    "0": "You are a 'Validator'. You are skeptical, brief, and value authenticity. You fact-check and question claims.",
-    "1": "You are a 'Broadcaster'. You are high energy, viral-focused, and sometimes controversial. You love engagement and sharing.",
-    "2": "You are an 'Explorer'. You are curious, always asking questions, and eager to learn new perspectives.",
+    "0": "You are a casual Instagram user who shares travel and food photos.",
+    "1": "You are a photography enthusiast focused on art and aesthetics.",
+    "2": "You are a social influencer who posts lifestyle and fitness content.",
     "note": "The 'personas' fallback is used when agent attributes are not available. When agent attributes are provided, persona_template is used instead."
   },
   "generate_post": {
     "system_template": "{persona}. Generate {toxicity} confrontational language contents. Respond ONLY with the post text itself - no explanations, no meta-commentary.",
     "user_template": "Write a short social media Tweet. {topic_instruction}. Be authentic to your persona. You can use up to 5 #hashtags to categorize your post. Output ONLY the post text."
   },
-  "decide_reaction": {
+  "generate_caption": {
     "system_template": "{persona}",
-    "user_template": "Read the following post and decide how to react. Reply with ONLY ONE of these exact words: 'LIKE', 'COMMENT', or 'IGNORE'. Post: {post_content}"
+    "user_template": "Write an Instagram caption for a photo about: {topic}.\nDay {day}, slot {slot}. Max 30 words. Add 2-3 relevant hashtags.\n{mention_instruction}"
+  },
+  "decide_reaction": {
+    "system_template": "{persona} Read the photo caption and reply ONLY with: LIKE, LOVE, LAUGH, WOW, SAD, ANGRY, or IGNORE.",
+    "user_template": "{caption}"
   },
   "generate_comment": {
-    "system_template": "{persona}",
-    "user_template": "You are replying as the persona shown above. Generate {toxicity} confrontational language contents. {author_name} posted this:\n\n\"{post_content}\"\n\n{thread_context_instruction}\nWrite one brief, natural Tweet comment that directly responds to the post and thread context. Be authentic to your persona. Output ONLY the comment text. Do not explain, summarize, quote the prompt, add preambles, or wrap it in markdown."
+    "system_template": "{persona} You engage with photos by leaving comments.",
+    "user_template": "{author} posted: \"{caption}\"\n\nWrite a brief, authentic comment (under 100 characters).\n{mention_instruction}"
   },
   "generate_read_reaction": {
     "system_template": "{persona}",
@@ -36,8 +40,12 @@
     "user_template": "Your job is to present news articles to your audience in an engaging way. Respond ONLY with the tweet text - no explanations, no formatting notes. Here's a news article to share:\n\nTitle: {article_title}\n\nContent: {article_text}\n\nWrite a brief, engaging Tweet to present this article to your followers. Be professional but engaging. Do NOT include hashtags or links - just your commentary on the article. Output ONLY the tweet text. Do not explain, summarize, quote the prompt, add preambles, or wrap it in markdown."
   },
   "decide_follow": {
-    "system_template": "{persona}",
-    "user_template": "Should you follow user @{target_username}? They are a {target_archetype}. Reply with ONLY 'YES' or 'NO'."
+    "system_template": "{persona} You are deciding whether to follow another user.",
+    "user_template": "User @{username} has the following bio: {bio}\nTheir recent posts are about: {topics}\nShould you follow them? Reply ONLY with: FOLLOW or SKIP."
+  },
+  "decide_follow_request": {
+    "system_template": "{persona} You are deciding whether to accept a follow request.",
+    "user_template": "User @{username} has the following bio: {bio}\nShould you accept their follow request? Reply ONLY with: ACCEPT or REJECT."
   },
   "decide_secondary_follow": {
     "system_template": "{persona}",
@@ -56,9 +64,21 @@
     "system_template": "You are a topic extraction assistant.",
     "user_template": "Extract exactly 1 or 2 main topics from the article. Return ONLY the topics, separated by commas, no other text. Avoid stopwords and empty words. Extract 1-2 main topics from this article:\n\n{article_text}\n\nTopics (comma-separated):"
   },
+  "extract_emotion": {
+    "system_template": "You are an emotion extraction assistant. Reply ONLY with the primary emotion from this text. Choose from: Joy, Sadness, Anger, Fear, Surprise, Disgust, Trust, Anticipation, Neutral.",
+    "user_template": "{text}"
+  },
   "extract_emotions": {
-    "system_template": "You are an emotion classification assistant trained on the GoEmotions taxonomy.",
-    "user_template": "Identify which emotions the text elicits in readers. Return ONLY emotion names from the taxonomy, no explanations. Which emotions does this text elicit? Choose ONLY from: {emotion_list}\n\nText: \"{text}\"\n\nEmotions (comma-separated list, or 'none' if no clear emotions):"
+    "system_template": "You are an emotion classification assistant. Identify which emotions from the GoEmotions taxonomy the given text elicits.",
+    "user_template": "Identify emotions from this text. Choose ONLY from: {emotion_list}\n\nText: \"{text}\"\n\nReturn emotions as comma-separated list:"
+  },
+  "extract_sentiment": {
+    "system_template": "You are a sentiment analysis assistant. Reply ONLY with: POSITIVE, NEGATIVE, or NEUTRAL.",
+    "user_template": "Text to analyze:\n{text}"
+  },
+  "describe_photo": {
+    "system_template": "You are an image description assistant. Describe images concisely.",
+    "user_template": "Describe this photo: <img {url}>"
   },
   "describe_image": {
     "system_template": "You are an image description assistant.",
@@ -69,13 +89,16 @@
     "user_template": "You are sharing an image on social media. Generate {toxicity} confrontational language contents. Respond ONLY with the post text - no explanations, no meta-commentary. You are sharing an image described as: \"{image_description}\"\n\n{topics_instruction}Write a brief, engaging Tweet to share this image. Be authentic to your persona and reference the image content. You can use #hashtags to categorize your post. Output ONLY the post text."
   },
   "infer_article_opinion": {
-    "system_template": "You are an opinion classification assistant.",
-    "user_template": "Analyze articles and determine their stance on topics using predefined opinion categories. Analyze this article and determine its stance on the topic '{topic}'.\n\nArticle excerpt:\n{article_text}\n\nWhat is the article's stance? Choose ONLY ONE from these options:\n{opinion_options}\n\nYour choice (ONE WORD ONLY):"
+    "system_template": "You are an opinion classification assistant. Analyze texts and determine their stance on topics using predefined opinion categories.",
+    "user_template": "Analyze this text and determine its stance on the topic '{topic}'.\n\nText excerpt:\n{article_text}\n\nWhat is the text's stance? Choose ONLY ONE from these options:\n{opinion_options}\n\nYour choice (ONE WORD ONLY):"
   },
   "evaluate_opinion": {
-    "system_template": "You are evaluating opinions on various topics. ",
-    "note": "Used for LLM-based opinion dynamics (model_name: llm_evaluation). The user template is constructed dynamically in llm_service.py based on evaluation_scope parameter.",
-    "user_template": "Consider the content, the author's stance, and your own perspective when forming your judgment. "
+    "system_template": "You are evaluating opinions on various topics. Consider the content, the author's stance, and your own perspective when forming your judgment.",
+    "user_template": "{author_name} posted this:\n\n\"{post_content}\"\n\nConsidering your current opinion score of {current_opinion} on the topic '{topic}', how does this post affect your opinion? Reply ONLY with a new opinion score between 0.0 and 1.0 (e.g., 0.65)."
+  },
+  "evaluate_opinion_transition": {
+    "system_template": "You are evaluating opinions using a discrete Likert scale. You must respond with exactly one of: AGREE, DISAGREE, or NEUTRAL.",
+    "user_template": "Topic: {topic}\n\nCurrent opinion class: {current_label}\nAuthor opinion class: {author_label}\nOpinion scale: {opinion_scale}\n\nPost:\n{post_content}\n\nIf the post should move the current opinion one adjacent step toward the author, reply AGREE. If it should move one adjacent step away, reply DISAGREE. If it should stay in the same class, reply NEUTRAL.\n"
   },
   "generate_share_commentary": {
     "system_template": "{persona}",
