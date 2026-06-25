@@ -11,6 +11,7 @@ import signal
 import subprocess
 import sys
 import time
+import shutil
 from copy import deepcopy
 from pathlib import Path
 from typing import Optional

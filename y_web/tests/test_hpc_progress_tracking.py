@@ -249,6 +249,83 @@ def test_start_hpc_client_clears_stale_recycled_pid_and_restarts(monkeypatch):
     assert mock_cli.pid == 88888
 
 
+def test_start_hpc_client_photo_sharing_branch_uses_shutil_copyfile(monkeypatch, tmp_path):
+    """Photo-sharing client startup should reach the copyfile branch without NameError."""
+    from y_web.src.hpc.client import start_hpc_client
+
+    monkeypatch.setattr("y_web.src.hpc.client.get_base_path", lambda: str(tmp_path))
+    monkeypatch.setattr("y_web.src.hpc.client.get_writable_path", lambda: str(tmp_path))
+
+    exp_folder = tmp_path / "y_web" / "experiments" / "exp44"
+    exp_folder.mkdir(parents=True)
+    (exp_folder / "ray_config.temp").write_text("127.0.0.1:12345", encoding="utf-8")
+    (exp_folder / "client_photo-population-photo-population.json").write_text(
+        "{}", encoding="utf-8"
+    )
+    (exp_folder / "photo-population.json").write_text("[]", encoding="utf-8")
+    (exp_folder / "prompts_ygram.json").write_text("{}", encoding="utf-8")
+    (tmp_path / "external" / "YPhotoSharing").mkdir(parents=True)
+    (tmp_path / "external" / "YPhotoSharing" / "run_client.py").write_text(
+        "print('client')\n", encoding="utf-8"
+    )
+
+    mock_exp = MagicMock()
+    mock_exp.idexp = 44
+    mock_exp.platform_type = "photo_sharing"
+    mock_exp.db_name = "experiments_exp44"
+
+    mock_cli = MagicMock()
+    mock_cli.id = 10
+    mock_cli.name = "photo-population"
+    mock_cli.pid = None
+
+    mock_population = MagicMock()
+    mock_population.name = "photo-population"
+
+    mock_process = MagicMock()
+    mock_process.pid = 99999
+
+    monkeypatch.setattr(
+        "y_web.src.hpc.client._tracked_process_is_alive", lambda pid: False
+    )
+    monkeypatch.setattr(
+        "y_web.src.hpc.client._is_hpc_client_process", lambda pid: False
+    )
+    monkeypatch.setattr(
+        "y_web.src.hpc.client._hpc_process_matches_client",
+        lambda pid, cli_name=None, exp_folder=None: False,
+    )
+    monkeypatch.setattr(
+        "y_web.src.hpc.client._sync_stress_reward_into_hpc_client_config",
+        lambda exp_folder, client_config_path: None,
+    )
+    monkeypatch.setattr("y_web.src.simulation.server.detect_env_handler", lambda: "python")
+    monkeypatch.setattr("y_web.src.hpc.client.build_subprocess_env", lambda: {})
+    monkeypatch.setattr("y_web.src.hpc.client.subprocess.Popen", lambda *a, **k: mock_process)
+    monkeypatch.setattr("y_web.src.hpc.client.db.session.commit", lambda: None)
+    monkeypatch.setattr("y_web.src.hpc.client.shutil.copyfile", lambda *a, **k: None)
+
+    class _FakeClientExecution:
+        query = MagicMock()
+
+        def __init__(self, **kwargs):
+            for key, value in kwargs.items():
+                setattr(self, key, value)
+
+    _FakeClientExecution.query.filter_by.return_value.first.return_value = None
+    monkeypatch.setattr("y_web.src.hpc.client.Client_Execution", _FakeClientExecution)
+    added_objects = []
+    monkeypatch.setattr(
+        "y_web.src.hpc.client.db.session.add", lambda obj: added_objects.append(obj)
+    )
+
+    process = start_hpc_client(mock_exp, mock_cli, mock_population)
+
+    assert process.pid == 99999
+    assert mock_cli.pid == 99999
+    assert added_objects and added_objects[0].client_id == mock_cli.id
+
+
 def test_stop_hpc_client_clears_stale_recycled_pid(monkeypatch):
     """Stop should clear stale PID state instead of failing restart later."""
     from y_web.src.hpc.client import stop_hpc_client
