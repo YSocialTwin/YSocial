@@ -143,6 +143,44 @@ def _distribution_total_is_valid(distribution):
     return abs(total - 100.0) < 0.01
 
 
+def _parse_json_array_form_value(raw_value, default=None):
+    if raw_value in (None, ""):
+        return list(default or [])
+    if isinstance(raw_value, list):
+        values = raw_value
+    else:
+        try:
+            values = json.loads(raw_value)
+        except (TypeError, ValueError, json.JSONDecodeError):
+            values = [item.strip() for item in str(raw_value).split(",")]
+    if not isinstance(values, list):
+        return list(default or [])
+    cleaned = []
+    for value in values:
+        text = str(value).strip()
+        if text and text not in cleaned:
+            cleaned.append(text)
+    return cleaned or list(default or [])
+
+
+def _parse_percentage_value(raw_value, default=0):
+    try:
+        return max(0, min(100, int(float(raw_value))))
+    except (TypeError, ValueError):
+        return int(default)
+
+
+def _parse_distribution_from_form(prefix):
+    distribution = request.form.get(f"{prefix}_distribution", "Uniform")
+    param_name = request.form.get(f"{prefix}_distribution_param", "")
+    return {
+        "min": request.form.get(f"{prefix}_min", "1"),
+        "max": request.form.get(f"{prefix}_max", "10"),
+        "distribution": distribution,
+        "parameter": param_name,
+    }
+
+
 @population.route("/admin/create_population_empty", methods=["POST", "GET"])
 @login_required
 def create_population_empty():
@@ -335,6 +373,68 @@ def create_population():
         "Zipf": zipf_s,
     }
 
+    photo_sharing_config = None
+    if username_type == "photo_sharing":
+        photo_story_visibility = {
+            "public": _parse_percentage_value(
+                request.form.get("photo_story_public_percentage"), 20
+            ),
+            "followers": _parse_percentage_value(
+                request.form.get("photo_story_followers_percentage"), 65
+            ),
+            "private": _parse_percentage_value(
+                request.form.get("photo_story_private_percentage"), 15
+            ),
+        }
+        photo_creator_tier = {
+            "standard": _parse_percentage_value(
+                request.form.get("photo_creator_standard_percentage"), 60
+            ),
+            "pro": _parse_percentage_value(
+                request.form.get("photo_creator_pro_percentage"), 25
+            ),
+            "influencer": _parse_percentage_value(
+                request.form.get("photo_creator_influencer_percentage"), 15
+            ),
+        }
+        photo_sharing_config = {
+            "is_private_percentage": _parse_percentage_value(
+                request.form.get("photo_is_private_percentage"), 20
+            ),
+            "is_verified_percentage": _parse_percentage_value(
+                request.form.get("photo_is_verified_percentage"), 10
+            ),
+            "attention_budget": _parse_distribution_from_form(
+                "photo_attention_budget"
+            ),
+            "favorite_filters": _parse_json_array_form_value(
+                request.form.get("photo_favorite_filters"),
+                default=["warm", "vintage", "mono", "grain", "bright", "clean"],
+            ),
+            "story_visibility": photo_story_visibility,
+            "creator_tier": photo_creator_tier,
+        }
+
+        if not _distribution_total_is_valid(photo_story_visibility):
+            flash("Photo story visibility percentages must sum to 100%.", "error")
+            return redirect(request.referrer)
+        if not _distribution_total_is_valid(photo_creator_tier):
+            flash("Photo creator tier percentages must sum to 100%.", "error")
+            return redirect(request.referrer)
+
+        try:
+            photo_min = int(photo_sharing_config["attention_budget"]["min"])
+            photo_max = int(photo_sharing_config["attention_budget"]["max"])
+        except (TypeError, ValueError):
+            flash("Photo attention budget min/max must be valid integers.", "error")
+            return redirect(request.referrer)
+        if photo_min <= 0 or photo_max <= 0 or photo_min > photo_max:
+            flash(
+                "Photo attention budget must use positive min/max values with min <= max.",
+                "error",
+            )
+            return redirect(request.referrer)
+
     population = Population(
         name=name,
         descr=descr,
@@ -367,7 +467,13 @@ def create_population():
     db.session.commit()
 
     try:
-        generate_population(name, percentages, actions_config, profession_backgrounds)
+        generate_population(
+            name,
+            percentages,
+            actions_config,
+            profession_backgrounds,
+            photo_sharing_config,
+        )
     except Exception as exc:
         PopulationActivityProfile.query.filter_by(population=population.id).delete()
         Agent_Population.query.filter_by(population_id=population.id).delete()

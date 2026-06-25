@@ -9,7 +9,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from y_web.src.agents.population import generate_population
+from y_web.src.agents.population import (
+    _build_photo_sharing_agent_ext_values,
+    generate_population,
+)
 
 pytestmark = pytest.mark.unit
 
@@ -217,6 +220,50 @@ def test_bulk_insert_preserves_agent_count():
 
         # Verify correct number of relationships were created
         assert len(relationships_list) == 5
+
+
+def test_photo_sharing_agent_ext_values_follow_config():
+    agent = MagicMock()
+    agent.profession = "Engineer"
+    agent.nationality = "American"
+    agent.language = "en"
+
+    config = {
+        "is_private_percentage": 30,
+        "is_verified_percentage": 40,
+        "attention_budget": {
+            "min": 50,
+            "max": 150,
+            "distribution": "Uniform",
+        },
+        "favorite_filters": ["warm", "mono", "grain", "custom"],
+        "story_visibility": {"public": 10, "followers": 70, "private": 20},
+        "creator_tier": {"standard": 60, "pro": 30, "influencer": 10},
+    }
+
+    with (
+        patch("y_web.src.agents.population.random.random", side_effect=[0.1, 0.6]),
+        patch("y_web.src.agents.population.random.randint", side_effect=[2, 120]),
+        patch(
+            "y_web.src.agents.population.random.sample",
+            return_value=["warm", "custom"],
+        ),
+        patch(
+            "y_web.src.agents.population.random.choices",
+            side_effect=[["followers"], ["pro"]],
+        ),
+    ):
+        entries = _build_photo_sharing_agent_ext_values(agent, config)
+
+    by_name = {name: value for name, value in entries}
+
+    assert by_name["bio"] == "Engineer | American | en"
+    assert by_name["is_private"] is True
+    assert by_name["is_verified"] is False
+    assert by_name["attention_budget"] == 120
+    assert by_name["favorite_filters"] == ["warm", "custom"]
+    assert by_name["story_visibility"] == "followers"
+    assert by_name["creator_tier"] == "pro"
 
 
 if __name__ == "__main__":

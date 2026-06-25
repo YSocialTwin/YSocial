@@ -55,7 +55,7 @@
  <span class="left text-danger">Population Platform <span>*</span></span>
  <span class="right ys-w-70">
                                             <div class="select is-fullwidth">
-                                                <select name="username_type" class="input" required>
+                                                <select name="username_type" id="population_username_type" class="input" required onchange="togglePhotoSharingConfigPanel()">
                                                     <option value="microblogging">Microblogging</option>
                                                     <option value="photo_sharing">Photo Sharing</option>
                                                     <option value="forum">Forum</option>
@@ -228,6 +228,131 @@
                                         </span>
                                     </div>
                                     </div><!-- End section-social-attributes -->
+
+                                    <div id="photo-sharing-config-wrapper" class="tutorial-section d-none">
+                                        <details id="photo-sharing-config-panel" open>
+                                            <summary class="form-section-header ys-clickable">
+                                                Photo Sharing Configuration <span class="ys-text-sm-normal">(Only for Photo Sharing populations)</span>
+                                            </summary>
+                                            <div class="form-section-description">
+                                                Configure photo-sharing specific fields. Percentages are applied per generated agent and the favorite filters define the pool used for random agent tag assignment.
+                                            </div>
+
+                                            <div class="box-line">
+                                                <span class="left">Is Private %</span>
+                                                <span class="right ys-w-70">
+                                                    <input type="number" id="photo_is_private_percentage" name="photo_is_private_percentage" class="input" min="0" max="100" value="20">
+                                                </span>
+                                            </div>
+                                            <div class="box-line">
+                                                <span class="left">Is Verified %</span>
+                                                <span class="right ys-w-70">
+                                                    <input type="number" id="photo_is_verified_percentage" name="photo_is_verified_percentage" class="input" min="0" max="100" value="10">
+                                                </span>
+                                            </div>
+
+                                            <div class="box-line">
+                                                <span class="left">Attention Budget</span>
+                                                <span class="right ys-w-70">
+                                                    <div class="ys-flex-col-gap-12">
+                                                        <div class="ys-flex-gap-10">
+                                                            <label class="ys-col-60">Min:</label>
+                                                            <input type="number" id="photo_attention_budget_min" name="photo_attention_budget_min" class="input ys-flex-input" min="1" value="50">
+                                                        </div>
+                                                        <div class="ys-flex-gap-10">
+                                                            <label class="ys-col-60">Max:</label>
+                                                            <input type="number" id="photo_attention_budget_max" name="photo_attention_budget_max" class="input ys-flex-input" min="1" value="150">
+                                                        </div>
+                                                        <div class="ys-flex-gap-10">
+                                                            <label class="ys-col-60">Distribution:</label>
+                                                            <select id="photo_attention_budget_distribution" name="photo_attention_budget_distribution" class="input ys-flex-input" onchange="updatePhotoAttentionBudgetDistributionParams()">
+                                                                <option value="Uniform" selected>Uniform</option>
+                                                                <option value="Poisson">Poisson</option>
+                                                                <option value="Geometric">Geometric</option>
+                                                                <option value="Zipf">Zipf</option>
+                                                            </select>
+                                                        </div>
+                                                        <div id="photo_attention_budget_poisson_params" class="ys-hidden-sub">
+                                                            <div class="ys-flex-gap-10">
+                                                                <label class="ys-col-60">Lambda (λ):</label>
+                                                                <input type="number" id="photo_attention_budget_distribution_param" name="photo_attention_budget_distribution_param" class="input ys-flex-input" step="0.01" value="0.88" disabled>
+                                                            </div>
+                                                        </div>
+                                                        <div id="photo_attention_budget_geometric_params" class="ys-hidden-sub">
+                                                            <div class="ys-flex-gap-10">
+                                                                <label class="ys-col-60">p:</label>
+                                                                <input type="number" id="photo_attention_budget_distribution_param_geometric" name="photo_attention_budget_distribution_param" class="input ys-flex-input" step="0.01" min="0" max="1" value="0.6667" disabled>
+                                                            </div>
+                                                        </div>
+                                                        <div id="photo_attention_budget_zipf_params" class="ys-hidden-sub">
+                                                            <div class="ys-flex-gap-10">
+                                                                <label class="ys-col-60">s:</label>
+                                                                <input type="number" id="photo_attention_budget_distribution_param_zipf" name="photo_attention_budget_distribution_param" class="input ys-flex-input" step="0.1" value="2.5" disabled>
+                                                            </div>
+                                                        </div>
+                                                        <small class="ys-text-tiny-gray">The selected distribution controls how attention budgets are sampled between min and max.</small>
+                                                    </div>
+                                                </span>
+                                            </div>
+
+                                            <div class="box-line">
+                                                <span class="left">Favorite Filters</span>
+                                                <span class="right ys-w-70">
+                                                    <input type="hidden" id="photo_favorite_filters" name="photo_favorite_filters" value='["warm","vintage","mono","grain","bright","clean"]'>
+                                                    <div class="ys-flex-col-gap-10">
+                                                        <div id="photo_favorite_filters_tags" class="profession-tags-container"></div>
+                                                        <div class="ys-flex-gap-10">
+                                                            <input type="text" id="photo_favorite_filter_new" class="input" placeholder="Add a new filter tag">
+                                                            <button type="button" class="button is-light" onclick="addPhotoFavoriteFilter()">Add Tag</button>
+                                                        </div>
+                                                        <small class="ys-text-tiny-gray">Click tags to toggle them. Selected tags are used as the available favorite filter pool.</small>
+                                                    </div>
+                                                </span>
+                                            </div>
+
+                                            <div class="box-line">
+                                                <span class="left">Story Visibility %</span>
+                                                <span class="right ys-w-70">
+                                                    <div class="ys-flex-col-gap-8">
+                                                        <div class="ys-flex-gap-10">
+                                                            <label class="ys-col-60">Public:</label>
+                                                            <input type="number" id="photo_story_public_percentage" name="photo_story_public_percentage" class="input ys-flex-input" min="0" max="100" value="20" oninput="validatePhotoSharingDistributions()">
+                                                        </div>
+                                                        <div class="ys-flex-gap-10">
+                                                            <label class="ys-col-60">Followers:</label>
+                                                            <input type="number" id="photo_story_followers_percentage" name="photo_story_followers_percentage" class="input ys-flex-input" min="0" max="100" value="65" oninput="validatePhotoSharingDistributions()">
+                                                        </div>
+                                                        <div class="ys-flex-gap-10">
+                                                            <label class="ys-col-60">Private:</label>
+                                                            <input type="number" id="photo_story_private_percentage" name="photo_story_private_percentage" class="input ys-flex-input" min="0" max="100" value="15" oninput="validatePhotoSharingDistributions()">
+                                                        </div>
+                                                        <small id="photo_story_visibility_validation" class="percentage-validation-compact ys-hidden-mt">Totals must equal 100%.</small>
+                                                    </div>
+                                                </span>
+                                            </div>
+
+                                            <div class="box-line">
+                                                <span class="left">Creator Tier %</span>
+                                                <span class="right ys-w-70">
+                                                    <div class="ys-flex-col-gap-8">
+                                                        <div class="ys-flex-gap-10">
+                                                            <label class="ys-col-60">Standard:</label>
+                                                            <input type="number" id="photo_creator_standard_percentage" name="photo_creator_standard_percentage" class="input ys-flex-input" min="0" max="100" value="60" oninput="validatePhotoSharingDistributions()">
+                                                        </div>
+                                                        <div class="ys-flex-gap-10">
+                                                            <label class="ys-col-60">Pro:</label>
+                                                            <input type="number" id="photo_creator_pro_percentage" name="photo_creator_pro_percentage" class="input ys-flex-input" min="0" max="100" value="25" oninput="validatePhotoSharingDistributions()">
+                                                        </div>
+                                                        <div class="ys-flex-gap-10">
+                                                            <label class="ys-col-60">Influencer:</label>
+                                                            <input type="number" id="photo_creator_influencer_percentage" name="photo_creator_influencer_percentage" class="input ys-flex-input" min="0" max="100" value="15" oninput="validatePhotoSharingDistributions()">
+                                                        </div>
+                                                        <small id="photo_creator_tier_validation" class="percentage-validation-compact ys-hidden-mt">Totals must equal 100%.</small>
+                                                    </div>
+                                                </span>
+                                            </div>
+                                        </details>
+                                    </div>
 
                                     <div id="section-profession-categories" class="tutorial-section">
  <div class="form-section-header ys-clickable" onclick="toggleProfessionBackgrounds()">
