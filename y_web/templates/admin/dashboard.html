@@ -16,7 +16,7 @@
  <span class="left ys-flex-gap-10-ai">
  Experiment: <strong class="ys-text-info">{{ experiments[exp]['experiment'].exp_name }}</strong>
                     <span style="background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="Experiment owner">{{ experiments[exp]['experiment'].owner }}</span>
-                    <span style="background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="Platform">{{ 'Forum' if experiments[exp]['experiment'].platform_type == 'forum' else 'Microblogging' }}</span>
+                    <span style="background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="Platform">{{ 'Forum' if experiments[exp]['experiment'].platform_type == 'forum' else 'Photo Sharing' if experiments[exp]['experiment'].platform_type == 'photo_sharing' else 'Microblogging' }}</span>
 
                     {% if experiments[exp]['experiment'].simulator_type == 'HPC' %}
                     <span style="background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="HPC Simulator">HPC</span>
@@ -174,7 +174,7 @@
                     {% if experiments[exp]['experiment'].owner %}
                     <span style="background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="Owner">{{ experiments[exp]['experiment'].owner }}</span>
                     {% endif %}
-                    <span style="background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="Platform">{{ 'Forum' if experiments[exp]['experiment'].platform_type == 'forum' else 'Microblogging' }}</span>
+                    <span style="background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="Platform">{{ 'Forum' if experiments[exp]['experiment'].platform_type == 'forum' else 'Photo Sharing' if experiments[exp]['experiment'].platform_type == 'photo_sharing' else 'Microblogging' }}</span>
 
                     {% if experiments[exp]['experiment'].simulator_type == 'HPC' %}
                     <span style="background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="HPC">HPC</span>

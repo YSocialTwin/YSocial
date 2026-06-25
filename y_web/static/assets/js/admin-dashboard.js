@@ -263,7 +263,7 @@ var AdminDashboard = (function() {
       const ownerBadge = exp.owner ? 
           `<span style="background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="Owner">${exp.owner}</span>` : '';
 
-      const platformBadge = `<span style="background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="Platform">${exp.platform_type === 'forum' ? 'Forum' : 'Microblogging'}</span>`;
+      const platformBadge = `<span style="background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="Platform">${exp.platform_type === 'forum' ? 'Forum' : exp.platform_type === 'photo_sharing' ? 'Photo Sharing' : 'Microblogging'}</span>`;
     
       const hpcBadge = exp.simulator_type === 'HPC' ?
           `<span style="background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="HPC">HPC</span>` : '';
@@ -386,7 +386,7 @@ var AdminDashboard = (function() {
       const ownerBadgeFull = exp.owner ?
           `<span style="background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="Experiment owner">${exp.owner}</span>` : '';
 
-      const platformBadgeFull = `<span style="background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="Platform">${exp.platform_type === 'forum' ? 'Forum' : 'Microblogging'}</span>`;
+      const platformBadgeFull = `<span style="background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="Platform">${exp.platform_type === 'forum' ? 'Forum' : exp.platform_type === 'photo_sharing' ? 'Photo Sharing' : 'Microblogging'}</span>`;
     
       const hpcBadgeFull = exp.simulator_type === 'HPC' ?
           `<span style="background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="HPC Simulator">HPC</span>` : '';

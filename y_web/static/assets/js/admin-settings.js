@@ -738,7 +738,7 @@ var AdminSettings = (function() {
                                       ${checkbox}
                                       <span class="exp-item-name">${exp.exp_name}</span>
                                       <span class="exp-tag owner">${exp.owner}</span>
-                                      <span class="exp-tag platform">${exp.platform_type === 'forum' ? 'Forum' : 'Microblogging'}</span>
+                                      <span class="exp-tag platform">${exp.platform_type === 'forum' ? 'Forum' : exp.platform_type === 'photo_sharing' ? 'Photo Sharing' : 'Microblogging'}</span>
                                       ${exp.simulator_type === 'HPC' ? '<span class="exp-tag hpc">HPC</span>' : ''}
                                       ${exp.is_remote === 1 ? '<span class="exp-tag remote">Remote</span>' : ''}
                                       ${exp.has_infinite_client ? '<span class="exp-tag infinite">∞</span>' : ''}
