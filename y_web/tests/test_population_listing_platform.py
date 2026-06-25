@@ -40,7 +40,9 @@ def test_populations_data_uses_username_type_for_platform_column(app):
             mock_edu_query.all.return_value = []
             mock_lean_query.all.return_value = []
             mock_tox_query.all.return_value = []
-            mock_session_query.return_value.join.return_value.filter.return_value.all.return_value = []
+            mock_session_query.return_value.join.return_value.filter.return_value.all.return_value = (
+                []
+            )
 
             response = populations_module.populations_data.__wrapped__()
 
