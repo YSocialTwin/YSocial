@@ -404,9 +404,7 @@ def create_population():
             "is_verified_percentage": _parse_percentage_value(
                 request.form.get("photo_is_verified_percentage"), 10
             ),
-            "attention_budget": _parse_distribution_from_form(
-                "photo_attention_budget"
-            ),
+            "attention_budget": _parse_distribution_from_form("photo_attention_budget"),
             "favorite_filters": _parse_json_array_form_value(
                 request.form.get("photo_favorite_filters"),
                 default=["warm", "vintage", "mono", "grain", "bright", "clean"],

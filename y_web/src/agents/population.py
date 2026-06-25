@@ -299,9 +299,7 @@ def _build_photo_sharing_agent_ext_values(agent, photo_sharing_config):
         "clean",
     ]
     favorite_filters = [
-        str(tag).strip()
-        for tag in favorite_filters
-        if str(tag).strip()
+        str(tag).strip() for tag in favorite_filters if str(tag).strip()
     ]
     favorite_filters = list(dict.fromkeys(favorite_filters))
     if favorite_filters:
@@ -332,15 +330,19 @@ def _build_photo_sharing_agent_ext_values(agent, photo_sharing_config):
     )
 
     bio_text = " | ".join(
-        part
-        for part in [agent.profession, agent.nationality, agent.language]
-        if part
+        part for part in [agent.profession, agent.nationality, agent.language] if part
     )
 
     return [
         ("bio", bio_text),
-        ("is_private", random.random() < (_percentage("is_private_percentage", 20) / 100.0)),
-        ("is_verified", random.random() < (_percentage("is_verified_percentage", 10) / 100.0)),
+        (
+            "is_private",
+            random.random() < (_percentage("is_private_percentage", 20) / 100.0),
+        ),
+        (
+            "is_verified",
+            random.random() < (_percentage("is_verified_percentage", 10) / 100.0),
+        ),
         ("attention_budget", attention_budget),
         ("favorite_filters", selected_filters),
         ("story_visibility", story_visibility),
