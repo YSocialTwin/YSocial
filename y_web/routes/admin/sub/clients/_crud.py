@@ -78,22 +78,9 @@ PLUGIN_REGISTRY_RELATIVE_PATHS = (
     Path("plugins_exposed") / "agent_types.json",
     Path("plugin_exposed") / "agent_types.json",
 )
-
-
-def _photo_sharing_client_dir(
-    exp_dir: str, client_name: str, population_name: str
-) -> str:
-    return os.path.join(exp_dir, f"client_{client_name}-{population_name}")
-
-
 def _client_config_path_for_platform(
     exp_dir: str, exp, client_name: str, population_name: str
 ) -> str:
-    if getattr(exp, "platform_type", None) == "photo_sharing":
-        return os.path.join(
-            _photo_sharing_client_dir(exp_dir, client_name, population_name),
-            "client_config.json",
-        )
     return os.path.join(exp_dir, f"client_{client_name}-{population_name}.json")
 
 
@@ -138,6 +125,18 @@ def _apply_photo_sharing_agent_fields(agent_payload, agent, ext_map):
         agent_payload["attention_budget"] = attention_budget
 
     agent_payload["photo_sharing"] = _photo_sharing_payload_from_agent(agent, ext_map)
+
+
+def _photo_sharing_cluster_id(value) -> str:
+    """Return a YPhotoSharing-compatible persona cluster id."""
+    if value is None:
+        return "0"
+    text = str(value).strip()
+    if not text:
+        return "0"
+    if text.isdigit():
+        return text
+    return "0"
 
 
 def _custom_agent_slug(name: str) -> str:
@@ -2144,6 +2143,7 @@ def generate_hpc_client_config(
     perspective_api_key,
     server_address=None,
     server_port=None,
+    server_name=None,
 ):
     """Generate client configuration for HPC simulator type.
 
@@ -2163,6 +2163,9 @@ def generate_hpc_client_config(
         "agents": agents_config,
         "logging": logging_config,
     }
+
+    if server_name:
+        config["server_name"] = server_name
 
     # Only include llm_v in config if it's provided (VLLM: when Image Transcription is enabled; Ollama: always included)
     if llm_v_config is not None:
@@ -2699,9 +2702,24 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
         exp_dir, exp, name, population.name
     )
     if exp.platform_type == "photo_sharing":
-        os.makedirs(os.path.dirname(config_filename), exist_ok=True)
-        config["agents_file"] = "agents.json"
-        config["users_file"] = "agents.json"
+        server_config_filename = os.path.join(exp_dir, "server_config.json")
+        photo_server_config = {}
+        if os.path.exists(server_config_filename):
+            with open(server_config_filename, "r", encoding="utf-8") as f:
+                photo_server_config = json.load(f)
+
+        runtime_client_id = f"{Path(exp_dir).name}:{name}"
+        config["client_id"] = runtime_client_id
+        config["namespace"] = photo_server_config.get("namespace", "yphotosharing")
+        config["server_name"] = photo_server_config.get(
+            "server_name", "orchestrator_server"
+        )
+        config["address"] = "auto"
+        config["agents_file"] = f"{population.name}.json"
+        config["users_file"] = f"{population.name}.json"
+        config.setdefault("logging", {})
+        config["logging"]["log_dir"] = os.path.join(exp_dir, "logs")
+        config["logging"]["instance_name"] = runtime_client_id
     with open(config_filename, "w") as f:
         json.dump(config, f, indent=2)
 
@@ -2838,6 +2856,9 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
             agent_data, feature_map.get(agent.id, {})
         )
         if exp.platform_type == "photo_sharing":
+            agent_data["recsys_type"] = _photo_sharing_cluster_id(
+                agent_data.get("recsys_type")
+            )
             _apply_photo_sharing_agent_fields(
                 agent_data, agent, agent_ext_map.get(agent.id, {})
             )
@@ -2895,17 +2916,14 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
             "activity_profile": activity_profile_name,
             "llm": bool(exp.llm_agents_enabled),
         }
+        if exp.platform_type == "photo_sharing":
+            page_data["recsys_type"] = "0"
+            page_data["frecsys_type"] = "default"
         population_data["agents"].append(page_data)
 
     # Save population file
     with open(population_filename, "w") as f:
         json.dump(population_data, f, indent=4)
-
-    if exp.platform_type == "photo_sharing":
-        photo_client_dir = _photo_sharing_client_dir(exp_dir, name, population.name)
-        os.makedirs(photo_client_dir, exist_ok=True)
-        with open(os.path.join(photo_client_dir, "agents.json"), "w") as f:
-            json.dump(population_data, f, indent=4)
 
     # Copy prompts file into the experiment folder.
     # Photo Sharing uses the YPhotoSharing prompt filename; other HPC paths keep prompts.json.
@@ -2920,13 +2938,6 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
             os.path.join("data_schema", "prompts_ygram.json")
         )
         shutil.copyfile(prompts_src, prompts_dest)
-        shutil.copyfile(
-            prompts_src,
-            os.path.join(
-                _photo_sharing_client_dir(exp_dir, name, population.name),
-                "prompts_ygram.json",
-            ),
-        )
     elif exp.platform_type == "microblogging":
         prompts_src = get_resource_path(os.path.join("data_schema", "prompts_hpc.json"))
         shutil.copyfile(prompts_src, prompts_dest)

@@ -7,7 +7,6 @@ extracted from y_web.utils.external_processes.
 
 import json
 import os
-import shutil
 import signal
 import subprocess
 import sys
@@ -139,11 +138,53 @@ def _build_hpc_runtime_client_id(exp_folder: str, client_name: str) -> str:
         folder_name = Path(str(exp_folder)).name
     return f"{folder_name}:{str(client_name).strip()}"
 
+def _normalize_photo_sharing_client_config(
+    exp_folder: str, client_name: str, population_name: str, client_config_path: str
+) -> None:
+    """Align YPhotoSharing client config with the experiment server runtime."""
+    server_config_path = os.path.join(exp_folder, "server_config.json")
+    server_config = {}
+    if os.path.exists(server_config_path):
+        with open(server_config_path, "r", encoding="utf-8") as handle:
+            server_config = json.load(handle)
 
-def _photo_sharing_client_dir(
-    exp_folder: str, client_name: str, population_name: str
-) -> str:
-    return os.path.join(exp_folder, f"client_{client_name}-{population_name}")
+    with open(client_config_path, "r", encoding="utf-8") as handle:
+        client_config = json.load(handle)
+
+    runtime_client_id = _build_hpc_runtime_client_id(exp_folder, client_name)
+    client_config["client_id"] = runtime_client_id
+    client_config["namespace"] = server_config.get("namespace", "yphotosharing")
+    client_config["server_name"] = server_config.get(
+        "server_name", "orchestrator_server"
+    )
+    client_config["address"] = "auto"
+    population_filename = f"{population_name}.json"
+    client_config["agents_file"] = population_filename
+    client_config["users_file"] = population_filename
+    client_config.setdefault("logging", {})
+    client_config["logging"]["log_dir"] = os.path.join(exp_folder, "logs")
+    client_config["logging"]["instance_name"] = runtime_client_id
+
+    with open(client_config_path, "w", encoding="utf-8") as handle:
+        json.dump(client_config, handle, indent=2)
+
+
+def _migrate_legacy_photo_sharing_client_layout(
+    exp_folder: str, client_name: str, population_name: str, client_config_path: str
+) -> None:
+    """Promote legacy per-client photo-sharing config into the standard HPC layout."""
+    if os.path.exists(client_config_path):
+        return
+
+    legacy_dir = os.path.join(exp_folder, f"client_{client_name}-{population_name}")
+    legacy_config = os.path.join(legacy_dir, "client_config.json")
+    if not os.path.exists(legacy_config):
+        return
+
+    with open(legacy_config, "r", encoding="utf-8") as handle:
+        client_config = json.load(handle)
+    with open(client_config_path, "w", encoding="utf-8") as handle:
+        json.dump(client_config, handle, indent=2)
 
 
 def resolve_hpc_client_log_path(
@@ -290,30 +331,14 @@ def start_hpc_client(exp, cli, population):
 
     # Construct paths for config, agents, and prompts files
     if exp.platform_type == "photo_sharing":
-        photo_client_dir = _photo_sharing_client_dir(
-            exp_folder, cli.name, population.name
+        client_config = os.path.join(
+            exp_folder, f"client_{cli.name}-{population.name}.json"
         )
-        client_config = os.path.join(photo_client_dir, "client_config.json")
-        agents_file = os.path.join(photo_client_dir, "agents.json")
-        prompts_file = os.path.join(photo_client_dir, "prompts_ygram.json")
-
-        os.makedirs(photo_client_dir, exist_ok=True)
-        root_agents_file = os.path.join(exp_folder, f"{population.name}.json")
-        root_prompts_file = os.path.join(exp_folder, "prompts_ygram.json")
-        if os.path.exists(root_agents_file):
-            shutil.copyfile(root_agents_file, agents_file)
-        if os.path.exists(root_prompts_file):
-            shutil.copyfile(root_prompts_file, prompts_file)
-        if os.path.exists(os.path.join(exp_folder, "ray_config.temp")):
-            shutil.copyfile(
-                os.path.join(exp_folder, "ray_config.temp"),
-                os.path.join(photo_client_dir, "ray_config.temp"),
-            )
-        if os.path.exists(os.path.join(exp_folder, "ray_namespace.temp")):
-            shutil.copyfile(
-                os.path.join(exp_folder, "ray_namespace.temp"),
-                os.path.join(photo_client_dir, "ray_namespace.temp"),
-            )
+        _migrate_legacy_photo_sharing_client_layout(
+            exp_folder, cli.name, population.name, client_config
+        )
+        agents_file = os.path.join(exp_folder, f"{population.name}.json")
+        prompts_file = os.path.join(exp_folder, "prompts_ygram.json")
     else:
         client_config = os.path.join(
             exp_folder, f"client_{cli.name}-{population.name}.json"
@@ -402,17 +427,12 @@ def start_hpc_client(exp, cli, population):
     runtime_config_dir = exp_folder
     if exp.platform_type == "photo_sharing":
         script_path = os.path.join(_external_repo_dir("YPhotoSharing"), "run_client.py")
-        runtime_config_dir = _photo_sharing_client_dir(
-            exp_folder, cli.name, population.name
-        )
+        runtime_config_dir = client_config
 
         try:
-            with open(client_config, "r", encoding="utf-8") as f:
-                photo_cfg = json.load(f)
-            photo_cfg.setdefault("agents_file", "agents.json")
-            photo_cfg.setdefault("users_file", "agents.json")
-            with open(client_config, "w", encoding="utf-8") as f:
-                json.dump(photo_cfg, f, indent=2)
+            _normalize_photo_sharing_client_config(
+                exp_folder, cli.name, population.name, client_config
+            )
         except Exception:
             pass
     elif exp.platform_type == "microblogging":
@@ -642,23 +662,36 @@ def stop_hpc_client(cli, *, terminal_state: Optional[str] = None):
                             )
                             connected_here = True
                         try:
-                            orchestrator = ray.get_actor(
-                                "Orchestrator", namespace=namespace
-                            )
                             runtime_client_id = _build_hpc_runtime_client_id(
                                 exp_folder, cli.name
                             )
+                            is_photo_sharing = (
+                                getattr(exp, "platform_type", None) == "photo_sharing"
+                            )
+                            orchestrator_name = (
+                                "orchestrator_server"
+                                if is_photo_sharing
+                                else "Orchestrator"
+                            )
+                            runtime_actor_name = (
+                                f"Client_{runtime_client_id}"
+                                if is_photo_sharing
+                                else runtime_client_id
+                            )
+                            orchestrator = ray.get_actor(
+                                orchestrator_name, namespace=namespace
+                            )
                             try:
                                 runtime_client = ray.get_actor(
-                                    runtime_client_id, namespace=namespace
+                                    runtime_actor_name, namespace=namespace
                                 )
                                 ray.kill(runtime_client, no_restart=True)
                                 print(
-                                    f"Killed HPC client actor {runtime_client_id} before stopping process."
+                                    f"Killed HPC client actor {runtime_actor_name} before stopping process."
                                 )
                             except ValueError:
                                 print(
-                                    f"HPC client actor {runtime_client_id} not found before stop; "
+                                    f"HPC client actor {runtime_actor_name} not found before stop; "
                                     "continuing with process shutdown."
                                 )
                             ray.get(
