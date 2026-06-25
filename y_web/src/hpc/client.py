@@ -140,7 +140,9 @@ def _build_hpc_runtime_client_id(exp_folder: str, client_name: str) -> str:
     return f"{folder_name}:{str(client_name).strip()}"
 
 
-def _photo_sharing_client_dir(exp_folder: str, client_name: str, population_name: str) -> str:
+def _photo_sharing_client_dir(
+    exp_folder: str, client_name: str, population_name: str
+) -> str:
     return os.path.join(exp_folder, f"client_{client_name}-{population_name}")
 
 

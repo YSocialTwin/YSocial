@@ -263,9 +263,7 @@ def test_start_hpc_client_photo_sharing_branch_uses_shutil_copyfile(
     (exp_folder / "ray_config.temp").write_text("127.0.0.1:12345", encoding="utf-8")
     photo_client_dir = exp_folder / "client_photo-population-photo-population"
     photo_client_dir.mkdir(parents=True)
-    (photo_client_dir / "client_config.json").write_text(
-        "{}", encoding="utf-8"
-    )
+    (photo_client_dir / "client_config.json").write_text("{}", encoding="utf-8")
     (exp_folder / "photo-population.json").write_text("[]", encoding="utf-8")
     (exp_folder / "prompts_ygram.json").write_text("{}", encoding="utf-8")
     (tmp_path / "external" / "YPhotoSharing").mkdir(parents=True)

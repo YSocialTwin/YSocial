@@ -80,7 +80,9 @@ PLUGIN_REGISTRY_RELATIVE_PATHS = (
 )
 
 
-def _photo_sharing_client_dir(exp_dir: str, client_name: str, population_name: str) -> str:
+def _photo_sharing_client_dir(
+    exp_dir: str, client_name: str, population_name: str
+) -> str:
     return os.path.join(exp_dir, f"client_{client_name}-{population_name}")
 
 
