@@ -261,7 +261,9 @@ def test_start_hpc_client_photo_sharing_branch_uses_shutil_copyfile(
     exp_folder = tmp_path / "y_web" / "experiments" / "exp44"
     exp_folder.mkdir(parents=True)
     (exp_folder / "ray_config.temp").write_text("127.0.0.1:12345", encoding="utf-8")
-    (exp_folder / "client_photo-population-photo-population.json").write_text(
+    photo_client_dir = exp_folder / "client_photo-population-photo-population"
+    photo_client_dir.mkdir(parents=True)
+    (photo_client_dir / "client_config.json").write_text(
         "{}", encoding="utf-8"
     )
     (exp_folder / "photo-population.json").write_text("[]", encoding="utf-8")
@@ -309,7 +311,6 @@ def test_start_hpc_client_photo_sharing_branch_uses_shutil_copyfile(
         "y_web.src.hpc.client.subprocess.Popen", lambda *a, **k: mock_process
     )
     monkeypatch.setattr("y_web.src.hpc.client.db.session.commit", lambda: None)
-    monkeypatch.setattr("y_web.src.hpc.client.shutil.copyfile", lambda *a, **k: None)
 
     class _FakeClientExecution:
         query = MagicMock()

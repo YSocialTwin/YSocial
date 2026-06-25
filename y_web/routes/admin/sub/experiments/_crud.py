@@ -1884,6 +1884,12 @@ def generate_photo_sharing_config(
     return config
 
 
+def _hpc_prompts_filename(experiment) -> str:
+    if getattr(experiment, "platform_type", None) == "photo_sharing":
+        return "prompts_ygram.json"
+    return "prompts.json"
+
+
 @experiments.route("/admin/create_experiment", methods=["POST", "GET"])
 @login_required
 def create_experiment():
@@ -2239,6 +2245,11 @@ def create_experiment():
             "w",
         ) as f:
             json.dump(config, f, indent=4)
+        if platform_type == "photo_sharing":
+            shutil.copyfile(
+                get_resource_path(os.path.join("data_schema", "prompts_ygram.json")),
+                f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}prompts_ygram.json",
+            )
     else:
         with open(
             f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}config_server.json",
@@ -2727,7 +2738,7 @@ def prompts_forum(uid):
 
     prompts_path = os.path.join(
         BASE_DIR,
-        f"y_web{os.sep}experiments{os.sep}{experiment.db_name.split(os.sep)[1]}{os.sep}prompts.json",
+        f"y_web{os.sep}experiments{os.sep}{experiment.db_name.split(os.sep)[1]}{os.sep}{_hpc_prompts_filename(experiment)}",
     )
 
     with open(prompts_path) as f:
@@ -2793,7 +2804,7 @@ def update_prompts(uid):
     # get the prompts file for the experiment
     prompts_filename = os.path.join(
         BASE_DIR,
-        f"y_web{os.sep}experiments{os.sep}{experiment.db_name.split(os.sep)[1]}{os.sep}prompts.json",
+        f"y_web{os.sep}experiments{os.sep}{experiment.db_name.split(os.sep)[1]}{os.sep}{_hpc_prompts_filename(experiment)}",
     )
 
     # read the prompts file

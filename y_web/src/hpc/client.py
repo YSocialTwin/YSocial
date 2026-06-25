@@ -140,6 +140,10 @@ def _build_hpc_runtime_client_id(exp_folder: str, client_name: str) -> str:
     return f"{folder_name}:{str(client_name).strip()}"
 
 
+def _photo_sharing_client_dir(exp_folder: str, client_name: str, population_name: str) -> str:
+    return os.path.join(exp_folder, f"client_{client_name}-{population_name}")
+
+
 def resolve_hpc_client_log_path(
     exp,
     client_name: str,
@@ -283,15 +287,37 @@ def start_hpc_client(exp, cli, population):
         )
 
     # Construct paths for config, agents, and prompts files
-    client_config = os.path.join(
-        exp_folder, f"client_{cli.name}-{population.name}.json"
-    )
-    agents_file = os.path.join(exp_folder, f"{population.name}.json")
-    prompts_file = (
-        os.path.join(exp_folder, "prompts_ygram.json")
-        if exp.platform_type == "photo_sharing"
-        else os.path.join(exp_folder, "prompts.json")
-    )
+    if exp.platform_type == "photo_sharing":
+        photo_client_dir = _photo_sharing_client_dir(
+            exp_folder, cli.name, population.name
+        )
+        client_config = os.path.join(photo_client_dir, "client_config.json")
+        agents_file = os.path.join(photo_client_dir, "agents.json")
+        prompts_file = os.path.join(photo_client_dir, "prompts_ygram.json")
+
+        os.makedirs(photo_client_dir, exist_ok=True)
+        root_agents_file = os.path.join(exp_folder, f"{population.name}.json")
+        root_prompts_file = os.path.join(exp_folder, "prompts_ygram.json")
+        if os.path.exists(root_agents_file):
+            shutil.copyfile(root_agents_file, agents_file)
+        if os.path.exists(root_prompts_file):
+            shutil.copyfile(root_prompts_file, prompts_file)
+        if os.path.exists(os.path.join(exp_folder, "ray_config.temp")):
+            shutil.copyfile(
+                os.path.join(exp_folder, "ray_config.temp"),
+                os.path.join(photo_client_dir, "ray_config.temp"),
+            )
+        if os.path.exists(os.path.join(exp_folder, "ray_namespace.temp")):
+            shutil.copyfile(
+                os.path.join(exp_folder, "ray_namespace.temp"),
+                os.path.join(photo_client_dir, "ray_namespace.temp"),
+            )
+    else:
+        client_config = os.path.join(
+            exp_folder, f"client_{cli.name}-{population.name}.json"
+        )
+        agents_file = os.path.join(exp_folder, f"{population.name}.json")
+        prompts_file = os.path.join(exp_folder, "prompts.json")
 
     # Validate that required files exist
     for file_path, file_name in [
@@ -374,21 +400,16 @@ def start_hpc_client(exp, cli, population):
     runtime_config_dir = exp_folder
     if exp.platform_type == "photo_sharing":
         script_path = os.path.join(_external_repo_dir("YPhotoSharing"), "run_client.py")
-        runtime_config_dir = os.path.join(exp_folder, f"photo_runtime_{cli.name}")
-        os.makedirs(runtime_config_dir, exist_ok=True)
-        runtime_client_config = os.path.join(runtime_config_dir, "client_config.json")
-        shutil.copyfile(client_config, runtime_client_config)
-        shutil.copyfile(agents_file, os.path.join(runtime_config_dir, "agents.json"))
-        shutil.copyfile(
-            prompts_file, os.path.join(runtime_config_dir, "prompts_ygram.json")
+        runtime_config_dir = _photo_sharing_client_dir(
+            exp_folder, cli.name, population.name
         )
 
         try:
-            with open(runtime_client_config, "r", encoding="utf-8") as f:
+            with open(client_config, "r", encoding="utf-8") as f:
                 photo_cfg = json.load(f)
             photo_cfg.setdefault("agents_file", "agents.json")
             photo_cfg.setdefault("users_file", "agents.json")
-            with open(runtime_client_config, "w", encoding="utf-8") as f:
+            with open(client_config, "w", encoding="utf-8") as f:
                 json.dump(photo_cfg, f, indent=2)
         except Exception:
             pass

@@ -191,6 +191,7 @@ def test_new_experiment_form_supports_photo_sharing_platform():
     assert '"server_name": "orchestrator_server"' in crud_source
     assert '"namespace": "yphotosharing"' in crud_source
     assert '"min_to_start": 1' in crud_source
+    assert '"prompts_ygram.json"' in crud_source
     assert "experiment_details_photo.html" in data_source
 
 

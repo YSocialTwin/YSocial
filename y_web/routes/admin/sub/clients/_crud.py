@@ -80,6 +80,21 @@ PLUGIN_REGISTRY_RELATIVE_PATHS = (
 )
 
 
+def _photo_sharing_client_dir(exp_dir: str, client_name: str, population_name: str) -> str:
+    return os.path.join(exp_dir, f"client_{client_name}-{population_name}")
+
+
+def _client_config_path_for_platform(
+    exp_dir: str, exp, client_name: str, population_name: str
+) -> str:
+    if getattr(exp, "platform_type", None) == "photo_sharing":
+        return os.path.join(
+            _photo_sharing_client_dir(exp_dir, client_name, population_name),
+            "client_config.json",
+        )
+    return os.path.join(exp_dir, f"client_{client_name}-{population_name}.json")
+
+
 def _parse_agent_ext_value(value):
     if value in (None, ""):
         return None
@@ -2678,8 +2693,13 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
     )
     config["recommendations"] = {"default_limit": recommendations_default_limit}
 
-    # Save config file using standard naming pattern
-    config_filename = f"{exp_dir}{os.sep}client_{name}-{population.name}.json"
+    config_filename = _client_config_path_for_platform(
+        exp_dir, exp, name, population.name
+    )
+    if exp.platform_type == "photo_sharing":
+        os.makedirs(os.path.dirname(config_filename), exist_ok=True)
+        config["agents_file"] = "agents.json"
+        config["users_file"] = "agents.json"
     with open(config_filename, "w") as f:
         json.dump(config, f, indent=2)
 
@@ -2879,6 +2899,12 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
     with open(population_filename, "w") as f:
         json.dump(population_data, f, indent=4)
 
+    if exp.platform_type == "photo_sharing":
+        photo_client_dir = _photo_sharing_client_dir(exp_dir, name, population.name)
+        os.makedirs(photo_client_dir, exist_ok=True)
+        with open(os.path.join(photo_client_dir, "agents.json"), "w") as f:
+            json.dump(population_data, f, indent=4)
+
     # Copy prompts file into the experiment folder.
     # Photo Sharing uses the YPhotoSharing prompt filename; other HPC paths keep prompts.json.
     prompts_dest = (
@@ -2887,7 +2913,19 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
         else f"{exp_dir}{os.sep}prompts.json"
     )
 
-    if exp.platform_type in {"microblogging", "photo_sharing"}:
+    if exp.platform_type == "photo_sharing":
+        prompts_src = get_resource_path(
+            os.path.join("data_schema", "prompts_ygram.json")
+        )
+        shutil.copyfile(prompts_src, prompts_dest)
+        shutil.copyfile(
+            prompts_src,
+            os.path.join(
+                _photo_sharing_client_dir(exp_dir, name, population.name),
+                "prompts_ygram.json",
+            ),
+        )
+    elif exp.platform_type == "microblogging":
         prompts_src = get_resource_path(os.path.join("data_schema", "prompts_hpc.json"))
         shutil.copyfile(prompts_src, prompts_dest)
     elif exp.platform_type == "forum":

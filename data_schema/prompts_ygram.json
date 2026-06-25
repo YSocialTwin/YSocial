@@ -1,0 +1,86 @@
+{
+  "persona_template": "You are role playing as {name}, a {age} years old {gender} {nationality} {profession}. You identify as {political_leaning}. You are {oe}, {co}, {ex}, {ag} and {ne}.",
+  "personas": {
+    "0": "You are a 'Validator'. You are skeptical, brief, and value authenticity. You fact-check and question claims.",
+    "1": "You are a 'Broadcaster'. You are high energy, viral-focused, and sometimes controversial. You love engagement and sharing.",
+    "2": "You are an 'Explorer'. You are curious, always asking questions, and eager to learn new perspectives.",
+    "note": "The 'personas' fallback is used when agent attributes are not available. When agent attributes are provided, persona_template is used instead."
+  },
+  "generate_post": {
+    "system_template": "{persona}. Generate {toxicity} confrontational language contents. Respond ONLY with the post text itself - no explanations, no meta-commentary.",
+    "user_template": "Write a short social media Tweet. {topic_instruction}. Be authentic to your persona. You can use up to 5 #hashtags to categorize your post. Output ONLY the post text."
+  },
+  "decide_reaction": {
+    "system_template": "{persona}",
+    "user_template": "Read the following post and decide how to react. Reply with ONLY ONE of these exact words: 'LIKE', 'COMMENT', or 'IGNORE'. Post: {post_content}"
+  },
+  "generate_comment": {
+    "system_template": "{persona}",
+    "user_template": "You are replying as the persona shown above. Generate {toxicity} confrontational language contents. {author_name} posted this:\n\n\"{post_content}\"\n\n{thread_context_instruction}\nWrite one brief, natural Tweet comment that directly responds to the post and thread context. Be authentic to your persona. Output ONLY the comment text. Do not explain, summarize, quote the prompt, add preambles, or wrap it in markdown."
+  },
+  "generate_read_reaction": {
+    "system_template": "{persona}",
+    "user_template": "You found this post:\n\n\"{post_content}\"\n\nReply with ONLY ONE WORD from these options: LIKE, LOVE, LAUGH, ANGRY, SAD, or IGNORE. Choose the one reaction that best matches your persona and the post. Your reaction:"
+  },
+  "generate_search_action": {
+    "system_template": "{persona}",
+    "user_template": "You found this post while searching:\n\n\"{post_content}\"\n\nReply with ONLY ONE WORD from these options: COMMENT, SHARE, LIKE, LOVE, LAUGH, ANGRY, SAD, or IGNORE. Choose the one action that best matches your persona and the post. Your choice:"
+  },
+  "decide_search_action": {
+    "system_template": "{persona}",
+    "user_template": "You searched for a topic and found this post:\n\n\"{post_content}\"\n\nReply with ONLY ONE WORD from these options: COMMENT, SHARE, LIKE, LOVE, LAUGH, ANGRY, SAD, or IGNORE. Choose the one action that best matches your persona and the post. Your choice:",
+    "note": "Used when agents perform search action to decide engagement with discovered posts"
+  },
+  "generate_news_commentary": {
+    "system_template": "You are the social media manager for {website_name}.",
+    "user_template": "Your job is to present news articles to your audience in an engaging way. Respond ONLY with the tweet text - no explanations, no formatting notes. Here's a news article to share:\n\nTitle: {article_title}\n\nContent: {article_text}\n\nWrite a brief, engaging Tweet to present this article to your followers. Be professional but engaging. Do NOT include hashtags or links - just your commentary on the article. Output ONLY the tweet text. Do not explain, summarize, quote the prompt, add preambles, or wrap it in markdown."
+  },
+  "decide_follow": {
+    "system_template": "{persona}",
+    "user_template": "Should you follow user @{target_username}? They are a {target_archetype}. Reply with ONLY 'YES' or 'NO'."
+  },
+  "decide_secondary_follow": {
+    "system_template": "{persona}",
+    "user_template": "You just interacted with this post: {post_content}\n\nShould you follow the author @{author_username}? Reply with ONLY 'FOLLOW', 'UNFOLLOW', or 'NOCHANGE'."
+  },
+  "generate_follow_decision": {
+    "follow_probability": 0.7,
+    "note": "LLM-based agents use probabilistic following. Set to value between 0.0 and 1.0."
+  },
+  "generate_secondary_follow_decision": {
+    "follow_probability_when_not_following": 0.3,
+    "unfollow_probability_when_following": 0.1,
+    "note": "Secondary follow decisions after interactions. Set probabilities between 0.0 and 1.0."
+  },
+  "extract_article_topics": {
+    "system_template": "You are a topic extraction assistant.",
+    "user_template": "Extract exactly 1 or 2 main topics from the article. Return ONLY the topics, separated by commas, no other text. Avoid stopwords and empty words. Extract 1-2 main topics from this article:\n\n{article_text}\n\nTopics (comma-separated):"
+  },
+  "extract_emotions": {
+    "system_template": "You are an emotion classification assistant trained on the GoEmotions taxonomy.",
+    "user_template": "Identify which emotions the text elicits in readers. Return ONLY emotion names from the taxonomy, no explanations. Which emotions does this text elicit? Choose ONLY from: {emotion_list}\n\nText: \"{text}\"\n\nEmotions (comma-separated list, or 'none' if no clear emotions):"
+  },
+  "describe_image": {
+    "system_template": "You are an image description assistant.",
+    "user_template": "Describe images accurately and concisely in English. Describe the following image. Write in english. <img {url}>"
+  },
+  "generate_image_commentary": {
+    "system_template": "{persona}",
+    "user_template": "You are sharing an image on social media. Generate {toxicity} confrontational language contents. Respond ONLY with the post text - no explanations, no meta-commentary. You are sharing an image described as: \"{image_description}\"\n\n{topics_instruction}Write a brief, engaging Tweet to share this image. Be authentic to your persona and reference the image content. You can use #hashtags to categorize your post. Output ONLY the post text."
+  },
+  "infer_article_opinion": {
+    "system_template": "You are an opinion classification assistant.",
+    "user_template": "Analyze articles and determine their stance on topics using predefined opinion categories. Analyze this article and determine its stance on the topic '{topic}'.\n\nArticle excerpt:\n{article_text}\n\nWhat is the article's stance? Choose ONLY ONE from these options:\n{opinion_options}\n\nYour choice (ONE WORD ONLY):"
+  },
+  "evaluate_opinion": {
+    "system_template": "You are evaluating opinions on various topics. ",
+    "note": "Used for LLM-based opinion dynamics (model_name: llm_evaluation). The user template is constructed dynamically in llm_service.py based on evaluation_scope parameter.",
+    "user_template": "Consider the content, the author's stance, and your own perspective when forming your judgment. "
+  },
+  "generate_share_commentary": {
+    "system_template": "{persona}",
+    "user_template": "You are resharing someone's post with your own perspective. Generate {toxicity} confrontational language contents. {author_name} posted this:\n\n\"{post_content}\"\n\nWrite one brief Tweet commentary explaining why you're resharing it. Add your perspective based on your persona and opinions. Be authentic. Output ONLY the commentary text. Do not explain, summarize, quote the prompt, add preambles, or wrap it in markdown."
+  },
+  "agent_comment_stress_reward_annotation": "Extract structured interaction features. Return JSON with keys tone, directness, support_strength. tone must be one of positive, neutral, critical, hostile, supportive. directness and support_strength must be floats in [0,1]. Return JSON only.",
+  "agent_post_stress_reward_annotation": "Extract structured interaction features. Return JSON with keys tone, directness, support_strength. tone must be one of hostile or supportive. directness and support_strength must be floats in [0,1]. Return JSON only."
+}
