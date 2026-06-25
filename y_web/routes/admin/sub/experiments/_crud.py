@@ -1832,6 +1832,58 @@ def generate_hpc_config(
     return config
 
 
+def generate_photo_sharing_config(
+    exp_name,
+    db_type,
+    db_uri,
+    topics,
+    data_path,
+    db_config_dict=None,
+    is_remote=False,
+):
+    """Generate config file for the YPhotoSharing simulator type."""
+    database_config = {
+        "type": db_type,
+    }
+
+    if db_type == "sqlite":
+        database_config["sqlite"] = {"filename": "yphotosharing.db"}
+    elif db_type == "postgresql":
+        if db_config_dict:
+            database_config["postgresql"] = db_config_dict
+        else:
+            database_config["postgresql"] = {
+                "host": "localhost",
+                "port": 5432,
+                "database": "yphotosharing",
+                "username": "postgres",
+                "password": "password",
+            }
+
+    config = {
+        "server_name": "orchestrator_server",
+        "namespace": "yphotosharing",
+        "min_to_start": 1,
+        "timeout_seconds": 60,
+        "database": database_config,
+        "simulation": {
+            "num_rounds": 48,
+            "discussion_topics": [t.strip() for t in topics if t.strip()],
+        },
+        "logging": {
+            "enable_server_log": True,
+            "enable_console_log": True,
+        },
+        "platform_type": "photo_sharing",
+        "database_uri": db_uri,
+        "data_path": data_path,
+        "is_remote": is_remote,
+        "experiment_name": exp_name,
+    }
+
+    return config
+
+
 @experiments.route("/admin/create_experiment", methods=["POST", "GET"])
 @login_required
 def create_experiment():
@@ -1990,11 +2042,11 @@ def create_experiment():
     db_uri = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}database_server.db"
 
     # copy the clean database to the experiments folder
-    if platform_type == "microblogging" or platform_type == "forum":
+    if platform_type in {"microblogging", "forum", "photo_sharing"}:
         if db_type == "sqlite":
             # Only Standard experiments get a pre-created database
             # HPC experiments: database is created automatically by the server on first startup
-            if simulator_type == "Standard":
+            if simulator_type == "Standard" and platform_type != "photo_sharing":
                 clean_db_source = get_resource_path(
                     os.path.join("data_schema", "database_clean_server.db")
                 )
@@ -2124,30 +2176,41 @@ def create_experiment():
                 "password": parsed_uri.password or "password",
             }
 
-        config = generate_hpc_config(
-            exp_name=exp_name,
-            platform_type=platform_type,
-            db_type=db_type,
-            db_uri=db_uri,
-            redis_enabled=redis_enabled,
-            redis_host=redis_host,
-            redis_port=redis_port,
-            redis_password=redis_password,
-            redis_sliding_window_days=redis_sliding_window_days,
-            perspective_api=(
-                perspective_api
-                if perspective_api and len(perspective_api) > 0
-                else None
-            ),
-            toxicity_annotation=toxicity_annotation,
-            sentiment_annotation=sentiment_annotation,
-            emotion_annotation=emotion_annotation,
-            opinion_dynamics_enabled=opinion_dynamics_enabled,
-            topics=topics,
-            data_path=data_path,
-            db_config_dict=db_config_dict,
-            is_remote=is_remote,
-        )
+        if platform_type == "photo_sharing":
+            config = generate_photo_sharing_config(
+                exp_name=exp_name,
+                db_type=db_type,
+                db_uri=db_uri,
+                topics=topics,
+                data_path=data_path,
+                db_config_dict=db_config_dict,
+                is_remote=is_remote,
+            )
+        else:
+            config = generate_hpc_config(
+                exp_name=exp_name,
+                platform_type=platform_type,
+                db_type=db_type,
+                db_uri=db_uri,
+                redis_enabled=redis_enabled,
+                redis_host=redis_host,
+                redis_port=redis_port,
+                redis_password=redis_password,
+                redis_sliding_window_days=redis_sliding_window_days,
+                perspective_api=(
+                    perspective_api
+                    if perspective_api and len(perspective_api) > 0
+                    else None
+                ),
+                toxicity_annotation=toxicity_annotation,
+                sentiment_annotation=sentiment_annotation,
+                emotion_annotation=emotion_annotation,
+                opinion_dynamics_enabled=opinion_dynamics_enabled,
+                topics=topics,
+                data_path=data_path,
+                db_config_dict=db_config_dict,
+                is_remote=is_remote,
+            )
     else:
         # Standard simulator
         config = generate_standard_config(

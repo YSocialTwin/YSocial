@@ -187,6 +187,10 @@ def test_new_experiment_form_supports_photo_sharing_platform():
     assert "photoSharingAvailable" in settings_js
     assert 'platform_type == "photo_sharing"' in crud_source
     assert 'simulator_type = "HPC"' in crud_source
+    assert "generate_photo_sharing_config(" in crud_source
+    assert '"server_name": "orchestrator_server"' in crud_source
+    assert '"namespace": "yphotosharing"' in crud_source
+    assert '"min_to_start": 1' in crud_source
     assert "experiment_details_photo.html" in data_source
 
 
