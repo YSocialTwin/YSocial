@@ -2748,16 +2748,17 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
     population_data = {"agents": []}
     feature_map = summarize_agent_custom_features_bulk([agent.id for agent in agents])
     agent_ext_rows = (
-        Agent_Ext.query.filter(Agent_Ext.agent_id.in_([agent.id for agent in agents]))
-        .all()
+        Agent_Ext.query.filter(
+            Agent_Ext.agent_id.in_([agent.id for agent in agents])
+        ).all()
         if agents
         else []
     )
     agent_ext_map: dict[int, dict[str, str]] = {}
     for entry in agent_ext_rows:
-        agent_ext_map.setdefault(entry.agent_id, {})[entry.feature_name] = (
-            entry.feature_value
-        )
+        agent_ext_map.setdefault(entry.agent_id, {})[
+            entry.feature_name
+        ] = entry.feature_value
     for idx, agent in enumerate(agents):
         custom_prompt = Agent_Profile.query.filter_by(agent_id=agent.id).first()
         custom_prompt = custom_prompt.profile if custom_prompt else None
@@ -4090,16 +4091,17 @@ def _create_standard_client_internal():
     res = {"agents": []}
     feature_map = summarize_agent_custom_features_bulk([agent.id for agent in agents])
     agent_ext_rows = (
-        Agent_Ext.query.filter(Agent_Ext.agent_id.in_([agent.id for agent in agents]))
-        .all()
+        Agent_Ext.query.filter(
+            Agent_Ext.agent_id.in_([agent.id for agent in agents])
+        ).all()
         if agents
         else []
     )
     agent_ext_map: dict[int, dict[str, str]] = {}
     for entry in agent_ext_rows:
-        agent_ext_map.setdefault(entry.agent_id, {})[entry.feature_name] = (
-            entry.feature_value
-        )
+        agent_ext_map.setdefault(entry.agent_id, {})[
+            entry.feature_name
+        ] = entry.feature_value
     for idx, a in enumerate(agents):
         custom_prompt = Agent_Profile.query.filter_by(agent_id=a.id).first()
 

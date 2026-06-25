@@ -495,9 +495,11 @@ def generate_population(
                     Agent_Ext(
                         agent_id=agent.id,
                         feature_name=feature_name,
-                        feature_value=json.dumps(feature_value)
-                        if isinstance(feature_value, (list, dict, bool))
-                        else str(feature_value),
+                        feature_value=(
+                            json.dumps(feature_value)
+                            if isinstance(feature_value, (list, dict, bool))
+                            else str(feature_value)
+                        ),
                     )
                 )
 
