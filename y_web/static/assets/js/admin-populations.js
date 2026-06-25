@@ -20,6 +20,11 @@ var AdminPopulations = (function() {
   };
 
   const popDetails = window.YS_DATA_POP_DETAILS;
+  const platformLabel = (platformType) => {
+      if (platformType === 'forum') return 'Forum';
+      if (platformType === 'photo_sharing') return 'Photo Sharing';
+      return 'Microblogging';
+  };
 
   if (popDetails) {
   createChartIfPresent("ages", {
@@ -422,7 +427,11 @@ var AdminPopulations = (function() {
     columns: [
       { id: 'id', hidden: true },
       { id: 'name', name: 'Name', attributes: editableCellAttributes },
-      { id: 'pop_type', name: 'Type' },
+      {
+        id: 'pop_type',
+        name: 'Type',
+        formatter: (cell) => platformLabel(cell),
+      },
       { id: "size", name: 'Agents' },
       { 
         id: 'education', 
@@ -650,7 +659,7 @@ var AdminPopulations = (function() {
                data-pop-size="${pop.size}"
                data-pop-type="${pop.username_type}">
               <span class="merge-population-name">${pop.name}</span>
-              <span class="merge-population-size">${pop.size} agents, ${pop.username_type}</span>
+              <span class="merge-population-size">${pop.size} agents, ${platformLabel(pop.username_type)}</span>
           </div>
       `).join('');
 
@@ -672,7 +681,7 @@ var AdminPopulations = (function() {
       container.innerHTML = mergeSelectedPopulations.map(pop => `
           <div class="merge-population-item">
               <span class="merge-population-name">${pop.name}</span>
-              <span class="merge-population-size">${pop.size} agents, ${pop.username_type}</span>
+              <span class="merge-population-size">${pop.size} agents, ${platformLabel(pop.username_type)}</span>
               <button type="button" class="merge-remove-btn" onclick="removeMergePopulation(${pop.id})">×</button>
           </div>
       `).join('');

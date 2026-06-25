@@ -80,6 +80,49 @@ PLUGIN_REGISTRY_RELATIVE_PATHS = (
 )
 
 
+def _parse_agent_ext_value(value):
+    if value in (None, ""):
+        return None
+    if isinstance(value, str):
+        stripped = value.strip()
+        if not stripped:
+            return None
+        try:
+            return json.loads(stripped)
+        except Exception:
+            return value
+    return value
+
+
+def _photo_sharing_payload_from_agent(agent, ext_map):
+    photo_payload = {"cover_image": agent.cover_image or random_cover_image_url()}
+    for feature_name in ("favorite_filters", "story_visibility", "creator_tier"):
+        parsed = _parse_agent_ext_value(ext_map.get(feature_name))
+        if parsed not in (None, ""):
+            photo_payload[feature_name] = parsed
+    return photo_payload
+
+
+def _apply_photo_sharing_agent_fields(agent_payload, agent, ext_map):
+    bio = _parse_agent_ext_value(ext_map.get("bio"))
+    if bio not in (None, ""):
+        agent_payload["bio"] = bio
+
+    is_private = _parse_agent_ext_value(ext_map.get("is_private"))
+    if is_private is not None:
+        agent_payload["is_private"] = bool(is_private)
+
+    is_verified = _parse_agent_ext_value(ext_map.get("is_verified"))
+    if is_verified is not None:
+        agent_payload["is_verified"] = bool(is_verified)
+
+    attention_budget = _parse_agent_ext_value(ext_map.get("attention_budget"))
+    if attention_budget not in (None, ""):
+        agent_payload["attention_budget"] = attention_budget
+
+    agent_payload["photo_sharing"] = _photo_sharing_payload_from_agent(agent, ext_map)
+
+
 def _custom_agent_slug(name: str) -> str:
     cleaned = re.sub(r"[^a-z0-9]+", " ", (name or "").lower()).strip()
     tokens = [token for token in cleaned.split() if token and token != "agent"]
@@ -2704,6 +2747,17 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
 
     population_data = {"agents": []}
     feature_map = summarize_agent_custom_features_bulk([agent.id for agent in agents])
+    agent_ext_rows = (
+        Agent_Ext.query.filter(Agent_Ext.agent_id.in_([agent.id for agent in agents]))
+        .all()
+        if agents
+        else []
+    )
+    agent_ext_map: dict[int, dict[str, str]] = {}
+    for entry in agent_ext_rows:
+        agent_ext_map.setdefault(entry.agent_id, {})[entry.feature_name] = (
+            entry.feature_value
+        )
     for idx, agent in enumerate(agents):
         custom_prompt = Agent_Profile.query.filter_by(agent_id=agent.id).first()
         custom_prompt = custom_prompt.profile if custom_prompt else None
@@ -2760,6 +2814,10 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
         _apply_structured_features_to_agent_payload(
             agent_data, feature_map.get(agent.id, {})
         )
+        if exp.platform_type == "photo_sharing":
+            _apply_photo_sharing_agent_fields(
+                agent_data, agent, agent_ext_map.get(agent.id, {})
+            )
         population_data["agents"].append(agent_data)
 
     # Add pages to population data
@@ -4031,6 +4089,17 @@ def _create_standard_client_internal():
 
     res = {"agents": []}
     feature_map = summarize_agent_custom_features_bulk([agent.id for agent in agents])
+    agent_ext_rows = (
+        Agent_Ext.query.filter(Agent_Ext.agent_id.in_([agent.id for agent in agents]))
+        .all()
+        if agents
+        else []
+    )
+    agent_ext_map: dict[int, dict[str, str]] = {}
+    for entry in agent_ext_rows:
+        agent_ext_map.setdefault(entry.agent_id, {})[entry.feature_name] = (
+            entry.feature_value
+        )
     for idx, a in enumerate(agents):
         custom_prompt = Agent_Profile.query.filter_by(agent_id=a.id).first()
 
@@ -4084,6 +4153,10 @@ def _create_standard_client_internal():
         _apply_structured_features_to_agent_payload(
             agent_payload, feature_map.get(a.id, {})
         )
+        if exp.platform_type == "photo_sharing":
+            _apply_photo_sharing_agent_fields(
+                agent_payload, a, agent_ext_map.get(a.id, {})
+            )
         res["agents"].append(agent_payload)
 
     # get the pages associated with the population

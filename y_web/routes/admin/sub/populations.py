@@ -20,6 +20,7 @@ from flask_login import current_user, login_required
 
 from y_web import db
 from y_web.src.agents.custom_features import (
+    agent_ext_entries_from_population_agent_payload,
     feature_entries_from_population_agent_payload,
     replace_agent_custom_features,
     summarize_agent_custom_features_bulk,
@@ -1071,6 +1072,8 @@ def upload_population():
     db.session.add(population)
     db.session.commit()
 
+    agent_populations = []
+    agent_ext_rows = []
     # add the agents to the database
     for a in data.get("agents", []):
         # check if the agent already exists
@@ -1120,17 +1123,39 @@ def upload_population():
             if feature_entries:
                 replace_agent_custom_features(agent.id, feature_entries)
                 db.session.commit()
+            Agent_Ext.query.filter_by(agent_id=agent.id).delete()
+            for ext_entry in agent_ext_entries_from_population_agent_payload(a):
+                agent_ext_rows.append(
+                    Agent_Ext(
+                        agent_id=agent.id,
+                        feature_name=ext_entry["feature_name"],
+                        feature_value=ext_entry["feature_value"],
+                    )
+                )
         else:
             feature_entries = feature_entries_from_population_agent_payload(a)
             if feature_entries:
                 replace_agent_custom_features(agent.id, feature_entries)
                 db.session.commit()
+            Agent_Ext.query.filter_by(agent_id=agent.id).delete()
+            for ext_entry in agent_ext_entries_from_population_agent_payload(a):
+                agent_ext_rows.append(
+                    Agent_Ext(
+                        agent_id=agent.id,
+                        feature_name=ext_entry["feature_name"],
+                        feature_value=ext_entry["feature_value"],
+                    )
+                )
 
-        agent_population = Agent_Population(
-            agent_id=agent.id, population_id=population.id
+        agent_populations.append(
+            Agent_Population(agent_id=agent.id, population_id=population.id)
         )
-        db.session.add(agent_population)
-        db.session.commit()
+
+    if agent_ext_rows:
+        db.session.bulk_save_objects(agent_ext_rows)
+    if agent_populations:
+        db.session.bulk_save_objects(agent_populations)
+    db.session.commit()
 
     # add the pages to the database
     for p in data.get("pages", []):

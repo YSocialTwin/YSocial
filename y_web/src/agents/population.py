@@ -20,6 +20,7 @@ from y_web.src.content.cover_images import random_cover_image_url
 from y_web.src.models import (
     AgeClass,
     Agent,
+    Agent_Ext,
     Agent_Population,
     Education,
     Leanings,
@@ -449,14 +450,61 @@ def generate_population(
 
     # Now create Agent_Population relationships in bulk
     agent_populations_to_insert = []
+    agent_exts_to_insert = []
     for agent in agents_to_insert:
         agent_population = Agent_Population(
             agent_id=agent.id, population_id=population.id
         )
         agent_populations_to_insert.append(agent_population)
 
+        if getattr(population, "username_type", "microblogging") == "photo_sharing":
+            favorite_filters = random.sample(
+                ["warm", "vintage", "mono", "grain", "bright", "clean"],
+                k=random.randint(0, 3),
+            )
+            story_visibility = random.choices(
+                ["public", "followers", "private"], weights=[20, 65, 15], k=1
+            )[0]
+            creator_tier = random.choices(
+                ["standard", "pro", "influencer"], weights=[60, 25, 15], k=1
+            )[0]
+            bio_text = " | ".join(
+                [
+                    part
+                    for part in [
+                        agent.profession,
+                        agent.nationality,
+                        agent.language,
+                    ]
+                    if part
+                ]
+            )
+            ext_values = [
+                ("bio", bio_text),
+                ("is_private", random.random() < 0.2),
+                ("is_verified", random.random() < 0.1),
+                ("attention_budget", 100),
+                ("favorite_filters", favorite_filters),
+                ("story_visibility", story_visibility),
+                ("creator_tier", creator_tier),
+            ]
+            for feature_name, feature_value in ext_values:
+                if feature_value in (None, "", []):
+                    continue
+                agent_exts_to_insert.append(
+                    Agent_Ext(
+                        agent_id=agent.id,
+                        feature_name=feature_name,
+                        feature_value=json.dumps(feature_value)
+                        if isinstance(feature_value, (list, dict, bool))
+                        else str(feature_value),
+                    )
+                )
+
     # Bulk insert all agent-population relationships
     db.session.bulk_save_objects(agent_populations_to_insert)
+    if agent_exts_to_insert:
+        db.session.bulk_save_objects(agent_exts_to_insert)
     db.session.commit()
 
 
