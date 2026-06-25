@@ -7,11 +7,11 @@ extracted from y_web.utils.external_processes.
 
 import json
 import os
+import shutil
 import signal
 import subprocess
 import sys
 import time
-import shutil
 from copy import deepcopy
 from pathlib import Path
 from typing import Optional

@@ -249,7 +249,9 @@ def test_start_hpc_client_clears_stale_recycled_pid_and_restarts(monkeypatch):
     assert mock_cli.pid == 88888
 
 
-def test_start_hpc_client_photo_sharing_branch_uses_shutil_copyfile(monkeypatch, tmp_path):
+def test_start_hpc_client_photo_sharing_branch_uses_shutil_copyfile(
+    monkeypatch, tmp_path
+):
     """Photo-sharing client startup should reach the copyfile branch without NameError."""
     from y_web.src.hpc.client import start_hpc_client
 
@@ -299,9 +301,13 @@ def test_start_hpc_client_photo_sharing_branch_uses_shutil_copyfile(monkeypatch,
         "y_web.src.hpc.client._sync_stress_reward_into_hpc_client_config",
         lambda exp_folder, client_config_path: None,
     )
-    monkeypatch.setattr("y_web.src.simulation.server.detect_env_handler", lambda: "python")
+    monkeypatch.setattr(
+        "y_web.src.simulation.server.detect_env_handler", lambda: "python"
+    )
     monkeypatch.setattr("y_web.src.hpc.client.build_subprocess_env", lambda: {})
-    monkeypatch.setattr("y_web.src.hpc.client.subprocess.Popen", lambda *a, **k: mock_process)
+    monkeypatch.setattr(
+        "y_web.src.hpc.client.subprocess.Popen", lambda *a, **k: mock_process
+    )
     monkeypatch.setattr("y_web.src.hpc.client.db.session.commit", lambda: None)
     monkeypatch.setattr("y_web.src.hpc.client.shutil.copyfile", lambda *a, **k: None)
 
