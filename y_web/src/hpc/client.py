@@ -138,6 +138,7 @@ def _build_hpc_runtime_client_id(exp_folder: str, client_name: str) -> str:
         folder_name = Path(str(exp_folder)).name
     return f"{folder_name}:{str(client_name).strip()}"
 
+
 def _normalize_photo_sharing_client_config(
     exp_folder: str, client_name: str, population_name: str, client_config_path: str
 ) -> None:
