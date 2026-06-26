@@ -10,9 +10,11 @@ from flask import current_app
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import sessionmaker
 
 from y_web import db
-from y_web.src.models import Exps
+from y_web.src.models import Exps, User_mgmt
+from y_web.src.experiment.schema import ensure_experiment_schema_for_uri
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 
@@ -99,6 +101,88 @@ def _experiment_engine_uri(experiment: Exps) -> Optional[str]:
         return f"{prefix}/{experiment.db_name}"
 
     return None
+
+
+def get_experiment_engine_uri(experiment: Exps) -> Optional[str]:
+    """
+    Public wrapper returning the database URI for an experiment.
+    """
+    return _experiment_engine_uri(experiment)
+
+
+def open_experiment_session(experiment: Exps):
+    """
+    Open an isolated SQLAlchemy session bound to the experiment database.
+
+    This avoids mutating Flask-SQLAlchemy's global bind map and guarantees the
+    schema exists before callers issue ORM queries or inserts.
+    """
+    uri = _experiment_engine_uri(experiment)
+    if not uri:
+        return None, None
+
+    ensure_experiment_schema_for_uri(uri)
+    engine = create_engine(uri, pool_pre_ping=True)
+    session = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)()
+    return session, engine
+
+
+def ensure_experiment_user(
+    experiment: Exps,
+    *,
+    user_id,
+    username: str,
+    email: str,
+    password: str,
+    cover_image: str = "",
+    user_type: str = "user",
+    leaning: str = "neutral",
+    age: int = 0,
+    recsys_type: str = "default",
+    frecsys_type: str = "default",
+    language: str = "en",
+    round_actions: int = 1,
+    toxicity: str = "no",
+    joined_on: int = 0,
+):
+    """
+    Ensure a participant row exists in the experiment database.
+
+    Returns a tuple ``(user, created)`` where ``user`` is the ORM instance
+    loaded from the experiment database session.
+    """
+    session, engine = open_experiment_session(experiment)
+    if session is None or engine is None:
+        return None, False
+
+    try:
+        user = session.query(User_mgmt).filter_by(username=username).first()
+        if user is not None:
+            return user, False
+
+        new_user = User_mgmt(
+            id=user_id,
+            email=email,
+            username=username,
+            password=password,
+            user_type=user_type,
+            leaning=leaning,
+            age=age,
+            recsys_type=recsys_type,
+            language=language,
+            frecsys_type=frecsys_type,
+            round_actions=round_actions,
+            toxicity=toxicity,
+            joined_on=joined_on,
+            cover_image=cover_image,
+        )
+        session.add(new_user)
+        session.commit()
+        session.refresh(new_user)
+        return new_user, True
+    finally:
+        session.close()
+        engine.dispose()
 
 
 def _fetch_round_from_engine(engine: Engine) -> Optional[Dict[str, int]]:

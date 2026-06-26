@@ -42,6 +42,7 @@ from y_web.src.experiment.access import (
     user_can_manage_experiment,
     user_can_view_experiment,
 )
+from y_web.src.experiment.helpers import ensure_experiment_user
 from y_web.src.external_runtime import runtime_spec
 from y_web.src.hpc.population_backup import restore_population_for_hpc_client
 from y_web.src.models import (
@@ -587,6 +588,8 @@ def join_experiment(exp_id):
     Returns:
         Redirect to experiment feed
     """
+    current_username = str(current_user.username)
+
     exp = Exps.query.filter_by(idexp=exp_id, status=1).first()
     if exp is None:
         flash("Experiment not found or not active.")
@@ -597,33 +600,29 @@ def join_experiment(exp_id):
         flash("You are not allowed to access this experiment.", "error")
         return redirect("/admin/experiments")
 
-    # Get user id - need to check in the experiment database
-    from y_web.src.experiment.context import register_experiment_database
-
-    bind_key = f"db_exp_{exp_id}"
-
-    # Ensure the experiment database is registered
-    if bind_key not in current_app.config["SQLALCHEMY_BINDS"]:
-        register_experiment_database(current_app, exp_id, exp.db_name)
-
-    # Temporarily switch to experiment database to get user
-    old_bind = current_app.config["SQLALCHEMY_BINDS"]["db_exp"]
-    current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = current_app.config[
-        "SQLALCHEMY_BINDS"
-    ][bind_key]
-
-    try:
-        user = (
-            db.session.query(User_mgmt)
-            .filter_by(username=current_user.username)
-            .first()
+    user_id = current_user.id
+    user_email = str(getattr(current_user, "email", "") or "")
+    user_password = str(getattr(current_user, "password", "") or "")
+    user_cover_image = random_cover_image_url()
+    user_record, created = ensure_experiment_user(
+        exp,
+        user_id=user_id,
+        username=current_username,
+        email=user_email,
+        password=user_password,
+        cover_image=user_cover_image,
+        joined_on=int(time.time()),
+    )
+    if user_record is None:
+        flash("Unable to prepare your experiment profile.")
+        return redirect("/admin/experiments")
+    if created:
+        current_app.logger.info(
+            "Created experiment participant %s for experiment %s",
+            current_username,
+            exp_id,
         )
-        if not user:
-            flash("User not found in experiment database.")
-            return redirect("/admin/experiments")
-        user_id = user.id
-    finally:
-        current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = old_bind
+    user_id = user_record.id
 
     # Route to the appropriate feed based on platform type
     if exp.platform_type == "microblogging":
@@ -631,7 +630,7 @@ def join_experiment(exp_id):
     elif exp.platform_type == "forum":
         return redirect(f"/{exp_id}/rfeed/{user_id}/feed/rf/1")
     elif exp.platform_type == "photo_sharing":
-        return redirect(f"/{exp_id}/photo/feed/{user_id}/feed/rf/1")
+        return redirect(f"/{exp_id}/photo/feed/all/feed/rf/1")
     else:
         flash("Unknown platform type for this experiment.")
         return redirect("/admin/experiments")
@@ -652,7 +651,10 @@ def change_active_experiment(exp_id):
         Redirect to settings page
     """
     check_privileges(current_user.username)
-    uname = current_user.username
+    uname = str(current_user.username)
+    admin_user_id = current_user.id
+    admin_user_email = current_user.email
+    admin_user_password = current_user.password
 
     exp = Exps.query.filter_by(idexp=exp_id).first()
 
@@ -681,105 +683,41 @@ def change_active_experiment(exp_id):
 
         register_experiment_database(current_app, exp_id, exp.db_name)
 
-        # Ensure user exists in the experiment database
-        # For HPC experiments with SQLite: database is created by server on first startup
-        # We skip user registration if database doesn't exist yet
-        # We need to switch to the correct bind temporarily
-        bind_key = f"db_exp_{exp_id}"
-
-        # For HPC experiments with SQLite, check if database exists
-        skip_user_registration = False
-        if exp.simulator_type == "HPC":
-            # Check database type
-            if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("sqlite"):
-                # Check if the SQLite database file exists
-                from y_web.src.system.path_utils import get_writable_path
-
-                db_path = get_writable_path(os.path.join("y_web", exp.db_name))
-                if not os.path.exists(db_path):
-                    skip_user_registration = True
-                    current_app.logger.info(
-                        f"HPC experiment database doesn't exist yet for experiment {exp_id}. "
-                        f"User will be added when server creates database on first startup."
-                    )
-
-        if not skip_user_registration:
-            # Check if user exists in this experiment's database
-            # Note: User_mgmt uses db_exp bind, so we need to query with bind
-            with db.session.no_autoflush:
-                # Temporarily set db_exp to this experiment
-                old_bind = current_app.config["SQLALCHEMY_BINDS"]["db_exp"]
-                current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = current_app.config[
-                    "SQLALCHEMY_BINDS"
-                ][bind_key]
-
-                try:
-                    user = (
-                        db.session.query(User_mgmt)
-                        .filter_by(username=current_user.username)
-                        .first()
-                    )
-
-                    if user is None:
-                        # For HPC experiments, we need to use UUID strings as IDs
-                        # Standard experiments use integer IDs with auto-increment
-                        if exp.simulator_type == "HPC":
-                            # Generate a UUID string for HPC user ID
-                            user_id = str(uuid.uuid4())
-                            current_app.logger.info(
-                                f"Assigning HPC user UUID {user_id} to {current_user.username} for experiment {exp_id}"
-                            )
-                        else:
-                            # For Standard experiments, use the admin user's ID (auto-increment behavior)
-                            user_id = current_user.id
-
-                        try:
-                            # Set recsys_type based on experiment type
-                            # HPC experiments use rchrono, Standard use default
-                            content_recsys = (
-                                "rchrono" if exp.simulator_type == "HPC" else "default"
-                            )
-
-                            new_user = User_mgmt(
-                                id=user_id,
-                                email=current_user.email,
-                                username=current_user.username,
-                                password=current_user.password,
-                                user_type="user",
-                                leaning="neutral",
-                                age=0,
-                                recsys_type=content_recsys,
-                                language="en",
-                                frecsys_type="default",
-                                round_actions=1,
-                                toxicity="no",
-                                joined_on=int(time.time()),
-                                cover_image=random_cover_image_url(),
-                            )
-                            db.session.add(new_user)
-                            db.session.commit()
-                        except Exception as e:
-                            db.session.rollback()
-                            # If IntegrityError due to duplicate ID, log and re-raise
-                            current_app.logger.error(
-                                f"Error adding user {current_user.username} to experiment {exp_id}: {e}"
-                            )
-                            flash(
-                                f"Error activating experiment: {str(e)}. Please try again."
-                            )
-                            raise
-                finally:
-                    # Restore old bind
-                    current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = old_bind
+        participant_id = (
+            str(uuid.uuid4())
+            if exp.simulator_type == "HPC"
+            else admin_user_id
+        )
+        participant_recsys = "rchrono" if exp.simulator_type == "HPC" else "default"
+        participant, created = ensure_experiment_user(
+            exp,
+            user_id=participant_id,
+            username=uname,
+            email=admin_user_email,
+            password=admin_user_password,
+            cover_image=random_cover_image_url(),
+            recsys_type=participant_recsys,
+            frecsys_type="default",
+            joined_on=int(time.time()),
+        )
+        if participant is None:
+            flash("Unable to prepare the experiment user.")
+            return redirect(url_for("experiments.settings"))
+        if created:
+            current_app.logger.info(
+                "Created experiment participant %s for experiment %s",
+                uname,
+                exp_id,
+            )
 
         # Add user to experiment if not present
         user_exp = (
             db.session.query(User_Experiment)
-            .filter_by(user_id=current_user.id, exp_id=exp_id)
+            .filter_by(user_id=admin_user_id, exp_id=exp_id)
             .first()
         )
         if user_exp is None:
-            user_exp = User_Experiment(user_id=current_user.id, exp_id=exp_id)
+            user_exp = User_Experiment(user_id=admin_user_id, exp_id=exp_id)
             db.session.add(user_exp)
             db.session.commit()
 

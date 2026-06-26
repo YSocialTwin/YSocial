@@ -12,6 +12,7 @@ from werkzeug.security import check_password_hash
 
 from y_web import db
 from y_web.routes.auth._blueprint import auth
+from y_web.src.experiment.helpers import ensure_experiment_user
 from y_web.src.models import Admin_users, Exps, User_Experiment, User_mgmt
 
 
@@ -155,6 +156,10 @@ def select_experiment():
         flash("User not found.")
         return redirect(url_for("auth.login"))
 
+    username = str(getattr(user, "username", "") or "")
+    email = str(getattr(user, "email", "") or "")
+    password = str(getattr(user, "password", "") or "")
+
     # Verify user has access to this experiment
     user_exp = User_Experiment.query.filter_by(
         user_id=user.id, exp_id=int(exp_id)
@@ -170,47 +175,30 @@ def select_experiment():
         return redirect(url_for("auth.login"))
 
     try:
-        # Use the proper experiment context registration
-        from flask import current_app
-
-        from y_web.src.experiment.context import (
-            get_db_bind_key_for_exp,
-            register_experiment_database,
+        user_agent, _created = ensure_experiment_user(
+            exp,
+            user_id=user.id,
+            username=username,
+            email=email,
+            password=password,
+            joined_on=0,
         )
+        if not user_agent:
+            flash("User not found in experiment database.")
+            return redirect(url_for("auth.login"))
 
-        # Register the experiment database if not already registered
-        bind_key = get_db_bind_key_for_exp(int(exp_id))
-        if bind_key not in current_app.config["SQLALCHEMY_BINDS"]:
-            register_experiment_database(current_app, int(exp_id), exp.db_name)
+        login_user(user_agent, remember=remember)
 
-        # Temporarily switch to experiment database to get user
-        old_bind = current_app.config["SQLALCHEMY_BINDS"].get("db_exp")
-        current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = current_app.config[
-            "SQLALCHEMY_BINDS"
-        ][bind_key]
-
-        try:
-            user_agent = User_mgmt.query.filter_by(username=user.username).first()
-            if not user_agent:
-                flash("User not found in experiment database.")
-                return redirect(url_for("auth.login"))
-
-            login_user(user_agent, remember=remember)
-
-            # Redirect to appropriate feed
-            if exp.platform_type == "microblogging":
-                return redirect(f"/{exp.idexp}/feed/{user_agent.id}/feed/rf/1")
-            elif exp.platform_type == "forum":
-                return redirect(f"/{exp.idexp}/rfeed/{user_agent.id}/rfeed/rf/1")
-            elif exp.platform_type == "photo_sharing":
-                return redirect(f"/{exp.idexp}/photo/feed/{user_agent.id}/feed/rf/1")
-            else:
-                flash("Unknown platform type.")
-                return redirect(url_for("auth.login"))
-        finally:
-            # Restore original db_exp binding
-            if old_bind:
-                current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = old_bind
+        # Redirect to appropriate feed
+        if exp.platform_type == "microblogging":
+            return redirect(f"/{exp.idexp}/feed/{user_agent.id}/feed/rf/1")
+        elif exp.platform_type == "forum":
+            return redirect(f"/{exp.idexp}/rfeed/{user_agent.id}/rfeed/rf/1")
+        elif exp.platform_type == "photo_sharing":
+            return redirect(f"/{exp.idexp}/photo/feed/all/feed/rf/1")
+        else:
+            flash("Unknown platform type.")
+            return redirect(url_for("auth.login"))
 
     except Exception as e:
         flash(f"Error accessing experiment: {str(e)}")

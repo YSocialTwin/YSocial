@@ -272,7 +272,7 @@ def index():
             elif exp.platform_type == "forum":
                 return redirect(f"/{exp.idexp}/rfeed/{exp_user_id}/rfeed/rf/1")
             elif exp.platform_type == "photo_sharing":
-                return redirect(f"/{exp.idexp}/photo/feed/{exp_user_id}/feed/rf/1")
+                return redirect(f"/{exp.idexp}/photo/feed/all/feed/rf/1")
     return render_template("login/login.html")
 
 

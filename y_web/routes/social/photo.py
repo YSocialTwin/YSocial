@@ -15,6 +15,7 @@ from y_web.routes.social.helpers import (
     get_safe_profile_pic,
     is_admin,
 )
+from y_web.src.experiment.helpers import ensure_experiment_user
 from y_web.src.data_access import get_unanswered_mentions
 from y_web.src.models import Exps, User_mgmt
 from y_web.src.recsys.content_recsys import get_suggested_posts
@@ -87,7 +88,7 @@ def photo_feed_logged():
         return redirect("/admin/join_simulation")
 
     exp = exps[0]
-    return redirect(f"/{exp.idexp}/photo/feed/{_photo_logged_user_id()}/feed/rf/1")
+    return redirect(f"/{exp.idexp}/photo/feed/all/feed/rf/1")
 
 
 @main.get(
@@ -105,6 +106,15 @@ def photo_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         abort(404)
 
+    exp_user, _created = ensure_experiment_user(
+        exp,
+        user_id=getattr(current_user, "id", 0) or 0,
+        username=str(current_user.username),
+        email=str(getattr(current_user, "email", "") or ""),
+        password=str(getattr(current_user, "password", "") or ""),
+        joined_on=0,
+    )
+
     if page < 1:
         page = 1
 
@@ -114,21 +124,22 @@ def photo_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     if user_id == "all":
         posts, additional = get_suggested_posts("all", "", page, max_post_per_page)
     else:
-        user = User_mgmt.query.filter_by(id=user_id).first()
+        try:
+            user = User_mgmt.query.filter_by(id=user_id).first()
+            if not user:
+                user = User_mgmt.query.filter_by(
+                    username=current_user.username
+                ).first()
+        except Exception:
+            user = None
         if not user:
-            user = User_mgmt.query.filter_by(username=current_user.username).first()
-        if not user:
-            flash(
-                "User not found in experiment. Please contact administrator.", "error"
-            )
-            return redirect(url_for("main.index"))
+            return redirect(f"/{exp_id}/photo/feed/all/feed/rf/1")
         posts, additional = get_suggested_posts(
             user_id, "ReverseChrono", page, max_post_per_page
         )
         username = user.username
 
     res = []
-    exp_user = User_mgmt.query.filter_by(username=current_user.username).first()
     exp_user_id = exp_user.id if exp_user else _photo_logged_user_id()
 
     if posts is not None:
@@ -143,17 +154,28 @@ def photo_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     if len(res) == 0 and page > 1:
         return redirect(f"/{exp_id}/photo/feed/{user_id}/{timeline}/{mode}/{page - 1}")
 
-    logged_user = User_mgmt.query.filter_by(username=current_user.username).first()
-    if not logged_user:
-        flash("User not found in experiment", "error")
-        return redirect(url_for("main.index"))
+    logged_user = exp_user
+    if logged_user is None:
+        try:
+            logged_user = User_mgmt.query.filter_by(
+                username=current_user.username
+            ).first()
+        except Exception:
+            logged_user = None
 
     profile_pic = get_safe_profile_pic(
-        current_user.username, getattr(logged_user, "is_page", 0)
+        current_user.username, getattr(logged_user, "is_page", 0) if logged_user else 0
     )
-    mentions = get_unanswered_mentions(current_user.username)
-    sfollow = get_suggested_users(logged_user.username, pages=False)
-    spages = get_suggested_users(logged_user.username, pages=True)
+    try:
+        mentions = get_unanswered_mentions(current_user.username)
+    except Exception:
+        mentions = []
+    try:
+        sfollow = get_suggested_users(logged_user.username, pages=False) if logged_user else []
+        spages = get_suggested_users(logged_user.username, pages=True) if logged_user else []
+    except Exception:
+        sfollow = []
+        spages = []
     stories = _build_photo_stories(res, sfollow + spages)
 
     return render_template(
