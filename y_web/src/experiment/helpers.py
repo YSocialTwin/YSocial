@@ -15,6 +15,7 @@ from sqlalchemy.orm import sessionmaker
 from y_web import db
 from y_web.src.experiment.schema import ensure_experiment_schema_for_uri
 from y_web.src.models import Exps, User_mgmt
+from y_web.src.system.path_utils import get_writable_path
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 
@@ -93,7 +94,9 @@ def _experiment_engine_uri(experiment: Exps) -> Optional[str]:
     base_uri = current_app.config["SQLALCHEMY_DATABASE_URI"]
 
     if base_uri.startswith("sqlite"):
-        db_path = (BASE_DIR / experiment.db_name).resolve()
+        db_name = str(getattr(experiment, "db_name", "") or "").replace("\\", os.sep)
+        db_path = get_writable_path(os.path.join("y_web", db_name))
+        os.makedirs(os.path.dirname(db_path), exist_ok=True)
         return f"sqlite:///{db_path}"
 
     if base_uri.startswith("postgresql"):
