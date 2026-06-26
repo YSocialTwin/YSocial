@@ -683,10 +683,15 @@ def change_active_experiment(exp_id):
 
         register_experiment_database(current_app, exp_id, exp.db_name)
 
-        participant_id = (
-            str(uuid.uuid4()) if exp.simulator_type == "HPC" else admin_user_id
-        )
-        participant_recsys = "rchrono" if exp.simulator_type == "HPC" else "default"
+        if exp.platform_type == "photo_sharing":
+            participant_id = admin_user_id
+            participant_recsys = "default"
+        elif exp.simulator_type == "HPC":
+            participant_id = str(uuid.uuid4())
+            participant_recsys = "rchrono"
+        else:
+            participant_id = admin_user_id
+            participant_recsys = "default"
         participant, created = ensure_experiment_user(
             exp,
             user_id=participant_id,

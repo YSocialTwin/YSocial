@@ -1,5 +1,9 @@
 from pathlib import Path
 
+from y_web import create_app
+from y_web.src.experiment.helpers import get_experiment_engine_uri
+from y_web.src.models import Exps
+
 
 def test_photo_feed_template_uses_collapsible_left_sidebar_and_instagram_layout():
     template = Path(
@@ -40,3 +44,13 @@ def test_photo_routes_do_not_rely_on_recsys_type_for_feed_rendering():
         "open_experiment_session" in admin_source
         or "ensure_experiment_user" in admin_source
     )
+
+
+def test_photo_experiment_uses_yphotosharing_database_file():
+    app = create_app()
+    with app.app_context():
+        exp = Exps.query.filter_by(idexp=1).first()
+        assert exp is not None
+        uri = get_experiment_engine_uri(exp)
+        assert uri is not None
+        assert uri.endswith("/yphotosharing.db")

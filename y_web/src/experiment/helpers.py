@@ -95,6 +95,13 @@ def _experiment_engine_uri(experiment: Exps) -> Optional[str]:
 
     if base_uri.startswith("sqlite"):
         db_name = str(getattr(experiment, "db_name", "") or "").replace("\\", os.sep)
+        if getattr(experiment, "platform_type", "") == "photo_sharing":
+            photo_folder = os.path.dirname(db_name)
+            photo_db_path = get_writable_path(
+                os.path.join("y_web", photo_folder, "yphotosharing.db")
+            )
+            return f"sqlite:///{photo_db_path}"
+
         db_path = get_writable_path(os.path.join("y_web", db_name))
         os.makedirs(os.path.dirname(db_path), exist_ok=True)
         return f"sqlite:///{db_path}"
@@ -125,7 +132,8 @@ def open_experiment_session(experiment: Exps):
         return None, None
 
     engine = create_engine(uri, pool_pre_ping=True)
-    _ensure_experiment_orm_tables(engine)
+    if getattr(experiment, "platform_type", "") != "photo_sharing":
+        _ensure_experiment_orm_tables(engine)
     ensure_experiment_schema_for_uri(uri)
     session = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)()
     return session, engine
