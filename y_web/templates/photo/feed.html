@@ -1,0 +1,876 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+    <meta http-equiv="x-ua-compatible" content="ie=edge"/>
+    <title>Y Social | Photo Sharing</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='assets/img/favicon.png') }}"/>
+
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:600,700,800,900" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700" rel="stylesheet"/>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='assets/css/app.css') }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='assets/css/core.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/social-components.css') }}"/>
+    <style>
+        body.photo-feed-body {
+            background:
+                radial-gradient(circle at top left, rgba(255, 143, 92, 0.09), transparent 30%),
+                radial-gradient(circle at top right, rgba(255, 56, 92, 0.08), transparent 28%),
+                #fafafa;
+        }
+
+        .photo-feed-shell {
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 244px minmax(0, 1fr) 332px;
+            gap: 0;
+            transition: grid-template-columns 0.25s ease;
+        }
+
+        .photo-feed-shell.is-collapsed {
+            grid-template-columns: 92px minmax(0, 1fr) 332px;
+        }
+
+        .photo-sidebar {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.98);
+            border-right: 1px solid rgba(0, 0, 0, 0.08);
+            backdrop-filter: blur(14px);
+            padding: 24px 16px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: padding 0.25s ease;
+        }
+
+        .photo-feed-shell.is-collapsed .photo-sidebar {
+            padding-inline: 12px;
+        }
+
+        .photo-sidebar__brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-height: 44px;
+            margin-bottom: 24px;
+        }
+
+        .photo-sidebar__brand-mark {
+            width: 28px;
+            height: 28px;
+            border-radius: 9px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f9ce34 0%, #ee2a7b 50%, #6228d7 100%);
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .photo-sidebar__brand-mark svg {
+            width: 17px;
+            height: 17px;
+        }
+
+        .photo-sidebar__brand-text {
+            font-family: "Montserrat", sans-serif;
+            font-size: 1.1rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: #111;
+            white-space: nowrap;
+            transition: opacity 0.2s ease, width 0.2s ease;
+        }
+
+        .photo-sidebar__section {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .photo-sidebar__item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            color: #111;
+            padding: 12px 14px;
+            border-radius: 14px;
+            transition: background 0.2s ease, transform 0.2s ease;
+        }
+
+        .photo-sidebar__item:hover {
+            background: rgba(0, 0, 0, 0.04);
+            transform: translateX(2px);
+        }
+
+        .photo-sidebar__item.is-active {
+            font-weight: 700;
+        }
+
+        .photo-sidebar__item i {
+            font-size: 1.45rem;
+            width: 26px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .photo-sidebar__item span {
+            white-space: nowrap;
+            transition: opacity 0.2s ease, width 0.2s ease;
+        }
+
+        .photo-sidebar__footer {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .photo-sidebar__profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 16px;
+            background: rgba(0, 0, 0, 0.03);
+        }
+
+        .photo-sidebar__profile img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .photo-sidebar__profile-copy {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .photo-sidebar__profile-copy strong,
+        .photo-sidebar__profile-copy span {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: opacity 0.2s ease, width 0.2s ease;
+        }
+
+        .photo-sidebar__toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            background: #fff;
+            color: #111;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .photo-sidebar__toggle:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+        }
+
+        .photo-feed-shell.is-collapsed .photo-sidebar__brand-text,
+        .photo-feed-shell.is-collapsed .photo-sidebar__item span,
+        .photo-feed-shell.is-collapsed .photo-sidebar__profile-copy,
+        .photo-feed-shell.is-collapsed .photo-sidebar__footer-label {
+            opacity: 0;
+            width: 0;
+            overflow: hidden;
+        }
+
+        .photo-feed-shell.is-collapsed .photo-sidebar__item {
+            justify-content: center;
+            gap: 0;
+            padding-inline: 0;
+        }
+
+        .photo-feed-shell.is-collapsed .photo-sidebar__profile {
+            justify-content: center;
+            padding-inline: 0;
+        }
+
+        .photo-feed-shell.is-collapsed .photo-sidebar__profile img {
+            margin-right: 0;
+        }
+
+        .photo-feed-shell.is-collapsed .photo-sidebar__toggle {
+            margin-inline: auto;
+        }
+
+        .photo-feed-content {
+            min-width: 0;
+            padding: 32px 24px 48px;
+        }
+
+        .photo-feed-main {
+            max-width: 640px;
+            margin: 0 auto;
+        }
+
+        .photo-feed-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 18px;
+        }
+
+        .photo-feed-top h1 {
+            font-family: "Montserrat", sans-serif;
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin: 0;
+        }
+
+        .photo-feed-top p {
+            color: #666;
+            margin: 4px 0 0;
+            font-size: 0.93rem;
+        }
+
+        .photo-stories {
+            display: flex;
+            gap: 18px;
+            overflow-x: auto;
+            padding: 8px 4px 18px;
+            margin-bottom: 14px;
+        }
+
+        .photo-story {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            min-width: 78px;
+            color: #111;
+        }
+
+        .photo-story__ring {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            padding: 3px;
+            background: linear-gradient(135deg, #f9ce34, #ee2a7b 48%, #6228d7);
+            box-shadow: 0 6px 18px rgba(238, 42, 123, 0.16);
+        }
+
+        .photo-story__ring-inner {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: #fff;
+            padding: 2px;
+        }
+
+        .photo-story__ring-inner img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #f2f2f2;
+        }
+
+        .photo-story span {
+            max-width: 78px;
+            font-size: 0.78rem;
+            text-align: center;
+            color: #262626;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .photo-feed-card {
+            background: #fff;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 18px;
+            overflow: hidden;
+            margin-bottom: 22px;
+            box-shadow: 0 16px 34px rgba(15, 23, 42, 0.06);
+        }
+
+        .photo-feed-card__header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 16px 18px;
+        }
+
+        .photo-feed-card__author {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .photo-feed-card__author img {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .photo-feed-card__author-copy {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .photo-feed-card__author-copy strong {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.95rem;
+            color: #111;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .photo-feed-card__author-copy small {
+            color: #777;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .photo-feed-card__menu {
+            color: #111;
+        }
+
+        .photo-feed-card__media {
+            position: relative;
+            background: #f3f3f3;
+        }
+
+        .photo-feed-card__media img {
+            width: 100%;
+            display: block;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+        }
+
+        .photo-feed-card__body {
+            padding: 16px 18px 18px;
+        }
+
+        .photo-feed-card__actions {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            margin-bottom: 14px;
+        }
+
+        .photo-feed-card__action {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #111;
+        }
+
+        .photo-feed-card__action i {
+            font-size: 1.4rem;
+        }
+
+        .photo-feed-card__caption {
+            color: #111;
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+
+        .photo-feed-card__caption strong {
+            font-weight: 700;
+        }
+
+        .photo-feed-card__meta {
+            margin-top: 10px;
+            color: #777;
+            font-size: 0.82rem;
+        }
+
+        .photo-feed-card__metrics {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .photo-feed-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.04);
+            color: #111;
+            font-size: 0.82rem;
+        }
+
+        .photo-right-rail {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow: auto;
+            padding: 36px 24px 36px 0;
+        }
+
+        .photo-right-rail__card {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 22px;
+            padding: 20px;
+            margin-bottom: 18px;
+            box-shadow: 0 16px 34px rgba(15, 23, 42, 0.06);
+        }
+
+        .photo-right-rail__card h2 {
+            margin: 0 0 10px;
+            font-family: "Montserrat", sans-serif;
+            font-size: 1rem;
+            font-weight: 800;
+        }
+
+        .photo-right-rail__list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .photo-suggestion {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .photo-suggestion__main {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .photo-suggestion__main img {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .photo-suggestion__copy {
+            min-width: 0;
+        }
+
+        .photo-suggestion__copy strong,
+        .photo-suggestion__copy small {
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .photo-suggestion__copy small {
+            color: #777;
+            font-size: 0.8rem;
+        }
+
+        .photo-feed-pagination {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 22px;
+        }
+
+        .photo-feed-pagination .button {
+            border-radius: 999px;
+        }
+
+        @media (max-width: 1200px) {
+            .photo-feed-shell {
+                grid-template-columns: 92px minmax(0, 1fr);
+            }
+
+            .photo-feed-shell .photo-right-rail {
+                display: none;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .photo-feed-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .photo-sidebar {
+                position: relative;
+                height: auto;
+                min-height: auto;
+                border-right: none;
+                border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+            }
+
+            .photo-feed-shell.is-collapsed {
+                grid-template-columns: 1fr;
+            }
+
+            .photo-feed-content {
+                padding: 20px 14px 30px;
+            }
+        }
+    </style>
+</head>
+<body class="photo-feed-body">
+{% include 'shared/browser_sync.html' %}
+
+<script>
+    window.EXP_ID = {{ exp_id if exp_id else 'null' }};
+    window.EXP_PREFIX = window.EXP_ID ? '/' + window.EXP_ID : '';
+</script>
+
+<div class="photo-feed-shell{% if photo_sidebar_collapsed %} is-collapsed{% endif %}" data-photo-shell>
+    <aside class="photo-sidebar">
+        <div>
+            <div class="photo-sidebar__brand">
+                <div class="photo-sidebar__brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M7 3.75h10A3.25 3.25 0 0 1 20.25 7v10A3.25 3.25 0 0 1 17 20.25H7A3.25 3.25 0 0 1 3.75 17V7A3.25 3.25 0 0 1 7 3.75Zm0 1.5A1.75 1.75 0 0 0 5.25 7v10A1.75 1.75 0 0 0 7 18.75h10A1.75 1.75 0 0 0 18.75 17V7A1.75 1.75 0 0 0 17 5.25H7Zm5 3.5a3.25 3.25 0 1 1 0 6.5 3.25 3.25 0 0 1 0-6.5Zm0 1.5a1.75 1.75 0 1 0 0 3.5 1.75 1.75 0 0 0 0-3.5Zm5.4-.95a.85.85 0 1 1 0 1.7.85.85 0 0 1 0-1.7Z" fill="currentColor"/>
+                    </svg>
+                </div>
+                <div class="photo-sidebar__brand-text">YPhotoSharing</div>
+            </div>
+
+            <nav class="photo-sidebar__section" aria-label="Primary">
+                <a class="photo-sidebar__item is-active" href="/{{ exp_id }}/photo/feed/{{ user_id }}/{{ timeline }}/{{ mode }}/{{ page }}">
+                    <i class="mdi mdi-home-variant"></i>
+                    <span>Home</span>
+                </a>
+                <a class="photo-sidebar__item" href="#">
+                    <i class="mdi mdi-play-box-outline"></i>
+                    <span>Reels</span>
+                </a>
+                <a class="photo-sidebar__item" href="#">
+                    <i class="mdi mdi-send-outline"></i>
+                    <span>Messages</span>
+                </a>
+                <a class="photo-sidebar__item" href="#">
+                    <i class="mdi mdi-magnify"></i>
+                    <span>Search</span>
+                </a>
+                <a class="photo-sidebar__item" href="#">
+                    <i class="mdi mdi-heart-outline"></i>
+                    <span>Notifications</span>
+                </a>
+                <a class="photo-sidebar__item" href="#">
+                    <i class="mdi mdi-plus-box-outline"></i>
+                    <span>Create</span>
+                </a>
+                <a class="photo-sidebar__item" href="/{{ exp_id }}/profile/{{ logged_id }}/recent/1">
+                    <i class="mdi mdi-account-circle-outline"></i>
+                    <span>Profile</span>
+                </a>
+            </nav>
+        </div>
+
+        <div class="photo-sidebar__footer">
+            <div class="photo-sidebar__profile">
+                <img
+                    src="https://via.placeholder.com/300x300"
+                    {% if profile_pic %}
+                        data-demo-src="{{ profile_pic }}"
+                    {% else %}
+                        data-demo-src="{{ url_for('static', filename='assets/img/users/' ~ (logged_id|user_image_id) ~ '.png') }}"
+                    {% endif %}
+                    alt=""
+                />
+                <div class="photo-sidebar__profile-copy">
+                    <strong>{{ logged_username }}</strong>
+                    <span>{{ 'Admin' if is_admin else 'Participant' }}</span>
+                </div>
+            </div>
+            <button
+                class="photo-sidebar__toggle sidebar-v1-trigger"
+                type="button"
+                data-photo-sidebar-toggle
+                aria-label="Toggle sidebar"
+                aria-pressed="{{ 'true' if photo_sidebar_collapsed else 'false' }}"
+            >
+                <i class="mdi mdi-menu"></i>
+            </button>
+        </div>
+    </aside>
+
+    <main class="photo-feed-content">
+        <div class="photo-feed-main">
+            <div class="photo-feed-top">
+                <div>
+                    <h1>For you</h1>
+                    <p>YPhotoSharing experiment feed for {{ logged_username }}.</p>
+                </div>
+                <a class="button is-light is-rounded" href="/admin/experiment_details/{{ exp_id }}">
+                    Experiment details
+                </a>
+            </div>
+
+            <div class="photo-stories">
+                {% for story in stories %}
+                <a class="photo-story" href="/{{ exp_id }}/profile/{{ story['id'] }}/recent/1">
+                    <div class="photo-story__ring">
+                        <div class="photo-story__ring-inner">
+                            <img
+                                src="https://via.placeholder.com/300x300"
+                                {% if story['profile_pic'] %}
+                                    data-demo-src="{{ story['profile_pic'] }}"
+                                {% else %}
+                                    data-demo-src="{{ url_for('static', filename='assets/img/users/' ~ (story['id']|user_image_id) ~ '.png') }}"
+                                {% endif %}
+                                alt=""
+                            />
+                        </div>
+                    </div>
+                    <span>{{ story['username'] }}</span>
+                </a>
+                {% endfor %}
+                {% if not stories %}
+                <div class="notification is-light">
+                    No story previews are available yet.
+                </div>
+                {% endif %}
+            </div>
+
+            {% for index, item in enumerate(items) %}
+            <article id="feed-post-{{ item['post_id'] }}" class="photo-feed-card">
+                <header class="photo-feed-card__header">
+                    <a class="photo-feed-card__author" href="/{{ exp_id }}/profile/{{ item['author_id'] }}/recent/1">
+                        <img
+                            src="https://via.placeholder.com/300x300"
+                            {% if item['profile_pic'] %}
+                                data-demo-src="{{ item['profile_pic'] }}"
+                            {% else %}
+                                data-demo-src="{{ url_for('static', filename='assets/img/users/' ~ (item['author_id']|user_image_id) ~ '.png') }}"
+                            {% endif %}
+                            alt=""
+                        />
+                        <div class="photo-feed-card__author-copy">
+                            <strong>
+                                {{ item['author'] }}
+                                {% if item.get('adhoc_agent_badge') %}
+                                <span class="tag is-rounded is-link is-light">{{ item['adhoc_agent_badge'] }}</span>
+                                {% endif %}
+                            </strong>
+                            <small>{{ item.get('display_time', '') }}</small>
+                        </div>
+                    </a>
+                    <div class="dropdown is-spaced is-right is-neutral dropdown-trigger photo-feed-card__menu">
+                        <div>
+                            <div class="button is-white is-small">
+                                <i data-feather="more-vertical"></i>
+                            </div>
+                        </div>
+                        <div class="dropdown-menu" role="menu">
+                            <div class="dropdown-content">
+                                <a href="/{{ exp_id }}/thread/{{ item['thread_id'] }}" class="dropdown-item">
+                                    <div class="media">
+                                        <i data-feather="message-circle"></i>
+                                        <div class="media-content">
+                                            <h3>Discussion</h3>
+                                            <small>Open the full conversation</small>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="photo-feed-card__media">
+                    {% if item['image'] != "" %}
+                    <img src="{{ item['image'].url }}" alt="{{ item['image'].description }}"/>
+                    {% else %}
+                    <img src="{{ item.get('profile_pic') or url_for('static', filename='assets/img/vector/logo/Ysocial_white.png') }}" alt="Post media placeholder"/>
+                    {% endif %}
+                </div>
+
+                <div class="photo-feed-card__body">
+                    <div class="photo-feed-card__actions">
+                        <a class="photo-feed-card__action" href="#">
+                            <i data-feather="heart"></i>
+                        </a>
+                        <a class="photo-feed-card__action" href="/{{ exp_id }}/thread/{{ item['thread_id'] }}">
+                            <i data-feather="message-circle"></i>
+                        </a>
+                        <a class="photo-feed-card__action" href="#">
+                            <i data-feather="send"></i>
+                        </a>
+                        <a class="photo-feed-card__action" href="#">
+                            <i data-feather="bookmark"></i>
+                        </a>
+                    </div>
+
+                    <div class="photo-feed-card__caption">
+                        <strong>{{ item['author'] }}</strong>
+                        {{ item['post']|safe }}
+                    </div>
+
+                    {% if item.get('shared_from') != -1 and item.get('shared_from') %}
+                    <div class="photo-feed-card__meta">
+                        Shared from
+                        <a href="/{{ exp_id }}/thread/{{ item['shared_from'][0] }}">{{ item['shared_from'][1] }}</a>
+                    </div>
+                    {% endif %}
+
+                    <div class="photo-feed-card__metrics">
+                        <span class="photo-feed-pill">
+                            <i class="mdi mdi-heart-outline"></i>
+                            {{ item.get('likes', 0) }} likes
+                        </span>
+                        <span class="photo-feed-pill">
+                            <i class="mdi mdi-comment-outline"></i>
+                            {{ item.get('t_comments', 0) }} comments
+                        </span>
+                        <span class="photo-feed-pill">
+                            <i class="mdi mdi-repeat"></i>
+                            {{ item.get('is_shared', 0) }} shares
+                        </span>
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+
+            <div class="photo-feed-pagination">
+                {% if page - 1 > 0 %}
+                <a class="button is-light" href="/{{ exp_id }}/photo/feed/{{ user_id }}/{{ timeline }}/{{ mode }}/{{ page - 1 }}">Previous</a>
+                {% endif %}
+                <a class="button is-dark" href="/{{ exp_id }}/photo/feed/{{ user_id }}/{{ timeline }}/{{ mode }}/{{ page + 1 }}">Next</a>
+            </div>
+        </div>
+    </main>
+
+    <aside class="photo-right-rail">
+        <div class="photo-right-rail__card">
+            <h2>Suggestions for you</h2>
+            <div class="photo-right-rail__list">
+                {% for user in sfollow[:5] %}
+                <div class="photo-suggestion">
+                    <a class="photo-suggestion__main" href="/{{ exp_id }}/profile/{{ user['id'] }}/recent/1">
+                        <img
+                            src="https://via.placeholder.com/300x300"
+                            {% if user['profile_pic'] %}
+                                data-demo-src="{{ user['profile_pic'] }}"
+                            {% else %}
+                                data-demo-src="{{ url_for('static', filename='assets/img/users/' ~ (user['id']|user_image_id) ~ '.png') }}"
+                            {% endif %}
+                            alt=""
+                        />
+                        <div class="photo-suggestion__copy">
+                            <strong>{{ user['username'] }}</strong>
+                            <small>Suggested account</small>
+                        </div>
+                    </a>
+                    <a class="button is-small is-link is-light" href="/{{ exp_id }}/profile/{{ user['id'] }}/recent/1">Follow</a>
+                </div>
+                {% endfor %}
+                {% for user in spages[:3] %}
+                <div class="photo-suggestion">
+                    <a class="photo-suggestion__main" href="/{{ exp_id }}/profile/{{ user['id'] }}/recent/1">
+                        <img
+                            src="https://via.placeholder.com/300x300"
+                            {% if user['profile_pic'] %}
+                                data-demo-src="{{ user['profile_pic'] }}"
+                            {% else %}
+                                data-demo-src="{{ url_for('static', filename='assets/img/users/' ~ (user['id']|user_image_id) ~ '.png') }}"
+                            {% endif %}
+                            alt=""
+                        />
+                        <div class="photo-suggestion__copy">
+                            <strong>{{ user['username'] }}</strong>
+                            <small>Page account</small>
+                        </div>
+                    </a>
+                    <a class="button is-small is-link is-light" href="/{{ exp_id }}/profile/{{ user['id'] }}/recent/1">View</a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="photo-right-rail__card">
+            <h2>Experiment notes</h2>
+            <p class="mb-3">
+                This page renders the YPhotoSharing simulation feed using the same data contract as the other social frontends, but with an Instagram-like presentation and a collapsible left rail.
+            </p>
+            <div class="photo-feed-card__metrics">
+                <span class="photo-feed-pill"><i class="mdi mdi-rocket-launch-outline"></i>Photo sharing</span>
+                <span class="photo-feed-pill"><i class="mdi mdi-account-group-outline"></i>{{ items|length }} posts</span>
+                <span class="photo-feed-pill"><i class="mdi mdi-bell-outline"></i>{{ mentions|length }} mentions</span>
+            </div>
+        </div>
+    </aside>
+</div>
+
+{% if experiment_memory_enabled %}
+{% include "microblogging/components/chat_panel.html" %}
+{% endif %}
+
+<script src="{{ url_for('static', filename='assets/js/app.js') }}"></script>
+<script src="https://js.stripe.com/v3/"></script>
+<script src="{{ url_for('static', filename='assets/js/global.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-v1.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-v2.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-mobile.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-options.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/sidebar-v1.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/chat.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/touch.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/tour.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/explorer.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/widgets.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/modal-uploader.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/popovers-pages.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/lightbox.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/feed.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/webcam.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/compose.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/autocompletes.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/infinite-scroll.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/async_updates.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/mb-feed.js') }}"></script>
+<script>
+    (function () {
+        var shell = document.querySelector('[data-photo-shell]');
+        var toggle = document.querySelector('[data-photo-sidebar-toggle]');
+        if (!shell || !toggle) {
+            return;
+        }
+
+        var storageKey = 'yphoto-feed-sidebar-collapsed';
+        var persisted = localStorage.getItem(storageKey);
+        if (persisted === 'false') {
+            shell.classList.remove('is-collapsed');
+        } else if (persisted === 'true') {
+            shell.classList.add('is-collapsed');
+        }
+
+        toggle.addEventListener('click', function () {
+            shell.classList.toggle('is-collapsed');
+            localStorage.setItem(
+                storageKey,
+                shell.classList.contains('is-collapsed') ? 'true' : 'false'
+            );
+        });
+    })();
+</script>
+</body>
+</html>

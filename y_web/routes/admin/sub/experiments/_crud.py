@@ -630,6 +630,8 @@ def join_experiment(exp_id):
         return redirect(f"/{exp_id}/feed/{user_id}/feed/rf/1")
     elif exp.platform_type == "forum":
         return redirect(f"/{exp_id}/rfeed/{user_id}/feed/rf/1")
+    elif exp.platform_type == "photo_sharing":
+        return redirect(f"/{exp_id}/photo/feed/{user_id}/feed/rf/1")
     else:
         flash("Unknown platform type for this experiment.")
         return redirect("/admin/experiments")

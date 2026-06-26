@@ -443,7 +443,11 @@ def _forum_current_profile_pic(exp_id, forum_user=None):
 
 def _experiment_memory_enabled(exp_id):
     exp = Exps.query.filter_by(idexp=int(exp_id)).first()
-    if not exp or getattr(exp, "platform_type", "") not in {"forum", "microblogging"}:
+    if not exp or getattr(exp, "platform_type", "") not in {
+        "forum",
+        "microblogging",
+        "photo_sharing",
+    }:
         return False
 
     uid = get_experiment_uid_from_db_name(
@@ -482,7 +486,7 @@ def _experiment_memory_enabled(exp_id):
         return True
 
     platform = getattr(exp, "platform_type", "")
-    if platform in {"microblogging", "forum"}:
+    if platform in {"microblogging", "forum", "photo_sharing"}:
         exp_dir = os.path.dirname(config_path)
         try:
             for entry in os.listdir(exp_dir):

@@ -81,7 +81,11 @@ def _latest_follow_action(*, follower_id, user_id):
 
 
 def _experiment_server_config(exp):
-    if not exp or getattr(exp, "platform_type", "") not in {"forum", "microblogging"}:
+    if not exp or getattr(exp, "platform_type", "") not in {
+        "forum",
+        "microblogging",
+        "photo_sharing",
+    }:
         return {}
 
     uid = get_experiment_uid_from_db_name(
@@ -112,7 +116,11 @@ def _experiment_server_config(exp):
 
 
 def _stress_reward_enabled_for_exp(exp):
-    if not exp or getattr(exp, "platform_type", "") not in {"microblogging", "forum"}:
+    if not exp or getattr(exp, "platform_type", "") not in {
+        "microblogging",
+        "forum",
+        "photo_sharing",
+    }:
         return False
 
     config = _experiment_server_config(exp)
@@ -263,6 +271,8 @@ def index():
                 return redirect(f"/{exp.idexp}/feed/{exp_user_id}/feed/rf/1")
             elif exp.platform_type == "forum":
                 return redirect(f"/{exp.idexp}/rfeed/{exp_user_id}/rfeed/rf/1")
+            elif exp.platform_type == "photo_sharing":
+                return redirect(f"/{exp.idexp}/photo/feed/{exp_user_id}/feed/rf/1")
     return render_template("login/login.html")
 
 

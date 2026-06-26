@@ -126,6 +126,19 @@ class TestNewFolderStructure:
     def test_forum_component_templates_exist(self, tpl):
         assert _exists(tpl), f"{tpl} is missing"
 
+    # -- photo/ --------------------------------------------------------------
+    def test_photo_dir_exists(self):
+        assert os.path.isdir(_template_path("photo"))
+
+    @pytest.mark.parametrize(
+        "tpl",
+        [
+            "photo/feed.html",
+        ],
+    )
+    def test_photo_page_templates_exist(self, tpl):
+        assert _exists(tpl), f"{tpl} is missing"
+
     # -- admin/ and error_pages/ (unchanged) ----------------------------------
     def test_admin_dir_unchanged(self):
         assert os.path.isdir(_template_path("admin"))
