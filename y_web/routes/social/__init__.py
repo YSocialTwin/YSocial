@@ -12,7 +12,13 @@ platform views.  The sub-package is assembled from:
   forum.py        – Reddit-style feed / thread / search routes
 """
 
-from . import common, forum, helpers, microblogging, photo  # side-effect: registers routes
+from . import (  # side-effect: registers routes
+    common,
+    forum,
+    helpers,
+    microblogging,
+    photo,
+)
 from ._blueprint import main
 
 __all__ = ["main"]

@@ -203,9 +203,7 @@ def select_experiment():
             elif exp.platform_type == "forum":
                 return redirect(f"/{exp.idexp}/rfeed/{user_agent.id}/rfeed/rf/1")
             elif exp.platform_type == "photo_sharing":
-                return redirect(
-                    f"/{exp.idexp}/photo/feed/{user_agent.id}/feed/rf/1"
-                )
+                return redirect(f"/{exp.idexp}/photo/feed/{user_agent.id}/feed/rf/1")
             else:
                 flash("Unknown platform type.")
                 return redirect(url_for("auth.login"))

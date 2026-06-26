@@ -90,7 +90,9 @@ def photo_feed_logged():
     return redirect(f"/{exp.idexp}/photo/feed/{_photo_logged_user_id()}/feed/rf/1")
 
 
-@main.get("/<int:exp_id>/photo/feed/<string:user_id>/<string:timeline>/<string:mode>/<int:page>")
+@main.get(
+    "/<int:exp_id>/photo/feed/<string:user_id>/<string:timeline>/<string:mode>/<int:page>"
+)
 @login_required
 def photo_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     """
@@ -116,7 +118,9 @@ def photo_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
         if not user:
             user = User_mgmt.query.filter_by(username=current_user.username).first()
         if not user:
-            flash("User not found in experiment. Please contact administrator.", "error")
+            flash(
+                "User not found in experiment. Please contact administrator.", "error"
+            )
             return redirect(url_for("main.index"))
         posts, additional = get_suggested_posts(
             user_id, "ReverseChrono", page, max_post_per_page
@@ -130,7 +134,9 @@ def photo_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     if posts is not None:
         res = _get_discussions(posts, username, page, exp_id, exp_user_id)
     if additional is not None:
-        res_additional = _get_discussions(additional, username, page, exp_id, exp_user_id)
+        res_additional = _get_discussions(
+            additional, username, page, exp_id, exp_user_id
+        )
         if res_additional:
             res.extend(res_additional)
 
