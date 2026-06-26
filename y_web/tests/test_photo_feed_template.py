@@ -33,9 +33,10 @@ def test_photo_routes_do_not_rely_on_recsys_type_for_feed_rendering():
         "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_crud.py"
     ).read_text(encoding="utf-8")
 
-    assert "ReverseChrono" in route_source
+    assert "photos p" in route_source
+    assert "stories s" in route_source
+    assert "photo_media" in route_source
     assert "recsys_type" not in route_source
-    assert "_build_photo_stories" in route_source
     assert "photo_sharing" in auth_source
     assert "photo_sharing" in common_source
     assert "photo_sharing" in admin_source
