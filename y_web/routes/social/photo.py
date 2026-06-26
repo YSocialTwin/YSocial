@@ -15,8 +15,8 @@ from y_web.routes.social.helpers import (
     get_safe_profile_pic,
     is_admin,
 )
-from y_web.src.experiment.helpers import ensure_experiment_user
 from y_web.src.data_access import get_unanswered_mentions
+from y_web.src.experiment.helpers import ensure_experiment_user
 from y_web.src.models import Exps, User_mgmt
 from y_web.src.recsys.content_recsys import get_suggested_posts
 from y_web.src.recsys.follow_recsys import get_suggested_users
@@ -127,9 +127,7 @@ def photo_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
         try:
             user = User_mgmt.query.filter_by(id=user_id).first()
             if not user:
-                user = User_mgmt.query.filter_by(
-                    username=current_user.username
-                ).first()
+                user = User_mgmt.query.filter_by(username=current_user.username).first()
         except Exception:
             user = None
         if not user:
@@ -171,8 +169,14 @@ def photo_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     except Exception:
         mentions = []
     try:
-        sfollow = get_suggested_users(logged_user.username, pages=False) if logged_user else []
-        spages = get_suggested_users(logged_user.username, pages=True) if logged_user else []
+        sfollow = (
+            get_suggested_users(logged_user.username, pages=False)
+            if logged_user
+            else []
+        )
+        spages = (
+            get_suggested_users(logged_user.username, pages=True) if logged_user else []
+        )
     except Exception:
         sfollow = []
         spages = []

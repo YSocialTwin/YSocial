@@ -13,8 +13,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
 
 from y_web import db
-from y_web.src.models import Exps, User_mgmt
 from y_web.src.experiment.schema import ensure_experiment_schema_for_uri
+from y_web.src.models import Exps, User_mgmt
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 
