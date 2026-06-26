@@ -8,8 +8,8 @@ same routing conventions used by the microblogging and forum frontends.
 import os
 import sqlite3
 from pathlib import Path
-from urllib.parse import urlparse
 from typing import Optional
+from urllib.parse import urlparse
 
 from flask import abort, flash, redirect, render_template, send_from_directory, url_for
 from flask_login import current_user, login_required
@@ -21,7 +21,11 @@ from y_web.routes.social.helpers import (
     is_admin,
 )
 from y_web.src.data_access import get_unanswered_mentions
-from y_web.src.experiment.helpers import ensure_experiment_user, get_experiment_dir, get_experiment_engine_uri
+from y_web.src.experiment.helpers import (
+    ensure_experiment_user,
+    get_experiment_dir,
+    get_experiment_engine_uri,
+)
 from y_web.src.models import Exps, User_mgmt
 from y_web.src.recsys.follow_recsys import get_suggested_users
 
@@ -106,9 +110,7 @@ def _build_photo_items(exp: Exps, page: int, page_size: int) -> list[dict]:
             str(row.get("author_username") or "").strip() or author_id or "Unknown"
         )
         profile_pic = (
-            row.get("author_profile_picture_url")
-            or row.get("author_cover_image")
-            or ""
+            row.get("author_profile_picture_url") or row.get("author_cover_image") or ""
         )
         items.append(
             {
