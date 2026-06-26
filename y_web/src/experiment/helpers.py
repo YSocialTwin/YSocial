@@ -124,10 +124,34 @@ def open_experiment_session(experiment: Exps):
     if not uri:
         return None, None
 
-    ensure_experiment_schema_for_uri(uri)
     engine = create_engine(uri, pool_pre_ping=True)
+    _ensure_experiment_orm_tables(engine)
+    ensure_experiment_schema_for_uri(uri)
     session = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)()
     return session, engine
+
+
+def _ensure_experiment_orm_tables(engine) -> None:
+    """
+    Create the core ORM tables bound to db_exp on the target engine.
+
+    This is intentionally limited to models that declare ``__bind_key__ ==
+    'db_exp'`` so we do not materialize admin tables inside experiment DBs.
+    """
+    tables = []
+    seen = set()
+    for mapper in db.Model.registry.mappers:
+        model = mapper.class_
+        if getattr(model, "__bind_key__", None) != "db_exp":
+            continue
+        table = getattr(model, "__table__", None)
+        if table is None or table.name in seen:
+            continue
+        seen.add(table.name)
+        tables.append(table)
+
+    if tables:
+        db.metadata.create_all(bind=engine, tables=tables)
 
 
 def ensure_experiment_user(
