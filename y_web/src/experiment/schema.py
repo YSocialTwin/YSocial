@@ -180,9 +180,12 @@ def _sqlite_existing_columns(conn: sqlite3.Connection, table: str) -> set[str]:
 
 
 def ensure_sqlite_experiment_schema(db_path: str) -> None:
-    if not db_path or not os.path.exists(db_path):
+    if not db_path:
         return
 
+    dirpath = os.path.dirname(db_path)
+    if dirpath:
+        os.makedirs(dirpath, exist_ok=True)
     conn = sqlite3.connect(db_path)
     try:
         for ddl in _SQLITE_TABLES.values():
