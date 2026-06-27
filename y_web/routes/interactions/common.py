@@ -42,10 +42,15 @@ def _resolve_follow_round_id(exp_id):
                 try:
                     round_row = (
                         session.query(Rounds)
-                        .order_by(Rounds.day.desc(), Rounds.hour.desc(), Rounds.id.desc())
+                        .order_by(
+                            Rounds.day.desc(), Rounds.hour.desc(), Rounds.id.desc()
+                        )
                         .first()
                     )
-                    if round_row is not None and getattr(round_row, "id", None) is not None:
+                    if (
+                        round_row is not None
+                        and getattr(round_row, "id", None) is not None
+                    ):
                         return int(round_row.id)
                 finally:
                     session.close()
@@ -53,9 +58,9 @@ def _resolve_follow_round_id(exp_id):
     except Exception:
         pass
 
-    current_round = (
-        Rounds.query.order_by(Rounds.day.desc(), Rounds.hour.desc(), Rounds.id.desc()).first()
-    )
+    current_round = Rounds.query.order_by(
+        Rounds.day.desc(), Rounds.hour.desc(), Rounds.id.desc()
+    ).first()
     if current_round is not None and getattr(current_round, "id", None) is not None:
         return int(current_round.id)
 
@@ -91,7 +96,9 @@ def follow(exp_id, user_id, follower_id):
         acting_user = None
 
         if session is not None and engine is not None:
-            acting_user = session.query(User_mgmt).filter_by(username=acting_username).first()
+            acting_user = (
+                session.query(User_mgmt).filter_by(username=acting_username).first()
+            )
             if acting_user is None and acting_username:
                 # Keep the photo experiment consistent with the other platforms:
                 # the logged-in participant must exist in the experiment DB
@@ -107,9 +114,11 @@ def follow(exp_id, user_id, follower_id):
                         password=str(getattr(current_user, "password", "") or ""),
                         joined_on=0,
                     )
-                    acting_user = session.query(User_mgmt).filter_by(
-                        username=acting_username
-                    ).first()
+                    acting_user = (
+                        session.query(User_mgmt)
+                        .filter_by(username=acting_username)
+                        .first()
+                    )
                 except Exception:
                     acting_user = None
         else:
@@ -124,13 +133,21 @@ def follow(exp_id, user_id, follower_id):
             except (ValueError, TypeError):
                 source_user_id = follower_id
 
-        query = session.query(Follow) if session is not None and engine is not None else Follow.query
+        query = (
+            session.query(Follow)
+            if session is not None and engine is not None
+            else Follow.query
+        )
         latest_follow = (
             query.filter_by(user_id=source_user_id, follower_id=user_id)
             .order_by(Follow.id.desc())
             .first()
         )
-        new_action = "unfollow" if str(getattr(latest_follow, "action", "") or "").lower() == "follow" else "follow"
+        new_action = (
+            "unfollow"
+            if str(getattr(latest_follow, "action", "") or "").lower() == "follow"
+            else "follow"
+        )
 
         follow_kwargs = dict(
             follower_id=user_id,
@@ -151,8 +168,29 @@ def follow(exp_id, user_id, follower_id):
 
         target_referrer = request.referrer or ""
         if "/photo/suggestions" in target_referrer:
-            return redirect(url_for("main.photo_feed", exp_id=exp_id, user_id="all", timeline="feed", mode="rf", page=1, tab="for_you"))
-        return redirect(target_referrer or url_for("main.photo_feed", exp_id=exp_id, user_id="all", timeline="feed", mode="rf", page=1, tab="for_you"))
+            return redirect(
+                url_for(
+                    "main.photo_feed",
+                    exp_id=exp_id,
+                    user_id="all",
+                    timeline="feed",
+                    mode="rf",
+                    page=1,
+                    tab="for_you",
+                )
+            )
+        return redirect(
+            target_referrer
+            or url_for(
+                "main.photo_feed",
+                exp_id=exp_id,
+                user_id="all",
+                timeline="feed",
+                mode="rf",
+                page=1,
+                tab="for_you",
+            )
+        )
     finally:
         if session is not None:
             session.close()

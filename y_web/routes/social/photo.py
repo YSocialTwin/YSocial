@@ -5,15 +5,23 @@ Provides an Instagram-like feed for YPhotoSharing experiments while keeping the
 same routing conventions used by the microblogging and forum frontends.
 """
 
-import os
-import sqlite3
 import hashlib
 import json
+import os
+import sqlite3
 from pathlib import Path
 from typing import Optional
 from urllib.parse import urlparse
 
-from flask import abort, flash, redirect, render_template, request, send_from_directory, url_for
+from flask import (
+    abort,
+    flash,
+    redirect,
+    render_template,
+    request,
+    send_from_directory,
+    url_for,
+)
 from flask_login import current_user, login_required
 
 from y_web.routes.social._blueprint import main
@@ -118,7 +126,9 @@ def _photo_db_rows(exp: Exps, query: str, params: tuple = ()) -> list[dict]:
 def _photo_build_item(exp: Exps, row: dict) -> dict:
     raw_media = row.get("image_url") or row.get("media_url") or ""
     author_id = str(row.get("user_id") or "")
-    author_name = str(row.get("author_username") or "").strip() or author_id or "Unknown"
+    author_name = (
+        str(row.get("author_username") or "").strip() or author_id or "Unknown"
+    )
     return {
         "post_id": row.get("id"),
         "author_id": author_id,
@@ -227,7 +237,11 @@ def _photo_ordered_unique_ids(*groups: list[str]) -> list[str]:
 
 
 def _photo_post_rows_by_ids(exp: Exps, photo_ids: list[str]) -> list[dict]:
-    ordered_ids = [str(photo_id or "").strip() for photo_id in photo_ids if str(photo_id or "").strip()]
+    ordered_ids = [
+        str(photo_id or "").strip()
+        for photo_id in photo_ids
+        if str(photo_id or "").strip()
+    ]
     if not ordered_ids:
         return []
 
@@ -253,7 +267,9 @@ def _photo_post_rows_by_ids(exp: Exps, photo_ids: list[str]) -> list[dict]:
 
 def _photo_photo_ids_by_author_ids(exp: Exps, author_ids: list[str]) -> list[str]:
     ordered_author_ids = [
-        str(author_id or "").strip() for author_id in (author_ids or []) if str(author_id or "").strip()
+        str(author_id or "").strip()
+        for author_id in (author_ids or [])
+        if str(author_id or "").strip()
     ]
     if not ordered_author_ids:
         return []
@@ -269,7 +285,11 @@ def _photo_photo_ids_by_author_ids(exp: Exps, author_ids: list[str]) -> list[str
         """,
         tuple(ordered_author_ids),
     )
-    return [str(row.get("id") or "").strip() for row in rows if str(row.get("id") or "").strip()]
+    return [
+        str(row.get("id") or "").strip()
+        for row in rows
+        if str(row.get("id") or "").strip()
+    ]
 
 
 def _photo_all_photo_ids(exp: Exps) -> list[str]:
@@ -282,7 +302,11 @@ def _photo_all_photo_ids(exp: Exps) -> list[str]:
         ORDER BY p.created_at DESC, p.id DESC
         """,
     )
-    return [str(row.get("id") or "").strip() for row in rows if str(row.get("id") or "").strip()]
+    return [
+        str(row.get("id") or "").strip()
+        for row in rows
+        if str(row.get("id") or "").strip()
+    ]
 
 
 def _build_photo_items_from_rows(exp: Exps, rows: list[dict]) -> list[dict]:
@@ -310,7 +334,10 @@ def _build_photo_items(exp: Exps, page: int, page_size: int) -> list[dict]:
     )
     return _build_photo_items_from_rows(exp, rows)
 
-def _build_photo_recommended_items(exp: Exps, logged_user_id, page: int, page_size: int) -> list[dict]:
+
+def _build_photo_recommended_items(
+    exp: Exps, logged_user_id, page: int, page_size: int
+) -> list[dict]:
     page = max(1, page)
     rec_photo_ids = _photo_latest_recommendation_ids(exp, logged_user_id)
     start = (page - 1) * page_size
@@ -332,7 +359,9 @@ def _build_photo_recommended_items(exp: Exps, logged_user_id, page: int, page_si
     return _build_photo_items_from_rows(exp, ordered_rows)
 
 
-def _build_photo_follower_items(exp: Exps, logged_user_id, page: int, page_size: int) -> list[dict]:
+def _build_photo_follower_items(
+    exp: Exps, logged_user_id, page: int, page_size: int
+) -> list[dict]:
     contact_ids = _photo_active_contact_ids(exp, logged_user_id)
     if not contact_ids:
         return []
@@ -463,7 +492,11 @@ def _photo_suggested_contacts(
 ):
     contacts = []
     seen_ids = set()
-    excluded_ids = {str(value or "").strip() for value in (exclude_ids or set()) if str(value or "").strip()}
+    excluded_ids = {
+        str(value or "").strip()
+        for value in (exclude_ids or set())
+        if str(value or "").strip()
+    }
 
     try:
         suggested_users = get_suggested_users(logged_username, pages=False)
@@ -609,12 +642,16 @@ def _photo_follow_stats(exp: Exps, user_id) -> tuple[int, int]:
     followers = {
         source_id
         for (source_id, target_id), meta in latest.items()
-        if target_id == user_key and meta.get("action") == "follow" and source_id != user_key
+        if target_id == user_key
+        and meta.get("action") == "follow"
+        and source_id != user_key
     }
     followees = {
         target_id
         for (source_id, target_id), meta in latest.items()
-        if source_id == user_key and meta.get("action") == "follow" and target_id != user_key
+        if source_id == user_key
+        and meta.get("action") == "follow"
+        and target_id != user_key
     }
     return len(followers), len(followees)
 
@@ -716,7 +753,9 @@ def _photo_post_comments(exp: Exps, photo_id: str, limit: int = 12) -> list[dict
     comments = []
     for row in rows:
         commenter_id = str(row.get("user_id") or "").strip()
-        commenter_name = str(row.get("commenter_username") or commenter_id or "Unknown").strip()
+        commenter_name = str(
+            row.get("commenter_username") or commenter_id or "Unknown"
+        ).strip()
         comments.append(
             {
                 "id": row.get("id"),
@@ -808,7 +847,9 @@ def _photo_post_details(exp: Exps, photo_id: str) -> dict:
     shares_count = int(row.get("num_shares") or 0)
     liked_by_label = ""
     if likers and likes_count > 1:
-        liked_by_label = f"Liked by {likers[0]['username']} and {max(0, likes_count - 1)} others"
+        liked_by_label = (
+            f"Liked by {likers[0]['username']} and {max(0, likes_count - 1)} others"
+        )
     elif likers:
         liked_by_label = f"Liked by {likers[0]['username']}"
 
@@ -845,11 +886,15 @@ def _photo_profile_totals(exp: Exps, user_id) -> tuple[int, int, int]:
         (user_key,),
     )
     followers_count, followees_count = _photo_follow_stats(exp, user_key)
-    total_posts = int(posts_count_rows[0].get("total_posts") or 0) if posts_count_rows else 0
+    total_posts = (
+        int(posts_count_rows[0].get("total_posts") or 0) if posts_count_rows else 0
+    )
     return total_posts, followers_count, followees_count
 
 
-def _photo_connection_items(exp: Exps, user_id, kind: str, viewer_id=None) -> list[dict]:
+def _photo_connection_items(
+    exp: Exps, user_id, kind: str, viewer_id=None
+) -> list[dict]:
     user_key = str(user_id or "").strip()
     if not user_key:
         return []
@@ -860,13 +905,17 @@ def _photo_connection_items(exp: Exps, user_id, kind: str, viewer_id=None) -> li
         connection_ids = [
             source_id
             for (source_id, target_id), meta in latest.items()
-            if target_id == user_key and meta.get("action") == "follow" and source_id != user_key
+            if target_id == user_key
+            and meta.get("action") == "follow"
+            and source_id != user_key
         ]
     else:
         connection_ids = [
             target_id
             for (source_id, target_id), meta in latest.items()
-            if source_id == user_key and meta.get("action") == "follow" and target_id != user_key
+            if source_id == user_key
+            and meta.get("action") == "follow"
+            and target_id != user_key
         ]
 
     connection_ids = _photo_ordered_unique_ids(connection_ids)
@@ -894,10 +943,9 @@ def _photo_connection_items(exp: Exps, user_id, kind: str, viewer_id=None) -> li
         if not row:
             continue
         username = str(row.get("username") or connection_id).strip()
-        viewer_follows = (
-            (viewer_key, connection_id) in latest
-            and latest[(viewer_key, connection_id)].get("action") == "follow"
-        )
+        viewer_follows = (viewer_key, connection_id) in latest and latest[
+            (viewer_key, connection_id)
+        ].get("action") == "follow"
         if viewer_key == user_key and normalized_kind == "followers":
             action_label = "Remove"
         elif viewer_key == user_key and normalized_kind == "following":
@@ -914,7 +962,9 @@ def _photo_connection_items(exp: Exps, user_id, kind: str, viewer_id=None) -> li
                     user_id=connection_id,
                     raw_profile_pic=row.get("profile_picture_url"),
                 ),
-                "subtitle": "Follower" if normalized_kind == "followers" else "Following",
+                "subtitle": (
+                    "Follower" if normalized_kind == "followers" else "Following"
+                ),
                 "action_label": action_label,
             }
         )
@@ -1026,7 +1076,9 @@ def photo_profile(exp_id, user_id, mode="recent", page=1):
     profile_user = _photo_user_record(exp, user_id)
     if not profile_user:
         try:
-            profile_user = _photo_user_record(exp, getattr(logged_user, "id", _photo_logged_user_id()))
+            profile_user = _photo_user_record(
+                exp, getattr(logged_user, "id", _photo_logged_user_id())
+            )
         except Exception:
             profile_user = {}
 
@@ -1034,7 +1086,9 @@ def photo_profile(exp_id, user_id, mode="recent", page=1):
         return redirect(f"/{exp_id}/photo/feed/all/feed/rf/1")
 
     profile_user_id = str(profile_user.get("id") or "").strip()
-    profile_username = str(profile_user.get("username") or profile_user_id or "").strip()
+    profile_username = str(
+        profile_user.get("username") or profile_user_id or ""
+    ).strip()
     logged_id = getattr(logged_user, "id", _photo_logged_user_id())
     profile_pic = _photo_profile_pic_url(
         exp,
@@ -1051,7 +1105,9 @@ def photo_profile(exp_id, user_id, mode="recent", page=1):
     active_mode = str(mode or "recent").strip().lower()
     if active_mode not in {"recent", "saved", "tagged"}:
         active_mode = "recent"
-    profile_items = _photo_profile_photo_items(exp, profile_user_id, active_mode, page, 12)
+    profile_items = _photo_profile_photo_items(
+        exp, profile_user_id, active_mode, page, 12
+    )
     profile_cover = _photo_media_url(exp, profile_user.get("cover_image"))
     if not profile_cover:
         profile_cover = profile_user.get("cover_image") or ""
@@ -1183,11 +1239,23 @@ def photo_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
         username = user.username
 
     if active_tab == "follower":
-        res = _build_photo_follower_items(exp, exp_user.id if exp_user else _photo_logged_user_id(), page, max_post_per_page)
+        res = _build_photo_follower_items(
+            exp,
+            exp_user.id if exp_user else _photo_logged_user_id(),
+            page,
+            max_post_per_page,
+        )
     else:
-        res = _build_photo_recommended_items(exp, exp_user.id if exp_user else _photo_logged_user_id(), page, max_post_per_page)
+        res = _build_photo_recommended_items(
+            exp,
+            exp_user.id if exp_user else _photo_logged_user_id(),
+            page,
+            max_post_per_page,
+        )
     if len(res) == 0 and page > 1:
-        return redirect(f"/{exp_id}/photo/feed/{user_id}/{timeline}/{mode}/{page - 1}?tab={active_tab}")
+        return redirect(
+            f"/{exp_id}/photo/feed/{user_id}/{timeline}/{mode}/{page - 1}?tab={active_tab}"
+        )
 
     logged_user = exp_user
     if logged_user is None:
@@ -1202,7 +1270,9 @@ def photo_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
         current_user.username, getattr(logged_user, "is_page", 0) if logged_user else 0
     )
     if not profile_pic:
-        profile_pic = _photo_user_avatar_url(getattr(logged_user, "id", _photo_logged_user_id()))
+        profile_pic = _photo_user_avatar_url(
+            getattr(logged_user, "id", _photo_logged_user_id())
+        )
     try:
         mentions = get_unanswered_mentions(current_user.username)
     except Exception:
@@ -1228,7 +1298,8 @@ def photo_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     suggested_contacts = _photo_suggested_contacts(
         exp,
         logged_user.username if logged_user else current_user.username,
-        exclude_ids=followed_contact_ids | {str(getattr(logged_user, "id", _photo_logged_user_id()))},
+        exclude_ids=followed_contact_ids
+        | {str(getattr(logged_user, "id", _photo_logged_user_id()))},
     )
 
     return render_template(

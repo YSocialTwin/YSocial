@@ -27,7 +27,9 @@ def test_photo_feed_template_uses_collapsible_left_sidebar_and_instagram_layout(
     assert "data-photo-sidebar-toggle" in base_template
     assert "photo-sidebar__item{% if photo_active_nav == 'home' %} is-active{% endif %}" in Path(
         "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/photo/components/sidebar.html"
-    ).read_text(encoding="utf-8")
+    ).read_text(
+        encoding="utf-8"
+    )
     assert "photo-stories" in template
     sidebar_template = Path(
         "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/photo/components/sidebar.html"
@@ -179,7 +181,9 @@ def test_photo_suggested_contacts_never_returns_empty_list_for_photo_experiment(
     with app.app_context():
         exp = Exps.query.filter_by(idexp=1).first()
         assert exp is not None
-        contact_ids = set(_photo_active_contact_ids(exp, "b49b2daa-0560-466e-bd45-95222c7a4a10"))
+        contact_ids = set(
+            _photo_active_contact_ids(exp, "b49b2daa-0560-466e-bd45-95222c7a4a10")
+        )
         contacts = _photo_suggested_contacts(
             exp,
             "Admin",
