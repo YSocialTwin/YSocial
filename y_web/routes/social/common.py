@@ -330,6 +330,9 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
         flash("User not found in experiment", "error")
         return redirect(url_for("main.index"))
 
+    if getattr(exp, "platform_type", "") == "photo_sharing":
+        return redirect(f"/{exp_id}/photo/profile/{user.id}/recent/{page}")
+
     is_following = (
         _latest_follow_action(follower_id=logged_id, user_id=user.id) == "follow"
     )

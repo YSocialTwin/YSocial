@@ -1,0 +1,403 @@
+{% extends "photo/base.html" %}
+
+{% block photo_title %}Y Social | {{ user.get('username', 'Profile') }}{% endblock %}
+{% block photo_body_class %}photo-profile-body{% endblock %}
+
+{% block photo_extra_head %}
+        .photo-profile-page {
+            min-height: 100vh;
+            max-width: 1240px;
+            margin: 0 auto;
+            padding: 34px 32px 52px;
+            background: #fff;
+        }
+
+        .photo-profile-hero {
+            display: grid;
+            grid-template-columns: 154px minmax(0, 1fr);
+            gap: 30px;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .photo-profile-avatar-wrap {
+            position: relative;
+            display: flex;
+            justify-content: center;
+        }
+
+        .photo-profile-note {
+            position: absolute;
+            top: -14px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 7px 12px;
+            border-radius: 999px;
+            background: #fff;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+            color: #8a8a8a;
+            font-size: 0.78rem;
+        }
+
+        .photo-profile-avatar {
+            width: 132px;
+            height: 132px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 4px solid #fff;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+            background: #f4f4f4;
+        }
+
+        .photo-profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-profile-topline {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .photo-profile-topline h1 {
+            margin: 0;
+            font-family: "Montserrat", sans-serif;
+            font-size: 1.85rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+        }
+
+        .photo-profile-subtitle {
+            margin-top: 8px;
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .photo-profile-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px;
+            margin-top: 14px;
+        }
+
+        .photo-profile-stat {
+            color: #111;
+            font-size: 0.95rem;
+        }
+
+        .photo-profile-stat button {
+            border: 0;
+            background: transparent;
+            color: inherit;
+            font: inherit;
+            padding: 0;
+            cursor: pointer;
+        }
+
+        .photo-profile-stat strong {
+            font-weight: 800;
+            margin-right: 6px;
+        }
+
+        .photo-profile-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 14px;
+            color: #111;
+        }
+
+        .photo-profile-links a {
+            color: #111;
+            font-weight: 700;
+        }
+
+        .photo-profile-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 22px;
+        }
+
+        .photo-profile-action {
+            min-width: 180px;
+            height: 36px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #edf0f4;
+            color: #111;
+            font-weight: 700;
+            border: 1px solid rgba(0, 0, 0, 0.04);
+        }
+
+        .photo-profile-action.is-follow {
+            background: rgba(255, 47, 85, 0.08);
+            color: #d91d4f;
+        }
+
+        .photo-profile-highlights {
+            display: flex;
+            gap: 18px;
+            flex-wrap: wrap;
+            margin: 14px 0 28px;
+        }
+
+        .photo-profile-highlight {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            min-width: 84px;
+        }
+
+        .photo-profile-highlight__circle {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #c6c6c6;
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.05);
+        }
+
+        .photo-profile-highlight__label {
+            font-size: 0.82rem;
+            color: #111;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .photo-profile-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 64px;
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
+            padding-top: 16px;
+            margin-bottom: 0;
+        }
+
+        .photo-profile-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #8b8b8b;
+            font-weight: 700;
+            padding-bottom: 12px;
+            position: relative;
+        }
+
+        .photo-profile-tab.is-active {
+            color: #111;
+        }
+
+        .photo-profile-tab.is-active::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -16px;
+            height: 2px;
+            background: #111;
+        }
+
+        .photo-profile-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 2px;
+            margin-top: 18px;
+        }
+
+        .photo-profile-tile {
+            position: relative;
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            background: #f3f3f3;
+            display: block;
+            cursor: zoom-in;
+        }
+
+        .photo-profile-tile img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .photo-profile-empty {
+            padding: 28px;
+            border-radius: 18px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            background: rgba(255, 255, 255, 0.96);
+            color: #666;
+            text-align: center;
+            box-shadow: 0 16px 34px rgba(15, 23, 42, 0.06);
+        }
+
+        @media (max-width: 1200px) {
+            .photo-profile-page {
+                padding-inline: 24px;
+            }
+
+            .photo-profile-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 767px) {
+            .photo-profile-page {
+                padding: 22px 14px 40px;
+            }
+
+            .photo-profile-hero {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .photo-profile-avatar-wrap {
+                justify-content: center;
+            }
+
+            .photo-profile-topline {
+                justify-content: center;
+            }
+
+            .photo-profile-stats,
+            .photo-profile-links,
+            .photo-profile-actions {
+                justify-content: center;
+            }
+
+            .photo-profile-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .photo-profile-tabs {
+                gap: 28px;
+            }
+        }
+{% endblock %}
+
+{% block photo_content %}
+<div class="photo-profile-page">
+    <section class="photo-profile-hero">
+        <div class="photo-profile-avatar-wrap">
+            <div class="photo-profile-note">Note...</div>
+            <div class="photo-profile-avatar">
+                <img src="{{ profile_pic }}" data-demo-src="{{ profile_pic }}" alt="{{ user.get('username', 'Profile') }} avatar"/>
+            </div>
+        </div>
+
+        <div class="photo-profile-meta">
+            <div class="photo-profile-topline">
+                <h1>{{ user.get('username', '') }}</h1>
+                <i data-feather="settings"></i>
+            </div>
+            <div class="photo-profile-subtitle">{{ user.get('username', '') }}</div>
+
+            <div class="photo-profile-stats">
+                <div class="photo-profile-stat"><strong>{{ total_posts }}</strong> posts</div>
+                <div class="photo-profile-stat">
+                    <button type="button" data-photo-people-open="followers"><strong>{{ total_followers }}</strong> followers</button>
+                </div>
+                <div class="photo-profile-stat">
+                    <button type="button" data-photo-people-open="following"><strong>{{ total_followees }}</strong> following</button>
+                </div>
+            </div>
+
+            <div class="photo-profile-links">
+                <a href="#">about.{{ user.get('username', '').lower() }}</a>
+                <span>@{{ user.get('username', '').lower() }}</span>
+            </div>
+
+            <div class="photo-profile-actions">
+                {% if can_follow_profile %}
+                    <a class="photo-profile-action is-follow" href="/{{ exp_id }}/follow/{{ user.get('id') }}/{{ logged_id }}">
+                        {% if is_following %}Unfollow{% else %}Follow{% endif %}
+                    </a>
+                {% else %}
+                    <a class="photo-profile-action" href="/{{ exp_id }}/edit_profile/{{ logged_id }}">Edit profile</a>
+                    <a class="photo-profile-action" href="/{{ exp_id }}/photo/feed/all/feed/rf/1">View archive</a>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <section class="photo-profile-highlights" aria-label="Highlights">
+        <div class="photo-profile-highlight">
+            <div class="photo-profile-highlight__circle">
+                <i data-feather="plus"></i>
+            </div>
+            <div class="photo-profile-highlight__label">New</div>
+        </div>
+        <div class="photo-profile-highlight">
+            <div class="photo-profile-highlight__circle">
+                <i data-feather="bookmark"></i>
+            </div>
+            <div class="photo-profile-highlight__label">Archive</div>
+        </div>
+    </section>
+
+    <div class="photo-profile-tabs">
+        <a class="photo-profile-tab{% if mode == 'recent' %} is-active{% endif %}" href="/{{ exp_id }}/photo/profile/{{ user.get('id') }}/recent/1">
+            <i data-feather="grid"></i>
+            Posts
+        </a>
+        <a class="photo-profile-tab{% if mode == 'saved' %} is-active{% endif %}" href="/{{ exp_id }}/photo/profile/{{ user.get('id') }}/saved/1">
+            <i data-feather="bookmark"></i>
+            Saved
+        </a>
+        <a class="photo-profile-tab{% if mode == 'tagged' %} is-active{% endif %}" href="/{{ exp_id }}/photo/profile/{{ user.get('id') }}/tagged/1">
+            <i data-feather="tag"></i>
+            Tagged
+        </a>
+    </div>
+
+    {% if items %}
+    <div class="photo-profile-grid">
+        {% for item in items %}
+        <a class="photo-profile-tile" href="#" data-photo-open-post="{{ item['post_id'] }}">
+            {% if item['image'] and item['image']['url'] %}
+            <img src="{{ item['image']['url'] }}" data-demo-src="{{ item['image']['url'] }}" alt="{{ item['image']['description'] }}"/>
+            {% else %}
+            <img src="{{ profile_pic }}" data-demo-src="{{ profile_pic }}" alt="{{ item['post'] }}"/>
+            {% endif %}
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="photo-profile-empty">
+        {% if mode == 'saved' %}
+        No saved photos available yet.
+        {% elif mode == 'tagged' %}
+        No tagged photos available yet.
+        {% else %}
+        No photos available yet.
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block photo_bootstrap_data %}
+<script>
+    window.YS_DATA_PHOTO_PROFILE = {
+        expId: '{{ exp_id }}',
+        userId: '{{ user_id }}',
+        loggedId: '{{ logged_id }}',
+        mode: '{{ mode }}',
+        page: {{ page }},
+        profileId: '{{ user_id }}',
+        followersEndpoint: '/{{ exp_id }}/api/photo/profile/{{ user_id }}/connections/followers',
+        followingEndpoint: '/{{ exp_id }}/api/photo/profile/{{ user_id }}/connections/following'
+    };
+</script>
+{% endblock %}

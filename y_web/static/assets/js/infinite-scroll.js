@@ -124,6 +124,12 @@
         }
     }
 
+    function buildPageUrl(apiEndpoint, page) {
+        const [basePath, queryString] = String(apiEndpoint || '').split('?');
+        const nextPath = `${basePath}/${page}`;
+        return queryString ? `${nextPath}?${queryString}` : nextPath;
+    }
+
     /**
      * Load more posts from the API
      */
@@ -137,7 +143,7 @@
 
         try {
             const nextPage = state.currentPage + 1;
-            const response = await fetch(`${state.apiEndpoint}/${nextPage}`);
+            const response = await fetch(buildPageUrl(state.apiEndpoint, nextPage));
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -429,7 +435,7 @@
         const message = document.createElement('div');
         message.className = 'infinite-scroll-end';
         message.style.cssText = 'text-align: center; padding: 2rem; color: #7a7a7a;';
-        message.innerHTML = '<p>You\'ve reached the end of the feed</p>';
+        message.innerHTML = '<p>No more posts available.</p>';
         state.sentinel.parentElement.insertBefore(message, state.sentinel);
     }
 

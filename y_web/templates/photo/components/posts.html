@@ -1,0 +1,99 @@
+{% for index, item in enumerate(items) %}
+<article id="feed-post-{{ item['post_id'] }}" class="photo-feed-card">
+    <header class="photo-feed-card__header">
+        <a class="photo-feed-card__author" href="/{{ exp_id }}/photo/profile/{{ item['author_id'] }}/recent/1">
+            {% set author_profile_src = item['profile_pic'] or url_for('static', filename='assets/img/users/' ~ (item['author_id']|user_image_id) ~ '.png') %}
+            <img
+                src="{{ author_profile_src }}"
+                data-demo-src="{{ author_profile_src }}"
+                alt=""
+            />
+            <div class="photo-feed-card__author-copy">
+                <strong>
+                    {{ item['author'] }}
+                    {% if item.get('adhoc_agent_badge') %}
+                    <span class="tag is-rounded is-link is-light">{{ item['adhoc_agent_badge'] }}</span>
+                    {% endif %}
+                </strong>
+                <small>{{ item.get('display_time', '') }}</small>
+            </div>
+        </a>
+        <div class="dropdown is-spaced is-right is-neutral dropdown-trigger photo-feed-card__menu">
+            <div>
+                <div class="button is-white is-small">
+                    <i data-feather="more-vertical"></i>
+                </div>
+            </div>
+            <div class="dropdown-menu" role="menu">
+                <div class="dropdown-content">
+                    <a href="/{{ exp_id }}/thread/{{ item['thread_id'] }}" class="dropdown-item">
+                        <div class="media">
+                            <i data-feather="message-circle"></i>
+                            <div class="media-content">
+                                <h3>Discussion</h3>
+                                <small>Open the full conversation</small>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="photo-feed-card__media">
+        {% if item['image'] != "" %}
+        <a class="photo-feed-card__media-link" href="#" data-photo-open-post="{{ item['post_id'] }}">
+            <img src="{{ item['image'].url }}" data-demo-src="{{ item['image'].url }}" alt="{{ item['image'].description }}"/>
+        </a>
+        {% else %}
+        <a class="photo-feed-card__media-link" href="#" data-photo-open-post="{{ item['post_id'] }}">
+            <img src="{{ item.get('profile_pic') or url_for('static', filename='assets/img/vector/logo/Ysocial_white.png') }}" data-demo-src="{{ item.get('profile_pic') or url_for('static', filename='assets/img/vector/logo/Ysocial_white.png') }}" alt="Post media placeholder"/>
+        </a>
+        {% endif %}
+    </div>
+
+    <div class="photo-feed-card__body">
+        <div class="photo-feed-card__actions">
+            <a class="photo-feed-card__action" href="#">
+                <i data-feather="heart"></i>
+            </a>
+            <a class="photo-feed-card__action" href="/{{ exp_id }}/thread/{{ item['thread_id'] }}">
+                <i data-feather="message-circle"></i>
+            </a>
+            <a class="photo-feed-card__action" href="#">
+                <i data-feather="send"></i>
+            </a>
+            <a class="photo-feed-card__action" href="#">
+                <i data-feather="bookmark"></i>
+            </a>
+        </div>
+
+        <div class="photo-feed-card__caption">
+            <strong>{{ item['author'] }}</strong>
+            {{ item['post']|safe }}
+        </div>
+
+        {% if item.get('shared_from') != -1 and item.get('shared_from') %}
+        <div class="photo-feed-card__meta">
+            Shared from
+            <a href="/{{ exp_id }}/thread/{{ item['shared_from'][0] }}">{{ item['shared_from'][1] }}</a>
+        </div>
+        {% endif %}
+
+        <div class="photo-feed-card__metrics">
+            <span class="photo-feed-pill">
+                <i class="mdi mdi-heart-outline"></i>
+                {{ item.get('likes', 0) }} likes
+            </span>
+            <span class="photo-feed-pill">
+                <i class="mdi mdi-comment-outline"></i>
+                {{ item.get('t_comments', 0) }} comments
+            </span>
+            <span class="photo-feed-pill">
+                <i class="mdi mdi-repeat"></i>
+                {{ item.get('is_shared', 0) }} shares
+            </span>
+        </div>
+    </div>
+</article>
+{% endfor %}

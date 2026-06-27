@@ -11,6 +11,7 @@ from flask_login import current_user, login_required
 
 from y_web import db
 from y_web.routes.interactions._blueprint import user
+from y_web.src.experiment.helpers import open_experiment_session
 from y_web.src.models import (
     Follow,
     Mentions,
@@ -21,6 +22,44 @@ from y_web.src.models import (
     Rounds,
     User_mgmt,
 )
+
+
+def _resolve_follow_round_id(exp_id):
+    """
+    Resolve a valid round id for follow/unfollow actions.
+
+    Photo-sharing experiments may be executed with a separate experiment DB, so
+    we prefer the latest round from that DB and only fall back to the shared
+    bound query if needed.
+    """
+    try:
+        from y_web.src.models import Exps
+
+        exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+        if exp is not None:
+            session, engine = open_experiment_session(exp)
+            if session is not None and engine is not None:
+                try:
+                    round_row = (
+                        session.query(Rounds)
+                        .order_by(Rounds.day.desc(), Rounds.hour.desc(), Rounds.id.desc())
+                        .first()
+                    )
+                    if round_row is not None and getattr(round_row, "id", None) is not None:
+                        return int(round_row.id)
+                finally:
+                    session.close()
+                    engine.dispose()
+    except Exception:
+        pass
+
+    current_round = (
+        Rounds.query.order_by(Rounds.day.desc(), Rounds.hour.desc(), Rounds.id.desc()).first()
+    )
+    if current_round is not None and getattr(current_round, "id", None) is not None:
+        return int(current_round.id)
+
+    return 0
 
 
 @user.route("/<int:exp_id>/follow/<user_id>/<follower_id>", methods=["GET", "POST"])
@@ -38,76 +77,87 @@ def follow(exp_id, user_id, follower_id):
     Returns:
         Redirect to referrer page
     """
-    # get the last round id from Rounds
-    current_round = Rounds.query.order_by(Rounds.day.desc(), Rounds.hour.desc()).first()
+    from y_web.src.models import Exps
 
-    acting_user = User_mgmt.query.filter_by(
-        username=getattr(current_user, "username", "") or ""
-    ).first()
+    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    session = None
+    engine = None
+    if exp is not None:
+        session, engine = open_experiment_session(exp)
 
-    if acting_user is not None:
-        follower_id_converted = acting_user.id
-    else:
-        # Handle both int and UUID follower_id (Standard vs HPC experiments)
-        try:
-            follower_id_converted = int(follower_id)
-        except (ValueError, TypeError):
-            follower_id_converted = follower_id
-
-    # check
-    followed = (
-        Follow.query.filter_by(user_id=follower_id_converted, follower_id=user_id)
-        .order_by(Follow.id.desc())
-        .first()
-    )
-
-    if followed:
-        if followed.action == "follow":
-            try:
-                new_follow = Follow(
-                    follower_id=user_id,
-                    user_id=follower_id_converted,
-                    action="unfollow",
-                    round=current_round.id,
-                )
-                db.session.add(new_follow)
-                db.session.commit()
-            except Exception as e:
-                db.session.rollback()
-                new_follow = Follow(
-                    id=str(uuid.uuid4()),
-                    follower_id=user_id,
-                    user_id=follower_id_converted,
-                    action="unfollow",
-                    round=current_round.id,
-                )
-                db.session.add(new_follow)
-                db.session.commit()
-            return redirect(request.referrer)
-
-    # add the user to the Follow table
     try:
-        new_follow = Follow(
-            follower_id=user_id,
-            user_id=follower_id_converted,
-            action="follow",
-            round=current_round.id,
-        )
-        db.session.add(new_follow)
-        db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        new_follow = Follow(
-            id=str(uuid.uuid4()),
-            follower_id=user_id,
-            user_id=follower_id_converted,
-            action="follow",
-            round=current_round.id,
-        )
-        db.session.add(new_follow)
-        db.session.commit()
+        current_round_id = _resolve_follow_round_id(exp_id)
+        acting_username = getattr(current_user, "username", "") or ""
+        acting_user = None
 
-    return redirect(request.referrer)
+        if session is not None and engine is not None:
+            acting_user = session.query(User_mgmt).filter_by(username=acting_username).first()
+            if acting_user is None and acting_username:
+                # Keep the photo experiment consistent with the other platforms:
+                # the logged-in participant must exist in the experiment DB
+                # before we record social actions for them.
+                try:
+                    from y_web.src.experiment.helpers import ensure_experiment_user
+
+                    ensure_experiment_user(
+                        exp,
+                        user_id=getattr(current_user, "id", follower_id) or follower_id,
+                        username=acting_username,
+                        email=str(getattr(current_user, "email", "") or ""),
+                        password=str(getattr(current_user, "password", "") or ""),
+                        joined_on=0,
+                    )
+                    acting_user = session.query(User_mgmt).filter_by(
+                        username=acting_username
+                    ).first()
+                except Exception:
+                    acting_user = None
+        else:
+            acting_user = User_mgmt.query.filter_by(username=acting_username).first()
+
+        if acting_user is not None:
+            source_user_id = acting_user.id
+        else:
+            # Handle both int and UUID follower_id (Standard vs HPC experiments)
+            try:
+                source_user_id = int(follower_id)
+            except (ValueError, TypeError):
+                source_user_id = follower_id
+
+        query = session.query(Follow) if session is not None and engine is not None else Follow.query
+        latest_follow = (
+            query.filter_by(user_id=source_user_id, follower_id=user_id)
+            .order_by(Follow.id.desc())
+            .first()
+        )
+        new_action = "unfollow" if str(getattr(latest_follow, "action", "") or "").lower() == "follow" else "follow"
+
+        follow_kwargs = dict(
+            follower_id=user_id,
+            user_id=source_user_id,
+            action=new_action,
+            round=current_round_id,
+        )
+        if getattr(exp, "platform_type", "") == "photo_sharing":
+            follow_kwargs["id"] = str(uuid.uuid4())
+
+        new_follow = Follow(**follow_kwargs)
+        if session is not None and engine is not None:
+            session.add(new_follow)
+            session.commit()
+        else:
+            db.session.add(new_follow)
+            db.session.commit()
+
+        target_referrer = request.referrer or ""
+        if "/photo/suggestions" in target_referrer:
+            return redirect(url_for("main.photo_feed", exp_id=exp_id, user_id="all", timeline="feed", mode="rf", page=1, tab="for_you"))
+        return redirect(target_referrer or url_for("main.photo_feed", exp_id=exp_id, user_id="all", timeline="feed", mode="rf", page=1, tab="for_you"))
+    finally:
+        if session is not None:
+            session.close()
+        if engine is not None:
+            engine.dispose()
 
 
 @user.route("/<int:exp_id>/share_content")
