@@ -1,0 +1,434 @@
+{% extends "photo/base.html" %}
+
+{% block photo_title %}Y Social | Search{% endblock %}
+{% block photo_body_class %}photo-search-body{% endblock %}
+
+{% block photo_extra_head %}
+        .photo-search-page {
+            min-height: 100vh;
+            padding: 28px 28px 56px;
+            background: #fff;
+        }
+
+        .photo-search-page__inner {
+            max-width: 1420px;
+            margin: 0 auto;
+        }
+
+        .photo-search-page__toolbar {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 18px;
+        }
+
+        .photo-search-page__form {
+            width: min(100%, 840px);
+            position: relative;
+        }
+
+        .photo-search-page__input {
+            width: 100%;
+            height: 40px;
+            border: 0;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.05);
+            padding: 0 18px 0 44px;
+            font-size: 0.95rem;
+            color: #111;
+        }
+
+        .photo-search-page__icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #8a8a8a;
+        }
+
+        .photo-search-page__tabs {
+            display: flex;
+            justify-content: center;
+            gap: 26px;
+            margin-bottom: 26px;
+        }
+
+        .photo-search-page__tab {
+            position: relative;
+            color: #7b7b7b;
+            font-weight: 700;
+            font-size: 1rem;
+            border: 0;
+            background: transparent;
+            padding: 0 0 6px;
+            cursor: pointer;
+        }
+
+        .photo-search-page__tab.is-active {
+            color: #111;
+        }
+
+        .photo-search-page__tab.is-active::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -8px;
+            height: 2px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #ff2f55, #ff7a00);
+        }
+
+        .photo-search-page__layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 340px;
+            gap: 38px;
+            align-items: start;
+        }
+
+        .photo-search-page__gallery {
+            min-width: 0;
+        }
+
+        .photo-search-page__gallery-head {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .photo-search-page__gallery-head h1 {
+            margin: 0;
+            font-family: "Montserrat", sans-serif;
+            font-size: 1.34rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .photo-search-page__gallery-head p {
+            margin: 0;
+            color: #666;
+        }
+
+        .photo-search-page__grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 2px;
+            background: #fff;
+        }
+
+        .photo-search-page__tile {
+            position: relative;
+            aspect-ratio: 1 / 1;
+            display: block;
+            overflow: hidden;
+            background: #f3f3f3;
+            cursor: zoom-in;
+            border: 0;
+            padding: 0;
+            appearance: none;
+            width: 100%;
+        }
+
+        .photo-search-page__tile img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.25s ease;
+        }
+
+        .photo-search-page__tile:hover img {
+            transform: scale(1.02);
+        }
+
+        .photo-search-page__tile-meta {
+            position: absolute;
+            inset: auto 0 0 0;
+            padding: 12px 10px 10px;
+            background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.62));
+            color: #fff;
+            font-size: 0.82rem;
+            line-height: 1.25;
+        }
+
+        .photo-search-page__sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .photo-search-page__card {
+            background: rgba(255, 255, 255, 0.96);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 20px;
+            padding: 18px 18px 16px;
+            box-shadow: 0 16px 34px rgba(15, 23, 42, 0.06);
+        }
+
+        .photo-search-page__card h2 {
+            margin: 0 0 8px;
+            font-family: "Montserrat", sans-serif;
+            font-size: 1rem;
+            font-weight: 800;
+        }
+
+        .photo-search-page__card p {
+            margin: 0 0 14px;
+            color: #666;
+            font-size: 0.92rem;
+        }
+
+        .photo-search-page__list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .photo-search-page__user {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .photo-search-page__user-main {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+            color: #111;
+        }
+
+        .photo-search-page__user-main:hover,
+        .photo-search-page__user-main:focus,
+        .photo-search-page__user-main:visited {
+            color: #111;
+            text-decoration: none;
+        }
+
+        .photo-search-page__user-main img {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .photo-search-page__user-copy {
+            min-width: 0;
+        }
+
+        .photo-search-page__user-copy strong,
+        .photo-search-page__user-copy small {
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .photo-search-page__user-copy small {
+            color: #777;
+            font-size: 0.8rem;
+        }
+
+        .photo-search-page__badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.05);
+            color: #666;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        .photo-search-page__chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .photo-search-page__chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.05);
+            color: #111;
+            padding: 8px 11px;
+            font-size: 0.84rem;
+            font-weight: 700;
+        }
+
+        .photo-search-page__empty {
+            padding: 40px 20px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.96);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            color: #666;
+            text-align: center;
+            box-shadow: 0 16px 34px rgba(15, 23, 42, 0.06);
+        }
+
+        @media (max-width: 1200px) {
+            .photo-search-page__layout {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .photo-search-page__sidebar {
+                order: -1;
+            }
+
+            .photo-search-page__grid {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 900px) {
+            .photo-search-page__grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .photo-search-page {
+                padding: 18px 14px 42px;
+            }
+
+            .photo-search-page__tabs {
+                gap: 16px;
+                overflow-x: auto;
+                justify-content: flex-start;
+                padding-bottom: 2px;
+            }
+
+            .photo-search-page__grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+{% endblock %}
+
+{% block photo_content %}
+<div class="photo-search-page">
+    <div class="photo-search-page__inner">
+        <div class="photo-search-page__toolbar">
+            <form class="photo-search-page__form" data-photo-search-form>
+                <i data-feather="search" class="photo-search-page__icon"></i>
+                <input
+                    class="photo-search-page__input"
+                    type="search"
+                    name="q"
+                    value="{{ search_query }}"
+                    placeholder="Search photos, people, hashtags"
+                    data-photo-search-input
+                    autocomplete="off"
+                />
+            </form>
+        </div>
+
+        <div class="photo-search-page__tabs" role="tablist" aria-label="Search filters">
+            {% for item in [('all', 'All'), ('photos', 'Photos'), ('users', 'People'), ('hashtags', 'Hashtags')] %}
+            <button
+                type="button"
+                class="photo-search-page__tab{% if search_kind == item[0] %} is-active{% endif %}"
+                data-photo-search-kind="{{ item[0] }}"
+            >{{ item[1] }}</button>
+            {% endfor %}
+        </div>
+
+        <div class="photo-search-page__layout">
+            <section class="photo-search-page__gallery">
+                <div class="photo-search-page__gallery-head">
+                    <div>
+                        <h1>Search results</h1>
+                        <p data-photo-search-summary>
+                            {% if search_query %}
+                                Showing {{ search_counts.photos }} photos, {{ search_counts.users }} people and {{ search_counts.hashtags }} hashtags for "{{ search_query }}".
+                            {% else %}
+                                Browse recent photos, people and hashtags in this experiment.
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="photo-search-page__grid" data-photo-search-grid>
+                    {% if search_photos %}
+                        {% for item in search_photos %}
+                        <button type="button" class="photo-search-page__tile" data-photo-open-post="{{ item['post_id'] }}">
+                            <img src="{{ item['image']['url'] }}" data-demo-src="{{ item['image']['url'] }}" alt="{{ item['image']['description'] }}"/>
+                            <div class="photo-search-page__tile-meta">
+                                <strong>{{ item['author'] }}</strong><br/>
+                                <span>{{ item['display_time'] }}</span>
+                            </div>
+                        </button>
+                        {% endfor %}
+                    {% else %}
+                        <div class="photo-search-page__empty">No photos matched your search yet.</div>
+                    {% endif %}
+                </div>
+            </section>
+
+            <aside class="photo-search-page__sidebar">
+                <div class="photo-search-page__card">
+                    <h2>People</h2>
+                    <p>Profiles and pages matching your search.</p>
+                    <div class="photo-search-page__list" data-photo-search-users>
+                        {% if search_users %}
+                            {% for user in search_users %}
+                            <div class="photo-search-page__user">
+                                <a class="photo-search-page__user-main" href="/{{ exp_id }}/photo/profile/{{ user['id'] }}/recent/1">
+                                    <img src="{{ user['profile_pic'] }}" data-demo-src="{{ user['profile_pic'] }}" alt=""/>
+                                    <div class="photo-search-page__user-copy">
+                                        <strong>{{ user['username'] }}</strong>
+                                        <small>{{ user['photo_count'] }} photos</small>
+                                    </div>
+                                </a>
+                                <span class="photo-search-page__badge">{{ 'Page' if user.get('kind') == 'page' else 'User' }}</span>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="photo-search-page__empty">No people matched yet.</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="photo-search-page__card">
+                    <h2>Hashtags</h2>
+                    <p>Search topics and photo tags.</p>
+                    <div class="photo-search-page__chips" data-photo-search-hashtags>
+                        {% if search_hashtags %}
+                            {% for tag in search_hashtags %}
+                            <a class="photo-search-page__chip" href="/{{ exp_id }}/photo/search?q=%23{{ tag['hashtag'] }}&kind=hashtags">
+                                #{{ tag['hashtag'] }}
+                                <span class="photo-search-page__badge">{{ tag['photo_count'] }}</span>
+                            </a>
+                            {% endfor %}
+                        {% else %}
+                            <div class="photo-search-page__empty">No hashtags matched yet.</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block photo_bootstrap_data %}
+<script>
+    window.YS_DATA_PHOTO_SEARCH = {
+        expId: '{{ exp_id }}',
+        loggedId: '{{ logged_id }}',
+        query: {{ search_query|tojson }},
+        kind: {{ search_kind|tojson }},
+        endpoint: '/{{ exp_id }}/api/photo/search',
+        pageUrl: '/{{ exp_id }}/photo/search'
+    };
+</script>
+{% endblock %}
+
+{% block photo_extra_scripts %}
+<script src="{{ url_for('static', filename='assets/js/photo-search.js') }}"></script>
+{% endblock %}

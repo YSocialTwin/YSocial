@@ -8,6 +8,9 @@ from y_web.routes.social.photo import (
     _photo_latest_recommendation_ids,
     _photo_media_root,
     _photo_media_url,
+    _photo_linkify_text,
+    _photo_build_item,
+    _photo_search_payload,
     _photo_profile_pic_url,
     _photo_suggested_contacts,
 )
@@ -27,9 +30,10 @@ def test_photo_feed_template_uses_collapsible_left_sidebar_and_instagram_layout(
     assert "data-photo-sidebar-toggle" in base_template
     assert "photo-sidebar__item{% if photo_active_nav == 'home' %} is-active{% endif %}" in Path(
         "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/photo/components/sidebar.html"
-    ).read_text(
-        encoding="utf-8"
-    )
+    ).read_text(encoding="utf-8")
+    assert "photo_home_url" in Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/photo/components/sidebar.html"
+    ).read_text(encoding="utf-8")
     assert "photo-stories" in template
     sidebar_template = Path(
         "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/photo/components/sidebar.html"
@@ -41,6 +45,7 @@ def test_photo_feed_template_uses_collapsible_left_sidebar_and_instagram_layout(
     assert "photo/feed" in template
     assert "photo/components/sidebar.html" in base_template
     assert "photo-overlays.js" in base_template
+    assert "data-photo-share-overlay" in base_template
     assert "photo-feed-tab" in template
     assert "Previous</a>" not in template
     assert "Next</a>" not in template
@@ -58,6 +63,9 @@ def test_photo_feed_template_uses_collapsible_left_sidebar_and_instagram_layout(
         "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/photo/components/posts.html"
     ).read_text(encoding="utf-8")
     assert "data-photo-open-post" in posts_template
+    assert "data-photo-post-like" in posts_template
+    assert "data-photo-post-bookmark" in posts_template
+    assert "data-photo-post-share" in posts_template
 
 
 def test_photo_routes_do_not_rely_on_recsys_type_for_feed_rendering():
@@ -89,6 +97,8 @@ def test_photo_routes_do_not_rely_on_recsys_type_for_feed_rendering():
     assert "photo_sharing" in admin_source
     assert "ensure_experiment_user" in route_source
     assert "photo/profile" in route_source
+    assert "api/photo/share" in route_source
+    assert "_photo_store_uploaded_media" in route_source
     assert (
         "open_experiment_session" in admin_source
         or "ensure_experiment_user" in admin_source
@@ -138,6 +148,51 @@ def test_photo_media_and_avatar_helpers_resolve_browser_safe_urls():
         )
         assert avatar_url.startswith("/static/assets/img/users/")
         assert avatar_url.endswith(".png")
+
+
+def test_photo_media_url_preserves_static_profile_assets():
+    app = create_app()
+    with app.app_context():
+        exp = Exps.query.filter_by(idexp=1).first()
+        assert exp is not None
+        assert _photo_media_url(exp, "/static/assets/img/users/1081.png") == "/static/assets/img/users/1081.png"
+
+
+def test_photo_text_linkification_targets_profiles_and_hashtag_search():
+    app = create_app()
+    with app.app_context():
+        exp = Exps.query.filter_by(idexp=1).first()
+        assert exp is not None
+
+        linked = _photo_linkify_text(exp, "Hello @KatherineJones #pizza")
+        assert '/1/photo/search?q=%23pizza&amp;kind=hashtags' in linked
+        assert '/1/photo/profile/' in linked
+        assert '@KatherineJones' in linked or 'KatherineJones' in linked
+
+
+def test_photo_build_item_exposes_linked_caption_and_author_href():
+    app = create_app()
+    with app.app_context():
+        exp = Exps.query.filter_by(idexp=1).first()
+        assert exp is not None
+
+        item = _photo_build_item(
+            exp,
+            {
+                "id": "photo-1",
+                "user_id": "b49b2daa-0560-466e-bd45-95222c7a4a10",
+                "author_username": "KatherineJones",
+                "author_profile_picture_url": "",
+                "author_cover_image": "",
+                "author_is_page": 0,
+                "caption": "Hello @KatherineJones #pizza",
+                "image_url": "https://example.com/photo.jpg",
+            },
+        )
+
+        assert item["author_href"].endswith("/photo/profile/b49b2daa-0560-466e-bd45-95222c7a4a10/recent/1")
+        assert "photo-inline-link" in item["post_html"]
+        assert "/1/photo/search?q=%23pizza&amp;kind=hashtags" in item["post_html"]
 
 
 def test_photo_feed_timelines_use_recommendations_and_social_contacts():
@@ -231,3 +286,47 @@ def test_photo_profile_page_is_wired_and_uses_photo_shell():
     assert "data-photo-open-post" in template
     assert "photo-sidebar__item" in base_template
     assert "photo/components/sidebar.html" in base_template
+
+
+def test_photo_search_page_is_wired_and_returns_all_search_domains():
+    route_source = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/photo.py"
+    ).read_text(encoding="utf-8")
+    template = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/photo/search.html"
+    ).read_text(encoding="utf-8")
+    sidebar_template = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/photo/components/sidebar.html"
+    ).read_text(encoding="utf-8")
+
+    assert "photo/search" in route_source
+    assert "api/photo/search" in route_source
+    assert "photo-search-page__grid" in template
+    assert "type=\"button\" class=\"photo-search-page__tile\"" in template
+    assert "photo-search.js" in template
+    assert "YSPhotoOpenPost" in Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/js/photo-search.js"
+    ).read_text(encoding="utf-8")
+    assert "YS_DATA_PHOTO_SEARCH" in Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/js/photo-overlays.js"
+    ).read_text(encoding="utf-8")
+    assert "data-photo-search-input" in template
+    assert "data-photo-search-kind" in template
+    assert "photo-sidebar__item{% if photo_active_nav == 'search' %} is-active{% endif %}" in sidebar_template
+    assert "data-photo-open-share" in sidebar_template
+
+    app = create_app()
+    with app.app_context():
+        exp = Exps.query.filter_by(idexp=1).first()
+        assert exp is not None
+        payload = _photo_search_payload(
+            exp,
+            "pizza",
+            "all",
+            "b49b2daa-0560-466e-bd45-95222c7a4a10",
+        )
+        assert payload["kind"] == "all"
+        assert isinstance(payload["photos"], list)
+        assert isinstance(payload["users"], list)
+        assert isinstance(payload["hashtags"], list)
+        assert payload["counts"]["photos"] >= 1

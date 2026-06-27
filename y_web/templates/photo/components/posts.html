@@ -1,5 +1,5 @@
 {% for index, item in enumerate(items) %}
-<article id="feed-post-{{ item['post_id'] }}" class="photo-feed-card">
+<article id="feed-post-{{ item['post_id'] }}" class="photo-feed-card" data-photo-post-card="{{ item['post_id'] }}">
     <header class="photo-feed-card__header">
         <a class="photo-feed-card__author" href="/{{ exp_id }}/photo/profile/{{ item['author_id'] }}/recent/1">
             {% set author_profile_src = item['profile_pic'] or url_for('static', filename='assets/img/users/' ~ (item['author_id']|user_image_id) ~ '.png') %}
@@ -42,35 +42,35 @@
 
     <div class="photo-feed-card__media">
         {% if item['image'] != "" %}
-        <a class="photo-feed-card__media-link" href="#" data-photo-open-post="{{ item['post_id'] }}">
+                <button type="button" class="photo-feed-card__media-link" data-photo-open-post="{{ item['post_id'] }}">
             <img src="{{ item['image'].url }}" data-demo-src="{{ item['image'].url }}" alt="{{ item['image'].description }}"/>
-        </a>
+        </button>
         {% else %}
-        <a class="photo-feed-card__media-link" href="#" data-photo-open-post="{{ item['post_id'] }}">
+        <button type="button" class="photo-feed-card__media-link" data-photo-open-post="{{ item['post_id'] }}">
             <img src="{{ item.get('profile_pic') or url_for('static', filename='assets/img/vector/logo/Ysocial_white.png') }}" data-demo-src="{{ item.get('profile_pic') or url_for('static', filename='assets/img/vector/logo/Ysocial_white.png') }}" alt="Post media placeholder"/>
-        </a>
+        </button>
         {% endif %}
     </div>
 
     <div class="photo-feed-card__body">
         <div class="photo-feed-card__actions">
-            <a class="photo-feed-card__action" href="#">
-                <i data-feather="heart"></i>
-            </a>
-            <a class="photo-feed-card__action" href="/{{ exp_id }}/thread/{{ item['thread_id'] }}">
-                <i data-feather="message-circle"></i>
-            </a>
-            <a class="photo-feed-card__action" href="#">
-                <i data-feather="send"></i>
-            </a>
-            <a class="photo-feed-card__action" href="#">
+            <div class="photo-feed-card__actions-left">
+                <button type="button" class="photo-feed-card__action{% if item.get('is_liked') %} photo-feed-card__action--active photo-feed-card__action--liked{% endif %}" data-photo-post-like data-photo-post-id="{{ item['post_id'] }}" aria-pressed="{{ 'true' if item.get('is_liked') else 'false' }}">
+                    <i data-feather="heart"></i>
+                    <span data-photo-post-like-count>{{ item.get('likes', 0) }}</span>
+                </button>
+                <button type="button" class="photo-feed-card__action" data-photo-open-post="{{ item['post_id'] }}">
+                    <i data-feather="message-circle"></i>
+                    <span data-photo-post-comment-count>{{ item.get('t_comments', 0) }}</span>
+                </button>
+                <button type="button" class="photo-feed-card__action" data-photo-post-share data-photo-post-id="{{ item['post_id'] }}">
+                    <i data-feather="send"></i>
+                    <span data-photo-post-share-count>{{ item.get('is_shared', 0) }}</span>
+                </button>
+            </div>
+            <button type="button" class="photo-feed-card__action photo-feed-card__action--bookmark{% if item.get('is_bookmarked') %} photo-feed-card__action--active photo-feed-card__action--saved{% endif %}" data-photo-post-bookmark data-photo-post-id="{{ item['post_id'] }}" aria-pressed="{{ 'true' if item.get('is_bookmarked') else 'false' }}">
                 <i data-feather="bookmark"></i>
-            </a>
-        </div>
-
-        <div class="photo-feed-card__caption">
-            <strong>{{ item['author'] }}</strong>
-            {{ item['post']|safe }}
+            </button>
         </div>
 
         {% if item.get('shared_from') != -1 and item.get('shared_from') %}
@@ -80,19 +80,15 @@
         </div>
         {% endif %}
 
-        <div class="photo-feed-card__metrics">
-            <span class="photo-feed-pill">
-                <i class="mdi mdi-heart-outline"></i>
-                {{ item.get('likes', 0) }} likes
-            </span>
-            <span class="photo-feed-pill">
-                <i class="mdi mdi-comment-outline"></i>
-                {{ item.get('t_comments', 0) }} comments
-            </span>
-            <span class="photo-feed-pill">
-                <i class="mdi mdi-repeat"></i>
-                {{ item.get('is_shared', 0) }} shares
-            </span>
+        <div class="photo-feed-card__caption">
+            <strong>
+                {% if item.get('author_href') %}
+                <a href="{{ item['author_href'] }}">{{ item['author'] }}</a>
+                {% else %}
+                {{ item['author'] }}
+                {% endif %}
+            </strong>
+            {{ item.get('post_html', item['post'])|safe }}
         </div>
     </div>
 </article>

@@ -274,6 +274,8 @@
     document.addEventListener('DOMContentLoaded', init);
 
     window.PhotoFeed = {
-        refreshFeed: refreshFeed
+        refreshFeed: refreshFeed,
+        initializeDynamicFeedContent: initializeDynamicFeedContent
     };
+    window.YSPhotoInitializeDynamicFeedContent = initializeDynamicFeedContent;
 })();

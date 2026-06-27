@@ -1,5 +1,5 @@
 <div>
-    <div class="photo-sidebar__brand">
+    <a class="photo-sidebar__brand" href="{{ photo_home_url or ('/' ~ exp_id ~ '/photo/feed/all/feed/rf/1') }}" aria-label="Go to home feed">
         {% if photo_sidebar_collapsed %}
         <img
             class="photo-sidebar__brand--collapsed"
@@ -13,22 +13,18 @@
             alt="YSocial"
         />
         {% endif %}
-    </div>
+    </a>
 
     <nav class="photo-sidebar__section" aria-label="Primary">
-        <a class="photo-sidebar__item{% if photo_active_nav == 'home' %} is-active{% endif %}" href="/{{ exp_id }}/photo/feed/{{ user_id }}/{{ timeline }}/{{ mode }}/{{ page }}{% if active_tab is defined %}?tab={{ active_tab }}{% endif %}">
+        <a class="photo-sidebar__item{% if photo_active_nav == 'home' %} is-active{% endif %}" href="{{ photo_home_url or ('/' ~ exp_id ~ '/photo/feed/all/feed/rf/1') }}">
             <i class="mdi mdi-home-variant"></i>
             <span>Home</span>
         </a>
         <a class="photo-sidebar__item" href="#">
-            <i class="mdi mdi-play-box-outline"></i>
-            <span>Reels</span>
-        </a>
-        <a class="photo-sidebar__item" href="#">
-            <i class="mdi mdi-send-outline"></i>
+            <i class="mdi mdi-message-outline"></i>
             <span>Messages</span>
         </a>
-        <a class="photo-sidebar__item" href="#">
+        <a class="photo-sidebar__item{% if photo_active_nav == 'search' %} is-active{% endif %}" href="/{{ exp_id }}/photo/search">
             <i class="mdi mdi-magnify"></i>
             <span>Search</span>
         </a>
@@ -36,7 +32,7 @@
             <i class="mdi mdi-heart-outline"></i>
             <span>Notifications</span>
         </a>
-        <a class="photo-sidebar__item" href="#">
+        <a class="photo-sidebar__item" href="#" data-photo-open-share>
             <i class="mdi mdi-plus-box-outline"></i>
             <span>Create</span>
         </a>
@@ -49,7 +45,7 @@
 
 <div class="photo-sidebar__footer">
     <div class="photo-sidebar__profile">
-        {% set sidebar_profile_src = profile_pic or url_for('static', filename='assets/img/users/' ~ (logged_id|user_image_id) ~ '.png') %}
+        {% set sidebar_profile_src = sidebar_profile_pic or profile_pic or url_for('static', filename='assets/img/users/' ~ (logged_id|user_image_id) ~ '.png') %}
         <img
             src="{{ sidebar_profile_src }}"
             data-demo-src="{{ sidebar_profile_src }}"

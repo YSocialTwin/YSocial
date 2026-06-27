@@ -141,39 +141,88 @@
             color: #d91d4f;
         }
 
-        .photo-profile-highlights {
+        .photo-profile-stories {
             display: flex;
-            gap: 18px;
-            flex-wrap: wrap;
+            gap: 22px;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding: 14px 4px 24px;
             margin: 14px 0 28px;
+            scrollbar-width: none;
         }
 
-        .photo-profile-highlight {
+        .photo-profile-stories::-webkit-scrollbar {
+            display: none;
+        }
+
+        .photo-profile-story {
+            width: 96px;
+            flex: 0 0 auto;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 8px;
-            min-width: 84px;
+            color: #111;
         }
 
-        .photo-profile-highlight__circle {
-            width: 72px;
-            height: 72px;
+        .photo-profile-story:hover,
+        .photo-profile-story:focus {
+            color: #111;
+            text-decoration: none;
+        }
+
+        .photo-profile-story__ring {
+            width: 92px;
+            height: 92px;
             border-radius: 50%;
-            border: 1px solid rgba(0, 0, 0, 0.08);
+            padding: 3px;
+            background: linear-gradient(135deg, #ff8a5c, #ff2f55 52%, #ab47ff);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+            flex-shrink: 0;
+        }
+
+        .photo-profile-story__ring-inner {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
             background: #fff;
+            padding: 4px;
+            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #c6c6c6;
-            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.05);
         }
 
-        .photo-profile-highlight__label {
-            font-size: 0.82rem;
-            color: #111;
-            font-weight: 700;
+        .photo-profile-story__ring-inner img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .photo-profile-story__label {
+            width: 100%;
+            font-size: 0.86rem;
+            color: #222;
             text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .photo-profile-story--new .photo-profile-story__ring {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.08));
+        }
+
+        .photo-profile-story--new .photo-profile-story__ring-inner {
+            background: #fff;
+            color: #c3c3c3;
+            position: relative;
+        }
+
+        .photo-profile-story--new .photo-profile-story__ring-inner i {
+            font-size: 2.15rem;
         }
 
         .photo-profile-tabs {
@@ -290,7 +339,9 @@
 <div class="photo-profile-page">
     <section class="photo-profile-hero">
         <div class="photo-profile-avatar-wrap">
+            {% if is_self_profile %}
             <div class="photo-profile-note">Note...</div>
+            {% endif %}
             <div class="photo-profile-avatar">
                 <img src="{{ profile_pic }}" data-demo-src="{{ profile_pic }}" alt="{{ user.get('username', 'Profile') }} avatar"/>
             </div>
@@ -331,19 +382,35 @@
         </div>
     </section>
 
-    <section class="photo-profile-highlights" aria-label="Highlights">
-        <div class="photo-profile-highlight">
-            <div class="photo-profile-highlight__circle">
-                <i data-feather="plus"></i>
+    <section class="photo-profile-stories" aria-label="Stories">
+        {% if is_self_profile %}
+        <a class="photo-profile-story photo-profile-story--new" href="#" aria-label="Create new story">
+            <div class="photo-profile-story__ring">
+                <div class="photo-profile-story__ring-inner">
+                    <i data-feather="plus"></i>
+                </div>
             </div>
-            <div class="photo-profile-highlight__label">New</div>
-        </div>
-        <div class="photo-profile-highlight">
-            <div class="photo-profile-highlight__circle">
-                <i data-feather="bookmark"></i>
-            </div>
-            <div class="photo-profile-highlight__label">Archive</div>
-        </div>
+            <div class="photo-profile-story__label">New</div>
+        </a>
+        {% endif %}
+
+        {% if profile_stories %}
+            {% for story in profile_stories %}
+            <a
+                class="photo-profile-story"
+                href="#"
+                data-photo-open-story="{{ story['story_id'] }}"
+                data-photo-story-index="{{ story['index'] }}"
+            >
+                <div class="photo-profile-story__ring">
+                    <div class="photo-profile-story__ring-inner">
+                        <img src="{{ story['image']['url'] }}" data-demo-src="{{ story['image']['url'] }}" alt="{{ story['image']['description'] }}"/>
+                    </div>
+                </div>
+                <div class="photo-profile-story__label">{{ story['display_time'] }}</div>
+            </a>
+            {% endfor %}
+        {% endif %}
     </section>
 
     <div class="photo-profile-tabs">
@@ -397,7 +464,8 @@
         page: {{ page }},
         profileId: '{{ user_id }}',
         followersEndpoint: '/{{ exp_id }}/api/photo/profile/{{ user_id }}/connections/followers',
-        followingEndpoint: '/{{ exp_id }}/api/photo/profile/{{ user_id }}/connections/following'
+        followingEndpoint: '/{{ exp_id }}/api/photo/profile/{{ user_id }}/connections/following',
+        stories: {{ profile_stories|tojson }}
     };
 </script>
 {% endblock %}

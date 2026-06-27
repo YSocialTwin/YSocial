@@ -57,6 +57,8 @@
         }
 
         .photo-sidebar__brand {
+            color: inherit;
+            text-decoration: none;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -275,10 +277,368 @@
         }
 
         .photo-overlay__media img {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            display: block;
+            margin: auto;
+        }
+
+        .photo-story-overlay__dialog {
+            width: min(1480px, 100%);
+            height: min(92vh, 1080px);
+            grid-template-columns: minmax(0, 1fr) 380px;
+        }
+
+        .photo-story-overlay__media {
+            background: #111;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 0;
+            min-height: 0;
+            position: relative;
+        }
+
+        .photo-story-overlay__carousel {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: stretch;
+            justify-content: stretch;
+        }
+
+        .photo-story-overlay__image {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            display: block;
+            background: #111;
+            margin: auto;
+        }
+
+        .photo-story-overlay__nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 44px;
+            height: 44px;
+            border: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.92);
+            color: #111;
+            box-shadow: 0 10px 26px rgba(0, 0, 0, 0.18);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .photo-story-overlay__nav:hover {
+            background: #fff;
+        }
+
+        .photo-story-overlay__nav:disabled {
+            opacity: 0.35;
+            cursor: default;
+        }
+
+        .photo-story-overlay__nav--prev {
+            left: 16px;
+        }
+
+        .photo-story-overlay__nav--next {
+            right: 16px;
+        }
+
+        .photo-story-overlay__counter {
+            position: absolute;
+            left: 16px;
+            bottom: 16px;
+            padding: 7px 12px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #111;
+            font-size: 0.82rem;
+            font-weight: 700;
+            z-index: 2;
+        }
+
+        .photo-story-overlay__panel {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            background: #fff;
+        }
+
+        .photo-story-overlay__meta {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .photo-story-overlay__title {
+            margin: 0;
+            font-family: "Montserrat", sans-serif;
+            font-size: 1.1rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: #111;
+        }
+
+        .photo-story-overlay__description {
+            margin: 0;
+            color: #222;
+            line-height: 1.55;
+            font-size: 0.95rem;
+        }
+
+        .photo-story-overlay__summary {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        .photo-share-overlay__dialog {
+            width: min(1320px, 100%);
+            height: min(90vh, 960px);
+            grid-template-columns: 1fr;
+        }
+
+        .photo-share-overlay__shell {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            min-height: 0;
+            width: 100%;
+            height: 100%;
+            background: #fff;
+        }
+
+        .photo-share-overlay__toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 14px 18px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .photo-share-overlay__toolbar-title {
+            margin: 0;
+            flex: 1;
+            text-align: center;
+            font-family: "Montserrat", sans-serif;
+            font-size: 1.05rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: #111;
+        }
+
+        .photo-share-overlay__toolbar-action {
+            min-width: 44px;
+            height: 40px;
+            border: 0;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.04);
+            color: #111;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 14px;
+            font-weight: 700;
+        }
+
+        .photo-share-overlay__toolbar-action.is-primary {
+            background: rgba(47, 95, 224, 0.12);
+            color: #2f5fe0;
+        }
+
+        .photo-share-overlay__toolbar-action:disabled {
+            opacity: 0.45;
+            cursor: default;
+        }
+
+        .photo-share-overlay__stage {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            align-items: stretch;
+        }
+
+        .photo-share-overlay__empty {
+            flex: 1;
+            min-height: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 28px;
+        }
+
+        .photo-share-overlay__empty.is-visible {
+            display: flex;
+        }
+
+        .photo-share-overlay__empty-card {
+            width: min(520px, 100%);
+            min-height: 520px;
+            border: 2px dashed rgba(0, 0, 0, 0.14);
+            border-radius: 28px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            text-align: center;
+            padding: 34px;
+            background: linear-gradient(180deg, rgba(247, 248, 250, 0.92), rgba(255, 255, 255, 0.98));
+        }
+
+        .photo-share-overlay__empty-card i {
+            font-size: 4rem;
+            color: #111;
+        }
+
+        .photo-share-overlay__empty-card h3 {
+            margin: 0;
+            font-family: "Montserrat", sans-serif;
+            font-size: 1.15rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .photo-share-overlay__empty-card p {
+            margin: 0;
+            max-width: 28rem;
+            color: #666;
+            line-height: 1.55;
+        }
+
+        .photo-share-overlay__dropzone-button {
+            border: 0;
+            border-radius: 14px;
+            padding: 12px 18px;
+            background: #2f5fe0;
+            color: #fff;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 12px 28px rgba(47, 95, 224, 0.22);
+        }
+
+        .photo-share-overlay__editor {
+            flex: 1;
+            min-height: 0;
+            display: none;
+            grid-template-columns: minmax(0, 1fr) 380px;
+            width: 100%;
+        }
+
+        .photo-share-overlay__editor.is-visible {
+            display: grid;
+        }
+
+        .photo-share-overlay__preview {
+            min-width: 0;
+            min-height: 0;
+            background: #f7f7f7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .photo-share-overlay__preview img {
             width: 100%;
             height: 100%;
             object-fit: contain;
             display: block;
+            margin: 0;
+            border-radius: 0;
+            box-shadow: none;
+        }
+
+        .photo-share-overlay__panel {
+            min-width: 0;
+            border-left: 1px solid rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .photo-share-overlay__author-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 18px 18px 12px;
+        }
+
+        .photo-share-overlay__author-row img {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .photo-share-overlay__author-row strong {
+            font-weight: 800;
+        }
+
+        .photo-share-overlay__form {
+            padding: 0 18px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            min-height: 0;
+            overflow: auto;
+        }
+
+        .photo-share-overlay__field {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .photo-share-overlay__field label {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #111;
+        }
+
+        .photo-share-overlay__field textarea,
+        .photo-share-overlay__field input {
+            width: 100%;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 14px;
+            padding: 12px 14px;
+            font: inherit;
+            color: #111;
+            background: #fff;
+        }
+
+        .photo-share-overlay__field textarea {
+            min-height: 118px;
+            resize: vertical;
+        }
+
+        .photo-share-overlay__helper {
+            color: #666;
+            font-size: 0.84rem;
+            line-height: 1.45;
+        }
+
+        .photo-share-overlay__input {
+            display: none;
         }
 
         .photo-overlay__panel {
@@ -329,6 +689,17 @@
             font-size: 0.82rem;
         }
 
+        .photo-inline-link {
+            color: #2f5fe0;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .photo-inline-link:hover,
+        .photo-inline-link:focus {
+            text-decoration: underline;
+        }
+
         .photo-overlay__close {
             width: 34px;
             height: 34px;
@@ -345,6 +716,8 @@
             min-height: 0;
             overflow: auto;
             padding: 16px 18px 18px;
+            display: flex;
+            flex-direction: column;
         }
 
         .photo-overlay__summary {
@@ -387,10 +760,119 @@
             margin-bottom: 16px;
         }
 
+        .photo-overlay__caption a,
+        .photo-overlay__comment-copy a,
+        .photo-overlay__author-copy a {
+            color: #2f5fe0;
+            text-decoration: none;
+        }
+
         .photo-overlay__comments {
             display: flex;
             flex-direction: column;
-            gap: 14px;
+            gap: 10px;
+        }
+
+        .photo-overlay__comments-scroll {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-height: 0;
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 6px;
+            margin-bottom: 14px;
+        }
+
+        .photo-overlay__comment-thread {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-left: 18px;
+            padding-left: 14px;
+            border-left: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .photo-overlay__comment-toggle {
+            margin-top: 6px;
+            border: 0;
+            background: transparent;
+            color: #7a7a7a;
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 0;
+            cursor: pointer;
+        }
+
+        .photo-overlay__comment-toggle:hover {
+            color: #111;
+        }
+
+        .photo-overlay__comment.is-collapsed > .photo-overlay__comment-thread {
+            display: none;
+        }
+
+        .photo-overlay__comment-meta-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+
+        .photo-overlay__composer {
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
+            padding-top: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .photo-overlay__composer-target {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            font-size: 0.82rem;
+            color: #666;
+        }
+
+        .photo-overlay__composer-target.is-visible {
+            display: flex;
+        }
+
+        .photo-overlay__composer-form {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+        }
+
+        .photo-overlay__composer-form textarea {
+            flex: 1;
+            min-height: 44px;
+            max-height: 140px;
+            resize: vertical;
+            border-radius: 14px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 10px 12px;
+            font: inherit;
+            line-height: 1.4;
+            color: #111;
+            background: #fff;
+        }
+
+        .photo-overlay__composer-form button {
+            border: 0;
+            border-radius: 12px;
+            padding: 10px 14px;
+            background: rgba(47, 95, 224, 0.12);
+            color: #2f5fe0;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .photo-overlay__composer-form button:hover {
+            background: rgba(47, 95, 224, 0.16);
         }
 
         .photo-overlay__comment {
@@ -656,7 +1138,23 @@
                 </div>
                 <div class="photo-overlay__liked-by" data-photo-post-liked-by></div>
                 <div class="photo-overlay__caption" data-photo-post-caption></div>
-                <div class="photo-overlay__comments" data-photo-post-comments-list></div>
+                <div class="photo-overlay__comments">
+                    <div class="photo-overlay__comments-scroll" data-photo-post-comments-list></div>
+                    <div class="photo-overlay__composer">
+                        <div class="photo-overlay__composer-target" data-photo-comment-target>
+                            <span data-photo-comment-target-label></span>
+                            <button type="button" class="photo-overlay__comment-toggle" data-photo-comment-cancel>Cancel</button>
+                        </div>
+                        <form class="photo-overlay__composer-form" data-photo-comment-form>
+                            <textarea
+                                data-photo-comment-input
+                                placeholder="Add a comment..."
+                                rows="2"
+                            ></textarea>
+                            <button type="submit">Post</button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -679,6 +1177,104 @@
         </div>
     </div>
 </div>
+    <div class="photo-overlay" data-photo-story-overlay hidden>
+        <div class="photo-overlay__dialog photo-story-overlay__dialog" role="dialog" aria-modal="true" aria-label="Story details">
+        <div class="photo-story-overlay__media">
+            <div class="photo-story-overlay__carousel">
+                <button class="photo-story-overlay__nav photo-story-overlay__nav--prev" type="button" data-photo-story-prev aria-label="Previous image">
+                    <i data-feather="chevron-left"></i>
+                </button>
+                <img class="photo-story-overlay__image" alt="" data-photo-story-image />
+                <button class="photo-story-overlay__nav photo-story-overlay__nav--next" type="button" data-photo-story-next aria-label="Next image">
+                    <i data-feather="chevron-right"></i>
+                </button>
+                <div class="photo-story-overlay__counter" data-photo-story-counter></div>
+            </div>
+        </div>
+        <div class="photo-overlay__panel photo-story-overlay__panel">
+            <div class="photo-overlay__header">
+                <div class="photo-overlay__author">
+                    <img alt="" data-photo-story-author-avatar />
+                    <div class="photo-overlay__author-copy">
+                        <strong data-photo-story-author></strong>
+                        <span data-photo-story-time></span>
+                    </div>
+                </div>
+                <button class="photo-overlay__close" type="button" data-photo-overlay-close aria-label="Close">
+                    <i data-feather="x"></i>
+                </button>
+            </div>
+            <div class="photo-overlay__body">
+                <div class="photo-story-overlay__meta">
+                    <h2 class="photo-story-overlay__title" data-photo-story-title></h2>
+                    <p class="photo-story-overlay__description" data-photo-story-description></p>
+                </div>
+                <div class="photo-overlay__summary">
+                    <div class="photo-overlay__stats">
+                        <span class="photo-overlay__pill" data-photo-story-images></span>
+                        <span class="photo-overlay__pill" data-photo-story-views></span>
+                    </div>
+                </div>
+                <div class="photo-overlay__liked-by" data-photo-story-caption></div>
+            </div>
+        </div>
+        </div>
+    </div>
+    <div class="photo-overlay" data-photo-share-overlay hidden>
+        <div class="photo-overlay__dialog photo-share-overlay__dialog" role="dialog" aria-modal="true" aria-label="Create new post">
+            <div class="photo-share-overlay__shell">
+                <div class="photo-share-overlay__toolbar">
+                    <button type="button" class="photo-share-overlay__toolbar-action" data-photo-share-back hidden>
+                        <i data-feather="arrow-left"></i>
+                    </button>
+                    <h2 class="photo-share-overlay__toolbar-title" data-photo-share-title>Create new post</h2>
+                    <button type="button" class="photo-share-overlay__toolbar-action is-primary" data-photo-share-submit hidden>
+                        Share
+                    </button>
+                    <button class="photo-overlay__close" type="button" data-photo-overlay-close aria-label="Close">
+                        <i data-feather="x"></i>
+                    </button>
+                </div>
+                <div class="photo-share-overlay__stage">
+                    <div class="photo-share-overlay__empty is-visible" data-photo-share-empty>
+                        <div class="photo-share-overlay__empty-card">
+                            <i data-feather="image"></i>
+                            <h3>Drag photos here</h3>
+                            <p>Select a photo from your computer, preview it instantly, then add a description and text before sharing it to the experiment feed.</p>
+                            <button type="button" class="photo-share-overlay__dropzone-button" data-photo-share-select>
+                                Select from computer
+                            </button>
+                        </div>
+                    </div>
+                    <div class="photo-share-overlay__editor" data-photo-share-editor>
+                        <div class="photo-share-overlay__preview">
+                            <img alt="Selected image preview" data-photo-share-preview />
+                        </div>
+                        <aside class="photo-share-overlay__panel">
+                            <div class="photo-share-overlay__author-row">
+                                <img alt="" data-photo-share-author-avatar />
+                                <strong data-photo-share-author></strong>
+                            </div>
+                            <form class="photo-share-overlay__form" data-photo-share-form>
+                                <div class="photo-share-overlay__field">
+                                    <label for="photo-share-alt-text">Image description</label>
+                                    <textarea id="photo-share-alt-text" data-photo-share-alt placeholder="Write a short description for the image..."></textarea>
+                                </div>
+                                <div class="photo-share-overlay__field">
+                                    <label for="photo-share-caption">Text</label>
+                                    <textarea id="photo-share-caption" data-photo-share-caption placeholder="Write the post text..."></textarea>
+                                </div>
+                                <div class="photo-share-overlay__helper">
+                                    The selected image will be copied into the experiment media folder before publishing.
+                                </div>
+                            </form>
+                        </aside>
+                    </div>
+                </div>
+                <input class="photo-share-overlay__input" type="file" accept="image/*" data-photo-share-file />
+            </div>
+        </div>
+    </div>
 {% block photo_bootstrap_data %}{% endblock %}
 </body>
 </html>

@@ -210,6 +210,7 @@
             padding: 0;
             width: 100%;
             cursor: zoom-in;
+            appearance: none;
         }
 
         .photo-feed-card__media img {
@@ -226,8 +227,16 @@
         .photo-feed-card__actions {
             display: flex;
             align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .photo-feed-card__actions-left {
+            display: flex;
+            align-items: center;
             gap: 18px;
-            margin-bottom: 14px;
+            min-width: 0;
         }
 
         .photo-feed-card__action {
@@ -235,10 +244,23 @@
             align-items: center;
             gap: 8px;
             color: #111;
+            font-weight: 600;
+            background: transparent;
+            border: 0;
+            padding: 0;
+            cursor: pointer;
+            appearance: none;
         }
 
         .photo-feed-card__action i {
             font-size: 1.4rem;
+        }
+
+        .photo-feed-card__action--active,
+        .photo-feed-card__action--active i,
+        .photo-feed-card__action--liked,
+        .photo-feed-card__action--saved {
+            color: #ff2f55;
         }
 
         .photo-feed-card__caption {
@@ -251,6 +273,17 @@
             font-weight: 700;
         }
 
+        .photo-feed-card__caption a {
+            color: #2f5fe0;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .photo-feed-card__caption a:hover,
+        .photo-feed-card__caption a:focus {
+            text-decoration: underline;
+        }
+
         .photo-feed-card__meta {
             margin-top: 10px;
             color: #777;
@@ -258,21 +291,11 @@
         }
 
         .photo-feed-card__metrics {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 14px;
+            display: none;
         }
 
         .photo-feed-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 10px;
-            border-radius: 999px;
-            background: rgba(0, 0, 0, 0.04);
-            color: #111;
-            font-size: 0.82rem;
+            display: none;
         }
 
         .photo-right-rail {
@@ -447,10 +470,14 @@
 
             <div class="photo-stories">
                 {% for story in stories %}
-                <a class="photo-story" href="/{{ exp_id }}/photo/profile/{{ story['id'] }}/recent/1">
+                <a
+                    class="photo-story"
+                    href="{% if story['story_id'] %}#{% else %}/{{ exp_id }}/photo/profile/{{ story['id'] }}/recent/1{% endif %}"
+                    {% if story['story_id'] %}data-photo-open-story="{{ story['story_id'] }}" data-photo-story-remove-on-open="true"{% endif %}
+                >
                     <div class="photo-story__ring">
                         <div class="photo-story__ring-inner">
-                            {% set story_profile_src = story['profile_pic'] or url_for('static', filename='assets/img/users/' ~ (story['id']|user_image_id) ~ '.png') %}
+                            {% set story_profile_src = story['profile_pic'] or story['image']['url'] or url_for('static', filename='assets/img/users/' ~ (story['id']|user_image_id) ~ '.png') %}
                             <img
                                 src="{{ story_profile_src }}"
                                 data-demo-src="{{ story_profile_src }}"
@@ -547,7 +574,8 @@
         timeline: '{{ timeline }}',
         mode: '{{ mode }}',
         page: {{ page }},
-        tab: '{{ active_tab }}'
+        tab: '{{ active_tab }}',
+        stories: {{ stories|tojson }}
     };
 </script>
 {% endblock %}
