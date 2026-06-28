@@ -9,6 +9,7 @@ import hashlib
 import html
 import json
 import os
+import base64
 import mimetypes
 import sqlite3
 import re
@@ -30,6 +31,7 @@ from flask import (
 from flask_login import current_user, login_required
 from werkzeug.utils import secure_filename
 
+from y_web import db
 from y_web.routes.social._blueprint import main
 from y_web.routes.social.helpers import (
     _experiment_memory_enabled,
@@ -43,15 +45,25 @@ from y_web.src.experiment.helpers import (
     open_experiment_session,
 )
 from y_web.src.models import Exps, User_mgmt
+from y_web.src.models.admin import Admin_users, Agent, Page
 from y_web.src.models.experiment import Rounds
 from y_web.src.recsys.follow_recsys import get_suggested_users
 
 
 def _photo_logged_user_id():
-    logged_user = User_mgmt.query.filter_by(username=current_user.username).first()
-    if logged_user is not None:
-        return logged_user.id
     return getattr(current_user, "id", 0) or 0
+
+
+def _photo_logged_user(exp: Exps):
+    exp_user, _created = ensure_experiment_user(
+        exp,
+        user_id=getattr(current_user, "id", 0) or 0,
+        username=str(getattr(current_user, "username", "") or ""),
+        email=str(getattr(current_user, "email", "") or ""),
+        password=str(getattr(current_user, "password", "") or ""),
+        joined_on=0,
+    )
+    return exp_user
 
 
 def _photo_db_path(exp: Exps) -> Optional[str]:
@@ -73,6 +85,105 @@ def _photo_media_root(exp: Exps) -> Optional[Path]:
     if not db_path:
         return None
     return Path(db_path).parent / "media"
+
+
+def _photo_ensure_story_schema(exp: Exps) -> None:
+    db_path = _photo_db_path(exp)
+    if not db_path or not os.path.exists(db_path):
+        return
+
+    required_columns = {
+        "title": "ALTER TABLE stories ADD COLUMN title VARCHAR(120)",
+        "description": "ALTER TABLE stories ADD COLUMN description TEXT",
+        "image_urls": "ALTER TABLE stories ADD COLUMN image_urls TEXT",
+    }
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        existing = {str(row["name"] or "") for row in conn.execute("PRAGMA table_info(stories)").fetchall()}
+        altered = False
+        for column_name, ddl in required_columns.items():
+            if column_name not in existing:
+                conn.execute(ddl)
+                altered = True
+        if altered:
+            conn.commit()
+
+        story_columns = {str(row["name"] or "") for row in conn.execute("PRAGMA table_info(stories)").fetchall()}
+        if {"title", "description", "image_urls"}.issubset(story_columns):
+            rows = conn.execute(
+                """
+                SELECT id, media_url, caption, title, description, image_urls, media_type
+                FROM stories
+                """
+            ).fetchall()
+            for row in rows:
+                story_id = str(row["id"] or "").strip()
+                if not story_id:
+                    continue
+
+                media_url = _photo_media_url(exp, row["media_url"] or "")
+                caption = str(row["caption"] or "").strip()
+                title = str(row["title"] or "").strip()
+                description = str(row["description"] or "").strip()
+                image_urls_raw = row["image_urls"]
+                normalized_urls: list[str] = []
+                if isinstance(image_urls_raw, str) and image_urls_raw.strip():
+                    try:
+                        loaded = json.loads(image_urls_raw)
+                    except json.JSONDecodeError:
+                        loaded = [image_urls_raw]
+                    if isinstance(loaded, list):
+                        normalized_urls = [
+                            _photo_media_url(exp, str(item or "").strip())
+                            for item in loaded
+                            if str(item or "").strip()
+                        ]
+                    elif loaded:
+                        normalized_urls = [_photo_media_url(exp, str(loaded).strip())]
+                elif isinstance(image_urls_raw, list):
+                    normalized_urls = [
+                        _photo_media_url(exp, str(item or "").strip())
+                        for item in image_urls_raw
+                        if str(item or "").strip()
+                    ]
+
+                normalized_urls = [url for url in normalized_urls if url]
+                if not normalized_urls and media_url:
+                    normalized_urls = [media_url]
+
+                next_title = title or caption or Path(media_url).name or "Story"
+                next_description = description or caption or next_title
+                next_image_urls = json.dumps(normalized_urls or ([media_url] if media_url else []))
+                next_media_type = str(row["media_type"] or "").strip() or ("carousel" if len(normalized_urls) > 1 else "image")
+
+                update_values = {
+                    "title": next_title[:120],
+                    "description": next_description[:2000],
+                    "image_urls": next_image_urls,
+                    "media_type": next_media_type,
+                }
+
+                if (
+                    title != update_values["title"]
+                    or description != update_values["description"]
+                    or str(image_urls_raw or "") != update_values["image_urls"]
+                    or str(row["media_type"] or "") != update_values["media_type"]
+                ):
+                    conn.execute(
+                        """
+                        UPDATE stories
+                        SET title = ?, description = ?, image_urls = ?, media_type = ?
+                        WHERE id = ?
+                        """,
+                        (
+                            update_values["title"],
+                            update_values["description"],
+                            update_values["image_urls"],
+                            update_values["media_type"],
+                            story_id,
+                        ),
+                    )
+            conn.commit()
 
 
 def _photo_store_uploaded_media(exp: Exps, upload_file) -> tuple[str, str]:
@@ -99,6 +210,38 @@ def _photo_store_uploaded_media(exp: Exps, upload_file) -> tuple[str, str]:
     upload_file.save(file_path)
     media_url = f"/{exp.idexp}/photo/media/{filename}"
     return str(file_path), media_url
+
+
+def _photo_store_profile_picture_data(exp: Exps, data_url: str) -> str:
+    raw_value = str(data_url or "").strip()
+    if not raw_value.startswith("data:image/") or "," not in raw_value:
+        return ""
+
+    header, encoded = raw_value.split(",", 1)
+    mime_type = header[5:].split(";", 1)[0].strip().lower()
+    suffix_map = {
+        "image/jpeg": ".jpg",
+        "image/jpg": ".jpg",
+        "image/png": ".png",
+        "image/webp": ".webp",
+        "image/gif": ".gif",
+    }
+    suffix = suffix_map.get(mime_type, ".png")
+
+    media_root = _photo_media_root(exp)
+    if media_root is None:
+        return ""
+
+    try:
+        image_bytes = base64.b64decode(encoded)
+    except Exception:
+        return ""
+
+    media_root.mkdir(parents=True, exist_ok=True)
+    filename = f"{uuid.uuid4()}{suffix}"
+    file_path = media_root / filename
+    file_path.write_bytes(image_bytes)
+    return f"/{exp.idexp}/photo/media/{filename}"
 
 
 def _photo_media_url(exp: Exps, raw_url: Optional[str]) -> str:
@@ -265,6 +408,7 @@ def _photo_sidebar_context(
         "logged_id": logged_id,
         "logged_username": str(current_user.username),
         "photo_home_url": photo_home_url,
+        "photo_messages_url": f"/{exp.idexp}/photo/messages",
         "profile_pic": profile_pic,
         "sidebar_profile_pic": profile_pic,
         "is_admin": is_admin(current_user.username),
@@ -372,7 +516,7 @@ def _photo_build_item(exp: Exps, row: dict) -> dict:
             "description": row.get("caption") or row.get("alt_text") or "",
         },
         "likes": row.get("num_likes") or 0,
-        "t_comments": row.get("num_comments") or 0,
+        "t_comments": _photo_comment_count(exp, row.get("id")),
         "is_shared": row.get("num_shares") or 0,
         "shared_from": shared_from,
         "is_liked": bool(row.get("is_liked")),
@@ -492,6 +636,34 @@ def _photo_post_rows_by_ids(exp: Exps, photo_ids: list[str]) -> list[dict]:
     return [rows_by_id[photo_id] for photo_id in ordered_ids if photo_id in rows_by_id]
 
 
+def _photo_post_rows_by_ids_for_user(exp: Exps, photo_ids: list[str], user_id) -> list[dict]:
+    ordered_ids = [str(photo_id or "").strip() for photo_id in photo_ids if str(photo_id or "").strip()]
+    user_key = str(user_id or "").strip()
+    if not ordered_ids or not user_key:
+        return []
+
+    placeholders = ",".join("?" for _ in ordered_ids)
+    rows = _photo_db_rows(
+        exp,
+        f"""
+        SELECT
+            p.*,
+            u.username AS author_username,
+            u.profile_picture_url AS author_profile_picture_url,
+            u.cover_image AS author_cover_image,
+            u.is_page AS author_is_page
+        FROM photos p
+        LEFT JOIN user_mgmt u ON u.id = p.user_id
+        WHERE p.id IN ({placeholders})
+          AND p.user_id = ?
+          AND COALESCE(p.is_removed, 0) = 0
+        """,
+        tuple(ordered_ids + [user_key]),
+    )
+    rows_by_id = {str(row.get("id") or "").strip(): row for row in rows}
+    return [rows_by_id[photo_id] for photo_id in ordered_ids if photo_id in rows_by_id]
+
+
 def _photo_photo_ids_by_author_ids(exp: Exps, author_ids: list[str]) -> list[str]:
     ordered_author_ids = [
         str(author_id or "").strip()
@@ -566,6 +738,22 @@ def _photo_viewer_photo_state(exp: Exps, photo_id: str, viewer_id) -> dict:
         "is_liked": bool(liked_rows),
         "is_bookmarked": bool(bookmarked_rows),
     }
+
+
+def _photo_comment_count(exp: Exps, photo_id: str) -> int:
+    photo_key = str(photo_id or "").strip()
+    if not photo_key:
+        return 0
+    rows = _photo_db_rows(
+        exp,
+        """
+        SELECT COUNT(*) AS total_comments
+        FROM comments
+        WHERE photo_id = ? AND COALESCE(is_removed, 0) = 0
+        """,
+        (photo_key,),
+    )
+    return int(rows[0].get("total_comments") or 0) if rows else 0
 
 
 def _build_photo_items_from_rows(exp: Exps, rows: list[dict], viewer_id=None) -> list[dict]:
@@ -1039,6 +1227,31 @@ def _photo_profile_photo_items(
     return _build_photo_items_from_rows(exp, rows, viewer_id=viewer_id or user_key)
 
 
+def _photo_profile_gallery_items(exp: Exps, user_id, limit: int = 48) -> list[dict]:
+    user_key = str(user_id or "").strip()
+    if not user_key:
+        return []
+
+    rows = _photo_db_rows(
+        exp,
+        """
+        SELECT
+            p.*,
+            u.username AS author_username,
+            u.profile_picture_url AS author_profile_picture_url,
+            u.cover_image AS author_cover_image,
+            u.is_page AS author_is_page
+        FROM photos p
+        LEFT JOIN user_mgmt u ON u.id = p.user_id
+        WHERE p.user_id = ? AND COALESCE(p.is_removed, 0) = 0
+        ORDER BY p.created_at DESC, p.id DESC
+        LIMIT ?
+        """,
+        (user_key, limit),
+    )
+    return _build_photo_items_from_rows(exp, rows, viewer_id=user_key)
+
+
 def _photo_post_comment_rows(exp: Exps, photo_id: str, limit: int = 12) -> list[dict]:
     photo_key = str(photo_id or "").strip()
     if not photo_key:
@@ -1208,16 +1421,7 @@ def _photo_post_details(exp: Exps, photo_id: str) -> dict:
     comments = _photo_post_comment_tree(exp, photo_key)
     likers = _photo_post_likers(exp, photo_key)
     likes_count = int(row.get("num_likes") or 0)
-    comments_count = int(row.get("num_comments") or 0)
-    if not comments_count:
-        comments_count = len(_photo_db_rows(
-            exp,
-            """
-            SELECT id FROM comments
-            WHERE photo_id = ? AND COALESCE(is_removed, 0) = 0
-            """,
-            (photo_key,),
-        ))
+    comments_count = _photo_comment_count(exp, photo_key)
     shares_count = int(row.get("num_shares") or 0)
     liked_by_label = ""
     if likers and likes_count > 1:
@@ -1582,23 +1786,7 @@ def photo_suggestions(exp_id):
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         abort(404)
 
-    exp_user, _created = ensure_experiment_user(
-        exp,
-        user_id=getattr(current_user, "id", 0) or 0,
-        username=str(current_user.username),
-        email=str(getattr(current_user, "email", "") or ""),
-        password=str(getattr(current_user, "password", "") or ""),
-        joined_on=0,
-    )
-
-    logged_user = exp_user
-    if logged_user is None:
-        try:
-            logged_user = User_mgmt.query.filter_by(
-                username=current_user.username
-            ).first()
-        except Exception:
-            logged_user = None
+    logged_user = _photo_logged_user(exp)
 
     if logged_user is not None:
         logged_id = logged_user.id
@@ -1638,23 +1826,9 @@ def photo_profile(exp_id, user_id, mode="recent", page=1):
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         abort(404)
 
-    exp_user, _created = ensure_experiment_user(
-        exp,
-        user_id=getattr(current_user, "id", 0) or 0,
-        username=str(current_user.username),
-        email=str(getattr(current_user, "email", "") or ""),
-        password=str(getattr(current_user, "password", "") or ""),
-        joined_on=0,
-    )
+    exp_user = _photo_logged_user(exp)
 
     logged_user = exp_user
-    if logged_user is None:
-        try:
-            logged_user = User_mgmt.query.filter_by(
-                username=current_user.username
-            ).first()
-        except Exception:
-            logged_user = None
 
     profile_user = _photo_user_record(exp, user_id)
     if not profile_user:
@@ -1680,6 +1854,7 @@ def photo_profile(exp_id, user_id, mode="recent", page=1):
         raw_profile_pic=profile_user.get("profile_picture_url"),
         is_page=int(profile_user.get("is_page") or 0),
     )
+    profile_bio = str(profile_user.get("bio") or "").strip()
     sidebar_profile_pic = get_safe_profile_pic(
         current_user.username, getattr(logged_user, "is_page", 0) if logged_user else 0
     ) or _photo_profile_pic_url(
@@ -1699,20 +1874,52 @@ def photo_profile(exp_id, user_id, mode="recent", page=1):
     if active_mode not in {"recent", "saved", "tagged"}:
         active_mode = "recent"
     profile_items = _photo_profile_photo_items(exp, profile_user_id, active_mode, page, 12, viewer_id=logged_id)
-    profile_cover = _photo_media_url(exp, profile_user.get("cover_image"))
-    if not profile_cover:
-        profile_cover = profile_user.get("cover_image") or ""
     profile_stories = _photo_profile_story_items(exp, profile_user_id, limit=12)
     is_self_profile = str(profile_user_id) == str(logged_id)
-
+    profile_gallery_items = _photo_profile_gallery_items(exp, profile_user_id, limit=48) if is_self_profile else []
+    available_profile_pics = []
+    profile_edit_data = {
+        "username": profile_username,
+        "email": str(profile_user.get("email") or ""),
+        "age": int(profile_user.get("age") or 0),
+        "gender": str(profile_user.get("gender") or ""),
+        "nationality": str(profile_user.get("nationality") or ""),
+        "language": str(profile_user.get("language") or ""),
+        "leaning": str(profile_user.get("leaning") or ""),
+        "education_level": str(profile_user.get("education_level") or ""),
+        "bio": profile_bio,
+        "profile_pic": profile_pic or "",
+    }
+    if is_self_profile:
+        try:
+            users_img_dir = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+                "static",
+                "assets",
+                "img",
+                "users",
+            )
+            available_profile_pics = [
+                url_for("static", filename="assets/img/users/" + filename)
+                for filename in sorted(
+                    filename
+                    for filename in os.listdir(users_img_dir)
+                    if filename.lower().endswith((".png", ".jpg", ".jpeg", ".webp"))
+                )
+            ]
+        except Exception:
+            available_profile_pics = []
     return render_template(
         "photo/profile.html",
         exp_id=exp_id,
         user=profile_user,
         user_id=profile_user_id,
-        profile_cover=profile_cover,
+        profile_bio=profile_bio,
         profile_stories=profile_stories,
         is_self_profile=is_self_profile,
+        profile_gallery_items=profile_gallery_items,
+        available_profile_pics=available_profile_pics,
+        profile_edit_data=profile_edit_data,
         total_posts=total_posts,
         total_followers=total_followers,
         total_followees=total_followees,
@@ -1748,23 +1955,9 @@ def photo_search(exp_id):
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         abort(404)
 
-    exp_user, _created = ensure_experiment_user(
-        exp,
-        user_id=getattr(current_user, "id", 0) or 0,
-        username=str(current_user.username),
-        email=str(getattr(current_user, "email", "") or ""),
-        password=str(getattr(current_user, "password", "") or ""),
-        joined_on=0,
-    )
+    exp_user = _photo_logged_user(exp)
 
-    logged_user = exp_user
-    if logged_user is None:
-        try:
-            logged_user = User_mgmt.query.filter_by(
-                username=current_user.username
-            ).first()
-        except Exception:
-            logged_user = None
+    logged_user = exp_user or _photo_logged_user(exp)
 
     logged_id = getattr(logged_user, "id", _photo_logged_user_id())
     query = str(request.args.get("q", "") or "").strip()
@@ -1791,6 +1984,43 @@ def photo_search(exp_id):
     )
 
 
+@main.get("/<int:exp_id>/photo/messages")
+@login_required
+def photo_messages(exp_id):
+    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
+        abort(404)
+
+    exp_user, _created = ensure_experiment_user(
+        exp,
+        user_id=getattr(current_user, "id", 0) or 0,
+        username=str(current_user.username),
+        email=str(getattr(current_user, "email", "") or ""),
+        password=str(getattr(current_user, "password", "") or ""),
+        joined_on=0,
+    )
+
+    logged_user = exp_user or _photo_logged_user(exp)
+
+    logged_id = getattr(logged_user, "id", _photo_logged_user_id())
+    profile_bio = str(getattr(logged_user, "bio", "") or "").strip()
+
+    return render_template(
+        "photo/messages.html",
+        exp_id=exp_id,
+        profile_bio=profile_bio,
+        experiment_memory_enabled=_experiment_memory_enabled(exp_id),
+        photo_include_chat_panel=False,
+        **_photo_sidebar_context(
+            exp,
+            logged_user=logged_user,
+            logged_id=logged_id,
+            photo_home_url=f"/{exp_id}/photo/feed/all/feed/rf/1",
+            photo_active_nav="messages",
+        ),
+    )
+
+
 @main.get("/<int:exp_id>/api/photo/search")
 @login_required
 def api_photo_search(exp_id):
@@ -1807,14 +2037,7 @@ def api_photo_search(exp_id):
         joined_on=0,
     )
 
-    logged_user = exp_user
-    if logged_user is None:
-        try:
-            logged_user = User_mgmt.query.filter_by(
-                username=current_user.username
-            ).first()
-        except Exception:
-            logged_user = None
+    logged_user = exp_user or _photo_logged_user(exp)
 
     logged_id = getattr(logged_user, "id", _photo_logged_user_id())
     query = str(request.args.get("q", "") or "").strip()
@@ -1853,7 +2076,7 @@ def api_photo_post(exp_id, photo_id):
         password=str(getattr(current_user, "password", "") or ""),
         joined_on=0,
     )
-    viewer_id = getattr(exp_user, "id", _photo_logged_user_id())
+    viewer_id = getattr(exp_user or _photo_logged_user(exp), "id", _photo_logged_user_id())
     details = _photo_post_details(exp, photo_id)
     if not details:
         return {"ok": False, "error": "not_found"}, 404
@@ -2271,6 +2494,127 @@ def api_photo_share_post(exp_id, photo_id):
     }
 
 
+@main.post("/<int:exp_id>/api/photo/story/create")
+@login_required
+def api_photo_create_story(exp_id):
+    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
+        return {"ok": False, "error": "not_found"}, 404
+
+    payload = request.get_json(silent=True) or {}
+    if not isinstance(payload, dict):
+        payload = {}
+
+    exp_user, _created = ensure_experiment_user(
+        exp,
+        user_id=getattr(current_user, "id", 0) or 0,
+        username=str(current_user.username),
+        email=str(getattr(current_user, "email", "") or ""),
+        password=str(getattr(current_user, "password", "") or ""),
+        joined_on=0,
+    )
+    user_id = str(getattr(exp_user, "id", _photo_logged_user_id()) or "").strip()
+    if not user_id:
+        return {"ok": False, "error": "missing_user"}, 400
+
+    photo_ids = payload.get("photo_ids")
+    if not isinstance(photo_ids, list):
+        photo_ids = []
+    ordered_photo_ids: list[str] = []
+    for photo_id in photo_ids:
+        photo_key = str(photo_id or "").strip()
+        if photo_key and photo_key not in ordered_photo_ids:
+            ordered_photo_ids.append(photo_key)
+    if not ordered_photo_ids:
+        return {"ok": False, "error": "missing_photos"}, 400
+    if len(ordered_photo_ids) > 5:
+        ordered_photo_ids = ordered_photo_ids[:5]
+
+    title = str(payload.get("title") or "").strip()
+    description = str(payload.get("description") or "").strip()
+    if not title or not description:
+        return {"ok": False, "error": "missing_story_text"}, 400
+
+    selected_rows = _photo_post_rows_by_ids_for_user(exp, ordered_photo_ids, user_id)
+    if not selected_rows:
+        return {"ok": False, "error": "no_valid_photos"}, 400
+
+    selected_urls: list[str] = []
+    for row in selected_rows:
+        url = _photo_media_url(exp, row.get("image_url") or row.get("media_url"))
+        if url and url not in selected_urls:
+            selected_urls.append(url)
+
+    if not selected_urls:
+        return {"ok": False, "error": "no_valid_photos"}, 400
+    if len(selected_urls) > 5:
+        selected_urls = selected_urls[:5]
+
+    round_id = _photo_latest_round_id()
+    story_id = str(uuid.uuid4())
+    _photo_ensure_story_schema(exp)
+    db_path = _photo_db_path(exp)
+    if not db_path:
+        return {"ok": False, "error": "database_unavailable"}, 500
+
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        conn.execute(
+            """
+            INSERT INTO stories (
+                id, user_id, round, media_url, media_type, duration_seconds,
+                sticker_type, sticker_data, caption, title, description,
+                image_urls, view_count, expires_at, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, CURRENT_TIMESTAMP)
+            """,
+            (
+                story_id,
+                user_id,
+                round_id,
+                selected_urls[0],
+                "carousel" if len(selected_urls) > 1 else "image",
+                int(payload.get("duration_seconds") or 5),
+                str(payload.get("sticker_type") or "").strip() or None,
+                json.dumps(payload.get("sticker_data") or {}),
+                description[:500],
+                title[:120],
+                description[:2000],
+                json.dumps(selected_urls),
+                0,
+            ),
+        )
+        conn.commit()
+        row = conn.execute(
+            """
+            SELECT
+                s.*,
+                u.username AS author_username,
+                u.profile_picture_url AS author_profile_picture_url,
+                u.cover_image AS author_cover_image,
+                u.is_page AS author_is_page
+            FROM stories s
+            LEFT JOIN user_mgmt u ON u.id = s.user_id
+            WHERE s.id = ?
+            LIMIT 1
+            """,
+            (story_id,),
+        ).fetchone()
+
+    if row is None:
+        return {"ok": False, "error": "story_not_created"}, 500
+
+    story = _photo_story_payload(
+        exp,
+        dict(row),
+        user_id=user_id,
+        author_name=str(row["author_username"] or current_user.username).strip() or current_user.username,
+    )
+    if not story:
+        return {"ok": False, "error": "story_not_serializable"}, 500
+
+    return {"ok": True, "story": story}
+
+
 @main.post("/<int:exp_id>/api/photo/story/<story_id>/view")
 @login_required
 def api_photo_story_view(exp_id, story_id):
@@ -2470,6 +2814,138 @@ def api_photo_share(exp_id):
     return {"ok": True, "post": item, "html": html}
 
 
+@main.post("/<int:exp_id>/api/photo/profile/update")
+@login_required
+def api_photo_profile_update(exp_id):
+    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
+        return {"ok": False, "error": "not_found"}, 404
+
+    exp_user, _created = ensure_experiment_user(
+        exp,
+        user_id=getattr(current_user, "id", 0) or 0,
+        username=str(current_user.username),
+        email=str(getattr(current_user, "email", "") or ""),
+        password=str(getattr(current_user, "password", "") or ""),
+        joined_on=0,
+    )
+
+    user_id = str(getattr(exp_user, "id", _photo_logged_user_id()) or "").strip()
+    if not user_id:
+        return {"ok": False, "error": "missing_user"}, 400
+
+    db_path = _photo_db_path(exp)
+    if not db_path or not os.path.exists(db_path):
+        return {"ok": False, "error": "database_unavailable"}, 500
+
+    profile_pic = str(request.form.get("profile_pic") or "").strip()
+    profile_pic_data = str(request.form.get("profile_pic_data") or "").strip()
+    if profile_pic_data:
+        stored_pic = _photo_store_profile_picture_data(exp, profile_pic_data)
+        if stored_pic:
+            profile_pic = stored_pic
+
+    bio = str(request.form.get("bio") or "").strip()
+    email = str(request.form.get("email") or "").strip()
+    gender = str(request.form.get("gender") or "").strip()
+    nationality = str(request.form.get("nationality") or "").strip()
+    language = str(request.form.get("language") or "").strip()
+    leaning = str(request.form.get("leaning") or "").strip()
+    education_level = str(request.form.get("education_level") or "").strip()
+    try:
+        age = int(str(request.form.get("age") or "0").strip() or 0)
+    except (TypeError, ValueError):
+        age = 0
+
+    updated_user = None
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        columns = {
+            row["name"]
+            for row in conn.execute("PRAGMA table_info(user_mgmt)").fetchall()
+        }
+        update_pairs = {
+            "email": email,
+            "age": age,
+            "gender": gender,
+            "nationality": nationality,
+            "language": language,
+            "leaning": leaning,
+            "education_level": education_level,
+            "profile_picture_url": profile_pic,
+            "bio": bio,
+        }
+        filtered = [
+            (key, value)
+            for key, value in update_pairs.items()
+            if key in columns
+        ]
+        if filtered:
+            set_clause = ", ".join(f"{key} = ?" for key, _value in filtered)
+            params = [value for _key, value in filtered] + [user_id]
+            conn.execute(
+                f"UPDATE user_mgmt SET {set_clause} WHERE id = ?",
+                params,
+            )
+            conn.commit()
+        updated_user = conn.execute(
+            "SELECT * FROM user_mgmt WHERE id = ? LIMIT 1",
+            (user_id,),
+        ).fetchone()
+
+    if updated_user is None:
+        return {"ok": False, "error": "profile_not_updated"}, 500
+
+    profile_username = str(updated_user["username"] or "").strip()
+    if profile_username:
+        try:
+            page = Page.query.filter_by(name=profile_username).first()
+            if page is not None and profile_pic:
+                page.logo = profile_pic
+        except Exception:
+            pass
+        try:
+            agent = Agent.query.filter_by(name=profile_username).first()
+            if agent is not None and profile_pic:
+                agent.profile_pic = profile_pic
+        except Exception:
+            pass
+        try:
+            admin_user = Admin_users.query.filter_by(username=profile_username).first()
+            if admin_user is not None and profile_pic:
+                admin_user.profile_pic = profile_pic
+        except Exception:
+            pass
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+
+    result = {
+        "ok": True,
+        "user_id": str(user_id),
+        "username": profile_username,
+        "email": str(updated_user["email"] or ""),
+        "profile_pic": _photo_profile_pic_url(
+            exp,
+            username=str(updated_user["username"] or ""),
+            user_id=str(updated_user["id"] or ""),
+            raw_profile_pic=updated_user["profile_picture_url"]
+            if "profile_picture_url" in updated_user.keys()
+            else "",
+            is_page=int(updated_user["is_page"] or 0) if "is_page" in updated_user.keys() else 0,
+        ),
+        "bio": str(updated_user["bio"] or "") if "bio" in updated_user.keys() else bio,
+        "gender": str(updated_user["gender"] or "") if "gender" in updated_user.keys() else gender,
+        "nationality": str(updated_user["nationality"] or "") if "nationality" in updated_user.keys() else nationality,
+        "language": str(updated_user["language"] or "") if "language" in updated_user.keys() else language,
+        "leaning": str(updated_user["leaning"] or "") if "leaning" in updated_user.keys() else leaning,
+        "education_level": str(updated_user["education_level"] or "") if "education_level" in updated_user.keys() else education_level,
+        "age": int(updated_user["age"] or 0) if "age" in updated_user.keys() else age,
+    }
+    return result
+
+
 @main.get("/<int:exp_id>/api/photo/profile/<user_id>/connections/<kind>")
 @login_required
 def api_photo_profile_connections(exp_id, user_id, kind):
@@ -2525,59 +3001,38 @@ def photo_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
         active_tab = "for_you"
 
     if user_id != "all":
+        user = None
         try:
-            user = User_mgmt.query.filter_by(id=user_id).first()
-            if not user:
-                user = User_mgmt.query.filter_by(username=current_user.username).first()
+            user = _photo_user_record(exp, user_id)
         except Exception:
             user = None
         if not user:
             return redirect(f"/{exp_id}/photo/feed/all/feed/rf/1")
-        username = user.username
+        username = str(user.get("username") or "")
+
+    logged_user = exp_user or _photo_logged_user(exp)
+    logged_id = getattr(logged_user, "id", _photo_logged_user_id())
 
     if active_tab == "follower":
-        res = _build_photo_follower_items(
-            exp,
-            exp_user.id if exp_user else _photo_logged_user_id(),
-            page,
-            max_post_per_page,
-        )
+        res = _build_photo_follower_items(exp, logged_id, page, max_post_per_page)
     else:
-        res = _build_photo_recommended_items(
-            exp,
-            exp_user.id if exp_user else _photo_logged_user_id(),
-            page,
-            max_post_per_page,
-        )
+        res = _build_photo_recommended_items(exp, logged_id, page, max_post_per_page)
     if len(res) == 0 and page > 1:
         return redirect(
             f"/{exp_id}/photo/feed/{user_id}/{timeline}/{mode}/{page - 1}?tab={active_tab}"
         )
 
-    logged_user = exp_user
-    if logged_user is None:
-        try:
-            logged_user = User_mgmt.query.filter_by(
-                username=current_user.username
-            ).first()
-        except Exception:
-            logged_user = None
-
     profile_pic = get_safe_profile_pic(
         current_user.username, getattr(logged_user, "is_page", 0) if logged_user else 0
     )
     if not profile_pic:
-        profile_pic = _photo_user_avatar_url(
-            getattr(logged_user, "id", _photo_logged_user_id())
-        )
+        profile_pic = _photo_user_avatar_url(logged_id)
     try:
         mentions = get_unanswered_mentions(current_user.username)
     except Exception:
         mentions = []
     followed_contact_ids = set(
-        _photo_active_contact_ids(
-            exp, getattr(logged_user, "id", _photo_logged_user_id())
-        )
+        _photo_active_contact_ids(exp, logged_id)
     )
     try:
         sfollow = (
@@ -2594,15 +3049,14 @@ def photo_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     story_author_filter = list(followed_contact_ids) if active_tab == "follower" else None
     stories = _build_photo_story_previews(
         exp,
-        getattr(logged_user, "id", _photo_logged_user_id()),
+        logged_id,
         list(followed_contact_ids),
         allowed_author_ids=story_author_filter,
     )
     suggested_contacts = _photo_suggested_contacts(
         exp,
         logged_user.username if logged_user else current_user.username,
-        exclude_ids=followed_contact_ids
-        | {str(getattr(logged_user, "id", _photo_logged_user_id()))},
+        exclude_ids=followed_contact_ids | {str(logged_id)},
     )
 
     return render_template(
@@ -2626,7 +3080,7 @@ def photo_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
         **_photo_sidebar_context(
             exp,
             logged_user=logged_user,
-            logged_id=getattr(logged_user, "id", _photo_logged_user_id()),
+            logged_id=logged_id,
             photo_home_url=f"/{exp_id}/photo/feed/all/feed/rf/1?tab={active_tab}",
             photo_active_nav="home",
         ),

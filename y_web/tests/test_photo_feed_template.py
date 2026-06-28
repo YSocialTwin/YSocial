@@ -59,6 +59,7 @@ def test_photo_feed_template_uses_collapsible_left_sidebar_and_instagram_layout(
     assert "position: fixed" in base_template
     assert "margin-left: 244px" not in template
     assert "Suggestions for you" in template
+    assert "microblog-chat.js" in base_template
     posts_template = Path(
         "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/photo/components/posts.html"
     ).read_text(encoding="utf-8")
@@ -66,6 +67,33 @@ def test_photo_feed_template_uses_collapsible_left_sidebar_and_instagram_layout(
     assert "data-photo-post-like" in posts_template
     assert "data-photo-post-bookmark" in posts_template
     assert "data-photo-post-share" in posts_template
+
+
+def test_photo_profile_template_exposes_bio_and_story_creation_hooks():
+    profile_template = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/photo/profile.html"
+    ).read_text(encoding="utf-8")
+    base_template = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/photo/base.html"
+    ).read_text(encoding="utf-8")
+
+    assert "data-photo-open-story-create" in profile_template
+    assert "data-photo-open-profile-edit" in profile_template
+    assert "profileBio" in profile_template
+    assert "availableProfilePics" in profile_template
+    assert "data-photo-profile-edit-upload" in base_template
+    assert "data-photo-profile-edit-input-bio" in base_template
+    assert "View archive" not in profile_template
+    assert "photo-story-create-overlay__gallery" in base_template
+    assert "data-photo-story-create-overlay" in base_template
+    assert "data-photo-profile-edit-overlay" in base_template
+    assert "photo-profile-edit-overlay__gallery-grid" in base_template
+    assert "photo/messages.html" in Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/photo.py"
+    ).read_text(encoding="utf-8")
+    assert "photo-messages.js" in Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/photo/messages.html"
+    ).read_text(encoding="utf-8")
 
 
 def test_photo_routes_do_not_rely_on_recsys_type_for_feed_rendering():
@@ -97,6 +125,7 @@ def test_photo_routes_do_not_rely_on_recsys_type_for_feed_rendering():
     assert "photo_sharing" in admin_source
     assert "ensure_experiment_user" in route_source
     assert "photo/profile" in route_source
+    assert "photo/messages" in route_source
     assert "api/photo/share" in route_source
     assert "_photo_store_uploaded_media" in route_source
     assert (

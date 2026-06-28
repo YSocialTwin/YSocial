@@ -31,6 +31,7 @@
             top: -14px;
             left: 50%;
             transform: translateX(-50%);
+            max-width: 160px;
             padding: 7px 12px;
             border-radius: 999px;
             background: #fff;
@@ -38,6 +39,9 @@
             box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
             color: #8a8a8a;
             font-size: 0.78rem;
+            line-height: 1.35;
+            text-align: center;
+            white-space: normal;
         }
 
         .photo-profile-avatar {
@@ -134,6 +138,8 @@
             color: #111;
             font-weight: 700;
             border: 1px solid rgba(0, 0, 0, 0.04);
+            cursor: pointer;
+            appearance: none;
         }
 
         .photo-profile-action.is-follow {
@@ -153,6 +159,13 @@
 
         .photo-profile-stories::-webkit-scrollbar {
             display: none;
+        }
+
+        .photo-profile-stories__items {
+            display: flex;
+            gap: 22px;
+            flex-wrap: nowrap;
+            min-width: 0;
         }
 
         .photo-profile-story {
@@ -339,8 +352,8 @@
 <div class="photo-profile-page">
     <section class="photo-profile-hero">
         <div class="photo-profile-avatar-wrap">
-            {% if is_self_profile %}
-            <div class="photo-profile-note">Note...</div>
+            {% if profile_bio %}
+            <div class="photo-profile-note">{{ profile_bio }}</div>
             {% endif %}
             <div class="photo-profile-avatar">
                 <img src="{{ profile_pic }}" data-demo-src="{{ profile_pic }}" alt="{{ user.get('username', 'Profile') }} avatar"/>
@@ -375,8 +388,7 @@
                         {% if is_following %}Unfollow{% else %}Follow{% endif %}
                     </a>
                 {% else %}
-                    <a class="photo-profile-action" href="/{{ exp_id }}/edit_profile/{{ logged_id }}">Edit profile</a>
-                    <a class="photo-profile-action" href="/{{ exp_id }}/photo/feed/all/feed/rf/1">View archive</a>
+                    <button type="button" class="photo-profile-action" data-photo-open-profile-edit>Edit profile</button>
                 {% endif %}
             </div>
         </div>
@@ -384,7 +396,7 @@
 
     <section class="photo-profile-stories" aria-label="Stories">
         {% if is_self_profile %}
-        <a class="photo-profile-story photo-profile-story--new" href="#" aria-label="Create new story">
+        <a class="photo-profile-story photo-profile-story--new" href="#" aria-label="Create new story" data-photo-open-story-create>
             <div class="photo-profile-story__ring">
                 <div class="photo-profile-story__ring-inner">
                     <i data-feather="plus"></i>
@@ -394,6 +406,7 @@
         </a>
         {% endif %}
 
+        <div class="photo-profile-stories__items" data-photo-profile-stories-list>
         {% if profile_stories %}
             {% for story in profile_stories %}
             <a
@@ -411,6 +424,7 @@
             </a>
             {% endfor %}
         {% endif %}
+        </div>
     </section>
 
     <div class="photo-profile-tabs">
@@ -422,10 +436,12 @@
             <i data-feather="bookmark"></i>
             Saved
         </a>
+        {#
         <a class="photo-profile-tab{% if mode == 'tagged' %} is-active{% endif %}" href="/{{ exp_id }}/photo/profile/{{ user.get('id') }}/tagged/1">
             <i data-feather="tag"></i>
             Tagged
         </a>
+        #}
     </div>
 
     {% if items %}
@@ -451,7 +467,6 @@
         {% endif %}
     </div>
     {% endif %}
-</div>
 {% endblock %}
 
 {% block photo_bootstrap_data %}
@@ -463,9 +478,13 @@
         mode: '{{ mode }}',
         page: {{ page }},
         profileId: '{{ user_id }}',
+        profileBio: {{ profile_bio|tojson }},
+        profileEditData: {{ profile_edit_data|default({})|tojson }},
+        availableProfilePics: {{ available_profile_pics|default([])|tojson }},
         followersEndpoint: '/{{ exp_id }}/api/photo/profile/{{ user_id }}/connections/followers',
         followingEndpoint: '/{{ exp_id }}/api/photo/profile/{{ user_id }}/connections/following',
-        stories: {{ profile_stories|tojson }}
+        stories: {{ profile_stories|tojson }},
+        storyGalleryItems: {{ profile_gallery_items|default([])|tojson }}
     };
 </script>
 {% endblock %}

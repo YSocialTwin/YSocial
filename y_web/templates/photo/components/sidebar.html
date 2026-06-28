@@ -20,7 +20,7 @@
             <i class="mdi mdi-home-variant"></i>
             <span>Home</span>
         </a>
-        <a class="photo-sidebar__item" href="#">
+        <a class="photo-sidebar__item{% if photo_active_nav == 'messages' %} is-active{% endif %}" href="{{ photo_messages_url or ('/' ~ exp_id ~ '/photo/messages') }}">
             <i class="mdi mdi-message-outline"></i>
             <span>Messages</span>
         </a>
@@ -28,10 +28,7 @@
             <i class="mdi mdi-magnify"></i>
             <span>Search</span>
         </a>
-        <a class="photo-sidebar__item" href="#">
-            <i class="mdi mdi-heart-outline"></i>
-            <span>Notifications</span>
-        </a>
+        {# Notifications are intentionally disabled for the photo frontend. #}
         <a class="photo-sidebar__item" href="#" data-photo-open-share>
             <i class="mdi mdi-plus-box-outline"></i>
             <span>Create</span>

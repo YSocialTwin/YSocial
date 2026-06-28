@@ -1,0 +1,486 @@
+{% extends "photo/base.html" %}
+
+{% block photo_title %}Y Social | Messages{% endblock %}
+
+{% block photo_extra_head %}
+        .photo-messages-page {
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: minmax(340px, 380px) minmax(0, 1fr);
+            background: #fff;
+        }
+
+        .photo-messages-sidebar {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            border-right: 1px solid rgba(0, 0, 0, 0.08);
+            background: #fff;
+        }
+
+        .photo-messages-sidebar-head {
+            padding: 22px 22px 14px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+            background: #fff;
+        }
+
+        .photo-messages-sidebar-user {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .photo-messages-sidebar-user strong {
+            font-family: "Montserrat", sans-serif;
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: #111;
+            letter-spacing: -0.03em;
+        }
+
+        .photo-messages-sidebar-user .photo-messages-compose {
+            width: 42px;
+            height: 42px;
+            border-radius: 999px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            background: #fff;
+            color: #111;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);
+            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+        }
+
+        .photo-messages-sidebar-user .photo-messages-compose:hover {
+            transform: translateY(-1px);
+            border-color: rgba(255, 47, 85, 0.18);
+            box-shadow: 0 12px 26px rgba(0, 0, 0, 0.08);
+        }
+
+        .photo-messages-search {
+            margin-top: 16px;
+            width: 100%;
+            min-height: 48px;
+            border: none;
+            border-radius: 999px;
+            background: #f4f4f5;
+            padding: 0 18px 0 52px;
+            font-size: 1rem;
+            color: #111;
+            outline: none;
+        }
+
+        .photo-messages-search-wrap {
+            position: relative;
+        }
+
+        .photo-messages-search-wrap i {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a1a1aa;
+            font-size: 1.05rem;
+        }
+
+        .photo-messages-list-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 24px 8px;
+        }
+
+        .photo-messages-list-head h2 {
+            margin: 0;
+            font-family: "Montserrat", sans-serif;
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #111;
+        }
+
+        .photo-messages-list-head span {
+            color: #71717a;
+            font-size: 0.92rem;
+        }
+
+        .photo-messages-list {
+            flex: 1 1 auto;
+            overflow-y: auto;
+            padding: 0 12px 18px;
+        }
+
+        .photo-messages-list-item {
+            width: 100%;
+            border: none;
+            background: transparent;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            text-align: left;
+            padding: 12px 12px;
+            border-radius: 18px;
+            cursor: pointer;
+            transition: background-color 0.18s ease, transform 0.18s ease;
+        }
+
+        .photo-messages-list-item:hover,
+        .photo-messages-list-item.is-active {
+            background: rgba(255, 47, 85, 0.05);
+        }
+
+        .photo-messages-avatar,
+        .photo-messages-thread-avatar {
+            width: 52px;
+            min-width: 52px;
+            height: 52px;
+            border-radius: 999px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #f9ce34 0%, #ee2a7b 48%, #6228d7 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.85);
+        }
+
+        .photo-messages-avatar-image {
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .photo-messages-avatar-fallback {
+            font-family: "Montserrat", sans-serif;
+            font-weight: 800;
+            color: #111;
+        }
+
+        .photo-messages-list-copy {
+            min-width: 0;
+            flex: 1 1 auto;
+        }
+
+        .photo-messages-list-name-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .photo-messages-list-name {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #111;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .photo-messages-list-preview,
+        .photo-messages-list-date {
+            color: #71717a;
+            font-size: 0.88rem;
+            line-height: 1.35;
+        }
+
+        .photo-messages-thread {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            background:
+                radial-gradient(circle at top right, rgba(255, 47, 85, 0.05), transparent 30%),
+                radial-gradient(circle at left top, rgba(255, 122, 0, 0.04), transparent 24%),
+                linear-gradient(180deg, #ffffff 0%, #ffffff 100%);
+        }
+
+        .photo-messages-thread-head {
+            min-height: 90px;
+            padding: 16px 24px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            background: #fff;
+        }
+
+        .photo-messages-thread-target {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 0;
+        }
+
+        .photo-messages-thread-copy {
+            min-width: 0;
+        }
+
+        .photo-messages-thread-name {
+            font-family: "Montserrat", sans-serif;
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #111;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .photo-messages-thread-subtitle {
+            color: #71717a;
+            font-size: 0.9rem;
+        }
+
+        .photo-messages-thread-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .photo-messages-icon-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 999px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            background: #fff;
+            color: #111;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);
+            cursor: pointer;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+        }
+
+        .photo-messages-icon-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 26px rgba(0, 0, 0, 0.08);
+            border-color: rgba(255, 47, 85, 0.18);
+        }
+
+        .photo-messages-messages {
+            flex: 1 1 auto;
+            overflow-y: auto;
+            padding: 18px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .photo-messages-empty {
+            margin: auto;
+            color: #71717a;
+            font-size: 0.95rem;
+            text-align: center;
+            max-width: 420px;
+        }
+
+        .photo-messages-date-separator {
+            align-self: center;
+            color: #9ca3af;
+            font-size: 0.78rem;
+            margin: 10px 0 4px;
+        }
+
+        .photo-messages-bubble-row {
+            display: flex;
+            margin-bottom: 4px;
+        }
+
+        .photo-messages-bubble-row.is-user {
+            justify-content: flex-end;
+        }
+
+        .photo-messages-bubble {
+            max-width: min(78%, 640px);
+            padding: 12px 14px;
+            border-radius: 18px;
+            line-height: 1.45;
+            font-size: 0.95rem;
+            white-space: pre-wrap;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+            box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
+        }
+
+        .photo-messages-bubble.is-user {
+            color: #fff;
+            background: linear-gradient(135deg, #ff7a00 0%, #ff2f55 100%);
+            border-bottom-right-radius: 6px;
+        }
+
+        .photo-messages-bubble.is-assistant {
+            color: #111;
+            background: #fff;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-bottom-left-radius: 6px;
+        }
+
+        .photo-messages-compose {
+            padding: 16px 24px 24px;
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
+            background: #fff;
+        }
+
+        .photo-messages-compose-form {
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 28px;
+            padding: 12px 14px 12px 16px;
+            background: #fff;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.06);
+        }
+
+        .photo-messages-input {
+            flex: 1 1 auto;
+            min-height: 42px;
+            max-height: 140px;
+            border: none;
+            outline: none;
+            resize: none;
+            font-size: 0.98rem;
+            line-height: 1.4;
+            color: #111827;
+        }
+
+        .photo-messages-input::placeholder {
+            color: #a1a1aa;
+        }
+
+        .photo-messages-send {
+            border: none;
+            border-radius: 999px;
+            min-width: 54px;
+            height: 42px;
+            padding: 0 16px;
+            background: linear-gradient(135deg, #ff7a00 0%, #ff2f55 100%);
+            color: #fff;
+            font-weight: 800;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 10px 20px rgba(255, 47, 85, 0.16);
+        }
+
+        .photo-messages-send:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 1200px) {
+            .photo-messages-page {
+                grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+            }
+        }
+
+        @media (max-width: 920px) {
+            .photo-messages-page {
+                grid-template-columns: 1fr;
+            }
+
+            .photo-messages-sidebar {
+                border-right: none;
+                border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+            }
+
+            .photo-messages-thread {
+                min-height: 70vh;
+            }
+        }
+{% endblock %}
+
+{% block photo_content %}
+<div
+    class="photo-messages-page"
+    id="photo-messages-page"
+    data-exp-id="{{ exp_id }}"
+>
+    <section class="photo-messages-sidebar">
+        <div class="photo-messages-sidebar-head">
+            <div class="photo-messages-sidebar-user">
+                <strong>{{ logged_username }}</strong>
+                <button type="button" class="photo-messages-compose" title="New message" data-photo-messages-new>
+                    <i class="mdi mdi-square-edit-outline"></i>
+                </button>
+            </div>
+            <div class="photo-messages-search-wrap">
+                <i class="mdi mdi-magnify"></i>
+                <input
+                    id="photo-messages-search"
+                    class="photo-messages-search"
+                    type="search"
+                    placeholder="Search"
+                    autocomplete="off"
+                />
+            </div>
+        </div>
+
+        <div class="photo-messages-list-head">
+            <h2>Messages</h2>
+            <span>Requests</span>
+        </div>
+
+        <div id="photo-messages-list" class="photo-messages-list"></div>
+    </section>
+
+    <section class="photo-messages-thread">
+        <div class="photo-messages-thread-head">
+            <div class="photo-messages-thread-target">
+                <div id="photo-messages-target-avatar" class="photo-messages-thread-avatar"></div>
+                <div class="photo-messages-thread-copy">
+                    <div id="photo-messages-target-name" class="photo-messages-thread-name">Select a conversation</div>
+                    <div id="photo-messages-target-subtitle" class="photo-messages-thread-subtitle"></div>
+                </div>
+            </div>
+            <div class="photo-messages-thread-actions">
+                <button type="button" class="photo-messages-icon-btn" title="Audio call">
+                    <i class="mdi mdi-phone-outline"></i>
+                </button>
+                <button type="button" class="photo-messages-icon-btn" title="Video call">
+                    <i class="mdi mdi-video-outline"></i>
+                </button>
+                <button type="button" class="photo-messages-icon-btn" title="Conversation info">
+                    <i class="mdi mdi-information-outline"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="photo-messages-messages" class="photo-messages-messages">
+            <div class="photo-messages-empty">
+                Select a conversation from the left panel to view and continue the chat.
+            </div>
+        </div>
+
+        <div class="photo-messages-compose">
+            <form id="photo-messages-compose" class="photo-messages-compose-form">
+                <textarea
+                    id="photo-messages-input"
+                    class="photo-messages-input"
+                    rows="2"
+                    placeholder="Message..."
+                ></textarea>
+                <button id="photo-messages-send" type="submit" class="photo-messages-send">
+                    <i class="mdi mdi-send"></i>
+                </button>
+            </form>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block photo_extra_scripts %}
+<script>
+    window.YS_DATA_PHOTO_MESSAGES = {{ {
+        "expId": exp_id,
+        "loggedId": logged_id,
+        "loggedUsername": logged_username
+    } | tojson }};
+</script>
+<script src="{{ url_for('static', filename='assets/js/photo-messages.js') }}"></script>
+{% endblock %}

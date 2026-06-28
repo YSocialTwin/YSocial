@@ -98,6 +98,87 @@ def test_microblog_chat_reply_strips_hashtags():
     assert "schools" in cleaned
 
 
+def test_photo_sharing_experiment_db_path_prefers_yphotosharing(monkeypatch, tmp_path):
+    from y_web.routes.api.interview import _memory
+
+    exp = SimpleNamespace(
+        db_name="experiments/test-exp/database_server.db",
+        platform_type="photo_sharing",
+    )
+    expected = tmp_path / "y_web" / "experiments" / "test-exp" / "yphotosharing.db"
+    expected.parent.mkdir(parents=True, exist_ok=True)
+    expected.write_text("", encoding="utf-8")
+
+    monkeypatch.setattr(
+        _memory,
+        "get_writable_path",
+        lambda path="": str(tmp_path / path) if path else str(tmp_path),
+    )
+
+    resolved = _memory._experiment_sqlite_db_path(exp)
+
+    assert resolved is not None
+    assert str(resolved).endswith("/y_web/experiments/test-exp/yphotosharing.db")
+
+
+def test_photo_sharing_open_experiment_session_bootstraps_full_schema(monkeypatch, tmp_path):
+    from sqlalchemy import text
+
+    from y_web import create_app
+    from y_web.src.experiment import helpers
+
+    app = create_app()
+    with app.app_context():
+        monkeypatch.setattr(
+            helpers,
+            "get_writable_path",
+            lambda path="": str(tmp_path / path) if path else str(tmp_path),
+        )
+
+        exp = SimpleNamespace(
+            db_name="experiments/test-exp/database_server.db",
+            platform_type="photo_sharing",
+        )
+
+        session, engine = helpers.open_experiment_session(exp)
+        try:
+            tables = {
+                row[0]
+                for row in session.execute(
+                    text("SELECT name FROM sqlite_master WHERE type='table'")
+                ).all()
+            }
+
+            assert "user_mgmt" in tables
+            assert "photos" in tables or "stories" in tables
+        finally:
+            session.close()
+            engine.dispose()
+
+
+def test_photo_chat_contacts_follow_the_photo_follow_graph():
+    from y_web import create_app
+    from y_web.routes.api import social
+    from y_web.src.models import Exps
+
+    app = create_app()
+    with app.app_context():
+        exp = Exps.query.filter_by(idexp=1).first()
+        assert exp is not None
+        social.current_user = SimpleNamespace(
+            username="Admin",
+            id=1,
+            email="admin@y-not.social",
+            password="x",
+        )
+        contacts = social._social_chat_photo_contacts(exp, 1)
+        usernames = [getattr(contact, "username", "") for contact in contacts]
+
+        assert "MichaelHudson" in usernames
+        assert "DonaldSalinas" in usernames
+        assert "LeslieBryant" in usernames
+
+
 def test_microblog_chat_refresh_runtime_context_uses_semantic_memory(monkeypatch):
     from y_web.routes.api import social
 
@@ -279,9 +360,6 @@ def test_microblog_chat_routes_are_exposed():
     assert (
         '@api_social.post("/<int:exp_id>/chat/session/<int:session_id>/message")'
         in route_source
-    )
-    assert (
-        "Microblogging chat is unavailable because memory is disabled." in route_source
     )
     assert "You can chat only with followed agents." in route_source
     assert "_social_chat_followed_agent_ids" in route_source

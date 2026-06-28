@@ -89,6 +89,25 @@
     return `<div class="microblog-chat-avatar-fallback">${escapeHtml(initials(name))}</div>`
   }
 
+  function getAgentProfilePic (agent) {
+    return String(
+      agent?.profile_pic ||
+      agent?.profile_picture_url ||
+      agent?.avatar ||
+      ''
+    ).trim()
+  }
+
+  function getSessionProfilePic (session) {
+    return String(
+      session?.target_profile_pic ||
+      session?.target_profile_picture_url ||
+      session?.profile_pic ||
+      session?.profile_picture_url ||
+      ''
+    ).trim()
+  }
+
   function loadReadState () {
     try {
       const raw = localStorage.getItem(readStateKey)
@@ -171,7 +190,7 @@
       const stamp = session?.last_message_at ? new Date(session.last_message_at).toLocaleDateString() : ''
       return `
         <button class="microblog-chat-list-item" type="button" data-agent-id="${agent.user_id}">
-          <div class="microblog-chat-list-avatar">${avatarMarkup(agent.username, agent.profile_pic)}</div>
+          <div class="microblog-chat-list-avatar">${avatarMarkup(agent.username, getAgentProfilePic(agent))}</div>
           <div class="microblog-chat-list-copy">
             <div class="microblog-chat-list-head">
               <span class="microblog-chat-list-name">${escapeHtml(agent.username)}</span>
@@ -217,7 +236,7 @@
 
     browserEl.classList.add('is-hidden')
     threadEl.classList.remove('is-hidden')
-    targetAvatarEl.innerHTML = avatarMarkup(session.target_username, session.target_profile_pic)
+    targetAvatarEl.innerHTML = avatarMarkup(session.target_username, getSessionProfilePic(session))
     targetNameEl.textContent = session.target_username
     targetSubtitleEl.textContent = 'Private message'
     markSessionRead(session)
@@ -233,6 +252,19 @@
       const data = await apiGet(`/api/social/${expId}/chat/bootstrap`)
       state.agents = Array.isArray(data.agents) ? data.agents : []
       state.sessions = Array.isArray(data.sessions) ? data.sessions : []
+      try {
+        const readState = loadReadState()
+        let changed = false
+        state.sessions.forEach(session => {
+          if (!session || !session.id) return
+          const key = String(session.id)
+          if (readState[key] == null) {
+            readState[key] = String(session.last_message_at || '')
+            changed = true
+          }
+        })
+        if (changed) saveReadState(readState)
+      } catch (err) {}
       renderList()
     } catch (err) {
       listEl.innerHTML = `<div class="microblog-chat-empty">${err.message}</div>`

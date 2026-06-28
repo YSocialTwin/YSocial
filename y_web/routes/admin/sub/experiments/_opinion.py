@@ -3033,6 +3033,28 @@ def _resolve_experiment_db_path(experiment):
     return os.path.join(get_writable_path(), "y_web", db_name)
 
 
+def _resolve_network_analysis_db_path(experiment):
+    """Return the experiment DB path used by network analytics.
+
+    Photo-sharing experiments keep their simulation state in yphotosharing.db,
+    while the dashboard metadata may still point to the legacy
+    database_server.db file. Network analytics must therefore prefer the photo
+    DB when it exists, otherwise they would inspect the wrong schema and report
+    that the network-analysis tables are missing.
+    """
+    if getattr(experiment, "platform_type", "") == "photo_sharing":
+        db_name = str(getattr(experiment, "db_name", "") or "").replace("\\", os.sep).strip()
+        uid = get_experiment_uid_from_db_name(db_name)
+        if uid:
+            photo_db_path = os.path.join(
+                get_writable_path(), "y_web", "experiments", uid, "yphotosharing.db"
+            )
+            if os.path.exists(photo_db_path):
+                return photo_db_path
+
+    return _resolve_experiment_db_path(experiment)
+
+
 def _experiment_db_has_required_stress_reward_tables(db_path):
     """Check whether the experiment DB exposes stress/reward analytics tables."""
     if not db_path or not os.path.exists(db_path):
@@ -3956,7 +3978,7 @@ def _load_network_experiment_context(uid, require_manage=False):
         flash("You do not have permission to manage this experiment.", "error")
         return None, None, redirect(url_for("experiments.experiment_details", uid=uid))
 
-    return experiment, _resolve_experiment_db_path(experiment), None
+    return experiment, _resolve_network_analysis_db_path(experiment), None
 
 
 def _experiment_db_has_required_tables(db_path, required_tables):

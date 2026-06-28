@@ -11,6 +11,7 @@ import os
 
 from flask import (
     flash,
+    jsonify,
     redirect,
     render_template,
     request,
@@ -633,6 +634,28 @@ def update_profile_data(exp_id, user_id):
     _set_user_cover_image(user.id, cover_image)
 
     db.session.commit()
+
+    if (
+        request.headers.get("X-Requested-With") == "XMLHttpRequest"
+        or "application/json" in request.headers.get("Accept", "")
+        or request.is_json
+    ):
+        return jsonify(
+            {
+                "ok": True,
+                "user_id": str(user.id),
+                "username": user.username,
+                "email": user.email or "",
+                "profile_pic": profile_pic or "",
+                "cover_image": cover_image or "",
+                "gender": user.gender or "",
+                "nationality": user.nationality or "",
+                "language": user.language or "",
+                "leaning": user.leaning or "",
+                "education_level": user.education_level or "",
+                "age": user.age or 0,
+            }
+        )
 
     return redirect(request.referrer)
 

@@ -641,6 +641,417 @@
             display: none;
         }
 
+        .photo-story-create-overlay__dialog {
+            width: min(1260px, 100%);
+            height: min(88vh, 940px);
+            max-height: 940px;
+            display: block;
+        }
+
+        .photo-story-create-overlay__shell {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            height: 100%;
+        }
+
+        .photo-story-create-overlay__stage {
+            display: grid;
+            grid-template-columns: minmax(0, 1.2fr) minmax(360px, 0.8fr);
+            min-height: 0;
+            flex: 1;
+        }
+
+        .photo-story-create-overlay__gallery {
+            min-width: 0;
+            padding: 18px;
+            overflow: auto;
+            background: #f8f9fb;
+            border-right: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .photo-story-create-overlay__gallery-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .photo-story-create-overlay__gallery-header strong {
+            font-family: "Montserrat", sans-serif;
+            font-size: 1.05rem;
+            letter-spacing: -0.02em;
+        }
+
+        .photo-story-create-overlay__counter {
+            color: #666;
+            font-size: 0.84rem;
+        }
+
+        .photo-story-create-overlay__gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+            gap: 10px;
+        }
+
+        .photo-story-create-overlay__tile {
+            position: relative;
+            aspect-ratio: 1 / 1;
+            padding: 0;
+            border: 0;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #eceef3;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(15, 23, 42, 0.06);
+        }
+
+        .photo-story-create-overlay__tile img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .photo-story-create-overlay__tile-check {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.95);
+            color: #2f5fe0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: scale(0.9);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .photo-story-create-overlay__tile.is-selected {
+            box-shadow: 0 0 0 3px rgba(47, 95, 224, 0.38), 0 10px 20px rgba(15, 23, 42, 0.08);
+        }
+
+        .photo-story-create-overlay__tile.is-selected .photo-story-create-overlay__tile-check {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .photo-story-create-overlay__panel {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            border-left: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .photo-story-create-overlay__preview {
+            flex: 0 0 auto;
+            aspect-ratio: 1 / 1.05;
+            background: #111;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .photo-story-create-overlay__preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        .photo-story-create-overlay__preview-meta {
+            padding: 14px 18px 0;
+            color: #666;
+            font-size: 0.84rem;
+        }
+
+        .photo-story-create-overlay__selected {
+            padding: 14px 18px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .photo-story-create-overlay__selected-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .photo-story-create-overlay__selected-empty {
+            color: #777;
+            font-size: 0.84rem;
+            line-height: 1.4;
+        }
+
+        .photo-story-create-overlay__selected-item {
+            position: relative;
+            width: 70px;
+            height: 70px;
+            padding: 0;
+            border: 2px solid transparent;
+            border-radius: 14px;
+            overflow: hidden;
+            background: #eceef3;
+        }
+
+        .photo-story-create-overlay__selected-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .photo-story-create-overlay__selected-item span {
+            position: absolute;
+            right: 5px;
+            bottom: 5px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: rgba(17, 17, 17, 0.88);
+            color: #fff;
+            font-size: 0.7rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .photo-story-create-overlay__form {
+            padding: 14px 18px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            min-height: 0;
+            overflow: auto;
+        }
+
+        .photo-story-create-overlay__field {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .photo-story-create-overlay__field label {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #111;
+        }
+
+        .photo-story-create-overlay__field textarea,
+        .photo-story-create-overlay__field input {
+            width: 100%;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 14px;
+            padding: 12px 14px;
+            font: inherit;
+            color: #111;
+            background: #fff;
+        }
+
+        .photo-story-create-overlay__field textarea {
+            min-height: 118px;
+            resize: vertical;
+        }
+
+        .photo-story-create-overlay__helper {
+            color: #666;
+            font-size: 0.84rem;
+            line-height: 1.45;
+        }
+
+        .photo-profile-edit-overlay__dialog {
+            width: min(1360px, 100%);
+            height: min(90vh, 960px);
+            max-height: 960px;
+            display: block;
+        }
+
+        .photo-profile-edit-overlay__shell {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            height: 100%;
+            background: #fff;
+        }
+
+        .photo-profile-edit-overlay__stage {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(360px, 0.95fr);
+            min-height: 0;
+            flex: 1;
+        }
+
+        .photo-profile-edit-overlay__gallery {
+            min-width: 0;
+            padding: 18px;
+            overflow: auto;
+            background: #f8f9fb;
+        }
+
+        .photo-profile-edit-overlay__preview-card {
+            border-radius: 22px;
+            background: #fff;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+            overflow: hidden;
+        }
+
+        .photo-profile-edit-overlay__preview-avatar {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px 16px;
+        }
+
+        .photo-profile-edit-overlay__preview-avatar img {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #fff;
+            box-shadow: 0 10px 20px rgba(15, 23, 42, 0.10);
+            background: #f2f4f8;
+            flex-shrink: 0;
+        }
+
+        .photo-profile-edit-overlay__preview-avatar span {
+            color: #666;
+            font-size: 0.88rem;
+        }
+
+        .photo-profile-edit-overlay__avatar-actions {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .photo-profile-edit-overlay__upload-button {
+            border: 0;
+            border-radius: 999px;
+            padding: 10px 16px;
+            background: rgba(47, 95, 224, 0.12);
+            color: #2f5fe0;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .photo-profile-edit-overlay__upload-input {
+            display: none;
+        }
+
+        .photo-profile-edit-overlay__section {
+            border-radius: 22px;
+            background: #fff;
+            padding: 16px;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+        }
+
+        .photo-profile-edit-overlay__section-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .photo-profile-edit-overlay__section-head strong {
+            font-family: "Montserrat", sans-serif;
+            font-size: 1rem;
+            letter-spacing: -0.02em;
+        }
+
+        .photo-profile-edit-overlay__section-head span {
+            color: #666;
+            font-size: 0.84rem;
+        }
+
+        .photo-profile-edit-overlay__gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+        }
+
+        .photo-profile-edit-overlay__option {
+            position: relative;
+            aspect-ratio: 1 / 1;
+            padding: 0;
+            border: 0;
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            background: #eceef3;
+            box-shadow: 0 10px 20px rgba(15, 23, 42, 0.06);
+        }
+
+        .photo-profile-edit-overlay__option img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .photo-profile-edit-overlay__option.is-selected {
+            box-shadow: 0 0 0 3px rgba(47, 95, 224, 0.36), 0 10px 20px rgba(15, 23, 42, 0.08);
+        }
+
+        .photo-profile-edit-overlay__panel {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            border-left: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .photo-profile-edit-overlay__form {
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            min-height: 0;
+            overflow: auto;
+        }
+
+        .photo-profile-edit-overlay__field {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .photo-profile-edit-overlay__field label {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #111;
+        }
+
+        .photo-profile-edit-overlay__field input,
+        .photo-profile-edit-overlay__field textarea,
+        .photo-profile-edit-overlay__field select {
+            width: 100%;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 14px;
+            padding: 12px 14px;
+            font: inherit;
+            color: #111;
+            background: #fff;
+        }
+
+        .photo-profile-edit-overlay__field textarea {
+            min-height: 118px;
+            resize: vertical;
+        }
+
+        .photo-profile-edit-overlay__helper {
+            color: #666;
+            font-size: 0.84rem;
+            line-height: 1.45;
+        }
+
         .photo-overlay__panel {
             display: flex;
             flex-direction: column;
@@ -1006,6 +1417,101 @@
             color: #666;
         }
 
+        body.photo-base-body .microblog-chat-collapse-handle {
+            border-color: rgba(255, 47, 85, 0.18);
+            background: linear-gradient(180deg, #ffffff 0%, #fff6f7 100%);
+            color: #ff2f55;
+        }
+
+        body.photo-base-body .microblog-chat-collapse-badge {
+            background: linear-gradient(135deg, #ff7a00 0%, #ff2f55 100%);
+            box-shadow: 0 8px 18px rgba(255, 47, 85, 0.28);
+        }
+
+        body.photo-base-body .microblog-chat-card {
+            background: rgba(255, 255, 255, 0.98);
+            border-color: rgba(255, 47, 85, 0.08);
+            box-shadow: 0 18px 42px rgba(15, 23, 42, 0.10), 0 0 0 1px rgba(255, 122, 0, 0.02);
+        }
+
+        body.photo-base-body .microblog-chat-icon-btn {
+            border-color: rgba(255, 47, 85, 0.12);
+            color: #444;
+            background: #fff;
+        }
+
+        body.photo-base-body .microblog-chat-icon-btn:hover {
+            border-color: rgba(255, 47, 85, 0.24);
+            box-shadow: 0 10px 20px rgba(255, 47, 85, 0.08);
+        }
+
+        body.photo-base-body .microblog-chat-search-input {
+            border-color: rgba(255, 47, 85, 0.12);
+            background: #faf7f7;
+        }
+
+        body.photo-base-body .microblog-chat-list-item:hover {
+            background: rgba(255, 47, 85, 0.05);
+        }
+
+        body.photo-base-body .microblog-chat-list-avatar,
+        body.photo-base-body .microblog-chat-thread-avatar {
+            background: linear-gradient(135deg, #f9ce34 0%, #ee2a7b 48%, #6228d7 100%);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.82);
+        }
+
+        body.photo-base-body .microblog-chat-avatar-fallback {
+            color: #ff2f55;
+        }
+
+        body.photo-base-body .microblog-chat-list-preview,
+        body.photo-base-body .microblog-chat-list-date,
+        body.photo-base-body .microblog-chat-subtitle,
+        body.photo-base-body .microblog-chat-thread-subtitle {
+            color: #7a7a7a;
+        }
+
+        body.photo-base-body .microblog-chat-messages {
+            background:
+                radial-gradient(circle at top right, rgba(255, 47, 85, 0.06), transparent 42%),
+                radial-gradient(circle at top left, rgba(255, 122, 0, 0.05), transparent 34%),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 252, 252, 0.98));
+        }
+
+        body.photo-base-body .microblog-chat-bubble.is-assistant {
+            background: #fff;
+            border-color: rgba(0, 0, 0, 0.07);
+            color: #111;
+        }
+
+        body.photo-base-body .microblog-chat-bubble.is-user {
+            background: linear-gradient(135deg, #ff7a00 0%, #ff2f55 100%);
+        }
+
+        body.photo-base-body .microblog-chat-compose {
+            border-top-color: rgba(0, 0, 0, 0.08);
+            background: #fff;
+        }
+
+        body.photo-base-body .microblog-chat-input {
+            border-color: rgba(255, 47, 85, 0.14);
+            background: #faf7f7;
+        }
+
+        body.photo-base-body .microblog-chat-input:focus {
+            border-color: #ff2f55;
+            box-shadow: 0 0 0 0.08rem rgba(255, 47, 85, 0.15);
+        }
+
+        body.photo-base-body .microblog-chat-send-btn {
+            background: linear-gradient(135deg, #ff7a00 0%, #ff2f55 100%);
+            box-shadow: 0 10px 20px rgba(255, 47, 85, 0.16);
+        }
+
+        body.photo-base-body .microblog-chat-empty {
+            color: #7a7a7a;
+        }
+
         @media (max-width: 1200px) {
             .photo-shell {
                 --photo-sidebar-width: 92px;
@@ -1035,6 +1541,24 @@
                 width: 100%;
             }
 
+            .photo-story-create-overlay__stage {
+                grid-template-columns: 1fr;
+            }
+
+            .photo-story-create-overlay__panel {
+                border-left: 0;
+                border-top: 1px solid rgba(0, 0, 0, 0.08);
+            }
+
+            .photo-profile-edit-overlay__stage {
+                grid-template-columns: 1fr;
+            }
+
+            .photo-profile-edit-overlay__panel {
+                border-left: 0;
+                border-top: 1px solid rgba(0, 0, 0, 0.08);
+            }
+
             .photo-main {
                 grid-column: 1;
             }
@@ -1056,7 +1580,7 @@
     </main>
 </div>
 
-{% if experiment_memory_enabled %}
+{% if photo_include_chat_panel|default(True) %}
 {% include "microblogging/components/chat_panel.html" %}
 {% endif %}
 
@@ -1083,6 +1607,9 @@
 <script src="{{ url_for('static', filename='assets/js/compose.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/autocompletes.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/async_updates.js') }}"></script>
+{% if photo_include_chat_panel|default(True) %}
+<script src="{{ url_for('static', filename='assets/js/microblog-chat.js') }}"></script>
+{% endif %}
 {% block photo_extra_scripts %}{% endblock %}
 
 <script>
@@ -1272,6 +1799,157 @@
                     </div>
                 </div>
                 <input class="photo-share-overlay__input" type="file" accept="image/*" data-photo-share-file />
+            </div>
+        </div>
+    </div>
+    <div class="photo-overlay" data-photo-story-create-overlay hidden>
+        <div class="photo-overlay__dialog photo-story-create-overlay__dialog" role="dialog" aria-modal="true" aria-label="Create story">
+            <div class="photo-story-create-overlay__shell">
+                <div class="photo-overlay__header">
+                    <div class="photo-overlay__author">
+                        <img alt="" data-photo-story-create-author-avatar />
+                        <div class="photo-overlay__author-copy">
+                            <strong data-photo-story-create-author></strong>
+                            <span>Create a story from your gallery</span>
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <button type="button" class="photo-overlay__close" data-photo-overlay-close aria-label="Close">
+                            <i data-feather="x"></i>
+                        </button>
+                        <button type="button" class="photo-share-overlay__toolbar-action is-primary" data-photo-story-create-submit disabled>
+                            Share
+                        </button>
+                    </div>
+                </div>
+                <div class="photo-story-create-overlay__stage">
+                    <div class="photo-story-create-overlay__gallery">
+                        <div class="photo-story-create-overlay__gallery-header">
+                            <strong>Select photos</strong>
+                            <span class="photo-story-create-overlay__counter" data-photo-story-create-counter>0 / 5 photos selected</span>
+                        </div>
+                        <div class="photo-story-create-overlay__gallery-grid" data-photo-story-create-gallery></div>
+                    </div>
+                    <aside class="photo-story-create-overlay__panel">
+                        <div class="photo-story-create-overlay__preview">
+                            <img alt="Selected story preview" data-photo-story-create-preview />
+                        </div>
+                        <div class="photo-story-create-overlay__preview-meta" data-photo-story-create-preview-meta>No photo selected yet</div>
+                        <div class="photo-story-create-overlay__selected">
+                            <div class="photo-story-create-overlay__selected-row" data-photo-story-create-selected></div>
+                        </div>
+                        <form class="photo-story-create-overlay__form" data-photo-story-create-form>
+                            <div class="photo-story-create-overlay__field">
+                                <label for="photo-story-create-title">Title</label>
+                                <input id="photo-story-create-title" type="text" maxlength="120" data-photo-story-create-input-title placeholder="Write a short title..." />
+                            </div>
+                            <div class="photo-story-create-overlay__field">
+                                <label for="photo-story-create-description">Description</label>
+                                <textarea id="photo-story-create-description" maxlength="2000" data-photo-story-create-input-description placeholder="Describe the story..."></textarea>
+                            </div>
+                            <div class="photo-story-create-overlay__helper" data-photo-story-create-helper>
+                                Choose up to 5 photos from your gallery. The selected images will be stored in the story record as a carousel.
+                            </div>
+                        </form>
+                    </aside>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="photo-overlay" data-photo-profile-edit-overlay hidden>
+        <div class="photo-overlay__dialog photo-profile-edit-overlay__dialog" role="dialog" aria-modal="true" aria-label="Edit profile">
+            <div class="photo-profile-edit-overlay__shell">
+                <div class="photo-overlay__header">
+                    <div class="photo-overlay__author">
+                        <img alt="" data-photo-profile-edit-avatar />
+                        <div class="photo-overlay__author-copy">
+                            <strong data-photo-profile-edit-username></strong>
+                            <span>Edit your profile details</span>
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <button type="button" class="photo-overlay__close" data-photo-overlay-close aria-label="Close">
+                            <i data-feather="x"></i>
+                        </button>
+                        <button type="button" class="photo-share-overlay__toolbar-action is-primary" data-photo-profile-edit-submit disabled>
+                            Save
+                        </button>
+                    </div>
+                </div>
+                <div class="photo-profile-edit-overlay__stage">
+                    <div class="photo-profile-edit-overlay__gallery">
+                        <section class="photo-profile-edit-overlay__section">
+                            <div class="photo-profile-edit-overlay__section-head">
+                                <strong>Profile picture</strong>
+                                <span data-photo-profile-edit-avatar-count></span>
+                            </div>
+                            <div class="photo-profile-edit-overlay__preview-card">
+                                <div class="photo-profile-edit-overlay__preview-avatar">
+                                    <img alt="Selected profile picture" data-photo-profile-edit-avatar-preview />
+                                    <span>Choose an image from your gallery or upload a new one.</span>
+                                </div>
+                            </div>
+                            <div class="photo-profile-edit-overlay__avatar-actions">
+                                <button type="button" class="photo-profile-edit-overlay__upload-button" data-photo-profile-edit-upload-trigger>
+                                    Upload photo
+                                </button>
+                                <input class="photo-profile-edit-overlay__upload-input" type="file" accept="image/*" data-photo-profile-edit-upload />
+                                <div class="photo-profile-edit-overlay__helper">Images are cropped to a square preview when needed.</div>
+                            </div>
+                            <input type="hidden" data-photo-profile-edit-avatar-input name="profile_pic" />
+                            <div class="photo-profile-edit-overlay__gallery-grid" data-photo-profile-edit-avatar-gallery></div>
+                        </section>
+                    </div>
+                    <aside class="photo-profile-edit-overlay__panel">
+                        <form class="photo-profile-edit-overlay__form" data-photo-profile-edit-form>
+                            <div class="photo-profile-edit-overlay__field">
+                                <label for="photo-profile-edit-email">Email</label>
+                                <input id="photo-profile-edit-email" type="text" name="email" data-photo-profile-edit-input-email />
+                            </div>
+                            <div class="photo-profile-edit-overlay__field">
+                                <label for="photo-profile-edit-age">Age</label>
+                                <input id="photo-profile-edit-age" type="number" min="0" name="age" data-photo-profile-edit-input-age />
+                            </div>
+                            <div class="photo-profile-edit-overlay__field">
+                                <label for="photo-profile-edit-gender">Gender</label>
+                                <select id="photo-profile-edit-gender" name="gender" data-photo-profile-edit-input-gender>
+                                    <option value=""></option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                </select>
+                            </div>
+                            <div class="photo-profile-edit-overlay__field">
+                                <label for="photo-profile-edit-nationality">Nationality</label>
+                                <input id="photo-profile-edit-nationality" type="text" name="nationality" data-photo-profile-edit-input-nationality />
+                            </div>
+                            <div class="photo-profile-edit-overlay__field">
+                                <label for="photo-profile-edit-language">Language</label>
+                                <input id="photo-profile-edit-language" type="text" name="language" data-photo-profile-edit-input-language />
+                            </div>
+                            <div class="photo-profile-edit-overlay__field">
+                                <label for="photo-profile-edit-leaning">Political leaning</label>
+                                <select id="photo-profile-edit-leaning" name="leaning" data-photo-profile-edit-input-leaning>
+                                    <option value=""></option>
+                                    <option value="none">None</option>
+                                    <option value="democrat">Democrat</option>
+                                    <option value="republican">Republican</option>
+                                    <option value="centrist">Centrist</option>
+                                </select>
+                            </div>
+                            <div class="photo-profile-edit-overlay__field">
+                                <label for="photo-profile-edit-education">Education level</label>
+                                <input id="photo-profile-edit-education" type="text" name="education_level" data-photo-profile-edit-input-education />
+                            </div>
+                            <div class="photo-profile-edit-overlay__field">
+                                <label for="photo-profile-edit-bio">Bio</label>
+                                <textarea id="photo-profile-edit-bio" name="bio" data-photo-profile-edit-input-bio placeholder="Write a short bio about yourself..."></textarea>
+                            </div>
+                            <div class="photo-profile-edit-overlay__helper">
+                                The changes are saved directly to your experiment profile without leaving this page.
+                            </div>
+                        </form>
+                    </aside>
+                </div>
             </div>
         </div>
     </div>

@@ -5,11 +5,15 @@
         postOverlay: null,
         peopleOverlay: null,
         storyOverlay: null,
+        storyCreateOverlay: null,
         shareOverlay: null,
         postDialog: null,
         peopleDialog: null,
         storyDialog: null,
+        storyCreateDialog: null,
         shareDialog: null,
+        profileEditOverlay: null,
+        profileEditDialog: null,
         currentPeopleItems: [],
         currentPeopleKind: null,
         currentPeopleSearch: '',
@@ -20,6 +24,14 @@
         currentShareObjectUrl: '',
         currentShareFile: null,
         currentShareSubmitting: false,
+        currentStoryCreateSelection: [],
+        storyCreateSubmitting: false,
+        storyGalleryItems: [],
+        currentProfileEditSelection: {
+            profilePic: '',
+            profilePicData: ''
+        },
+        profileEditSubmitting: false,
         currentPhotoId: '',
         currentCommentTargetId: '',
         currentCommentTargetLabel: '',
@@ -37,11 +49,13 @@
     }
 
     function ensureOverlayElements() {
-        if (!state.postOverlay || !state.peopleOverlay || !state.storyOverlay || !state.shareOverlay) {
+        if (!state.postOverlay || !state.peopleOverlay || !state.storyOverlay || !state.shareOverlay || !state.storyCreateOverlay || !state.profileEditOverlay) {
             state.postOverlay = document.querySelector('[data-photo-post-overlay]');
             state.peopleOverlay = document.querySelector('[data-photo-people-overlay]');
             state.storyOverlay = document.querySelector('[data-photo-story-overlay]');
+            state.storyCreateOverlay = document.querySelector('[data-photo-story-create-overlay]');
             state.shareOverlay = document.querySelector('[data-photo-share-overlay]');
+            state.profileEditOverlay = document.querySelector('[data-photo-profile-edit-overlay]');
             if (state.postOverlay) {
                 state.postDialog = state.postOverlay.querySelector('.photo-overlay__dialog');
             }
@@ -51,11 +65,17 @@
             if (state.storyOverlay) {
                 state.storyDialog = state.storyOverlay.querySelector('.photo-overlay__dialog');
             }
+            if (state.storyCreateOverlay) {
+                state.storyCreateDialog = state.storyCreateOverlay.querySelector('.photo-overlay__dialog');
+            }
             if (state.shareOverlay) {
                 state.shareDialog = state.shareOverlay.querySelector('.photo-overlay__dialog');
             }
+            if (state.profileEditOverlay) {
+                state.profileEditDialog = state.profileEditOverlay.querySelector('.photo-overlay__dialog');
+            }
         }
-        return Boolean(state.postOverlay && state.peopleOverlay && state.storyOverlay && state.shareOverlay);
+        return Boolean(state.postOverlay && state.peopleOverlay && state.storyOverlay && state.shareOverlay && state.storyCreateOverlay && state.profileEditOverlay);
     }
 
     function setBodyLocked(locked) {
@@ -75,14 +95,29 @@
             state.storyOverlay.classList.remove('is-open');
             state.storyOverlay.hidden = true;
         }
+        if (state.storyCreateOverlay) {
+            state.storyCreateOverlay.classList.remove('is-open');
+            state.storyCreateOverlay.hidden = true;
+        }
         if (state.shareOverlay) {
             state.shareOverlay.classList.remove('is-open');
             state.shareOverlay.hidden = true;
+        }
+        if (state.profileEditOverlay) {
+            state.profileEditOverlay.classList.remove('is-open');
+            state.profileEditOverlay.hidden = true;
         }
         state.currentStory = null;
         state.currentStoryIndex = 0;
         state.currentStoryTrigger = null;
         state.currentPost = null;
+        state.currentStoryCreateSelection = [];
+        state.storyCreateSubmitting = false;
+        state.profileEditSubmitting = false;
+        state.currentProfileEditSelection = {
+            profilePic: '',
+            profilePicData: ''
+        };
         clearSharePreview();
         setBodyLocked(false);
     }
@@ -727,6 +762,626 @@
         openOverlay(state.storyOverlay);
     }
 
+    function getStoryCreateElements() {
+        if (!state.storyCreateOverlay) {
+            return {};
+        }
+        return {
+            author: state.storyCreateOverlay.querySelector('[data-photo-story-create-author]'),
+            authorAvatar: state.storyCreateOverlay.querySelector('[data-photo-story-create-author-avatar]'),
+            title: state.storyCreateOverlay.querySelector('[data-photo-story-create-title]'),
+            submit: state.storyCreateOverlay.querySelector('[data-photo-story-create-submit]'),
+            gallery: state.storyCreateOverlay.querySelector('[data-photo-story-create-gallery]'),
+            selected: state.storyCreateOverlay.querySelector('[data-photo-story-create-selected]'),
+            preview: state.storyCreateOverlay.querySelector('[data-photo-story-create-preview]'),
+            previewMeta: state.storyCreateOverlay.querySelector('[data-photo-story-create-preview-meta]'),
+            titleInput: state.storyCreateOverlay.querySelector('[data-photo-story-create-input-title]'),
+            descriptionInput: state.storyCreateOverlay.querySelector('[data-photo-story-create-input-description]'),
+            counter: state.storyCreateOverlay.querySelector('[data-photo-story-create-counter]'),
+            helper: state.storyCreateOverlay.querySelector('[data-photo-story-create-helper]'),
+            form: state.storyCreateOverlay.querySelector('[data-photo-story-create-form]')
+        };
+    }
+
+    function syncStoryCreateAuthor() {
+        var elements = getStoryCreateElements();
+        var sidebar = document.querySelector('.photo-sidebar__profile');
+        var avatar = sidebar ? sidebar.querySelector('img') : null;
+        var name = sidebar ? sidebar.querySelector('strong') : null;
+        if (elements.authorAvatar && avatar) {
+            elements.authorAvatar.src = avatar.getAttribute('src') || '';
+            elements.authorAvatar.alt = avatar.getAttribute('alt') || '';
+        }
+        if (elements.author && name) {
+            elements.author.textContent = name.textContent || '';
+        }
+    }
+
+    function findStoryCreateGalleryItem(photoId) {
+        var targetId = String(photoId || '').trim();
+        if (!targetId) {
+            return null;
+        }
+        for (var i = 0; i < state.storyGalleryItems.length; i += 1) {
+            var item = state.storyGalleryItems[i] || {};
+            var itemId = String(item.post_id || item.photo_id || item.id || '').trim();
+            if (itemId === targetId) {
+                return item;
+            }
+        }
+        return null;
+    }
+
+    function getStoryCreateSelectedItems() {
+        var items = [];
+        for (var i = 0; i < state.currentStoryCreateSelection.length; i += 1) {
+            var item = findStoryCreateGalleryItem(state.currentStoryCreateSelection[i]);
+            if (item) {
+                items.push(item);
+            }
+        }
+        return items;
+    }
+
+    function updateStoryCreateSubmitState() {
+        var elements = getStoryCreateElements();
+        if (!elements.submit) {
+            return;
+        }
+        elements.submit.textContent = 'Share';
+        var title = elements.titleInput ? String(elements.titleInput.value || '').trim() : '';
+        var description = elements.descriptionInput ? String(elements.descriptionInput.value || '').trim() : '';
+        var canSubmit = !state.storyCreateSubmitting && state.currentStoryCreateSelection.length > 0 && Boolean(title) && Boolean(description);
+        elements.submit.disabled = !canSubmit;
+        if (elements.counter) {
+            elements.counter.textContent = state.currentStoryCreateSelection.length + ' / 5 photos selected';
+        }
+    }
+
+    function renderStoryCreateSelection() {
+        var elements = getStoryCreateElements();
+        if (!elements.selected || !elements.preview) {
+            return;
+        }
+
+        var selectedItems = getStoryCreateSelectedItems();
+        if (!selectedItems.length) {
+            elements.selected.innerHTML = '<div class="photo-story-create-overlay__selected-empty">Select up to 5 photos from your gallery.</div>';
+            elements.preview.removeAttribute('src');
+            elements.preview.alt = 'No photo selected';
+            if (elements.previewMeta) {
+                elements.previewMeta.textContent = 'No photo selected yet';
+            }
+            updateStoryCreateSubmitState();
+            if (window.feather) {
+                window.feather.replace();
+            }
+            return;
+        }
+
+        elements.selected.innerHTML = selectedItems.map(function (item, index) {
+            var image = item.image || {};
+            return [
+                '<button type="button" class="photo-story-create-overlay__selected-item" data-photo-story-create-photo="' + escapeHtml(item.post_id || item.photo_id || item.id || '') + '">',
+                '  <img src="' + escapeHtml(image.url || '') + '" alt="' + escapeHtml(image.description || '') + '"/>',
+                '  <span>' + escapeHtml(index + 1) + '</span>',
+                '</button>'
+            ].join('');
+        }).join('');
+
+        var first = selectedItems[0] || {};
+        var firstImage = first.image || {};
+        elements.preview.src = firstImage.url || '';
+        elements.preview.alt = firstImage.description || first.post || first.title || 'Selected photo';
+        if (elements.previewMeta) {
+            elements.previewMeta.textContent = selectedItems.length + ' selected';
+        }
+        updateStoryCreateSubmitState();
+        if (window.feather) {
+            window.feather.replace();
+        }
+    }
+
+    function renderStoryCreateGallery() {
+        var elements = getStoryCreateElements();
+        if (!elements.gallery) {
+            return;
+        }
+
+        var items = Array.isArray(state.storyGalleryItems) ? state.storyGalleryItems : [];
+        if (!items.length) {
+            elements.gallery.innerHTML = '<div class="photo-overlay__empty">No photos are available in your gallery yet.</div>';
+            renderStoryCreateSelection();
+            return;
+        }
+
+        elements.gallery.innerHTML = items.map(function (item) {
+            var image = item.image || {};
+            var photoId = String(item.post_id || item.photo_id || item.id || '').trim();
+            var selected = state.currentStoryCreateSelection.indexOf(photoId) !== -1;
+            return [
+                '<button type="button" class="photo-story-create-overlay__tile' + (selected ? ' is-selected' : '') + '" data-photo-story-create-photo="' + escapeHtml(photoId) + '">',
+                '  <img src="' + escapeHtml(image.url || '') + '" alt="' + escapeHtml(image.description || item.post || '') + '"/>',
+                '  <span class="photo-story-create-overlay__tile-check"><i data-feather="check"></i></span>',
+                '</button>'
+            ].join('');
+        }).join('');
+
+        renderStoryCreateSelection();
+    }
+
+    function toggleStoryCreatePhoto(photoId) {
+        var photoKey = String(photoId || '').trim();
+        if (!photoKey) {
+            return;
+        }
+        var index = state.currentStoryCreateSelection.indexOf(photoKey);
+        if (index !== -1) {
+            state.currentStoryCreateSelection.splice(index, 1);
+        } else if (state.currentStoryCreateSelection.length < 5) {
+            state.currentStoryCreateSelection.push(photoKey);
+        }
+        renderStoryCreateGallery();
+    }
+
+    function clearStoryCreateState() {
+        state.currentStoryCreateSelection = [];
+        state.storyCreateSubmitting = false;
+        var elements = getStoryCreateElements();
+        if (elements.titleInput) {
+            elements.titleInput.value = '';
+        }
+        if (elements.descriptionInput) {
+            elements.descriptionInput.value = '';
+        }
+        renderStoryCreateGallery();
+        updateStoryCreateSubmitState();
+    }
+
+    function openStoryCreateOverlay() {
+        if (!state.storyCreateOverlay) {
+            return;
+        }
+        syncStoryCreateAuthor();
+        clearStoryCreateState();
+        openOverlay(state.storyCreateOverlay);
+        renderStoryCreateGallery();
+    }
+
+    function getProfileEditContext() {
+        var context = getContext();
+        return {
+            data: context.profileEditData || {},
+            profilePics: Array.isArray(context.availableProfilePics) ? context.availableProfilePics.slice() : []
+        };
+    }
+
+    function getProfileEditElements() {
+        if (!state.profileEditOverlay) {
+            return {};
+        }
+        return {
+            avatar: state.profileEditOverlay.querySelector('[data-photo-profile-edit-avatar]'),
+            username: state.profileEditOverlay.querySelector('[data-photo-profile-edit-username]'),
+            avatarPreview: state.profileEditOverlay.querySelector('[data-photo-profile-edit-avatar-preview]'),
+            avatarGallery: state.profileEditOverlay.querySelector('[data-photo-profile-edit-avatar-gallery]'),
+            avatarInput: state.profileEditOverlay.querySelector('[data-photo-profile-edit-avatar-input]'),
+            uploadInput: state.profileEditOverlay.querySelector('[data-photo-profile-edit-upload]'),
+            uploadTrigger: state.profileEditOverlay.querySelector('[data-photo-profile-edit-upload-trigger]'),
+            avatarCount: state.profileEditOverlay.querySelector('[data-photo-profile-edit-avatar-count]'),
+            form: state.profileEditOverlay.querySelector('[data-photo-profile-edit-form]'),
+            submit: state.profileEditOverlay.querySelector('[data-photo-profile-edit-submit]'),
+            email: state.profileEditOverlay.querySelector('[data-photo-profile-edit-input-email]'),
+            age: state.profileEditOverlay.querySelector('[data-photo-profile-edit-input-age]'),
+            gender: state.profileEditOverlay.querySelector('[data-photo-profile-edit-input-gender]'),
+            nationality: state.profileEditOverlay.querySelector('[data-photo-profile-edit-input-nationality]'),
+            language: state.profileEditOverlay.querySelector('[data-photo-profile-edit-input-language]'),
+            leaning: state.profileEditOverlay.querySelector('[data-photo-profile-edit-input-leaning]'),
+            education: state.profileEditOverlay.querySelector('[data-photo-profile-edit-input-education]'),
+            bio: state.profileEditOverlay.querySelector('[data-photo-profile-edit-input-bio]')
+        };
+    }
+
+    function syncProfileEditHeader() {
+        var elements = getProfileEditElements();
+        var context = getProfileEditContext();
+        var data = context.data || {};
+        var avatarValue = state.currentProfileEditSelection.profilePicData || state.currentProfileEditSelection.profilePic || data.profile_pic || '';
+        if (elements.avatar) {
+            elements.avatar.src = avatarValue || '';
+            elements.avatar.alt = data.username || '';
+        }
+        if (elements.username) {
+            elements.username.textContent = data.username || '';
+        }
+        if (elements.avatarInput) {
+            elements.avatarInput.value = avatarValue || '';
+        }
+    }
+
+    function setProfileEditFieldValues() {
+        var elements = getProfileEditElements();
+        var context = getProfileEditContext();
+        var data = context.data || {};
+        if (elements.email) {
+            elements.email.value = data.email || '';
+        }
+        if (elements.age) {
+            elements.age.value = data.age || 0;
+        }
+        if (elements.gender) {
+            elements.gender.value = data.gender || '';
+        }
+        if (elements.nationality) {
+            elements.nationality.value = data.nationality || '';
+        }
+        if (elements.language) {
+            elements.language.value = data.language || '';
+        }
+        if (elements.leaning) {
+            elements.leaning.value = data.leaning || '';
+        }
+        if (elements.education) {
+            elements.education.value = data.education_level || '';
+        }
+        if (elements.bio) {
+            elements.bio.value = data.bio || '';
+        }
+    }
+
+    function updateProfileEditSubmitState() {
+        var elements = getProfileEditElements();
+        if (!elements.submit) {
+            return;
+        }
+        var canSubmit = !state.profileEditSubmitting;
+        if (elements.submit) {
+            elements.submit.disabled = !canSubmit;
+            elements.submit.textContent = state.profileEditSubmitting ? 'Saving...' : 'Save';
+        }
+    }
+
+    function renderProfileEditGallery(kind) {
+        var elements = getProfileEditElements();
+        var context = getProfileEditContext();
+        var data = context.data || {};
+        var items = context.profilePics;
+        var selectedValue = state.currentProfileEditSelection.profilePicData || state.currentProfileEditSelection.profilePic || data.profile_pic || '';
+        var gallery = elements.avatarGallery;
+        var preview = elements.avatarPreview;
+        var count = elements.avatarCount;
+        var optionAttribute = 'data-photo-profile-edit-avatar-option';
+        var optionClass = 'photo-profile-edit-overlay__option';
+
+        if (!gallery) {
+            return;
+        }
+
+        if (count) {
+            count.textContent = items.length ? (items.length + ' available') : 'No options';
+        }
+
+        if (!items.length) {
+            gallery.innerHTML = '<div class="photo-overlay__empty">No profile pictures are available yet.</div>';
+        } else {
+            gallery.innerHTML = items.map(function (item) {
+                var isSelected = String(item || '') === String(selectedValue || '');
+                return [
+                    '<button type="button" class="' + optionClass + (isSelected ? ' is-selected' : '') + '" ' + optionAttribute + '="' + escapeHtml(item) + '">',
+                    '  <img src="' + escapeHtml(item) + '" alt="">',
+                    '</button>'
+                ].join('');
+            }).join('');
+        }
+
+        if (preview) {
+            if (selectedValue || items.length) {
+                preview.src = selectedValue || items[0];
+            } else {
+                preview.removeAttribute('src');
+            }
+            preview.alt = 'Selected profile picture';
+        }
+    }
+
+    function renderProfileEditOverlay() {
+        if (!state.profileEditOverlay) {
+            return;
+        }
+        syncProfileEditHeader();
+        setProfileEditFieldValues();
+        renderProfileEditGallery('avatar');
+        updateProfileEditSubmitState();
+        if (window.feather) {
+            window.feather.replace();
+        }
+    }
+
+    function setProfileEditSelection(value) {
+        state.currentProfileEditSelection.profilePic = String(value || '').trim();
+        state.currentProfileEditSelection.profilePicData = '';
+        syncProfileEditHeader();
+        renderProfileEditGallery('avatar');
+        updateProfileEditSubmitState();
+        if (window.feather) {
+            window.feather.replace();
+        }
+    }
+
+    function readFileAsDataUrl(file) {
+        return new Promise(function (resolve, reject) {
+            var reader = new FileReader();
+            reader.onload = function (event) {
+                resolve(event && event.target ? event.target.result : '');
+            };
+            reader.onerror = function () {
+                reject(new Error('Unable to read file'));
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function cropDataUrlToSquare(dataUrl) {
+        return new Promise(function (resolve) {
+            var image = new Image();
+            image.onload = function () {
+                try {
+                    var size = Math.min(image.width || 0, image.height || 0);
+                    if (!size) {
+                        resolve(dataUrl);
+                        return;
+                    }
+                    var canvas = document.createElement('canvas');
+                    canvas.width = size;
+                    canvas.height = size;
+                    var context2d = canvas.getContext('2d');
+                    if (!context2d) {
+                        resolve(dataUrl);
+                        return;
+                    }
+                    var offsetX = Math.max(0, Math.floor((image.width - size) / 2));
+                    var offsetY = Math.max(0, Math.floor((image.height - size) / 2));
+                    context2d.drawImage(image, offsetX, offsetY, size, size, 0, 0, size, size);
+                    resolve(canvas.toDataURL('image/png'));
+                } catch (error) {
+                    resolve(dataUrl);
+                }
+            };
+            image.onerror = function () {
+                resolve(dataUrl);
+            };
+            image.src = dataUrl;
+        });
+    }
+
+    function setProfileEditUploadedImage(dataUrl) {
+        state.currentProfileEditSelection.profilePic = '';
+        state.currentProfileEditSelection.profilePicData = String(dataUrl || '').trim();
+        syncProfileEditHeader();
+        renderProfileEditGallery('avatar');
+        updateProfileEditSubmitState();
+        if (window.feather) {
+            window.feather.replace();
+        }
+    }
+
+    function handleProfileEditUpload(file) {
+        if (!file) {
+            return;
+        }
+        readFileAsDataUrl(file).then(function (dataUrl) {
+            if (!dataUrl) {
+                return dataUrl;
+            }
+            return cropDataUrlToSquare(dataUrl);
+        }).then(function (croppedDataUrl) {
+            if (croppedDataUrl) {
+                setProfileEditUploadedImage(croppedDataUrl);
+            }
+        }).catch(function () {
+            // Keep the previous selection if the image cannot be processed.
+        });
+    }
+
+    function openProfileEditOverlay() {
+        if (!state.profileEditOverlay) {
+            return;
+        }
+        state.profileEditSubmitting = false;
+        var context = getProfileEditContext();
+        state.currentProfileEditSelection = {
+            profilePic: context.data.profile_pic || (context.profilePics.length ? context.profilePics[0] : ''),
+            profilePicData: ''
+        };
+        openOverlay(state.profileEditOverlay);
+        renderProfileEditOverlay();
+    }
+
+    function applyProfileEditResult(result) {
+        if (!result || !result.ok) {
+            return;
+        }
+
+        var context = getContext();
+        if (context.profileEditData) {
+            context.profileEditData.profile_pic = typeof result.profile_pic !== 'undefined' ? result.profile_pic : (context.profileEditData.profile_pic || '');
+            context.profileEditData.email = typeof result.email !== 'undefined' ? result.email : (context.profileEditData.email || '');
+            context.profileEditData.age = typeof result.age !== 'undefined' ? result.age : context.profileEditData.age;
+            context.profileEditData.gender = typeof result.gender !== 'undefined' ? result.gender : (context.profileEditData.gender || '');
+            context.profileEditData.nationality = typeof result.nationality !== 'undefined' ? result.nationality : (context.profileEditData.nationality || '');
+            context.profileEditData.language = typeof result.language !== 'undefined' ? result.language : (context.profileEditData.language || '');
+            context.profileEditData.leaning = typeof result.leaning !== 'undefined' ? result.leaning : (context.profileEditData.leaning || '');
+            context.profileEditData.education_level = typeof result.education_level !== 'undefined' ? result.education_level : (context.profileEditData.education_level || '');
+            context.profileEditData.bio = typeof result.bio !== 'undefined' ? result.bio : (context.profileEditData.bio || '');
+        }
+
+        state.currentProfileEditSelection.profilePic = result.profile_pic || state.currentProfileEditSelection.profilePic || '';
+        state.currentProfileEditSelection.profilePicData = '';
+
+        var avatar = document.querySelector('.photo-profile-avatar img');
+        if (avatar && result.profile_pic) {
+            avatar.src = result.profile_pic;
+        }
+        var sidebarAvatar = document.querySelector('.photo-sidebar__profile img');
+        if (sidebarAvatar && result.profile_pic) {
+            sidebarAvatar.src = result.profile_pic;
+        }
+        var overlayAvatar = state.profileEditOverlay ? state.profileEditOverlay.querySelector('[data-photo-profile-edit-avatar]') : null;
+        if (overlayAvatar && result.profile_pic) {
+            overlayAvatar.src = result.profile_pic;
+        }
+        var noteBubble = document.querySelector('.photo-profile-note');
+        if (noteBubble) {
+            if (result.bio) {
+                noteBubble.textContent = result.bio;
+                noteBubble.style.display = 'block';
+            } else if (context.profileEditData && context.profileEditData.bio) {
+                noteBubble.textContent = context.profileEditData.bio;
+                noteBubble.style.display = 'block';
+            } else {
+                noteBubble.style.display = 'none';
+            }
+        }
+    }
+
+    function submitProfileEditOverlay() {
+        var elements = getProfileEditElements();
+        if (!elements.form || state.profileEditSubmitting) {
+            return;
+        }
+        var context = getProfileEditContext();
+        var data = context.data || {};
+        var formData = new FormData();
+        formData.append('email', elements.email ? String(elements.email.value || '').trim() : (data.email || ''));
+        formData.append('age', elements.age ? String(elements.age.value || data.age || 0).trim() : String(data.age || 0));
+        formData.append('gender', elements.gender ? String(elements.gender.value || '').trim() : (data.gender || ''));
+        formData.append('nationality', elements.nationality ? String(elements.nationality.value || '').trim() : (data.nationality || ''));
+        formData.append('language', elements.language ? String(elements.language.value || '').trim() : (data.language || ''));
+        formData.append('leaning', elements.leaning ? String(elements.leaning.value || '').trim() : (data.leaning || ''));
+        formData.append('education_level', elements.education ? String(elements.education.value || '').trim() : (data.education_level || ''));
+        formData.append('bio', elements.bio ? String(elements.bio.value || '').trim() : (data.bio || ''));
+        if (state.currentProfileEditSelection.profilePicData) {
+            formData.append('profile_pic_data', state.currentProfileEditSelection.profilePicData);
+        } else {
+            formData.append('profile_pic', state.currentProfileEditSelection.profilePic || data.profile_pic || '');
+        }
+
+        var endpoint = '/' + state.expId + '/api/photo/profile/update';
+        state.profileEditSubmitting = true;
+        updateProfileEditSubmitState();
+
+        fetch(endpoint, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        }).then(function (response) {
+            if (!response.ok) {
+                throw new Error('Request failed');
+            }
+            return response.json();
+        }).then(function (result) {
+            if (result && result.ok) {
+                applyProfileEditResult(result);
+                closeAllOverlays();
+            }
+        }).catch(function () {
+            if (elements.submit) {
+                elements.submit.textContent = 'Unable to save';
+            }
+        }).finally(function () {
+            state.profileEditSubmitting = false;
+            updateProfileEditSubmitState();
+        });
+    }
+
+    function insertProfileStory(story) {
+        if (!story) {
+            return;
+        }
+        var context = getContext();
+        if (Array.isArray(context.stories)) {
+            context.stories.unshift(story);
+        }
+
+        var list = document.querySelector('[data-photo-profile-stories-list]');
+        if (!list) {
+            return;
+        }
+        var imageUrl = (story.image && story.image.url) || (Array.isArray(story.image_urls) && story.image_urls[0]) || '';
+        var storyId = String(story.story_id || story.id || '').trim();
+        if (!storyId || !imageUrl) {
+            return;
+        }
+        var node = document.createElement('a');
+        node.className = 'photo-profile-story';
+        node.href = '#';
+        node.setAttribute('data-photo-open-story', storyId);
+        node.setAttribute('data-photo-story-index', '0');
+        node.innerHTML = [
+            '<div class="photo-profile-story__ring">',
+            '  <div class="photo-profile-story__ring-inner">',
+            '    <img src="' + escapeHtml(imageUrl) + '" alt="' + escapeHtml((story.image && story.image.description) || story.description || story.title || '') + '"/>',
+            '  </div>',
+            '</div>',
+            '<div class="photo-profile-story__label">' + escapeHtml(story.display_time || 'Now') + '</div>'
+        ].join('');
+        list.insertAdjacentElement('afterbegin', node);
+        if (window.feather) {
+            window.feather.replace();
+        }
+    }
+
+    function submitStoryCreateOverlay() {
+        var elements = getStoryCreateElements();
+        if (!elements.submit || state.storyCreateSubmitting) {
+            return;
+        }
+
+        var title = elements.titleInput ? String(elements.titleInput.value || '').trim() : '';
+        var description = elements.descriptionInput ? String(elements.descriptionInput.value || '').trim() : '';
+        if (!title || !description || !state.currentStoryCreateSelection.length) {
+            updateStoryCreateSubmitState();
+            return;
+        }
+
+        state.storyCreateSubmitting = true;
+        elements.submit.disabled = true;
+
+        fetch('/' + state.expId + '/api/photo/story/create', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                photo_ids: state.currentStoryCreateSelection,
+                title: title,
+                description: description
+            })
+        }).then(function (response) {
+            if (!response.ok) {
+                throw new Error('Request failed');
+            }
+            return response.json();
+        }).then(function (result) {
+            if (result && result.ok && result.story) {
+                insertProfileStory(result.story);
+                closeAllOverlays();
+            }
+        }).catch(function () {
+            if (elements.submit) {
+                elements.submit.textContent = 'Unable to share';
+            }
+        }).finally(function () {
+            state.storyCreateSubmitting = false;
+            updateStoryCreateSubmitState();
+        });
+    }
+
     function getShareElements() {
         if (!state.shareOverlay) {
             return {};
@@ -1232,6 +1887,20 @@
                 return;
             }
 
+            var storyCreateTrigger = event.target.closest('[data-photo-open-story-create]');
+            if (storyCreateTrigger) {
+                event.preventDefault();
+                openStoryCreateOverlay();
+                return;
+            }
+
+            var profileEditTrigger = event.target.closest('[data-photo-open-profile-edit]');
+            if (profileEditTrigger) {
+                event.preventDefault();
+                openProfileEditOverlay();
+                return;
+            }
+
             var likeTrigger = event.target.closest('[data-photo-post-like]');
             if (likeTrigger) {
                 event.preventDefault();
@@ -1260,6 +1929,30 @@
                 return;
             }
 
+            var storyCreatePhotoTrigger = event.target.closest('[data-photo-story-create-photo]');
+            if (storyCreatePhotoTrigger) {
+                event.preventDefault();
+                toggleStoryCreatePhoto(storyCreatePhotoTrigger.getAttribute('data-photo-story-create-photo'));
+                return;
+            }
+
+            var profileAvatarTrigger = event.target.closest('[data-photo-profile-edit-avatar-option]');
+            if (profileAvatarTrigger) {
+                event.preventDefault();
+                setProfileEditSelection(profileAvatarTrigger.getAttribute('data-photo-profile-edit-avatar-option'));
+                return;
+            }
+
+            var profileUploadTrigger = event.target.closest('[data-photo-profile-edit-upload-trigger]');
+            if (profileUploadTrigger) {
+                event.preventDefault();
+                var uploadInput = state.profileEditOverlay ? state.profileEditOverlay.querySelector('[data-photo-profile-edit-upload]') : null;
+                if (uploadInput) {
+                    uploadInput.click();
+                }
+                return;
+            }
+
             var postTrigger = event.target.closest('[data-photo-open-post]');
             if (postTrigger) {
                 event.preventDefault();
@@ -1283,7 +1976,9 @@
 
             if (event.target.matches('[data-photo-post-overlay]') ||
                 event.target.matches('[data-photo-people-overlay]') ||
-                event.target.matches('[data-photo-story-overlay]')) {
+                event.target.matches('[data-photo-story-overlay]') ||
+                event.target.matches('[data-photo-story-create-overlay]') ||
+                event.target.matches('[data-photo-profile-edit-overlay]')) {
                 closeAllOverlays();
             }
         });
@@ -1335,12 +2030,76 @@
                 });
             }
         }
+
+        if (state.storyCreateOverlay) {
+            var storyCreateSubmit = state.storyCreateOverlay.querySelector('[data-photo-story-create-submit]');
+            var storyCreateTitle = state.storyCreateOverlay.querySelector('[data-photo-story-create-input-title]');
+            var storyCreateDescription = state.storyCreateOverlay.querySelector('[data-photo-story-create-input-description]');
+            var storyCreateForm = state.storyCreateOverlay.querySelector('[data-photo-story-create-form]');
+            if (storyCreateSubmit && storyCreateSubmit.getAttribute('data-photo-bound') !== 'true') {
+                storyCreateSubmit.setAttribute('data-photo-bound', 'true');
+                storyCreateSubmit.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    submitStoryCreateOverlay();
+                });
+            }
+            if (storyCreateTitle && storyCreateTitle.getAttribute('data-photo-bound') !== 'true') {
+                storyCreateTitle.setAttribute('data-photo-bound', 'true');
+                storyCreateTitle.addEventListener('input', updateStoryCreateSubmitState);
+            }
+            if (storyCreateDescription && storyCreateDescription.getAttribute('data-photo-bound') !== 'true') {
+                storyCreateDescription.setAttribute('data-photo-bound', 'true');
+                storyCreateDescription.addEventListener('input', updateStoryCreateSubmitState);
+            }
+            if (storyCreateForm && storyCreateForm.getAttribute('data-photo-bound') !== 'true') {
+                storyCreateForm.setAttribute('data-photo-bound', 'true');
+                storyCreateForm.addEventListener('submit', function (event) {
+                    event.preventDefault();
+                    submitStoryCreateOverlay();
+                });
+            }
+            if (state.storyCreateOverlay.getAttribute('data-photo-bound') !== 'true') {
+                state.storyCreateOverlay.setAttribute('data-photo-bound', 'true');
+                state.storyCreateOverlay.addEventListener('dragover', function (event) {
+                    event.preventDefault();
+                });
+            }
+        }
+
+        if (state.profileEditOverlay) {
+            var profileEditSubmit = state.profileEditOverlay.querySelector('[data-photo-profile-edit-submit]');
+            var profileEditForm = state.profileEditOverlay.querySelector('[data-photo-profile-edit-form]');
+            var profileEditUpload = state.profileEditOverlay.querySelector('[data-photo-profile-edit-upload]');
+            if (profileEditSubmit && profileEditSubmit.getAttribute('data-photo-bound') !== 'true') {
+                profileEditSubmit.setAttribute('data-photo-bound', 'true');
+                profileEditSubmit.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    submitProfileEditOverlay();
+                });
+            }
+            if (profileEditForm && profileEditForm.getAttribute('data-photo-bound') !== 'true') {
+                profileEditForm.setAttribute('data-photo-bound', 'true');
+                profileEditForm.addEventListener('submit', function (event) {
+                    event.preventDefault();
+                    submitProfileEditOverlay();
+                });
+            }
+            if (profileEditUpload && profileEditUpload.getAttribute('data-photo-bound') !== 'true') {
+                profileEditUpload.setAttribute('data-photo-bound', 'true');
+                profileEditUpload.addEventListener('change', function () {
+                    var file = profileEditUpload.files && profileEditUpload.files[0] ? profileEditUpload.files[0] : null;
+                    handleProfileEditUpload(file);
+                    profileEditUpload.value = '';
+                });
+            }
+        }
     }
 
     function init() {
         var context = getContext();
         state.expId = String(context.expId || '');
         state.loggedId = String(context.loggedId || context.userId || '');
+        state.storyGalleryItems = Array.isArray(context.storyGalleryItems) ? context.storyGalleryItems.slice() : [];
         if (!ensureOverlayElements()) {
             return;
         }

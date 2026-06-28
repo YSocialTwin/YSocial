@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import sqlite3
+import hashlib
 from datetime import datetime, timezone
 from types import SimpleNamespace
 from typing import Any, Dict, List, Optional
@@ -51,7 +52,32 @@ from ._server import (
 def _resolve_interview_profile_pic(user: User_mgmt, exp: Exps) -> str:
     if not user or not exp:
         return ""
-    if str(getattr(exp, "platform_type", "") or "") == "forum":
+    direct_pic = str(
+        getattr(user, "profile_picture_url", "")
+        or getattr(user, "profile_pic", "")
+        or getattr(user, "avatar", "")
+        or ""
+    ).strip()
+    if direct_pic:
+        return direct_pic
+
+    platform_type = str(getattr(exp, "platform_type", "") or "")
+    if platform_type == "photo_sharing":
+        user_key = str(
+            getattr(user, "id", "")
+            or getattr(user, "username", "")
+            or ""
+        ).strip()
+        if not user_key:
+            return ""
+        try:
+            image_id = str(int(user_key))
+        except (TypeError, ValueError):
+            hashed = int(hashlib.md5(user_key.encode("utf-8")).hexdigest(), 16)
+            image_id = str((hashed % 1000) + 1)
+        return f"/static/assets/img/users/{image_id}.png"
+
+    if platform_type == "forum":
         return resolve_forum_profile_pic(user, int(getattr(exp, "idexp", 0) or 0))
 
     username = str(getattr(user, "username", "") or "").strip()
@@ -268,6 +294,24 @@ def _experiment_sqlite_db_path(exp: Exps) -> Optional[Any]:
     db_name = str(getattr(exp, "db_name", "") or "").strip()
     if not db_name:
         return None
+
+    if str(getattr(exp, "platform_type", "") or "").strip().lower() == "photo_sharing":
+        uid = _get_experiment_uid_from_db_name(db_name)
+        if uid:
+            photo_db = Path(
+                get_writable_path(
+                    os.path.join("y_web", "experiments", uid, "yphotosharing.db")
+                )
+            )
+            if photo_db.exists():
+                return photo_db
+        # Fall back to the experiment-local database name if the photo DB has
+        # not been materialized yet.
+        candidate = Path(get_writable_path(os.path.join("y_web", db_name)))
+        if candidate.exists():
+            return candidate
+        return None
+
     candidate = Path(get_writable_path(os.path.join("y_web", db_name)))
     if candidate.exists():
         return candidate

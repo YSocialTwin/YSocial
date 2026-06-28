@@ -34,6 +34,7 @@ from y_web.routes.api.interview._server import (
     _memory_server_unavailable,
 )
 from y_web.routes.social.helpers import _experiment_memory_enabled
+from y_web.src.experiment.helpers import ensure_experiment_user
 from y_web.src.models import (
     Admin_users,
     Exps,
@@ -61,6 +62,7 @@ def _json_error(message: str, status: int = 400):
 
 def _social_chat_owner_user(exp: Exps) -> User_mgmt | None:
     username = getattr(current_user, "username", "") or ""
+    is_photo = str(getattr(exp, "platform_type", "") or "").strip().lower() == "photo_sharing"
     db_path = _experiment_sqlite_db_path(exp)
     if db_path is not None and db_path.exists():
         try:
@@ -80,7 +82,41 @@ def _social_chat_owner_user(exp: Exps) -> User_mgmt | None:
         except Exception:
             pass
 
-    return User_mgmt.query.filter_by(username=username).first()
+    if is_photo:
+        try:
+            created_user, _created = ensure_experiment_user(
+                exp,
+                user_id=getattr(current_user, "id", 0) or 0,
+                username=username,
+                email=str(getattr(current_user, "email", "") or ""),
+                password=str(getattr(current_user, "password", "") or ""),
+                joined_on=0,
+            )
+            if created_user is not None:
+                return created_user
+        except Exception:
+            pass
+        return None
+
+    user = User_mgmt.query.filter_by(username=username).first()
+    if user is not None:
+        return user
+
+    try:
+        created_user, _created = ensure_experiment_user(
+            exp,
+            user_id=getattr(current_user, "id", 0) or 0,
+            username=username,
+            email=str(getattr(current_user, "email", "") or ""),
+            password=str(getattr(current_user, "password", "") or ""),
+            joined_on=0,
+        )
+        if created_user is not None:
+            return created_user
+    except Exception:
+        pass
+
+    return None
 
 
 def _social_chat_followed_agent_ids(exp: Exps, owner_user_id) -> set:
@@ -88,8 +124,15 @@ def _social_chat_followed_agent_ids(exp: Exps, owner_user_id) -> set:
     followed_ids: set = set()
     latest_actions: dict = {}
     db_path = _experiment_sqlite_db_path(exp)
+    is_photo = str(getattr(exp, "platform_type", "") or "").strip().lower() == "photo_sharing"
 
-    if isinstance(owner_id, str) and db_path is not None and db_path.exists():
+    def _mark_active(target_id, action):
+        target_id = _coerce_experiment_user_id(target_id)
+        if target_id is None or target_id == owner_id or target_id in latest_actions:
+            return
+        latest_actions[target_id] = str(action or "").strip().lower()
+
+    if is_photo and db_path is not None and db_path.exists():
         try:
             import sqlite3
 
@@ -98,21 +141,43 @@ def _social_chat_followed_agent_ids(exp: Exps, owner_user_id) -> set:
             try:
                 rows = conn.execute(
                     """
-                    select f.follower_id as target_id, f.action
+                    select f.user_id as source_id, f.follower_id as target_id, f.action, f.rowid as rid
                     from follow f
                     left join rounds r on f.round = r.id
-                    where f.user_id = ?
+                    where f.user_id = ? or f.follower_id = ?
                     order by coalesce(r.day, 0) desc, coalesce(r.hour, 0) desc, f.rowid desc
                     """,
-                    (owner_id,),
+                    (owner_id, owner_id),
                 ).fetchall()
             finally:
                 conn.close()
             for row in rows:
-                target_id = _coerce_experiment_user_id(row["target_id"])
-                if target_id is None or target_id in latest_actions:
-                    continue
-                latest_actions[target_id] = str(row["action"] or "").strip().lower()
+                target_id = row["target_id"] if str(row["source_id"]) == str(owner_id) else row["source_id"]
+                _mark_active(target_id, row["action"])
+        except Exception:
+            latest_actions = {}
+    elif isinstance(owner_id, str) and db_path is not None and db_path.exists():
+        try:
+            import sqlite3
+
+            conn = sqlite3.connect(str(db_path))
+            conn.row_factory = sqlite3.Row
+            try:
+                rows = conn.execute(
+                    """
+                    select f.user_id as source_id, f.follower_id as target_id, f.action, f.rowid as rid
+                    from follow f
+                    left join rounds r on f.round = r.id
+                    where f.user_id = ? or f.follower_id = ?
+                    order by coalesce(r.day, 0) desc, coalesce(r.hour, 0) desc, f.rowid desc
+                    """,
+                    (owner_id, owner_id),
+                ).fetchall()
+            finally:
+                conn.close()
+            for row in rows:
+                target_id = row["target_id"] if str(row["source_id"]) == str(owner_id) else row["source_id"]
+                _mark_active(target_id, row["action"])
         except Exception:
             latest_actions = {}
     else:
@@ -121,18 +186,48 @@ def _social_chat_followed_agent_ids(exp: Exps, owner_user_id) -> set:
             .order_by(Follow.id.desc())
             .all()
         )
-        for event in follow_events:
-            target_id = _coerce_experiment_user_id(getattr(event, "follower_id", None))
-            if target_id is None or target_id in latest_actions:
-                continue
-            latest_actions[target_id] = (
-                str(getattr(event, "action", "") or "").strip().lower()
+        reverse_events = (
+            Follow.query.filter(Follow.follower_id == owner_id)
+            .order_by(Follow.id.desc())
+            .all()
+        )
+        for event in sorted(
+            [*follow_events, *reverse_events],
+            key=lambda item: int(getattr(item, "id", 0) or 0),
+            reverse=True,
+        ):
+            target_id = (
+                getattr(event, "follower_id", None)
+                if str(getattr(event, "user_id", None)) == str(owner_id)
+                else getattr(event, "user_id", None)
             )
+            _mark_active(target_id, getattr(event, "action", ""))
 
     for target_id, action in latest_actions.items():
         if action == "follow":
             followed_ids.add(target_id)
     return followed_ids
+
+
+def _social_chat_photo_contacts(exp: Exps, owner_user_id) -> list[User_mgmt]:
+    owner_id = _coerce_experiment_user_id(owner_user_id)
+    if owner_id is None:
+        return []
+
+    contacts = []
+    seen_ids = set()
+    for contact_id in sorted(_social_chat_followed_agent_ids(exp, owner_id), key=lambda value: str(value)):
+        contact = _load_experiment_user_sqlite(exp, contact_id)
+        if contact is None:
+            continue
+        contact_key = _coerce_experiment_user_id(getattr(contact, "id", None))
+        if contact_key is None or contact_key == owner_id or contact_key in seen_ids:
+            continue
+        if int(getattr(contact, "is_page", 0) or 0) != 0:
+            continue
+        seen_ids.add(contact_key)
+        contacts.append(contact)
+    return contacts
 
 
 def _social_chat_admin_user(exp: Exps) -> Admin_users | None:
@@ -404,19 +499,17 @@ def api_social_chat_bootstrap(exp_id: int):
     exp = Exps.query.filter_by(idexp=int(exp_id)).first()
     if exp is None:
         return _json_error("Experiment not found.", 404)
-    if not _experiment_memory_enabled(exp_id):
-        return _json_error(
-            "Microblogging chat is unavailable because memory is disabled.", 403
-        )
     _ensure_experiment_db_bind(exp)
+    is_photo = str(getattr(exp, "platform_type", "") or "").strip().lower() == "photo_sharing"
 
     owner_user = _social_chat_owner_user(exp)
     if owner_user is None:
         return _json_error("Experiment user not found for current session.", 404)
     owner_id = _coerce_experiment_user_id(owner_user.id)
     followed_agent_ids = _social_chat_followed_agent_ids(exp, owner_id)
-
-    if isinstance(owner_id, str):
+    if is_photo:
+        agents = _social_chat_photo_contacts(exp, owner_id)
+    elif isinstance(owner_id, str):
         agents = [
             _load_experiment_user_sqlite(exp, agent_id)
             for agent_id in sorted(followed_agent_ids, key=lambda value: str(value))
@@ -426,18 +519,16 @@ def api_social_chat_bootstrap(exp_id: int):
             for agent in agents
             if agent is not None
             and int(getattr(agent, "is_page", 0) or 0) == 0
-            and str(getattr(agent, "user_type", "user") or "user") != "user"
             and _coerce_experiment_user_id(getattr(agent, "id", None)) != owner_id
         ]
     else:
-        agents = (
+        agents_query = (
             User_mgmt.query.filter(User_mgmt.is_page == 0)
-            .filter(User_mgmt.user_type != "user")
             .filter(User_mgmt.id != owner_id)
             .filter(User_mgmt.id.in_(followed_agent_ids or {-1}))
-            .order_by(User_mgmt.username.asc())
-            .all()
         )
+        agents_query = agents_query.filter(User_mgmt.user_type != "user")
+        agents = agents_query.order_by(User_mgmt.username.asc()).all()
     sessions = (
         ForumChatSession.query.filter_by(owner_user_id=owner_id)
         .order_by(
@@ -494,11 +585,8 @@ def api_social_chat_open_session(exp_id: int):
     exp = Exps.query.filter_by(idexp=int(exp_id)).first()
     if exp is None:
         return _json_error("Experiment not found.", 404)
-    if not _experiment_memory_enabled(exp_id):
-        return _json_error(
-            "Microblogging chat is unavailable because memory is disabled.", 403
-        )
     _ensure_experiment_db_bind(exp)
+    is_photo = str(getattr(exp, "platform_type", "") or "").strip().lower() == "photo_sharing"
 
     owner_user = _social_chat_owner_user(exp)
     if owner_user is None:
@@ -508,18 +596,13 @@ def api_social_chat_open_session(exp_id: int):
 
     payload = request.get_json(silent=True) or {}
     agent_user_id = _coerce_experiment_user_id(payload.get("agent_user_id"))
-    target_user = (
-        _load_experiment_user_sqlite(exp, agent_user_id)
-        if isinstance(agent_user_id, str)
-        else None
-    )
+    target_user = _load_experiment_user_sqlite(exp, agent_user_id) if is_photo else None
     if target_user is None:
-        target_user = (
-            User_mgmt.query.filter(User_mgmt.is_page == 0)
-            .filter(User_mgmt.user_type != "user")
-            .filter(User_mgmt.id == agent_user_id)
-            .first()
+        target_query = User_mgmt.query.filter(User_mgmt.is_page == 0).filter(
+            User_mgmt.id == agent_user_id
         )
+        target_query = target_query.filter(User_mgmt.user_type != "user")
+        target_user = target_query.first()
     if target_user is None:
         return _json_error("Target agent not found.", 404)
     if _coerce_experiment_user_id(target_user.id) not in followed_agent_ids:
@@ -538,11 +621,8 @@ def api_social_chat_get_session(exp_id: int, session_id: int):
     exp = Exps.query.filter_by(idexp=int(exp_id)).first()
     if exp is None:
         return _json_error("Experiment not found.", 404)
-    if not _experiment_memory_enabled(exp_id):
-        return _json_error(
-            "Microblogging chat is unavailable because memory is disabled.", 403
-        )
     _ensure_experiment_db_bind(exp)
+    is_photo = str(getattr(exp, "platform_type", "") or "").strip().lower() == "photo_sharing"
 
     owner_user = _social_chat_owner_user(exp)
     if owner_user is None:
@@ -558,6 +638,9 @@ def api_social_chat_get_session(exp_id: int, session_id: int):
     if _coerce_experiment_user_id(session.target_user_id) not in followed_agent_ids:
         return _json_error("You can chat only with followed agents.", 403)
 
+    if is_photo:
+        return _json_success(_social_chat_session_payload(session, include_messages=True))
+
     return _json_success(_social_chat_session_payload(session, include_messages=True))
 
 
@@ -567,11 +650,8 @@ def api_social_chat_send_message(exp_id: int, session_id: int):
     exp = Exps.query.filter_by(idexp=int(exp_id)).first()
     if exp is None:
         return _json_error("Experiment not found.", 404)
-    if not _experiment_memory_enabled(exp_id):
-        return _json_error(
-            "Microblogging chat is unavailable because memory is disabled.", 403
-        )
     _ensure_experiment_db_bind(exp)
+    is_photo = str(getattr(exp, "platform_type", "") or "").strip().lower() == "photo_sharing"
 
     owner_user = _social_chat_owner_user(exp)
     if owner_user is None:
@@ -588,13 +668,11 @@ def api_social_chat_send_message(exp_id: int, session_id: int):
     if target_id not in followed_agent_ids:
         return _json_error("You can chat only with followed agents.", 403)
 
-    target_user = (
-        _load_experiment_user_sqlite(exp, target_id)
-        if isinstance(target_id, str)
-        else None
-    )
+    target_user = _load_experiment_user_sqlite(exp, target_id) if is_photo else None
     if target_user is None:
-        target_user = User_mgmt.query.filter_by(id=target_id).first()
+        target_query = User_mgmt.query.filter_by(id=target_id)
+        target_query = target_query.filter(User_mgmt.user_type != "user")
+        target_user = target_query.first()
     if target_user is None:
         return _json_error("Target agent not found.", 404)
 

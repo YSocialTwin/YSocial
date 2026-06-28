@@ -3,6 +3,7 @@
 import json
 import os
 import shutil
+from pathlib import Path
 
 from flask import flash, redirect, request, url_for
 from flask_login import current_user, login_required
@@ -72,17 +73,29 @@ def reset_client(uid):
     client = Client.query.filter_by(id=uid).first()
     exp = Exps.query.filter_by(idexp=client.id_exp).first()
     population = Population.query.filter_by(id=client.population_id).first()
-    path = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}{os.sep}{population.name}.json"
-    if os.path.exists(path):
-        os.remove(path)
+    exp_folder = exp.db_name.split(os.sep)[1]
+    exp_dir = Path(BASE_DIR) / "y_web" / "experiments" / exp_folder
+
+    path = exp_dir / f"{population.name}.json"
+    if path.exists():
+        path.unlink()
 
     prompt_candidates = ["prompts.json"]
     if exp.platform_type == "photo_sharing":
         prompt_candidates.insert(0, "prompts_ygram.json")
     for prompt_file in prompt_candidates:
-        path = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}{os.sep}{prompt_file}"
-        if os.path.exists(path):
-            os.remove(path)
+        prompt_path = exp_dir / prompt_file
+        if prompt_path.exists():
+            prompt_path.unlink()
+
+    if exp.platform_type == "photo_sharing":
+        state_candidates = [
+            exp_dir / f"client_{client.name}-{population.name}.state.json",
+        ]
+        state_candidates.extend(exp_dir.glob(f"client_{client.name}-*.state.json"))
+        for state_path in state_candidates:
+            if state_path.exists():
+                state_path.unlink()
 
     # copy the original prompts.json file
     if exp.platform_type in {"microblogging", "photo_sharing"}:
@@ -92,9 +105,9 @@ def reset_client(uid):
                 os.path.join("data_schema", "prompts_ygram.json")
             )
         prompts_dest = (
-            f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}{os.sep}prompts_ygram.json"
+            exp_dir / "prompts_ygram.json"
             if exp.platform_type == "photo_sharing"
-            else f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}{os.sep}prompts.json"
+            else exp_dir / "prompts.json"
         )
         shutil.copy(
             prompts_src,
@@ -106,7 +119,7 @@ def reset_client(uid):
         )
         shutil.copy(
             prompts_src,
-            f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}{os.sep}prompts.json",
+            exp_dir / "prompts.json",
         )
     else:
         raise Exception(f"unsupported platform: {exp.platform_type}")

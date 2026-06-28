@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import re
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Optional
@@ -100,6 +101,7 @@ def _experiment_engine_uri(experiment: Exps) -> Optional[str]:
             photo_db_path = get_writable_path(
                 os.path.join("y_web", photo_folder, "yphotosharing.db")
             )
+            os.makedirs(os.path.dirname(photo_db_path), exist_ok=True)
             return f"sqlite:///{photo_db_path}"
 
         db_path = get_writable_path(os.path.join("y_web", db_name))
@@ -132,9 +134,11 @@ def open_experiment_session(experiment: Exps):
         return None, None
 
     engine = create_engine(uri, pool_pre_ping=True)
-    if getattr(experiment, "platform_type", "") != "photo_sharing":
+    if getattr(experiment, "platform_type", "") == "photo_sharing":
+        _ensure_photo_sharing_orm_tables(engine, uri)
+    else:
         _ensure_experiment_orm_tables(engine)
-    ensure_experiment_schema_for_uri(uri)
+        ensure_experiment_schema_for_uri(uri)
     session = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)()
     return session, engine
 
@@ -160,6 +164,29 @@ def _ensure_experiment_orm_tables(engine) -> None:
 
     if tables:
         db.metadata.create_all(bind=engine, tables=tables)
+
+
+def _ensure_photo_sharing_orm_tables(engine, uri: Optional[str] = None) -> None:
+    """
+    Create the complete YPhotoSharing ORM schema on the target engine.
+
+    The external YPhotoSharing package ships with its own SQLAlchemy Base and
+    model graph, which includes the ``user_mgmt`` table required by photo
+    experiments. We import it lazily so a missing or partially initialised
+    photo database can be repaired on first use.
+    """
+    try:
+        external_root = Path(__file__).resolve().parents[3] / "external" / "YPhotoSharing"
+        external_root_str = str(external_root)
+        if external_root.exists() and external_root_str not in sys.path:
+            sys.path.insert(0, external_root_str)
+
+        from YPhotoSharing.YServer.classes.models import Base as PhotoBase
+
+        PhotoBase.metadata.create_all(bind=engine)
+    except Exception:
+        if uri:
+            ensure_experiment_schema_for_uri(uri)
 
 
 def ensure_experiment_user(
