@@ -121,7 +121,9 @@ def test_photo_sharing_experiment_db_path_prefers_yphotosharing(monkeypatch, tmp
     assert str(resolved).endswith("/y_web/experiments/test-exp/yphotosharing.db")
 
 
-def test_photo_sharing_open_experiment_session_bootstraps_full_schema(monkeypatch, tmp_path):
+def test_photo_sharing_open_experiment_session_bootstraps_full_schema(
+    monkeypatch, tmp_path
+):
     from sqlalchemy import text
 
     from y_web import create_app

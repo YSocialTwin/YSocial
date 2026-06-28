@@ -176,7 +176,9 @@ def _ensure_photo_sharing_orm_tables(engine, uri: Optional[str] = None) -> None:
     photo database can be repaired on first use.
     """
     try:
-        external_root = Path(__file__).resolve().parents[3] / "external" / "YPhotoSharing"
+        external_root = (
+            Path(__file__).resolve().parents[3] / "external" / "YPhotoSharing"
+        )
         external_root_str = str(external_root)
         if external_root.exists() and external_root_str not in sys.path:
             sys.path.insert(0, external_root_str)

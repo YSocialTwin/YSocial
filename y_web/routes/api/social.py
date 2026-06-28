@@ -62,7 +62,9 @@ def _json_error(message: str, status: int = 400):
 
 def _social_chat_owner_user(exp: Exps) -> User_mgmt | None:
     username = getattr(current_user, "username", "") or ""
-    is_photo = str(getattr(exp, "platform_type", "") or "").strip().lower() == "photo_sharing"
+    is_photo = (
+        str(getattr(exp, "platform_type", "") or "").strip().lower() == "photo_sharing"
+    )
     db_path = _experiment_sqlite_db_path(exp)
     if db_path is not None and db_path.exists():
         try:
@@ -124,7 +126,9 @@ def _social_chat_followed_agent_ids(exp: Exps, owner_user_id) -> set:
     followed_ids: set = set()
     latest_actions: dict = {}
     db_path = _experiment_sqlite_db_path(exp)
-    is_photo = str(getattr(exp, "platform_type", "") or "").strip().lower() == "photo_sharing"
+    is_photo = (
+        str(getattr(exp, "platform_type", "") or "").strip().lower() == "photo_sharing"
+    )
 
     def _mark_active(target_id, action):
         target_id = _coerce_experiment_user_id(target_id)
@@ -152,7 +156,11 @@ def _social_chat_followed_agent_ids(exp: Exps, owner_user_id) -> set:
             finally:
                 conn.close()
             for row in rows:
-                target_id = row["target_id"] if str(row["source_id"]) == str(owner_id) else row["source_id"]
+                target_id = (
+                    row["target_id"]
+                    if str(row["source_id"]) == str(owner_id)
+                    else row["source_id"]
+                )
                 _mark_active(target_id, row["action"])
         except Exception:
             latest_actions = {}
@@ -176,7 +184,11 @@ def _social_chat_followed_agent_ids(exp: Exps, owner_user_id) -> set:
             finally:
                 conn.close()
             for row in rows:
-                target_id = row["target_id"] if str(row["source_id"]) == str(owner_id) else row["source_id"]
+                target_id = (
+                    row["target_id"]
+                    if str(row["source_id"]) == str(owner_id)
+                    else row["source_id"]
+                )
                 _mark_active(target_id, row["action"])
         except Exception:
             latest_actions = {}
@@ -216,7 +228,9 @@ def _social_chat_photo_contacts(exp: Exps, owner_user_id) -> list[User_mgmt]:
 
     contacts = []
     seen_ids = set()
-    for contact_id in sorted(_social_chat_followed_agent_ids(exp, owner_id), key=lambda value: str(value)):
+    for contact_id in sorted(
+        _social_chat_followed_agent_ids(exp, owner_id), key=lambda value: str(value)
+    ):
         contact = _load_experiment_user_sqlite(exp, contact_id)
         if contact is None:
             continue
@@ -500,7 +514,9 @@ def api_social_chat_bootstrap(exp_id: int):
     if exp is None:
         return _json_error("Experiment not found.", 404)
     _ensure_experiment_db_bind(exp)
-    is_photo = str(getattr(exp, "platform_type", "") or "").strip().lower() == "photo_sharing"
+    is_photo = (
+        str(getattr(exp, "platform_type", "") or "").strip().lower() == "photo_sharing"
+    )
 
     owner_user = _social_chat_owner_user(exp)
     if owner_user is None:
@@ -586,7 +602,9 @@ def api_social_chat_open_session(exp_id: int):
     if exp is None:
         return _json_error("Experiment not found.", 404)
     _ensure_experiment_db_bind(exp)
-    is_photo = str(getattr(exp, "platform_type", "") or "").strip().lower() == "photo_sharing"
+    is_photo = (
+        str(getattr(exp, "platform_type", "") or "").strip().lower() == "photo_sharing"
+    )
 
     owner_user = _social_chat_owner_user(exp)
     if owner_user is None:
@@ -622,7 +640,9 @@ def api_social_chat_get_session(exp_id: int, session_id: int):
     if exp is None:
         return _json_error("Experiment not found.", 404)
     _ensure_experiment_db_bind(exp)
-    is_photo = str(getattr(exp, "platform_type", "") or "").strip().lower() == "photo_sharing"
+    is_photo = (
+        str(getattr(exp, "platform_type", "") or "").strip().lower() == "photo_sharing"
+    )
 
     owner_user = _social_chat_owner_user(exp)
     if owner_user is None:
@@ -639,7 +659,9 @@ def api_social_chat_get_session(exp_id: int, session_id: int):
         return _json_error("You can chat only with followed agents.", 403)
 
     if is_photo:
-        return _json_success(_social_chat_session_payload(session, include_messages=True))
+        return _json_success(
+            _social_chat_session_payload(session, include_messages=True)
+        )
 
     return _json_success(_social_chat_session_payload(session, include_messages=True))
 
@@ -651,7 +673,9 @@ def api_social_chat_send_message(exp_id: int, session_id: int):
     if exp is None:
         return _json_error("Experiment not found.", 404)
     _ensure_experiment_db_bind(exp)
-    is_photo = str(getattr(exp, "platform_type", "") or "").strip().lower() == "photo_sharing"
+    is_photo = (
+        str(getattr(exp, "platform_type", "") or "").strip().lower() == "photo_sharing"
+    )
 
     owner_user = _social_chat_owner_user(exp)
     if owner_user is None:

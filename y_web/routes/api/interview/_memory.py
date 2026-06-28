@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import sqlite3
-import hashlib
 from datetime import datetime, timezone
 from types import SimpleNamespace
 from typing import Any, Dict, List, Optional
@@ -64,9 +64,7 @@ def _resolve_interview_profile_pic(user: User_mgmt, exp: Exps) -> str:
     platform_type = str(getattr(exp, "platform_type", "") or "")
     if platform_type == "photo_sharing":
         user_key = str(
-            getattr(user, "id", "")
-            or getattr(user, "username", "")
-            or ""
+            getattr(user, "id", "") or getattr(user, "username", "") or ""
         ).strip()
         if not user_key:
             return ""

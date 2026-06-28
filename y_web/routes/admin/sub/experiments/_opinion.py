@@ -3043,7 +3043,9 @@ def _resolve_network_analysis_db_path(experiment):
     that the network-analysis tables are missing.
     """
     if getattr(experiment, "platform_type", "") == "photo_sharing":
-        db_name = str(getattr(experiment, "db_name", "") or "").replace("\\", os.sep).strip()
+        db_name = (
+            str(getattr(experiment, "db_name", "") or "").replace("\\", os.sep).strip()
+        )
         uid = get_experiment_uid_from_db_name(db_name)
         if uid:
             photo_db_path = os.path.join(
