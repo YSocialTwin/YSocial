@@ -521,9 +521,9 @@ def test_stop_hpc_client_marks_manual_stop_before_killing_process():
         patch.object(hpc_client.db.session, "commit"),
         patch.object(hpc_client.db.session, "rollback"),
     ):
-        assert hpc_client.stop_hpc_client(
-            mock_cli, terminal_state="manual_stop"
-        ) is True
+        assert (
+            hpc_client.stop_hpc_client(mock_cli, terminal_state="manual_stop") is True
+        )
 
     assert call_order[0] == ("mark", "manual_stop")
     assert any(item[0] == "kill" for item in call_order)
