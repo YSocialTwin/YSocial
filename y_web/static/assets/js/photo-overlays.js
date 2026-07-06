@@ -4,11 +4,13 @@
     var state = {
         postOverlay: null,
         peopleOverlay: null,
+        switchOverlay: null,
         storyOverlay: null,
         storyCreateOverlay: null,
         shareOverlay: null,
         postDialog: null,
         peopleDialog: null,
+        switchDialog: null,
         storyDialog: null,
         storyCreateDialog: null,
         shareDialog: null,
@@ -17,6 +19,10 @@
         currentPeopleItems: [],
         currentPeopleKind: null,
         currentPeopleSearch: '',
+        currentSwitchUsers: [],
+        currentSwitchSearch: '',
+        currentSwitchUserId: '',
+        switchSubmitting: false,
         currentStory: null,
         currentStoryIndex: 0,
         currentStoryTrigger: null,
@@ -49,9 +55,10 @@
     }
 
     function ensureOverlayElements() {
-        if (!state.postOverlay || !state.peopleOverlay || !state.storyOverlay || !state.shareOverlay || !state.storyCreateOverlay || !state.profileEditOverlay) {
+        if (!state.postOverlay || !state.peopleOverlay || !state.switchOverlay || !state.storyOverlay || !state.shareOverlay || !state.storyCreateOverlay || !state.profileEditOverlay) {
             state.postOverlay = document.querySelector('[data-photo-post-overlay]');
             state.peopleOverlay = document.querySelector('[data-photo-people-overlay]');
+            state.switchOverlay = document.querySelector('[data-photo-switch-user-overlay]');
             state.storyOverlay = document.querySelector('[data-photo-story-overlay]');
             state.storyCreateOverlay = document.querySelector('[data-photo-story-create-overlay]');
             state.shareOverlay = document.querySelector('[data-photo-share-overlay]');
@@ -61,6 +68,9 @@
             }
             if (state.peopleOverlay) {
                 state.peopleDialog = state.peopleOverlay.querySelector('.photo-overlay__dialog');
+            }
+            if (state.switchOverlay) {
+                state.switchDialog = state.switchOverlay.querySelector('.photo-overlay__dialog');
             }
             if (state.storyOverlay) {
                 state.storyDialog = state.storyOverlay.querySelector('.photo-overlay__dialog');
@@ -75,7 +85,7 @@
                 state.profileEditDialog = state.profileEditOverlay.querySelector('.photo-overlay__dialog');
             }
         }
-        return Boolean(state.postOverlay && state.peopleOverlay && state.storyOverlay && state.shareOverlay && state.storyCreateOverlay && state.profileEditOverlay);
+        return Boolean(state.postOverlay && state.peopleOverlay && state.switchOverlay && state.storyOverlay && state.shareOverlay && state.storyCreateOverlay && state.profileEditOverlay);
     }
 
     function setBodyLocked(locked) {
@@ -90,6 +100,10 @@
         if (state.peopleOverlay) {
             state.peopleOverlay.classList.remove('is-open');
             state.peopleOverlay.hidden = true;
+        }
+        if (state.switchOverlay) {
+            state.switchOverlay.classList.remove('is-open');
+            state.switchOverlay.hidden = true;
         }
         if (state.storyOverlay) {
             state.storyOverlay.classList.remove('is-open');
@@ -111,6 +125,10 @@
         state.currentStoryIndex = 0;
         state.currentStoryTrigger = null;
         state.currentPost = null;
+        state.currentSwitchUsers = [];
+        state.currentSwitchSearch = '';
+        state.currentSwitchUserId = '';
+        state.switchSubmitting = false;
         state.currentStoryCreateSelection = [];
         state.storyCreateSubmitting = false;
         state.profileEditSubmitting = false;
@@ -615,6 +633,138 @@
         }
         applyPeopleFilter();
         openOverlay(state.peopleOverlay);
+    }
+
+    function renderSwitchUserRow(item) {
+        var isCurrent = !!item.is_current;
+        var actionLabel = isCurrent ? 'Current' : 'Switch';
+        var actionClass = isCurrent ? '' : ' is-primary';
+        var userId = String(item.id || '').trim();
+        var username = String(item.username || '').trim();
+        return [
+            '<div class="photo-people-overlay__row">',
+            '  <a href="#" class="photo-people-overlay__user" data-photo-switch-user-select data-photo-switch-user-id="' + escapeHtml(userId) + '">',
+            '    <img src="' + escapeHtml(item.profile_pic || '') + '" alt="">',
+            '    <div class="photo-people-overlay__user-copy">',
+            '      <strong>' + escapeHtml(username || '') + '</strong>',
+            '      <span>' + escapeHtml(item.subtitle || '') + '</span>',
+            '    </div>',
+            '  </a>',
+            '  <a href="#" class="photo-people-overlay__action' + actionClass + '" data-photo-switch-user-select data-photo-switch-user-id="' + escapeHtml(userId) + '">',
+            '    ' + escapeHtml(actionLabel),
+            '  </a>',
+            '</div>'
+        ].join('');
+    }
+
+    function applySwitchUserFilter() {
+        if (!state.switchOverlay) {
+            return;
+        }
+
+        var list = state.switchOverlay.querySelector('[data-photo-switch-user-list]');
+        if (!list) {
+            return;
+        }
+
+        var query = String(state.currentSwitchSearch || '').trim().toLowerCase();
+        var filtered = state.currentSwitchUsers.filter(function (item) {
+            if (!query) {
+                return true;
+            }
+            return String(item.username || '').toLowerCase().indexOf(query) !== -1;
+        });
+
+        list.innerHTML = filtered.length
+            ? filtered.map(function (item) { return renderSwitchUserRow(item); }).join('')
+            : '<div class="photo-overlay__empty">No matching users found.</div>';
+    }
+
+    function renderSwitchUserOverlay(payload) {
+        if (!state.switchOverlay) {
+            return;
+        }
+        state.currentSwitchUsers = Array.isArray(payload && payload.users) ? payload.users.slice() : [];
+        state.currentSwitchUserId = String(payload && payload.current_user_id ? payload.current_user_id : '').trim();
+        state.currentSwitchSearch = '';
+
+        var title = state.switchOverlay.querySelector('[data-photo-switch-user-title]');
+        var input = state.switchOverlay.querySelector('[data-photo-switch-user-search]');
+        if (title) {
+            title.textContent = 'Switch user';
+        }
+        if (input) {
+            input.value = '';
+        }
+        applySwitchUserFilter();
+        openOverlay(state.switchOverlay);
+        if (input && typeof input.focus === 'function') {
+            window.setTimeout(function () {
+                input.focus();
+            }, 0);
+        }
+    }
+
+    function submitSwitchUserSelection(userId) {
+        if (!state.expId || state.switchSubmitting) {
+            return;
+        }
+
+        var nextUserId = String(userId || '').trim();
+        state.switchSubmitting = true;
+        fetch('/' + state.expId + '/api/photo/switch/user', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ user_id: nextUserId })
+        }).then(function (response) {
+            if (!response.ok) {
+                throw new Error('Request failed');
+            }
+            return response.json();
+        }).then(function () {
+            closeAllOverlays();
+            window.location.reload();
+        }).catch(function () {
+            if (state.switchOverlay) {
+                var list = state.switchOverlay.querySelector('[data-photo-switch-user-list]');
+                if (list) {
+                    list.innerHTML = '<div class="photo-overlay__empty">Unable to switch user. Please try again.</div>';
+                }
+            }
+        }).finally(function () {
+            state.switchSubmitting = false;
+        });
+    }
+
+    function openSwitchUserOverlay() {
+        if (!state.expId) {
+            return;
+        }
+        if (state.switchOverlay) {
+            var list = state.switchOverlay.querySelector('[data-photo-switch-user-list]');
+            if (list) {
+                list.innerHTML = '<div class="photo-overlay__empty">Loading users...</div>';
+            }
+            openOverlay(state.switchOverlay);
+        }
+
+        fetchJson('/' + state.expId + '/api/photo/switch/users')
+            .then(function (payload) {
+                renderSwitchUserOverlay(payload);
+            })
+            .catch(function () {
+                if (state.switchOverlay) {
+                    var list = state.switchOverlay.querySelector('[data-photo-switch-user-list]');
+                    if (list) {
+                        list.innerHTML = '<div class="photo-overlay__empty">Unable to load users.</div>';
+                    }
+                    openOverlay(state.switchOverlay);
+                }
+            });
     }
 
     function normalizeStoryImages(story) {
@@ -1561,7 +1711,8 @@
         var endpoints = {
             like: '/' + state.expId + '/api/photo/post/' + encodeURIComponent(photoId) + '/like',
             bookmark: '/' + state.expId + '/api/photo/post/' + encodeURIComponent(photoId) + '/bookmark',
-            share: '/' + state.expId + '/api/photo/post/' + encodeURIComponent(photoId) + '/share'
+            share: '/' + state.expId + '/api/photo/post/' + encodeURIComponent(photoId) + '/share',
+            delete: '/' + state.expId + '/api/photo/post/' + encodeURIComponent(photoId) + '/delete'
         };
         var endpoint = endpoints[action];
         if (!endpoint) {
@@ -1616,6 +1767,24 @@
             }
             if (result && result.html) {
                 insertSharedPostHtml(result.html);
+            }
+        });
+    }
+
+    function deletePost(photoId) {
+        if (!photoId) {
+            return;
+        }
+        postPhotoAction(photoId, 'delete', null, function (result) {
+            if (!result || result.ok === false) {
+                return;
+            }
+            var card = document.getElementById('feed-post-' + photoId);
+            if (card && card.parentNode) {
+                card.parentNode.removeChild(card);
+            }
+            if (state.currentPhotoId && String(state.currentPhotoId) === String(photoId)) {
+                closeAllOverlays();
             }
         });
     }
@@ -1901,6 +2070,13 @@
                 return;
             }
 
+            var switchUserTrigger = event.target.closest('[data-photo-switch-user-open]');
+            if (switchUserTrigger) {
+                event.preventDefault();
+                openSwitchUserOverlay();
+                return;
+            }
+
             var likeTrigger = event.target.closest('[data-photo-post-like]');
             if (likeTrigger) {
                 event.preventDefault();
@@ -1919,6 +2095,13 @@
             if (sharePostTrigger) {
                 event.preventDefault();
                 sharePost(sharePostTrigger.getAttribute('data-photo-post-id'));
+                return;
+            }
+
+            var deletePostTrigger = event.target.closest('[data-photo-post-delete]');
+            if (deletePostTrigger) {
+                event.preventDefault();
+                deletePost(deletePostTrigger.getAttribute('data-photo-post-id'));
                 return;
             }
 
@@ -1967,6 +2150,13 @@
                 return;
             }
 
+            var switchUserSelect = event.target.closest('[data-photo-switch-user-select]');
+            if (switchUserSelect) {
+                event.preventDefault();
+                submitSwitchUserSelection(switchUserSelect.getAttribute('data-photo-switch-user-id'));
+                return;
+            }
+
             var closeTrigger = event.target.closest('[data-photo-overlay-close]');
             if (closeTrigger) {
                 event.preventDefault();
@@ -1976,6 +2166,7 @@
 
             if (event.target.matches('[data-photo-post-overlay]') ||
                 event.target.matches('[data-photo-people-overlay]') ||
+                event.target.matches('[data-photo-switch-user-overlay]') ||
                 event.target.matches('[data-photo-story-overlay]') ||
                 event.target.matches('[data-photo-story-create-overlay]') ||
                 event.target.matches('[data-photo-profile-edit-overlay]')) {
@@ -2008,6 +2199,16 @@
                 search.addEventListener('input', function () {
                     state.currentPeopleSearch = search.value || '';
                     applyPeopleFilter();
+                });
+            }
+        }
+
+        if (state.switchOverlay) {
+            var switchSearch = state.switchOverlay.querySelector('[data-photo-switch-user-search]');
+            if (switchSearch) {
+                switchSearch.addEventListener('input', function () {
+                    state.currentSwitchSearch = switchSearch.value || '';
+                    applySwitchUserFilter();
                 });
             }
         }

@@ -215,12 +215,33 @@ def ensure_experiment_user(
     Returns a tuple ``(user, created)`` where ``user`` is the ORM instance
     loaded from the experiment database session.
     """
-    session, engine = open_experiment_session(experiment)
-    if session is None or engine is None:
+    from flask import session
+    from flask_login import current_user
+
+    db_session, engine = open_experiment_session(experiment)
+    if db_session is None or engine is None:
         return None, False
 
     try:
-        user = session.query(User_mgmt).filter_by(username=username).first()
+        selected_user_id = ""
+        if (
+            str(getattr(experiment, "platform_type", "") or "").strip().lower()
+            == "photo_sharing"
+            and str(getattr(current_user, "role", "") or "").strip().lower() == "admin"
+        ):
+            selected_user_id = str(
+                session.get("photo_view_user_id")
+                or session.get("photo_switch_user_id")
+                or ""
+            ).strip()
+
+        if selected_user_id:
+            selected_user = db_session.query(User_mgmt).filter_by(id=selected_user_id).first()
+            if selected_user is not None:
+                user = selected_user
+                return user, False
+
+        user = db_session.query(User_mgmt).filter_by(username=username).first()
         if user is not None:
             return user, False
 
@@ -240,12 +261,12 @@ def ensure_experiment_user(
             joined_on=joined_on,
             cover_image=cover_image,
         )
-        session.add(new_user)
-        session.commit()
-        session.refresh(new_user)
+        db_session.add(new_user)
+        db_session.commit()
+        db_session.refresh(new_user)
         return new_user, True
     finally:
-        session.close()
+        db_session.close()
         engine.dispose()
 
 

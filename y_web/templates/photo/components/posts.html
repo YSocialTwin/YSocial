@@ -18,6 +18,7 @@
                 <small>{{ item.get('display_time', '') }}</small>
             </div>
         </a>
+        {% if logged_id and item['author_id']|string == logged_id|string %}
         <div class="dropdown is-spaced is-right is-neutral dropdown-trigger photo-feed-card__menu">
             <div>
                 <div class="button is-white is-small">
@@ -26,18 +27,19 @@
             </div>
             <div class="dropdown-menu" role="menu">
                 <div class="dropdown-content">
-                    <a href="/{{ exp_id }}/thread/{{ item['thread_id'] }}" class="dropdown-item">
+                    <button type="button" class="dropdown-item" data-photo-post-delete data-photo-post-id="{{ item['post_id'] }}">
                         <div class="media">
-                            <i data-feather="message-circle"></i>
+                            <i data-feather="trash-2"></i>
                             <div class="media-content">
-                                <h3>Discussion</h3>
-                                <small>Open the full conversation</small>
+                                <h3>Delete photo</h3>
+                                <small>Remove this photo from the feed</small>
                             </div>
                         </div>
-                    </a>
+                    </button>
                 </div>
             </div>
         </div>
+        {% endif %}
     </header>
 
     <div class="photo-feed-card__media">
@@ -76,7 +78,19 @@
         {% if item.get('shared_from') != -1 and item.get('shared_from') %}
         <div class="photo-feed-card__meta">
             Shared from
-            <a href="/{{ exp_id }}/thread/{{ item['shared_from'][0] }}">{{ item['shared_from'][1] }}</a>
+            {% if item['shared_from'] is mapping %}
+                {% if item['shared_from'].get('href') %}
+                <a href="{{ item['shared_from'].get('href') }}">{{ item['shared_from'].get('author', 'Shared post') }}</a>
+                {% else %}
+                {{ item['shared_from'].get('author', 'Shared post') }}
+                {% endif %}
+            {% else %}
+                {% if item['shared_from']|length > 2 and item['shared_from'][2] %}
+                <a href="{{ item['shared_from'][2] }}">{{ item['shared_from'][1] }}</a>
+                {% else %}
+                {{ item['shared_from'][1] }}
+                {% endif %}
+            {% endif %}
         </div>
         {% endif %}
 

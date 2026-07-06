@@ -25,6 +25,7 @@ from flask import (
     redirect,
     render_template,
     request,
+    session,
     send_from_directory,
     url_for,
 )
@@ -51,10 +52,76 @@ from y_web.src.recsys.follow_recsys import get_suggested_users
 
 
 def _photo_logged_user_id():
+    if is_admin(getattr(current_user, "username", "")):
+        selected_user_id = str(
+            session.get("photo_view_user_id") or session.get("photo_switch_user_id") or ""
+        ).strip()
+        if selected_user_id:
+            return selected_user_id
     return getattr(current_user, "id", 0) or 0
 
 
+def _photo_active_user(exp: Exps):
+    """Resolve the currently visible photo user.
+
+    Admin impersonation must win over the default experiment-user row created
+    for the authenticated admin account, otherwise the UI keeps showing the
+    admin's own data even after a switch.
+    """
+    active_user = _photo_logged_user(exp)
+    if active_user is not None:
+        return active_user
+    exp_user, _created = ensure_experiment_user(
+        exp,
+        user_id=getattr(current_user, "id", 0) or 0,
+        username=str(current_user.username),
+        email=str(getattr(current_user, "email", "") or ""),
+        password=str(getattr(current_user, "password", "") or ""),
+        joined_on=0,
+    )
+    return exp_user
+
+
 def _photo_logged_user(exp: Exps):
+    if is_admin(getattr(current_user, "username", "")):
+        selected_user_id = str(
+            session.get("photo_view_user_id") or session.get("photo_switch_user_id") or ""
+        ).strip()
+        if selected_user_id:
+            selected_user = _photo_user_record(exp, selected_user_id)
+            if selected_user:
+                selected_username = str(selected_user.get("username") or "").strip()
+                selected_email = str(selected_user.get("email") or "")
+                selected_password = str(selected_user.get("password") or "")
+                selected_cover_image = str(selected_user.get("cover_image") or "")
+                selected_user_type = str(selected_user.get("user_type") or "user")
+                selected_leaning = str(selected_user.get("leaning") or "neutral")
+                selected_age = int(selected_user.get("age") or 0)
+                selected_recsys = str(selected_user.get("recsys_type") or "default")
+                selected_frecsys = str(selected_user.get("frecsys_type") or "default")
+                selected_language = str(selected_user.get("language") or "en")
+                selected_round_actions = int(selected_user.get("round_actions") or 1)
+                selected_toxicity = str(selected_user.get("toxicity") or "no")
+                selected_joined_on = int(selected_user.get("joined_on") or 0)
+                user, _created = ensure_experiment_user(
+                    exp,
+                    user_id=selected_user_id,
+                    username=selected_username,
+                    email=selected_email,
+                    password=selected_password,
+                    cover_image=selected_cover_image,
+                    user_type=selected_user_type,
+                    leaning=selected_leaning,
+                    age=selected_age,
+                    recsys_type=selected_recsys,
+                    frecsys_type=selected_frecsys,
+                    language=selected_language,
+                    round_actions=selected_round_actions,
+                    toxicity=selected_toxicity,
+                    joined_on=selected_joined_on,
+                )
+                if user is not None:
+                    return user
     exp_user, _created = ensure_experiment_user(
         exp,
         user_id=getattr(current_user, "id", 0) or 0,
@@ -428,23 +495,25 @@ def _photo_sidebar_context(
         getattr(logged_user, "profile_picture_url", "") if logged_user else ""
     )
     is_page = getattr(logged_user, "is_page", 0) if logged_user else 0
-    profile_pic = get_safe_profile_pic(
-        current_user.username, is_page
-    ) or _photo_profile_pic_url(
+    active_username = str(getattr(logged_user, "username", "") or current_user.username)
+    active_is_page = int(getattr(logged_user, "is_page", 0) if logged_user else 0)
+    active_profile_pic = _photo_profile_pic_url(
         exp,
-        username=str(current_user.username),
+        username=active_username,
         user_id=logged_id,
         raw_profile_pic=raw_profile_pic,
-        is_page=is_page,
+        is_page=active_is_page,
     )
+    sidebar_role_label = "Viewing as" if is_admin(current_user.username) and active_username != current_user.username else ("Admin" if is_admin(current_user.username) else "Participant")
     return {
         "logged_id": logged_id,
-        "logged_username": str(current_user.username),
+        "logged_username": active_username,
         "photo_home_url": photo_home_url,
         "photo_messages_url": f"/{exp.idexp}/photo/messages",
-        "profile_pic": profile_pic,
-        "sidebar_profile_pic": profile_pic,
+        "sidebar_profile_pic": active_profile_pic,
         "is_admin": is_admin(current_user.username),
+        "photo_sidebar_switch_enabled": is_admin(current_user.username),
+        "photo_sidebar_role_label": sidebar_role_label,
         "photo_active_nav": photo_active_nav,
         "photo_sidebar_collapsed": photo_sidebar_collapsed,
     }
@@ -526,14 +595,40 @@ def _photo_build_item(exp: Exps, row: dict) -> dict:
     parent_photo_id = str(row.get("parent_photo_id") or "").strip()
     shared_from = -1
     if parent_photo_id:
-        shared_from = [
-            parent_photo_id,
-            str(
-                row.get("parent_author_username")
-                or row.get("parent_author")
-                or "Shared post"
-            ).strip(),
-        ]
+        parent_author_name = str(row.get("parent_author_username") or row.get("parent_author") or "").strip()
+        parent_author_id = str(row.get("parent_author_id") or "").strip()
+        if not parent_author_name or not parent_author_id:
+            parent_rows = _photo_db_rows(
+                exp,
+                """
+                SELECT
+                    p.user_id AS parent_author_id,
+                    u.username AS parent_author_username,
+                    u.profile_picture_url AS parent_author_profile_picture_url,
+                    u.is_page AS parent_author_is_page
+                FROM photos p
+                LEFT JOIN user_mgmt u ON u.id = p.user_id
+                WHERE p.id = ?
+                LIMIT 1
+                """,
+                (parent_photo_id,),
+            )
+            if parent_rows:
+                parent_row = parent_rows[0]
+                parent_author_name = parent_author_name or str(parent_row.get("parent_author_username") or "").strip()
+                parent_author_id = parent_author_id or str(parent_row.get("parent_author_id") or "").strip()
+                parent_author_profile = str(parent_row.get("parent_author_profile_picture_url") or "").strip()
+            else:
+                parent_author_profile = ""
+        else:
+            parent_author_profile = str(row.get("parent_author_profile_picture_url") or "").strip()
+        parent_author_href = _photo_profile_href(exp, parent_author_id) if parent_author_id else ""
+        shared_from = {
+            "photo_id": parent_photo_id,
+            "author": parent_author_name or "Shared post",
+            "href": parent_author_href,
+            "profile_pic": parent_author_profile,
+        }
     return {
         "post_id": row.get("id"),
         "author_id": author_id,
@@ -1887,6 +1982,93 @@ def photo_suggestions(exp_id):
     )
 
 
+@main.get("/<int:exp_id>/api/photo/switch/users")
+@login_required
+def api_photo_switch_users(exp_id):
+    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
+        return {"ok": False, "error": "not_found"}, 404
+    if not is_admin(current_user.username):
+        return {"ok": False, "error": "forbidden"}, 403
+
+    db_path = _photo_db_path(exp)
+    if not db_path or not os.path.exists(db_path):
+        return {"ok": False, "error": "database_unavailable"}, 500
+
+    current_active_id = str(_photo_logged_user_id() or "").strip()
+    users = []
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute(
+            """
+            SELECT id, username, email, bio, profile_picture_url, is_page
+            FROM user_mgmt
+            WHERE COALESCE(is_page, 0) = 0
+            ORDER BY username COLLATE NOCASE ASC
+            """
+        ).fetchall()
+        for row in rows:
+            user_id = str(row["id"] or "").strip()
+            username = str(row["username"] or "").strip()
+            if not user_id or not username:
+                continue
+            users.append(
+                {
+                    "id": user_id,
+                    "username": username,
+                    "subtitle": str(row["bio"] or row["email"] or "Participant").strip()
+                    or "Participant",
+                    "profile_pic": _photo_profile_pic_url(
+                        exp,
+                        username=username,
+                        user_id=user_id,
+                        raw_profile_pic=row["profile_picture_url"],
+                        is_page=int(row["is_page"] or 0),
+                    ),
+                    "is_current": user_id == current_active_id,
+                }
+            )
+
+    return {"ok": True, "current_user_id": current_active_id, "users": users}
+
+
+@main.post("/<int:exp_id>/api/photo/switch/user")
+@login_required
+def api_photo_switch_user(exp_id):
+    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
+        return {"ok": False, "error": "not_found"}, 404
+    if not is_admin(current_user.username):
+        return {"ok": False, "error": "forbidden"}, 403
+
+    payload = request.get_json(silent=True) or request.form.to_dict(flat=True)
+    user_id = str(payload.get("user_id") or "").strip()
+    if not user_id:
+        session.pop("photo_view_user_id", None)
+        session.pop("photo_switch_user_id", None)
+        return {"ok": True, "user_id": _photo_logged_user_id()}
+
+    selected_user = _photo_user_record(exp, user_id)
+    if not selected_user:
+        return {"ok": False, "error": "user_not_found"}, 404
+
+    session["photo_view_user_id"] = str(selected_user.get("id") or user_id)
+    session["photo_switch_user_id"] = str(selected_user.get("id") or user_id)
+
+    return {
+        "ok": True,
+        "user_id": str(selected_user.get("id") or user_id),
+        "username": str(selected_user.get("username") or ""),
+        "profile_pic": _photo_profile_pic_url(
+            exp,
+            username=str(selected_user.get("username") or ""),
+            user_id=str(selected_user.get("id") or ""),
+            raw_profile_pic=str(selected_user.get("profile_picture_url") or ""),
+            is_page=int(selected_user.get("is_page") or 0),
+        ),
+    }
+
+
 @main.get("/<int:exp_id>/photo/profile/<user_id>/<string:mode>/<int:page>")
 @login_required
 def photo_profile(exp_id, user_id, mode="recent", page=1):
@@ -1894,9 +2076,7 @@ def photo_profile(exp_id, user_id, mode="recent", page=1):
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         abort(404)
 
-    exp_user = _photo_logged_user(exp)
-
-    logged_user = exp_user
+    logged_user = _photo_active_user(exp)
 
     profile_user = _photo_user_record(exp, user_id)
     if not profile_user:
@@ -1923,16 +2103,17 @@ def photo_profile(exp_id, user_id, mode="recent", page=1):
         is_page=int(profile_user.get("is_page") or 0),
     )
     profile_bio = str(profile_user.get("bio") or "").strip()
-    sidebar_profile_pic = get_safe_profile_pic(
-        current_user.username, getattr(logged_user, "is_page", 0) if logged_user else 0
-    ) or _photo_profile_pic_url(
+    sidebar_profile_pic = _photo_profile_pic_url(
         exp,
-        username=str(current_user.username),
+        username=str(getattr(logged_user, "username", "") or current_user.username),
         user_id=getattr(logged_user, "id", _photo_logged_user_id()),
         raw_profile_pic=(
             getattr(logged_user, "profile_picture_url", "") if logged_user else ""
         ),
         is_page=getattr(logged_user, "is_page", 0) if logged_user else 0,
+    ) or get_safe_profile_pic(
+        str(getattr(logged_user, "username", "") or current_user.username),
+        getattr(logged_user, "is_page", 0) if logged_user else 0,
     )
 
     total_posts, total_followers, total_followees = _photo_profile_totals(
@@ -1990,6 +2171,7 @@ def photo_profile(exp_id, user_id, mode="recent", page=1):
         exp_id=exp_id,
         user=profile_user,
         user_id=profile_user_id,
+        profile_pic=profile_pic,
         profile_bio=profile_bio,
         profile_stories=profile_stories,
         is_self_profile=is_self_profile,
@@ -2031,9 +2213,7 @@ def photo_search(exp_id):
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         abort(404)
 
-    exp_user = _photo_logged_user(exp)
-
-    logged_user = exp_user or _photo_logged_user(exp)
+    logged_user = _photo_active_user(exp)
 
     logged_id = getattr(logged_user, "id", _photo_logged_user_id())
     query = str(request.args.get("q", "") or "").strip()
@@ -2067,16 +2247,7 @@ def photo_messages(exp_id):
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         abort(404)
 
-    exp_user, _created = ensure_experiment_user(
-        exp,
-        user_id=getattr(current_user, "id", 0) or 0,
-        username=str(current_user.username),
-        email=str(getattr(current_user, "email", "") or ""),
-        password=str(getattr(current_user, "password", "") or ""),
-        joined_on=0,
-    )
-
-    logged_user = exp_user or _photo_logged_user(exp)
+    logged_user = _photo_active_user(exp)
 
     logged_id = getattr(logged_user, "id", _photo_logged_user_id())
     profile_bio = str(getattr(logged_user, "bio", "") or "").strip()
@@ -2104,16 +2275,7 @@ def api_photo_search(exp_id):
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         return {"ok": False, "error": "not_found"}, 404
 
-    exp_user, _created = ensure_experiment_user(
-        exp,
-        user_id=getattr(current_user, "id", 0) or 0,
-        username=str(current_user.username),
-        email=str(getattr(current_user, "email", "") or ""),
-        password=str(getattr(current_user, "password", "") or ""),
-        joined_on=0,
-    )
-
-    logged_user = exp_user or _photo_logged_user(exp)
+    logged_user = _photo_active_user(exp)
 
     logged_id = getattr(logged_user, "id", _photo_logged_user_id())
     query = str(request.args.get("q", "") or "").strip()
@@ -2155,6 +2317,8 @@ def api_photo_post(exp_id, photo_id):
     viewer_id = getattr(
         exp_user or _photo_logged_user(exp), "id", _photo_logged_user_id()
     )
+    viewer_user = _photo_active_user(exp)
+    viewer_id = getattr(viewer_user, "id", _photo_logged_user_id())
     details = _photo_post_details(exp, photo_id)
     if not details:
         return {"ok": False, "error": "not_found"}, 404
@@ -2179,15 +2343,8 @@ def api_photo_create_comment(exp_id, photo_id):
 
     parent_comment_id = str(payload.get("parent_comment_id") or "").strip() or None
 
-    exp_user, _created = ensure_experiment_user(
-        exp,
-        user_id=getattr(current_user, "id", 0) or 0,
-        username=str(current_user.username),
-        email=str(getattr(current_user, "email", "") or ""),
-        password=str(getattr(current_user, "password", "") or ""),
-        joined_on=0,
-    )
-    commenter_id = str(getattr(exp_user, "id", _photo_logged_user_id()) or "").strip()
+    commenter_user = _photo_active_user(exp)
+    commenter_id = str(getattr(commenter_user, "id", _photo_logged_user_id()) or "").strip()
     if not commenter_id:
         return {"ok": False, "error": "missing_user"}, 400
 
@@ -2275,15 +2432,8 @@ def api_photo_toggle_like(exp_id, photo_id):
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         return {"ok": False, "error": "not_found"}, 404
 
-    exp_user, _created = ensure_experiment_user(
-        exp,
-        user_id=getattr(current_user, "id", 0) or 0,
-        username=str(current_user.username),
-        email=str(getattr(current_user, "email", "") or ""),
-        password=str(getattr(current_user, "password", "") or ""),
-        joined_on=0,
-    )
-    viewer_id = str(getattr(exp_user, "id", _photo_logged_user_id()) or "").strip()
+    viewer_user = _photo_active_user(exp)
+    viewer_id = str(getattr(viewer_user, "id", _photo_logged_user_id()) or "").strip()
     if not viewer_id:
         return {"ok": False, "error": "missing_user"}, 400
 
@@ -2390,15 +2540,8 @@ def api_photo_toggle_bookmark(exp_id, photo_id):
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         return {"ok": False, "error": "not_found"}, 404
 
-    exp_user, _created = ensure_experiment_user(
-        exp,
-        user_id=getattr(current_user, "id", 0) or 0,
-        username=str(current_user.username),
-        email=str(getattr(current_user, "email", "") or ""),
-        password=str(getattr(current_user, "password", "") or ""),
-        joined_on=0,
-    )
-    viewer_id = str(getattr(exp_user, "id", _photo_logged_user_id()) or "").strip()
+    viewer_user = _photo_active_user(exp)
+    viewer_id = str(getattr(viewer_user, "id", _photo_logged_user_id()) or "").strip()
     if not viewer_id:
         return {"ok": False, "error": "missing_user"}, 400
 
@@ -2447,15 +2590,8 @@ def api_photo_share_post(exp_id, photo_id):
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         return {"ok": False, "error": "not_found"}, 404
 
-    exp_user, _created = ensure_experiment_user(
-        exp,
-        user_id=getattr(current_user, "id", 0) or 0,
-        username=str(current_user.username),
-        email=str(getattr(current_user, "email", "") or ""),
-        password=str(getattr(current_user, "password", "") or ""),
-        joined_on=0,
-    )
-    viewer_id = str(getattr(exp_user, "id", _photo_logged_user_id()) or "").strip()
+    viewer_user = _photo_active_user(exp)
+    viewer_id = str(getattr(viewer_user, "id", _photo_logged_user_id()) or "").strip()
     if not viewer_id:
         return {"ok": False, "error": "missing_user"}, 400
 
@@ -2561,10 +2697,12 @@ def api_photo_share_post(exp_id, photo_id):
         return {"ok": False, "error": "photo_not_created"}, 500
 
     item = _photo_build_item(exp, dict(row))
-    item["shared_from"] = [
-        photo_key,
-        str(original["author_username"] or original["user_id"] or "Shared post"),
-    ]
+    source_author_id = str(original["user_id"] or "").strip()
+    source_author_name = str(original["author_username"] or source_author_id or "Shared post").strip()
+    item["shared_from"] = {
+        "author": source_author_name,
+        "href": _photo_profile_href(exp, source_author_id) if source_author_id else "",
+    }
     item.update(_photo_viewer_photo_state(exp, new_photo_id, viewer_id))
     html = render_template(
         "photo/components/posts.html",
@@ -2574,6 +2712,7 @@ def api_photo_share_post(exp_id, photo_id):
         enumerate=enumerate,
         len=len,
         active_tab="for_you",
+        logged_id=viewer_id,
     )
     return {
         "ok": True,
@@ -2583,6 +2722,59 @@ def api_photo_share_post(exp_id, photo_id):
         "html": html,
         "shares": int(updated_original["num_shares"] or 0) if updated_original else 0,
     }
+
+
+@main.post("/<int:exp_id>/api/photo/post/<photo_id>/delete")
+@login_required
+def api_photo_delete_post(exp_id, photo_id):
+    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
+        return {"ok": False, "error": "not_found"}, 404
+
+    viewer_user = _photo_active_user(exp)
+    viewer_id = str(getattr(viewer_user, "id", _photo_logged_user_id()) or "").strip()
+    if not viewer_id:
+        return {"ok": False, "error": "missing_user"}, 400
+
+    photo_key = str(photo_id or "").strip()
+    db_path = _photo_db_path(exp)
+    if not db_path:
+        return {"ok": False, "error": "database_unavailable"}, 500
+
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        photo = conn.execute(
+            """
+            SELECT id, user_id
+            FROM photos
+            WHERE id = ?
+            LIMIT 1
+            """,
+            (photo_key,),
+        ).fetchone()
+        if photo is None:
+            return {"ok": False, "error": "not_found"}, 404
+        if str(photo["user_id"] or "") != viewer_id:
+            return {"ok": False, "error": "forbidden"}, 403
+
+        columns = {
+            str(row["name"] or "")
+            for row in conn.execute("PRAGMA table_info(photos)").fetchall()
+        }
+        if "is_removed" in columns:
+            conn.execute(
+                """
+                UPDATE photos
+                SET is_removed = 1
+                WHERE id = ?
+                """,
+                (photo_key,),
+            )
+        else:
+            conn.execute("DELETE FROM photos WHERE id = ?", (photo_key,))
+        conn.commit()
+
+    return {"ok": True, "photo_id": photo_key}
 
 
 @main.post("/<int:exp_id>/api/photo/story/create")
@@ -2596,15 +2788,8 @@ def api_photo_create_story(exp_id):
     if not isinstance(payload, dict):
         payload = {}
 
-    exp_user, _created = ensure_experiment_user(
-        exp,
-        user_id=getattr(current_user, "id", 0) or 0,
-        username=str(current_user.username),
-        email=str(getattr(current_user, "email", "") or ""),
-        password=str(getattr(current_user, "password", "") or ""),
-        joined_on=0,
-    )
-    user_id = str(getattr(exp_user, "id", _photo_logged_user_id()) or "").strip()
+    viewer_user = _photo_active_user(exp)
+    user_id = str(getattr(viewer_user, "id", _photo_logged_user_id()) or "").strip()
     if not user_id:
         return {"ok": False, "error": "missing_user"}, 400
 
@@ -2698,7 +2883,11 @@ def api_photo_create_story(exp_id):
         exp,
         dict(row),
         user_id=user_id,
-        author_name=str(row["author_username"] or current_user.username).strip()
+        author_name=str(
+            row["author_username"]
+            or getattr(viewer_user, "username", "")
+            or current_user.username
+        ).strip()
         or current_user.username,
     )
     if not story:
@@ -2714,15 +2903,8 @@ def api_photo_story_view(exp_id, story_id):
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         return {"ok": False, "error": "not_found"}, 404
 
-    exp_user, _created = ensure_experiment_user(
-        exp,
-        user_id=getattr(current_user, "id", 0) or 0,
-        username=str(current_user.username),
-        email=str(getattr(current_user, "email", "") or ""),
-        password=str(getattr(current_user, "password", "") or ""),
-        joined_on=0,
-    )
-    viewer_id = str(getattr(exp_user, "id", _photo_logged_user_id()) or "").strip()
+    viewer_user = _photo_active_user(exp)
+    viewer_id = str(getattr(viewer_user, "id", _photo_logged_user_id()) or "").strip()
     if not viewer_id:
         return {"ok": False, "error": "missing_user"}, 400
 
@@ -2815,15 +2997,8 @@ def api_photo_share(exp_id):
     if not caption and not alt_text:
         return {"ok": False, "error": "missing_text"}, 400
 
-    exp_user, _created = ensure_experiment_user(
-        exp,
-        user_id=getattr(current_user, "id", 0) or 0,
-        username=str(current_user.username),
-        email=str(getattr(current_user, "email", "") or ""),
-        password=str(getattr(current_user, "password", "") or ""),
-        joined_on=0,
-    )
-    user_id = str(getattr(exp_user, "id", _photo_logged_user_id()) or "").strip()
+    viewer_user = _photo_active_user(exp)
+    user_id = str(getattr(viewer_user, "id", _photo_logged_user_id()) or "").strip()
     if not user_id:
         return {"ok": False, "error": "missing_user"}, 400
 
@@ -2917,16 +3092,9 @@ def api_photo_profile_update(exp_id):
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         return {"ok": False, "error": "not_found"}, 404
 
-    exp_user, _created = ensure_experiment_user(
-        exp,
-        user_id=getattr(current_user, "id", 0) or 0,
-        username=str(current_user.username),
-        email=str(getattr(current_user, "email", "") or ""),
-        password=str(getattr(current_user, "password", "") or ""),
-        joined_on=0,
-    )
+    viewer_user = _photo_active_user(exp)
 
-    user_id = str(getattr(exp_user, "id", _photo_logged_user_id()) or "").strip()
+    user_id = str(getattr(viewer_user, "id", _photo_logged_user_id()) or "").strip()
     if not user_id:
         return {"ok": False, "error": "missing_user"}, 400
 
@@ -3073,16 +3241,9 @@ def api_photo_profile_connections(exp_id, user_id, kind):
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         return {"ok": False, "error": "not_found"}, 404
 
-    exp_user, _created = ensure_experiment_user(
-        exp,
-        user_id=getattr(current_user, "id", 0) or 0,
-        username=str(current_user.username),
-        email=str(getattr(current_user, "email", "") or ""),
-        password=str(getattr(current_user, "password", "") or ""),
-        joined_on=0,
-    )
+    viewer_user = _photo_active_user(exp)
 
-    viewer_id = getattr(exp_user, "id", _photo_logged_user_id())
+    viewer_id = getattr(viewer_user, "id", _photo_logged_user_id())
     items = _photo_connection_items(exp, user_id, kind, viewer_id)
     return {"ok": True, "kind": kind, "items": items}
 
@@ -3101,15 +3262,6 @@ def photo_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     exp = Exps.query.filter_by(idexp=int(exp_id)).first()
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         abort(404)
-
-    exp_user, _created = ensure_experiment_user(
-        exp,
-        user_id=getattr(current_user, "id", 0) or 0,
-        username=str(current_user.username),
-        email=str(getattr(current_user, "email", "") or ""),
-        password=str(getattr(current_user, "password", "") or ""),
-        joined_on=0,
-    )
 
     if page < 1:
         page = 1
@@ -3130,7 +3282,7 @@ def photo_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
             return redirect(f"/{exp_id}/photo/feed/all/feed/rf/1")
         username = str(user.get("username") or "")
 
-    logged_user = exp_user or _photo_logged_user(exp)
+    logged_user = _photo_active_user(exp)
     logged_id = getattr(logged_user, "id", _photo_logged_user_id())
 
     if active_tab == "follower":
@@ -3142,13 +3294,14 @@ def photo_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
             f"/{exp_id}/photo/feed/{user_id}/{timeline}/{mode}/{page - 1}?tab={active_tab}"
         )
 
+    active_username = str(getattr(logged_user, "username", "") or current_user.username)
     profile_pic = get_safe_profile_pic(
-        current_user.username, getattr(logged_user, "is_page", 0) if logged_user else 0
+        active_username, getattr(logged_user, "is_page", 0) if logged_user else 0
     )
     if not profile_pic:
         profile_pic = _photo_user_avatar_url(logged_id)
     try:
-        mentions = get_unanswered_mentions(current_user.username)
+        mentions = get_unanswered_mentions(active_username)
     except Exception:
         mentions = []
     followed_contact_ids = set(_photo_active_contact_ids(exp, logged_id))
@@ -3224,16 +3377,9 @@ def api_photo_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1
     if active_tab not in {"for_you", "follower"}:
         active_tab = "for_you"
 
-    exp_user, _created = ensure_experiment_user(
-        exp,
-        user_id=getattr(current_user, "id", 0) or 0,
-        username=str(current_user.username),
-        email=str(getattr(current_user, "email", "") or ""),
-        password=str(getattr(current_user, "password", "") or ""),
-        joined_on=0,
-    )
+    viewer_user = _photo_active_user(exp)
 
-    logged_id = exp_user.id if exp_user else _photo_logged_user_id()
+    logged_id = getattr(viewer_user, "id", _photo_logged_user_id())
     if active_tab == "follower":
         items = _build_photo_follower_items(exp, logged_id, page, max_post_per_page)
         has_more = len(items) >= max_post_per_page
@@ -3249,5 +3395,6 @@ def api_photo_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1
         enumerate=enumerate,
         len=len,
         active_tab=active_tab,
+        logged_id=logged_id,
     )
     return {"html": html, "has_more": has_more}

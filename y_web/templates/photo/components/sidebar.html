@@ -41,8 +41,14 @@
 </div>
 
 <div class="photo-sidebar__footer">
-    <div class="photo-sidebar__profile">
-        {% set sidebar_profile_src = sidebar_profile_pic or profile_pic or url_for('static', filename='assets/img/users/' ~ (logged_id|user_image_id) ~ '.png') %}
+    {% set sidebar_profile_src = sidebar_profile_pic or url_for('static', filename='assets/img/users/' ~ (logged_id|user_image_id) ~ '.png') %}
+    {% if photo_sidebar_switch_enabled|default(false) %}
+    <button
+        class="photo-sidebar__profile photo-sidebar__profile-button"
+        type="button"
+        data-photo-switch-user-open
+        aria-label="Switch photo user"
+    >
         <img
             src="{{ sidebar_profile_src }}"
             data-demo-src="{{ sidebar_profile_src }}"
@@ -50,9 +56,25 @@
         />
         <div class="photo-sidebar__profile-copy">
             <strong>{{ logged_username }}</strong>
-            <span>{{ 'Admin' if is_admin else 'Participant' }}</span>
+            <span>{{ photo_sidebar_role_label or ('Admin' if is_admin else 'Participant') }}</span>
+        </div>
+        <span class="photo-sidebar__profile-switch" aria-hidden="true">
+            <i class="mdi mdi-account-switch"></i>
+        </span>
+    </button>
+    {% else %}
+    <div class="photo-sidebar__profile">
+        <img
+            src="{{ sidebar_profile_src }}"
+            data-demo-src="{{ sidebar_profile_src }}"
+            alt=""
+        />
+        <div class="photo-sidebar__profile-copy">
+            <strong>{{ logged_username }}</strong>
+            <span>{{ photo_sidebar_role_label or ('Admin' if is_admin else 'Participant') }}</span>
         </div>
     </div>
+    {% endif %}
     <button
         class="photo-sidebar__toggle sidebar-v1-trigger"
         type="button"

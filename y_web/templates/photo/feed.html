@@ -565,6 +565,7 @@
 {% endblock %}
 
 {% block photo_extra_scripts %}
+<script src="{{ url_for('static', filename='assets/js/infinite-scroll.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/photo-feed.js') }}"></script>
 <script>
     window.YS_DATA_PHOTO_FEED = {

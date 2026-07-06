@@ -48,7 +48,8 @@
         destroyInfiniteScroll();
 
         state.apiEndpoint = options.apiEndpoint;
-        state.currentPage = options.initialPage || 1;
+        var initialPage = parseInt(options.initialPage, 10);
+        state.currentPage = Number.isFinite(initialPage) && initialPage > 0 ? initialPage : 1;
         state.hasMore = true;
         state.isLoading = false;
         state.postsContainer = document.getElementById(options.postsContainerId);
@@ -142,7 +143,7 @@
         showLoader();
 
         try {
-            const nextPage = state.currentPage + 1;
+            const nextPage = Number(state.currentPage || 1) + 1;
             const response = await fetch(buildPageUrl(state.apiEndpoint, nextPage));
             
             if (!response.ok) {
@@ -153,7 +154,7 @@
             
             if (data.html && data.html.trim().length > 0) {
                 appendPostsHtml(data.html);
-                state.currentPage = nextPage;
+                state.currentPage = Number(nextPage) || 1;
                 state.hasMore = data.has_more;
             } else {
                 state.hasMore = false;

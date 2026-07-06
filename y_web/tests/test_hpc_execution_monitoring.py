@@ -655,6 +655,143 @@ class TestHPCExecutionLogMonitoring:
                 assert already_running_client.status == 1
                 mock_commit.assert_called_once()
 
+    def test_mark_hpc_client_as_failed_updates_db_state(self, app, db):
+        """Failed clients must be marked stopped and retain a failed terminal state."""
+        from y_web.src.hpc.log_metrics import _mark_hpc_client_as_failed
+        from y_web.src.models import Client, Client_Execution, Exps, Population
+
+        with app.app_context():
+            exp = Exps(
+                exp_name="Test HPC Failure",
+                exp_descr="Test",
+                platform_type="microblogging",
+                owner="test",
+                status=1,
+                running=1,
+                port=5002,
+                db_name="experiments_test_failure",
+                simulator_type="HPC",
+                exp_status="active",
+            )
+            db.session.add(exp)
+            db.session.commit()
+
+            pop = Population(name="test_pop_failure", descr="Test population", size=10)
+            db.session.add(pop)
+            db.session.commit()
+
+            client = Client(
+                name="client_failure",
+                descr="Test client failure",
+                id_exp=exp.idexp,
+                population_id=pop.id,
+                status=1,
+                pid=4242,
+            )
+            db.session.add(client)
+            db.session.commit()
+
+            client_exec = Client_Execution(
+                client_id=client.id,
+                elapsed_time=11,
+                expected_duration_rounds=24,
+                terminal_state=None,
+            )
+            db.session.add(client_exec)
+            db.session.commit()
+
+            assert _mark_hpc_client_as_failed(
+                exp.idexp, client.id, reason="unit test failure"
+            )
+
+            updated_client = Client.query.filter_by(id=client.id).first()
+            updated_exec = Client_Execution.query.filter_by(client_id=client.id).first()
+            assert updated_client.status == 0
+            assert updated_client.pid is None
+            assert updated_exec.terminal_state == "failed"
+
+    @patch("y_web.src.hpc.server.stop_hpc_server")
+    def test_monitor_stops_experiment_when_client_dies_without_completion(
+        self, mock_stop, app, db
+    ):
+        """A dead tracked HPC client must stop the experiment even without an execution log."""
+        from y_web.src.hpc import log_metrics
+        from y_web.src.models import Client, Exps, Population
+
+        with app.app_context():
+            exp = Exps(
+                exp_name="Test HPC Dead Client",
+                exp_descr="Test",
+                platform_type="microblogging",
+                owner="test",
+                status=1,
+                running=1,
+                port=5003,
+                db_name="experiments_test_dead_client",
+                simulator_type="HPC",
+                exp_status="active",
+            )
+            db.session.add(exp)
+            db.session.commit()
+
+            pop = Population(name="test_pop_dead", descr="Test population", size=10)
+            db.session.add(pop)
+            db.session.commit()
+
+            client = Client(
+                name="dead_client",
+                descr="Test dead client",
+                id_exp=exp.idexp,
+                population_id=pop.id,
+                status=1,
+                pid=98765,
+            )
+            db.session.add(client)
+            db.session.commit()
+
+            with tempfile.TemporaryDirectory() as tmpdir:
+                with (
+                    patch.object(
+                        log_metrics,
+                        "resolve_hpc_client_log_path",
+                        return_value=os.path.join(tmpdir, "client.log"),
+                    ),
+                    patch.object(
+                        log_metrics,
+                        "_is_hpc_client_tracked_process_alive",
+                        return_value=False,
+                    ),
+                    patch.object(
+                        log_metrics,
+                        "_mark_hpc_client_as_failed",
+                        return_value=True,
+                    ) as mock_mark_failed,
+                    patch.object(
+                        log_metrics,
+                        "_stop_hpc_experiment_after_client_failure",
+                        return_value=True,
+                    ) as mock_stop_after_failure,
+                    patch.object(
+                        log_metrics,
+                        "check_hpc_client_execution_completion",
+                        return_value=False,
+                    ),
+                    patch.object(log_metrics.os.path, "exists", return_value=False),
+                ):
+                    result = log_metrics.monitor_hpc_client_execution_logs()
+
+                assert result is False
+                mock_mark_failed.assert_called_once_with(
+                    exp.idexp, client.id, reason=f"PID {client.pid} no longer alive for client {client.name}"
+                )
+                mock_stop_after_failure.assert_called_once_with(
+                    exp.idexp,
+                    reason=f"PID {client.pid} no longer alive for client {client.name}",
+                )
+                updated_exp = Exps.query.filter_by(idexp=exp.idexp).first()
+                assert updated_exp.running == 1
+                assert updated_exp.exp_status == "active"
+
     @patch("y_web.src.hpc.server.stop_hpc_server")
     def test_check_and_terminate_does_not_stop_without_session_running_marker(
         self, mock_stop, app, db

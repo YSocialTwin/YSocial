@@ -162,11 +162,39 @@
             background: rgba(0, 0, 0, 0.03);
         }
 
+        .photo-sidebar__profile-button {
+            width: 100%;
+            border: 0;
+            cursor: pointer;
+            text-align: left;
+            font: inherit;
+            color: inherit;
+            appearance: none;
+            background: rgba(0, 0, 0, 0.03);
+        }
+
+        .photo-sidebar__profile-button:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
         .photo-sidebar__profile img {
             width: 36px;
             height: 36px;
             border-radius: 50%;
             object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .photo-sidebar__profile-switch {
+            margin-left: auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.05);
+            color: #111;
             flex-shrink: 0;
         }
 
@@ -213,6 +241,10 @@
             overflow: hidden;
         }
 
+        .photo-shell.is-collapsed .photo-sidebar__profile-switch {
+            display: none;
+        }
+
         .photo-shell.is-collapsed .photo-sidebar__item {
             justify-content: center;
             gap: 0;
@@ -222,6 +254,7 @@
         .photo-shell.is-collapsed .photo-sidebar__profile {
             justify-content: center;
             padding-inline: 0;
+            gap: 0;
         }
 
         .photo-shell.is-collapsed .photo-sidebar__profile img {
@@ -259,12 +292,14 @@
             position: relative;
             width: min(1560px, 100%);
             height: min(92vh, 1080px);
+            max-height: 92vh;
             background: #fff;
             border-radius: 18px;
             overflow: hidden;
             box-shadow: 0 28px 80px rgba(0, 0, 0, 0.32);
             display: grid;
             grid-template-columns: minmax(0, 1fr) 390px;
+            grid-template-rows: minmax(0, 1fr);
         }
 
         .photo-overlay__media {
@@ -274,6 +309,8 @@
             justify-content: center;
             min-width: 0;
             min-height: 0;
+            height: 100%;
+            overflow: hidden;
         }
 
         .photo-overlay__media img {
@@ -1056,6 +1093,7 @@
             display: flex;
             flex-direction: column;
             min-width: 0;
+            min-height: 0;
             background: #fff;
         }
 
@@ -1125,7 +1163,7 @@
         .photo-overlay__body {
             flex: 1;
             min-height: 0;
-            overflow: auto;
+            overflow: hidden;
             padding: 16px 18px 18px;
             display: flex;
             flex-direction: column;
@@ -1182,6 +1220,9 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
         }
 
         .photo-overlay__comments-scroll {
@@ -1336,6 +1377,11 @@
             padding: 12px 18px 0;
         }
 
+        .photo-people-overlay__dialog .photo-overlay__body {
+            padding: 14px 18px 18px;
+            overflow: hidden;
+        }
+
         .photo-people-overlay__search input {
             width: 100%;
             height: 36px;
@@ -1352,6 +1398,9 @@
             flex-direction: column;
             gap: 10px;
             padding-top: 14px;
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
         }
 
         .photo-people-overlay__row {
@@ -1700,6 +1749,24 @@
             </div>
             <div class="photo-overlay__body">
                 <div class="photo-people-overlay__list" data-photo-people-list></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="photo-overlay" data-photo-switch-user-overlay hidden>
+    <div class="photo-overlay__dialog photo-people-overlay__dialog" role="dialog" aria-modal="true" aria-label="Switch user">
+        <div class="photo-overlay__panel">
+            <div class="photo-overlay__header photo-people-overlay__header">
+                <strong data-photo-switch-user-title>Switch user</strong>
+                <button class="photo-overlay__close" type="button" data-photo-overlay-close aria-label="Close">
+                    <i data-feather="x"></i>
+                </button>
+            </div>
+            <div class="photo-people-overlay__search">
+                <input type="search" placeholder="Search by username" data-photo-switch-user-search />
+            </div>
+            <div class="photo-overlay__body">
+                <div class="photo-people-overlay__list" data-photo-switch-user-list></div>
             </div>
         </div>
     </div>
