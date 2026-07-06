@@ -530,5 +530,21 @@ def test_stop_hpc_client_marks_manual_stop_before_killing_process():
     assert mock_cli.status == 0
 
 
+def test_clear_hpc_runtime_markers_removes_stale_ready_files(tmp_path):
+    """Restarted HPC servers must not reuse stale Ray readiness markers."""
+    from y_web.src.hpc.server import _clear_hpc_runtime_markers
+
+    exp_folder = tmp_path / "y_web" / "experiments" / "exp123"
+    exp_folder.mkdir(parents=True)
+    for marker in ("ray_ready.temp", "ray_config.temp", "ray_namespace.temp"):
+        (exp_folder / marker).write_text("stale", encoding="utf-8")
+
+    removed = _clear_hpc_runtime_markers(str(exp_folder))
+
+    assert removed == 3
+    for marker in ("ray_ready.temp", "ray_config.temp", "ray_namespace.temp"):
+        assert not (exp_folder / marker).exists()
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

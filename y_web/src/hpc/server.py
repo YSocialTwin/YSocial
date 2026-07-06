@@ -116,6 +116,20 @@ def _resolve_hpc_experiment_folder(exp) -> str:
     return os.path.join(y_web_dir, "experiments", uid)
 
 
+def _clear_hpc_runtime_markers(exp_folder: str) -> int:
+    """Remove stale Ray runtime markers before starting or after stopping."""
+    removed = 0
+    for marker_name in ("ray_ready.temp", "ray_config.temp", "ray_namespace.temp"):
+        marker_path = os.path.join(exp_folder, marker_name)
+        if os.path.exists(marker_path):
+            try:
+                os.remove(marker_path)
+                removed += 1
+            except OSError:
+                pass
+    return removed
+
+
 def _clear_stale_hpc_server_pid(exp, *, exp_folder: Optional[str] = None) -> bool:
     """
     Clear stale/recycled server PID from DB tracking.
@@ -179,6 +193,7 @@ def start_hpc_server(exp):
         sys.path.append(_external_repo_dir("YSimulator"))
 
     exp_folder = _resolve_hpc_experiment_folder(exp)
+    _clear_hpc_runtime_markers(exp_folder)
 
     # Clear stale/recycled PID entries before checking for duplicates.
     _clear_stale_hpc_server_pid(exp, exp_folder=exp_folder)
@@ -600,6 +615,10 @@ def stop_hpc_server(exp_id):
                 print(f"Removed ray_config.log from {exp_folder}")
             except Exception as e:
                 print(f"Warning: Could not remove ray_config.log: {e}")
+
+        # Remove stale runtime markers so the next restart must wait for a fresh
+        # server initialization to complete.
+        _clear_hpc_runtime_markers(exp_folder)
 
         # Clear PID from database
         exp.server_pid = None
