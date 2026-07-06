@@ -390,6 +390,10 @@ def start_hpc_client(exp, cli, population):
             )
             raise FileNotFoundError(error_msg)
 
+    # Give the server a few seconds to finish registering its Ray actor and
+    # listening endpoints before the client performs the first lookup.
+    time.sleep(3)
+
     # Remove completion log entries from actor log if restarting
     # Actor logs are in logs/{client_name}_actor.log
     logs_folder = os.path.join(exp_folder, "logs")

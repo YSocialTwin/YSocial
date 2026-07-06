@@ -225,6 +225,7 @@ def test_start_hpc_client_clears_stale_recycled_pid_and_restarts(monkeypatch):
     )
     monkeypatch.setattr("y_web.src.hpc.client.get_base_path", lambda: "/tmp")
     monkeypatch.setattr("y_web.src.hpc.client.get_writable_path", lambda: "/tmp")
+    monkeypatch.setattr("y_web.src.hpc.client.time.sleep", lambda *_: None)
     monkeypatch.setattr(
         "y_web.src.hpc.client.Path.exists", lambda *_args, **_kwargs: True
     )
@@ -257,6 +258,7 @@ def test_start_hpc_client_photo_sharing_uses_top_level_hpc_layout(
 
     monkeypatch.setattr("y_web.src.hpc.client.get_base_path", lambda: str(tmp_path))
     monkeypatch.setattr("y_web.src.hpc.client.get_writable_path", lambda: str(tmp_path))
+    monkeypatch.setattr("y_web.src.hpc.client.time.sleep", lambda *_: None)
 
     exp_folder = tmp_path / "y_web" / "experiments" / "exp44"
     exp_folder.mkdir(parents=True)
