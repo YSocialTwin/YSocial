@@ -25,8 +25,8 @@ from flask import (
     redirect,
     render_template,
     request,
-    session,
     send_from_directory,
+    session,
     url_for,
 )
 from flask_login import current_user, login_required
@@ -54,7 +54,9 @@ from y_web.src.recsys.follow_recsys import get_suggested_users
 def _photo_logged_user_id():
     if is_admin(getattr(current_user, "username", "")):
         selected_user_id = str(
-            session.get("photo_view_user_id") or session.get("photo_switch_user_id") or ""
+            session.get("photo_view_user_id")
+            or session.get("photo_switch_user_id")
+            or ""
         ).strip()
         if selected_user_id:
             return selected_user_id
@@ -85,7 +87,9 @@ def _photo_active_user(exp: Exps):
 def _photo_logged_user(exp: Exps):
     if is_admin(getattr(current_user, "username", "")):
         selected_user_id = str(
-            session.get("photo_view_user_id") or session.get("photo_switch_user_id") or ""
+            session.get("photo_view_user_id")
+            or session.get("photo_switch_user_id")
+            or ""
         ).strip()
         if selected_user_id:
             selected_user = _photo_user_record(exp, selected_user_id)
@@ -504,7 +508,11 @@ def _photo_sidebar_context(
         raw_profile_pic=raw_profile_pic,
         is_page=active_is_page,
     )
-    sidebar_role_label = "Viewing as" if is_admin(current_user.username) and active_username != current_user.username else ("Admin" if is_admin(current_user.username) else "Participant")
+    sidebar_role_label = (
+        "Viewing as"
+        if is_admin(current_user.username) and active_username != current_user.username
+        else ("Admin" if is_admin(current_user.username) else "Participant")
+    )
     return {
         "logged_id": logged_id,
         "logged_username": active_username,
@@ -595,7 +603,9 @@ def _photo_build_item(exp: Exps, row: dict) -> dict:
     parent_photo_id = str(row.get("parent_photo_id") or "").strip()
     shared_from = -1
     if parent_photo_id:
-        parent_author_name = str(row.get("parent_author_username") or row.get("parent_author") or "").strip()
+        parent_author_name = str(
+            row.get("parent_author_username") or row.get("parent_author") or ""
+        ).strip()
         parent_author_id = str(row.get("parent_author_id") or "").strip()
         if not parent_author_name or not parent_author_id:
             parent_rows = _photo_db_rows(
@@ -615,14 +625,26 @@ def _photo_build_item(exp: Exps, row: dict) -> dict:
             )
             if parent_rows:
                 parent_row = parent_rows[0]
-                parent_author_name = parent_author_name or str(parent_row.get("parent_author_username") or "").strip()
-                parent_author_id = parent_author_id or str(parent_row.get("parent_author_id") or "").strip()
-                parent_author_profile = str(parent_row.get("parent_author_profile_picture_url") or "").strip()
+                parent_author_name = (
+                    parent_author_name
+                    or str(parent_row.get("parent_author_username") or "").strip()
+                )
+                parent_author_id = (
+                    parent_author_id
+                    or str(parent_row.get("parent_author_id") or "").strip()
+                )
+                parent_author_profile = str(
+                    parent_row.get("parent_author_profile_picture_url") or ""
+                ).strip()
             else:
                 parent_author_profile = ""
         else:
-            parent_author_profile = str(row.get("parent_author_profile_picture_url") or "").strip()
-        parent_author_href = _photo_profile_href(exp, parent_author_id) if parent_author_id else ""
+            parent_author_profile = str(
+                row.get("parent_author_profile_picture_url") or ""
+            ).strip()
+        parent_author_href = (
+            _photo_profile_href(exp, parent_author_id) if parent_author_id else ""
+        )
         shared_from = {
             "photo_id": parent_photo_id,
             "author": parent_author_name or "Shared post",
@@ -1999,14 +2021,12 @@ def api_photo_switch_users(exp_id):
     users = []
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = sqlite3.Row
-        rows = conn.execute(
-            """
+        rows = conn.execute("""
             SELECT id, username, email, bio, profile_picture_url, is_page
             FROM user_mgmt
             WHERE COALESCE(is_page, 0) = 0
             ORDER BY username COLLATE NOCASE ASC
-            """
-        ).fetchall()
+            """).fetchall()
         for row in rows:
             user_id = str(row["id"] or "").strip()
             username = str(row["username"] or "").strip()
@@ -2344,7 +2364,9 @@ def api_photo_create_comment(exp_id, photo_id):
     parent_comment_id = str(payload.get("parent_comment_id") or "").strip() or None
 
     commenter_user = _photo_active_user(exp)
-    commenter_id = str(getattr(commenter_user, "id", _photo_logged_user_id()) or "").strip()
+    commenter_id = str(
+        getattr(commenter_user, "id", _photo_logged_user_id()) or ""
+    ).strip()
     if not commenter_id:
         return {"ok": False, "error": "missing_user"}, 400
 
@@ -2698,7 +2720,9 @@ def api_photo_share_post(exp_id, photo_id):
 
     item = _photo_build_item(exp, dict(row))
     source_author_id = str(original["user_id"] or "").strip()
-    source_author_name = str(original["author_username"] or source_author_id or "Shared post").strip()
+    source_author_name = str(
+        original["author_username"] or source_author_id or "Shared post"
+    ).strip()
     item["shared_from"] = {
         "author": source_author_name,
         "href": _photo_profile_href(exp, source_author_id) if source_author_id else "",

@@ -236,7 +236,9 @@ def ensure_experiment_user(
             ).strip()
 
         if selected_user_id:
-            selected_user = db_session.query(User_mgmt).filter_by(id=selected_user_id).first()
+            selected_user = (
+                db_session.query(User_mgmt).filter_by(id=selected_user_id).first()
+            )
             if selected_user is not None:
                 user = selected_user
                 return user, False

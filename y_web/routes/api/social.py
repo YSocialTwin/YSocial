@@ -68,7 +68,9 @@ def _social_chat_owner_user(exp: Exps) -> User_mgmt | None:
     db_path = _experiment_sqlite_db_path(exp)
     if is_photo and username and username.lower() == "admin":
         selected_user_id = str(
-            session.get("photo_view_user_id") or session.get("photo_switch_user_id") or ""
+            session.get("photo_view_user_id")
+            or session.get("photo_switch_user_id")
+            or ""
         ).strip()
         if selected_user_id:
             try:
@@ -310,10 +312,14 @@ def _social_chat_session_payload(
         "id": int(session.id),
         "target_user_id": resolved_target_user_id,
         "target_username": str(
-            target_username if target_username is not None else session.target_username or ""
+            target_username
+            if target_username is not None
+            else session.target_username or ""
         ),
         "target_profile_pic": str(
-            target_profile_pic if target_profile_pic is not None else session.target_profile_pic or ""
+            target_profile_pic
+            if target_profile_pic is not None
+            else session.target_profile_pic or ""
         ),
         "last_message_preview": str(session.last_message_preview or ""),
         "last_message_at": (
@@ -343,8 +349,14 @@ def _social_chat_view_payload(
     if not peer_user_id:
         return None
 
-    is_photo = str(getattr(exp, "platform_type", "") or "").strip().lower() == "photo_sharing"
-    peer_user = _load_experiment_user_sqlite(exp, peer_user_id) if is_photo else User_mgmt.query.filter_by(id=peer_user_id).first()
+    is_photo = (
+        str(getattr(exp, "platform_type", "") or "").strip().lower() == "photo_sharing"
+    )
+    peer_user = (
+        _load_experiment_user_sqlite(exp, peer_user_id)
+        if is_photo
+        else User_mgmt.query.filter_by(id=peer_user_id).first()
+    )
     if peer_user is not None and getattr(peer_user, "username", None):
         peer_username = str(peer_user.username or "").strip()
     elif owner_id == _coerce_experiment_user_id(session.owner_user_id):
@@ -383,14 +395,12 @@ def _social_chat_build_transcript(
 ) -> str:
     messages = sorted(session.messages or [], key=lambda item: int(item.id))
     tail = messages[-max_messages:]
-    assistant_name = str(assistant_username or session.target_username or "Agent").strip() or "Agent"
+    assistant_name = (
+        str(assistant_username or session.target_username or "Agent").strip() or "Agent"
+    )
     lines = []
     for msg in tail:
-        role = (
-            "You"
-            if str(msg.role or "") == "user"
-            else assistant_name
-        )
+        role = "You" if str(msg.role or "") == "user" else assistant_name
         content = str(msg.content or "").strip()
         if not content:
             continue
@@ -425,14 +435,18 @@ def _social_chat_upsert_session(
     target_id = _coerce_experiment_user_id(target_user.id)
     session = (
         ForumChatSession.query.filter(
-            (ForumChatSession.owner_user_id == owner_id) & (ForumChatSession.target_user_id == target_id)
-            | (ForumChatSession.owner_user_id == target_id) & (ForumChatSession.target_user_id == owner_id)
+            (ForumChatSession.owner_user_id == owner_id)
+            & (ForumChatSession.target_user_id == target_id)
+            | (ForumChatSession.owner_user_id == target_id)
+            & (ForumChatSession.target_user_id == owner_id)
         )
         .order_by(ForumChatSession.updated_at.desc(), ForumChatSession.id.desc())
         .first()
     )
     if session is not None:
-        if not session.target_profile_pic and str(session.target_user_id) == str(target_id):
+        if not session.target_profile_pic and str(session.target_user_id) == str(
+            target_id
+        ):
             session.target_profile_pic = _resolve_interview_profile_pic(
                 target_user, exp
             )
@@ -605,7 +619,9 @@ def api_social_chat_bootstrap(exp_id: int):
         return _json_error("Experiment user not found for current session.", 404)
     owner_id = _coerce_experiment_user_id(owner_user.id)
     followed_agent_ids_raw = _social_chat_followed_agent_ids(exp, owner_id)
-    followed_agent_ids = {str(value) for value in followed_agent_ids_raw if str(value).strip()}
+    followed_agent_ids = {
+        str(value) for value in followed_agent_ids_raw if str(value).strip()
+    }
     if is_photo:
         agents = _social_chat_photo_contacts(exp, owner_id)
     elif isinstance(owner_id, str):
@@ -657,12 +673,18 @@ def api_social_chat_bootstrap(exp_id: int):
             continue
         existing = session_map.get(peer_id)
         if existing is not None:
-            existing_stamp = str(existing.get("last_message_at") or existing.get("updated_at") or "")
-            next_stamp = str(payload.get("last_message_at") or payload.get("updated_at") or "")
+            existing_stamp = str(
+                existing.get("last_message_at") or existing.get("updated_at") or ""
+            )
+            next_stamp = str(
+                payload.get("last_message_at") or payload.get("updated_at") or ""
+            )
             if next_stamp <= existing_stamp:
                 continue
             session_payloads = [
-                item for item in session_payloads if _coerce_experiment_user_id(item.get("target_user_id")) != peer_id
+                item
+                for item in session_payloads
+                if _coerce_experiment_user_id(item.get("target_user_id")) != peer_id
             ]
         session_map[peer_id] = payload
         session_payloads.append(payload)
@@ -676,7 +698,9 @@ def api_social_chat_bootstrap(exp_id: int):
                 "username": str(agent.username or ""),
                 "profile_pic": _resolve_interview_profile_pic(agent, exp),
                 "profession": str(getattr(agent, "profession", "") or ""),
-                "preview": str((sess.get("last_message_preview") if sess else "") or ""),
+                "preview": str(
+                    (sess.get("last_message_preview") if sess else "") or ""
+                ),
                 "session_id": int(sess.get("id")) if sess else None,
                 "last_message_at": (
                     str(sess.get("last_message_at"))
@@ -713,7 +737,11 @@ def api_social_chat_open_session(exp_id: int):
     if owner_user is None:
         return _json_error("Experiment user not found for current session.", 404)
     owner_id = _coerce_experiment_user_id(owner_user.id)
-    followed_agent_ids = {str(value) for value in _social_chat_followed_agent_ids(exp, owner_id) if str(value).strip()}
+    followed_agent_ids = {
+        str(value)
+        for value in _social_chat_followed_agent_ids(exp, owner_id)
+        if str(value).strip()
+    }
 
     payload = request.get_json(silent=True) or {}
     agent_user_id = _coerce_experiment_user_id(payload.get("agent_user_id"))
@@ -731,8 +759,20 @@ def api_social_chat_open_session(exp_id: int):
 
     session = (
         ForumChatSession.query.filter(
-            ((ForumChatSession.owner_user_id == owner_id) & (ForumChatSession.target_user_id == _coerce_experiment_user_id(target_user.id)))
-            | ((ForumChatSession.owner_user_id == _coerce_experiment_user_id(target_user.id)) & (ForumChatSession.target_user_id == owner_id))
+            (
+                (ForumChatSession.owner_user_id == owner_id)
+                & (
+                    ForumChatSession.target_user_id
+                    == _coerce_experiment_user_id(target_user.id)
+                )
+            )
+            | (
+                (
+                    ForumChatSession.owner_user_id
+                    == _coerce_experiment_user_id(target_user.id)
+                )
+                & (ForumChatSession.target_user_id == owner_id)
+            )
         )
         .order_by(ForumChatSession.updated_at.desc(), ForumChatSession.id.desc())
         .first()
@@ -767,12 +807,20 @@ def api_social_chat_get_session(exp_id: int, session_id: int):
     if owner_user is None:
         return _json_error("Experiment user not found for current session.", 404)
     owner_id = _coerce_experiment_user_id(owner_user.id)
-    followed_agent_ids = {str(value) for value in _social_chat_followed_agent_ids(exp, owner_id) if str(value).strip()}
+    followed_agent_ids = {
+        str(value)
+        for value in _social_chat_followed_agent_ids(exp, owner_id)
+        if str(value).strip()
+    }
 
-    session = ForumChatSession.query.filter_by(id=int(session_id)).filter(
-        (ForumChatSession.owner_user_id == owner_id)
-        | (ForumChatSession.target_user_id == owner_id)
-    ).first()
+    session = (
+        ForumChatSession.query.filter_by(id=int(session_id))
+        .filter(
+            (ForumChatSession.owner_user_id == owner_id)
+            | (ForumChatSession.target_user_id == owner_id)
+        )
+        .first()
+    )
     if session is None:
         return _json_error("Chat session not found.", 404)
     peer_user_id = _social_chat_peer_user_id(session, owner_id)
@@ -804,12 +852,20 @@ def api_social_chat_send_message(exp_id: int, session_id: int):
     if owner_user is None:
         return _json_error("Experiment user not found for current session.", 404)
     owner_id = _coerce_experiment_user_id(owner_user.id)
-    followed_agent_ids = {str(value) for value in _social_chat_followed_agent_ids(exp, owner_id) if str(value).strip()}
+    followed_agent_ids = {
+        str(value)
+        for value in _social_chat_followed_agent_ids(exp, owner_id)
+        if str(value).strip()
+    }
 
-    session = ForumChatSession.query.filter_by(id=int(session_id)).filter(
-        (ForumChatSession.owner_user_id == owner_id)
-        | (ForumChatSession.target_user_id == owner_id)
-    ).first()
+    session = (
+        ForumChatSession.query.filter_by(id=int(session_id))
+        .filter(
+            (ForumChatSession.owner_user_id == owner_id)
+            | (ForumChatSession.target_user_id == owner_id)
+        )
+        .first()
+    )
     if session is None:
         return _json_error("Chat session not found.", 404)
     target_id = _social_chat_peer_user_id(session, owner_id)

@@ -782,7 +782,9 @@ class TestHPCExecutionLogMonitoring:
 
                 assert result is False
                 mock_mark_failed.assert_called_once_with(
-                    exp.idexp, client.id, reason=f"PID {client.pid} no longer alive for client {client.name}"
+                    exp.idexp,
+                    client.id,
+                    reason=f"PID {client.pid} no longer alive for client {client.name}",
                 )
                 mock_stop_after_failure.assert_called_once_with(
                     exp.idexp,
