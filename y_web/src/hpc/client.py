@@ -273,6 +273,23 @@ def _sync_stress_reward_into_hpc_client_config(exp_folder, client_config_path):
     return True
 
 
+def _wait_for_hpc_server_ready(exp_folder: str, timeout_seconds: int = 180) -> None:
+    """
+    Wait until the server writes its readiness marker after the orchestrator actor starts.
+    """
+    ready_path = Path(exp_folder) / "ray_ready.temp"
+    deadline = time.monotonic() + max(1, timeout_seconds)
+    while time.monotonic() < deadline:
+        if ready_path.exists():
+            return
+        time.sleep(1)
+
+    raise FileNotFoundError(
+        f"ray_ready.temp file not found after {timeout_seconds} seconds: {ready_path}\n"
+        "The HPC server may not have fully initialized its Ray actor yet."
+    )
+
+
 def _set_client_execution_terminal_state(cli, terminal_state: str) -> bool:
     """Persist the terminal state for an HPC client execution record."""
     if not terminal_state:
@@ -392,6 +409,7 @@ def start_hpc_client(exp, cli, population):
 
     # Give the server a few seconds to finish registering its Ray actor and
     # listening endpoints before the client performs the first lookup.
+    _wait_for_hpc_server_ready(exp_folder, timeout_seconds=180)
     time.sleep(3)
 
     # Remove completion log entries from actor log if restarting
