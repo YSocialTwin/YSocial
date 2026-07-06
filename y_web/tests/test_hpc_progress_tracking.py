@@ -315,6 +315,10 @@ def test_start_hpc_client_photo_sharing_uses_top_level_hpc_layout(
         lambda exp_folder, client_config_path: None,
     )
     monkeypatch.setattr(
+        "y_web.src.hpc.client._wait_for_hpc_server_ready",
+        lambda exp_folder, timeout_seconds=180: None,
+    )
+    monkeypatch.setattr(
         "y_web.src.simulation.server.detect_env_handler", lambda: "python"
     )
     monkeypatch.setattr("y_web.src.hpc.client.build_subprocess_env", lambda: {})
@@ -484,6 +488,46 @@ def test_admin_progress_refreshes_hpc_client_log_when_stale():
         payload = get_progress(client.id)
 
     assert json.loads(payload)["progress"] == 25
+
+
+def test_stop_hpc_client_marks_manual_stop_before_killing_process():
+    """Manual stop must be recorded before the termination attempt starts."""
+    from y_web.src.hpc import client as hpc_client
+
+    mock_cli = MagicMock()
+    mock_cli.pid = 4242
+    mock_cli.name = "manual_stop_client"
+    mock_cli.status = 1
+    mock_cli.experiment = MagicMock(db_name=None)
+
+    call_order = []
+
+    def _record_mark(_cli, state):
+        call_order.append(("mark", state))
+        return True
+
+    def _record_kill(pid, sig):
+        call_order.append(("kill", pid, sig))
+
+    with (
+        patch.object(
+            hpc_client, "_set_client_execution_terminal_state", side_effect=_record_mark
+        ),
+        patch.object(hpc_client, "_clear_stale_hpc_pid", return_value=False),
+        patch.object(hpc_client, "_tracked_process_is_alive", return_value=False),
+        patch.object(hpc_client, "_is_hpc_client_process", return_value=False),
+        patch.object(hpc_client.os, "kill", side_effect=_record_kill),
+        patch("y_web.src.simulation.port_manager.__terminate_process"),
+        patch.object(hpc_client.db.session, "commit"),
+        patch.object(hpc_client.db.session, "rollback"),
+    ):
+        assert hpc_client.stop_hpc_client(
+            mock_cli, terminal_state="manual_stop"
+        ) is True
+
+    assert call_order[0] == ("mark", "manual_stop")
+    assert any(item[0] == "kill" for item in call_order)
+    assert mock_cli.status == 0
 
 
 if __name__ == "__main__":

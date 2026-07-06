@@ -634,6 +634,19 @@ def stop_hpc_client(cli, *, terminal_state: Optional[str] = None):
     )
 
     try:
+        manual_stop_requested = terminal_state in {"manual_stop", "paused"}
+
+        # For user-initiated stops/pauses, mark the execution record before
+        # touching the process tree. This prevents the HPC monitor from
+        # interpreting the shutdown window as a crash and respawning the client.
+        if manual_stop_requested:
+            _set_client_execution_terminal_state(cli, terminal_state)
+            cli.status = 0
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+
         if not cli.pid:
             print(f"No tracked HPC client process found for client {cli.name}")
             if terminal_state:
@@ -780,7 +793,7 @@ def stop_hpc_client(cli, *, terminal_state: Optional[str] = None):
 
         # Clear PID from database
         cli.pid = None
-        if terminal_state and terminated:
+        if terminal_state and terminated and not manual_stop_requested:
             _set_client_execution_terminal_state(cli, terminal_state)
         db.session.commit()
         return terminated

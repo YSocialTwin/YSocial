@@ -2578,10 +2578,11 @@ def stop_experiment(uid):
 
             # Update client status in database
             if exp.simulator_type == "HPC" and stop_result is False:
-                client.status = 1
-                all_clients_stopped = False
-            else:
-                client.status = 0
+                current_app.logger.warning(
+                    f"Unable to confirm immediate stop for HPC client '{client.name}' "
+                    "while stopping experiment; clearing running status anyway."
+                )
+            client.status = 0
             db.session.commit()
 
     if not all_clients_stopped:

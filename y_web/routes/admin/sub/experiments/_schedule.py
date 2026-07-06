@@ -722,9 +722,12 @@ def stop_schedule():
                                 exp, client, pause=False
                             )
                         if exp.simulator_type == "HPC" and stop_result is False:
-                            client.status = 1
-                        else:
-                            client.status = 0
+                            current_app.logger.warning(
+                                f"Unable to confirm immediate stop for HPC client '{client.name}' "
+                                f"in scheduled stop; keeping manual-stop terminal state and "
+                                "clearing running status anyway."
+                            )
+                        client.status = 0
                         db.session.commit()
 
                 # Stop server

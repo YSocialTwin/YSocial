@@ -497,19 +497,12 @@ def pause_client(uid, idexp):
     stop_result = stop_client_for_experiment(exp, client, pause=True)
 
     if exp.simulator_type == "HPC":
-        if _hpc_client_process_still_running(exp, client):
-            client.status = 1
-            flash(
-                f"HPC client '{client.name}' is still running; status kept as running.",
-                "warning",
-            )
-        elif stop_result is False:
+        if stop_result is False:
             flash(
                 f"Unable to confirm stop for HPC client '{client.name}'.",
                 "warning",
             )
-        else:
-            client.status = 0
+        client.status = 0
         db.session.commit()
     else:
         client.status = 0
@@ -550,19 +543,12 @@ def stop_client(uid, idexp):
     stop_result = stop_client_for_experiment(exp, client, pause=False)
 
     if exp.simulator_type == "HPC":
-        if _hpc_client_process_still_running(exp, client):
-            client.status = 1
-            flash(
-                f"HPC client '{client.name}' is still running; status kept as running.",
-                "warning",
-            )
-        elif stop_result is False:
+        if stop_result is False:
             flash(
                 f"Unable to confirm stop for HPC client '{client.name}'.",
                 "warning",
             )
-        else:
-            client.status = 0
+        client.status = 0
         db.session.commit()
     else:
         client.status = 0
