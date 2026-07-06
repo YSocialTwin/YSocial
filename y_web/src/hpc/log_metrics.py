@@ -92,6 +92,59 @@ def _read_execution_log_tail(execution_log_path, tail_bytes: int = 65536):
         return None, None
 
 
+def _clear_hpc_execution_logs(exp_id: int) -> int:
+    """
+    Remove stale execution-log contents for a restarting HPC experiment.
+
+    The monitor only inspects the current ``*_execution.log`` file, so clearing
+    it before a restart prevents the same fatal line from being re-detected on
+    every monitor tick.
+
+    Returns:
+        int: Number of execution-log files that were cleared or removed.
+    """
+    try:
+        from y_web.src.hpc.server import _resolve_hpc_experiment_folder
+
+        exp = Exps.query.filter_by(idexp=exp_id).first()
+        if not exp:
+            return 0
+
+        exp_folder = _resolve_hpc_experiment_folder(exp)
+        logs_dir = os.path.join(exp_folder, "logs")
+        if not os.path.isdir(logs_dir):
+            return 0
+
+        cleared = 0
+        for entry_name in os.listdir(logs_dir):
+            if "_execution.log" not in entry_name:
+                continue
+
+            entry_path = os.path.join(logs_dir, entry_name)
+            if not os.path.isfile(entry_path):
+                continue
+
+            try:
+                if entry_name.endswith(".gz"):
+                    os.remove(entry_path)
+                else:
+                    with open(entry_path, "w", encoding="utf-8"):
+                        pass
+                cleared += 1
+            except Exception as exc:
+                logger.warning(
+                    f"Failed to clear stale execution log {entry_path}: {exc}",
+                    exc_info=True,
+                )
+        return cleared
+    except Exception as exc:
+        logger.warning(
+            f"Unable to clear execution logs for experiment {exp_id}: {exc}",
+            exc_info=True,
+        )
+        return 0
+
+
 def _is_hpc_client_tracked_process_alive(client: Client, *, exp_folder: str) -> bool:
     """
     Return True when the tracked PID still belongs to this HPC client process.
@@ -834,6 +887,20 @@ def _restart_failed_schedule_experiment(exp_id: int, reason: str = "") -> bool:
                 )
             )
             db.session.commit()
+
+            cleared_logs = _clear_hpc_execution_logs(exp_id)
+            if cleared_logs > 0:
+                db.session.add(
+                    ExperimentScheduleLog(
+                        message=(
+                            f"Cleared {cleared_logs} stale execution log(s) before "
+                            f"restarting experiment '{exp.exp_name}' in schedule group "
+                            f"'{group_name}'."
+                        ),
+                        log_type="info",
+                    )
+                )
+                db.session.commit()
 
             _, clients_to_start = _get_clients_to_start(exp)
             if not clients_to_start:

@@ -291,6 +291,15 @@ class TestHPCExecutionLogMonitoring:
             db.session.add(item)
             db.session.commit()
 
+            exp_folder = tmp_path / "y_web" / "experiments" / "test_restart"
+            logs_folder = exp_folder / "logs"
+            logs_folder.mkdir(parents=True, exist_ok=True)
+            execution_log = logs_folder / f"{client.name}_execution.log"
+            execution_log.write_text(
+                '{"timestamp":"2026-02-04T14:44:01.000000","level":"ERROR","message":"Client error: ActorDiedError"}\n',
+                encoding="utf-8",
+            )
+
             with (
                 patch(
                     "y_web.src.simulation.execution_backend.start_server_for_experiment"
@@ -298,6 +307,14 @@ class TestHPCExecutionLogMonitoring:
                 patch(
                     "y_web.src.simulation.execution_backend.start_client_for_experiment"
                 ) as mock_start_client,
+                patch(
+                    "y_web.src.hpc.server.get_writable_path",
+                    return_value=str(tmp_path),
+                ),
+                patch(
+                    "y_web.src.system.path_utils.get_writable_path",
+                    return_value=str(tmp_path),
+                ),
                 patch("y_web.src.hpc.log_metrics.time.sleep", return_value=None),
             ):
                 result = _restart_failed_schedule_experiment(
@@ -306,6 +323,17 @@ class TestHPCExecutionLogMonitoring:
                 assert result is True
                 mock_start_server.assert_called_once_with(exp)
                 mock_start_client.assert_called_once()
+
+            execution_log = (
+                tmp_path
+                / "y_web"
+                / "experiments"
+                / "test_restart"
+                / "logs"
+                / f"{client.name}_execution.log"
+            )
+            assert execution_log.exists()
+            assert execution_log.read_text(encoding="utf-8") == ""
 
             updated_exp = Exps.query.filter_by(idexp=exp.idexp).first()
             assert updated_exp.running == 1
