@@ -409,7 +409,9 @@ def check_hpc_client_execution_completion(exp_id, client_id, execution_log_path)
         if lines is None:
             return False
         if not lines:
-            print(f"[HPC Monitor] No lines found in execution log: {execution_log_path}")
+            print(
+                f"[HPC Monitor] No lines found in execution log: {execution_log_path}"
+            )
             return False
 
         print(
