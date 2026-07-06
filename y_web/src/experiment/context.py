@@ -6,6 +6,7 @@ It provides utilities to register, access, and switch between experiment databas
 """
 
 import os
+from contextlib import contextmanager
 
 from flask import current_app, g, request
 
@@ -158,6 +159,43 @@ def teardown_experiment_context(exception=None):
     # Restore original db_exp bind if it was modified
     if hasattr(g, "original_db_exp_bind") and g.original_db_exp_bind is not None:
         current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = g.original_db_exp_bind
+
+
+@contextmanager
+def experiment_db_bind(exp_id):
+    """Temporarily point ``db_exp`` at the database for ``exp_id``.
+
+    The application already keeps a request-level bind through
+    ``setup_experiment_context()``, but some feed paths build multiple query
+    batches and can observe the wrong bind when other requests are active in
+    parallel.  Wrapping the full rendering path keeps the feed data source
+    stable for the duration of the request without changing callers.
+    """
+
+    if exp_id is None:
+        yield
+        return
+
+    from y_web.src.models import Exps
+
+    bind_key = get_db_bind_key_for_exp(exp_id)
+    if bind_key not in current_app.config["SQLALCHEMY_BINDS"]:
+        exp = Exps.query.filter_by(idexp=exp_id).first()
+        if exp is not None:
+            register_experiment_database(current_app, exp_id, exp.db_name)
+
+    binds = current_app.config["SQLALCHEMY_BINDS"]
+    original_bind = binds.get("db_exp")
+    if bind_key in binds:
+        binds["db_exp"] = binds[bind_key]
+
+    try:
+        yield
+    finally:
+        if original_bind is not None:
+            binds["db_exp"] = original_bind
+        else:
+            binds.pop("db_exp", None)
 
 
 def initialize_active_experiment_databases(app):

@@ -32,6 +32,7 @@ from y_web.src.data_access import (
     get_user_friends,
     get_user_recent_posts,
 )
+from y_web.src.experiment.context import experiment_db_bind
 from y_web.src.forum.service import (
     _format_display_time,
     _format_display_time_from_created_at,
@@ -176,121 +177,122 @@ def feeed_logged():
 @login_required
 def feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     """Handle feed operation."""
-    if page < 1:
-        page = 1
+    with experiment_db_bind(exp_id):
+        if page < 1:
+            page = 1
 
-    max_post_per_page = 10
-    username = ""
-    posts, additional = None, None
+        max_post_per_page = 10
+        username = ""
+        posts, additional = None, None
 
-    if user_id == "all":
-        posts, additional = get_suggested_posts("all", "", page, max_post_per_page)
+        if user_id == "all":
+            posts, additional = get_suggested_posts("all", "", page, max_post_per_page)
 
-    elif user_id != "all":
-        user = User_mgmt.query.filter_by(id=user_id).first()
-        if not user:
-            # Try to find user by username instead of ID
-            user = User_mgmt.query.filter_by(username=current_user.username).first()
+        elif user_id != "all":
+            user = User_mgmt.query.filter_by(id=user_id).first()
             if not user:
-                flash(
-                    "User not found in experiment. Please contact administrator.",
-                    "error",
-                )
-                return redirect(f"/admin/experiments")
-        recsys = user.recsys_type
+                # Try to find user by username instead of ID
+                user = User_mgmt.query.filter_by(username=current_user.username).first()
+                if not user:
+                    flash(
+                        "User not found in experiment. Please contact administrator.",
+                        "error",
+                    )
+                    return redirect(f"/admin/experiments")
+            recsys = user.recsys_type
 
-        posts, additional = get_suggested_posts(
-            user_id, recsys, page, max_post_per_page
-        )
-        username = user.username
+            posts, additional = get_suggested_posts(
+                user_id, recsys, page, max_post_per_page
+            )
+            username = user.username
 
-    res, res_additional = [], []
+        res, res_additional = [], []
 
-    # Get experiment user ID for reactions
-    exp_user = User_mgmt.query.filter_by(username=current_user.username).first()
-    exp_user_id = exp_user.id if exp_user else current_user.id
+        # Get experiment user ID for reactions
+        exp_user = User_mgmt.query.filter_by(username=current_user.username).first()
+        exp_user_id = exp_user.id if exp_user else current_user.id
 
-    if posts is not None:
-        res = _get_discussions(posts, username, page, exp_id, exp_user_id)
-    if additional is not None:
-        res_additional = _get_discussions(
-            additional, username, page, exp_id, exp_user_id
-        )
+        if posts is not None:
+            res = _get_discussions(posts, username, page, exp_id, exp_user_id)
+        if additional is not None:
+            res_additional = _get_discussions(
+                additional, username, page, exp_id, exp_user_id
+            )
 
-    # combine the posts and additional posts
-    if len(res_additional) > 0:
-        for add in res_additional:
-            res.append(add)
+        # combine the posts and additional posts
+        if len(res_additional) > 0:
+            for add in res_additional:
+                res.append(add)
 
-    # not enough posts to display
-    if len(res) == 0 and page > 1:
-        return redirect(f"/feed/{user_id}/{timeline}/{mode}/{page - 1}")
+        # not enough posts to display
+        if len(res) == 0 and page > 1:
+            return redirect(f"/feed/{user_id}/{timeline}/{mode}/{page - 1}")
 
-    trending_ht = get_trending_hashtags()
-    mentions = get_unanswered_mentions(current_user.username)
-    sfollow = get_suggested_users(current_user.username, pages=False)
-    spages = get_suggested_users(current_user.username, pages=True)
+        trending_ht = get_trending_hashtags()
+        mentions = get_unanswered_mentions(current_user.username)
+        sfollow = get_suggested_users(current_user.username, pages=False)
+        spages = get_suggested_users(current_user.username, pages=True)
 
-    try:
-        ag = Agent.query.filter_by(name=current_user.username).first()
-        profile_pic = (
-            ag.profile_pic
-            if ag is not None and ag.profile_pic is not None
-            else Admin_users.query.filter_by(username=current_user.username)
-            .first()
-            .profile_pic
-        )
-    except:
-        profile_pic = ""
-
-    user = User_mgmt.query.filter_by(username=current_user.username).first()
-    profile_pic_feed = ""
-    if user.is_page == 1:
-        pg = Page.query.filter_by(name=user.username).first()
-        if pg is not None:
-            profile_pic_feed = pg.logo
-    else:
         try:
-            ag = Agent.query.filter_by(name=user.username).first()
-            profile_pic_feed = (
+            ag = Agent.query.filter_by(name=current_user.username).first()
+            profile_pic = (
                 ag.profile_pic
                 if ag is not None and ag.profile_pic is not None
-                else Admin_users.query.filter_by(username=user.username)
+                else Admin_users.query.filter_by(username=current_user.username)
                 .first()
                 .profile_pic
             )
         except:
-            profile_pic_feed = ""
+            profile_pic = ""
 
-    # Get experiment user (not admin user)
-    logged_user = User_mgmt.query.filter_by(username=current_user.username).first()
-    if not logged_user:
-        flash("User not found in experiment", "error")
-        return redirect(url_for("main.index"))
-    logged_id = logged_user.id
+        user = User_mgmt.query.filter_by(username=current_user.username).first()
+        profile_pic_feed = ""
+        if user.is_page == 1:
+            pg = Page.query.filter_by(name=user.username).first()
+            if pg is not None:
+                profile_pic_feed = pg.logo
+        else:
+            try:
+                ag = Agent.query.filter_by(name=user.username).first()
+                profile_pic_feed = (
+                    ag.profile_pic
+                    if ag is not None and ag.profile_pic is not None
+                    else Admin_users.query.filter_by(username=user.username)
+                    .first()
+                    .profile_pic
+                )
+            except:
+                profile_pic_feed = ""
 
-    return render_template(
-        "microblogging/feed.html",
-        items=res,
-        page=page,
-        profile_pic=profile_pic,
-        profile_pic_feed=profile_pic_feed,
-        user_id=user_id,
-        timeline=timeline,
-        username=username,
-        mode=mode,
-        enumerate=enumerate,
-        len=len,
-        logged_username=current_user.username,
-        logged_id=logged_id,
-        trending_ht=trending_ht,
-        str=str,
-        bool=bool,
-        mentions=mentions,
-        is_admin=is_admin(current_user.username),
-        sfollow=sfollow,
-        spages=spages,
-    )
+        # Get experiment user (not admin user)
+        logged_user = User_mgmt.query.filter_by(username=current_user.username).first()
+        if not logged_user:
+            flash("User not found in experiment", "error")
+            return redirect(url_for("main.index"))
+        logged_id = logged_user.id
+
+        return render_template(
+            "microblogging/feed.html",
+            items=res,
+            page=page,
+            profile_pic=profile_pic,
+            profile_pic_feed=profile_pic_feed,
+            user_id=user_id,
+            timeline=timeline,
+            username=username,
+            mode=mode,
+            enumerate=enumerate,
+            len=len,
+            logged_username=current_user.username,
+            logged_id=logged_id,
+            trending_ht=trending_ht,
+            str=str,
+            bool=bool,
+            mentions=mentions,
+            is_admin=is_admin(current_user.username),
+            sfollow=sfollow,
+            spages=spages,
+        )
 
 
 @main.get("/<int:exp_id>/hashtag_posts/<hashtag_id>/<int:page>")
@@ -973,62 +975,63 @@ def api_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
 
     Returns rendered HTML for posts.
     """
-    if page < 1:
-        page = 1
+    with experiment_db_bind(exp_id):
+        if page < 1:
+            page = 1
 
-    max_post_per_page = 10
-    username = ""
-    render_user_id = current_user.id
-    posts, additional = None, None
+        max_post_per_page = 10
+        username = ""
+        render_user_id = current_user.id
+        posts, additional = None, None
 
-    if user_id == "all":
-        posts, additional = get_suggested_posts("all", "", page, max_post_per_page)
-    elif user_id != "all":
-        user = User_mgmt.query.filter_by(id=user_id).first()
-        if not user:
-            user = User_mgmt.query.filter_by(username=current_user.username).first()
-        if not user:
-            return jsonify({"html": "", "has_more": False}), 404
-        render_user_id = user.id
-        recsys = user.recsys_type
-        posts, additional = get_suggested_posts(
-            user.id, recsys, page, max_post_per_page
+        if user_id == "all":
+            posts, additional = get_suggested_posts("all", "", page, max_post_per_page)
+        elif user_id != "all":
+            user = User_mgmt.query.filter_by(id=user_id).first()
+            if not user:
+                user = User_mgmt.query.filter_by(username=current_user.username).first()
+            if not user:
+                return jsonify({"html": "", "has_more": False}), 404
+            render_user_id = user.id
+            recsys = user.recsys_type
+            posts, additional = get_suggested_posts(
+                user.id, recsys, page, max_post_per_page
+            )
+            username = user.username
+
+        res, res_additional = [], []
+
+        # Get experiment user ID for reactions
+        exp_user = User_mgmt.query.filter_by(username=current_user.username).first()
+        exp_user_id = exp_user.id if exp_user else current_user.id
+
+        if posts is not None:
+            res = _get_discussions(posts, username, page, exp_id, exp_user_id)
+        if additional is not None:
+            res_additional = _get_discussions(
+                additional, username, page, exp_id, exp_user_id
+            )
+
+        # combine the posts and additional posts
+        if len(res_additional) > 0:
+            for add in res_additional:
+                res.append(add)
+
+        has_more = bool(
+            (posts is not None and getattr(posts, "has_next", False))
+            or (additional is not None and getattr(additional, "has_next", False))
         )
-        username = user.username
 
-    res, res_additional = [], []
-
-    # Get experiment user ID for reactions
-    exp_user = User_mgmt.query.filter_by(username=current_user.username).first()
-    exp_user_id = exp_user.id if exp_user else current_user.id
-
-    if posts is not None:
-        res = _get_discussions(posts, username, page, exp_id, exp_user_id)
-    if additional is not None:
-        res_additional = _get_discussions(
-            additional, username, page, exp_id, exp_user_id
+        html = render_template(
+            "microblogging/components/posts.html",
+            items=res,
+            enumerate=enumerate,
+            user_id=render_user_id,
+            str=str,
+            bool=bool,
+            len=len,
         )
-
-    # combine the posts and additional posts
-    if len(res_additional) > 0:
-        for add in res_additional:
-            res.append(add)
-
-    has_more = bool(
-        (posts is not None and getattr(posts, "has_next", False))
-        or (additional is not None and getattr(additional, "has_next", False))
-    )
-
-    html = render_template(
-        "microblogging/components/posts.html",
-        items=res,
-        enumerate=enumerate,
-        user_id=render_user_id,
-        str=str,
-        bool=bool,
-        len=len,
-    )
-    return jsonify({"html": html, "has_more": has_more})
+        return jsonify({"html": html, "has_more": has_more})
 
 
 @main.get("/<int:exp_id>/api/hashtag_posts/<hashtag_id>/<int:page>")
