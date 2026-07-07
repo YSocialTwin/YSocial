@@ -3057,6 +3057,11 @@ def _resolve_network_analysis_db_path(experiment):
     return _resolve_experiment_db_path(experiment)
 
 
+def _resolve_analytics_db_path(experiment):
+    """Return the analytics DB path used by experiment dashboards."""
+    return _resolve_network_analysis_db_path(experiment)
+
+
 def _experiment_db_has_required_stress_reward_tables(db_path):
     """Check whether the experiment DB exposes stress/reward analytics tables."""
     if not db_path or not os.path.exists(db_path):
@@ -3933,7 +3938,7 @@ def _load_annotation_experiment_context(
         flash("You do not have permission to manage this experiment.", "error")
         return None, None, redirect(url_for("experiments.experiment_details", uid=uid))
 
-    db_path = _resolve_experiment_db_path(experiment)
+    db_path = _resolve_analytics_db_path(experiment)
     config_path = os.path.join(
         os.path.dirname(db_path),
         (
@@ -3980,7 +3985,7 @@ def _load_network_experiment_context(uid, require_manage=False):
         flash("You do not have permission to manage this experiment.", "error")
         return None, None, redirect(url_for("experiments.experiment_details", uid=uid))
 
-    return experiment, _resolve_network_analysis_db_path(experiment), None
+    return experiment, _resolve_analytics_db_path(experiment), None
 
 
 def _experiment_db_has_required_tables(db_path, required_tables):
@@ -4000,6 +4005,14 @@ def _experiment_db_has_required_tables(db_path, required_tables):
         return False
 
     return set(required_tables).issubset(tables)
+
+
+def _experiment_db_has_any_required_tables(db_path, required_table_sets):
+    """Check whether the experiment DB matches at least one table set."""
+    return any(
+        _experiment_db_has_required_tables(db_path, required_tables)
+        for required_tables in required_table_sets
+    )
 
 
 def _get_annotation_max_round(db_path):
@@ -4153,9 +4166,54 @@ def _table_round_column(conn, table_name):
     }
     if "round" in columns:
         return "round"
+    if "round_id" in columns:
+        return "round_id"
     if "tid" in columns:
         return "tid"
     return None
+
+
+def _table_columns(conn, table_name):
+    return {
+        row[1] for row in conn.execute(f"PRAGMA table_info({table_name})").fetchall()
+    }
+
+
+def _analytics_content_schema(conn):
+    table_names = {
+        row["name"] if isinstance(row, sqlite3.Row) else row[0]
+        for row in conn.execute("SELECT name FROM sqlite_master WHERE type = 'table'")
+    }
+    is_photo_sharing = any(
+        table_name in table_names
+        for table_name in ("photo_topics", "photo_hashtags", "photo_emotions", "photos")
+    )
+    reactions_columns = _table_columns(conn, "reactions") if "reactions" in table_names else set()
+    reported_columns = _table_columns(conn, "reported") if "reported" in table_names else set()
+    recommendations_columns = (
+        _table_columns(conn, "recommendations") if "recommendations" in table_names else set()
+    )
+    return {
+        "table_names": table_names,
+        "is_photo_sharing": is_photo_sharing,
+        "content_table": "photos" if is_photo_sharing and "photos" in table_names else "post",
+        "content_link_table": "photo_topics" if is_photo_sharing and "photo_topics" in table_names else "post_topics",
+        "hashtag_link_table": "photo_hashtags" if is_photo_sharing and "photo_hashtags" in table_names else "post_hashtags",
+        "emotion_table": "photo_emotions" if is_photo_sharing and "photo_emotions" in table_names else "post_emotions",
+        "content_id_column": "photo_id" if is_photo_sharing else "post_id",
+        "reaction_content_id_column": "photo_id" if "photo_id" in reactions_columns else "post_id",
+        "reported_content_id_column": "content_id" if "content_id" in reported_columns else "to_post",
+        "reported_round_column": _table_round_column(conn, "reported") if "reported" in table_names else None,
+        "reported_actor_column": "reporter_id" if "reporter_id" in reported_columns else "from_uid",
+        "reported_content_type_column": "content_type" if "content_type" in reported_columns else None,
+        "recommendation_ids_column": "photo_ids" if "photo_ids" in recommendations_columns else "post_ids",
+        "content_text_column": "caption" if is_photo_sharing else "tweet",
+        "content_summary_expression": (
+            "COALESCE(NULLIF(TRIM(caption), ''), NULLIF(TRIM(alt_text), ''), NULLIF(TRIM(image_url), ''))"
+            if is_photo_sharing
+            else "COALESCE(NULLIF(TRIM(tweet), ''), '')"
+        ),
+    }
 
 
 def _network_graph_metrics(graph):
@@ -4211,7 +4269,9 @@ def _available_network_analysis_types(db_path):
         }
     if "follow" in table_names:
         available.append("follow")
-    if "mentions" in table_names and "post" in table_names:
+    if "mentions" in table_names and (
+        "post" in table_names or "photos" in table_names
+    ):
         available.append("mention")
     return available
 
@@ -4227,6 +4287,7 @@ def _build_network_analytics_payload(
     """Build network analytics up to the selected simulation time."""
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = sqlite3.Row
+        schema = _analytics_content_schema(conn)
         network_type = str(network_type or "follow").strip().lower()
         if network_type not in {"follow", "mention"}:
             network_type = "follow"
@@ -4320,7 +4381,7 @@ def _build_network_analytics_payload(
                         r.day AS day,
                         r.hour AS hour
                     FROM mentions m
-                    JOIN post p ON p.id = m.post_id
+                    JOIN {schema["content_table"]} p ON p.id = m.{schema["content_id_column"]}
                     JOIN rounds r ON r.id = m.{round_column}
                     WHERE (r.day < ? OR (r.day = ? AND r.hour <= ?))
                     ORDER BY r.day ASC, r.hour ASC, m.rowid ASC
@@ -4336,7 +4397,7 @@ def _build_network_analytics_payload(
                         r.day AS day,
                         r.hour AS hour
                     FROM mentions m
-                    JOIN post p ON p.id = m.post_id
+                    JOIN {schema["content_table"]} p ON p.id = m.{schema["content_id_column"]}
                     JOIN rounds r ON r.id = m.{round_column}
                     ORDER BY r.day ASC, r.hour ASC, m.rowid ASC
                     """).fetchall()
@@ -4753,13 +4814,9 @@ def _build_topic_evolution_payload(
 ):
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = sqlite3.Row
+        schema = _analytics_content_schema(conn)
         topic_names = _topic_name_mapping(expid, conn)
-        table_names = {
-            row["name"] if isinstance(row, sqlite3.Row) else row[0]
-            for row in conn.execute(
-                "SELECT name FROM sqlite_master WHERE type = 'table'"
-            ).fetchall()
-        }
+        table_names = schema["table_names"]
         reported_round_column = (
             _table_round_column(conn, "reported") if "reported" in table_names else None
         )
@@ -4774,11 +4831,15 @@ def _build_topic_evolution_payload(
                 r.day AS day,
                 r.hour AS hour,
                 'content' AS event_type
-            FROM post_topics pt
-            JOIN post p ON p.id = pt.post_id
+            FROM {topic_link_table} pt
+            JOIN {content_table} p ON p.id = pt.{content_id_column}
             JOIN rounds r ON r.id = p.round
             WHERE (r.day < ? OR (r.day = ? AND r.hour <= ?))
-            """]
+            """.format(
+            topic_link_table=schema["content_link_table"],
+            content_table=schema["content_table"],
+            content_id_column=schema["content_id_column"],
+        )]
         params = [filter_day, filter_day, filter_hour]
 
         if "reactions" in table_names:
@@ -4789,23 +4850,32 @@ def _build_topic_evolution_payload(
                     r.day AS day,
                     r.hour AS hour,
                     'reaction' AS event_type
-                FROM post_topics pt
-                JOIN reactions re ON re.post_id = pt.post_id
+                FROM {topic_link_table} pt
+                JOIN reactions re ON re.{reaction_content_id_column} = pt.{content_id_column}
                 JOIN rounds r ON r.id = re.round
                 WHERE (r.day < ? OR (r.day = ? AND r.hour <= ?))
-                """)
+                """.format(
+                topic_link_table=schema["content_link_table"],
+                reaction_content_id_column=schema["reaction_content_id_column"],
+                content_id_column=schema["content_id_column"],
+            ))
             params.extend([filter_day, filter_day, filter_hour])
 
         if "reported" in table_names and reported_round_column:
+            reported_content_filter = (
+                f" AND rp.{schema['reported_content_type_column']} = 'photo'"
+                if schema["reported_content_type_column"] and schema["is_photo_sharing"]
+                else ""
+            )
             event_queries.append(f"""
                 SELECT
                     pt.topic_id AS topic_id,
-                    rp.from_uid AS actor_id,
+                    rp.{schema["reported_actor_column"]} AS actor_id,
                     r.day AS day,
                     r.hour AS hour,
                     'report' AS event_type
-                FROM post_topics pt
-                JOIN reported rp ON rp.to_post = pt.post_id
+                FROM {schema["content_link_table"]} pt
+                JOIN reported rp ON rp.{schema["reported_content_id_column"]} = pt.{schema["content_id_column"]}{reported_content_filter}
                 JOIN rounds r ON r.id = rp.{reported_round_column}
                 WHERE (r.day < ? OR (r.day = ? AND r.hour <= ?))
                 """)
@@ -5323,12 +5393,8 @@ def _build_hashtag_evolution_payload(
 ):
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = sqlite3.Row
-        table_names = {
-            row["name"] if isinstance(row, sqlite3.Row) else row[0]
-            for row in conn.execute(
-                "SELECT name FROM sqlite_master WHERE type = 'table'"
-            ).fetchall()
-        }
+        schema = _analytics_content_schema(conn)
+        table_names = schema["table_names"]
         reported_round_column = (
             _table_round_column(conn, "reported") if "reported" in table_names else None
         )
@@ -5343,11 +5409,15 @@ def _build_hashtag_evolution_payload(
                 r.day AS day,
                 r.hour AS hour,
                 'content' AS event_type
-            FROM post_hashtags ph
-            JOIN post p ON p.id = ph.post_id
+            FROM {hashtag_link_table} ph
+            JOIN {content_table} p ON p.id = ph.{content_id_column}
             JOIN rounds r ON r.id = p.round
             WHERE (r.day < ? OR (r.day = ? AND r.hour <= ?))
-            """]
+            """.format(
+            hashtag_link_table=schema["hashtag_link_table"],
+            content_table=schema["content_table"],
+            content_id_column=schema["content_id_column"],
+        )]
         params = [filter_day, filter_day, filter_hour]
 
         if "reactions" in table_names:
@@ -5358,23 +5428,32 @@ def _build_hashtag_evolution_payload(
                     r.day AS day,
                     r.hour AS hour,
                     'reaction' AS event_type
-                FROM post_hashtags ph
-                JOIN reactions re ON re.post_id = ph.post_id
+                FROM {hashtag_link_table} ph
+                JOIN reactions re ON re.{reaction_content_id_column} = ph.{content_id_column}
                 JOIN rounds r ON r.id = re.round
                 WHERE (r.day < ? OR (r.day = ? AND r.hour <= ?))
-                """)
+                """.format(
+                hashtag_link_table=schema["hashtag_link_table"],
+                reaction_content_id_column=schema["reaction_content_id_column"],
+                content_id_column=schema["content_id_column"],
+            ))
             params.extend([filter_day, filter_day, filter_hour])
 
         if "reported" in table_names and reported_round_column:
+            reported_content_filter = (
+                f" AND rp.{schema['reported_content_type_column']} = 'photo'"
+                if schema["reported_content_type_column"] and schema["is_photo_sharing"]
+                else ""
+            )
             event_queries.append(f"""
                 SELECT
                     ph.hashtag_id AS hashtag_id,
-                    rp.from_uid AS actor_id,
+                    rp.{schema["reported_actor_column"]} AS actor_id,
                     r.day AS day,
                     r.hour AS hour,
                     'report' AS event_type
-                FROM post_hashtags ph
-                JOIN reported rp ON rp.to_post = ph.post_id
+                FROM {schema["hashtag_link_table"]} ph
+                JOIN reported rp ON rp.{schema["reported_content_id_column"]} = ph.{schema["content_id_column"]}{reported_content_filter}
                 JOIN rounds r ON r.id = rp.{reported_round_column}
                 WHERE (r.day < ? OR (r.day = ? AND r.hour <= ?))
                 """)
@@ -6407,16 +6486,19 @@ def _build_emotion_analytics_payload(db_path, filter_day, filter_hour):
     """Aggregate emotion statistics up to a selected simulation time."""
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = sqlite3.Row
+        schema = _analytics_content_schema(conn)
         time_condition = _build_annotation_time_condition("r")
+        content_label = "Photo" if schema["is_photo_sharing"] else "Post"
+        content_label_plural = "Photos" if schema["is_photo_sharing"] else "Posts"
 
         distribution_rows = conn.execute(
             f"""
             SELECT
                 e.emotion,
                 COUNT(*) AS emotion_count
-            FROM post_emotions pe
+            FROM {schema["emotion_table"]} pe
             JOIN emotions e ON e.id = pe.emotion_id
-            JOIN post p ON p.id = pe.post_id
+            JOIN {schema["content_table"]} p ON p.id = pe.{schema["content_id_column"]}
             JOIN rounds r ON r.id = p.round
             WHERE {time_condition}
             GROUP BY e.emotion
@@ -6429,10 +6511,10 @@ def _build_emotion_analytics_payload(db_path, filter_day, filter_hour):
             f"""
             SELECT
                 COUNT(*) AS total_tags,
-                COUNT(DISTINCT pe.post_id) AS annotated_posts,
+                COUNT(DISTINCT pe.{schema["content_id_column"]}) AS annotated_posts,
                 COUNT(DISTINCT pe.emotion_id) AS unique_emotions
-            FROM post_emotions pe
-            JOIN post p ON p.id = pe.post_id
+            FROM {schema["emotion_table"]} pe
+            JOIN {schema["content_table"]} p ON p.id = pe.{schema["content_id_column"]}
             JOIN rounds r ON r.id = p.round
             WHERE {time_condition}
             """,
@@ -6449,9 +6531,9 @@ def _build_emotion_analytics_payload(db_path, filter_day, filter_hour):
                     r.day AS day,
                     e.emotion,
                     COUNT(*) AS emotion_count
-                FROM post_emotions pe
+                FROM {schema["emotion_table"]} pe
                 JOIN emotions e ON e.id = pe.emotion_id
-                JOIN post p ON p.id = pe.post_id
+                JOIN {schema["content_table"]} p ON p.id = pe.{schema["content_id_column"]}
                 JOIN rounds r ON r.id = p.round
                 WHERE (r.day < ? OR (r.day = ? AND r.hour <= ?))
                   AND e.emotion IN ({placeholders})
@@ -6462,13 +6544,13 @@ def _build_emotion_analytics_payload(db_path, filter_day, filter_hour):
             ).fetchall()
 
         secondary_rows = conn.execute(
-            """
+            f"""
             SELECT
                 r.day AS day,
                 COUNT(*) AS emotion_tags,
-                COUNT(DISTINCT pe.post_id) AS annotated_posts
-            FROM post_emotions pe
-            JOIN post p ON p.id = pe.post_id
+                COUNT(DISTINCT pe.{schema["content_id_column"]}) AS annotated_posts
+            FROM {schema["emotion_table"]} pe
+            JOIN {schema["content_table"]} p ON p.id = pe.{schema["content_id_column"]}
             JOIN rounds r ON r.id = p.round
             WHERE (r.day < ? OR (r.day = ? AND r.hour <= ?))
             GROUP BY r.day
@@ -6490,7 +6572,7 @@ def _build_emotion_analytics_payload(db_path, filter_day, filter_hour):
     stats = [
         {
             "key": "annotated_posts",
-            "label": "Annotated Posts",
+            "label": f"Annotated {content_label_plural}",
             "value": _safe_int(stats_row["annotated_posts"]),
             "color": "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
         },
@@ -6527,7 +6609,7 @@ def _build_emotion_analytics_payload(db_path, filter_day, filter_hour):
         "stats": stats,
         "distribution": {
             "title": "Emotion Distribution",
-            "description": "Current distribution of annotated emotions.",
+            "description": f"Current distribution of annotated {content_label_plural.lower()}.",
             "type": "bar",
             "labels": [row["emotion"] for row in distribution_rows[:10]],
             "datasets": [
@@ -6558,7 +6640,7 @@ def _build_emotion_analytics_payload(db_path, filter_day, filter_hour):
         },
         "secondary": {
             "title": "Annotation Volume",
-            "description": "Total emotion tags versus distinct annotated posts per day.",
+            "description": f"Total emotion tags versus distinct annotated {content_label_plural.lower()} per day.",
             "type": "bar",
             "labels": [f"Day {int(row['day'])}" for row in secondary_rows],
             "datasets": [
@@ -6568,7 +6650,7 @@ def _build_emotion_analytics_payload(db_path, filter_day, filter_hour):
                     "backgroundColor": "#c084fc",
                 },
                 {
-                    "label": "Annotated Posts",
+                    "label": f"Annotated {content_label_plural}",
                     "data": [
                         _safe_int(row["annotated_posts"]) for row in secondary_rows
                     ],
@@ -6578,7 +6660,7 @@ def _build_emotion_analytics_payload(db_path, filter_day, filter_hour):
             "options": {"beginAtZero": True},
         },
         "summary": {
-            "title": "Top Emotions",
+            "title": f"Top Emotions",
             "columns": ["Emotion", "Tags"],
             "rows": [
                 [row["emotion"], _safe_int(row["emotion_count"])]
@@ -6594,12 +6676,8 @@ def _build_recsys_evolution_payload(
 ):
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = sqlite3.Row
-        table_names = {
-            row["name"] if isinstance(row, sqlite3.Row) else row[0]
-            for row in conn.execute(
-                "SELECT name FROM sqlite_master WHERE type = 'table'"
-            ).fetchall()
-        }
+        schema = _analytics_content_schema(conn)
+        table_names = schema["table_names"]
         user_rows = conn.execute("""
             SELECT id, username, COALESCE(NULLIF(TRIM(recsys_type), ''), 'unknown') AS recsys_type
             FROM user_mgmt
@@ -6611,12 +6689,12 @@ def _build_recsys_evolution_payload(
         }
         recommendation_rows = conn.execute(
             """
-            SELECT rec.user_id, rec.post_ids, rec.round, r.day, r.hour
+            SELECT rec.user_id, rec.{ids_column}, rec.round, r.day, r.hour
             FROM recommendations rec
             JOIN rounds r ON r.id = rec.round
             WHERE (r.day < ? OR (r.day = ? AND r.hour <= ?))
             ORDER BY r.day ASC, r.hour ASC, rec.id ASC
-            """,
+            """.format(ids_column=schema["recommendation_ids_column"]),
             (filter_day, filter_day, filter_hour),
         ).fetchall()
 
@@ -6624,7 +6702,9 @@ def _build_recsys_evolution_payload(
         expanded_rows = []
         for row in recommendation_rows:
             receiver_uid = str(row["user_id"])
-            parsed_post_ids = _parse_recommendation_post_ids(row["post_ids"])
+            parsed_post_ids = _parse_recommendation_post_ids(
+                row[schema["recommendation_ids_column"]]
+            )
             if not parsed_post_ids:
                 continue
             post_ids.extend(parsed_post_ids)
@@ -6644,14 +6724,16 @@ def _build_recsys_evolution_payload(
             placeholders = ",".join(["?"] * len(unique_post_ids))
             post_rows = conn.execute(
                 f"""
-                SELECT id, user_id, COALESCE(tweet, '') AS tweet
-                FROM post
+                SELECT id, user_id, {schema["content_summary_expression"]} AS content_text
+                FROM {schema["content_table"]}
                 WHERE id IN ({placeholders})
                 """,
                 tuple(unique_post_ids),
             ).fetchall()
         post_authors = {str(row["id"]): str(row["user_id"]) for row in post_rows}
-        post_texts = {str(row["id"]): str(row["tweet"] or "") for row in post_rows}
+        post_texts = {
+            str(row["id"]): str(row["content_text"] or "") for row in post_rows
+        }
 
         recommendation_events_by_recsys = defaultdict(int)
         recommendation_count_by_post = defaultdict(int)
@@ -7224,7 +7306,10 @@ _ANNOTATION_ANALYTICS_REGISTRY = {
     "emotion": {
         "label": "emotion",
         "title": "Emotion Statistics",
-        "required_tables": {"post_emotions", "emotions", "post", "rounds"},
+        "required_table_sets": (
+            {"post_emotions", "emotions", "post", "rounds"},
+            {"photo_emotions", "emotions", "photos", "rounds"},
+        ),
         "builder": _build_emotion_analytics_payload,
     },
 }
@@ -7238,7 +7323,16 @@ def _render_annotation_analytics_page(expid, annotation_key):
     if error_response is not None:
         return error_response
 
-    if not _experiment_db_has_required_tables(db_path, config["required_tables"]):
+    required_table_sets = config.get("required_table_sets")
+    if required_table_sets is not None:
+        has_required_tables = _experiment_db_has_any_required_tables(
+            db_path, required_table_sets
+        )
+    else:
+        has_required_tables = _experiment_db_has_required_tables(
+            db_path, config["required_tables"]
+        )
+    if not has_required_tables:
         flash(
             f"The current experiment database does not contain {config['title'].lower()} tables.",
             "warning",
@@ -7285,7 +7379,16 @@ def _annotation_analytics_json(expid, annotation_key):
     if error_response is not None:
         return jsonify({"error": f"{config['title']} not available"}), 400
 
-    if not _experiment_db_has_required_tables(db_path, config["required_tables"]):
+    required_table_sets = config.get("required_table_sets")
+    if required_table_sets is not None:
+        has_required_tables = _experiment_db_has_any_required_tables(
+            db_path, required_table_sets
+        )
+    else:
+        has_required_tables = _experiment_db_has_required_tables(
+            db_path, config["required_tables"]
+        )
+    if not has_required_tables:
         return jsonify({"error": f"{config['title']} tables not available"}), 400
 
     filter_day = request.args.get("day", type=int, default=1)
@@ -7362,8 +7465,11 @@ def topic_evolution(expid):
     if error_response is not None:
         return error_response
 
-    required_tables = {"post_topics", "post", "rounds", "user_mgmt"}
-    if not _experiment_db_has_required_tables(db_path, required_tables):
+    required_table_sets = (
+        {"post_topics", "post", "rounds", "user_mgmt"},
+        {"photo_topics", "photos", "rounds", "user_mgmt"},
+    )
+    if not _experiment_db_has_any_required_tables(db_path, required_table_sets):
         flash(
             "The current experiment database does not contain topic-evolution tables.",
             "warning",
@@ -7412,8 +7518,11 @@ def topic_evolution_data(expid):
     if error_response is not None:
         return jsonify({"error": "Topic evolution not available"}), 400
 
-    required_tables = {"post_topics", "post", "rounds", "user_mgmt"}
-    if not _experiment_db_has_required_tables(db_path, required_tables):
+    required_table_sets = (
+        {"post_topics", "post", "rounds", "user_mgmt"},
+        {"photo_topics", "photos", "rounds", "user_mgmt"},
+    )
+    if not _experiment_db_has_any_required_tables(db_path, required_table_sets):
         return jsonify({"error": "Topic-evolution tables not available"}), 400
 
     filter_day = request.args.get("day", type=int, default=1)
@@ -7451,8 +7560,11 @@ def hashtag_evolution(expid):
     if error_response is not None:
         return error_response
 
-    required_tables = {"post_hashtags", "hashtags", "post", "rounds", "user_mgmt"}
-    if not _experiment_db_has_required_tables(db_path, required_tables):
+    required_table_sets = (
+        {"post_hashtags", "hashtags", "post", "rounds", "user_mgmt"},
+        {"photo_hashtags", "hashtags", "photos", "rounds", "user_mgmt"},
+    )
+    if not _experiment_db_has_any_required_tables(db_path, required_table_sets):
         flash(
             "The current experiment database does not contain hashtag-evolution tables.",
             "warning",
@@ -7500,8 +7612,11 @@ def hashtag_evolution_data(expid):
     if error_response is not None:
         return jsonify({"error": "Hashtag evolution not available"}), 400
 
-    required_tables = {"post_hashtags", "hashtags", "post", "rounds", "user_mgmt"}
-    if not _experiment_db_has_required_tables(db_path, required_tables):
+    required_table_sets = (
+        {"post_hashtags", "hashtags", "post", "rounds", "user_mgmt"},
+        {"photo_hashtags", "hashtags", "photos", "rounds", "user_mgmt"},
+    )
+    if not _experiment_db_has_any_required_tables(db_path, required_table_sets):
         return jsonify({"error": "Hashtag-evolution tables not available"}), 400
 
     filter_day = request.args.get("day", type=int, default=1)
@@ -7538,8 +7653,11 @@ def recsys_evolution(expid):
     if error_response is not None:
         return error_response
 
-    required_tables = {"recommendations", "post", "rounds", "user_mgmt"}
-    if not _experiment_db_has_required_tables(db_path, required_tables):
+    required_table_sets = (
+        {"recommendations", "post", "rounds", "user_mgmt"},
+        {"recommendations", "photos", "rounds", "user_mgmt"},
+    )
+    if not _experiment_db_has_any_required_tables(db_path, required_table_sets):
         flash(
             "The current experiment database does not contain recommendation-tracking tables.",
             "warning",
@@ -7581,8 +7699,11 @@ def recsys_evolution_data(expid):
     if error_response is not None:
         return jsonify({"error": "Recommendation analytics not available"}), 400
 
-    required_tables = {"recommendations", "post", "rounds", "user_mgmt"}
-    if not _experiment_db_has_required_tables(db_path, required_tables):
+    required_table_sets = (
+        {"recommendations", "post", "rounds", "user_mgmt"},
+        {"recommendations", "photos", "rounds", "user_mgmt"},
+    )
+    if not _experiment_db_has_any_required_tables(db_path, required_table_sets):
         return jsonify({"error": "Recommendation-tracking tables not available"}), 400
 
     filter_day = request.args.get("day", type=int, default=1)
