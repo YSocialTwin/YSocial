@@ -2,10 +2,10 @@
 Test for new optional client form fields: network structure and hourly activity rates.
 """
 
+import re
 from unittest.mock import Mock, patch
 
 import pytest
-import re
 
 pytestmark = pytest.mark.integration
 
@@ -235,7 +235,11 @@ class TestClientFormFields:
             template_source = open(template_path, "r", encoding="utf-8").read()
             uncommented_source = re.sub(r"<!--.*?-->", "", template_source, flags=re.S)
 
-            assert 'name="llm_backend" id="llm_backend" value="ollama"' in template_source
+            assert (
+                'name="llm_backend" id="llm_backend" value="ollama"' in template_source
+            )
             assert "LLM Service" in template_source
-            assert 'Embedded vLLM' in template_source
-            assert '<select name="llm_backend" id="llm_backend"' not in uncommented_source
+            assert "Embedded vLLM" in template_source
+            assert (
+                '<select name="llm_backend" id="llm_backend"' not in uncommented_source
+            )
