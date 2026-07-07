@@ -164,7 +164,7 @@ def setup_experiment_context():
                 "db_exp"
             )
         if not hasattr(g, "original_db_exp_engine"):
-            g.original_db_exp_engine = db.engines.get("db_exp")
+            g.original_db_exp_engine = db.get_engine(bind="db_exp")
 
         # Dynamically override db_exp bind and cached engine to point to the
         # current experiment's database.
