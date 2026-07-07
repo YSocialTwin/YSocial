@@ -20,6 +20,21 @@ import numpy as np
 
 from y_web.src.models import ActivityProfile, PopulationActivityProfile
 
+_REPLY_TO_MENTION_DISABLED = False
+
+
+def _is_fatal_reply_error(exc: Exception) -> bool:
+    """Return True when a reply failure is irrecoverable for the current runtime."""
+    message = f"{type(exc).__name__}: {exc}".lower()
+    fatal_markers = (
+        "actordiederror",
+        "actoralreadyexistserror",
+        "the actor died unexpectedly before finishing this task",
+        "owner's node has crashed",
+        "owner worker exit type: system_error",
+    )
+    return any(marker in message for marker in fatal_markers)
+
 
 def _rule_based_agents_enabled(config):
     llm_agents = (config or {}).get("agents", {}).get("llm_agents")
@@ -233,6 +248,7 @@ def process_agent(g, archetypes, cl, exp, tid, FakeAgent, local_random):
     :param local_random: Thread-local random.Random instance for thread safety
     :return: Tuple of (agent_name, success_flag)
     """
+    global _REPLY_TO_MENTION_DISABLED
 
     try:
         # Canonical client logs aggregate by simulation day/hour.
@@ -314,14 +330,27 @@ def process_agent(g, archetypes, cl, exp, tid, FakeAgent, local_random):
             try:
                 # reply to received mentions
                 if g not in cl.pages:
-                    if not archetypes["enabled"]:
-                        g.reply(tid=tid)
-                    else:
-                        # Use getattr with default to handle agents without archetype attribute
-                        if (
-                            getattr(g, "archetype", "broadcaster") == "broadcaster"
-                        ):  # only broadcasters reply
-                            g.reply(tid=tid)
+                    if not _REPLY_TO_MENTION_DISABLED:
+                        should_reply = not archetypes["enabled"]
+                        if archetypes["enabled"]:
+                            # Use getattr with default to handle agents without archetype attribute
+                            should_reply = (
+                                getattr(g, "archetype", "broadcaster")
+                                == "broadcaster"
+                            )
+
+                        if should_reply:
+                            try:
+                                g.reply(tid=tid)
+                            except Exception as reply_exc:
+                                if _is_fatal_reply_error(reply_exc):
+                                    _REPLY_TO_MENTION_DISABLED = True
+                                    print(
+                                        "Warning: disabling mention replies for the remainder "
+                                        "of this client run after a fatal Ray actor failure",
+                                        file=sys.stderr,
+                                    )
+                                raise
 
                 # select action to be performed
                 g.select_action(
