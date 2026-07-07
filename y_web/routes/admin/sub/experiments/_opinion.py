@@ -4170,8 +4170,11 @@ def _network_graph_metrics(graph):
         (len(component) for component in weak_components), default=0
     )
     largest_component_share = _safe_ratio(largest_component_size, node_count, digits=4)
-    reciprocity = nx.reciprocity(graph)
-    reciprocity = 0.0 if reciprocity is None else round(float(reciprocity), 4)
+    if node_count < 2 or edge_count == 0:
+        reciprocity = 0.0
+    else:
+        reciprocity = nx.reciprocity(graph)
+        reciprocity = 0.0 if reciprocity is None else round(float(reciprocity), 4)
     undirected = graph.to_undirected()
     clustering = (
         round(float(nx.transitivity(undirected)), 4)

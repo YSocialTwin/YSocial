@@ -1,8 +1,13 @@
 import sqlite3
+import importlib
+from types import SimpleNamespace
 
 import pytest
 
-from y_web.routes.admin.sub.experiments._opinion import _build_network_analytics_payload
+from y_web.routes.admin.sub.experiments._opinion import (
+    _build_network_analytics_payload,
+    _resolve_network_analysis_db_path,
+)
 
 pytestmark = pytest.mark.unit
 
@@ -211,3 +216,67 @@ def test_ego_network_includes_alter_alter_edges(tmp_path):
     assert ("u1", "u2") in rendered_edges
     assert ("u1", "u3") in rendered_edges
     assert ("u2", "u3") in rendered_edges
+
+
+def test_photo_sharing_network_analysis_handles_empty_graph(tmp_path):
+    db_path = tmp_path / "photo_network.db"
+    with sqlite3.connect(db_path) as conn:
+        conn.executescript("""
+            CREATE TABLE user_mgmt (
+                id TEXT PRIMARY KEY,
+                username TEXT NOT NULL
+            );
+            CREATE TABLE rounds (
+                id TEXT PRIMARY KEY,
+                day INTEGER NOT NULL,
+                hour INTEGER NOT NULL
+            );
+            CREATE TABLE follow (
+                id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                follower_id TEXT NOT NULL,
+                action TEXT,
+                round TEXT
+            );
+            """)
+        conn.executemany(
+            "INSERT INTO user_mgmt(id, username) VALUES (?, ?)",
+            [("u1", "alice"), ("u2", "bob")],
+        )
+        conn.executemany(
+            "INSERT INTO rounds(id, day, hour) VALUES (?, ?, ?)",
+            [("r1", 1, 1), ("r2", 2, 1)],
+        )
+        conn.commit()
+
+    analytics = _build_network_analytics_payload(
+        str(db_path), filter_day=2, filter_hour=1, network_type="follow"
+    )
+
+    assert analytics["secondary"]["datasets"][0]["data"] == [0, 0]
+    assert analytics["secondary"]["datasets"][1]["data"] == [0, 0]
+    stats = {item["key"]: item["value"] for item in analytics["stats"]}
+    assert stats["node_count"] == 2
+    assert stats["edge_count"] == 0
+    assert stats["component_count"] == 2
+    assert stats["largest_component_size"] == 1
+
+
+def test_photo_sharing_network_analysis_prefers_yphotosharing_db(tmp_path, monkeypatch):
+    opinion_mod = importlib.import_module("y_web.routes.admin.sub.experiments._opinion")
+
+    exp_uid = "test-photo-exp"
+    photo_dir = tmp_path / "y_web" / "experiments" / exp_uid
+    photo_dir.mkdir(parents=True)
+    photo_db = photo_dir / "yphotosharing.db"
+    photo_db.write_text("", encoding="utf-8")
+
+    monkeypatch.setattr(opinion_mod, "get_writable_path", lambda: str(tmp_path))
+
+    experiment = SimpleNamespace(
+        platform_type="photo_sharing",
+        db_name=f"experiments/{exp_uid}/database_server.db",
+    )
+
+    resolved = _resolve_network_analysis_db_path(experiment)
+    assert resolved == str(photo_db)
