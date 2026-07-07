@@ -40,8 +40,8 @@ def test_experiment_db_bind_refresh_works_without_db_engines(app, monkeypatch):
         original_db_exp = app.config["SQLALCHEMY_BINDS"]["db_exp"]
         app.config["SQLALCHEMY_BINDS"]["db_exp_4"] = "sqlite:////tmp/exp_4.db"
 
-        original_bind, original_engine, refreshed_engine = context._activate_db_exp_bind(
-            4
+        original_bind, original_engine, refreshed_engine = (
+            context._activate_db_exp_bind(4)
         )
 
         assert original_bind == original_db_exp
