@@ -4188,25 +4188,57 @@ def _analytics_content_schema(conn):
         table_name in table_names
         for table_name in ("photo_topics", "photo_hashtags", "photo_emotions", "photos")
     )
-    reactions_columns = _table_columns(conn, "reactions") if "reactions" in table_names else set()
-    reported_columns = _table_columns(conn, "reported") if "reported" in table_names else set()
+    reactions_columns = (
+        _table_columns(conn, "reactions") if "reactions" in table_names else set()
+    )
+    reported_columns = (
+        _table_columns(conn, "reported") if "reported" in table_names else set()
+    )
     recommendations_columns = (
-        _table_columns(conn, "recommendations") if "recommendations" in table_names else set()
+        _table_columns(conn, "recommendations")
+        if "recommendations" in table_names
+        else set()
     )
     return {
         "table_names": table_names,
         "is_photo_sharing": is_photo_sharing,
-        "content_table": "photos" if is_photo_sharing and "photos" in table_names else "post",
-        "content_link_table": "photo_topics" if is_photo_sharing and "photo_topics" in table_names else "post_topics",
-        "hashtag_link_table": "photo_hashtags" if is_photo_sharing and "photo_hashtags" in table_names else "post_hashtags",
-        "emotion_table": "photo_emotions" if is_photo_sharing and "photo_emotions" in table_names else "post_emotions",
+        "content_table": (
+            "photos" if is_photo_sharing and "photos" in table_names else "post"
+        ),
+        "content_link_table": (
+            "photo_topics"
+            if is_photo_sharing and "photo_topics" in table_names
+            else "post_topics"
+        ),
+        "hashtag_link_table": (
+            "photo_hashtags"
+            if is_photo_sharing and "photo_hashtags" in table_names
+            else "post_hashtags"
+        ),
+        "emotion_table": (
+            "photo_emotions"
+            if is_photo_sharing and "photo_emotions" in table_names
+            else "post_emotions"
+        ),
         "content_id_column": "photo_id" if is_photo_sharing else "post_id",
-        "reaction_content_id_column": "photo_id" if "photo_id" in reactions_columns else "post_id",
-        "reported_content_id_column": "content_id" if "content_id" in reported_columns else "to_post",
-        "reported_round_column": _table_round_column(conn, "reported") if "reported" in table_names else None,
-        "reported_actor_column": "reporter_id" if "reporter_id" in reported_columns else "from_uid",
-        "reported_content_type_column": "content_type" if "content_type" in reported_columns else None,
-        "recommendation_ids_column": "photo_ids" if "photo_ids" in recommendations_columns else "post_ids",
+        "reaction_content_id_column": (
+            "photo_id" if "photo_id" in reactions_columns else "post_id"
+        ),
+        "reported_content_id_column": (
+            "content_id" if "content_id" in reported_columns else "to_post"
+        ),
+        "reported_round_column": (
+            _table_round_column(conn, "reported") if "reported" in table_names else None
+        ),
+        "reported_actor_column": (
+            "reporter_id" if "reporter_id" in reported_columns else "from_uid"
+        ),
+        "reported_content_type_column": (
+            "content_type" if "content_type" in reported_columns else None
+        ),
+        "recommendation_ids_column": (
+            "photo_ids" if "photo_ids" in recommendations_columns else "post_ids"
+        ),
         "content_text_column": "caption" if is_photo_sharing else "tweet",
         "content_summary_expression": (
             "COALESCE(NULLIF(TRIM(caption), ''), NULLIF(TRIM(alt_text), ''), NULLIF(TRIM(image_url), ''))"
@@ -4269,9 +4301,7 @@ def _available_network_analysis_types(db_path):
         }
     if "follow" in table_names:
         available.append("follow")
-    if "mentions" in table_names and (
-        "post" in table_names or "photos" in table_names
-    ):
+    if "mentions" in table_names and ("post" in table_names or "photos" in table_names):
         available.append("mention")
     return available
 
@@ -4824,7 +4854,8 @@ def _build_topic_evolution_payload(
             conn.execute("SELECT COUNT(*) AS c FROM user_mgmt").fetchone()["c"]
         )
 
-        event_queries = ["""
+        event_queries = [
+            """
             SELECT
                 pt.topic_id AS topic_id,
                 p.user_id AS actor_id,
@@ -4836,14 +4867,16 @@ def _build_topic_evolution_payload(
             JOIN rounds r ON r.id = p.round
             WHERE (r.day < ? OR (r.day = ? AND r.hour <= ?))
             """.format(
-            topic_link_table=schema["content_link_table"],
-            content_table=schema["content_table"],
-            content_id_column=schema["content_id_column"],
-        )]
+                topic_link_table=schema["content_link_table"],
+                content_table=schema["content_table"],
+                content_id_column=schema["content_id_column"],
+            )
+        ]
         params = [filter_day, filter_day, filter_hour]
 
         if "reactions" in table_names:
-            event_queries.append("""
+            event_queries.append(
+                """
                 SELECT
                     pt.topic_id AS topic_id,
                     re.user_id AS actor_id,
@@ -4855,10 +4888,11 @@ def _build_topic_evolution_payload(
                 JOIN rounds r ON r.id = re.round
                 WHERE (r.day < ? OR (r.day = ? AND r.hour <= ?))
                 """.format(
-                topic_link_table=schema["content_link_table"],
-                reaction_content_id_column=schema["reaction_content_id_column"],
-                content_id_column=schema["content_id_column"],
-            ))
+                    topic_link_table=schema["content_link_table"],
+                    reaction_content_id_column=schema["reaction_content_id_column"],
+                    content_id_column=schema["content_id_column"],
+                )
+            )
             params.extend([filter_day, filter_day, filter_hour])
 
         if "reported" in table_names and reported_round_column:
@@ -5402,7 +5436,8 @@ def _build_hashtag_evolution_payload(
             conn.execute("SELECT COUNT(*) AS c FROM user_mgmt").fetchone()["c"]
         )
 
-        event_queries = ["""
+        event_queries = [
+            """
             SELECT
                 ph.hashtag_id AS hashtag_id,
                 p.user_id AS actor_id,
@@ -5414,14 +5449,16 @@ def _build_hashtag_evolution_payload(
             JOIN rounds r ON r.id = p.round
             WHERE (r.day < ? OR (r.day = ? AND r.hour <= ?))
             """.format(
-            hashtag_link_table=schema["hashtag_link_table"],
-            content_table=schema["content_table"],
-            content_id_column=schema["content_id_column"],
-        )]
+                hashtag_link_table=schema["hashtag_link_table"],
+                content_table=schema["content_table"],
+                content_id_column=schema["content_id_column"],
+            )
+        ]
         params = [filter_day, filter_day, filter_hour]
 
         if "reactions" in table_names:
-            event_queries.append("""
+            event_queries.append(
+                """
                 SELECT
                     ph.hashtag_id AS hashtag_id,
                     re.user_id AS actor_id,
@@ -5433,10 +5470,11 @@ def _build_hashtag_evolution_payload(
                 JOIN rounds r ON r.id = re.round
                 WHERE (r.day < ? OR (r.day = ? AND r.hour <= ?))
                 """.format(
-                hashtag_link_table=schema["hashtag_link_table"],
-                reaction_content_id_column=schema["reaction_content_id_column"],
-                content_id_column=schema["content_id_column"],
-            ))
+                    hashtag_link_table=schema["hashtag_link_table"],
+                    reaction_content_id_column=schema["reaction_content_id_column"],
+                    content_id_column=schema["content_id_column"],
+                )
+            )
             params.extend([filter_day, filter_day, filter_hour])
 
         if "reported" in table_names and reported_round_column:

@@ -17,8 +17,7 @@ pytestmark = pytest.mark.unit
 
 def _create_photo_sharing_analytics_db(db_path):
     with sqlite3.connect(db_path) as conn:
-        conn.executescript(
-            """
+        conn.executescript("""
             CREATE TABLE user_mgmt (
                 id TEXT PRIMARY KEY,
                 username TEXT NOT NULL,
@@ -101,8 +100,7 @@ def _create_photo_sharing_analytics_db(db_path):
                 reason TEXT,
                 round_id TEXT
             );
-            """
-        )
+            """)
         conn.executemany(
             "INSERT INTO user_mgmt(id, username, recsys_type) VALUES (?, ?, ?)",
             [
@@ -146,7 +144,11 @@ def _create_photo_sharing_analytics_db(db_path):
         )
         conn.executemany(
             "INSERT INTO photo_emotions(id, photo_id, emotion_id, score, viral_score) VALUES (?, ?, ?, ?, ?)",
-            [("pe1", "p1", "e1", 0.9, 0.4), ("pe2", "p2", "e1", 0.8, 0.3), ("pe3", "p3", "e2", 0.7, 0.2)],
+            [
+                ("pe1", "p1", "e1", 0.9, 0.4),
+                ("pe2", "p2", "e1", 0.8, 0.3),
+                ("pe3", "p3", "e2", 0.7, 0.2),
+            ],
         )
         conn.executemany(
             "INSERT INTO recommendations(id, user_id, photo_ids, round) VALUES (?, ?, ?, ?)",
@@ -247,7 +249,9 @@ def test_photo_emotion_analytics_use_photo_emotions(tmp_path):
     db_path = tmp_path / "photo_emotion.db"
     _create_photo_sharing_analytics_db(db_path)
 
-    analytics = _build_emotion_analytics_payload(str(db_path), filter_day=2, filter_hour=1)
+    analytics = _build_emotion_analytics_payload(
+        str(db_path), filter_day=2, filter_hour=1
+    )
 
     stats = {item["key"]: item["value"] for item in analytics["stats"]}
     assert stats["annotated_posts"] == 3
