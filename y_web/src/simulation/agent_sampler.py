@@ -335,8 +335,7 @@ def process_agent(g, archetypes, cl, exp, tid, FakeAgent, local_random):
                         if archetypes["enabled"]:
                             # Use getattr with default to handle agents without archetype attribute
                             should_reply = (
-                                getattr(g, "archetype", "broadcaster")
-                                == "broadcaster"
+                                getattr(g, "archetype", "broadcaster") == "broadcaster"
                             )
 
                         if should_reply:
