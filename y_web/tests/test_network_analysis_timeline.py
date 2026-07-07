@@ -1,5 +1,5 @@
-import sqlite3
 import importlib
+import sqlite3
 from types import SimpleNamespace
 
 import pytest
