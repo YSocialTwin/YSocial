@@ -86,7 +86,7 @@ def _activate_db_exp_bind(exp_id):
     binds = current_app.config["SQLALCHEMY_BINDS"]
     target_uri = binds.get(bind_key)
     original_bind = binds.get("db_exp")
-    original_engine = db.engines.get("db_exp")
+    original_engine = db.get_engine(bind="db_exp")
 
     if not target_uri:
         return original_bind, original_engine, None
@@ -97,10 +97,7 @@ def _activate_db_exp_bind(exp_id):
 
     binds["db_exp"] = target_uri
     db.session.remove()
-    engine_options = dict(db._engine_options)
-    engine_options["url"] = target_uri
-    refreshed_engine = db._make_engine("db_exp", engine_options, current_app)
-    db.engines["db_exp"] = refreshed_engine
+    refreshed_engine = db.get_engine(bind="db_exp")
     return original_bind, original_engine, refreshed_engine
 
 
@@ -114,11 +111,6 @@ def _restore_db_exp_bind(original_bind, original_engine, refreshed_engine=None):
         binds.pop("db_exp", None)
 
     db.session.remove()
-    if original_engine is not None:
-        db.engines["db_exp"] = original_engine
-    else:
-        db.engines.pop("db_exp", None)
-
     if refreshed_engine is not None and refreshed_engine is not original_engine:
         refreshed_engine.dispose()
 
