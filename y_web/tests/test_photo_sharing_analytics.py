@@ -8,8 +8,10 @@ from y_web.routes.admin.sub.experiments._opinion import (
     _build_emotion_analytics_payload,
     _build_hashtag_evolution_payload,
     _build_network_analytics_payload,
+    _build_sentiment_analytics_payload,
     _build_recsys_evolution_payload,
     _build_topic_evolution_payload,
+    _resolve_analytics_db_path,
 )
 
 pytestmark = pytest.mark.unit
@@ -64,6 +66,21 @@ def _create_photo_sharing_analytics_db(db_path):
             CREATE TABLE emotions (
                 id TEXT PRIMARY KEY,
                 emotion TEXT NOT NULL
+            );
+            CREATE TABLE post_sentiment (
+                id TEXT PRIMARY KEY,
+                post_id TEXT NOT NULL,
+                user_id TEXT NOT NULL,
+                topic_id TEXT,
+                round TEXT NOT NULL,
+                neg REAL,
+                pos REAL,
+                neu REAL,
+                compound REAL,
+                sentiment_parent TEXT,
+                is_post INTEGER,
+                is_comment INTEGER,
+                is_reaction INTEGER
             );
             CREATE TABLE recommendations (
                 id TEXT PRIMARY KEY,
@@ -183,6 +200,41 @@ def _create_photo_sharing_analytics_db(db_path):
             "INSERT INTO reported(id, reporter_id, content_id, content_type, reason, round_id) VALUES (?, ?, ?, ?, ?, ?)",
             [("rep1", "u4", "p2", "photo", "spam", "r2")],
         )
+        conn.executemany(
+            "INSERT INTO post_sentiment(id, post_id, user_id, topic_id, round, neg, pos, neu, compound, sentiment_parent, is_post, is_comment, is_reaction) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            [
+                (
+                    "s1",
+                    "p1",
+                    "u2",
+                    "t1",
+                    "r1",
+                    0.05,
+                    0.8,
+                    0.15,
+                    0.75,
+                    "",
+                    1,
+                    0,
+                    0,
+                ),
+                (
+                    "s2",
+                    "p2",
+                    "u3",
+                    "t1",
+                    "r2",
+                    0.10,
+                    0.7,
+                    0.20,
+                    0.55,
+                    "",
+                    1,
+                    0,
+                    0,
+                ),
+            ],
+        )
         conn.commit()
 
 
@@ -260,6 +312,18 @@ def test_photo_emotion_analytics_use_photo_emotions(tmp_path):
     assert analytics["summary"]["rows"][0] == ["joy", 2]
 
 
+def test_photo_sentiment_analytics_use_photo_tables(tmp_path):
+    db_path = tmp_path / "photo_sentiment.db"
+    _create_photo_sharing_analytics_db(db_path)
+
+    analytics = _build_sentiment_analytics_payload(str(db_path), filter_day=2, filter_hour=1)
+
+    stats = {item["key"]: item["value"] for item in analytics["stats"]}
+    assert stats["annotated_posts"] == 2
+    assert analytics["summary"]["rows"][0][0] == "alice"
+    assert analytics["summary"]["rows"][0][3] == "first photo"
+
+
 def test_photo_network_mention_analytics_use_photo_mentions(tmp_path):
     db_path = tmp_path / "photo_network.db"
     _create_photo_sharing_analytics_db(db_path)
@@ -274,3 +338,26 @@ def test_photo_network_mention_analytics_use_photo_mentions(tmp_path):
     assert analytics["network_type"] == "mention"
     assert analytics["secondary"]["datasets"][1]["data"] == [1, 2]
     assert analytics["secondary"]["datasets"][1]["label"] == "Mention Edges"
+
+
+def test_analytics_db_resolver_keeps_legacy_platforms_on_standard_path(
+    tmp_path, monkeypatch
+):
+    experiment = type(
+        "Experiment",
+        (),
+        {
+            "platform_type": "microblogging",
+            "db_name": "experiments/legacy/database_server.db",
+        },
+    )()
+
+    monkeypatch.setattr(
+        opinion_module,
+        "_resolve_network_analysis_db_path",
+        lambda exp: "/resolved/legacy.db",
+    )
+    assert _resolve_analytics_db_path(experiment) == "/resolved/legacy.db"
+
+    experiment.platform_type = "forum"
+    assert _resolve_analytics_db_path(experiment) == "/resolved/legacy.db"

@@ -6327,7 +6327,10 @@ def _build_sentiment_analytics_payload(db_path, filter_day, filter_hour):
     """Aggregate sentiment annotations up to a selected simulation time."""
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = sqlite3.Row
+        schema = _analytics_content_schema(conn)
         time_condition = _build_annotation_time_condition("r")
+        content_label = "Photo" if schema["is_photo_sharing"] else "Post"
+        content_label_plural = "Photos" if schema["is_photo_sharing"] else "Posts"
 
         snapshot = conn.execute(
             f"""
@@ -6389,17 +6392,24 @@ def _build_sentiment_analytics_payload(db_path, filter_day, filter_hour):
             )
             SELECT
                 u.username,
-                p.tweet,
+                {content_text_expression} AS content_text,
                 d.compound,
                 r.day,
                 r.hour
             FROM post_sentiment_dedup d
-            JOIN post p ON p.id = d.post_id
+            JOIN {content_table} p ON p.id = d.post_id
             JOIN user_mgmt u ON u.id = p.user_id
             JOIN rounds r ON r.id = p.round
             ORDER BY ABS(d.compound) DESC, r.day DESC, r.hour DESC
             LIMIT 10
-            """,
+            """.format(
+                content_table=schema["content_table"],
+                content_text_expression=(
+                    "COALESCE(NULLIF(TRIM(p.caption), ''), NULLIF(TRIM(p.alt_text), ''), NULLIF(TRIM(p.image_url), ''))"
+                    if schema["is_photo_sharing"]
+                    else "COALESCE(NULLIF(TRIM(p.tweet), ''), '')"
+                ),
+            ),
             (filter_day, filter_day, filter_hour),
         ).fetchall()
 
@@ -6407,7 +6417,7 @@ def _build_sentiment_analytics_payload(db_path, filter_day, filter_hour):
     stats = [
         {
             "key": "annotated_posts",
-            "label": "Annotated Posts",
+            "label": f"Annotated {content_label_plural}",
             "value": _safe_int(snapshot["annotated_posts"]),
             "color": "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
         },
@@ -6444,7 +6454,7 @@ def _build_sentiment_analytics_payload(db_path, filter_day, filter_hour):
         "stats": stats,
         "distribution": {
             "title": "Sentiment Distribution",
-            "description": "Current polarity breakdown across annotated posts.",
+            "description": f"Current polarity breakdown across annotated {content_label_plural.lower()}.",
             "type": "doughnut",
             "labels": ["Positive", "Neutral", "Negative"],
             "datasets": [
@@ -6481,7 +6491,7 @@ def _build_sentiment_analytics_payload(db_path, filter_day, filter_hour):
         },
         "secondary": {
             "title": "Sentiment Mix Over Time",
-            "description": "Positive, neutral, and negative post counts by day.",
+            "description": f"Positive, neutral, and negative {content_label.lower()} counts by day.",
             "type": "bar",
             "labels": [f"Day {int(row['day'])}" for row in trend_rows],
             "datasets": [
@@ -6504,14 +6514,14 @@ def _build_sentiment_analytics_payload(db_path, filter_day, filter_hour):
             "options": {"beginAtZero": True, "stacked": True},
         },
         "summary": {
-            "title": "Most Polarized Posts",
+            "title": f"Most Polarized {content_label_plural}",
             "columns": ["Author", "Compound", "When", "Content"],
             "rows": [
                 [
                     row["username"],
                     f"{_safe_float(row['compound']):.3f}",
                     f"Day {row['day']}, Hour {row['hour']}",
-                    _truncate_text(row["tweet"]),
+                    _truncate_text(row["content_text"]),
                 ]
                 for row in extreme_rows
             ],
