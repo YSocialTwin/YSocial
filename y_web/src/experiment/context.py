@@ -176,9 +176,7 @@ def setup_experiment_context():
 
         # Dynamically override db_exp bind and cached engine to point to the
         # current experiment's database.
-        original_bind, original_engine, refreshed_engine = _activate_db_exp_bind(
-            exp_id
-        )
+        original_bind, original_engine, refreshed_engine = _activate_db_exp_bind(exp_id)
         if not hasattr(g, "original_db_exp_bind"):
             g.original_db_exp_bind = original_bind
         if not hasattr(g, "original_db_exp_engine"):
