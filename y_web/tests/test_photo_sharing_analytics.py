@@ -8,8 +8,8 @@ from y_web.routes.admin.sub.experiments._opinion import (
     _build_emotion_analytics_payload,
     _build_hashtag_evolution_payload,
     _build_network_analytics_payload,
-    _build_sentiment_analytics_payload,
     _build_recsys_evolution_payload,
+    _build_sentiment_analytics_payload,
     _build_topic_evolution_payload,
     _resolve_analytics_db_path,
 )
@@ -316,7 +316,9 @@ def test_photo_sentiment_analytics_use_photo_tables(tmp_path):
     db_path = tmp_path / "photo_sentiment.db"
     _create_photo_sharing_analytics_db(db_path)
 
-    analytics = _build_sentiment_analytics_payload(str(db_path), filter_day=2, filter_hour=1)
+    analytics = _build_sentiment_analytics_payload(
+        str(db_path), filter_day=2, filter_hour=1
+    )
 
     stats = {item["key"]: item["value"] for item in analytics["stats"]}
     assert stats["annotated_posts"] == 2
