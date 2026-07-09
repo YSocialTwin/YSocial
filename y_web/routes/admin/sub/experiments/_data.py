@@ -1273,7 +1273,10 @@ def clear_experiment_logs(uid):
         _deleted_count, failed_paths = clear_experiment_log_files(exp_folder)
 
         if deleted_count:
-            flash(f"Cleared {deleted_count} log file(s) from the experiment folder.", "success")
+            flash(
+                f"Cleared {deleted_count} log file(s) from the experiment folder.",
+                "success",
+            )
         else:
             flash("No log files were found to clear.", "warning")
 
@@ -1285,7 +1288,9 @@ def clear_experiment_logs(uid):
                 "warning",
             )
     except Exception as exc:
-        current_app.logger.error(f"Failed to clear experiment logs: {exc}", exc_info=True)
+        current_app.logger.error(
+            f"Failed to clear experiment logs: {exc}", exc_info=True
+        )
         flash(f"Failed to clear experiment logs: {str(exc)}", "error")
 
     return redirect(url_for("experiments.experiment_details", uid=uid))
