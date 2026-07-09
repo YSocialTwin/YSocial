@@ -41,3 +41,17 @@ def test_experiment_details_batches_client_execution_lookup():
         "Client_Execution.query.filter_by(client_id=client.id).first()"
         not in experiment_details_source
     )
+
+
+def test_clear_experiment_logs_uses_helper_return_value_consistently():
+    data_source = (
+        REPO_ROOT / "y_web" / "routes" / "admin" / "sub" / "experiments" / "_data.py"
+    ).read_text(encoding="utf-8")
+
+    start = data_source.index("def clear_experiment_logs(uid):")
+    end = data_source.index("@experiments.route(\"/admin/reset_hpc_experiment")
+    clear_logs_source = data_source[start:end]
+
+    assert "deleted_count, failed_paths = clear_experiment_log_files(exp_folder)" in clear_logs_source
+    assert "_deleted_count, failed_paths = clear_experiment_log_files(exp_folder)" not in clear_logs_source
+    assert "if deleted_count:" in clear_logs_source

@@ -1283,7 +1283,7 @@ def clear_experiment_logs(uid):
 
         base_dir = get_writable_path()
         exp_folder = _get_experiment_folder(base_dir, exp, _get_database_type())
-        _deleted_count, failed_paths = clear_experiment_log_files(exp_folder)
+        deleted_count, failed_paths = clear_experiment_log_files(exp_folder)
 
         if deleted_count:
             flash(
