@@ -144,10 +144,34 @@ def _photo_db_path(exp: Exps) -> Optional[str]:
     return uri.replace("sqlite:///", "", 1)
 
 
-def _photo_latest_round_id() -> str:
-    current_round = Rounds.query.order_by(Rounds.day.desc(), Rounds.hour.desc()).first()
-    if current_round is not None and getattr(current_round, "id", None) is not None:
-        return str(current_round.id)
+def _photo_latest_round_id(exp: Optional[Exps] = None) -> str:
+    if exp is not None:
+        try:
+            session, engine = open_experiment_session(exp)
+            if session is not None and engine is not None:
+                try:
+                    current_round = (
+                        session.query(Rounds)
+                        .order_by(Rounds.day.desc(), Rounds.hour.desc(), Rounds.id.desc())
+                        .first()
+                    )
+                    if current_round is not None and getattr(current_round, "id", None) is not None:
+                        return str(current_round.id)
+                finally:
+                    session.close()
+                    engine.dispose()
+        except Exception:
+            pass
+
+    try:
+        current_round = Rounds.query.order_by(
+            Rounds.day.desc(), Rounds.hour.desc(), Rounds.id.desc()
+        ).first()
+        if current_round is not None and getattr(current_round, "id", None) is not None:
+            return str(current_round.id)
+    except Exception:
+        pass
+
     return "1"
 
 
@@ -843,8 +867,9 @@ def _photo_photo_ids_by_author_ids(exp: Exps, author_ids: list[str]) -> list[str
         f"""
         SELECT p.id
         FROM photos p
+        LEFT JOIN rounds rd ON rd.id = p.round
         WHERE p.user_id IN ({placeholders}) AND COALESCE(p.is_removed, 0) = 0
-        ORDER BY p.created_at DESC, p.id DESC
+        ORDER BY COALESCE(rd.day, 0) DESC, COALESCE(rd.hour, 0) DESC, p.created_at DESC, p.id DESC
         """,
         tuple(ordered_author_ids),
     )
@@ -861,8 +886,9 @@ def _photo_all_photo_ids(exp: Exps) -> list[str]:
         """
         SELECT p.id
         FROM photos p
+        LEFT JOIN rounds rd ON rd.id = p.round
         WHERE COALESCE(p.is_removed, 0) = 0
-        ORDER BY p.created_at DESC, p.id DESC
+        ORDER BY COALESCE(rd.day, 0) DESC, COALESCE(rd.hour, 0) DESC, p.created_at DESC, p.id DESC
         """,
     )
     return [
@@ -946,8 +972,9 @@ def _build_photo_items(
             u.is_page AS author_is_page
         FROM photos p
         LEFT JOIN user_mgmt u ON u.id = p.user_id
+        LEFT JOIN rounds rd ON rd.id = p.round
         WHERE COALESCE(p.is_removed, 0) = 0
-        ORDER BY p.created_at DESC, p.id DESC
+        ORDER BY COALESCE(rd.day, 0) DESC, COALESCE(rd.hour, 0) DESC, p.created_at DESC, p.id DESC
         LIMIT ? OFFSET ?
         """,
         (page_size, offset),
@@ -999,8 +1026,9 @@ def _build_photo_follower_items(
             u.is_page AS author_is_page
         FROM photos p
         LEFT JOIN user_mgmt u ON u.id = p.user_id
+        LEFT JOIN rounds rd ON rd.id = p.round
         WHERE p.user_id IN ({placeholders}) AND COALESCE(p.is_removed, 0) = 0
-        ORDER BY p.created_at DESC, p.id DESC
+        ORDER BY COALESCE(rd.day, 0) DESC, COALESCE(rd.hour, 0) DESC, p.created_at DESC, p.id DESC
         LIMIT ? OFFSET ?
         """,
         tuple(contact_ids + [page_size, offset]),
@@ -1039,9 +1067,10 @@ def _build_photo_story_previews(
         LEFT JOIN story_views sv
             ON sv.story_id = s.id
            AND sv.viewer_id = ?
+        LEFT JOIN rounds rd ON rd.id = s.round
         WHERE sv.story_id IS NULL
         {author_clause}
-        ORDER BY s.created_at DESC, s.id DESC
+        ORDER BY COALESCE(rd.day, 0) DESC, COALESCE(rd.hour, 0) DESC, s.created_at DESC, s.id DESC
         """.format(
             author_clause=(
                 "AND s.user_id IN ({})".format(",".join("?" for _ in author_ids))
@@ -1098,8 +1127,9 @@ def _photo_profile_story_items(exp: Exps, user_id, limit: int = 12) -> list[dict
             u.is_page AS author_is_page
         FROM stories s
         LEFT JOIN user_mgmt u ON u.id = s.user_id
+        LEFT JOIN rounds rd ON rd.id = s.round
         WHERE s.user_id = ?
-        ORDER BY s.created_at DESC, s.id DESC
+        ORDER BY COALESCE(rd.day, 0) DESC, COALESCE(rd.hour, 0) DESC, s.created_at DESC, s.id DESC
         LIMIT ?
         """,
         (user_key, limit),
@@ -1355,8 +1385,9 @@ def _photo_profile_photo_items(
             FROM saved_photos sp
             JOIN photos p ON p.id = sp.photo_id
             LEFT JOIN user_mgmt u ON u.id = p.user_id
+            LEFT JOIN rounds rd ON rd.id = sp.round
             WHERE sp.user_id = ? AND COALESCE(p.is_removed, 0) = 0
-            ORDER BY sp.created_at DESC, sp.id DESC
+            ORDER BY COALESCE(rd.day, 0) DESC, COALESCE(rd.hour, 0) DESC, sp.created_at DESC, sp.id DESC
             LIMIT ? OFFSET ?
             """,
             (user_key, page_size, offset),
@@ -1373,13 +1404,14 @@ def _photo_profile_photo_items(
                 u.profile_picture_url AS author_profile_picture_url,
                 u.cover_image AS author_cover_image,
                 u.is_page AS author_is_page
-            FROM mentions m
-            JOIN photos p ON p.id = m.photo_id
-            LEFT JOIN user_mgmt u ON u.id = p.user_id
-            WHERE m.user_id = ? AND COALESCE(p.is_removed, 0) = 0
-            ORDER BY m.id DESC
-            LIMIT ? OFFSET ?
-            """,
+        FROM mentions m
+        JOIN photos p ON p.id = m.photo_id
+        LEFT JOIN user_mgmt u ON u.id = p.user_id
+        LEFT JOIN rounds rd ON rd.id = p.round
+        WHERE m.user_id = ? AND COALESCE(p.is_removed, 0) = 0
+        ORDER BY COALESCE(rd.day, 0) DESC, COALESCE(rd.hour, 0) DESC, m.id DESC
+        LIMIT ? OFFSET ?
+        """,
             (user_key, page_size, offset),
         )
         return _build_photo_items_from_rows(exp, rows, viewer_id=viewer_id or user_key)
@@ -1395,8 +1427,9 @@ def _photo_profile_photo_items(
             u.is_page AS author_is_page
         FROM photos p
         LEFT JOIN user_mgmt u ON u.id = p.user_id
+        LEFT JOIN rounds rd ON rd.id = p.round
         WHERE p.user_id = ? AND COALESCE(p.is_removed, 0) = 0
-        ORDER BY p.created_at DESC, p.id DESC
+        ORDER BY COALESCE(rd.day, 0) DESC, COALESCE(rd.hour, 0) DESC, p.created_at DESC, p.id DESC
         LIMIT ? OFFSET ?
         """,
         (user_key, page_size, offset),
@@ -1420,8 +1453,9 @@ def _photo_profile_gallery_items(exp: Exps, user_id, limit: int = 48) -> list[di
             u.is_page AS author_is_page
         FROM photos p
         LEFT JOIN user_mgmt u ON u.id = p.user_id
+        LEFT JOIN rounds rd ON rd.id = p.round
         WHERE p.user_id = ? AND COALESCE(p.is_removed, 0) = 0
-        ORDER BY p.created_at DESC, p.id DESC
+        ORDER BY COALESCE(rd.day, 0) DESC, COALESCE(rd.hour, 0) DESC, p.created_at DESC, p.id DESC
         LIMIT ?
         """,
         (user_key, limit),
@@ -1445,8 +1479,9 @@ def _photo_post_comment_rows(exp: Exps, photo_id: str, limit: int = 12) -> list[
             u.is_page AS commenter_is_page
         FROM comments c
         LEFT JOIN user_mgmt u ON u.id = c.user_id
+        LEFT JOIN rounds rd ON rd.id = c.round
         WHERE c.photo_id = ? AND COALESCE(c.is_removed, 0) = 0
-        ORDER BY COALESCE(c.created_at, c.timestamp, '') DESC, c.id DESC
+        ORDER BY COALESCE(rd.day, 0) DESC, COALESCE(rd.hour, 0) DESC, COALESCE(c.created_at, c.timestamp, '') DESC, c.id DESC
         LIMIT ?
         """,
         (photo_key, limit),
@@ -1498,8 +1533,9 @@ def _photo_post_comment_tree(exp: Exps, photo_id: str, limit: int = 200) -> list
             u.is_page AS commenter_is_page
         FROM comments c
         LEFT JOIN user_mgmt u ON u.id = c.user_id
+        LEFT JOIN rounds rd ON rd.id = c.round
         WHERE c.photo_id = ? AND COALESCE(c.is_removed, 0) = 0
-        ORDER BY COALESCE(c.created_at, c.timestamp, '') ASC, c.id ASC
+        ORDER BY COALESCE(rd.day, 0) ASC, COALESCE(rd.hour, 0) ASC, COALESCE(c.created_at, c.timestamp, '') ASC, c.id ASC
         LIMIT ?
         """,
         (photo_key, limit),
@@ -1545,8 +1581,9 @@ def _photo_post_likers(exp: Exps, photo_id: str, limit: int = 3) -> list[dict]:
             u.profile_picture_url AS profile_picture_url
         FROM reactions r
         LEFT JOIN user_mgmt u ON u.id = r.user_id
+        LEFT JOIN rounds rd ON rd.id = r.round
         WHERE r.photo_id = ?
-        ORDER BY r.created_at DESC, r.id DESC
+        ORDER BY COALESCE(rd.day, 0) DESC, COALESCE(rd.hour, 0) DESC, r.created_at DESC, r.id DESC
         LIMIT ?
         """,
         (photo_key, limit),
@@ -1746,8 +1783,9 @@ def _photo_search_recent_photo_rows(exp: Exps, limit: int = 24) -> list[dict]:
             u.is_page AS author_is_page
         FROM photos p
         LEFT JOIN user_mgmt u ON u.id = p.user_id
+        LEFT JOIN rounds rd ON rd.id = p.round
         WHERE COALESCE(p.is_removed, 0) = 0
-        ORDER BY p.created_at DESC, p.id DESC
+        ORDER BY COALESCE(rd.day, 0) DESC, COALESCE(rd.hour, 0) DESC, p.created_at DESC, p.id DESC
         LIMIT ?
         """,
         (limit,),
@@ -1852,6 +1890,7 @@ def _photo_search_photo_rows(exp: Exps, query: str, limit: int = 24) -> list[dic
                 u.is_page AS author_is_page
             FROM photos p
             LEFT JOIN user_mgmt u ON u.id = p.user_id
+            LEFT JOIN rounds rd ON rd.id = p.round
             LEFT JOIN photo_hashtags ph ON ph.photo_id = p.id
             LEFT JOIN hashtags h ON h.id = ph.hashtag_id
             WHERE COALESCE(p.is_removed, 0) = 0
@@ -1862,7 +1901,7 @@ def _photo_search_photo_rows(exp: Exps, query: str, limit: int = 24) -> list[dic
                  OR LOWER(COALESCE(u.username, '')) LIKE ?
                  OR LOWER(COALESCE(h.hashtag, '')) LIKE ?
               )
-            ORDER BY p.created_at DESC, p.id DESC
+            ORDER BY COALESCE(rd.day, 0) DESC, COALESCE(rd.hour, 0) DESC, p.created_at DESC, p.id DESC
             LIMIT ?
             """,
             (like, like, like, like, like, limit),
@@ -2370,7 +2409,7 @@ def api_photo_create_comment(exp_id, photo_id):
     if not commenter_id:
         return {"ok": False, "error": "missing_user"}, 400
 
-    round_id = str(_photo_latest_round_id()).strip()
+    round_id = str(_photo_latest_round_id(exp)).strip()
     db_path = _photo_db_path(exp)
     if not db_path:
         return {"ok": False, "error": "database_unavailable"}, 500
@@ -2510,7 +2549,7 @@ def api_photo_toggle_like(exp_id, photo_id):
                 SET reaction_type = 'LIKE', round = ?
                 WHERE id = ?
                 """,
-                (str(_photo_latest_round_id()), reaction["id"]),
+                (str(_photo_latest_round_id(exp)), reaction["id"]),
             )
             liked = True
         else:
@@ -2523,7 +2562,7 @@ def api_photo_toggle_like(exp_id, photo_id):
                     str(uuid.uuid4()),
                     viewer_id,
                     photo_key,
-                    str(_photo_latest_round_id()),
+                    str(_photo_latest_round_id(exp)),
                 ),
             )
             conn.execute(
@@ -2590,10 +2629,10 @@ def api_photo_toggle_bookmark(exp_id, photo_id):
         else:
             conn.execute(
                 """
-                INSERT INTO saved_photos (id, user_id, photo_id, created_at)
-                VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+                INSERT INTO saved_photos (id, user_id, photo_id, round, created_at)
+                VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
                 """,
-                (str(uuid.uuid4()), viewer_id, photo_key),
+                (str(uuid.uuid4()), viewer_id, photo_key, str(_photo_latest_round_id(exp))),
             )
             bookmarked = True
         conn.commit()
@@ -2622,7 +2661,7 @@ def api_photo_share_post(exp_id, photo_id):
     if not db_path:
         return {"ok": False, "error": "database_unavailable"}, 500
 
-    round_id = _photo_latest_round_id()
+    round_id = _photo_latest_round_id(exp)
     new_photo_id = str(uuid.uuid4())
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = sqlite3.Row
@@ -2850,7 +2889,7 @@ def api_photo_create_story(exp_id):
     if len(selected_urls) > 5:
         selected_urls = selected_urls[:5]
 
-    round_id = _photo_latest_round_id()
+    round_id = _photo_latest_round_id(exp)
     story_id = str(uuid.uuid4())
     _photo_ensure_story_schema(exp)
     db_path = _photo_db_path(exp)
@@ -2967,10 +3006,15 @@ def api_photo_story_view(exp_id, story_id):
         if existing is None:
             conn.execute(
                 """
-                INSERT INTO story_views (id, story_id, viewer_id, viewed_at)
-                VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+                INSERT INTO story_views (id, story_id, viewer_id, round, viewed_at)
+                VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
                 """,
-                (str(uuid.uuid4()), story_key, viewer_id),
+                (
+                    str(uuid.uuid4()),
+                    story_key,
+                    viewer_id,
+                    str(_photo_latest_round_id(exp)),
+                ),
             )
             conn.execute(
                 """
@@ -3031,7 +3075,7 @@ def api_photo_share(exp_id):
     except ValueError:
         return {"ok": False, "error": "media_root_unavailable"}, 500
 
-    round_id = _photo_latest_round_id()
+    round_id = _photo_latest_round_id(exp)
     photo_id = str(uuid.uuid4())
     db_path = _photo_db_path(exp)
     if not db_path:

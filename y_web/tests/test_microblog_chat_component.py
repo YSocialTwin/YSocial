@@ -152,10 +152,57 @@ def test_photo_sharing_open_experiment_session_bootstraps_full_schema(
             }
 
             assert "user_mgmt" in tables
+            assert "rounds" in tables
             assert "photos" in tables or "stories" in tables
         finally:
             session.close()
             engine.dispose()
+
+
+def test_follow_round_resolution_preserves_photo_round_strings(monkeypatch):
+    from y_web.routes.interactions import common
+    import y_web.src.models as models
+
+    class FakeExpsQuery:
+        def filter_by(self, **kwargs):
+            return self
+
+        def first(self):
+            return SimpleNamespace(idexp=9, platform_type="photo_sharing")
+
+    class FakeExps:
+        query = FakeExpsQuery()
+
+    class FakeRoundRow:
+        id = "round-abc"
+
+    class FakeQuery:
+        def order_by(self, *args, **kwargs):
+            return self
+
+        def first(self):
+            return FakeRoundRow()
+
+    class FakeSession:
+        def query(self, model):
+            assert model is common.Rounds
+            return FakeQuery()
+
+        def close(self):
+            return None
+
+    class FakeEngine:
+        def dispose(self):
+            return None
+
+    monkeypatch.setattr(models, "Exps", FakeExps)
+    monkeypatch.setattr(
+        common,
+        "open_experiment_session",
+        lambda exp: (FakeSession(), FakeEngine()),
+    )
+
+    assert common._resolve_follow_round_id(9) == "round-abc"
 
 
 def test_photo_chat_contacts_follow_the_photo_follow_graph():

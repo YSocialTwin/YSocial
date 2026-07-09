@@ -4,6 +4,15 @@ import sqlite3
 from sqlalchemy import create_engine, text
 
 _SQLITE_TABLES = {
+    "rounds": """
+        CREATE TABLE IF NOT EXISTS rounds (
+            id TEXT PRIMARY KEY,
+            day INTEGER NOT NULL,
+            hour INTEGER NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(day, hour)
+        )
+    """,
     "image_posts": """
         CREATE TABLE IF NOT EXISTS image_posts (
             id INTEGER PRIMARY KEY,
@@ -53,6 +62,24 @@ _SQLITE_TABLES = {
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     """,
+    "saved_photos": """
+        CREATE TABLE IF NOT EXISTS saved_photos (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL REFERENCES user_mgmt(id) ON DELETE CASCADE,
+            photo_id TEXT NOT NULL REFERENCES photos(id) ON DELETE CASCADE,
+            round TEXT NOT NULL REFERENCES rounds(id) ON DELETE CASCADE,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    """,
+    "story_views": """
+        CREATE TABLE IF NOT EXISTS story_views (
+            id TEXT PRIMARY KEY,
+            story_id TEXT NOT NULL REFERENCES stories(id) ON DELETE CASCADE,
+            viewer_id TEXT NOT NULL REFERENCES user_mgmt(id) ON DELETE CASCADE,
+            round TEXT NOT NULL REFERENCES rounds(id) ON DELETE CASCADE,
+            viewed_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    """,
     "stress_reward": """
         CREATE TABLE IF NOT EXISTS stress_reward (
             id TEXT PRIMARY KEY,
@@ -70,6 +97,9 @@ _SQLITE_TABLES = {
 }
 
 _SQLITE_COLUMNS = {
+    "rounds": {
+        "created_at": "DATETIME DEFAULT CURRENT_TIMESTAMP",
+    },
     "user_mgmt": {
         "cover_image": "VARCHAR(400) DEFAULT ''",
     },
@@ -86,9 +116,24 @@ _SQLITE_COLUMNS = {
         "fetch_images_from_url": "BOOLEAN DEFAULT 0",
         "fetch_images_timeout": "INTEGER DEFAULT 10",
     },
+    "saved_photos": {
+        "round": "TEXT",
+    },
+    "story_views": {
+        "round": "TEXT",
+    },
 }
 
 _POSTGRES_TABLES = {
+    "rounds": """
+        CREATE TABLE IF NOT EXISTS rounds (
+            id VARCHAR(36) PRIMARY KEY,
+            day INTEGER NOT NULL,
+            hour INTEGER NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            CONSTRAINT uq_round_day_hour UNIQUE (day, hour)
+        )
+    """,
     "image_posts": """
         CREATE TABLE IF NOT EXISTS image_posts (
             id SERIAL PRIMARY KEY,
@@ -138,6 +183,24 @@ _POSTGRES_TABLES = {
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """,
+    "saved_photos": """
+        CREATE TABLE IF NOT EXISTS saved_photos (
+            id VARCHAR(36) PRIMARY KEY,
+            user_id VARCHAR(36) NOT NULL REFERENCES user_mgmt(id) ON DELETE CASCADE,
+            photo_id VARCHAR(36) NOT NULL REFERENCES photos(id) ON DELETE CASCADE,
+            round VARCHAR(36) NOT NULL REFERENCES rounds(id) ON DELETE CASCADE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """,
+    "story_views": """
+        CREATE TABLE IF NOT EXISTS story_views (
+            id VARCHAR(36) PRIMARY KEY,
+            story_id VARCHAR(36) NOT NULL REFERENCES stories(id) ON DELETE CASCADE,
+            viewer_id VARCHAR(36) NOT NULL REFERENCES user_mgmt(id) ON DELETE CASCADE,
+            round VARCHAR(36) NOT NULL REFERENCES rounds(id) ON DELETE CASCADE,
+            viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """,
     "stress_reward": """
         CREATE TABLE IF NOT EXISTS stress_reward (
             id VARCHAR(36) PRIMARY KEY,
@@ -155,6 +218,9 @@ _POSTGRES_TABLES = {
 }
 
 _POSTGRES_COLUMNS = {
+    "rounds": {
+        "created_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+    },
     "user_mgmt": {
         "cover_image": "VARCHAR(400) DEFAULT ''",
     },
@@ -171,12 +237,29 @@ _POSTGRES_COLUMNS = {
         "fetch_images_from_url": "BOOLEAN DEFAULT FALSE",
         "fetch_images_timeout": "INTEGER DEFAULT 10",
     },
+    "saved_photos": {
+        "round": "VARCHAR(36)",
+    },
+    "story_views": {
+        "round": "VARCHAR(36)",
+    },
 }
 
 
 def _sqlite_existing_columns(conn: sqlite3.Connection, table: str) -> set[str]:
     rows = conn.execute(f"PRAGMA table_info({table})").fetchall()
     return {str(row[1]) for row in rows}
+
+
+def _sqlite_alter_column_definition(column_def: str) -> str:
+    normalized = " ".join(column_def.split())
+    if "DEFAULT CURRENT_TIMESTAMP" in normalized:
+        return normalized.replace(" DEFAULT CURRENT_TIMESTAMP", "")
+    if "DEFAULT CURRENT_DATE" in normalized:
+        return normalized.replace(" DEFAULT CURRENT_DATE", "")
+    if "DEFAULT CURRENT_TIME" in normalized:
+        return normalized.replace(" DEFAULT CURRENT_TIME", "")
+    return normalized
 
 
 def ensure_sqlite_experiment_schema(db_path: str) -> None:
@@ -197,8 +280,9 @@ def ensure_sqlite_experiment_schema(db_path: str) -> None:
                 continue  # table doesn't exist in this DB; skip
             for column_name, column_def in columns.items():
                 if column_name not in existing:
+                    ddl = _sqlite_alter_column_definition(column_def)
                     conn.execute(
-                        f"ALTER TABLE {table} ADD COLUMN {column_name} {column_def}"
+                        f"ALTER TABLE {table} ADD COLUMN {column_name} {ddl}"
                     )
 
         stress_reward_columns = _sqlite_existing_columns(conn, "stress_reward")
@@ -208,6 +292,10 @@ def ensure_sqlite_experiment_schema(db_path: str) -> None:
         if "created_at" in _sqlite_existing_columns(conn, "post"):
             conn.execute(
                 "UPDATE post SET created_at = CURRENT_TIMESTAMP WHERE created_at IS NULL"
+            )
+        if "created_at" in _sqlite_existing_columns(conn, "rounds"):
+            conn.execute(
+                "UPDATE rounds SET created_at = CURRENT_TIMESTAMP WHERE created_at IS NULL"
             )
 
         conn.commit()

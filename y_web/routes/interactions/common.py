@@ -8,6 +8,7 @@ import uuid
 
 from flask import flash, jsonify, redirect, request, url_for
 from flask_login import current_user, login_required
+from sqlalchemy.exc import OperationalError
 
 from y_web import db
 from y_web.routes.interactions._blueprint import user
@@ -51,18 +52,26 @@ def _resolve_follow_round_id(exp_id):
                         round_row is not None
                         and getattr(round_row, "id", None) is not None
                     ):
-                        return int(round_row.id)
+                        return round_row.id
+                except OperationalError:
+                    # Older experiment databases can be missing the rounds table.
+                    # In that case we fall back to the shared query below and
+                    # ultimately to round 0 instead of breaking the follow action.
+                    pass
                 finally:
                     session.close()
                     engine.dispose()
     except Exception:
         pass
 
-    current_round = Rounds.query.order_by(
-        Rounds.day.desc(), Rounds.hour.desc(), Rounds.id.desc()
-    ).first()
-    if current_round is not None and getattr(current_round, "id", None) is not None:
-        return int(current_round.id)
+    try:
+        current_round = Rounds.query.order_by(
+            Rounds.day.desc(), Rounds.hour.desc(), Rounds.id.desc()
+        ).first()
+        if current_round is not None and getattr(current_round, "id", None) is not None:
+            return current_round.id
+    except OperationalError:
+        pass
 
     return 0
 

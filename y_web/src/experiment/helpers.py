@@ -186,6 +186,8 @@ def _ensure_photo_sharing_orm_tables(engine, uri: Optional[str] = None) -> None:
         from YPhotoSharing.YServer.classes.models import Base as PhotoBase
 
         PhotoBase.metadata.create_all(bind=engine)
+        if uri:
+            ensure_experiment_schema_for_uri(uri)
     except Exception:
         if uri:
             ensure_experiment_schema_for_uri(uri)
