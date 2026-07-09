@@ -47,6 +47,7 @@ There are four operational layers worth separating:
 3. [Configuration](configuration.md)
 4. [User Guide](features.md)
 5. [PyInstaller Packaging](packaging.md)
+6. [Multi-Platform Simulations](multi-platform-simulations.md) - modular implementation package
 
 ## Scope of this documentation
 

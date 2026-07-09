@@ -42,6 +42,7 @@ def test_admin_shared_bundles_guard_optional_page_sections():
     populations = (STATIC_JS_DIR / "admin-populations.js").read_text(encoding="utf-8")
     miscellanea = (STATIC_JS_DIR / "admin-miscellanea.js").read_text(encoding="utf-8")
     settings = (STATIC_JS_DIR / "admin-settings.js").read_text(encoding="utf-8")
+    dashboard = (STATIC_JS_DIR / "admin-dashboard.js").read_text(encoding="utf-8")
 
     assert "const popDetails = window.YS_DATA_POP_DETAILS;" in populations
     assert "if (popDetails) {" in populations
@@ -55,6 +56,13 @@ def test_admin_shared_bundles_guard_optional_page_sections():
     assert "EXP_STATUS.STOPPED_SCHEDULED" in settings
     assert "progress_label" in settings
     assert "NA" in settings
+    assert "function pollClientProgress(" not in settings
+    assert "setInterval(updateProgress, 2000)" not in settings
+    assert "fetch(`/admin/experiment_clients/${expId}`)" in settings
+    assert "function pollAllClientProgress(" not in dashboard
+    assert "fetch(`/admin/progress/${clientId}`)" not in dashboard
+    assert "setInterval(refreshAllClientProgress, PROGRESS_REFRESH_INTERVAL)" in dashboard
+    assert "data-exp-id=\"" in dashboard
 
 
 def test_admin_clients_network_parameter_rows_toggle_bootstrap_visibility():

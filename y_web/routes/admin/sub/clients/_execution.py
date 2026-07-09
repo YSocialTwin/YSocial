@@ -372,8 +372,6 @@ def extend_simulation(id_client):
 @login_required
 def run_client(uid, idexp):
     """Handle run client operation."""
-    from ..experiments import experiment_details
-
     check_privileges(current_user.username)
 
     # get experiment
@@ -417,15 +415,13 @@ def run_client(uid, idexp):
         # Catch any other errors
         flash(f"Unexpected error starting client: {str(e)}", "error")
 
-    return experiment_details(idexp)
+    return redirect(url_for("experiments.experiment_details", uid=idexp))
 
 
 @clientsr.route("/admin/resume_client/<int:uid>/<int:idexp>")
 @login_required
 def resume_client(uid, idexp):
     """Handle resume client operation."""
-    from ..experiments import experiment_details
-
     check_privileges(current_user.username)
 
     # get experiment
@@ -469,15 +465,13 @@ def resume_client(uid, idexp):
         # Catch any other errors
         flash(f"Unexpected error starting client: {str(e)}", "error")
 
-    return experiment_details(idexp)
+    return redirect(url_for("experiments.experiment_details", uid=idexp))
 
 
 @clientsr.route("/admin/pause_client/<int:uid>/<int:idexp>")
 @login_required
 def pause_client(uid, idexp):
     """Handle pause client operation."""
-    from ..experiments import experiment_details
-
     check_privileges(current_user.username)
 
     exp = Exps.query.filter_by(idexp=idexp).first()
@@ -519,15 +513,13 @@ def pause_client(uid, idexp):
             )
             db.session.commit()
 
-    return experiment_details(idexp)  # redirect(request.referrer)
+    return redirect(url_for("experiments.experiment_details", uid=idexp))
 
 
 @clientsr.route("/admin/stop_client/<int:uid>/<int:idexp>")
 @login_required
 def stop_client(uid, idexp):
     """Handle stop client operation."""
-    from ..experiments import experiment_details
-
     check_privileges(current_user.username)
 
     # get client and experiment
@@ -565,15 +557,13 @@ def stop_client(uid, idexp):
             )
             db.session.commit()
 
-    return experiment_details(idexp)  # redirect(request.referrer)
+    return redirect(url_for("experiments.experiment_details", uid=idexp))
 
 
 @clientsr.route("/admin/run_adhoc_client/<int:idexp>/<path:client_key>")
 @login_required
 def run_adhoc_client(idexp, client_key):
     """Start a file-backed ad hoc plugin client."""
-    from ..experiments import experiment_details
-
     check_privileges(current_user.username)
 
     exp = Exps.query.filter_by(idexp=idexp).first()
@@ -595,15 +585,13 @@ def run_adhoc_client(idexp, client_key):
     except Exception as e:
         flash(f"Unexpected error starting ad hoc client: {str(e)}", "error")
 
-    return experiment_details(idexp)
+    return redirect(url_for("experiments.experiment_details", uid=idexp))
 
 
 @clientsr.route("/admin/pause_adhoc_client/<int:idexp>/<path:client_key>")
 @login_required
 def pause_adhoc_client(idexp, client_key):
     """Pause a file-backed ad hoc plugin client."""
-    from ..experiments import experiment_details
-
     check_privileges(current_user.username)
 
     exp = Exps.query.filter_by(idexp=idexp).first()
@@ -621,4 +609,4 @@ def pause_adhoc_client(idexp, client_key):
     except Exception as e:
         flash(f"Unexpected error pausing ad hoc client: {str(e)}", "error")
 
-    return experiment_details(idexp)
+    return redirect(url_for("experiments.experiment_details", uid=idexp))

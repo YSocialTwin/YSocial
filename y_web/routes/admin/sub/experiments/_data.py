@@ -409,8 +409,7 @@ def experiment_clients(exp_id):
 
         # Get clients for this experiment
         clients = Client.query.filter_by(id_exp=exp_id).all()
-
-        client_data = []
+        client_ids = [client.id for client in clients]
         for client in clients:
             # Update client log metrics before reading execution data
             # This ensures we have the latest progress information
@@ -421,9 +420,12 @@ def experiment_clients(exp_id):
                 try:
                     # Pass is_hpc flag for HPC experiments to use correct log format
                     is_hpc = experiment.simulator_type == "HPC"
-                    current_app.logger.info(
-                        f"Updating metrics for client {client.id} ({client.name}), "
-                        f"is_hpc={is_hpc}, log_file={client_log_file}"
+                    current_app.logger.debug(
+                        "Updating metrics for client %s (%s), is_hpc=%s, log_file=%s",
+                        client.id,
+                        client.name,
+                        is_hpc,
+                        client_log_file,
                     )
                     update_client_log_metrics(
                         exp_id, client.id, client_log_file, is_hpc=is_hpc
@@ -434,23 +436,24 @@ def experiment_clients(exp_id):
                         exc_info=True,
                     )
             else:
-                current_app.logger.warning(
-                    f"Log file not found for client {client.id} ({client.name}): {client_log_file}"
+                current_app.logger.debug(
+                    "Log file not found for client %s (%s): %s",
+                    client.id,
+                    client.name,
+                    client_log_file,
                 )
 
+        client_exec_by_id = {}
+        if client_ids:
+            client_exec_rows = Client_Execution.query.filter(
+                Client_Execution.client_id.in_(client_ids)
+            ).all()
+            client_exec_by_id = {row.client_id: row for row in client_exec_rows}
+
+        client_data = []
+        for client in clients:
             # Get client execution data (now updated with latest info)
-            client_exec = Client_Execution.query.filter_by(client_id=client.id).first()
-
-            if client_exec:
-                current_app.logger.info(
-                    f"Client_Execution for client {client.id}: elapsed_time={client_exec.elapsed_time}, "
-                    f"expected={client_exec.expected_duration_rounds}, "
-                    f"last_day={client_exec.last_active_day}, last_hour={client_exec.last_active_hour}"
-                )
-            else:
-                current_app.logger.warning(
-                    f"No Client_Execution record found for client {client.id} ({client.name})"
-                )
+            client_exec = client_exec_by_id.get(client.id)
 
             client_info = {
                 "id": client.id,
@@ -538,13 +541,23 @@ def experiment_details(uid):
 
     # get experiment clients
     clients = Client.query.filter_by(id_exp=uid).all()
+    client_ids = [client.id for client in clients]
 
     # get client execution data to check if clients have been run
     client_executions = {}
-    for client in clients:
-        execution = Client_Execution.query.filter_by(client_id=client.id).first()
-        # Client has been run at least once if execution exists and elapsed_time > 0
-        client_executions[client.id] = execution and execution.elapsed_time > 0
+    if client_ids:
+        execution_rows = Client_Execution.query.filter(
+            Client_Execution.client_id.in_(client_ids)
+        ).all()
+        execution_by_client_id = {row.client_id: row for row in execution_rows}
+        for client in clients:
+            execution = execution_by_client_id.get(client.id)
+            # Client has been run at least once if execution exists and elapsed_time > 0
+            client_executions[client.id] = bool(
+                execution and execution.elapsed_time > 0
+            )
+    else:
+        client_executions = {}
 
     # HPC reset availability: only stopped experiments that already started once.
     has_started_once = _experiment_has_started_once(experiment, clients=clients)

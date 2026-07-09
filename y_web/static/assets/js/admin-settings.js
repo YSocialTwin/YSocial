@@ -826,177 +826,117 @@ var AdminSettings = (function() {
       createGroupedView(containerId, statusFilter, boxId);
   }
 
-  // Store active progress poll intervals
-  const progressPollIntervals = {};
+  // Track inflight progress refreshes so the same experiment does not stack requests.
+  const experimentProgressRequests = {};
 
-  // Store experiment-level sync intervals (for updating Client_Execution from logs)
-  const experimentSyncIntervals = {};
-
-  // Function to fetch and display client progress for an experiment
-  function fetchAndDisplayClientProgress(expId) {
-      const progressSection = document.getElementById(`progress-section-${expId}`);
-      if (!progressSection) return;
-    
-      // Clear any existing experiment sync interval for this experiment
-      if (experimentSyncIntervals[expId]) {
-          clearInterval(experimentSyncIntervals[expId]);
-          delete experimentSyncIntervals[expId];
-      }
-    
-      // Function to fetch and update client data
-      const fetchClientData = () => {
-          const progressSection = document.getElementById(`progress-section-${expId}`);
-          if (!progressSection) {
-              // Progress section no longer exists, stop syncing
-              if (experimentSyncIntervals[expId]) {
-                  clearInterval(experimentSyncIntervals[expId]);
-                  delete experimentSyncIntervals[expId];
-              }
-              return;
-          }
-        
-          // Fetch client data for this experiment
-          // This endpoint updates Client_Execution from log files on the backend
-          fetch(`/admin/experiment_clients/${expId}`)
-              .then(response => response.json())
-              .then(data => {
-                  if (data.error || !data.clients || data.clients.length === 0) {
-                      progressSection.style.display = 'none';
-                      return;
-                  }
-                
-                  progressSection.style.display = 'block';
-                  let html = '';
-                
-                  data.clients.forEach(client => {
-                      if (client.status === 1) {  // Only show running clients
-                          const progressId = `progress-${expId}-${client.id}`;
-                          html += `
-                              <div class="client-progress-item">
-                                  <span class="client-name">${client.name}</span>
-                                  <div class="sleek-progress-container">
-                                      <div id="${progressId}" class="sleek-progress-bar" style="width: 0%;">
-                                          <span>0%</span>
-                                      </div>
-                                  </div>
-                              </div>
-                          `;
-                      }
-                  });
-                
-                  if (html) {
-                      progressSection.innerHTML = html;
-                    
-                      // Start polling for each running client
-                      data.clients.forEach(client => {
-                          if (client.status === 1) {
-                              pollClientProgress(expId, client.id);
-                          }
-                      });
-                  } else {
-                      progressSection.style.display = 'none';
-                  }
-              })
-              .catch(err => {
-                  console.error('Error fetching client data:', err);
-                  progressSection.style.display = 'none';
-              });
-      };
-    
-      // Initial fetch
-      fetchClientData();
-    
-      // Set up interval to sync every 30 seconds
-      // This ensures Client_Execution table is updated regularly from log files
-      experimentSyncIntervals[expId] = setInterval(fetchClientData, 30000);
+  function escapeHtml(value) {
+      return String(value ?? '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
   }
 
-  // Function to poll a single client's progress
-  function pollClientProgress(expId, clientId) {
-      const progressId = `progress-${expId}-${clientId}`;
-      const intervalKey = `${expId}-${clientId}`;
-    
-      // Clear any existing interval for this client
-      if (progressPollIntervals[intervalKey]) {
-          clearInterval(progressPollIntervals[intervalKey]);
+  function applyClientProgressState(progressBar, client) {
+      if (!progressBar) {
+          return;
       }
-    
-      // Function to update progress
-      const updateProgress = () => {
-          const progressBar = document.getElementById(progressId);
-          if (!progressBar) {
-              // Progress bar no longer exists, stop polling
-              if (progressPollIntervals[intervalKey]) {
-                  clearInterval(progressPollIntervals[intervalKey]);
-                  delete progressPollIntervals[intervalKey];
-              }
-              return;
+
+      if (client.infinite) {
+          progressBar.style.width = '100%';
+          progressBar.style.background = 'linear-gradient(90deg, #22c55e 0%, #4ade80 100%)';
+          progressBar.style.boxShadow = '0 2px 6px rgba(34,197,94,0.3)';
+
+          const days = client.elapsed_days || 0;
+          const hours = client.elapsed_hours || 0;
+          const timeText = days > 0 ? `${days}d ${hours}h` : `${hours}h`;
+          const label = progressBar.querySelector('span');
+          if (label) {
+              label.textContent = `∞ ${timeText}`;
           }
-        
-          fetch(`/admin/progress/${clientId}`)
-              .then(response => {
-                  if (!response.ok) {
-                      throw new Error(`HTTP ${response.status}`);
-                  }
-                  return response.json();
-              })
-              .then(data => {
-                  if (data.infinite) {
-                      // Infinite client - show green bar with elapsed time
-                      progressBar.style.width = '100%';
-                      progressBar.style.background = 'linear-gradient(90deg, #22c55e 0%, #4ade80 100%)';
-                      progressBar.style.boxShadow = '0 2px 6px rgba(34,197,94,0.3)';
-                    
-                      const days = data.elapsed_days || 0;
-                      const hours = data.elapsed_hours || 0;
-                      let timeText = '';
-                      if (days > 0) {
-                          timeText = days + 'd ' + hours + 'h';
-                      } else {
-                          timeText = hours + 'h';
-                      }
-                      progressBar.querySelector('span').textContent = '∞ ' + timeText;
-                  } else {
-                      // Finite client - show progress percentage
-                      const percentage = Math.min(100, Math.max(0, data.progress || 0));
-                      progressBar.style.width = percentage + '%';
-                      progressBar.querySelector('span').textContent = percentage + '%';
-                    
-                      // Update gradient based on progress
-                      if (percentage >= 75) {
-                          progressBar.style.background = 'linear-gradient(90deg, #039be5 0%, #00d1b2 100%)';
-                          progressBar.style.boxShadow = '0 2px 6px rgba(0,209,178,0.3)';
-                      } else if (percentage >= 50) {
-                          progressBar.style.background = 'linear-gradient(90deg, #039be5 0%, #5596e6 100%)';
-                          progressBar.style.boxShadow = '0 2px 6px rgba(85,150,230,0.3)';
-                      }
-                  }
-              })
-              .catch(err => console.error('Error polling progress:', err));
-      };
-    
-      // Initial update
-      updateProgress();
-    
-      // Poll every 2 seconds
-      progressPollIntervals[intervalKey] = setInterval(updateProgress, 2000);
+          return;
+      }
+
+      const percentage = Math.min(100, Math.max(0, client.progress || 0));
+      progressBar.style.width = `${percentage}%`;
+      const label = progressBar.querySelector('span');
+      if (label) {
+          label.textContent = `${percentage}%`;
+      }
+
+      if (percentage >= 75) {
+          progressBar.style.background = 'linear-gradient(90deg, #039be5 0%, #00d1b2 100%)';
+          progressBar.style.boxShadow = '0 2px 6px rgba(0,209,178,0.3)';
+      } else if (percentage >= 50) {
+          progressBar.style.background = 'linear-gradient(90deg, #039be5 0%, #5596e6 100%)';
+          progressBar.style.boxShadow = '0 2px 6px rgba(85,150,230,0.3)';
+      } else {
+          progressBar.style.background = 'linear-gradient(90deg, #039be5 0%, #4facfe 100%)';
+          progressBar.style.boxShadow = '0 2px 6px rgba(3,155,229,0.3)';
+      }
+  }
+
+  // Fetch and display client progress for an experiment.
+  // One request covers all running clients in the experiment, which avoids the
+  // client-by-client polling fan-out that previously overwhelmed the page.
+  function fetchAndDisplayClientProgress(expId) {
+      const progressSection = document.getElementById(`progress-section-${expId}`);
+      if (!progressSection || experimentProgressRequests[expId]) {
+          return;
+      }
+
+      experimentProgressRequests[expId] = true;
+
+      fetch(`/admin/experiment_clients/${expId}`)
+          .then(response => response.json())
+          .then(data => {
+              if (data.error || !data.clients || data.clients.length === 0) {
+                  progressSection.style.display = 'none';
+                  progressSection.innerHTML = '';
+                  return;
+              }
+
+              const runningClients = data.clients.filter(client => client.status === 1);
+              if (!runningClients.length) {
+                  progressSection.style.display = 'none';
+                  progressSection.innerHTML = '';
+                  return;
+              }
+
+              progressSection.style.display = 'block';
+              progressSection.innerHTML = runningClients.map((client) => {
+                  const progressId = `progress-${expId}-${client.id}`;
+                  return `
+                      <div class="client-progress-item">
+                          <span class="client-name">${escapeHtml(client.name)}</span>
+                          <div class="sleek-progress-container">
+                              <div id="${progressId}" class="sleek-progress-bar" style="width: 0%;">
+                                  <span>0%</span>
+                              </div>
+                          </div>
+                      </div>
+                  `;
+              }).join('');
+
+              runningClients.forEach((client) => {
+                  applyClientProgressState(
+                      document.getElementById(`progress-${expId}-${client.id}`),
+                      client
+                  );
+              });
+          })
+          .catch(err => {
+              console.error('Error fetching client data:', err);
+              progressSection.style.display = 'none';
+          })
+          .finally(() => {
+              experimentProgressRequests[expId] = false;
+          });
   }
 
   // Function to refresh all grouped views
   function refreshAllTables() {
-      // Clean up old progress poll intervals when refreshing
-      // (they will be recreated for visible experiments)
-      Object.keys(progressPollIntervals).forEach(key => {
-          clearInterval(progressPollIntervals[key]);
-          delete progressPollIntervals[key];
-      });
-    
-      // Clean up experiment sync intervals
-      Object.keys(experimentSyncIntervals).forEach(key => {
-          clearInterval(experimentSyncIntervals[key]);
-          delete experimentSyncIntervals[key];
-      });
-    
       createGroupedView('groups-active', EXP_STATUS.ACTIVE, 'box-active');
       createGroupedView('groups-completed', EXP_STATUS.COMPLETED, 'box-completed');
       createGroupedView('groups-stopped', EXP_STATUS.STOPPED_SCHEDULED, 'box-stopped');
@@ -1009,10 +949,7 @@ var AdminSettings = (function() {
 
   // Clean up progress polling intervals when page unloads
   window.addEventListener('beforeunload', () => {
-      Object.keys(progressPollIntervals).forEach(key => {
-          clearInterval(progressPollIntervals[key]);
-          delete progressPollIntervals[key];
-      });
+      // No-op: in-flight fetches are naturally discarded when the page unloads.
   });
 
   // Delay for Grid.js to complete rendering before equalizing heights

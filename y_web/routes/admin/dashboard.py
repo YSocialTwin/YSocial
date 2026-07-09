@@ -17,6 +17,7 @@ from flask import (
     url_for,
 )
 from flask_login import current_user, login_required
+from collections import defaultdict
 
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
@@ -199,23 +200,28 @@ def dashboard():
     total_completed = len(completed_experiments)
     total_stopped = len(stopped_experiments)
 
+    exp_ids = [exp.idexp for exp in all_experiments]
+    clients_by_exp = defaultdict(list)
+    client_exec_by_id = {}
+    if exp_ids:
+        all_clients = Client.query.filter(Client.id_exp.in_(exp_ids)).all()
+        client_ids = []
+        for client in all_clients:
+            clients_by_exp[client.id_exp].append(client)
+            client_ids.append(client.id)
+
+        if client_ids:
+            exec_rows = Client_Execution.query.filter(
+                Client_Execution.client_id.in_(client_ids)
+            ).all()
+            client_exec_by_id = {row.client_id: row for row in exec_rows}
+
     def _calculate_experiment_progress(experiments_list):
         """Return average client execution progress per experiment id."""
         progress_by_exp = {}
         for exp in experiments_list:
-            clients = Client.query.filter_by(id_exp=exp.idexp).all()
+            clients = clients_by_exp.get(exp.idexp, [])
             has_started_once = _experiment_has_started_once(exp, clients=clients)
-            client_ids = [client.id for client in clients]
-            if not client_ids:
-                if has_started_once:
-                    progress_by_exp[exp.idexp] = 0
-                continue
-
-            client_exec_rows = Client_Execution.query.filter(
-                Client_Execution.client_id.in_(client_ids)
-            ).all()
-            client_exec_by_id = {row.client_id: row for row in client_exec_rows}
-
             total_progress = 0
             count = 0
             for client in clients:
@@ -247,12 +253,11 @@ def dashboard():
         result = {}
         progress_by_exp = _calculate_experiment_progress(experiments_list)
         for e in experiments_list:
-            clients = Client.query.filter_by(id_exp=e.idexp).all()
+            clients = clients_by_exp.get(e.idexp, [])
             has_started_once = _experiment_has_started_once(e, clients=clients)
             client_data = []
             for client in clients:
-                cl = Client_Execution.query.filter_by(client_id=client.id).first()
-                client_executions = cl if cl is not None else -1
+                client_executions = client_exec_by_id.get(client.id, -1)
                 client_data.append((client, client_executions))
             exp_progress = progress_by_exp.get(e.idexp)
             if exp_progress is None and has_started_once:
@@ -430,15 +435,31 @@ def dashboard_experiments_by_status(status):
     end = start + per_page
     paginated_experiments = experiments[start:end]
 
+    paginated_exp_ids = [exp.idexp for exp in paginated_experiments]
+    clients_by_exp = defaultdict(list)
+    client_exec_by_id = {}
+    if paginated_exp_ids:
+        paginated_clients = Client.query.filter(Client.id_exp.in_(paginated_exp_ids)).all()
+        client_ids = []
+        for client in paginated_clients:
+            clients_by_exp[client.id_exp].append(client)
+            client_ids.append(client.id)
+
+        if client_ids:
+            exec_rows = Client_Execution.query.filter(
+                Client_Execution.client_id.in_(client_ids)
+            ).all()
+            client_exec_by_id = {row.client_id: row for row in exec_rows}
+
     # Build experiment data with clients
     result = []
     for exp in paginated_experiments:
-        clients = Client.query.filter_by(id_exp=exp.idexp).all()
+        clients = clients_by_exp.get(exp.idexp, [])
         has_started_once = _experiment_has_started_once(exp, clients=clients)
         client_data = []
         progress_values = []
         for client in clients:
-            cl = Client_Execution.query.filter_by(client_id=client.id).first()
+            cl = client_exec_by_id.get(client.id)
             elapsed = cl.elapsed_time if cl else 0
             expected = cl.expected_duration_rounds if cl else 0
             progress = min(100, int((elapsed / expected) * 100)) if expected > 0 else 0
