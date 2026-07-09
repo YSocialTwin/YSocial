@@ -6,6 +6,8 @@ about page, and administrative functions for managing experiments, clients,
 and system status monitoring.
 """
 
+from collections import defaultdict
+
 from flask import (
     Blueprint,
     current_app,
@@ -17,7 +19,6 @@ from flask import (
     url_for,
 )
 from flask_login import current_user, login_required
-from collections import defaultdict
 
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
@@ -439,7 +440,9 @@ def dashboard_experiments_by_status(status):
     clients_by_exp = defaultdict(list)
     client_exec_by_id = {}
     if paginated_exp_ids:
-        paginated_clients = Client.query.filter(Client.id_exp.in_(paginated_exp_ids)).all()
+        paginated_clients = Client.query.filter(
+            Client.id_exp.in_(paginated_exp_ids)
+        ).all()
         client_ids = []
         for client in paginated_clients:
             clients_by_exp[client.id_exp].append(client)

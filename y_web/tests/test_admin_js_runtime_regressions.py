@@ -62,8 +62,10 @@ def test_admin_shared_bundles_guard_optional_page_sections():
     assert "fetch(`/admin/experiment_clients/${expId}`)" in settings
     assert "function pollAllClientProgress(" not in dashboard
     assert "fetch(`/admin/progress/${clientId}`)" not in dashboard
-    assert "setInterval(refreshAllClientProgress, PROGRESS_REFRESH_INTERVAL)" in dashboard
-    assert "data-exp-id=\"" in dashboard
+    assert (
+        "setInterval(refreshAllClientProgress, PROGRESS_REFRESH_INTERVAL)" in dashboard
+    )
+    assert 'data-exp-id="' in dashboard
     assert "async function pollAllClientProgress()" in experiments
     assert "const results = await Promise.all(" in experiments
 

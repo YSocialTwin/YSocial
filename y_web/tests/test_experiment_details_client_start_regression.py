@@ -18,9 +18,12 @@ def test_client_action_routes_redirect_back_to_experiment_details():
         REPO_ROOT / "y_web" / "routes" / "admin" / "sub" / "clients" / "_execution.py"
     ).read_text(encoding="utf-8")
 
-    assert execution_source.count(
-        'return redirect(url_for("experiments.experiment_details", uid=idexp))'
-    ) >= 6
+    assert (
+        execution_source.count(
+            'return redirect(url_for("experiments.experiment_details", uid=idexp))'
+        )
+        >= 6
+    )
     assert "return experiment_details(idexp)" not in execution_source
 
 
@@ -30,7 +33,7 @@ def test_experiment_details_batches_client_execution_lookup():
     ).read_text(encoding="utf-8")
 
     start = data_source.index("def experiment_details(uid):")
-    end = data_source.index("@experiments.route(\"/admin/update_experiment_descr")
+    end = data_source.index('@experiments.route("/admin/update_experiment_descr')
     experiment_details_source = data_source[start:end]
 
     assert "Client_Execution.client_id.in_(client_ids)" in experiment_details_source
