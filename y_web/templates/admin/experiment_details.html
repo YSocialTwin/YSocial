@@ -243,6 +243,20 @@
                                                         title="Delete"><i
  class="mdi mdi-delete ys-icon-lg ys-icon-muted"></i></a>{% elif can_manage_experiment %}<i class="mdi mdi-delete-off ys-icon-muted" title="Stop the experiment before deleting it"></i>{% else %}<i class="mdi mdi-lock" title="Only owner/admin/shared researchers can delete"></i>{% endif %}</span>
                             </div>
+                            <div class="box-line">
+                                <span class="left">Clear Logs</span>
+                                <span class="right">
+                                    {% if can_manage_experiment and experiment.running != 1 %}
+                                    <form method="POST" action="/admin/clear_experiment_logs/{{ experiment.idexp }}" style="display:inline;" onsubmit="return confirm('Clear all log files for this experiment? This will delete server, client, and runtime logs from the experiment folder.');">
+                                        <button type="submit" class="button is-small is-warning is-light">Clear Logs</button>
+                                    </form>
+                                    {% elif can_manage_experiment %}
+                                    <i class="mdi mdi-delete-sweep-off ys-icon-muted" title="Stop the experiment before clearing logs"></i>
+                                    {% else %}
+                                    <i class="mdi mdi-lock" title="Only owner/admin/shared researchers can clear logs"></i>
+                                    {% endif %}
+                                </span>
+                            </div>
                                 </div>
                             </div>
 

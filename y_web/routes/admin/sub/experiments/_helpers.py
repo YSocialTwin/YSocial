@@ -237,6 +237,47 @@ def _get_experiment_folder(base_dir, experiment, db_type):
     )
 
 
+def _is_experiment_log_filename(filename):
+    """Return True for log-like files stored under an experiment folder."""
+    name = str(filename or "").strip().lower()
+    if not name:
+        return False
+    return (
+        name.endswith(".log")
+        or ".log." in name
+        or name.endswith(".gz")
+        or name.endswith(".jsonl")
+    )
+
+
+def clear_experiment_log_files(exp_folder):
+    """
+    Remove log files from an experiment folder recursively.
+
+    Returns:
+        tuple[int, list[str]]: (deleted_count, failed_paths)
+    """
+    if not exp_folder or not os.path.isdir(exp_folder):
+        return 0, []
+
+    deleted_count = 0
+    failed_paths = []
+
+    for root, _, files in os.walk(exp_folder):
+        for filename in files:
+            if not _is_experiment_log_filename(filename):
+                continue
+
+            file_path = os.path.join(root, filename)
+            try:
+                os.remove(file_path)
+                deleted_count += 1
+            except OSError:
+                failed_paths.append(file_path)
+
+    return deleted_count, failed_paths
+
+
 def _experiment_configuration_box_present(experiment):
     """Return whether experiment_details should show a configuration block."""
     if experiment is None:

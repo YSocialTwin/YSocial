@@ -1246,6 +1246,51 @@ def update_experiment_topics(uid):
     return redirect(url_for("experiments.experiment_details", uid=uid))
 
 
+@experiments.route("/admin/clear_experiment_logs/<int:uid>", methods=["POST"])
+@login_required
+def clear_experiment_logs(uid):
+    """Delete runtime log files for an experiment without removing the experiment itself."""
+    check_privileges(current_user.username)
+
+    exp = Exps.query.filter_by(idexp=uid).first()
+    if not exp:
+        flash("Experiment not found.", "error")
+        return redirect(url_for("experiments.settings"))
+    if int(getattr(exp, "running", 0) or 0) == 1:
+        flash("Stop the experiment before clearing logs.", "warning")
+        return redirect(url_for("experiments.experiment_details", uid=uid))
+
+    admin_user = _current_admin_user_or_none()
+    if not user_can_manage_experiment(admin_user, exp):
+        flash("You do not have permission to clear logs for this experiment.", "error")
+        return redirect(url_for("experiments.experiment_details", uid=uid))
+
+    try:
+        from y_web.src.system.path_utils import get_writable_path
+
+        base_dir = get_writable_path()
+        exp_folder = _get_experiment_folder(base_dir, exp, _get_database_type())
+        _deleted_count, failed_paths = clear_experiment_log_files(exp_folder)
+
+        if deleted_count:
+            flash(f"Cleared {deleted_count} log file(s) from the experiment folder.", "success")
+        else:
+            flash("No log files were found to clear.", "warning")
+
+        for failed_path in failed_paths:
+            current_app.logger.warning(f"Could not delete log file {failed_path}")
+        if failed_paths:
+            flash(
+                f"Could not delete {len(failed_paths)} log file(s) due to filesystem errors.",
+                "warning",
+            )
+    except Exception as exc:
+        current_app.logger.error(f"Failed to clear experiment logs: {exc}", exc_info=True)
+        flash(f"Failed to clear experiment logs: {str(exc)}", "error")
+
+    return redirect(url_for("experiments.experiment_details", uid=uid))
+
+
 @experiments.route("/admin/reset_hpc_experiment/<int:uid>", methods=["POST"])
 @login_required
 def reset_hpc_experiment(uid):
@@ -1303,23 +1348,10 @@ def reset_hpc_experiment(uid):
         base_dir = get_writable_path()
         exp_folder = _get_experiment_folder(base_dir, exp, _get_database_type())
 
-        for log_dir in [os.path.join(exp_folder, "logs"), exp_folder]:
-            if not os.path.isdir(log_dir):
-                continue
-            for root, _, files in os.walk(log_dir):
-                for filename in files:
-                    if (
-                        log_dir.endswith("logs")
-                        or filename.endswith(".log")
-                        or filename.endswith(".gz")
-                        or filename.endswith(".jsonl")
-                    ):
-                        try:
-                            os.remove(os.path.join(root, filename))
-                        except OSError:
-                            current_app.logger.warning(
-                                f"Could not delete log file {os.path.join(root, filename)}"
-                            )
+        deleted_count, failed_paths = clear_experiment_log_files(exp_folder)
+        if failed_paths:
+            for failed_path in failed_paths:
+                current_app.logger.warning(f"Could not delete log file {failed_path}")
 
         for db_filename in ("database_server.db", "simulation.db"):
             db_path = os.path.join(exp_folder, db_filename)
