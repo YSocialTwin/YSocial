@@ -653,39 +653,37 @@ var AdminExperiments = (function() {
       }
   }
 
-  function pollAllClientProgress() {
+  async function pollAllClientProgress() {
       const progressBars = document.querySelectorAll('.ys-progress-bar[data-progress-url]');
       if (!progressBars.length) {
           return;
       }
 
-      let shouldContinuePolling = false;
-      progressBars.forEach((bar) => {
+      const results = await Promise.all(Array.from(progressBars).map(async (bar) => {
           const progressUrl = bar.dataset.progressUrl;
           if (!progressUrl) {
-              return;
+              return null;
           }
 
-          $.ajax({
-              url: progressUrl,
-              method: 'GET',
-              dataType: 'json',
-              success: function (data) {
-                  applyProgressBarState($(bar), data);
-                  if (data.infinite || (data.progress || 0) < 100) {
-                      shouldContinuePolling = true;
-                  }
-              }
-          });
-      });
+          try {
+              const response = await fetch(progressUrl);
+              const data = await response.json();
+              applyProgressBarState($(bar), data);
+              return data;
+          } catch (error) {
+              console.error(`Error refreshing progress from ${progressUrl}:`, error);
+              return null;
+          }
+      }));
 
       setTimeout(() => {
-          const hasActiveBars = Array.from(document.querySelectorAll('.ys-progress-bar[data-progress-url] span'))
-              .some((span) => {
-                  const text = span.textContent || '';
-                  return text.startsWith('∞') || text !== '100%';
-              });
-          if (shouldContinuePolling || hasActiveBars) {
+          const hasActiveBars = results.some((data) => {
+              if (!data) {
+                  return false;
+              }
+              return data.infinite || (data.progress || 0) < 100;
+          });
+          if (hasActiveBars) {
               pollAllClientProgress();
           }
       }, 1000);
