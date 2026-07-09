@@ -1,14 +1,14 @@
-from pathlib import Path
 from contextlib import contextmanager
+from pathlib import Path
 from types import SimpleNamespace
 
 from y_web import create_app
 from y_web.routes.social.photo import (
     _build_photo_follower_items,
     _build_photo_recommended_items,
-    _photo_db_path,
     _photo_active_contact_ids,
     _photo_build_item,
+    _photo_db_path,
     _photo_latest_recommendation_ids,
     _photo_linkify_text,
     _photo_media_root,
@@ -212,8 +212,14 @@ def test_photo_routes_order_by_round_chronology_for_visual_feeds():
     assert "LEFT JOIN rounds rd ON rd.id = p.round" in route_source
     assert "COALESCE(rd.day, 0) DESC, COALESCE(rd.hour, 0) DESC" in route_source
     assert "COALESCE(rd.day, 0) ASC, COALESCE(rd.hour, 0) ASC" in route_source
-    assert "INSERT INTO saved_photos (id, user_id, photo_id, round, created_at)" in route_source
-    assert "INSERT INTO story_views (id, story_id, viewer_id, round, viewed_at)" in route_source
+    assert (
+        "INSERT INTO saved_photos (id, user_id, photo_id, round, created_at)"
+        in route_source
+    )
+    assert (
+        "INSERT INTO story_views (id, story_id, viewer_id, round, viewed_at)"
+        in route_source
+    )
 
 
 def test_photo_recsys_uses_round_freshness_not_wall_clock():
@@ -248,7 +254,10 @@ def test_photo_media_and_avatar_helpers_resolve_browser_safe_urls():
             exp,
             "file:////Users/rossetti/PycharmProjects/YWeb/y_web/experiments/8bd5081e_535f_4cd7_8214_64ffb57de8bc/media/19680620-f4a8-4eac-bf8b-c4901d70fc74.jpg",
         )
-        assert media_url == f"/{exp.idexp}/photo/media/19680620-f4a8-4eac-bf8b-c4901d70fc74.jpg"
+        assert (
+            media_url
+            == f"/{exp.idexp}/photo/media/19680620-f4a8-4eac-bf8b-c4901d70fc74.jpg"
+        )
 
         avatar_url = _photo_profile_pic_url(
             exp,
@@ -296,7 +305,10 @@ def test_photo_build_item_exposes_linked_caption_and_author_href():
             "/photo/profile/b49b2daa-0560-466e-bd45-95222c7a4a10/recent/1"
         )
         assert "photo-inline-link" in item["post_html"]
-        assert f"/{exp.idexp}/photo/search?q=%23pizza&amp;kind=hashtags" in item["post_html"]
+        assert (
+            f"/{exp.idexp}/photo/search?q=%23pizza&amp;kind=hashtags"
+            in item["post_html"]
+        )
 
 
 def test_photo_feed_timelines_use_recommendations_and_social_contacts():

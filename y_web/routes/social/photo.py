@@ -152,10 +152,15 @@ def _photo_latest_round_id(exp: Optional[Exps] = None) -> str:
                 try:
                     current_round = (
                         session.query(Rounds)
-                        .order_by(Rounds.day.desc(), Rounds.hour.desc(), Rounds.id.desc())
+                        .order_by(
+                            Rounds.day.desc(), Rounds.hour.desc(), Rounds.id.desc()
+                        )
                         .first()
                     )
-                    if current_round is not None and getattr(current_round, "id", None) is not None:
+                    if (
+                        current_round is not None
+                        and getattr(current_round, "id", None) is not None
+                    ):
                         return str(current_round.id)
                 finally:
                     session.close()
@@ -2632,7 +2637,12 @@ def api_photo_toggle_bookmark(exp_id, photo_id):
                 INSERT INTO saved_photos (id, user_id, photo_id, round, created_at)
                 VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
                 """,
-                (str(uuid.uuid4()), viewer_id, photo_key, str(_photo_latest_round_id(exp))),
+                (
+                    str(uuid.uuid4()),
+                    viewer_id,
+                    photo_key,
+                    str(_photo_latest_round_id(exp)),
+                ),
             )
             bookmarked = True
         conn.commit()

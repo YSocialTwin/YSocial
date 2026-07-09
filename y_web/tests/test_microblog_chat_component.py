@@ -160,8 +160,8 @@ def test_photo_sharing_open_experiment_session_bootstraps_full_schema(
 
 
 def test_follow_round_resolution_preserves_photo_round_strings(monkeypatch):
-    from y_web.routes.interactions import common
     import y_web.src.models as models
+    from y_web.routes.interactions import common
 
     class FakeExpsQuery:
         def filter_by(self, **kwargs):

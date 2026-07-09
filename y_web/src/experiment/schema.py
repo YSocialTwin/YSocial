@@ -281,9 +281,7 @@ def ensure_sqlite_experiment_schema(db_path: str) -> None:
             for column_name, column_def in columns.items():
                 if column_name not in existing:
                     ddl = _sqlite_alter_column_definition(column_def)
-                    conn.execute(
-                        f"ALTER TABLE {table} ADD COLUMN {column_name} {ddl}"
-                    )
+                    conn.execute(f"ALTER TABLE {table} ADD COLUMN {column_name} {ddl}")
 
         stress_reward_columns = _sqlite_existing_columns(conn, "stress_reward")
         if stress_reward_columns and "action" not in stress_reward_columns:
