@@ -26,18 +26,21 @@ def test_dynamic_fill_ui_and_start_payload_are_wired():
 
     assert 'id="dynamic-fill-toggle"' in settings_template
     assert "Optional dynamic filling can reuse open slots" in settings_template
-    assert settings_template.index('id="dynamic-fill-toggle"') < settings_template.index(
-        'id="schedule-log-container"'
-    )
+    assert settings_template.index(
+        'id="dynamic-fill-toggle"'
+    ) < settings_template.index('id="schedule-log-container"')
     assert "dynamic_filling_enabled: dynamicFillingEnabled" in admin_settings_js
     assert "dynamicFillToggle.disabled = true;" in admin_settings_js
-    assert "dynamicFillToggle.checked = !!data.dynamic_filling_enabled;" in admin_settings_js
+    assert (
+        "dynamicFillToggle.checked = !!data.dynamic_filling_enabled;"
+        in admin_settings_js
+    )
 
 
 def test_dynamic_fill_schema_columns_are_present():
-    model_source = (
-        REPO_ROOT / "y_web" / "src" / "models" / "admin.py"
-    ).read_text(encoding="utf-8")
+    model_source = (REPO_ROOT / "y_web" / "src" / "models" / "admin.py").read_text(
+        encoding="utf-8"
+    )
     migration_source = (
         REPO_ROOT / "y_web" / "migrations" / "add_experiment_schedule_tables.py"
     ).read_text(encoding="utf-8")
@@ -52,11 +55,19 @@ def test_dynamic_fill_schema_columns_are_present():
 
 def test_dynamic_fill_helper_uses_no_autoflush_for_read_queries():
     schedule_source = (
-        REPO_ROOT / "y_web" / "routes" / "admin" / "sub" / "experiments" / "_schedule.py"
+        REPO_ROOT
+        / "y_web"
+        / "routes"
+        / "admin"
+        / "sub"
+        / "experiments"
+        / "_schedule.py"
     ).read_text(encoding="utf-8")
 
     assert "with db.session.no_autoflush:" in schedule_source
-    assert "Population.query.filter_by(id=client.population_id).first()" in schedule_source
+    assert (
+        "Population.query.filter_by(id=client.population_id).first()" in schedule_source
+    )
     assert "Client.query.filter_by(id_exp=exp.idexp).all()" in schedule_source
     assert "with _schedule_check_lock:" in schedule_source
 
@@ -70,13 +81,16 @@ def test_check_progress_dispatches_to_dynamic_fill_mode():
         dynamic_filling_enabled=1,
     )
 
-    with patch(
-        "y_web.routes.admin.sub.experiments._schedule._get_or_create_schedule_status",
-        return_value=status,
-    ), patch(
-        "y_web.routes.admin.sub.experiments._schedule._advance_dynamic_schedule",
-        return_value={"success": True, "is_running": True},
-    ) as mock_advance:
+    with (
+        patch(
+            "y_web.routes.admin.sub.experiments._schedule._get_or_create_schedule_status",
+            return_value=status,
+        ),
+        patch(
+            "y_web.routes.admin.sub.experiments._schedule._advance_dynamic_schedule",
+            return_value={"success": True, "is_running": True},
+        ) as mock_advance,
+    ):
         result = _do_check_schedule_progress()
 
     mock_advance.assert_called_once_with(status, [])
@@ -95,11 +109,14 @@ def test_dynamic_fill_is_blocked_while_initial_launch_is_in_progress(app):
     )
 
     with app.app_context():
-        with patch(
-            "y_web.routes.admin.sub.experiments._schedule.ExperimentScheduleGroup.query.get"
-        ) as mock_group_get, patch(
-            "y_web.routes.admin.sub.experiments._schedule._get_ordered_schedule_items"
-        ) as mock_ordered:
+        with (
+            patch(
+                "y_web.routes.admin.sub.experiments._schedule.ExperimentScheduleGroup.query.get"
+            ) as mock_group_get,
+            patch(
+                "y_web.routes.admin.sub.experiments._schedule._get_ordered_schedule_items"
+            ) as mock_ordered,
+        ):
             result = _advance_dynamic_schedule(status, [])
 
         assert result["success"] is True
@@ -112,11 +129,17 @@ def test_dynamic_fill_is_blocked_while_initial_launch_is_in_progress(app):
 
 def test_stop_schedule_disables_advancement_before_teardown():
     schedule_source = (
-        REPO_ROOT / "y_web" / "routes" / "admin" / "sub" / "experiments" / "_schedule.py"
+        REPO_ROOT
+        / "y_web"
+        / "routes"
+        / "admin"
+        / "sub"
+        / "experiments"
+        / "_schedule.py"
     ).read_text(encoding="utf-8")
 
     stop_section = schedule_source.split("def stop_schedule():", 1)[1].split(
-        "@experiments.route(\"/admin/schedule/check_progress\"", 1
+        '@experiments.route("/admin/schedule/check_progress"', 1
     )[0]
 
     assert "with _schedule_check_lock:" in stop_section
@@ -136,16 +159,19 @@ def test_check_progress_preserves_default_batch_progression():
     current_item = SimpleNamespace(experiment_id=7)
     current_exp = SimpleNamespace(exp_status="active")
 
-    with patch(
-        "y_web.routes.admin.sub.experiments._schedule._get_or_create_schedule_status",
-        return_value=status,
-    ), patch(
-        "y_web.routes.admin.sub.experiments._schedule._advance_dynamic_schedule"
-    ) as mock_advance, patch(
-        "y_web.routes.admin.sub.experiments._schedule.ExperimentScheduleItem"
-    ) as mock_item_cls, patch(
-        "y_web.routes.admin.sub.experiments._schedule.Exps"
-    ) as mock_exps_cls:
+    with (
+        patch(
+            "y_web.routes.admin.sub.experiments._schedule._get_or_create_schedule_status",
+            return_value=status,
+        ),
+        patch(
+            "y_web.routes.admin.sub.experiments._schedule._advance_dynamic_schedule"
+        ) as mock_advance,
+        patch(
+            "y_web.routes.admin.sub.experiments._schedule.ExperimentScheduleItem"
+        ) as mock_item_cls,
+        patch("y_web.routes.admin.sub.experiments._schedule.Exps") as mock_exps_cls,
+    ):
         mock_item_cls.query.filter_by.return_value.order_by.return_value.all.return_value = [
             current_item
         ]
@@ -161,8 +187,8 @@ def test_check_progress_preserves_default_batch_progression():
 
 
 def test_failed_experiment_does_not_free_dynamic_fill_slot(app):
-    from y_web.routes.admin.sub.experiments._schedule import _advance_dynamic_schedule
     from y_web.routes.admin.sub.experiments import _schedule as schedule_module
+    from y_web.routes.admin.sub.experiments._schedule import _advance_dynamic_schedule
 
     current_group = SimpleNamespace(id=11, order_index=0, name="group-1")
     current_items = [
@@ -185,11 +211,7 @@ def test_failed_experiment_does_not_free_dynamic_fill_slot(app):
     with app.app_context():
         fake_group_query = SimpleNamespace(
             get=lambda group_id: current_group,
-            filter=SimpleNamespace(
-                order_by=SimpleNamespace(
-                    all=lambda: []
-                )
-            ),
+            filter=SimpleNamespace(order_by=SimpleNamespace(all=lambda: [])),
         )
         fake_exp_query = SimpleNamespace(
             get=lambda exp_id: {
@@ -199,11 +221,15 @@ def test_failed_experiment_does_not_free_dynamic_fill_slot(app):
             }.get(exp_id)
         )
 
-        with patch.object(schedule_module.ExperimentScheduleGroup, "query", fake_group_query), patch.object(
-            schedule_module.Exps, "query", fake_exp_query
-        ), patch(
-            "y_web.routes.admin.sub.experiments._schedule._get_ordered_schedule_items",
-            return_value=current_items,
+        with (
+            patch.object(
+                schedule_module.ExperimentScheduleGroup, "query", fake_group_query
+            ),
+            patch.object(schedule_module.Exps, "query", fake_exp_query),
+            patch(
+                "y_web.routes.admin.sub.experiments._schedule._get_ordered_schedule_items",
+                return_value=current_items,
+            ),
         ):
             result = _advance_dynamic_schedule(status, [])
 

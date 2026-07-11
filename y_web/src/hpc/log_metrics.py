@@ -601,9 +601,7 @@ def get_latest_hourly_summary_from_client_log(client_log_path):
                         slot = log_entry.get("slot")
 
                         if day is not None and slot is not None:
-                            elapsed_time = _elapsed_time_from_hourly_summary(
-                                day, slot
-                            )
+                            elapsed_time = _elapsed_time_from_hourly_summary(day, slot)
 
                             latest_hourly = {
                                 "day": day,

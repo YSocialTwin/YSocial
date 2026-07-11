@@ -51,4 +51,3 @@ def test_hpc_client_reuses_client_days_as_expected_rounds():
 
     assert "expected_rounds = -1 if cli.days == -1 else cli.days * 24" in source
     assert "client_exec.expected_duration_rounds = expected_rounds" in source
-

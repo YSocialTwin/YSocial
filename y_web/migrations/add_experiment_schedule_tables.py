@@ -123,9 +123,7 @@ def migrate_sqlite(db_path):
                 cursor.execute(
                     "ALTER TABLE experiment_schedule_status ADD COLUMN launch_in_progress INTEGER NOT NULL DEFAULT 0"
                 )
-                print(
-                    "✓ Added launch_in_progress column to experiment_schedule_status"
-                )
+                print("✓ Added launch_in_progress column to experiment_schedule_status")
 
         # Create experiment_schedule_logs table
         cursor.execute(
@@ -237,12 +235,10 @@ def migrate_postgresql(host, port, database, user, password):
             )
             print("✓ Created experiment_schedule_status table")
         else:
-            cursor.execute(
-                """
+            cursor.execute("""
                 SELECT column_name FROM information_schema.columns
                 WHERE table_name = 'experiment_schedule_status'
-                """
-            )
+                """)
             columns = {row[0] for row in cursor.fetchall()}
             if "current_group_capacity" not in columns:
                 cursor.execute(
@@ -262,9 +258,7 @@ def migrate_postgresql(host, port, database, user, password):
                 cursor.execute(
                     "ALTER TABLE experiment_schedule_status ADD COLUMN launch_in_progress INTEGER NOT NULL DEFAULT 0"
                 )
-                print(
-                    "✓ Added launch_in_progress column to experiment_schedule_status"
-                )
+                print("✓ Added launch_in_progress column to experiment_schedule_status")
 
         conn.commit()
         conn.close()

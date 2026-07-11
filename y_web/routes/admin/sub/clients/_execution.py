@@ -224,9 +224,7 @@ def extend_simulation(id_client):
                         config = json.load(f)
 
                     # Keep every duration field aligned with the new total value.
-                    config = _sync_duration_fields_in_client_config(
-                        config, client.days
-                    )
+                    config = _sync_duration_fields_in_client_config(config, client.days)
 
                     if "simulation" in config:
 
