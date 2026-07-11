@@ -123,20 +123,20 @@ def test_elapsed_time_calculation():
     """
     Test the elapsed_time calculation logic for HPC clients.
 
-    Verifies the formula: elapsed_time = max_day * 24 + max_hour + 1
+    Verifies the formula: elapsed_time = (day - 1) * 24 + slot
     """
     # Test cases from log_metrics.py line 751
     test_cases = [
-        (0, 0, 1),  # Day 0, Hour 0 = Round 1
-        (0, 1, 2),  # Day 0, Hour 1 = Round 2
-        (0, 23, 24),  # Day 0, Hour 23 = Round 24
-        (1, 0, 25),  # Day 1, Hour 0 = Round 25
-        (1, 23, 48),  # Day 1, Hour 23 = Round 48
-        (6, 23, 168),  # Day 6, Hour 23 = Round 168 (7 days complete)
+        (1, 1, 1),  # Day 1, Hour 1 = Round 1
+        (1, 2, 2),  # Day 1, Hour 2 = Round 2
+        (1, 24, 24),  # Day 1, Hour 24 = Round 24
+        (2, 1, 25),  # Day 2, Hour 1 = Round 25
+        (2, 24, 48),  # Day 2, Hour 24 = Round 48
+        (7, 24, 168),  # Day 7, Hour 24 = Round 168 (7 days complete)
     ]
 
     for max_day, max_hour, expected_elapsed in test_cases:
-        elapsed_time = max_day * 24 + max_hour + 1
+        elapsed_time = (max_day - 1) * 24 + max_hour
         assert (
             elapsed_time == expected_elapsed
         ), f"Day {max_day}, Hour {max_hour} should give elapsed_time {expected_elapsed}, got {elapsed_time}"

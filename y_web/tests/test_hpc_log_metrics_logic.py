@@ -73,8 +73,8 @@ def test_get_latest_hourly_summary_calculates_elapsed_time(tmp_path):
 
     result = get_latest_hourly_summary_from_client_log(str(log_file))
 
-    # elapsed_time = day * 24 + slot + 1  →  1*24 + 20 + 1 = 45
-    assert result["elapsed_time"] == 45
+    # elapsed_time = (day - 1) * 24 + slot  →  (1 - 1) * 24 + 20 = 20
+    assert result["elapsed_time"] == 20
 
 
 def test_get_latest_hourly_summary_skips_garbage_lines(tmp_path):
@@ -155,4 +155,4 @@ def test_update_client_execution_from_log_marks_progress(app, tmp_path):
     assert result is True
     assert mock_exec.last_active_day == 1
     assert mock_exec.last_active_hour == 20
-    assert mock_exec.elapsed_time == 45
+    assert mock_exec.elapsed_time == 20

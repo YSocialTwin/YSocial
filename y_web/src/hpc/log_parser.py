@@ -35,6 +35,25 @@ logger = logging.getLogger(__name__)
 HPC_BASE_TIME = datetime(2000, 1, 1, 0, 0, 0)
 
 
+def _elapsed_time_from_hourly_summary(day, slot):
+    """
+    Convert an hourly summary position into a 1-based elapsed round count.
+
+    Current HPC client logs report days and slots starting at 1, so:
+    - day=1, slot=1  -> elapsed round 1
+    - day=1, slot=24 -> elapsed round 24
+    - day=2, slot=1  -> elapsed round 25
+
+    Legacy logs that still include day=0 or slot=0 are preserved with the
+    previous 0-based conversion to avoid breaking older experiments.
+    """
+    day = int(day)
+    slot = int(slot)
+    if day <= 0 or slot <= 0:
+        return day * 24 + slot + 1
+    return (day - 1) * 24 + slot
+
+
 def parse_server_log_incremental(log_file_path, exp_id, start_offset=0, is_hpc=False):
     """
     Parse server log file incrementally from a given offset.
@@ -580,9 +599,10 @@ def parse_client_log_incremental(
                 client_exec.last_active_day = max_day
                 client_exec.last_active_hour = max_hour
 
-                # Update elapsed_time (current round, 1-indexed)
-                # day 0, hour 0 = round 1
-                client_exec.elapsed_time = max_day * 24 + max_hour + 1
+                # Update elapsed_time using the 1-based HPC log convention.
+                client_exec.elapsed_time = _elapsed_time_from_hourly_summary(
+                    max_day, max_hour
+                )
 
                 logger.info(
                     f"HPC: Updated Client_Execution for client {client_id}: "
@@ -609,11 +629,21 @@ def parse_client_log_incremental(
                         }
 
                     if client.status == 1:
-                        client.status = 0
                         client_exec.terminal_state = "completed"
+                        client.status = 0
                         logger.info(
                             f"HPC client {client_id} simulation complete at round {current_round}, marking as stopped"
                         )
+
+                        try:
+                            from y_web.src.hpc.client import stop_hpc_client
+
+                            stop_hpc_client(client, terminal_state="completed")
+                        except Exception as exc:
+                            logger.warning(
+                                f"Unable to immediately stop completed HPC client {client_id}: {exc}",
+                                exc_info=True,
+                            )
 
                     # Commit the client status change before checking other clients
                     _commit_with_retry(db.session)

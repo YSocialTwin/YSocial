@@ -77,15 +77,19 @@ def test_log_file_exclusion():
         "_server.log",
         "test_client.log",
         "population_A_client.log",
+        "adhoc_client_alpha.state.json",
     ]
 
     # Filter out log files (simulating the copy logic)
-    files_to_copy = [f for f in file_list if not f.endswith(".log")]
+    files_to_copy = [
+        f for f in file_list if not f.endswith(".log") and not f.endswith(".state.json")
+    ]
 
     # Verify log files are excluded
     assert "_server.log" not in files_to_copy
     assert "test_client.log" not in files_to_copy
     assert "population_A_client.log" not in files_to_copy
+    assert "adhoc_client_alpha.state.json" not in files_to_copy
 
     # Verify other files are included
     assert "config_server.json" in files_to_copy

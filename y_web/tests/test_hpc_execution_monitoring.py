@@ -384,8 +384,8 @@ class TestHPCExecutionLogMonitoring:
                 client_id=client.id,
                 elapsed_time=24,
                 expected_duration_rounds=24,
-                last_active_day=0,
-                last_active_hour=23,
+                last_active_day=1,
+                last_active_hour=24,
             )
             db.session.add(client_exec)
             db.session.commit()
@@ -448,8 +448,8 @@ class TestHPCExecutionLogMonitoring:
                 client_id=client.id,
                 elapsed_time=23,
                 expected_duration_rounds=24,
-                last_active_day=0,
-                last_active_hour=22,
+                last_active_day=1,
+                last_active_hour=23,
                 terminal_state="manual_stop",
             )
             db.session.add(client_exec)
@@ -582,8 +582,8 @@ class TestHPCExecutionLogMonitoring:
                 client_id=client.id,
                 elapsed_time=10,
                 expected_duration_rounds=24,
-                last_active_day=0,
-                last_active_hour=9,
+                last_active_day=1,
+                last_active_hour=10,
             )
             db.session.add(client_exec)
             db.session.commit()
@@ -595,9 +595,9 @@ class TestHPCExecutionLogMonitoring:
             # Verify updates
             updated_exec = Client_Execution.query.filter_by(client_id=client.id).first()
             assert updated_exec.elapsed_time == 24
-            # With 24 rounds: round 1 = day 0, hour 0; round 24 = day 0, hour 23
-            assert updated_exec.last_active_day == 0
-            assert updated_exec.last_active_hour == 23
+            # With 24 rounds: round 1 = day 1, hour 1; round 24 = day 1, hour 24
+            assert updated_exec.last_active_day == 1
+            assert updated_exec.last_active_hour == 24
 
             updated_client = Client.query.filter_by(id=client.id).first()
             assert updated_client.status == 0
@@ -644,6 +644,9 @@ class TestHPCExecutionLogMonitoring:
                         "y_web.src.hpc.log_parser.Client_Execution.query"
                     ) as mock_exec_query,
                     patch("y_web.src.hpc.log_parser.Client.query") as mock_client_query,
+                    patch(
+                        "y_web.src.hpc.log_parser.ClientLogMetrics.query"
+                    ) as mock_metrics_query,
                 ):
                     mock_exec_query.filter_by.return_value.first.return_value = (
                         mock_exec
@@ -651,16 +654,89 @@ class TestHPCExecutionLogMonitoring:
                     mock_client_query.filter_by.return_value.first.return_value = (
                         mock_client
                     )
+                    mock_metrics_query.filter_by.return_value.first.return_value = None
 
                     new_offset, metrics = parse_client_log_incremental(
                         log_path, exp_id=1, client_id=1, start_offset=0, is_hpc=True
                     )
                     assert new_offset > 0
                     assert "hourly" in metrics
-                    assert mock_exec.elapsed_time == 50
+                    assert mock_exec.elapsed_time == 25
                     assert mock_exec.last_active_day == 2
                     assert mock_exec.last_active_hour == 1
                     assert mock_client.status == 1
+                    mock_commit.assert_called()
+        finally:
+            os.unlink(log_path)
+
+    def test_parse_client_log_incremental_stops_completed_client_immediately(self, app):
+        """Finite HPC clients should be terminated as soon as completion is detected."""
+        from y_web.src.hpc.log_parser import parse_client_log_incremental
+
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix="_client.log", delete=False
+        ) as f:
+            log_path = f.name
+            f.write(
+                json.dumps(
+                    {
+                        "time": "2026-04-21 08:18:28",
+                        "summary_type": "hourly",
+                        "day": 0,
+                        "slot": 23,
+                        "total_execution_time_seconds": 1.5,
+                        "actions_by_method": {"comment": 3},
+                    }
+                )
+                + "\n"
+            )
+
+        try:
+            with app.app_context():
+                mock_exec = MagicMock()
+                mock_exec.expected_duration_rounds = 24
+                mock_exec.elapsed_time = 0
+                mock_exec.last_active_day = None
+                mock_exec.last_active_hour = None
+                mock_exec.terminal_state = None
+
+                mock_client = MagicMock()
+                mock_client.status = 1
+                mock_client.id_exp = 99
+                mock_client.pid = 12345
+
+                with (
+                    patch("y_web.src.hpc.log_parser._commit_with_retry") as mock_commit,
+                    patch(
+                        "y_web.src.hpc.log_parser.Client_Execution.query"
+                    ) as mock_exec_query,
+                    patch("y_web.src.hpc.log_parser.Client.query") as mock_client_query,
+                    patch(
+                        "y_web.src.hpc.log_parser.ClientLogMetrics.query"
+                    ) as mock_metrics_query,
+                    patch("y_web.src.hpc.client.stop_hpc_client") as mock_stop,
+                ):
+                    mock_exec_query.filter_by.return_value.first.return_value = (
+                        mock_exec
+                    )
+                    mock_client_query.filter_by.return_value.first.return_value = (
+                        mock_client
+                    )
+                    mock_metrics_query.filter_by.return_value.first.return_value = None
+
+                    new_offset, metrics = parse_client_log_incremental(
+                        log_path, exp_id=1, client_id=1, start_offset=0, is_hpc=True
+                    )
+                    assert new_offset > 0
+                    assert "hourly" in metrics
+                    assert mock_exec.elapsed_time == 24
+                    assert mock_exec.last_active_day == 0
+                    assert mock_exec.last_active_hour == 23
+                    assert mock_exec.terminal_state == "completed"
+                    assert mock_client.status == 0
+                    mock_stop.assert_called_once_with(
+                        mock_client, terminal_state="completed"
+                    )
                     mock_commit.assert_called()
         finally:
             os.unlink(log_path)

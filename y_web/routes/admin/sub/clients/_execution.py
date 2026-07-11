@@ -29,6 +29,26 @@ from y_web.src.system.path_utils import get_resource_path
 from ._blueprint import clientsr
 
 
+def _sync_duration_fields_in_client_config(config: dict, days: int) -> dict:
+    """Keep all duration fields in a client config aligned with the new total."""
+    updated = dict(config)
+    duration_value = int(days)
+    max_ticks_value = None if duration_value == -1 else duration_value * 24
+    simulation = updated.get("simulation")
+    if isinstance(simulation, dict):
+        simulation["days"] = duration_value
+        simulation["num_days"] = duration_value
+
+    client_section = updated.get("client")
+    if isinstance(client_section, dict) and "max_ticks" in client_section:
+        client_section["max_ticks"] = max_ticks_value
+
+    if "max_ticks" in updated:
+        updated["max_ticks"] = max_ticks_value
+
+    return updated
+
+
 def _hpc_client_process_still_running(exp, client) -> bool:
     """Return whether the tracked HPC client PID is still active for this client."""
     try:
@@ -149,14 +169,13 @@ def extend_simulation(id_client):
     # get the client execution
     client_execution = Client_Execution.query.filter_by(client_id=id_client).first()
 
-    # extend the simulation
-    client_execution.expected_duration_rounds += int(days) * 24
-
-    db.session.commit()
-
     # update the client days field
     client = db.session.query(Client).filter_by(id=id_client).first()
     client.days = int(client.days) + int(days)
+    new_total_days = int(client.days)
+    client_execution.expected_duration_rounds = (
+        -1 if new_total_days == -1 else new_total_days * 24
+    )
     db.session.commit()
 
     # Check if the experiment was completed, and reset to stopped if so
@@ -204,9 +223,12 @@ def extend_simulation(id_client):
                     with open(config_path, "r") as f:
                         config = json.load(f)
 
-                    # Update num_days in simulation config
+                    # Keep every duration field aligned with the new total value.
+                    config = _sync_duration_fields_in_client_config(
+                        config, client.days
+                    )
+
                     if "simulation" in config:
-                        config["simulation"]["num_days"] = days  # int(client.days)
 
                         # Write updated config back to file
                         with open(config_path, "w") as f:

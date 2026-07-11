@@ -3017,6 +3017,10 @@ def _create_single_experiment_copy(source_exp, new_exp_name, exp_group=""):
         if log_pattern.search(item):
             continue
 
+        # Skip runtime state snapshots so copied experiments always start fresh.
+        if item.endswith(".state.json"):
+            continue
+
         # For HPC experiments, skip additional files:
         # - database files (HPC generates its own on server startup)
         # - ray_config.temp (temporary Ray configuration file)

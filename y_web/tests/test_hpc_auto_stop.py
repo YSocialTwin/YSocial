@@ -28,8 +28,8 @@ def test_hpc_client_completion_stops_all_when_last_client_finishes():
     mock_client_exec = MagicMock()
     mock_client_exec.elapsed_time = 168  # Finished (7 days * 24 hours)
     mock_client_exec.expected_duration_rounds = 168
-    mock_client_exec.last_active_day = 6
-    mock_client_exec.last_active_hour = 23
+    mock_client_exec.last_active_day = 7
+    mock_client_exec.last_active_hour = 24
 
     # Create other clients (all stopped)
     mock_client_2 = MagicMock()
