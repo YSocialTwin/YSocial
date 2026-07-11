@@ -1,0 +1,249 @@
+{% extends "photo/base.html" %}
+
+{% block photo_title %}Y Social | Suggested Contacts{% endblock %}
+{% block photo_body_class %}photo-suggestions-body{% endblock %}
+
+{% block photo_extra_head %}
+        .photo-suggestions-page {
+            min-height: 100vh;
+            padding: 40px 24px 56px;
+            background: #fff;
+        }
+
+        .photo-suggestions-page__inner {
+            max-width: 840px;
+            margin: 0 auto;
+        }
+
+        .photo-suggestions-page__top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 22px;
+        }
+
+        .photo-suggestions-page__top h1 {
+            margin: 0;
+            font-family: "Montserrat", sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .photo-suggestions-page__top p {
+            margin: 6px 0 0;
+            color: #666;
+        }
+
+        .photo-suggestions-page__back {
+            color: #111;
+            background: rgba(0, 0, 0, 0.04);
+            border-color: transparent;
+            box-shadow: none;
+        }
+
+        .photo-suggestions-page__back:hover,
+        .photo-suggestions-page__back:focus {
+            color: #111;
+            background: rgba(0, 0, 0, 0.06);
+        }
+
+        .photo-suggestions-card {
+            background: rgba(255, 255, 255, 0.96);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 20px;
+            padding: 18px 20px;
+            box-shadow: 0 16px 34px rgba(15, 23, 42, 0.06);
+        }
+
+        .photo-suggestions-card__header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .photo-suggestions-card__header h2 {
+            margin: 0;
+            font-family: "Montserrat", sans-serif;
+            font-size: 1rem;
+            font-weight: 800;
+        }
+
+        .photo-suggestions-card__header p {
+            margin: 4px 0 0;
+            color: #666;
+            font-size: 0.92rem;
+        }
+
+        .photo-suggestions-card__list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .photo-suggestions-card__row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .photo-suggestions-card__main {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+            flex: 1;
+            color: #111;
+            text-decoration: none;
+        }
+
+        .photo-suggestions-card__main:hover,
+        .photo-suggestions-card__main:focus,
+        .photo-suggestions-card__main:visited {
+            color: #111;
+            text-decoration: none;
+        }
+
+        .photo-suggestions-card__main img {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .photo-suggestions-card__copy {
+            min-width: 0;
+        }
+
+        .photo-suggestions-card__copy strong,
+        .photo-suggestions-card__copy small {
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .photo-suggestions-card__copy strong {
+            font-size: 0.98rem;
+        }
+
+        .photo-suggestions-card__copy small {
+            color: #777;
+            font-size: 0.84rem;
+            margin-top: 2px;
+        }
+
+        .photo-suggestions-card__footer {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 18px;
+        }
+
+        .photo-suggestions-card__footer a {
+            color: #111;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .photo-suggestions-card__footer a:hover,
+        .photo-suggestions-card__footer a:focus,
+        .photo-suggestions-card__footer a:visited {
+            color: #111;
+            text-decoration: none;
+        }
+
+        .photo-suggestions-card .button.is-link.is-light {
+            background: rgba(255, 47, 85, 0.08);
+            border-color: transparent;
+            color: #d91d4f;
+            box-shadow: none;
+        }
+
+        .photo-suggestions-card .button.is-link.is-light:hover,
+        .photo-suggestions-card .button.is-link.is-light:focus {
+            background: rgba(255, 47, 85, 0.14);
+            color: #b31243;
+        }
+
+        .photo-suggestions-card .button.is-static.is-light {
+            background: rgba(0, 0, 0, 0.05);
+            border-color: transparent;
+            color: #777;
+        }
+
+        @media (max-width: 768px) {
+            .photo-suggestions-page {
+                padding: 24px 14px 40px;
+            }
+
+            .photo-suggestions-card {
+                padding: 16px;
+            }
+        }
+{% endblock %}
+
+{% block photo_content %}
+<div class="photo-suggestions-page">
+    <div class="photo-suggestions-page__inner">
+        <div class="photo-suggestions-page__top">
+            <div>
+                <h1>Suggested Contacts</h1>
+                <p>People and pages you can follow in this experiment.</p>
+            </div>
+            <a class="button is-light is-rounded photo-suggestions-page__back" href="/{{ exp_id }}/photo/feed/all/feed/rf/1">Back to feed</a>
+        </div>
+
+        <div class="photo-suggestions-card">
+            <div class="photo-suggestions-card__header">
+                <div>
+                    <h2>Suggestions for you</h2>
+                    <p>Follow accounts to update your feed and social graph.</p>
+                </div>
+            </div>
+
+            <div class="photo-suggestions-card__list">
+                {% if suggestions %}
+                    {% for user in suggestions %}
+                    <div class="photo-suggestions-card__row">
+                        <a class="photo-suggestions-card__main" href="/{{ exp_id }}/photo/profile/{{ user['id'] }}/recent/1">
+                            {% set suggested_profile_src = user['profile_pic'] or url_for('static', filename='assets/img/users/' ~ (user['id']|user_image_id) ~ '.png') %}
+                            <img src="{{ suggested_profile_src }}" data-demo-src="{{ suggested_profile_src }}" alt=""/>
+                            <div class="photo-suggestions-card__copy">
+                                <strong>{{ user['username'] }}</strong>
+                                <small>
+                                    {% if user.get('kind') == 'page' %}
+                                        Suggested page
+                                    {% else %}
+                                        Suggested contact
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </a>
+                        {% if followed_contact_ids and user['id'] in followed_contact_ids %}
+                        <span class="button is-small is-static is-light">Followed</span>
+                        {% else %}
+                        <a class="button is-small is-link is-light" href="/{{ exp_id }}/follow/{{ user['id'] }}/{{ logged_id }}">
+                            Follow
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="notification is-light">
+                        Suggested contacts are loading.
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="photo-suggestions-card__footer">
+                <a href="/{{ exp_id }}/photo/feed/all/feed/rf/1">See all</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

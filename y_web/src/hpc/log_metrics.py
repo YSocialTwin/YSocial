@@ -9,6 +9,7 @@ loop. Parsing helpers are imported from y_web.src.hpc.log_parser.
 import json
 import logging
 import os
+import time
 
 from y_web import db
 from y_web.src.hpc.client import resolve_hpc_client_log_path
@@ -44,6 +45,104 @@ _SERVER_COMPLETION_MARKERS = {
     "Notified server of completion",
     "Simulation complete. Server notified.",
 }
+_FATAL_CLIENT_ERROR_MARKERS = {
+    "actordiederror",
+    "actoralreadyexistserror",
+    "the actor died unexpectedly before finishing this task",
+    "owner's node has crashed",
+    "owner worker exit type: system_error",
+}
+
+
+def _read_execution_log_tail(execution_log_path, tail_bytes: int = 65536):
+    """
+    Read the tail of an execution log and return the raw lines plus the last line.
+
+    The helper keeps the scan bounded so we can inspect completion markers and
+    fatal runtime errors without loading arbitrarily large logs into memory.
+    """
+    if not os.path.exists(execution_log_path):
+        return None, None
+
+    try:
+        with open(execution_log_path, "r") as f:
+            try:
+                f.seek(0, os.SEEK_END)
+                file_size = f.tell()
+
+                if file_size == 0:
+                    return [], ""
+
+                f.seek(max(0, file_size - min(tail_bytes, file_size)))
+                lines = f.read().splitlines()
+                if not lines:
+                    return [], ""
+                return lines, lines[-1].strip()
+            except Exception:
+                f.seek(0)
+                lines = f.readlines()
+                if not lines:
+                    return [], ""
+                return lines, lines[-1].strip()
+    except Exception as exc:
+        logger.warning(
+            f"Unable to read execution log tail from {execution_log_path}: {exc}",
+            exc_info=True,
+        )
+        return None, None
+
+
+def _clear_hpc_execution_logs(exp_id: int) -> int:
+    """
+    Remove stale execution-log contents for a restarting HPC experiment.
+
+    The monitor only inspects the current ``*_execution.log`` file, so clearing
+    it before a restart prevents the same fatal line from being re-detected on
+    every monitor tick.
+
+    Returns:
+        int: Number of execution-log files that were cleared or removed.
+    """
+    try:
+        from y_web.src.hpc.server import _resolve_hpc_experiment_folder
+
+        exp = Exps.query.filter_by(idexp=exp_id).first()
+        if not exp:
+            return 0
+
+        exp_folder = _resolve_hpc_experiment_folder(exp)
+        logs_dir = os.path.join(exp_folder, "logs")
+        if not os.path.isdir(logs_dir):
+            return 0
+
+        cleared = 0
+        for entry_name in os.listdir(logs_dir):
+            if "_execution.log" not in entry_name:
+                continue
+
+            entry_path = os.path.join(logs_dir, entry_name)
+            if not os.path.isfile(entry_path):
+                continue
+
+            try:
+                if entry_name.endswith(".gz"):
+                    os.remove(entry_path)
+                else:
+                    with open(entry_path, "w", encoding="utf-8"):
+                        pass
+                cleared += 1
+            except Exception as exc:
+                logger.warning(
+                    f"Failed to clear stale execution log {entry_path}: {exc}",
+                    exc_info=True,
+                )
+        return cleared
+    except Exception as exc:
+        logger.warning(
+            f"Unable to clear execution logs for experiment {exp_id}: {exc}",
+            exc_info=True,
+        )
+        return 0
 
 
 def _is_hpc_client_tracked_process_alive(client: Client, *, exp_folder: str) -> bool:
@@ -144,6 +243,40 @@ def _tail_contains_completion_marker(lines) -> bool:
         if message == _NATURAL_COMPLETION_MARKER:
             return True
         if message in _SERVER_COMPLETION_MARKERS:
+            return True
+
+    return False
+
+
+def _tail_contains_fatal_client_error(lines) -> bool:
+    """Return whether the execution log tail reports a fatal client runtime error."""
+    for raw_line in lines:
+        line = (raw_line or "").strip()
+        if not line:
+            continue
+
+        try:
+            entry = json.loads(line)
+        except Exception:
+            lowered = line.lower()
+            if any(marker in lowered for marker in _FATAL_CLIENT_ERROR_MARKERS):
+                return True
+            continue
+
+        message = str(entry.get("message", "") or "")
+        error_message = str(entry.get("error_message", "") or "")
+        error_type = str(entry.get("error_type", "") or "")
+        combined = " ".join(
+            [message, error_message, error_type, str(entry.get("traceback", "") or "")]
+        ).lower()
+        if any(marker in combined for marker in _FATAL_CLIENT_ERROR_MARKERS):
+            return True
+
+        level = str(entry.get("level", "") or "").strip().lower()
+        if level == "error" and any(
+            marker in combined
+            for marker in {"actor died", "worker exit type", "owner's node has crashed"}
+        ):
             return True
 
     return False
@@ -325,42 +458,18 @@ def check_hpc_client_execution_completion(exp_id, client_id, execution_log_path)
         return False
 
     try:
-        # Read the last line of the log file
-        with open(execution_log_path, "r") as f:
-            # Efficiently read last line by seeking to end
-            # Handle both small and large files
-            try:
-                f.seek(0, os.SEEK_END)
-                file_size = f.tell()
+        lines, last_line = _read_execution_log_tail(execution_log_path)
+        if lines is None:
+            return False
+        if not lines:
+            print(
+                f"[HPC Monitor] No lines found in execution log: {execution_log_path}"
+            )
+            return False
 
-                if file_size == 0:
-                    print(f"[HPC Monitor] Execution log is empty: {execution_log_path}")
-                    return False
-
-                # Read up to 10KB from the end to find the last line
-                # This handles cases where the last line might be very long
-                chunk_size = min(10240, file_size)
-                f.seek(max(0, file_size - chunk_size))
-                lines = f.read().splitlines()
-
-                if not lines:
-                    print(
-                        f"[HPC Monitor] No lines found in execution log: {execution_log_path}"
-                    )
-                    return False
-
-                last_line = lines[-1].strip()
-                print(
-                    f"[HPC Monitor] Last line from {execution_log_path}: {last_line[:200]}..."
-                )
-            except Exception as e:
-                print(f"[HPC Monitor] Error seeking in file, using fallback: {e}")
-                # Fallback: read entire file if seeking fails
-                f.seek(0)
-                lines = f.readlines()
-                if not lines:
-                    return False
-                last_line = lines[-1].strip()
+        print(
+            f"[HPC Monitor] Last line from {execution_log_path}: {last_line[:200]}..."
+        )
 
         # Parse the last line as JSON
         if not last_line:
@@ -418,6 +527,13 @@ def check_hpc_client_execution_completion(exp_id, client_id, execution_log_path)
                     f"HPC client {client_id} completed for experiment {exp_id} based on execution progress"
                 )
                 return True
+
+        if _tail_contains_fatal_client_error(lines):
+            print("[HPC Monitor] Fatal client runtime error detected in execution log")
+            logger.error(
+                f"HPC client {client_id} reported a fatal runtime error for experiment {exp_id}"
+            )
+            return False
 
         print(f"[HPC Monitor] Message does not match 'Client shutdown complete'")
         return False
@@ -636,6 +752,204 @@ def mark_hpc_client_as_completed(exp_id, client_id):
     except Exception as e:
         logger.error(
             f"Error marking client {client_id} as completed: {e}", exc_info=True
+        )
+        db.session.rollback()
+        return False
+
+
+def _mark_hpc_client_as_failed(exp_id, client_id, *, reason: str = "") -> bool:
+    """
+    Mark an HPC client as failed and stop the experiment.
+
+    This is used when the tracked subprocess or its Ray runtime disappears
+    without a normal completion marker. The function preserves the last known
+    execution progress, marks the client as stopped, and records a failed
+    terminal state so the experiment can be safely restarted later.
+    """
+    try:
+        print(f"[HPC Monitor] Marking client {client_id} as failed... {reason}")
+
+        client_exec = Client_Execution.query.filter_by(client_id=client_id).first()
+        client = Client.query.filter_by(id=client_id).first()
+        if not client:
+            logger.warning(f"Client {client_id} not found while marking failure")
+            return False
+
+        if client_exec:
+            client_exec.terminal_state = "failed"
+
+        client.status = 0
+        client.pid = None
+
+        _commit_with_retry(db.session)
+        logger.warning(
+            f"HPC client {client_id} marked as failed for experiment {exp_id}"
+            + (f" ({reason})" if reason else "")
+        )
+        return True
+    except Exception as e:
+        logger.error(f"Error marking client {client_id} as failed: {e}", exc_info=True)
+        db.session.rollback()
+        return False
+
+
+def _stop_hpc_experiment_after_client_failure(exp_id: int, reason: str = "") -> bool:
+    """
+    Stop the experiment after an unrecoverable client failure.
+
+    The server is shut down and the experiment is moved back to the stopped
+    state so it can be restarted cleanly later.
+    """
+    try:
+        from y_web.src.hpc.server import stop_hpc_server
+        from y_web.src.models import Exps
+
+        exp = Exps.query.filter_by(idexp=exp_id).first()
+        if not exp:
+            return False
+
+        print(
+            f"[HPC Monitor] Stopping experiment {exp.exp_name} after client failure"
+            + (f" ({reason})" if reason else "")
+        )
+        stop_hpc_server(exp_id)
+        exp.running = 0
+        exp.exp_status = "stopped"
+        _commit_with_retry(db.session)
+
+        if _restart_failed_schedule_experiment(exp_id, reason=reason):
+            return True
+
+        return True
+    except Exception as e:
+        logger.error(
+            f"Error stopping experiment {exp_id} after client failure: {e}",
+            exc_info=True,
+        )
+        db.session.rollback()
+        return False
+
+
+def _restart_failed_schedule_experiment(exp_id: int, reason: str = "") -> bool:
+    """
+    Restart a failed HPC experiment if it belongs to the active schedule group.
+
+    The restart is only attempted for experiments that are part of the currently
+    running schedule group. Both the failure and the restart are written to the
+    experiment schedule log so the user can see each recovery attempt.
+    """
+    try:
+        from y_web.routes.admin.sub.experiments._blueprint import _schedule_check_lock
+        from y_web.routes.admin.sub.experiments._schedule import _get_clients_to_start
+        from y_web.src.models import (
+            ExperimentScheduleGroup,
+            ExperimentScheduleItem,
+            ExperimentScheduleLog,
+            ExperimentScheduleStatus,
+            Population,
+        )
+        from y_web.src.simulation.execution_backend import (
+            start_client_for_experiment,
+            start_server_for_experiment,
+        )
+
+        with _schedule_check_lock:
+            exp = Exps.query.filter_by(idexp=exp_id).first()
+            if not exp:
+                return False
+
+            schedule_status = ExperimentScheduleStatus.query.first()
+            if (
+                not schedule_status
+                or not schedule_status.is_running
+                or not schedule_status.current_group_id
+            ):
+                return False
+
+            schedule_item = ExperimentScheduleItem.query.filter_by(
+                experiment_id=exp_id,
+                group_id=schedule_status.current_group_id,
+            ).first()
+            if not schedule_item:
+                return False
+
+            group = ExperimentScheduleGroup.query.get(schedule_status.current_group_id)
+            group_name = group.name if group else "Unknown"
+            restart_reason = f" ({reason})" if reason else ""
+
+            db.session.add(
+                ExperimentScheduleLog(
+                    message=(
+                        f"Experiment '{exp.exp_name}' failed in running schedule "
+                        f"group '{group_name}'{restart_reason}. Restarting automatically."
+                    ),
+                    log_type="warning",
+                )
+            )
+            db.session.commit()
+
+            cleared_logs = _clear_hpc_execution_logs(exp_id)
+            if cleared_logs > 0:
+                db.session.add(
+                    ExperimentScheduleLog(
+                        message=(
+                            f"Cleared {cleared_logs} stale execution log(s) before "
+                            f"restarting experiment '{exp.exp_name}' in schedule group "
+                            f"'{group_name}'."
+                        ),
+                        log_type="info",
+                    )
+                )
+                db.session.commit()
+
+            _, clients_to_start = _get_clients_to_start(exp)
+            if not clients_to_start:
+                db.session.add(
+                    ExperimentScheduleLog(
+                        message=(
+                            f"Experiment '{exp.exp_name}' has no clients to restart "
+                            f"after failure in schedule group '{group_name}'."
+                        ),
+                        log_type="warning",
+                    )
+                )
+                db.session.commit()
+                return False
+
+            exp.running = 1
+            exp.exp_status = "active"
+            db.session.commit()
+
+            start_server_for_experiment(exp)
+            time.sleep(3)
+
+            restarted_clients = 0
+            for client in clients_to_start:
+                if client.status != 0:
+                    continue
+                population = Population.query.filter_by(id=client.population_id).first()
+                if not population:
+                    continue
+                start_client_for_experiment(exp, client, population, resume=True)
+                client.status = 1
+                restarted_clients += 1
+                db.session.commit()
+
+            db.session.add(
+                ExperimentScheduleLog(
+                    message=(
+                        f"Experiment '{exp.exp_name}' restarted automatically in "
+                        f"schedule group '{group_name}' "
+                        f"({restarted_clients} client(s) restarted)."
+                    ),
+                    log_type="success" if restarted_clients > 0 else "warning",
+                )
+            )
+            db.session.commit()
+            return restarted_clients > 0
+    except Exception as e:
+        logger.error(
+            f"Error restarting experiment {exp_id} after failure: {e}", exc_info=True
         )
         db.session.rollback()
         return False
@@ -910,6 +1224,13 @@ def monitor_hpc_client_execution_logs():
                     print(
                         f"[HPC Monitor] Checking client: {client.name} (ID: {client.id})"
                     )
+                    client_exec = None
+                    try:
+                        client_exec = Client_Execution.query.filter_by(
+                            client_id=client.id
+                        ).first()
+                    except Exception:
+                        client_exec = None
 
                     # Update client execution progress from client log
                     client_log_path = resolve_hpc_client_log_path(
@@ -935,36 +1256,82 @@ def monitor_hpc_client_execution_logs():
                         f"[HPC Monitor] Looking for execution log: {execution_log_path}"
                     )
 
-                    if not os.path.exists(execution_log_path):
+                    execution_log_exists = os.path.exists(execution_log_path)
+                    if execution_log_exists:
+                        print(
+                            f"[HPC Monitor] Execution log found, checking for shutdown message..."
+                        )
+
+                        lines, _ = _read_execution_log_tail(execution_log_path)
+                        if lines is None:
+                            print(
+                                f"[HPC Monitor] Failed to read execution log tail for {client.name}"
+                            )
+                            lines = []
+
+                        if _tail_contains_fatal_client_error(lines):
+                            reason = f"fatal runtime error reported in {client.name} execution log"
+                            print(f"[HPC Monitor] {reason}")
+                            if _mark_hpc_client_as_failed(
+                                exp.idexp, client.id, reason=reason
+                            ):
+                                _stop_hpc_experiment_after_client_failure(
+                                    exp.idexp, reason=reason
+                                )
+                                print(
+                                    f"[HPC Monitor] *** EXPERIMENT {exp.exp_name} STOPPED AFTER CLIENT FAILURE ***"
+                                )
+                            return False
+
+                        # Check if client has completed
+                        if check_hpc_client_execution_completion(
+                            exp.idexp, client.id, execution_log_path
+                        ):
+                            print(
+                                f"[HPC Monitor] *** SHUTDOWN DETECTED for {client.name} ***"
+                            )
+                            # Mark client as completed
+                            if mark_hpc_client_as_completed(exp.idexp, client.id):
+                                print(
+                                    f"[HPC Monitor] Successfully marked {client.name} as completed"
+                                )
+                                logger.info(
+                                    f"Successfully marked client {client.name} as completed "
+                                    f"for experiment {exp.exp_name}"
+                                )
+                            else:
+                                print(
+                                    f"[HPC Monitor] Failed to mark {client.name} as completed"
+                                )
+                            continue
+                    else:
                         print(
                             f"[HPC Monitor] Execution log not found for {client.name}"
                         )
-                        continue
 
-                    print(
-                        f"[HPC Monitor] Execution log found, checking for shutdown message..."
-                    )
-
-                    # Check if client has completed
-                    if check_hpc_client_execution_completion(
-                        exp.idexp, client.id, execution_log_path
+                    # If the tracked process is gone and we still have no completion
+                    # evidence, treat this as an unrecoverable failure so the
+                    # experiment does not stay stuck in the running state.
+                    if not _is_hpc_client_tracked_process_alive(
+                        client, exp_folder=exp_folder
                     ):
-                        print(
-                            f"[HPC Monitor] *** SHUTDOWN DETECTED for {client.name} ***"
-                        )
-                        # Mark client as completed
-                        if mark_hpc_client_as_completed(exp.idexp, client.id):
-                            print(
-                                f"[HPC Monitor] Successfully marked {client.name} as completed"
+                        terminal_state = getattr(client_exec, "terminal_state", None)
+                        if terminal_state not in {"manual_stop", "paused", "completed"}:
+                            reason = (
+                                f"PID {getattr(client, 'pid', None)} no longer alive "
+                                f"for client {client.name}"
                             )
-                            logger.info(
-                                f"Successfully marked client {client.name} as completed "
-                                f"for experiment {exp.exp_name}"
-                            )
-                        else:
-                            print(
-                                f"[HPC Monitor] Failed to mark {client.name} as completed"
-                            )
+                            print(f"[HPC Monitor] {reason}")
+                            if _mark_hpc_client_as_failed(
+                                exp.idexp, client.id, reason=reason
+                            ):
+                                _stop_hpc_experiment_after_client_failure(
+                                    exp.idexp, reason=reason
+                                )
+                                print(
+                                    f"[HPC Monitor] *** EXPERIMENT {exp.exp_name} STOPPED AFTER CLIENT FAILURE ***"
+                                )
+                            return False
                     else:
                         print(
                             f"[HPC Monitor] No shutdown message found for {client.name}"

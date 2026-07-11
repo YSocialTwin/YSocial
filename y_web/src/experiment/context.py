@@ -6,6 +6,7 @@ It provides utilities to register, access, and switch between experiment databas
 """
 
 import os
+from contextlib import contextmanager
 
 from flask import current_app, g, request
 
@@ -64,6 +65,56 @@ def register_experiment_database(app, exp_id, db_name):
     app.config["SQLALCHEMY_BINDS"][bind_key] = db_uri
 
 
+def _activate_db_exp_bind(exp_id):
+    """Point the shared ``db_exp`` bind at the database for ``exp_id``.
+
+    Flask-SQLAlchemy caches engines per bind key. Updating only
+    ``SQLALCHEMY_BINDS`` is not enough because the already-created ``db_exp``
+    engine may still reference the legacy dummy database. This helper refreshes
+    both the bind URI and the cached engine so experiment-scoped ORM queries are
+    executed against the selected experiment database.
+    """
+
+    from y_web.src.models import Exps
+
+    bind_key = get_db_bind_key_for_exp(exp_id)
+    if bind_key not in current_app.config["SQLALCHEMY_BINDS"]:
+        exp = Exps.query.filter_by(idexp=exp_id).first()
+        if exp is not None:
+            register_experiment_database(current_app, exp_id, exp.db_name)
+
+    binds = current_app.config["SQLALCHEMY_BINDS"]
+    target_uri = binds.get(bind_key)
+    original_bind = binds.get("db_exp")
+    original_engine = db.get_engine(bind="db_exp")
+
+    if not target_uri:
+        return original_bind, original_engine, None
+
+    from y_web.src.experiment.schema import ensure_experiment_schema_for_uri
+
+    ensure_experiment_schema_for_uri(target_uri)
+
+    binds["db_exp"] = target_uri
+    db.session.remove()
+    refreshed_engine = db.get_engine(bind="db_exp")
+    return original_bind, original_engine, refreshed_engine
+
+
+def _restore_db_exp_bind(original_bind, original_engine, refreshed_engine=None):
+    """Restore the shared ``db_exp`` bind after a temporary override."""
+
+    binds = current_app.config["SQLALCHEMY_BINDS"]
+    if original_bind is not None:
+        binds["db_exp"] = original_bind
+    else:
+        binds.pop("db_exp", None)
+
+    db.session.remove()
+    if refreshed_engine is not None and refreshed_engine is not original_engine:
+        refreshed_engine.dispose()
+
+
 def get_active_experiments():
     """
     Get all currently active experiments.
@@ -107,18 +158,22 @@ def setup_experiment_context():
 
         g.current_db_bind = bind_key
 
-        # Store the original db_exp bind so we can restore it later
+        # Store the original db_exp bind so we can restore it later.
         if not hasattr(g, "original_db_exp_bind"):
             g.original_db_exp_bind = current_app.config["SQLALCHEMY_BINDS"].get(
                 "db_exp"
             )
+        if not hasattr(g, "original_db_exp_engine"):
+            g.original_db_exp_engine = db.get_engine(bind="db_exp")
 
-        # Dynamically override db_exp bind to point to this experiment's database
-        # This ensures all queries using __bind_key__ = "db_exp" route to the correct database
-        if bind_key in current_app.config["SQLALCHEMY_BINDS"]:
-            current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = current_app.config[
-                "SQLALCHEMY_BINDS"
-            ][bind_key]
+        # Dynamically override db_exp bind and cached engine to point to the
+        # current experiment's database.
+        original_bind, original_engine, refreshed_engine = _activate_db_exp_bind(exp_id)
+        if not hasattr(g, "original_db_exp_bind"):
+            g.original_db_exp_bind = original_bind
+        if not hasattr(g, "original_db_exp_engine"):
+            g.original_db_exp_engine = original_engine
+        g.current_db_exp_engine = refreshed_engine
     else:
         # No exp_id in URL, fall back to legacy behavior
         g.current_exp_id = None
@@ -156,8 +211,35 @@ def teardown_experiment_context(exception=None):
         exception: Exception that occurred during request processing, if any
     """
     # Restore original db_exp bind if it was modified
-    if hasattr(g, "original_db_exp_bind") and g.original_db_exp_bind is not None:
-        current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = g.original_db_exp_bind
+    if hasattr(g, "original_db_exp_bind") or hasattr(g, "original_db_exp_engine"):
+        _restore_db_exp_bind(
+            getattr(g, "original_db_exp_bind", None),
+            getattr(g, "original_db_exp_engine", None),
+            getattr(g, "current_db_exp_engine", None),
+        )
+
+
+@contextmanager
+def experiment_db_bind(exp_id):
+    """Temporarily point ``db_exp`` at the database for ``exp_id``.
+
+    The application already keeps a request-level bind through
+    ``setup_experiment_context()``, but some feed paths build multiple query
+    batches and can observe the wrong bind when other requests are active in
+    parallel.  Wrapping the full rendering path keeps the feed data source
+    stable for the duration of the request without changing callers.
+    """
+
+    if exp_id is None:
+        yield
+        return
+
+    original_bind, original_engine, refreshed_engine = _activate_db_exp_bind(exp_id)
+
+    try:
+        yield
+    finally:
+        _restore_db_exp_bind(original_bind, original_engine, refreshed_engine)
 
 
 def initialize_active_experiment_databases(app):

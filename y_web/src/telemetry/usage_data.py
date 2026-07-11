@@ -48,16 +48,22 @@ class Telemetry(object):
         Returns:
             bool: True if telemetry is enabled, False otherwise
         """
-        if self.user is None:
-            return True  # Default to enabled if no user context
+        try:
+            if self.user is None:
+                return True  # Default to enabled if no user context
 
-        # Check if user is authenticated
-        if not hasattr(self.user, "is_authenticated") or not self.user.is_authenticated:
-            return True  # Default to enabled for anonymous users
+            # Check if user is authenticated
+            if (
+                not hasattr(self.user, "is_authenticated")
+                or not self.user.is_authenticated
+            ):
+                return True  # Default to enabled for anonymous users
 
-        # Check if user has telemetry_enabled attribute (Admin_users)
-        if hasattr(self.user, "telemetry_enabled"):
-            return bool(self.user.telemetry_enabled)
+            # Check if user has telemetry_enabled attribute (Admin_users)
+            if hasattr(self.user, "telemetry_enabled"):
+                return bool(self.user.telemetry_enabled)
+        except Exception:
+            return True
 
         return True  # Default to enabled if attribute doesn't exist
 

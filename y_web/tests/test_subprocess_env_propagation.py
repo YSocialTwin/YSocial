@@ -171,7 +171,6 @@ def test_subprocess_env_helper_injects_persistent_model_cache(monkeypatch, tmp_p
 
     assert env["YSOCIAL_MODEL_CACHE_DIR"] == str(tmp_path / "model-cache")
     assert env["HF_HOME"].startswith(env["YSOCIAL_MODEL_CACHE_DIR"])
-    assert env["TRANSFORMERS_CACHE"].startswith(env["HF_HOME"])
     assert env["HUGGINGFACE_HUB_CACHE"].startswith(env["HF_HOME"])
     assert env["TORCH_HOME"].startswith(env["YSOCIAL_MODEL_CACHE_DIR"])
 

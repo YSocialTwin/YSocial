@@ -34,6 +34,12 @@ def test_normalize_returns_forum():
     assert normalize_population_username_type("forum") == "forum"
 
 
+def test_normalize_returns_photo_sharing():
+    from y_web.src.agents.platform import normalize_population_username_type
+
+    assert normalize_population_username_type("photo_sharing") == "photo_sharing"
+
+
 def test_normalize_unknown_returns_default():
     from y_web.src.agents.platform import normalize_population_username_type
 

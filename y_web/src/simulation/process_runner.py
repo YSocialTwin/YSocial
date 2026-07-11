@@ -740,7 +740,15 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
                     # Track all agents in daily_active, not just successful ones (preserves original behavior)
                     churned_ids = []
                     for future in as_completed(future_to_agent):
-                        agent_name, success, churned_id = future.result()
+                        try:
+                            agent_name, success, churned_id = future.result()
+                        except Exception as exc:
+                            print(
+                                f"Warning: agent task failed during slot processing: {exc}",
+                                file=sys.stderr,
+                            )
+                            print(traceback.format_exc(), file=sys.stderr)
+                            continue
                         # Add to daily_active regardless of success to maintain original behavior
                         daily_active[agent_name] = None
                         if churned_id:

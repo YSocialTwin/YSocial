@@ -11,6 +11,7 @@ import os
 
 from flask import (
     flash,
+    jsonify,
     redirect,
     render_template,
     request,
@@ -81,7 +82,11 @@ def _latest_follow_action(*, follower_id, user_id):
 
 
 def _experiment_server_config(exp):
-    if not exp or getattr(exp, "platform_type", "") not in {"forum", "microblogging"}:
+    if not exp or getattr(exp, "platform_type", "") not in {
+        "forum",
+        "microblogging",
+        "photo_sharing",
+    }:
         return {}
 
     uid = get_experiment_uid_from_db_name(
@@ -112,7 +117,11 @@ def _experiment_server_config(exp):
 
 
 def _stress_reward_enabled_for_exp(exp):
-    if not exp or getattr(exp, "platform_type", "") not in {"microblogging", "forum"}:
+    if not exp or getattr(exp, "platform_type", "") not in {
+        "microblogging",
+        "forum",
+        "photo_sharing",
+    }:
         return False
 
     config = _experiment_server_config(exp)
@@ -263,6 +272,8 @@ def index():
                 return redirect(f"/{exp.idexp}/feed/{exp_user_id}/feed/rf/1")
             elif exp.platform_type == "forum":
                 return redirect(f"/{exp.idexp}/rfeed/{exp_user_id}/rfeed/rf/1")
+            elif exp.platform_type == "photo_sharing":
+                return redirect(f"/{exp.idexp}/photo/feed/all/feed/rf/1")
     return render_template("login/login.html")
 
 
@@ -319,6 +330,9 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
     if not user:
         flash("User not found in experiment", "error")
         return redirect(url_for("main.index"))
+
+    if getattr(exp, "platform_type", "") == "photo_sharing":
+        return redirect(f"/{exp_id}/photo/profile/{user.id}/recent/{page}")
 
     is_following = (
         _latest_follow_action(follower_id=logged_id, user_id=user.id) == "follow"
@@ -620,6 +634,28 @@ def update_profile_data(exp_id, user_id):
     _set_user_cover_image(user.id, cover_image)
 
     db.session.commit()
+
+    if (
+        request.headers.get("X-Requested-With") == "XMLHttpRequest"
+        or "application/json" in request.headers.get("Accept", "")
+        or request.is_json
+    ):
+        return jsonify(
+            {
+                "ok": True,
+                "user_id": str(user.id),
+                "username": user.username,
+                "email": user.email or "",
+                "profile_pic": profile_pic or "",
+                "cover_image": cover_image or "",
+                "gender": user.gender or "",
+                "nationality": user.nationality or "",
+                "language": user.language or "",
+                "leaning": user.leaning or "",
+                "education_level": user.education_level or "",
+                "age": user.age or 0,
+            }
+        )
 
     return redirect(request.referrer)
 

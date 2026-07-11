@@ -8,10 +8,17 @@ platform views.  The sub-package is assembled from:
   helpers.py      – shared helper functions (get_safe_profile_pic, is_admin, …)
   common.py       – profile and cross-platform routes
   microblogging.py – Twitter-style feed / thread / hashtag routes
+  photo.py         – Instagram-style feed routes
   forum.py        – Reddit-style feed / thread / search routes
 """
 
-from . import common, forum, helpers, microblogging  # side-effect: registers routes
+from . import (  # side-effect: registers routes
+    common,
+    forum,
+    helpers,
+    microblogging,
+    photo,
+)
 from ._blueprint import main
 
 __all__ = ["main"]

@@ -118,6 +118,233 @@ class TestHPCExecutionLogMonitoring:
         finally:
             os.unlink(log_path)
 
+    def test_check_shutdown_fatal_error_is_not_completed(self, app, db):
+        """A fatal Ray actor error in the execution log must not count as completion."""
+        from y_web.src.hpc.log_metrics import check_hpc_client_execution_completion
+
+        payload = {
+            "timestamp": "2026-02-04T14:44:01.000000",
+            "level": "ERROR",
+            "message": (
+                "Client error: ActorDiedError: The actor died unexpectedly before "
+                "finishing this task."
+            ),
+            "error_type": "ActorDiedError",
+            "error_message": (
+                "The actor is dead because its owner has died. Owner worker exit type: "
+                "SYSTEM_ERROR Worker exit detail: Owner's node has crashed."
+            ),
+            "traceback": "Traceback (most recent call last): ...",
+        }
+
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix="_execution.log", delete=False
+        ) as f:
+            log_path = f.name
+            f.write(json.dumps(payload) + "\n")
+
+        try:
+            with app.app_context():
+                result = check_hpc_client_execution_completion(1, 1, log_path)
+                assert result is False
+        finally:
+            os.unlink(log_path)
+
+    def test_monitor_marks_fatal_execution_as_failed(self, app, db, tmp_path):
+        """Fatal execution errors should be surfaced to the monitor and stop the experiment."""
+        from y_web.src.hpc.log_metrics import monitor_hpc_client_execution_logs
+        from y_web.src.models import (
+            Client,
+            Exps,
+            Population,
+        )
+
+        payload = {
+            "timestamp": "2026-02-04T14:44:01.000000",
+            "level": "ERROR",
+            "message": (
+                "Client error: ActorDiedError: The actor died unexpectedly before "
+                "finishing this task."
+            ),
+            "error_type": "ActorDiedError",
+            "error_message": (
+                "The actor is dead because its owner has died. Owner worker exit type: "
+                "SYSTEM_ERROR Worker exit detail: Owner's node has crashed."
+            ),
+            "traceback": "Traceback (most recent call last): ...",
+        }
+
+        with app.app_context():
+            exp = Exps(
+                exp_name="Fatal HPC",
+                exp_descr="Test",
+                platform_type="microblogging",
+                owner="test",
+                status=1,
+                running=1,
+                port=5000,
+                db_name="experiments_test_monitor",
+                simulator_type="HPC",
+                exp_status="active",
+            )
+            db.session.add(exp)
+            db.session.commit()
+
+            pop = Population(name="monitor_pop", descr="Test population", size=10)
+            db.session.add(pop)
+            db.session.commit()
+
+            client = Client(
+                name="monitor_client",
+                descr="Test client",
+                id_exp=exp.idexp,
+                population_id=pop.id,
+                status=1,
+            )
+            db.session.add(client)
+            db.session.commit()
+
+            exp_folder = tmp_path / "y_web" / "experiments" / "test_monitor"
+            logs_folder = exp_folder / "logs"
+            logs_folder.mkdir(parents=True, exist_ok=True)
+
+            execution_log = logs_folder / f"{client.name}_execution.log"
+            execution_log.write_text(json.dumps(payload) + "\n", encoding="utf-8")
+
+            client_log = logs_folder / f"{client.name}_client.log"
+            client_log.write_text("", encoding="utf-8")
+
+            with (
+                patch(
+                    "y_web.src.system.path_utils.get_writable_path",
+                    return_value=str(tmp_path),
+                ),
+                patch(
+                    "y_web.src.hpc.log_metrics._mark_hpc_client_as_failed",
+                    return_value=True,
+                ) as mock_mark_failed,
+                patch(
+                    "y_web.src.hpc.log_metrics._stop_hpc_experiment_after_client_failure",
+                    return_value=True,
+                ) as mock_stop_experiment,
+            ):
+                assert monitor_hpc_client_execution_logs() is False
+                mock_mark_failed.assert_called_once()
+                mock_stop_experiment.assert_called_once()
+
+    def test_restart_failed_schedule_experiment_logs_and_restarts(
+        self, app, db, tmp_path
+    ):
+        """Scheduled failures should restart the experiment and emit schedule logs."""
+        from y_web.src.hpc.log_metrics import _restart_failed_schedule_experiment
+        from y_web.src.models import (
+            Client,
+            ExperimentScheduleGroup,
+            ExperimentScheduleItem,
+            ExperimentScheduleLog,
+            ExperimentScheduleStatus,
+            Exps,
+            Population,
+        )
+
+        with app.app_context():
+            exp = Exps(
+                exp_name="Restart HPC",
+                exp_descr="Test",
+                platform_type="microblogging",
+                owner="test",
+                status=1,
+                running=0,
+                port=5001,
+                db_name="experiments_test_restart",
+                simulator_type="HPC",
+                exp_status="stopped",
+            )
+            db.session.add(exp)
+            db.session.commit()
+
+            pop = Population(name="restart_pop", descr="Test population", size=10)
+            db.session.add(pop)
+            db.session.commit()
+
+            client = Client(
+                name="restart_client",
+                descr="Test client",
+                id_exp=exp.idexp,
+                population_id=pop.id,
+                status=0,
+            )
+            db.session.add(client)
+            db.session.commit()
+
+            group = ExperimentScheduleGroup(name="Restart Group", order_index=1)
+            db.session.add(group)
+            db.session.commit()
+
+            status = ExperimentScheduleStatus(is_running=1, current_group_id=group.id)
+            db.session.add(status)
+            db.session.commit()
+
+            item = ExperimentScheduleItem(
+                group_id=group.id, experiment_id=exp.idexp, order_index=1
+            )
+            db.session.add(item)
+            db.session.commit()
+
+            exp_folder = tmp_path / "y_web" / "experiments" / "test_restart"
+            logs_folder = exp_folder / "logs"
+            logs_folder.mkdir(parents=True, exist_ok=True)
+            execution_log = logs_folder / f"{client.name}_execution.log"
+            execution_log.write_text(
+                '{"timestamp":"2026-02-04T14:44:01.000000","level":"ERROR","message":"Client error: ActorDiedError"}\n',
+                encoding="utf-8",
+            )
+
+            with (
+                patch(
+                    "y_web.src.simulation.execution_backend.start_server_for_experiment"
+                ) as mock_start_server,
+                patch(
+                    "y_web.src.simulation.execution_backend.start_client_for_experiment"
+                ) as mock_start_client,
+                patch(
+                    "y_web.src.hpc.server.get_writable_path",
+                    return_value=str(tmp_path),
+                ),
+                patch(
+                    "y_web.src.system.path_utils.get_writable_path",
+                    return_value=str(tmp_path),
+                ),
+                patch("y_web.src.hpc.log_metrics.time.sleep", return_value=None),
+            ):
+                result = _restart_failed_schedule_experiment(
+                    exp.idexp, reason="fatal runtime error"
+                )
+                assert result is True
+                mock_start_server.assert_called_once_with(exp)
+                mock_start_client.assert_called_once()
+
+            execution_log = (
+                tmp_path
+                / "y_web"
+                / "experiments"
+                / "test_restart"
+                / "logs"
+                / f"{client.name}_execution.log"
+            )
+            assert execution_log.exists()
+            assert execution_log.read_text(encoding="utf-8") == ""
+
+            updated_exp = Exps.query.filter_by(idexp=exp.idexp).first()
+            assert updated_exp.running == 1
+            assert updated_exp.exp_status == "active"
+
+            logs = ExperimentScheduleLog.query.order_by(
+                ExperimentScheduleLog.created_at.asc()
+            ).all()
+            assert any("Restarting automatically" in log.message for log in logs)
+            assert any("restarted automatically" in log.message for log in logs)
+
     def test_check_shutdown_message_with_completed_progress_is_found(self, app, db):
         """If execution progress already reached the end, shutdown should still count as completion."""
         from y_web.src.hpc.log_metrics import check_hpc_client_execution_completion
@@ -654,6 +881,145 @@ class TestHPCExecutionLogMonitoring:
                 assert stale_client.status == 1
                 assert already_running_client.status == 1
                 mock_commit.assert_called_once()
+
+    def test_mark_hpc_client_as_failed_updates_db_state(self, app, db):
+        """Failed clients must be marked stopped and retain a failed terminal state."""
+        from y_web.src.hpc.log_metrics import _mark_hpc_client_as_failed
+        from y_web.src.models import Client, Client_Execution, Exps, Population
+
+        with app.app_context():
+            exp = Exps(
+                exp_name="Test HPC Failure",
+                exp_descr="Test",
+                platform_type="microblogging",
+                owner="test",
+                status=1,
+                running=1,
+                port=5002,
+                db_name="experiments_test_failure",
+                simulator_type="HPC",
+                exp_status="active",
+            )
+            db.session.add(exp)
+            db.session.commit()
+
+            pop = Population(name="test_pop_failure", descr="Test population", size=10)
+            db.session.add(pop)
+            db.session.commit()
+
+            client = Client(
+                name="client_failure",
+                descr="Test client failure",
+                id_exp=exp.idexp,
+                population_id=pop.id,
+                status=1,
+                pid=4242,
+            )
+            db.session.add(client)
+            db.session.commit()
+
+            client_exec = Client_Execution(
+                client_id=client.id,
+                elapsed_time=11,
+                expected_duration_rounds=24,
+                terminal_state=None,
+            )
+            db.session.add(client_exec)
+            db.session.commit()
+
+            assert _mark_hpc_client_as_failed(
+                exp.idexp, client.id, reason="unit test failure"
+            )
+
+            updated_client = Client.query.filter_by(id=client.id).first()
+            updated_exec = Client_Execution.query.filter_by(client_id=client.id).first()
+            assert updated_client.status == 0
+            assert updated_client.pid is None
+            assert updated_exec.terminal_state == "failed"
+
+    @patch("y_web.src.hpc.server.stop_hpc_server")
+    def test_monitor_stops_experiment_when_client_dies_without_completion(
+        self, mock_stop, app, db
+    ):
+        """A dead tracked HPC client must stop the experiment even without an execution log."""
+        from y_web.src.hpc import log_metrics
+        from y_web.src.models import Client, Exps, Population
+
+        with app.app_context():
+            exp = Exps(
+                exp_name="Test HPC Dead Client",
+                exp_descr="Test",
+                platform_type="microblogging",
+                owner="test",
+                status=1,
+                running=1,
+                port=5003,
+                db_name="experiments_test_dead_client",
+                simulator_type="HPC",
+                exp_status="active",
+            )
+            db.session.add(exp)
+            db.session.commit()
+
+            pop = Population(name="test_pop_dead", descr="Test population", size=10)
+            db.session.add(pop)
+            db.session.commit()
+
+            client = Client(
+                name="dead_client",
+                descr="Test dead client",
+                id_exp=exp.idexp,
+                population_id=pop.id,
+                status=1,
+                pid=98765,
+            )
+            db.session.add(client)
+            db.session.commit()
+
+            with tempfile.TemporaryDirectory() as tmpdir:
+                with (
+                    patch.object(
+                        log_metrics,
+                        "resolve_hpc_client_log_path",
+                        return_value=os.path.join(tmpdir, "client.log"),
+                    ),
+                    patch.object(
+                        log_metrics,
+                        "_is_hpc_client_tracked_process_alive",
+                        return_value=False,
+                    ),
+                    patch.object(
+                        log_metrics,
+                        "_mark_hpc_client_as_failed",
+                        return_value=True,
+                    ) as mock_mark_failed,
+                    patch.object(
+                        log_metrics,
+                        "_stop_hpc_experiment_after_client_failure",
+                        return_value=True,
+                    ) as mock_stop_after_failure,
+                    patch.object(
+                        log_metrics,
+                        "check_hpc_client_execution_completion",
+                        return_value=False,
+                    ),
+                    patch.object(log_metrics.os.path, "exists", return_value=False),
+                ):
+                    result = log_metrics.monitor_hpc_client_execution_logs()
+
+                assert result is False
+                mock_mark_failed.assert_called_once_with(
+                    exp.idexp,
+                    client.id,
+                    reason=f"PID {client.pid} no longer alive for client {client.name}",
+                )
+                mock_stop_after_failure.assert_called_once_with(
+                    exp.idexp,
+                    reason=f"PID {client.pid} no longer alive for client {client.name}",
+                )
+                updated_exp = Exps.query.filter_by(idexp=exp.idexp).first()
+                assert updated_exp.running == 1
+                assert updated_exp.exp_status == "active"
 
     @patch("y_web.src.hpc.server.stop_hpc_server")
     def test_check_and_terminate_does_not_stop_without_session_running_marker(

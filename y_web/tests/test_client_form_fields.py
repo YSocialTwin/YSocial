@@ -2,6 +2,7 @@
 Test for new optional client form fields: network structure and hourly activity rates.
 """
 
+import re
 from unittest.mock import Mock, patch
 
 import pytest
@@ -223,3 +224,22 @@ class TestClientFormFields:
             'name="llm_model"' in template_source
             and 'value="huihui-ai/Llama-3.2-3B-Instruct-abliterated"' in template_source
         )
+
+    def test_hpc_and_photo_llm_backend_selector_is_fixed_to_llm_service(self):
+        templates = [
+            "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_hpc.html",
+            "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_photo.html",
+        ]
+
+        for template_path in templates:
+            template_source = open(template_path, "r", encoding="utf-8").read()
+            uncommented_source = re.sub(r"<!--.*?-->", "", template_source, flags=re.S)
+
+            assert (
+                'name="llm_backend" id="llm_backend" value="ollama"' in template_source
+            )
+            assert "LLM Service" in template_source
+            assert "Embedded vLLM" in template_source
+            assert (
+                '<select name="llm_backend" id="llm_backend"' not in uncommented_source
+            )

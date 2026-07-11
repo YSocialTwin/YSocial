@@ -3,6 +3,7 @@
 import json
 import os
 import shutil
+from pathlib import Path
 
 from flask import flash, redirect, request, url_for
 from flask_login import current_user, login_required
@@ -72,20 +73,45 @@ def reset_client(uid):
     client = Client.query.filter_by(id=uid).first()
     exp = Exps.query.filter_by(idexp=client.id_exp).first()
     population = Population.query.filter_by(id=client.population_id).first()
-    path = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}{os.sep}{population.name}.json"
-    if os.path.exists(path):
-        os.remove(path)
+    exp_folder = exp.db_name.split(os.sep)[1]
+    exp_dir = Path(BASE_DIR) / "y_web" / "experiments" / exp_folder
 
-    path = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}{os.sep}prompts.json"
-    if os.path.exists(path):
-        os.remove(path)
+    path = exp_dir / f"{population.name}.json"
+    if path.exists():
+        path.unlink()
+
+    prompt_candidates = ["prompts.json"]
+    if exp.platform_type == "photo_sharing":
+        prompt_candidates.insert(0, "prompts_ygram.json")
+    for prompt_file in prompt_candidates:
+        prompt_path = exp_dir / prompt_file
+        if prompt_path.exists():
+            prompt_path.unlink()
+
+    if exp.platform_type == "photo_sharing":
+        state_candidates = [
+            exp_dir / f"client_{client.name}-{population.name}.state.json",
+        ]
+        state_candidates.extend(exp_dir.glob(f"client_{client.name}-*.state.json"))
+        for state_path in state_candidates:
+            if state_path.exists():
+                state_path.unlink()
 
     # copy the original prompts.json file
-    if exp.platform_type == "microblogging":
+    if exp.platform_type in {"microblogging", "photo_sharing"}:
         prompts_src = get_resource_path(os.path.join("data_schema", "prompts.json"))
+        if exp.platform_type == "photo_sharing":
+            prompts_src = get_resource_path(
+                os.path.join("data_schema", "prompts_ygram.json")
+            )
+        prompts_dest = (
+            exp_dir / "prompts_ygram.json"
+            if exp.platform_type == "photo_sharing"
+            else exp_dir / "prompts.json"
+        )
         shutil.copy(
             prompts_src,
-            f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}{os.sep}prompts.json",
+            prompts_dest,
         )
     elif exp.platform_type == "forum":
         prompts_src = get_resource_path(
@@ -93,7 +119,7 @@ def reset_client(uid):
         )
         shutil.copy(
             prompts_src,
-            f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}{os.sep}prompts.json",
+            exp_dir / "prompts.json",
         )
     else:
         raise Exception(f"unsupported platform: {exp.platform_type}")
@@ -346,8 +372,6 @@ def extend_simulation(id_client):
 @login_required
 def run_client(uid, idexp):
     """Handle run client operation."""
-    from ..experiments import experiment_details
-
     check_privileges(current_user.username)
 
     # get experiment
@@ -391,15 +415,13 @@ def run_client(uid, idexp):
         # Catch any other errors
         flash(f"Unexpected error starting client: {str(e)}", "error")
 
-    return experiment_details(idexp)
+    return redirect(url_for("experiments.experiment_details", uid=idexp))
 
 
 @clientsr.route("/admin/resume_client/<int:uid>/<int:idexp>")
 @login_required
 def resume_client(uid, idexp):
     """Handle resume client operation."""
-    from ..experiments import experiment_details
-
     check_privileges(current_user.username)
 
     # get experiment
@@ -443,15 +465,13 @@ def resume_client(uid, idexp):
         # Catch any other errors
         flash(f"Unexpected error starting client: {str(e)}", "error")
 
-    return experiment_details(idexp)
+    return redirect(url_for("experiments.experiment_details", uid=idexp))
 
 
 @clientsr.route("/admin/pause_client/<int:uid>/<int:idexp>")
 @login_required
 def pause_client(uid, idexp):
     """Handle pause client operation."""
-    from ..experiments import experiment_details
-
     check_privileges(current_user.username)
 
     exp = Exps.query.filter_by(idexp=idexp).first()
@@ -471,19 +491,12 @@ def pause_client(uid, idexp):
     stop_result = stop_client_for_experiment(exp, client, pause=True)
 
     if exp.simulator_type == "HPC":
-        if _hpc_client_process_still_running(exp, client):
-            client.status = 1
-            flash(
-                f"HPC client '{client.name}' is still running; status kept as running.",
-                "warning",
-            )
-        elif stop_result is False:
+        if stop_result is False:
             flash(
                 f"Unable to confirm stop for HPC client '{client.name}'.",
                 "warning",
             )
-        else:
-            client.status = 0
+        client.status = 0
         db.session.commit()
     else:
         client.status = 0
@@ -500,15 +513,13 @@ def pause_client(uid, idexp):
             )
             db.session.commit()
 
-    return experiment_details(idexp)  # redirect(request.referrer)
+    return redirect(url_for("experiments.experiment_details", uid=idexp))
 
 
 @clientsr.route("/admin/stop_client/<int:uid>/<int:idexp>")
 @login_required
 def stop_client(uid, idexp):
     """Handle stop client operation."""
-    from ..experiments import experiment_details
-
     check_privileges(current_user.username)
 
     # get client and experiment
@@ -524,19 +535,12 @@ def stop_client(uid, idexp):
     stop_result = stop_client_for_experiment(exp, client, pause=False)
 
     if exp.simulator_type == "HPC":
-        if _hpc_client_process_still_running(exp, client):
-            client.status = 1
-            flash(
-                f"HPC client '{client.name}' is still running; status kept as running.",
-                "warning",
-            )
-        elif stop_result is False:
+        if stop_result is False:
             flash(
                 f"Unable to confirm stop for HPC client '{client.name}'.",
                 "warning",
             )
-        else:
-            client.status = 0
+        client.status = 0
         db.session.commit()
     else:
         client.status = 0
@@ -553,15 +557,13 @@ def stop_client(uid, idexp):
             )
             db.session.commit()
 
-    return experiment_details(idexp)  # redirect(request.referrer)
+    return redirect(url_for("experiments.experiment_details", uid=idexp))
 
 
 @clientsr.route("/admin/run_adhoc_client/<int:idexp>/<path:client_key>")
 @login_required
 def run_adhoc_client(idexp, client_key):
     """Start a file-backed ad hoc plugin client."""
-    from ..experiments import experiment_details
-
     check_privileges(current_user.username)
 
     exp = Exps.query.filter_by(idexp=idexp).first()
@@ -583,15 +585,13 @@ def run_adhoc_client(idexp, client_key):
     except Exception as e:
         flash(f"Unexpected error starting ad hoc client: {str(e)}", "error")
 
-    return experiment_details(idexp)
+    return redirect(url_for("experiments.experiment_details", uid=idexp))
 
 
 @clientsr.route("/admin/pause_adhoc_client/<int:idexp>/<path:client_key>")
 @login_required
 def pause_adhoc_client(idexp, client_key):
     """Pause a file-backed ad hoc plugin client."""
-    from ..experiments import experiment_details
-
     check_privileges(current_user.username)
 
     exp = Exps.query.filter_by(idexp=idexp).first()
@@ -609,4 +609,4 @@ def pause_adhoc_client(idexp, client_key):
     except Exception as e:
         flash(f"Unexpected error pausing ad hoc client: {str(e)}", "error")
 
-    return experiment_details(idexp)
+    return redirect(url_for("experiments.experiment_details", uid=idexp))

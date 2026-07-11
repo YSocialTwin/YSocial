@@ -1289,11 +1289,6 @@ var AdminMiscellanea = (function() {
               hpcMaxPerGroup.value = hasLimit ? data.max_hpc_per_group : 4;
               hpcMaxPerGroup.disabled = !hasLimit;
           }
-          const hpcVllmWorkerLimit = document.getElementById('hpc_max_hpc_simulations_per_vllm_worker');
-          if (hpcVllmWorkerLimit) {
-              hpcVllmWorkerLimit.value = data.max_hpc_simulations_per_vllm_worker ?? 5;
-          }
-        
           updateHpcMonitorStatusIndicator(data.enabled);
         
           if (data.last_check) {
@@ -1336,8 +1331,6 @@ var AdminMiscellanea = (function() {
       const groupLimitEnabled = document.getElementById('hpc_group_limit_enabled').checked;
       const maxPerGroupValue = document.getElementById('hpc_max_hpc_per_group').value;
       const maxPerGroup = groupLimitEnabled ? Number(maxPerGroupValue) : null;
-      const maxVllmWorkersValue = document.getElementById('hpc_max_hpc_simulations_per_vllm_worker').value;
-      const maxVllmWorkers = Number(maxVllmWorkersValue);
     
       // Check for NaN or invalid values
       if (isNaN(interval) || interval < 1 || interval > 300) {
@@ -1348,10 +1341,6 @@ var AdminMiscellanea = (function() {
           showHpcMonitorMessage('Max HPC experiments per group must be a valid number greater than 0, or disable the limit', true);
           return;
       }
-      if (isNaN(maxVllmWorkers) || maxVllmWorkers < 1) {
-          showHpcMonitorMessage('Max simulations per vLLM worker must be a valid number greater than 0', true);
-          return;
-      }
     
       try {
           const response = await fetch('/admin/hpc_monitor_settings', {
@@ -1360,8 +1349,7 @@ var AdminMiscellanea = (function() {
               body: JSON.stringify({
                   enabled: enabled,
                   check_interval_seconds: interval,
-                  max_hpc_per_group: maxPerGroup,
-                  max_hpc_simulations_per_vllm_worker: maxVllmWorkers
+                  max_hpc_per_group: maxPerGroup
               })
           });
         
@@ -1376,13 +1364,6 @@ var AdminMiscellanea = (function() {
       } catch (error) {
           console.error('Error saving HPC monitor settings:', error);
           showHpcMonitorMessage('Error saving settings', true);
-      }
-  });
-
-  bindById('save-hpc-monitor-settings-secondary', 'click', function() {
-      const primaryButton = document.getElementById('save-hpc-monitor-settings');
-      if (primaryButton) {
-          primaryButton.click();
       }
   });
 

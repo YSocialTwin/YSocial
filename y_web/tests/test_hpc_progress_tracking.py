@@ -225,6 +225,7 @@ def test_start_hpc_client_clears_stale_recycled_pid_and_restarts(monkeypatch):
     )
     monkeypatch.setattr("y_web.src.hpc.client.get_base_path", lambda: "/tmp")
     monkeypatch.setattr("y_web.src.hpc.client.get_writable_path", lambda: "/tmp")
+    monkeypatch.setattr("y_web.src.hpc.client.time.sleep", lambda *_: None)
     monkeypatch.setattr(
         "y_web.src.hpc.client.Path.exists", lambda *_args, **_kwargs: True
     )
@@ -247,6 +248,165 @@ def test_start_hpc_client_clears_stale_recycled_pid_and_restarts(monkeypatch):
 
     assert process.pid == 88888
     assert mock_cli.pid == 88888
+
+
+def test_start_hpc_client_photo_sharing_uses_top_level_hpc_layout(
+    monkeypatch, tmp_path
+):
+    """Photo-sharing client startup should normalize into the top-level HPC layout."""
+    from y_web.src.hpc.client import start_hpc_client
+
+    monkeypatch.setattr("y_web.src.hpc.client.get_base_path", lambda: str(tmp_path))
+    monkeypatch.setattr("y_web.src.hpc.client.get_writable_path", lambda: str(tmp_path))
+    monkeypatch.setattr("y_web.src.hpc.client.time.sleep", lambda *_: None)
+
+    exp_folder = tmp_path / "y_web" / "experiments" / "exp44"
+    exp_folder.mkdir(parents=True)
+    (exp_folder / "ray_config.temp").write_text("127.0.0.1:12345", encoding="utf-8")
+    (exp_folder / "server_config.json").write_text(
+        json.dumps(
+            {
+                "server_name": "orchestrator_server",
+                "namespace": "yphotosharing",
+            }
+        ),
+        encoding="utf-8",
+    )
+    photo_client_dir = exp_folder / "client_photo-population-photo-population"
+    photo_client_dir.mkdir(parents=True)
+    (photo_client_dir / "client_config.json").write_text(
+        json.dumps({"namespace": "wrong"}), encoding="utf-8"
+    )
+    (exp_folder / "photo-population.json").write_text("[]", encoding="utf-8")
+    (exp_folder / "prompts_ygram.json").write_text("{}", encoding="utf-8")
+    (tmp_path / "external" / "YPhotoSharing").mkdir(parents=True)
+    (tmp_path / "external" / "YPhotoSharing" / "run_client.py").write_text(
+        "print('client')\n", encoding="utf-8"
+    )
+
+    mock_exp = MagicMock()
+    mock_exp.idexp = 44
+    mock_exp.platform_type = "photo_sharing"
+    mock_exp.db_name = "experiments_exp44"
+
+    mock_cli = MagicMock()
+    mock_cli.id = 10
+    mock_cli.name = "photo-population"
+    mock_cli.pid = None
+
+    mock_population = MagicMock()
+    mock_population.name = "photo-population"
+
+    mock_process = MagicMock()
+    mock_process.pid = 99999
+
+    monkeypatch.setattr(
+        "y_web.src.hpc.client._tracked_process_is_alive", lambda pid: False
+    )
+    monkeypatch.setattr(
+        "y_web.src.hpc.client._is_hpc_client_process", lambda pid: False
+    )
+    monkeypatch.setattr(
+        "y_web.src.hpc.client._hpc_process_matches_client",
+        lambda pid, cli_name=None, exp_folder=None: False,
+    )
+    monkeypatch.setattr(
+        "y_web.src.hpc.client._sync_stress_reward_into_hpc_client_config",
+        lambda exp_folder, client_config_path: None,
+    )
+    monkeypatch.setattr(
+        "y_web.src.hpc.client._wait_for_hpc_server_ready",
+        lambda exp_folder, timeout_seconds=180: None,
+    )
+    monkeypatch.setattr(
+        "y_web.src.simulation.server.detect_env_handler", lambda: "python"
+    )
+    monkeypatch.setattr("y_web.src.hpc.client.build_subprocess_env", lambda: {})
+    monkeypatch.setattr(
+        "y_web.src.hpc.client.subprocess.Popen", lambda *a, **k: mock_process
+    )
+    monkeypatch.setattr("y_web.src.hpc.client.db.session.commit", lambda: None)
+
+    class _FakeClientExecution:
+        query = MagicMock()
+
+        def __init__(self, **kwargs):
+            for key, value in kwargs.items():
+                setattr(self, key, value)
+
+    _FakeClientExecution.query.filter_by.return_value.first.return_value = None
+    monkeypatch.setattr("y_web.src.hpc.client.Client_Execution", _FakeClientExecution)
+    added_objects = []
+    monkeypatch.setattr(
+        "y_web.src.hpc.client.db.session.add", lambda obj: added_objects.append(obj)
+    )
+
+    process = start_hpc_client(mock_exp, mock_cli, mock_population)
+
+    assert process.pid == 99999
+    assert mock_cli.pid == 99999
+    assert added_objects and added_objects[0].client_id == mock_cli.id
+    top_level_config = exp_folder / "client_photo-population-photo-population.json"
+    rewritten_config = json.loads(top_level_config.read_text(encoding="utf-8"))
+    assert rewritten_config["namespace"] == "yphotosharing"
+    assert rewritten_config["server_name"] == "orchestrator_server"
+    assert rewritten_config["client_id"] == "exp44:photo-population"
+    assert rewritten_config["agents_file"] == "photo-population.json"
+    assert rewritten_config["users_file"] == "photo-population.json"
+    assert rewritten_config["logging"]["log_dir"] == str(exp_folder / "logs")
+    assert rewritten_config["logging"]["instance_name"] == "exp44:photo-population"
+
+
+def test_stop_hpc_client_photo_sharing_targets_yphotosharing_actor(tmp_path):
+    """Photo-sharing stop path should target the YPhotoSharing actor names."""
+    from y_web.src.hpc.client import stop_hpc_client
+
+    exp_dir = tmp_path / "y_web" / "experiments" / "exp123"
+    exp_dir.mkdir(parents=True)
+    (exp_dir / "ray_config.temp").write_text("127.0.0.1:12345", encoding="utf-8")
+    (exp_dir / "ray_namespace.temp").write_text("yphotosharing", encoding="utf-8")
+
+    mock_cli = MagicMock()
+    mock_cli.name = "photo_client"
+    mock_cli.pid = 4321
+    mock_cli.experiment.db_name = "experiments_exp123"
+    mock_cli.experiment.platform_type = "photo_sharing"
+
+    mock_actor = MagicMock()
+    mock_actor.deregister_client.remote.return_value = "ok"
+    mock_runtime_client = MagicMock()
+
+    with (
+        patch("y_web.src.hpc.client._clear_stale_hpc_pid", return_value=False),
+        patch("y_web.src.hpc.client.get_writable_path", return_value=str(tmp_path)),
+        patch("y_web.src.hpc.client.ray.is_initialized", return_value=False),
+        patch("y_web.src.hpc.client.ray.init") as mock_ray_init,
+        patch("y_web.src.hpc.client.ray.get_actor") as mock_get_actor,
+        patch("y_web.src.hpc.client.ray.kill") as mock_ray_kill,
+        patch("y_web.src.hpc.client.ray.get", return_value=True) as mock_ray_get,
+        patch("y_web.src.hpc.client.ray.shutdown") as mock_ray_shutdown,
+        patch("y_web.src.hpc.client.os.kill", side_effect=OSError("no such process")),
+        patch("y_web.src.hpc.client.db.session.commit"),
+    ):
+        mock_get_actor.side_effect = [mock_actor, mock_runtime_client]
+        result = stop_hpc_client(mock_cli)
+
+    assert result is True
+    mock_ray_init.assert_called_once_with(
+        address="127.0.0.1:12345",
+        namespace="yphotosharing",
+        ignore_reinit_error=True,
+    )
+    assert mock_get_actor.call_args_list[0].args == ("orchestrator_server",)
+    assert mock_get_actor.call_args_list[0].kwargs == {"namespace": "yphotosharing"}
+    assert mock_get_actor.call_args_list[1].args == ("Client_exp123:photo_client",)
+    assert mock_get_actor.call_args_list[1].kwargs == {"namespace": "yphotosharing"}
+    assert mock_ray_kill.call_args_list[0].args == (mock_runtime_client,)
+    assert mock_ray_kill.call_args_list[0].kwargs == {"no_restart": True}
+    mock_ray_get.assert_called()
+    mock_ray_shutdown.assert_called_once()
+    assert mock_cli.pid is None
+    mock_actor.deregister_client.remote.assert_called_once_with("exp123:photo_client")
 
 
 def test_stop_hpc_client_clears_stale_recycled_pid(monkeypatch):
@@ -328,6 +488,62 @@ def test_admin_progress_refreshes_hpc_client_log_when_stale():
         payload = get_progress(client.id)
 
     assert json.loads(payload)["progress"] == 25
+
+
+def test_stop_hpc_client_marks_manual_stop_before_killing_process():
+    """Manual stop must be recorded before the termination attempt starts."""
+    from y_web.src.hpc import client as hpc_client
+
+    mock_cli = MagicMock()
+    mock_cli.pid = 4242
+    mock_cli.name = "manual_stop_client"
+    mock_cli.status = 1
+    mock_cli.experiment = MagicMock(db_name=None)
+
+    call_order = []
+
+    def _record_mark(_cli, state):
+        call_order.append(("mark", state))
+        return True
+
+    def _record_kill(pid, sig):
+        call_order.append(("kill", pid, sig))
+
+    with (
+        patch.object(
+            hpc_client, "_set_client_execution_terminal_state", side_effect=_record_mark
+        ),
+        patch.object(hpc_client, "_clear_stale_hpc_pid", return_value=False),
+        patch.object(hpc_client, "_tracked_process_is_alive", return_value=False),
+        patch.object(hpc_client, "_is_hpc_client_process", return_value=False),
+        patch.object(hpc_client.os, "kill", side_effect=_record_kill),
+        patch("y_web.src.simulation.port_manager.__terminate_process"),
+        patch.object(hpc_client.db.session, "commit"),
+        patch.object(hpc_client.db.session, "rollback"),
+    ):
+        assert (
+            hpc_client.stop_hpc_client(mock_cli, terminal_state="manual_stop") is True
+        )
+
+    assert call_order[0] == ("mark", "manual_stop")
+    assert any(item[0] == "kill" for item in call_order)
+    assert mock_cli.status == 0
+
+
+def test_clear_hpc_runtime_markers_removes_stale_ready_files(tmp_path):
+    """Restarted HPC servers must not reuse stale Ray readiness markers."""
+    from y_web.src.hpc.server import _clear_hpc_runtime_markers
+
+    exp_folder = tmp_path / "y_web" / "experiments" / "exp123"
+    exp_folder.mkdir(parents=True)
+    for marker in ("ray_ready.temp", "ray_config.temp", "ray_namespace.temp"):
+        (exp_folder / marker).write_text("stale", encoding="utf-8")
+
+    removed = _clear_hpc_runtime_markers(str(exp_folder))
+
+    assert removed == 3
+    for marker in ("ray_ready.temp", "ray_config.temp", "ray_namespace.temp"):
+        assert not (exp_folder / marker).exists()
 
 
 if __name__ == "__main__":

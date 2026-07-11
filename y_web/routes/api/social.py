@@ -4,7 +4,7 @@ import json
 import re
 from datetime import datetime, timezone
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, session
 from flask_login import current_user, login_required
 
 from y_web import db
@@ -34,6 +34,7 @@ from y_web.routes.api.interview._server import (
     _memory_server_unavailable,
 )
 from y_web.routes.social.helpers import _experiment_memory_enabled
+from y_web.src.experiment.helpers import ensure_experiment_user
 from y_web.src.models import (
     Admin_users,
     Exps,
@@ -61,7 +62,23 @@ def _json_error(message: str, status: int = 400):
 
 def _social_chat_owner_user(exp: Exps) -> User_mgmt | None:
     username = getattr(current_user, "username", "") or ""
+    is_photo = (
+        str(getattr(exp, "platform_type", "") or "").strip().lower() == "photo_sharing"
+    )
     db_path = _experiment_sqlite_db_path(exp)
+    if is_photo and username and username.lower() == "admin":
+        selected_user_id = str(
+            session.get("photo_view_user_id")
+            or session.get("photo_switch_user_id")
+            or ""
+        ).strip()
+        if selected_user_id:
+            try:
+                selected_user = _load_experiment_user_sqlite(exp, selected_user_id)
+                if selected_user is not None:
+                    return selected_user
+            except Exception:
+                pass
     if db_path is not None and db_path.exists():
         try:
             import sqlite3
@@ -80,7 +97,41 @@ def _social_chat_owner_user(exp: Exps) -> User_mgmt | None:
         except Exception:
             pass
 
-    return User_mgmt.query.filter_by(username=username).first()
+    if is_photo:
+        try:
+            created_user, _created = ensure_experiment_user(
+                exp,
+                user_id=getattr(current_user, "id", 0) or 0,
+                username=username,
+                email=str(getattr(current_user, "email", "") or ""),
+                password=str(getattr(current_user, "password", "") or ""),
+                joined_on=0,
+            )
+            if created_user is not None:
+                return created_user
+        except Exception:
+            pass
+        return None
+
+    user = User_mgmt.query.filter_by(username=username).first()
+    if user is not None:
+        return user
+
+    try:
+        created_user, _created = ensure_experiment_user(
+            exp,
+            user_id=getattr(current_user, "id", 0) or 0,
+            username=username,
+            email=str(getattr(current_user, "email", "") or ""),
+            password=str(getattr(current_user, "password", "") or ""),
+            joined_on=0,
+        )
+        if created_user is not None:
+            return created_user
+    except Exception:
+        pass
+
+    return None
 
 
 def _social_chat_followed_agent_ids(exp: Exps, owner_user_id) -> set:
@@ -88,8 +139,17 @@ def _social_chat_followed_agent_ids(exp: Exps, owner_user_id) -> set:
     followed_ids: set = set()
     latest_actions: dict = {}
     db_path = _experiment_sqlite_db_path(exp)
+    is_photo = (
+        str(getattr(exp, "platform_type", "") or "").strip().lower() == "photo_sharing"
+    )
 
-    if isinstance(owner_id, str) and db_path is not None and db_path.exists():
+    def _mark_active(target_id, action):
+        target_id = _coerce_experiment_user_id(target_id)
+        if target_id is None or target_id == owner_id or target_id in latest_actions:
+            return
+        latest_actions[target_id] = str(action or "").strip().lower()
+
+    if is_photo and db_path is not None and db_path.exists():
         try:
             import sqlite3
 
@@ -98,21 +158,51 @@ def _social_chat_followed_agent_ids(exp: Exps, owner_user_id) -> set:
             try:
                 rows = conn.execute(
                     """
-                    select f.follower_id as target_id, f.action
+                    select f.user_id as source_id, f.follower_id as target_id, f.action, f.rowid as rid
                     from follow f
                     left join rounds r on f.round = r.id
-                    where f.user_id = ?
+                    where f.user_id = ? or f.follower_id = ?
                     order by coalesce(r.day, 0) desc, coalesce(r.hour, 0) desc, f.rowid desc
                     """,
-                    (owner_id,),
+                    (owner_id, owner_id),
                 ).fetchall()
             finally:
                 conn.close()
             for row in rows:
-                target_id = _coerce_experiment_user_id(row["target_id"])
-                if target_id is None or target_id in latest_actions:
-                    continue
-                latest_actions[target_id] = str(row["action"] or "").strip().lower()
+                target_id = (
+                    row["target_id"]
+                    if str(row["source_id"]) == str(owner_id)
+                    else row["source_id"]
+                )
+                _mark_active(target_id, row["action"])
+        except Exception:
+            latest_actions = {}
+    elif isinstance(owner_id, str) and db_path is not None and db_path.exists():
+        try:
+            import sqlite3
+
+            conn = sqlite3.connect(str(db_path))
+            conn.row_factory = sqlite3.Row
+            try:
+                rows = conn.execute(
+                    """
+                    select f.user_id as source_id, f.follower_id as target_id, f.action, f.rowid as rid
+                    from follow f
+                    left join rounds r on f.round = r.id
+                    where f.user_id = ? or f.follower_id = ?
+                    order by coalesce(r.day, 0) desc, coalesce(r.hour, 0) desc, f.rowid desc
+                    """,
+                    (owner_id, owner_id),
+                ).fetchall()
+            finally:
+                conn.close()
+            for row in rows:
+                target_id = (
+                    row["target_id"]
+                    if str(row["source_id"]) == str(owner_id)
+                    else row["source_id"]
+                )
+                _mark_active(target_id, row["action"])
         except Exception:
             latest_actions = {}
     else:
@@ -121,18 +211,50 @@ def _social_chat_followed_agent_ids(exp: Exps, owner_user_id) -> set:
             .order_by(Follow.id.desc())
             .all()
         )
-        for event in follow_events:
-            target_id = _coerce_experiment_user_id(getattr(event, "follower_id", None))
-            if target_id is None or target_id in latest_actions:
-                continue
-            latest_actions[target_id] = (
-                str(getattr(event, "action", "") or "").strip().lower()
+        reverse_events = (
+            Follow.query.filter(Follow.follower_id == owner_id)
+            .order_by(Follow.id.desc())
+            .all()
+        )
+        for event in sorted(
+            [*follow_events, *reverse_events],
+            key=lambda item: int(getattr(item, "id", 0) or 0),
+            reverse=True,
+        ):
+            target_id = (
+                getattr(event, "follower_id", None)
+                if str(getattr(event, "user_id", None)) == str(owner_id)
+                else getattr(event, "user_id", None)
             )
+            _mark_active(target_id, getattr(event, "action", ""))
 
     for target_id, action in latest_actions.items():
         if action == "follow":
             followed_ids.add(target_id)
     return followed_ids
+
+
+def _social_chat_photo_contacts(exp: Exps, owner_user_id) -> list[User_mgmt]:
+    owner_id = _coerce_experiment_user_id(owner_user_id)
+    if owner_id is None:
+        return []
+
+    contacts = []
+    seen_ids = set()
+    for contact_id in sorted(
+        _social_chat_followed_agent_ids(exp, owner_id), key=lambda value: str(value)
+    ):
+        contact = _load_experiment_user_sqlite(exp, contact_id)
+        if contact is None:
+            continue
+        contact_key = _coerce_experiment_user_id(getattr(contact, "id", None))
+        if contact_key is None or contact_key == owner_id or contact_key in seen_ids:
+            continue
+        if int(getattr(contact, "is_page", 0) or 0) != 0:
+            continue
+        seen_ids.add(contact_key)
+        contacts.append(contact)
+    return contacts
 
 
 def _social_chat_admin_user(exp: Exps) -> Admin_users | None:
@@ -160,14 +282,45 @@ def _social_chat_message_payload(message: ForumChatMessage) -> dict:
     }
 
 
+def _social_chat_peer_user_id(session: ForumChatSession, owner_user_id) -> str:
+    owner_id = _coerce_experiment_user_id(owner_user_id)
+    session_owner_id = _coerce_experiment_user_id(session.owner_user_id)
+    session_target_id = _coerce_experiment_user_id(session.target_user_id)
+    if owner_id is None:
+        return ""
+    if owner_id == session_owner_id:
+        return str(session_target_id or "")
+    if owner_id == session_target_id:
+        return str(session_owner_id or "")
+    return ""
+
+
 def _social_chat_session_payload(
-    session: ForumChatSession, *, include_messages: bool = False
+    session: ForumChatSession,
+    *,
+    include_messages: bool = False,
+    target_user_id=None,
+    target_username: str | None = None,
+    target_profile_pic: str | None = None,
 ) -> dict:
+    resolved_target_user_id = (
+        _coerce_experiment_user_id(target_user_id)
+        if target_user_id is not None
+        else _coerce_experiment_user_id(session.target_user_id)
+    )
     payload = {
         "id": int(session.id),
-        "target_user_id": _coerce_experiment_user_id(session.target_user_id),
-        "target_username": str(session.target_username or ""),
-        "target_profile_pic": str(session.target_profile_pic or ""),
+        "target_user_id": resolved_target_user_id,
+        "target_username": str(
+            target_username
+            if target_username is not None
+            else session.target_username or ""
+        ),
+        "target_profile_pic": str(
+            target_profile_pic
+            if target_profile_pic is not None
+            else session.target_profile_pic or ""
+        ),
         "last_message_preview": str(session.last_message_preview or ""),
         "last_message_at": (
             session.last_message_at.isoformat() if session.last_message_at else None
@@ -184,6 +337,47 @@ def _social_chat_session_payload(
     return payload
 
 
+def _social_chat_view_payload(
+    exp: Exps,
+    session: ForumChatSession,
+    *,
+    owner_user_id,
+    include_messages: bool = False,
+) -> dict | None:
+    owner_id = _coerce_experiment_user_id(owner_user_id)
+    peer_user_id = _social_chat_peer_user_id(session, owner_id)
+    if not peer_user_id:
+        return None
+
+    is_photo = (
+        str(getattr(exp, "platform_type", "") or "").strip().lower() == "photo_sharing"
+    )
+    peer_user = (
+        _load_experiment_user_sqlite(exp, peer_user_id)
+        if is_photo
+        else User_mgmt.query.filter_by(id=peer_user_id).first()
+    )
+    if peer_user is not None and getattr(peer_user, "username", None):
+        peer_username = str(peer_user.username or "").strip()
+    elif owner_id == _coerce_experiment_user_id(session.owner_user_id):
+        peer_username = str(session.target_username or "").strip()
+    else:
+        peer_username = str(session.owner_username or "").strip()
+    peer_profile_pic = ""
+    if peer_user is not None:
+        peer_profile_pic = _resolve_interview_profile_pic(peer_user, exp)
+    elif is_photo:
+        peer_profile_pic = str(session.target_profile_pic or "")
+
+    return _social_chat_session_payload(
+        session,
+        include_messages=include_messages,
+        target_user_id=peer_user_id,
+        target_username=peer_username,
+        target_profile_pic=peer_profile_pic,
+    )
+
+
 def _social_chat_render_memory_pack(snapshot: dict | None) -> str:
     if not isinstance(snapshot, dict) or not snapshot:
         return ""
@@ -194,17 +388,19 @@ def _social_chat_render_memory_pack(snapshot: dict | None) -> str:
 
 
 def _social_chat_build_transcript(
-    session: ForumChatSession, *, max_messages: int = 12
+    session: ForumChatSession,
+    *,
+    max_messages: int = 12,
+    assistant_username: str | None = None,
 ) -> str:
     messages = sorted(session.messages or [], key=lambda item: int(item.id))
     tail = messages[-max_messages:]
+    assistant_name = (
+        str(assistant_username or session.target_username or "Agent").strip() or "Agent"
+    )
     lines = []
     for msg in tail:
-        role = (
-            "You"
-            if str(msg.role or "") == "user"
-            else str(session.target_username or "Agent")
-        )
+        role = "You" if str(msg.role or "") == "user" else assistant_name
         content = str(msg.content or "").strip()
         if not content:
             continue
@@ -235,16 +431,22 @@ def _social_chat_build_memory_query(
 def _social_chat_upsert_session(
     *, exp: Exps, owner_user: User_mgmt, target_user: User_mgmt
 ) -> ForumChatSession:
+    owner_id = _coerce_experiment_user_id(owner_user.id)
+    target_id = _coerce_experiment_user_id(target_user.id)
     session = (
-        ForumChatSession.query.filter_by(
-            owner_user_id=_coerce_experiment_user_id(owner_user.id),
-            target_user_id=_coerce_experiment_user_id(target_user.id),
+        ForumChatSession.query.filter(
+            (ForumChatSession.owner_user_id == owner_id)
+            & (ForumChatSession.target_user_id == target_id)
+            | (ForumChatSession.owner_user_id == target_id)
+            & (ForumChatSession.target_user_id == owner_id)
         )
         .order_by(ForumChatSession.updated_at.desc(), ForumChatSession.id.desc())
         .first()
     )
     if session is not None:
-        if not session.target_profile_pic:
+        if not session.target_profile_pic and str(session.target_user_id) == str(
+            target_id
+        ):
             session.target_profile_pic = _resolve_interview_profile_pic(
                 target_user, exp
             )
@@ -252,9 +454,9 @@ def _social_chat_upsert_session(
 
     interests = _get_top_interests_for_user_in_exp(exp, target_user.id)
     session = ForumChatSession(
-        owner_user_id=_coerce_experiment_user_id(owner_user.id),
+        owner_user_id=owner_id,
         owner_username=str(owner_user.username or ""),
-        target_user_id=_coerce_experiment_user_id(target_user.id),
+        target_user_id=target_id,
         target_username=str(target_user.username or ""),
         target_profile_pic=_resolve_interview_profile_pic(target_user, exp),
         persona_snapshot=_build_persona_snapshot(target_user, interests, exp),
@@ -322,7 +524,10 @@ def _social_chat_generate_reply(
     )
     facts_pack = _format_facts_pack(facts_snapshot, max_chars=2200).strip()
     persona_snapshot = str(session.persona_snapshot or "").strip()
-    transcript = _social_chat_build_transcript(session)
+    transcript = _social_chat_build_transcript(
+        session,
+        assistant_username=str(target_user.username or ""),
+    )
 
     mode, model, base_url, api_key, temperature, max_tokens = _resolve_llm_backend(
         backend_mode="admin",
@@ -404,42 +609,46 @@ def api_social_chat_bootstrap(exp_id: int):
     exp = Exps.query.filter_by(idexp=int(exp_id)).first()
     if exp is None:
         return _json_error("Experiment not found.", 404)
-    if not _experiment_memory_enabled(exp_id):
-        return _json_error(
-            "Microblogging chat is unavailable because memory is disabled.", 403
-        )
     _ensure_experiment_db_bind(exp)
+    is_photo = (
+        str(getattr(exp, "platform_type", "") or "").strip().lower() == "photo_sharing"
+    )
 
     owner_user = _social_chat_owner_user(exp)
     if owner_user is None:
         return _json_error("Experiment user not found for current session.", 404)
     owner_id = _coerce_experiment_user_id(owner_user.id)
-    followed_agent_ids = _social_chat_followed_agent_ids(exp, owner_id)
-
-    if isinstance(owner_id, str):
+    followed_agent_ids_raw = _social_chat_followed_agent_ids(exp, owner_id)
+    followed_agent_ids = {
+        str(value) for value in followed_agent_ids_raw if str(value).strip()
+    }
+    if is_photo:
+        agents = _social_chat_photo_contacts(exp, owner_id)
+    elif isinstance(owner_id, str):
         agents = [
             _load_experiment_user_sqlite(exp, agent_id)
-            for agent_id in sorted(followed_agent_ids, key=lambda value: str(value))
+            for agent_id in sorted(followed_agent_ids_raw, key=lambda value: str(value))
         ]
         agents = [
             agent
             for agent in agents
             if agent is not None
             and int(getattr(agent, "is_page", 0) or 0) == 0
-            and str(getattr(agent, "user_type", "user") or "user") != "user"
             and _coerce_experiment_user_id(getattr(agent, "id", None)) != owner_id
         ]
     else:
-        agents = (
+        agents_query = (
             User_mgmt.query.filter(User_mgmt.is_page == 0)
-            .filter(User_mgmt.user_type != "user")
             .filter(User_mgmt.id != owner_id)
-            .filter(User_mgmt.id.in_(followed_agent_ids or {-1}))
-            .order_by(User_mgmt.username.asc())
-            .all()
+            .filter(User_mgmt.id.in_(list(followed_agent_ids_raw) or [-1]))
         )
+        agents_query = agents_query.filter(User_mgmt.user_type != "user")
+        agents = agents_query.order_by(User_mgmt.username.asc()).all()
     sessions = (
-        ForumChatSession.query.filter_by(owner_user_id=owner_id)
+        ForumChatSession.query.filter(
+            (ForumChatSession.owner_user_id == owner_id)
+            | (ForumChatSession.target_user_id == owner_id)
+        )
         .order_by(
             ForumChatSession.last_message_at.desc(),
             ForumChatSession.updated_at.desc(),
@@ -447,15 +656,38 @@ def api_social_chat_bootstrap(exp_id: int):
         )
         .all()
     )
-    sessions = [
-        sess
-        for sess in sessions
-        if _coerce_experiment_user_id(sess.target_user_id) in followed_agent_ids
-    ]
 
-    session_map = {
-        _coerce_experiment_user_id(sess.target_user_id): sess for sess in sessions
-    }
+    session_map = {}
+    session_payloads = []
+    for sess in sessions:
+        peer_id = _social_chat_peer_user_id(sess, owner_id)
+        if not peer_id or str(peer_id) not in followed_agent_ids:
+            continue
+        payload = _social_chat_view_payload(
+            exp,
+            sess,
+            owner_user_id=owner_id,
+            include_messages=False,
+        )
+        if payload is None:
+            continue
+        existing = session_map.get(peer_id)
+        if existing is not None:
+            existing_stamp = str(
+                existing.get("last_message_at") or existing.get("updated_at") or ""
+            )
+            next_stamp = str(
+                payload.get("last_message_at") or payload.get("updated_at") or ""
+            )
+            if next_stamp <= existing_stamp:
+                continue
+            session_payloads = [
+                item
+                for item in session_payloads
+                if _coerce_experiment_user_id(item.get("target_user_id")) != peer_id
+            ]
+        session_map[peer_id] = payload
+        session_payloads.append(payload)
     agent_payload = []
     for agent in agents:
         agent_id = _coerce_experiment_user_id(agent.id)
@@ -466,11 +698,13 @@ def api_social_chat_bootstrap(exp_id: int):
                 "username": str(agent.username or ""),
                 "profile_pic": _resolve_interview_profile_pic(agent, exp),
                 "profession": str(getattr(agent, "profession", "") or ""),
-                "preview": str((sess.last_message_preview if sess else "") or ""),
-                "session_id": int(sess.id) if sess else None,
+                "preview": str(
+                    (sess.get("last_message_preview") if sess else "") or ""
+                ),
+                "session_id": int(sess.get("id")) if sess else None,
                 "last_message_at": (
-                    sess.last_message_at.isoformat()
-                    if (sess and sess.last_message_at)
+                    str(sess.get("last_message_at"))
+                    if (sess and sess.get("last_message_at"))
                     else None
                 ),
             }
@@ -483,7 +717,7 @@ def api_social_chat_bootstrap(exp_id: int):
                 "username": str(owner_user.username or ""),
             },
             "agents": agent_payload,
-            "sessions": [_social_chat_session_payload(sess) for sess in sessions],
+            "sessions": session_payloads,
         }
     )
 
@@ -494,42 +728,68 @@ def api_social_chat_open_session(exp_id: int):
     exp = Exps.query.filter_by(idexp=int(exp_id)).first()
     if exp is None:
         return _json_error("Experiment not found.", 404)
-    if not _experiment_memory_enabled(exp_id):
-        return _json_error(
-            "Microblogging chat is unavailable because memory is disabled.", 403
-        )
     _ensure_experiment_db_bind(exp)
+    is_photo = (
+        str(getattr(exp, "platform_type", "") or "").strip().lower() == "photo_sharing"
+    )
 
     owner_user = _social_chat_owner_user(exp)
     if owner_user is None:
         return _json_error("Experiment user not found for current session.", 404)
     owner_id = _coerce_experiment_user_id(owner_user.id)
-    followed_agent_ids = _social_chat_followed_agent_ids(exp, owner_id)
+    followed_agent_ids = {
+        str(value)
+        for value in _social_chat_followed_agent_ids(exp, owner_id)
+        if str(value).strip()
+    }
 
     payload = request.get_json(silent=True) or {}
     agent_user_id = _coerce_experiment_user_id(payload.get("agent_user_id"))
-    target_user = (
-        _load_experiment_user_sqlite(exp, agent_user_id)
-        if isinstance(agent_user_id, str)
-        else None
-    )
+    target_user = _load_experiment_user_sqlite(exp, agent_user_id) if is_photo else None
     if target_user is None:
-        target_user = (
-            User_mgmt.query.filter(User_mgmt.is_page == 0)
-            .filter(User_mgmt.user_type != "user")
-            .filter(User_mgmt.id == agent_user_id)
-            .first()
+        target_query = User_mgmt.query.filter(User_mgmt.is_page == 0).filter(
+            User_mgmt.id == agent_user_id
         )
+        target_query = target_query.filter(User_mgmt.user_type != "user")
+        target_user = target_query.first()
     if target_user is None:
         return _json_error("Target agent not found.", 404)
-    if _coerce_experiment_user_id(target_user.id) not in followed_agent_ids:
+    if str(_coerce_experiment_user_id(target_user.id)) not in followed_agent_ids:
         return _json_error("You can chat only with followed agents.", 403)
 
-    session = _social_chat_upsert_session(
-        exp=exp, owner_user=owner_user, target_user=target_user
+    session = (
+        ForumChatSession.query.filter(
+            (
+                (ForumChatSession.owner_user_id == owner_id)
+                & (
+                    ForumChatSession.target_user_id
+                    == _coerce_experiment_user_id(target_user.id)
+                )
+            )
+            | (
+                (
+                    ForumChatSession.owner_user_id
+                    == _coerce_experiment_user_id(target_user.id)
+                )
+                & (ForumChatSession.target_user_id == owner_id)
+            )
+        )
+        .order_by(ForumChatSession.updated_at.desc(), ForumChatSession.id.desc())
+        .first()
     )
+    if session is None:
+        session = _social_chat_upsert_session(
+            exp=exp, owner_user=owner_user, target_user=target_user
+        )
     db.session.commit()
-    return _json_success(_social_chat_session_payload(session, include_messages=True))
+    return _json_success(
+        _social_chat_view_payload(
+            exp,
+            session,
+            owner_user_id=owner_id,
+            include_messages=True,
+        )
+    )
 
 
 @api_social.get("/<int:exp_id>/chat/session/<int:session_id>")
@@ -538,27 +798,43 @@ def api_social_chat_get_session(exp_id: int, session_id: int):
     exp = Exps.query.filter_by(idexp=int(exp_id)).first()
     if exp is None:
         return _json_error("Experiment not found.", 404)
-    if not _experiment_memory_enabled(exp_id):
-        return _json_error(
-            "Microblogging chat is unavailable because memory is disabled.", 403
-        )
     _ensure_experiment_db_bind(exp)
+    is_photo = (
+        str(getattr(exp, "platform_type", "") or "").strip().lower() == "photo_sharing"
+    )
 
     owner_user = _social_chat_owner_user(exp)
     if owner_user is None:
         return _json_error("Experiment user not found for current session.", 404)
     owner_id = _coerce_experiment_user_id(owner_user.id)
-    followed_agent_ids = _social_chat_followed_agent_ids(exp, owner_id)
+    followed_agent_ids = {
+        str(value)
+        for value in _social_chat_followed_agent_ids(exp, owner_id)
+        if str(value).strip()
+    }
 
-    session = ForumChatSession.query.filter_by(
-        id=int(session_id), owner_user_id=owner_id
-    ).first()
+    session = (
+        ForumChatSession.query.filter_by(id=int(session_id))
+        .filter(
+            (ForumChatSession.owner_user_id == owner_id)
+            | (ForumChatSession.target_user_id == owner_id)
+        )
+        .first()
+    )
     if session is None:
         return _json_error("Chat session not found.", 404)
-    if _coerce_experiment_user_id(session.target_user_id) not in followed_agent_ids:
+    peer_user_id = _social_chat_peer_user_id(session, owner_id)
+    if str(peer_user_id) not in followed_agent_ids:
         return _json_error("You can chat only with followed agents.", 403)
 
-    return _json_success(_social_chat_session_payload(session, include_messages=True))
+    return _json_success(
+        _social_chat_view_payload(
+            exp,
+            session,
+            owner_user_id=owner_id,
+            include_messages=True,
+        )
+    )
 
 
 @api_social.post("/<int:exp_id>/chat/session/<int:session_id>/message")
@@ -567,34 +843,40 @@ def api_social_chat_send_message(exp_id: int, session_id: int):
     exp = Exps.query.filter_by(idexp=int(exp_id)).first()
     if exp is None:
         return _json_error("Experiment not found.", 404)
-    if not _experiment_memory_enabled(exp_id):
-        return _json_error(
-            "Microblogging chat is unavailable because memory is disabled.", 403
-        )
     _ensure_experiment_db_bind(exp)
+    is_photo = (
+        str(getattr(exp, "platform_type", "") or "").strip().lower() == "photo_sharing"
+    )
 
     owner_user = _social_chat_owner_user(exp)
     if owner_user is None:
         return _json_error("Experiment user not found for current session.", 404)
     owner_id = _coerce_experiment_user_id(owner_user.id)
-    followed_agent_ids = _social_chat_followed_agent_ids(exp, owner_id)
+    followed_agent_ids = {
+        str(value)
+        for value in _social_chat_followed_agent_ids(exp, owner_id)
+        if str(value).strip()
+    }
 
-    session = ForumChatSession.query.filter_by(
-        id=int(session_id), owner_user_id=owner_id
-    ).first()
+    session = (
+        ForumChatSession.query.filter_by(id=int(session_id))
+        .filter(
+            (ForumChatSession.owner_user_id == owner_id)
+            | (ForumChatSession.target_user_id == owner_id)
+        )
+        .first()
+    )
     if session is None:
         return _json_error("Chat session not found.", 404)
-    target_id = _coerce_experiment_user_id(session.target_user_id)
-    if target_id not in followed_agent_ids:
+    target_id = _social_chat_peer_user_id(session, owner_id)
+    if str(target_id) not in followed_agent_ids:
         return _json_error("You can chat only with followed agents.", 403)
 
-    target_user = (
-        _load_experiment_user_sqlite(exp, target_id)
-        if isinstance(target_id, str)
-        else None
-    )
+    target_user = _load_experiment_user_sqlite(exp, target_id) if is_photo else None
     if target_user is None:
-        target_user = User_mgmt.query.filter_by(id=target_id).first()
+        target_query = User_mgmt.query.filter_by(id=target_id)
+        target_query = target_query.filter(User_mgmt.user_type != "user")
+        target_user = target_query.first()
     if target_user is None:
         return _json_error("Target agent not found.", 404)
 
@@ -640,7 +922,12 @@ def api_social_chat_send_message(exp_id: int, session_id: int):
 
     return _json_success(
         {
-            "session": _social_chat_session_payload(session),
+            "session": _social_chat_view_payload(
+                exp,
+                session,
+                owner_user_id=owner_id,
+                include_messages=False,
+            ),
             "user_message": _social_chat_message_payload(user_msg),
             "assistant_message": _social_chat_message_payload(assistant_msg),
         }

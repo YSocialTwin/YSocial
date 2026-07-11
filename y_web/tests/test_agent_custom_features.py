@@ -2,6 +2,7 @@ from y_web import db
 from y_web.routes.admin.sub.agents import _ensure_interest_topics_exist
 from y_web.routes.admin.sub.clients._crud import _export_adhoc_population_json
 from y_web.src.agents.custom_features import (
+    agent_ext_entries_from_population_agent_payload,
     feature_entries_from_population_agent_payload,
     replace_agent_custom_features,
     summarize_agent_custom_features,
@@ -107,6 +108,32 @@ def test_feature_entries_from_population_agent_payload_supports_opinion_and_cust
         assert ("custom", "Class") in by_type
         assert '"group_name": "Supportive"' in by_type[("opinion", "Climate")]
         assert '"stubborn": true' in by_type[("opinion", "Climate")]
+
+
+def test_agent_ext_entries_from_population_agent_payload_supports_photo_sharing_fields():
+    entries = agent_ext_entries_from_population_agent_payload(
+        {
+            "bio": "Photographer",
+            "is_private": True,
+            "is_verified": False,
+            "attention_budget": 120,
+            "photo_sharing": {
+                "favorite_filters": ["warm", "mono"],
+                "story_visibility": "followers",
+                "creator_tier": "pro",
+            },
+        }
+    )
+
+    by_name = {entry["feature_name"]: entry["feature_value"] for entry in entries}
+
+    assert by_name["bio"] == "Photographer"
+    assert by_name["is_private"] == "true"
+    assert by_name["is_verified"] == "false"
+    assert by_name["attention_budget"] == "120"
+    assert by_name["favorite_filters"] == '["warm", "mono"]'
+    assert by_name["story_visibility"] == "followers"
+    assert by_name["creator_tier"] == "pro"
 
 
 def test_ensure_interest_topics_exist_creates_missing_topics_case_insensitively(app):

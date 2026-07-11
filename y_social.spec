@@ -192,6 +192,7 @@ for submodule in [
     "YServerReddit",
     "YClientReddit",
     "YSimulator",
+    "YPhotoSharing",
     "y_agents_plugins",
 ]:
     submodule_path = os.path.join(basedir, "external", submodule)

@@ -20,6 +20,7 @@ from flask_login import current_user, login_required
 
 from y_web import db
 from y_web.src.agents.custom_features import (
+    agent_ext_entries_from_population_agent_payload,
     feature_entries_from_population_agent_payload,
     replace_agent_custom_features,
     summarize_agent_custom_features_bulk,
@@ -140,6 +141,44 @@ def _distribution_total_is_valid(distribution):
         return False
     total = sum(float(v) for v in distribution.values())
     return abs(total - 100.0) < 0.01
+
+
+def _parse_json_array_form_value(raw_value, default=None):
+    if raw_value in (None, ""):
+        return list(default or [])
+    if isinstance(raw_value, list):
+        values = raw_value
+    else:
+        try:
+            values = json.loads(raw_value)
+        except (TypeError, ValueError, json.JSONDecodeError):
+            values = [item.strip() for item in str(raw_value).split(",")]
+    if not isinstance(values, list):
+        return list(default or [])
+    cleaned = []
+    for value in values:
+        text = str(value).strip()
+        if text and text not in cleaned:
+            cleaned.append(text)
+    return cleaned or list(default or [])
+
+
+def _parse_percentage_value(raw_value, default=0):
+    try:
+        return max(0, min(100, int(float(raw_value))))
+    except (TypeError, ValueError):
+        return int(default)
+
+
+def _parse_distribution_from_form(prefix):
+    distribution = request.form.get(f"{prefix}_distribution", "Uniform")
+    param_name = request.form.get(f"{prefix}_distribution_param", "")
+    return {
+        "min": request.form.get(f"{prefix}_min", "1"),
+        "max": request.form.get(f"{prefix}_max", "10"),
+        "distribution": distribution,
+        "parameter": param_name,
+    }
 
 
 @population.route("/admin/create_population_empty", methods=["POST", "GET"])
@@ -334,6 +373,66 @@ def create_population():
         "Zipf": zipf_s,
     }
 
+    photo_sharing_config = None
+    if username_type == "photo_sharing":
+        photo_story_visibility = {
+            "public": _parse_percentage_value(
+                request.form.get("photo_story_public_percentage"), 20
+            ),
+            "followers": _parse_percentage_value(
+                request.form.get("photo_story_followers_percentage"), 65
+            ),
+            "private": _parse_percentage_value(
+                request.form.get("photo_story_private_percentage"), 15
+            ),
+        }
+        photo_creator_tier = {
+            "standard": _parse_percentage_value(
+                request.form.get("photo_creator_standard_percentage"), 60
+            ),
+            "pro": _parse_percentage_value(
+                request.form.get("photo_creator_pro_percentage"), 25
+            ),
+            "influencer": _parse_percentage_value(
+                request.form.get("photo_creator_influencer_percentage"), 15
+            ),
+        }
+        photo_sharing_config = {
+            "is_private_percentage": _parse_percentage_value(
+                request.form.get("photo_is_private_percentage"), 20
+            ),
+            "is_verified_percentage": _parse_percentage_value(
+                request.form.get("photo_is_verified_percentage"), 10
+            ),
+            "attention_budget": _parse_distribution_from_form("photo_attention_budget"),
+            "favorite_filters": _parse_json_array_form_value(
+                request.form.get("photo_favorite_filters"),
+                default=["warm", "vintage", "mono", "grain", "bright", "clean"],
+            ),
+            "story_visibility": photo_story_visibility,
+            "creator_tier": photo_creator_tier,
+        }
+
+        if not _distribution_total_is_valid(photo_story_visibility):
+            flash("Photo story visibility percentages must sum to 100%.", "error")
+            return redirect(request.referrer)
+        if not _distribution_total_is_valid(photo_creator_tier):
+            flash("Photo creator tier percentages must sum to 100%.", "error")
+            return redirect(request.referrer)
+
+        try:
+            photo_min = int(photo_sharing_config["attention_budget"]["min"])
+            photo_max = int(photo_sharing_config["attention_budget"]["max"])
+        except (TypeError, ValueError):
+            flash("Photo attention budget min/max must be valid integers.", "error")
+            return redirect(request.referrer)
+        if photo_min <= 0 or photo_max <= 0 or photo_min > photo_max:
+            flash(
+                "Photo attention budget must use positive min/max values with min <= max.",
+                "error",
+            )
+            return redirect(request.referrer)
+
     population = Population(
         name=name,
         descr=descr,
@@ -366,7 +465,13 @@ def create_population():
     db.session.commit()
 
     try:
-        generate_population(name, percentages, actions_config, profession_backgrounds)
+        generate_population(
+            name,
+            percentages,
+            actions_config,
+            profession_backgrounds,
+            photo_sharing_config,
+        )
     except Exception as exc:
         PopulationActivityProfile.query.filter_by(population=population.id).delete()
         Agent_Population.query.filter_by(population_id=population.id).delete()
@@ -421,9 +526,12 @@ def populations_data():
         for s in sort.split(","):
             direction = s[0]
             name = s[1:]
-            if name not in ["name", "descr", "size", "pop_type"]:
+            if name not in ["name", "descr", "size", "platform_type", "pop_type"]:
                 name = "name"
-            col = getattr(Population, name)
+            if name == "platform_type":
+                col = Population.username_type
+            else:
+                col = getattr(Population, name)
             if direction == "-":
                 col = col.desc()
             order.append(col)
@@ -480,6 +588,7 @@ def populations_data():
                     if t_id.strip()
                 ],
                 "username_type": infer_population_username_type(pop) or "microblogging",
+                "platform_type": infer_population_username_type(pop) or "microblogging",
                 "pop_type": pop.pop_type or "standard",
                 "activity_profiles": population_profiles.get(pop.id, []),
             }
@@ -1071,6 +1180,8 @@ def upload_population():
     db.session.add(population)
     db.session.commit()
 
+    agent_populations = []
+    agent_ext_rows = []
     # add the agents to the database
     for a in data.get("agents", []):
         # check if the agent already exists
@@ -1120,17 +1231,39 @@ def upload_population():
             if feature_entries:
                 replace_agent_custom_features(agent.id, feature_entries)
                 db.session.commit()
+            Agent_Ext.query.filter_by(agent_id=agent.id).delete()
+            for ext_entry in agent_ext_entries_from_population_agent_payload(a):
+                agent_ext_rows.append(
+                    Agent_Ext(
+                        agent_id=agent.id,
+                        feature_name=ext_entry["feature_name"],
+                        feature_value=ext_entry["feature_value"],
+                    )
+                )
         else:
             feature_entries = feature_entries_from_population_agent_payload(a)
             if feature_entries:
                 replace_agent_custom_features(agent.id, feature_entries)
                 db.session.commit()
+            Agent_Ext.query.filter_by(agent_id=agent.id).delete()
+            for ext_entry in agent_ext_entries_from_population_agent_payload(a):
+                agent_ext_rows.append(
+                    Agent_Ext(
+                        agent_id=agent.id,
+                        feature_name=ext_entry["feature_name"],
+                        feature_value=ext_entry["feature_value"],
+                    )
+                )
 
-        agent_population = Agent_Population(
-            agent_id=agent.id, population_id=population.id
+        agent_populations.append(
+            Agent_Population(agent_id=agent.id, population_id=population.id)
         )
-        db.session.add(agent_population)
-        db.session.commit()
+
+    if agent_ext_rows:
+        db.session.bulk_save_objects(agent_ext_rows)
+    if agent_populations:
+        db.session.bulk_save_objects(agent_populations)
+    db.session.commit()
 
     # add the pages to the database
     for p in data.get("pages", []):

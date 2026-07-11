@@ -149,6 +149,7 @@ Assuming you have [Anaconda](https://www.anaconda.com/) installed, you can creat
    - `external/YServer`
    - `external/YClientReddit`
    - `external/YServerReddit`
+   - `external/YPhotoSharing`
    - `external/YSimulator`
 3. **Install dependencies:**  
    ```bash

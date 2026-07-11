@@ -116,17 +116,15 @@ def get_model_cache_root() -> Path:
 def get_model_cache_env(root: Optional[str | Path] = None) -> Dict[str, str]:
     cache_root = _normalize_root(root or get_model_cache_root())
     hf_home = cache_root / "huggingface"
-    transformers_cache = hf_home / "transformers"
     hub_cache = hf_home / "hub"
     torch_home = cache_root / "torch"
 
-    for path in (cache_root, hf_home, transformers_cache, hub_cache, torch_home):
+    for path in (cache_root, hf_home, hub_cache, torch_home):
         path.mkdir(parents=True, exist_ok=True)
 
     return {
         "YSOCIAL_MODEL_CACHE_DIR": str(cache_root),
         "HF_HOME": str(hf_home),
-        "TRANSFORMERS_CACHE": str(transformers_cache),
         "HUGGINGFACE_HUB_CACHE": str(hub_cache),
         "TORCH_HOME": str(torch_home),
     }

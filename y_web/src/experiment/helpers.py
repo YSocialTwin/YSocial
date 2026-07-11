@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import re
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Optional
@@ -10,9 +11,12 @@ from flask import current_app
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import sessionmaker
 
 from y_web import db
-from y_web.src.models import Exps
+from y_web.src.experiment.schema import ensure_experiment_schema_for_uri
+from y_web.src.models import Exps, User_mgmt
+from y_web.src.system.path_utils import get_writable_path
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 
@@ -91,7 +95,17 @@ def _experiment_engine_uri(experiment: Exps) -> Optional[str]:
     base_uri = current_app.config["SQLALCHEMY_DATABASE_URI"]
 
     if base_uri.startswith("sqlite"):
-        db_path = (BASE_DIR / experiment.db_name).resolve()
+        db_name = str(getattr(experiment, "db_name", "") or "").replace("\\", os.sep)
+        if getattr(experiment, "platform_type", "") == "photo_sharing":
+            photo_folder = os.path.dirname(db_name)
+            photo_db_path = get_writable_path(
+                os.path.join("y_web", photo_folder, "yphotosharing.db")
+            )
+            os.makedirs(os.path.dirname(photo_db_path), exist_ok=True)
+            return f"sqlite:///{photo_db_path}"
+
+        db_path = get_writable_path(os.path.join("y_web", db_name))
+        os.makedirs(os.path.dirname(db_path), exist_ok=True)
         return f"sqlite:///{db_path}"
 
     if base_uri.startswith("postgresql"):
@@ -99,6 +113,165 @@ def _experiment_engine_uri(experiment: Exps) -> Optional[str]:
         return f"{prefix}/{experiment.db_name}"
 
     return None
+
+
+def get_experiment_engine_uri(experiment: Exps) -> Optional[str]:
+    """
+    Public wrapper returning the database URI for an experiment.
+    """
+    return _experiment_engine_uri(experiment)
+
+
+def open_experiment_session(experiment: Exps):
+    """
+    Open an isolated SQLAlchemy session bound to the experiment database.
+
+    This avoids mutating Flask-SQLAlchemy's global bind map and guarantees the
+    schema exists before callers issue ORM queries or inserts.
+    """
+    uri = _experiment_engine_uri(experiment)
+    if not uri:
+        return None, None
+
+    engine = create_engine(uri, pool_pre_ping=True)
+    if getattr(experiment, "platform_type", "") == "photo_sharing":
+        _ensure_photo_sharing_orm_tables(engine, uri)
+    else:
+        _ensure_experiment_orm_tables(engine)
+        ensure_experiment_schema_for_uri(uri)
+    session = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)()
+    return session, engine
+
+
+def _ensure_experiment_orm_tables(engine) -> None:
+    """
+    Create the core ORM tables bound to db_exp on the target engine.
+
+    This is intentionally limited to models that declare ``__bind_key__ ==
+    'db_exp'`` so we do not materialize admin tables inside experiment DBs.
+    """
+    tables = []
+    seen = set()
+    for mapper in db.Model.registry.mappers:
+        model = mapper.class_
+        if getattr(model, "__bind_key__", None) != "db_exp":
+            continue
+        table = getattr(model, "__table__", None)
+        if table is None or table.name in seen:
+            continue
+        seen.add(table.name)
+        tables.append(table)
+
+    if tables:
+        db.metadata.create_all(bind=engine, tables=tables)
+
+
+def _ensure_photo_sharing_orm_tables(engine, uri: Optional[str] = None) -> None:
+    """
+    Create the complete YPhotoSharing ORM schema on the target engine.
+
+    The external YPhotoSharing package ships with its own SQLAlchemy Base and
+    model graph, which includes the ``user_mgmt`` table required by photo
+    experiments. We import it lazily so a missing or partially initialised
+    photo database can be repaired on first use.
+    """
+    try:
+        external_root = (
+            Path(__file__).resolve().parents[3] / "external" / "YPhotoSharing"
+        )
+        external_root_str = str(external_root)
+        if external_root.exists() and external_root_str not in sys.path:
+            sys.path.insert(0, external_root_str)
+
+        from YPhotoSharing.YServer.classes.models import Base as PhotoBase
+
+        PhotoBase.metadata.create_all(bind=engine)
+        if uri:
+            ensure_experiment_schema_for_uri(uri)
+    except Exception:
+        if uri:
+            ensure_experiment_schema_for_uri(uri)
+
+
+def ensure_experiment_user(
+    experiment: Exps,
+    *,
+    user_id,
+    username: str,
+    email: str,
+    password: str,
+    cover_image: str = "",
+    user_type: str = "user",
+    leaning: str = "neutral",
+    age: int = 0,
+    recsys_type: str = "default",
+    frecsys_type: str = "default",
+    language: str = "en",
+    round_actions: int = 1,
+    toxicity: str = "no",
+    joined_on: int = 0,
+):
+    """
+    Ensure a participant row exists in the experiment database.
+
+    Returns a tuple ``(user, created)`` where ``user`` is the ORM instance
+    loaded from the experiment database session.
+    """
+    from flask import session
+    from flask_login import current_user
+
+    db_session, engine = open_experiment_session(experiment)
+    if db_session is None or engine is None:
+        return None, False
+
+    try:
+        selected_user_id = ""
+        if (
+            str(getattr(experiment, "platform_type", "") or "").strip().lower()
+            == "photo_sharing"
+            and str(getattr(current_user, "role", "") or "").strip().lower() == "admin"
+        ):
+            selected_user_id = str(
+                session.get("photo_view_user_id")
+                or session.get("photo_switch_user_id")
+                or ""
+            ).strip()
+
+        if selected_user_id:
+            selected_user = (
+                db_session.query(User_mgmt).filter_by(id=selected_user_id).first()
+            )
+            if selected_user is not None:
+                user = selected_user
+                return user, False
+
+        user = db_session.query(User_mgmt).filter_by(username=username).first()
+        if user is not None:
+            return user, False
+
+        new_user = User_mgmt(
+            id=user_id,
+            email=email,
+            username=username,
+            password=password,
+            user_type=user_type,
+            leaning=leaning,
+            age=age,
+            recsys_type=recsys_type,
+            language=language,
+            frecsys_type=frecsys_type,
+            round_actions=round_actions,
+            toxicity=toxicity,
+            joined_on=joined_on,
+            cover_image=cover_image,
+        )
+        db_session.add(new_user)
+        db_session.commit()
+        db_session.refresh(new_user)
+        return new_user, True
+    finally:
+        db_session.close()
+        engine.dispose()
 
 
 def _fetch_round_from_engine(engine: Engine) -> Optional[Dict[str, int]]:

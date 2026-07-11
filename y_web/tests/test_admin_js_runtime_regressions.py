@@ -42,19 +42,32 @@ def test_admin_shared_bundles_guard_optional_page_sections():
     populations = (STATIC_JS_DIR / "admin-populations.js").read_text(encoding="utf-8")
     miscellanea = (STATIC_JS_DIR / "admin-miscellanea.js").read_text(encoding="utf-8")
     settings = (STATIC_JS_DIR / "admin-settings.js").read_text(encoding="utf-8")
+    dashboard = (STATIC_JS_DIR / "admin-dashboard.js").read_text(encoding="utf-8")
+    experiments = (STATIC_JS_DIR / "admin-experiments.js").read_text(encoding="utf-8")
 
     assert "const popDetails = window.YS_DATA_POP_DETAILS;" in populations
     assert "if (popDetails) {" in populations
     assert "if (tableDiv) {" in populations
     assert "if (llmModelsTableDiv) {" in miscellanea
-    assert "hpc_max_hpc_simulations_per_vllm_worker" in miscellanea
-    assert "save-hpc-monitor-settings-secondary" in miscellanea
+    assert "hpc_max_hpc_simulations_per_vllm_worker" not in miscellanea
+    assert "save-hpc-monitor-settings-secondary" not in miscellanea
     assert "boxDiv.classList.remove('d-none');" in settings
     assert "boxDiv.classList.add('d-none');" in settings
     assert "function renderExperimentProgressBadge(exp, statusFilter)" in settings
     assert "EXP_STATUS.STOPPED_SCHEDULED" in settings
     assert "progress_label" in settings
     assert "NA" in settings
+    assert "function pollClientProgress(" not in settings
+    assert "setInterval(updateProgress, 2000)" not in settings
+    assert "fetch(`/admin/experiment_clients/${expId}`)" in settings
+    assert "function pollAllClientProgress(" not in dashboard
+    assert "fetch(`/admin/progress/${clientId}`)" not in dashboard
+    assert (
+        "setInterval(refreshAllClientProgress, PROGRESS_REFRESH_INTERVAL)" in dashboard
+    )
+    assert 'data-exp-id="' in dashboard
+    assert "async function pollAllClientProgress()" in experiments
+    assert "const results = await Promise.all(" in experiments
 
 
 def test_admin_clients_network_parameter_rows_toggle_bootstrap_visibility():

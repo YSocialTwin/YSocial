@@ -409,8 +409,7 @@ def experiment_clients(exp_id):
 
         # Get clients for this experiment
         clients = Client.query.filter_by(id_exp=exp_id).all()
-
-        client_data = []
+        client_ids = [client.id for client in clients]
         for client in clients:
             # Update client log metrics before reading execution data
             # This ensures we have the latest progress information
@@ -421,9 +420,12 @@ def experiment_clients(exp_id):
                 try:
                     # Pass is_hpc flag for HPC experiments to use correct log format
                     is_hpc = experiment.simulator_type == "HPC"
-                    current_app.logger.info(
-                        f"Updating metrics for client {client.id} ({client.name}), "
-                        f"is_hpc={is_hpc}, log_file={client_log_file}"
+                    current_app.logger.debug(
+                        "Updating metrics for client %s (%s), is_hpc=%s, log_file=%s",
+                        client.id,
+                        client.name,
+                        is_hpc,
+                        client_log_file,
                     )
                     update_client_log_metrics(
                         exp_id, client.id, client_log_file, is_hpc=is_hpc
@@ -434,23 +436,24 @@ def experiment_clients(exp_id):
                         exc_info=True,
                     )
             else:
-                current_app.logger.warning(
-                    f"Log file not found for client {client.id} ({client.name}): {client_log_file}"
+                current_app.logger.debug(
+                    "Log file not found for client %s (%s): %s",
+                    client.id,
+                    client.name,
+                    client_log_file,
                 )
 
+        client_exec_by_id = {}
+        if client_ids:
+            client_exec_rows = Client_Execution.query.filter(
+                Client_Execution.client_id.in_(client_ids)
+            ).all()
+            client_exec_by_id = {row.client_id: row for row in client_exec_rows}
+
+        client_data = []
+        for client in clients:
             # Get client execution data (now updated with latest info)
-            client_exec = Client_Execution.query.filter_by(client_id=client.id).first()
-
-            if client_exec:
-                current_app.logger.info(
-                    f"Client_Execution for client {client.id}: elapsed_time={client_exec.elapsed_time}, "
-                    f"expected={client_exec.expected_duration_rounds}, "
-                    f"last_day={client_exec.last_active_day}, last_hour={client_exec.last_active_hour}"
-                )
-            else:
-                current_app.logger.warning(
-                    f"No Client_Execution record found for client {client.id} ({client.name})"
-                )
+            client_exec = client_exec_by_id.get(client.id)
 
             client_info = {
                 "id": client.id,
@@ -538,13 +541,23 @@ def experiment_details(uid):
 
     # get experiment clients
     clients = Client.query.filter_by(id_exp=uid).all()
+    client_ids = [client.id for client in clients]
 
     # get client execution data to check if clients have been run
     client_executions = {}
-    for client in clients:
-        execution = Client_Execution.query.filter_by(client_id=client.id).first()
-        # Client has been run at least once if execution exists and elapsed_time > 0
-        client_executions[client.id] = execution and execution.elapsed_time > 0
+    if client_ids:
+        execution_rows = Client_Execution.query.filter(
+            Client_Execution.client_id.in_(client_ids)
+        ).all()
+        execution_by_client_id = {row.client_id: row for row in execution_rows}
+        for client in clients:
+            execution = execution_by_client_id.get(client.id)
+            # Client has been run at least once if execution exists and elapsed_time > 0
+            client_executions[client.id] = bool(
+                execution and execution.elapsed_time > 0
+            )
+    else:
+        client_executions = {}
 
     # HPC reset availability: only stopped experiments that already started once.
     has_started_once = _experiment_has_started_once(experiment, clients=clients)
@@ -725,11 +738,11 @@ def experiment_details(uid):
         except Exception:
             forum_feed_health = None
 
-    template_name = (
-        "admin/experiment_details_forum.html"
-        if experiment.platform_type == "forum"
-        else "admin/experiment_details.html"
-    )
+    template_name = "admin/experiment_details.html"
+    if experiment.platform_type == "forum":
+        template_name = "admin/experiment_details_forum.html"
+    elif experiment.platform_type == "photo_sharing":
+        template_name = "admin/experiment_details_photo.html"
 
     return render_template(
         template_name,
@@ -1246,6 +1259,56 @@ def update_experiment_topics(uid):
     return redirect(url_for("experiments.experiment_details", uid=uid))
 
 
+@experiments.route("/admin/clear_experiment_logs/<int:uid>", methods=["POST"])
+@login_required
+def clear_experiment_logs(uid):
+    """Delete runtime log files for an experiment without removing the experiment itself."""
+    check_privileges(current_user.username)
+
+    exp = Exps.query.filter_by(idexp=uid).first()
+    if not exp:
+        flash("Experiment not found.", "error")
+        return redirect(url_for("experiments.settings"))
+    if int(getattr(exp, "running", 0) or 0) == 1:
+        flash("Stop the experiment before clearing logs.", "warning")
+        return redirect(url_for("experiments.experiment_details", uid=uid))
+
+    admin_user = _current_admin_user_or_none()
+    if not user_can_manage_experiment(admin_user, exp):
+        flash("You do not have permission to clear logs for this experiment.", "error")
+        return redirect(url_for("experiments.experiment_details", uid=uid))
+
+    try:
+        from y_web.src.system.path_utils import get_writable_path
+
+        base_dir = get_writable_path()
+        exp_folder = _get_experiment_folder(base_dir, exp, _get_database_type())
+        deleted_count, failed_paths = clear_experiment_log_files(exp_folder)
+
+        if deleted_count:
+            flash(
+                f"Cleared {deleted_count} log file(s) from the experiment folder.",
+                "success",
+            )
+        else:
+            flash("No log files were found to clear.", "warning")
+
+        for failed_path in failed_paths:
+            current_app.logger.warning(f"Could not delete log file {failed_path}")
+        if failed_paths:
+            flash(
+                f"Could not delete {len(failed_paths)} log file(s) due to filesystem errors.",
+                "warning",
+            )
+    except Exception as exc:
+        current_app.logger.error(
+            f"Failed to clear experiment logs: {exc}", exc_info=True
+        )
+        flash(f"Failed to clear experiment logs: {str(exc)}", "error")
+
+    return redirect(url_for("experiments.experiment_details", uid=uid))
+
+
 @experiments.route("/admin/reset_hpc_experiment/<int:uid>", methods=["POST"])
 @login_required
 def reset_hpc_experiment(uid):
@@ -1303,23 +1366,10 @@ def reset_hpc_experiment(uid):
         base_dir = get_writable_path()
         exp_folder = _get_experiment_folder(base_dir, exp, _get_database_type())
 
-        for log_dir in [os.path.join(exp_folder, "logs"), exp_folder]:
-            if not os.path.isdir(log_dir):
-                continue
-            for root, _, files in os.walk(log_dir):
-                for filename in files:
-                    if (
-                        log_dir.endswith("logs")
-                        or filename.endswith(".log")
-                        or filename.endswith(".gz")
-                        or filename.endswith(".jsonl")
-                    ):
-                        try:
-                            os.remove(os.path.join(root, filename))
-                        except OSError:
-                            current_app.logger.warning(
-                                f"Could not delete log file {os.path.join(root, filename)}"
-                            )
+        deleted_count, failed_paths = clear_experiment_log_files(exp_folder)
+        if failed_paths:
+            for failed_path in failed_paths:
+                current_app.logger.warning(f"Could not delete log file {failed_path}")
 
         for db_filename in ("database_server.db", "simulation.db"):
             db_path = os.path.join(exp_folder, db_filename)

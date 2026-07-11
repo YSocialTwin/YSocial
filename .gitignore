@@ -157,6 +157,9 @@ venv.bak/
 # External runtime repositories are managed as standalone clones
 /external/
 
+# Runtime experiment artifacts
+/y_web/experiments/
+
 # mypy
 .mypy_cache/
 .dmypy.json

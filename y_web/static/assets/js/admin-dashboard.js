@@ -29,78 +29,101 @@ var AdminDashboard = (function() {
   }
 
   function applyProgressBarState(progressBar, data) {
-      if (!progressBar || progressBar.length === 0) {
+      const element = progressBar && progressBar.jquery ? progressBar[0] : progressBar;
+      if (!element) {
           return;
       }
 
       if (data.infinite) {
-          progressBar.css('width', '100%');
-          progressBar.css('background', 'linear-gradient(90deg, #22c55e 0%, #4ade80 100%)');
-          progressBar.css('box-shadow', '0 2px 6px rgba(34,197,94,0.3)');
+          element.style.width = '100%';
+          element.style.background = 'linear-gradient(90deg, #22c55e 0%, #4ade80 100%)';
+          element.style.boxShadow = '0 2px 6px rgba(34,197,94,0.3)';
 
           const days = data.elapsed_days || 0;
           const hours = data.elapsed_hours || 0;
           const timeText = days > 0 ? (days + 'd ' + hours + 'h') : (hours + 'h elapsed');
-          progressBar.find('span').text('∞ ' + timeText);
+          const label = element.querySelector('span');
+          if (label) {
+              label.textContent = '∞ ' + timeText;
+          }
           return;
       }
 
       const percentage = Math.min(100, Math.max(0, data.progress || 0));
-      progressBar.css('width', percentage + '%');
-      progressBar.find('span').text(percentage + '%');
+      element.style.width = percentage + '%';
+      const label = element.querySelector('span');
+      if (label) {
+          label.textContent = percentage + '%';
+      }
 
       if (percentage >= 75) {
-          progressBar.css('background', 'linear-gradient(90deg, #039be5 0%, #00d1b2 100%)');
-          progressBar.css('box-shadow', '0 2px 6px rgba(0,209,178,0.3)');
+          element.style.background = 'linear-gradient(90deg, #039be5 0%, #00d1b2 100%)';
+          element.style.boxShadow = '0 2px 6px rgba(0,209,178,0.3)';
       } else if (percentage >= 50) {
-          progressBar.css('background', 'linear-gradient(90deg, #039be5 0%, #5596e6 100%)');
-          progressBar.css('box-shadow', '0 2px 6px rgba(85,150,230,0.3)');
+          element.style.background = 'linear-gradient(90deg, #039be5 0%, #5596e6 100%)';
+          element.style.boxShadow = '0 2px 6px rgba(85,150,230,0.3)';
       } else {
-          progressBar.css('background', 'linear-gradient(90deg, #039be5 0%, #4facfe 100%)');
-          progressBar.css('box-shadow', '0 2px 6px rgba(3,155,229,0.3)');
+          element.style.background = 'linear-gradient(90deg, #039be5 0%, #4facfe 100%)';
+          element.style.boxShadow = '0 2px 6px rgba(3,155,229,0.3)';
       }
   }
 
-  function pollAllClientProgress() {
-      const progressBars = document.querySelectorAll('[id^="progress-bar-"]');
-      if (!progressBars.length) {
+  const experimentProgressRequests = {};
+  const PROGRESS_REFRESH_INTERVAL = 5000;
+
+  function getRunningExperimentIds() {
+      const container = document.getElementById('running-experiments-container');
+      if (!container) {
+          return [];
+      }
+
+      const expIds = new Set();
+      container.querySelectorAll('[data-exp-id]').forEach((element) => {
+          const expId = element.dataset.expId;
+          if (expId) {
+              expIds.add(expId);
+          }
+      });
+      return Array.from(expIds);
+  }
+
+  function refreshExperimentProgress(expId) {
+      if (!expId || experimentProgressRequests[expId]) {
           return;
       }
 
-      let shouldContinuePolling = false;
-      progressBars.forEach((bar) => {
-          const clientId = bar.id.replace('progress-bar-', '');
-          if (!clientId) {
-              return;
-          }
+      experimentProgressRequests[expId] = true;
 
-          $.ajax({
-              url: `/admin/progress/${clientId}`,
-              method: 'GET',
-              dataType: 'json',
-              success: function (data) {
-                  applyProgressBarState($(`#progress-bar-${clientId}`), data);
-                  if (data.infinite || (data.progress || 0) < 100) {
-                      shouldContinuePolling = true;
-                  }
+      fetch(`/admin/experiment_clients/${expId}`)
+          .then(response => response.json())
+          .then(data => {
+              if (data.error || !data.clients || data.clients.length === 0) {
+                  return;
               }
-          });
-      });
 
-      setTimeout(() => {
-          const hasActiveBars = Array.from(document.querySelectorAll('[id^="progress-bar-"] span'))
-              .some((span) => {
-                  const text = span.textContent || '';
-                  return text.startsWith('∞') || text !== '100%';
+              data.clients.forEach((client) => {
+                  const progressBar = document.getElementById(`progress-bar-${client.id}`);
+                  if (progressBar) {
+                      applyProgressBarState(progressBar, client);
+                  }
               });
-          if (shouldContinuePolling || hasActiveBars) {
-              pollAllClientProgress();
-          }
-      }, 1000);
+          })
+          .catch((error) => {
+              console.error(`Error refreshing progress for experiment ${expId}:`, error);
+          })
+          .finally(() => {
+              experimentProgressRequests[expId] = false;
+          });
+  }
+
+  function refreshAllClientProgress() {
+      getRunningExperimentIds().forEach((expId) => {
+          refreshExperimentProgress(expId);
+      });
   }
 
   $(document).ready(function () {
-      pollAllClientProgress();
+      refreshAllClientProgress();
   });
 
   function startJupyterSession(expId) {
@@ -201,6 +224,7 @@ var AdminDashboard = (function() {
 
   // Start periodic async refresh
   setInterval(refreshDashboardAsync, DASHBOARD_REFRESH_INTERVAL);
+  setInterval(refreshAllClientProgress, PROGRESS_REFRESH_INTERVAL);
 
   // Experiment server control functions
   function startExperimentServer(expId) {
@@ -263,7 +287,7 @@ var AdminDashboard = (function() {
       const ownerBadge = exp.owner ? 
           `<span style="background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="Owner">${exp.owner}</span>` : '';
 
-      const platformBadge = `<span style="background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="Platform">${exp.platform_type === 'forum' ? 'Forum' : 'Microblogging'}</span>`;
+      const platformBadge = `<span style="background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="Platform">${exp.platform_type === 'forum' ? 'Forum' : exp.platform_type === 'photo_sharing' ? 'Photo Sharing' : 'Microblogging'}</span>`;
     
       const hpcBadge = exp.simulator_type === 'HPC' ?
           `<span style="background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="HPC">HPC</span>` : '';
@@ -343,7 +367,7 @@ var AdminDashboard = (function() {
               </span>
               <span class="right" style="width: 55%; display: flex; align-items: center; gap: 10px;">
                   <div class="sleek-progress-container" style="flex: 1; position: relative; background: linear-gradient(to right, #f5f5f5 0%, #e8e8e8 100%); border-radius: 20px; height: 24px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.08);">
-                      <div id="progress-bar-${client.id}" class="sleek-progress-bar" 
+                      <div id="progress-bar-${client.id}" class="sleek-progress-bar" data-exp-id="${exp.idexp}"
                            style="position: absolute; left: 0; top: 0; height: 100%; width: ${client.progress}%; background: linear-gradient(90deg, #039be5 0%, #4facfe 100%); border-radius: 20px; transition: width 0.4s ease-in-out; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(3,155,229,0.3);">
                           <span style="font-size: 0.75em; font-weight: 600; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">${client.progress}%</span>
                       </div>
@@ -386,7 +410,7 @@ var AdminDashboard = (function() {
       const ownerBadgeFull = exp.owner ?
           `<span style="background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="Experiment owner">${exp.owner}</span>` : '';
 
-      const platformBadgeFull = `<span style="background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="Platform">${exp.platform_type === 'forum' ? 'Forum' : 'Microblogging'}</span>`;
+      const platformBadgeFull = `<span style="background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="Platform">${exp.platform_type === 'forum' ? 'Forum' : exp.platform_type === 'photo_sharing' ? 'Photo Sharing' : 'Microblogging'}</span>`;
     
       const hpcBadgeFull = exp.simulator_type === 'HPC' ?
           `<span style="background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="HPC Simulator">HPC</span>` : '';

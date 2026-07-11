@@ -25,6 +25,7 @@ from werkzeug.security import generate_password_hash
 
 from y_web import db  # , app
 from y_web.src.content.cover_images import random_cover_image_url
+from y_web.src.experiment.helpers import ensure_experiment_user
 from y_web.src.llm.vllm_manager import get_llm_models
 from y_web.src.models import Admin_users, Exps, User_Experiment, User_mgmt
 from y_web.src.system.miscellanea import (
@@ -378,74 +379,39 @@ def add_user_to_experiment():
         flash("Experiment not found.", "error")
         return user_details(user_id)
 
-    # Use the proper experiment context registration
-    from y_web.src.experiment.context import (
-        get_db_bind_key_for_exp,
-        register_experiment_database,
+    user_exp, _created = ensure_experiment_user(
+        exp,
+        user_id=user.id,
+        username=user.username,
+        email=user.email,
+        password=user.password,
+        cover_image=random_cover_image_url(),
+        joined_on=0,
     )
-
-    # Register the experiment database if not already registered
-    bind_key = get_db_bind_key_for_exp(experiment_id)
-    if bind_key not in current_app.config["SQLALCHEMY_BINDS"]:
-        register_experiment_database(current_app, experiment_id, exp.db_name)
-
-    # Temporarily switch to experiment database to create user
-    old_bind = current_app.config["SQLALCHEMY_BINDS"].get("db_exp")
-    try:
-        current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = current_app.config[
-            "SQLALCHEMY_BINDS"
-        ][bind_key]
-
-        # check if the user is present in the User_mgmt table
-        user_exp = db.session.query(User_mgmt).filter_by(username=user.username).first()
-
-        if user_exp is None:
-            new_user = User_mgmt(
-                email=user.email,
-                username=user.username,
-                password=user.password,
-                user_type="user",
-                leaning="neutral",
-                age=0,
-                recsys_type="default",
-                language="en",
-                frecsys_type="default",
-                round_actions=1,
-                toxicity="no",
-                joined_on=0,
-                cover_image=random_cover_image_url(),
-            )
-            db.session.add(new_user)
-            db.session.commit()
-
-        # Add to User_Experiment if not present
-        user_exp_record = (
-            db.session.query(User_Experiment)
-            .filter_by(user_id=user_id, exp_id=experiment_id)
-            .first()
+    if user_exp is None:
+        flash(
+            "Error adding user to experiment: unable to open experiment database.",
+            "error",
         )
+        return user_details(user_id)
 
-        if user_exp_record is None:
-            user_exp_record = User_Experiment(user_id=user_id, exp_id=experiment_id)
-            db.session.add(user_exp_record)
-            db.session.commit()
-            flash(
-                f"User '{user.username}' successfully added to experiment '{exp.exp_name}'.",
-                "success",
-            )
-        else:
-            flash(
-                f"User '{user.username}' is already assigned to experiment '{exp.exp_name}'.",
-                "info",
-            )
+    user_exp_record = User_Experiment.query.filter_by(
+        user_id=user_id, exp_id=experiment_id
+    ).first()
 
-    except Exception as e:
-        db.session.rollback()
-        flash(f"Error adding user to experiment: {str(e)}", "error")
-    finally:
-        # Restore original db_exp binding
-        if old_bind:
-            current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = old_bind
+    if user_exp_record is None:
+        user_exp_record = User_Experiment(user_id=user_id, exp_id=experiment_id)
+        db.session.add(user_exp_record)
+        db.session.commit()
+        flash(
+            f"User '{user.username}' successfully added to experiment '{exp.exp_name}'.",
+            "success",
+        )
+    else:
+        flash(
+            f"User '{user.username}' is already assigned to experiment '{exp.exp_name}'.",
+            "info",
+        )
 
     return user_details(user_id)
 
@@ -836,98 +802,68 @@ def bulk_assign_users():
             flash("Experiment not found.", "error")
             return redirect(url_for("users.user_data"))
 
-        # Use the proper experiment context registration
-        from y_web.src.experiment.context import (
-            get_db_bind_key_for_exp,
-            register_experiment_database,
-        )
-
-        # Register the experiment database if not already registered
-        bind_key = get_db_bind_key_for_exp(exp_id)
-        if bind_key not in current_app.config["SQLALCHEMY_BINDS"]:
-            register_experiment_database(current_app, exp_id, exp.db_name)
-
-        # Temporarily switch to experiment database
-        old_bind = current_app.config["SQLALCHEMY_BINDS"].get("db_exp")
-        current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = current_app.config[
-            "SQLALCHEMY_BINDS"
-        ][bind_key]
-
         assigned = 0
         errors = []
 
-        try:
-            for user_id_str in user_ids:
-                try:
-                    user_id = int(user_id_str)
-                    user = Admin_users.query.filter_by(id=user_id).first()
+        for user_id_str in user_ids:
+            try:
+                user_id = int(user_id_str)
+                user = Admin_users.query.filter_by(id=user_id).first()
 
-                    if not user:
-                        errors.append(f"User ID {user_id} not found")
-                        continue
+                if not user:
+                    errors.append(f"User ID {user_id} not found")
+                    continue
 
-                    # Check if already assigned
-                    existing = User_Experiment.query.filter_by(
-                        user_id=user_id, exp_id=exp_id
-                    ).first()
+                # Check if already assigned
+                existing = User_Experiment.query.filter_by(
+                    user_id=user_id, exp_id=exp_id
+                ).first()
 
-                    if existing:
-                        errors.append(
-                            f"User '{user.username}' already assigned to this experiment"
-                        )
-                        continue
+                if existing:
+                    errors.append(
+                        f"User '{user.username}' already assigned to this experiment"
+                    )
+                    continue
 
-                    # Ensure user exists in experiment database (User_mgmt)
-                    user_agent = User_mgmt.query.filter_by(
-                        username=user.username
-                    ).first()
-                    if not user_agent:
-                        new_user_mgmt = User_mgmt(
-                            email=user.email,
-                            username=user.username,
-                            password=user.password,  # Already hashed
-                            user_type="user",
-                            leaning="neutral",
-                            age=0,
-                            recsys_type="default",
-                            language="en",
-                            frecsys_type="default",
-                            round_actions=1,
-                            toxicity="no",
-                            joined_on=0,
-                            cover_image=random_cover_image_url(),
-                        )
-                        db.session.add(new_user_mgmt)
-                        db.session.commit()
-
-                    # Create User_Experiment record
-                    user_exp = User_Experiment(user_id=user_id, exp_id=exp_id)
-                    db.session.add(user_exp)
-                    db.session.commit()
-
-                    assigned += 1
-                except ValueError:
-                    errors.append(f"Invalid user ID: {user_id_str}")
-                except Exception as e:
-                    db.session.rollback()
-                    errors.append(f"Error assigning user {user_id_str}: {str(e)}")
-
-            if assigned > 0:
-                flash(
-                    f"Successfully assigned {assigned} user(s) to experiment '{exp.exp_name}'.",
-                    "success",
+                # Ensure user exists in experiment database (User_mgmt)
+                user_agent, _created = ensure_experiment_user(
+                    exp,
+                    user_id=user.id,
+                    username=user.username,
+                    email=user.email,
+                    password=user.password,
+                    cover_image=random_cover_image_url(),
+                    joined_on=0,
                 )
-            if errors:
-                flash(
-                    f"Errors: {'; '.join(errors[:5])}"
-                    + (" ..." if len(errors) > 5 else ""),
-                    "warning",
-                )
+                if not user_agent:
+                    errors.append(
+                        f"Could not provision experiment user for '{user.username}'"
+                    )
+                    continue
 
-        finally:
-            # Restore original db_exp binding
-            if old_bind:
-                current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = old_bind
+                # Create User_Experiment record
+                user_exp = User_Experiment(user_id=user_id, exp_id=exp_id)
+                db.session.add(user_exp)
+                db.session.commit()
+
+                assigned += 1
+            except ValueError:
+                errors.append(f"Invalid user ID: {user_id_str}")
+            except Exception as e:
+                db.session.rollback()
+                errors.append(f"Error assigning user {user_id_str}: {str(e)}")
+
+        if assigned > 0:
+            flash(
+                f"Successfully assigned {assigned} user(s) to experiment '{exp.exp_name}'.",
+                "success",
+            )
+        if errors:
+            flash(
+                f"Errors: {'; '.join(errors[:5])}"
+                + (" ..." if len(errors) > 5 else ""),
+                "warning",
+            )
 
     except Exception as e:
         flash(f"Error during bulk assignment: {str(e)}", "error")

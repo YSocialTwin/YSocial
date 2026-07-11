@@ -61,6 +61,8 @@ def _runtime_group_active_experiments(group_key: str) -> list[Exps]:
         query = base_query.filter(
             Exps.platform_type == "microblogging", Exps.simulator_type != "HPC"
         )
+    elif group_key == "photo_sharing":
+        query = base_query.filter(Exps.platform_type == "photo_sharing")
     elif group_key == "forum":
         query = base_query.filter(Exps.platform_type == "forum")
     elif group_key == "hpc":

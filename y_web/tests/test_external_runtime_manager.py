@@ -55,7 +55,7 @@ def runtime_repo_spec(tmp_path, monkeypatch):
         group="hpc",
         group_label="HPC",
         category="simulation_runtimes",
-        category_label="Simulation Runtimes",
+        category_label="Simulation Runtime Stack",
         label="TestRuntime",
         path=clone_target,
         github_repo="YSocialTwin/TestRuntime",
@@ -639,7 +639,7 @@ def test_external_runtimes_page_hides_git_controls_when_git_is_unavailable(
                         "group": "hpc",
                         "group_label": "HPC",
                         "category": "simulation_runtimes",
-                        "category_label": "Simulation Runtimes",
+                        "category_label": "Simulation Runtime Stack",
                         "github_repo": "YSocialTwin/TestRuntime",
                         "repo_url": "https://example.test/repo.git",
                         "default_branch": "main",
@@ -678,8 +678,8 @@ def test_external_runtimes_page_hides_git_controls_when_git_is_unavailable(
         "_runtime_categories",
         lambda grouped_status, active_group_usage: [
             {
-                "label": "Simulation Runtimes",
-                "description": "Repositories classified under Simulation Runtimes.",
+                "label": "Simulation Runtime Stack",
+                "description": "Repositories classified under Simulation Runtime Stack.",
                 "repo_count": 1,
                 "installed_count": 0,
                 "active_experiment_count": 0,
@@ -815,7 +815,13 @@ def test_runtime_visibility_respects_private_allowlist(monkeypatch):
 def test_grouped_runtime_specs_include_agent_plugins():
     grouped = registry.grouped_runtime_specs()
     group_keys = [group_key for group_key, _, _ in grouped]
+    assert "photo_sharing" in group_keys
     assert "agent_plugins" in group_keys
+
+    photo_spec = registry.runtime_spec("photo_sharing")
+    assert photo_spec.github_repo == "YSocialTwin/YPhotoSharing"
+    assert photo_spec.category == "simulation_runtimes"
+    assert photo_spec.is_private is True
 
     plugin_spec = registry.runtime_spec("agent_plugins")
     assert plugin_spec.github_repo == "YSocialTwin/y_agents_plugins"

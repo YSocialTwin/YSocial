@@ -20,6 +20,7 @@ from y_web.src.content.cover_images import random_cover_image_url
 from y_web.src.models import (
     AgeClass,
     Agent,
+    Agent_Ext,
     Agent_Population,
     Education,
     Leanings,
@@ -41,6 +42,15 @@ def __sample_round_actions(
     truncated to the integer support [min, max]. Falls back to uniform if invalid.
     """
 
+    return _sample_integer_from_distribution(min_v, max_v, param, dist)
+
+
+def _sample_integer_from_distribution(
+    min_v: int,
+    max_v: int,
+    param: float,
+    dist: str = "uniform",
+) -> int:
     min_v = int(min_v)
     max_v = int(max_v)
 
@@ -50,43 +60,36 @@ def __sample_round_actions(
     support = list(range(min_v, max_v + 1))
     R = len(support)
 
-    # Map support to k in [1..R] for simpler formulas
     def to_value(k: int) -> int:
         return support[0] + (k - 1)
 
-    # Uniform
     if dist == "uniform" or dist is None:
         return random.randint(min_v, max_v)
 
-    if param is not None:
+    if param in (None, ""):
+        param = None
+    else:
         param = float(param)
 
-    # Build weights for k=1..R then sample
     weights = []
     if dist == "poisson":
         lam = float(param) if (param is not None) else 0.88
         if lam <= 0:
             return random.randint(min_v, max_v)
-        # Unnormalized Poisson pmf over k=1..R (exclude zero)
         for k in range(1, R + 1):
-            # compute poisson at k
-            w = math.exp(-lam) * (lam**k) / math.factorial(k)
-            weights.append(w)
-
+            weights.append(math.exp(-lam) * (lam**k) / math.factorial(k))
     elif dist == "geometric":
         p = float(param) if (param is not None) else (2.0 / 3.0)
         if not (0 < p <= 1):
             return random.randint(min_v, max_v)
         for k in range(1, R + 1):
-            w = p * ((1 - p) ** (k - 1))
-            weights.append(w)
+            weights.append(p * ((1 - p) ** (k - 1)))
     elif dist == "zipf":
         s = float(param) if (param is not None) else 2.5
         if s <= 1:
             return random.randint(min_v, max_v)
         for k in range(1, R + 1):
-            w = k ** (-s)
-            weights.append(w)
+            weights.append(k ** (-s))
     else:
         return random.randint(min_v, max_v)
 
@@ -94,7 +97,6 @@ def __sample_round_actions(
     if total <= 0 or any(math.isnan(w) or math.isinf(w) for w in weights):
         return random.randint(min_v, max_v)
 
-    # Sample k in [1..R] then map to support
     k = random.choices(range(1, R + 1), weights=weights, k=1)[0]
     return to_value(k)
 
@@ -258,8 +260,102 @@ def _generate_unique_name(
     return unique_name
 
 
+def _weighted_choice(distribution, default=None):
+    if isinstance(distribution, dict) and distribution:
+        items = []
+        weights = []
+        for key, value in distribution.items():
+            try:
+                weight = float(value)
+            except (TypeError, ValueError):
+                continue
+            if weight <= 0:
+                continue
+            items.append(key)
+            weights.append(weight)
+        if items and sum(weights) > 0:
+            return random.choices(items, weights=weights, k=1)[0]
+    if isinstance(default, (list, tuple)) and default:
+        return random.choice(list(default))
+    return default[0] if isinstance(default, (list, tuple)) and default else default
+
+
+def _build_photo_sharing_agent_ext_values(agent, photo_sharing_config):
+    config = photo_sharing_config or {}
+
+    def _percentage(name: str, fallback: float) -> float:
+        try:
+            value = float(config.get(name, fallback))
+        except (TypeError, ValueError):
+            return float(fallback)
+        return max(0.0, min(100.0, value))
+
+    favorite_filters = config.get("favorite_filters") or [
+        "warm",
+        "vintage",
+        "mono",
+        "grain",
+        "bright",
+        "clean",
+    ]
+    favorite_filters = [
+        str(tag).strip() for tag in favorite_filters if str(tag).strip()
+    ]
+    favorite_filters = list(dict.fromkeys(favorite_filters))
+    if favorite_filters:
+        max_pick = min(3, len(favorite_filters))
+        min_pick = 1 if max_pick > 0 else 0
+        selected_filters = random.sample(
+            favorite_filters,
+            k=random.randint(min_pick, max_pick),
+        )
+    else:
+        selected_filters = []
+
+    attention_budget_config = config.get("attention_budget") or {}
+    attention_budget = _sample_integer_from_distribution(
+        attention_budget_config.get("min", 50),
+        attention_budget_config.get("max", 150),
+        attention_budget_config.get("parameter"),
+        attention_budget_config.get("distribution", "Uniform"),
+    )
+
+    story_visibility = _weighted_choice(
+        config.get("story_visibility"),
+        default=["public", "followers", "private"],
+    )
+    creator_tier = _weighted_choice(
+        config.get("creator_tier"),
+        default=["standard", "pro", "influencer"],
+    )
+
+    bio_text = " | ".join(
+        part for part in [agent.profession, agent.nationality, agent.language] if part
+    )
+
+    return [
+        ("bio", bio_text),
+        (
+            "is_private",
+            random.random() < (_percentage("is_private_percentage", 20) / 100.0),
+        ),
+        (
+            "is_verified",
+            random.random() < (_percentage("is_verified_percentage", 10) / 100.0),
+        ),
+        ("attention_budget", attention_budget),
+        ("favorite_filters", selected_filters),
+        ("story_visibility", story_visibility),
+        ("creator_tier", creator_tier),
+    ]
+
+
 def generate_population(
-    population_name, percentages=None, actions_config=None, profession_backgrounds=None
+    population_name,
+    percentages=None,
+    actions_config=None,
+    profession_backgrounds=None,
+    photo_sharing_config=None,
 ):
     """
     Generate a population of AI agents with realistic profiles.
@@ -449,19 +545,45 @@ def generate_population(
 
     # Now create Agent_Population relationships in bulk
     agent_populations_to_insert = []
+    agent_exts_to_insert = []
     for agent in agents_to_insert:
         agent_population = Agent_Population(
             agent_id=agent.id, population_id=population.id
         )
         agent_populations_to_insert.append(agent_population)
 
+        if getattr(population, "username_type", "microblogging") == "photo_sharing":
+            ext_values = _build_photo_sharing_agent_ext_values(
+                agent, photo_sharing_config
+            )
+            for feature_name, feature_value in ext_values:
+                if feature_value in (None, "", []):
+                    continue
+                agent_exts_to_insert.append(
+                    Agent_Ext(
+                        agent_id=agent.id,
+                        feature_name=feature_name,
+                        feature_value=(
+                            json.dumps(feature_value)
+                            if isinstance(feature_value, (list, dict, bool))
+                            else str(feature_value)
+                        ),
+                    )
+                )
+
     # Bulk insert all agent-population relationships
     db.session.bulk_save_objects(agent_populations_to_insert)
+    if agent_exts_to_insert:
+        db.session.bulk_save_objects(agent_exts_to_insert)
     db.session.commit()
 
 
 def generate_population_from_config(
-    population_name, percentages=None, actions_config=None, profession_backgrounds=None
+    population_name,
+    percentages=None,
+    actions_config=None,
+    profession_backgrounds=None,
+    photo_sharing_config=None,
 ):
     """Configuration-oriented entrypoint for population generation."""
     return generate_population(
@@ -469,6 +591,7 @@ def generate_population_from_config(
         percentages=percentages,
         actions_config=actions_config,
         profession_backgrounds=profession_backgrounds,
+        photo_sharing_config=photo_sharing_config,
     )
 
 

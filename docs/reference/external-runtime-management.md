@@ -22,17 +22,19 @@ Installed plugins expose metadata through:
 
 Plugins are organized into two top-level categories:
 
-- `Simulation Runtimes`
+- `Simulation Runtime Stack`
   - `Microblogging`
     - `YClient`
     - `YServer`
   - `Forum`
     - `YClientReddit`
     - `YServerReddit`
+  - `Photo Sharing`
+    - `YPhotoSharing`
   - `HPC`
     - `YSimulator`
-- `Agent Plugins`
-  - `y_agents_plugins`
+  - `Agent Plugins`
+    - `y_agents_plugins`
 
 The experiment creation flow already uses these plugin states to determine which experiment types are available.
 

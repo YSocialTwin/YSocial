@@ -116,6 +116,20 @@ def _resolve_hpc_experiment_folder(exp) -> str:
     return os.path.join(y_web_dir, "experiments", uid)
 
 
+def _clear_hpc_runtime_markers(exp_folder: str) -> int:
+    """Remove stale Ray runtime markers before starting or after stopping."""
+    removed = 0
+    for marker_name in ("ray_ready.temp", "ray_config.temp", "ray_namespace.temp"):
+        marker_path = os.path.join(exp_folder, marker_name)
+        if os.path.exists(marker_path):
+            try:
+                os.remove(marker_path)
+                removed += 1
+            except OSError:
+                pass
+    return removed
+
+
 def _clear_stale_hpc_server_pid(exp, *, exp_folder: Optional[str] = None) -> bool:
     """
     Clear stale/recycled server PID from DB tracking.
@@ -173,9 +187,13 @@ def start_hpc_server(exp):
             return candidate
         return os.path.join(resource_external, repo_name)
 
-    sys.path.append(_external_repo_dir("YSimulator"))
+    if exp.platform_type == "photo_sharing":
+        sys.path.append(_external_repo_dir("YPhotoSharing"))
+    else:
+        sys.path.append(_external_repo_dir("YSimulator"))
 
     exp_folder = _resolve_hpc_experiment_folder(exp)
+    _clear_hpc_runtime_markers(exp_folder)
 
     # Clear stale/recycled PID entries before checking for duplicates.
     _clear_stale_hpc_server_pid(exp, exp_folder=exp_folder)
@@ -202,8 +220,11 @@ def start_hpc_server(exp):
         exp_uid = f"{uid}{os.sep}"
         config = exp_folder
 
-    # Determine the server directory and script path based on platform type
-    if exp.platform_type == "microblogging":
+    # Determine the server directory and script path based on platform type.
+    if exp.platform_type == "photo_sharing":
+        server_dir = _external_repo_dir("YPhotoSharing")
+        script_path = os.path.join(server_dir, "run_server.py")
+    elif exp.platform_type == "microblogging":
         server_dir = _external_repo_dir("YServer")
         script_path = os.path.join(_external_repo_dir("YSimulator"), "run_server.py")
     else:
@@ -219,9 +240,12 @@ def start_hpc_server(exp):
         not (is_frozen or has_meipass or is_bundle_exe)
         and not Path(script_path).exists()
     ):
+        expected_repo = (
+            "YPhotoSharing" if exp.platform_type == "photo_sharing" else "YSimulator"
+        )
         raise FileNotFoundError(
             f"Server script not found: {script_path}\n"
-            f"Please ensure YServer is cloned under external/YServer.\n"
+            f"Please ensure {expected_repo} is cloned under external/{expected_repo}.\n"
             f"You can install or update it from the Admin > Plugins panel."
         )
 
@@ -242,7 +266,7 @@ def start_hpc_server(exp):
     # Set up environment (always needed, gunicorn branch adds extra vars)
     env = build_subprocess_env()
 
-    if use_gunicorn:
+    if use_gunicorn and exp.platform_type != "photo_sharing":
         # Use gunicorn for PostgreSQL
         print(f"Starting server for experiment {exp_uid} with gunicorn (PostgreSQL)...")
 
@@ -377,16 +401,13 @@ def start_hpc_server(exp):
         is_bundle_exe = "python" not in Path(sys.executable).name.lower()
 
         if is_frozen or has_meipass or is_bundle_exe:
-            # Running from PyInstaller - invoke the bundled executable with special flag
-            # The launcher script detects this flag and routes to the server runner
-            cmd = [
-                sys.executable,
-                "--run-server-subprocess",
-                "--config",
-                config,
-                "--platform",
-                exp.platform_type,
-            ]
+            if exp.platform_type == "photo_sharing":
+                cmd = [sys.executable, script_path, "--config", config]
+            else:
+                # Running from PyInstaller - invoke the bundled executable with special flag
+                # The launcher script detects this flag and routes to the server runner
+                cmd = [sys.executable, "--run-server-subprocess", "--config", config]
+                cmd.extend(["--platform", exp.platform_type])
         elif (
             isinstance(python_cmd, str)
             and " " in python_cmd
@@ -594,6 +615,10 @@ def stop_hpc_server(exp_id):
                 print(f"Removed ray_config.log from {exp_folder}")
             except Exception as e:
                 print(f"Warning: Could not remove ray_config.log: {e}")
+
+        # Remove stale runtime markers so the next restart must wait for a fresh
+        # server initialization to complete.
+        _clear_hpc_runtime_markers(exp_folder)
 
         # Clear PID from database
         exp.server_pid = None

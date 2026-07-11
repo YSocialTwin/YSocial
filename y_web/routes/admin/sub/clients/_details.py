@@ -35,6 +35,7 @@ from ._blueprint import clientsr
 from ._crud import (
     _build_client_creation_context,
     _build_hourly_activity_chart_series,
+    _client_config_path_for_platform,
     _extract_llm_names_from_population_payload,
     _get_client_population_pages,
     _get_experiment_folder_name,
@@ -71,18 +72,17 @@ def client_details(uid):
 
     base_dir = get_writable_path()
     exp_folder = _get_experiment_folder_name(experiment)
-    config_path = os.path.join(
+    exp_dir = os.path.join(
         base_dir,
         "y_web",
         "experiments",
         exp_folder,
-        f"client_{client.name}-{population.name}.json",
+    )
+    config_path = _client_config_path_for_platform(
+        exp_dir, experiment, client.name, population.name
     )
     population_path = os.path.join(
-        base_dir,
-        "y_web",
-        "experiments",
-        exp_folder,
+        exp_dir,
         f"{population.name}.json",
     )
 
@@ -152,18 +152,17 @@ def client_details_forum(uid):
 
     base_dir = get_writable_path()
     exp_folder = _get_experiment_folder_name(experiment)
-    config_path = os.path.join(
+    exp_dir = os.path.join(
         base_dir,
         "y_web",
         "experiments",
         exp_folder,
-        f"client_{client.name}-{population.name}.json",
+    )
+    config_path = _client_config_path_for_platform(
+        exp_dir, experiment, client.name, population.name
     )
     population_path = os.path.join(
-        base_dir,
-        "y_web",
-        "experiments",
-        exp_folder,
+        exp_dir,
         f"{population.name}.json",
     )
 
@@ -237,18 +236,17 @@ def client_details_hpc(uid):
 
     base_dir = get_writable_path()
     exp_folder = _get_experiment_folder_name(experiment)
-    config_path = os.path.join(
+    exp_dir = os.path.join(
         base_dir,
         "y_web",
         "experiments",
         exp_folder,
-        f"client_{client.name}-{population.name}.json",
+    )
+    config_path = _client_config_path_for_platform(
+        exp_dir, experiment, client.name, population.name
     )
     population_path = os.path.join(
-        base_dir,
-        "y_web",
-        "experiments",
-        exp_folder,
+        exp_dir,
         f"{population.name}.json",
     )
 

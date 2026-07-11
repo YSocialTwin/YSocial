@@ -251,7 +251,7 @@ class TestHPCLLMVConfig:
         assert '"memory_embedding_model": memory_embedding_model' in create_block
         assert '"memory_backend": (' in create_block
 
-    def test_create_hpc_client_source_persists_vllm_shared_pool_limit(self):
+    def test_create_hpc_client_source_disables_vllm_shared_pool_limit(self):
         source = open(
             "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_crud.py"
         ).read()
@@ -260,8 +260,8 @@ class TestHPCLLMVConfig:
         )[0]
 
         assert '"shared_pool": {' in create_block
-        assert '"enabled": True' in create_block
-        assert '"max_clients_per_worker": hpc_vllm_worker_limit' in create_block
+        assert '"enabled": False' in create_block
+        assert '"max_clients_per_worker": hpc_vllm_worker_limit' not in create_block
 
     def test_hpc_template_exposes_memory_configuration_section(self):
         template = open(
@@ -306,6 +306,29 @@ class TestHPCLLMVConfig:
             'llm_v_max_tokens = form_data.get("llm_v_max_tokens", "300")'
             in create_block
         )
+
+    def test_photo_client_source_contains_yphotosharing_fields(self):
+        crud_source = open(
+            "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_crud.py",
+            "r",
+            encoding="utf-8",
+        ).read()
+        template_source = open(
+            "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_photo.html",
+            "r",
+            encoding="utf-8",
+        ).read()
+
+        assert 'url_for("clientsr.clients_photo"' in crud_source
+        assert '"llm_vision"' in crud_source
+        assert '"use_local_diffusion"' in crud_source
+        assert '"local_diffusion_model"' in crud_source
+        assert '"enable_memory_annotations"' in crud_source
+        assert 'name="use_local_diffusion"' in template_source
+        assert 'name="local_diffusion_model"' in template_source
+        assert 'name="enable_action_log"' in template_source
+        assert 'name="update_rule"' in template_source
+        assert "Recommendation Systems" not in template_source
 
 
 if __name__ == "__main__":

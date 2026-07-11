@@ -272,3 +272,40 @@ def feature_entries_from_population_agent_payload(agent_payload: dict) -> list[d
             )
 
     return entries
+
+
+def _stringify_agent_ext_value(value) -> str | None:
+    if value in (None, ""):
+        return None
+    if isinstance(value, (dict, list, tuple, bool, int, float)):
+        return json.dumps(value)
+    return str(value)
+
+
+def agent_ext_entries_from_population_agent_payload(agent_payload: dict) -> list[dict]:
+    """Extract agent_ext rows from a population agent payload."""
+    entries: list[dict] = []
+
+    def add_entry(feature_name: str, value) -> None:
+        normalized = _stringify_agent_ext_value(value)
+        if normalized in (None, ""):
+            return
+        entries.append(
+            {
+                "feature_name": str(feature_name).strip(),
+                "feature_value": normalized,
+            }
+        )
+
+    add_entry("bio", agent_payload.get("bio"))
+    add_entry("is_private", agent_payload.get("is_private"))
+    add_entry("is_verified", agent_payload.get("is_verified"))
+    add_entry("attention_budget", agent_payload.get("attention_budget"))
+
+    photo_sharing = agent_payload.get("photo_sharing") or {}
+    if isinstance(photo_sharing, dict):
+        add_entry("favorite_filters", photo_sharing.get("favorite_filters"))
+        add_entry("story_visibility", photo_sharing.get("story_visibility"))
+        add_entry("creator_tier", photo_sharing.get("creator_tier"))
+
+    return entries

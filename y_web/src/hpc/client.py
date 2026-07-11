@@ -139,6 +139,55 @@ def _build_hpc_runtime_client_id(exp_folder: str, client_name: str) -> str:
     return f"{folder_name}:{str(client_name).strip()}"
 
 
+def _normalize_photo_sharing_client_config(
+    exp_folder: str, client_name: str, population_name: str, client_config_path: str
+) -> None:
+    """Align YPhotoSharing client config with the experiment server runtime."""
+    server_config_path = os.path.join(exp_folder, "server_config.json")
+    server_config = {}
+    if os.path.exists(server_config_path):
+        with open(server_config_path, "r", encoding="utf-8") as handle:
+            server_config = json.load(handle)
+
+    with open(client_config_path, "r", encoding="utf-8") as handle:
+        client_config = json.load(handle)
+
+    runtime_client_id = _build_hpc_runtime_client_id(exp_folder, client_name)
+    client_config["client_id"] = runtime_client_id
+    client_config["namespace"] = server_config.get("namespace", "yphotosharing")
+    client_config["server_name"] = server_config.get(
+        "server_name", "orchestrator_server"
+    )
+    client_config["address"] = "auto"
+    population_filename = f"{population_name}.json"
+    client_config["agents_file"] = population_filename
+    client_config["users_file"] = population_filename
+    client_config.setdefault("logging", {})
+    client_config["logging"]["log_dir"] = os.path.join(exp_folder, "logs")
+    client_config["logging"]["instance_name"] = runtime_client_id
+
+    with open(client_config_path, "w", encoding="utf-8") as handle:
+        json.dump(client_config, handle, indent=2)
+
+
+def _migrate_legacy_photo_sharing_client_layout(
+    exp_folder: str, client_name: str, population_name: str, client_config_path: str
+) -> None:
+    """Promote legacy per-client photo-sharing config into the standard HPC layout."""
+    if os.path.exists(client_config_path):
+        return
+
+    legacy_dir = os.path.join(exp_folder, f"client_{client_name}-{population_name}")
+    legacy_config = os.path.join(legacy_dir, "client_config.json")
+    if not os.path.exists(legacy_config):
+        return
+
+    with open(legacy_config, "r", encoding="utf-8") as handle:
+        client_config = json.load(handle)
+    with open(client_config_path, "w", encoding="utf-8") as handle:
+        json.dump(client_config, handle, indent=2)
+
+
 def resolve_hpc_client_log_path(
     exp,
     client_name: str,
@@ -224,6 +273,23 @@ def _sync_stress_reward_into_hpc_client_config(exp_folder, client_config_path):
     return True
 
 
+def _wait_for_hpc_server_ready(exp_folder: str, timeout_seconds: int = 180) -> None:
+    """
+    Wait until the server writes its readiness marker after the orchestrator actor starts.
+    """
+    ready_path = Path(exp_folder) / "ray_ready.temp"
+    deadline = time.monotonic() + max(1, timeout_seconds)
+    while time.monotonic() < deadline:
+        if ready_path.exists():
+            return
+        time.sleep(1)
+
+    raise FileNotFoundError(
+        f"ray_ready.temp file not found after {timeout_seconds} seconds: {ready_path}\n"
+        "The HPC server may not have fully initialized its Ray actor yet."
+    )
+
+
 def _set_client_execution_terminal_state(cli, terminal_state: str) -> bool:
     """Persist the terminal state for an HPC client execution record."""
     if not terminal_state:
@@ -282,11 +348,21 @@ def start_hpc_client(exp, cli, population):
         )
 
     # Construct paths for config, agents, and prompts files
-    client_config = os.path.join(
-        exp_folder, f"client_{cli.name}-{population.name}.json"
-    )
-    agents_file = os.path.join(exp_folder, f"{population.name}.json")
-    prompts_file = os.path.join(exp_folder, "prompts.json")
+    if exp.platform_type == "photo_sharing":
+        client_config = os.path.join(
+            exp_folder, f"client_{cli.name}-{population.name}.json"
+        )
+        _migrate_legacy_photo_sharing_client_layout(
+            exp_folder, cli.name, population.name, client_config
+        )
+        agents_file = os.path.join(exp_folder, f"{population.name}.json")
+        prompts_file = os.path.join(exp_folder, "prompts_ygram.json")
+    else:
+        client_config = os.path.join(
+            exp_folder, f"client_{cli.name}-{population.name}.json"
+        )
+        agents_file = os.path.join(exp_folder, f"{population.name}.json")
+        prompts_file = os.path.join(exp_folder, "prompts.json")
 
     # Validate that required files exist
     for file_path, file_name in [
@@ -331,6 +407,11 @@ def start_hpc_client(exp, cli, population):
             )
             raise FileNotFoundError(error_msg)
 
+    # Give the server a few seconds to finish registering its Ray actor and
+    # listening endpoints before the client performs the first lookup.
+    _wait_for_hpc_server_ready(exp_folder, timeout_seconds=180)
+    time.sleep(3)
+
     # Remove completion log entries from actor log if restarting
     # Actor logs are in logs/{client_name}_actor.log
     logs_folder = os.path.join(exp_folder, "logs")
@@ -366,7 +447,18 @@ def start_hpc_client(exp, cli, population):
         return os.path.join(resource_external, repo_name)
 
     # Determine the script path based on platform type
-    if exp.platform_type == "microblogging":
+    runtime_config_dir = exp_folder
+    if exp.platform_type == "photo_sharing":
+        script_path = os.path.join(_external_repo_dir("YPhotoSharing"), "run_client.py")
+        runtime_config_dir = client_config
+
+        try:
+            _normalize_photo_sharing_client_config(
+                exp_folder, cli.name, population.name, client_config
+            )
+        except Exception:
+            pass
+    elif exp.platform_type == "microblogging":
         script_path = os.path.join(_external_repo_dir("YSimulator"), "run_client.py")
     else:
         raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
@@ -380,9 +472,12 @@ def start_hpc_client(exp, cli, population):
         not (is_frozen or has_meipass or is_bundle_exe)
         and not Path(script_path).exists()
     ):
+        expected_repo = (
+            "YPhotoSharing" if exp.platform_type == "photo_sharing" else "YSimulator"
+        )
         raise FileNotFoundError(
             f"Client script not found: {script_path}\n"
-            f"Please ensure YSimulator is cloned under external/YSimulator.\n"
+            f"Please ensure {expected_repo} is cloned under external/{expected_repo}.\n"
             f"You can install or update it from the Admin > Plugins panel."
         )
 
@@ -392,16 +487,24 @@ def start_hpc_client(exp, cli, population):
     # Build the command
     if is_frozen or has_meipass or is_bundle_exe:
         # Running from PyInstaller bundle
-        cmd = [
-            sys.executable,
-            "--run-hpc-client-subprocess",
-            "--config",
-            client_config,
-            "--agents",
-            agents_file,
-            "--prompts",
-            prompts_file,
-        ]
+        if exp.platform_type == "photo_sharing":
+            cmd = [
+                sys.executable,
+                script_path,
+                "--config",
+                runtime_config_dir,
+            ]
+        else:
+            cmd = [
+                sys.executable,
+                "--run-hpc-client-subprocess",
+                "--config",
+                client_config,
+                "--agents",
+                agents_file,
+                "--prompts",
+                prompts_file,
+            ]
     elif (
         isinstance(python_cmd, str)
         and " " in python_cmd
@@ -409,27 +512,42 @@ def start_hpc_client(exp, cli, population):
     ):
         # Handle commands like "pipenv run python"
         cmd_parts = python_cmd.split()
-        cmd = cmd_parts + [
-            script_path,
-            "--config",
-            client_config,
-            "--agents",
-            agents_file,
-            "--prompts",
-            prompts_file,
-        ]
+        if exp.platform_type == "photo_sharing":
+            cmd = cmd_parts + [
+                script_path,
+                "--config",
+                runtime_config_dir,
+            ]
+        else:
+            cmd = cmd_parts + [
+                script_path,
+                "--config",
+                client_config,
+                "--agents",
+                agents_file,
+                "--prompts",
+                prompts_file,
+            ]
     else:
         # Simple python executable path (may contain spaces on Windows)
-        cmd = [
-            python_cmd,
-            script_path,
-            "--config",
-            client_config,
-            "--agents",
-            agents_file,
-            "--prompts",
-            prompts_file,
-        ]
+        if exp.platform_type == "photo_sharing":
+            cmd = [
+                python_cmd,
+                script_path,
+                "--config",
+                runtime_config_dir,
+            ]
+        else:
+            cmd = [
+                python_cmd,
+                script_path,
+                "--config",
+                client_config,
+                "--agents",
+                agents_file,
+                "--prompts",
+                prompts_file,
+            ]
 
     print(f"Starting HPC client {cli.name} for experiment {exp.idexp}...")
     print(f"Config: {client_config}")
@@ -516,6 +634,19 @@ def stop_hpc_client(cli, *, terminal_state: Optional[str] = None):
     )
 
     try:
+        manual_stop_requested = terminal_state in {"manual_stop", "paused"}
+
+        # For user-initiated stops/pauses, mark the execution record before
+        # touching the process tree. This prevents the HPC monitor from
+        # interpreting the shutdown window as a crash and respawning the client.
+        if manual_stop_requested:
+            _set_client_execution_terminal_state(cli, terminal_state)
+            cli.status = 0
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+
         if not cli.pid:
             print(f"No tracked HPC client process found for client {cli.name}")
             if terminal_state:
@@ -567,23 +698,36 @@ def stop_hpc_client(cli, *, terminal_state: Optional[str] = None):
                             )
                             connected_here = True
                         try:
-                            orchestrator = ray.get_actor(
-                                "Orchestrator", namespace=namespace
-                            )
                             runtime_client_id = _build_hpc_runtime_client_id(
                                 exp_folder, cli.name
                             )
+                            is_photo_sharing = (
+                                getattr(exp, "platform_type", None) == "photo_sharing"
+                            )
+                            orchestrator_name = (
+                                "orchestrator_server"
+                                if is_photo_sharing
+                                else "Orchestrator"
+                            )
+                            runtime_actor_name = (
+                                f"Client_{runtime_client_id}"
+                                if is_photo_sharing
+                                else runtime_client_id
+                            )
+                            orchestrator = ray.get_actor(
+                                orchestrator_name, namespace=namespace
+                            )
                             try:
                                 runtime_client = ray.get_actor(
-                                    runtime_client_id, namespace=namespace
+                                    runtime_actor_name, namespace=namespace
                                 )
                                 ray.kill(runtime_client, no_restart=True)
                                 print(
-                                    f"Killed HPC client actor {runtime_client_id} before stopping process."
+                                    f"Killed HPC client actor {runtime_actor_name} before stopping process."
                                 )
                             except ValueError:
                                 print(
-                                    f"HPC client actor {runtime_client_id} not found before stop; "
+                                    f"HPC client actor {runtime_actor_name} not found before stop; "
                                     "continuing with process shutdown."
                                 )
                             ray.get(
@@ -649,7 +793,7 @@ def stop_hpc_client(cli, *, terminal_state: Optional[str] = None):
 
         # Clear PID from database
         cli.pid = None
-        if terminal_state and terminated:
+        if terminal_state and terminated and not manual_stop_requested:
             _set_client_execution_terminal_state(cli, terminal_state)
         db.session.commit()
         return terminated
