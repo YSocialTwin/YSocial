@@ -1062,6 +1062,13 @@ var AdminSettings = (function() {
       loadScheduleGroups();
       loadPersistentLogs();
       checkScheduleStatus();
+      const dynamicFillToggle = document.getElementById('dynamic-fill-toggle');
+      if (dynamicFillToggle) {
+          dynamicFillToggle.addEventListener('change', function() {
+              updateDynamicFillToggleVisual(dynamicFillToggle);
+          });
+          updateDynamicFillToggleVisual(dynamicFillToggle);
+      }
   });
 
   function loadPersistentLogs() {
@@ -1323,6 +1330,28 @@ var AdminSettings = (function() {
       logDiv.scrollTop = logDiv.scrollHeight;
   }
 
+  function updateDynamicFillToggleVisual(toggle) {
+      if (!toggle) return;
+
+      const wrapper = toggle.parentElement;
+      if (!wrapper) return;
+
+      const track = wrapper.querySelector('.dynamic-fill-track');
+      const knob = wrapper.querySelector('.dynamic-fill-knob');
+      if (!track || !knob) return;
+
+      if (toggle.checked) {
+          track.style.background = toggle.disabled ? '#8cc89a' : '#28a745';
+          knob.style.transform = 'translateX(18px)';
+      } else {
+          track.style.background = toggle.disabled ? '#dee2e6' : '#ced4da';
+          knob.style.transform = 'translateX(0)';
+      }
+
+      track.style.opacity = toggle.disabled ? '0.85' : '1';
+      knob.style.opacity = toggle.disabled ? '0.95' : '1';
+  }
+
   function displayLogs(logs) {
       if (logs && logs.length > 0) {
           logs.forEach(log => addLogMessage(log));
@@ -1330,6 +1359,9 @@ var AdminSettings = (function() {
   }
 
   function startSchedule() {
+      const dynamicFillToggle = document.getElementById('dynamic-fill-toggle');
+      const dynamicFillingEnabled = !!(dynamicFillToggle && dynamicFillToggle.checked);
+
       // Clear previous logs display
       const logDiv = document.getElementById('schedule-log');
       if (logDiv) {
@@ -1337,7 +1369,11 @@ var AdminSettings = (function() {
           addLogMessage('Starting schedule...');
       }
 
-      fetch('/admin/schedule/start', { method: 'POST' })
+      fetch('/admin/schedule/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dynamic_filling_enabled: dynamicFillingEnabled })
+      })
           .then(response => response.json())
           .then(data => {
               if (data.success) {
@@ -1387,10 +1423,16 @@ var AdminSettings = (function() {
               const startBtn = document.getElementById('start-schedule-btn');
               const stopBtn = document.getElementById('stop-schedule-btn');
               const badge = document.getElementById('schedule-status-badge');
+              const dynamicFillToggle = document.getElementById('dynamic-fill-toggle');
 
               if (data.is_running) {
                   if (startBtn) startBtn.style.display = 'none';
                   if (stopBtn) stopBtn.style.display = 'inline-block';
+                  if (dynamicFillToggle) {
+                      dynamicFillToggle.checked = !!data.dynamic_filling_enabled;
+                      dynamicFillToggle.disabled = true;
+                      updateDynamicFillToggleVisual(dynamicFillToggle);
+                  }
                   if (badge) {
                       badge.style.display = 'inline-block';
                       badge.style.background = '#28a745';
@@ -1405,6 +1447,11 @@ var AdminSettings = (function() {
               } else {
                   if (startBtn) startBtn.style.display = 'inline-block';
                   if (stopBtn) stopBtn.style.display = 'none';
+                  if (dynamicFillToggle) {
+                      dynamicFillToggle.disabled = false;
+                      dynamicFillToggle.checked = !!data.dynamic_filling_enabled;
+                      updateDynamicFillToggleVisual(dynamicFillToggle);
+                  }
                   if (badge) badge.style.display = 'none';
                   currentRunningGroupId = null;
                   if (scheduleCheckInterval) {

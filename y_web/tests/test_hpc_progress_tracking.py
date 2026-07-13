@@ -91,21 +91,21 @@ def test_progress_tracking_flow():
         "client_id": 1,
         "elapsed_time": 0,
         "expected_duration_rounds": 168,  # 7 days
-        "last_active_hour": -1,
-        "last_active_day": -1,
+        "last_active_hour": 0,
+        "last_active_day": 0,
     }
 
     # Simulate progress updates
-    for day in range(7):
-        for hour in range(24):
+    for day in range(1, 8):
+        for hour in range(1, 25):
             # Update progress
             client_exec["last_active_day"] = day
             client_exec["last_active_hour"] = hour
-            client_exec["elapsed_time"] = day * 24 + hour + 1
+            client_exec["elapsed_time"] = (day - 1) * 24 + hour
 
             # Check if complete
             if client_exec["elapsed_time"] >= client_exec["expected_duration_rounds"]:
-                assert day == 6 and hour == 23, "Should complete on day 6, hour 23"
+                assert day == 7 and hour == 24, "Should complete on day 7, hour 24"
                 assert client_exec["elapsed_time"] == 168
                 break
 

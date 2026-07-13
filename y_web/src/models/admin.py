@@ -184,6 +184,9 @@ class ExperimentScheduleStatus(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     is_running = db.Column(db.Integer, nullable=False, default=0)
     current_group_id = db.Column(db.Integer, nullable=True, default=None)
+    current_group_capacity = db.Column(db.Integer, nullable=True, default=None)
+    dynamic_filling_enabled = db.Column(db.Integer, nullable=False, default=0)
+    launch_in_progress = db.Column(db.Integer, nullable=False, default=0)
     started_at = db.Column(db.DateTime, nullable=True, default=None)
 
 

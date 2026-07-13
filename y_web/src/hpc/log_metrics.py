@@ -54,6 +54,25 @@ _FATAL_CLIENT_ERROR_MARKERS = {
 }
 
 
+def _elapsed_time_from_hourly_summary(day, slot):
+    """
+    Convert an hourly summary position into a 1-based elapsed round count.
+
+    Current HPC client logs report days and slots starting at 1, so:
+    - day=1, slot=1  -> elapsed round 1
+    - day=1, slot=24 -> elapsed round 24
+    - day=2, slot=1  -> elapsed round 25
+
+    Legacy logs that still include day=0 or slot=0 are preserved with the
+    previous 0-based conversion to avoid breaking older experiments.
+    """
+    day = int(day)
+    slot = int(slot)
+    if day <= 0 or slot <= 0:
+        return day * 24 + slot + 1
+    return (day - 1) * 24 + slot
+
+
 def _read_execution_log_tail(execution_log_path, tail_bytes: int = 65536):
     """
     Read the tail of an execution log and return the raw lines plus the last line.
@@ -582,10 +601,7 @@ def get_latest_hourly_summary_from_client_log(client_log_path):
                         slot = log_entry.get("slot")
 
                         if day is not None and slot is not None:
-                            # Calculate elapsed_time: each day has 24 hours
-                            # If day=1, slot=20, that means we're in day 1, hour 20
-                            # elapsed_time = day * 24 + slot + 1 (adding 1 because we count from 1)
-                            elapsed_time = day * 24 + slot + 1
+                            elapsed_time = _elapsed_time_from_hourly_summary(day, slot)
 
                             latest_hourly = {
                                 "day": day,
@@ -708,18 +724,17 @@ def mark_hpc_client_as_completed(exp_id, client_id):
             f"[HPC Monitor] Expected duration: {client_exec.expected_duration_rounds} rounds"
         )
 
-        # Calculate max day and hour from expected_duration_rounds
-        # Since each experiment has its own database and the Rounds table is in db_exp,
-        # it's more reliable to calculate from expected_duration_rounds
-        # Assuming day 0, hour 0 = round 1 (as per HPC format in parse_client_log_incremental)
+        # Calculate the final displayed day/hour from expected_duration_rounds.
+        # HPC logs use 1-based day/hour labels, so round 24 is day 1, hour 24
+        # and round 48 is day 2, hour 24.
         if client_exec.expected_duration_rounds > 0:
-            total_hours = client_exec.expected_duration_rounds - 1
-            max_day = total_hours // 24
-            max_hour = total_hours % 24
+            total_rounds = client_exec.expected_duration_rounds
+            max_day = (total_rounds - 1) // 24 + 1
+            max_hour = (total_rounds - 1) % 24 + 1
         else:
-            # Default to 0,0 if no rounds configured
-            max_day = 0
-            max_hour = 0
+            # Default to the first visible slot if no duration is configured.
+            max_day = 1
+            max_hour = 1
 
         # Update client_execution record
         client_exec.elapsed_time = client_exec.expected_duration_rounds

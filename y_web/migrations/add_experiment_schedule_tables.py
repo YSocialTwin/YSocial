@@ -91,6 +91,9 @@ def migrate_sqlite(db_path):
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     is_running INTEGER NOT NULL DEFAULT 0,
                     current_group_id INTEGER,
+                    current_group_capacity INTEGER,
+                    dynamic_filling_enabled INTEGER NOT NULL DEFAULT 0,
+                    launch_in_progress INTEGER NOT NULL DEFAULT 0,
                     started_at DATETIME
                 )
             """)
@@ -99,6 +102,28 @@ def migrate_sqlite(db_path):
                 "INSERT INTO experiment_schedule_status (is_running) VALUES (0)"
             )
             print("✓ Created experiment_schedule_status table")
+        else:
+            cursor.execute("PRAGMA table_info(experiment_schedule_status)")
+            columns = [row[1] for row in cursor.fetchall()]
+            if "current_group_capacity" not in columns:
+                cursor.execute(
+                    "ALTER TABLE experiment_schedule_status ADD COLUMN current_group_capacity INTEGER"
+                )
+                print(
+                    "✓ Added current_group_capacity column to experiment_schedule_status"
+                )
+            if "dynamic_filling_enabled" not in columns:
+                cursor.execute(
+                    "ALTER TABLE experiment_schedule_status ADD COLUMN dynamic_filling_enabled INTEGER NOT NULL DEFAULT 0"
+                )
+                print(
+                    "✓ Added dynamic_filling_enabled column to experiment_schedule_status"
+                )
+            if "launch_in_progress" not in columns:
+                cursor.execute(
+                    "ALTER TABLE experiment_schedule_status ADD COLUMN launch_in_progress INTEGER NOT NULL DEFAULT 0"
+                )
+                print("✓ Added launch_in_progress column to experiment_schedule_status")
 
         # Create experiment_schedule_logs table
         cursor.execute(
@@ -198,6 +223,9 @@ def migrate_postgresql(host, port, database, user, password):
                     id SERIAL PRIMARY KEY,
                     is_running INTEGER NOT NULL DEFAULT 0,
                     current_group_id INTEGER,
+                    current_group_capacity INTEGER,
+                    dynamic_filling_enabled INTEGER NOT NULL DEFAULT 0,
+                    launch_in_progress INTEGER NOT NULL DEFAULT 0,
                     started_at TIMESTAMP
                 )
             """)
@@ -206,6 +234,31 @@ def migrate_postgresql(host, port, database, user, password):
                 "INSERT INTO experiment_schedule_status (is_running) VALUES (0)"
             )
             print("✓ Created experiment_schedule_status table")
+        else:
+            cursor.execute("""
+                SELECT column_name FROM information_schema.columns
+                WHERE table_name = 'experiment_schedule_status'
+                """)
+            columns = {row[0] for row in cursor.fetchall()}
+            if "current_group_capacity" not in columns:
+                cursor.execute(
+                    "ALTER TABLE experiment_schedule_status ADD COLUMN current_group_capacity INTEGER"
+                )
+                print(
+                    "✓ Added current_group_capacity column to experiment_schedule_status"
+                )
+            if "dynamic_filling_enabled" not in columns:
+                cursor.execute(
+                    "ALTER TABLE experiment_schedule_status ADD COLUMN dynamic_filling_enabled INTEGER NOT NULL DEFAULT 0"
+                )
+                print(
+                    "✓ Added dynamic_filling_enabled column to experiment_schedule_status"
+                )
+            if "launch_in_progress" not in columns:
+                cursor.execute(
+                    "ALTER TABLE experiment_schedule_status ADD COLUMN launch_in_progress INTEGER NOT NULL DEFAULT 0"
+                )
+                print("✓ Added launch_in_progress column to experiment_schedule_status")
 
         conn.commit()
         conn.close()

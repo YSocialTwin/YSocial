@@ -517,12 +517,16 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
                 file=sys.stderr,
             )
 
+        expected_rounds = -1 if cli.days == -1 else cli.days * 24
         bootstrap_completed = _population_bootstrap_completed(
             os.path.join(data_base_path, "database_server.db"),
             filename,
         )
 
         if ce and bootstrap_completed:
+            ce.expected_duration_rounds = expected_rounds
+            session.add(ce)
+            session.commit()
             first_run = False
         elif ce:
             print(
@@ -533,14 +537,13 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
             ce.elapsed_time = 0
             ce.last_active_hour = -1
             ce.last_active_day = -1
+            ce.expected_duration_rounds = expected_rounds
             session.add(ce)
             session.commit()
             first_run = True
         else:
             print(f"Client {cli.name} first execution.")
             first_run = True
-            # For infinite clients (days = -1), set expected_duration_rounds to -1
-            expected_rounds = -1 if cli.days == -1 else cli.days * 24
             ce = Client_Execution(
                 client_id=cli.id,
                 elapsed_time=0,

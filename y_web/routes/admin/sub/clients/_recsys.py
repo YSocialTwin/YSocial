@@ -191,7 +191,14 @@ def _update_client_simulation_internal(uid, expected_mode):
         config.setdefault("agents", {})
         config.setdefault("posts", {})
         config.setdefault("topics", [])
+        config["simulation"]["days"] = client.days
         config["simulation"]["num_days"] = client.days
+        if "client" in config and isinstance(config["client"], dict):
+            config["client"]["max_ticks"] = (
+                None if client.days == -1 else int(client.days) * 24
+            )
+        if "max_ticks" in config:
+            config["max_ticks"] = None if client.days == -1 else int(client.days) * 24
         config["simulation"][
             "percentage_new_agents_iteration"
         ] = client.percentage_new_agents_iteration
