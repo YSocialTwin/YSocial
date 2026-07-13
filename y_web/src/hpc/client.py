@@ -381,10 +381,11 @@ def start_hpc_client(exp, cli, population):
     except Exception as exc:
         print(f"Warning: failed to synchronize HPC stress_reward config: {exc}")
 
-    # Validate ray_config.temp exists (required for HPC client startup)
-    # Wait up to 60 seconds (6 attempts x 10 seconds) for the file to appear
+    # Validate ray_config.temp exists (required for HPC client startup).
+    # Local Ray bootstrap can exceed a minute on some machines, so keep the
+    # startup window comfortably above the slow-path initialization time.
     ray_config_path = os.path.join(exp_folder, "ray_config.temp")
-    max_attempts = 6
+    max_attempts = 18
     wait_seconds = 10
 
     for attempt in range(1, max_attempts + 1):
