@@ -194,6 +194,53 @@ def test_subprocess_env_helper_uses_persisted_model_cache_setting(
     assert env["HF_HOME"].startswith(str(saved_root))
 
 
+def test_model_cache_refresh_falls_back_from_stale_absolute_path(
+    monkeypatch, tmp_path
+):
+    """A macOS cache path saved on disk must not crash Ubuntu request handling."""
+    import y_web.src.system.model_cache as model_cache
+    from pathlib import Path
+
+    fallback_root = tmp_path / "fallback-cache"
+    settings_path = tmp_path / "model_cache_settings.json"
+    state_path = tmp_path / "detoxify_download_state.json"
+    stale_root = "/Users/rossetti/.cache/ysocial_models"
+    original_mkdir = Path.mkdir
+
+    def fake_mkdir(self, *args, **kwargs):
+        if str(self) == stale_root:
+            raise PermissionError("[Errno 13] Permission denied: '/Users'")
+        return original_mkdir(self, *args, **kwargs)
+
+    monkeypatch.setattr(model_cache, "_DEFAULT_ROOT", fallback_root)
+    monkeypatch.setattr(model_cache, "_settings_path", lambda: settings_path)
+    monkeypatch.setattr(model_cache, "_state_path", lambda: state_path)
+    monkeypatch.setattr(model_cache.Path, "mkdir", fake_mkdir, raising=False)
+
+    state_path.write_text(
+        """
+        {
+          "status": "idle",
+          "progress": 100,
+          "path": "/Users/rossetti/.cache/ysocial_models",
+          "pid": null,
+          "notification_id": null,
+          "message": "Detoxify model is ready.",
+          "started_at": null,
+          "finished_at": "2026-06-02T16:05:39.929555+00:00",
+          "stdout_log": "/Users/rossetti/PycharmProjects/YWeb/y_web/system/detoxify_download_stdout.log",
+          "stderr_log": "/Users/rossetti/PycharmProjects/YWeb/y_web/system/detoxify_download_stderr.log"
+        }
+        """.strip(),
+        encoding="utf-8",
+    )
+
+    refreshed = model_cache.refresh_detoxify_download_state()
+
+    assert refreshed["path"] == str(fallback_root)
+    assert fallback_root.exists()
+
+
 def test_simulation_server_uses_sanitized_subprocess_env():
     """simulation/server.py must sanitize inherited Flask/Werkzeug env vars."""
     import y_web.src.simulation.server as mod

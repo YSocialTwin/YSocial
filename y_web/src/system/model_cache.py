@@ -23,6 +23,11 @@ def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def _fallback_root() -> Path:
+    _DEFAULT_ROOT.mkdir(parents=True, exist_ok=True)
+    return _DEFAULT_ROOT
+
+
 def _system_dir() -> Path:
     base = Path(get_writable_path()) / "y_web" / "system"
     base.mkdir(parents=True, exist_ok=True)
@@ -82,8 +87,14 @@ def _normalize_root(path: Optional[str | Path]) -> Path:
         root = Path(path).expanduser()
     else:
         root = _DEFAULT_ROOT
-    root.mkdir(parents=True, exist_ok=True)
-    return root
+    try:
+        root.mkdir(parents=True, exist_ok=True)
+        return root
+    except OSError:
+        # Persisted cache paths can outlive the machine or OS they were created on.
+        # If the configured location is not writable, fall back to the local default
+        # instead of failing request handling with PermissionError.
+        return _fallback_root()
 
 
 def load_model_cache_settings() -> Dict[str, object]:
