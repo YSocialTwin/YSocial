@@ -194,12 +194,11 @@ def test_subprocess_env_helper_uses_persisted_model_cache_setting(
     assert env["HF_HOME"].startswith(str(saved_root))
 
 
-def test_model_cache_refresh_falls_back_from_stale_absolute_path(
-    monkeypatch, tmp_path
-):
+def test_model_cache_refresh_falls_back_from_stale_absolute_path(monkeypatch, tmp_path):
     """A macOS cache path saved on disk must not crash Ubuntu request handling."""
-    import y_web.src.system.model_cache as model_cache
     from pathlib import Path
+
+    import y_web.src.system.model_cache as model_cache
 
     fallback_root = tmp_path / "fallback-cache"
     settings_path = tmp_path / "model_cache_settings.json"
