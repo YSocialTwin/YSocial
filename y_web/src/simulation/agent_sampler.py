@@ -37,10 +37,26 @@ def _is_fatal_reply_error(exc: Exception) -> bool:
 
 
 def _rule_based_agents_enabled(config):
-    llm_agents = (config or {}).get("agents", {}).get("llm_agents")
-    return (
-        isinstance(llm_agents, list) and len(llm_agents) == 1 and llm_agents[0] is None
-    )
+    agents = None
+
+    if isinstance(config, dict):
+        raw_agents = config.get("agents")
+        if isinstance(raw_agents, dict):
+            llm_agents = raw_agents.get("llm_agents")
+            return (
+                isinstance(llm_agents, list)
+                and len(llm_agents) == 1
+                and llm_agents[0] is None
+            )
+        if isinstance(raw_agents, list):
+            agents = raw_agents
+    elif isinstance(config, list):
+        agents = config
+
+    if agents is not None:
+        return any(isinstance(agent, dict) and agent.get("llm") for agent in agents)
+
+    return False
 
 
 def _validator_allowed_actions():
