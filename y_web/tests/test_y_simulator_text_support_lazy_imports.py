@@ -34,7 +34,9 @@ def test_annotations_module_imports_without_detoxify_or_perspective(monkeypatch)
             raise AssertionError(f"unexpected eager import of {name}")
         return real_import(name, globals, locals, fromlist, level)
 
-    monkeypatch.delitem(sys.modules, "YSimulator.YClient.text_support.annotations", raising=False)
+    monkeypatch.delitem(
+        sys.modules, "YSimulator.YClient.text_support.annotations", raising=False
+    )
     monkeypatch.setattr(builtins, "__import__", guarded_import)
 
     module = importlib.import_module("YSimulator.YClient.text_support.annotations")
