@@ -181,10 +181,19 @@ def test_stopped_experiments_allow_rename_form_and_route():
         "r",
     ).read()
 
-    assert '@experiments.route("/admin/update_experiment_name/<int:uid>", methods=["POST"])' in data_source
+    assert (
+        '@experiments.route("/admin/update_experiment_name/<int:uid>", methods=["POST"])'
+        in data_source
+    )
     assert "Stop the experiment before renaming it." in data_source
-    assert 'action="/admin/update_experiment_name/{{ experiment.idexp }}"' in standard_template
-    assert 'action="/admin/update_experiment_name/{{ experiment.idexp }}"' in forum_template
+    assert (
+        'action="/admin/update_experiment_name/{{ experiment.idexp }}"'
+        in standard_template
+    )
+    assert (
+        'action="/admin/update_experiment_name/{{ experiment.idexp }}"'
+        in forum_template
+    )
     assert "experiment.running == 0" in standard_template
     assert "experiment.running == 0" in forum_template
 
