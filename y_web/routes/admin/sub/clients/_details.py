@@ -256,6 +256,27 @@ def client_details_hpc(uid):
 
     agents = _read_json_if_exists(population_path)
     llms = _extract_llm_names_from_population_payload(agents)
+    current_crecsys = client.crecsys
+    current_frecsys = client.frecsys
+    if isinstance(agents, list):
+        for agent in agents:
+            if not isinstance(agent, dict) or int(agent.get("is_page", 0) or 0) == 1:
+                continue
+            current_crecsys = agent.get("recsys_type") or current_crecsys
+            current_frecsys = agent.get("frecsys_type") or current_frecsys
+            if current_crecsys or current_frecsys:
+                break
+    if isinstance(config, dict):
+        current_crecsys = (
+            config.get("recsys_type")
+            or config.get("agents", {}).get("recsys_type")
+            or current_crecsys
+        )
+        current_frecsys = (
+            config.get("frecsys_type")
+            or config.get("agents", {}).get("frecsys_type")
+            or current_frecsys
+        )
 
     # Extract activity data from HPC config structure
     data = []
@@ -308,6 +329,8 @@ def client_details_hpc(uid):
         crecsys=crecsys,
         llms=llms,
         config=config,
+        current_crecsys=current_crecsys,
+        current_frecsys=current_frecsys,
     )
 
 

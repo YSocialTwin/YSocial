@@ -314,8 +314,8 @@
                                 <hr>
                                 <div class="box-line">
                                     <span class="left">Current Recommender</span>
-                                    <span class="right">Follow: {{ client.frecsys if client.frecsys else 'Not set' }}</span>
-                                    <span class="right">Content: {{ client.crecsys if client.crecsys else 'Not set' }}</span>
+                                    <span class="right">Follow: {{ current_frecsys if current_frecsys else 'Not set' }}</span>
+                                    <span class="right">Content: {{ current_crecsys if current_crecsys else 'Not set' }}</span>
                                 </div>
                             </div>
                             <hr>
@@ -344,14 +344,14 @@
                                                 {% for category, items in categorized.items() %}
                                                 <optgroup label="{{ category }}">
                                                     {% for recsys in items %}
-                                                    <option value="{{ recsys.name }}" {% if client.crecsys == recsys.name %}selected{% endif %}>{{ recsys.value }}</option>
+                                                    <option value="{{ recsys.name }}" {% if current_crecsys == recsys.name %}selected{% endif %}>{{ recsys.value }}</option>
                                                     {% endfor %}
                                                 </optgroup>
                                                 {% endfor %}
                                                 
                                                 {% if uncategorized %}
                                                     {% for recsys in uncategorized %}
-                                                    <option value="{{ recsys.name }}" {% if client.frecsys == recsys.name %}selected{% endif %}>{{ recsys.value }}</option>
+                                                    <option value="{{ recsys.name }}" {% if current_crecsys == recsys.name %}selected{% endif %}>{{ recsys.value }}</option>
                                                     {% endfor %}
                                                 {% endif %}
                                             </select>
@@ -381,14 +381,14 @@
                                                 {% for category, items in categorized.items() %}
                                                 <optgroup label="{{ category }}">
                                                     {% for recsys in items %}
-                                                    <option value="{{ recsys.name }}">{{ recsys.value }}</option>
+                                                    <option value="{{ recsys.name }}" {% if current_frecsys == recsys.name %}selected{% endif %}>{{ recsys.value }}</option>
                                                     {% endfor %}
                                                 </optgroup>
                                                 {% endfor %}
                                                 
                                                 {% if uncategorized %}
                                                     {% for recsys in uncategorized %}
-                                                    <option value="{{ recsys.name }}">{{ recsys.value }}</option>
+                                                    <option value="{{ recsys.name }}" {% if current_frecsys == recsys.name %}selected{% endif %}>{{ recsys.value }}</option>
                                                     {% endfor %}
                                                 {% endif %}
                                             </select>

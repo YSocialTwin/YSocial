@@ -330,20 +330,50 @@ def _update_recsys_internal(uid, expected_mode):
 
     # get populations for client uid
     population = Population.query.filter_by(id=client.population_id).first()
-    # get agents for the populations
-    agents = Agent_Population.query.filter_by(population_id=population.id).all()
-
-    # updating the recommenders of the agents in the specific simulation instance (not in the population)
-    for agent in agents:
-        try:
+    if population:
+        # Update the recommenders for agents that already exist in the experiment DB.
+        # If the experiment has not been activated yet, those rows may be absent and
+        # the config update should still succeed.
+        agents = Agent_Population.query.filter_by(population_id=population.id).all()
+        for agent in agents:
             a = Agent.query.filter_by(id=agent.agent_id).first()
-            user = (User_mgmt.query.filter_by(username=a.name)).first()
+            if not a:
+                continue
+            user = User_mgmt.query.filter_by(username=a.name).first()
+            if not user:
+                continue
             user.frecsys_type = frecsys_type
             user.recsys_type = recsys_type
-            db.session.commit()
-        except:
-            flash("The experiment needs to be activated first.", "error")
-            return redirect(request.referrer)
+
+    from y_web.src.system.path_utils import get_writable_path
+
+    base_dir = get_writable_path()
+    exp_folder = _get_experiment_folder_name(exp)
+    config_path = None
+    if population:
+        config_path = os.path.join(
+            base_dir,
+            "y_web",
+            "experiments",
+            exp_folder,
+            f"client_{client.name}-{population.name}.json",
+        )
+    if config_path and os.path.exists(config_path):
+        try:
+            with open(config_path, "r", encoding="utf-8") as handle:
+                client_config = json.load(handle) or {}
+            client_config["recsys_type"] = recsys_type
+            client_config["frecsys_type"] = frecsys_type
+            client_config.setdefault("agents", {})
+            client_config["agents"]["recsys_type"] = recsys_type
+            client_config["agents"]["frecsys_type"] = frecsys_type
+            with open(config_path, "w", encoding="utf-8") as handle:
+                json.dump(client_config, handle, indent=4)
+        except Exception as exc:
+            flash(
+                f"Updated database values, but failed to sync client config: {exc}",
+                "warning",
+            )
 
     db.session.commit()
     return redirect(request.referrer)

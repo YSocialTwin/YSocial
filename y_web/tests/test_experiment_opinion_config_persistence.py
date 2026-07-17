@@ -290,6 +290,25 @@ def test_hpc_client_details_align_model_selection_with_active_vllm_model():
 
     assert "config.llm.model == model" in content
     assert 'action="/admin/update_hpc_client_settings/{{ client.id }}"' in content
+    assert "current_crecsys" in content
+    assert "current_frecsys" in content
+
+
+def test_hpc_recsys_updates_do_not_require_activation_when_config_exists():
+    source = open(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_recsys.py",
+        "r",
+    ).read()
+
+    start = source.index("def _update_recsys_internal(uid, expected_mode):")
+    end = source.index('@clientsr.route("/admin/update_standard_recsys/<int:uid>"')
+    internal_source = source[start:end]
+
+    assert "The experiment needs to be activated first." not in internal_source
+    assert "if not user:" in internal_source
+    assert "continue" in internal_source
+    assert 'client_config["recsys_type"] = recsys_type' in internal_source
+    assert 'client_config["frecsys_type"] = frecsys_type' in internal_source
 
 
 def test_client_details_pages_expose_memory_and_archetype_editors():
