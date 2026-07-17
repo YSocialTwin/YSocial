@@ -161,7 +161,32 @@ def test_stopped_experiments_allow_client_configuration_updates():
             assert 'include "admin/experiment_details.html"' in content
         else:
             assert "experiment.running == 0" in content
-            assert "configuration_update_required or experiment.running == 0" in content
+            assert (
+                "experiment.running == 0 or (client_executions.get(client.id, False) and not configuration_update_required)"
+                in content
+            )
+
+
+def test_stopped_experiments_allow_rename_form_and_route():
+    data_source = open(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_data.py",
+        "r",
+    ).read()
+    standard_template = open(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/experiment_details.html",
+        "r",
+    ).read()
+    forum_template = open(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/experiment_details_forum.html",
+        "r",
+    ).read()
+
+    assert '@experiments.route("/admin/update_experiment_name/<int:uid>", methods=["POST"])' in data_source
+    assert "Stop the experiment before renaming it." in data_source
+    assert 'action="/admin/update_experiment_name/{{ experiment.idexp }}"' in standard_template
+    assert 'action="/admin/update_experiment_name/{{ experiment.idexp }}"' in forum_template
+    assert "experiment.running == 0" in standard_template
+    assert "experiment.running == 0" in forum_template
 
 
 def test_new_experiment_form_supports_photo_sharing_platform():

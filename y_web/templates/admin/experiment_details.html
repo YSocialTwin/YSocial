@@ -35,11 +35,18 @@
  <div class="box-content ys-flex-1">
                             <div class="box-lines">
                                 <b>Basic Information</b>
- <p class="ys-label-hint">Experiment identification and settings.</p>
+<p class="ys-label-hint">Experiment identification and settings.</p>
                                 <div class="box-line">
                                     <span class="left">Name</span>
                                     <span class="right">
+                                        {% if can_manage_experiment and experiment.running == 0 %}
+                                        <form method="POST" action="/admin/update_experiment_name/{{ experiment.idexp }}" class="ys-inline-flex-gap ys-align-center">
+                                            <input type="text" name="exp_name" class="input ys-input-sm" value="{{ experiment.exp_name }}" maxlength="50" style="min-width: 220px;">
+                                            <button type="submit" class="button is-small is-light">Rename</button>
+                                        </form>
+                                        {% else %}
                                         {{ experiment.exp_name }}
+                                        {% endif %}
                                         {% if has_infinite_client %}
  <span class="ys-badge-success" title="This experiment has at least one client set to run until manually stopped">∞</span>
                                         {% endif %}
@@ -481,7 +488,7 @@
                                             <i class="mdi mdi-tune" style="font-size: 16px; color: #8b5cf6;"></i>
                                         </a>
                                         {% endif %}
-                                        {% if client_executions.get(client.id, False) and not configuration_update_required %}
+                                        {% if experiment.running == 0 or (client_executions.get(client.id, False) and not configuration_update_required) %}
                                         <a href="/admin/client_details/{{client.id}}" class="link-tooltip" title="View Client Details">
  <i class="mdi mdi-open-in-new ys-icon-md-brand"></i>
                                         </a>

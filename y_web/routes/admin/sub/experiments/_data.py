@@ -825,6 +825,85 @@ def update_experiment_descr(uid):
     return jsonify({"success": True, "exp_descr": exp_descr}), 200
 
 
+@experiments.route("/admin/update_experiment_name/<int:uid>", methods=["POST"])
+@login_required
+def update_experiment_name(uid):
+    """Rename an experiment before it starts."""
+    check_privileges(current_user.username)
+
+    exp = Exps.query.filter_by(idexp=uid).first()
+    if not exp:
+        flash("Experiment not found.", "error")
+        return redirect(url_for("experiments.settings"))
+
+    admin_user = _current_admin_user_or_none()
+    if not user_can_manage_experiment(admin_user, exp):
+        flash("You do not have permission to rename this experiment.", "error")
+        return redirect(url_for("experiments.experiment_details", uid=uid))
+
+    if int(getattr(exp, "running", 0) or 0) == 1:
+        flash("Stop the experiment before renaming it.", "warning")
+        return redirect(url_for("experiments.experiment_details", uid=uid))
+
+    new_exp_name = (request.form.get("exp_name") or "").strip()
+    if not new_exp_name:
+        flash("Experiment name is required.", "warning")
+        return redirect(url_for("experiments.experiment_details", uid=uid))
+    if len(new_exp_name) > 50:
+        flash("Experiment name must be 50 characters or fewer.", "warning")
+        return redirect(url_for("experiments.experiment_details", uid=uid))
+
+    duplicate_exp = Exps.query.filter(
+        Exps.exp_name == new_exp_name, Exps.idexp != uid
+    ).first()
+    if duplicate_exp:
+        flash("An experiment with that name already exists.", "warning")
+        return redirect(url_for("experiments.experiment_details", uid=uid))
+
+    try:
+        from y_web.src.system.path_utils import get_writable_path
+
+        base_dir = get_writable_path()
+        exp_folder = _get_experiment_folder(base_dir, exp, _get_database_type())
+        cfg_name = (
+            "server_config.json"
+            if exp.simulator_type == "HPC"
+            else "config_server.json"
+        )
+        cfg_path = os.path.join(exp_folder, cfg_name)
+
+        if os.path.exists(cfg_path):
+            with open(cfg_path, "r") as handle:
+                config = json.load(handle)
+
+            if exp.simulator_type == "HPC":
+                config["experiment_name"] = new_exp_name
+                config["server_name"] = new_exp_name
+                config["namespace"] = new_exp_name
+            else:
+                config["name"] = new_exp_name
+
+            with open(cfg_path, "w") as handle:
+                json.dump(config, handle, indent=4)
+
+        exp.exp_name = new_exp_name
+        db.session.commit()
+    except Exception as exc:
+        db.session.rollback()
+        current_app.logger.error(
+            "Failed to rename experiment %s to %s: %s",
+            uid,
+            new_exp_name,
+            exc,
+            exc_info=True,
+        )
+        flash(f"Failed to rename experiment: {exc}", "error")
+        return redirect(url_for("experiments.experiment_details", uid=uid))
+
+    flash(f"Experiment renamed to '{new_exp_name}'.", "success")
+    return redirect(url_for("experiments.experiment_details", uid=uid))
+
+
 @experiments.route("/admin/update_experiment_config/<int:uid>", methods=["POST"])
 @login_required
 def update_experiment_config(uid):
