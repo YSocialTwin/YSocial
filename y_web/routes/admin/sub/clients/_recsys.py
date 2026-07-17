@@ -80,6 +80,9 @@ def _update_client_simulation_internal(uid, expected_mode):
     client.share = _float("share", client.share)
     client.search = _float("search", client.search)
     client.vote = _float("vote", client.vote)
+    recommendations_default_limit = _int(
+        "recommendations_default_limit", 12
+    )
 
     memory_enabled = request.form.get("memory_enabled") in {"on", "true", "1", "yes"}
     memory_semantic_enabled = request.form.get("memory_semantic_enabled") in {
@@ -206,6 +209,7 @@ def _update_client_simulation_internal(uid, expected_mode):
             "percentage_removed_agents_iteration"
         ] = client.percentage_removed_agents_iteration
         config["simulation"]["visibility_rounds"] = client.visibility_rounds
+        config["posts"]["visibility_rounds"] = client.visibility_rounds
         config["agents"]["max_length_thread_reading"] = client.max_length_thread_reading
         config["agents"][
             "reading_from_follower_ratio"
@@ -227,6 +231,7 @@ def _update_client_simulation_internal(uid, expected_mode):
                 "vote": client.vote,
             }
         )
+        config["recommendations"] = {"default_limit": recommendations_default_limit}
         config["agents"].update(
             {
                 "memory_enabled": bool(memory_enabled),

@@ -78,47 +78,58 @@
  <p class="ys-text-small">
                             Configuration settings controlling simulation behavior and dynamics.
                         </p>
+                        <form action="/admin/update_hpc_client_settings/{{ client.id }}" method="POST">
                         <div class="box-content">
                             <div class="box-lines">
                                 <b>Duration & Growth</b>
  <p class="ys-label-hint">Simulation length and population dynamics.</p>
                                 <div class="box-line">
                                     <span class="left">Simulation Length (days)</span>
-                                    <span class="right">{{ config.simulation.num_days if config and config.simulation else client.days }}</span>
+                                    <span class="right"><input type="number" name="days" class="input" value="{{ current_days }}"></span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">% New Agents (daily)</span>
-                                    <span class="right">{{ config.simulation.percentage_new_agents_iteration if config and config.simulation else client.percentage_new_agents_iteration }}</span>
+                                    <span class="right"><input type="number" step="0.01" name="percentage_new_agents_iteration" class="input" value="{{ current_percentage_new_agents_iteration }}"></span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">% Daily Churn</span>
-                                    <span class="right">{{ config.simulation.percentage_removed_agents_iteration if config and config.simulation else client.percentage_removed_agents_iteration }}</span>
+                                    <span class="right"><input type="number" step="0.01" name="percentage_removed_agents_iteration" class="input" value="{{ current_percentage_removed_agents_iteration }}"></span>
                                 </div>
                                 <hr>
                                 <b>Behavioral Settings</b>
  <p class="ys-label-hint">Agent interaction and engagement parameters.</p>
                                 <div class="box-line">
                                     <span class="left">Thread Context Length</span>
-                                    <span class="right">{{ config.agents.max_length_thread_reading if config and config.agents else client.max_length_thread_reading }}</span>
+                                    <span class="right"><input type="number" name="max_length_thread_reading" class="input" value="{{ current_max_length_thread_reading }}"></span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Timeline Follower Ratio</span>
-                                    <span class="right">{{ config.agents.reading_from_follower_ratio if config and config.agents else client.reading_from_follower_ratio }}</span>
+                                    <span class="right"><input type="number" step="0.01" name="reading_from_follower_ratio" class="input" value="{{ current_reading_from_follower_ratio }}"></span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Probability Daily Follow</span>
-                                    <span class="right">{{ config.agents.probability_of_daily_follow if config and config.agents else client.probability_of_daily_follow }}</span>
+                                    <span class="right"><input type="number" step="0.01" name="probability_of_daily_follow" class="input" value="{{ current_probability_of_daily_follow }}"></span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Agents' Memory (hours)</span>
-                                    <span class="right">{{ config.agents.attention_window if config and config.agents else client.attention_window }}</span>
+                                    <span class="right"><input type="number" name="attention_window" class="input" value="{{ current_attention_window }}"></span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Content Visibility (hours)</span>
-                                    <span class="right">{{ config.simulation.visibility_rounds if config and config.simulation else client.visibility_rounds }}</span>
+                                    <span class="right"><input type="number" name="visibility_rounds" class="input" value="{{ current_visibility_rounds }}"></span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">Recommendation Limit</span>
+                                    <span class="right"><input type="number" name="recommendations_default_limit" class="input" value="{{ current_recommendations_default_limit }}"></span>
                                 </div>
                             </div>
                         </div>
+                        <div class="button-wrap">
+                            <button class="button is-solid primary-button is-fullwidth">
+                                Save Simulation Parameters
+                            </button>
+                        </div>
+                        </form>
                         <hr>
                         <h3 class="title is-5 is-thin">Extend Simulation</h3>
                          <div class="box-content">
@@ -140,42 +151,49 @@
 
                     <div class="dashboard-box" id="box-actions-likelihood">
                         <h3 class="title is-5 is-thin">Global Actions Likelihood</h3>
+                        <form action="/admin/update_hpc_client_settings/{{ client.id }}" method="POST">
                         <div class="box-content">
                             <div class="box-lines">
                                 <div class="box-line">
                                     <span class="left">Post new content</span>
-                                    <span class="right">{{ config.simulation.actions_likelihood.post if config and config.simulation and config.simulation.actions_likelihood else client.post }}</span>
+                                    <span class="right"><input type="number" step="0.01" name="post" class="input" value="{{ current_post }}"></span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Share and comment an Image</span>
-                                    <span class="right">{{ config.simulation.actions_likelihood.image if config and config.simulation and config.simulation.actions_likelihood else client.image }}</span>
+                                    <span class="right"><input type="number" step="0.01" name="image" class="input" value="{{ current_image }}"></span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Comment on a News</span>
-                                    <span class="right">{{ config.simulation.actions_likelihood.news if config and config.simulation and config.simulation.actions_likelihood else client.news }}</span>
+                                    <span class="right"><input type="number" step="0.01" name="news" class="input" value="{{ current_news }}"></span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Comment a Post</span>
-                                    <span class="right">{{ config.simulation.actions_likelihood.comment if config and config.simulation and config.simulation.actions_likelihood else client.comment }}</span>
+                                    <span class="right"><input type="number" step="0.01" name="comment" class="input" value="{{ current_comment }}"></span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Read a content</span>
-                                    <span class="right">{{ config.simulation.actions_likelihood.read if config and config.simulation and config.simulation.actions_likelihood else client.read }}</span>
+                                    <span class="right"><input type="number" step="0.01" name="read" class="input" value="{{ current_read }}"></span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Share News from a Page</span>
-                                    <span class="right">{{ config.simulation.actions_likelihood.share if config and config.simulation and config.simulation.actions_likelihood else client.share }}</span>
+                                    <span class="right"><input type="number" step="0.01" name="share" class="input" value="{{ current_share }}"></span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Search a Hashtag</span>
-                                    <span class="right">{{ config.simulation.actions_likelihood.search if config and config.simulation and config.simulation.actions_likelihood else client.search }}</span>
+                                    <span class="right"><input type="number" step="0.01" name="search" class="input" value="{{ current_search }}"></span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Cast Vote</span>
-                                    <span class="right">{{ config.simulation.actions_likelihood.vote if config and config.simulation and config.simulation.actions_likelihood else client.vote }}</span>
+                                    <span class="right"><input type="number" step="0.01" name="vote" class="input" value="{{ current_vote }}"></span>
                                 </div>
                             </div>
                         </div>
+                        <div class="button-wrap">
+                            <button class="button is-solid primary-button is-fullwidth">
+                                Save Actions Likelihood
+                            </button>
+                        </div>
+                        </form>
                     </div>
 
                     <div class="dashboard-box" id="box-memory-config">

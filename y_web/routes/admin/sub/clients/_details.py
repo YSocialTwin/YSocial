@@ -258,6 +258,25 @@ def client_details_hpc(uid):
     llms = _extract_llm_names_from_population_payload(agents)
     current_crecsys = client.crecsys
     current_frecsys = client.frecsys
+    current_days = client.days
+    current_percentage_new_agents_iteration = client.percentage_new_agents_iteration
+    current_percentage_removed_agents_iteration = (
+        client.percentage_removed_agents_iteration
+    )
+    current_max_length_thread_reading = client.max_length_thread_reading
+    current_reading_from_follower_ratio = client.reading_from_follower_ratio
+    current_probability_of_daily_follow = client.probability_of_daily_follow
+    current_attention_window = client.attention_window
+    current_visibility_rounds = client.visibility_rounds
+    current_post = client.post
+    current_image = client.image
+    current_news = client.news
+    current_comment = client.comment
+    current_read = client.read
+    current_share = client.share
+    current_search = client.search
+    current_vote = client.vote
+    current_recommendations_default_limit = 12
     if isinstance(agents, list):
         for agent in agents:
             if not isinstance(agent, dict) or int(agent.get("is_page", 0) or 0) == 1:
@@ -267,6 +286,13 @@ def client_details_hpc(uid):
             if current_crecsys or current_frecsys:
                 break
     if isinstance(config, dict):
+        config_simulation = config.get("simulation", {}) if isinstance(config.get("simulation", {}), dict) else {}
+        config_posts = config.get("posts", {}) if isinstance(config.get("posts", {}), dict) else {}
+        config_actions = (
+            config_simulation.get("actions_likelihood", {})
+            if isinstance(config_simulation.get("actions_likelihood", {}), dict)
+            else {}
+        )
         current_crecsys = (
             config.get("recsys_type")
             or config.get("agents", {}).get("recsys_type")
@@ -276,6 +302,46 @@ def client_details_hpc(uid):
             config.get("frecsys_type")
             or config.get("agents", {}).get("frecsys_type")
             or current_frecsys
+        )
+        current_days = config_simulation.get("days", current_days)
+        current_percentage_new_agents_iteration = config_simulation.get(
+            "percentage_new_agents_iteration",
+            current_percentage_new_agents_iteration,
+        )
+        current_percentage_removed_agents_iteration = config_simulation.get(
+            "percentage_removed_agents_iteration",
+            current_percentage_removed_agents_iteration,
+        )
+        current_max_length_thread_reading = config.get("agents", {}).get(
+            "max_length_thread_reading", current_max_length_thread_reading
+        )
+        current_reading_from_follower_ratio = config.get("agents", {}).get(
+            "reading_from_follower_ratio", current_reading_from_follower_ratio
+        )
+        current_probability_of_daily_follow = config.get("agents", {}).get(
+            "probability_of_daily_follow", current_probability_of_daily_follow
+        )
+        current_attention_window = config.get("agents", {}).get(
+            "attention_window", current_attention_window
+        )
+        current_visibility_rounds = config_posts.get(
+            "visibility_rounds",
+            config_simulation.get("visibility_rounds", current_visibility_rounds),
+        )
+        current_post = config_actions.get("post", current_post)
+        current_image = config_actions.get("image", current_image)
+        current_news = config_actions.get("news", current_news)
+        current_comment = config_actions.get("comment", current_comment)
+        current_read = config_actions.get("read", current_read)
+        current_share = config_actions.get("share", current_share)
+        current_search = config_actions.get("search", current_search)
+        current_vote = config_actions.get("vote", current_vote)
+        current_recommendations_default_limit = (
+            config.get("recommendations", {}).get(
+                "default_limit", current_recommendations_default_limit
+            )
+            if isinstance(config.get("recommendations", {}), dict)
+            else current_recommendations_default_limit
         )
 
     # Extract activity data from HPC config structure
@@ -331,6 +397,23 @@ def client_details_hpc(uid):
         config=config,
         current_crecsys=current_crecsys,
         current_frecsys=current_frecsys,
+        current_days=current_days,
+        current_percentage_new_agents_iteration=current_percentage_new_agents_iteration,
+        current_percentage_removed_agents_iteration=current_percentage_removed_agents_iteration,
+        current_max_length_thread_reading=current_max_length_thread_reading,
+        current_reading_from_follower_ratio=current_reading_from_follower_ratio,
+        current_probability_of_daily_follow=current_probability_of_daily_follow,
+        current_attention_window=current_attention_window,
+        current_visibility_rounds=current_visibility_rounds,
+        current_post=current_post,
+        current_image=current_image,
+        current_news=current_news,
+        current_comment=current_comment,
+        current_read=current_read,
+        current_share=current_share,
+        current_search=current_search,
+        current_vote=current_vote,
+        current_recommendations_default_limit=current_recommendations_default_limit,
     )
 
 
