@@ -80,9 +80,7 @@ def _update_client_simulation_internal(uid, expected_mode):
     client.share = _float("share", client.share)
     client.search = _float("search", client.search)
     client.vote = _float("vote", client.vote)
-    recommendations_default_limit = _int(
-        "recommendations_default_limit", 12
-    )
+    recommendations_default_limit = _int("recommendations_default_limit", 12)
 
     memory_enabled = request.form.get("memory_enabled") in {"on", "true", "1", "yes"}
     memory_semantic_enabled = request.form.get("memory_semantic_enabled") in {

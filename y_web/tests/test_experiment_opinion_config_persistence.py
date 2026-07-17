@@ -304,7 +304,10 @@ def test_hpc_client_detail_context_includes_current_simulation_and_actions_value
 
     assert "current_visibility_rounds = client.visibility_rounds" in source
     assert "current_recommendations_default_limit = 12" in source
-    assert "current_recommendations_default_limit=current_recommendations_default_limit" in source
+    assert (
+        "current_recommendations_default_limit=current_recommendations_default_limit"
+        in source
+    )
 
 
 def test_hpc_recsys_updates_do_not_require_activation_when_config_exists():
@@ -322,7 +325,10 @@ def test_hpc_recsys_updates_do_not_require_activation_when_config_exists():
     assert "continue" in internal_source
     assert 'client_config["recsys_type"] = recsys_type' in internal_source
     assert 'client_config["frecsys_type"] = frecsys_type' in internal_source
-    assert 'config["recommendations"] = {"default_limit": recommendations_default_limit}' in source
+    assert (
+        'config["recommendations"] = {"default_limit": recommendations_default_limit}'
+        in source
+    )
 
 
 def test_client_details_pages_expose_memory_and_archetype_editors():

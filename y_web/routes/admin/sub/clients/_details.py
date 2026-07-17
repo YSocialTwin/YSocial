@@ -286,8 +286,14 @@ def client_details_hpc(uid):
             if current_crecsys or current_frecsys:
                 break
     if isinstance(config, dict):
-        config_simulation = config.get("simulation", {}) if isinstance(config.get("simulation", {}), dict) else {}
-        config_posts = config.get("posts", {}) if isinstance(config.get("posts", {}), dict) else {}
+        config_simulation = (
+            config.get("simulation", {})
+            if isinstance(config.get("simulation", {}), dict)
+            else {}
+        )
+        config_posts = (
+            config.get("posts", {}) if isinstance(config.get("posts", {}), dict) else {}
+        )
         config_actions = (
             config_simulation.get("actions_likelihood", {})
             if isinstance(config_simulation.get("actions_likelihood", {}), dict)
