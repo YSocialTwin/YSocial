@@ -18,7 +18,6 @@ import time
 import uuid
 from collections import defaultdict
 from datetime import datetime, timedelta
-from hashlib import sha1
 from itertools import product
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urlparse
@@ -3399,8 +3398,31 @@ def _matrix_virtual_recsys_features(
         or agents_config.get("frecsys_type")
     )
 
+    def _build_options(options, current_value):
+        normalized = []
+        seen = set()
+        for option in options or []:
+            option_name = str(option.get("name") or "").strip()
+            if not option_name or option_name in seen:
+                continue
+            normalized.append(option)
+            seen.add(option_name)
+        current_name = str(current_value or "").strip()
+        if current_name and current_name not in seen:
+            normalized.insert(
+                0,
+                {
+                    "name": current_name,
+                    "label": current_name,
+                    "category": "",
+                    "enabled": "",
+                },
+            )
+        return normalized
+
     synthetic = []
-    if catalog.get("content") or current_content is not None:
+    content_options = _build_options(catalog.get("content"), current_content)
+    if content_options or current_content is not None:
         synthetic.append(
             {
                 "path_tokens": ["agents", "recsys_type"],
@@ -3416,10 +3438,13 @@ def _matrix_virtual_recsys_features(
                 "can_unlock": True,
                 "is_virtual": True,
                 "display_label": "Content recsys",
-                "default_values": catalog.get("content", []),
+                "allow_custom_values": False,
+                "editor_mode": "recsys",
+                "default_values": content_options,
             }
         )
-    if catalog.get("follow") or current_follow is not None:
+    follow_options = _build_options(catalog.get("follow"), current_follow)
+    if follow_options or current_follow is not None:
         synthetic.append(
             {
                 "path_tokens": ["agents", "frecsys_type"],
@@ -3435,7 +3460,9 @@ def _matrix_virtual_recsys_features(
                 "can_unlock": True,
                 "is_virtual": True,
                 "display_label": "Follow recsys",
-                "default_values": catalog.get("follow", []),
+                "allow_custom_values": False,
+                "editor_mode": "recsys",
+                "default_values": follow_options,
             }
         )
     return synthetic
@@ -3485,10 +3512,130 @@ def _matrix_set_path(container, path_tokens, value):
     return True
 
 
+def _matrix_get_path(container, path_tokens):
+    """Read a nested value from a dict/list tree using tokenized path segments."""
+    if not path_tokens:
+        return container
+
+    current = container
+    for token in path_tokens:
+        if isinstance(token, int):
+            if not isinstance(current, list) or token < 0 or token >= len(current):
+                return None
+            current = current[token]
+        else:
+            if not isinstance(current, dict) or token not in current:
+                return None
+            current = current[token]
+    return current
+
+
+def _matrix_coerce_value_type(value, value_type=None, reference_value=None):
+    """Coerce a matrix value to the type observed in the original JSON."""
+    reference = reference_value
+    if reference is not None:
+        if isinstance(reference, bool):
+            if isinstance(value, bool):
+                return value
+            if isinstance(value, (int, float)):
+                return bool(value)
+            text = str(value).strip().lower()
+            if text in {"true", "1", "yes", "on"}:
+                return True
+            if text in {"false", "0", "no", "off"}:
+                return False
+            return bool(value)
+        if isinstance(reference, int) and not isinstance(reference, bool):
+            try:
+                return int(value)
+            except Exception:
+                try:
+                    return int(float(value))
+                except Exception:
+                    return value
+        if isinstance(reference, float):
+            try:
+                return float(value)
+            except Exception:
+                return value
+        if isinstance(reference, list):
+            if isinstance(value, list):
+                return value
+            if isinstance(value, str):
+                try:
+                    parsed = json.loads(value)
+                    return parsed if isinstance(parsed, list) else value
+                except Exception:
+                    return value
+            return value
+        if isinstance(reference, dict):
+            if isinstance(value, dict):
+                return value
+            if isinstance(value, str):
+                try:
+                    parsed = json.loads(value)
+                    return parsed if isinstance(parsed, dict) else value
+                except Exception:
+                    return value
+            return value
+        return str(value)
+
+    normalized_type = str(value_type or "").strip().lower()
+    if normalized_type in {"bool", "boolean"}:
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, (int, float)):
+            return bool(value)
+        text = str(value).strip().lower()
+        if text in {"true", "1", "yes", "on"}:
+            return True
+        if text in {"false", "0", "no", "off"}:
+            return False
+        return bool(value)
+    if normalized_type in {"int", "integer"}:
+        try:
+            return int(value)
+        except Exception:
+            try:
+                return int(float(value))
+            except Exception:
+                return value
+    if normalized_type in {"float", "real", "number"}:
+        try:
+            return float(value)
+        except Exception:
+            return value
+    if normalized_type in {"list", "array"}:
+        if isinstance(value, list):
+            return value
+        if isinstance(value, str):
+            try:
+                parsed = json.loads(value)
+                return parsed if isinstance(parsed, list) else value
+            except Exception:
+                return value
+        return value
+    if normalized_type in {"dict", "object"}:
+        if isinstance(value, dict):
+            return value
+        if isinstance(value, str):
+            try:
+                parsed = json.loads(value)
+                return parsed if isinstance(parsed, dict) else value
+            except Exception:
+                return value
+        return value
+    if normalized_type in {"nonetype", "null", "none"}:
+        return None
+    if normalized_type:
+        return str(value)
+    return value
+
+
 def _matrix_name_fragment(value):
     """Build a short name fragment from an arbitrary JSON value."""
     if isinstance(value, bool):
-        return "T" if value else "F"
+        return "true" if value else "false"
     if value is None:
         return "null"
     if isinstance(value, int):
@@ -3499,13 +3646,56 @@ def _matrix_name_fragment(value):
     if isinstance(value, list):
         return f"list{len(value)}"
     if isinstance(value, dict):
-        return "obj"
+        return "object"
     text = str(value).strip()
     if not text:
         return "blank"
+    text = re.sub(r"([a-z0-9])([A-Z])", r"\1-\2", text)
     text = re.sub(r"[^A-Za-z0-9]+", "-", text)
     text = text.strip("-")
-    return text[:12] or "val"
+    text = re.sub(r"-+", "-", text).lower()
+    return text[:24] or "val"
+
+
+def _matrix_humanize_identifier(value):
+    """Convert a JSON key or identifier into a readable slug fragment."""
+    text = str(value or "").strip()
+    if not text:
+        return ""
+
+    text = re.sub(r"([a-z0-9])([A-Z])", r"\1-\2", text)
+    text = text.replace("_", "-")
+    text = re.sub(r"[^A-Za-z0-9]+", "-", text)
+    text = re.sub(r"-+", "-", text).strip("-")
+    return text.lower()
+
+
+def _matrix_compact_slug(text, max_length):
+    """Shorten a slug while preserving whole words when possible."""
+    slug = _matrix_humanize_identifier(text)
+    if len(slug) <= max_length:
+        return slug
+    if max_length <= 0:
+        return ""
+
+    pieces = [piece for piece in slug.split("-") if piece]
+    if not pieces:
+        return slug[:max_length].rstrip("-")
+
+    parts = []
+    current_length = 0
+    for piece in pieces:
+        piece_length = len(piece)
+        separator = 1 if parts else 0
+        if current_length + separator + piece_length > max_length:
+            break
+        parts.append(piece)
+        current_length += separator + piece_length
+
+    if parts:
+        return "-".join(parts)
+
+    return slug[:max_length].rstrip("-")
 
 
 def _matrix_path_alias(path_tokens):
@@ -3514,35 +3704,114 @@ def _matrix_path_alias(path_tokens):
     for token in path_tokens:
         if isinstance(token, int):
             continue
-        token = str(token)
-        if token in {"simulation", "agents", "logging", "server", "database"}:
+        token = _matrix_humanize_identifier(token)
+        if token in {
+            "simulation",
+            "agents",
+            "logging",
+            "server",
+            "database",
+            "settings",
+            "config",
+            "configs",
+            "configuration",
+            "value",
+            "values",
+            "type",
+            "enabled",
+        }:
             continue
-        parts.append(token[:8])
+        if token:
+            parts.append(token)
     if not parts:
-        parts = [str(path_tokens[-1])[:8]]
-    alias = "_".join(parts)
-    return re.sub(r"[^A-Za-z0-9_]+", "_", alias).strip("_") or "var"
+        last_token = path_tokens[-1] if path_tokens else "var"
+        parts = [_matrix_humanize_identifier(last_token) or "var"]
+    if len(parts) > 2:
+        parts = parts[-2:]
+    alias = "-".join(parts)
+    return alias or "var"
+
+
+def _matrix_override_alias(override):
+    """Pick the most readable alias for a matrix override."""
+    display_label = _matrix_humanize_identifier(override.get("display_label"))
+    if display_label and display_label not in {
+        "current",
+        "current-value",
+        "alternative",
+        "alternative-values",
+        "enabled",
+        "disabled",
+        "value",
+        "values",
+        "type",
+    }:
+        return _matrix_preferred_slug_segment(display_label)
+    return _matrix_preferred_slug_segment(_matrix_path_alias(override.get("path_tokens") or []))
+
+
+def _matrix_preferred_slug_segment(slug):
+    """Prefer the most informative word inside a slug."""
+    slug = _matrix_humanize_identifier(slug)
+    if not slug:
+        return "var"
+    pieces = [piece for piece in slug.split("-") if piece]
+    if not pieces:
+        return slug
+    best_piece = max(pieces, key=lambda piece: (len(piece), -pieces.index(piece)))
+    return best_piece or slug
 
 
 def _matrix_build_experiment_name(source_name, combo_overrides, max_length=50):
     """Build an informative, bounded experiment name for one matrix combination."""
     suffix_parts = []
     for override in combo_overrides:
-        alias = _matrix_path_alias(override["path_tokens"])
-        suffix_parts.append(f"{alias}={_matrix_name_fragment(override['value'])}")
+        alias = _matrix_override_alias(override)
+        value_fragment = _matrix_name_fragment(override["value"])
+        suffix_parts.append((alias, value_fragment))
 
-    suffix = "__".join(suffix_parts)
     base = re.sub(r"\s+", "_", str(source_name or "").strip()) or "experiment"
+    base = re.sub(r"[^A-Za-z0-9_]+", "_", base).strip("_") or "experiment"
+    suffix = "__".join(f"{alias}-{value}" for alias, value in suffix_parts)
     candidate = f"{base}__{suffix}" if suffix else base
     if len(candidate) <= max_length:
         return candidate
 
-    digest = sha1(candidate.encode("utf-8")).hexdigest()[:6]
-    head = base[: max(8, max_length - len(digest) - 1)]
-    candidate = f"{head}-{digest}"
-    if len(candidate) > max_length:
-        candidate = candidate[:max_length]
-    return candidate
+    if not suffix_parts:
+        return base[:max_length].rstrip("_-") or "experiment"
+
+    max_suffix_length = max_length - len(base) - 2
+    if max_suffix_length <= 0:
+        return base[:max_length].rstrip("_-") or "experiment"
+
+    def _build_with_budget(part_budget):
+        packed_parts = []
+        for alias, value in suffix_parts:
+            alias_budget = max(4, min(len(alias), max(4, part_budget // 3 + 1)))
+            value_budget = max(3, min(len(value), max(3, part_budget - alias_budget - 1)))
+            compact_alias = _matrix_compact_slug(alias, alias_budget)
+            compact_value = _matrix_compact_slug(value, value_budget)
+            packed_part = f"{compact_alias}-{compact_value}".strip("-")
+            packed_parts.append(packed_part or "var")
+        return f"{base}__{'__'.join(packed_parts)}"
+
+    part_count = len(suffix_parts)
+    separators_length = max(0, (part_count - 1) * 2)
+    available_for_parts = max_suffix_length - separators_length
+    if available_for_parts <= 0:
+        return base[:max_length].rstrip("_-") or "experiment"
+
+    best_candidate = None
+    max_part_budget = max(4, available_for_parts // max(1, part_count))
+    for part_budget in range(max_part_budget, 3, -1):
+        candidate = _build_with_budget(part_budget)
+        best_candidate = candidate
+        if len(candidate) <= max_length:
+            return candidate
+
+    if best_candidate:
+        return best_candidate[:max_length].rstrip("_-") or base[:max_length].rstrip("_-")
+    return base[:max_length].rstrip("_-") or "experiment"
 
 
 def _matrix_collect_config_reports(exp, exp_folder):
@@ -3796,10 +4065,15 @@ def _matrix_apply_overrides_to_file(file_path, overrides):
 
     changed = False
     for override in overrides:
-        changed = (
-            _matrix_set_path(data, override["path_tokens"], deepcopy(override["value"]))
-            or changed
+        reference_value = _matrix_get_path(data, override["path_tokens"])
+        coerced_value = _matrix_coerce_value_type(
+            override["value"],
+            override.get("value_type"),
+            reference_value,
         )
+        changed = _matrix_set_path(
+            data, override["path_tokens"], deepcopy(coerced_value)
+        ) or changed
 
     if changed:
         with open(file_path, "w", encoding="utf-8") as handle:
@@ -3875,7 +4149,9 @@ def _matrix_parse_variation_payload(payload):
             {
                 "file_name": file_name,
                 "path_tokens": path_tokens,
+                "display_label": str(item.get("display_label") or "").strip() or None,
                 "values": values,
+                "value_type": str(item.get("value_type") or "").strip() or None,
                 "can_unlock": bool(item.get("can_unlock", True)),
             }
         )
@@ -3897,7 +4173,9 @@ def _matrix_prepare_override_map(variation_items, combo_values):
             {
                 "file_name": item["file_name"],
                 "path_tokens": item["path_tokens"],
+                "display_label": item.get("display_label"),
                 "value": value,
+                "value_type": item.get("value_type"),
             }
         )
     return overrides

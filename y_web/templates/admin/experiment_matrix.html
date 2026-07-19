@@ -246,6 +246,44 @@
     padding-left: 0.8rem;
     padding-right: 0.8rem;
 }
+.matrix-recsys-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.55rem;
+    min-width: 0;
+}
+.matrix-recsys-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.55rem 0.68rem;
+    border: 1px solid #dbeafe;
+    border-radius: 14px;
+    background: #f8fbff;
+    min-width: 0;
+}
+.matrix-recsys-option-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-width: 0;
+    color: #1d4ed8;
+    font-size: 0.84rem;
+    font-weight: 600;
+}
+.matrix-current-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.18rem 0.45rem;
+    border-radius: 999px;
+    background: #dbeafe;
+    color: #1d4ed8;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
 .matrix-value-pill {
     display: inline-flex;
     align-items: center;
@@ -532,9 +570,15 @@
                 <input type="hidden" id="variation_payload" name="variation_payload" value="[]">
 
                 {% macro render_leaf(feature, label=None, depth=0) %}
+                    {% set allow_custom_values = feature.allow_custom_values if feature.allow_custom_values is defined else True %}
+                    {% set editor_mode = feature.editor_mode if feature.editor_mode is defined else 'tags' %}
                     <div class="taxonomy-leaf matrix-feature-row taxonomy-depth-{{ depth }}"
                          data-file-name="{{ feature.file_name }}"
                          data-path-tokens='{{ feature.path_tokens|tojson }}'
+                         data-display-label="{{ label or feature.display_label or feature.path }}"
+                         data-value-type="{{ feature.value_type }}"
+                         data-allow-custom-values="{{ 1 if allow_custom_values else 0 }}"
+                         data-editor-mode="{{ editor_mode }}"
                          data-can-unlock="1">
                         <div class="taxonomy-leaf-header">
                             <div class="taxonomy-leaf-title">
@@ -555,19 +599,44 @@
                                 </div>
                                 <div class="matrix-value-block">
                                     <div class="taxonomy-path">Alternative values</div>
-                                    <div class="matrix-tag-editor" data-empty-label="Add alternative values">
-                                        <div class="matrix-tag-list" aria-live="polite">
-                                            {% for option in feature.default_values or [] %}
-                                                <span class="matrix-tag-chip" data-value='{{ option.name|tojson }}'>
-                                                    <code>{{ option.label or option.name }}</code>
-                                                    <button type="button" class="matrix-tag-remove" aria-label="Remove alternative value">×</button>
-                                                </span>
-                                            {% endfor %}
-                                        </div>
-                                        <div class="matrix-tag-input-row">
-                                            <input type="text" class="input matrix-tag-input" disabled placeholder="Type a value and press Enter">
-                                            <button type="button" class="button is-light matrix-tag-add" disabled>Add</button>
-                                        </div>
+                                    <div class="matrix-tag-editor"
+                                         data-mode="{{ editor_mode }}"
+                                         data-empty-label="{% if allow_custom_values %}Add alternative values{% else %}Select at least one recommender system{% endif %}"
+                                         data-allow-custom-values="{{ 1 if allow_custom_values else 0 }}">
+                                        {% if editor_mode == 'recsys' %}
+                                            <div class="matrix-recsys-options" aria-live="polite">
+                                                {% for option in feature.default_values or [] %}
+                                                    {% set is_current = option.name == feature.value %}
+                                                    <label class="matrix-recsys-option">
+                                                        <span class="matrix-recsys-option-label">
+                                                            <code>{{ option.label or option.name }}</code>
+                                                            {% if is_current %}
+                                                                <span class="matrix-current-badge">Current</span>
+                                                            {% endif %}
+                                                        </span>
+                                                        <span class="matrix-switch">
+                                                            <input type="checkbox" class="matrix-recsys-toggle matrix-switch-input" data-value='{{ option.name|tojson }}' checked>
+                                                            <span class="matrix-switch-track" aria-hidden="true"></span>
+                                                        </span>
+                                                    </label>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            <div class="matrix-tag-list" aria-live="polite">
+                                                {% for option in feature.default_values or [] %}
+                                                    <span class="matrix-tag-chip" data-value='{{ option.name|tojson }}'>
+                                                        <code>{{ option.label or option.name }}</code>
+                                                        <button type="button" class="matrix-tag-remove" aria-label="Remove alternative value">×</button>
+                                                    </span>
+                                                {% endfor %}
+                                            </div>
+                                            {% if allow_custom_values %}
+                                            <div class="matrix-tag-input-row">
+                                                <input type="text" class="input matrix-tag-input" disabled placeholder="Type a value and press Enter">
+                                                <button type="button" class="button is-light matrix-tag-add" disabled>Add</button>
+                                            </div>
+                                            {% endif %}
+                                        {% endif %}
                                         <input type="hidden" class="matrix-values leaf-input" value="[]">
                                     </div>
                                 </div>
@@ -787,12 +856,15 @@
         if (!editor) {
             return null;
         }
+        const mode = editor.dataset.mode || 'tags';
         return {
             editor,
-            list: editor.querySelector('.matrix-tag-list'),
+            mode,
+            list: editor.querySelector('.matrix-tag-list') || editor.querySelector('.matrix-recsys-options'),
             input: editor.querySelector('.matrix-tag-input'),
             addButton: editor.querySelector('.matrix-tag-add'),
             hidden: editor.querySelector('.matrix-values'),
+            optionToggles: Array.from(editor.querySelectorAll('.matrix-recsys-toggle')),
         };
     }
 
@@ -808,6 +880,25 @@
         }
 
         const unlocked = toggle.checked;
+        if (elements.mode === 'recsys') {
+            const values = elements.optionToggles
+                .filter(optionToggle => optionToggle.checked)
+                .map(optionToggle => parseTagValue(optionToggle.dataset.value || optionToggle.value || ''))
+                .filter(value => value !== null && value !== undefined && String(value).trim?.() !== '');
+            if (elements.hidden) {
+                elements.hidden.value = JSON.stringify(values);
+            }
+            if (!unlocked) {
+                return { unlocked: false, count: 1, valid: true };
+            }
+            return {
+                unlocked: true,
+                count: values.length,
+                valid: values.length > 0,
+                values,
+            };
+        }
+
         const { input, addButton } = elements;
         if (input) {
             input.disabled = !unlocked;
@@ -855,7 +946,7 @@
 
     function addTag(row, rawValue) {
         const elements = getEditorElements(row);
-        if (!elements || !elements.list || !elements.input) {
+        if (!elements || elements.mode === 'recsys' || !elements.list || !elements.input) {
             return false;
         }
         const parsed = parseTagValue(rawValue);
@@ -947,10 +1038,18 @@
             if (!toggle || !elements || !toggle.checked) {
                 return;
             }
-            const values = Array.from(elements.list.querySelectorAll('.matrix-tag-chip')).map(chip => {
-                const raw = chip.dataset.value || chip.textContent || '';
-                return parseTagValue(raw);
-            }).filter(value => value !== null && value !== undefined && String(value).trim?.() !== '');
+            let values = [];
+            if (elements.mode === 'recsys') {
+                values = elements.optionToggles
+                    .filter(optionToggle => optionToggle.checked)
+                    .map(optionToggle => parseTagValue(optionToggle.dataset.value || optionToggle.value || ''))
+                    .filter(value => value !== null && value !== undefined && String(value).trim?.() !== '');
+            } else {
+                values = Array.from(elements.list.querySelectorAll('.matrix-tag-chip')).map(chip => {
+                    const raw = chip.dataset.value || chip.textContent || '';
+                    return parseTagValue(raw);
+                }).filter(value => value !== null && value !== undefined && String(value).trim?.() !== '');
+            }
             if (values.length === 0) {
                 valid = false;
                 return;
@@ -958,6 +1057,8 @@
             payload.push({
                 file_name: row.dataset.fileName,
                 path_tokens: JSON.parse(row.dataset.pathTokens || '[]'),
+                display_label: row.dataset.displayLabel || null,
+                value_type: row.dataset.valueType || null,
                 values: values,
                 can_unlock: true
             });
@@ -972,7 +1073,11 @@
         const elements = getEditorElements(row);
         if (toggle && elements) {
             toggle.addEventListener('change', recalculateMatrix);
-            if (elements.input) {
+            if (elements.mode === 'recsys') {
+                elements.optionToggles.forEach(function(optionToggle) {
+                    optionToggle.addEventListener('change', recalculateMatrix);
+                });
+            } else if (elements.input) {
                 elements.input.addEventListener('keydown', function(event) {
                     if (event.key === 'Enter' || event.key === ',') {
                         event.preventDefault();
