@@ -9,6 +9,7 @@ from flask import flash, redirect, request, url_for
 from flask_login import current_user, login_required
 
 from y_web import db
+from y_web.src.hpc.population_backup import _population_json_candidates
 from y_web.src.models import (
     Agent,
     Agent_Population,
@@ -19,7 +20,6 @@ from y_web.src.models import (
     Topic_List,
     User_mgmt,
 )
-from y_web.src.hpc.population_backup import _population_json_candidates
 from y_web.src.system.miscellanea import check_privileges
 
 from ._blueprint import clientsr
@@ -83,9 +83,7 @@ def _update_client_simulation_internal(uid, expected_mode):
     client.share = _float("share", client.share)
     client.search = _float("search", client.search)
     client.vote = _float("vote", client.vote)
-    recommendations_default_limit = _int(
-        "recommendations_default_limit", 12
-    )
+    recommendations_default_limit = _int("recommendations_default_limit", 12)
 
     memory_enabled = request.form.get("memory_enabled") in {"on", "true", "1", "yes"}
     memory_semantic_enabled = request.form.get("memory_semantic_enabled") in {
@@ -306,7 +304,9 @@ def _update_client_simulation_internal(uid, expected_mode):
     return redirect(request.referrer)
 
 
-def _sync_population_recsys_fields(exp_folder, population_name, recsys_type, frecsys_type):
+def _sync_population_recsys_fields(
+    exp_folder, population_name, recsys_type, frecsys_type
+):
     """Rewrite per-agent recsys settings in all matching population JSON files."""
     updated_paths = []
 
