@@ -16,10 +16,10 @@ import socket
 import threading
 import time
 import uuid
-from hashlib import sha1
-from itertools import product
 from collections import defaultdict
 from datetime import datetime, timedelta
+from hashlib import sha1
+from itertools import product
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urlparse
 from urllib.request import Request, urlopen
@@ -67,6 +67,7 @@ from y_web.src.models import (
     ExperimentScheduleLog,
     ExperimentScheduleStatus,
     Exps,
+    Follow_Recsys,
     HpcMonitorSettings,
     Jupyter_instances,
     Languages,
@@ -83,7 +84,6 @@ from y_web.src.models import (
     Population,
     Population_Experiment,
     Profession,
-    Follow_Recsys,
     Rounds,
     ServerLogMetrics,
     Topic_List,
@@ -2990,8 +2990,12 @@ def experiment_matrix():
             matrix_reports, total_features, unlockable_features = (
                 _matrix_collect_config_reports(source_exp, exp_folder)
             )
-            server_reports = [report for report in matrix_reports if report["kind"] == "server"]
-            client_reports = [report for report in matrix_reports if report["kind"] == "client"]
+            server_reports = [
+                report for report in matrix_reports if report["kind"] == "server"
+            ]
+            client_reports = [
+                report for report in matrix_reports if report["kind"] == "client"
+            ]
             for report in matrix_reports:
                 for feature in report["features"]:
                     if feature.get("can_unlock"):
@@ -3038,14 +3042,17 @@ def experiment_matrix():
         if unlocked_items:
             invalid_items = [item for item in unlocked_items if not item.get("values")]
             if invalid_items:
-                flash("Every unlocked feature needs at least one alternative value.", "warning")
+                flash(
+                    "Every unlocked feature needs at least one alternative value.",
+                    "warning",
+                )
                 return redirect(
                     url_for(
                         "experiments.experiment_matrix",
                         source_exp_id=source_exp.idexp,
                         exp_group=exp_group,
+                    )
                 )
-            )
             combinations = _matrix_build_combinations(unlocked_items)
         else:
             combinations = [()]
@@ -3358,9 +3365,11 @@ def _matrix_client_file_candidates(client, population_name):
     population_name_compact = population_name.replace(" ", "")
     return [
         f"client_{client.name}-{population_name}.json" if population_name else "",
-        f"client_{client.name}-{population_name_compact}.json"
-        if population_name_compact
-        else "",
+        (
+            f"client_{client.name}-{population_name_compact}.json"
+            if population_name_compact
+            else ""
+        ),
         f"{client.name}_config.json",
     ]
 
@@ -3373,7 +3382,9 @@ def _matrix_virtual_recsys_features(
     catalog,
 ):
     """Inject virtual recsys matrix rows backed by the admin DB catalogs."""
-    agents_config = client_config.get("agents") if isinstance(client_config, dict) else {}
+    agents_config = (
+        client_config.get("agents") if isinstance(client_config, dict) else {}
+    )
     if not isinstance(agents_config, dict):
         agents_config = {}
 
@@ -3395,7 +3406,11 @@ def _matrix_virtual_recsys_features(
                 "path_tokens": ["agents", "recsys_type"],
                 "path": "agents.recsys_type",
                 "value": current_content,
-                "value_type": type(current_content).__name__ if current_content is not None else "NoneType",
+                "value_type": (
+                    type(current_content).__name__
+                    if current_content is not None
+                    else "NoneType"
+                ),
                 "value_display": _matrix_format_value(current_content),
                 "file_name": file_name,
                 "can_unlock": True,
@@ -3410,7 +3425,11 @@ def _matrix_virtual_recsys_features(
                 "path_tokens": ["agents", "frecsys_type"],
                 "path": "agents.frecsys_type",
                 "value": current_follow,
-                "value_type": type(current_follow).__name__ if current_follow is not None else "NoneType",
+                "value_type": (
+                    type(current_follow).__name__
+                    if current_follow is not None
+                    else "NoneType"
+                ),
                 "value_display": _matrix_format_value(current_follow),
                 "file_name": file_name,
                 "can_unlock": True,
@@ -3538,7 +3557,9 @@ def _matrix_collect_config_reports(exp, exp_folder):
         from y_web.src.system.path_utils import get_writable_path as _get_writable_path
 
         writable_candidate = _get_writable_path(
-            os.path.join("y_web", "experiments", os.path.basename(str(exp_folder or "")))
+            os.path.join(
+                "y_web", "experiments", os.path.basename(str(exp_folder or ""))
+            )
         )
         if (
             writable_candidate
@@ -3550,7 +3571,9 @@ def _matrix_collect_config_reports(exp, exp_folder):
         pass
 
     try:
-        from y_web.src.experiment.helpers import get_experiment_dir as _fallback_experiment_dir
+        from y_web.src.experiment.helpers import (
+            get_experiment_dir as _fallback_experiment_dir,
+        )
 
         fallback_dir = str(_fallback_experiment_dir(exp))
         if (
@@ -3616,11 +3639,7 @@ def _matrix_collect_config_reports(exp, exp_folder):
                 "path": server_config_path,
                 "features": server_features,
                 "tree": _matrix_build_taxonomy_tree(
-                    [
-                        leaf
-                        for leaf in server_features
-                        if leaf.get("can_unlock")
-                    ]
+                    [leaf for leaf in server_features if leaf.get("can_unlock")]
                 ),
             }
         )
@@ -3777,9 +3796,10 @@ def _matrix_apply_overrides_to_file(file_path, overrides):
 
     changed = False
     for override in overrides:
-        changed = _matrix_set_path(
-            data, override["path_tokens"], deepcopy(override["value"])
-        ) or changed
+        changed = (
+            _matrix_set_path(data, override["path_tokens"], deepcopy(override["value"]))
+            or changed
+        )
 
     if changed:
         with open(file_path, "w", encoding="utf-8") as handle:
@@ -4297,11 +4317,13 @@ def _create_single_experiment_copy(
     for source_client in source_clients:
         population = Population.query.filter_by(id=source_client.population_id).first()
         population_name = (population.name if population else "").strip()
-        candidate_files = _matrix_client_file_candidates(
-            source_client, population_name
-        )
+        candidate_files = _matrix_client_file_candidates(source_client, population_name)
         matched_file_name = next(
-            (candidate for candidate in candidate_files if candidate in overrides_by_file),
+            (
+                candidate
+                for candidate in candidate_files
+                if candidate in overrides_by_file
+            ),
             None,
         )
         client_crecsys = source_client.crecsys
