@@ -16,6 +16,8 @@ import socket
 import threading
 import time
 import uuid
+from hashlib import sha1
+from itertools import product
 from collections import defaultdict
 from datetime import datetime, timedelta
 from urllib.error import HTTPError, URLError
@@ -55,6 +57,7 @@ from y_web.src.models import (
     Client,
     Client_Execution,
     ClientLogMetrics,
+    Content_Recsys,
     DownloadNotification,
     Education,
     Exp_stats,
@@ -80,6 +83,7 @@ from y_web.src.models import (
     Population,
     Population_Experiment,
     Profession,
+    Follow_Recsys,
     Rounds,
     ServerLogMetrics,
     Topic_List,
@@ -121,6 +125,8 @@ from ._helpers import *  # noqa: F401,F403
 from ._helpers import (
     _current_admin_user_or_none,
     _experiment_configuration_update_required,
+    _get_database_type,
+    _get_experiment_folder,
     default_stress_reward_config,
 )
 
@@ -2940,6 +2946,164 @@ def copy_experiment():
     return redirect(url_for("experiments.settings"))
 
 
+@experiments.route("/admin/experiment_matrix", methods=["GET", "POST"])
+@login_required
+def experiment_matrix():
+    """Inspect and expand experiment configuration matrices."""
+    check_privileges(current_user.username)
+
+    user = _current_admin_user_or_none()
+    if not user:
+        flash("Invalid user session.", "error")
+        return redirect(url_for("experiments.settings"))
+
+    if user.role not in ("admin", "researcher"):
+        flash("Access denied. Please use the experiment feed.")
+        return redirect(url_for("auth.login"))
+
+    visible_query = get_visible_experiment_query(user)
+    all_experiments = visible_query.order_by(Exps.exp_name.asc()).all()
+    visible_exp_ids = {exp.idexp for exp in all_experiments}
+
+    selected_exp_id = request.values.get("source_exp_id", type=int)
+    exp_group = (request.values.get("exp_group") or "").strip()
+    source_exp = (
+        Exps.query.filter_by(idexp=selected_exp_id).first()
+        if selected_exp_id and selected_exp_id in visible_exp_ids
+        else None
+    )
+    matrix_reports = []
+    server_reports = []
+    client_reports = []
+    total_features = 0
+    unlockable_features = 0
+    allowed_variation_keys = set()
+
+    if source_exp:
+        try:
+            from y_web.src.system.path_utils import get_writable_path
+
+            base_dir = get_writable_path()
+            exp_folder = _get_experiment_folder(
+                base_dir, source_exp, _get_database_type()
+            )
+            matrix_reports, total_features, unlockable_features = (
+                _matrix_collect_config_reports(source_exp, exp_folder)
+            )
+            server_reports = [report for report in matrix_reports if report["kind"] == "server"]
+            client_reports = [report for report in matrix_reports if report["kind"] == "client"]
+            for report in matrix_reports:
+                for feature in report["features"]:
+                    if feature.get("can_unlock"):
+                        allowed_variation_keys.add(
+                            (report["file_name"], tuple(feature["path_tokens"]))
+                        )
+        except Exception as exc:
+            current_app.logger.error(
+                "Failed to load matrix reports for experiment %s: %s",
+                selected_exp_id,
+                exc,
+                exc_info=True,
+            )
+            matrix_reports = []
+            server_reports = []
+            client_reports = []
+            total_features = 0
+            unlockable_features = 0
+
+    if request.method == "POST":
+        source_exp_id = request.form.get("source_exp_id", type=int)
+        exp_group = (request.form.get("exp_group") or "").strip()
+        variation_payload = request.form.get("variation_payload") or "[]"
+        source_exp = (
+            Exps.query.filter_by(idexp=source_exp_id).first()
+            if source_exp_id and source_exp_id in visible_exp_ids
+            else None
+        )
+
+        if not source_exp:
+            flash("Source experiment not found.", "error")
+            return redirect(url_for("experiments.settings"))
+
+        variation_items = _matrix_parse_variation_payload(variation_payload)
+        unlocked_items = []
+        for item in variation_items:
+            key = (item["file_name"], tuple(item["path_tokens"]))
+            if key not in allowed_variation_keys:
+                continue
+            if not item.get("can_unlock"):
+                continue
+            unlocked_items.append(item)
+
+        if unlocked_items:
+            invalid_items = [item for item in unlocked_items if not item.get("values")]
+            if invalid_items:
+                flash("Every unlocked feature needs at least one alternative value.", "warning")
+                return redirect(
+                    url_for(
+                        "experiments.experiment_matrix",
+                        source_exp_id=source_exp.idexp,
+                        exp_group=exp_group,
+                )
+            )
+            combinations = _matrix_build_combinations(unlocked_items)
+        else:
+            combinations = [()]
+
+        created = 0
+        for combo_index, combo_values in enumerate(combinations, start=1):
+            overrides = _matrix_prepare_override_map(unlocked_items, combo_values)
+            new_exp_name = _matrix_build_experiment_name(
+                source_exp.exp_name,
+                overrides,
+            )
+            base_candidate = new_exp_name
+            name_suffix_index = 2
+            while Exps.query.filter_by(exp_name=new_exp_name).first():
+                new_exp_name = f"{base_candidate[:40]}_{name_suffix_index}"
+                if len(new_exp_name) > 50:
+                    new_exp_name = new_exp_name[:50]
+                name_suffix_index += 1
+
+            success = _create_single_experiment_copy(
+                source_exp,
+                new_exp_name,
+                exp_group,
+                config_variations=overrides,
+            )
+            if success:
+                created += 1
+
+        if created:
+            flash(
+                f"Created {created} matrix experiment(s) in group '{exp_group or '-'}'.",
+                "success",
+            )
+        else:
+            flash("No experiment matrix combinations were created.", "warning")
+
+        return redirect(
+            url_for(
+                "experiments.experiment_matrix",
+                source_exp_id=source_exp.idexp,
+                exp_group=exp_group,
+            )
+        )
+
+    return render_template(
+        "admin/experiment_matrix.html",
+        experiments=all_experiments,
+        selected_experiment=source_exp,
+        selected_exp_id=selected_exp_id,
+        selected_group=exp_group,
+        matrix_reports=matrix_reports,
+        server_reports=server_reports,
+        client_reports=client_reports,
+        total_features=total_features,
+        unlockable_features=unlockable_features,
+    )
+
+
 def _build_copy_experiment_names(new_exp_name, num_copies):
     """Return the experiment names that should be created for a copy request."""
     if num_copies == 1:
@@ -2955,7 +3119,781 @@ def _load_settings_experiment_lists(visible_query):
     return experiments, experiments, active_experiments
 
 
-def _create_single_experiment_copy(source_exp, new_exp_name, exp_group=""):
+_MATRIX_SYSTEM_PATHS = {
+    ("name",),
+    ("exp_name",),
+    ("experiment_name",),
+    ("server_name",),
+    ("namespace",),
+    ("port",),
+    ("database_uri",),
+    ("data_path",),
+    ("is_remote",),
+}
+_MATRIX_EXCLUDED_ROOTS = {
+    "redis",
+    "logging",
+    "experiment_configuration_confirmed",
+    "platform_type",
+    "perspective_api",
+}
+_MATRIX_EXCLUDED_LEAF_NAMES = {
+    "note",
+    "heartbeat_interval",
+    "num_slots_per_day",
+    "hourly_activity",
+}
+_MATRIX_CLIENT_EXCLUDED_ROOTS = {
+    "server",
+    "activity_profiles",
+}
+_MATRIX_CLIENT_EXCLUDED_LEAF_NAMES = {
+    "enable_sentiment",
+    "emotion_annotation",
+}
+
+
+def _matrix_path_to_string(path_tokens):
+    """Render a JSON path token list into a compact dotted label."""
+    path_bits = []
+    for token in path_tokens:
+        if isinstance(token, int):
+            if not path_bits:
+                path_bits.append(f"[{token}]")
+            else:
+                path_bits[-1] = f"{path_bits[-1]}[{token}]"
+        else:
+            path_bits.append(str(token))
+    return ".".join(path_bits)
+
+
+def _matrix_is_variable_path(path_tokens, file_name=""):
+    """Return True when a JSON leaf is safe to expose as a matrix variable."""
+    path_tuple = tuple(path_tokens or [])
+    if not path_tuple:
+        return False
+
+    lowered_tokens = [str(token).lower() for token in path_tuple]
+    for token in lowered_tokens:
+        for excluded_root in _MATRIX_EXCLUDED_ROOTS:
+            if token == excluded_root or token.startswith(f"{excluded_root}_"):
+                return False
+    if lowered_tokens and lowered_tokens[0] in _MATRIX_EXCLUDED_ROOTS:
+        return False
+    if any(token in _MATRIX_EXCLUDED_LEAF_NAMES for token in lowered_tokens):
+        return False
+
+    normalized_file_name = str(file_name or "").lower()
+    is_client_file = (
+        normalized_file_name.startswith("client")
+        or normalized_file_name.endswith("_config.json")
+    ) and normalized_file_name not in {"server_config.json", "config_server.json"}
+    if is_client_file:
+        if any(token in _MATRIX_CLIENT_EXCLUDED_ROOTS for token in lowered_tokens):
+            return False
+        if any(token in _MATRIX_CLIENT_EXCLUDED_LEAF_NAMES for token in lowered_tokens):
+            return False
+
+    if path_tuple in _MATRIX_SYSTEM_PATHS:
+        return False
+
+    file_name = str(file_name or "").lower()
+    if file_name == "server_config.json":
+        if path_tuple[:2] == ("server", "port"):
+            return False
+        if path_tuple[:1] == ("database_uri",):
+            return False
+        if path_tuple[:1] == ("address",):
+            return False
+        if path_tuple[:1] == ("min_to_start",):
+            return False
+        if path_tuple[:1] == ("timeout_seconds",):
+            return False
+    if file_name == "config_server.json":
+        if path_tuple[:1] == ("port",):
+            return False
+        if path_tuple[:1] == ("database_uri",):
+            return False
+        if path_tuple[:1] == ("data_path",):
+            return False
+        if path_tuple[:1] == ("address",):
+            return False
+        if path_tuple[:1] == ("min_to_start",):
+            return False
+        if path_tuple[:1] == ("timeout_seconds",):
+            return False
+    if path_tuple[:2] == ("server", "address"):
+        return False
+    if path_tuple[:2] == ("database", "sqlite"):
+        return False
+    if path_tuple[:1] == ("database",):
+        return False
+    return True
+
+
+def _matrix_path_label(token):
+    """Humanize one taxonomy token for display."""
+    text = str(token or "").replace("_", " ").strip()
+    if not text:
+        return ""
+    return text[:1].upper() + text[1:]
+
+
+def _matrix_tree_insert(node, path_tokens, feature):
+    """Insert a feature leaf into a nested taxonomy tree."""
+    current = node
+    running_tokens = []
+    for index, token in enumerate(path_tokens):
+        running_tokens.append(token)
+        is_leaf = index == len(path_tokens) - 1
+        children = current.setdefault("children", {})
+        key = str(token)
+        if key not in children:
+            children[key] = {
+                "label": _matrix_path_label(token),
+                "token": token,
+                "path_tokens": list(running_tokens),
+                "path": _matrix_path_to_string(running_tokens),
+                "children": {},
+                "feature": None,
+            }
+        current = children[key]
+        if is_leaf:
+            current["feature"] = feature
+
+
+def _matrix_build_taxonomy_tree(features):
+    """Build a nested tree from dotted JSON paths."""
+    root = {"label": "", "path_tokens": [], "path": "", "children": {}, "feature": None}
+    for feature in features:
+        _matrix_tree_insert(root, feature.get("path_tokens") or [], feature)
+    return root
+
+
+def _matrix_flatten_json(value, path_tokens=None):
+    """Flatten a JSON tree into leaf nodes suitable for report rendering."""
+    if path_tokens is None:
+        path_tokens = []
+
+    if isinstance(value, dict):
+        entries = []
+        for key, child in value.items():
+            entries.extend(_matrix_flatten_json(child, path_tokens + [key]))
+        return entries
+
+    if isinstance(value, list):
+        if not value:
+            return [
+                {
+                    "path_tokens": list(path_tokens),
+                    "path": _matrix_path_to_string(path_tokens),
+                    "value": [],
+                    "value_type": "list",
+                }
+            ]
+        entries = []
+        for index, child in enumerate(value):
+            entries.extend(_matrix_flatten_json(child, path_tokens + [index]))
+        return entries
+
+    return [
+        {
+            "path_tokens": list(path_tokens),
+            "path": _matrix_path_to_string(path_tokens),
+            "value": value,
+            "value_type": type(value).__name__,
+        }
+    ]
+
+
+def _matrix_format_value(value):
+    """Return a compact, readable string representation for JSON values."""
+    if isinstance(value, str):
+        return value
+    try:
+        return json.dumps(value, ensure_ascii=False)
+    except Exception:
+        return str(value)
+
+
+def _matrix_get_experiment_mode(experiment):
+    """Return the matrix catalog mode for the given experiment."""
+    if getattr(experiment, "simulator_type", "Standard") == "HPC":
+        return "hpc"
+    if getattr(experiment, "platform_type", "microblogging") == "forum":
+        return "forum"
+    return "standard"
+
+
+def _matrix_recsys_catalog(experiment):
+    """Return mode-filtered content and follow recsys choices."""
+    mode = _matrix_get_experiment_mode(experiment)
+    mode_lower = mode.lower()
+    content_recsys = [
+        {
+            "name": recsys.name,
+            "label": recsys.value,
+            "category": recsys.category,
+            "enabled": recsys.enabled,
+        }
+        for recsys in Content_Recsys.query.order_by(Content_Recsys.id.asc()).all()
+        if recsys.enabled and mode_lower in recsys.enabled.lower()
+    ]
+    follow_recsys = [
+        {
+            "name": recsys.name,
+            "label": recsys.value,
+            "category": recsys.category,
+            "enabled": recsys.enabled,
+        }
+        for recsys in Follow_Recsys.query.order_by(Follow_Recsys.id.asc()).all()
+        if recsys.enabled and mode_lower in recsys.enabled.lower()
+    ]
+    return {"content": content_recsys, "follow": follow_recsys}
+
+
+def _matrix_client_file_candidates(client, population_name):
+    """Return likely config file names for a client/population pair."""
+    population_name = (population_name or "").strip()
+    population_name_compact = population_name.replace(" ", "")
+    return [
+        f"client_{client.name}-{population_name}.json" if population_name else "",
+        f"client_{client.name}-{population_name_compact}.json"
+        if population_name_compact
+        else "",
+        f"{client.name}_config.json",
+    ]
+
+
+def _matrix_virtual_recsys_features(
+    *,
+    client,
+    client_config,
+    file_name,
+    catalog,
+):
+    """Inject virtual recsys matrix rows backed by the admin DB catalogs."""
+    agents_config = client_config.get("agents") if isinstance(client_config, dict) else {}
+    if not isinstance(agents_config, dict):
+        agents_config = {}
+
+    current_content = (
+        getattr(client, "crecsys", None)
+        or client_config.get("recsys_type")
+        or agents_config.get("recsys_type")
+    )
+    current_follow = (
+        getattr(client, "frecsys", None)
+        or client_config.get("frecsys_type")
+        or agents_config.get("frecsys_type")
+    )
+
+    synthetic = []
+    if catalog.get("content") or current_content is not None:
+        synthetic.append(
+            {
+                "path_tokens": ["agents", "recsys_type"],
+                "path": "agents.recsys_type",
+                "value": current_content,
+                "value_type": type(current_content).__name__ if current_content is not None else "NoneType",
+                "value_display": _matrix_format_value(current_content),
+                "file_name": file_name,
+                "can_unlock": True,
+                "is_virtual": True,
+                "display_label": "Content recsys",
+                "default_values": catalog.get("content", []),
+            }
+        )
+    if catalog.get("follow") or current_follow is not None:
+        synthetic.append(
+            {
+                "path_tokens": ["agents", "frecsys_type"],
+                "path": "agents.frecsys_type",
+                "value": current_follow,
+                "value_type": type(current_follow).__name__ if current_follow is not None else "NoneType",
+                "value_display": _matrix_format_value(current_follow),
+                "file_name": file_name,
+                "can_unlock": True,
+                "is_virtual": True,
+                "display_label": "Follow recsys",
+                "default_values": catalog.get("follow", []),
+            }
+        )
+    return synthetic
+
+
+def _matrix_parse_value(raw_value):
+    """Parse a value entered in the matrix UI."""
+    text = str(raw_value or "").strip()
+    if not text:
+        return None
+    try:
+        return json.loads(text)
+    except Exception:
+        return text
+
+
+def _matrix_set_path(container, path_tokens, value):
+    """Set a nested value on a dict/list tree using tokenized path segments."""
+    if not path_tokens:
+        return False
+
+    current = container
+    for index, token in enumerate(path_tokens[:-1]):
+        next_token = path_tokens[index + 1]
+        if isinstance(token, int):
+            if not isinstance(current, list) or token >= len(current):
+                return False
+            current = current[token]
+            continue
+
+        if not isinstance(current, dict) or token not in current:
+            return False
+        if current[token] is None:
+            current[token] = [] if isinstance(next_token, int) else {}
+        current = current[token]
+
+    last_token = path_tokens[-1]
+    if isinstance(last_token, int):
+        if not isinstance(current, list) or last_token >= len(current):
+            return False
+        current[last_token] = value
+        return True
+
+    if not isinstance(current, dict):
+        return False
+    current[last_token] = value
+    return True
+
+
+def _matrix_name_fragment(value):
+    """Build a short name fragment from an arbitrary JSON value."""
+    if isinstance(value, bool):
+        return "T" if value else "F"
+    if value is None:
+        return "null"
+    if isinstance(value, int):
+        return str(value)
+    if isinstance(value, float):
+        text = f"{value:.6g}"
+        return text.rstrip("0").rstrip(".") if "." in text else text
+    if isinstance(value, list):
+        return f"list{len(value)}"
+    if isinstance(value, dict):
+        return "obj"
+    text = str(value).strip()
+    if not text:
+        return "blank"
+    text = re.sub(r"[^A-Za-z0-9]+", "-", text)
+    text = text.strip("-")
+    return text[:12] or "val"
+
+
+def _matrix_path_alias(path_tokens):
+    """Create a compact alias from a JSON path."""
+    parts = []
+    for token in path_tokens:
+        if isinstance(token, int):
+            continue
+        token = str(token)
+        if token in {"simulation", "agents", "logging", "server", "database"}:
+            continue
+        parts.append(token[:8])
+    if not parts:
+        parts = [str(path_tokens[-1])[:8]]
+    alias = "_".join(parts)
+    return re.sub(r"[^A-Za-z0-9_]+", "_", alias).strip("_") or "var"
+
+
+def _matrix_build_experiment_name(source_name, combo_overrides, max_length=50):
+    """Build an informative, bounded experiment name for one matrix combination."""
+    suffix_parts = []
+    for override in combo_overrides:
+        alias = _matrix_path_alias(override["path_tokens"])
+        suffix_parts.append(f"{alias}={_matrix_name_fragment(override['value'])}")
+
+    suffix = "__".join(suffix_parts)
+    base = re.sub(r"\s+", "_", str(source_name or "").strip()) or "experiment"
+    candidate = f"{base}__{suffix}" if suffix else base
+    if len(candidate) <= max_length:
+        return candidate
+
+    digest = sha1(candidate.encode("utf-8")).hexdigest()[:6]
+    head = base[: max(8, max_length - len(digest) - 1)]
+    candidate = f"{head}-{digest}"
+    if len(candidate) > max_length:
+        candidate = candidate[:max_length]
+    return candidate
+
+
+def _matrix_collect_config_reports(exp, exp_folder):
+    """Collect server/client config files and flatten them into report-friendly rows."""
+    reports = []
+    search_roots = []
+    for candidate in [exp_folder]:
+        if candidate and os.path.isdir(candidate) and candidate not in search_roots:
+            search_roots.append(candidate)
+
+    try:
+        from y_web.src.system.path_utils import get_writable_path as _get_writable_path
+
+        writable_candidate = _get_writable_path(
+            os.path.join("y_web", "experiments", os.path.basename(str(exp_folder or "")))
+        )
+        if (
+            writable_candidate
+            and os.path.isdir(writable_candidate)
+            and writable_candidate not in search_roots
+        ):
+            search_roots.append(writable_candidate)
+    except Exception:
+        pass
+
+    try:
+        from y_web.src.experiment.helpers import get_experiment_dir as _fallback_experiment_dir
+
+        fallback_dir = str(_fallback_experiment_dir(exp))
+        if (
+            fallback_dir
+            and os.path.isdir(fallback_dir)
+            and fallback_dir not in search_roots
+        ):
+            search_roots.append(fallback_dir)
+    except Exception:
+        pass
+
+    def _iter_config_files():
+        seen = set()
+        for root in search_roots:
+            for current_root, dirnames, filenames in os.walk(root):
+                dirnames[:] = [
+                    name
+                    for name in dirnames
+                    if not name.startswith(".")
+                    and name != "__pycache__"
+                    and name != "_hpc_population_backups"
+                ]
+                for filename in filenames:
+                    if filename in seen:
+                        continue
+                    seen.add(filename)
+                    full_path = os.path.join(current_root, filename)
+                    if not os.path.isfile(full_path):
+                        continue
+                    if filename.endswith(".state.json") or filename.endswith(".log"):
+                        continue
+                    yield current_root, filename, full_path
+
+    server_candidates = {"server_config.json", "config_server.json"}
+    server_config_entry = next(
+        (
+            (root, name, path)
+            for root, name, path in _iter_config_files()
+            if name in server_candidates
+        ),
+        None,
+    )
+    if server_config_entry:
+        server_root, server_config_name, server_config_path = server_config_entry
+        try:
+            with open(server_config_path, "r", encoding="utf-8") as handle:
+                server_config = json.load(handle)
+        except Exception:
+            server_config = {}
+        server_features = []
+        for leaf in _matrix_flatten_json(server_config):
+            leaf["can_unlock"] = _matrix_is_variable_path(
+                leaf["path_tokens"], server_config_name
+            )
+            leaf["value_display"] = _matrix_format_value(leaf["value"])
+            leaf["file_name"] = server_config_name
+            server_features.append(leaf)
+        reports.append(
+            {
+                "kind": "server",
+                "file_name": server_config_name,
+                "title": "Server Configuration",
+                "path": server_config_path,
+                "features": server_features,
+                "tree": _matrix_build_taxonomy_tree(
+                    [
+                        leaf
+                        for leaf in server_features
+                        if leaf.get("can_unlock")
+                    ]
+                ),
+            }
+        )
+
+    discovered_client_files = []
+    for current_root, entry, full_path in _iter_config_files():
+        if entry in {"server_config.json", "config_server.json", "prompts.json"}:
+            continue
+        is_standard_client = entry.startswith("client") and entry.endswith(".json")
+        is_hpc_client = entry.endswith("_config.json") and not entry.startswith(
+            "server"
+        )
+        if is_standard_client or is_hpc_client:
+            discovered_client_files.append((current_root, entry, full_path))
+
+    client_records = []
+    if exp.idexp is not None:
+        client_records = Client.query.filter_by(id_exp=exp.idexp).all()
+
+    def _matrix_match_client_file(candidate_names):
+        for candidate in candidate_names:
+            if not candidate:
+                continue
+            for _, entry, full_path in discovered_client_files:
+                if entry == candidate and os.path.exists(full_path):
+                    return candidate, full_path
+        return None, None
+
+    rendered_client_files = set()
+    recsys_catalog = _matrix_recsys_catalog(exp) if exp else {}
+    if client_records:
+        for client in client_records:
+            population = Population.query.filter_by(id=client.population_id).first()
+            population_name = (population.name if population else "").strip()
+            candidate_names = _matrix_client_file_candidates(client, population_name)
+            file_name, file_path = _matrix_match_client_file(candidate_names)
+            if not file_name or not file_path:
+                continue
+            rendered_client_files.add(file_name)
+            try:
+                with open(file_path, "r", encoding="utf-8") as handle:
+                    client_config = json.load(handle)
+            except Exception:
+                client_config = {}
+            features = []
+            for leaf in _matrix_flatten_json(client_config):
+                leaf["can_unlock"] = _matrix_is_variable_path(
+                    leaf["path_tokens"], file_name
+                )
+                leaf["value_display"] = _matrix_format_value(leaf["value"])
+                leaf["file_name"] = file_name
+                features.append(leaf)
+            features.extend(
+                _matrix_virtual_recsys_features(
+                    client=client,
+                    client_config=client_config,
+                    file_name=file_name,
+                    catalog=recsys_catalog,
+                )
+            )
+            recommendation_features = [
+                leaf
+                for leaf in features
+                if leaf.get("path") in {"agents.recsys_type", "agents.frecsys_type"}
+            ]
+            client_label = client.name
+            if population_name:
+                client_label = f"{client.name} · {population_name}"
+            reports.append(
+                {
+                    "kind": "client",
+                    "file_name": file_name,
+                    "title": client_label,
+                    "path": file_path,
+                    "features": features,
+                    "recommendation_features": recommendation_features,
+                    "tree": _matrix_build_taxonomy_tree(
+                        [
+                            leaf
+                            for leaf in features
+                            if leaf.get("can_unlock")
+                            and leaf.get("path")
+                            not in {"agents.recsys_type", "agents.frecsys_type"}
+                        ]
+                    ),
+                }
+            )
+    else:
+        for _, file_name, file_path in discovered_client_files:
+            if file_name in rendered_client_files:
+                continue
+            try:
+                with open(file_path, "r", encoding="utf-8") as handle:
+                    client_config = json.load(handle)
+            except Exception:
+                client_config = {}
+            features = []
+            for leaf in _matrix_flatten_json(client_config):
+                leaf["can_unlock"] = _matrix_is_variable_path(
+                    leaf["path_tokens"], file_name
+                )
+                leaf["value_display"] = _matrix_format_value(leaf["value"])
+                leaf["file_name"] = file_name
+                features.append(leaf)
+            features.extend(
+                _matrix_virtual_recsys_features(
+                    client=None,
+                    client_config=client_config,
+                    file_name=file_name,
+                    catalog=recsys_catalog,
+                )
+            )
+            recommendation_features = [
+                leaf
+                for leaf in features
+                if leaf.get("path") in {"agents.recsys_type", "agents.frecsys_type"}
+            ]
+            reports.append(
+                {
+                    "kind": "client",
+                    "file_name": file_name,
+                    "title": file_name,
+                    "path": file_path,
+                    "features": features,
+                    "recommendation_features": recommendation_features,
+                    "tree": _matrix_build_taxonomy_tree(
+                        [
+                            leaf
+                            for leaf in features
+                            if leaf.get("can_unlock")
+                            and leaf.get("path")
+                            not in {"agents.recsys_type", "agents.frecsys_type"}
+                        ]
+                    ),
+                }
+            )
+
+    configurable_features = sum(
+        1
+        for report in reports
+        for feature in report["features"]
+        if feature.get("can_unlock")
+    )
+    return reports, configurable_features, configurable_features
+
+
+def _matrix_apply_overrides_to_file(file_path, overrides):
+    """Apply a list of JSON path overrides to a configuration file."""
+    if not overrides or not os.path.exists(file_path):
+        return False
+
+    with open(file_path, "r", encoding="utf-8") as handle:
+        data = json.load(handle)
+
+    changed = False
+    for override in overrides:
+        changed = _matrix_set_path(
+            data, override["path_tokens"], deepcopy(override["value"])
+        ) or changed
+
+    if changed:
+        with open(file_path, "w", encoding="utf-8") as handle:
+            json.dump(data, handle, indent=4)
+    return changed
+
+
+def _matrix_apply_recsys_to_population_file(
+    file_path, recsys_type=None, frecsys_type=None
+):
+    """Propagate recsys selections into every agent row in a population JSON."""
+    if not os.path.exists(file_path):
+        return False
+
+    try:
+        with open(file_path, "r", encoding="utf-8") as handle:
+            payload = json.load(handle)
+    except Exception:
+        return False
+
+    changed = False
+
+    def _update_agent(agent):
+        nonlocal changed
+        if not isinstance(agent, dict):
+            return
+        if str(agent.get("user_type") or "").strip().lower() == "page":
+            return
+        if recsys_type is not None and agent.get("recsys_type") != recsys_type:
+            agent["recsys_type"] = recsys_type
+            changed = True
+        if frecsys_type is not None and agent.get("frecsys_type") != frecsys_type:
+            agent["frecsys_type"] = frecsys_type
+            changed = True
+
+    if isinstance(payload, dict):
+        agents = payload.get("agents")
+        if isinstance(agents, list):
+            for agent in agents:
+                _update_agent(agent)
+        elif isinstance(agents, dict):
+            for agent in agents.values():
+                _update_agent(agent)
+        else:
+            _update_agent(payload)
+    elif isinstance(payload, list):
+        for agent in payload:
+            _update_agent(agent)
+
+    if changed:
+        with open(file_path, "w", encoding="utf-8") as handle:
+            json.dump(payload, handle, indent=4)
+    return changed
+
+
+def _matrix_parse_variation_payload(payload):
+    """Parse the form payload submitted from the experiment matrix page."""
+    try:
+        raw_items = json.loads(payload or "[]")
+    except Exception:
+        return []
+
+    parsed_items = []
+    for item in raw_items:
+        if not isinstance(item, dict):
+            continue
+        file_name = str(item.get("file_name") or "").strip()
+        path_tokens = item.get("path_tokens") or []
+        values = item.get("values") or []
+        if not file_name or not isinstance(path_tokens, list) or not values:
+            continue
+        parsed_items.append(
+            {
+                "file_name": file_name,
+                "path_tokens": path_tokens,
+                "values": values,
+                "can_unlock": bool(item.get("can_unlock", True)),
+            }
+        )
+    return parsed_items
+
+
+def _matrix_build_combinations(variation_items):
+    """Return cartesian-product combinations for the unlocked matrix rows."""
+    if not variation_items:
+        return [()]
+    return list(product(*[item["values"] for item in variation_items]))
+
+
+def _matrix_prepare_override_map(variation_items, combo_values):
+    """Bind a product tuple back to the original variation definitions."""
+    overrides = []
+    for item, value in zip(variation_items, combo_values):
+        overrides.append(
+            {
+                "file_name": item["file_name"],
+                "path_tokens": item["path_tokens"],
+                "value": value,
+            }
+        )
+    return overrides
+
+
+def _matrix_override_index(overrides):
+    """Index overrides by file name for fast lookup during experiment copying."""
+    indexed = defaultdict(list)
+    for override in overrides or []:
+        indexed[override.get("file_name")].append(override)
+    return indexed
+
+
+def _create_single_experiment_copy(
+    source_exp, new_exp_name, exp_group="", config_variations=None
+):
     """
     Helper function to create a single experiment copy.
 
@@ -2963,6 +3901,7 @@ def _create_single_experiment_copy(source_exp, new_exp_name, exp_group=""):
         source_exp: Source experiment object
         new_exp_name: Name for the new experiment
         exp_group: Group name for the experiment (optional)
+        config_variations: Optional list of per-file JSON overrides
 
     Returns:
         bool: True if successful, False otherwise
@@ -3214,6 +4153,15 @@ def _create_single_experiment_copy(source_exp, new_exp_name, exp_group=""):
         # Add data_path so YServer knows where to write logs (e.g., _server.log)
         config["data_path"] = new_folder + os.sep
 
+    if config_variations:
+        for override in config_variations:
+            if override.get("file_name") == os.path.basename(config_path):
+                _matrix_set_path(
+                    config,
+                    override.get("path_tokens") or [],
+                    deepcopy(override.get("value")),
+                )
+
     with open(config_path, "w") as f:
         json.dump(config, f, indent=4)
 
@@ -3273,6 +4221,15 @@ def _create_single_experiment_copy(source_exp, new_exp_name, exp_group=""):
                             r":(\d+)(/|$)", f":{suggested_port}\\2", old_api
                         )
                         client_config["servers"]["api"] = new_api
+
+                if config_variations:
+                    for override in config_variations:
+                        if override.get("file_name") == item:
+                            _matrix_set_path(
+                                client_config,
+                                override.get("path_tokens") or [],
+                                deepcopy(override.get("value")),
+                            )
 
                 with open(client_config_path, "w") as f:
                     json.dump(client_config, f, indent=4)
@@ -3335,7 +4292,30 @@ def _create_single_experiment_copy(source_exp, new_exp_name, exp_group=""):
 
     # Copy Client records
     source_clients = Client.query.filter_by(id_exp=source_exp.idexp).all()
+    overrides_by_file = _matrix_override_index(config_variations)
+    updated_population_files = set()
     for source_client in source_clients:
+        population = Population.query.filter_by(id=source_client.population_id).first()
+        population_name = (population.name if population else "").strip()
+        candidate_files = _matrix_client_file_candidates(
+            source_client, population_name
+        )
+        matched_file_name = next(
+            (candidate for candidate in candidate_files if candidate in overrides_by_file),
+            None,
+        )
+        client_crecsys = source_client.crecsys
+        client_frecsys = source_client.frecsys
+        if matched_file_name:
+            for override in overrides_by_file.get(matched_file_name, []):
+                path_tokens = override.get("path_tokens") or []
+                if not path_tokens:
+                    continue
+                last_token = str(path_tokens[-1]).lower()
+                if last_token == "recsys_type":
+                    client_crecsys = override.get("value")
+                elif last_token == "frecsys_type":
+                    client_frecsys = override.get("value")
         new_client = Client(
             name=source_client.name,
             descr=source_client.descr,
@@ -3370,12 +4350,22 @@ def _create_single_experiment_copy(source_exp, new_exp_name, exp_group=""):
             probability_of_secondary_follow=source_client.probability_of_secondary_follow,
             population_id=source_client.population_id,
             network_type=source_client.network_type,
-            crecsys=source_client.crecsys,
-            frecsys=source_client.frecsys,
+            crecsys=client_crecsys,
+            frecsys=client_frecsys,
             pid=None,  # No process ID yet
         )
         db.session.add(new_client)
         db.session.commit()
+
+        if population_name:
+            population_file_path = os.path.join(new_folder, f"{population_name}.json")
+            if population_file_path not in updated_population_files:
+                _matrix_apply_recsys_to_population_file(
+                    population_file_path,
+                    recsys_type=client_crecsys,
+                    frecsys_type=client_frecsys,
+                )
+                updated_population_files.add(population_file_path)
 
     # Note: Client_Execution entries are NOT copied - they will be created
     # when the client is first started, ensuring fresh execution state

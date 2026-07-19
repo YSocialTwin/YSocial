@@ -1444,8 +1444,13 @@ def _build_client_creation_context(idexp, recsys_mode):
 
     crecsys_all = Content_Recsys.query.all()
     frecsys_all = Follow_Recsys.query.all()
-    crecsys = [r for r in crecsys_all if r.enabled and recsys_mode in r.enabled]
-    frecsys = [r for r in frecsys_all if r.enabled and recsys_mode in r.enabled]
+    recsys_mode_lower = str(recsys_mode or "").lower()
+    crecsys = [
+        r for r in crecsys_all if r.enabled and recsys_mode_lower in r.enabled.lower()
+    ]
+    frecsys = [
+        r for r in frecsys_all if r.enabled and recsys_mode_lower in r.enabled.lower()
+    ]
 
     experiment_clock = {
         "mode": "simulated",

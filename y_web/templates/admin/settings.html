@@ -555,6 +555,53 @@
                             </form>
                         </div>
                     </div>
+
+                    <div id="box-experiment-matrix" class="dashboard-box ys-mt-15em">
+                        <h3 class="title is-5 is-thin">Experiment Matrix</h3>
+                        <div class="box-content">
+                            <form action="/admin/experiment_matrix" method="GET">
+                                <div class="box-lines">
+                                    <div class="box-line">
+                                        <span class="left">Source Experiment</span>
+                                        <span class="right ys-w-70">
+                                            <div class="select w-100">
+                                                <select id="matrix_source_exp_id" name="source_exp_id" class="w-100" required>
+                                                    <option value="">Select experiment...</option>
+                                                    {% for exp in all_experiments %}
+                                                    <option value="{{ exp.idexp }}">{{ exp.exp_name }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">Experiment Group</span>
+                                        <span class="right ys-w-70">
+                                            <input type="text"
+                                                   id="matrix_exp_group"
+                                                   name="exp_group"
+                                                   list="exp_groups_datalist_matrix"
+                                                   class="input"
+                                                   placeholder="Enter or select a group...">
+                                            <datalist id="exp_groups_datalist_matrix">
+                                                {% for group in exp_groups %}
+                                                <option value="{{ group }}">
+                                                {% endfor %}
+                                            </datalist>
+                                            <p class="ys-text-tiny-gray-mt">
+                                                Matrix-generated experiments are added to this group.
+                                            </p>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="button-wrap">
+                                    <button type="submit" class="button is-solid primary-button is-fullwidth">
+                                        Matrix
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
