@@ -3747,7 +3747,9 @@ def _matrix_override_alias(override):
         "type",
     }:
         return _matrix_preferred_slug_segment(display_label)
-    return _matrix_preferred_slug_segment(_matrix_path_alias(override.get("path_tokens") or []))
+    return _matrix_preferred_slug_segment(
+        _matrix_path_alias(override.get("path_tokens") or [])
+    )
 
 
 def _matrix_preferred_slug_segment(slug):
@@ -3788,7 +3790,9 @@ def _matrix_build_experiment_name(source_name, combo_overrides, max_length=50):
         packed_parts = []
         for alias, value in suffix_parts:
             alias_budget = max(4, min(len(alias), max(4, part_budget // 3 + 1)))
-            value_budget = max(3, min(len(value), max(3, part_budget - alias_budget - 1)))
+            value_budget = max(
+                3, min(len(value), max(3, part_budget - alias_budget - 1))
+            )
             compact_alias = _matrix_compact_slug(alias, alias_budget)
             compact_value = _matrix_compact_slug(value, value_budget)
             packed_part = f"{compact_alias}-{compact_value}".strip("-")
@@ -3810,7 +3814,9 @@ def _matrix_build_experiment_name(source_name, combo_overrides, max_length=50):
             return candidate
 
     if best_candidate:
-        return best_candidate[:max_length].rstrip("_-") or base[:max_length].rstrip("_-")
+        return best_candidate[:max_length].rstrip("_-") or base[:max_length].rstrip(
+            "_-"
+        )
     return base[:max_length].rstrip("_-") or "experiment"
 
 
@@ -4071,9 +4077,10 @@ def _matrix_apply_overrides_to_file(file_path, overrides):
             override.get("value_type"),
             reference_value,
         )
-        changed = _matrix_set_path(
-            data, override["path_tokens"], deepcopy(coerced_value)
-        ) or changed
+        changed = (
+            _matrix_set_path(data, override["path_tokens"], deepcopy(coerced_value))
+            or changed
+        )
 
     if changed:
         with open(file_path, "w", encoding="utf-8") as handle:
