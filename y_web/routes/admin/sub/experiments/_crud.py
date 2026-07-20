@@ -3074,6 +3074,10 @@ def experiment_matrix():
                 source_exp.exp_name,
                 overrides,
             )
+            new_exp_descr = _matrix_build_experiment_description(
+                source_exp,
+                overrides,
+            )
             base_candidate = new_exp_name
             name_suffix_index = 2
             while Exps.query.filter_by(exp_name=new_exp_name).first():
@@ -3087,6 +3091,7 @@ def experiment_matrix():
                 new_exp_name,
                 exp_group,
                 config_variations=overrides,
+                exp_descr=new_exp_descr,
             )
             if success:
                 created += 1
@@ -3668,6 +3673,26 @@ def _matrix_name_fragment(value):
     return text[:24] or "val"
 
 
+def _matrix_choice_fragment(choice, use_short_label=True):
+    """Build the fragment used for experiment names and descriptions."""
+    if not isinstance(choice, dict):
+        return _matrix_name_fragment(choice)
+
+    label = str(choice.get("value_label") or "").strip()
+    if label:
+        if use_short_label:
+            match = re.search(r"\(([^)]+)\)", label)
+            if match:
+                short_code = re.sub(r"[^A-Za-z0-9]+", "-", match.group(1)).strip("-")
+                if short_code:
+                    return short_code[:24].lower()
+        label_fragment = _matrix_name_fragment(label)
+        if label_fragment:
+            return label_fragment
+
+    return _matrix_name_fragment(choice.get("value"))
+
+
 def _matrix_humanize_identifier(value):
     """Convert a JSON key or identifier into a readable slug fragment."""
     text = str(value or "").strip()
@@ -3776,16 +3801,16 @@ def _matrix_preferred_slug_segment(slug):
 
 
 def _matrix_build_experiment_name(source_name, combo_overrides, max_length=50):
-    """Build an informative, bounded experiment name for one matrix combination."""
-    suffix_parts = []
-    for override in combo_overrides:
-        alias = _matrix_override_alias(override)
-        value_fragment = _matrix_name_fragment(override["value"])
-        suffix_parts.append((alias, value_fragment))
-
+    """Build a short, bounded experiment name for one matrix combination."""
     base = re.sub(r"\s+", "_", str(source_name or "").strip()) or "experiment"
     base = re.sub(r"[^A-Za-z0-9_]+", "_", base).strip("_") or "experiment"
-    suffix = "__".join(f"{alias}-{value}" for alias, value in suffix_parts)
+    suffix_parts = [
+        _matrix_choice_fragment(override, use_short_label=True)
+        for override in combo_overrides
+        if override
+    ]
+    suffix_parts = [part for part in suffix_parts if part]
+    suffix = "__".join(suffix_parts)
     candidate = f"{base}__{suffix}" if suffix else base
     if len(candidate) <= max_length:
         return candidate
@@ -3829,6 +3854,32 @@ def _matrix_build_experiment_name(source_name, combo_overrides, max_length=50):
             "_-"
         )
     return base[:max_length].rstrip("_-") or "experiment"
+
+
+def _matrix_build_experiment_description(source_exp, combo_overrides):
+    """Build a verbose description for the generated experiment."""
+    parts = []
+    for override in combo_overrides or []:
+        label = override.get("display_label") or _matrix_path_alias(
+            override.get("path_tokens") or []
+        )
+        value_fragment = str(
+            override.get("value_label")
+            if override.get("value_label") not in {None, ""}
+            else _matrix_format_value(override.get("value"))
+        ).strip()
+        if label and value_fragment:
+            parts.append(f"{label}: {value_fragment}")
+        elif value_fragment:
+            parts.append(value_fragment)
+
+    matrix_summary = "; ".join(parts)
+    source_descr = str(getattr(source_exp, "exp_descr", "") or "").strip()
+    if source_descr and matrix_summary:
+        return f"{source_descr}\n\nMatrix variations: {matrix_summary}"
+    if matrix_summary:
+        return f"Matrix variations: {matrix_summary}"
+    return source_descr
 
 
 def _matrix_collect_config_reports(exp, exp_folder):
@@ -4161,14 +4212,24 @@ def _matrix_parse_variation_payload(payload):
         file_name = str(item.get("file_name") or "").strip()
         path_tokens = item.get("path_tokens") or []
         values = item.get("values") or []
+        value_labels = item.get("value_labels") or []
         if not file_name or not isinstance(path_tokens, list) or not values:
             continue
+        choices = []
+        for index, value in enumerate(values):
+            choices.append(
+                {
+                    "value": value,
+                    "value_label": value_labels[index] if index < len(value_labels) else None,
+                }
+            )
         parsed_items.append(
             {
                 "file_name": file_name,
                 "path_tokens": path_tokens,
                 "display_label": str(item.get("display_label") or "").strip() or None,
                 "values": values,
+                "choices": choices,
                 "value_type": str(item.get("value_type") or "").strip() or None,
                 "can_unlock": bool(item.get("can_unlock", True)),
             }
@@ -4180,7 +4241,7 @@ def _matrix_build_combinations(variation_items):
     """Return cartesian-product combinations for the unlocked matrix rows."""
     if not variation_items:
         return [()]
-    return list(product(*[item["values"] for item in variation_items]))
+    return list(product(*[item["choices"] for item in variation_items]))
 
 
 def _matrix_build_override_sets(variation_items, cartesian_mode=True):
@@ -4196,21 +4257,28 @@ def _matrix_build_override_sets(variation_items, cartesian_mode=True):
 
     override_sets = []
     for item in variation_items:
-        for value in item["values"]:
-            override_sets.append(_matrix_prepare_override_map([item], (value,)))
+        for choice in item["choices"]:
+            override_sets.append(_matrix_prepare_override_map([item], (choice,)))
     return override_sets
 
 
 def _matrix_prepare_override_map(variation_items, combo_values):
     """Bind a product tuple back to the original variation definitions."""
     overrides = []
-    for item, value in zip(variation_items, combo_values):
+    for item, choice in zip(variation_items, combo_values):
+        if isinstance(choice, dict):
+            value = choice.get("value")
+            value_label = choice.get("value_label")
+        else:
+            value = choice
+            value_label = None
         overrides.append(
             {
                 "file_name": item["file_name"],
                 "path_tokens": item["path_tokens"],
                 "display_label": item.get("display_label"),
                 "value": value,
+                "value_label": value_label,
                 "value_type": item.get("value_type"),
             }
         )
@@ -4226,7 +4294,7 @@ def _matrix_override_index(overrides):
 
 
 def _create_single_experiment_copy(
-    source_exp, new_exp_name, exp_group="", config_variations=None
+    source_exp, new_exp_name, exp_group="", config_variations=None, exp_descr=None
 ):
     """
     Helper function to create a single experiment copy.
@@ -4236,6 +4304,7 @@ def _create_single_experiment_copy(
         new_exp_name: Name for the new experiment
         exp_group: Group name for the experiment (optional)
         config_variations: Optional list of per-file JSON overrides
+        exp_descr: Optional description for the new experiment
 
     Returns:
         bool: True if successful, False otherwise
@@ -4579,7 +4648,7 @@ def _create_single_experiment_copy(
         platform_type=source_exp.platform_type,
         db_name=new_db_name,
         owner=current_user.username,
-        exp_descr=source_exp.exp_descr,
+        exp_descr=exp_descr if exp_descr is not None else source_exp.exp_descr,
         status=0,  # Not loaded
         running=0,  # Not running
         port=suggested_port,

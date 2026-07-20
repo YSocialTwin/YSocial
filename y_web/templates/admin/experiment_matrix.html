@@ -650,7 +650,7 @@
                                                             {% endif %}
                                                         </span>
                                                         <span class="matrix-switch">
-                                                            <input type="checkbox" class="matrix-recsys-toggle matrix-switch-input" data-value='{{ option.name|tojson }}' checked>
+                                                            <input type="checkbox" class="matrix-recsys-toggle matrix-switch-input" data-value='{{ option.name|tojson }}' data-label='{{ (option.label or option.name)|tojson }}' checked>
                                                             <span class="matrix-switch-track" aria-hidden="true"></span>
                                                         </span>
                                                     </label>
@@ -1101,11 +1101,17 @@
                 return;
             }
             let values = [];
+            let valueLabels = [];
             if (elements.mode === 'recsys') {
-                values = elements.optionToggles
-                    .filter(optionToggle => optionToggle.checked)
-                    .map(optionToggle => parseTagValue(optionToggle.dataset.value || optionToggle.value || ''))
-                    .filter(value => value !== null && value !== undefined && String(value).trim?.() !== '');
+                const selectedOptions = elements.optionToggles.filter(optionToggle => optionToggle.checked);
+                const recsysChoices = selectedOptions
+                    .map(optionToggle => ({
+                        value: parseTagValue(optionToggle.dataset.value || optionToggle.value || ''),
+                        label: optionToggle.dataset.label || optionToggle.getAttribute('data-label') || optionToggle.title || '',
+                    }))
+                    .filter(choice => choice.value !== null && choice.value !== undefined && String(choice.value).trim?.() !== '');
+                values = recsysChoices.map(choice => choice.value);
+                valueLabels = recsysChoices.map(choice => choice.label);
             } else {
                 values = Array.from(elements.list.querySelectorAll('.matrix-tag-chip')).map(chip => {
                     const raw = chip.dataset.value || chip.textContent || '';
@@ -1122,6 +1128,7 @@
                 display_label: row.dataset.displayLabel || null,
                 value_type: row.dataset.valueType || null,
                 values: values,
+                value_labels: valueLabels,
                 can_unlock: true
             });
         });
