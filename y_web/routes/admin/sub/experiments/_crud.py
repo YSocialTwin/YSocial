@@ -3019,8 +3019,8 @@ def experiment_matrix():
         exp_group = (request.form.get("exp_group") or "").strip()
         variation_payload = request.form.get("variation_payload") or "[]"
         generation_mode = (
-            request.form.get("generation_mode") or "independent"
-        ).strip().lower()
+            (request.form.get("generation_mode") or "independent").strip().lower()
+        )
         cartesian_mode = generation_mode in {
             "cartesian",
             "cartesian_product",
