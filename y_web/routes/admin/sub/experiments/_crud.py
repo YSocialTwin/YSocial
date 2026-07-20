@@ -4220,7 +4220,9 @@ def _matrix_parse_variation_payload(payload):
             choices.append(
                 {
                     "value": value,
-                    "value_label": value_labels[index] if index < len(value_labels) else None,
+                    "value_label": (
+                        value_labels[index] if index < len(value_labels) else None
+                    ),
                 }
             )
         parsed_items.append(
