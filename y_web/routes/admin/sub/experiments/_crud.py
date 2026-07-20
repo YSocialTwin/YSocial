@@ -3018,6 +3018,15 @@ def experiment_matrix():
         source_exp_id = request.form.get("source_exp_id", type=int)
         exp_group = (request.form.get("exp_group") or "").strip()
         variation_payload = request.form.get("variation_payload") or "[]"
+        generation_mode = (
+            request.form.get("generation_mode") or "independent"
+        ).strip().lower()
+        cartesian_mode = generation_mode in {
+            "cartesian",
+            "cartesian_product",
+            "product",
+            "cross",
+        }
         source_exp = (
             Exps.query.filter_by(idexp=source_exp_id).first()
             if source_exp_id and source_exp_id in visible_exp_ids
@@ -3052,13 +3061,15 @@ def experiment_matrix():
                         exp_group=exp_group,
                     )
                 )
-            combinations = _matrix_build_combinations(unlocked_items)
+            override_sets = _matrix_build_override_sets(
+                unlocked_items,
+                cartesian_mode=cartesian_mode,
+            )
         else:
-            combinations = [()]
+            override_sets = [[]]
 
         created = 0
-        for combo_index, combo_values in enumerate(combinations, start=1):
-            overrides = _matrix_prepare_override_map(unlocked_items, combo_values)
+        for combo_index, overrides in enumerate(override_sets, start=1):
             new_exp_name = _matrix_build_experiment_name(
                 source_exp.exp_name,
                 overrides,
@@ -4170,6 +4181,24 @@ def _matrix_build_combinations(variation_items):
     if not variation_items:
         return [()]
     return list(product(*[item["values"] for item in variation_items]))
+
+
+def _matrix_build_override_sets(variation_items, cartesian_mode=True):
+    """Expand unlocked rows into concrete override sets for experiment creation."""
+    if not variation_items:
+        return [[]]
+
+    if cartesian_mode:
+        return [
+            _matrix_prepare_override_map(variation_items, combo_values)
+            for combo_values in _matrix_build_combinations(variation_items)
+        ]
+
+    override_sets = []
+    for item in variation_items:
+        for value in item["values"]:
+            override_sets.append(_matrix_prepare_override_map([item], (value,)))
+    return override_sets
 
 
 def _matrix_prepare_override_map(variation_items, combo_values):

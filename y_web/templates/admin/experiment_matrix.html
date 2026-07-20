@@ -412,6 +412,37 @@
     gap: 0.9rem;
     align-items: center;
 }
+.matrix-footer-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.9rem;
+    flex-wrap: wrap;
+}
+.matrix-generation-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #dbeafe;
+    border-radius: 14px;
+    background: #f8fbff;
+    min-width: 0;
+}
+.matrix-generation-toggle .label-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+.matrix-generation-toggle .label-title {
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: #1f2937;
+}
+.matrix-generation-toggle .label-subtitle {
+    font-size: 0.72rem;
+    color: #64748b;
+}
 
 @media (max-width: 900px) {
     .matrix-report-grid {
@@ -438,6 +469,10 @@
 
     .matrix-footer-grid {
         grid-template-columns: 1fr;
+    }
+
+    .matrix-footer-actions {
+        justify-content: flex-start;
     }
 }
 
@@ -781,12 +816,25 @@
                         <div>
                             <div class="matrix-count">Total configurations: <span id="matrix-total-configs-inline">1</span></div>
                             <div class="matrix-hint">
-                                Unlock a feature and provide one value per line to include it in the Cartesian product.
+                                Unlock a feature and provide alternative values. Turn Cartesian mode on to combine all enabled features; leave it off to generate independent variants one feature at a time.
                             </div>
                             <div id="matrix-warning" class="matrix-warning" style="display:none;"></div>
                         </div>
-                        <div style="min-width: 220px;">
-                            <button id="matrix-submit-btn" type="submit" class="button is-primary is-fullwidth" disabled>Generate Experiments</button>
+                        <div class="matrix-footer-actions">
+                            <input type="hidden" id="generation_mode" name="generation_mode" value="independent">
+                            <label class="matrix-generation-toggle">
+                                <span class="label-stack">
+                                    <span class="label-title">Cartesian product</span>
+                                    <span class="label-subtitle">Combine all enabled features</span>
+                                </span>
+                                <span class="matrix-switch">
+                                    <input type="checkbox" id="matrix-generation-toggle" class="matrix-switch-input">
+                                    <span class="matrix-switch-track" aria-hidden="true"></span>
+                                </span>
+                            </label>
+                            <div style="min-width: 220px;">
+                                <button id="matrix-submit-btn" type="submit" class="button is-primary is-fullwidth" disabled>Generate Experiments</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -813,6 +861,8 @@
     const form = document.getElementById('matrix-form');
     const submitBtn = document.getElementById('matrix-submit-btn');
     const payloadEl = document.getElementById('variation_payload');
+    const generationToggle = document.getElementById('matrix-generation-toggle');
+    const generationModeEl = document.getElementById('generation_mode');
 
     function parseMatrixValues(raw) {
         return raw
@@ -848,6 +898,16 @@
             return JSON.stringify(value);
         } catch (err) {
             return String(value);
+        }
+    }
+
+    function getGenerationMode() {
+        return generationToggle && generationToggle.checked ? 'cartesian' : 'independent';
+    }
+
+    function syncGenerationMode() {
+        if (generationModeEl) {
+            generationModeEl.value = getGenerationMode();
         }
     }
 
@@ -991,10 +1051,11 @@
     }
 
     function recalculateMatrix() {
-        let total = 1;
+        let total = getGenerationMode() === 'cartesian' ? 1 : 0;
         let unlockedCount = 0;
         let valid = true;
         let message = '';
+        const cartesianMode = getGenerationMode() === 'cartesian';
 
         rows.forEach(row => {
             const state = updateRowState(row);
@@ -1005,7 +1066,7 @@
             if (!state.valid) {
                 valid = false;
             } else {
-                total *= state.count;
+                total = cartesianMode ? total * state.count : total + state.count;
             }
         });
 
@@ -1025,6 +1086,7 @@
         if (submitBtn) {
             submitBtn.disabled = unlockedCount === 0 || !valid;
         }
+        syncGenerationMode();
         return { total, valid };
     }
 
@@ -1103,8 +1165,13 @@
         }
     });
 
+    if (generationToggle) {
+        generationToggle.addEventListener('change', recalculateMatrix);
+    }
+
     if (form) {
         form.addEventListener('submit', function(event) {
+            syncGenerationMode();
             if (!buildPayload()) {
                 event.preventDefault();
                 recalculateMatrix();
