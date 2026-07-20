@@ -3693,6 +3693,22 @@ def _matrix_choice_fragment(choice, use_short_label=True):
     return _matrix_name_fragment(choice.get("value"))
 
 
+def _matrix_is_recsys_override(override):
+    """Return True when the override targets a recsys choice."""
+    if not isinstance(override, dict):
+        return False
+    path_tokens = override.get("path_tokens") or []
+    if path_tokens:
+        last_token = str(path_tokens[-1]).strip().lower()
+        if last_token in {"recsys_type", "frecsys_type"}:
+            return True
+    label = str(override.get("display_label") or "").strip().lower()
+    if "recsys" in label:
+        return True
+    value_label = str(override.get("value_label") or "").strip()
+    return bool(re.search(r"\([^)]+\)", value_label))
+
+
 def _matrix_humanize_identifier(value):
     """Convert a JSON key or identifier into a readable slug fragment."""
     text = str(value or "").strip()
@@ -3804,10 +3820,13 @@ def _matrix_build_experiment_name(source_name, combo_overrides, max_length=50):
     """Build a short, bounded experiment name for one matrix combination."""
     base = re.sub(r"\s+", "_", str(source_name or "").strip()) or "experiment"
     base = re.sub(r"[^A-Za-z0-9_]+", "_", base).strip("_") or "experiment"
+    ordered_overrides = sorted(
+        [override for override in combo_overrides if override],
+        key=lambda override: (0 if _matrix_is_recsys_override(override) else 1),
+    )
     suffix_parts = [
         _matrix_choice_fragment(override, use_short_label=True)
-        for override in combo_overrides
-        if override
+        for override in ordered_overrides
     ]
     suffix_parts = [part for part in suffix_parts if part]
     suffix = "__".join(suffix_parts)
