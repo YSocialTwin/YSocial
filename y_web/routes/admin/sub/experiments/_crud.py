@@ -4217,7 +4217,9 @@ def _matrix_apply_recsys_to_population_file(
     return changed
 
 
-def _matrix_sync_client_record_from_config(client_record, client_config, fallback_source):
+def _matrix_sync_client_record_from_config(
+    client_record, client_config, fallback_source
+):
     """Copy editable client fields from the final config into the DB client row."""
     if client_record is None or not isinstance(client_config, dict):
         return client_record
@@ -4283,22 +4285,47 @@ def _matrix_sync_client_record_from_config(client_record, client_config, fallbac
         ],
         "follow": [("simulation", "actions_likelihood", "follow"), ("follow",)],
         "llm": [("llm", "model"), ("servers", "llm"), ("llm",)],
-        "llm_api_key": [("llm", "llm_api_key"), ("servers", "llm_api_key"), ("llm_api_key",)],
+        "llm_api_key": [
+            ("llm", "llm_api_key"),
+            ("servers", "llm_api_key"),
+            ("llm_api_key",),
+        ],
         "llm_max_tokens": [
             ("llm", "max_tokens"),
             ("servers", "llm_max_tokens"),
             ("llm_max_tokens",),
         ],
-        "llm_temperature": [("llm", "temperature"), ("servers", "llm_temperature"), ("llm_temperature",)],
-        "llm_v_agent": [("llm_v", "model"), ("agents", "llm_v_agent"), ("llm_v_agent",)],
-        "llm_v": [("llm_v", "address"), ("servers", "llm_v"), ("llm_v",), ("llm_v_address",)],
-        "llm_v_api_key": [("llm_v", "llm_api_key"), ("servers", "llm_v_api_key"), ("llm_v_api_key",)],
+        "llm_temperature": [
+            ("llm", "temperature"),
+            ("servers", "llm_temperature"),
+            ("llm_temperature",),
+        ],
+        "llm_v_agent": [
+            ("llm_v", "model"),
+            ("agents", "llm_v_agent"),
+            ("llm_v_agent",),
+        ],
+        "llm_v": [
+            ("llm_v", "address"),
+            ("servers", "llm_v"),
+            ("llm_v",),
+            ("llm_v_address",),
+        ],
+        "llm_v_api_key": [
+            ("llm_v", "llm_api_key"),
+            ("servers", "llm_v_api_key"),
+            ("llm_v_api_key",),
+        ],
         "llm_v_max_tokens": [
             ("llm_v", "max_tokens"),
             ("servers", "llm_v_max_tokens"),
             ("llm_v_max_tokens",),
         ],
-        "llm_v_temperature": [("llm_v", "temperature"), ("servers", "llm_v_temperature"), ("llm_v_temperature",)],
+        "llm_v_temperature": [
+            ("llm_v", "temperature"),
+            ("servers", "llm_v_temperature"),
+            ("llm_v_temperature",),
+        ],
         "archetype_validator": [
             ("simulation", "agent_archetypes", "distribution", "validator"),
             ("agent_archetypes", "distribution", "validator"),
@@ -4320,7 +4347,13 @@ def _matrix_sync_client_record_from_config(client_record, client_config, fallbac
             ("trans_val_val",),
         ],
         "trans_val_broad": [
-            ("simulation", "agent_archetypes", "transitions", "validator", "broadcaster"),
+            (
+                "simulation",
+                "agent_archetypes",
+                "transitions",
+                "validator",
+                "broadcaster",
+            ),
             ("agent_archetypes", "transitions", "validator", "broadcaster"),
             ("trans_val_broad",),
         ],
@@ -4330,17 +4363,35 @@ def _matrix_sync_client_record_from_config(client_record, client_config, fallbac
             ("trans_val_expl",),
         ],
         "trans_broad_broad": [
-            ("simulation", "agent_archetypes", "transitions", "broadcaster", "broadcaster"),
+            (
+                "simulation",
+                "agent_archetypes",
+                "transitions",
+                "broadcaster",
+                "broadcaster",
+            ),
             ("agent_archetypes", "transitions", "broadcaster", "broadcaster"),
             ("trans_broad_broad",),
         ],
         "trans_broad_val": [
-            ("simulation", "agent_archetypes", "transitions", "broadcaster", "validator"),
+            (
+                "simulation",
+                "agent_archetypes",
+                "transitions",
+                "broadcaster",
+                "validator",
+            ),
             ("agent_archetypes", "transitions", "broadcaster", "validator"),
             ("trans_broad_val",),
         ],
         "trans_broad_expl": [
-            ("simulation", "agent_archetypes", "transitions", "broadcaster", "explorer"),
+            (
+                "simulation",
+                "agent_archetypes",
+                "transitions",
+                "broadcaster",
+                "explorer",
+            ),
             ("agent_archetypes", "transitions", "broadcaster", "explorer"),
             ("trans_broad_expl",),
         ],
@@ -4355,7 +4406,13 @@ def _matrix_sync_client_record_from_config(client_record, client_config, fallbac
             ("trans_expl_val",),
         ],
         "trans_expl_broad": [
-            ("simulation", "agent_archetypes", "transitions", "explorer", "broadcaster"),
+            (
+                "simulation",
+                "agent_archetypes",
+                "transitions",
+                "explorer",
+                "broadcaster",
+            ),
             ("agent_archetypes", "transitions", "explorer", "broadcaster"),
             ("trans_expl_broad",),
         ],
@@ -4363,8 +4420,10 @@ def _matrix_sync_client_record_from_config(client_record, client_config, fallbac
 
     source_ref = fallback_source if isinstance(fallback_source, Client) else None
     for attr_name, candidate_paths in field_paths.items():
-        reference_value = getattr(source_ref, attr_name, None) if source_ref else getattr(
-            client_record, attr_name, None
+        reference_value = (
+            getattr(source_ref, attr_name, None)
+            if source_ref
+            else getattr(client_record, attr_name, None)
         )
         selected_value = None
         for path_tokens in candidate_paths:
