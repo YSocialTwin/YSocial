@@ -4217,6 +4217,170 @@ def _matrix_apply_recsys_to_population_file(
     return changed
 
 
+def _matrix_sync_client_record_from_config(client_record, client_config, fallback_source):
+    """Copy editable client fields from the final config into the DB client row."""
+    if client_record is None or not isinstance(client_config, dict):
+        return client_record
+
+    field_paths = {
+        "days": [
+            ("simulation", "num_days"),
+            ("simulation", "days"),
+            ("num_days",),
+            ("days",),
+        ],
+        "percentage_new_agents_iteration": [
+            ("simulation", "percentage_new_agents_iteration"),
+            ("agents", "new_agents", "percentage_new_agents"),
+            ("agents", "new_agents", "probability_new_agents"),
+            ("percentage_new_agents_iteration",),
+        ],
+        "percentage_removed_agents_iteration": [
+            ("simulation", "percentage_removed_agents_iteration"),
+            ("agents", "churn", "churn_percentage"),
+            ("agents", "churn", "churn_probability"),
+            ("percentage_removed_agents_iteration",),
+        ],
+        "max_length_thread_reading": [
+            ("agents", "max_length_thread_reading"),
+            ("max_length_thread_reading",),
+        ],
+        "reading_from_follower_ratio": [
+            ("agents", "reading_from_follower_ratio"),
+            ("reading_from_follower_ratio",),
+        ],
+        "probability_of_daily_follow": [
+            ("agents", "probability_of_daily_follow"),
+            ("probability_of_daily_follow",),
+        ],
+        "probability_of_secondary_follow": [
+            ("agents", "probability_of_secondary_follow"),
+            ("probability_of_secondary_follow",),
+        ],
+        "attention_window": [
+            ("agents", "attention_window"),
+            ("attention_window",),
+        ],
+        "visibility_rounds": [
+            ("agents", "visibility_rounds"),
+            ("visibility_rounds",),
+        ],
+        "post": [("simulation", "actions_likelihood", "post"), ("post",)],
+        "share": [("simulation", "actions_likelihood", "share"), ("share",)],
+        "image": [("simulation", "actions_likelihood", "image"), ("image",)],
+        "comment": [("simulation", "actions_likelihood", "comment"), ("comment",)],
+        "read": [("simulation", "actions_likelihood", "read"), ("read",)],
+        "news": [("simulation", "actions_likelihood", "news"), ("news",)],
+        "search": [("simulation", "actions_likelihood", "search"), ("search",)],
+        "vote": [
+            ("simulation", "actions_likelihood", "cast"),
+            ("simulation", "actions_likelihood", "vote"),
+            ("vote",),
+        ],
+        "share_link": [
+            ("simulation", "actions_likelihood", "share_link"),
+            ("share_link",),
+        ],
+        "follow": [("simulation", "actions_likelihood", "follow"), ("follow",)],
+        "llm": [("llm", "model"), ("servers", "llm"), ("llm",)],
+        "llm_api_key": [("llm", "llm_api_key"), ("servers", "llm_api_key"), ("llm_api_key",)],
+        "llm_max_tokens": [
+            ("llm", "max_tokens"),
+            ("servers", "llm_max_tokens"),
+            ("llm_max_tokens",),
+        ],
+        "llm_temperature": [("llm", "temperature"), ("servers", "llm_temperature"), ("llm_temperature",)],
+        "llm_v_agent": [("llm_v", "model"), ("agents", "llm_v_agent"), ("llm_v_agent",)],
+        "llm_v": [("llm_v", "address"), ("servers", "llm_v"), ("llm_v",), ("llm_v_address",)],
+        "llm_v_api_key": [("llm_v", "llm_api_key"), ("servers", "llm_v_api_key"), ("llm_v_api_key",)],
+        "llm_v_max_tokens": [
+            ("llm_v", "max_tokens"),
+            ("servers", "llm_v_max_tokens"),
+            ("llm_v_max_tokens",),
+        ],
+        "llm_v_temperature": [("llm_v", "temperature"), ("servers", "llm_v_temperature"), ("llm_v_temperature",)],
+        "archetype_validator": [
+            ("simulation", "agent_archetypes", "distribution", "validator"),
+            ("agent_archetypes", "distribution", "validator"),
+            ("archetype_validator",),
+        ],
+        "archetype_broadcaster": [
+            ("simulation", "agent_archetypes", "distribution", "broadcaster"),
+            ("agent_archetypes", "distribution", "broadcaster"),
+            ("archetype_broadcaster",),
+        ],
+        "archetype_explorer": [
+            ("simulation", "agent_archetypes", "distribution", "explorer"),
+            ("agent_archetypes", "distribution", "explorer"),
+            ("archetype_explorer",),
+        ],
+        "trans_val_val": [
+            ("simulation", "agent_archetypes", "transitions", "validator", "validator"),
+            ("agent_archetypes", "transitions", "validator", "validator"),
+            ("trans_val_val",),
+        ],
+        "trans_val_broad": [
+            ("simulation", "agent_archetypes", "transitions", "validator", "broadcaster"),
+            ("agent_archetypes", "transitions", "validator", "broadcaster"),
+            ("trans_val_broad",),
+        ],
+        "trans_val_expl": [
+            ("simulation", "agent_archetypes", "transitions", "validator", "explorer"),
+            ("agent_archetypes", "transitions", "validator", "explorer"),
+            ("trans_val_expl",),
+        ],
+        "trans_broad_broad": [
+            ("simulation", "agent_archetypes", "transitions", "broadcaster", "broadcaster"),
+            ("agent_archetypes", "transitions", "broadcaster", "broadcaster"),
+            ("trans_broad_broad",),
+        ],
+        "trans_broad_val": [
+            ("simulation", "agent_archetypes", "transitions", "broadcaster", "validator"),
+            ("agent_archetypes", "transitions", "broadcaster", "validator"),
+            ("trans_broad_val",),
+        ],
+        "trans_broad_expl": [
+            ("simulation", "agent_archetypes", "transitions", "broadcaster", "explorer"),
+            ("agent_archetypes", "transitions", "broadcaster", "explorer"),
+            ("trans_broad_expl",),
+        ],
+        "trans_expl_expl": [
+            ("simulation", "agent_archetypes", "transitions", "explorer", "explorer"),
+            ("agent_archetypes", "transitions", "explorer", "explorer"),
+            ("trans_expl_expl",),
+        ],
+        "trans_expl_val": [
+            ("simulation", "agent_archetypes", "transitions", "explorer", "validator"),
+            ("agent_archetypes", "transitions", "explorer", "validator"),
+            ("trans_expl_val",),
+        ],
+        "trans_expl_broad": [
+            ("simulation", "agent_archetypes", "transitions", "explorer", "broadcaster"),
+            ("agent_archetypes", "transitions", "explorer", "broadcaster"),
+            ("trans_expl_broad",),
+        ],
+    }
+
+    source_ref = fallback_source if isinstance(fallback_source, Client) else None
+    for attr_name, candidate_paths in field_paths.items():
+        reference_value = getattr(source_ref, attr_name, None) if source_ref else getattr(
+            client_record, attr_name, None
+        )
+        selected_value = None
+        for path_tokens in candidate_paths:
+            selected_value = _matrix_get_path(client_config, path_tokens)
+            if selected_value is not None:
+                break
+        if selected_value is None:
+            selected_value = getattr(client_record, attr_name, None)
+        coerced_value = _matrix_coerce_value_type(
+            selected_value,
+            reference_value=reference_value,
+        )
+        setattr(client_record, attr_name, coerced_value)
+    return client_record
+
+
 def _matrix_parse_variation_payload(payload):
     """Parse the form payload submitted from the experiment matrix page."""
     try:
@@ -4722,6 +4886,7 @@ def _create_single_experiment_copy(
         population = Population.query.filter_by(id=source_client.population_id).first()
         population_name = (population.name if population else "").strip()
         candidate_files = _matrix_client_file_candidates(source_client, population_name)
+        client_config_path = None
         matched_file_name = next(
             (
                 candidate
@@ -4730,6 +4895,14 @@ def _create_single_experiment_copy(
             ),
             None,
         )
+        if matched_file_name:
+            client_config_path = os.path.join(new_folder, matched_file_name)
+        else:
+            for candidate in candidate_files:
+                candidate_path = os.path.join(new_folder, candidate)
+                if os.path.exists(candidate_path):
+                    client_config_path = candidate_path
+                    break
         client_crecsys = source_client.crecsys
         client_frecsys = source_client.frecsys
         if matched_file_name:
@@ -4779,6 +4952,20 @@ def _create_single_experiment_copy(
             crecsys=client_crecsys,
             frecsys=client_frecsys,
             pid=None,  # No process ID yet
+        )
+        synced_client_config = None
+        if client_config_path and os.path.exists(client_config_path):
+            try:
+                with open(client_config_path, "r", encoding="utf-8") as f:
+                    synced_client_config = json.load(f)
+            except Exception:
+                synced_client_config = None
+        if synced_client_config is None:
+            synced_client_config = client_config
+        _matrix_sync_client_record_from_config(
+            new_client,
+            synced_client_config,
+            source_client,
         )
         db.session.add(new_client)
         db.session.commit()

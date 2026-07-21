@@ -272,6 +272,33 @@
     font-size: 0.84rem;
     font-weight: 600;
 }
+.matrix-boolean-options {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 0;
+}
+.matrix-boolean-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #1d4ed8;
+}
+.matrix-boolean-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    background: #dbeafe;
+    color: #1d4ed8;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
 .matrix-current-badge {
     display: inline-flex;
     align-items: center;
@@ -606,7 +633,8 @@
 
                 {% macro render_leaf(feature, label=None, depth=0) %}
                     {% set allow_custom_values = feature.allow_custom_values if feature.allow_custom_values is defined else True %}
-                    {% set editor_mode = feature.editor_mode if feature.editor_mode is defined else 'tags' %}
+                    {% set value_type = (feature.value_type or '')|string|lower %}
+                    {% set editor_mode = feature.editor_mode if feature.editor_mode is defined else ('boolean' if value_type in ['bool', 'boolean'] else 'tags') %}
                     <div class="taxonomy-leaf matrix-feature-row taxonomy-depth-{{ depth }}"
                          data-file-name="{{ feature.file_name }}"
                          data-path-tokens='{{ feature.path_tokens|tojson }}'
@@ -614,6 +642,7 @@
                          data-value-type="{{ feature.value_type }}"
                          data-allow-custom-values="{{ 1 if allow_custom_values else 0 }}"
                          data-editor-mode="{{ editor_mode }}"
+                         data-current-value='{{ feature.value|tojson }}'
                          data-can-unlock="1">
                         <div class="taxonomy-leaf-header">
                             <div class="taxonomy-leaf-title">
@@ -655,6 +684,20 @@
                                                         </span>
                                                     </label>
                                                 {% endfor %}
+                                            </div>
+                                        {% elif editor_mode == 'boolean' %}
+                                            {% set current_bool = feature.value|string|lower in ['true', '1', 'yes', 'on'] %}
+                                            <div class="matrix-boolean-options" aria-live="polite">
+                                                <span class="matrix-boolean-label">
+                                                    <span class="matrix-boolean-pill">False</span>
+                                                </span>
+                                                <label class="matrix-switch" title="Toggle the generated value between false and true">
+                                                    <input type="checkbox" class="matrix-boolean-toggle matrix-switch-input" data-value-true="true" data-value-false="false" {% if current_bool %}checked{% endif %}>
+                                                    <span class="matrix-switch-track" aria-hidden="true"></span>
+                                                </label>
+                                                <span class="matrix-boolean-label">
+                                                    <span class="matrix-boolean-pill">True</span>
+                                                </span>
                                             </div>
                                         {% else %}
                                             <div class="matrix-tag-list" aria-live="polite">
@@ -925,6 +968,7 @@
             addButton: editor.querySelector('.matrix-tag-add'),
             hidden: editor.querySelector('.matrix-values'),
             optionToggles: Array.from(editor.querySelectorAll('.matrix-recsys-toggle')),
+            booleanToggle: editor.querySelector('.matrix-boolean-toggle'),
         };
     }
 
@@ -956,6 +1000,22 @@
                 count: values.length,
                 valid: values.length > 0,
                 values,
+            };
+        }
+
+        if (elements.mode === 'boolean') {
+            const boolValue = !!(elements.booleanToggle && elements.booleanToggle.checked);
+            if (elements.hidden) {
+                elements.hidden.value = JSON.stringify([boolValue]);
+            }
+            if (!unlocked) {
+                return { unlocked: false, count: 1, valid: true };
+            }
+            return {
+                unlocked: true,
+                count: 1,
+                valid: true,
+                values: [boolValue],
             };
         }
 
@@ -1006,7 +1066,13 @@
 
     function addTag(row, rawValue) {
         const elements = getEditorElements(row);
-        if (!elements || elements.mode === 'recsys' || !elements.list || !elements.input) {
+        if (
+            !elements ||
+            elements.mode === 'recsys' ||
+            elements.mode === 'boolean' ||
+            !elements.list ||
+            !elements.input
+        ) {
             return false;
         }
         const parsed = parseTagValue(rawValue);
@@ -1112,6 +1178,10 @@
                     .filter(choice => choice.value !== null && choice.value !== undefined && String(choice.value).trim?.() !== '');
                 values = recsysChoices.map(choice => choice.value);
                 valueLabels = recsysChoices.map(choice => choice.label);
+            } else if (elements.mode === 'boolean') {
+                const boolValue = !!(elements.booleanToggle && elements.booleanToggle.checked);
+                values = [boolValue];
+                valueLabels = [String(boolValue)];
             } else {
                 values = Array.from(elements.list.querySelectorAll('.matrix-tag-chip')).map(chip => {
                     const raw = chip.dataset.value || chip.textContent || '';
@@ -1146,6 +1216,10 @@
                 elements.optionToggles.forEach(function(optionToggle) {
                     optionToggle.addEventListener('change', recalculateMatrix);
                 });
+            } else if (elements.mode === 'boolean') {
+                if (elements.booleanToggle) {
+                    elements.booleanToggle.addEventListener('change', recalculateMatrix);
+                }
             } else if (elements.input) {
                 elements.input.addEventListener('keydown', function(event) {
                     if (event.key === 'Enter' || event.key === ',') {
