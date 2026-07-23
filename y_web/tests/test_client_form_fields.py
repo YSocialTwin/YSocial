@@ -226,7 +226,7 @@ class TestClientFormFields:
 
         assert 'name="follow"' in template_source
         assert "Global Actions Likelihood" in template_source
-        assert 'current_follow' in template_source
+        assert "current_follow" in template_source
         assert 'client.follow = _float("follow", client.follow)' in crud_source
         assert '"follow": client.follow' in crud_source
 
