@@ -206,10 +206,10 @@ def test_matrix_client_network_type_preserved_when_csv_exists(tmp_path):
     folder.mkdir()
     (folder / "client_alpha_network.csv").write_text("Alice,Bob\n", encoding="utf-8")
 
-    assert _matrix_client_network_type("client_alpha", "", str(folder)) == "Custom Network"
     assert (
-        _matrix_client_network_type("client_alpha", "ER", str(folder)) == "ER"
+        _matrix_client_network_type("client_alpha", "", str(folder)) == "Custom Network"
     )
+    assert _matrix_client_network_type("client_alpha", "ER", str(folder)) == "ER"
 
     renamed_folder = tmp_path / "clone2"
     renamed_folder.mkdir()
