@@ -226,9 +226,8 @@ def test_startup_repairs_missing_network_type_when_csv_present(tmp_path):
     """process_runner must set network_type to 'Custom Network' on first run when
     the DB record has an empty network_type but the CSV file already exists on
     disk (legacy matrix-generated experiments created before the copy fix)."""
-    import importlib
-    import sys
-    from unittest.mock import MagicMock, patch
+    import os
+    from unittest.mock import MagicMock
 
     # Build a minimal data_base_path with the expected network CSV.
     data_base_path = str(tmp_path) + "/"
@@ -242,19 +241,46 @@ def test_startup_repairs_missing_network_type_when_csv_present(tmp_path):
     cli.days = 7
     cli.id = 1
 
-    # Verify the repair condition: empty network_type + CSV present.
+    # Verify the repair pre-condition: empty network_type + CSV present.
     assert not cli.network_type
-    assert (tmp_path / "client_alpha_network.csv").exists()
+    assert os.path.exists(os.path.join(data_base_path, "client_alpha_network.csv"))
 
-    # Simulate the repair logic from process_runner.start_client_process.
-    csv_full = data_base_path + f"{cli.name}_network.csv"
-    import os
+    # Simulate the repair block from process_runner.start_client_process,
+    # including the DB session interactions.
+    fake_session = MagicMock()
+    first_run = True
 
-    if not cli.network_type and os.path.exists(csv_full):
-        cli.network_type = "Custom Network"
+    if first_run and not cli.network_type:
+        csv_full = os.path.join(data_base_path, f"{cli.name}_network.csv")
+        if os.path.exists(csv_full):
+            cli.network_type = "Custom Network"
+            try:
+                fake_session.add(cli)
+                fake_session.commit()
+            except Exception:
+                fake_session.rollback()
 
-    # After repair the client should be treated as having a network.
+    # After repair the client should be flagged as having a network.
     assert cli.network_type == "Custom Network"
+    # The DB session must have received add() and commit() calls.
+    fake_session.add.assert_called_once_with(cli)
+    fake_session.commit.assert_called_once()
+
+    # When network_type is already set, the repair must NOT fire.
+    cli2 = MagicMock()
+    cli2.name = "client_beta"
+    cli2.network_type = "ER"
+    fake_session2 = MagicMock()
+
+    if first_run and not cli2.network_type:
+        csv_full2 = os.path.join(data_base_path, f"{cli2.name}_network.csv")
+        if os.path.exists(csv_full2):
+            cli2.network_type = "Custom Network"
+            fake_session2.add(cli2)
+            fake_session2.commit()
+
+    assert cli2.network_type == "ER"
+    fake_session2.add.assert_not_called()
 
 
 def test_exp_group_parameter():

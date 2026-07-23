@@ -595,8 +595,13 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
                         "set to 'Custom Network'",
                         file=sys.stderr,
                     )
-                except Exception:
+                except Exception as repair_exc:
                     session.rollback()
+                    print(
+                        f"Warning: could not persist network_type repair for client "
+                        f"'{cli.name}': {repair_exc}",
+                        file=sys.stderr,
+                    )
 
         if first_run and cli.network_type:
             path = f"{cli.name}_network.csv"
