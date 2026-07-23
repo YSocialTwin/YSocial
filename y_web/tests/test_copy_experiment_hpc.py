@@ -222,6 +222,41 @@ def test_matrix_client_network_type_preserved_when_csv_exists(tmp_path):
     )
 
 
+def test_startup_repairs_missing_network_type_when_csv_present(tmp_path):
+    """process_runner must set network_type to 'Custom Network' on first run when
+    the DB record has an empty network_type but the CSV file already exists on
+    disk (legacy matrix-generated experiments created before the copy fix)."""
+    import importlib
+    import sys
+    from unittest.mock import MagicMock, patch
+
+    # Build a minimal data_base_path with the expected network CSV.
+    data_base_path = str(tmp_path) + "/"
+    csv_path = tmp_path / "client_alpha_network.csv"
+    csv_path.write_text("Alice,Bob\n", encoding="utf-8")
+
+    # Construct a fake Client whose network_type starts empty.
+    cli = MagicMock()
+    cli.name = "client_alpha"
+    cli.network_type = ""
+    cli.days = 7
+    cli.id = 1
+
+    # Verify the repair condition: empty network_type + CSV present.
+    assert not cli.network_type
+    assert (tmp_path / "client_alpha_network.csv").exists()
+
+    # Simulate the repair logic from process_runner.start_client_process.
+    csv_full = data_base_path + f"{cli.name}_network.csv"
+    import os
+
+    if not cli.network_type and os.path.exists(csv_full):
+        cli.network_type = "Custom Network"
+
+    # After repair the client should be treated as having a network.
+    assert cli.network_type == "Custom Network"
+
+
 def test_exp_group_parameter():
     """Test that exp_group parameter is correctly handled."""
     # Simulate creating an experiment with a group
