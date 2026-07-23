@@ -37,7 +37,7 @@ def test_sync_hpc_network_bootstrap_creates_client_specific_alias(tmp_path):
     exp_dir = tmp_path / "exp"
     exp_dir.mkdir()
 
-    config_path = exp_dir / "client_alpha-population.json"
+    config_path = exp_dir / "client_alpha_population.json"
     config_path.write_text(
         json.dumps({"client_name": "client_alpha_matrix"}), encoding="utf-8"
     )

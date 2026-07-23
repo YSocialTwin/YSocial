@@ -310,10 +310,9 @@ def _sync_hpc_network_bootstrap(exp_folder, client_config_path, cli) -> bool:
         if exact_match.exists():
             candidate_paths.append(exact_match)
 
-    for entry in exp_dir.iterdir():
+    for entry in exp_dir.glob("*_network.csv"):
         if (
             entry.is_file()
-            and entry.name.endswith("_network.csv")
             and (
                 (record_client_name and entry.name.startswith(f"{record_client_name}_"))
                 or (
@@ -324,16 +323,21 @@ def _sync_hpc_network_bootstrap(exp_folder, client_config_path, cli) -> bool:
         ):
             candidate_paths.append(entry)
 
-    seen = set()
+    unique_candidates = []
+    seen_candidates = set()
     for candidate_path in candidate_paths:
         normalized = str(candidate_path.resolve())
-        if normalized in seen:
+        if normalized in seen_candidates:
             continue
-        seen.add(normalized)
+        seen_candidates.add(normalized)
+        unique_candidates.append(candidate_path)
+
+    for candidate_path in unique_candidates:
         try:
             shutil.copy2(candidate_path, desired_network_path)
             return True
         except OSError:
+            # Skip inaccessible or otherwise unusable candidates and keep looking.
             continue
 
     return False
