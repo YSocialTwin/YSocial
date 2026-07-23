@@ -290,6 +290,8 @@ def _sync_hpc_network_bootstrap(exp_folder, client_config_path, cli) -> bool:
     except (OSError, json.JSONDecodeError):
         return False
 
+    # Older layouts may store the runtime identity under "name" instead of
+    # the current "client_name" key; accept either when rebuilding aliases.
     config_client_name = str(
         client_config.get("client_name") or client_config.get("name") or ""
     ).strip()
@@ -335,9 +337,11 @@ def _sync_hpc_network_bootstrap(exp_folder, client_config_path, cli) -> bool:
     for candidate_path in unique_candidates:
         try:
             shutil.copy2(candidate_path, desired_network_path)
+            # The first successful alias is enough for YSimulator to locate the
+            # network bootstrap file during client startup.
             return True
         except OSError:
-            # Skip inaccessible or otherwise unusable candidates and keep looking.
+            # Skip inaccessible or otherwise unusable candidates and keep looking
             continue
 
     return False
