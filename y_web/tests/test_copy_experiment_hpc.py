@@ -198,6 +198,30 @@ def test_config_verification_logic():
     assert std_verify.get("database_uri") == expected_db
 
 
+def test_matrix_client_network_type_preserved_when_csv_exists(tmp_path):
+    """Matrix copies must keep network bootstrap when a client CSV is present."""
+    from y_web.routes.admin.sub.experiments._crud import _matrix_client_network_type
+
+    folder = tmp_path / "clone"
+    folder.mkdir()
+    (folder / "client_alpha_network.csv").write_text("Alice,Bob\n", encoding="utf-8")
+
+    assert _matrix_client_network_type("client_alpha", "", str(folder)) == "Custom Network"
+    assert (
+        _matrix_client_network_type("client_alpha", "ER", str(folder)) == "ER"
+    )
+
+    renamed_folder = tmp_path / "clone2"
+    renamed_folder.mkdir()
+    (renamed_folder / "client_alpha_legacy_network.csv").write_text(
+        "Alice,Bob\n", encoding="utf-8"
+    )
+    assert (
+        _matrix_client_network_type("client_alpha", "", str(renamed_folder))
+        == "Custom Network"
+    )
+
+
 def test_exp_group_parameter():
     """Test that exp_group parameter is correctly handled."""
     # Simulate creating an experiment with a group

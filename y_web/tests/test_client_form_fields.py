@@ -211,7 +211,7 @@ class TestClientFormFields:
         assert 'value="0.35"' in template_source
         assert 'value="72"' in template_source
         assert (
-            'input type="hidden" name="follow" id="follow" value="1"' in template_source
+            'input type="hidden" name="follow" id="follow" value="0"' in template_source
         )
 
     def test_hpc_embedded_vllm_model_default_is_updated(self):

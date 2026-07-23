@@ -3389,6 +3389,29 @@ def _matrix_client_file_candidates(client, population_name):
     ]
 
 
+def _matrix_client_network_type(client_name, source_network_type, new_folder):
+    """Preserve network bootstrap when a matching client CSV exists in the clone."""
+    network_type = source_network_type
+    if network_type:
+        return network_type
+
+    expected_network_filename = f"{client_name}_network.csv"
+    expected_network_path = os.path.join(new_folder, expected_network_filename)
+    if os.path.exists(expected_network_path):
+        return "Custom Network"
+
+    client_prefix = f"{client_name}_"
+    for entry in os.listdir(new_folder):
+        if (
+            entry.startswith(client_prefix)
+            and entry.endswith("_network.csv")
+            and os.path.isfile(os.path.join(new_folder, entry))
+        ):
+            return "Custom Network"
+
+    return network_type
+
+
 def _matrix_virtual_recsys_features(
     *,
     client,
@@ -4974,6 +4997,9 @@ def _create_single_experiment_copy(
                     client_crecsys = override.get("value")
                 elif last_token == "frecsys_type":
                     client_frecsys = override.get("value")
+        client_network_type = _matrix_client_network_type(
+            source_client.name, source_client.network_type, new_folder
+        )
         new_client = Client(
             name=source_client.name,
             descr=source_client.descr,
@@ -5007,7 +5033,7 @@ def _create_single_experiment_copy(
             id_exp=new_exp.idexp,
             probability_of_secondary_follow=source_client.probability_of_secondary_follow,
             population_id=source_client.population_id,
-            network_type=source_client.network_type,
+            network_type=client_network_type,
             crecsys=client_crecsys,
             frecsys=client_frecsys,
             pid=None,  # No process ID yet
