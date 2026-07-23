@@ -83,6 +83,7 @@ def _update_client_simulation_internal(uid, expected_mode):
     client.share = _float("share", client.share)
     client.search = _float("search", client.search)
     client.vote = _float("vote", client.vote)
+    client.follow = _float("follow", client.follow)
     recommendations_default_limit = _int("recommendations_default_limit", 12)
 
     memory_enabled = request.form.get("memory_enabled") in {"on", "true", "1", "yes"}
@@ -230,6 +231,7 @@ def _update_client_simulation_internal(uid, expected_mode):
                 "share": client.share,
                 "search": client.search,
                 "vote": client.vote,
+                "follow": client.follow,
             }
         )
         config["recommendations"] = {"default_limit": recommendations_default_limit}
