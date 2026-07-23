@@ -8,6 +8,7 @@ extracted from y_web.utils.external_processes.
 import json
 import os
 import signal
+import shutil
 import subprocess
 import sys
 import time
