@@ -30,6 +30,31 @@ def test_hpc_client_creates_client_execution_record():
     assert expected_rounds == 168
 
 
+def test_sync_hpc_network_bootstrap_creates_client_specific_alias(tmp_path):
+    """Copied HPC experiments should recreate the client-specific network filename."""
+    from y_web.src.hpc.client import _sync_hpc_network_bootstrap
+
+    exp_dir = tmp_path / "exp"
+    exp_dir.mkdir()
+
+    config_path = exp_dir / "client_alpha-population.json"
+    config_path.write_text(
+        json.dumps({"client_name": "client_alpha_matrix"}), encoding="utf-8"
+    )
+    source_network = exp_dir / "client_alpha_network.csv"
+    source_network.write_text("alice,bob\n", encoding="utf-8")
+
+    cli = MagicMock()
+    cli.name = "client_alpha"
+
+    changed = _sync_hpc_network_bootstrap(str(exp_dir), str(config_path), cli)
+
+    aliased_network = exp_dir / "client_alpha_matrix_network.csv"
+    assert changed is True
+    assert aliased_network.exists()
+    assert aliased_network.read_text(encoding="utf-8") == "alice,bob\n"
+
+
 def test_hpc_infinite_client_creates_proper_record():
     """Test that infinite HPC clients (-1 days) set expected_duration_rounds to -1."""
 

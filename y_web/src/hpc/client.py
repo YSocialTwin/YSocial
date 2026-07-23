@@ -273,6 +273,71 @@ def _sync_stress_reward_into_hpc_client_config(exp_folder, client_config_path):
     return True
 
 
+def _sync_hpc_network_bootstrap(exp_folder, client_config_path, cli) -> bool:
+    """Ensure YSimulator can find the copied network CSV for this HPC client."""
+    if not exp_folder or not client_config_path:
+        return False
+
+    exp_dir = Path(exp_folder)
+    config_path = Path(client_config_path)
+    if not exp_dir.exists() or not config_path.exists():
+        return False
+
+    try:
+        with open(config_path, "r", encoding="utf-8") as handle:
+            client_config = json.load(handle)
+    except (OSError, json.JSONDecodeError):
+        return False
+
+    config_client_name = str(
+        client_config.get("client_name") or client_config.get("name") or ""
+    ).strip()
+    record_client_name = str(getattr(cli, "name", "") or "").strip()
+    desired_client_name = config_client_name or record_client_name
+    if not desired_client_name:
+        return False
+
+    desired_network_path = exp_dir / f"{desired_client_name}_network.csv"
+    if desired_network_path.exists():
+        return False
+
+    candidate_paths = []
+    for candidate_name in {record_client_name, config_client_name}:
+        if not candidate_name:
+            continue
+        exact_match = exp_dir / f"{candidate_name}_network.csv"
+        if exact_match.exists():
+            candidate_paths.append(exact_match)
+
+    for entry in exp_dir.iterdir():
+        if (
+            entry.is_file()
+            and entry.name.endswith("_network.csv")
+            and (
+                (record_client_name and entry.name.startswith(f"{record_client_name}_"))
+                or (
+                    config_client_name
+                    and entry.name.startswith(f"{config_client_name}_")
+                )
+            )
+        ):
+            candidate_paths.append(entry)
+
+    seen = set()
+    for candidate_path in candidate_paths:
+        normalized = str(candidate_path.resolve())
+        if normalized in seen:
+            continue
+        seen.add(normalized)
+        try:
+            shutil.copy2(candidate_path, desired_network_path)
+            return True
+        except OSError:
+            continue
+
+    return False
+
+
 def _wait_for_hpc_server_ready(exp_folder: str, timeout_seconds: int = 180) -> None:
     """
     Wait until the server writes its readiness marker after the orchestrator actor starts.
@@ -380,6 +445,11 @@ def start_hpc_client(exp, cli, population):
         _sync_stress_reward_into_hpc_client_config(exp_folder, client_config)
     except Exception as exc:
         print(f"Warning: failed to synchronize HPC stress_reward config: {exc}")
+
+    try:
+        _sync_hpc_network_bootstrap(exp_folder, client_config, cli)
+    except Exception as exc:
+        print(f"Warning: failed to synchronize HPC network bootstrap: {exc}")
 
     # Validate ray_config.temp exists (required for HPC client startup).
     # Local Ray bootstrap can exceed a minute on some machines, so keep the
