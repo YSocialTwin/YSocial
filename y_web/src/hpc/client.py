@@ -300,8 +300,12 @@ def _sync_hpc_network_bootstrap(exp_folder, client_config_path, cli) -> bool:
     if not desired_client_name:
         return False
 
-    desired_network_path = exp_dir / f"{desired_client_name}_network.csv"
-    if desired_network_path.exists():
+    runtime_client_name = _build_hpc_runtime_client_id(exp_folder, desired_client_name)
+    desired_network_paths = [
+        exp_dir / f"{runtime_client_name}_network.csv",
+        exp_dir / f"{desired_client_name}_network.csv",
+    ]
+    if any(path.exists() for path in desired_network_paths):
         return False
 
     candidate_paths = []
@@ -322,8 +326,12 @@ def _sync_hpc_network_bootstrap(exp_folder, client_config_path, cli) -> bool:
                     and entry.name.startswith(f"{config_client_name}_")
                 )
             )
-        ):
+            ):
             candidate_paths.append(entry)
+
+    generic_network_path = exp_dir / "network.csv"
+    if generic_network_path.exists():
+        candidate_paths.append(generic_network_path)
 
     unique_candidates = []
     seen_candidates = set()
@@ -335,14 +343,65 @@ def _sync_hpc_network_bootstrap(exp_folder, client_config_path, cli) -> bool:
         unique_candidates.append(candidate_path)
 
     for candidate_path in unique_candidates:
-        try:
-            shutil.copy2(candidate_path, desired_network_path)
-            # The first successful alias is enough for YSimulator to locate the
-            # network bootstrap file during client startup.
+        copied_any = False
+        for desired_network_path in desired_network_paths:
+            if desired_network_path.exists():
+                copied_any = True
+                continue
+            try:
+                shutil.copy2(candidate_path, desired_network_path)
+                copied_any = True
+            except OSError:
+                # Skip inaccessible or otherwise unusable targets and keep looking
+                continue
+        if copied_any:
+            # Keep both the runtime client-id alias and the legacy client-name
+            # alias in sync so the current and historical loaders can resolve
+            # the initial topology.
             return True
-        except OSError:
-            # Skip inaccessible or otherwise unusable candidates and keep looking
+
+    return False
+
+
+def _hpc_network_bootstrap_exists(exp_folder, client_config_path, cli) -> bool:
+    """Return True when a usable initial-network CSV already exists on disk."""
+    if not exp_folder or not client_config_path:
+        return False
+
+    exp_dir = Path(exp_folder)
+    config_path = Path(client_config_path)
+    if not exp_dir.exists() or not config_path.exists():
+        return False
+
+    try:
+        with open(config_path, "r", encoding="utf-8") as handle:
+            client_config = json.load(handle)
+    except (OSError, json.JSONDecodeError):
+        return False
+
+    config_client_name = str(
+        client_config.get("client_name") or client_config.get("name") or ""
+    ).strip()
+    record_client_name = str(getattr(cli, "name", "") or "").strip()
+    desired_client_name = config_client_name or record_client_name
+    if not desired_client_name:
+        return False
+
+    runtime_client_name = _build_hpc_runtime_client_id(exp_folder, desired_client_name)
+    candidate_names = {record_client_name, config_client_name, runtime_client_name}
+
+    for candidate_name in candidate_names:
+        if not candidate_name:
             continue
+        if (exp_dir / f"{candidate_name}_network.csv").exists():
+            return True
+
+    if (exp_dir / "network.csv").exists():
+        return True
+
+    for entry in exp_dir.glob("*_network.csv"):
+        if entry.is_file():
+            return True
 
     return False
 

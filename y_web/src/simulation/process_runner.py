@@ -584,8 +584,16 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
         # that future restarts also load the file.  This mirrors the logic applied by
         # _matrix_client_network_type during experiment copy.
         if first_run and not cli.network_type:
-            csv_path = os.path.join(data_base_path, f"{cli.name}_network.csv")
-            if os.path.exists(csv_path):
+            try:
+                from y_web.src.hpc.client import _hpc_network_bootstrap_exists
+
+                network_bootstrap_exists = _hpc_network_bootstrap_exists(
+                    data_base_path, client_config_path, cli
+                )
+            except Exception:
+                network_bootstrap_exists = False
+
+            if network_bootstrap_exists:
                 cli.network_type = "Custom Network"
                 try:
                     session.add(cli)

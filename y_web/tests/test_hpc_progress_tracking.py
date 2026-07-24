@@ -50,9 +50,12 @@ def test_sync_hpc_network_bootstrap_creates_client_specific_alias(tmp_path):
     changed = _sync_hpc_network_bootstrap(str(exp_dir), str(config_path), cli)
 
     aliased_network = exp_dir / "client_alpha_matrix_network.csv"
+    runtime_network = exp_dir / "exp:client_alpha_matrix_network.csv"
     assert changed is True
     assert aliased_network.exists()
     assert aliased_network.read_text(encoding="utf-8") == "alice,bob\n"
+    assert runtime_network.exists()
+    assert runtime_network.read_text(encoding="utf-8") == "alice,bob\n"
 
 
 def test_hpc_infinite_client_creates_proper_record():

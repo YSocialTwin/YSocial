@@ -226,13 +226,18 @@ def test_startup_repairs_missing_network_type_when_csv_present(tmp_path):
     """process_runner must set network_type to 'Custom Network' on first run when
     the DB record has an empty network_type but the CSV file already exists on
     disk (legacy matrix-generated experiments created before the copy fix)."""
-    import os
     from unittest.mock import MagicMock
 
-    # Build a minimal data_base_path with the expected network CSV.
+    from y_web.src.hpc.client import _hpc_network_bootstrap_exists
+
     data_base_path = str(tmp_path) + "/"
-    csv_path = tmp_path / "client_alpha_network.csv"
+    csv_path = tmp_path / "network.csv"
     csv_path.write_text("Alice,Bob\n", encoding="utf-8")
+
+    client_config_path = tmp_path / "client_alpha_matrix.json"
+    client_config_path.write_text(
+        json.dumps({"client_name": "client_alpha_matrix"}), encoding="utf-8"
+    )
 
     # Construct a fake Client whose network_type starts empty.
     cli = MagicMock()
@@ -243,16 +248,15 @@ def test_startup_repairs_missing_network_type_when_csv_present(tmp_path):
 
     # Verify the repair pre-condition: empty network_type + CSV present.
     assert not cli.network_type
-    assert os.path.exists(os.path.join(data_base_path, "client_alpha_network.csv"))
+    assert _hpc_network_bootstrap_exists(data_base_path, str(client_config_path), cli)
 
-    # Simulate the repair block from process_runner.start_client_process,
-    # including the DB session interactions.
     fake_session = MagicMock()
     first_run = True
 
     if first_run and not cli.network_type:
-        csv_full = os.path.join(data_base_path, f"{cli.name}_network.csv")
-        if os.path.exists(csv_full):
+        if _hpc_network_bootstrap_exists(
+            data_base_path, str(client_config_path), cli
+        ):
             cli.network_type = "Custom Network"
             try:
                 fake_session.add(cli)
@@ -273,14 +277,34 @@ def test_startup_repairs_missing_network_type_when_csv_present(tmp_path):
     fake_session2 = MagicMock()
 
     if first_run and not cli2.network_type:
-        csv_full2 = os.path.join(data_base_path, f"{cli2.name}_network.csv")
-        if os.path.exists(csv_full2):
+        if _hpc_network_bootstrap_exists(
+            data_base_path, str(client_config_path), cli2
+        ):
             cli2.network_type = "Custom Network"
             fake_session2.add(cli2)
             fake_session2.commit()
 
     assert cli2.network_type == "ER"
     fake_session2.add.assert_not_called()
+
+
+def test_hpc_legacy_matrix_experiment_with_generic_network_csv_is_detected(tmp_path):
+    """Legacy matrix experiments with only network.csv must still bootstrap."""
+    from y_web.src.hpc.client import _hpc_network_bootstrap_exists
+
+    exp_dir = tmp_path / "legacy_exp"
+    exp_dir.mkdir()
+    (exp_dir / "network.csv").write_text("Alice,Bob\n", encoding="utf-8")
+
+    config_path = exp_dir / "client_alpha_matrix.json"
+    config_path.write_text(
+        json.dumps({"client_name": "client_alpha_matrix"}), encoding="utf-8"
+    )
+
+    cli = MagicMock()
+    cli.name = "client_alpha"
+
+    assert _hpc_network_bootstrap_exists(str(exp_dir), str(config_path), cli) is True
 
 
 def test_exp_group_parameter():
