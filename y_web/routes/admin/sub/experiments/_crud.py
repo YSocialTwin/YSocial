@@ -3215,6 +3215,8 @@ def _matrix_is_variable_path(path_tokens, file_name=""):
             return False
         if any(token in _MATRIX_CLIENT_EXCLUDED_LEAF_NAMES for token in lowered_tokens):
             return False
+        if path_tuple == ("posts", "visibility_rounds"):
+            return False
 
     if path_tuple in _MATRIX_SYSTEM_PATHS:
         return False

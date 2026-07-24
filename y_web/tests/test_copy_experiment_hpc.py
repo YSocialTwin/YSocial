@@ -238,6 +238,17 @@ def test_matrix_resolve_client_days_prefers_num_days():
     assert _matrix_resolve_client_days({}, 7) == 7
 
 
+def test_matrix_excludes_client_visibility_rounds_but_keeps_server_value():
+    """Client-side visibility_rounds should not be exposed in matrix reports."""
+    from y_web.routes.admin.sub.experiments._crud import _matrix_is_variable_path
+
+    assert _matrix_is_variable_path(("posts", "visibility_rounds"), "client_a.json") is False
+    assert (
+        _matrix_is_variable_path(("posts", "visibility_rounds"), "server_config.json")
+        is True
+    )
+
+
 def test_startup_repairs_missing_network_type_when_csv_present(tmp_path):
     """process_runner must set network_type to 'Custom Network' on first run when
     the DB record has an empty network_type but the CSV file already exists on
