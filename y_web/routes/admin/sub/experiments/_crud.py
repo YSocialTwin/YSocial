@@ -2969,16 +2969,19 @@ def experiment_matrix():
     matrix_experiments = _matrix_experiment_payload(all_experiments)
 
     selected_exp_id = request.values.get("source_exp_id", type=int)
+    source_group = (request.values.get("source_group") or "").strip()
     exp_group = (request.values.get("exp_group") or "").strip()
     source_exp = (
         Exps.query.filter_by(idexp=selected_exp_id).first()
         if selected_exp_id and selected_exp_id in visible_exp_ids
         else None
     )
-    if source_exp and not exp_group:
-        exp_group = (source_exp.exp_group or "").strip()
-    if source_exp and exp_group and (source_exp.exp_group or "").strip() != exp_group:
+    if source_exp and not source_group:
+        source_group = (source_exp.exp_group or "").strip()
+    if source_exp and source_group and (source_exp.exp_group or "").strip() != source_group:
         source_exp = None
+    if not exp_group and source_group:
+        exp_group = source_group
     matrix_reports = []
     server_reports = []
     client_reports = []
@@ -3023,11 +3026,12 @@ def experiment_matrix():
             unlockable_features = 0
 
     grouped_experiments = _matrix_filter_experiments_by_group(
-        all_experiments, exp_group
+        all_experiments, source_group
     )
 
     if request.method == "POST":
         source_exp_id = request.form.get("source_exp_id", type=int)
+        source_group = (request.form.get("source_group") or "").strip()
         exp_group = (request.form.get("exp_group") or "").strip()
         variation_payload = request.form.get("variation_payload") or "[]"
         generation_mode = (
@@ -3044,24 +3048,29 @@ def experiment_matrix():
             if source_exp_id and source_exp_id in visible_exp_ids
             else None
         )
-        if source_exp and not exp_group:
-            exp_group = (source_exp.exp_group or "").strip()
-        if (
-            source_exp
-            and exp_group
-            and (source_exp.exp_group or "").strip() != exp_group
-        ):
+        if source_exp and not source_group:
+            source_group = (source_exp.exp_group or "").strip()
+        if source_exp and source_group and (source_exp.exp_group or "").strip() != source_group:
             flash(
-                "Please pick a source experiment from the selected group.",
+                "Please pick a source experiment from the selected source group.",
                 "error",
             )
             return redirect(
                 url_for(
                     "experiments.experiment_matrix",
+                    source_group=source_group,
                     exp_group=exp_group,
                 )
             )
-
+        if not exp_group:
+            exp_group = source_group
+        if (
+            source_exp
+            and source_group
+            and (source_exp.exp_group or "").strip() != source_group
+        ):
+            flash("Source experiment not found.", "error")
+            return redirect(url_for("experiments.settings"))
         if not source_exp:
             flash("Source experiment not found.", "error")
             return redirect(url_for("experiments.settings"))
@@ -3087,6 +3096,7 @@ def experiment_matrix():
                     url_for(
                         "experiments.experiment_matrix",
                         source_exp_id=source_exp.idexp,
+                        source_group=source_group,
                         exp_group=exp_group,
                     )
                 )
@@ -3137,6 +3147,7 @@ def experiment_matrix():
             url_for(
                 "experiments.experiment_matrix",
                 source_exp_id=source_exp.idexp,
+                source_group=source_group,
                 exp_group=exp_group,
             )
         )
@@ -3149,6 +3160,7 @@ def experiment_matrix():
         grouped_experiments=grouped_experiments,
         selected_experiment=source_exp,
         selected_exp_id=selected_exp_id,
+        selected_source_group=source_group,
         selected_group=exp_group,
         matrix_reports=matrix_reports,
         server_reports=server_reports,

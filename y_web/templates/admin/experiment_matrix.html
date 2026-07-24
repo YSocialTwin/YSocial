@@ -576,32 +576,44 @@
                                 <p style="color: rgba(248,250,252,0.78);">
                                     Inspect nested config values, unlock the ones you want to vary, and generate the full combination set.
                                 </p>
-                                {% if selected_group %}
-                                <div style="margin-top: 0.75rem; display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; border-radius: 999px; background: rgba(255,255,255,0.08); color: #f8fafc; border: 1px solid rgba(255,255,255,0.12);">
-                                    <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(248,250,252,0.7);">Target Group</span>
-                                    <strong>{{ selected_group }}</strong>
-                                </div>
-                                {% endif %}
                             </div>
                             <div style="min-width: 260px; flex: 0 1 360px;">
                                 <form action="/admin/experiment_matrix" method="GET" class="is-flex is-flex-direction-column" style="gap:0.5rem;">
                                     <div class="select is-fullwidth">
-                                        <select id="matrix-exp-group" name="exp_group">
-                                            <option value="">Select experiment group...</option>
+                                        <select id="matrix-source-group" name="source_group">
+                                            <option value="">Select source group...</option>
                                             {% for group_name in matrix_exp_groups or [] %}
-                                            <option value="{{ group_name }}" {% if selected_group == group_name %}selected{% endif %}>{{ group_name }}</option>
+                                            <option value="{{ group_name }}" {% if selected_source_group == group_name %}selected{% endif %}>{{ group_name }}</option>
                                             {% endfor %}
                                         </select>
                                     </div>
                                     <div class="select is-fullwidth">
-                                        <select id="matrix-source-exp" name="source_exp_id" {% if not selected_group %}disabled{% endif %} required>
-                                            <option value="">{{ 'Select source experiment...' if selected_group else 'Select a group first...' }}</option>
+                                        <select id="matrix-source-exp" name="source_exp_id" {% if not selected_source_group %}disabled{% endif %} required>
+                                            <option value="">{{ 'Select source experiment...' if selected_source_group else 'Select a source group first...' }}</option>
                                             {% for exp in grouped_experiments or [] %}
                                             <option value="{{ exp.idexp }}" {% if selected_experiment and selected_experiment.idexp == exp.idexp %}selected{% endif %}>{{ exp.exp_name }}</option>
                                             {% endfor %}
                                         </select>
                                     </div>
-                                    <p class="matrix-hint" style="margin-top:-0.15rem;">Pick a group first, then choose one experiment from that group.</p>
+                                    <div class="field">
+                                        <label class="label" style="color: rgba(248,250,252,0.85);">Target Group</label>
+                                        <div class="control">
+                                            <input type="text"
+                                                   id="matrix-target-group"
+                                                   name="exp_group"
+                                                   list="exp_groups_datalist_matrix"
+                                                   class="input"
+                                                   value="{{ selected_group or selected_source_group or '' }}"
+                                                   placeholder="Choose an existing group or type a new one">
+                                        </div>
+                                        <datalist id="exp_groups_datalist_matrix">
+                                            {% for group_name in matrix_exp_groups or [] %}
+                                            <option value="{{ group_name }}">
+                                            {% endfor %}
+                                        </datalist>
+                                        <p class="matrix-hint" style="margin-top:0.35rem;">You can assign the generated experiments to an existing group or create a new one here.</p>
+                                    </div>
+                                    <p class="matrix-hint" style="margin-top:-0.15rem;">Pick a source group first, then choose one experiment from that group.</p>
                                     <button type="submit" class="button is-info is-fullwidth">Load Matrix</button>
                                 </form>
                             </div>
@@ -642,6 +654,7 @@
             {% if selected_experiment %}
             <form id="matrix-form" action="/admin/experiment_matrix" method="POST">
                 <input type="hidden" name="source_exp_id" value="{{ selected_experiment.idexp }}">
+                <input type="hidden" name="source_group" value="{{ selected_source_group }}">
                 <input type="hidden" name="exp_group" value="{{ selected_group }}">
                 <input type="hidden" id="variation_payload" name="variation_payload" value="[]">
 
@@ -912,7 +925,7 @@
 <script>
 (function() {
     const experimentData = {{ matrix_experiments|tojson }};
-    const groupSelect = document.getElementById('matrix-exp-group');
+    const groupSelect = document.getElementById('matrix-source-group');
     const sourceSelect = document.getElementById('matrix-source-exp');
 
     if (!groupSelect || !sourceSelect) {
@@ -935,7 +948,9 @@
 
         clearOptions(
             sourceSelect,
-            normalizedGroup ? 'Select source experiment...' : 'Select a group first...'
+            normalizedGroup
+                ? 'Select source experiment...'
+                : 'Select a source group first...'
         );
 
         if (!normalizedGroup) {
