@@ -3044,7 +3044,11 @@ def experiment_matrix():
         )
         if source_exp and not exp_group:
             exp_group = (source_exp.exp_group or "").strip()
-        if source_exp and exp_group and (source_exp.exp_group or "").strip() != exp_group:
+        if (
+            source_exp
+            and exp_group
+            and (source_exp.exp_group or "").strip() != exp_group
+        ):
             flash(
                 "Please pick a source experiment from the selected group.",
                 "error",
