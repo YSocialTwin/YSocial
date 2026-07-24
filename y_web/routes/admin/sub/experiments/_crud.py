@@ -260,6 +260,7 @@ def settings():
         .all()
     )
     exp_groups = [group[0] for group in exp_groups]  # Extract from tuples
+    matrix_experiments = _matrix_experiment_payload(all_experiments)
     repo_availability = _external_repo_availability()
 
     return render_template(
@@ -272,6 +273,7 @@ def settings():
         enable_notebook=current_app.config.get("ENABLE_NOTEBOOK", False),
         exp_has_infinite=exp_has_infinite,
         exp_groups=exp_groups,
+        matrix_experiments=matrix_experiments,
         active_experiments=active_experiments,
         repo_availability=repo_availability,
     )

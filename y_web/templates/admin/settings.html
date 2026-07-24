@@ -562,34 +562,32 @@
                             <form action="/admin/experiment_matrix" method="GET">
                                 <div class="box-lines">
                                     <div class="box-line">
-                                        <span class="left">Source Experiment</span>
+                                        <span class="left">Experiment Group</span>
                                         <span class="right ys-w-70">
-                                            <div class="select w-100">
-                                                <select id="matrix_source_exp_id" name="source_exp_id" class="w-100" required>
-                                                    <option value="">Select experiment...</option>
-                                                    {% for exp in all_experiments %}
-                                                    <option value="{{ exp.idexp }}">{{ exp.exp_name }}</option>
-                                                    {% endfor %}
-                                                </select>
-                                            </div>
+                                            <select id="matrix_exp_group_select"
+                                                    name="exp_group"
+                                                    class="input w-100">
+                                                <option value="">Select a group...</option>
+                                                {% for group in exp_groups %}
+                                                <option value="{{ group }}">{{ group }}</option>
+                                                {% endfor %}
+                                            </select>
                                         </span>
                                     </div>
                                     <div class="box-line">
-                                        <span class="left">Experiment Group</span>
+                                        <span class="left">Source Experiment</span>
                                         <span class="right ys-w-70">
-                                            <input type="text"
-                                                   id="matrix_exp_group"
-                                                   name="exp_group"
-                                                   list="exp_groups_datalist_matrix"
-                                                   class="input"
-                                                   placeholder="Enter or select a group...">
-                                            <datalist id="exp_groups_datalist_matrix">
-                                                {% for group in exp_groups %}
-                                                <option value="{{ group }}">
-                                                {% endfor %}
-                                            </datalist>
+                                            <div class="select w-100">
+                                                <select id="matrix_source_exp_id"
+                                                        name="source_exp_id"
+                                                        class="w-100"
+                                                        disabled
+                                                        required>
+                                                    <option value="">Select a group first...</option>
+                                                </select>
+                                            </div>
                                             <p class="ys-text-tiny-gray-mt">
-                                                Matrix-generated experiments are added to this group.
+                                                Choose a source experiment from the selected group.
                                             </p>
                                         </span>
                                     </div>
@@ -613,7 +611,8 @@
 <script>
 var YS_DATA_SETTINGS = {
     enableNotebook: {{ enable_notebook | tojson }},
-    repoAvailability: {{ repo_availability | tojson }}
+    repoAvailability: {{ repo_availability | tojson }},
+    matrixExperiments: {{ matrix_experiments | tojson }}
 };
 </script>
 <script src="{{ url_for('static', filename='assets/js/admin-settings.js') }}"></script>

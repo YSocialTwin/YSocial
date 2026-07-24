@@ -141,3 +141,23 @@ def test_new_experiment_form_uses_repo_availability_bridge():
         "microbloggingOption.disabled = !microbloggingAvailable && !hpcAvailable;"
         in admin_settings_js
     )
+
+
+def test_experiment_matrix_box_filters_source_experiments_by_group():
+    settings = (
+        REPO_ROOT / "y_web" / "templates" / "admin" / "settings.html"
+    ).read_text(encoding="utf-8")
+    admin_settings_js = (STATIC_JS_DIR / "admin-settings.js").read_text(
+        encoding="utf-8"
+    )
+
+    assert 'id="matrix_exp_group_select"' in settings
+    assert 'id="matrix_source_exp_id"' in settings
+    assert 'Select a group first...' in settings
+    assert 'Choose a source experiment from the selected group.' in settings
+    assert "matrixExperiments:" in settings
+    assert "function initializeMatrixExperimentSelector()" in admin_settings_js
+    assert "matrix_exp_group_select" in admin_settings_js
+    assert "matrix_source_exp_id" in admin_settings_js
+    assert "String(item.group || '').trim() === groupName" in admin_settings_js
+    assert "option.textContent = exp.name;" in admin_settings_js
