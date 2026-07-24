@@ -580,14 +580,22 @@
                             <div style="min-width: 260px; flex: 0 1 360px;">
                                 <form action="/admin/experiment_matrix" method="GET" class="is-flex is-flex-direction-column" style="gap:0.5rem;">
                                     <div class="select is-fullwidth">
-                                        <select name="source_exp_id" required>
-                                            <option value="">Select experiment...</option>
-                                            {% for exp in experiments %}
+                                        <select id="matrix-exp-group" name="exp_group">
+                                            <option value="">Select experiment group...</option>
+                                            {% for group_name in matrix_exp_groups or [] %}
+                                            <option value="{{ group_name }}" {% if selected_group == group_name %}selected{% endif %}>{{ group_name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="select is-fullwidth">
+                                        <select id="matrix-source-exp" name="source_exp_id" {% if not selected_group %}disabled{% endif %} required>
+                                            <option value="">{{ 'Select source experiment...' if selected_group else 'Select a group first...' }}</option>
+                                            {% for exp in grouped_experiments or [] %}
                                             <option value="{{ exp.idexp }}" {% if selected_experiment and selected_experiment.idexp == exp.idexp %}selected{% endif %}>{{ exp.exp_name }}</option>
                                             {% endfor %}
                                         </select>
                                     </div>
-                                    <input type="text" class="input" name="exp_group" value="{{ selected_group }}" placeholder="Experiment group">
+                                    <p class="matrix-hint" style="margin-top:-0.15rem;">Pick a group first, then choose one experiment from that group.</p>
                                     <button type="submit" class="button is-info is-fullwidth">Load Matrix</button>
                                 </form>
                             </div>
@@ -896,6 +904,62 @@
 </div>
 
 <script>
+(function() {
+    const experimentData = {{ matrix_experiments|tojson }};
+    const groupSelect = document.getElementById('matrix-exp-group');
+    const sourceSelect = document.getElementById('matrix-source-exp');
+
+    if (!groupSelect || !sourceSelect) {
+        return;
+    }
+
+    function clearOptions(select, placeholderText) {
+        while (select.options.length > 0) {
+            select.remove(0);
+        }
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = placeholderText;
+        select.appendChild(placeholder);
+    }
+
+    function populateSourceExperiments(groupName, selectedId) {
+        const normalizedGroup = String(groupName || '').trim();
+        const experiments = experimentData.filter(item => String(item.group || '').trim() === normalizedGroup);
+
+        clearOptions(
+            sourceSelect,
+            normalizedGroup ? 'Select source experiment...' : 'Select a group first...'
+        );
+
+        if (!normalizedGroup) {
+            sourceSelect.disabled = true;
+            return;
+        }
+
+        experiments.forEach(exp => {
+            const option = document.createElement('option');
+            option.value = String(exp.idexp);
+            option.textContent = exp.name;
+            if (selectedId && String(selectedId) === String(exp.idexp)) {
+                option.selected = true;
+            }
+            sourceSelect.appendChild(option);
+        });
+
+        sourceSelect.disabled = experiments.length === 0;
+        if (experiments.length === 0) {
+            sourceSelect.value = '';
+        }
+    }
+
+    groupSelect.addEventListener('change', function() {
+        populateSourceExperiments(groupSelect.value, null);
+    });
+
+    populateSourceExperiments(groupSelect.value, {{ selected_exp_id|tojson }});
+})();
+
 (function() {
     const rows = Array.from(document.querySelectorAll('.matrix-feature-row'));
     const totalEl = document.getElementById('matrix-total-configs');

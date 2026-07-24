@@ -252,6 +252,35 @@ def test_matrix_excludes_client_visibility_rounds_but_keeps_server_value():
     )
 
 
+def test_matrix_groups_filter_source_experiments():
+    """The matrix page should populate source experiments by selected group."""
+    from types import SimpleNamespace
+
+    from y_web.routes.admin.sub.experiments._crud import (
+        _matrix_collect_experiment_groups,
+        _matrix_experiment_payload,
+        _matrix_filter_experiments_by_group,
+    )
+
+    experiments = [
+        SimpleNamespace(idexp=1, exp_name="alpha", exp_group="group-a"),
+        SimpleNamespace(idexp=2, exp_name="beta", exp_group="group-b"),
+        SimpleNamespace(idexp=3, exp_name="gamma", exp_group="group-a"),
+        SimpleNamespace(idexp=4, exp_name="no-group", exp_group=""),
+    ]
+
+    assert _matrix_collect_experiment_groups(experiments) == ["group-a", "group-b"]
+    assert [
+        exp.idexp for exp in _matrix_filter_experiments_by_group(experiments, "group-a")
+    ] == [1, 3]
+    assert _matrix_filter_experiments_by_group(experiments, "") == []
+
+    payload = _matrix_experiment_payload(experiments)
+    assert payload[0]["name"] == "alpha"
+    assert payload[0]["group"] == "group-a"
+    assert payload[3]["group"] == ""
+
+
 def test_startup_repairs_missing_network_type_when_csv_present(tmp_path):
     """process_runner must set network_type to 'Custom Network' on first run when
     the DB record has an empty network_type but the CSV file already exists on

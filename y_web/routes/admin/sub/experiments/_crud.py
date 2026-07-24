@@ -2963,6 +2963,8 @@ def experiment_matrix():
     visible_query = get_visible_experiment_query(user)
     all_experiments = visible_query.order_by(Exps.exp_name.asc()).all()
     visible_exp_ids = {exp.idexp for exp in all_experiments}
+    matrix_exp_groups = _matrix_collect_experiment_groups(all_experiments)
+    matrix_experiments = _matrix_experiment_payload(all_experiments)
 
     selected_exp_id = request.values.get("source_exp_id", type=int)
     exp_group = (request.values.get("exp_group") or "").strip()
@@ -2971,6 +2973,10 @@ def experiment_matrix():
         if selected_exp_id and selected_exp_id in visible_exp_ids
         else None
     )
+    if source_exp and not exp_group:
+        exp_group = (source_exp.exp_group or "").strip()
+    if source_exp and exp_group and (source_exp.exp_group or "").strip() != exp_group:
+        source_exp = None
     matrix_reports = []
     server_reports = []
     client_reports = []
@@ -3014,6 +3020,10 @@ def experiment_matrix():
             total_features = 0
             unlockable_features = 0
 
+    grouped_experiments = _matrix_filter_experiments_by_group(
+        all_experiments, exp_group
+    )
+
     if request.method == "POST":
         source_exp_id = request.form.get("source_exp_id", type=int)
         exp_group = (request.form.get("exp_group") or "").strip()
@@ -3032,6 +3042,19 @@ def experiment_matrix():
             if source_exp_id and source_exp_id in visible_exp_ids
             else None
         )
+        if source_exp and not exp_group:
+            exp_group = (source_exp.exp_group or "").strip()
+        if source_exp and exp_group and (source_exp.exp_group or "").strip() != exp_group:
+            flash(
+                "Please pick a source experiment from the selected group.",
+                "error",
+            )
+            return redirect(
+                url_for(
+                    "experiments.experiment_matrix",
+                    exp_group=exp_group,
+                )
+            )
 
         if not source_exp:
             flash("Source experiment not found.", "error")
@@ -3115,6 +3138,9 @@ def experiment_matrix():
     return render_template(
         "admin/experiment_matrix.html",
         experiments=all_experiments,
+        matrix_exp_groups=matrix_exp_groups,
+        matrix_experiments=matrix_experiments,
+        grouped_experiments=grouped_experiments,
         selected_experiment=source_exp,
         selected_exp_id=selected_exp_id,
         selected_group=exp_group,
@@ -3132,6 +3158,46 @@ def _build_copy_experiment_names(new_exp_name, num_copies):
         return [new_exp_name]
 
     return [f"{new_exp_name}_{i}" for i in range(1, num_copies + 1)]
+
+
+def _matrix_collect_experiment_groups(experiments):
+    """Return distinct experiment groups sorted for the matrix selector."""
+    seen = set()
+    groups = []
+    for exp in experiments or []:
+        group_name = str(getattr(exp, "exp_group", "") or "").strip()
+        if not group_name or group_name in seen:
+            continue
+        seen.add(group_name)
+        groups.append(group_name)
+    groups.sort(key=lambda item: item.lower())
+    return groups
+
+
+def _matrix_filter_experiments_by_group(experiments, group_name):
+    """Return experiments belonging to the requested group."""
+    normalized_group = str(group_name or "").strip()
+    if not normalized_group:
+        return []
+    return [
+        exp
+        for exp in experiments or []
+        if str(getattr(exp, "exp_group", "") or "").strip() == normalized_group
+    ]
+
+
+def _matrix_experiment_payload(experiments):
+    """Serialize experiments for client-side matrix dropdown filtering."""
+    payload = []
+    for exp in experiments or []:
+        payload.append(
+            {
+                "idexp": getattr(exp, "idexp", None),
+                "name": getattr(exp, "exp_name", ""),
+                "group": str(getattr(exp, "exp_group", "") or "").strip(),
+            }
+        )
+    return payload
 
 
 def _load_settings_experiment_lists(visible_query):
