@@ -1,0 +1,1383 @@
+{% include "admin/head.html" %}
+
+<style>
+.matrix-summary-card {
+    background: linear-gradient(135deg, #0f172a 0%, #1f2937 100%);
+    color: #f8fafc;
+    border-radius: 14px;
+    padding: 1rem 1.1rem;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+}
+.matrix-summary-card .matrix-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+.matrix-summary-stat {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 12px;
+    padding: 0.65rem 0.8rem;
+}
+.matrix-summary-stat .label {
+    display: block;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: rgba(248,250,252,0.7);
+}
+.matrix-summary-stat .value {
+    display: block;
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-top: 0.25rem;
+    word-break: break-word;
+}
+.matrix-report-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    background: #fff;
+    overflow: hidden;
+    margin-bottom: 0.8rem;
+}
+.matrix-report-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 0.75rem;
+}
+.matrix-root-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 0.75rem;
+    align-items: start;
+}
+.matrix-root-grid > .taxonomy-leaf {
+    margin-bottom: 0;
+    align-self: start;
+}
+.matrix-root-grid > .matrix-taxonomy-group {
+    grid-column: 1 / -1;
+    width: 100%;
+    margin-bottom: 0;
+}
+.matrix-report-card summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 0.8rem 0.9rem;
+    background: linear-gradient(90deg, #f8fafc 0%, #eef2ff 100%);
+    border-bottom: 1px solid #e5e7eb;
+}
+.matrix-report-card summary::-webkit-details-marker {
+    display: none;
+}
+.matrix-report-title {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.4rem 0.8rem;
+    align-items: center;
+}
+.matrix-report-title strong {
+    font-size: 0.98rem;
+}
+.matrix-report-title .meta {
+    font-size: 0.78rem;
+    color: #4b5563;
+}
+.matrix-feature-table th,
+.matrix-feature-table td {
+    vertical-align: top;
+}
+.matrix-feature-table td {
+    font-size: 0.84rem;
+}
+.matrix-taxonomy-group {
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    margin-bottom: 0.9rem;
+    overflow: hidden;
+    background: #fff;
+}
+.matrix-taxonomy-group > summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 0.72rem 0.85rem;
+    background: linear-gradient(90deg, #f8fafc 0%, #eef2ff 100%);
+    border-bottom: 1px solid #e5e7eb;
+    font-weight: 700;
+}
+.matrix-taxonomy-group > summary::-webkit-details-marker {
+    display: none;
+}
+.matrix-taxonomy-children {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 0.6rem;
+    padding: 0.65rem 0.75rem 0.75rem 0.75rem;
+}
+.matrix-taxonomy-children > .matrix-taxonomy-group {
+    grid-column: 1 / -1;
+    width: 100%;
+    margin-bottom: 0.7rem;
+}
+.matrix-taxonomy-children > .taxonomy-leaf {
+    grid-column: auto;
+    width: 100%;
+    margin-bottom: 0;
+}
+.taxonomy-path {
+    font-size: 0.74rem;
+    color: #6b7280;
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 600;
+}
+.taxonomy-leaf {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #fff;
+    overflow: hidden;
+    height: 100%;
+    min-width: 0;
+}
+.taxonomy-leaf-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.6rem;
+    align-items: center;
+    padding: 0.62rem 0.72rem;
+    background: #fafafa;
+    border-bottom: 1px solid #e5e7eb;
+}
+.taxonomy-leaf-title {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+.taxonomy-leaf-title .name {
+    font-weight: 700;
+    color: #111827;
+    font-size: 0.96rem;
+}
+.taxonomy-leaf-title .breadcrumb {
+    font-size: 0.72rem;
+    color: #6b7280;
+}
+.taxonomy-leaf-body {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr);
+    gap: 0.65rem;
+    padding: 0.68rem 0.72rem 0.74rem;
+    align-items: start;
+}
+.matrix-field-stack {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+    min-width: 0;
+}
+.matrix-value-block {
+    display: grid;
+    gap: 0.28rem;
+    min-width: 0;
+}
+.matrix-tag-editor {
+    display: grid;
+    gap: 0.45rem;
+    min-width: 0;
+}
+.matrix-tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    min-width: 0;
+    min-height: 34px;
+}
+.matrix-tag-empty {
+    color: #9ca3af;
+    font-size: 0.8rem;
+    padding: 0.15rem 0;
+}
+.matrix-tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.55rem;
+    border-radius: 999px;
+    border: 1px solid #dbeafe;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 0.84rem;
+    font-weight: 600;
+    min-width: 0;
+}
+.matrix-tag-chip code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.matrix-tag-remove {
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    padding: 0;
+    font-size: 1rem;
+    line-height: 1;
+}
+.matrix-tag-input-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.45rem;
+    align-items: center;
+}
+.matrix-tag-input {
+    min-height: 34px;
+    height: 34px;
+    font-size: 0.86rem;
+}
+.matrix-tag-add {
+    min-height: 34px;
+    height: 34px;
+    padding-left: 0.8rem;
+    padding-right: 0.8rem;
+}
+.matrix-recsys-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.55rem;
+    min-width: 0;
+}
+.matrix-recsys-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.55rem 0.68rem;
+    border: 1px solid #dbeafe;
+    border-radius: 14px;
+    background: #f8fbff;
+    min-width: 0;
+}
+.matrix-recsys-option-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-width: 0;
+    color: #1d4ed8;
+    font-size: 0.84rem;
+    font-weight: 600;
+}
+.matrix-boolean-options {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 0;
+}
+.matrix-boolean-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #1d4ed8;
+}
+.matrix-boolean-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    background: #dbeafe;
+    color: #1d4ed8;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.matrix-current-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.18rem 0.45rem;
+    border-radius: 999px;
+    background: #dbeafe;
+    color: #1d4ed8;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.matrix-value-pill {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+    max-width: 100%;
+    width: fit-content;
+    padding: 0.3rem 0.55rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 999px;
+    background: #fff;
+    color: #111827;
+    font-size: 0.85rem;
+    line-height: 1.2;
+    word-break: break-word;
+}
+.taxonomy-leaf-body .leaf-value {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 0.45rem 0.55rem;
+    font-size: 0.88rem;
+}
+.taxonomy-leaf-body .leaf-input {
+    min-height: 0;
+    height: auto;
+    resize: vertical;
+    font-family: monospace;
+    font-size: 0.85rem;
+}
+.taxonomy-depth-1 {
+    margin-left: 0;
+}
+.taxonomy-depth-2 {
+    margin-left: 0.4rem;
+}
+.taxonomy-depth-3 {
+    margin-left: 0.8rem;
+}
+.taxonomy-depth-4 {
+    margin-left: 1.2rem;
+}
+.matrix-feature-path {
+    font-family: monospace;
+    word-break: break-word;
+}
+.matrix-feature-value {
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-width: 280px;
+    overflow: auto;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 0.5rem 0.6rem;
+    margin: 0;
+}
+.matrix-toggle-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 52px;
+}
+.matrix-switch {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    min-height: 34px;
+}
+.matrix-switch-input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+.matrix-switch-track {
+    position: relative;
+    width: 42px;
+    height: 24px;
+    border-radius: 999px;
+    background: #cbd5e1;
+    transition: background-color 0.16s ease;
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.08);
+    flex: 0 0 auto;
+}
+.matrix-switch-track::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.18);
+    transition: transform 0.16s ease;
+}
+.matrix-switch-input:checked + .matrix-switch-track {
+    background: #3b82f6;
+}
+.matrix-switch-input:checked + .matrix-switch-track::after {
+    transform: translateX(18px);
+}
+.matrix-values {
+    display: none;
+}
+.matrix-footer {
+    position: sticky;
+    bottom: 12px;
+    z-index: 20;
+    margin-top: 1.25rem;
+    padding: 0.95rem 1rem;
+    background: rgba(255,255,255,0.96);
+    border: 1px solid #dbeafe;
+    border-radius: 16px;
+    box-shadow: 0 14px 26px rgba(15, 23, 42, 0.08);
+    backdrop-filter: blur(10px);
+}
+.matrix-footer-grid {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.9rem;
+    align-items: center;
+}
+.matrix-footer-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.9rem;
+    flex-wrap: wrap;
+}
+.matrix-generation-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #dbeafe;
+    border-radius: 14px;
+    background: #f8fbff;
+    min-width: 0;
+}
+.matrix-generation-toggle .label-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+.matrix-generation-toggle .label-title {
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: #1f2937;
+}
+.matrix-generation-toggle .label-subtitle {
+    font-size: 0.72rem;
+    color: #64748b;
+}
+
+@media (max-width: 900px) {
+    .matrix-report-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .matrix-taxonomy-children {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .taxonomy-leaf-body {
+        grid-template-columns: 1fr;
+    }
+
+    .matrix-toggle-wrap {
+        justify-content: flex-start;
+        min-width: 0;
+    }
+
+    .matrix-tag-input-row {
+        grid-template-columns: 1fr;
+    }
+
+    .matrix-footer-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .matrix-footer-actions {
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 640px) {
+    .matrix-summary-card {
+        padding: 0.85rem;
+    }
+
+    .matrix-summary-card .matrix-summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .matrix-report-card summary,
+    .matrix-taxonomy-group > summary,
+    .taxonomy-leaf-header {
+        padding-left: 0.7rem;
+        padding-right: 0.7rem;
+    }
+
+    .matrix-report-title {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .taxonomy-leaf-title .name {
+        font-size: 0.92rem;
+    }
+
+    .taxonomy-leaf-title .breadcrumb,
+    .matrix-report-title .meta,
+    .taxonomy-path {
+        font-size: 0.7rem;
+    }
+
+}
+.matrix-count {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #0f172a;
+}
+.matrix-hint {
+    color: #6b7280;
+    font-size: 0.84rem;
+}
+.matrix-warning {
+    color: #b45309;
+    font-size: 0.85rem;
+    margin-top: 0.35rem;
+}
+</style>
+
+<div class="view-wrapper is-dashboard">
+    <div id="creator-dashboard" class="dashboard-container">
+        {% include "admin/dash_head.html" %}
+
+        <div class="dashboard-body">
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <a href="/admin/experiments">Experiments</a> > Experiment Matrix
+                        {% if selected_experiment %}
+                        : <a href="/admin/experiment_details/{{ selected_experiment.idexp }}">{{ selected_experiment.exp_name }}</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="matrix-summary-card">
+                        <div class="is-flex is-justify-content-space-between is-align-items-center is-flex-wrap-wrap" style="gap: 0.75rem;">
+                            <div>
+                                <h3 class="title is-5 is-thin" style="color:#f8fafc; margin-bottom:0.2rem;">Experiment Matrix</h3>
+                                <p style="color: rgba(248,250,252,0.78);">
+                                    Inspect nested config values, unlock the ones you want to vary, and generate the full combination set.
+                                </p>
+                            </div>
+                            <div style="min-width: 260px; flex: 0 1 360px;">
+                                <form action="/admin/experiment_matrix" method="GET" class="is-flex is-flex-direction-column" style="gap:0.5rem;">
+                                    <div class="select is-fullwidth">
+                                        <select id="matrix-source-group" name="source_group">
+                                            <option value="">Select source group...</option>
+                                            {% for group_name in matrix_exp_groups or [] %}
+                                            <option value="{{ group_name }}" {% if selected_source_group == group_name %}selected{% endif %}>{{ group_name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="select is-fullwidth">
+                                        <select id="matrix-source-exp" name="source_exp_id" {% if not selected_source_group %}disabled{% endif %} required>
+                                            <option value="">{{ 'Select source experiment...' if selected_source_group else 'Select a source group first...' }}</option>
+                                            {% for exp in grouped_experiments or [] %}
+                                            <option value="{{ exp.idexp }}" {% if selected_experiment and selected_experiment.idexp == exp.idexp %}selected{% endif %}>{{ exp.exp_name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="field">
+                                        <label class="label" style="color: rgba(248,250,252,0.85);">Target Group</label>
+                                        <div class="control">
+                                            <input type="text"
+                                                   id="matrix-target-group"
+                                                   name="target_group"
+                                                   list="exp_groups_datalist_matrix"
+                                                   class="input"
+                                                   value="{{ selected_group or '' }}"
+                                                   placeholder="Choose an existing group or type a new one"
+                                                   required>
+                                        </div>
+                                        <datalist id="exp_groups_datalist_matrix">
+                                            {% for group_name in matrix_exp_groups or [] %}
+                                            <option value="{{ group_name }}">
+                                            {% endfor %}
+                                        </datalist>
+                                        <p class="matrix-hint" style="margin-top:0.35rem;">You can assign the generated experiments to an existing group or create a new one here.</p>
+                                    </div>
+                                    <p class="matrix-hint" style="margin-top:-0.15rem;">Pick a source group first, then choose one experiment from that group.</p>
+                                    <button type="submit" class="button is-info is-fullwidth">Load Matrix</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        {% if selected_experiment %}
+                        <div class="matrix-summary-grid">
+                            <div class="matrix-summary-stat">
+                                <span class="label">Selected Experiment</span>
+                                <span class="value">{{ selected_experiment.exp_name }}</span>
+                            </div>
+                            <div class="matrix-summary-stat">
+                                <span class="label">Platform</span>
+                                <span class="value">{{ selected_experiment.platform_type }}</span>
+                            </div>
+                            <div class="matrix-summary-stat">
+                                <span class="label">Target Group</span>
+                                <span class="value">{{ selected_group or "-" }}</span>
+                            </div>
+                            <div class="matrix-summary-stat">
+                                <span class="label">Configurable Features</span>
+                                <span class="value">{{ total_features }}</span>
+                            </div>
+                            <div class="matrix-summary-stat">
+                                <span class="label">Visible Rows</span>
+                                <span class="value">{{ unlockable_features }}</span>
+                            </div>
+                            <div class="matrix-summary-stat">
+                                <span class="label">Generated Configs</span>
+                                <span class="value" id="matrix-total-configs">1</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            {% if selected_experiment %}
+            <form id="matrix-form" action="/admin/experiment_matrix" method="POST">
+                <input type="hidden" name="source_exp_id" value="{{ selected_experiment.idexp }}">
+                <input type="hidden" name="source_group" value="{{ selected_source_group }}">
+                <input type="hidden" name="target_group" value="{{ selected_group }}">
+                <input type="hidden" name="exp_group" value="{{ selected_group }}">
+                <input type="hidden" id="variation_payload" name="variation_payload" value="[]">
+
+                {% macro render_leaf(feature, label=None, depth=0) %}
+                    {% set allow_custom_values = feature.allow_custom_values if feature.allow_custom_values is defined else True %}
+                    {% set value_type = (feature.value_type or '')|string|lower %}
+                    {% set editor_mode = feature.editor_mode if feature.editor_mode is defined else ('boolean' if value_type in ['bool', 'boolean'] else 'tags') %}
+                    <div class="taxonomy-leaf matrix-feature-row taxonomy-depth-{{ depth }}"
+                         data-file-name="{{ feature.file_name }}"
+                         data-path-tokens='{{ feature.path_tokens|tojson }}'
+                         data-display-label="{{ label or feature.display_label or feature.path }}"
+                         data-value-type="{{ feature.value_type }}"
+                         data-allow-custom-values="{{ 1 if allow_custom_values else 0 }}"
+                         data-editor-mode="{{ editor_mode }}"
+                         data-current-value='{{ feature.value|tojson }}'
+                         data-can-unlock="1">
+                        <div class="taxonomy-leaf-header">
+                            <div class="taxonomy-leaf-title">
+                                <span class="name">{{ label or feature.display_label or feature.path }}</span>
+                            </div>
+                        </div>
+                        <div class="taxonomy-leaf-body">
+                            <div class="matrix-toggle-wrap">
+                                <label class="matrix-switch">
+                                    <input type="checkbox" class="matrix-unlock-toggle matrix-switch-input">
+                                    <span class="matrix-switch-track" aria-hidden="true"></span>
+                                </label>
+                            </div>
+                            <div class="matrix-field-stack">
+                                <div class="matrix-value-block">
+                                    <div class="taxonomy-path">Current value</div>
+                                    <span class="matrix-value-pill">{{ feature.value_display }}</span>
+                                </div>
+                                <div class="matrix-value-block">
+                                    <div class="taxonomy-path">Alternative values</div>
+                                    <div class="matrix-tag-editor"
+                                         data-mode="{{ editor_mode }}"
+                                         data-empty-label="{% if allow_custom_values %}Add alternative values{% else %}Select at least one recommender system{% endif %}"
+                                         data-allow-custom-values="{{ 1 if allow_custom_values else 0 }}">
+                                        {% if editor_mode == 'recsys' %}
+                                            <div class="matrix-recsys-options" aria-live="polite">
+                                                {% for option in feature.default_values or [] %}
+                                                    {% set is_current = option.name == feature.value %}
+                                                    <label class="matrix-recsys-option">
+                                                        <span class="matrix-recsys-option-label">
+                                                            <code>{{ option.label or option.name }}</code>
+                                                            {% if is_current %}
+                                                                <span class="matrix-current-badge">Current</span>
+                                                            {% endif %}
+                                                        </span>
+                                                        <span class="matrix-switch">
+                                                            <input type="checkbox" class="matrix-recsys-toggle matrix-switch-input" data-value='{{ option.name|tojson }}' data-label='{{ (option.label or option.name)|tojson }}' checked>
+                                                            <span class="matrix-switch-track" aria-hidden="true"></span>
+                                                        </span>
+                                                    </label>
+                                                {% endfor %}
+                                            </div>
+                                        {% elif editor_mode == 'boolean' %}
+                                            {% set current_bool = feature.value|string|lower in ['true', '1', 'yes', 'on'] %}
+                                            <div class="matrix-boolean-options" aria-live="polite">
+                                                <span class="matrix-boolean-label">
+                                                    <span class="matrix-boolean-pill">False</span>
+                                                </span>
+                                                <label class="matrix-switch" title="Toggle the generated value between false and true">
+                                                    <input type="checkbox" class="matrix-boolean-toggle matrix-switch-input" data-value-true="true" data-value-false="false" {% if current_bool %}checked{% endif %}>
+                                                    <span class="matrix-switch-track" aria-hidden="true"></span>
+                                                </label>
+                                                <span class="matrix-boolean-label">
+                                                    <span class="matrix-boolean-pill">True</span>
+                                                </span>
+                                            </div>
+                                        {% else %}
+                                            <div class="matrix-tag-list" aria-live="polite">
+                                                {% for option in feature.default_values or [] %}
+                                                    <span class="matrix-tag-chip" data-value='{{ option.name|tojson }}'>
+                                                        <code>{{ option.label or option.name }}</code>
+                                                        <button type="button" class="matrix-tag-remove" aria-label="Remove alternative value">×</button>
+                                                    </span>
+                                                {% endfor %}
+                                            </div>
+                                            {% if allow_custom_values %}
+                                            <div class="matrix-tag-input-row">
+                                                <input type="text" class="input matrix-tag-input" disabled placeholder="Type a value and press Enter">
+                                                <button type="button" class="button is-light matrix-tag-add" disabled>Add</button>
+                                            </div>
+                                            {% endif %}
+                                        {% endif %}
+                                        <input type="hidden" class="matrix-values leaf-input" value="[]">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endmacro %}
+
+                {% macro render_taxonomy(node, depth=0) %}
+                    {% set children = node.children.values() | list %}
+                    {% if node.feature %}
+                        {{ render_leaf(node.feature, node.feature.display_label or node.label, depth) }}
+                    {% endif %}
+                    {% if children %}
+                                {% for child in children %}
+                                    {% if child.children or child.feature %}
+                                        {% if child.feature and not child.children %}
+                                            {{ render_taxonomy(child, depth + 1) }}
+                                        {% else %}
+                                            <details class="matrix-taxonomy-group taxonomy-depth-{{ depth }}">
+                                                <summary>
+                                                    <span>{{ child.label }}</span>
+                                                    <span class="taxonomy-path">{{ child.path }}</span>
+                                                </summary>
+                                                <div class="matrix-taxonomy-children">
+                                                    {{ render_taxonomy(child, depth + 1) }}
+                                                </div>
+                                            </details>
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+                    {% endif %}
+                {% endmacro %}
+
+                {% macro render_report_panel(report, panel_open=False) %}
+                    <details class="matrix-report-card">
+                        <summary>
+                            <div class="matrix-report-title">
+                                <div>
+                                    <strong>{{ report.title }}</strong>
+                                    <div class="meta">{{ report.file_name }}</div>
+                                </div>
+                                <div class="meta">{{ report.features|selectattr('can_unlock')|list|length }} configurable values</div>
+                            </div>
+                        </summary>
+                        <div style="padding: 1rem;">
+                            {% if report.kind == 'client' and report.recommendation_features %}
+                                <details class="matrix-taxonomy-group" open>
+                                    <summary>
+                                        <span>Recommendations</span>
+                                        <span class="taxonomy-path">agents.recsys_type / agents.frecsys_type</span>
+                                    </summary>
+                                    <div class="matrix-taxonomy-children">
+                                        <div class="matrix-root-grid">
+                                            {% for feature in report.recommendation_features %}
+                                                {{ render_leaf(feature, feature.display_label, 0) }}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </details>
+                            {% endif %}
+                            {% if report.tree.children %}
+                                <div class="matrix-root-grid">
+                                    {% for child in report.tree.children.values() %}
+                                        {% if child.children or child.feature %}
+                                            {% if child.feature and not child.children %}
+                                                {{ render_taxonomy(child, 0) }}
+                                            {% else %}
+                                                <details class="matrix-taxonomy-group">
+                                                    <summary>
+                                                        <span>{{ child.label }}</span>
+                                                        <span class="taxonomy-path">{{ child.path }}</span>
+                                                    </summary>
+                                                    <div class="matrix-taxonomy-children">
+                                                        {{ render_taxonomy(child, 1) }}
+                                                    </div>
+                                                </details>
+                                            {% endif %}
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="has-text-grey">No configurable values found in this file.</p>
+                            {% endif %}
+                        </div>
+                    </details>
+                {% endmacro %}
+
+                {% if server_reports or client_reports %}
+                    <details class="matrix-report-card">
+                        <summary>
+                            <div class="matrix-report-title">
+                                <div>
+                                    <strong>Server Settings</strong>
+                                    <div class="meta">{{ server_reports|length }} file{{ '' if server_reports|length == 1 else 's' }}</div>
+                                </div>
+                            </div>
+                        </summary>
+                        <div style="padding: 1rem;">
+                            {% if server_reports %}
+                                <div class="matrix-report-grid">
+                                    {% for report in server_reports %}
+                                        {{ render_report_panel(report) }}
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="has-text-grey">No server configuration file was found for this experiment.</p>
+                            {% endif %}
+                        </div>
+                    </details>
+
+                    <details class="matrix-report-card" style="margin-top: 1rem;">
+                        <summary>
+                            <div class="matrix-report-title">
+                                <div>
+                                    <strong>Client Settings</strong>
+                                    <div class="meta">{{ client_reports|length }} file{{ '' if client_reports|length == 1 else 's' }}</div>
+                                </div>
+                            </div>
+                        </summary>
+                        <div style="padding: 1rem;">
+                            {% if client_reports %}
+                                <div class="matrix-report-grid">
+                                    {% for report in client_reports %}
+                                        {{ render_report_panel(report) }}
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="has-text-grey">No client configuration files were found for this experiment.</p>
+                            {% endif %}
+                        </div>
+                    </details>
+                {% else %}
+                    <div class="dashboard-box" style="margin-top: 1rem;">
+                        <p class="has-text-weight-semibold">No configuration files were found for this experiment.</p>
+                        <p class="has-text-grey">The matrix loader searched the experiment folder and its subfolders but did not find a readable server or client JSON config.</p>
+                    </div>
+                {% endif %}
+
+                <div class="matrix-footer">
+                    <div class="matrix-footer-grid">
+                        <div>
+                            <div class="matrix-count">Total configurations: <span id="matrix-total-configs-inline">1</span></div>
+                            <div class="matrix-hint">
+                                Unlock a feature and provide alternative values. Turn Cartesian mode on to combine all enabled features; leave it off to generate independent variants one feature at a time.
+                            </div>
+                            <div id="matrix-warning" class="matrix-warning" style="display:none;"></div>
+                        </div>
+                        <div class="matrix-footer-actions">
+                            <input type="hidden" id="generation_mode" name="generation_mode" value="independent">
+                            <label class="matrix-generation-toggle">
+                                <span class="label-stack">
+                                    <span class="label-title">Cartesian product</span>
+                                    <span class="label-subtitle">Combine all enabled features</span>
+                                </span>
+                                <span class="matrix-switch">
+                                    <input type="checkbox" id="matrix-generation-toggle" class="matrix-switch-input">
+                                    <span class="matrix-switch-track" aria-hidden="true"></span>
+                                </span>
+                            </label>
+                            <div style="min-width: 220px;">
+                                <button id="matrix-submit-btn" type="submit" class="button is-primary is-fullwidth" disabled>Generate Experiments</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            {% else %}
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <p class="has-text-grey">Select an experiment above to inspect its configuration matrix.</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    const experimentData = {{ matrix_experiments|tojson }};
+    const groupSelect = document.getElementById('matrix-source-group');
+    const sourceSelect = document.getElementById('matrix-source-exp');
+
+    if (!groupSelect || !sourceSelect) {
+        return;
+    }
+
+    function clearOptions(select, placeholderText) {
+        while (select.options.length > 0) {
+            select.remove(0);
+        }
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = placeholderText;
+        select.appendChild(placeholder);
+    }
+
+    function populateSourceExperiments(groupName, selectedId) {
+        const normalizedGroup = String(groupName || '').trim();
+        const experiments = experimentData.filter(item => String(item.group || '').trim() === normalizedGroup);
+
+        clearOptions(
+            sourceSelect,
+            normalizedGroup
+                ? 'Select source experiment...'
+                : 'Select a source group first...'
+        );
+
+        if (!normalizedGroup) {
+            sourceSelect.disabled = true;
+            return;
+        }
+
+        experiments.forEach(exp => {
+            const option = document.createElement('option');
+            option.value = String(exp.idexp);
+            option.textContent = exp.name;
+            if (selectedId && String(selectedId) === String(exp.idexp)) {
+                option.selected = true;
+            }
+            sourceSelect.appendChild(option);
+        });
+
+        sourceSelect.disabled = experiments.length === 0;
+        if (experiments.length === 0) {
+            sourceSelect.value = '';
+        }
+    }
+
+    groupSelect.addEventListener('change', function() {
+        populateSourceExperiments(groupSelect.value, null);
+    });
+
+    const matrixForm = document.getElementById('matrix-form');
+    const targetGroupInput = document.getElementById('matrix-target-group');
+    function syncTargetGroupFields() {
+        if (!matrixForm || !targetGroupInput) {
+            return;
+        }
+        const normalizedTarget = String(targetGroupInput.value || '').trim();
+        const hiddenTarget = matrixForm.querySelector('input[name="target_group"]');
+        const hiddenLegacy = matrixForm.querySelector('input[name="exp_group"]');
+        if (hiddenTarget) {
+            hiddenTarget.value = normalizedTarget;
+        }
+        if (hiddenLegacy) {
+            hiddenLegacy.value = normalizedTarget;
+        }
+    }
+
+    if (matrixForm && targetGroupInput) {
+        targetGroupInput.addEventListener('input', syncTargetGroupFields);
+        targetGroupInput.addEventListener('change', syncTargetGroupFields);
+        matrixForm.addEventListener('submit', syncTargetGroupFields);
+        syncTargetGroupFields();
+    }
+
+    populateSourceExperiments(groupSelect.value, {{ selected_exp_id|tojson }});
+})();
+
+(function() {
+    const rows = Array.from(document.querySelectorAll('.matrix-feature-row'));
+    const totalEl = document.getElementById('matrix-total-configs');
+    const totalInlineEl = document.getElementById('matrix-total-configs-inline');
+    const warningEl = document.getElementById('matrix-warning');
+    const form = document.getElementById('matrix-form');
+    const submitBtn = document.getElementById('matrix-submit-btn');
+    const payloadEl = document.getElementById('variation_payload');
+    const generationToggle = document.getElementById('matrix-generation-toggle');
+    const generationModeEl = document.getElementById('generation_mode');
+
+    function parseMatrixValues(raw) {
+        return raw
+            .split(/\r?\n/)
+            .map(part => part.trim())
+            .filter(Boolean)
+            .map(part => {
+                try {
+                    return JSON.parse(part);
+                } catch (err) {
+                    return part;
+                }
+            });
+    }
+
+    function parseTagValue(raw) {
+        const text = String(raw || '').trim();
+        if (!text) {
+            return null;
+        }
+        try {
+            return JSON.parse(text);
+        } catch (err) {
+            return text;
+        }
+    }
+
+    function formatTagValue(value) {
+        if (typeof value === 'string') {
+            return value;
+        }
+        try {
+            return JSON.stringify(value);
+        } catch (err) {
+            return String(value);
+        }
+    }
+
+    function getGenerationMode() {
+        return generationToggle && generationToggle.checked ? 'cartesian' : 'independent';
+    }
+
+    function syncGenerationMode() {
+        if (generationModeEl) {
+            generationModeEl.value = getGenerationMode();
+        }
+    }
+
+    function getEditorElements(row) {
+        const editor = row.querySelector('.matrix-tag-editor');
+        if (!editor) {
+            return null;
+        }
+        const mode = editor.dataset.mode || 'tags';
+        return {
+            editor,
+            mode,
+            list: editor.querySelector('.matrix-tag-list') || editor.querySelector('.matrix-recsys-options'),
+            input: editor.querySelector('.matrix-tag-input'),
+            addButton: editor.querySelector('.matrix-tag-add'),
+            hidden: editor.querySelector('.matrix-values'),
+            optionToggles: Array.from(editor.querySelectorAll('.matrix-recsys-toggle')),
+            booleanToggle: editor.querySelector('.matrix-boolean-toggle'),
+        };
+    }
+
+    function syncTagEditor(row) {
+        const elements = getEditorElements(row);
+        if (!elements) {
+            return { unlocked: false, count: 1, valid: true };
+        }
+
+        const toggle = row.querySelector('.matrix-unlock-toggle');
+        if (!toggle) {
+            return { unlocked: false, count: 1, valid: true };
+        }
+
+        const unlocked = toggle.checked;
+        if (elements.mode === 'recsys') {
+            const values = elements.optionToggles
+                .filter(optionToggle => optionToggle.checked)
+                .map(optionToggle => parseTagValue(optionToggle.dataset.value || optionToggle.value || ''))
+                .filter(value => value !== null && value !== undefined && String(value).trim?.() !== '');
+            if (elements.hidden) {
+                elements.hidden.value = JSON.stringify(values);
+            }
+            if (!unlocked) {
+                return { unlocked: false, count: 1, valid: true };
+            }
+            return {
+                unlocked: true,
+                count: values.length,
+                valid: values.length > 0,
+                values,
+            };
+        }
+
+        if (elements.mode === 'boolean') {
+            const boolValue = !!(elements.booleanToggle && elements.booleanToggle.checked);
+            if (elements.hidden) {
+                elements.hidden.value = JSON.stringify([boolValue]);
+            }
+            if (!unlocked) {
+                return { unlocked: false, count: 1, valid: true };
+            }
+            return {
+                unlocked: true,
+                count: 1,
+                valid: true,
+                values: [boolValue],
+            };
+        }
+
+        const { input, addButton } = elements;
+        if (input) {
+            input.disabled = !unlocked;
+            input.style.opacity = unlocked ? '1' : '0.55';
+        }
+        if (addButton) {
+            addButton.disabled = !unlocked;
+        }
+        if (!elements.list) {
+            return { unlocked: false, count: 1, valid: true };
+        }
+
+        const chips = Array.from(elements.list.querySelectorAll('.matrix-tag-chip'));
+        const values = chips.map(chip => {
+            const raw = chip.dataset.value || chip.textContent || '';
+            return parseTagValue(raw);
+        }).filter(value => value !== null && value !== undefined && String(value).trim?.() !== '');
+
+        const hasValues = chips.length > 0;
+        if (elements.hidden) {
+            elements.hidden.value = JSON.stringify(values);
+        }
+
+        if (!hasValues) {
+            const empty = elements.list.querySelector('.matrix-tag-empty');
+            if (!empty && unlocked) {
+                const placeholder = document.createElement('span');
+                placeholder.className = 'matrix-tag-empty';
+                placeholder.textContent = elements.editor.dataset.emptyLabel || 'Add alternative values';
+                elements.list.appendChild(placeholder);
+            }
+        } else {
+            const empty = elements.list.querySelector('.matrix-tag-empty');
+            if (empty) {
+                empty.remove();
+            }
+        }
+
+        if (!unlocked) {
+            return { unlocked: false, count: 1, valid: true };
+        }
+
+        return { unlocked: true, count: values.length, valid: values.length > 0, values };
+    }
+
+    function addTag(row, rawValue) {
+        const elements = getEditorElements(row);
+        if (
+            !elements ||
+            elements.mode === 'recsys' ||
+            elements.mode === 'boolean' ||
+            !elements.list ||
+            !elements.input
+        ) {
+            return false;
+        }
+        const parsed = parseTagValue(rawValue);
+        if (parsed === null || parsed === undefined || String(parsed).trim?.() === '') {
+            return false;
+        }
+        const chip = document.createElement('span');
+        chip.className = 'matrix-tag-chip';
+        chip.dataset.value = formatTagValue(parsed);
+        const code = document.createElement('code');
+        code.textContent = formatTagValue(parsed);
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'matrix-tag-remove';
+        remove.setAttribute('aria-label', 'Remove alternative value');
+        remove.textContent = '×';
+        remove.addEventListener('click', function() {
+            chip.remove();
+            syncTagEditor(row);
+            recalculateMatrix();
+        });
+        chip.appendChild(code);
+        chip.appendChild(remove);
+        const empty = elements.list.querySelector('.matrix-tag-empty');
+        if (empty) {
+            empty.remove();
+        }
+        elements.list.appendChild(chip);
+        elements.input.value = '';
+        syncTagEditor(row);
+        return true;
+    }
+
+    function updateRowState(row) {
+        const toggle = row.querySelector('.matrix-unlock-toggle');
+        const elements = getEditorElements(row);
+        if (!toggle || !elements) {
+            return { unlocked: false, count: 1, valid: true };
+        }
+        const unlocked = toggle.checked;
+        return syncTagEditor(row) || { unlocked: false, count: 1, valid: true };
+    }
+
+    function recalculateMatrix() {
+        let total = getGenerationMode() === 'cartesian' ? 1 : 0;
+        let unlockedCount = 0;
+        let valid = true;
+        let message = '';
+        const cartesianMode = getGenerationMode() === 'cartesian';
+
+        rows.forEach(row => {
+            const state = updateRowState(row);
+            if (!state.unlocked) {
+                return;
+            }
+            unlockedCount += 1;
+            if (!state.valid) {
+                valid = false;
+            } else {
+                total = cartesianMode ? total * state.count : total + state.count;
+            }
+        });
+
+        if (unlockedCount === 0) {
+            total = 1;
+        } else if (!valid) {
+            total = 0;
+            message = 'Every unlocked feature must have at least one alternative value.';
+        }
+
+        if (totalEl) totalEl.textContent = String(total);
+        if (totalInlineEl) totalInlineEl.textContent = String(total);
+        if (warningEl) {
+            warningEl.style.display = message ? 'block' : 'none';
+            warningEl.textContent = message;
+        }
+        if (submitBtn) {
+            submitBtn.disabled = unlockedCount === 0 || !valid;
+        }
+        syncGenerationMode();
+        return { total, valid };
+    }
+
+    function buildPayload() {
+        const payload = [];
+        let valid = true;
+
+        rows.forEach(row => {
+            const toggle = row.querySelector('.matrix-unlock-toggle');
+            const elements = getEditorElements(row);
+            if (!toggle || !elements || !toggle.checked) {
+                return;
+            }
+            let values = [];
+            let valueLabels = [];
+            if (elements.mode === 'recsys') {
+                const selectedOptions = elements.optionToggles.filter(optionToggle => optionToggle.checked);
+                const recsysChoices = selectedOptions
+                    .map(optionToggle => ({
+                        value: parseTagValue(optionToggle.dataset.value || optionToggle.value || ''),
+                        label: optionToggle.dataset.label || optionToggle.getAttribute('data-label') || optionToggle.title || '',
+                    }))
+                    .filter(choice => choice.value !== null && choice.value !== undefined && String(choice.value).trim?.() !== '');
+                values = recsysChoices.map(choice => choice.value);
+                valueLabels = recsysChoices.map(choice => choice.label);
+            } else if (elements.mode === 'boolean') {
+                const boolValue = !!(elements.booleanToggle && elements.booleanToggle.checked);
+                values = [boolValue];
+                valueLabels = [String(boolValue)];
+            } else {
+                values = Array.from(elements.list.querySelectorAll('.matrix-tag-chip')).map(chip => {
+                    const raw = chip.dataset.value || chip.textContent || '';
+                    return parseTagValue(raw);
+                }).filter(value => value !== null && value !== undefined && String(value).trim?.() !== '');
+            }
+            if (values.length === 0) {
+                valid = false;
+                return;
+            }
+            payload.push({
+                file_name: row.dataset.fileName,
+                path_tokens: JSON.parse(row.dataset.pathTokens || '[]'),
+                display_label: row.dataset.displayLabel || null,
+                value_type: row.dataset.valueType || null,
+                values: values,
+                value_labels: valueLabels,
+                can_unlock: true
+            });
+        });
+
+        payloadEl.value = JSON.stringify(payload);
+        return valid;
+    }
+
+    rows.forEach(row => {
+        const toggle = row.querySelector('.matrix-unlock-toggle');
+        const elements = getEditorElements(row);
+        if (toggle && elements) {
+            toggle.addEventListener('change', recalculateMatrix);
+            if (elements.mode === 'recsys') {
+                elements.optionToggles.forEach(function(optionToggle) {
+                    optionToggle.addEventListener('change', recalculateMatrix);
+                });
+            } else if (elements.mode === 'boolean') {
+                if (elements.booleanToggle) {
+                    elements.booleanToggle.addEventListener('change', recalculateMatrix);
+                }
+            } else if (elements.input) {
+                elements.input.addEventListener('keydown', function(event) {
+                    if (event.key === 'Enter' || event.key === ',') {
+                        event.preventDefault();
+                        if (addTag(row, elements.input.value)) {
+                            recalculateMatrix();
+                        }
+                    }
+                });
+                elements.input.addEventListener('blur', function() {
+                    if (elements.input.value.trim()) {
+                        addTag(row, elements.input.value);
+                        recalculateMatrix();
+                    }
+                });
+            }
+            if (elements.addButton) {
+                elements.addButton.addEventListener('click', function() {
+                    if (addTag(row, elements.input.value)) {
+                        recalculateMatrix();
+                    }
+                });
+            }
+        }
+    });
+
+    if (generationToggle) {
+        generationToggle.addEventListener('change', recalculateMatrix);
+    }
+
+    if (form) {
+        form.addEventListener('submit', function(event) {
+            syncGenerationMode();
+            if (!buildPayload()) {
+                event.preventDefault();
+                recalculateMatrix();
+                return;
+            }
+            const state = recalculateMatrix();
+            if (!state.valid || state.total === 0) {
+                event.preventDefault();
+            }
+        });
+    }
+
+    recalculateMatrix();
+})();
+</script>
+
+{% include "admin/footer.html" %}

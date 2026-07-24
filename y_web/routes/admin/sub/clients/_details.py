@@ -276,6 +276,7 @@ def client_details_hpc(uid):
     current_share = client.share
     current_search = client.search
     current_vote = client.vote
+    current_follow = client.follow
     current_recommendations_default_limit = 12
     if isinstance(agents, list):
         for agent in agents:
@@ -342,6 +343,7 @@ def client_details_hpc(uid):
         current_share = config_actions.get("share", current_share)
         current_search = config_actions.get("search", current_search)
         current_vote = config_actions.get("vote", current_vote)
+        current_follow = config_actions.get("follow", current_follow)
         current_recommendations_default_limit = (
             config.get("recommendations", {}).get(
                 "default_limit", current_recommendations_default_limit
@@ -419,6 +421,7 @@ def client_details_hpc(uid):
         current_share=current_share,
         current_search=current_search,
         current_vote=current_vote,
+        current_follow=current_follow,
         current_recommendations_default_limit=current_recommendations_default_limit,
     )
 

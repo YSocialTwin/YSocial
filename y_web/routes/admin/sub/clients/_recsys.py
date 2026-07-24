@@ -2,11 +2,14 @@
 
 import json
 import os
+import re
+from pathlib import Path
 
 from flask import flash, redirect, request, url_for
 from flask_login import current_user, login_required
 
 from y_web import db
+from y_web.src.hpc.population_backup import _population_json_candidates
 from y_web.src.models import (
     Agent,
     Agent_Population,
@@ -80,6 +83,7 @@ def _update_client_simulation_internal(uid, expected_mode):
     client.share = _float("share", client.share)
     client.search = _float("search", client.search)
     client.vote = _float("vote", client.vote)
+    client.follow = _float("follow", client.follow)
     recommendations_default_limit = _int("recommendations_default_limit", 12)
 
     memory_enabled = request.form.get("memory_enabled") in {"on", "true", "1", "yes"}
@@ -227,6 +231,7 @@ def _update_client_simulation_internal(uid, expected_mode):
                 "share": client.share,
                 "search": client.search,
                 "vote": client.vote,
+                "follow": client.follow,
             }
         )
         config["recommendations"] = {"default_limit": recommendations_default_limit}
@@ -299,6 +304,87 @@ def _update_client_simulation_internal(uid, expected_mode):
 
     flash("Client simulation parameters updated.", "success")
     return redirect(request.referrer)
+
+
+def _sync_population_recsys_fields(
+    exp_folder, population_name, recsys_type, frecsys_type
+):
+    """Rewrite per-agent recsys settings in all matching population JSON files."""
+    updated_paths = []
+
+    candidates = list(_population_json_candidates(exp_folder, population_name))
+    if exp_folder and population_name:
+        compact_name = population_name.replace(" ", "")
+        base_match = re.match(r"^(.+?)(?:_\d+)?$", compact_name)
+        if base_match and os.path.isdir(exp_folder):
+            base_name = base_match.group(1)
+            for entry in sorted(Path(exp_folder).iterdir()):
+                if not entry.is_file():
+                    continue
+                entry_name = entry.name
+                if (
+                    not entry_name.endswith(".json")
+                    or entry_name.startswith("client_")
+                    or entry_name.startswith("config_")
+                    or entry_name.startswith("prompts")
+                    or entry_name.startswith("_")
+                ):
+                    continue
+                if entry_name.startswith(base_name):
+                    candidates.append(str(entry))
+
+    seen = set()
+    unique_candidates = []
+    for candidate in candidates:
+        if candidate not in seen:
+            unique_candidates.append(candidate)
+            seen.add(candidate)
+
+    for candidate in unique_candidates:
+        if not os.path.exists(candidate):
+            continue
+        try:
+            with open(candidate, "r", encoding="utf-8") as handle:
+                payload = json.load(handle)
+
+            changed = False
+
+            def _update_agent(agent):
+                nonlocal changed
+                if not isinstance(agent, dict):
+                    return
+                if agent.get("recsys_type") != recsys_type:
+                    agent["recsys_type"] = recsys_type
+                    changed = True
+                if agent.get("frecsys_type") != frecsys_type:
+                    agent["frecsys_type"] = frecsys_type
+                    changed = True
+
+            if isinstance(payload, dict):
+                agents = payload.get("agents")
+                if isinstance(agents, list):
+                    for agent in agents:
+                        _update_agent(agent)
+                elif isinstance(agents, dict):
+                    for agent in agents.values():
+                        _update_agent(agent)
+                else:
+                    _update_agent(payload)
+            elif isinstance(payload, list):
+                for agent in payload:
+                    _update_agent(agent)
+
+            if changed:
+                with open(candidate, "w", encoding="utf-8") as handle:
+                    json.dump(payload, handle, indent=2)
+                updated_paths.append(candidate)
+        except Exception as exc:
+            flash(
+                f"Updated database values, but failed to sync population config '{os.path.basename(candidate)}': {exc}",
+                "warning",
+            )
+
+    return updated_paths
 
 
 def _update_recsys_internal(uid, expected_mode):
@@ -377,6 +463,14 @@ def _update_recsys_internal(uid, expected_mode):
                 f"Updated database values, but failed to sync client config: {exc}",
                 "warning",
             )
+
+    if population:
+        _sync_population_recsys_fields(
+            os.path.join(base_dir, "y_web", "experiments", exp_folder),
+            population.name,
+            recsys_type,
+            frecsys_type,
+        )
 
     db.session.commit()
     return redirect(request.referrer)

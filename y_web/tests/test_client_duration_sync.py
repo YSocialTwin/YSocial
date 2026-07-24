@@ -49,5 +49,6 @@ def test_hpc_client_reuses_client_days_as_expected_rounds():
         "/Users/rossetti/PycharmProjects/YWeb/y_web/src/hpc/client.py"
     ).read_text(encoding="utf-8")
 
-    assert "expected_rounds = -1 if cli.days == -1 else cli.days * 24" in source
+    assert "_sync_hpc_client_duration_from_config" in source
+    assert "_resolve_hpc_client_days_from_config" in source
     assert "client_exec.expected_duration_rounds = expected_rounds" in source

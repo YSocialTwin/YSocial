@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 pytestmark = pytest.mark.unit
@@ -329,6 +331,37 @@ def test_hpc_recsys_updates_do_not_require_activation_when_config_exists():
         'config["recommendations"] = {"default_limit": recommendations_default_limit}'
         in source
     )
+    assert "_sync_population_recsys_fields(" in source
+
+
+def test_population_recsys_sync_rewrites_all_agents_in_place(tmp_path):
+    from y_web.routes.admin.sub.clients._recsys import (
+        _sync_population_recsys_fields,
+    )
+
+    population_file = tmp_path / "my_population.json"
+    population_file.write_text(
+        """
+        {
+          "agents": [
+            {"username": "a", "recsys_type": "old", "frecsys_type": "old"},
+            {"username": "b", "recsys_type": "old2", "frecsys_type": "old2"},
+            {"username": "page", "is_page": 1, "recsys_type": "page_old", "frecsys_type": "page_old"}
+          ]
+        }
+        """.strip(),
+        encoding="utf-8",
+    )
+
+    updated = _sync_population_recsys_fields(
+        str(tmp_path), "my_population", "ReverseChronoFollowersPopularity", "Jaccard"
+    )
+
+    assert str(population_file) in updated
+    payload = json.loads(population_file.read_text(encoding="utf-8"))
+    for agent in payload["agents"]:
+        assert agent["recsys_type"] == "ReverseChronoFollowersPopularity"
+        assert agent["frecsys_type"] == "Jaccard"
 
 
 def test_client_details_pages_expose_memory_and_archetype_editors():

@@ -211,8 +211,24 @@ class TestClientFormFields:
         assert 'value="0.35"' in template_source
         assert 'value="72"' in template_source
         assert (
-            'input type="hidden" name="follow" id="follow" value="1"' in template_source
+            'input type="hidden" name="follow" id="follow" value="0"' in template_source
         )
+
+    def test_hpc_details_form_exposes_follow_action(self):
+        template_source = open(
+            "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/client_details_hpc.html",
+            "r",
+        ).read()
+        crud_source = open(
+            "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_recsys.py",
+            "r",
+        ).read()
+
+        assert 'name="follow"' in template_source
+        assert "Global Actions Likelihood" in template_source
+        assert "current_follow" in template_source
+        assert 'client.follow = _float("follow", client.follow)' in crud_source
+        assert '"follow": client.follow' in crud_source
 
     def test_hpc_embedded_vllm_model_default_is_updated(self):
         template_source = open(
