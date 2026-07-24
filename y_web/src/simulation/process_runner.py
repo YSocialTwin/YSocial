@@ -577,6 +577,40 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
         if exp.platform_type == "forum":
             client_kwargs["log_file"] = log_file
 
+        # Repair missing network_type for experiments created before the matrix-copy
+        # fix: if the DB record has no network_type but the network CSV is present on
+        # disk (e.g., a synthetic ER/BA graph that was generated at creation time),
+        # treat the client as having a custom network and persist the correction so
+        # that future restarts also load the file.  This mirrors the logic applied by
+        # _matrix_client_network_type during experiment copy.
+        if first_run and not cli.network_type:
+            try:
+                from y_web.src.hpc.client import _hpc_network_bootstrap_exists
+
+                network_bootstrap_exists = _hpc_network_bootstrap_exists(
+                    data_base_path, client_config_path, cli
+                )
+            except Exception:
+                network_bootstrap_exists = False
+
+            if network_bootstrap_exists:
+                cli.network_type = "Custom Network"
+                try:
+                    session.add(cli)
+                    session.commit()
+                    print(
+                        f"Repaired missing network_type for client '{cli.name}': "
+                        "set to 'Custom Network'",
+                        file=sys.stderr,
+                    )
+                except Exception as repair_exc:
+                    session.rollback()
+                    print(
+                        f"Warning: could not persist network_type repair for client "
+                        f"'{cli.name}': {repair_exc}",
+                        file=sys.stderr,
+                    )
+
         if first_run and cli.network_type:
             path = f"{cli.name}_network.csv"
             client_kwargs["network"] = path

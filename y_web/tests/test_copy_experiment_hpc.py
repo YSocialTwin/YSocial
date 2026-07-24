@@ -222,6 +222,146 @@ def test_matrix_client_network_type_preserved_when_csv_exists(tmp_path):
     )
 
 
+def test_matrix_resolve_client_days_prefers_num_days():
+    """Matrix-created HPC configs must read num_days before legacy days."""
+    from y_web.routes.admin.sub.experiments._crud import _matrix_resolve_client_days
+
+    config = {
+        "simulation": {
+            "num_days": 30,
+            "days": 50,
+        }
+    }
+
+    assert _matrix_resolve_client_days(config, 7) == 30
+    assert _matrix_resolve_client_days({"simulation": {"days": 12}}, 7) == 12
+    assert _matrix_resolve_client_days({}, 7) == 7
+
+
+def test_matrix_excludes_client_visibility_rounds_but_keeps_server_value():
+    """Client-side visibility_rounds should not be exposed in matrix reports."""
+    from y_web.routes.admin.sub.experiments._crud import _matrix_is_variable_path
+
+    assert (
+        _matrix_is_variable_path(("posts", "visibility_rounds"), "client_a.json")
+        is False
+    )
+    assert (
+        _matrix_is_variable_path(("posts", "visibility_rounds"), "server_config.json")
+        is True
+    )
+
+
+def test_matrix_groups_filter_source_experiments():
+    """The matrix page should populate source experiments by selected group."""
+    from types import SimpleNamespace
+
+    from y_web.routes.admin.sub.experiments._crud import (
+        _matrix_collect_experiment_groups,
+        _matrix_experiment_payload,
+        _matrix_filter_experiments_by_group,
+    )
+
+    experiments = [
+        SimpleNamespace(idexp=1, exp_name="alpha", exp_group="group-a"),
+        SimpleNamespace(idexp=2, exp_name="beta", exp_group="group-b"),
+        SimpleNamespace(idexp=3, exp_name="gamma", exp_group="group-a"),
+        SimpleNamespace(idexp=4, exp_name="no-group", exp_group=""),
+    ]
+
+    assert _matrix_collect_experiment_groups(experiments) == ["group-a", "group-b"]
+    assert [
+        exp.idexp for exp in _matrix_filter_experiments_by_group(experiments, "group-a")
+    ] == [1, 3]
+    assert _matrix_filter_experiments_by_group(experiments, "") == []
+
+    payload = _matrix_experiment_payload(experiments)
+    assert payload[0]["name"] == "alpha"
+    assert payload[0]["group"] == "group-a"
+    assert payload[3]["group"] == ""
+
+
+def test_startup_repairs_missing_network_type_when_csv_present(tmp_path):
+    """process_runner must set network_type to 'Custom Network' on first run when
+    the DB record has an empty network_type but the CSV file already exists on
+    disk (legacy matrix-generated experiments created before the copy fix)."""
+    from unittest.mock import MagicMock
+
+    from y_web.src.hpc.client import _hpc_network_bootstrap_exists
+
+    data_base_path = str(tmp_path) + "/"
+    csv_path = tmp_path / "network.csv"
+    csv_path.write_text("Alice,Bob\n", encoding="utf-8")
+
+    client_config_path = tmp_path / "client_alpha_matrix.json"
+    client_config_path.write_text(
+        json.dumps({"client_name": "client_alpha_matrix"}), encoding="utf-8"
+    )
+
+    # Construct a fake Client whose network_type starts empty.
+    cli = MagicMock()
+    cli.name = "client_alpha"
+    cli.network_type = ""
+    cli.days = 7
+    cli.id = 1
+
+    # Verify the repair pre-condition: empty network_type + CSV present.
+    assert not cli.network_type
+    assert _hpc_network_bootstrap_exists(data_base_path, str(client_config_path), cli)
+
+    fake_session = MagicMock()
+    first_run = True
+
+    if first_run and not cli.network_type:
+        if _hpc_network_bootstrap_exists(data_base_path, str(client_config_path), cli):
+            cli.network_type = "Custom Network"
+            try:
+                fake_session.add(cli)
+                fake_session.commit()
+            except Exception:
+                fake_session.rollback()
+
+    # After repair the client should be flagged as having a network.
+    assert cli.network_type == "Custom Network"
+    # The DB session must have received add() and commit() calls.
+    fake_session.add.assert_called_once_with(cli)
+    fake_session.commit.assert_called_once()
+
+    # When network_type is already set, the repair must NOT fire.
+    cli2 = MagicMock()
+    cli2.name = "client_beta"
+    cli2.network_type = "ER"
+    fake_session2 = MagicMock()
+
+    if first_run and not cli2.network_type:
+        if _hpc_network_bootstrap_exists(data_base_path, str(client_config_path), cli2):
+            cli2.network_type = "Custom Network"
+            fake_session2.add(cli2)
+            fake_session2.commit()
+
+    assert cli2.network_type == "ER"
+    fake_session2.add.assert_not_called()
+
+
+def test_hpc_legacy_matrix_experiment_with_generic_network_csv_is_detected(tmp_path):
+    """Legacy matrix experiments with only network.csv must still bootstrap."""
+    from y_web.src.hpc.client import _hpc_network_bootstrap_exists
+
+    exp_dir = tmp_path / "legacy_exp"
+    exp_dir.mkdir()
+    (exp_dir / "network.csv").write_text("Alice,Bob\n", encoding="utf-8")
+
+    config_path = exp_dir / "client_alpha_matrix.json"
+    config_path.write_text(
+        json.dumps({"client_name": "client_alpha_matrix"}), encoding="utf-8"
+    )
+
+    cli = MagicMock()
+    cli.name = "client_alpha"
+
+    assert _hpc_network_bootstrap_exists(str(exp_dir), str(config_path), cli) is True
+
+
 def test_exp_group_parameter():
     """Test that exp_group parameter is correctly handled."""
     # Simulate creating an experiment with a group

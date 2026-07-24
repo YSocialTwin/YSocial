@@ -1911,6 +1911,52 @@ function fetchEmbeddingModels() {
         });
 }
 
+function initializeMatrixExperimentSelector() {
+    const data = (window.YS_DATA_SETTINGS && Array.isArray(YS_DATA_SETTINGS.matrixExperiments))
+        ? YS_DATA_SETTINGS.matrixExperiments
+        : [];
+    const groupSelect = document.getElementById('matrix_exp_group_select');
+    const sourceSelect = document.getElementById('matrix_source_exp_id');
+
+    if (!groupSelect || !sourceSelect) {
+        return;
+    }
+
+    const setPlaceholder = (text) => {
+        sourceSelect.innerHTML = '';
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = text;
+        sourceSelect.appendChild(placeholder);
+    };
+
+    const populateSourceExperiments = () => {
+        const groupName = String(groupSelect.value || '').trim();
+        if (!groupName) {
+            sourceSelect.disabled = true;
+            setPlaceholder('Select a group first...');
+            return;
+        }
+
+        const experiments = data
+            .filter((item) => String(item.group || '').trim() === groupName)
+            .sort((left, right) => String(left.name || '').localeCompare(String(right.name || '')));
+
+        sourceSelect.disabled = false;
+        setPlaceholder(experiments.length ? 'Select experiment...' : 'No experiments in this group');
+
+        experiments.forEach((exp) => {
+            const option = document.createElement('option');
+            option.value = exp.idexp;
+            option.textContent = exp.name;
+            sourceSelect.appendChild(option);
+        });
+    };
+
+    groupSelect.addEventListener('change', populateSourceExperiments);
+    populateSourceExperiments();
+}
+
 window.addEventListener('DOMContentLoaded', function() {
     const service = document.getElementById('embedding_service');
     const host = document.getElementById('embedding_host');
@@ -1928,6 +1974,7 @@ window.addEventListener('DOMContentLoaded', function() {
         fetchButton.addEventListener('click', fetchEmbeddingModels);
     }
     syncEmbeddingSettingsControls();
+    initializeMatrixExperimentSelector();
 });
 
 Object.assign(window, {

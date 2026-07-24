@@ -260,6 +260,7 @@ def settings():
         .all()
     )
     exp_groups = [group[0] for group in exp_groups]  # Extract from tuples
+    matrix_experiments = _matrix_experiment_payload(all_experiments)
     repo_availability = _external_repo_availability()
 
     return render_template(
@@ -272,6 +273,7 @@ def settings():
         enable_notebook=current_app.config.get("ENABLE_NOTEBOOK", False),
         exp_has_infinite=exp_has_infinite,
         exp_groups=exp_groups,
+        matrix_experiments=matrix_experiments,
         active_experiments=active_experiments,
         repo_availability=repo_availability,
     )
@@ -1433,7 +1435,7 @@ def upload_experiment():
             # HPC client config has simpler structure
             # Extract basic information
             client_name = client_config.get("name", "hpc_client")
-            client_days = client_config.get("simulation", {}).get("days", 7)
+            client_days = _matrix_resolve_client_days(client_config, 7)
 
             # Create minimal Client record for HPC
             # Many fields will use defaults since HPC config is simpler
@@ -2963,14 +2965,27 @@ def experiment_matrix():
     visible_query = get_visible_experiment_query(user)
     all_experiments = visible_query.order_by(Exps.exp_name.asc()).all()
     visible_exp_ids = {exp.idexp for exp in all_experiments}
+    matrix_exp_groups = _matrix_collect_experiment_groups(all_experiments)
+    matrix_experiments = _matrix_experiment_payload(all_experiments)
 
     selected_exp_id = request.values.get("source_exp_id", type=int)
-    exp_group = (request.values.get("exp_group") or "").strip()
+    source_group = (request.values.get("source_group") or "").strip()
+    target_group = (
+        request.values.get("target_group") or request.values.get("exp_group") or ""
+    ).strip()
     source_exp = (
         Exps.query.filter_by(idexp=selected_exp_id).first()
         if selected_exp_id and selected_exp_id in visible_exp_ids
         else None
     )
+    if source_exp and not source_group:
+        source_group = (source_exp.exp_group or "").strip()
+    if (
+        source_exp
+        and source_group
+        and (source_exp.exp_group or "").strip() != source_group
+    ):
+        source_exp = None
     matrix_reports = []
     server_reports = []
     client_reports = []
@@ -3014,9 +3029,16 @@ def experiment_matrix():
             total_features = 0
             unlockable_features = 0
 
+    grouped_experiments = _matrix_filter_experiments_by_group(
+        all_experiments, source_group
+    )
+
     if request.method == "POST":
         source_exp_id = request.form.get("source_exp_id", type=int)
-        exp_group = (request.form.get("exp_group") or "").strip()
+        source_group = (request.form.get("source_group") or "").strip()
+        target_group = (
+            request.form.get("target_group") or request.form.get("exp_group") or ""
+        ).strip()
         variation_payload = request.form.get("variation_payload") or "[]"
         generation_mode = (
             (request.form.get("generation_mode") or "independent").strip().lower()
@@ -3032,7 +3054,31 @@ def experiment_matrix():
             if source_exp_id and source_exp_id in visible_exp_ids
             else None
         )
-
+        if source_exp and not source_group:
+            source_group = (source_exp.exp_group or "").strip()
+        if (
+            source_exp
+            and source_group
+            and (source_exp.exp_group or "").strip() != source_group
+        ):
+            flash(
+                "Please pick a source experiment from the selected source group.",
+                "error",
+            )
+            return redirect(
+                url_for(
+                    "experiments.experiment_matrix",
+                    source_group=source_group,
+                    target_group=target_group,
+                )
+            )
+        if (
+            source_exp
+            and source_group
+            and (source_exp.exp_group or "").strip() != source_group
+        ):
+            flash("Source experiment not found.", "error")
+            return redirect(url_for("experiments.settings"))
         if not source_exp:
             flash("Source experiment not found.", "error")
             return redirect(url_for("experiments.settings"))
@@ -3058,7 +3104,8 @@ def experiment_matrix():
                     url_for(
                         "experiments.experiment_matrix",
                         source_exp_id=source_exp.idexp,
-                        exp_group=exp_group,
+                        source_group=source_group,
+                        target_group=target_group,
                     )
                 )
             override_sets = _matrix_build_override_sets(
@@ -3089,7 +3136,7 @@ def experiment_matrix():
             success = _create_single_experiment_copy(
                 source_exp,
                 new_exp_name,
-                exp_group,
+                target_group,
                 config_variations=overrides,
                 exp_descr=new_exp_descr,
             )
@@ -3098,7 +3145,7 @@ def experiment_matrix():
 
         if created:
             flash(
-                f"Created {created} matrix experiment(s) in group '{exp_group or '-'}'.",
+                f"Created {created} matrix experiment(s) in group '{target_group or '-'}'.",
                 "success",
             )
         else:
@@ -3108,16 +3155,21 @@ def experiment_matrix():
             url_for(
                 "experiments.experiment_matrix",
                 source_exp_id=source_exp.idexp,
-                exp_group=exp_group,
+                source_group=source_group,
+                target_group=target_group,
             )
         )
 
     return render_template(
         "admin/experiment_matrix.html",
         experiments=all_experiments,
+        matrix_exp_groups=matrix_exp_groups,
+        matrix_experiments=matrix_experiments,
+        grouped_experiments=grouped_experiments,
         selected_experiment=source_exp,
         selected_exp_id=selected_exp_id,
-        selected_group=exp_group,
+        selected_source_group=source_group,
+        selected_group=target_group,
         matrix_reports=matrix_reports,
         server_reports=server_reports,
         client_reports=client_reports,
@@ -3132,6 +3184,46 @@ def _build_copy_experiment_names(new_exp_name, num_copies):
         return [new_exp_name]
 
     return [f"{new_exp_name}_{i}" for i in range(1, num_copies + 1)]
+
+
+def _matrix_collect_experiment_groups(experiments):
+    """Return distinct experiment groups sorted for the matrix selector."""
+    seen = set()
+    groups = []
+    for exp in experiments or []:
+        group_name = str(getattr(exp, "exp_group", "") or "").strip()
+        if not group_name or group_name in seen:
+            continue
+        seen.add(group_name)
+        groups.append(group_name)
+    groups.sort(key=lambda item: item.lower())
+    return groups
+
+
+def _matrix_filter_experiments_by_group(experiments, group_name):
+    """Return experiments belonging to the requested group."""
+    normalized_group = str(group_name or "").strip()
+    if not normalized_group:
+        return []
+    return [
+        exp
+        for exp in experiments or []
+        if str(getattr(exp, "exp_group", "") or "").strip() == normalized_group
+    ]
+
+
+def _matrix_experiment_payload(experiments):
+    """Serialize experiments for client-side matrix dropdown filtering."""
+    payload = []
+    for exp in experiments or []:
+        payload.append(
+            {
+                "idexp": getattr(exp, "idexp", None),
+                "name": getattr(exp, "exp_name", ""),
+                "group": str(getattr(exp, "exp_group", "") or "").strip(),
+            }
+        )
+    return payload
 
 
 def _load_settings_experiment_lists(visible_query):
@@ -3214,6 +3306,8 @@ def _matrix_is_variable_path(path_tokens, file_name=""):
         if any(token in _MATRIX_CLIENT_EXCLUDED_ROOTS for token in lowered_tokens):
             return False
         if any(token in _MATRIX_CLIENT_EXCLUDED_LEAF_NAMES for token in lowered_tokens):
+            return False
+        if path_tuple == ("posts", "visibility_rounds"):
             return False
 
     if path_tuple in _MATRIX_SYSTEM_PATHS:
@@ -4461,6 +4555,29 @@ def _matrix_sync_client_record_from_config(
         )
         setattr(client_record, attr_name, coerced_value)
     return client_record
+
+
+def _matrix_resolve_client_days(client_config, fallback_days=7):
+    """Resolve the client duration from a matrix client config."""
+    if not isinstance(client_config, dict):
+        return fallback_days
+
+    simulation_cfg = client_config.get("simulation")
+    if not isinstance(simulation_cfg, dict):
+        simulation_cfg = {}
+
+    for key in ("num_days", "days"):
+        value = simulation_cfg.get(key)
+        if value is None:
+            value = client_config.get(key)
+        if value is None:
+            continue
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            continue
+
+    return fallback_days
 
 
 def _matrix_parse_variation_payload(payload):

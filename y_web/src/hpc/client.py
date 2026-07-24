@@ -7,6 +7,7 @@ extracted from y_web.utils.external_processes.
 
 import json
 import os
+import shutil
 import signal
 import subprocess
 import sys
@@ -273,6 +274,191 @@ def _sync_stress_reward_into_hpc_client_config(exp_folder, client_config_path):
     return True
 
 
+def _resolve_hpc_client_days_from_config(client_config_path: str) -> Optional[int]:
+    """
+    Read the simulation duration from an HPC client config file.
+
+    Matrix-generated experiments can carry the correct duration in
+    ``simulation.num_days`` even when the DB client row still has an older
+    ``days`` value. Prefer ``num_days`` but keep legacy ``days`` support.
+    """
+    if not client_config_path or not Path(client_config_path).exists():
+        return None
+
+    try:
+        with open(client_config_path, "r", encoding="utf-8") as handle:
+            client_config = json.load(handle)
+    except (OSError, json.JSONDecodeError):
+        return None
+
+    if not isinstance(client_config, dict):
+        return None
+
+    simulation_cfg = client_config.get("simulation")
+    if not isinstance(simulation_cfg, dict):
+        simulation_cfg = {}
+
+    for key in ("num_days", "days"):
+        value = simulation_cfg.get(key)
+        if value is None:
+            value = client_config.get(key)
+        if value is None:
+            continue
+        try:
+            parsed = int(value)
+        except (TypeError, ValueError):
+            continue
+        return -1 if parsed == 0 else parsed
+
+    return None
+
+
+def _sync_hpc_client_duration_from_config(
+    client_config_path: str,
+    cli,
+) -> Optional[int]:
+    """
+    Sync the DB client duration to the client config when they differ.
+
+    Returns the resolved duration in days when available.
+    """
+    resolved_days = _resolve_hpc_client_days_from_config(client_config_path)
+    if resolved_days is None:
+        return None
+
+    current_days = getattr(cli, "days", None)
+    if current_days != resolved_days:
+        cli.days = resolved_days
+        db.session.commit()
+    return resolved_days
+
+
+def _sync_hpc_network_bootstrap(exp_folder, client_config_path, cli) -> bool:
+    """Ensure YSimulator can find the copied network CSV for this HPC client."""
+    if not exp_folder or not client_config_path:
+        return False
+
+    exp_dir = Path(exp_folder)
+    config_path = Path(client_config_path)
+    if not exp_dir.exists() or not config_path.exists():
+        return False
+
+    try:
+        with open(config_path, "r", encoding="utf-8") as handle:
+            client_config = json.load(handle)
+    except (OSError, json.JSONDecodeError):
+        return False
+
+    # Older layouts may store the runtime identity under "name" instead of
+    # the current "client_name" key; accept either when rebuilding aliases.
+    config_client_name = str(
+        client_config.get("client_name") or client_config.get("name") or ""
+    ).strip()
+    record_client_name = str(getattr(cli, "name", "") or "").strip()
+    desired_client_name = config_client_name or record_client_name
+    if not desired_client_name:
+        return False
+
+    runtime_client_name = _build_hpc_runtime_client_id(exp_folder, desired_client_name)
+    desired_network_paths = [
+        exp_dir / f"{runtime_client_name}_network.csv",
+        exp_dir / f"{desired_client_name}_network.csv",
+    ]
+    if any(path.exists() for path in desired_network_paths):
+        return False
+
+    candidate_paths = []
+    for candidate_name in {record_client_name, config_client_name}:
+        if not candidate_name:
+            continue
+        exact_match = exp_dir / f"{candidate_name}_network.csv"
+        if exact_match.exists():
+            candidate_paths.append(exact_match)
+
+    for entry in exp_dir.glob("*_network.csv"):
+        if entry.is_file() and (
+            (record_client_name and entry.name.startswith(f"{record_client_name}_"))
+            or (config_client_name and entry.name.startswith(f"{config_client_name}_"))
+        ):
+            candidate_paths.append(entry)
+
+    generic_network_path = exp_dir / "network.csv"
+    if generic_network_path.exists():
+        candidate_paths.append(generic_network_path)
+
+    unique_candidates = []
+    seen_candidates = set()
+    for candidate_path in candidate_paths:
+        normalized = str(candidate_path.resolve())
+        if normalized in seen_candidates:
+            continue
+        seen_candidates.add(normalized)
+        unique_candidates.append(candidate_path)
+
+    for candidate_path in unique_candidates:
+        copied_any = False
+        for desired_network_path in desired_network_paths:
+            if desired_network_path.exists():
+                copied_any = True
+                continue
+            try:
+                shutil.copy2(candidate_path, desired_network_path)
+                copied_any = True
+            except OSError:
+                # Skip inaccessible or otherwise unusable targets and keep looking
+                continue
+        if copied_any:
+            # Keep both the runtime client-id alias and the legacy client-name
+            # alias in sync so the current and historical loaders can resolve
+            # the initial topology.
+            return True
+
+    return False
+
+
+def _hpc_network_bootstrap_exists(exp_folder, client_config_path, cli) -> bool:
+    """Return True when a usable initial-network CSV already exists on disk."""
+    if not exp_folder or not client_config_path:
+        return False
+
+    exp_dir = Path(exp_folder)
+    config_path = Path(client_config_path)
+    if not exp_dir.exists() or not config_path.exists():
+        return False
+
+    try:
+        with open(config_path, "r", encoding="utf-8") as handle:
+            client_config = json.load(handle)
+    except (OSError, json.JSONDecodeError):
+        return False
+
+    config_client_name = str(
+        client_config.get("client_name") or client_config.get("name") or ""
+    ).strip()
+    record_client_name = str(getattr(cli, "name", "") or "").strip()
+    desired_client_name = config_client_name or record_client_name
+    if not desired_client_name:
+        return False
+
+    runtime_client_name = _build_hpc_runtime_client_id(exp_folder, desired_client_name)
+    candidate_names = {record_client_name, config_client_name, runtime_client_name}
+
+    for candidate_name in candidate_names:
+        if not candidate_name:
+            continue
+        if (exp_dir / f"{candidate_name}_network.csv").exists():
+            return True
+
+    if (exp_dir / "network.csv").exists():
+        return True
+
+    for entry in exp_dir.glob("*_network.csv"):
+        if entry.is_file():
+            return True
+
+    return False
+
+
 def _wait_for_hpc_server_ready(exp_folder: str, timeout_seconds: int = 180) -> None:
     """
     Wait until the server writes its readiness marker after the orchestrator actor starts.
@@ -380,6 +566,16 @@ def start_hpc_client(exp, cli, population):
         _sync_stress_reward_into_hpc_client_config(exp_folder, client_config)
     except Exception as exc:
         print(f"Warning: failed to synchronize HPC stress_reward config: {exc}")
+
+    try:
+        synced_days = _sync_hpc_client_duration_from_config(client_config, cli)
+    except Exception as exc:
+        print(f"Warning: failed to synchronize HPC client duration: {exc}")
+
+    try:
+        _sync_hpc_network_bootstrap(exp_folder, client_config, cli)
+    except Exception as exc:
+        print(f"Warning: failed to synchronize HPC network bootstrap: {exc}")
 
     # Validate ray_config.temp exists (required for HPC client startup).
     # Local Ray bootstrap can exceed a minute on some machines, so keep the
