@@ -254,9 +254,7 @@ def test_startup_repairs_missing_network_type_when_csv_present(tmp_path):
     first_run = True
 
     if first_run and not cli.network_type:
-        if _hpc_network_bootstrap_exists(
-            data_base_path, str(client_config_path), cli
-        ):
+        if _hpc_network_bootstrap_exists(data_base_path, str(client_config_path), cli):
             cli.network_type = "Custom Network"
             try:
                 fake_session.add(cli)
@@ -277,9 +275,7 @@ def test_startup_repairs_missing_network_type_when_csv_present(tmp_path):
     fake_session2 = MagicMock()
 
     if first_run and not cli2.network_type:
-        if _hpc_network_bootstrap_exists(
-            data_base_path, str(client_config_path), cli2
-        ):
+        if _hpc_network_bootstrap_exists(data_base_path, str(client_config_path), cli2):
             cli2.network_type = "Custom Network"
             fake_session2.add(cli2)
             fake_session2.commit()

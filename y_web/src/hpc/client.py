@@ -7,8 +7,8 @@ extracted from y_web.utils.external_processes.
 
 import json
 import os
-import signal
 import shutil
+import signal
 import subprocess
 import sys
 import time
@@ -317,16 +317,10 @@ def _sync_hpc_network_bootstrap(exp_folder, client_config_path, cli) -> bool:
             candidate_paths.append(exact_match)
 
     for entry in exp_dir.glob("*_network.csv"):
-        if (
-            entry.is_file()
-            and (
-                (record_client_name and entry.name.startswith(f"{record_client_name}_"))
-                or (
-                    config_client_name
-                    and entry.name.startswith(f"{config_client_name}_")
-                )
-            )
-            ):
+        if entry.is_file() and (
+            (record_client_name and entry.name.startswith(f"{record_client_name}_"))
+            or (config_client_name and entry.name.startswith(f"{config_client_name}_"))
+        ):
             candidate_paths.append(entry)
 
     generic_network_path = exp_dir / "network.csv"
