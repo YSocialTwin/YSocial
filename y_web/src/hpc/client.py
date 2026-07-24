@@ -274,6 +274,65 @@ def _sync_stress_reward_into_hpc_client_config(exp_folder, client_config_path):
     return True
 
 
+def _resolve_hpc_client_days_from_config(client_config_path: str) -> Optional[int]:
+    """
+    Read the simulation duration from an HPC client config file.
+
+    Matrix-generated experiments can carry the correct duration in
+    ``simulation.num_days`` even when the DB client row still has an older
+    ``days`` value. Prefer ``num_days`` but keep legacy ``days`` support.
+    """
+    if not client_config_path or not Path(client_config_path).exists():
+        return None
+
+    try:
+        with open(client_config_path, "r", encoding="utf-8") as handle:
+            client_config = json.load(handle)
+    except (OSError, json.JSONDecodeError):
+        return None
+
+    if not isinstance(client_config, dict):
+        return None
+
+    simulation_cfg = client_config.get("simulation")
+    if not isinstance(simulation_cfg, dict):
+        simulation_cfg = {}
+
+    for key in ("num_days", "days"):
+        value = simulation_cfg.get(key)
+        if value is None:
+            value = client_config.get(key)
+        if value is None:
+            continue
+        try:
+            parsed = int(value)
+        except (TypeError, ValueError):
+            continue
+        return -1 if parsed == 0 else parsed
+
+    return None
+
+
+def _sync_hpc_client_duration_from_config(
+    client_config_path: str,
+    cli,
+) -> Optional[int]:
+    """
+    Sync the DB client duration to the client config when they differ.
+
+    Returns the resolved duration in days when available.
+    """
+    resolved_days = _resolve_hpc_client_days_from_config(client_config_path)
+    if resolved_days is None:
+        return None
+
+    current_days = getattr(cli, "days", None)
+    if current_days != resolved_days:
+        cli.days = resolved_days
+        db.session.commit()
+    return resolved_days
+
+
 def _sync_hpc_network_bootstrap(exp_folder, client_config_path, cli) -> bool:
     """Ensure YSimulator can find the copied network CSV for this HPC client."""
     if not exp_folder or not client_config_path:
@@ -507,6 +566,11 @@ def start_hpc_client(exp, cli, population):
         _sync_stress_reward_into_hpc_client_config(exp_folder, client_config)
     except Exception as exc:
         print(f"Warning: failed to synchronize HPC stress_reward config: {exc}")
+
+    try:
+        synced_days = _sync_hpc_client_duration_from_config(client_config, cli)
+    except Exception as exc:
+        print(f"Warning: failed to synchronize HPC client duration: {exc}")
 
     try:
         _sync_hpc_network_bootstrap(exp_folder, client_config, cli)

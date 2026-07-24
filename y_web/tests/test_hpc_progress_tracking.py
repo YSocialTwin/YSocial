@@ -278,6 +278,100 @@ def test_start_hpc_client_clears_stale_recycled_pid_and_restarts(monkeypatch):
     assert mock_cli.pid == 88888
 
 
+def test_start_hpc_client_syncs_duration_from_matrix_config(monkeypatch, tmp_path):
+    """Matrix-generated HPC configs must override stale DB days with num_days."""
+    from y_web.src.hpc.client import start_hpc_client
+
+    exp_folder = tmp_path / "y_web" / "experiments" / "exp99"
+    exp_folder.mkdir(parents=True)
+    (exp_folder / "ray_config.temp").write_text("127.0.0.1:12345", encoding="utf-8")
+    (exp_folder / "ray_namespace.temp").write_text("DigitAfrica_test", encoding="utf-8")
+    (exp_folder / "client_matrix-pop.json").write_text(
+        json.dumps(
+            {
+                "client_name": "matrix",
+                "simulation": {
+                    "num_days": 30,
+                    "num_slots_per_day": 24,
+                    "heartbeat_interval": 5,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    (exp_folder / "pop.json").write_text("[]", encoding="utf-8")
+    (exp_folder / "matrix.json").write_text("[]", encoding="utf-8")
+    (exp_folder / "prompts.json").write_text("{}", encoding="utf-8")
+    (exp_folder / "network.csv").write_text("alice,bob\n", encoding="utf-8")
+    (tmp_path / "external" / "YSimulator").mkdir(parents=True)
+    (tmp_path / "external" / "YSimulator" / "run_client.py").write_text(
+        "print('client')\n", encoding="utf-8"
+    )
+
+    mock_exp = MagicMock()
+    mock_exp.idexp = 99
+    mock_exp.platform_type = "microblogging"
+    mock_exp.db_name = "experiments_exp99"
+
+    mock_cli = MagicMock()
+    mock_cli.id = 7
+    mock_cli.name = "matrix"
+    mock_cli.pid = None
+    mock_cli.days = 50
+
+    mock_population = MagicMock()
+    mock_population.name = "pop"
+
+    mock_process = MagicMock()
+    mock_process.pid = 77777
+
+    existing_exec_q = MagicMock()
+    existing_exec_q.first.return_value = None
+
+    monkeypatch.setattr("y_web.src.hpc.client.get_base_path", lambda: str(tmp_path))
+    monkeypatch.setattr("y_web.src.hpc.client.get_writable_path", lambda: str(tmp_path))
+    monkeypatch.setattr("y_web.src.hpc.client.time.sleep", lambda *_: None)
+    monkeypatch.setattr(
+        "y_web.src.hpc.client._clear_stale_hpc_pid", lambda cli, exp_folder=None: False
+    )
+    monkeypatch.setattr(
+        "y_web.src.hpc.client._wait_for_hpc_server_ready",
+        lambda exp_folder, timeout_seconds=180: None,
+    )
+    monkeypatch.setattr(
+        "y_web.src.hpc.client._sync_stress_reward_into_hpc_client_config",
+        lambda exp_folder, client_config_path: False,
+    )
+    monkeypatch.setattr(
+        "y_web.src.hpc.client._sync_hpc_network_bootstrap",
+        lambda exp_folder, client_config_path, cli: False,
+    )
+    monkeypatch.setattr("y_web.src.simulation.server.detect_env_handler", lambda: "python")
+    monkeypatch.setattr("y_web.src.hpc.client.build_subprocess_env", lambda: {})
+    monkeypatch.setattr("y_web.src.hpc.client.subprocess.Popen", lambda *a, **k: mock_process)
+    monkeypatch.setattr("y_web.src.hpc.client.db.session.commit", lambda: None)
+
+    class _FakeClientExecution:
+        query = MagicMock()
+
+        def __init__(self, **kwargs):
+            for key, value in kwargs.items():
+                setattr(self, key, value)
+
+    _FakeClientExecution.query.filter_by.return_value.first.return_value = None
+    monkeypatch.setattr("y_web.src.hpc.client.Client_Execution", _FakeClientExecution)
+    added_objects = []
+    monkeypatch.setattr(
+        "y_web.src.hpc.client.db.session.add", lambda obj: added_objects.append(obj)
+    )
+
+    process = start_hpc_client(mock_exp, mock_cli, mock_population)
+
+    assert process.pid == 77777
+    assert mock_cli.days == 30
+    assert added_objects and added_objects[0].expected_duration_rounds == 720
+
+
 def test_start_hpc_client_photo_sharing_uses_top_level_hpc_layout(
     monkeypatch, tmp_path
 ):

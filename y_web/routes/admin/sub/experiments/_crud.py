@@ -1433,7 +1433,7 @@ def upload_experiment():
             # HPC client config has simpler structure
             # Extract basic information
             client_name = client_config.get("name", "hpc_client")
-            client_days = client_config.get("simulation", {}).get("days", 7)
+            client_days = _matrix_resolve_client_days(client_config, 7)
 
             # Create minimal Client record for HPC
             # Many fields will use defaults since HPC config is simpler
@@ -4461,6 +4461,29 @@ def _matrix_sync_client_record_from_config(
         )
         setattr(client_record, attr_name, coerced_value)
     return client_record
+
+
+def _matrix_resolve_client_days(client_config, fallback_days=7):
+    """Resolve the client duration from a matrix client config."""
+    if not isinstance(client_config, dict):
+        return fallback_days
+
+    simulation_cfg = client_config.get("simulation")
+    if not isinstance(simulation_cfg, dict):
+        simulation_cfg = {}
+
+    for key in ("num_days", "days"):
+        value = simulation_cfg.get(key)
+        if value is None:
+            value = client_config.get(key)
+        if value is None:
+            continue
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            continue
+
+    return fallback_days
 
 
 def _matrix_parse_variation_payload(payload):

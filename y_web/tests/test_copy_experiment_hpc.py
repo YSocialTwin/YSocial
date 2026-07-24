@@ -222,6 +222,22 @@ def test_matrix_client_network_type_preserved_when_csv_exists(tmp_path):
     )
 
 
+def test_matrix_resolve_client_days_prefers_num_days():
+    """Matrix-created HPC configs must read num_days before legacy days."""
+    from y_web.routes.admin.sub.experiments._crud import _matrix_resolve_client_days
+
+    config = {
+        "simulation": {
+            "num_days": 30,
+            "days": 50,
+        }
+    }
+
+    assert _matrix_resolve_client_days(config, 7) == 30
+    assert _matrix_resolve_client_days({"simulation": {"days": 12}}, 7) == 12
+    assert _matrix_resolve_client_days({}, 7) == 7
+
+
 def test_startup_repairs_missing_network_type_when_csv_present(tmp_path):
     """process_runner must set network_type to 'Custom Network' on first run when
     the DB record has an empty network_type but the CSV file already exists on
