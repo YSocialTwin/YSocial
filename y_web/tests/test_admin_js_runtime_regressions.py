@@ -178,9 +178,15 @@ def test_experiment_matrix_page_separates_source_group_and_target_group():
     assert 'name="source_group"' in matrix_template
     assert 'id="matrix-target-group"' in matrix_template
     assert 'name="exp_group"' in matrix_template
-    assert 'Choose an existing group or type a new one' in matrix_template
-    assert 'You can assign the generated experiments to an existing group or create a new one here.' in matrix_template
+    assert "Choose an existing group or type a new one" in matrix_template
+    assert (
+        "You can assign the generated experiments to an existing group or create a new one here."
+        in matrix_template
+    )
     assert "selected_source_group" in matrix_template
     assert "selected_source_group" in matrix_crud
-    assert "source_group = (request.values.get(\"source_group\") or \"\").strip()" in matrix_crud
+    assert (
+        'source_group = (request.values.get("source_group") or "").strip()'
+        in matrix_crud
+    )
     assert "grouped_experiments = _matrix_filter_experiments_by_group(" in matrix_crud
