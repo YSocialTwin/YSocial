@@ -153,8 +153,11 @@ def test_experiment_matrix_box_filters_source_experiments_by_group():
 
     assert 'id="matrix_exp_group_select"' in settings
     assert 'id="matrix_source_exp_id"' in settings
-    assert "Select a group first..." in settings
-    assert "Choose a source experiment from the selected group." in settings
+    assert 'Select a group first...' in settings
+    assert 'Choose a source experiment from the selected group.' in settings
+    assert "Target Group" in (
+        REPO_ROOT / "y_web" / "templates" / "admin" / "experiment_matrix.html"
+    ).read_text(encoding="utf-8")
     assert "matrixExperiments:" in settings
     assert "function initializeMatrixExperimentSelector()" in admin_settings_js
     assert "matrix_exp_group_select" in admin_settings_js

@@ -576,6 +576,12 @@
                                 <p style="color: rgba(248,250,252,0.78);">
                                     Inspect nested config values, unlock the ones you want to vary, and generate the full combination set.
                                 </p>
+                                {% if selected_group %}
+                                <div style="margin-top: 0.75rem; display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; border-radius: 999px; background: rgba(255,255,255,0.08); color: #f8fafc; border: 1px solid rgba(255,255,255,0.12);">
+                                    <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(248,250,252,0.7);">Target Group</span>
+                                    <strong>{{ selected_group }}</strong>
+                                </div>
+                                {% endif %}
                             </div>
                             <div style="min-width: 260px; flex: 0 1 360px;">
                                 <form action="/admin/experiment_matrix" method="GET" class="is-flex is-flex-direction-column" style="gap:0.5rem;">
