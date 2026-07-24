@@ -3101,13 +3101,13 @@ def experiment_matrix():
                     "warning",
                 )
                 return redirect(
-                url_for(
-                    "experiments.experiment_matrix",
-                    source_exp_id=source_exp.idexp,
-                    source_group=source_group,
-                    target_group=target_group,
+                    url_for(
+                        "experiments.experiment_matrix",
+                        source_exp_id=source_exp.idexp,
+                        source_group=source_group,
+                        target_group=target_group,
+                    )
                 )
-            )
             override_sets = _matrix_build_override_sets(
                 unlocked_items,
                 cartesian_mode=cartesian_mode,
