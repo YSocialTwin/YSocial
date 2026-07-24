@@ -346,9 +346,13 @@ def test_start_hpc_client_syncs_duration_from_matrix_config(monkeypatch, tmp_pat
         "y_web.src.hpc.client._sync_hpc_network_bootstrap",
         lambda exp_folder, client_config_path, cli: False,
     )
-    monkeypatch.setattr("y_web.src.simulation.server.detect_env_handler", lambda: "python")
+    monkeypatch.setattr(
+        "y_web.src.simulation.server.detect_env_handler", lambda: "python"
+    )
     monkeypatch.setattr("y_web.src.hpc.client.build_subprocess_env", lambda: {})
-    monkeypatch.setattr("y_web.src.hpc.client.subprocess.Popen", lambda *a, **k: mock_process)
+    monkeypatch.setattr(
+        "y_web.src.hpc.client.subprocess.Popen", lambda *a, **k: mock_process
+    )
     monkeypatch.setattr("y_web.src.hpc.client.db.session.commit", lambda: None)
 
     class _FakeClientExecution:

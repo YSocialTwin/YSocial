@@ -46,7 +46,7 @@ def test_process_runner_reuses_client_days_as_expected_rounds():
 
 def test_hpc_client_reuses_client_days_as_expected_rounds():
     source = Path(
-    "/Users/rossetti/PycharmProjects/YWeb/y_web/src/hpc/client.py"
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/src/hpc/client.py"
     ).read_text(encoding="utf-8")
 
     assert "_sync_hpc_client_duration_from_config" in source
