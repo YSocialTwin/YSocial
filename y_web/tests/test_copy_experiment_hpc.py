@@ -242,7 +242,10 @@ def test_matrix_excludes_client_visibility_rounds_but_keeps_server_value():
     """Client-side visibility_rounds should not be exposed in matrix reports."""
     from y_web.routes.admin.sub.experiments._crud import _matrix_is_variable_path
 
-    assert _matrix_is_variable_path(("posts", "visibility_rounds"), "client_a.json") is False
+    assert (
+        _matrix_is_variable_path(("posts", "visibility_rounds"), "client_a.json")
+        is False
+    )
     assert (
         _matrix_is_variable_path(("posts", "visibility_rounds"), "server_config.json")
         is True
