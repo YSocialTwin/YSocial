@@ -147,6 +147,9 @@ def test_experiment_matrix_box_filters_source_experiments_by_group():
     settings = (
         REPO_ROOT / "y_web" / "templates" / "admin" / "settings.html"
     ).read_text(encoding="utf-8")
+    matrix_template = (
+        REPO_ROOT / "y_web" / "templates" / "admin" / "experiment_matrix.html"
+    ).read_text(encoding="utf-8")
     admin_settings_js = (STATIC_JS_DIR / "admin-settings.js").read_text(
         encoding="utf-8"
     )
@@ -158,6 +161,9 @@ def test_experiment_matrix_box_filters_source_experiments_by_group():
     assert "Target Group" in (
         REPO_ROOT / "y_web" / "templates" / "admin" / "experiment_matrix.html"
     ).read_text(encoding="utf-8")
+    assert "function syncTargetGroupFields()" in matrix_template
+    assert "targetGroupInput.addEventListener('input', syncTargetGroupFields)" in matrix_template
+    assert "matrixForm.addEventListener('submit', syncTargetGroupFields)" in matrix_template
     assert "matrixExperiments:" in settings
     assert "function initializeMatrixExperimentSelector()" in admin_settings_js
     assert "matrix_exp_group_select" in admin_settings_js
@@ -177,12 +183,9 @@ def test_experiment_matrix_page_separates_source_group_and_target_group():
     assert 'id="matrix-source-group"' in matrix_template
     assert 'name="source_group"' in matrix_template
     assert 'id="matrix-target-group"' in matrix_template
-    assert 'name="exp_group"' in matrix_template
-    assert "Choose an existing group or type a new one" in matrix_template
-    assert (
-        "You can assign the generated experiments to an existing group or create a new one here."
-        in matrix_template
-    )
+    assert 'name="target_group"' in matrix_template
+    assert 'Choose an existing group or type a new one' in matrix_template
+    assert 'You can assign the generated experiments to an existing group or create a new one here.' in matrix_template
     assert "selected_source_group" in matrix_template
     assert "selected_source_group" in matrix_crud
     assert (

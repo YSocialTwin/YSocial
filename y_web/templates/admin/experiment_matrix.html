@@ -600,11 +600,12 @@
                                         <div class="control">
                                             <input type="text"
                                                    id="matrix-target-group"
-                                                   name="exp_group"
+                                                   name="target_group"
                                                    list="exp_groups_datalist_matrix"
                                                    class="input"
-                                                   value="{{ selected_group or selected_source_group or '' }}"
-                                                   placeholder="Choose an existing group or type a new one">
+                                                   value="{{ selected_group or '' }}"
+                                                   placeholder="Choose an existing group or type a new one"
+                                                   required>
                                         </div>
                                         <datalist id="exp_groups_datalist_matrix">
                                             {% for group_name in matrix_exp_groups or [] %}
@@ -655,6 +656,7 @@
             <form id="matrix-form" action="/admin/experiment_matrix" method="POST">
                 <input type="hidden" name="source_exp_id" value="{{ selected_experiment.idexp }}">
                 <input type="hidden" name="source_group" value="{{ selected_source_group }}">
+                <input type="hidden" name="target_group" value="{{ selected_group }}">
                 <input type="hidden" name="exp_group" value="{{ selected_group }}">
                 <input type="hidden" id="variation_payload" name="variation_payload" value="[]">
 
@@ -977,6 +979,30 @@
     groupSelect.addEventListener('change', function() {
         populateSourceExperiments(groupSelect.value, null);
     });
+
+    const matrixForm = document.getElementById('matrix-form');
+    const targetGroupInput = document.getElementById('matrix-target-group');
+    function syncTargetGroupFields() {
+        if (!matrixForm || !targetGroupInput) {
+            return;
+        }
+        const normalizedTarget = String(targetGroupInput.value || '').trim();
+        const hiddenTarget = matrixForm.querySelector('input[name="target_group"]');
+        const hiddenLegacy = matrixForm.querySelector('input[name="exp_group"]');
+        if (hiddenTarget) {
+            hiddenTarget.value = normalizedTarget;
+        }
+        if (hiddenLegacy) {
+            hiddenLegacy.value = normalizedTarget;
+        }
+    }
+
+    if (matrixForm && targetGroupInput) {
+        targetGroupInput.addEventListener('input', syncTargetGroupFields);
+        targetGroupInput.addEventListener('change', syncTargetGroupFields);
+        matrixForm.addEventListener('submit', syncTargetGroupFields);
+        syncTargetGroupFields();
+    }
 
     populateSourceExperiments(groupSelect.value, {{ selected_exp_id|tojson }});
 })();

@@ -2970,7 +2970,9 @@ def experiment_matrix():
 
     selected_exp_id = request.values.get("source_exp_id", type=int)
     source_group = (request.values.get("source_group") or "").strip()
-    exp_group = (request.values.get("exp_group") or "").strip()
+    target_group = (
+        request.values.get("target_group") or request.values.get("exp_group") or ""
+    ).strip()
     source_exp = (
         Exps.query.filter_by(idexp=selected_exp_id).first()
         if selected_exp_id and selected_exp_id in visible_exp_ids
@@ -2984,8 +2986,6 @@ def experiment_matrix():
         and (source_exp.exp_group or "").strip() != source_group
     ):
         source_exp = None
-    if not exp_group and source_group:
-        exp_group = source_group
     matrix_reports = []
     server_reports = []
     client_reports = []
@@ -3036,7 +3036,9 @@ def experiment_matrix():
     if request.method == "POST":
         source_exp_id = request.form.get("source_exp_id", type=int)
         source_group = (request.form.get("source_group") or "").strip()
-        exp_group = (request.form.get("exp_group") or "").strip()
+        target_group = (
+            request.form.get("target_group") or request.form.get("exp_group") or ""
+        ).strip()
         variation_payload = request.form.get("variation_payload") or "[]"
         generation_mode = (
             (request.form.get("generation_mode") or "independent").strip().lower()
@@ -3067,11 +3069,9 @@ def experiment_matrix():
                 url_for(
                     "experiments.experiment_matrix",
                     source_group=source_group,
-                    exp_group=exp_group,
+                    target_group=target_group,
                 )
             )
-        if not exp_group:
-            exp_group = source_group
         if (
             source_exp
             and source_group
@@ -3101,13 +3101,13 @@ def experiment_matrix():
                     "warning",
                 )
                 return redirect(
-                    url_for(
-                        "experiments.experiment_matrix",
-                        source_exp_id=source_exp.idexp,
-                        source_group=source_group,
-                        exp_group=exp_group,
-                    )
+                url_for(
+                    "experiments.experiment_matrix",
+                    source_exp_id=source_exp.idexp,
+                    source_group=source_group,
+                    target_group=target_group,
                 )
+            )
             override_sets = _matrix_build_override_sets(
                 unlocked_items,
                 cartesian_mode=cartesian_mode,
@@ -3136,7 +3136,7 @@ def experiment_matrix():
             success = _create_single_experiment_copy(
                 source_exp,
                 new_exp_name,
-                exp_group,
+                target_group,
                 config_variations=overrides,
                 exp_descr=new_exp_descr,
             )
@@ -3145,7 +3145,7 @@ def experiment_matrix():
 
         if created:
             flash(
-                f"Created {created} matrix experiment(s) in group '{exp_group or '-'}'.",
+                f"Created {created} matrix experiment(s) in group '{target_group or '-'}'.",
                 "success",
             )
         else:
@@ -3156,7 +3156,7 @@ def experiment_matrix():
                 "experiments.experiment_matrix",
                 source_exp_id=source_exp.idexp,
                 source_group=source_group,
-                exp_group=exp_group,
+                target_group=target_group,
             )
         )
 
@@ -3169,7 +3169,7 @@ def experiment_matrix():
         selected_experiment=source_exp,
         selected_exp_id=selected_exp_id,
         selected_source_group=source_group,
-        selected_group=exp_group,
+        selected_group=target_group,
         matrix_reports=matrix_reports,
         server_reports=server_reports,
         client_reports=client_reports,
