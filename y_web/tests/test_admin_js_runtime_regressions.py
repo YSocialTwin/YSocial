@@ -157,6 +157,7 @@ def test_copy_group_box_is_present_in_admin_settings():
     assert 'name="target_group"' in settings
     assert 'id="copy_target_group"' in settings
     assert "Copy Group" in settings
+    assert settings.count("is-12-tablet is-4-desktop ys-flex-col") == 3
     assert settings.index('id="box-copy-experiment"') < settings.index(
         'id="box-copy-group"'
     ) < settings.index('id="box-experiment-matrix"')
