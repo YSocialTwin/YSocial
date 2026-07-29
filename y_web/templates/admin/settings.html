@@ -390,9 +390,9 @@
 
             </div>
 
-            <!-- ROW 3: Experiment Schedule (left 2/3) + Copy Experiment (right 1/3) -->
+            <!-- ROW 3: Experiment Schedule -->
             <div class="columns">
-                <div class="column is-8">
+                <div class="column is-12">
                     <div id="box-schedule" class="dashboard-box">
                         <h3 class="title is-5 is-thin" style="display: flex; align-items: center; justify-content: space-between;">
  <span class="ys-flex-gap-10-ai">
@@ -480,9 +480,11 @@
                         </div>
                     </div>
                 </div>
-                
-                <!-- Copy Experiment Column (right 1/3) -->
-                <div class="column is-4">
+            </div>
+
+            <!-- ROW 4: Copy Experiment + Copy Group + Experiment Matrix -->
+            <div class="columns is-multiline ys-flex-stretch" style="margin-top: 1rem;">
+                <div class="column is-12-mobile is-4-tablet ys-flex-col">
                     <div id="box-copy-experiment" class="dashboard-box">
                         <h3 class="title is-5 is-thin">Copy Experiment</h3>
                         <div class="box-content">
@@ -555,8 +557,60 @@
                             </form>
                         </div>
                     </div>
+                </div>
 
-                    <div id="box-experiment-matrix" class="dashboard-box ys-mt-15em">
+                <div class="column is-12-mobile is-4-tablet ys-flex-col">
+                    <div id="box-copy-group" class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Copy Group</h3>
+                        <div class="box-content">
+                            <form action="/admin/copy_experiment_group" method="POST" onsubmit="showLoading('Copying experiment group...');">
+                                <div class="box-lines">
+                                    <div class="box-line">
+                                        <span class="left">Source Group</span>
+ <span class="right ys-w-70">
+                                            <div class="select w-100">
+                                                <select id="copy_source_group" name="source_group" class="w-100" required>
+                                                    <option value="">Select group...</option>
+                                                    {% for group in exp_groups %}
+                                                    <option value="{{ group }}">{{ group }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">Target Group</span>
+ <span class="right ys-w-70">
+                                            <input type="text"
+                                                   id="copy_target_group"
+                                                   name="target_group"
+                                                   class="input"
+                                                   placeholder="Enter a fresh group name..."
+                                                   list="exp_groups_datalist_copy_group"
+                                                   required>
+                                            <datalist id="exp_groups_datalist_copy_group">
+                                                {% for group in exp_groups %}
+                                                <option value="{{ group }}">
+                                                {% endfor %}
+                                            </datalist>
+ <p class="ys-text-tiny-gray-mt">
+                                                Creates fresh copies of every experiment in the selected group.
+                                            </p>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="button-wrap">
+                                    <button type="submit" class="button is-solid primary-button is-fullwidth">
+                                        Copy Group
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="column is-12-mobile is-4-tablet ys-flex-col">
+                    <div id="box-experiment-matrix" class="dashboard-box">
                         <h3 class="title is-5 is-thin">Experiment Matrix</h3>
                         <div class="box-content">
                             <form action="/admin/experiment_matrix" method="GET">

@@ -143,6 +143,25 @@ def test_new_experiment_form_uses_repo_availability_bridge():
     )
 
 
+def test_copy_group_box_is_present_in_admin_settings():
+    settings = (
+        REPO_ROOT / "y_web" / "templates" / "admin" / "settings.html"
+    ).read_text(encoding="utf-8")
+
+    assert "Copy Rules" not in settings
+    assert "ROW 4: Copy Experiment + Copy Group + Experiment Matrix" in settings
+    assert 'id="box-copy-group"' in settings
+    assert 'action="/admin/copy_experiment_group"' in settings
+    assert 'name="source_group"' in settings
+    assert 'id="copy_source_group"' in settings
+    assert 'name="target_group"' in settings
+    assert 'id="copy_target_group"' in settings
+    assert "Copy Group" in settings
+    assert settings.index('id="box-copy-experiment"') < settings.index(
+        'id="box-copy-group"'
+    ) < settings.index('id="box-experiment-matrix"')
+
+
 def test_experiment_matrix_box_filters_source_experiments_by_group():
     settings = (
         REPO_ROOT / "y_web" / "templates" / "admin" / "settings.html"

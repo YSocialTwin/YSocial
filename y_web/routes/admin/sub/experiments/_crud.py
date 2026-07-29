@@ -2947,6 +2947,130 @@ def copy_experiment():
     return redirect(url_for("experiments.settings"))
 
 
+def _build_copy_group_experiment_name(source_exp_name, target_group_name, source_exp_id):
+    """Return a unique, bounded experiment name for a copied group member."""
+    base_name = str(source_exp_name or "").strip() or "experiment"
+    group_slug = _matrix_compact_slug(target_group_name or "copy", 16) or "copy"
+    suffix = f"__{group_slug}__{source_exp_id}"
+    max_length = 50
+
+    candidate = f"{base_name}{suffix}"
+    if len(candidate) <= max_length:
+        return candidate
+
+    available_for_base = max_length - len(suffix)
+    if available_for_base <= 0:
+        return candidate[:max_length].rstrip("_-") or "experiment"
+
+    compact_base = _matrix_compact_slug(base_name, available_for_base)
+    candidate = f"{compact_base}{suffix}" if compact_base else suffix.lstrip("_")
+    return candidate[:max_length].rstrip("_-") or "experiment"
+
+
+def _copy_experiment_group(source_group, target_group):
+    """Copy every experiment in a source group into a fresh target group."""
+    from y_web.src.telemetry import Telemetry
+
+    user = _current_admin_user_or_none()
+    if not user:
+        return 0, [], "Invalid user session."
+
+    source_group = str(source_group or "").strip()
+    target_group = str(target_group or "").strip()
+
+    if not source_group:
+        return 0, [], "Select a valid source group."
+    if not target_group:
+        return 0, [], "Select a valid target group."
+    if source_group == target_group:
+        return 0, [], "Source and target groups must be different."
+
+    visible_query = get_visible_experiment_query(user)
+    source_experiments = (
+        visible_query.filter(Exps.exp_group == source_group)
+        .order_by(Exps.exp_name.asc())
+        .all()
+    )
+    if not source_experiments:
+        return 0, [], f"No experiments found in group '{source_group}'."
+
+    copy_plan = []
+    for source_exp in source_experiments:
+        new_name = _build_copy_group_experiment_name(
+            source_exp.exp_name, target_group, source_exp.idexp
+        )
+        copy_plan.append((source_exp, new_name))
+
+    for _, new_name in copy_plan:
+        if Exps.query.filter_by(exp_name=new_name).first():
+            return 0, [], f"An experiment with name '{new_name}' already exists."
+
+    created_count = 0
+    created_names = []
+    for source_exp, new_name in copy_plan:
+        try:
+            success = _create_single_experiment_copy(
+                source_exp, new_name, target_group
+            )
+            if success:
+                created_count += 1
+                created_names.append(new_name)
+                telemetry = Telemetry(user=current_user)
+                telemetry.log_event(
+                    {
+                        "action": "create_experiment",
+                        "data": {
+                            "platform_type": source_exp.platform_type,
+                            "annotations": source_exp.annotations,
+                            "llm_agents_enabled": source_exp.llm_agents_enabled,
+                            "copy_experiment_group": "True",
+                            "source_group": source_group,
+                            "target_group": target_group,
+                        },
+                    },
+                )
+        except Exception as exc:
+            current_app.logger.error(
+                "Error copying group experiment '%s' into '%s': %s",
+                getattr(source_exp, "exp_name", ""),
+                target_group,
+                exc,
+                exc_info=True,
+            )
+
+    if created_count == 0:
+        return 0, [], f"Failed to copy any experiments from group '{source_group}'."
+    return created_count, created_names, None
+
+
+@experiments.route("/admin/copy_experiment_group", methods=["POST"])
+@login_required
+def copy_experiment_group():
+    """Copy every experiment in a selected source group into a fresh target group."""
+    check_privileges(current_user.username)
+
+    source_group = request.form.get("source_group")
+    target_group = request.form.get("target_group")
+
+    created_count, created_names, error_message = _copy_experiment_group(
+        source_group, target_group
+    )
+    if error_message:
+        flash(error_message, "error")
+        return redirect(url_for("experiments.settings"))
+
+    if created_count == 1:
+        flash(
+            f"Experiment '{created_names[0]}' successfully created as part of copied group '{target_group}'."
+        )
+    else:
+        flash(
+            f"{created_count} experiment copies successfully created in group '{target_group}'."
+        )
+
+    return redirect(url_for("experiments.settings"))
+
+
 @experiments.route("/admin/experiment_matrix", methods=["GET", "POST"])
 @login_required
 def experiment_matrix():

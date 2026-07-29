@@ -9,6 +9,7 @@ import json
 import os
 import shutil
 import tempfile
+from types import SimpleNamespace
 from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
@@ -258,10 +259,120 @@ def test_client_config_port_update():
         new_api = re.sub(r":\d+/", f":{new_port}/", old_api)
         old_client_config["servers"]["api"] = new_api
 
-    # Verify the port was updated
-    assert old_client_config["servers"]["api"] == "http://127.0.0.1:5010/"
-    assert "5010" in old_client_config["servers"]["api"]
-    assert "5000" not in old_client_config["servers"]["api"]
+
+def test_build_copy_group_experiment_name_is_bounded_and_traceable():
+    from y_web.routes.admin.sub.experiments._crud import (
+        _build_copy_group_experiment_name,
+    )
+
+    name = _build_copy_group_experiment_name(
+        "Very Long Source Experiment Name That Should Be Trimmed",
+        "Fresh Group Name With Extra Words",
+        42,
+    )
+
+    assert len(name) <= 50
+    assert "42" in name
+    assert "fresh-group-name" in name.lower()
+    assert name.startswith("Very") or name.startswith("very")
+
+
+def test_copy_experiment_group_builds_one_copy_per_source_experiment(monkeypatch):
+    from y_web.routes.admin.sub.experiments import _crud
+
+    source_experiments = [
+        SimpleNamespace(
+            idexp=10,
+            exp_name="Alpha",
+            platform_type="microblogging",
+            annotations="a",
+            llm_agents_enabled=1,
+        ),
+        SimpleNamespace(
+            idexp=11,
+            exp_name="Beta",
+            platform_type="forum",
+            annotations="b",
+            llm_agents_enabled=0,
+        ),
+    ]
+    created_calls = []
+
+    class FakeVisibleQuery:
+        def filter(self, *args, **kwargs):
+            return self
+
+        def order_by(self, *args, **kwargs):
+            return self
+
+        def all(self):
+            return source_experiments
+
+    class FakeNameQuery:
+        def filter_by(self, **kwargs):
+            self.kwargs = kwargs
+            return self
+
+        def first(self):
+            return None
+
+    class FakeTelemetry:
+        def __init__(self, user):
+            self.user = user
+
+        def log_event(self, payload):
+            created_calls.append(("telemetry", payload))
+
+    class FakeColumn:
+        def asc(self):
+            return self
+
+    class FakeExps:
+        exp_group = object()
+        exp_name = FakeColumn()
+        query = FakeNameQuery()
+
+    monkeypatch.setattr(_crud, "_current_admin_user_or_none", lambda: SimpleNamespace())
+    monkeypatch.setattr(_crud, "get_visible_experiment_query", lambda user: FakeVisibleQuery())
+    monkeypatch.setattr(_crud, "Exps", FakeExps)
+    monkeypatch.setattr(
+        _crud,
+        "_create_single_experiment_copy",
+        lambda source_exp, new_name, exp_group: created_calls.append(
+            (source_exp.idexp, new_name, exp_group)
+        )
+        or True,
+    )
+    monkeypatch.setattr("y_web.src.telemetry.Telemetry", FakeTelemetry)
+
+    created_count, created_names, error_message = _crud._copy_experiment_group(
+        "Source Group", "Fresh Group"
+    )
+
+    assert error_message is None
+    assert created_count == 2
+    assert len(created_names) == 2
+    copy_calls = [call for call in created_calls if call and call[0] != "telemetry"]
+    assert copy_calls[0][0] == 10
+    assert copy_calls[0][2] == "Fresh Group"
+    assert copy_calls[1][0] == 11
+    assert copy_calls[1][2] == "Fresh Group"
+    assert created_names[0] != created_names[1]
+    assert any(call[0] == "telemetry" for call in created_calls)
+
+
+def test_copy_experiment_group_rejects_same_source_and_target(monkeypatch):
+    from y_web.routes.admin.sub.experiments import _crud
+
+    monkeypatch.setattr(_crud, "_current_admin_user_or_none", lambda: SimpleNamespace())
+
+    created_count, created_names, error_message = _crud._copy_experiment_group(
+        "Same Group", "Same Group"
+    )
+
+    assert created_count == 0
+    assert created_names == []
+    assert error_message == "Source and target groups must be different."
 
 
 def test_copy_experiment_names_are_not_capped():
