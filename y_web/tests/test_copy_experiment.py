@@ -333,7 +333,9 @@ def test_copy_experiment_group_builds_one_copy_per_source_experiment(monkeypatch
         query = FakeNameQuery()
 
     monkeypatch.setattr(_crud, "_current_admin_user_or_none", lambda: SimpleNamespace())
-    monkeypatch.setattr(_crud, "get_visible_experiment_query", lambda user: FakeVisibleQuery())
+    monkeypatch.setattr(
+        _crud, "get_visible_experiment_query", lambda user: FakeVisibleQuery()
+    )
     monkeypatch.setattr(_crud, "Exps", FakeExps)
     monkeypatch.setattr(
         _crud,

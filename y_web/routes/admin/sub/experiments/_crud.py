@@ -2947,7 +2947,9 @@ def copy_experiment():
     return redirect(url_for("experiments.settings"))
 
 
-def _build_copy_group_experiment_name(source_exp_name, target_group_name, source_exp_id):
+def _build_copy_group_experiment_name(
+    source_exp_name, target_group_name, source_exp_id
+):
     """Return a unique, bounded experiment name for a copied group member."""
     base_name = str(source_exp_name or "").strip() or "experiment"
     group_slug = _matrix_compact_slug(target_group_name or "copy", 16) or "copy"
@@ -3009,9 +3011,7 @@ def _copy_experiment_group(source_group, target_group):
     created_names = []
     for source_exp, new_name in copy_plan:
         try:
-            success = _create_single_experiment_copy(
-                source_exp, new_name, target_group
-            )
+            success = _create_single_experiment_copy(source_exp, new_name, target_group)
             if success:
                 created_count += 1
                 created_names.append(new_name)
