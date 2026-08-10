@@ -230,7 +230,13 @@ def ensure_kernel_installed(kernel_name="python3_ysocial"):
         return False
 
 
-def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000):
+def start_jupyter(
+    expid,
+    notebook_dir=None,
+    current_host=None,
+    current_port=5000,
+    current_origin=None,
+):
     """Start Jupyter Lab server.
 
     Args:
@@ -306,6 +312,12 @@ def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000
         }
     )
 
+    origin = current_origin
+    if not origin and current_host:
+        origin = f"http://{current_host}:{current_port}"
+    if not origin:
+        origin = "http://localhost"
+
     # Build jupyter-lab command with proper Windows support
     # On Windows, try multiple approaches to find and run jupyter-lab
     if sys.platform.startswith("win"):
@@ -363,7 +375,7 @@ def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000
                     f"--ServerApp.ip={current_host or '0.0.0.0'}",
                     "--no-browser",
                     f"--ServerApp.root_dir={notebook_dir.resolve()}",
-                    f"--ServerApp.allow_origin=http://{current_host}:{current_port}",
+                    f"--ServerApp.allow_origin={origin}",
                     "--ServerApp.allow_origin_pat=.*",
                     "--ServerApp.disable_check_xsrf=True",
                     "--IdentityProvider.token=",
@@ -371,7 +383,7 @@ def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000
                     "--ServerApp.allow_host=*",
                     f"--ServerApp.base_url=/jupyter/{expid}/",
                     "--ServerApp.trust_xheaders=True",
-                    f'--ServerApp.tornado_settings={{"headers": {{"X-Frame-Options": "ALLOWALL", "Content-Security-Policy": "frame-ancestors http://{current_host}:{current_port}"}}}}',
+                    f'--ServerApp.tornado_settings={{"headers": {{"X-Frame-Options": "ALLOWALL", "Content-Security-Policy": "frame-ancestors {origin}"}}}}',
                 ]
             else:
                 # Using jupyter.exe - add "lab" as first argument
@@ -384,7 +396,7 @@ def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000
                     f"--ServerApp.ip={current_host or '0.0.0.0'}",
                     "--no-browser",
                     f"--ServerApp.root_dir={notebook_dir.resolve()}",
-                    f"--ServerApp.allow_origin=http://{current_host}:{current_port}",
+                    f"--ServerApp.allow_origin={origin}",
                     "--ServerApp.allow_origin_pat=.*",
                     "--ServerApp.disable_check_xsrf=True",
                     "--IdentityProvider.token=",
@@ -392,7 +404,7 @@ def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000
                     "--ServerApp.allow_host=*",
                     f"--ServerApp.base_url=/jupyter/{expid}/",
                     "--ServerApp.trust_xheaders=True",
-                    f'--ServerApp.tornado_settings={{"headers": {{"X-Frame-Options": "ALLOWALL", "Content-Security-Policy": "frame-ancestors http://{current_host}:{current_port}"}}}}',
+                    f'--ServerApp.tornado_settings={{"headers": {{"X-Frame-Options": "ALLOWALL", "Content-Security-Policy": "frame-ancestors {origin}"}}}}',
                 ]
         else:
             # No jupyter-lab executable found, try python -m jupyterlab as last resort
@@ -410,7 +422,7 @@ def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000
                 f"--ServerApp.ip={current_host or '0.0.0.0'}",
                 "--no-browser",
                 f"--ServerApp.root_dir={notebook_dir.resolve()}",
-                f"--ServerApp.allow_origin=http://{current_host}:{current_port}",
+                f"--ServerApp.allow_origin={origin}",
                 "--ServerApp.allow_origin_pat=.*",
                 "--ServerApp.disable_check_xsrf=True",
                 "--IdentityProvider.token=",
@@ -418,7 +430,7 @@ def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000
                 "--ServerApp.allow_host=*",
                 f"--ServerApp.base_url=/jupyter/{expid}/",
                 "--ServerApp.trust_xheaders=True",
-                f'--ServerApp.tornado_settings={{"headers": {{"X-Frame-Options": "ALLOWALL", "Content-Security-Policy": "frame-ancestors http://{current_host}:{current_port}"}}}}',
+                f'--ServerApp.tornado_settings={{"headers": {{"X-Frame-Options": "ALLOWALL", "Content-Security-Policy": "frame-ancestors {origin}"}}}}',
             ]
     else:
         # Unix/Linux/Mac: use python -m jupyter lab
@@ -433,7 +445,7 @@ def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000
             f"--ServerApp.ip={current_host or '0.0.0.0'}",
             "--no-browser",
             f"--ServerApp.root_dir={notebook_dir.resolve()}",
-            f"--ServerApp.allow_origin=http://{current_host}:{current_port}",
+            f"--ServerApp.allow_origin={origin}",
             "--ServerApp.allow_origin_pat=.*",
             "--ServerApp.disable_check_xsrf=True",
             "--IdentityProvider.token=",
@@ -441,7 +453,7 @@ def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000
             "--ServerApp.allow_host=*",
             f"--ServerApp.base_url=/jupyter/{expid}/",
             "--ServerApp.trust_xheaders=True",
-            f'--ServerApp.tornado_settings={{"headers": {{"X-Frame-Options": "ALLOWALL", "Content-Security-Policy": "frame-ancestors http://{current_host}:{current_port}"}}}}',
+            f'--ServerApp.tornado_settings={{"headers": {{"X-Frame-Options": "ALLOWALL", "Content-Security-Policy": "frame-ancestors {origin}"}}}}',
         ]
 
     try:

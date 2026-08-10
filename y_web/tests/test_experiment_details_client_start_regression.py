@@ -61,3 +61,33 @@ def test_clear_experiment_logs_uses_helper_return_value_consistently():
         not in clear_logs_source
     )
     assert "if deleted_count:" in clear_logs_source
+
+
+def test_jupyter_start_route_uses_experiment_directory_helper():
+    jupyter_source = (
+        REPO_ROOT / "y_web" / "routes" / "admin" / "sub" / "jupyterlab.py"
+    ).read_text(encoding="utf-8")
+
+    assert "_get_notebook_dir(exp)" in jupyter_source
+    assert "split(os.sep)[1]" not in jupyter_source
+    assert "request.host.split(\":\")" not in jupyter_source
+    assert "_get_request_host_and_port()" in jupyter_source
+    assert 'current_app.config.get("ENABLE_NOTEBOOK", True)' in jupyter_source
+
+
+def test_dashboard_and_experiment_details_default_notebook_enabled():
+    dashboard_source = (
+        REPO_ROOT / "y_web" / "routes" / "admin" / "dashboard.py"
+    ).read_text(encoding="utf-8")
+    data_source = (
+        REPO_ROOT
+        / "y_web"
+        / "routes"
+        / "admin"
+        / "sub"
+        / "experiments"
+        / "_data.py"
+    ).read_text(encoding="utf-8")
+
+    assert 'current_app.config.get("ENABLE_NOTEBOOK", True)' in dashboard_source
+    assert 'current_app.config.get("ENABLE_NOTEBOOK", True)' in data_source

@@ -377,7 +377,7 @@ def dashboard():
         db_server=db_server,
         has_jupyter_sessions=has_jupyter_sessions,
         jupyter_by_exp=jupyter_by_exp,
-        notebook=current_app.config["ENABLE_NOTEBOOK"],
+        notebook=current_app.config.get("ENABLE_NOTEBOOK", True),
         total_experiments=total_experiments,
         # Telemetry notice
         show_telemetry_notice=show_telemetry_notice,

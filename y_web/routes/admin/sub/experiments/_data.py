@@ -758,7 +758,7 @@ def experiment_details(uid):
         len=len,
         dbtype=dbtype,
         jupyter_instance=jupyter_instance,
-        notebooks=current_app.config["ENABLE_NOTEBOOK"],
+        notebooks=current_app.config.get("ENABLE_NOTEBOOK", True),
         telemetry_enabled=telemetry_enabled,
         can_manage_experiment=user_can_manage_experiment(admin_user, experiment),
         llm_agents_enabled_effective=llm_agents_enabled_effective,

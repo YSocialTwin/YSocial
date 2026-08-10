@@ -3,6 +3,7 @@ from flask import Blueprint, current_app, jsonify, render_template, request
 from flask_login import login_required
 
 from y_web import db
+from y_web.src.experiment.helpers import get_experiment_dir
 from y_web.routes.admin.sub.experiments import experiment_details
 from y_web.src.models import Exps, Jupyter_instances
 from y_web.src.system.jupyter_utils import *
@@ -13,7 +14,7 @@ lab = Blueprint("lab", __name__)
 
 def __check_notebook_enabled():
     """Check if Jupyter Notebook functionality is enabled"""
-    if current_app.config["ENABLE_NOTEBOOK"] is not False:
+    if current_app.config.get("ENABLE_NOTEBOOK", True) is not False:
         return False
     else:
         return (
@@ -25,6 +26,29 @@ def __check_notebook_enabled():
             ),
             403,
         )
+
+
+def _get_request_host_and_port():
+    """Return the request host and port with a safe fallback when no port is present."""
+    host = request.host or ""
+    if ":" in host:
+        host_name, host_port = host.rsplit(":", 1)
+        return host_name, host_port
+
+    return host, str(request.environ.get("SERVER_PORT", 80))
+
+
+def _get_request_origin():
+    """Return the browser-visible origin used to reach the admin app."""
+    host_url = request.host_url or ""
+    if host_url.endswith("/"):
+        host_url = host_url[:-1]
+    return host_url
+
+
+def _get_notebook_dir(exp: Exps):
+    """Return the notebook directory for an experiment."""
+    return get_experiment_dir(exp) / "notebooks"
 
 
 @lab.route("/admin/lab_start/<experiment_id>", methods=["GET"])
@@ -52,34 +76,27 @@ def api_start_jupyter(experiment_id):
             404,
         )
 
-    # determine the database type and set the notebook directory accordingly
-    db_type = "sqlite"
-    if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
-        db_type = "postgresql"
-
-    if db_type == "sqlite":
-        path = exp.db_name.split(os.sep)
-        notebook_dir = f"y_web{os.sep}{path[0]}{os.sep}{path[1]}{os.sep}notebooks"
-    elif db_type == "postgresql":
-        db_name = exp.db_name
-        db_name = db_name.split("experiments_")[-1]
-        notebook_dir = f"y_web{os.sep}experiments{os.sep}{db_name}{os.sep}notebooks"
-    else:
+    notebook_dir = _get_notebook_dir(exp)
+    if not notebook_dir:
         return (
             jsonify(
                 {
                     "success": False,
-                    "message": f"Unsupported database type for experiment ID: {experiment_id}",
+                    "message": f"Could not resolve notebook directory for experiment ID: {experiment_id}",
                 }
             ),
             400,
         )
 
+    current_host, current_port = _get_request_host_and_port()
+    current_origin = _get_request_origin()
+
     success, message, instance_id = start_jupyter(
         exp_id,
-        notebook_dir,
-        current_host=request.host.split(":")[0],
-        current_port=request.host.split(":")[1],
+        str(notebook_dir),
+        current_host=current_host,
+        current_port=current_port,
+        current_origin=current_origin,
     )
     return jsonify({"success": success, "message": message, "instance_id": instance_id})
 
@@ -126,14 +143,14 @@ def api_create_notebook(expid):
     if disabled is not False:
         return disabled
 
-    path = (
-        db.session.query(Exps).filter_by(idexp=int(expid)).first().db_name.split(os.sep)
-    )
+    exp = db.session.query(Exps).filter_by(idexp=int(expid)).first()
+    if not exp:
+        return jsonify({"success": False, "message": f"Experiment not found: {expid}"}), 404
 
-    notebook_dir = f"y_web{os.sep}{path[0]}{os.sep}{path[1]}{os.sep}notebooks"
+    notebook_dir = _get_notebook_dir(exp)
 
     try:
-        filepath = create_notebook_with_template("untitled.ipynb", notebook_dir)
+        filepath = create_notebook_with_template("untitled.ipynb", str(notebook_dir))
         return jsonify(
             {
                 "success": True,
@@ -168,6 +185,9 @@ def jupyter_page(exp_id):
         return experiment_details(exp_id)
 
     inst = JUPYTER_INSTANCES[exp_id]
+    if not inst["process"]:
+        return experiment_details(exp_id)
+
     try:
         proc = psutil.Process(int(inst["process"]))
         if not proc.is_running():
@@ -175,7 +195,7 @@ def jupyter_page(exp_id):
     except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
         return experiment_details(exp_id)
 
-    current_host = request.host.split(":")[0]
+    current_host, current_port = _get_request_host_and_port()
     jupyter_url = f"http://{current_host}:{inst['port']}/lab?token=embed-jupyter-token"
 
     experiment = Exps.query.filter_by(idexp=exp_id).first()
@@ -189,4 +209,5 @@ def jupyter_page(exp_id):
         notebook_dir=str(inst["notebook_dir"]),
         experiment=experiment,
         current_host=current_host,
+        current_port=current_port,
     )

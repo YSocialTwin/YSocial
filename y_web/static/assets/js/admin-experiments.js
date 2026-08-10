@@ -112,9 +112,19 @@ var AdminExperiments = (function() {
   function startJupyter(expId) {
       showLoading('Starting JupyterLab...');
       fetch(`/admin/lab_start/${expId}`)
-          .then(response => response.json())
+          .then(response => {
+              if (!response.ok) {
+                  throw new Error(`HTTP ${response.status}`);
+              }
+              return response.json();
+          })
           .then(data => {
-              location.reload();
+              if (data && data.success) {
+                  window.location.href = `/admin/lab/${expId}`;
+                  return;
+              }
+
+              throw new Error((data && data.message) || 'Failed to start JupyterLab');
           })
           .catch(error => {
               console.error('Error starting JupyterLab:', error);
@@ -1373,6 +1383,18 @@ var AdminExperiments = (function() {
 })();
 
 
+// Shared helpers for the second bundled module. These need file scope because
+// AdminExperimentsForum is wrapped in its own IIFE.
+const byId = (id) => document.getElementById(id);
+const bindById = (id, eventName, handler) => {
+    const element = byId(id);
+    if (element) {
+        element.addEventListener(eventName, handler);
+    }
+    return element;
+};
+const currentExperimentData = () => window.YS_DATA_EXP_FORUM || window.YS_DATA_EXP || {};
+
 /**
  * AdminExperimentsForum - Extracted from admin templates (Phase T6)
  * Auto-generated. Do not edit manually.
@@ -1402,9 +1424,19 @@ var AdminExperimentsForum = (function() {
   function startJupyter(expId) {
       showLoading('Starting JupyterLab...');
       fetch(`/admin/lab_start/${expId}`)
-          .then(response => response.json())
+          .then(response => {
+              if (!response.ok) {
+                  throw new Error(`HTTP ${response.status}`);
+              }
+              return response.json();
+          })
           .then(data => {
-              location.reload();
+              if (data && data.success) {
+                  window.location.href = `/admin/lab/${expId}`;
+                  return;
+              }
+
+              throw new Error((data && data.message) || 'Failed to start JupyterLab');
           })
           .catch(error => {
               console.error('Error starting JupyterLab:', error);

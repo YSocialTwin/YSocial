@@ -70,6 +70,54 @@ def test_admin_shared_bundles_guard_optional_page_sections():
     assert "const results = await Promise.all(" in experiments
 
 
+def test_admin_experiments_start_jupyter_redirects_to_lab_page():
+    experiments = (STATIC_JS_DIR / "admin-experiments.js").read_text(encoding="utf-8")
+    start = experiments.index("function startJupyter(expId) {")
+    end = experiments.index("function stopJupyter(instanceId) {")
+    start_block = experiments[start:end]
+
+    assert "window.location.href = `/admin/lab/${expId}`;" in start_block
+    assert "throw new Error((data && data.message) || 'Failed to start JupyterLab');" in start_block
+    assert "response => response.json()" not in start_block
+
+
+def test_admin_experiments_forum_bundle_has_shared_helpers_in_file_scope():
+    experiments = (STATIC_JS_DIR / "admin-experiments.js").read_text(encoding="utf-8")
+    forum_start = experiments.index("var AdminExperimentsForum = (function() {")
+
+    assert experiments.index("const byId = (id) => document.getElementById(id);") < forum_start
+    assert (
+        experiments.index(
+            "const bindById = (id, eventName, handler) => {"
+        )
+        < forum_start
+    )
+    assert (
+        experiments.index(
+            "const currentExperimentData = () => window.YS_DATA_EXP_FORUM || window.YS_DATA_EXP || {};"
+        )
+        < forum_start
+    )
+
+
+def test_admin_dashboard_exposes_experiment_pagination_controls():
+    dashboard = (
+        REPO_ROOT / "y_web" / "templates" / "admin" / "dashboard.html"
+    ).read_text(encoding="utf-8")
+    admin_dashboard_js = (STATIC_JS_DIR / "admin-dashboard.js").read_text(
+        encoding="utf-8"
+    )
+
+    assert 'id="completed-pagination"' in dashboard
+    assert 'id="completed-prev"' in dashboard
+    assert 'onclick="paginateCompleted(-1); return false;"' in dashboard
+    assert 'id="stopped-pagination"' in dashboard
+    assert 'id="stopped-prev"' in dashboard
+    assert 'onclick="paginateStopped(-1); return false;"' in dashboard
+    assert "window.paginateCompleted = paginateCompleted;" in admin_dashboard_js
+    assert "window.paginateStopped = paginateStopped;" in admin_dashboard_js
+
+
 def test_admin_clients_network_parameter_rows_toggle_bootstrap_visibility():
     clients = (STATIC_JS_DIR / "admin-clients.js").read_text(encoding="utf-8")
 

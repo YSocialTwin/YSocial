@@ -608,6 +608,9 @@ async function deleteNotification(id) {
   window.stopExperimentServer = stopExperimentServer;
   window.selectExperiment = selectExperiment;
   window.joinExperiment = joinExperiment;
+  window.paginateRunning = paginateRunning;
+  window.paginateCompleted = paginateCompleted;
+  window.paginateStopped = paginateStopped;
 
 
 
