@@ -3,8 +3,8 @@ from flask import Blueprint, current_app, jsonify, render_template, request
 from flask_login import login_required
 
 from y_web import db
-from y_web.src.experiment.helpers import get_experiment_dir
 from y_web.routes.admin.sub.experiments import experiment_details
+from y_web.src.experiment.helpers import get_experiment_dir
 from y_web.src.models import Exps, Jupyter_instances
 from y_web.src.system.jupyter_utils import *
 from y_web.src.system.miscellanea import ollama_status
@@ -145,7 +145,10 @@ def api_create_notebook(expid):
 
     exp = db.session.query(Exps).filter_by(idexp=int(expid)).first()
     if not exp:
-        return jsonify({"success": False, "message": f"Experiment not found: {expid}"}), 404
+        return (
+            jsonify({"success": False, "message": f"Experiment not found: {expid}"}),
+            404,
+        )
 
     notebook_dir = _get_notebook_dir(exp)
 
