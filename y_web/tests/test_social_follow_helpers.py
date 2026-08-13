@@ -2,8 +2,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from y_web.src.data_access import users as users_module
 from y_web.routes.interactions import common as interactions_common
+from y_web.src.data_access import users as users_module
 
 pytestmark = pytest.mark.unit
 
