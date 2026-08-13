@@ -1080,8 +1080,8 @@ def get_suggested_port():
     assigned_ports = {
         exp.port
         for exp in Exps.query.all()
-        if exp.port and str(getattr(exp, "exp_status", "") or "").strip().lower()
-        != "completed"
+        if exp.port
+        and str(getattr(exp, "exp_status", "") or "").strip().lower() != "completed"
     }
 
     # Check each port in the range

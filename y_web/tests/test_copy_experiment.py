@@ -381,8 +381,8 @@ def test_copy_experiment_group_builds_one_copy_per_source_experiment(monkeypatch
     )
     monkeypatch.setattr("y_web.src.telemetry.Telemetry", FakeTelemetry)
 
-    created_count, created_names, failures, error_message = _crud._copy_experiment_group(
-        "Source Group", "Fresh Group"
+    created_count, created_names, failures, error_message = (
+        _crud._copy_experiment_group("Source Group", "Fresh Group")
     )
 
     assert error_message is None
@@ -403,8 +403,8 @@ def test_copy_experiment_group_rejects_same_source_and_target(monkeypatch):
 
     monkeypatch.setattr(_crud, "_current_admin_user_or_none", lambda: SimpleNamespace())
 
-    created_count, created_names, failures, error_message = _crud._copy_experiment_group(
-        "Same Group", "Same Group"
+    created_count, created_names, failures, error_message = (
+        _crud._copy_experiment_group("Same Group", "Same Group")
     )
 
     assert created_count == 0
@@ -475,16 +475,14 @@ def test_copy_experiment_group_reports_partial_failure(monkeypatch):
         lambda user: SimpleNamespace(log_event=lambda payload: None),
     )
 
-    created_count, created_names, failures, error_message = _crud._copy_experiment_group(
-        "Source Group", "Fresh Group"
+    created_count, created_names, failures, error_message = (
+        _crud._copy_experiment_group("Source Group", "Fresh Group")
     )
 
     assert error_message is None
     assert created_count == 1
     assert created_names == ["Alpha__fresh-group__10"]
-    assert failures == [
-        ("Beta", "Beta__fresh-group__11", "copy helper returned False")
-    ]
+    assert failures == [("Beta", "Beta__fresh-group__11", "copy helper returned False")]
 
 
 def test_copy_experiment_names_are_not_capped():

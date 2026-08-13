@@ -77,7 +77,10 @@ def test_admin_experiments_start_jupyter_redirects_to_lab_page():
     start_block = experiments[start:end]
 
     assert "window.location.href = `/admin/lab/${expId}`;" in start_block
-    assert "throw new Error((data && data.message) || 'Failed to start JupyterLab');" in start_block
+    assert (
+        "throw new Error((data && data.message) || 'Failed to start JupyterLab');"
+        in start_block
+    )
     assert "response => response.json()" not in start_block
 
 
@@ -85,11 +88,12 @@ def test_admin_experiments_forum_bundle_has_shared_helpers_in_file_scope():
     experiments = (STATIC_JS_DIR / "admin-experiments.js").read_text(encoding="utf-8")
     forum_start = experiments.index("var AdminExperimentsForum = (function() {")
 
-    assert experiments.index("const byId = (id) => document.getElementById(id);") < forum_start
     assert (
-        experiments.index(
-            "const bindById = (id, eventName, handler) => {"
-        )
+        experiments.index("const byId = (id) => document.getElementById(id);")
+        < forum_start
+    )
+    assert (
+        experiments.index("const bindById = (id, eventName, handler) => {")
         < forum_start
     )
     assert (
