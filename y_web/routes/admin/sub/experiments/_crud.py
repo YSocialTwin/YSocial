@@ -2975,17 +2975,17 @@ def _copy_experiment_group(source_group, target_group):
 
     user = _current_admin_user_or_none()
     if not user:
-        return 0, [], "Invalid user session."
+        return 0, [], [], "Invalid user session."
 
     source_group = str(source_group or "").strip()
     target_group = str(target_group or "").strip()
 
     if not source_group:
-        return 0, [], "Select a valid source group."
+        return 0, [], [], "Select a valid source group."
     if not target_group:
-        return 0, [], "Select a valid target group."
+        return 0, [], [], "Select a valid target group."
     if source_group == target_group:
-        return 0, [], "Source and target groups must be different."
+        return 0, [], [], "Source and target groups must be different."
 
     visible_query = get_visible_experiment_query(user)
     source_experiments = (
@@ -2994,7 +2994,7 @@ def _copy_experiment_group(source_group, target_group):
         .all()
     )
     if not source_experiments:
-        return 0, [], f"No experiments found in group '{source_group}'."
+        return 0, [], [], f"No experiments found in group '{source_group}'."
 
     copy_plan = []
     for source_exp in source_experiments:
@@ -3005,10 +3005,11 @@ def _copy_experiment_group(source_group, target_group):
 
     for _, new_name in copy_plan:
         if Exps.query.filter_by(exp_name=new_name).first():
-            return 0, [], f"An experiment with name '{new_name}' already exists."
+            return 0, [], [], f"An experiment with name '{new_name}' already exists."
 
     created_count = 0
     created_names = []
+    failures = []
     for source_exp, new_name in copy_plan:
         try:
             success = _create_single_experiment_copy(source_exp, new_name, target_group)
@@ -3029,6 +3030,14 @@ def _copy_experiment_group(source_group, target_group):
                         },
                     },
                 )
+            else:
+                failures.append(
+                    (
+                        getattr(source_exp, "exp_name", new_name),
+                        new_name,
+                        "copy helper returned False",
+                    )
+                )
         except Exception as exc:
             current_app.logger.error(
                 "Error copying group experiment '%s' into '%s': %s",
@@ -3037,10 +3046,25 @@ def _copy_experiment_group(source_group, target_group):
                 exc,
                 exc_info=True,
             )
+            failures.append(
+                (
+                    getattr(source_exp, "exp_name", new_name),
+                    new_name,
+                    str(exc),
+                )
+            )
 
     if created_count == 0:
-        return 0, [], f"Failed to copy any experiments from group '{source_group}'."
-    return created_count, created_names, None
+        if failures:
+            return (
+                0,
+                [],
+                failures,
+                f"Failed to copy any experiments from group '{source_group}'.",
+            )
+        return 0, [], [], f"Failed to copy any experiments from group '{source_group}'."
+
+    return created_count, created_names, failures, None
 
 
 @experiments.route("/admin/copy_experiment_group", methods=["POST"])
@@ -3052,12 +3076,39 @@ def copy_experiment_group():
     source_group = request.form.get("source_group")
     target_group = request.form.get("target_group")
 
-    created_count, created_names, error_message = _copy_experiment_group(
+    created_count, created_names, failures, error_message = _copy_experiment_group(
         source_group, target_group
     )
+    structured_failure_message = None
+    if failures:
+        structured_failure_message = {
+            "title": "Copy Group had failures",
+            "summary": (
+                error_message
+                if error_message
+                else (
+                    f"{created_count} experiment(s) were copied successfully into "
+                    f"'{target_group}', but some copies failed."
+                )
+            ),
+            "failures": [
+                {
+                    "source": source_name,
+                    "target": new_name,
+                    "reason": reason,
+                }
+                for source_name, new_name, reason in failures
+            ],
+        }
     if error_message:
-        flash(error_message, "error")
+        if structured_failure_message:
+            flash(structured_failure_message, "error")
+        else:
+            flash(error_message, "error")
         return redirect(url_for("experiments.settings"))
+
+    if structured_failure_message:
+        flash(structured_failure_message, "warning")
 
     if created_count == 1:
         flash(

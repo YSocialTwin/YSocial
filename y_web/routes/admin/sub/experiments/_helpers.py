@@ -1067,18 +1067,22 @@ def get_suggested_port():
     Find the first available port in the range 5000-6000.
 
     A port is considered available if:
-    1. It is not assigned to any existing experiment (regardless of running status)
+    1. It is not reserved by any experiment that is still active or may resume
     2. It is currently free (not in use by any process)
+
+    Completed experiments release their port reservation and can be reused.
 
     Returns:
         int: The first available port, or 5000 if none found
     """
-    # Get all ports assigned to existing experiments
-    assigned_ports = set()
-    experiments = Exps.query.all()
-    for exp in experiments:
-        if exp.port:
-            assigned_ports.add(exp.port)
+    # Only reserve ports for experiments that are not completed yet.
+    # Completed experiments may safely release their port for reuse.
+    assigned_ports = {
+        exp.port
+        for exp in Exps.query.all()
+        if exp.port and str(getattr(exp, "exp_status", "") or "").strip().lower()
+        != "completed"
+    }
 
     # Check each port in the range
     for port in range(5000, 6001):
