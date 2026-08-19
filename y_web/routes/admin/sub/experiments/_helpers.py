@@ -1084,8 +1084,9 @@ def get_suggested_port():
     reusable_experiment_ids = {
         getattr(exp, "idexp", None)
         for exp in experiments
-        if exp.port and str(getattr(exp, "exp_status", "") or "").strip().lower()
-        == "completed" and getattr(exp, "idexp", None) is not None
+        if exp.port
+        and str(getattr(exp, "exp_status", "") or "").strip().lower() == "completed"
+        and getattr(exp, "idexp", None) is not None
     }
 
     stopped_experiments = [
@@ -1106,7 +1107,9 @@ def get_suggested_port():
 
             all_completed = True
             for client in clients:
-                client_exec = Client_Execution.query.filter_by(client_id=client.id).first()
+                client_exec = Client_Execution.query.filter_by(
+                    client_id=client.id
+                ).first()
                 if client_exec is None:
                     all_completed = False
                     break
@@ -1123,8 +1126,7 @@ def get_suggested_port():
     assigned_ports = {
         exp.port
         for exp in experiments
-        if exp.port
-        and getattr(exp, "idexp", None) not in reusable_experiment_ids
+        if exp.port and getattr(exp, "idexp", None) not in reusable_experiment_ids
     }
 
     # Check each port from 5000 upward, stopping at the TCP port ceiling.

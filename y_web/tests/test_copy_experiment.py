@@ -257,7 +257,9 @@ def test_get_suggested_port_skips_non_completed_experiment_ports(monkeypatch):
         "Client_Execution",
         SimpleNamespace(
             query=SimpleNamespace(
-                filter_by=lambda **_kwargs: SimpleNamespace(first=lambda: client_execs[0])
+                filter_by=lambda **_kwargs: SimpleNamespace(
+                    first=lambda: client_execs[0]
+                )
             ),
             client_id=SimpleNamespace(in_=lambda values: values),
         ),
@@ -305,7 +307,11 @@ def test_get_suggested_port_reuses_legacy_stopped_experiment_port(monkeypatch):
         _helpers,
         "Client_Execution",
         SimpleNamespace(
-            query=SimpleNamespace(filter_by=lambda **_kwargs: SimpleNamespace(first=lambda: client_execs[0])),
+            query=SimpleNamespace(
+                filter_by=lambda **_kwargs: SimpleNamespace(
+                    first=lambda: client_execs[0]
+                )
+            ),
             client_id=SimpleNamespace(in_=lambda values: values),
         ),
     )
