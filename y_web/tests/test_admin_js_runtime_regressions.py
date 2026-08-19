@@ -60,6 +60,7 @@ def test_admin_shared_bundles_guard_optional_page_sections():
     assert "function pollClientProgress(" not in settings
     assert "setInterval(updateProgress, 2000)" not in settings
     assert "fetch(`/admin/experiment_clients/${expId}`)" in settings
+    assert "changePage," in settings
     assert "function pollAllClientProgress(" not in dashboard
     assert "fetch(`/admin/progress/${clientId}`)" not in dashboard
     assert (

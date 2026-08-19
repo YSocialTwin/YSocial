@@ -1982,6 +1982,7 @@ Object.assign(window, {
     stopExperimentServer,
     toggleExperimentSelection,
     toggleAllExperiments,
+    changePage,
     downloadSelectedExperiments,
     downloadAllExperiments,
     downloadGroupExperiments,
