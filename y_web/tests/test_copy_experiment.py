@@ -215,8 +215,8 @@ def test_get_suggested_port_reuses_completed_experiment_port(monkeypatch):
     class FakeQuery:
         def all(self):
             return [
-                SimpleNamespace(port=5000, exp_status="completed"),
-                SimpleNamespace(port=5001, exp_status="active"),
+                SimpleNamespace(port=5000, exp_status="completed", idexp=1),
+                SimpleNamespace(port=5001, exp_status="active", idexp=2),
             ]
 
     monkeypatch.setattr(_helpers, "Exps", SimpleNamespace(query=FakeQuery()))
@@ -231,16 +231,103 @@ def test_get_suggested_port_skips_non_completed_experiment_ports(monkeypatch):
     class FakeQuery:
         def all(self):
             return [
-                SimpleNamespace(port=5000, exp_status="stopped"),
-                SimpleNamespace(port=5001, exp_status="active"),
-                SimpleNamespace(port=5002, exp_status=None),
-                SimpleNamespace(port=5003, exp_status="completed"),
+                SimpleNamespace(port=5000, exp_status="stopped", idexp=1),
+                SimpleNamespace(port=5001, exp_status="active", idexp=2),
+                SimpleNamespace(port=5002, exp_status=None, idexp=3),
+                SimpleNamespace(port=5003, exp_status="completed", idexp=4),
             ]
 
+    clients = [SimpleNamespace(id=21, id_exp=1)]
+    client_execs = [
+        SimpleNamespace(client_id=21, elapsed_time=3, expected_duration_rounds=10)
+    ]
+
     monkeypatch.setattr(_helpers, "Exps", SimpleNamespace(query=FakeQuery()))
+    monkeypatch.setattr(
+        _helpers,
+        "Client",
+        SimpleNamespace(
+            query=SimpleNamespace(
+                filter_by=lambda **_kwargs: SimpleNamespace(all=lambda: clients)
+            )
+        ),
+    )
+    monkeypatch.setattr(
+        _helpers,
+        "Client_Execution",
+        SimpleNamespace(
+            query=SimpleNamespace(
+                filter_by=lambda **_kwargs: SimpleNamespace(first=lambda: client_execs[0])
+            ),
+            client_id=SimpleNamespace(in_=lambda values: values),
+        ),
+    )
     monkeypatch.setattr(_helpers, "is_port_free", lambda port: port == 5003)
 
     assert _helpers.get_suggested_port() == 5003
+
+
+def test_get_suggested_port_reuses_legacy_stopped_experiment_port(monkeypatch):
+    from y_web.routes.admin.sub.experiments import _helpers
+
+    class FakeQuery:
+        def __init__(self, rows):
+            self.rows = rows
+
+        def all(self):
+            return self.rows
+
+        def filter(self, *_args, **_kwargs):
+            return self
+
+        def filter_by(self, **_kwargs):
+            return self
+
+    experiments = [
+        SimpleNamespace(port=5000, exp_status="stopped", idexp=1),
+        SimpleNamespace(port=5001, exp_status="active", idexp=2),
+    ]
+    clients = [SimpleNamespace(id=11, id_exp=1)]
+    client_execs = [
+        SimpleNamespace(client_id=11, elapsed_time=12, expected_duration_rounds=12)
+    ]
+
+    monkeypatch.setattr(_helpers, "Exps", SimpleNamespace(query=FakeQuery(experiments)))
+    monkeypatch.setattr(
+        _helpers,
+        "Client",
+        SimpleNamespace(
+            query=FakeQuery(clients),
+            id_exp=SimpleNamespace(in_=lambda values: values),
+        ),
+    )
+    monkeypatch.setattr(
+        _helpers,
+        "Client_Execution",
+        SimpleNamespace(
+            query=SimpleNamespace(filter_by=lambda **_kwargs: SimpleNamespace(first=lambda: client_execs[0])),
+            client_id=SimpleNamespace(in_=lambda values: values),
+        ),
+    )
+    monkeypatch.setattr(_helpers, "is_port_free", lambda port: port == 5000)
+
+    assert _helpers.get_suggested_port() == 5000
+
+
+def test_get_suggested_port_scans_past_6000(monkeypatch):
+    from y_web.routes.admin.sub.experiments import _helpers
+
+    class FakeQuery:
+        def all(self):
+            return [
+                SimpleNamespace(port=port, exp_status="active", idexp=port)
+                for port in range(5000, 6001)
+            ]
+
+    monkeypatch.setattr(_helpers, "Exps", SimpleNamespace(query=FakeQuery()))
+    monkeypatch.setattr(_helpers, "is_port_free", lambda port: port == 6001)
+
+    assert _helpers.get_suggested_port() == 6001
 
 
 def test_config_update_verification():

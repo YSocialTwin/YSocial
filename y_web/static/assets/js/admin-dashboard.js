@@ -191,9 +191,21 @@ var AdminDashboard = (function() {
             
               // Fetch updated experiment data for each section
               await Promise.all([
-                  refreshExperimentSection('running', '#28a745'),
-                  refreshExperimentSection('completed', '#17a2b8'),
-                  refreshExperimentSection('stopped', '#6c757d')
+                  refreshExperimentSection(
+                      'running',
+                      '#28a745',
+                      paginationState.running.page
+                  ),
+                  refreshExperimentSection(
+                      'completed',
+                      '#17a2b8',
+                      paginationState.completed.page
+                  ),
+                  refreshExperimentSection(
+                      'stopped',
+                      '#6c757d',
+                      paginationState.stopped.page
+                  )
               ]);
           }
       } catch (error) {
@@ -201,21 +213,42 @@ var AdminDashboard = (function() {
       }
   }
 
-  async function refreshExperimentSection(status, sectionColor) {
+  async function refreshExperimentSection(status, sectionColor, page) {
       try {
-          const response = await fetch(`/admin/dashboard/experiments/${status}?page=1&per_page=5`);
+          const currentPage = Math.max(
+              1,
+              page || paginationState[status].page || 1
+          );
+          const response = await fetch(
+              `/admin/dashboard/experiments/${status}?page=${currentPage}&per_page=5`
+          );
           const data = await response.json();
         
           const containerId = `${status === 'running' ? 'running' : status}-experiments-container`;
           const container = document.getElementById(containerId);
         
           if (container && data.experiments) {
+              const totalPages = data.total_pages || 1;
+              paginationState[status].page = Math.min(currentPage, totalPages);
+              paginationState[status].totalPages = totalPages;
+
               // Use compact rendering for completed/stopped, full for running
               const renderFunc = status === 'running' 
                   ? (exp) => renderExperimentBoxFromData(exp, sectionColor, {}, false, false)
                   : (exp) => renderCompactExperimentBoxFromData(exp, sectionColor);
               const html = data.experiments.map(renderFunc).join('');
               container.innerHTML = html || '<p style="color: #666; text-align: center;">No experiments in this category</p>';
+
+              const prevBtn = document.getElementById(`${status}-prev`);
+              const nextBtn = document.getElementById(`${status}-next`);
+              const pageInfo = document.getElementById(`${status}-page-info`);
+              if (prevBtn) prevBtn.disabled = paginationState[status].page <= 1;
+              if (nextBtn) nextBtn.disabled = paginationState[status].page >= totalPages;
+              if (pageInfo) {
+                  pageInfo.textContent = status === 'running'
+                      ? `Page ${paginationState[status].page} of ${totalPages}`
+                      : `${paginationState[status].page}/${totalPages}`;
+              }
           }
       } catch (error) {
           console.error(`Error refreshing ${status} experiments:`, error);

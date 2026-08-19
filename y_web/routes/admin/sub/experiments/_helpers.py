@@ -19,6 +19,7 @@ import uuid
 from collections import defaultdict
 from copy import deepcopy
 from datetime import datetime, timedelta
+from itertools import count
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urlparse
 from urllib.request import Request, urlopen
@@ -1073,19 +1074,64 @@ def get_suggested_port():
     Completed experiments release their port reservation and can be reused.
 
     Returns:
-        int: The first available port, or 5000 if none found
+        int: The first available port, or None if none found up to 65535
     """
-    # Only reserve ports for experiments that are not completed yet.
-    # Completed experiments may safely release their port for reuse.
-    assigned_ports = {
-        exp.port
-        for exp in Exps.query.all()
-        if exp.port
-        and str(getattr(exp, "exp_status", "") or "").strip().lower() != "completed"
+    experiments = Exps.query.all()
+
+    # Release ports for experiments that are already completed.
+    # Legacy rows may still be marked "stopped" even though every client
+    # execution has finished, so treat those as reusable too.
+    reusable_experiment_ids = {
+        getattr(exp, "idexp", None)
+        for exp in experiments
+        if exp.port and str(getattr(exp, "exp_status", "") or "").strip().lower()
+        == "completed" and getattr(exp, "idexp", None) is not None
     }
 
-    # Check each port in the range
-    for port in range(5000, 6001):
+    stopped_experiments = [
+        exp
+        for exp in experiments
+        if exp.port
+        and str(getattr(exp, "exp_status", "") or "").strip().lower() == "stopped"
+    ]
+    if stopped_experiments:
+        for exp in stopped_experiments:
+            exp_id = getattr(exp, "idexp", None)
+            if exp_id is None:
+                continue
+
+            clients = Client.query.filter_by(id_exp=exp_id).all()
+            if not clients:
+                continue
+
+            all_completed = True
+            for client in clients:
+                client_exec = Client_Execution.query.filter_by(client_id=client.id).first()
+                if client_exec is None:
+                    all_completed = False
+                    break
+
+                expected_duration = getattr(client_exec, "expected_duration_rounds", 0)
+                elapsed_time = getattr(client_exec, "elapsed_time", 0)
+                if expected_duration == -1 or elapsed_time < expected_duration:
+                    all_completed = False
+                    break
+
+            if all_completed:
+                reusable_experiment_ids.add(exp_id)
+
+    assigned_ports = {
+        exp.port
+        for exp in experiments
+        if exp.port
+        and getattr(exp, "idexp", None) not in reusable_experiment_ids
+    }
+
+    # Check each port from 5000 upward, stopping at the TCP port ceiling.
+    for port in count(5000):
+        if port > 65535:
+            return None
+
         # Skip if already assigned to an experiment
         if port in assigned_ports:
             continue
