@@ -291,8 +291,21 @@ var AdminExperiments = (function() {
               const volumeData = allClientMethodsData.methods.map(method => callVolume[method]);
               const executionTimeData = allClientMethodsData.methods.map(method => meanExecutionTime[method]);
 
+              const clientCallVolumeCanvas = document.getElementById("clientCallVolumeChart");
+              if (clientCallVolumeCanvas && typeof Chart !== "undefined" && typeof Chart.getChart === "function") {
+                  const existingClientCallVolumeChart = Chart.getChart(clientCallVolumeCanvas);
+                  if (existingClientCallVolumeChart && existingClientCallVolumeChart !== clientCallVolumeChartInstance) {
+                      existingClientCallVolumeChart.destroy();
+                  }
+              }
+              if (clientCallVolumeChartInstance) {
+                  clientCallVolumeChartInstance.destroy();
+                  clientCallVolumeChartInstance = null;
+              }
+
               // Call Volume Chart
-              clientCallVolumeChartInstance = new Chart("clientCallVolumeChart", {
+              if (clientCallVolumeCanvas) {
+                  clientCallVolumeChartInstance = new Chart(clientCallVolumeCanvas, {
                   type: 'bar',
                   data: {
                       labels: allClientMethodsData.methods,
@@ -334,9 +347,23 @@ var AdminExperiments = (function() {
                       }
                   }
               });
+              }
 
               // Mean Execution Time Chart
-              clientMeanExecutionTimeChartInstance = new Chart("clientMeanExecutionTimeChart", {
+              const clientMeanExecutionTimeCanvas = document.getElementById("clientMeanExecutionTimeChart");
+              if (clientMeanExecutionTimeCanvas && typeof Chart !== "undefined" && typeof Chart.getChart === "function") {
+                  const existingClientMeanExecutionTimeChart = Chart.getChart(clientMeanExecutionTimeCanvas);
+                  if (existingClientMeanExecutionTimeChart && existingClientMeanExecutionTimeChart !== clientMeanExecutionTimeChartInstance) {
+                      existingClientMeanExecutionTimeChart.destroy();
+                  }
+              }
+              if (clientMeanExecutionTimeChartInstance) {
+                  clientMeanExecutionTimeChartInstance.destroy();
+                  clientMeanExecutionTimeChartInstance = null;
+              }
+
+              if (clientMeanExecutionTimeCanvas) {
+                  clientMeanExecutionTimeChartInstance = new Chart(clientMeanExecutionTimeCanvas, {
                   type: 'bar',
                   data: {
                       labels: allClientMethodsData.methods,
@@ -380,6 +407,7 @@ var AdminExperiments = (function() {
                       }
                   }
               });
+              }
           })
           .catch(error => {
               console.error('Error fetching client logs:', error);
@@ -783,14 +811,22 @@ var AdminExperiments = (function() {
           simulationData = removeOutliers(rawSimulationData);
       }
 
-      // Destroy existing server compute time chart before recreating
+      // Destroy any chart already bound to this canvas before recreating it.
+      const serverComputeTimeTrendCanvas = document.getElementById('serverComputeTimeTrendChart');
+      if (serverComputeTimeTrendCanvas && typeof Chart !== 'undefined' && typeof Chart.getChart === 'function') {
+          const existingServerComputeTimeTrendChart = Chart.getChart(serverComputeTimeTrendCanvas);
+          if (existingServerComputeTimeTrendChart && existingServerComputeTimeTrendChart !== serverComputeTimeTrendChart) {
+              existingServerComputeTimeTrendChart.destroy();
+          }
+      }
       if (serverComputeTimeTrendChart) {
           serverComputeTimeTrendChart.destroy();
+          serverComputeTimeTrendChart = null;
       }
-    
+
       // Create/recreate server compute time chart
-      if (labels.length > 0) {
-          serverComputeTimeTrendChart = new Chart('serverComputeTimeTrendChart', {
+      if (labels.length > 0 && serverComputeTimeTrendCanvas) {
+          serverComputeTimeTrendChart = new Chart(serverComputeTimeTrendCanvas, {
               type: 'line',
               data: {
                   labels: labels,
@@ -860,14 +896,22 @@ var AdminExperiments = (function() {
           });
       }
 
-      // Destroy existing client compute time chart before recreating
+      // Destroy any chart already bound to this canvas before recreating it.
+      const clientComputeTimeTrendCanvas = document.getElementById('clientComputeTimeTrendChart');
+      if (clientComputeTimeTrendCanvas && typeof Chart !== 'undefined' && typeof Chart.getChart === 'function') {
+          const existingClientComputeTimeTrendChart = Chart.getChart(clientComputeTimeTrendCanvas);
+          if (existingClientComputeTimeTrendChart && existingClientComputeTimeTrendChart !== clientComputeTimeTrendChart) {
+              existingClientComputeTimeTrendChart.destroy();
+          }
+      }
       if (clientComputeTimeTrendChart) {
           clientComputeTimeTrendChart.destroy();
+          clientComputeTimeTrendChart = null;
       }
-    
+
       // Create/recreate client compute time chart
-      if (labels.length > 0 && clientComputeDatasets.length > 0) {
-          clientComputeTimeTrendChart = new Chart('clientComputeTimeTrendChart', {
+      if (labels.length > 0 && clientComputeDatasets.length > 0 && clientComputeTimeTrendCanvas) {
+          clientComputeTimeTrendChart = new Chart(clientComputeTimeTrendCanvas, {
               type: 'line',
               data: {
                   labels: labels,
@@ -886,14 +930,22 @@ var AdminExperiments = (function() {
           });
       }
 
-      // Destroy existing simulation time chart before recreating
+      // Destroy any chart already bound to this canvas before recreating it.
+      const simulationTimeTrendCanvas = document.getElementById('simulationTimeTrendChart');
+      if (simulationTimeTrendCanvas && typeof Chart !== 'undefined' && typeof Chart.getChart === 'function') {
+          const existingSimulationTimeTrendChart = Chart.getChart(simulationTimeTrendCanvas);
+          if (existingSimulationTimeTrendChart && existingSimulationTimeTrendChart !== simulationTimeTrendChart) {
+              existingSimulationTimeTrendChart.destroy();
+          }
+      }
       if (simulationTimeTrendChart) {
           simulationTimeTrendChart.destroy();
+          simulationTimeTrendChart = null;
       }
-    
+
       // Create/recreate simulation time chart
-      if (labels.length > 0) {
-          simulationTimeTrendChart = new Chart('simulationTimeTrendChart', {
+      if (labels.length > 0 && simulationTimeTrendCanvas) {
+          simulationTimeTrendChart = new Chart(simulationTimeTrendCanvas, {
               type: 'line',
               data: {
                   labels: labels,
@@ -1231,8 +1283,21 @@ var AdminExperiments = (function() {
                   meanDurationChartInstance.destroy();
               }
 
+              const callVolumeCanvas = document.getElementById("callVolumeChart");
+              if (callVolumeCanvas && typeof Chart !== "undefined" && typeof Chart.getChart === "function") {
+                  const existingCallVolumeChart = Chart.getChart(callVolumeCanvas);
+                  if (existingCallVolumeChart && existingCallVolumeChart !== callVolumeChartInstance) {
+                      existingCallVolumeChart.destroy();
+                  }
+              }
+              if (callVolumeChartInstance) {
+                  callVolumeChartInstance.destroy();
+                  callVolumeChartInstance = null;
+              }
+
               // Call Volume Chart
-              callVolumeChartInstance = new Chart("callVolumeChart", {
+              if (callVolumeCanvas) {
+                  callVolumeChartInstance = new Chart(callVolumeCanvas, {
                   type: 'bar',
                   data: {
                       labels: allPathsData.paths,
@@ -1274,53 +1339,68 @@ var AdminExperiments = (function() {
                       }
                   }
               });
+              }
 
               // Mean Duration Chart
-              meanDurationChartInstance = new Chart("meanDurationChart", {
-              type: 'bar',
-              data: {
-                  labels: allPathsData.paths,
-                  datasets: [{
-                      label: 'Mean Duration (s)',
-                      data: durationData,
-                      backgroundColor: 'rgba(76, 175, 80, 0.6)',
-                      borderColor: 'rgba(76, 175, 80, 1)',
-                      borderWidth: 1,
-                      borderRadius: 4
-                  }]
-              },
-              options: {
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                      legend: {
-                          display: false
-                      },
-                      tooltip: {
-                          backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                          padding: 8,
-                          titleFont: { size: 12 },
-                          bodyFont: { size: 11 },
-                          callbacks: {
-                              label: function(context) {
-                                  return 'Duration: ' + context.parsed.y.toFixed(4) + 's';
-                              }
-                          }
-                      }
-                  },
-                  scales: {
-                      y: {
-                          beginAtZero: true,
-                          ticks: {
-                              callback: function(value) {
-                                  return value.toFixed(4);
-                              }
-                          }
-                      }
+              const meanDurationCanvas = document.getElementById("meanDurationChart");
+              if (meanDurationCanvas && typeof Chart !== "undefined" && typeof Chart.getChart === "function") {
+                  const existingMeanDurationChart = Chart.getChart(meanDurationCanvas);
+                  if (existingMeanDurationChart && existingMeanDurationChart !== meanDurationChartInstance) {
+                      existingMeanDurationChart.destroy();
                   }
               }
-          });
-      })
+              if (meanDurationChartInstance) {
+                  meanDurationChartInstance.destroy();
+                  meanDurationChartInstance = null;
+              }
+
+              if (meanDurationCanvas) {
+                  meanDurationChartInstance = new Chart(meanDurationCanvas, {
+                      type: 'bar',
+                      data: {
+                          labels: allPathsData.paths,
+                          datasets: [{
+                              label: 'Mean Duration (s)',
+                              data: durationData,
+                              backgroundColor: 'rgba(76, 175, 80, 0.6)',
+                              borderColor: 'rgba(76, 175, 80, 1)',
+                              borderWidth: 1,
+                              borderRadius: 4
+                          }]
+                      },
+                      options: {
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: {
+                              legend: {
+                                  display: false
+                              },
+                              tooltip: {
+                                  backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                  padding: 8,
+                                  titleFont: { size: 12 },
+                                  bodyFont: { size: 11 },
+                                  callbacks: {
+                                      label: function(context) {
+                                          return 'Duration: ' + context.parsed.y.toFixed(4) + 's';
+                                      }
+                                  }
+                              }
+                          },
+                          scales: {
+                              y: {
+                                  beginAtZero: true,
+                                  ticks: {
+                                      callback: function(value) {
+                                          return value.toFixed(4);
+                                      }
+                                  }
+                              }
+                          }
+                      }
+                  });
+              }
+          })
       .catch(error => {
           console.error('Error fetching logs:', error);
           document.getElementById('logs-error-message').style.display = 'block';
@@ -1603,8 +1683,21 @@ var AdminExperimentsForum = (function() {
               const volumeData = allClientMethodsData.methods.map(method => callVolume[method]);
               const executionTimeData = allClientMethodsData.methods.map(method => meanExecutionTime[method]);
 
+              const clientCallVolumeCanvas = document.getElementById("clientCallVolumeChart");
+              if (clientCallVolumeCanvas && typeof Chart !== "undefined" && typeof Chart.getChart === "function") {
+                  const existingClientCallVolumeChart = Chart.getChart(clientCallVolumeCanvas);
+                  if (existingClientCallVolumeChart && existingClientCallVolumeChart !== clientCallVolumeChartInstance) {
+                      existingClientCallVolumeChart.destroy();
+                  }
+              }
+              if (clientCallVolumeChartInstance) {
+                  clientCallVolumeChartInstance.destroy();
+                  clientCallVolumeChartInstance = null;
+              }
+
               // Call Volume Chart
-              clientCallVolumeChartInstance = new Chart("clientCallVolumeChart", {
+              if (clientCallVolumeCanvas) {
+                  clientCallVolumeChartInstance = new Chart(clientCallVolumeCanvas, {
                   type: 'bar',
                   data: {
                       labels: allClientMethodsData.methods,
@@ -1646,9 +1739,23 @@ var AdminExperimentsForum = (function() {
                       }
                   }
               });
+              }
 
               // Mean Execution Time Chart
-              clientMeanExecutionTimeChartInstance = new Chart("clientMeanExecutionTimeChart", {
+              const clientMeanExecutionTimeCanvas = document.getElementById("clientMeanExecutionTimeChart");
+              if (clientMeanExecutionTimeCanvas && typeof Chart !== "undefined" && typeof Chart.getChart === "function") {
+                  const existingClientMeanExecutionTimeChart = Chart.getChart(clientMeanExecutionTimeCanvas);
+                  if (existingClientMeanExecutionTimeChart && existingClientMeanExecutionTimeChart !== clientMeanExecutionTimeChartInstance) {
+                      existingClientMeanExecutionTimeChart.destroy();
+                  }
+              }
+              if (clientMeanExecutionTimeChartInstance) {
+                  clientMeanExecutionTimeChartInstance.destroy();
+                  clientMeanExecutionTimeChartInstance = null;
+              }
+
+              if (clientMeanExecutionTimeCanvas) {
+                  clientMeanExecutionTimeChartInstance = new Chart(clientMeanExecutionTimeCanvas, {
                   type: 'bar',
                   data: {
                       labels: allClientMethodsData.methods,
@@ -1692,6 +1799,7 @@ var AdminExperimentsForum = (function() {
                       }
                   }
               });
+              }
           })
           .catch(error => {
               console.error('Error fetching client logs:', error);
@@ -2022,14 +2130,22 @@ var AdminExperimentsForum = (function() {
           simulationData = removeOutliers(rawSimulationData);
       }
 
-      // Destroy existing server compute time chart before recreating
+      // Destroy any chart already bound to this canvas before recreating it.
+      const serverComputeTimeTrendCanvas = document.getElementById('serverComputeTimeTrendChart');
+      if (serverComputeTimeTrendCanvas && typeof Chart !== 'undefined' && typeof Chart.getChart === 'function') {
+          const existingServerComputeTimeTrendChart = Chart.getChart(serverComputeTimeTrendCanvas);
+          if (existingServerComputeTimeTrendChart && existingServerComputeTimeTrendChart !== serverComputeTimeTrendChart) {
+              existingServerComputeTimeTrendChart.destroy();
+          }
+      }
       if (serverComputeTimeTrendChart) {
           serverComputeTimeTrendChart.destroy();
+          serverComputeTimeTrendChart = null;
       }
-    
+
       // Create/recreate server compute time chart
-      if (labels.length > 0) {
-          serverComputeTimeTrendChart = new Chart('serverComputeTimeTrendChart', {
+      if (labels.length > 0 && serverComputeTimeTrendCanvas) {
+          serverComputeTimeTrendChart = new Chart(serverComputeTimeTrendCanvas, {
               type: 'line',
               data: {
                   labels: labels,
@@ -2099,14 +2215,22 @@ var AdminExperimentsForum = (function() {
           });
       }
 
-      // Destroy existing client compute time chart before recreating
+      // Destroy any chart already bound to this canvas before recreating it.
+      const clientComputeTimeTrendCanvas = document.getElementById('clientComputeTimeTrendChart');
+      if (clientComputeTimeTrendCanvas && typeof Chart !== 'undefined' && typeof Chart.getChart === 'function') {
+          const existingClientComputeTimeTrendChart = Chart.getChart(clientComputeTimeTrendCanvas);
+          if (existingClientComputeTimeTrendChart && existingClientComputeTimeTrendChart !== clientComputeTimeTrendChart) {
+              existingClientComputeTimeTrendChart.destroy();
+          }
+      }
       if (clientComputeTimeTrendChart) {
           clientComputeTimeTrendChart.destroy();
+          clientComputeTimeTrendChart = null;
       }
-    
+
       // Create/recreate client compute time chart
-      if (labels.length > 0 && clientComputeDatasets.length > 0) {
-          clientComputeTimeTrendChart = new Chart('clientComputeTimeTrendChart', {
+      if (labels.length > 0 && clientComputeDatasets.length > 0 && clientComputeTimeTrendCanvas) {
+          clientComputeTimeTrendChart = new Chart(clientComputeTimeTrendCanvas, {
               type: 'line',
               data: {
                   labels: labels,
@@ -2125,14 +2249,22 @@ var AdminExperimentsForum = (function() {
           });
       }
 
-      // Destroy existing simulation time chart before recreating
+      // Destroy any chart already bound to this canvas before recreating it.
+      const simulationTimeTrendCanvas = document.getElementById('simulationTimeTrendChart');
+      if (simulationTimeTrendCanvas && typeof Chart !== 'undefined' && typeof Chart.getChart === 'function') {
+          const existingSimulationTimeTrendChart = Chart.getChart(simulationTimeTrendCanvas);
+          if (existingSimulationTimeTrendChart && existingSimulationTimeTrendChart !== simulationTimeTrendChart) {
+              existingSimulationTimeTrendChart.destroy();
+          }
+      }
       if (simulationTimeTrendChart) {
           simulationTimeTrendChart.destroy();
+          simulationTimeTrendChart = null;
       }
-    
+
       // Create/recreate simulation time chart
-      if (labels.length > 0) {
-          simulationTimeTrendChart = new Chart('simulationTimeTrendChart', {
+      if (labels.length > 0 && simulationTimeTrendCanvas) {
+          simulationTimeTrendChart = new Chart(simulationTimeTrendCanvas, {
               type: 'line',
               data: {
                   labels: labels,
@@ -2462,16 +2594,21 @@ var AdminExperimentsForum = (function() {
               const volumeData = allPathsData.paths.map(path => callVolume[path]);
               const durationData = allPathsData.paths.map(path => meanDuration[path]);
 
-              // Destroy existing charts before creating new ones
+              const callVolumeCanvas = document.getElementById("callVolumeChart");
+              if (callVolumeCanvas && typeof Chart !== "undefined" && typeof Chart.getChart === "function") {
+                  const existingCallVolumeChart = Chart.getChart(callVolumeCanvas);
+                  if (existingCallVolumeChart && existingCallVolumeChart !== callVolumeChartInstance) {
+                      existingCallVolumeChart.destroy();
+                  }
+              }
               if (callVolumeChartInstance) {
                   callVolumeChartInstance.destroy();
-              }
-              if (meanDurationChartInstance) {
-                  meanDurationChartInstance.destroy();
+                  callVolumeChartInstance = null;
               }
 
               // Call Volume Chart
-              callVolumeChartInstance = new Chart("callVolumeChart", {
+              if (callVolumeCanvas) {
+                  callVolumeChartInstance = new Chart(callVolumeCanvas, {
                   type: 'bar',
                   data: {
                       labels: allPathsData.paths,
@@ -2513,52 +2650,67 @@ var AdminExperimentsForum = (function() {
                       }
                   }
               });
+              }
 
               // Mean Duration Chart
-              meanDurationChartInstance = new Chart("meanDurationChart", {
-              type: 'bar',
-              data: {
-                  labels: allPathsData.paths,
-                  datasets: [{
-                      label: 'Mean Duration (s)',
-                      data: durationData,
-                      backgroundColor: 'rgba(76, 175, 80, 0.6)',
-                      borderColor: 'rgba(76, 175, 80, 1)',
-                      borderWidth: 1,
-                      borderRadius: 4
-                  }]
-              },
-              options: {
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                      legend: {
-                          display: false
-                      },
-                      tooltip: {
-                          backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                          padding: 8,
-                          titleFont: { size: 12 },
-                          bodyFont: { size: 11 },
-                          callbacks: {
-                              label: function(context) {
-                                  return 'Duration: ' + context.parsed.y.toFixed(4) + 's';
-                              }
-                          }
-                      }
-                  },
-                  scales: {
-                      y: {
-                          beginAtZero: true,
-                          ticks: {
-                              callback: function(value) {
-                                  return value.toFixed(4);
-                              }
-                          }
-                      }
+              const meanDurationCanvas = document.getElementById("meanDurationChart");
+              if (meanDurationCanvas && typeof Chart !== "undefined" && typeof Chart.getChart === "function") {
+                  const existingMeanDurationChart = Chart.getChart(meanDurationCanvas);
+                  if (existingMeanDurationChart && existingMeanDurationChart !== meanDurationChartInstance) {
+                      existingMeanDurationChart.destroy();
                   }
               }
-          });
+              if (meanDurationChartInstance) {
+                  meanDurationChartInstance.destroy();
+                  meanDurationChartInstance = null;
+              }
+
+              if (meanDurationCanvas) {
+                  meanDurationChartInstance = new Chart(meanDurationCanvas, {
+                      type: 'bar',
+                      data: {
+                          labels: allPathsData.paths,
+                          datasets: [{
+                              label: 'Mean Duration (s)',
+                              data: durationData,
+                              backgroundColor: 'rgba(76, 175, 80, 0.6)',
+                              borderColor: 'rgba(76, 175, 80, 1)',
+                              borderWidth: 1,
+                              borderRadius: 4
+                          }]
+                      },
+                      options: {
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: {
+                              legend: {
+                                  display: false
+                              },
+                              tooltip: {
+                                  backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                  padding: 8,
+                                  titleFont: { size: 12 },
+                                  bodyFont: { size: 11 },
+                                  callbacks: {
+                                      label: function(context) {
+                                          return 'Duration: ' + context.parsed.y.toFixed(4) + 's';
+                                      }
+                                  }
+                              }
+                          },
+                          scales: {
+                              y: {
+                                  beginAtZero: true,
+                                  ticks: {
+                                      callback: function(value) {
+                                          return value.toFixed(4);
+                                      }
+                                  }
+                              }
+                          }
+                      }
+                  });
+              }
       })
       .catch(error => {
           console.error('Error fetching logs:', error);

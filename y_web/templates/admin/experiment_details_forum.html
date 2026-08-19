@@ -1014,7 +1014,6 @@
 
 
             <!-- Client Logs Visualization Section -->
-            {% if len(clients) > 0 %}
             <div class="columns">
                 <div class="column is-12">
                     <div id="client-logs-section" class="dashboard-box">
@@ -1042,13 +1041,22 @@
  <div class="box-content ys-info-box">
  <label for="clientSelector" class="ys-label-block">Select Client:</label>
                             <div class="select is-fullwidth">
- <select id="clientSelector" class="w-100">
+ <select id="clientSelector" class="w-100" {% if len(clients) == 0 %}disabled{% endif %}>
+                                    {% if len(clients) > 0 %}
                                     <option value="">-- Select a client --</option>
                                     {% for client in clients %}
                                     <option value="{{ client.id }}">{{ client.name }}</option>
                                     {% endfor %}
+                                    {% else %}
+                                    <option value="">No clients available</option>
+                                    {% endif %}
                                 </select>
                             </div>
+                            {% if len(clients) == 0 %}
+ <p class="ys-text-small ys-mt-half-em">
+                                This experiment has no clients yet, so client log analysis is unavailable until a client is created.
+                            </p>
+                            {% endif %}
                         </div>
 
  <div id="client-logs-error-message" class="ys-warning-panel">
@@ -1094,9 +1102,6 @@
                     </div>
                 </div>
             </div>
-
-
-            {% endif %}
 
             <!-- Additional Row for Registered Users and Error Reporting -->
             <div class="columns is-multiline">

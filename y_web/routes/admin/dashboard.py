@@ -170,7 +170,9 @@ def dashboard():
 
     # Filter experiments based on user role + visibility grants
     if user.role in ("admin", "researcher"):
-        all_experiments = get_visible_experiment_query(user).all()
+        all_experiments = (
+            get_visible_experiment_query(user).order_by(Exps.idexp.asc()).all()
+        )
     else:
         # Regular users should not access this page
         # They are redirected to their experiment feed
@@ -411,7 +413,9 @@ def dashboard_experiments_by_status(status):
 
     # Filter experiments based on role + visibility grants
     if user.role in ("admin", "researcher"):
-        all_experiments = get_visible_experiment_query(user).all()
+        all_experiments = (
+            get_visible_experiment_query(user).order_by(Exps.idexp.asc()).all()
+        )
     else:
         return jsonify({"error": "Access denied"}), 403
 

@@ -19,6 +19,7 @@ import uuid
 from collections import defaultdict
 from copy import deepcopy
 from datetime import datetime, timedelta
+from itertools import count
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urlparse
 from urllib.request import Request, urlopen
@@ -1064,24 +1065,75 @@ def _extract_related_experiment_ids(message):
 
 def get_suggested_port():
     """
-    Find the first available port in the range 5000-6000.
+    Find the first available port starting at 5000.
 
     A port is considered available if:
-    1. It is not assigned to any existing experiment (regardless of running status)
+    1. It is not reserved by any experiment that is still active or may resume
     2. It is currently free (not in use by any process)
 
-    Returns:
-        int: The first available port, or 5000 if none found
-    """
-    # Get all ports assigned to existing experiments
-    assigned_ports = set()
-    experiments = Exps.query.all()
-    for exp in experiments:
-        if exp.port:
-            assigned_ports.add(exp.port)
+    Completed experiments release their port reservation and can be reused.
 
-    # Check each port in the range
-    for port in range(5000, 6001):
+    Returns:
+        int: The first available port, or None if the OS cannot provide one
+    """
+    experiments = Exps.query.all()
+
+    # Release ports for experiments that are already completed.
+    # Legacy rows may still be marked "stopped" even though every client
+    # execution has finished, so treat those as reusable too.
+    reusable_experiment_ids = {
+        getattr(exp, "idexp", None)
+        for exp in experiments
+        if exp.port
+        and str(getattr(exp, "exp_status", "") or "").strip().lower() == "completed"
+        and getattr(exp, "idexp", None) is not None
+    }
+
+    stopped_experiments = [
+        exp
+        for exp in experiments
+        if exp.port
+        and str(getattr(exp, "exp_status", "") or "").strip().lower() == "stopped"
+    ]
+    if stopped_experiments:
+        for exp in stopped_experiments:
+            exp_id = getattr(exp, "idexp", None)
+            if exp_id is None:
+                continue
+
+            clients = Client.query.filter_by(id_exp=exp_id).all()
+            if not clients:
+                continue
+
+            all_completed = True
+            for client in clients:
+                client_exec = Client_Execution.query.filter_by(
+                    client_id=client.id
+                ).first()
+                if client_exec is None:
+                    all_completed = False
+                    break
+
+                expected_duration = getattr(client_exec, "expected_duration_rounds", 0)
+                elapsed_time = getattr(client_exec, "elapsed_time", 0)
+                if expected_duration == -1 or elapsed_time < expected_duration:
+                    all_completed = False
+                    break
+
+            if all_completed:
+                reusable_experiment_ids.add(exp_id)
+
+    assigned_ports = {
+        exp.port
+        for exp in experiments
+        if exp.port and getattr(exp, "idexp", None) not in reusable_experiment_ids
+    }
+
+    # Check each port from 5000 upward, stopping at the TCP port ceiling.
+    for port in count(5000):
+        if port > 65535:
+            break
+
         # Skip if already assigned to an experiment
         if port in assigned_ports:
             continue
@@ -1089,6 +1141,20 @@ def get_suggested_port():
         # Check if port is currently free
         if is_port_free(port):
             return port
+
+    # Fall back to an OS-assigned free port if the configured range is exhausted.
+    # This prevents older servers from failing hard when a large historical
+    # experiment catalog has saturated the common port range.
+    for _ in range(32):
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                sock.bind(("127.0.0.1", 0))
+                fallback_port = sock.getsockname()[1]
+        except OSError:
+            continue
+
+        if fallback_port not in assigned_ports:
+            return fallback_port
 
     # Return None if no port is available
     return None

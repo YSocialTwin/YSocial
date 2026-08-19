@@ -12,7 +12,23 @@
     {% endif %}
     <div class="alert alert-{{ alert_class }} ys-admin-flash-alert" role="alert">
         <button type="button" class="close" data-dismiss="alert" aria-label="Close">&times;</button>
-        {{ message }}
+        {% if message is mapping and message.get('failures') %}
+            <div><strong>{{ message.get('title') or 'Notice' }}</strong></div>
+            <div>{{ message.get('summary') }}</div>
+            <ul class="ys-mt-05">
+                {% for failure in message.get('failures') %}
+                <li>
+                    <strong>{{ failure.get('source') }}</strong>
+                    {% if failure.get('target') %}
+                    - target <code>{{ failure.get('target') }}</code>
+                    {% endif %}
+                    : {{ failure.get('reason') }}
+                </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            {{ message }}
+        {% endif %}
     </div>
     {% endfor %}
 </div>

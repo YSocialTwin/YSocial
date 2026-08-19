@@ -76,6 +76,25 @@ def _resolve_follow_round_id(exp_id):
     return 0
 
 
+def _build_follow_payload(*, exp, source_user_id, target_user_id, action, round_id):
+    """Build a follow/unfollow ORM payload.
+
+    HPC experiment databases use UUID primary keys, while non-HPC experiments
+    continue to use integer autoincrement ids.
+    """
+    follow_kwargs = {
+        "user_id": source_user_id,
+        "follower_id": target_user_id,
+        "action": action,
+        "round": round_id,
+    }
+    simulator_type = str(getattr(exp, "simulator_type", "") or "").strip().upper()
+    platform_type = str(getattr(exp, "platform_type", "") or "").strip().lower()
+    if simulator_type == "HPC" or platform_type == "photo_sharing":
+        follow_kwargs["id"] = str(uuid.uuid4())
+    return follow_kwargs
+
+
 @user.route("/<int:exp_id>/follow/<user_id>/<follower_id>", methods=["GET", "POST"])
 @login_required
 def follow(exp_id, user_id, follower_id):
@@ -158,14 +177,13 @@ def follow(exp_id, user_id, follower_id):
             else "follow"
         )
 
-        follow_kwargs = dict(
-            follower_id=user_id,
-            user_id=source_user_id,
+        follow_kwargs = _build_follow_payload(
+            exp=exp,
+            source_user_id=source_user_id,
+            target_user_id=user_id,
             action=new_action,
-            round=current_round_id,
+            round_id=current_round_id,
         )
-        if getattr(exp, "platform_type", "") == "photo_sharing":
-            follow_kwargs["id"] = str(uuid.uuid4())
 
         new_follow = Follow(**follow_kwargs)
         if session is not None and engine is not None:

@@ -209,6 +209,167 @@ def test_unique_port_assignment():
     assert available_port != source_port
 
 
+def test_get_suggested_port_reuses_completed_experiment_port(monkeypatch):
+    from y_web.routes.admin.sub.experiments import _helpers
+
+    class FakeQuery:
+        def all(self):
+            return [
+                SimpleNamespace(port=5000, exp_status="completed", idexp=1),
+                SimpleNamespace(port=5001, exp_status="active", idexp=2),
+            ]
+
+    monkeypatch.setattr(_helpers, "Exps", SimpleNamespace(query=FakeQuery()))
+    monkeypatch.setattr(_helpers, "is_port_free", lambda port: port == 5000)
+
+    assert _helpers.get_suggested_port() == 5000
+
+
+def test_get_suggested_port_skips_non_completed_experiment_ports(monkeypatch):
+    from y_web.routes.admin.sub.experiments import _helpers
+
+    class FakeQuery:
+        def all(self):
+            return [
+                SimpleNamespace(port=5000, exp_status="stopped", idexp=1),
+                SimpleNamespace(port=5001, exp_status="active", idexp=2),
+                SimpleNamespace(port=5002, exp_status=None, idexp=3),
+                SimpleNamespace(port=5003, exp_status="completed", idexp=4),
+            ]
+
+    clients = [SimpleNamespace(id=21, id_exp=1)]
+    client_execs = [
+        SimpleNamespace(client_id=21, elapsed_time=3, expected_duration_rounds=10)
+    ]
+
+    monkeypatch.setattr(_helpers, "Exps", SimpleNamespace(query=FakeQuery()))
+    monkeypatch.setattr(
+        _helpers,
+        "Client",
+        SimpleNamespace(
+            query=SimpleNamespace(
+                filter_by=lambda **_kwargs: SimpleNamespace(all=lambda: clients)
+            )
+        ),
+    )
+    monkeypatch.setattr(
+        _helpers,
+        "Client_Execution",
+        SimpleNamespace(
+            query=SimpleNamespace(
+                filter_by=lambda **_kwargs: SimpleNamespace(
+                    first=lambda: client_execs[0]
+                )
+            ),
+            client_id=SimpleNamespace(in_=lambda values: values),
+        ),
+    )
+    monkeypatch.setattr(_helpers, "is_port_free", lambda port: port == 5003)
+
+    assert _helpers.get_suggested_port() == 5003
+
+
+def test_get_suggested_port_reuses_legacy_stopped_experiment_port(monkeypatch):
+    from y_web.routes.admin.sub.experiments import _helpers
+
+    class FakeQuery:
+        def __init__(self, rows):
+            self.rows = rows
+
+        def all(self):
+            return self.rows
+
+        def filter(self, *_args, **_kwargs):
+            return self
+
+        def filter_by(self, **_kwargs):
+            return self
+
+    experiments = [
+        SimpleNamespace(port=5000, exp_status="stopped", idexp=1),
+        SimpleNamespace(port=5001, exp_status="active", idexp=2),
+    ]
+    clients = [SimpleNamespace(id=11, id_exp=1)]
+    client_execs = [
+        SimpleNamespace(client_id=11, elapsed_time=12, expected_duration_rounds=12)
+    ]
+
+    monkeypatch.setattr(_helpers, "Exps", SimpleNamespace(query=FakeQuery(experiments)))
+    monkeypatch.setattr(
+        _helpers,
+        "Client",
+        SimpleNamespace(
+            query=FakeQuery(clients),
+            id_exp=SimpleNamespace(in_=lambda values: values),
+        ),
+    )
+    monkeypatch.setattr(
+        _helpers,
+        "Client_Execution",
+        SimpleNamespace(
+            query=SimpleNamespace(
+                filter_by=lambda **_kwargs: SimpleNamespace(
+                    first=lambda: client_execs[0]
+                )
+            ),
+            client_id=SimpleNamespace(in_=lambda values: values),
+        ),
+    )
+    monkeypatch.setattr(_helpers, "is_port_free", lambda port: port == 5000)
+
+    assert _helpers.get_suggested_port() == 5000
+
+
+def test_get_suggested_port_scans_past_6000(monkeypatch):
+    from y_web.routes.admin.sub.experiments import _helpers
+
+    class FakeQuery:
+        def all(self):
+            return [
+                SimpleNamespace(port=port, exp_status="active", idexp=port)
+                for port in range(5000, 6001)
+            ]
+
+    monkeypatch.setattr(_helpers, "Exps", SimpleNamespace(query=FakeQuery()))
+    monkeypatch.setattr(_helpers, "is_port_free", lambda port: port == 6001)
+
+    assert _helpers.get_suggested_port() == 6001
+
+
+def test_get_suggested_port_falls_back_to_os_port_when_scan_is_exhausted(monkeypatch):
+    from y_web.routes.admin.sub.experiments import _helpers
+
+    class FakeQuery:
+        def all(self):
+            return [
+                SimpleNamespace(port=5000, exp_status="active", idexp=1),
+                SimpleNamespace(port=5001, exp_status="active", idexp=2),
+            ]
+
+    class FakeSocket:
+        def __init__(self, *args, **kwargs):
+            self.port = 61000
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def bind(self, address):
+            return None
+
+        def getsockname(self):
+            return ("127.0.0.1", self.port)
+
+    monkeypatch.setattr(_helpers, "Exps", SimpleNamespace(query=FakeQuery()))
+    monkeypatch.setattr(_helpers, "is_port_free", lambda port: False)
+    monkeypatch.setattr(_helpers, "count", lambda start: iter([5000, 5001, 65536]))
+    monkeypatch.setattr(_helpers.socket, "socket", lambda *args, **kwargs: FakeSocket())
+
+    assert _helpers.get_suggested_port() == 61000
+
+
 def test_config_update_verification():
     """Test that config_server.json is properly updated with new values."""
     # Simulate config update
@@ -347,13 +508,14 @@ def test_copy_experiment_group_builds_one_copy_per_source_experiment(monkeypatch
     )
     monkeypatch.setattr("y_web.src.telemetry.Telemetry", FakeTelemetry)
 
-    created_count, created_names, error_message = _crud._copy_experiment_group(
-        "Source Group", "Fresh Group"
+    created_count, created_names, failures, error_message = (
+        _crud._copy_experiment_group("Source Group", "Fresh Group")
     )
 
     assert error_message is None
     assert created_count == 2
     assert len(created_names) == 2
+    assert failures == []
     copy_calls = [call for call in created_calls if call and call[0] != "telemetry"]
     assert copy_calls[0][0] == 10
     assert copy_calls[0][2] == "Fresh Group"
@@ -368,13 +530,120 @@ def test_copy_experiment_group_rejects_same_source_and_target(monkeypatch):
 
     monkeypatch.setattr(_crud, "_current_admin_user_or_none", lambda: SimpleNamespace())
 
-    created_count, created_names, error_message = _crud._copy_experiment_group(
-        "Same Group", "Same Group"
+    created_count, created_names, failures, error_message = (
+        _crud._copy_experiment_group("Same Group", "Same Group")
     )
 
     assert created_count == 0
     assert created_names == []
+    assert failures == []
     assert error_message == "Source and target groups must be different."
+
+
+def test_copy_experiment_group_reports_partial_failure(monkeypatch):
+    from y_web.routes.admin.sub.experiments import _crud
+
+    source_experiments = [
+        SimpleNamespace(
+            idexp=10,
+            exp_name="Alpha",
+            platform_type="microblogging",
+            annotations="a",
+            llm_agents_enabled=1,
+        ),
+        SimpleNamespace(
+            idexp=11,
+            exp_name="Beta",
+            platform_type="forum",
+            annotations="b",
+            llm_agents_enabled=0,
+        ),
+    ]
+
+    class FakeVisibleQuery:
+        def filter(self, *args, **kwargs):
+            return self
+
+        def order_by(self, *args, **kwargs):
+            return self
+
+        def all(self):
+            return source_experiments
+
+    class FakeNameQuery:
+        def filter_by(self, **kwargs):
+            self.kwargs = kwargs
+            return self
+
+        def first(self):
+            return None
+
+    class FakeColumn:
+        def asc(self):
+            return self
+
+    class FakeExps:
+        exp_group = object()
+        exp_name = FakeColumn()
+        query = FakeNameQuery()
+
+    monkeypatch.setattr(_crud, "_current_admin_user_or_none", lambda: SimpleNamespace())
+    monkeypatch.setattr(
+        _crud, "get_visible_experiment_query", lambda user: FakeVisibleQuery()
+    )
+    monkeypatch.setattr(_crud, "Exps", FakeExps)
+    monkeypatch.setattr(
+        _crud,
+        "_create_single_experiment_copy",
+        lambda source_exp, new_name, exp_group: source_exp.idexp == 10,
+    )
+    monkeypatch.setattr(
+        "y_web.src.telemetry.Telemetry",
+        lambda user: SimpleNamespace(log_event=lambda payload: None),
+    )
+
+    created_count, created_names, failures, error_message = (
+        _crud._copy_experiment_group("Source Group", "Fresh Group")
+    )
+
+    assert error_message is None
+    assert created_count == 1
+    assert created_names == ["Alpha__fresh-group__10"]
+    assert failures == [
+        (
+            "Beta",
+            "Beta__fresh-group__11",
+            "Source experiment does not have a database reference.",
+        )
+    ]
+
+
+def test_matrix_copy_failure_diagnosis_reports_missing_source_folder(monkeypatch):
+    from y_web.routes.admin.sub.experiments import _crud
+
+    monkeypatch.setattr(
+        _crud,
+        "current_app",
+        SimpleNamespace(config={"SQLALCHEMY_DATABASE_URI": "sqlite:///test.db"}),
+    )
+    monkeypatch.setattr(
+        "y_web.src.system.path_utils.get_writable_path", lambda: "/tmp/base"
+    )
+
+    def fake_exists(path):
+        return not str(path).endswith("/y_web/experiments/uid")
+
+    monkeypatch.setattr(_crud.os.path, "exists", fake_exists)
+
+    source_exp = SimpleNamespace(
+        db_name=f"experiments{os.sep}uid{os.sep}database_server.db",
+        exp_name="Source",
+    )
+
+    reason = _crud._matrix_describe_experiment_copy_failure(source_exp)
+
+    assert reason is not None
+    assert "Source folder not found" in reason
 
 
 def test_copy_experiment_names_are_not_capped():
