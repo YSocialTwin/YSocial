@@ -42,7 +42,7 @@ def __terminate_process(pid):
                 p = psutil.Process(pid)
                 p.terminate()  # graceful
             except ImportError:
-                os.system(f"taskkill /PID {pid} /F")
+                subprocess.run(["taskkill", "/PID", str(int(pid)), "/F"], check=False)
         else:
             # On Unix: send SIGKILL
             os.kill(pid, signal.SIGKILL)
