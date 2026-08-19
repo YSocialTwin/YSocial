@@ -610,7 +610,11 @@ def test_copy_experiment_group_reports_partial_failure(monkeypatch):
     assert created_count == 1
     assert created_names == ["Alpha__fresh-group__10"]
     assert failures == [
-        ("Beta", "Beta__fresh-group__11", "Source experiment does not have a database reference.")
+        (
+            "Beta",
+            "Beta__fresh-group__11",
+            "Source experiment does not have a database reference.",
+        )
     ]
 
 

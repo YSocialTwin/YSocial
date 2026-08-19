@@ -3330,9 +3330,7 @@ def experiment_matrix():
                     {
                         "source": source_exp.exp_name,
                         "target": new_exp_name,
-                        "reason": _matrix_describe_experiment_copy_failure(
-                            source_exp
-                        )
+                        "reason": _matrix_describe_experiment_copy_failure(source_exp)
                         or "copy helper returned False",
                     }
                 )
@@ -4927,9 +4925,11 @@ def _matrix_describe_experiment_copy_failure(source_exp):
     if not os.path.exists(source_folder):
         return f"Source folder not found: {source_folder}"
 
-    config_name = "server_config.json" if os.path.exists(
-        os.path.join(source_folder, "server_config.json")
-    ) else "config_server.json"
+    config_name = (
+        "server_config.json"
+        if os.path.exists(os.path.join(source_folder, "server_config.json"))
+        else "config_server.json"
+    )
     config_path = os.path.join(source_folder, config_name)
     if not os.path.exists(config_path):
         return f"Missing config file '{config_name}' in source folder."
