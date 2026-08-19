@@ -336,6 +336,40 @@ def test_get_suggested_port_scans_past_6000(monkeypatch):
     assert _helpers.get_suggested_port() == 6001
 
 
+def test_get_suggested_port_falls_back_to_os_port_when_scan_is_exhausted(monkeypatch):
+    from y_web.routes.admin.sub.experiments import _helpers
+
+    class FakeQuery:
+        def all(self):
+            return [
+                SimpleNamespace(port=5000, exp_status="active", idexp=1),
+                SimpleNamespace(port=5001, exp_status="active", idexp=2),
+            ]
+
+    class FakeSocket:
+        def __init__(self, *args, **kwargs):
+            self.port = 61000
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def bind(self, address):
+            return None
+
+        def getsockname(self):
+            return ("127.0.0.1", self.port)
+
+    monkeypatch.setattr(_helpers, "Exps", SimpleNamespace(query=FakeQuery()))
+    monkeypatch.setattr(_helpers, "is_port_free", lambda port: False)
+    monkeypatch.setattr(_helpers, "count", lambda start: iter([5000, 5001, 65536]))
+    monkeypatch.setattr(_helpers.socket, "socket", lambda *args, **kwargs: FakeSocket())
+
+    assert _helpers.get_suggested_port() == 61000
+
+
 def test_config_update_verification():
     """Test that config_server.json is properly updated with new values."""
     # Simulate config update
@@ -575,7 +609,37 @@ def test_copy_experiment_group_reports_partial_failure(monkeypatch):
     assert error_message is None
     assert created_count == 1
     assert created_names == ["Alpha__fresh-group__10"]
-    assert failures == [("Beta", "Beta__fresh-group__11", "copy helper returned False")]
+    assert failures == [
+        ("Beta", "Beta__fresh-group__11", "Source experiment does not have a database reference.")
+    ]
+
+
+def test_matrix_copy_failure_diagnosis_reports_missing_source_folder(monkeypatch):
+    from y_web.routes.admin.sub.experiments import _crud
+
+    monkeypatch.setattr(
+        _crud,
+        "current_app",
+        SimpleNamespace(config={"SQLALCHEMY_DATABASE_URI": "sqlite:///test.db"}),
+    )
+    monkeypatch.setattr(
+        "y_web.src.system.path_utils.get_writable_path", lambda: "/tmp/base"
+    )
+
+    def fake_exists(path):
+        return not str(path).endswith("/y_web/experiments/uid")
+
+    monkeypatch.setattr(_crud.os.path, "exists", fake_exists)
+
+    source_exp = SimpleNamespace(
+        db_name=f"experiments{os.sep}uid{os.sep}database_server.db",
+        exp_name="Source",
+    )
+
+    reason = _crud._matrix_describe_experiment_copy_failure(source_exp)
+
+    assert reason is not None
+    assert "Source folder not found" in reason
 
 
 def test_copy_experiment_names_are_not_capped():

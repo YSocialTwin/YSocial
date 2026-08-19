@@ -1065,7 +1065,7 @@ def _extract_related_experiment_ids(message):
 
 def get_suggested_port():
     """
-    Find the first available port in the range 5000-6000.
+    Find the first available port starting at 5000.
 
     A port is considered available if:
     1. It is not reserved by any experiment that is still active or may resume
@@ -1074,7 +1074,7 @@ def get_suggested_port():
     Completed experiments release their port reservation and can be reused.
 
     Returns:
-        int: The first available port, or None if none found up to 65535
+        int: The first available port, or None if the OS cannot provide one
     """
     experiments = Exps.query.all()
 
@@ -1132,7 +1132,7 @@ def get_suggested_port():
     # Check each port from 5000 upward, stopping at the TCP port ceiling.
     for port in count(5000):
         if port > 65535:
-            return None
+            break
 
         # Skip if already assigned to an experiment
         if port in assigned_ports:
@@ -1141,6 +1141,20 @@ def get_suggested_port():
         # Check if port is currently free
         if is_port_free(port):
             return port
+
+    # Fall back to an OS-assigned free port if the configured range is exhausted.
+    # This prevents older servers from failing hard when a large historical
+    # experiment catalog has saturated the common port range.
+    for _ in range(32):
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                sock.bind(("127.0.0.1", 0))
+                fallback_port = sock.getsockname()[1]
+        except OSError:
+            continue
+
+        if fallback_port not in assigned_ports:
+            return fallback_port
 
     # Return None if no port is available
     return None

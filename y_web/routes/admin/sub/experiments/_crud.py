@@ -1934,8 +1934,14 @@ def create_experiment():
     else:
         # For local experiments, use default local settings
         host = "127.0.0.1"
-        # Use suggested port (first available in range 5000-6000)
+        # Use suggested port (first available, with OS fallback if needed)
         port = get_suggested_port()
+        if port is None:
+            flash(
+                "No available port could be assigned for the new experiment.",
+                "error",
+            )
+            return redirect(url_for("experiments.settings"))
 
     # Redis configuration parameters for HPC simulator
     redis_enabled = request.form.get("redis_enabled") == "true"
@@ -3031,11 +3037,12 @@ def _copy_experiment_group(source_group, target_group):
                     },
                 )
             else:
+                reason = _matrix_describe_experiment_copy_failure(source_exp)
                 failures.append(
                     (
                         getattr(source_exp, "exp_name", new_name),
                         new_name,
-                        "copy helper returned False",
+                        reason or "copy helper returned False",
                     )
                 )
         except Exception as exc:
@@ -3224,6 +3231,7 @@ def experiment_matrix():
             "product",
             "cross",
         }
+        failures = []
         source_exp = (
             Exps.query.filter_by(idexp=source_exp_id).first()
             if source_exp_id and source_exp_id in visible_exp_ids
@@ -3317,14 +3325,51 @@ def experiment_matrix():
             )
             if success:
                 created += 1
+            else:
+                failures.append(
+                    {
+                        "source": source_exp.exp_name,
+                        "target": new_exp_name,
+                        "reason": _matrix_describe_experiment_copy_failure(
+                            source_exp
+                        )
+                        or "copy helper returned False",
+                    }
+                )
 
         if created:
-            flash(
-                f"Created {created} matrix experiment(s) in group '{target_group or '-'}'.",
-                "success",
-            )
+            if failures:
+                flash(
+                    {
+                        "title": "Experiment matrix had failures",
+                        "summary": (
+                            f"{created} matrix experiment(s) were created in group "
+                            f"'{target_group or '-'}', but some combinations failed."
+                        ),
+                        "failures": failures,
+                    },
+                    "warning",
+                )
+            else:
+                flash(
+                    f"Created {created} matrix experiment(s) in group '{target_group or '-'}'.",
+                    "success",
+                )
         else:
-            flash("No experiment matrix combinations were created.", "warning")
+            if failures:
+                flash(
+                    {
+                        "title": "Experiment matrix had failures",
+                        "summary": (
+                            f"No experiment matrix combinations were created for "
+                            f"group '{target_group or '-'}'."
+                        ),
+                        "failures": failures,
+                    },
+                    "error",
+                )
+            else:
+                flash("No experiment matrix combinations were created.", "warning")
 
         return redirect(
             url_for(
@@ -4850,6 +4895,49 @@ def _matrix_override_index(overrides):
     for override in overrides or []:
         indexed[override.get("file_name")].append(override)
     return indexed
+
+
+def _matrix_describe_experiment_copy_failure(source_exp):
+    """Return a short human-readable reason when a copy helper aborts early."""
+    if not source_exp:
+        return "Source experiment was not provided."
+
+    db_name = str(getattr(source_exp, "db_name", "") or "").strip()
+    if not db_name:
+        return "Source experiment does not have a database reference."
+
+    db_type = "sqlite"
+    if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
+        db_type = "postgresql"
+
+    if db_type == "sqlite":
+        source_parts = db_name.split(os.sep)
+        if len(source_parts) < 2:
+            return f"Unsupported sqlite db_name format: '{db_name}'."
+        source_uid = source_parts[1]
+    else:
+        source_uid = db_name.replace("experiments_", "")
+
+    from y_web.src.system.path_utils import get_writable_path
+
+    base_dir = get_writable_path()
+    source_folder = os.path.join(
+        base_dir, f"y_web{os.sep}experiments{os.sep}{source_uid}"
+    )
+    if not os.path.exists(source_folder):
+        return f"Source folder not found: {source_folder}"
+
+    config_name = "server_config.json" if os.path.exists(
+        os.path.join(source_folder, "server_config.json")
+    ) else "config_server.json"
+    config_path = os.path.join(source_folder, config_name)
+    if not os.path.exists(config_path):
+        return f"Missing config file '{config_name}' in source folder."
+
+    if get_suggested_port() is None:
+        return "No available port could be assigned."
+
+    return None
 
 
 def _create_single_experiment_copy(
