@@ -558,9 +558,7 @@ def stop_hpc_server(exp_id):
     from y_web.src.simulation.port_manager import (
         __terminate_process as _terminate_process,
     )
-    from y_web.src.simulation.port_manager import (
-        _force_terminate_process_tree,
-    )
+    from y_web.src.simulation.port_manager import _force_terminate_process_tree
 
     try:
         # Get experiment from database

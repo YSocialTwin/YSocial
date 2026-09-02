@@ -965,16 +965,14 @@ def upload_experiment():
 
                     # Insert initial admin user
                     hashed_pw = generate_password_hash("admin", method="pbkdf2:sha256")
-                    stmt = text(
-                        """
+                    stmt = text("""
                         INSERT INTO user_mgmt (username, email, password, user_type, leaning, age,
                                                language, owner, joined_on, frecsys_type,
                                                round_actions, toxicity, is_page, daily_activity_level, cover_image)
                         VALUES (:username, :email, :password, :user_type, :leaning, :age,
                                 :language, :owner, :joined_on, :frecsys_type,
                                 :round_actions, :toxicity, :is_page, :daily_activity_level, :cover_image)
-                        """
-                    )
+                        """)
 
                     dummy_conn.execute(
                         stmt,
@@ -2071,16 +2069,14 @@ def create_experiment():
                     # Insert initial admin user
                     hashed_pw = generate_password_hash("admin", method="pbkdf2:sha256")
 
-                    stmt = text(
-                        """
+                    stmt = text("""
                                 INSERT INTO user_mgmt (username, email, password, user_type, leaning, age,
                                                        language, owner, joined_on, frecsys_type,
                                                        round_actions, toxicity, is_page, daily_activity_level, cover_image)
                                 VALUES (:username, :email, :password, :user_type, :leaning, :age,
                                         :language, :owner, :joined_on, :frecsys_type,
                                         :round_actions, :toxicity, :is_page, :daily_activity_level, :cover_image)
-                                """
-                    )
+                                """)
 
                     dummy_conn.execute(
                         stmt,
@@ -2384,14 +2380,12 @@ def _delete_simulation_internal(exp_id):
                 ) as conn:
                     # Terminate existing connections to the database
                     conn.execute(
-                        text(
-                            f"""
+                        text(f"""
                             SELECT pg_terminate_backend(pg_stat_activity.pid)
                             FROM pg_stat_activity
                             WHERE pg_stat_activity.datname = :dbname
                             AND pid <> pg_backend_pid()
-                            """
-                        ),
+                            """),
                         {"dbname": exp.db_name},
                     )
                     # Drop the database
@@ -5139,16 +5133,14 @@ def _create_single_experiment_copy(
                 # Insert initial admin user
                 hashed_pw = generate_password_hash("admin", method="pbkdf2:sha256")
 
-                stmt = text(
-                    """
+                stmt = text("""
                     INSERT INTO user_mgmt (username, email, password, user_type, leaning, age,
                                            language, owner, joined_on, frecsys_type,
                                            round_actions, toxicity, is_page, daily_activity_level, cover_image)
                     VALUES (:username, :email, :password, :user_type, :leaning, :age,
                             :language, :owner, :joined_on, :frecsys_type,
                             :round_actions, :toxicity, :is_page, :daily_activity_level, :cover_image)
-                    """
-                )
+                    """)
                 conn.execute(
                     stmt,
                     {
