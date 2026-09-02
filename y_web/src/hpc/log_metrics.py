@@ -808,12 +808,43 @@ def _mark_hpc_client_as_failed(exp_id, client_id, *, reason: str = "") -> bool:
         return False
 
 
+def _experiment_is_in_active_schedule_group(exp_id: int) -> bool:
+    """Return whether the experiment belongs to the currently running schedule group."""
+    try:
+        from y_web.src.models import ExperimentScheduleItem, ExperimentScheduleStatus
+
+        schedule_status = ExperimentScheduleStatus.query.first()
+        if (
+            not schedule_status
+            or not schedule_status.is_running
+            or not schedule_status.current_group_id
+        ):
+            return False
+
+        return (
+            ExperimentScheduleItem.query.filter_by(
+                experiment_id=exp_id,
+                group_id=schedule_status.current_group_id,
+            ).first()
+            is not None
+        )
+    except Exception as exc:
+        logger.warning(
+            f"Unable to resolve active schedule group membership for experiment {exp_id}: {exc}",
+            exc_info=True,
+        )
+        db.session.rollback()
+        return False
+
+
 def _stop_hpc_experiment_after_client_failure(exp_id: int, reason: str = "") -> bool:
     """
-    Stop the experiment after an unrecoverable client failure.
+    Stop a scheduled experiment after an unrecoverable client failure.
 
-    The server is shut down and the experiment is moved back to the stopped
-    state so it can be restarted cleanly later.
+    Manual or otherwise unscheduled HPC experiments are monitored for progress and
+    normal completion, but failure recovery is schedule-owned. Stopping an
+    ungrouped experiment here would leave the user with a surprising shutdown and
+    no automatic restart path.
     """
     try:
         from y_web.src.hpc.server import stop_hpc_server
@@ -823,8 +854,20 @@ def _stop_hpc_experiment_after_client_failure(exp_id: int, reason: str = "") -> 
         if not exp:
             return False
 
+        if not _experiment_is_in_active_schedule_group(exp_id):
+            logger.warning(
+                f"HPC client failure detected for unscheduled experiment {exp_id} "
+                f"({exp.exp_name}); client was marked failed, leaving experiment running"
+                + (f" ({reason})" if reason else "")
+            )
+            print(
+                f"[HPC Monitor] Client failure detected for unscheduled experiment {exp.exp_name}; "
+                "leaving experiment running" + (f" ({reason})" if reason else "")
+            )
+            return False
+
         print(
-            f"[HPC Monitor] Stopping experiment {exp.exp_name} after client failure"
+            f"[HPC Monitor] Stopping experiment {exp.exp_name} after scheduled client failure"
             + (f" ({reason})" if reason else "")
         )
         stop_hpc_server(exp_id)
@@ -1290,12 +1333,18 @@ def monitor_hpc_client_execution_logs():
                             if _mark_hpc_client_as_failed(
                                 exp.idexp, client.id, reason=reason
                             ):
-                                _stop_hpc_experiment_after_client_failure(
-                                    exp.idexp, reason=reason
-                                )
-                                print(
-                                    f"[HPC Monitor] *** EXPERIMENT {exp.exp_name} STOPPED AFTER CLIENT FAILURE ***"
-                                )
+                                if _experiment_is_in_active_schedule_group(exp.idexp):
+                                    _stop_hpc_experiment_after_client_failure(
+                                        exp.idexp, reason=reason
+                                    )
+                                    print(
+                                        f"[HPC Monitor] *** EXPERIMENT {exp.exp_name} STOPPED AFTER CLIENT FAILURE ***"
+                                    )
+                                else:
+                                    print(
+                                        f"[HPC Monitor] *** CLIENT {client.name} MARKED FAILED; "
+                                        "UNSCHEDULED EXPERIMENT LEFT RUNNING ***"
+                                    )
                             return False
 
                         # Check if client has completed
@@ -1340,12 +1389,18 @@ def monitor_hpc_client_execution_logs():
                             if _mark_hpc_client_as_failed(
                                 exp.idexp, client.id, reason=reason
                             ):
-                                _stop_hpc_experiment_after_client_failure(
-                                    exp.idexp, reason=reason
-                                )
-                                print(
-                                    f"[HPC Monitor] *** EXPERIMENT {exp.exp_name} STOPPED AFTER CLIENT FAILURE ***"
-                                )
+                                if _experiment_is_in_active_schedule_group(exp.idexp):
+                                    _stop_hpc_experiment_after_client_failure(
+                                        exp.idexp, reason=reason
+                                    )
+                                    print(
+                                        f"[HPC Monitor] *** EXPERIMENT {exp.exp_name} STOPPED AFTER CLIENT FAILURE ***"
+                                    )
+                                else:
+                                    print(
+                                        f"[HPC Monitor] *** CLIENT {client.name} MARKED FAILED; "
+                                        "UNSCHEDULED EXPERIMENT LEFT RUNNING ***"
+                                    )
                             return False
                     else:
                         print(

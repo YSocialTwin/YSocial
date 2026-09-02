@@ -340,6 +340,8 @@ def terminate_server_process(exp_id):
 
         # Clear PID from database
         exp.server_pid = None
+        exp.running = 0
+        exp.exp_status = "stopped"
         db.session.commit()
         return True
 
@@ -920,6 +922,8 @@ def start_server(exp):
 
     # Save the PID to the database for persistent tracking
     exp.server_pid = process.pid
+    exp.running = 1
+    exp.exp_status = "active"
     db.session.commit()
 
     # Identify the database URI to be set

@@ -487,14 +487,16 @@ def create_tutorial_experiment():
                         dummy_conn.execute(text(schema_sql))
 
                     hashed_pw = generate_password_hash("admin", method="pbkdf2:sha256")
-                    stmt = text("""
+                    stmt = text(
+                        """
                         INSERT INTO user_mgmt (username, email, password, user_type, leaning, age,
                                                language, owner, joined_on, frecsys_type,
                                                round_actions, toxicity, is_page, daily_activity_level, cover_image)
                         VALUES (:username, :email, :password, :user_type, :leaning, :age,
                                 :language, :owner, :joined_on, :frecsys_type,
                                 :round_actions, :toxicity, :is_page, :daily_activity_level, :cover_image)
-                        """)
+                        """
+                    )
                     dummy_conn.execute(
                         stmt,
                         {
@@ -961,6 +963,8 @@ def run_tutorial_simulation():
         # Start the experiment server if not already running
         if exp.running == 0:
             # Update experiment status
+            exp.running = 1
+            exp.exp_status = "active"
             db.session.query(Exps).filter_by(idexp=experiment_id).update(
                 {Exps.running: 1, Exps.exp_status: "active"}
             )

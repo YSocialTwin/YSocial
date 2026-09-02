@@ -1,7 +1,11 @@
 import os
 import sqlite3
+import threading
 
 from sqlalchemy import create_engine, text
+
+_ENSURED_SCHEMAS: set[str] = set()
+_SCHEMA_LOCK = threading.Lock()
 
 _SQLITE_TABLES = {
     "rounds": """
@@ -262,60 +266,78 @@ def _sqlite_alter_column_definition(column_def: str) -> str:
     return normalized
 
 
-def ensure_sqlite_experiment_schema(db_path: str) -> None:
+def ensure_sqlite_experiment_schema(db_path: str) -> bool:
     if not db_path:
-        return
+        return False
 
     dirpath = os.path.dirname(db_path)
     if dirpath:
         os.makedirs(dirpath, exist_ok=True)
-    conn = sqlite3.connect(db_path)
     try:
-        for ddl in _SQLITE_TABLES.values():
-            conn.execute(ddl)
+        conn = sqlite3.connect(db_path, timeout=30.0)
+        try:
+            conn.execute("PRAGMA busy_timeout = 30000")
+            try:
+                conn.execute("PRAGMA journal_mode = WAL")
+            except Exception:
+                pass
 
-        for table, columns in _SQLITE_COLUMNS.items():
-            existing = _sqlite_existing_columns(conn, table)
-            if not existing:
-                continue  # table doesn't exist in this DB; skip
-            for column_name, column_def in columns.items():
-                if column_name not in existing:
-                    ddl = _sqlite_alter_column_definition(column_def)
-                    conn.execute(f"ALTER TABLE {table} ADD COLUMN {column_name} {ddl}")
+            for ddl in _SQLITE_TABLES.values():
+                conn.execute(ddl)
 
-        stress_reward_columns = _sqlite_existing_columns(conn, "stress_reward")
-        if stress_reward_columns and "action" not in stress_reward_columns:
-            conn.execute("ALTER TABLE stress_reward ADD COLUMN action TEXT")
+            for table, columns in _SQLITE_COLUMNS.items():
+                existing = _sqlite_existing_columns(conn, table)
+                if not existing:
+                    continue  # table doesn't exist in this DB; skip
+                for column_name, column_def in columns.items():
+                    if column_name not in existing:
+                        ddl = _sqlite_alter_column_definition(column_def)
+                        conn.execute(
+                            f"ALTER TABLE {table} ADD COLUMN {column_name} {ddl}"
+                        )
 
-        if "created_at" in _sqlite_existing_columns(conn, "post"):
-            conn.execute(
-                "UPDATE post SET created_at = CURRENT_TIMESTAMP WHERE created_at IS NULL"
-            )
-        if "created_at" in _sqlite_existing_columns(conn, "rounds"):
-            conn.execute(
-                "UPDATE rounds SET created_at = CURRENT_TIMESTAMP WHERE created_at IS NULL"
-            )
+            stress_reward_columns = _sqlite_existing_columns(conn, "stress_reward")
+            if stress_reward_columns and "action" not in stress_reward_columns:
+                conn.execute("ALTER TABLE stress_reward ADD COLUMN action TEXT")
 
-        conn.commit()
-    finally:
-        conn.close()
+            if "created_at" in _sqlite_existing_columns(conn, "post"):
+                conn.execute(
+                    "UPDATE post SET created_at = CURRENT_TIMESTAMP WHERE created_at IS NULL"
+                )
+            if "created_at" in _sqlite_existing_columns(conn, "rounds"):
+                conn.execute(
+                    "UPDATE rounds SET created_at = CURRENT_TIMESTAMP WHERE created_at IS NULL"
+                )
+
+            conn.commit()
+            return True
+        finally:
+            conn.close()
+    except sqlite3.OperationalError as e:
+        if "locked" in str(e).lower() or "busy" in str(e).lower():
+            # If the database is currently locked by a running simulation process,
+            # do not crash the request. The active server manages its own schema.
+            return False
+        raise
 
 
 def _postgres_existing_columns(conn, table: str) -> set[str]:
     rows = conn.execute(
-        text("""
+        text(
+            """
             SELECT column_name
             FROM information_schema.columns
             WHERE table_schema = 'public' AND table_name = :table_name
-            """),
+            """
+        ),
         {"table_name": table},
     ).fetchall()
     return {str(row[0]) for row in rows}
 
 
-def ensure_postgresql_experiment_schema(db_uri: str) -> None:
+def ensure_postgresql_experiment_schema(db_uri: str) -> bool:
     if not db_uri:
-        return
+        return False
 
     engine = create_engine(db_uri)
     try:
@@ -352,12 +374,21 @@ def ensure_postgresql_experiment_schema(db_uri: str) -> None:
                 )
     finally:
         engine.dispose()
+    return True
 
 
-def ensure_experiment_schema_for_uri(db_uri: str) -> None:
+def ensure_experiment_schema_for_uri(db_uri: str) -> bool:
     if not db_uri:
-        return
+        return False
+    with _SCHEMA_LOCK:
+        if db_uri in _ENSURED_SCHEMAS:
+            return True
+    ensured = False
     if db_uri.startswith("sqlite:///"):
-        ensure_sqlite_experiment_schema(db_uri.replace("sqlite:///", "", 1))
+        ensured = ensure_sqlite_experiment_schema(db_uri.replace("sqlite:///", "", 1))
     elif db_uri.startswith("postgresql"):
-        ensure_postgresql_experiment_schema(db_uri)
+        ensured = ensure_postgresql_experiment_schema(db_uri)
+    if ensured:
+        with _SCHEMA_LOCK:
+            _ENSURED_SCHEMAS.add(db_uri)
+    return ensured

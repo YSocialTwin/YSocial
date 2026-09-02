@@ -422,6 +422,8 @@ def run_client(uid, idexp):
 
         # For remote experiments, set experiment to running when first client starts
         if exp.is_remote == 1 and exp.running == 0:
+            exp.running = 1
+            exp.exp_status = "active"
             db.session.query(Exps).filter_by(idexp=idexp).update(
                 {Exps.running: 1, Exps.exp_status: "active"}
             )
@@ -472,6 +474,8 @@ def resume_client(uid, idexp):
 
         # For remote experiments, set experiment to running when first client starts
         if exp.is_remote == 1 and exp.running == 0:
+            exp.running = 1
+            exp.exp_status = "active"
             db.session.query(Exps).filter_by(idexp=idexp).update(
                 {Exps.running: 1, Exps.exp_status: "active"}
             )
@@ -528,6 +532,8 @@ def pause_client(uid, idexp):
         any_running = any(c.status == 1 for c in all_clients)
         if not any_running and exp.running == 1:
             # All clients stopped, set experiment to stopped
+            exp.running = 0
+            exp.exp_status = "stopped"
             db.session.query(Exps).filter_by(idexp=idexp).update(
                 {Exps.running: 0, Exps.exp_status: "stopped"}
             )
@@ -572,6 +578,8 @@ def stop_client(uid, idexp):
         any_running = any(c.status == 1 for c in all_clients)
         if not any_running and exp.running == 1:
             # All clients stopped, set experiment to stopped
+            exp.running = 0
+            exp.exp_status = "stopped"
             db.session.query(Exps).filter_by(idexp=idexp).update(
                 {Exps.running: 0, Exps.exp_status: "stopped"}
             )

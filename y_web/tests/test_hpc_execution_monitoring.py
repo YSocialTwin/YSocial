@@ -150,8 +150,10 @@ class TestHPCExecutionLogMonitoring:
         finally:
             os.unlink(log_path)
 
-    def test_monitor_marks_fatal_execution_as_failed(self, app, db, tmp_path):
-        """Fatal execution errors should be surfaced to the monitor and stop the experiment."""
+    def test_monitor_marks_unscheduled_fatal_execution_as_failed_without_stopping(
+        self, app, db, tmp_path
+    ):
+        """Fatal errors in unscheduled runs are marked failed without stopping the experiment."""
         from y_web.src.hpc.log_metrics import monitor_hpc_client_execution_logs
         from y_web.src.models import (
             Client,
@@ -230,7 +232,7 @@ class TestHPCExecutionLogMonitoring:
             ):
                 assert monitor_hpc_client_execution_logs() is False
                 mock_mark_failed.assert_called_once()
-                mock_stop_experiment.assert_called_once()
+                mock_stop_experiment.assert_not_called()
 
     def test_restart_failed_schedule_experiment_logs_and_restarts(
         self, app, db, tmp_path
@@ -1014,10 +1016,10 @@ class TestHPCExecutionLogMonitoring:
             assert updated_exec.terminal_state == "failed"
 
     @patch("y_web.src.hpc.server.stop_hpc_server")
-    def test_monitor_stops_experiment_when_client_dies_without_completion(
+    def test_monitor_marks_unscheduled_dead_client_failed_without_stopping_experiment(
         self, mock_stop, app, db
     ):
-        """A dead tracked HPC client must stop the experiment even without an execution log."""
+        """A dead tracked HPC client in an unscheduled run must not stop the experiment."""
         from y_web.src.hpc import log_metrics
         from y_web.src.models import Client, Exps, Population
 
@@ -1089,10 +1091,7 @@ class TestHPCExecutionLogMonitoring:
                     client.id,
                     reason=f"PID {client.pid} no longer alive for client {client.name}",
                 )
-                mock_stop_after_failure.assert_called_once_with(
-                    exp.idexp,
-                    reason=f"PID {client.pid} no longer alive for client {client.name}",
-                )
+                mock_stop_after_failure.assert_not_called()
                 updated_exp = Exps.query.filter_by(idexp=exp.idexp).first()
                 assert updated_exp.running == 1
                 assert updated_exp.exp_status == "active"

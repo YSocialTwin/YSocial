@@ -78,15 +78,19 @@ def _hpc_server_process_matches_experiment(
         cmdline_l = cmdline.lower()
 
         if exp_folder:
+            raw_folder = str(exp_folder).replace("\\", "/").lower()
             try:
-                norm_folder = str(Path(exp_folder).resolve()).replace("\\", "/")
+                resolved_folder = (
+                    str(Path(exp_folder).resolve()).replace("\\", "/").lower()
+                )
             except Exception:
-                norm_folder = str(exp_folder).replace("\\", "/")
-            norm_folder_l = norm_folder.lower()
+                resolved_folder = raw_folder
+            folder_name = Path(exp_folder).name.lower()
             # gunicorn mode can omit config path in argv; allow port-only match there.
             if (
-                norm_folder_l
-                and norm_folder_l not in cmdline_l
+                raw_folder not in cmdline_l
+                and resolved_folder not in cmdline_l
+                and folder_name not in cmdline_l
                 and "gunicorn" not in cmdline_l
             ):
                 return False
@@ -479,6 +483,8 @@ def start_hpc_server(exp):
 
     # Save the PID to the database for persistent tracking
     exp.server_pid = process.pid
+    exp.running = 1
+    exp.exp_status = "active"
     db.session.commit()
 
     # Identify the database URI to be set
@@ -622,6 +628,8 @@ def stop_hpc_server(exp_id):
 
         # Clear PID from database
         exp.server_pid = None
+        exp.running = 0
+        exp.exp_status = "stopped"
         db.session.commit()
         return True
 

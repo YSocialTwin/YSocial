@@ -1,3 +1,4 @@
+import sys
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
@@ -66,6 +67,30 @@ def test_start_hpc_server_clears_stale_pid_and_restarts(monkeypatch):
 
     assert started.pid == 90001
     assert exp.server_pid == 90001
+
+
+def test_hpc_server_process_match_accepts_gunicorn_port_match(monkeypatch):
+    from y_web.src.hpc import server as hpc_server
+
+    class _FakeProcess:
+        def __init__(self, pid):
+            self._pid = pid
+
+        def status(self):
+            return "running"
+
+        def cmdline(self):
+            return ["/usr/bin/gunicorn", "--bind", "127.0.0.1:5004"]
+
+    fake_psutil = SimpleNamespace(Process=_FakeProcess, STATUS_ZOMBIE="zombie")
+    monkeypatch.setitem(sys.modules, "psutil", fake_psutil)
+
+    assert (
+        hpc_server._hpc_server_process_matches_experiment(
+            12345, exp_folder="/tmp/unrelated/path", port=5004
+        )
+        is True
+    )
 
 
 def test_stop_hpc_server_force_terminates_process_tree(monkeypatch):

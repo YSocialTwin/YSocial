@@ -159,6 +159,9 @@ venv.bak/
 
 # Runtime experiment artifacts
 /y_web/experiments/
+/y_web/master/
+/y_web/symlink_exp.sh
+/y_web/system/model_cache_settings.json
 
 # mypy
 .mypy_cache/

@@ -72,11 +72,19 @@ def _hpc_process_matches_client(
         cmdline_l = cmdline.lower()
 
         if exp_folder:
+            raw_folder = str(exp_folder).replace("\\", "/").lower()
             try:
-                norm_folder = str(Path(exp_folder).resolve()).replace("\\", "/")
+                resolved_folder = (
+                    str(Path(exp_folder).resolve()).replace("\\", "/").lower()
+                )
             except Exception:
-                norm_folder = str(exp_folder).replace("\\", "/")
-            if norm_folder and norm_folder.lower() not in cmdline_l:
+                resolved_folder = raw_folder
+            folder_name = Path(exp_folder).name.lower()
+            if (
+                raw_folder not in cmdline_l
+                and resolved_folder not in cmdline_l
+                and folder_name not in cmdline_l
+            ):
                 return False
 
         if cli_name:
