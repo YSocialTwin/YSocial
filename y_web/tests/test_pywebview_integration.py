@@ -124,14 +124,15 @@ class TestPyInstallerSpecUpdated(unittest.TestCase):
 
 
 class TestRequirementsTxt(unittest.TestCase):
-    """Test that requirements.txt includes pywebview."""
+    """Test that requirements include pywebview."""
 
     def test_requirements_includes_pywebview(self):
-        """Test that pywebview is in requirements.txt."""
+        """Test that pywebview is declared in requirements/base.txt."""
         from pathlib import Path
 
         project_root = Path(__file__).parent.parent.parent
-        req_path = project_root / "requirements.txt"
+        # requirements.txt delegates to requirements/base.txt
+        req_path = project_root / "requirements" / "base.txt"
 
         with open(req_path, "r") as f:
             content = f.read()
