@@ -141,7 +141,7 @@ def app():
     @login_required
     def follow(user_id, follower_id):
         # Get the last round id from Rounds
-        current_round = Rounds.query.order_by(Rounds.id.desc()).first()
+        current_round = db.session.scalars(select(Rounds).order_by(Rounds.id.desc())).first()
         if not current_round:
             return "No rounds available", 400
 
@@ -188,7 +188,7 @@ def app():
         if not original:
             return "Post not found", 404
 
-        current_round = Rounds.query.order_by(Rounds.id.desc()).first()
+        current_round = db.session.scalars(select(Rounds).order_by(Rounds.id.desc())).first()
         if not current_round:
             return "No rounds available", 400
 
@@ -212,7 +212,7 @@ def app():
         if not post_id:
             return "Missing post_id", 400
 
-        current_round = Rounds.query.order_by(Rounds.id.desc()).first()
+        current_round = db.session.scalars(select(Rounds).order_by(Rounds.id.desc())).first()
         if not current_round:
             return "No rounds available", 400
 
@@ -247,7 +247,7 @@ def app():
         if not text:
             return "Missing text", 400
 
-        current_round = Rounds.query.order_by(Rounds.id.desc()).first()
+        current_round = db.session.scalars(select(Rounds).order_by(Rounds.id.desc())).first()
         if not current_round:
             return "No rounds available", 400
 

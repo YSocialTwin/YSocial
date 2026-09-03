@@ -1,0 +1,37 @@
+- generic [ref=f6e4]:
+  - generic [ref=f6e9]:
+    - heading "Y Social" [level=2] [ref=f6e10]
+    - heading "Where the Digital World comes to life." [level=4] [ref=f6e11]
+  - generic [ref=f6e22]:
+    - heading "Internal Server Error" [level=2] [ref=f6e23]
+    - paragraph [ref=f6e24]: Error 500
+    - paragraph [ref=f6e25]: The server encountered an unexpected condition. We're working to fix the issue. Please try again later.
+    - generic [ref=f6e26]:
+      - paragraph [ref=f6e27]:
+        - strong [ref=f6e28]: "Debug Information:"
+      - paragraph [ref=f6e29]:
+        - strong [ref=f6e30]: "URL:"
+        - text: http://127.0.0.1:5050/admin/dashboard
+      - paragraph [ref=f6e31]:
+        - strong [ref=f6e32]: "Method:"
+        - text: GET
+      - paragraph [ref=f6e33]:
+        - strong [ref=f6e34]: "Path:"
+        - text: /admin/dashboard
+      - paragraph [ref=f6e35]:
+        - strong [ref=f6e36]: "Endpoint:"
+        - text: admin.dashboard
+      - paragraph [ref=f6e37]:
+        - strong [ref=f6e38]: "Exception:"
+        - text: KeyError
+      - paragraph [ref=f6e39]:
+        - strong [ref=f6e40]: "Message:"
+        - text: "'ENABLE_NOTEBOOK'"
+      - paragraph [ref=f6e41]:
+        - strong [ref=f6e42]: "Wrapped exception:"
+        - text: InternalServerError
+      - paragraph [ref=f6e43]:
+        - strong [ref=f6e44]: "Trace excerpt:"
+        - text: "response = self.full_dispatch_request() File \"/opt/anaconda3/lib/python3.9/site-packages/flask/app.py\", line 919, in full_dispatch_request rv = self.handle_user_exception(e) File \"/opt/anaconda3/lib/python3.9/site-packages/flask/app.py\", line 917, in full_dispatch_request rv = self.dispatch_request() File \"/opt/anaconda3/lib/python3.9/site-packages/flask/app.py\", line 902, in dispatch_request return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args) # type: ignore[no-any-return] File \"/opt/anaconda3/lib/python3.9/site-packages/flask_login/utils.py\", line 290, in decorated_view return current_app.ensure_sync(func)(*args, **kwargs) File \"/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/dashboard.py\", line 380, in dashboard notebook=current_app.config[\"ENABLE_NOTEBOOK\"], KeyError: 'ENABLE_NOTEBOOK'"
+    - link "Go to Homepage" [ref=f6e46] [cursor=pointer]:
+      - /url: /

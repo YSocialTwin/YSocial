@@ -226,7 +226,7 @@ def index():
     """
     if current_user.is_authenticated:
         # get active experiments
-        exps = Exps.query.filter(Exps.status != 0).all()
+        exps = db.session.scalars(select(Exps).filter(Exps.status != 0)).all()
         if exps:
             # If multiple experiments, redirect to join menu
             if len(exps) > 1:
@@ -282,7 +282,7 @@ def index():
 def profile():
     """Handle profile operation - legacy route."""
     # Get active experiments
-    exps = Exps.query.filter(Exps.status != 0).all()
+    exps = db.session.scalars(select(Exps).filter(Exps.status != 0)).all()
     if not exps:
         flash("No active experiment. Please activate an experiment first.")
         return redirect("/admin/experiments")
@@ -348,9 +348,9 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
     ).count()
     total_likes = db.session.scalar(select(func.count()).select_from(Reactions).filter_by(user_id=user_id, type="like"))
     total_dislikes = db.session.scalar(select(func.count()).select_from(Reactions).filter_by(user_id=user_id, type="dislike"))
-    total_articles = Post.query.filter(
+    total_articles = db.session.scalar(select(func.count()).select_from(Post).filter(
         Post.user_id == user_id, Post.news_id.isnot(None)
-    ).count()
+    ))
 
     hashtags = (
         db.session.query(

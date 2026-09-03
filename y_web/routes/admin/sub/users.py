@@ -28,7 +28,7 @@ from y_web.src.content.cover_images import random_cover_image_url
 from y_web.src.experiment.helpers import ensure_experiment_user
 from y_web.src.llm.vllm_manager import get_llm_models
 from y_web.src.models import Admin_users, Exps, User_Experiment, User_mgmt
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from y_web.src.system.miscellanea import (
     check_privileges,
     llm_backend_status,
@@ -72,7 +72,7 @@ def user_data():
     experiments = db.session.scalars(select(Exps)).all()
 
     # Get all users for bulk assignment
-    all_users = Admin_users.query.order_by(Admin_users.username).all()
+    all_users = db.session.scalars(select(Admin_users).order_by(Admin_users.username)).all()
 
     return render_template(
         "admin/users.html",
@@ -330,7 +330,7 @@ def delete_user(uid):
 
     try:
         # Delete associated User_Experiment records first
-        User_Experiment.query.filter_by(user_id=uid).delete()
+        db.session.execute(delete(User_Experiment).filter_by(user_id=uid))
 
         # Delete the user
         db.session.delete(user)
@@ -737,9 +737,9 @@ def bulk_create_users():
             continue
 
         # Check if user already exists
-        existing = Admin_users.query.filter(
+        existing = db.session.scalars(select(Admin_users).filter(
             (Admin_users.username == username) | (Admin_users.email == email)
-        ).first()
+        )).first()
 
         if existing:
             errors.append(

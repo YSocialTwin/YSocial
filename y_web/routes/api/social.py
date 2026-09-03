@@ -271,7 +271,7 @@ def _social_chat_admin_user(exp: Exps) -> Admin_users | None:
     if current_admin is not None:
         return current_admin
 
-    return Admin_users.query.order_by(Admin_users.id.asc()).first()
+    return db.session.scalars(select(Admin_users).order_by(Admin_users.id.asc())).first()
 
 
 def _social_chat_message_payload(message: ForumChatMessage) -> dict:

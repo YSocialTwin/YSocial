@@ -279,7 +279,7 @@ def create_app(db_type="sqlite", desktop_mode=False):
                 exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
 
             if exp is None:
-                active_exps = Exps.query.filter(Exps.status != 0).all()
+                active_exps = db.session.scalars(select(Exps).filter(Exps.status != 0)).all()
                 if not active_exps:
                     return dict(feed_home_url="/")
                 if len(active_exps) > 1:

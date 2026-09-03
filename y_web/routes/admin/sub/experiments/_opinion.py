@@ -115,7 +115,7 @@ from ._blueprint import (
     experiments,
 )
 from ._helpers import *  # noqa: F401,F403
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from ._helpers import (
     _current_admin_user_or_none,
     _load_stress_reward_experiment_context,
@@ -1151,8 +1151,8 @@ def _bootstrap_initial_agent_opinions_if_missing(expid, experiment):
 
     if inserted:
         db.session.commit()
-        OpinionEvolutionCache.query.filter_by(exp_id=expid).delete()
-        OpinionEvolutionSampledAgents.query.filter_by(exp_id=expid).delete()
+        db.session.execute(delete(OpinionEvolutionCache).filter_by(exp_id=expid))
+        db.session.execute(delete(OpinionEvolutionSampledAgents).filter_by(exp_id=expid))
         db.session.commit()
 
     return inserted
@@ -1191,8 +1191,8 @@ def _invalidate_stale_opinion_evolution_cache(expid):
     if cache_max_time <= db_max_time:
         return False
 
-    OpinionEvolutionCache.query.filter_by(exp_id=expid).delete()
-    OpinionEvolutionSampledAgents.query.filter_by(exp_id=expid).delete()
+    db.session.execute(delete(OpinionEvolutionCache).filter_by(exp_id=expid))
+    db.session.execute(delete(OpinionEvolutionSampledAgents).filter_by(exp_id=expid))
     db.session.commit()
     return True
 
@@ -1354,7 +1354,7 @@ def update_opinion_group():
         )
 
     # Check for overlaps with other existing groups
-    existing_groups = OpinionGroup.query.filter(OpinionGroup.id != group_id).all()
+    existing_groups = db.session.scalars(select(OpinionGroup).filter(OpinionGroup.id != group_id)).all()
     for existing in existing_groups:
         # Check if the updated group overlaps with any other existing group
         # Two ranges [a1, a2] and [b1, b2] overlap if: a1 < b2 AND b1 < a2
@@ -2248,9 +2248,9 @@ def get_or_compute_opinion_stats(expid, filter_day, filter_hour, filter_topic_id
         cache_entry = None
 
     if cache_entry and _is_invalid_opinion_cache_entry(cache_entry):
-        OpinionEvolutionCache.query.filter_by(
+        db.session.execute(delete(OpinionEvolutionCache).filter_by(
             exp_id=expid, topic_id=filter_topic_id
-        ).delete()
+        ))
         db.session.commit()
         cache_entry = None
 
@@ -2295,9 +2295,9 @@ def get_or_compute_opinion_stats(expid, filter_day, filter_hour, filter_topic_id
             previous_cache = None
 
     if previous_cache and _is_invalid_opinion_cache_entry(previous_cache):
-        OpinionEvolutionCache.query.filter_by(
+        db.session.execute(delete(OpinionEvolutionCache).filter_by(
             exp_id=expid, topic_id=filter_topic_id
-        ).delete()
+        ))
         db.session.commit()
         previous_cache = None
 

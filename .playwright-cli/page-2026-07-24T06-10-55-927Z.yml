@@ -1,0 +1,104 @@
+- generic [active] [ref=f28e1]:
+  - generic [ref=f28e5]:
+    - separator [ref=f28e6]
+    - link "Home" [ref=f28e7] [cursor=pointer]:
+      - /url: /admin/dashboard
+    - link "Users" [ref=f28e13] [cursor=pointer]:
+      - /url: /admin/users
+    - separator [ref=f28e21]
+    - link "Experiments" [ref=f28e22] [cursor=pointer]:
+      - /url: /admin/experiments
+    - link "Populations" [ref=f28e28] [cursor=pointer]:
+      - /url: /admin/populations
+    - separator [ref=f28e37]
+    - link "Agent Resources" [ref=f28e38] [cursor=pointer]:
+      - /url: /admin/agents_dashboard
+    - separator [ref=f28e44]
+    - link "Miscellanea" [ref=f28e45] [cursor=pointer]:
+      - /url: /admin/miscellanea/
+    - link "Plugins" [ref=f28e52] [cursor=pointer]:
+      - /url: /admin/external_runtimes
+    - link "About" [ref=f28e59] [cursor=pointer]:
+      - /url: /admin/about
+  - generic [ref=f28e66]:
+    - generic [ref=f28e68]:
+      - generic [ref=f28e69]:
+        - generic [ref=f28e70]: 󱀈
+        - generic [ref=f28e72]:
+          - generic [ref=f28e73]: New Blog Post!
+          - generic [ref=f28e74]: 🎉 Finally Published! 2026-07-23
+      - generic [ref=f28e75]:
+        - link " Read Article" [ref=f28e76] [cursor=pointer]:
+          - /url: "#"
+          - generic [ref=f28e77]: 
+          - generic [ref=f28e78]: Read Article
+        - button "" [ref=f28e79] [cursor=pointer]
+    - generic [ref=f28e81]:
+      - heading [level=1]
+      - generic [ref=f28e83]:
+        - button "No Active Experiments" [disabled]
+        - button "Notifications" [ref=f28e86] [cursor=pointer]
+        - button "Account" [ref=f28e92] [cursor=pointer]
+    - generic [ref=f28e98]:
+      - generic [ref=f28e101]:
+        - link "Experiments" [ref=f28e102] [cursor=pointer]:
+          - /url: /admin/experiments
+        - text: "> Experiment Matrix :"
+        - link "hpc_ba_matrix_base" [ref=f28e103] [cursor=pointer]:
+          - /url: /admin/experiment_details/4
+      - generic [ref=f28e106]:
+        - generic [ref=f28e107]:
+          - generic [ref=f28e108]:
+            - heading "Experiment Matrix" [level=3] [ref=f28e109]
+            - paragraph [ref=f28e110]: Inspect nested config values, unlock the ones you want to vary, and generate the full combination set.
+          - generic [ref=f28e112]:
+            - combobox [ref=f28e114] [cursor=pointer]:
+              - option "Select experiment..."
+              - option "forum"
+              - option "hpc_ba_matrix_base" [selected]
+              - option "microblogging"
+              - option "photo"
+            - textbox "Experiment group" [ref=f28e115]
+            - button "Load Matrix" [ref=f28e116] [cursor=pointer]
+        - generic [ref=f28e117]:
+          - generic [ref=f28e118]:
+            - generic [ref=f28e119]: Selected Experiment
+            - generic [ref=f28e120]: hpc_ba_matrix_base
+          - generic [ref=f28e121]:
+            - generic [ref=f28e122]: Platform
+            - generic [ref=f28e123]: microblogging
+          - generic [ref=f28e124]:
+            - generic [ref=f28e125]: Target Group
+            - generic [ref=f28e126]: "-"
+          - generic [ref=f28e127]:
+            - generic [ref=f28e128]: Configurable Features
+            - generic [ref=f28e129]: "172"
+          - generic [ref=f28e130]:
+            - generic [ref=f28e131]: Visible Rows
+            - generic [ref=f28e132]: "172"
+          - generic [ref=f28e133]:
+            - generic [ref=f28e134]: Generated Configs
+            - generic [ref=f28e135]: "1"
+      - generic [ref=f28e136]:
+        - group [ref=f28e137]:
+          - generic "Server Settings 1 file" [ref=f28e138] [cursor=pointer]:
+            - generic [ref=f28e140]:
+              - strong [ref=f28e141]: Server Settings
+              - generic [ref=f28e142]: 1 file
+        - group [ref=f28e143]:
+          - generic "Client Settings 1 file" [ref=f28e144] [cursor=pointer]:
+            - generic [ref=f28e146]:
+              - strong [ref=f28e147]: Client Settings
+              - generic [ref=f28e148]: 1 file
+        - generic [ref=f28e150]:
+          - generic [ref=f28e151]:
+            - generic [ref=f28e152]: "Total configurations: 1"
+            - generic [ref=f28e153]: Unlock a feature and provide alternative values. Turn Cartesian mode on to combine all enabled features; leave it off to generate independent variants one feature at a time.
+          - generic [ref=f28e154]:
+            - generic [ref=f28e155]:
+              - generic [ref=f28e156]:
+                - generic [ref=f28e157]: Cartesian product
+                - generic [ref=f28e158]: Combine all enabled features
+              - generic [ref=f28e159] [cursor=pointer]:
+                - checkbox "Cartesian product Combine all enabled features"
+            - button "Generate Experiments" [disabled] [ref=f28e162]

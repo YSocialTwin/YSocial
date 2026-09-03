@@ -26,7 +26,7 @@ from y_web.src.llm.ollama_manager import (
 )
 from y_web.src.models import Ollama_Pull
 from y_web.src.system.miscellanea import check_privileges
-from sqlalchemy import select
+from sqlalchemy import delete, select
 
 ollama = Blueprint("ollama", __name__)
 
@@ -123,7 +123,7 @@ def delete_model(model_name):
     # delete the model from the ollama server
     delete_ollama_model(model_name)
 
-    Ollama_Pull.query.filter_by(model_name=model_name).delete()
+    db.session.execute(delete(Ollama_Pull).filter_by(model_name=model_name))
     db.session.commit()
 
     return redirect(request.referrer)

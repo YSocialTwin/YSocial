@@ -1,0 +1,283 @@
+- generic [active] [ref=f12e1]:
+  - generic [ref=f12e5]:
+    - separator [ref=f12e6]
+    - link "Home" [ref=f12e7] [cursor=pointer]:
+      - /url: /admin/dashboard
+    - link "Users" [ref=f12e13] [cursor=pointer]:
+      - /url: /admin/users
+    - separator [ref=f12e21]
+    - link "Experiments" [ref=f12e22] [cursor=pointer]:
+      - /url: /admin/experiments
+    - link "Populations" [ref=f12e28] [cursor=pointer]:
+      - /url: /admin/populations
+    - separator [ref=f12e37]
+    - link "Agent Resources" [ref=f12e38] [cursor=pointer]:
+      - /url: /admin/agents_dashboard
+    - separator [ref=f12e44]
+    - link "Miscellanea" [ref=f12e45] [cursor=pointer]:
+      - /url: /admin/miscellanea/
+    - link "Plugins" [ref=f12e52] [cursor=pointer]:
+      - /url: /admin/external_runtimes
+    - link "About" [ref=f12e59] [cursor=pointer]:
+      - /url: /admin/about
+  - generic [ref=f12e66]:
+    - generic [ref=f12e68]:
+      - generic [ref=f12e69]:
+        - generic [ref=f12e70]: 󱀈
+        - generic [ref=f12e72]:
+          - generic [ref=f12e73]: New Blog Post!
+          - generic [ref=f12e74]: 🎉 Finally Published! 2026-07-23
+      - generic [ref=f12e75]:
+        - link " Read Article" [ref=f12e76] [cursor=pointer]:
+          - /url: "#"
+          - generic [ref=f12e77]: 
+          - generic [ref=f12e78]: Read Article
+        - button "" [ref=f12e79] [cursor=pointer]
+    - generic [ref=f12e81]:
+      - heading [level=1]
+      - generic [ref=f12e83]:
+        - button "Replay Tutorial" [ref=f12e323] [cursor=pointer]
+        - button "No Active Experiments" [disabled]
+        - button "Notifications" [ref=f12e86] [cursor=pointer]
+        - button "Account" [ref=f12e92] [cursor=pointer]
+    - generic [ref=f12e98]:
+      - generic [ref=f12e101]:
+        - generic [ref=f12e102]:
+          - heading "Running" [level=3] [ref=f12e103]
+          - generic [ref=f12e107]:
+            - generic [ref=f12e108] [cursor=pointer]:
+              - generic [ref=f12e109]:
+                - generic [ref=f12e110]: 
+                - generic [ref=f12e111]: No group
+                - generic [ref=f12e112]: "1"
+              - generic [ref=f12e113]: Click to expand/collapse
+            - generic [ref=f12e116]:
+              - generic [ref=f12e117]:
+                - generic [ref=f12e118]: hpc_ba_matrix_base
+                - generic [ref=f12e119]: Admin
+                - generic [ref=f12e120]: Microblogging
+                - generic [ref=f12e121]: HPC
+                - generic [ref=f12e122]: 100%
+              - generic [ref=f12e123]:
+                - link "" [ref=f12e124] [cursor=pointer]:
+                  - /url: "#"
+                - link "" [ref=f12e126] [cursor=pointer]:
+                  - /url: /admin/select_experiment/4
+                - link "" [ref=f12e128] [cursor=pointer]:
+                  - /url: /admin/experiment_details/4
+                - link "" [ref=f12e130] [cursor=pointer]:
+                  - /url: /admin/delete_simulation/4
+        - text: 裡  
+        - generic [ref=f12e132]:
+          - heading [level=3] [ref=f12e133]:
+            - generic [ref=f12e134]: Stopped / Scheduled
+            - button " Delete All" [ref=f12e136] [cursor=pointer]:
+              - generic [ref=f12e137]: 
+              - text: Delete All
+          - generic [ref=f12e139]:
+            - generic [ref=f12e140]:
+              - generic [ref=f12e141] [cursor=pointer]:
+                - generic [ref=f12e142]:
+                  - generic [ref=f12e143]: 
+                  - generic [ref=f12e144]: Examples
+                  - generic [ref=f12e145]: "3"
+                - button " Delete Group" [ref=f12e147]:
+                  - generic [ref=f12e148]: 
+                  - text: Delete Group
+                - generic [ref=f12e149]: Click to expand/collapse
+              - text:            
+            - generic [ref=f12e150]:
+              - generic [ref=f12e151] [cursor=pointer]:
+                - generic [ref=f12e152]:
+                  - generic [ref=f12e153]: 
+                  - generic [ref=f12e154]: No group
+                  - generic [ref=f12e155]: "1"
+                - button " Delete Group" [ref=f12e157]:
+                  - generic [ref=f12e158]: 
+                  - text: Delete Group
+                - generic [ref=f12e159]: Click to expand/collapse
+              - text:    
+            - generic [ref=f12e160]:
+              - generic [ref=f12e161] [cursor=pointer]:
+                - generic [ref=f12e162]:
+                  - generic [ref=f12e163]: 
+                  - generic [ref=f12e164]: test
+                  - generic [ref=f12e165]: "2"
+                - button " Delete Group" [ref=f12e167]:
+                  - generic [ref=f12e168]: 
+                  - text: Delete Group
+                - generic [ref=f12e169]: Click to expand/collapse
+              - text:        
+      - generic [ref=f12e170]:
+        - generic [ref=f12e172]:
+          - heading "New Experiment" [level=3] [ref=f12e173]
+          - generic [ref=f12e175]:
+            - generic [ref=f12e176]:
+              - generic [ref=f12e177]:
+                - generic [ref=f12e178]: Platform Type
+                - generic [ref=f12e179]:
+                  - combobox [ref=f12e181] [cursor=pointer]:
+                    - option "Microblogging (i.e., X/BlueSky)" [selected]
+                    - option "Photo Sharing (e.g., Instagram)"
+                    - option "Forum (i.e., Reddit)"
+                  - generic [ref=f12e182]:
+                    - generic [ref=f12e183]: HPC
+                    - generic [ref=f12e184]:
+                      - checkbox
+                    - generic [ref=f12e186]: Disabled
+                  - text: 
+              - generic [ref=f12e187]:
+                - generic [ref=f12e188]: Name
+                - textbox [ref=f12e190]
+              - generic [ref=f12e191]:
+                - generic [ref=f12e192]: Enable LLM Agents
+                - generic [ref=f12e194]:
+                  - generic [ref=f12e195]:
+                    - checkbox [checked]
+                  - generic [ref=f12e197]: Enable AI-driven agents in the simulation
+              - generic [ref=f12e198]:
+                - generic [ref=f12e199]: Simulation Topics
+                - generic [ref=f12e201]:
+                  - list
+                  - textbox "Enter topic name" [ref=f12e202]
+              - text: 󰢻 
+              - generic [ref=f12e203]:
+                - generic [ref=f12e204]: Experiment Group
+                - generic [ref=f12e205]:
+                  - combobox "Enter or select a group..." [ref=f12e207]
+                  - paragraph [ref=f12e208]: "Optional: Group experiments together (e.g., \"Project A\", \"Study B\")"
+            - button "Create" [disabled] [ref=f12e210]
+        - generic [ref=f12e212]:
+          - heading "Upload Experiment" [level=3] [ref=f12e213]
+          - generic [ref=f12e215]:
+            - generic [ref=f12e216]:
+              - generic [ref=f12e217]:
+                - generic [ref=f12e218]: Experiment Name
+                - textbox "Leave empty to use name from config..." [ref=f12e220]
+              - generic [ref=f12e221]:
+                - generic [ref=f12e222]: Experiment Group
+                - combobox "Enter or select a group..." [ref=f12e224]
+              - generic [ref=f12e225]:
+                - generic [ref=f12e226]: ZIP File
+                - generic [ref=f12e228]:
+                  - button "📦 Choose ZIP file..." [ref=f12e229]
+                  - generic [ref=f12e230] [cursor=pointer]:
+                    - generic [ref=f12e231]: 📦
+                    - generic [ref=f12e232]: Choose ZIP file...
+            - button "Upload Experiment" [ref=f12e234] [cursor=pointer]
+      - generic [ref=f12e235]:
+        - generic [ref=f12e237]:
+          - heading " Experiment Schedule" [level=3] [ref=f12e238]:
+            - generic [ref=f12e239]:
+              - generic [ref=f12e240]: 
+              - text: Experiment Schedule
+          - paragraph [ref=f12e241]: Create experiment groups for sequential batch execution. Experiments within a group run in parallel; groups run sequentially. HPC experiments can be grouped without a fixed per-group cap (cannot mix with Standard experiments). Optional dynamic filling can reuse open slots from later groups while a batch is running.
+          - generic [ref=f12e242]:
+            - generic [ref=f12e243]:
+              - heading " Available" [level=4] [ref=f12e244]:
+                - generic [ref=f12e245]: 
+                - text: Available
+              - generic [ref=f12e246]:
+                - generic [ref=f12e328]:
+                  - strong [ref=f12e329]: microblogging
+                  - text: (Admin)
+                - generic [ref=f12e331]:
+                  - strong [ref=f12e332]: forum
+                  - text: (Admin)
+                - generic [ref=f12e334]:
+                  - strong [ref=f12e335]: photo
+                  - text: (Admin)
+                - generic [ref=f12e337]:
+                  - strong [ref=f12e338]: hpc_ba_matrix_base__7
+                  - text: (Admin)
+                - generic [ref=f12e340]:
+                  - strong [ref=f12e341]: testssss
+                  - text: (Admin)
+                - generic [ref=f12e343]:
+                  - strong [ref=f12e344]: testssss__rc
+                  - text: (Admin)
+            - generic [ref=f12e248]:
+              - generic [ref=f12e249]:
+                - heading " Groups" [level=4] [ref=f12e250]:
+                  - generic [ref=f12e251]: 
+                  - text: Groups
+                - generic [ref=f12e252]:
+                  - button " Add" [ref=f12e253] [cursor=pointer]:
+                    - generic [ref=f12e254]: 
+                    - text: Add
+                  - button " Auto" [ref=f12e255] [cursor=pointer]:
+                    - generic [ref=f12e256]: 
+                    - text: Auto
+                  - spinbutton "Experiments per group" [ref=f12e257]: "2"
+                  - generic [ref=f12e259] [cursor=pointer]:
+                    - generic [ref=f12e260]:
+                      - checkbox "Dynamic fill"
+                    - generic [ref=f12e263]: Dynamic fill
+                  - combobox "Filter experiments by group" [ref=f12e265] [cursor=pointer]:
+                    - option "All Groups" [selected]
+                    - option "Examples"
+                    - option "test"
+              - paragraph [ref=f12e345]: No groups created yet. Click "Add Group" to start.
+          - generic [ref=f12e268]:
+            - generic [ref=f12e269]:
+              - heading " Log" [level=4] [ref=f12e270]:
+                - generic [ref=f12e271]: 
+                - text: Log
+              - generic [ref=f12e272]:
+                - button " Clear" [ref=f12e273] [cursor=pointer]:
+                  - generic [ref=f12e274]: 
+                  - text: Clear
+                - button " Start" [ref=f12e275] [cursor=pointer]:
+                  - generic [ref=f12e276]: 
+                  - text: Start
+                - text: 
+            - paragraph [ref=f12e278]: No logs yet
+        - generic [ref=f12e279]:
+          - generic [ref=f12e280]:
+            - heading "Copy Experiment" [level=3] [ref=f12e281]
+            - generic [ref=f12e283]:
+              - generic [ref=f12e284]:
+                - generic [ref=f12e285]:
+                  - generic [ref=f12e286]: New Name
+                  - textbox "Enter new name..." [ref=f12e288]
+                - generic [ref=f12e289]:
+                  - generic [ref=f12e290]: Source Experiment
+                  - combobox [ref=f12e293] [cursor=pointer]:
+                    - option "Select experiment..." [selected]
+                    - option "microblogging"
+                    - option "forum"
+                    - option "photo"
+                    - option "hpc_ba_matrix_base"
+                    - option "hpc_ba_matrix_base__7"
+                    - option "testssss"
+                    - option "testssss__rc"
+                - generic [ref=f12e294]:
+                  - generic [ref=f12e295]: Number of Copies
+                  - generic [ref=f12e296]:
+                    - spinbutton [ref=f12e297]: "1"
+                    - paragraph [ref=f12e298]: "If >1, creates copies named: name_1, name_2, etc. There is no hard cap."
+                - generic [ref=f12e299]:
+                  - generic [ref=f12e300]: Experiment Group
+                  - generic [ref=f12e301]:
+                    - combobox "Enter or select a group..." [ref=f12e302]
+                    - paragraph [ref=f12e303]: "Optional: Group experiments together"
+              - button "Copy Experiment" [ref=f12e305] [cursor=pointer]
+          - generic [ref=f12e306]:
+            - heading "Experiment Matrix" [level=3] [ref=f12e307]
+            - generic [ref=f12e309]:
+              - generic [ref=f12e310]:
+                - generic [ref=f12e311]:
+                  - generic [ref=f12e312]: Experiment Group
+                  - combobox [ref=f12e314]:
+                    - option "Select a group..."
+                    - option "Examples"
+                    - option "test" [selected]
+                - generic [ref=f12e315]:
+                  - generic [ref=f12e316]: Source Experiment
+                  - generic [ref=f12e317]:
+                    - combobox [ref=f12e319] [cursor=pointer]:
+                      - option "Select experiment..." [selected]
+                      - option "testssss"
+                      - option "testssss__rc"
+                    - paragraph [ref=f12e320]: Choose a source experiment from the selected group.
+              - button "Matrix" [ref=f12e322] [cursor=pointer]

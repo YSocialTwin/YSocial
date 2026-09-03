@@ -193,7 +193,7 @@ def settings():
     stopped_experiments = db.session.scalars(select(Exps).filter_by(exp_status="stopped")).all()
     stopped_ids = [exp.idexp for exp in stopped_experiments]
     if stopped_ids:
-        clients = Client.query.filter(Client.id_exp.in_(stopped_ids)).all()
+        clients = db.session.scalars(select(Client).filter(Client.id_exp.in_(stopped_ids))).all()
         clients_by_exp = defaultdict(list)
         client_ids = []
         for client in clients:
@@ -202,9 +202,9 @@ def settings():
 
         exec_by_client_id = {}
         if client_ids:
-            exec_rows = Client_Execution.query.filter(
+            exec_rows = db.session.scalars(select(Client_Execution).filter(
                 Client_Execution.client_id.in_(client_ids)
-            ).all()
+            )).all()
             exec_by_client_id = {row.client_id: row for row in exec_rows}
 
         updated_any = False
@@ -238,7 +238,7 @@ def settings():
     preview_ids = [exp.idexp for exp in experiments]
     preview_clients = []
     if preview_ids:
-        preview_clients = Client.query.filter(Client.id_exp.in_(preview_ids)).all()
+        preview_clients = db.session.scalars(select(Client).filter(Client.id_exp.in_(preview_ids))).all()
     preview_clients_by_exp = defaultdict(list)
     for client in preview_clients:
         preview_clients_by_exp[client.id_exp].append(client)
@@ -294,7 +294,7 @@ def visibility_settings():
         return redirect(url_for("admin.dashboard"))
 
     if is_admin:
-        manageable_experiments = Exps.query.order_by(Exps.exp_name.asc()).all()
+        manageable_experiments = db.session.scalars(select(Exps).order_by(Exps.exp_name.asc())).all()
     else:
         manageable_experiments = (
             Exps.query.filter_by(owner=user.username)
@@ -3675,7 +3675,7 @@ def _matrix_recsys_catalog(experiment):
             "category": recsys.category,
             "enabled": recsys.enabled,
         }
-        for recsys in Content_Recsys.query.order_by(Content_Recsys.id.asc()).all()
+        for recsys in db.session.scalars(select(Content_Recsys).order_by(Content_Recsys.id.asc())).all()
         if recsys.enabled and mode_lower in recsys.enabled.lower()
     ]
     follow_recsys = [
@@ -3685,7 +3685,7 @@ def _matrix_recsys_catalog(experiment):
             "category": recsys.category,
             "enabled": recsys.enabled,
         }
-        for recsys in Follow_Recsys.query.order_by(Follow_Recsys.id.asc()).all()
+        for recsys in db.session.scalars(select(Follow_Recsys).order_by(Follow_Recsys.id.asc())).all()
         if recsys.enabled and mode_lower in recsys.enabled.lower()
     ]
     return {"content": content_recsys, "follow": follow_recsys}

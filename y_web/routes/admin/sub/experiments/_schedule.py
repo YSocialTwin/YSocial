@@ -116,7 +116,7 @@ from ._blueprint import (
     experiments,
 )
 from ._helpers import *  # noqa: F401,F403
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 
 
 @experiments.route("/admin/schedule/groups", methods=["GET"])
@@ -240,7 +240,7 @@ def delete_schedule_group(group_id):
         )
 
     # Delete all items in the group first
-    ExperimentScheduleItem.query.filter_by(group_id=group_id).delete()
+    db.session.execute(delete(ExperimentScheduleItem).filter_by(group_id=group_id))
     db.session.delete(group)
     db.session.commit()
 
@@ -801,11 +801,11 @@ def _advance_dynamic_schedule(status, logs):
 
         completed_groups = db.session.scalars(select(ExperimentScheduleGroup).filter_by(is_completed=1)).all()
         for group in completed_groups:
-            ExperimentScheduleItem.query.filter_by(group_id=group.id).delete()
+            db.session.execute(delete(ExperimentScheduleItem).filter_by(group_id=group.id))
             db.session.delete(group)
         db.session.commit()
 
-        ExperimentScheduleLog.query.delete()
+        db.session.execute(delete(ExperimentScheduleLog))
         db.session.commit()
 
         return {
@@ -880,7 +880,7 @@ def start_schedule():
         return jsonify({"success": False, "message": "Schedule already running"}), 400
 
     # Clear old logs when starting a new schedule
-    ExperimentScheduleLog.query.delete()
+    db.session.execute(delete(ExperimentScheduleLog))
     db.session.commit()
 
     # Get first non-completed group
@@ -1150,12 +1150,12 @@ def _do_check_schedule_progress():
                 is_completed=1
             )).all()
             for group in completed_groups:
-                ExperimentScheduleItem.query.filter_by(group_id=group.id).delete()
+                db.session.execute(delete(ExperimentScheduleItem).filter_by(group_id=group.id))
                 db.session.delete(group)
             db.session.commit()
 
             # Clear all schedule logs after successful completion
-            ExperimentScheduleLog.query.delete()
+            db.session.execute(delete(ExperimentScheduleLog))
             db.session.commit()
 
             return {
@@ -1425,7 +1425,7 @@ def clear_schedule_logs():
     """
     check_privileges(current_user.username)
 
-    ExperimentScheduleLog.query.delete()
+    db.session.execute(delete(ExperimentScheduleLog))
     db.session.commit()
 
     return jsonify({"success": True})
@@ -1635,7 +1635,7 @@ def cleanup_completed_groups():
 
     for group in completed_groups:
         # Delete items first
-        ExperimentScheduleItem.query.filter_by(group_id=group.id).delete()
+        db.session.execute(delete(ExperimentScheduleItem).filter_by(group_id=group.id))
         db.session.delete(group)
 
     db.session.commit()

@@ -79,7 +79,7 @@ def login_post():
 
         # Get active experiments from the user's assigned experiments
         exp_ids = [ue.exp_id for ue in user_experiments]
-        active_exps = Exps.query.filter(Exps.idexp.in_(exp_ids), Exps.status == 1).all()
+        active_exps = db.session.scalars(select(Exps).filter(Exps.idexp.in_(exp_ids), Exps.status == 1)).all()
 
         if not active_exps:
             flash("No active experiments available. Please contact an administrator.")

@@ -150,9 +150,9 @@ def __sample_age_degree_profession(age_class, edu_classes, profession_category=N
                 profession = random.choice(category_professions)
             else:
                 # Fallback to random if no professions found for category
-                profession = Profession.query.order_by(func.random()).first()
+                profession = db.session.scalars(select(Profession).order_by(func.random())).first()
         else:
-            profession = Profession.query.order_by(func.random()).first()
+            profession = db.session.scalars(select(Profession).order_by(func.random())).first()
 
     sampled = random.choices(
         population=list(edu_classes.keys()), weights=list(edu_classes.values()), k=1

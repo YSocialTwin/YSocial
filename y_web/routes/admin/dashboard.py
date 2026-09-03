@@ -208,16 +208,16 @@ def dashboard():
     clients_by_exp = defaultdict(list)
     client_exec_by_id = {}
     if exp_ids:
-        all_clients = Client.query.filter(Client.id_exp.in_(exp_ids)).all()
+        all_clients = db.session.scalars(select(Client).filter(Client.id_exp.in_(exp_ids))).all()
         client_ids = []
         for client in all_clients:
             clients_by_exp[client.id_exp].append(client)
             client_ids.append(client.id)
 
         if client_ids:
-            exec_rows = Client_Execution.query.filter(
+            exec_rows = db.session.scalars(select(Client_Execution).filter(
                 Client_Execution.client_id.in_(client_ids)
-            ).all()
+            )).all()
             client_exec_by_id = {row.client_id: row for row in exec_rows}
 
     def _calculate_experiment_progress(experiments_list):
@@ -445,18 +445,18 @@ def dashboard_experiments_by_status(status):
     clients_by_exp = defaultdict(list)
     client_exec_by_id = {}
     if paginated_exp_ids:
-        paginated_clients = Client.query.filter(
+        paginated_clients = db.session.scalars(select(Client).filter(
             Client.id_exp.in_(paginated_exp_ids)
-        ).all()
+        )).all()
         client_ids = []
         for client in paginated_clients:
             clients_by_exp[client.id_exp].append(client)
             client_ids.append(client.id)
 
         if client_ids:
-            exec_rows = Client_Execution.query.filter(
+            exec_rows = db.session.scalars(select(Client_Execution).filter(
                 Client_Execution.client_id.in_(client_ids)
-            ).all()
+            )).all()
             client_exec_by_id = {row.client_id: row for row in exec_rows}
 
     # Build experiment data with clients

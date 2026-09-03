@@ -337,9 +337,9 @@ def rss_feeds(uid):
         return error_response
 
     url_feeds_path = os.path.join(experiment_dir, "url_feeds.txt")
-    available_rss_resources = ForumRssFeedResource.query.order_by(
+    available_rss_resources = db.session.scalars(select(ForumRssFeedResource).order_by(
         ForumRssFeedResource.name.asc(), ForumRssFeedResource.id.asc()
-    ).all()
+    )).all()
     selected_rss_resource_ids = _selected_rss_resource_ids(
         experiment_dir, available_rss_resources
     )
@@ -378,9 +378,9 @@ def update_rss_feeds(uid):
             continue
 
     resources = (
-        ForumRssFeedResource.query.filter(
+        db.session.scalars(select(ForumRssFeedResource).filter(
             ForumRssFeedResource.id.in_(selected_ids)
-        ).all()
+        )).all()
         if selected_ids
         else []
     )
@@ -590,9 +590,9 @@ def upload_url_feeds(uid):
 def forum_rss_resources():
     """Manage reusable RSS feed resources for forum simulations."""
     check_privileges(current_user.username)
-    resources = ForumRssFeedResource.query.order_by(
+    resources = db.session.scalars(select(ForumRssFeedResource).order_by(
         ForumRssFeedResource.name.asc(), ForumRssFeedResource.id.asc()
-    ).all()
+    )).all()
     return render_template(
         "admin/forum_rss_resources.html",
         resources=resources,
@@ -673,9 +673,9 @@ def image_feeds(uid):
     if error_response is not None:
         return error_response
 
-    available_image_resources = ForumImageFeedResource.query.order_by(
+    available_image_resources = db.session.scalars(select(ForumImageFeedResource).order_by(
         ForumImageFeedResource.subreddit.asc(), ForumImageFeedResource.id.asc()
-    ).all()
+    )).all()
     selected_image_resource_ids = _selected_image_resource_ids(
         experiment_dir, available_image_resources
     )
@@ -707,9 +707,9 @@ def update_image_feeds(uid):
             continue
 
     resources = (
-        ForumImageFeedResource.query.filter(
+        db.session.scalars(select(ForumImageFeedResource).filter(
             ForumImageFeedResource.id.in_(selected_ids)
-        ).all()
+        )).all()
         if selected_ids
         else []
     )
@@ -809,9 +809,9 @@ def upload_image_feeds(uid):
 def forum_image_resources():
     """Manage reusable image feed resources for forum simulations."""
     check_privileges(current_user.username)
-    resources = ForumImageFeedResource.query.order_by(
+    resources = db.session.scalars(select(ForumImageFeedResource).order_by(
         ForumImageFeedResource.subreddit.asc(), ForumImageFeedResource.id.asc()
-    ).all()
+    )).all()
     return render_template(
         "admin/forum_image_resources.html",
         resources=[_forum_image_resource_payload(resource) for resource in resources],

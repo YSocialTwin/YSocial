@@ -82,7 +82,7 @@ from y_web.src.models import (
     User_mgmt,
 )
 from y_web.src.system.path_utils import get_writable_path
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 
 try:
     from y_web.src.models import ContentShown
@@ -165,7 +165,7 @@ def _forum_chat_admin_user(exp: Exps) -> Admin_users | None:
     if current_admin is not None:
         return current_admin
 
-    return Admin_users.query.order_by(Admin_users.id.asc()).first()
+    return db.session.scalars(select(Admin_users).order_by(Admin_users.id.asc())).first()
 
 
 def _forum_chat_message_payload(message: ForumChatMessage) -> dict:
@@ -853,7 +853,7 @@ def api_enrich_pending(exp_id: int):
     enriched_images = 0
 
     if summarizer and max_articles:
-        candidates = Articles.query.order_by(Articles.id.desc()).limit(200).all()
+        candidates = db.session.scalars(select(Articles).order_by(Articles.id.desc()).limit(200)).all()
         for art in candidates:
             if enriched_articles >= max_articles:
                 break
@@ -869,7 +869,7 @@ def api_enrich_pending(exp_id: int):
                 enriched_articles += 1
 
     if annotator and max_images:
-        candidates = Images.query.order_by(Images.id.desc()).limit(200).all()
+        candidates = db.session.scalars(select(Images).order_by(Images.id.desc()).limit(200)).all()
         for img in candidates:
             if enriched_images >= max_images:
                 break
@@ -1244,9 +1244,9 @@ def api_delete_post(exp_id: int, post_id: int):
             synchronize_session=False
         )
         if ContentShown is not None:
-            ContentShown.query.filter(
+            db.session.execute(delete(ContentShown).filter(
                 ContentShown.content_id.in_(target_post_ids)
-            ).delete(synchronize_session=False)
+            ))
         Post.query.filter(Post.id.in_(target_post_ids)).delete(
             synchronize_session=False
         )

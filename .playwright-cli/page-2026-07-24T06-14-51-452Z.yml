@@ -1,0 +1,333 @@
+- generic [active] [ref=f34e1]:
+  - generic [ref=f34e5]:
+    - separator [ref=f34e6]
+    - link "Home" [ref=f34e7] [cursor=pointer]:
+      - /url: /admin/dashboard
+    - link "Users" [ref=f34e13] [cursor=pointer]:
+      - /url: /admin/users
+    - separator [ref=f34e21]
+    - link "Experiments" [ref=f34e22] [cursor=pointer]:
+      - /url: /admin/experiments
+    - link "Populations" [ref=f34e28] [cursor=pointer]:
+      - /url: /admin/populations
+    - separator [ref=f34e37]
+    - link "Agent Resources" [ref=f34e38] [cursor=pointer]:
+      - /url: /admin/agents_dashboard
+    - separator [ref=f34e44]
+    - link "Miscellanea" [ref=f34e45] [cursor=pointer]:
+      - /url: /admin/miscellanea/
+    - link "Plugins" [ref=f34e52] [cursor=pointer]:
+      - /url: /admin/external_runtimes
+    - link "About" [ref=f34e59] [cursor=pointer]:
+      - /url: /admin/about
+  - generic [ref=f34e66]:
+    - generic [ref=f34e68]:
+      - generic [ref=f34e69]:
+        - generic [ref=f34e70]: 󱀈
+        - generic [ref=f34e72]:
+          - generic [ref=f34e73]: New Blog Post!
+          - generic [ref=f34e74]: 🎉 Finally Published! 2026-07-23
+      - generic [ref=f34e75]:
+        - link " Read Article" [ref=f34e76] [cursor=pointer]:
+          - /url: "#"
+          - generic [ref=f34e77]: 
+          - generic [ref=f34e78]: Read Article
+        - button "" [ref=f34e79] [cursor=pointer]
+    - generic [ref=f34e81]:
+      - heading [level=1]
+      - generic [ref=f34e83]:
+        - button "No Active Experiments" [disabled]
+        - button "Notifications" [ref=f34e86] [cursor=pointer]
+        - button "Account" [ref=f34e92] [cursor=pointer]
+    - generic [ref=f34e98]:
+      - generic [ref=f34e101]:
+        - link "Experiments" [ref=f34e102] [cursor=pointer]:
+          - /url: /admin/experiments
+        - text: "> Simulation: hpc_ba_matrix_base__6"
+      - generic [ref=f34e103]:
+        - generic [ref=f34e105]:
+          - heading "Experiment Overview" [level=3] [ref=f34e106]
+          - generic [ref=f34e108]:
+            - text: Basic Information
+            - paragraph [ref=f34e109]: Experiment identification and settings.
+            - generic [ref=f34e110]:
+              - generic [ref=f34e111]: Name
+              - generic [ref=f34e113]:
+                - textbox [ref=f34e114]: hpc_ba_matrix_base__6
+                - button "Rename" [ref=f34e115] [cursor=pointer]
+            - generic [ref=f34e116]:
+              - generic [ref=f34e117]: Platform Type
+              - generic [ref=f34e118]: microblogging
+            - generic [ref=f34e119]:
+              - generic [ref=f34e120]: Owner
+              - generic [ref=f34e121]: Admin
+            - generic [ref=f34e122]:
+              - generic [ref=f34e123]: Simulation Topics
+              - generic [ref=f34e125]:
+                - generic [ref=f34e126]:
+                  - list [ref=f34e127]:
+                    - listitem [ref=f34e128]:
+                      - text: Topic1
+                      - button "X" [ref=f34e129] [cursor=pointer]
+                    - listitem [ref=f34e130]:
+                      - text: Topic2
+                      - button "X" [ref=f34e131] [cursor=pointer]
+                    - listitem [ref=f34e132]:
+                      - text: Topic3
+                      - button "X" [ref=f34e133] [cursor=pointer]
+                    - listitem [ref=f34e134]:
+                      - text: Topic4
+                      - button "X" [ref=f34e135] [cursor=pointer]
+                    - listitem [ref=f34e136]:
+                      - text: Topic5
+                      - button "X" [ref=f34e137] [cursor=pointer]
+                    - listitem [ref=f34e138]:
+                      - text: Topic6
+                      - button "X" [ref=f34e139] [cursor=pointer]
+                    - listitem [ref=f34e140]:
+                      - text: Topic7
+                      - button "X" [ref=f34e141] [cursor=pointer]
+                    - listitem [ref=f34e142]:
+                      - text: Topic8
+                      - button "X" [ref=f34e143] [cursor=pointer]
+                    - listitem [ref=f34e144]:
+                      - text: Topic9
+                      - button "X" [ref=f34e145] [cursor=pointer]
+                    - listitem [ref=f34e146]:
+                      - text: Topic10
+                      - button "X" [ref=f34e147] [cursor=pointer]
+                  - textbox "Enter topic name" [ref=f34e148]
+                - button "Save Topics" [ref=f34e150] [cursor=pointer]
+            - separator [ref=f34e151]
+            - text: Experiment Configuration
+            - paragraph [ref=f34e152]: Enable or disable runtime annotations and memory.
+            - generic [ref=f34e153]:
+              - generic [ref=f34e154]:
+                - generic [ref=f34e155]:
+                  - generic [ref=f34e156]:
+                    - generic:
+                      - checkbox
+                    - generic [ref=f34e157]: Opinion Dynamics
+                  - generic [ref=f34e158]:
+                    - generic [ref=f34e159]:
+                      - checkbox
+                    - generic [ref=f34e161]: Stress/Reward
+                - generic [ref=f34e162]: LLM annotations (toxicity, sentiment, emotion) are unavailable for rule-based experiments.
+              - button "Update Configuration" [ref=f34e163] [cursor=pointer]
+            - separator [ref=f34e164]
+            - generic [ref=f34e165]:
+              - group [ref=f34e166]:
+                - generic [ref=f34e167] [cursor=pointer]:
+                  - text: ▶
+                  - generic [ref=f34e168]: Additional Configuration
+                - text: 
+              - separator [ref=f34e171]
+              - text: Management
+              - paragraph [ref=f34e172]: Download or remove this experiment.
+              - generic [ref=f34e173]:
+                - generic [ref=f34e174]: Download Experiment
+                - link "" [ref=f34e176] [cursor=pointer]:
+                  - /url: /admin/download_experiment/5
+              - generic [ref=f34e178]:
+                - generic [ref=f34e179]: Delete Experiment
+                - link "" [ref=f34e181] [cursor=pointer]:
+                  - /url: /admin/delete_simulation/5
+              - generic [ref=f34e183]:
+                - generic [ref=f34e184]: Clear Logs
+                - button "Clear Logs" [ref=f34e187] [cursor=pointer]
+        - generic [ref=f34e188]:
+          - generic [ref=f34e189]:
+            - heading "Server & Analysis Controls" [level=3] [ref=f34e190]
+            - paragraph [ref=f34e191]: Control panel for simulation server, web interface, and data analysis environment.
+            - generic [ref=f34e194]:
+              - generic [ref=f34e195]: Server Controls
+              - generic [ref=f34e197]:
+                - link "" [ref=f34e198] [cursor=pointer]:
+                  - /url: /admin/start_experiment/5
+                - link "" [ref=f34e200] [cursor=pointer]:
+                  - /url: /admin/select_experiment/5
+            - generic [ref=f34e202]:
+              - generic [ref=f34e203]: Server Address
+              - generic [ref=f34e204]:
+                - generic [ref=f34e205]: "Host:"
+                - generic [ref=f34e206]: 127.0.0.1
+              - generic [ref=f34e207]:
+                - generic [ref=f34e208]: "Port:"
+                - generic [ref=f34e209]: "5005"
+          - generic [ref=f34e210]:
+            - heading "Simulation Clients" [level=3] [ref=f34e211]
+            - paragraph [ref=f34e212]: Manage clients running agent populations for this experiment.
+            - generic [ref=f34e213]:
+              - generic [ref=f34e215]:
+                - generic [ref=f34e216]:
+                  - generic [ref=f34e217]: 󱍰
+                  - generic [ref=f34e218]:
+                    - generic "client_ba_base" [ref=f34e219]
+                    - link "" [ref=f34e220] [cursor=pointer]:
+                      - /url: /admin/client_details/661
+                - generic [ref=f34e222]:
+                  - generic [ref=f34e223]: 0%
+                  - link "" [ref=f34e226] [cursor=pointer]:
+                    - /url: /admin/delete_client/661
+              - generic [ref=f34e228]:
+                - separator [ref=f34e229]
+                - link "" [ref=f34e230] [cursor=pointer]:
+                  - /url: /admin/clients/5
+        - generic [ref=f34e232]:
+          - generic [ref=f34e233]:
+            - heading "Quick Reference Guide" [level=3] [ref=f34e234]
+            - generic [ref=f34e235]:
+              - paragraph [ref=f34e236]:
+                - text: Experiment Overview Use the left column to inspect metadata, update topics, toggle annotations, and open advanced configuration such as prompts, embeddings, and stress/reward settings.
+                - generic [ref=f34e237]: 
+                - text: Update runtime annotations and memory in Experiment Configuration
+                - generic [ref=f34e238]: 
+                - text: Maintain the active simulation topics from the overview card
+                - generic [ref=f34e239]: 
+                - text: Open prompt and embedding settings from Additional Configuration
+                - generic [ref=f34e240]: 
+                - text: Use Management to download or remove the experiment
+              - separator [ref=f34e241]
+              - paragraph [ref=f34e242]:
+                - text: Server, Clients, and Analytics The center column controls execution and the lower sections expose logs and diagnostics for both the server and active clients.
+                - generic [ref=f34e243]: 
+                - text: Start or stop the server from Server & Analysis Controls
+                - generic [ref=f34e244]: 
+                - text: Launch clients and open the web interface from the same control panel
+                - generic [ref=f34e245]: 
+                - text: Use Request Logs Analysis and Client Logs Analysis to inspect runtime behavior
+          - generic [ref=f34e246]:
+            - heading "Analytics Pages" [level=3] [ref=f34e247]
+            - generic [ref=f34e248]:
+              - paragraph [ref=f34e249]: Open the active experiment dashboards from a single compact panel.
+              - generic [ref=f34e250]:
+                - link "󱁊 Network Analysis Structure, density, components Open" [ref=f34e251] [cursor=pointer]:
+                  - /url: /admin/network_analysis/5
+                  - generic [ref=f34e252]: 󱁊
+                  - generic [ref=f34e254]:
+                    - generic [ref=f34e255]: Network Analysis
+                    - generic [ref=f34e256]: Structure, density, components
+                  - generic [ref=f34e257]: Open
+                - link " Topic Evolution Diffusion, emergence, reach Open" [ref=f34e258] [cursor=pointer]:
+                  - /url: /admin/topic_evolution/5
+                  - generic [ref=f34e259]: 
+                  - generic [ref=f34e261]:
+                    - generic [ref=f34e262]: Topic Evolution
+                    - generic [ref=f34e263]: Diffusion, emergence, reach
+                  - generic [ref=f34e264]: Open
+                - link " Hashtag Evolution Diffusion, emergence, reach Open" [ref=f34e265] [cursor=pointer]:
+                  - /url: /admin/hashtag_evolution/5
+                  - generic [ref=f34e266]: 
+                  - generic [ref=f34e268]:
+                    - generic [ref=f34e269]: Hashtag Evolution
+                    - generic [ref=f34e270]: Diffusion, emergence, reach
+                  - generic [ref=f34e271]: Open
+                - link "靖 Recsys Evolution Recommendation exposure and reach Open" [ref=f34e272] [cursor=pointer]:
+                  - /url: /admin/recsys_evolution/5
+                  - generic [ref=f34e273]: 靖
+                  - generic [ref=f34e275]:
+                    - generic [ref=f34e276]: Recsys Evolution
+                    - generic [ref=f34e277]: Recommendation exposure and reach
+                  - generic [ref=f34e278]: Open
+      - generic [ref=f34e281]:
+        - generic [ref=f34e282]:
+          - heading "Server Trends Analysis" [level=3] [ref=f34e283]
+          - generic [ref=f34e284]:
+            - generic [ref=f34e285] [cursor=pointer]:
+              - checkbox "Auto-refresh" [checked] [ref=f34e286]
+              - generic [ref=f34e287]: Auto-refresh
+            - spinbutton "Refresh interval in seconds (5-300)" [ref=f34e288]: "30"
+            - generic [ref=f34e289]: sec
+            - button " Refresh Data" [ref=f34e290] [cursor=pointer]:
+              - generic [ref=f34e291]: 
+              - text: Refresh Data
+        - paragraph [ref=f34e292]: Trend analysis of server compute time and simulation time progression.
+        - generic [ref=f34e293]:
+          - generic [ref=f34e294]: 
+          - text: Log file not found
+        - generic [ref=f34e295]:
+          - text: "Aggregation:"
+          - generic [ref=f34e296]:
+            - generic [ref=f34e297] [cursor=pointer]:
+              - radio "Daily" [checked] [ref=f34e298]
+              - text: Daily
+            - generic [ref=f34e299] [cursor=pointer]:
+              - radio "Hourly" [ref=f34e300]
+              - text: Hourly
+        - generic [ref=f34e301]:
+          - generic [ref=f34e302]:
+            - heading "Server Compute Time" [level=4] [ref=f34e304]
+            - heading "Client Compute Time" [level=4] [ref=f34e308]
+          - heading "Simulation Time Trend" [level=4] [ref=f34e313]
+        - generic [ref=f34e316]:
+          - heading " Remaining Time Forecast" [level=4] [ref=f34e317]:
+            - generic [ref=f34e318]: 
+            - text: Remaining Time Forecast
+          - generic [ref=f34e319]:
+            - paragraph [ref=f34e320]:
+              - strong [ref=f34e321]: "Total simulation time so far:"
+              - text: "-"
+            - paragraph [ref=f34e322]:
+              - strong [ref=f34e323]: "Average time per slot:"
+              - text: "-"
+            - paragraph [ref=f34e324]:
+              - strong [ref=f34e325]: "Remaining slots:"
+              - text: "-"
+            - paragraph [ref=f34e326]:
+              - strong [ref=f34e327]: "Estimated remaining time:"
+              - text: "-"
+      - generic [ref=f34e330]:
+        - generic [ref=f34e331]:
+          - heading "Server Logs Analysis" [level=3] [ref=f34e332]
+          - generic [ref=f34e333]:
+            - generic [ref=f34e334] [cursor=pointer]:
+              - checkbox "Auto-refresh" [checked] [ref=f34e335]
+              - generic [ref=f34e336]: Auto-refresh
+            - spinbutton "Refresh interval in seconds (5-300)" [ref=f34e337]: "30"
+            - generic [ref=f34e338]: sec
+            - button " Refresh Data" [ref=f34e339] [cursor=pointer]:
+              - generic [ref=f34e340]: 
+              - text: Refresh Data
+        - paragraph [ref=f34e341]: Real-time analysis of server API calls from _server.log file.
+        - generic [ref=f34e342]:
+          - generic [ref=f34e343]: 
+          - text: Log file not found
+        - generic [ref=f34e344]:
+          - heading "Call Volume by Path" [level=4] [ref=f34e347]
+          - heading "Mean Duration by Path (seconds)" [level=4] [ref=f34e352]
+        - generic [ref=f34e356]:
+          - heading "Filter Paths" [level=4] [ref=f34e357]
+          - generic [ref=f34e358]:
+            - button "Select All" [ref=f34e359] [cursor=pointer]
+            - button "Deselect All" [ref=f34e360] [cursor=pointer]
+      - generic [ref=f34e363]:
+        - generic [ref=f34e364]:
+          - heading "Client Logs Analysis" [level=3] [ref=f34e365]
+          - generic [ref=f34e366]:
+            - generic [ref=f34e367] [cursor=pointer]:
+              - checkbox "Auto-refresh" [checked] [ref=f34e368]
+              - generic [ref=f34e369]: Auto-refresh
+            - spinbutton "Refresh interval in seconds (5-300)" [ref=f34e370]: "30"
+            - generic [ref=f34e371]: sec
+            - button " Refresh Data" [disabled] [ref=f34e372]:
+              - generic [ref=f34e373]: 
+              - text: Refresh Data
+        - paragraph [ref=f34e374]: Analysis of client(s) execution.
+        - generic [ref=f34e375]:
+          - generic [ref=f34e376]: "Select Client:"
+          - combobox "Select Client:" [ref=f34e378] [cursor=pointer]:
+            - option "-- Select a client --" [selected]
+            - option "client_ba_base"
+        - text: 
+      - generic [ref=f34e381]:
+        - heading "Something went wrong?" [level=3] [ref=f34e382]
+        - paragraph [ref=f34e383]: "Help us improve YSocial: submit the experiment log!"
+        - generic [ref=f34e385]:
+          - paragraph [ref=f34e386]: This will compress and send your experiment's log files and configuration to help us diagnose issues and improve the platform.
+          - generic [ref=f34e387]:
+            - generic [ref=f34e388]: "Describe the problem (optional):"
+            - textbox "What issue did you encounter? What were you trying to do when the error occurred?" [ref=f34e390]
+            - paragraph [ref=f34e391]: Please describe what you were doing and what went wrong. This helps us understand and fix the issue faster.
+          - button " Submit Logs" [ref=f34e392] [cursor=pointer]:
+            - generic [ref=f34e393]: 
+            - generic: Submit Logs

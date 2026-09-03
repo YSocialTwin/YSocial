@@ -323,7 +323,7 @@ def _agent_builder_context(**overrides):
         available_cover_images = []
 
     context = {
-        "populations": Population.query.filter(Population.pop_type.is_(None)).all(),
+        "populations": db.session.scalars(select(Population).filter(Population.pop_type.is_(None))).all(),
         "models": get_llm_models(),
         "llm_backend": llm_backend_status(),
         "professions": db.session.scalars(select(Profession)).all(),
@@ -331,10 +331,10 @@ def _agent_builder_context(**overrides):
         "education_levels": db.session.scalars(select(Education)).all(),
         "leanings": db.session.scalars(select(Leanings)).all(),
         "languages": db.session.scalars(select(Languages)).all(),
-        "interest_topics": Topic_List.query.order_by(Topic_List.name.asc()).all(),
-        "opinion_groups": OpinionGroup.query.order_by(
+        "interest_topics": db.session.scalars(select(Topic_List).order_by(Topic_List.name.asc())).all(),
+        "opinion_groups": db.session.scalars(select(OpinionGroup).order_by(
             OpinionGroup.lower_bound.asc()
-        ).all(),
+        )).all(),
         "toxicity_levels": db.session.scalars(select(Toxicity_Levels)).all(),
         "activity_profiles": db.session.scalars(select(ActivityProfile)).all(),
         "page_kind": "standard",
@@ -528,7 +528,7 @@ def _agent_listing_query(ag_type_filter):
 def _agent_ext_map(agent_ids):
     if not agent_ids:
         return {}
-    entries = Agent_Ext.query.filter(Agent_Ext.agent_id.in_(agent_ids)).all()
+    entries = db.session.scalars(select(Agent_Ext).filter(Agent_Ext.agent_id.in_(agent_ids))).all()
     ext_map = {}
     for entry in entries:
         ext_map.setdefault(entry.agent_id, {})[entry.feature_name] = entry.feature_value

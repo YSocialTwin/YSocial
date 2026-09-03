@@ -129,7 +129,7 @@ def feeed_logged():
         Redirect to feed with experiment ID and user ID
     """
     # Get active experiments
-    exps = Exps.query.filter(Exps.status != 0).all()
+    exps = db.session.scalars(select(Exps).filter(Exps.status != 0)).all()
     if not exps:
         flash("No active experiment. Please activate an experiment first.")
         return redirect("/admin/experiments")

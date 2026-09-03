@@ -1,0 +1,341 @@
+- generic [ref=f15e1]:
+  - generic [ref=f15e5]:
+    - separator [ref=f15e6]
+    - link "Home" [ref=f15e7] [cursor=pointer]:
+      - /url: /admin/dashboard
+    - link "Users" [ref=f15e13] [cursor=pointer]:
+      - /url: /admin/users
+    - separator [ref=f15e21]
+    - link "Experiments" [ref=f15e22] [cursor=pointer]:
+      - /url: /admin/experiments
+    - link "Populations" [ref=f15e28] [cursor=pointer]:
+      - /url: /admin/populations
+    - separator [ref=f15e37]
+    - link "Agent Resources" [ref=f15e38] [cursor=pointer]:
+      - /url: /admin/agents_dashboard
+    - separator [ref=f15e44]
+    - link "Miscellanea" [ref=f15e45] [cursor=pointer]:
+      - /url: /admin/miscellanea/
+    - link "Plugins" [ref=f15e52] [cursor=pointer]:
+      - /url: /admin/external_runtimes
+    - link "About" [ref=f15e59] [cursor=pointer]:
+      - /url: /admin/about
+  - generic [ref=f15e66]:
+    - generic [ref=f15e67]:
+      - heading [level=1]
+      - generic [ref=f15e69]:
+        - button "Replay Tutorial" [ref=f15e152] [cursor=pointer]
+        - button "No Active Experiments" [disabled]
+        - button "Notifications" [ref=f15e72] [cursor=pointer]
+        - button "Account" [ref=f15e78] [cursor=pointer]
+    - alert [ref=f15e85]:
+      - button "Close" [ref=f15e86] [cursor=pointer]: ×
+      - text: Created 1 matrix experiment(s) in group 'matrix_test'.
+    - generic [ref=f15e87]:
+      - generic [ref=f15e90]:
+        - link "Experiments" [ref=f15e91] [cursor=pointer]:
+          - /url: /admin/experiments
+        - text: "> Experiment Matrix :"
+        - link "ER" [ref=f15e92] [cursor=pointer]:
+          - /url: /admin/experiment_details/1
+      - generic [ref=f15e95]:
+        - generic [ref=f15e96]:
+          - generic [ref=f15e97]:
+            - heading "Experiment Matrix" [level=3] [ref=f15e98]
+            - paragraph [ref=f15e99]: Inspect nested config values, unlock the ones you want to vary, and generate the full combination set.
+          - generic [ref=f15e101]:
+            - combobox [ref=f15e103] [cursor=pointer]:
+              - option "Select experiment..."
+              - option "ER" [selected]
+              - option "ER__31"
+              - option "ER__false"
+              - option "asdsa"
+            - textbox "Experiment group" [ref=f15e104]: matrix_test
+            - button "Load Matrix" [ref=f15e105] [cursor=pointer]
+        - generic [ref=f15e106]:
+          - generic [ref=f15e107]:
+            - generic [ref=f15e108]: Selected Experiment
+            - generic [ref=f15e109]: ER
+          - generic [ref=f15e110]:
+            - generic [ref=f15e111]: Platform
+            - generic [ref=f15e112]: microblogging
+          - generic [ref=f15e113]:
+            - generic [ref=f15e114]: Target Group
+            - generic [ref=f15e115]: matrix_test
+          - generic [ref=f15e116]:
+            - generic [ref=f15e117]: Configurable Features
+            - generic [ref=f15e118]: "154"
+          - generic [ref=f15e119]:
+            - generic [ref=f15e120]: Visible Rows
+            - generic [ref=f15e121]: "154"
+          - generic [ref=f15e122]:
+            - generic [ref=f15e123]: Generated Configs
+            - generic [ref=f15e124]: "1"
+      - generic [ref=f15e125]:
+        - group [ref=f15e126]:
+          - generic "Server Settings 1 file" [ref=f15e127] [cursor=pointer]:
+            - generic [ref=f15e129]:
+              - strong [ref=f15e130]: Server Settings
+              - generic [ref=f15e131]: 1 file
+        - group [ref=f15e132]:
+          - generic "Client Settings 1 file" [ref=f15e133] [cursor=pointer]:
+            - generic [ref=f15e135]:
+              - strong [ref=f15e136]: Client Settings
+              - generic [ref=f15e137]: 1 file
+          - group [ref=f15e158]:
+            - generic "sds · exp_new client_sds-exp_new.json 92 configurable values" [ref=f15e159] [cursor=pointer]:
+              - generic [ref=f15e160]:
+                - generic [ref=f15e161]:
+                  - strong [ref=f15e162]: sds · exp_new
+                  - generic [ref=f15e163]: client_sds-exp_new.json
+                - generic [ref=f15e164]: 92 configurable values
+            - generic [ref=f15e165]:
+              - group [ref=f15e166]:
+                - generic "Recommendations agents.recsys_type / agents.frecsys_type" [ref=f15e167] [cursor=pointer]
+                - generic [ref=f15e169]:
+                  - generic [ref=f15e170]:
+                    - generic [ref=f15e171]: Content recsys
+                    - generic [ref=f15e174]:
+                      - generic [ref=f15e176] [cursor=pointer]:
+                        - checkbox
+                      - generic [ref=f15e178]:
+                        - generic [ref=f15e179]:
+                          - generic [ref=f15e180]: Current value
+                          - generic [ref=f15e181]: ReverseChrono
+                        - generic [ref=f15e182]:
+                          - generic [ref=f15e183]: Alternative values
+                          - generic [ref=f15e185]:
+                            - generic [ref=f15e186]:
+                              - code [ref=f15e188]: Random
+                              - generic [ref=f15e189] [cursor=pointer]:
+                                - checkbox "Random" [checked]
+                            - generic [ref=f15e191]:
+                              - generic [ref=f15e192]:
+                                - code [ref=f15e193]: (RC) Reverse Chrono
+                                - generic [ref=f15e194]: Current
+                              - generic [ref=f15e195] [cursor=pointer]:
+                                - checkbox "(RC) Reverse Chrono Current" [checked]
+                            - generic [ref=f15e197]:
+                              - code [ref=f15e199]: (RCP) Popularity
+                              - generic [ref=f15e200] [cursor=pointer]:
+                                - checkbox "(RCP) Popularity" [checked]
+                            - generic [ref=f15e202]:
+                              - code [ref=f15e204]: (RCF) Followers
+                              - generic [ref=f15e205] [cursor=pointer]:
+                                - checkbox "(RCF) Followers" [checked]
+                            - generic [ref=f15e207]:
+                              - code [ref=f15e209]: (FP) Followers-Popularity
+                              - generic [ref=f15e210] [cursor=pointer]:
+                                - checkbox "(FP) Followers-Popularity" [checked]
+                            - generic [ref=f15e212]:
+                              - code [ref=f15e214]: (RCC) Reverse Chrono Comments
+                              - generic [ref=f15e215] [cursor=pointer]:
+                                - checkbox "(RCC) Reverse Chrono Comments" [checked]
+                            - generic [ref=f15e217]:
+                              - code [ref=f15e219]: (CI) Common Interests
+                              - generic [ref=f15e220] [cursor=pointer]:
+                                - checkbox "(CI) Common Interests" [checked]
+                            - generic [ref=f15e222]:
+                              - code [ref=f15e224]: (CUI) Common User Interests
+                              - generic [ref=f15e225] [cursor=pointer]:
+                                - checkbox "(CUI) Common User Interests" [checked]
+                            - generic [ref=f15e227]:
+                              - code [ref=f15e229]: (SIR) Similar Users Reactions
+                              - generic [ref=f15e230] [cursor=pointer]:
+                                - checkbox "(SIR) Similar Users Reactions" [checked]
+                            - generic [ref=f15e232]:
+                              - code [ref=f15e234]: (SIP) Similar Users Posts
+                              - generic [ref=f15e235] [cursor=pointer]:
+                                - checkbox "(SIP) Similar Users Posts" [checked]
+                            - generic [ref=f15e237]:
+                              - code [ref=f15e239]: (CBF) ContentBasedFeatures
+                              - generic [ref=f15e240] [cursor=pointer]:
+                                - checkbox "(CBF) ContentBasedFeatures" [checked]
+                            - generic [ref=f15e242]:
+                              - code [ref=f15e244]: (CBV) ContentBasedVector
+                              - generic [ref=f15e245] [cursor=pointer]:
+                                - checkbox "(CBV) ContentBasedVector" [checked]
+                            - generic [ref=f15e247]:
+                              - code [ref=f15e249]: (CUU) CollaborativeUserUser
+                              - generic [ref=f15e250] [cursor=pointer]:
+                                - checkbox "(CUU) CollaborativeUserUser" [checked]
+                            - generic [ref=f15e252]:
+                              - code [ref=f15e254]: (CII) CollaborativeItemItem
+                              - generic [ref=f15e255] [cursor=pointer]:
+                                - checkbox "(CII) CollaborativeItemItem" [checked]
+                            - generic [ref=f15e257]:
+                              - code [ref=f15e259]: (HLR) HybridLinearRanker
+                              - generic [ref=f15e260] [cursor=pointer]:
+                                - checkbox "(HLR) HybridLinearRanker" [checked]
+                  - generic [ref=f15e262]:
+                    - generic [ref=f15e263]: Follow recsys
+                    - generic [ref=f15e266]:
+                      - generic [ref=f15e268] [cursor=pointer]:
+                        - checkbox
+                      - generic [ref=f15e270]:
+                        - generic [ref=f15e271]:
+                          - generic [ref=f15e272]: Current value
+                          - generic [ref=f15e273]: random
+                        - generic [ref=f15e274]:
+                          - generic [ref=f15e275]: Alternative values
+                          - generic [ref=f15e277]:
+                            - generic [ref=f15e278]:
+                              - generic [ref=f15e279]:
+                                - code [ref=f15e280]: random
+                                - generic [ref=f15e281]: Current
+                              - generic [ref=f15e282] [cursor=pointer]:
+                                - checkbox "random Current" [checked]
+                            - generic [ref=f15e284]:
+                              - code [ref=f15e286]: Random
+                              - generic [ref=f15e287] [cursor=pointer]:
+                                - checkbox "Random" [checked]
+                            - generic [ref=f15e289]:
+                              - code [ref=f15e291]: Common Neighbors
+                              - generic [ref=f15e292] [cursor=pointer]:
+                                - checkbox "Common Neighbors" [checked]
+                            - generic [ref=f15e294]:
+                              - code [ref=f15e296]: Jaccard
+                              - generic [ref=f15e297] [cursor=pointer]:
+                                - checkbox "Jaccard" [checked]
+                            - generic [ref=f15e299]:
+                              - code [ref=f15e301]: Adamic Adar
+                              - generic [ref=f15e302] [cursor=pointer]:
+                                - checkbox "Adamic Adar" [checked]
+                            - generic [ref=f15e304]:
+                              - code [ref=f15e306]: Preferential Attachment
+                              - generic [ref=f15e307] [cursor=pointer]:
+                                - checkbox "Preferential Attachment" [checked]
+                            - generic [ref=f15e309]:
+                              - code [ref=f15e311]: Activity
+                              - generic [ref=f15e312] [cursor=pointer]:
+                                - checkbox "Activity" [checked]
+                            - generic [ref=f15e314]:
+                              - code [ref=f15e316]: ResourceAllocation
+                              - generic [ref=f15e317] [cursor=pointer]:
+                                - checkbox "ResourceAllocation" [checked]
+                            - generic [ref=f15e319]:
+                              - code [ref=f15e321]: CosineSimilarity
+                              - generic [ref=f15e322] [cursor=pointer]:
+                                - checkbox "CosineSimilarity" [checked]
+                            - generic [ref=f15e324]:
+                              - code [ref=f15e326]: CoEngagement
+                              - generic [ref=f15e327] [cursor=pointer]:
+                                - checkbox "CoEngagement" [checked]
+                            - generic [ref=f15e329]:
+                              - code [ref=f15e331]: RandomWalkRestart
+                              - generic [ref=f15e332] [cursor=pointer]:
+                                - checkbox "RandomWalkRestart" [checked]
+                            - generic [ref=f15e334]:
+                              - code [ref=f15e336]: ReactionsOnContent
+                              - generic [ref=f15e337] [cursor=pointer]:
+                                - checkbox "ReactionsOnContent" [checked]
+                            - generic [ref=f15e339]:
+                              - code [ref=f15e341]: TwoHopEgoSampling
+                              - generic [ref=f15e342] [cursor=pointer]:
+                                - checkbox "TwoHopEgoSampling" [checked]
+              - generic [ref=f15e344]:
+                - generic [ref=f15e345]:
+                  - generic [ref=f15e346]: Client name
+                  - generic [ref=f15e349]:
+                    - generic [ref=f15e351] [cursor=pointer]:
+                      - checkbox
+                    - generic [ref=f15e353]:
+                      - generic [ref=f15e354]:
+                        - generic [ref=f15e355]: Current value
+                        - generic [ref=f15e356]: sds
+                      - generic [ref=f15e357]:
+                        - generic [ref=f15e358]: Alternative values
+                        - generic [ref=f15e361]:
+                          - textbox "Type a value and press Enter" [disabled] [ref=f15e362]
+                          - button "Add" [disabled] [ref=f15e363]
+                - group [ref=f15e364]:
+                  - generic "Llm llm" [ref=f15e365] [cursor=pointer]
+                - group [ref=f15e366]:
+                  - generic "Simulation simulation" [ref=f15e367] [cursor=pointer]
+                  - generic [ref=f15e374]:
+                    - generic [ref=f15e375]:
+                      - generic [ref=f15e376]: Num days
+                      - generic [ref=f15e379]:
+                        - generic [ref=f15e381] [cursor=pointer]:
+                          - checkbox [checked]
+                        - generic [ref=f15e383]:
+                          - generic [ref=f15e384]:
+                            - generic [ref=f15e385]: Current value
+                            - generic [ref=f15e386]: "30"
+                          - generic [ref=f15e387]:
+                            - generic [ref=f15e388]: Alternative values
+                            - generic [ref=f15e389]:
+                              - generic [ref=f15e462]:
+                                - code [ref=f15e463]: "32"
+                                - button "Remove alternative value" [ref=f15e464] [cursor=pointer]: ×
+                              - generic [ref=f15e391]:
+                                - textbox "Type a value and press Enter" [ref=f15e392]
+                                - button "Add" [active] [ref=f15e393] [cursor=pointer]
+                    - generic [ref=f15e394]:
+                      - generic [ref=f15e395]: Percentage new agents iteration
+                      - generic [ref=f15e398]:
+                        - generic [ref=f15e400] [cursor=pointer]:
+                          - checkbox
+                        - generic [ref=f15e402]:
+                          - generic [ref=f15e403]:
+                            - generic [ref=f15e404]: Current value
+                            - generic [ref=f15e405]: "0.0"
+                          - generic [ref=f15e406]:
+                            - generic [ref=f15e407]: Alternative values
+                            - generic [ref=f15e410]:
+                              - textbox "Type a value and press Enter" [disabled] [ref=f15e411]
+                              - button "Add" [disabled] [ref=f15e412]
+                    - generic [ref=f15e413]:
+                      - generic [ref=f15e414]: Percentage removed agents iteration
+                      - generic [ref=f15e417]:
+                        - generic [ref=f15e419] [cursor=pointer]:
+                          - checkbox
+                        - generic [ref=f15e421]:
+                          - generic [ref=f15e422]:
+                            - generic [ref=f15e423]: Current value
+                            - generic [ref=f15e424]: "0.0"
+                          - generic [ref=f15e425]:
+                            - generic [ref=f15e426]: Alternative values
+                            - generic [ref=f15e429]:
+                              - textbox "Type a value and press Enter" [disabled] [ref=f15e430]
+                              - button "Add" [disabled] [ref=f15e431]
+                    - group [ref=f15e432]:
+                      - generic "Discussion topics simulation.discussion_topics" [ref=f15e433] [cursor=pointer]
+                    - group [ref=f15e434]:
+                      - generic "Actions likelihood simulation.actions_likelihood" [ref=f15e435] [cursor=pointer]
+                    - group [ref=f15e436]:
+                      - generic "Agent archetypes simulation.agent_archetypes" [ref=f15e437] [cursor=pointer]
+                    - generic [ref=f15e438]:
+                      - generic [ref=f15e439]: Enable toxicity
+                      - generic [ref=f15e442]:
+                        - generic [ref=f15e444] [cursor=pointer]:
+                          - checkbox
+                        - generic [ref=f15e446]:
+                          - generic [ref=f15e447]:
+                            - generic [ref=f15e448]: Current value
+                            - generic [ref=f15e449]: "false"
+                          - generic [ref=f15e450]:
+                            - generic [ref=f15e451]: Alternative values
+                            - generic [ref=f15e453]:
+                              - generic [ref=f15e454]: "False"
+                              - generic "Toggle the generated value between false and true" [ref=f15e456] [cursor=pointer]:
+                                - checkbox
+                              - generic [ref=f15e458]: "True"
+                - group [ref=f15e368]:
+                  - generic "Agents agents" [ref=f15e369] [cursor=pointer]
+                - group [ref=f15e370]:
+                  - generic "Llm v llm_v" [ref=f15e371] [cursor=pointer]
+                - group [ref=f15e372]:
+                  - generic "Recommendations recommendations" [ref=f15e373] [cursor=pointer]
+        - generic [ref=f15e139]:
+          - generic [ref=f15e140]:
+            - generic [ref=f15e141]: "Total configurations: 1"
+            - generic [ref=f15e142]: Unlock a feature and provide alternative values. Turn Cartesian mode on to combine all enabled features; leave it off to generate independent variants one feature at a time.
+          - generic [ref=f15e143]:
+            - generic [ref=f15e144]:
+              - generic [ref=f15e145]:
+                - generic [ref=f15e146]: Cartesian product
+                - generic [ref=f15e147]: Combine all enabled features
+              - generic [ref=f15e148] [cursor=pointer]:
+                - checkbox "Cartesian product Combine all enabled features"
+            - button "Generate Experiments" [ref=f15e151] [cursor=pointer]

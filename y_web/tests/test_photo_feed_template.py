@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from types import SimpleNamespace
 
-from y_web import create_app
+from y_web import create_app, db
 from y_web.routes.social.photo import (
     _build_photo_follower_items,
     _build_photo_recommended_items,
@@ -20,13 +20,14 @@ from y_web.routes.social.photo import (
 )
 from y_web.src.experiment.helpers import get_experiment_engine_uri
 from y_web.src.models import Exps
+from sqlalchemy import select
 
 
 @contextmanager
 def _photo_experiment():
     app = create_app()
     with app.app_context():
-        for exp in Exps.query.order_by(Exps.idexp.asc()).all():
+        for exp in db.session.scalars(select(Exps).order_by(Exps.idexp.asc())).all():
             uri = get_experiment_engine_uri(exp)
             if uri and uri.endswith("/yphotosharing.db"):
                 yield exp

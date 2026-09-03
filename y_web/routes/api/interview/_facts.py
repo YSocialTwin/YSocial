@@ -711,7 +711,7 @@ def _build_facts_snapshot(
                 key=lambda value: str(value),
             )
             users = (
-                User_mgmt.query.filter(User_mgmt.id.in_(author_ids)).all()
+                db.session.scalars(select(User_mgmt).filter(User_mgmt.id.in_(author_ids))).all()
                 if author_ids
                 else []
             )
@@ -997,7 +997,7 @@ def _build_facts_snapshot(
 
             parent_map: Dict[int, Post] = {}
             if parent_ids:
-                parents = Post.query.filter(Post.id.in_(parent_ids)).all()
+                parents = db.session.scalars(select(Post).filter(Post.id.in_(parent_ids))).all()
                 parent_map = {
                     int(getattr(pp, "id", 0) or 0): pp
                     for pp in parents
@@ -1006,7 +1006,7 @@ def _build_facts_snapshot(
 
             op_map: Dict[int, Post] = {}
             if thread_root_ids:
-                ops = Post.query.filter(Post.id.in_(thread_root_ids)).all()
+                ops = db.session.scalars(select(Post).filter(Post.id.in_(thread_root_ids))).all()
                 op_map = {
                     int(getattr(op, "id", 0) or 0): op for op in ops if op is not None
                 }

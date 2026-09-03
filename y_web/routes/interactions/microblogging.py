@@ -80,7 +80,7 @@ def publish_post(exp_id):
             img_id = img.id
 
     # get the last round id from Rounds
-    current_round = Rounds.query.order_by(Rounds.day.desc(), Rounds.hour.desc()).first()
+    current_round = db.session.scalars(select(Rounds).order_by(Rounds.day.desc(), Rounds.hour.desc())).first()
 
     # add post to the db
     try:

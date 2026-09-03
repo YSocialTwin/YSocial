@@ -1,0 +1,11 @@
+- generic [ref=e4]:
+  - generic [ref=e9]:
+    - heading "Y Social" [level=2] [ref=e10]
+    - heading "Where the Digital World comes to life." [level=4] [ref=e11]
+  - generic [ref=e23]:
+    - textbox "Your email" [active] [ref=e26]
+    - textbox "Your Password" [ref=e33]
+    - generic [ref=e39] [cursor=pointer]:
+      - checkbox "Remember me" [ref=e40]
+      - text: Remember me
+    - button "Login" [ref=e43] [cursor=pointer]

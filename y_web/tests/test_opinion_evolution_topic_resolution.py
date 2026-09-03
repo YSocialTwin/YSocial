@@ -1,5 +1,5 @@
 import pytest
-from sqlalchemy import select
+from sqlalchemy import delete, select
 
 pytestmark = pytest.mark.unit
 
@@ -59,9 +59,9 @@ def test_opinion_evolution_bootstraps_missing_agent_opinions():
     assert (
         "def _bootstrap_initial_agent_opinions_if_missing(expid, experiment):" in source
     )
-    assert "OpinionEvolutionCache.query.filter_by(exp_id=expid).delete()" in source
+    assert "db.session.execute(delete(OpinionEvolutionCache).filter_by(exp_id=expid))" in source
     assert (
-        "OpinionEvolutionSampledAgents.query.filter_by(exp_id=expid).delete()" in source
+        "db.session.execute(delete(OpinionEvolutionSampledAgents).filter_by(exp_id=expid))" in source
     )
     assert "_bootstrap_initial_agent_opinions_if_missing(expid, experiment)" in source
 

@@ -519,9 +519,9 @@ def set_network(uid):
     # get populations for client uid
     populations = db.session.scalars(select(Population).filter_by(id=client.population_id)).all()
     # get agents for the populations
-    agents = Agent_Population.query.filter(
+    agents = db.session.scalars(select(Agent_Population).filter(
         Agent_Population.population_id.in_([p.id for p in populations])
-    ).all()
+    )).all()
     # get agent ids for all agents in populations
     agent_ids = [db.session.scalars(select(Agent).filter_by(id=a.agent_id)).first().name for a in agents]
 
@@ -655,10 +655,10 @@ def upload_network(uid):
 
                     if agent_1 is not None:
                         # check if in population
-                        test = Agent_Population.query.filter(
+                        test = db.session.scalars(select(Agent_Population).filter(
                             Agent_Population.agent_id.in_(aids),
                             Agent_Population.population_id == client.population_id,
-                        ).all()
+                        )).all()
                         error = len(test) == 0
                     else:
                         agent_1 = db.session.scalars(select(Page).filter_by(name=l[0])).all()
@@ -666,10 +666,10 @@ def upload_network(uid):
 
                         if agent_1 is not None:
                             # check if in population
-                            test = Page_Population.query.filter(
+                            test = db.session.scalars(select(Page_Population).filter(
                                 Page_Population.page_id.in_(aids),
                                 Page_Population.population_id == client.population_id,
-                            ).all()
+                            )).all()
                             error = len(test) == 0
                         if agent_1 is None:
                             error = True
@@ -679,10 +679,10 @@ def upload_network(uid):
 
                     if agent_2 is not None:
                         # check if in population
-                        test = Agent_Population.query.filter(
+                        test = db.session.scalars(select(Agent_Population).filter(
                             Agent_Population.agent_id.in_(aids),
                             Agent_Population.population_id == client.population_id,
-                        ).all()
+                        )).all()
                         error2 = len(test) == 0
                     else:
                         agent_2 = db.session.scalars(select(Page).filter_by(name=l[1])).all()
@@ -690,10 +690,10 @@ def upload_network(uid):
 
                         if agent_2 is not None:
                             # check if in population
-                            test = Page_Population.query.filter(
+                            test = db.session.scalars(select(Page_Population).filter(
                                 Page_Population.page_id.in_(aids),
                                 Page_Population.population_id == client.population_id,
-                            ).all()
+                            )).all()
                             error2 = len(test) == 0
 
                         if agent_2 is None:
@@ -736,9 +736,9 @@ def download_agent_list(uid):
     populations = db.session.scalars(select(Population_Experiment).filter_by(id_exp=client.id_exp)).all()
 
     # get agents in the populations
-    agents = Agent_Population.query.filter(
+    agents = db.session.scalars(select(Agent_Population).filter(
         Agent_Population.population_id.in_([p.id_population for p in populations])
-    ).all()
+    )).all()
 
     # get the experiment
     exp = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()

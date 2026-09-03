@@ -84,7 +84,7 @@ class TestY_WebModuleImports:
     def test_import_y_web_models(self):
         """Test importing y_web models"""
         try:
-            from y_web import models
+            from y_web import db, models
 
             # Test that some key models exist
             assert hasattr(models, "User_mgmt")

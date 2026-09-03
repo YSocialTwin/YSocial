@@ -1,0 +1,144 @@
+- generic [active] [ref=f3e1]:
+  - generic [ref=f3e5]:
+    - separator [ref=f3e6]
+    - link "Home" [ref=f3e7] [cursor=pointer]:
+      - /url: /admin/dashboard
+    - link "Users" [ref=f3e13] [cursor=pointer]:
+      - /url: /admin/users
+    - separator [ref=f3e21]
+    - link "Experiments" [ref=f3e22] [cursor=pointer]:
+      - /url: /admin/experiments
+    - link "Populations" [ref=f3e28] [cursor=pointer]:
+      - /url: /admin/populations
+    - separator [ref=f3e37]
+    - link "Agent Resources" [ref=f3e38] [cursor=pointer]:
+      - /url: /admin/agents_dashboard
+    - separator [ref=f3e44]
+    - link "Miscellanea" [ref=f3e45] [cursor=pointer]:
+      - /url: /admin/miscellanea/
+    - link "Plugins" [ref=f3e52] [cursor=pointer]:
+      - /url: /admin/external_runtimes
+    - link "About" [ref=f3e59] [cursor=pointer]:
+      - /url: /admin/about
+  - generic [ref=f3e66]:
+    - generic [ref=f3e68]:
+      - generic [ref=f3e69]:
+        - generic [ref=f3e70]: 󱀈
+        - generic [ref=f3e72]:
+          - generic [ref=f3e73]: New Blog Post!
+          - generic [ref=f3e74]: 🎉 Finally Published! 2026-07-23
+      - generic [ref=f3e75]:
+        - link " Read Article" [ref=f3e76] [cursor=pointer]:
+          - /url: "#"
+          - generic [ref=f3e77]: 
+          - generic [ref=f3e78]: Read Article
+        - button "" [ref=f3e79] [cursor=pointer]
+    - generic [ref=f3e81]:
+      - heading [level=1]
+      - generic [ref=f3e83]:
+        - button "No Active Experiments" [disabled]
+        - button "Notifications" [ref=f3e86] [cursor=pointer]
+        - button "Account" [ref=f3e92] [cursor=pointer]
+    - generic [ref=f3e99]:
+      - generic [ref=f3e100]:
+        - generic [ref=f3e101]:
+          - heading "Currently Running Experiments (1 total)" [level=3] [ref=f3e102]:
+            - text: Currently Running Experiments
+            - generic [ref=f3e104]: (1 total)
+          - paragraph [ref=f3e105]: Active experiments grouped by their project group. Click on a group header to expand/collapse.
+          - generic [ref=f3e107]:
+            - generic [ref=f3e108] [cursor=pointer]:
+              - generic [ref=f3e109]:
+                - generic [ref=f3e110]: 
+                - generic [ref=f3e111]: No group
+                - generic [ref=f3e112]: "1"
+              - generic [ref=f3e113]: Click to expand/collapse
+            - generic [ref=f3e116]:
+              - generic [ref=f3e117]:
+                - generic [ref=f3e118]:
+                  - text: "Experiment:"
+                  - strong [ref=f3e119]: hpc_ba_matrix_base
+                  - text: Admin Microblogging HPC
+                  - link "" [ref=f3e120] [cursor=pointer]:
+                    - /url: /admin/experiment_details/4
+                - generic [ref=f3e123]:
+                  - link "" [ref=f3e124] [cursor=pointer]:
+                    - /url: "#"
+                  - link "" [ref=f3e126] [cursor=pointer]:
+                    - /url: "#"
+                  - link "" [ref=f3e128] [cursor=pointer]:
+                    - /url: javascript:void(0);
+              - separator [ref=f3e130]
+              - generic [ref=f3e131]:
+                - generic [ref=f3e132]:
+                  - text: "Client:"
+                  - generic [ref=f3e133]: 󱍰
+                  - emphasis [ref=f3e134]: client_ba_base
+                  - link "" [ref=f3e135] [cursor=pointer]:
+                    - /url: /admin/client_details/660
+                - generic [ref=f3e137]:
+                  - generic [ref=f3e138]: 100%
+                  - link "" [ref=f3e142] [cursor=pointer]:
+                    - /url: javascript:void(0);
+        - generic [ref=f3e146]:
+          - heading "Stopped / Scheduled (6 total)" [level=3] [ref=f3e147]:
+            - text: Stopped / Scheduled
+            - generic [ref=f3e149]: (6 total)
+          - paragraph [ref=f3e150]: Experiments grouped by project. Click to expand/collapse.
+          - generic [ref=f3e151]:
+            - generic [ref=f3e152]:
+              - generic [ref=f3e153] [cursor=pointer]:
+                - generic [ref=f3e154]:
+                  - generic [ref=f3e155]: 
+                  - generic [ref=f3e156]: Examples
+                  - generic [ref=f3e157]: "3"
+                - generic [ref=f3e158]: Click to expand/collapse
+              - text:            
+            - generic [ref=f3e159]:
+              - generic [ref=f3e160] [cursor=pointer]:
+                - generic [ref=f3e161]:
+                  - generic [ref=f3e162]: 
+                  - generic [ref=f3e163]: No group
+                  - generic [ref=f3e164]: "1"
+                - generic [ref=f3e165]: Click to expand/collapse
+              - text:    
+            - generic [ref=f3e166]:
+              - generic [ref=f3e167] [cursor=pointer]:
+                - generic [ref=f3e168]:
+                  - generic [ref=f3e169]: 
+                  - generic [ref=f3e170]: test
+                  - generic [ref=f3e171]: "2"
+                - generic [ref=f3e172]: Click to expand/collapse
+              - text:        
+      - generic [ref=f3e174]:
+        - heading "Quick Reference Guide" [level=3] [ref=f3e175]
+        - generic [ref=f3e176]:
+          - paragraph [ref=f3e177]: "Running a YSocial Experiment Follow these steps to set up and run a simulation:"
+          - separator [ref=f3e178]
+          - paragraph [ref=f3e179]:
+            - text: 1. Create one or more Agent Populations Define one or more
+            - link "Agent Populations" [ref=f3e180] [cursor=pointer]:
+              - /url: /admin/populations
+            - text: ". Remember: You can add to your population"
+            - link "News Pages" [ref=f3e181] [cursor=pointer]:
+              - /url: /admin/pages
+            - text: and
+            - link "Custom agents" [ref=f3e182] [cursor=pointer]:
+              - /url: /admin/agents
+            - text: .
+          - separator [ref=f3e183]
+          - paragraph [ref=f3e184]:
+            - text: 2. Create an Experiment Describe your simulation with an
+            - link "Experiment" [ref=f3e185] [cursor=pointer]:
+              - /url: /admin/experiments
+            - text: .
+          - separator [ref=f3e186]
+          - paragraph [ref=f3e187]: 3. Configure one or more Clients Create and configure one or more clients for the experiment. Each client manages a population.
+          - separator [ref=f3e188]
+          - paragraph [ref=f3e189]: 4. Run the Simulation Start the experiment and run the clients to begin your simulation.
+          - separator [ref=f3e190]
+          - button " Show Tutorial" [ref=f3e192] [cursor=pointer]:
+            - generic [ref=f3e193]: 
+            - text: Show Tutorial
+  - generic "sqlite" [ref=f3e196]: 
+  - text:   󱚧 󰒓     

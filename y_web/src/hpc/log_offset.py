@@ -21,7 +21,7 @@ from sqlalchemy.exc import OperationalError, PendingRollbackError
 
 from y_web import db
 from y_web.src.models import ClientLogMetrics, LogFileOffset, ServerLogMetrics
-from sqlalchemy import select
+from sqlalchemy import delete, select
 
 logger = logging.getLogger(__name__)
 
@@ -171,12 +171,12 @@ def reset_hpc_client_metrics(exp_id, client_id):
     """
     try:
         # Delete existing client metrics
-        ClientLogMetrics.query.filter_by(exp_id=exp_id, client_id=client_id).delete()
+        db.session.execute(delete(ClientLogMetrics).filter_by(exp_id=exp_id, client_id=client_id))
 
         # Delete file offsets for this client
-        LogFileOffset.query.filter_by(
+        db.session.execute(delete(LogFileOffset).filter_by(
             exp_id=exp_id, log_file_type="client", client_id=client_id
-        ).delete()
+        ))
 
         success = _commit_with_retry(db.session)
         if success:
@@ -201,10 +201,10 @@ def reset_hpc_server_metrics(exp_id):
     """
     try:
         # Delete existing server metrics
-        ServerLogMetrics.query.filter_by(exp_id=exp_id).delete()
+        db.session.execute(delete(ServerLogMetrics).filter_by(exp_id=exp_id))
 
         # Delete file offsets for server logs
-        LogFileOffset.query.filter_by(exp_id=exp_id, log_file_type="server").delete()
+        db.session.execute(delete(LogFileOffset).filter_by(exp_id=exp_id, log_file_type="server"))
 
         success = _commit_with_retry(db.session)
         if success:

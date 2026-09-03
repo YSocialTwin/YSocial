@@ -105,7 +105,7 @@ def publish_post_reddit(exp_id):
             pass
 
     # get the last round id from Rounds
-    current_round = Rounds.query.order_by(Rounds.day.desc(), Rounds.hour.desc()).first()
+    current_round = db.session.scalars(select(Rounds).order_by(Rounds.day.desc(), Rounds.hour.desc())).first()
 
     # Handle article URL storage
     news_id = None
@@ -396,7 +396,7 @@ def publish_comment(exp_id):
         pass
 
     # get the last round id from Rounds
-    current_round = Rounds.query.order_by(Rounds.day.desc(), Rounds.hour.desc()).first()
+    current_round = db.session.scalars(select(Rounds).order_by(Rounds.day.desc(), Rounds.hour.desc())).first()
 
     # get the thread if of the post with id pid
     parent_post = db.session.scalars(select(Post).filter_by(id=pid)).first()

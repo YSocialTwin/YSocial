@@ -1,0 +1,50 @@
+- generic [active] [ref=f30e1]:
+  - generic [ref=f30e5]:
+    - separator [ref=f30e6]
+    - link "Home" [ref=f30e7] [cursor=pointer]:
+      - /url: /admin/dashboard
+    - link "Users" [ref=f30e13] [cursor=pointer]:
+      - /url: /admin/users
+    - separator [ref=f30e21]
+    - link "Experiments" [ref=f30e22] [cursor=pointer]:
+      - /url: /admin/experiments
+    - link "Populations" [ref=f30e28] [cursor=pointer]:
+      - /url: /admin/populations
+    - separator [ref=f30e37]
+    - link "Agent Resources" [ref=f30e38] [cursor=pointer]:
+      - /url: /admin/agents_dashboard
+    - separator [ref=f30e44]
+    - link "Miscellanea" [ref=f30e45] [cursor=pointer]:
+      - /url: /admin/miscellanea/
+    - link "Plugins" [ref=f30e52] [cursor=pointer]:
+      - /url: /admin/external_runtimes
+    - link "About" [ref=f30e59] [cursor=pointer]:
+      - /url: /admin/about
+  - generic [ref=f30e66]:
+    - generic [ref=f30e67]:
+      - heading [level=1]
+      - generic [ref=f30e69]:
+        - button "No Active Experiments" [disabled]
+        - button "Notifications" [ref=f30e72] [cursor=pointer]
+        - button "Account" [ref=f30e78] [cursor=pointer]
+    - generic [ref=f30e84]:
+      - generic [ref=f30e87]:
+        - link "Experiments" [ref=f30e88] [cursor=pointer]:
+          - /url: /admin/experiments
+        - text: "> Experiment Matrix"
+      - generic [ref=f30e92]:
+        - generic [ref=f30e93]:
+          - heading "Experiment Matrix" [level=3] [ref=f30e94]
+          - paragraph [ref=f30e95]: Inspect nested config values, unlock the ones you want to vary, and generate the full combination set.
+        - generic [ref=f30e97]:
+          - combobox [ref=f30e99] [cursor=pointer]:
+            - option "Select experiment..." [selected]
+            - option "ER"
+            - option "ER__31"
+            - option "ER__32"
+            - option "ER__33"
+            - option "ER__false"
+            - option "asdsa"
+          - textbox "Experiment group" [ref=f30e100]
+          - button "Load Matrix" [ref=f30e101] [cursor=pointer]
+      - paragraph [ref=f30e105]: Select an experiment above to inspect its configuration matrix.

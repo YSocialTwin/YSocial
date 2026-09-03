@@ -1,0 +1,433 @@
+- generic [active] [ref=f9e1]:
+  - generic [ref=f9e5]:
+    - separator [ref=f9e6]
+    - link "Home" [ref=f9e7] [cursor=pointer]:
+      - /url: /admin/dashboard
+    - link "Users" [ref=f9e13] [cursor=pointer]:
+      - /url: /admin/users
+    - separator [ref=f9e21]
+    - link "Experiments" [ref=f9e22] [cursor=pointer]:
+      - /url: /admin/experiments
+    - link "Populations" [ref=f9e28] [cursor=pointer]:
+      - /url: /admin/populations
+    - separator [ref=f9e37]
+    - link "Agent Resources" [ref=f9e38] [cursor=pointer]:
+      - /url: /admin/agents_dashboard
+    - separator [ref=f9e44]
+    - link "Miscellanea" [ref=f9e45] [cursor=pointer]:
+      - /url: /admin/miscellanea/
+    - link "Plugins" [ref=f9e52] [cursor=pointer]:
+      - /url: /admin/external_runtimes
+    - link "About" [ref=f9e59] [cursor=pointer]:
+      - /url: /admin/about
+  - generic [ref=f9e66]:
+    - generic [ref=f9e68]:
+      - generic [ref=f9e69]:
+        - generic [ref=f9e70]: 󱀈
+        - generic [ref=f9e72]:
+          - generic [ref=f9e73]: New Blog Post!
+          - generic [ref=f9e74]: 🎉 Finally Published! 2026-07-23
+      - generic [ref=f9e75]:
+        - link " Read Article" [ref=f9e76] [cursor=pointer]:
+          - /url: "#"
+          - generic [ref=f9e77]: 
+          - generic [ref=f9e78]: Read Article
+        - button "" [ref=f9e79] [cursor=pointer]
+    - generic [ref=f9e81]:
+      - heading [level=1]
+      - generic [ref=f9e83]:
+        - button "No Active Experiments" [disabled]
+        - button "Notifications" [ref=f9e86] [cursor=pointer]
+        - button "Account" [ref=f9e92] [cursor=pointer]
+    - generic [ref=f9e98]:
+      - generic [ref=f9e101]:
+        - link "Experiments" [ref=f9e102] [cursor=pointer]:
+          - /url: /admin/experiments
+        - text: "> Simulation:"
+        - link "hpc_ba_matrix_base" [ref=f9e103] [cursor=pointer]:
+          - /url: /admin/experiment_details/4
+        - text: "> Client: client_ba_base"
+        - generic [ref=f9e104]: HPC
+      - generic [ref=f9e105]:
+        - generic [ref=f9e106]:
+          - generic [ref=f9e107]:
+            - heading "Client Overview" [level=3] [ref=f9e108]
+            - paragraph [ref=f9e109]: Information about this simulation client, including assigned population and content sources.
+            - generic [ref=f9e110]:
+              - generic [ref=f9e111]:
+                - text: Basic Information
+                - paragraph [ref=f9e112]: Client identification and configuration.
+                - generic [ref=f9e113]:
+                  - generic [ref=f9e114]: Name
+                  - generic [ref=f9e115]: client_ba_base
+                - generic [ref=f9e116]: Description
+                - separator [ref=f9e118]
+                - text: Assigned Resources
+                - paragraph [ref=f9e119]: Population and content pages used in this simulation.
+                - generic [ref=f9e120]:
+                  - generic [ref=f9e121]: Population
+                  - link "pop1" [ref=f9e123] [cursor=pointer]:
+                    - /url: /admin/population_details/44
+                - generic [ref=f9e124]:
+                  - generic [ref=f9e125]: Content Pages
+                  - generic [ref=f9e126]: No pages assigned
+              - generic [ref=f9e127]:
+                - link "" [ref=f9e128] [cursor=pointer]:
+                  - /url: /admin/download_agent_list/660
+                - link "" [ref=f9e130] [cursor=pointer]:
+                  - /url: /admin/delete_client/660
+          - generic [ref=f9e132]:
+            - heading "Simulation Parameters" [level=3] [ref=f9e133]
+            - paragraph [ref=f9e134]: Configuration settings controlling simulation behavior and dynamics.
+            - generic [ref=f9e135]:
+              - generic [ref=f9e137]:
+                - text: Duration & Growth
+                - paragraph [ref=f9e138]: Simulation length and population dynamics.
+                - generic [ref=f9e139]:
+                  - generic [ref=f9e140]: Simulation Length (days)
+                  - spinbutton [ref=f9e142]: "5"
+                - generic [ref=f9e143]:
+                  - generic [ref=f9e144]: "% New Agents (daily)"
+                  - spinbutton [ref=f9e146]: "0.0"
+                - generic [ref=f9e147]:
+                  - generic [ref=f9e148]: "% Daily Churn"
+                  - spinbutton [ref=f9e150]: "0.0"
+                - separator [ref=f9e151]
+                - text: Behavioral Settings
+                - paragraph [ref=f9e152]: Agent interaction and engagement parameters.
+                - generic [ref=f9e153]:
+                  - generic [ref=f9e154]: Thread Context Length
+                  - spinbutton [ref=f9e156]: "5"
+                - generic [ref=f9e157]:
+                  - generic [ref=f9e158]: Timeline Follower Ratio
+                  - spinbutton [ref=f9e160]: "0.8"
+                - generic [ref=f9e161]:
+                  - generic [ref=f9e162]: Probability Daily Follow
+                  - spinbutton [ref=f9e164]: "0.0"
+                - generic [ref=f9e165]:
+                  - generic [ref=f9e166]: Agents' Memory (hours)
+                  - spinbutton [ref=f9e168]: "336"
+                - generic [ref=f9e169]:
+                  - generic [ref=f9e170]: Content Visibility (hours)
+                  - spinbutton [ref=f9e172]: "72"
+                - generic [ref=f9e173]:
+                  - generic [ref=f9e174]: Recommendation Limit
+                  - spinbutton [ref=f9e176]: "12"
+              - button "Save Simulation Parameters" [ref=f9e178] [cursor=pointer]
+            - separator [ref=f9e179]
+            - heading "Extend Simulation" [level=3] [ref=f9e180]
+            - generic [ref=f9e182]:
+              - generic [ref=f9e184]:
+                - generic [ref=f9e185]: Days
+                - textbox [ref=f9e187]: "10"
+              - button "Save" [ref=f9e189] [cursor=pointer]
+          - generic [ref=f9e190]:
+            - heading "Global Actions Likelihood" [level=3] [ref=f9e191]
+            - generic [ref=f9e192]:
+              - generic [ref=f9e194]:
+                - generic [ref=f9e195]:
+                  - generic [ref=f9e196]: Post new content
+                  - spinbutton [ref=f9e198]: "3.0"
+                - generic [ref=f9e199]:
+                  - generic [ref=f9e200]: Share and comment an Image
+                  - spinbutton [ref=f9e202]: "0.0"
+                - generic [ref=f9e203]:
+                  - generic [ref=f9e204]: Comment on a News
+                  - spinbutton [ref=f9e206]: "0.0"
+                - generic [ref=f9e207]:
+                  - generic [ref=f9e208]: Comment a Post
+                  - spinbutton [ref=f9e210]: "5.0"
+                - generic [ref=f9e211]:
+                  - generic [ref=f9e212]: Read a content
+                  - spinbutton [ref=f9e214]: "2.0"
+                - generic [ref=f9e215]:
+                  - generic [ref=f9e216]: Share News from a Page
+                  - spinbutton [ref=f9e218]: "0.0"
+                - generic [ref=f9e219]:
+                  - generic [ref=f9e220]: Search a Hashtag
+                  - spinbutton [ref=f9e222]: "0.0"
+                - generic [ref=f9e223]:
+                  - generic [ref=f9e224]: Cast Vote
+                  - spinbutton [ref=f9e226]: "0.0"
+                - generic [ref=f9e227]:
+                  - generic [ref=f9e228]: Follow
+                  - spinbutton [ref=f9e230]: "0.0"
+              - button "Save Actions Likelihood" [ref=f9e232] [cursor=pointer]
+          - generic [ref=f9e233]:
+            - heading "Client Memory" [level=3] [ref=f9e234]
+            - generic [ref=f9e235]:
+              - generic [ref=f9e237]:
+                - generic [ref=f9e238]:
+                  - generic [ref=f9e239]: Enable Memory
+                  - checkbox [ref=f9e241]
+                - generic [ref=f9e242]:
+                  - generic [ref=f9e243]: Enable Semantic Retrieval
+                  - checkbox [ref=f9e245]
+                - generic [ref=f9e246]:
+                  - generic [ref=f9e247]: Pair Limit
+                  - spinbutton [ref=f9e249]: "5"
+                - generic [ref=f9e250]:
+                  - generic [ref=f9e251]: Prompt Max Chars
+                  - spinbutton [ref=f9e253]: "1600"
+                - generic [ref=f9e254]:
+                  - generic [ref=f9e255]: Embedding Model
+                  - textbox [ref=f9e257]: snowflake-arctic-embed:110m
+              - button "Save Memory" [ref=f9e259] [cursor=pointer]
+          - generic [ref=f9e260]:
+            - heading "Agent Archetypes" [level=3] [ref=f9e261]
+            - generic [ref=f9e262]:
+              - generic [ref=f9e264]:
+                - generic [ref=f9e265]:
+                  - generic [ref=f9e266]: Enable Archetypes
+                  - checkbox [checked] [ref=f9e268]
+                - generic [ref=f9e269]:
+                  - generic [ref=f9e270]: Validator %
+                  - spinbutton [ref=f9e272]: "52"
+                - generic [ref=f9e273]:
+                  - generic [ref=f9e274]: Broadcaster %
+                  - spinbutton [ref=f9e276]: "20"
+                - generic [ref=f9e277]:
+                  - generic [ref=f9e278]: Explorer %
+                  - spinbutton [ref=f9e280]: "28"
+              - button "Save Archetypes" [ref=f9e282] [cursor=pointer]
+          - generic [ref=f9e283]:
+            - heading "LLM" [level=3] [ref=f9e284]
+            - generic [ref=f9e286]:
+              - generic [ref=f9e287]:
+                - generic [ref=f9e288]: LLM Model
+                - generic [ref=f9e289]: llama3.2
+              - generic [ref=f9e290]:
+                - generic [ref=f9e291]: LLM Server URL
+                - generic [ref=f9e292]: N/A
+              - generic [ref=f9e293]:
+                - generic [ref=f9e294]: API Key
+                - generic [ref=f9e295]: "NULL"
+              - generic [ref=f9e296]:
+                - generic [ref=f9e297]: Max tokens
+                - generic [ref=f9e298]: "-1"
+              - generic [ref=f9e299]:
+                - generic [ref=f9e300]: Temperature
+                - generic [ref=f9e301]: "0.9"
+              - separator [ref=f9e302]
+              - heading "LLM (Image Transcription)" [level=3] [ref=f9e303]
+              - generic [ref=f9e304]:
+                - generic [ref=f9e305]: LLM Model
+                - generic [ref=f9e306]: minicpm-v:latest
+              - generic [ref=f9e307]:
+                - generic [ref=f9e308]: LLM Server
+                - generic [ref=f9e309]: http://127.0.0.1:11434/v1:11434
+              - generic [ref=f9e310]:
+                - generic [ref=f9e311]: API Key
+                - generic [ref=f9e312]: "NULL"
+              - generic [ref=f9e313]:
+                - generic [ref=f9e314]: Max tokens
+                - generic [ref=f9e315]: "300"
+              - generic [ref=f9e316]:
+                - generic [ref=f9e317]: Temperature
+                - generic [ref=f9e318]: "0.5"
+        - generic [ref=f9e320]:
+          - generic [ref=f9e323]:
+            - generic [ref=f9e324]:
+              - heading "Client Recommenders & Large Language Models" [level=3] [ref=f9e325]
+              - generic [ref=f9e327]:
+                - text: Here, you can bulk update the recommender systems/LLM used by all agents in the population. Any changes made will apply to all agents within the specific experimental instance associated with the client.
+                - strong [ref=f9e328]: "Note:"
+                - text: Ensure that the experiment is loaded before applying changes to avoid overwriting configurations from other simulations, especially if the same population is deployed across multiple experiments.
+              - separator [ref=f9e329]
+              - generic [ref=f9e330]:
+                - generic [ref=f9e331]: Current Recommender
+                - generic [ref=f9e332]: "Follow: random"
+                - generic [ref=f9e333]: "Content: random"
+            - separator [ref=f9e334]
+            - generic [ref=f9e335]:
+              - generic [ref=f9e336]:
+                - heading "Set Recommenders" [level=4] [ref=f9e337]
+                - generic [ref=f9e338]:
+                  - generic [ref=f9e339]: Content Recommender
+                  - combobox [ref=f9e342] [cursor=pointer]:
+                    - option "Random" [selected]
+                    - option "(RC) Reverse Chrono"
+                    - option "(RCP) Popularity"
+                    - option "(RCC) Reverse Chrono Comments"
+                    - option "(RCF) Followers"
+                    - option "(FP) Followers-Popularity"
+                    - option "(CI) Common Interests"
+                    - option "(CBF) ContentBasedFeatures"
+                    - option "(CBV) ContentBasedVector"
+                    - option "(CUI) Common User Interests"
+                    - option "(SIR) Similar Users Reactions"
+                    - option "(SIP) Similar Users Posts"
+                    - option "(CUU) CollaborativeUserUser"
+                    - option "(CII) CollaborativeItemItem"
+                    - option "(HLR) HybridLinearRanker"
+                - generic [ref=f9e343]:
+                  - generic [ref=f9e344]: Follow Recommender
+                  - combobox [ref=f9e348] [cursor=pointer]:
+                    - option "Random" [selected]
+                    - option "Common Neighbors"
+                    - option "Jaccard"
+                    - option "Adamic Adar"
+                    - option "ResourceAllocation"
+                    - option "Preferential Attachment"
+                    - option "Activity"
+                    - option "CosineSimilarity"
+                    - option "CoEngagement"
+                    - option "ReactionsOnContent"
+                    - option "RandomWalkRestart"
+                    - option "TwoHopEgoSampling"
+              - button "Save" [ref=f9e350] [cursor=pointer]
+            - separator [ref=f9e351]
+            - generic [ref=f9e352]: Current LLM
+            - separator [ref=f9e354]
+            - generic [ref=f9e355]:
+              - generic [ref=f9e356]:
+                - heading "Set LLM" [level=4] [ref=f9e357]
+                - generic [ref=f9e358]:
+                  - generic [ref=f9e359]: Custom LLM URL (optional)
+                  - generic [ref=f9e361]:
+                    - textbox "e.g., localhost:8000" [ref=f9e362]: None
+                    - button "Fetch Models" [ref=f9e363] [cursor=pointer]
+                - generic [ref=f9e365]:
+                  - generic [ref=f9e366]: Available Models
+                  - combobox [ref=f9e369] [cursor=pointer]:
+                    - option [selected]
+                    - option "llama3.2-vision:latest"
+                    - option "embeddinggemma:latest"
+                    - option "gemma4:e4b"
+                    - option "qwen2.5:3b"
+                    - option "qwen2.5-coder:3b"
+                    - option "x/z-image-turbo:latest"
+                    - option "ministral-3:3b"
+                    - option "gpt-oss:latest"
+                    - option "deepseek-r1:7b"
+                    - option "gpt-oss:20b"
+                    - option "sushruth/solar-uncensored:latest"
+                    - option "dolphin-llama3:latest"
+                    - option "qwen2.5:0.5b"
+                    - option "snowflake-arctic-embed:110m"
+                    - option "gfg/solar-10.7b-instruct-v1.0-uncensored:latest"
+                    - option "llama3.2:latest"
+                    - option "minicpm-v:latest"
+                    - option "llama3.1:latest"
+              - button "Save" [ref=f9e371] [cursor=pointer]
+          - generic [ref=f9e374]:
+            - generic [ref=f9e375]:
+              - heading "Social Network Structure" [level=3] [ref=f9e376]
+              - generic [ref=f9e378]:
+                - text: Each client can be deployed by imposing a starting social network among the agents of its populations. The network can be either synthetically generated or custom-made and uploaded. To create a custom network file download the agent name list using
+                - generic [ref=f9e379]: 
+              - separator [ref=f9e380]
+              - generic [ref=f9e381]:
+                - generic [ref=f9e382]: Type of Network
+                - generic [ref=f9e383]: BA
+            - separator [ref=f9e384]
+            - generic [ref=f9e385]:
+              - generic [ref=f9e386]:
+                - heading "Set Synthetic Network" [level=4] [ref=f9e387]
+                - generic [ref=f9e388]:
+                  - generic [ref=f9e389]: Model
+                  - combobox [ref=f9e392] [cursor=pointer]:
+                    - option [selected]
+                    - option "Random Network (Erdős-Rényi)"
+                    - option "Scale Free (Barabási-Albert)"
+                    - option "Small World (Watts-Strogatz)"
+                    - option "Powerlaw Cluster"
+                    - option "Complete Graph"
+                    - option "Stochastic Block Model"
+                    - option "LFR Benchmark (Community Structure)"
+              - button "Create" [ref=f9e394] [cursor=pointer]
+            - separator [ref=f9e395]
+            - generic [ref=f9e396]:
+              - heading "Upload Custom Network" [level=4] [ref=f9e397]
+              - generic [ref=f9e398]:
+                - button "📊 Choose edge list file..." [ref=f9e399]
+                - generic [ref=f9e400] [cursor=pointer]:
+                  - generic [ref=f9e401]: 📊
+                  - generic [ref=f9e402]: Choose edge list file...
+              - button "Upload Network" [ref=f9e404] [cursor=pointer]
+          - generic [ref=f9e406]:
+            - heading "Hourly Activity Rates" [level=3] [ref=f9e407]
+            - generic [ref=f9e408]:
+              - text: Default values from
+              - link "Bluesky Data" [ref=f9e409] [cursor=pointer]:
+                - /url: https://zenodo.org/records/14669616
+            - generic [ref=f9e414]:
+              - paragraph [ref=f9e415]: "Hourly Activity Percentages:"
+              - generic [ref=f9e416]:
+                - generic [ref=f9e417]:
+                  - generic [ref=f9e418]: 0h
+                  - textbox [ref=f9e419]: "0.023"
+                - generic [ref=f9e420]:
+                  - generic [ref=f9e421]: 1h
+                  - textbox [ref=f9e422]: "0.021"
+                - generic [ref=f9e423]:
+                  - generic [ref=f9e424]: 2h
+                  - textbox [ref=f9e425]: "0.02"
+                - generic [ref=f9e426]:
+                  - generic [ref=f9e427]: 3h
+                  - textbox [ref=f9e428]: "0.02"
+                - generic [ref=f9e429]:
+                  - generic [ref=f9e430]: 4h
+                  - textbox [ref=f9e431]: "0.018"
+                - generic [ref=f9e432]:
+                  - generic [ref=f9e433]: 5h
+                  - textbox [ref=f9e434]: "0.017"
+                - generic [ref=f9e435]:
+                  - generic [ref=f9e436]: 6h
+                  - textbox [ref=f9e437]: "0.017"
+                - generic [ref=f9e438]:
+                  - generic [ref=f9e439]: 7h
+                  - textbox [ref=f9e440]: "0.018"
+                - generic [ref=f9e441]:
+                  - generic [ref=f9e442]: 8h
+                  - textbox [ref=f9e443]: "0.02"
+                - generic [ref=f9e444]:
+                  - generic [ref=f9e445]: 9h
+                  - textbox [ref=f9e446]: "0.02"
+                - generic [ref=f9e447]:
+                  - generic [ref=f9e448]: 10h
+                  - textbox [ref=f9e449]: "0.021"
+                - generic [ref=f9e450]:
+                  - generic [ref=f9e451]: 11h
+                  - textbox [ref=f9e452]: "0.022"
+              - generic [ref=f9e453]:
+                - generic [ref=f9e454]:
+                  - generic [ref=f9e455]: 12h
+                  - textbox [ref=f9e456]: "0.024"
+                - generic [ref=f9e457]:
+                  - generic [ref=f9e458]: 13h
+                  - textbox [ref=f9e459]: "0.027"
+                - generic [ref=f9e460]:
+                  - generic [ref=f9e461]: 14h
+                  - textbox [ref=f9e462]: "0.03"
+                - generic [ref=f9e463]:
+                  - generic [ref=f9e464]: 15h
+                  - textbox [ref=f9e465]: "0.032"
+                - generic [ref=f9e466]:
+                  - generic [ref=f9e467]: 16h
+                  - textbox [ref=f9e468]: "0.032"
+                - generic [ref=f9e469]:
+                  - generic [ref=f9e470]: 17h
+                  - textbox [ref=f9e471]: "0.032"
+                - generic [ref=f9e472]:
+                  - generic [ref=f9e473]: 18h
+                  - textbox [ref=f9e474]: "0.032"
+                - generic [ref=f9e475]:
+                  - generic [ref=f9e476]: 19h
+                  - textbox [ref=f9e477]: "0.031"
+                - generic [ref=f9e478]:
+                  - generic [ref=f9e479]: 20h
+                  - textbox [ref=f9e480]: "0.03"
+                - generic [ref=f9e481]:
+                  - generic [ref=f9e482]: 21h
+                  - textbox [ref=f9e483]: "0.029"
+                - generic [ref=f9e484]:
+                  - generic [ref=f9e485]: 22h
+                  - textbox [ref=f9e486]: "0.027"
+                - generic [ref=f9e487]:
+                  - generic [ref=f9e488]: 23h
+                  - textbox [ref=f9e489]: "0.025"
+              - generic [ref=f9e490]:
+                - link "" [ref=f9e491] [cursor=pointer]:
+                  - /url: /admin/reset_agents_activity/660
+                - button "Update Activity Rates" [ref=f9e493] [cursor=pointer]

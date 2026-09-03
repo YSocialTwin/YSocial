@@ -342,9 +342,9 @@ class TestHPCExecutionLogMonitoring:
             assert updated_exp.running == 1
             assert updated_exp.exp_status == "active"
 
-            logs = ExperimentScheduleLog.query.order_by(
+            logs = db.session.scalars(select(ExperimentScheduleLog).order_by(
                 ExperimentScheduleLog.created_at.asc()
-            ).all()
+            )).all()
             assert any("Restarting automatically" in log.message for log in logs)
             assert any("restarted automatically" in log.message for log in logs)
 

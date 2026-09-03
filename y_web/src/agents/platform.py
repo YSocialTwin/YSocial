@@ -59,7 +59,7 @@ def infer_population_username_type(population):
     experiment_ids = [assoc.id_exp for assoc in associations]
     experiment_types = {
         normalize_population_username_type(exp.platform_type, default="")
-        for exp in Exps.query.filter(Exps.idexp.in_(experiment_ids)).all()
+        for exp in db.session.scalars(select(Exps).filter(Exps.idexp.in_(experiment_ids))).all()
     }
     experiment_types.discard("")
     if len(experiment_types) == 1:

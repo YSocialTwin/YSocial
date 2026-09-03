@@ -1,0 +1,318 @@
+- generic [active] [ref=f9e1]:
+  - generic [ref=f9e5]:
+    - separator [ref=f9e6]
+    - link "Home" [ref=f9e7] [cursor=pointer]:
+      - /url: /admin/dashboard
+    - link "Users" [ref=f9e13] [cursor=pointer]:
+      - /url: /admin/users
+    - separator [ref=f9e21]
+    - link "Experiments" [ref=f9e22] [cursor=pointer]:
+      - /url: /admin/experiments
+    - link "Populations" [ref=f9e28] [cursor=pointer]:
+      - /url: /admin/populations
+    - separator [ref=f9e37]
+    - link "Agent Resources" [ref=f9e38] [cursor=pointer]:
+      - /url: /admin/agents_dashboard
+    - separator [ref=f9e44]
+    - link "Miscellanea" [ref=f9e45] [cursor=pointer]:
+      - /url: /admin/miscellanea/
+    - link "Plugins" [ref=f9e52] [cursor=pointer]:
+      - /url: /admin/external_runtimes
+    - link "About" [ref=f9e59] [cursor=pointer]:
+      - /url: /admin/about
+  - generic [ref=f9e66]:
+    - generic [ref=f9e68]:
+      - generic [ref=f9e69]:
+        - generic [ref=f9e70]: 󱀈
+        - generic [ref=f9e72]:
+          - generic [ref=f9e73]: New Blog Post!
+          - generic [ref=f9e74]: 🎉 Finally Published! 2026-07-23
+      - generic [ref=f9e75]:
+        - link " Read Article" [ref=f9e76] [cursor=pointer]:
+          - /url: "#"
+          - generic [ref=f9e77]: 
+          - generic [ref=f9e78]: Read Article
+        - button "" [ref=f9e79] [cursor=pointer]
+    - generic [ref=f9e81]:
+      - heading [level=1]
+      - generic [ref=f9e83]:
+        - button "No Active Experiments" [disabled]
+        - button "Notifications" [ref=f9e86] [cursor=pointer]
+        - button "Account" [ref=f9e92] [cursor=pointer]
+    - generic [ref=f9e98]:
+      - generic [ref=f9e101]:
+        - text: 裡  
+        - generic [ref=f9e102]:
+          - heading [level=3] [ref=f9e103]:
+            - generic [ref=f9e104]: Stopped / Scheduled
+            - button " Delete All" [ref=f9e106] [cursor=pointer]:
+              - generic [ref=f9e107]: 
+              - text: Delete All
+          - generic [ref=f9e110]:
+            - generic [ref=f9e111] [cursor=pointer]:
+              - generic [ref=f9e112]:
+                - generic [ref=f9e113]: 
+                - generic [ref=f9e114]: Examples
+                - generic [ref=f9e115]: "3"
+              - button " Delete Group" [ref=f9e117]:
+                - generic [ref=f9e118]: 
+                - text: Delete Group
+              - generic [ref=f9e119]: Click to expand/collapse
+            - text:            
+      - generic [ref=f9e120]:
+        - generic [ref=f9e122]:
+          - heading "New Experiment" [level=3] [ref=f9e123]
+          - generic [ref=f9e125]:
+            - generic [ref=f9e126]:
+              - generic [ref=f9e127]:
+                - generic [ref=f9e128]: Platform Type
+                - generic [ref=f9e129]:
+                  - combobox [ref=f9e131] [cursor=pointer]:
+                    - option "Microblogging (i.e., X/BlueSky)" [selected]
+                    - option "Photo Sharing (e.g., Instagram)"
+                    - option "Forum (i.e., Reddit)"
+                  - generic [ref=f9e132]:
+                    - generic [ref=f9e133]: HPC
+                    - generic [ref=f9e134]:
+                      - checkbox
+                    - generic [ref=f9e136]: Disabled
+                  - text: 
+              - generic [ref=f9e137]:
+                - generic [ref=f9e138]: Name
+                - textbox [ref=f9e140]
+              - generic [ref=f9e141]:
+                - generic [ref=f9e142]: Enable LLM Agents
+                - generic [ref=f9e144]:
+                  - generic [ref=f9e145]:
+                    - checkbox [checked]
+                  - generic [ref=f9e147]: Enable AI-driven agents in the simulation
+              - generic [ref=f9e148]:
+                - generic [ref=f9e149]: Simulation Topics
+                - generic [ref=f9e151]:
+                  - list
+                  - textbox "Enter topic name" [ref=f9e152]
+              - text: 󰢻 
+              - generic [ref=f9e153]:
+                - generic [ref=f9e154]: Experiment Group
+                - generic [ref=f9e155]:
+                  - combobox "Enter or select a group..." [ref=f9e157]
+                  - paragraph [ref=f9e158]: "Optional: Group experiments together (e.g., \"Project A\", \"Study B\")"
+            - button "Create" [disabled] [ref=f9e160]
+        - generic [ref=f9e162]:
+          - heading "Upload Experiment" [level=3] [ref=f9e163]
+          - generic [ref=f9e165]:
+            - generic [ref=f9e166]:
+              - generic [ref=f9e167]:
+                - generic [ref=f9e168]: Experiment Name
+                - textbox "Leave empty to use name from config..." [ref=f9e170]
+              - generic [ref=f9e171]:
+                - generic [ref=f9e172]: Experiment Group
+                - combobox "Enter or select a group..." [ref=f9e174]
+              - generic [ref=f9e175]:
+                - generic [ref=f9e176]: ZIP File
+                - generic [ref=f9e178]:
+                  - button "📦 Choose ZIP file..." [ref=f9e179]
+                  - generic [ref=f9e180] [cursor=pointer]:
+                    - generic [ref=f9e181]: 📦
+                    - generic [ref=f9e182]: Choose ZIP file...
+            - button "Upload Experiment" [ref=f9e184] [cursor=pointer]
+      - generic [ref=f9e185]:
+        - generic [ref=f9e187]:
+          - heading " Experiment Schedule" [level=3] [ref=f9e188]:
+            - generic [ref=f9e189]:
+              - generic [ref=f9e190]: 
+              - text: Experiment Schedule
+          - paragraph [ref=f9e191]: Create experiment groups for sequential batch execution. Experiments within a group run in parallel; groups run sequentially. HPC experiments can be grouped without a fixed per-group cap (cannot mix with Standard experiments). Optional dynamic filling can reuse open slots from later groups while a batch is running.
+          - generic [ref=f9e192]:
+            - generic [ref=f9e193]:
+              - heading " Available" [level=4] [ref=f9e194]:
+                - generic [ref=f9e195]: 
+                - text: Available
+              - generic [ref=f9e196]:
+                - generic [ref=f9e198]:
+                  - strong [ref=f9e199]: microblogging
+                  - text: (Admin)
+                - generic [ref=f9e201]:
+                  - strong [ref=f9e202]: forum
+                  - text: (Admin)
+                - generic [ref=f9e204]:
+                  - strong [ref=f9e205]: photo
+                  - text: (Admin)
+            - generic [ref=f9e206]:
+              - generic [ref=f9e207]:
+                - heading " Groups" [level=4] [ref=f9e208]:
+                  - generic [ref=f9e209]: 
+                  - text: Groups
+                - generic [ref=f9e210]:
+                  - button " Add" [ref=f9e211] [cursor=pointer]:
+                    - generic [ref=f9e212]: 
+                    - text: Add
+                  - button " Auto" [ref=f9e213] [cursor=pointer]:
+                    - generic [ref=f9e214]: 
+                    - text: Auto
+                  - spinbutton "Experiments per group" [ref=f9e215]: "2"
+                  - generic [ref=f9e217] [cursor=pointer]:
+                    - generic [ref=f9e218]:
+                      - checkbox "Dynamic fill"
+                    - generic [ref=f9e221]: Dynamic fill
+                  - combobox "Filter experiments by group" [ref=f9e223] [cursor=pointer]:
+                    - option "All Groups" [selected]
+                    - option "Examples"
+              - paragraph [ref=f9e225]: No groups created yet. Click "Add Group" to start.
+          - generic [ref=f9e226]:
+            - generic [ref=f9e227]:
+              - heading " Log" [level=4] [ref=f9e228]:
+                - generic [ref=f9e229]: 
+                - text: Log
+              - generic [ref=f9e230]:
+                - button " Clear" [ref=f9e231] [cursor=pointer]:
+                  - generic [ref=f9e232]: 
+                  - text: Clear
+                - button " Start" [ref=f9e233] [cursor=pointer]:
+                  - generic [ref=f9e234]: 
+                  - text: Start
+                - text: 
+            - generic [ref=f9e235]:
+              - generic [ref=f9e236]: "[19:58:24] Experiment 'ER_F' restarted automatically in schedule group 'Auto Group 1 (HPC)' (1 client(s) restarted)."
+              - generic [ref=f9e237]: "[19:58:31] Cleared 1 stale execution log(s) before restarting experiment 'ER_F' in schedule group 'Auto Group 1 (HPC)'."
+              - generic [ref=f9e238]: "[19:58:31] Experiment 'ER_F' failed in running schedule group 'Auto Group 1 (HPC)' (PID 94003 no longer alive for client hh). Restarting automatically."
+              - generic [ref=f9e239]: "[19:58:47] Experiment 'ER_F' restarted automatically in schedule group 'Auto Group 1 (HPC)' (1 client(s) restarted)."
+              - generic [ref=f9e240]: "[19:58:54] Cleared 1 stale execution log(s) before restarting experiment 'ER_F' in schedule group 'Auto Group 1 (HPC)'."
+              - generic [ref=f9e241]: "[19:58:54] Experiment 'ER_F' failed in running schedule group 'Auto Group 1 (HPC)' (PID 95623 no longer alive for client hh). Restarting automatically."
+              - generic [ref=f9e242]: "[19:59:10] Experiment 'ER_F' restarted automatically in schedule group 'Auto Group 1 (HPC)' (1 client(s) restarted)."
+              - generic [ref=f9e243]: "[19:59:17] Cleared 1 stale execution log(s) before restarting experiment 'ER_F' in schedule group 'Auto Group 1 (HPC)'."
+              - generic [ref=f9e244]: "[19:59:17] Experiment 'ER_F' failed in running schedule group 'Auto Group 1 (HPC)' (PID 97290 no longer alive for client hh). Restarting automatically."
+              - generic [ref=f9e245]: "[19:59:33] Experiment 'ER_F' restarted automatically in schedule group 'Auto Group 1 (HPC)' (1 client(s) restarted)."
+              - generic [ref=f9e246]: "[19:59:40] Cleared 1 stale execution log(s) before restarting experiment 'ER_F' in schedule group 'Auto Group 1 (HPC)'."
+              - generic [ref=f9e247]: "[19:59:40] Experiment 'ER_F' failed in running schedule group 'Auto Group 1 (HPC)' (PID 98973 no longer alive for client hh). Restarting automatically."
+              - generic [ref=f9e248]: "[19:59:56] Experiment 'ER_F' restarted automatically in schedule group 'Auto Group 1 (HPC)' (1 client(s) restarted)."
+              - generic [ref=f9e249]: "[20:00:03] Cleared 1 stale execution log(s) before restarting experiment 'ER_F' in schedule group 'Auto Group 1 (HPC)'."
+              - generic [ref=f9e250]: "[20:00:03] Experiment 'ER_F' failed in running schedule group 'Auto Group 1 (HPC)' (PID 959 no longer alive for client hh). Restarting automatically."
+              - generic [ref=f9e251]: "[20:00:19] Experiment 'ER_F' restarted automatically in schedule group 'Auto Group 1 (HPC)' (1 client(s) restarted)."
+              - generic [ref=f9e252]: "[20:00:26] Cleared 1 stale execution log(s) before restarting experiment 'ER_F' in schedule group 'Auto Group 1 (HPC)'."
+              - generic [ref=f9e253]: "[20:00:26] Experiment 'ER_F' failed in running schedule group 'Auto Group 1 (HPC)' (PID 2638 no longer alive for client hh). Restarting automatically."
+              - generic [ref=f9e254]: "[20:00:42] Experiment 'ER_F' restarted automatically in schedule group 'Auto Group 1 (HPC)' (1 client(s) restarted)."
+              - generic [ref=f9e255]: "[20:00:49] Cleared 1 stale execution log(s) before restarting experiment 'ER_F' in schedule group 'Auto Group 1 (HPC)'."
+              - generic [ref=f9e256]: "[20:00:49] Experiment 'ER_F' failed in running schedule group 'Auto Group 1 (HPC)' (PID 3499 no longer alive for client hh). Restarting automatically."
+              - generic [ref=f9e257]: "[20:01:05] Experiment 'ER_F' restarted automatically in schedule group 'Auto Group 1 (HPC)' (1 client(s) restarted)."
+              - generic [ref=f9e258]: "[20:01:12] Cleared 1 stale execution log(s) before restarting experiment 'ER_F' in schedule group 'Auto Group 1 (HPC)'."
+              - generic [ref=f9e259]: "[20:01:12] Experiment 'ER_F' failed in running schedule group 'Auto Group 1 (HPC)' (PID 4341 no longer alive for client hh). Restarting automatically."
+              - generic [ref=f9e260]: "[20:01:28] Experiment 'ER_F' restarted automatically in schedule group 'Auto Group 1 (HPC)' (1 client(s) restarted)."
+              - generic [ref=f9e261]: "[20:01:35] Cleared 1 stale execution log(s) before restarting experiment 'ER_F' in schedule group 'Auto Group 1 (HPC)'."
+              - generic [ref=f9e262]: "[20:01:35] Experiment 'ER_F' failed in running schedule group 'Auto Group 1 (HPC)' (PID 5243 no longer alive for client hh). Restarting automatically."
+              - generic [ref=f9e263]: "[20:01:51] Experiment 'ER_F' restarted automatically in schedule group 'Auto Group 1 (HPC)' (1 client(s) restarted)."
+              - generic [ref=f9e264]: "[20:01:57] Cleared 1 stale execution log(s) before restarting experiment 'ER_F' in schedule group 'Auto Group 1 (HPC)'."
+              - generic [ref=f9e265]: "[20:01:57] Experiment 'ER_F' failed in running schedule group 'Auto Group 1 (HPC)' (PID 6107 no longer alive for client hh). Restarting automatically."
+              - generic [ref=f9e266]: "[20:02:13] Experiment 'ER_F' restarted automatically in schedule group 'Auto Group 1 (HPC)' (1 client(s) restarted)."
+              - generic [ref=f9e267]: "[20:02:20] Cleared 1 stale execution log(s) before restarting experiment 'ER_F' in schedule group 'Auto Group 1 (HPC)'."
+              - generic [ref=f9e268]: "[20:02:20] Experiment 'ER_F' failed in running schedule group 'Auto Group 1 (HPC)' (PID 6928 no longer alive for client hh). Restarting automatically."
+              - generic [ref=f9e269]: "[20:02:36] Experiment 'ER_F' restarted automatically in schedule group 'Auto Group 1 (HPC)' (1 client(s) restarted)."
+              - generic [ref=f9e270]: "[20:02:43] Cleared 1 stale execution log(s) before restarting experiment 'ER_F' in schedule group 'Auto Group 1 (HPC)'."
+              - generic [ref=f9e271]: "[20:02:43] Experiment 'ER_F' failed in running schedule group 'Auto Group 1 (HPC)' (PID 7718 no longer alive for client hh). Restarting automatically."
+              - generic [ref=f9e272]: "[20:02:59] Experiment 'ER_F' restarted automatically in schedule group 'Auto Group 1 (HPC)' (1 client(s) restarted)."
+              - generic [ref=f9e273]: "[20:03:06] Cleared 1 stale execution log(s) before restarting experiment 'ER_F' in schedule group 'Auto Group 1 (HPC)'."
+              - generic [ref=f9e274]: "[20:03:06] Experiment 'ER_F' failed in running schedule group 'Auto Group 1 (HPC)' (PID 8572 no longer alive for client hh). Restarting automatically."
+              - generic [ref=f9e275]: "[20:03:22] Experiment 'ER_F' restarted automatically in schedule group 'Auto Group 1 (HPC)' (1 client(s) restarted)."
+              - generic [ref=f9e276]: "[20:03:29] Cleared 1 stale execution log(s) before restarting experiment 'ER_F' in schedule group 'Auto Group 1 (HPC)'."
+              - generic [ref=f9e277]: "[20:03:29] Experiment 'ER_F' failed in running schedule group 'Auto Group 1 (HPC)' (PID 9390 no longer alive for client hh). Restarting automatically."
+              - generic [ref=f9e278]: "[20:03:45] Experiment 'ER_F' restarted automatically in schedule group 'Auto Group 1 (HPC)' (1 client(s) restarted)."
+              - generic [ref=f9e279]: "[20:03:52] Cleared 1 stale execution log(s) before restarting experiment 'ER_F' in schedule group 'Auto Group 1 (HPC)'."
+              - generic [ref=f9e280]: "[20:03:52] Experiment 'ER_F' failed in running schedule group 'Auto Group 1 (HPC)' (PID 10268 no longer alive for client hh). Restarting automatically."
+              - generic [ref=f9e281]: "[20:04:08] Experiment 'ER_F' restarted automatically in schedule group 'Auto Group 1 (HPC)' (1 client(s) restarted)."
+              - generic [ref=f9e282]: "[20:04:15] Cleared 1 stale execution log(s) before restarting experiment 'ER_F' in schedule group 'Auto Group 1 (HPC)'."
+              - generic [ref=f9e283]: "[20:04:15] Experiment 'ER_F' failed in running schedule group 'Auto Group 1 (HPC)' (PID 11087 no longer alive for client hh). Restarting automatically."
+              - generic [ref=f9e284]: "[20:04:31] Experiment 'ER_F' restarted automatically in schedule group 'Auto Group 1 (HPC)' (1 client(s) restarted)."
+              - generic [ref=f9e285]: "[20:04:38] Cleared 1 stale execution log(s) before restarting experiment 'ER_F' in schedule group 'Auto Group 1 (HPC)'."
+              - generic [ref=f9e286]: "[20:04:38] Experiment 'ER_F' failed in running schedule group 'Auto Group 1 (HPC)' (PID 11902 no longer alive for client hh). Restarting automatically."
+              - generic [ref=f9e287]: "[20:04:54] Experiment 'ER_F' restarted automatically in schedule group 'Auto Group 1 (HPC)' (1 client(s) restarted)."
+              - generic [ref=f9e288]: "[20:05:01] Cleared 1 stale execution log(s) before restarting experiment 'ER_F' in schedule group 'Auto Group 1 (HPC)'."
+              - generic [ref=f9e289]: "[20:05:01] Experiment 'ER_F' failed in running schedule group 'Auto Group 1 (HPC)' (PID 12624 no longer alive for client hh). Restarting automatically."
+              - generic [ref=f9e290]: "[20:05:17] Experiment 'ER_F' restarted automatically in schedule group 'Auto Group 1 (HPC)' (1 client(s) restarted)."
+              - generic [ref=f9e291]: "[20:05:24] Cleared 1 stale execution log(s) before restarting experiment 'ER_F' in schedule group 'Auto Group 1 (HPC)'."
+              - generic [ref=f9e292]: "[20:05:24] Experiment 'ER_F' failed in running schedule group 'Auto Group 1 (HPC)' (PID 13456 no longer alive for client hh). Restarting automatically."
+              - generic [ref=f9e293]: "[20:05:40] Experiment 'ER_F' restarted automatically in schedule group 'Auto Group 1 (HPC)' (1 client(s) restarted)."
+              - generic [ref=f9e294]: "[20:05:46] Cleared 1 stale execution log(s) before restarting experiment 'ER_F' in schedule group 'Auto Group 1 (HPC)'."
+              - generic [ref=f9e295]: "[20:05:46] Experiment 'ER_F' failed in running schedule group 'Auto Group 1 (HPC)' (PID 14254 no longer alive for client hh). Restarting automatically."
+              - generic [ref=f9e296]: "[20:06:02] Experiment 'ER_F' restarted automatically in schedule group 'Auto Group 1 (HPC)' (1 client(s) restarted)."
+              - generic [ref=f9e297]: "[20:06:09] Cleared 1 stale execution log(s) before restarting experiment 'ER_F' in schedule group 'Auto Group 1 (HPC)'."
+              - generic [ref=f9e298]: "[20:06:09] Experiment 'ER_F' failed in running schedule group 'Auto Group 1 (HPC)' (PID 15070 no longer alive for client hh). Restarting automatically."
+              - generic [ref=f9e299]: "[20:06:25] Experiment 'ER_F' restarted automatically in schedule group 'Auto Group 1 (HPC)' (1 client(s) restarted)."
+              - generic [ref=f9e300]: "[20:06:32] Cleared 1 stale execution log(s) before restarting experiment 'ER_F' in schedule group 'Auto Group 1 (HPC)'."
+              - generic [ref=f9e301]: "[20:06:32] Experiment 'ER_F' failed in running schedule group 'Auto Group 1 (HPC)' (PID 15904 no longer alive for client hh). Restarting automatically."
+              - generic [ref=f9e302]: "[20:06:48] Experiment 'ER_F' restarted automatically in schedule group 'Auto Group 1 (HPC)' (1 client(s) restarted)."
+              - generic [ref=f9e303]: "[20:06:55] Cleared 1 stale execution log(s) before restarting experiment 'ER_F' in schedule group 'Auto Group 1 (HPC)'."
+              - generic [ref=f9e304]: "[20:06:55] Experiment 'ER_F' failed in running schedule group 'Auto Group 1 (HPC)' (PID 16733 no longer alive for client hh). Restarting automatically."
+              - generic [ref=f9e305]: "[20:07:11] Experiment 'ER_F' restarted automatically in schedule group 'Auto Group 1 (HPC)' (1 client(s) restarted)."
+              - generic [ref=f9e306]: "[20:07:18] Cleared 1 stale execution log(s) before restarting experiment 'ER_F' in schedule group 'Auto Group 1 (HPC)'."
+              - generic [ref=f9e307]: "[20:07:18] Experiment 'ER_F' failed in running schedule group 'Auto Group 1 (HPC)' (PID 17516 no longer alive for client hh). Restarting automatically."
+              - generic [ref=f9e308]: "[20:07:34] Experiment 'ER_F' restarted automatically in schedule group 'Auto Group 1 (HPC)' (1 client(s) restarted)."
+              - generic [ref=f9e309]: "[20:07:41] Cleared 1 stale execution log(s) before restarting experiment 'ER_F' in schedule group 'Auto Group 1 (HPC)'."
+              - generic [ref=f9e310]: "[20:07:41] Experiment 'ER_F' failed in running schedule group 'Auto Group 1 (HPC)' (PID 18274 no longer alive for client hh). Restarting automatically."
+              - generic [ref=f9e311]: "[20:07:57] Experiment 'ER_F' restarted automatically in schedule group 'Auto Group 1 (HPC)' (1 client(s) restarted)."
+              - generic [ref=f9e312]: "[20:08:04] Cleared 1 stale execution log(s) before restarting experiment 'ER_F' in schedule group 'Auto Group 1 (HPC)'."
+              - generic [ref=f9e313]: "[20:08:04] Experiment 'ER_F' failed in running schedule group 'Auto Group 1 (HPC)' (PID 19085 no longer alive for client hh). Restarting automatically."
+              - generic [ref=f9e314]: "[20:08:20] Experiment 'ER_F' restarted automatically in schedule group 'Auto Group 1 (HPC)' (1 client(s) restarted)."
+              - generic [ref=f9e315]: "[20:08:27] Cleared 1 stale execution log(s) before restarting experiment 'ER_F' in schedule group 'Auto Group 1 (HPC)'."
+              - generic [ref=f9e316]: "[20:08:27] Experiment 'ER_F' failed in running schedule group 'Auto Group 1 (HPC)' (PID 19916 no longer alive for client hh). Restarting automatically."
+              - generic [ref=f9e317]: "[20:08:43] Experiment 'ER_F' restarted automatically in schedule group 'Auto Group 1 (HPC)' (1 client(s) restarted)."
+              - generic [ref=f9e318]: "[20:08:50] Cleared 1 stale execution log(s) before restarting experiment 'ER_F' in schedule group 'Auto Group 1 (HPC)'."
+              - generic [ref=f9e319]: "[20:08:50] Experiment 'ER_F' failed in running schedule group 'Auto Group 1 (HPC)' (PID 20754 no longer alive for client hh). Restarting automatically."
+              - generic [ref=f9e320]: "[20:09:06] Experiment 'ER_F' restarted automatically in schedule group 'Auto Group 1 (HPC)' (1 client(s) restarted)."
+              - generic [ref=f9e321]: "[20:09:13] Cleared 1 stale execution log(s) before restarting experiment 'ER_F' in schedule group 'Auto Group 1 (HPC)'."
+              - generic [ref=f9e322]: "[20:09:13] Experiment 'ER_F' failed in running schedule group 'Auto Group 1 (HPC)' (PID 21550 no longer alive for client hh). Restarting automatically."
+              - generic [ref=f9e323]: "[20:09:29] Experiment 'ER_F' restarted automatically in schedule group 'Auto Group 1 (HPC)' (1 client(s) restarted)."
+              - generic [ref=f9e324]: "[20:09:36] Cleared 1 stale execution log(s) before restarting experiment 'ER_F' in schedule group 'Auto Group 1 (HPC)'."
+              - generic [ref=f9e325]: "[20:09:36] Experiment 'ER_F' failed in running schedule group 'Auto Group 1 (HPC)' (PID 22313 no longer alive for client hh). Restarting automatically."
+              - generic [ref=f9e326]: "[20:09:52] Experiment 'ER_F' restarted automatically in schedule group 'Auto Group 1 (HPC)' (1 client(s) restarted)."
+              - generic [ref=f9e327]: "[20:09:59] Cleared 1 stale execution log(s) before restarting experiment 'ER_F' in schedule group 'Auto Group 1 (HPC)'."
+              - generic [ref=f9e328]: "[20:09:59] Experiment 'ER_F' failed in running schedule group 'Auto Group 1 (HPC)' (PID 23035 no longer alive for client hh). Restarting automatically."
+              - generic [ref=f9e329]: "[20:10:15] Experiment 'ER_F' restarted automatically in schedule group 'Auto Group 1 (HPC)' (1 client(s) restarted)."
+              - generic [ref=f9e330]: "[20:10:22] Cleared 1 stale execution log(s) before restarting experiment 'ER_F' in schedule group 'Auto Group 1 (HPC)'."
+              - generic [ref=f9e331]: "[20:10:22] Experiment 'ER_F' failed in running schedule group 'Auto Group 1 (HPC)' (PID 23897 no longer alive for client hh). Restarting automatically."
+              - generic [ref=f9e332]: "[20:10:38] Experiment 'ER_F' restarted automatically in schedule group 'Auto Group 1 (HPC)' (1 client(s) restarted)."
+              - generic [ref=f9e333]: "[20:10:44] Cleared 1 stale execution log(s) before restarting experiment 'ER_F' in schedule group 'Auto Group 1 (HPC)'."
+              - generic [ref=f9e334]: "[20:10:44] Experiment 'ER_F' failed in running schedule group 'Auto Group 1 (HPC)' (PID 24740 no longer alive for client hh). Restarting automatically."
+              - generic [ref=f9e335]: "[20:11:00] Experiment 'ER_F' restarted automatically in schedule group 'Auto Group 1 (HPC)' (1 client(s) restarted)."
+        - generic [ref=f9e336]:
+          - generic [ref=f9e337]:
+            - heading "Copy Experiment" [level=3] [ref=f9e338]
+            - generic [ref=f9e340]:
+              - generic [ref=f9e341]:
+                - generic [ref=f9e342]:
+                  - generic [ref=f9e343]: New Name
+                  - textbox "Enter new name..." [ref=f9e345]
+                - generic [ref=f9e346]:
+                  - generic [ref=f9e347]: Source Experiment
+                  - combobox [ref=f9e350] [cursor=pointer]:
+                    - option "Select experiment..." [selected]
+                    - option "microblogging"
+                    - option "forum"
+                    - option "photo"
+                - generic [ref=f9e351]:
+                  - generic [ref=f9e352]: Number of Copies
+                  - generic [ref=f9e353]:
+                    - spinbutton [ref=f9e354]: "1"
+                    - paragraph [ref=f9e355]: "If >1, creates copies named: name_1, name_2, etc. There is no hard cap."
+                - generic [ref=f9e356]:
+                  - generic [ref=f9e357]: Experiment Group
+                  - generic [ref=f9e358]:
+                    - combobox "Enter or select a group..." [ref=f9e359]
+                    - paragraph [ref=f9e360]: "Optional: Group experiments together"
+              - button "Copy Experiment" [ref=f9e362] [cursor=pointer]
+          - generic [ref=f9e363]:
+            - heading "Experiment Matrix" [level=3] [ref=f9e364]
+            - generic [ref=f9e366]:
+              - generic [ref=f9e367]:
+                - generic [ref=f9e368]:
+                  - generic [ref=f9e369]: Source Experiment
+                  - combobox [ref=f9e372] [cursor=pointer]:
+                    - option "Select experiment..." [selected]
+                    - option "microblogging"
+                    - option "forum"
+                    - option "photo"
+                - generic [ref=f9e373]:
+                  - generic [ref=f9e374]: Experiment Group
+                  - generic [ref=f9e375]:
+                    - combobox "Enter or select a group..." [ref=f9e376]
+                    - paragraph [ref=f9e377]: Matrix-generated experiments are added to this group.
+              - button "Matrix" [ref=f9e379] [cursor=pointer]

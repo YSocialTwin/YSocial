@@ -230,7 +230,7 @@ def _opinion_configuration_internal(idexp, expected_mode):
     distribution_names = [d["name"] for d in distributions]
 
     # Fetch opinion groups from the database
-    opinion_groups = OpinionGroup.query.order_by(OpinionGroup.lower_bound).all()
+    opinion_groups = db.session.scalars(select(OpinionGroup).order_by(OpinionGroup.lower_bound)).all()
 
     # Create bins and labels from opinion groups
     # If no groups exist, use default bins
@@ -468,7 +468,7 @@ def _get_segment_index(segment_name, dimensions, pop_data_agents, age_class_map)
 
 def _build_opinion_groups_dict():
     """Load opinion groups as config-friendly bounds."""
-    opinion_groups = OpinionGroup.query.order_by(OpinionGroup.lower_bound).all()
+    opinion_groups = db.session.scalars(select(OpinionGroup).order_by(OpinionGroup.lower_bound)).all()
     opinion_groups_dict = {}
     for group in opinion_groups:
         opinion_groups_dict[group.name.rstrip()] = [
@@ -775,8 +775,8 @@ def _persist_hpc_opinion_dynamics(context):
 def _invalidate_opinion_evolution_cache_for_experiment(exp_id):
     """Clear opinion-evolution cache and stable samples for an experiment."""
     try:
-        OpinionEvolutionCache.query.filter_by(exp_id=exp_id).delete()
-        OpinionEvolutionSampledAgents.query.filter_by(exp_id=exp_id).delete()
+        db.session.execute(delete(OpinionEvolutionCache).filter_by(exp_id=exp_id))
+        db.session.execute(delete(OpinionEvolutionSampledAgents).filter_by(exp_id=exp_id))
         db.session.commit()
     except Exception:
         db.session.rollback()

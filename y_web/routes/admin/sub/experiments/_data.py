@@ -317,16 +317,16 @@ def experiments_data():
     clients_by_exp = defaultdict(list)
     client_ids = []
     if exp_ids:
-        all_clients = Client.query.filter(Client.id_exp.in_(exp_ids)).all()
+        all_clients = db.session.scalars(select(Client).filter(Client.id_exp.in_(exp_ids))).all()
         for client in all_clients:
             clients_by_exp[client.id_exp].append(client)
             client_ids.append(client.id)
 
     client_exec_by_client_id = {}
     if client_ids:
-        client_exec_rows = Client_Execution.query.filter(
+        client_exec_rows = db.session.scalars(select(Client_Execution).filter(
             Client_Execution.client_id.in_(client_ids)
-        ).all()
+        )).all()
         client_exec_by_client_id = {row.client_id: row for row in client_exec_rows}
 
     # Calculate average progress for all experiments.
@@ -446,9 +446,9 @@ def experiment_clients(exp_id):
 
         client_exec_by_id = {}
         if client_ids:
-            client_exec_rows = Client_Execution.query.filter(
+            client_exec_rows = db.session.scalars(select(Client_Execution).filter(
                 Client_Execution.client_id.in_(client_ids)
-            ).all()
+            )).all()
             client_exec_by_id = {row.client_id: row for row in client_exec_rows}
 
         client_data = []
@@ -547,9 +547,9 @@ def experiment_details(uid):
     # get client execution data to check if clients have been run
     client_executions = {}
     if client_ids:
-        execution_rows = Client_Execution.query.filter(
+        execution_rows = db.session.scalars(select(Client_Execution).filter(
             Client_Execution.client_id.in_(client_ids)
-        ).all()
+        )).all()
         execution_by_client_id = {row.client_id: row for row in execution_rows}
         for client in clients:
             execution = execution_by_client_id.get(client.id)
@@ -854,9 +854,9 @@ def update_experiment_name(uid):
         flash("Experiment name must be 50 characters or fewer.", "warning")
         return redirect(url_for("experiments.experiment_details", uid=uid))
 
-    duplicate_exp = Exps.query.filter(
+    duplicate_exp = db.session.scalars(select(Exps).filter(
         Exps.exp_name == new_exp_name, Exps.idexp != uid
-    ).first()
+    )).first()
     if duplicate_exp:
         flash("An experiment with that name already exists.", "warning")
         return redirect(url_for("experiments.experiment_details", uid=uid))
@@ -1784,9 +1784,9 @@ def experiment_trends(exp_id):
         client_progress = {}
 
         if client_ids:
-            client_executions = Client_Execution.query.filter(
+            client_executions = db.session.scalars(select(Client_Execution).filter(
                 Client_Execution.client_id.in_(client_ids)
-            ).all()
+            )).all()
             if client_executions:
                 # Filter out infinite clients (-1) and get max from finite ones
                 finite_expected = [

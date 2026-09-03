@@ -1,0 +1,94 @@
+- generic [active] [ref=f33e1]:
+  - generic [ref=f33e5]:
+    - separator [ref=f33e6]
+    - link "Home" [ref=f33e7] [cursor=pointer]:
+      - /url: /admin/dashboard
+    - link "Users" [ref=f33e13] [cursor=pointer]:
+      - /url: /admin/users
+    - separator [ref=f33e21]
+    - link "Experiments" [ref=f33e22] [cursor=pointer]:
+      - /url: /admin/experiments
+    - link "Populations" [ref=f33e28] [cursor=pointer]:
+      - /url: /admin/populations
+    - separator [ref=f33e37]
+    - link "Agent Resources" [ref=f33e38] [cursor=pointer]:
+      - /url: /admin/agents_dashboard
+    - separator [ref=f33e44]
+    - link "Miscellanea" [ref=f33e45] [cursor=pointer]:
+      - /url: /admin/miscellanea/
+    - link "Plugins" [ref=f33e52] [cursor=pointer]:
+      - /url: /admin/external_runtimes
+    - link "About" [ref=f33e59] [cursor=pointer]:
+      - /url: /admin/about
+  - generic [ref=f33e66]:
+    - generic [ref=f33e67]:
+      - heading [level=1]
+      - generic [ref=f33e69]:
+        - button "No Active Experiments" [disabled]
+        - button "Notifications" [ref=f33e72] [cursor=pointer]
+        - button "Account" [ref=f33e78] [cursor=pointer]
+    - generic [ref=f33e84]:
+      - generic [ref=f33e87]:
+        - link "Experiments" [ref=f33e88] [cursor=pointer]:
+          - /url: /admin/experiments
+        - text: "> Experiment Matrix :"
+        - link "ER" [ref=f33e89] [cursor=pointer]:
+          - /url: /admin/experiment_details/1
+      - generic [ref=f33e92]:
+        - generic [ref=f33e93]:
+          - generic [ref=f33e94]:
+            - heading "Experiment Matrix" [level=3] [ref=f33e95]
+            - paragraph [ref=f33e96]: Inspect nested config values, unlock the ones you want to vary, and generate the full combination set.
+          - generic [ref=f33e98]:
+            - combobox [ref=f33e100] [cursor=pointer]:
+              - option "Select experiment..."
+              - option "ER" [selected]
+              - option "ER__31"
+              - option "ER__32"
+              - option "ER__33"
+              - option "ER__false"
+              - option "asdsa"
+            - textbox "Experiment group" [ref=f33e101]: matrix_fix2
+            - button "Load Matrix" [ref=f33e102] [cursor=pointer]
+        - generic [ref=f33e103]:
+          - generic [ref=f33e104]:
+            - generic [ref=f33e105]: Selected Experiment
+            - generic [ref=f33e106]: ER
+          - generic [ref=f33e107]:
+            - generic [ref=f33e108]: Platform
+            - generic [ref=f33e109]: microblogging
+          - generic [ref=f33e110]:
+            - generic [ref=f33e111]: Target Group
+            - generic [ref=f33e112]: matrix_fix2
+          - generic [ref=f33e113]:
+            - generic [ref=f33e114]: Configurable Features
+            - generic [ref=f33e115]: "154"
+          - generic [ref=f33e116]:
+            - generic [ref=f33e117]: Visible Rows
+            - generic [ref=f33e118]: "154"
+          - generic [ref=f33e119]:
+            - generic [ref=f33e120]: Generated Configs
+            - generic [ref=f33e121]: "1"
+      - generic [ref=f33e122]:
+        - group [ref=f33e123]:
+          - generic "Server Settings 1 file" [ref=f33e124] [cursor=pointer]:
+            - generic [ref=f33e126]:
+              - strong [ref=f33e127]: Server Settings
+              - generic [ref=f33e128]: 1 file
+        - group [ref=f33e129]:
+          - generic "Client Settings 1 file" [ref=f33e130] [cursor=pointer]:
+            - generic [ref=f33e132]:
+              - strong [ref=f33e133]: Client Settings
+              - generic [ref=f33e134]: 1 file
+        - generic [ref=f33e136]:
+          - generic [ref=f33e137]:
+            - generic [ref=f33e138]: "Total configurations: 1"
+            - generic [ref=f33e139]: Unlock a feature and provide alternative values. Turn Cartesian mode on to combine all enabled features; leave it off to generate independent variants one feature at a time.
+          - generic [ref=f33e140]:
+            - generic [ref=f33e141]:
+              - generic [ref=f33e142]:
+                - generic [ref=f33e143]: Cartesian product
+                - generic [ref=f33e144]: Combine all enabled features
+              - generic [ref=f33e145] [cursor=pointer]:
+                - checkbox "Cartesian product Combine all enabled features"
+            - button "Generate Experiments" [disabled] [ref=f33e148]

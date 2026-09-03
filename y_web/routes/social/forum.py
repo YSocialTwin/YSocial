@@ -434,7 +434,7 @@ def feeed_logged_reddit():
         Redirect to Reddit feed with experiment ID
     """
     # Get active experiments
-    exps = Exps.query.filter(Exps.status != 0).all()
+    exps = db.session.scalars(select(Exps).filter(Exps.status != 0)).all()
     if not exps:
         flash("No active experiment. Please activate an experiment first.")
         return redirect("/admin/experiments")
@@ -449,7 +449,7 @@ def feeed_logged_reddit():
 @main.get("/rnotifications")
 @login_required
 def rnotifications_logged():
-    exps = Exps.query.filter(Exps.status != 0).all()
+    exps = db.session.scalars(select(Exps).filter(Exps.status != 0)).all()
     if not exps:
         flash("No active experiment. Please activate an experiment first.")
         return redirect("/admin/experiments")

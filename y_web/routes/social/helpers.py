@@ -257,10 +257,10 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
                     "day": db.session.scalars(select(Rounds).filter_by(id=c.round)).first().day,
                     "hour": db.session.scalars(select(Rounds).filter_by(id=c.round)).first().hour,
                     "likes": len(
-                        list(Reactions.query.filter_by(post_id=c.id, type="like"))
+                        db.session.scalars(select(Reactions).filter_by(post_id=c.id, type="like")).all()
                     ),
                     "dislikes": len(
-                        list(Reactions.query.filter_by(post_id=c.id, type="dislike"))
+                        db.session.scalars(select(Reactions).filter_by(post_id=c.id, type="dislike")).all()
                     ),
                     "is_liked": db.session.scalars(select(Reactions).filter_by(
                         post_id=c.id, user_id=exp_user_id, type="like"
@@ -391,10 +391,10 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
                     else None
                 ),
                 "likes": len(
-                    list(Reactions.query.filter_by(post_id=post.id, type="like"))
+                    db.session.scalars(select(Reactions).filter_by(post_id=post.id, type="like")).all()
                 ),
                 "dislikes": len(
-                    list(Reactions.query.filter_by(post_id=post.id, type="dislike"))
+                    db.session.scalars(select(Reactions).filter_by(post_id=post.id, type="dislike")).all()
                 ),
                 "is_liked": db.session.scalars(select(Reactions).filter_by(
                     post_id=post.id, user_id=exp_user_id, type="like"

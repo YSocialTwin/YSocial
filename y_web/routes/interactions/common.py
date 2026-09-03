@@ -66,9 +66,9 @@ def _resolve_follow_round_id(exp_id):
         pass
 
     try:
-        current_round = Rounds.query.order_by(
+        current_round = db.session.scalars(select(Rounds).order_by(
             Rounds.day.desc(), Rounds.hour.desc(), Rounds.id.desc()
-        ).first()
+        )).first()
         if current_round is not None and getattr(current_round, "id", None) is not None:
             return current_round.id
     except OperationalError:
@@ -255,7 +255,7 @@ def share_content(exp_id):
 
     # get the post
     original = db.session.scalars(select(Post).filter_by(id=post_id)).first()
-    current_round = Rounds.query.order_by(Rounds.day.desc(), Rounds.hour.desc()).first()
+    current_round = db.session.scalars(select(Rounds).order_by(Rounds.day.desc(), Rounds.hour.desc())).first()
 
     try:
         post = Post(
@@ -316,7 +316,7 @@ def react(exp_id):
         )
     exp_user_id = exp_user.id
 
-    current_round = Rounds.query.order_by(Rounds.day.desc(), Rounds.hour.desc()).first()
+    current_round = db.session.scalars(select(Rounds).order_by(Rounds.day.desc(), Rounds.hour.desc())).first()
 
     record = db.session.scalars(select(Reactions).filter_by(
         post_id=post_id, user_id=exp_user_id, round=current_round.id
@@ -392,7 +392,7 @@ def report_content(exp_id):
         post_id_converted = post_id
 
     target_post = db.session.scalars(select(Post).filter_by(id=post_id_converted)).first()
-    current_round = Rounds.query.order_by(Rounds.day.desc(), Rounds.hour.desc()).first()
+    current_round = db.session.scalars(select(Rounds).order_by(Rounds.day.desc(), Rounds.hour.desc())).first()
     if target_post is None or current_round is None:
         if is_ajax:
             return jsonify({"message": "Content not found.", "status": 404}), 404

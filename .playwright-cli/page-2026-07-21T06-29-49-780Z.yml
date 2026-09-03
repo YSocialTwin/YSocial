@@ -1,0 +1,12 @@
+- generic [ref=f3e4]:
+  - generic [ref=f3e9]:
+    - heading "Y Social" [level=2] [ref=f3e10]
+    - heading "Where the Digital World comes to life." [level=4] [ref=f3e11]
+  - generic [ref=f3e23]:
+    - generic [ref=f3e24]: Please check your login details and try again.
+    - textbox "Your email" [active] [ref=f3e27]
+    - textbox "Your Password" [ref=f3e34]
+    - generic [ref=f3e40] [cursor=pointer]:
+      - checkbox "Remember me" [ref=f3e41]
+      - text: Remember me
+    - button "Login" [ref=f3e44] [cursor=pointer]

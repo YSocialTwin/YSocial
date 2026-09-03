@@ -58,7 +58,7 @@ from y_web.src.models import (
     Toxicity_Levels,
 )
 from y_web.src.system.desktop_file_handler import send_file_desktop
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from y_web.src.system.miscellanea import (
     check_privileges,
     llm_backend_status,
@@ -474,9 +474,9 @@ def create_population():
             photo_sharing_config,
         )
     except Exception as exc:
-        PopulationActivityProfile.query.filter_by(population=population.id).delete()
-        Agent_Population.query.filter_by(population_id=population.id).delete()
-        Agent_Profile.query.filter_by(population_id=population.id).delete()
+        db.session.execute(delete(PopulationActivityProfile).filter_by(population=population.id))
+        db.session.execute(delete(Agent_Population).filter_by(population_id=population.id))
+        db.session.execute(delete(Agent_Profile).filter_by(population_id=population.id))
         db.session.delete(population)
         db.session.commit()
         flash(
@@ -693,7 +693,7 @@ def population_details(uid):
             ln["total"].append(1)
 
     # Bin ages according to AgeClass ranges
-    age_classes = AgeClass.query.order_by(AgeClass.age_start).all()
+    age_classes = db.session.scalars(select(AgeClass).order_by(AgeClass.age_start)).all()
     age = {"age": [], "total": []}
 
     # Initialize bins for each age class
@@ -1232,7 +1232,7 @@ def upload_population():
             if feature_entries:
                 replace_agent_custom_features(agent.id, feature_entries)
                 db.session.commit()
-            Agent_Ext.query.filter_by(agent_id=agent.id).delete()
+            db.session.execute(delete(Agent_Ext).filter_by(agent_id=agent.id))
             for ext_entry in agent_ext_entries_from_population_agent_payload(a):
                 agent_ext_rows.append(
                     Agent_Ext(
@@ -1246,7 +1246,7 @@ def upload_population():
             if feature_entries:
                 replace_agent_custom_features(agent.id, feature_entries)
                 db.session.commit()
-            Agent_Ext.query.filter_by(agent_id=agent.id).delete()
+            db.session.execute(delete(Agent_Ext).filter_by(agent_id=agent.id))
             for ext_entry in agent_ext_entries_from_population_agent_payload(a):
                 agent_ext_rows.append(
                     Agent_Ext(
@@ -1429,20 +1429,20 @@ def merge_populations():
         return redirect(request.referrer)
 
     # Collect unique agent IDs from all selected populations (optimized query)
-    agent_populations = Agent_Population.query.filter(
+    agent_populations = db.session.scalars(select(Agent_Population).filter(
         Agent_Population.population_id.in_(population_ids)
-    ).all()
+    )).all()
     unique_agent_ids = set(ap.agent_id for ap in agent_populations)
 
     # Collect unique page IDs from all selected populations (optimized query)
-    page_populations = Page_Population.query.filter(
+    page_populations = db.session.scalars(select(Page_Population).filter(
         Page_Population.population_id.in_(population_ids)
-    ).all()
+    )).all()
     unique_page_ids = set(pp.page_id for pp in page_populations)
 
     # Fetch all unique agents to aggregate their properties
     agents = (
-        Agent.query.filter(Agent.id.in_(unique_agent_ids)).all()
+        db.session.scalars(select(Agent).filter(Agent.id.in_(unique_agent_ids))).all()
         if unique_agent_ids
         else []
     )

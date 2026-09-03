@@ -170,9 +170,9 @@ def _photo_latest_round_id(exp: Optional[Exps] = None) -> str:
             pass
 
     try:
-        current_round = Rounds.query.order_by(
+        current_round = db.session.scalars(select(Rounds).order_by(
             Rounds.day.desc(), Rounds.hour.desc(), Rounds.id.desc()
-        ).first()
+        )).first()
         if current_round is not None and getattr(current_round, "id", None) is not None:
             return str(current_round.id)
     except Exception:
@@ -1995,9 +1995,9 @@ def photo_feed_logged():
     Redirects the logged-in participant to the first active photo-sharing
     experiment.
     """
-    exps = Exps.query.filter(
+    exps = db.session.scalars(select(Exps).filter(
         Exps.status != 0, Exps.platform_type == "photo_sharing"
-    ).all()
+    )).all()
     if not exps:
         flash("No active photo-sharing experiment. Please activate one first.")
         return redirect("/admin/experiments")

@@ -981,7 +981,7 @@ def _serialize_download_notification(notification):
     )
     related_experiments = []
     if related_exp_ids:
-        experiments = Exps.query.filter(Exps.idexp.in_(related_exp_ids)).all()
+        experiments = db.session.scalars(select(Exps).filter(Exps.idexp.in_(related_exp_ids))).all()
         exp_map = {exp.idexp: exp for exp in experiments}
         for exp_id in related_exp_ids:
             exp = exp_map.get(exp_id)
