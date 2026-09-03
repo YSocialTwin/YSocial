@@ -16,6 +16,7 @@ from flask_login import (
 )
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import check_password_hash, generate_password_hash
+from y_web import db
 
 pytestmark = pytest.mark.integration
 
@@ -79,7 +80,7 @@ def test_user_model_with_flask_login():
 
     @login_manager.user_loader
     def load_user(user_id):
-        return TestUser.query.get(int(user_id))
+        return db.session.get(TestUser, int(user_id))
 
     with app.app_context():
         db.create_all()
@@ -156,7 +157,7 @@ def test_auth_integration():
 
     @login_manager.user_loader
     def load_user(user_id):
-        return TestUser.query.get(int(user_id))
+        return db.session.get(TestUser, int(user_id))
 
     # Create auth blueprint
     auth_bp = Blueprint("auth", __name__)
@@ -245,7 +246,7 @@ def test_failed_login_attempts():
 
     @login_manager.user_loader
     def load_user(user_id):
-        return TestUser.query.get(int(user_id))
+        return db.session.get(TestUser, int(user_id))
 
     auth_bp = Blueprint("auth", __name__)
 

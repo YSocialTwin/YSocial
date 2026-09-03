@@ -205,6 +205,7 @@ def test_follow_round_resolution_preserves_photo_round_strings(monkeypatch):
     assert common._resolve_follow_round_id(9) == "round-abc"
 
 
+@pytest.mark.integration
 def test_photo_chat_contacts_follow_the_photo_follow_graph():
     from y_web import create_app
     from y_web.routes.api import social

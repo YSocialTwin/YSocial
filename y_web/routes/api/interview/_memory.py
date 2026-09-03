@@ -709,7 +709,7 @@ def _build_memory_snapshot_legacy(
     for other_id in other_ids:
         other_username = None
         try:
-            u = User_mgmt.query.get(_coerce_experiment_user_id(other_id))
+            u = db.session.get(User_mgmt, _coerce_experiment_user_id(other_id))
             other_username = getattr(u, "username", None) if u else None
         except Exception:
             other_username = None
@@ -833,7 +833,7 @@ def _build_memory_snapshot_local_db(
         return snap
 
     try:
-        agent_user = User_mgmt.query.get(normalized_agent_user_id)
+        agent_user = db.session.get(User_mgmt, normalized_agent_user_id)
         if agent_user is not None:
             snap["agent_username"] = str(getattr(agent_user, "username", "") or "")
     except Exception:
@@ -1176,7 +1176,7 @@ def _build_memory_snapshot_local_db(
                 .all()
             )
             for m in reversed(mention_rows):
-                post_obj = Post.query.get(int(getattr(m, "post_id", 0) or 0))
+                post_obj = db.session.get(Post, int(getattr(m, "post_id", 0) or 0))
                 if post_obj is None:
                     continue
                 actor_id = _coerce_experiment_user_id(
@@ -1184,7 +1184,7 @@ def _build_memory_snapshot_local_db(
                 )
                 actor_username = ""
                 try:
-                    actor_user = User_mgmt.query.get(actor_id)
+                    actor_user = db.session.get(User_mgmt, actor_id)
                     actor_username = str(getattr(actor_user, "username", "") or "")
                 except Exception:
                     actor_username = ""
@@ -1216,7 +1216,7 @@ def _build_memory_snapshot_local_db(
                 .all()
             )
             for r in reversed(reaction_rows):
-                target_post = Post.query.get(int(getattr(r, "post_id", 0) or 0))
+                target_post = db.session.get(Post, int(getattr(r, "post_id", 0) or 0))
                 target_user_id = (
                     _coerce_experiment_user_id(getattr(target_post, "user_id", None))
                     if target_post is not None
@@ -1258,7 +1258,7 @@ def _build_memory_snapshot_local_db(
         other_username = str(usernames_by_id.get(str(other_id), "") or "")
         if not other_username:
             try:
-                u = User_mgmt.query.get(other_id)
+                u = db.session.get(User_mgmt, other_id)
                 other_username = str(getattr(u, "username", "") or "")
             except Exception:
                 other_username = ""

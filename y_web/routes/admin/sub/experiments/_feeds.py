@@ -653,7 +653,7 @@ def create_forum_rss_resource():
 def delete_forum_rss_resource(resource_id):
     """Delete a reusable forum RSS resource."""
     check_privileges(current_user.username)
-    resource = ForumRssFeedResource.query.get(resource_id)
+    resource = db.session.get(ForumRssFeedResource, resource_id)
     if resource is None:
         flash("RSS feed resource not found.", "error")
         return redirect("/admin/forum_rss_resources")
@@ -880,7 +880,7 @@ def create_forum_image_resource():
 def delete_forum_image_resource(resource_id):
     """Delete a reusable forum image feed resource."""
     check_privileges(current_user.username)
-    resource = ForumImageFeedResource.query.get(resource_id)
+    resource = db.session.get(ForumImageFeedResource, resource_id)
     if resource is None:
         flash("Image feed resource not found.", "error")
         return redirect("/admin/forum_image_resources")

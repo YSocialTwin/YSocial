@@ -13,6 +13,7 @@ from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash
+from y_web import db
 
 pytestmark = pytest.mark.integration
 
@@ -95,9 +96,9 @@ def app():
         user_id_str = str(user_id)
         if user_id_str.startswith("admin_"):
             admin_id = int(user_id_str.replace("admin_", ""))
-            return Admin_users.query.get(admin_id)
+            return db.session.get(Admin_users, admin_id)
         else:
-            return User_mgmt.query.get(int(user_id))
+            return db.session.get(User_mgmt, int(user_id))
 
     # Create auth blueprint
     from flask import (

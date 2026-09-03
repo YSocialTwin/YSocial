@@ -10,6 +10,7 @@ from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import check_password_hash, generate_password_hash
+from y_web import db
 
 pytestmark = pytest.mark.integration
 
@@ -83,7 +84,7 @@ def app():
 
     @login_manager.user_loader
     def load_user(user_id):
-        return User_mgmt.query.get(int(user_id))
+        return db.session.get(User_mgmt, int(user_id))
 
     # Create users blueprint with password and email update functionality
     import re

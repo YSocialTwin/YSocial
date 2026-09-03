@@ -322,7 +322,7 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
         # Keep as string if it's a UUID
         pass
 
-    user = User_mgmt.query.get(user_id)
+    user = db.session.get(User_mgmt, user_id)
     if not user:
         user = User_mgmt.query.filter_by(username=user_id).first()
 

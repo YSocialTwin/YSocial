@@ -18,9 +18,6 @@ import json
 import os
 import sys
 
-import flask_sqlalchemy
-import sqlalchemy
-import sqlalchemy.orm
 from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
@@ -28,86 +25,6 @@ from flask_sqlalchemy import SQLAlchemy
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-def _ensure_flask_sqlalchemy_legacy_compat() -> None:
-    """
-    Flask-SQLAlchemy 2.x expects sqlalchemy.__all__ and sqlalchemy.orm.__all__,
-    which were removed in SQLAlchemy 2.x.
-
-    Recreate only the legacy symbol subset that Flask-SQLAlchemy commonly copies
-    onto the extension object, instead of mirroring every public SQLAlchemy 2.x
-    attribute. A broad copy drags in names like ``engine`` that trigger runtime
-    errors during bootstrap.
-    """
-
-    if not hasattr(sqlalchemy.orm, "relation") and hasattr(
-        sqlalchemy.orm, "relationship"
-    ):
-        sqlalchemy.orm.relation = sqlalchemy.orm.relationship
-
-    sqlalchemy_public = [
-        "Column",
-        "Integer",
-        "BigInteger",
-        "REAL",
-        "Float",
-        "Boolean",
-        "String",
-        "Text",
-        "DateTime",
-        "ForeignKey",
-        "Index",
-        "Table",
-        "func",
-        "text",
-        "or_",
-    ]
-    orm_public = [
-        "relationship",
-        "relation",
-        "dynamic_loader",
-        "backref",
-    ]
-
-    if not hasattr(sqlalchemy, "__all__"):
-        sqlalchemy.__all__ = [
-            name for name in sqlalchemy_public if hasattr(sqlalchemy, name)
-        ]
-    if not hasattr(sqlalchemy.orm, "__all__"):
-        sqlalchemy.orm.__all__ = [
-            name for name in orm_public if hasattr(sqlalchemy.orm, name)
-        ]
-
-    session_base = getattr(flask_sqlalchemy, "SessionBase", None)
-    signalling_session = getattr(flask_sqlalchemy, "SignallingSession", None)
-    if session_base is not None and signalling_session is not None:
-        original_get_bind = signalling_session.get_bind
-        if not getattr(original_get_bind, "_ysocial_sa2_compat", False):
-
-            def _compat_get_bind(self, mapper=None, clause=None):
-                if mapper is not None:
-                    try:
-                        persist_selectable = mapper.persist_selectable
-                    except AttributeError:
-                        persist_selectable = mapper.mapped_table
-
-                    info = getattr(persist_selectable, "info", {})
-                    bind_key = info.get("bind_key")
-                    if bind_key is not None:
-                        binds = {}
-                        try:
-                            binds = self.app.config.get("SQLALCHEMY_BINDS", {}) or {}
-                        except Exception:
-                            binds = {}
-                        if bind_key in binds:
-                            state = flask_sqlalchemy.get_state(self.app)
-                            return state.db.get_engine(self.app, bind=bind_key)
-                return session_base.get_bind(self, mapper, clause=clause)
-
-            _compat_get_bind._ysocial_sa2_compat = True
-            signalling_session.get_bind = _compat_get_bind
-
-
-_ensure_flask_sqlalchemy_legacy_compat()
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -302,10 +219,10 @@ def create_app(db_type="sqlite", desktop_mode=False):
         if user_id_str.startswith("admin_"):
             # Admin or researcher user
             admin_id = user_id_str.replace("admin_", "")
-            return Admin_users.query.get(admin_id)
+            return db.session.get(Admin_users, admin_id)
         else:
             # Regular experiment participant
-            return User_mgmt.query.get(user_id)
+            return db.session.get(User_mgmt, user_id)
 
     # Setup experiment context handler
     from y_web.src.experiment.context import (

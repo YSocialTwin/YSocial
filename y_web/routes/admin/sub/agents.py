@@ -400,7 +400,7 @@ def _custom_agent_rows(spec: dict) -> list[dict]:
     for agent in agents_res:
         activity_profile_name = None
         if agent.activity_profile:
-            profile = ActivityProfile.query.get(agent.activity_profile)
+            profile = db.session.get(ActivityProfile, agent.activity_profile)
             activity_profile_name = profile.name if profile else None
         row = {
             "id": agent.id,
@@ -750,7 +750,7 @@ def _agent_listing_response(ag_type_filter, *, hello_mode=False):
     for agent in agents_res:
         activity_profile_data = None
         if agent.activity_profile:
-            profile = ActivityProfile.query.get(agent.activity_profile)
+            profile = db.session.get(ActivityProfile, agent.activity_profile)
             if profile:
                 activity_profile_data = {"name": profile.name, "hours": profile.hours}
 

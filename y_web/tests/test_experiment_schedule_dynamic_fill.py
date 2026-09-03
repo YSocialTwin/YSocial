@@ -171,11 +171,13 @@ def test_check_progress_preserves_default_batch_progression():
             "y_web.routes.admin.sub.experiments._schedule.ExperimentScheduleItem"
         ) as mock_item_cls,
         patch("y_web.routes.admin.sub.experiments._schedule.Exps") as mock_exps_cls,
+        patch("y_web.routes.admin.sub.experiments._schedule.db") as mock_db,
     ):
         mock_item_cls.query.filter_by.return_value.order_by.return_value.all.return_value = [
             current_item
         ]
         mock_exps_cls.query.get.return_value = current_exp
+        mock_db.session.get.return_value = current_exp
 
         result = _do_check_schedule_progress()
 
@@ -221,6 +223,13 @@ def test_failed_experiment_does_not_free_dynamic_fill_slot(app):
             }.get(exp_id)
         )
 
+        def _fake_session_get(model, pk):
+            if model is schedule_module.ExperimentScheduleGroup:
+                return fake_group_query.get(pk)
+            if model is schedule_module.Exps:
+                return fake_exp_query.get(pk)
+            return None
+
         with (
             patch.object(
                 schedule_module.ExperimentScheduleGroup, "query", fake_group_query
@@ -230,7 +239,11 @@ def test_failed_experiment_does_not_free_dynamic_fill_slot(app):
                 "y_web.routes.admin.sub.experiments._schedule._get_ordered_schedule_items",
                 return_value=current_items,
             ),
+            patch(
+                "y_web.routes.admin.sub.experiments._schedule.db"
+            ) as mock_db,
         ):
+            mock_db.session.get.side_effect = _fake_session_get
             result = _advance_dynamic_schedule(status, [])
 
         assert result["success"] is True

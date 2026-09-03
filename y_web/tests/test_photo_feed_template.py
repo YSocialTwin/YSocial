@@ -1,3 +1,4 @@
+import pytest
 from contextlib import contextmanager
 from pathlib import Path
 from types import SimpleNamespace
@@ -277,6 +278,7 @@ def test_photo_media_url_preserves_static_profile_assets():
         )
 
 
+@pytest.mark.integration
 def test_photo_text_linkification_targets_profiles_and_hashtag_search():
     with _photo_experiment() as exp:
         linked = _photo_linkify_text(exp, "Hello @KatherineJones #pizza")
@@ -285,6 +287,7 @@ def test_photo_text_linkification_targets_profiles_and_hashtag_search():
         assert "@KatherineJones" in linked or "KatherineJones" in linked
 
 
+@pytest.mark.integration
 def test_photo_build_item_exposes_linked_caption_and_author_href():
     with _photo_experiment() as exp:
         item = _photo_build_item(
@@ -311,6 +314,7 @@ def test_photo_build_item_exposes_linked_caption_and_author_href():
         )
 
 
+@pytest.mark.integration
 def test_photo_feed_timelines_use_recommendations_and_social_contacts():
     with _photo_experiment() as exp:
         user_id = "b49b2daa-0560-466e-bd45-95222c7a4a10"
@@ -339,6 +343,7 @@ def test_photo_media_root_matches_photo_experiment_directory():
         assert media_root.parent.name == Path(_photo_db_path(exp)).parent.name
 
 
+@pytest.mark.integration
 def test_photo_suggested_contacts_never_returns_empty_list_for_photo_experiment():
     with _photo_experiment() as exp:
         contact_ids = set(
@@ -393,6 +398,7 @@ def test_photo_profile_page_is_wired_and_uses_photo_shell():
     assert "photo/components/sidebar.html" in base_template
 
 
+@pytest.mark.integration
 def test_photo_search_page_is_wired_and_returns_all_search_domains():
     route_source = Path(
         "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/photo.py"

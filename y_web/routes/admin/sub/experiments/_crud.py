@@ -1156,7 +1156,7 @@ def upload_experiment():
                 population_id=existing_population.id
             ).all()
             for link in agent_pop_links:
-                agent = Agent.query.get(link.agent_id)
+                agent = db.session.get(Agent, link.agent_id)
                 if agent:
                     existing_agent_names.add(agent.name)
 
@@ -1165,7 +1165,7 @@ def upload_experiment():
                 population_id=existing_population.id
             ).all()
             for link in page_pop_links:
-                page = Page.query.get(link.page_id)
+                page = db.session.get(Page, link.page_id)
                 if page:
                     existing_agent_names.add(page.name)
 
@@ -2630,7 +2630,7 @@ def stop_experiment(uid):
             experiment_id=uid, group_id=schedule_status.current_group_id
         ).first()
         if schedule_item:
-            group = ExperimentScheduleGroup.query.get(schedule_status.current_group_id)
+            group = db.session.get(ExperimentScheduleGroup, schedule_status.current_group_id)
             group_name = group.name if group else "Unknown"
             log_msg = (
                 f"Experiment '{exp.exp_name}' was manually stopped in running schedule "

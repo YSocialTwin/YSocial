@@ -169,7 +169,7 @@ def update():
         username=current_user.username
     ).first()
 
-    user = Admin_users.query.get(data["id"])
+    user = db.session.get(Admin_users, data["id"])
 
     # Handle role changes with restrictions
     if "role" in data:
@@ -1019,7 +1019,7 @@ def mark_blog_post_read(post_id):
         return jsonify({"error": "Access denied"}), 403
 
     try:
-        blog_post = BlogPost.query.get(post_id)
+        blog_post = db.session.get(BlogPost, post_id)
         if not blog_post:
             print(f"Blog post {post_id} not found")
             return jsonify({"error": "Blog post not found"}), 404
@@ -1061,7 +1061,8 @@ def open_external_url():
         return jsonify({"error": "Access denied"}), 403
 
     try:
-        url = request.json.get("url")
+        data = request.get_json(silent=True) or {}
+        url = data.get("url")
         if not url:
             return jsonify({"error": "URL is required"}), 400
 

@@ -148,7 +148,7 @@ def get_schedule_groups():
         )
         experiments_list = []
         for item in items:
-            exp = Exps.query.get(item.experiment_id)
+            exp = db.session.get(Exps, item.experiment_id)
             if exp:
                 experiments_list.append(
                     {
@@ -226,7 +226,7 @@ def delete_schedule_group(group_id):
     """
     check_privileges(current_user.username)
 
-    group = ExperimentScheduleGroup.query.get(group_id)
+    group = db.session.get(ExperimentScheduleGroup, group_id)
     if not group:
         return jsonify({"success": False, "message": "Group not found"}), 404
 
@@ -270,11 +270,11 @@ def add_experiment_to_group(group_id):
     if not data or "experiment_id" not in data:
         return jsonify({"success": False, "message": "experiment_id is required"}), 400
 
-    group = ExperimentScheduleGroup.query.get(group_id)
+    group = db.session.get(ExperimentScheduleGroup, group_id)
     if not group:
         return jsonify({"success": False, "message": "Group not found"}), 404
 
-    exp = Exps.query.get(data["experiment_id"])
+    exp = db.session.get(Exps, data["experiment_id"])
     if not exp:
         return jsonify({"success": False, "message": "Experiment not found"}), 404
 
@@ -403,7 +403,7 @@ def remove_experiment_from_group(item_id):
     """
     check_privileges(current_user.username)
 
-    item = ExperimentScheduleItem.query.get(item_id)
+    item = db.session.get(ExperimentScheduleItem, item_id)
     if not item:
         return jsonify({"success": False, "message": "Item not found"}), 404
 
@@ -445,7 +445,7 @@ def reorder_schedule_groups():
         return jsonify({"success": False, "message": "group_ids is required"}), 400
 
     for index, group_id in enumerate(data["group_ids"]):
-        group = ExperimentScheduleGroup.query.get(group_id)
+        group = db.session.get(ExperimentScheduleGroup, group_id)
         if group:
             group.order_index = index
     db.session.commit()
@@ -662,7 +662,7 @@ def _advance_dynamic_schedule(status, logs):
             "logs": logs,
         }
 
-    current_group = ExperimentScheduleGroup.query.get(status.current_group_id)
+    current_group = db.session.get(ExperimentScheduleGroup, status.current_group_id)
     if not current_group:
         status.is_running = 0
         status.current_group_id = None
@@ -682,7 +682,7 @@ def _advance_dynamic_schedule(status, logs):
         current_group_capacity = len(current_items)
 
     for item in current_items:
-        exp = Exps.query.get(item.experiment_id)
+        exp = db.session.get(Exps, item.experiment_id)
         if exp and exp.exp_status == "completed":
             _clear_completed_experiment_from_current_group(current_group, exp, logs)
 
@@ -711,7 +711,7 @@ def _advance_dynamic_schedule(status, logs):
                 if free_slots <= 0:
                     break
 
-                exp = Exps.query.get(item.experiment_id)
+                exp = db.session.get(Exps, item.experiment_id)
                 if not exp or exp.running != 0:
                     continue
 
@@ -749,7 +749,7 @@ def _advance_dynamic_schedule(status, logs):
     current_items = _get_ordered_schedule_items(current_group.id)
     active_items = []
     for item in current_items:
-        exp = Exps.query.get(item.experiment_id)
+        exp = db.session.get(Exps, item.experiment_id)
         if exp and exp.exp_status != "completed":
             active_items.append(exp)
 
@@ -830,7 +830,7 @@ def _advance_dynamic_schedule(status, logs):
 
     started_count = 0
     for item in next_items:
-        exp = Exps.query.get(item.experiment_id)
+        exp = db.session.get(Exps, item.experiment_id)
         if exp and _start_scheduled_experiment(exp, logs):
             started_count += 1
 
@@ -936,7 +936,7 @@ def start_schedule():
     # Start each experiment in the group
     started_count = 0
     for item in items:
-        exp = Exps.query.get(item.experiment_id)
+        exp = db.session.get(Exps, item.experiment_id)
         if exp and _start_scheduled_experiment(exp, logs):
             started_count += 1
 
@@ -990,7 +990,7 @@ def stop_schedule():
                 group_id=status.current_group_id
             ).all()
             for item in items:
-                exp = Exps.query.get(item.experiment_id)
+                exp = db.session.get(Exps, item.experiment_id)
                 if exp and exp.running == 1:
                     # Stop all clients first
                     clients = Client.query.filter_by(id_exp=exp.idexp).all()
@@ -1069,7 +1069,7 @@ def _do_check_schedule_progress():
         all_completed = True
 
         for item in items:
-            exp = Exps.query.get(item.experiment_id)
+            exp = db.session.get(Exps, item.experiment_id)
             if exp:
                 # Check if experiment is completed
                 if exp.exp_status != "completed":
@@ -1086,7 +1086,7 @@ def _do_check_schedule_progress():
 
         # All completed - stop current group experiments and move to next group
         logs = []
-        current_group = ExperimentScheduleGroup.query.get(status.current_group_id)
+        current_group = db.session.get(ExperimentScheduleGroup, status.current_group_id)
 
         msg = f"Group '{current_group.name}' completed!"
         logs.append(msg)
@@ -1097,7 +1097,7 @@ def _do_check_schedule_progress():
         db.session.commit()
 
         for item in items:
-            exp = Exps.query.get(item.experiment_id)
+            exp = db.session.get(Exps, item.experiment_id)
             if exp and exp.running == 1:
                 msg = f"Stopping experiment '{exp.exp_name}'..."
                 logs.append(msg)
@@ -1176,7 +1176,7 @@ def _do_check_schedule_progress():
             group_id=next_group.id
         ).all()
         for item in next_items:
-            exp = Exps.query.get(item.experiment_id)
+            exp = db.session.get(Exps, item.experiment_id)
             if exp and exp.running == 0:
                 # Check if all clients have already completed before starting the server
                 all_clients_completed, clients_to_start = _get_clients_to_start(exp)

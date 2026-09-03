@@ -403,7 +403,7 @@ def download_pages():
         # Get activity profile name if set
         activity_profile_name = None
         if page.activity_profile:
-            activity_profile_obj = ActivityProfile.query.get(page.activity_profile)
+            activity_profile_obj = db.session.get(ActivityProfile, page.activity_profile)
             if activity_profile_obj:
                 activity_profile_name = activity_profile_obj.name
 

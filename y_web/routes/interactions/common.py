@@ -456,7 +456,7 @@ def delete_post(exp_id):
     except (ValueError, TypeError):
         post_id_converted = post_id
 
-    post = Post.query.get(post_id_converted)
+    post = db.session.get(Post, post_id_converted)
     db.session.delete(post)
     db.session.commit()
 

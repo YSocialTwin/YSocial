@@ -309,7 +309,7 @@ def _enqueue_user_notification(
 def _run_single_download_job(app, notification_id, eid):
     """Background worker for single experiment export."""
     with app.app_context():
-        notification = DownloadNotification.query.get(notification_id)
+        notification = db.session.get(DownloadNotification, notification_id)
         if not notification:
             return
 
@@ -320,7 +320,7 @@ def _run_single_download_job(app, notification_id, eid):
             output_zip_path = os.path.join(temp_data_dir, f"{file_base}.zip")
             download_name = _build_single_experiment_zip(eid, output_zip_path)
 
-            notification = DownloadNotification.query.get(notification_id)
+            notification = db.session.get(DownloadNotification, notification_id)
             if not notification:
                 return
             if notification.status == "cancelled":
@@ -343,7 +343,7 @@ def _run_single_download_job(app, notification_id, eid):
                 f"Error generating async experiment archive (eid={eid}): {exc}",
                 exc_info=True,
             )
-            notification = DownloadNotification.query.get(notification_id)
+            notification = db.session.get(DownloadNotification, notification_id)
             if notification and notification.status != "cancelled":
                 notification.status = "failed"
                 notification.message = "Archive generation failed."
@@ -356,7 +356,7 @@ def _run_single_download_job(app, notification_id, eid):
 def _run_bulk_download_job(app, notification_id, exp_ids):
     """Background worker for bulk experiments export."""
     with app.app_context():
-        notification = DownloadNotification.query.get(notification_id)
+        notification = db.session.get(DownloadNotification, notification_id)
         if not notification:
             return
 
@@ -367,7 +367,7 @@ def _run_bulk_download_job(app, notification_id, exp_ids):
             output_zip_path = os.path.join(temp_data_dir, f"{file_base}.zip")
             download_name = _build_bulk_experiments_zip(exp_ids, output_zip_path)
 
-            notification = DownloadNotification.query.get(notification_id)
+            notification = db.session.get(DownloadNotification, notification_id)
             if not notification:
                 return
             if notification.status == "cancelled":
@@ -389,7 +389,7 @@ def _run_bulk_download_job(app, notification_id, exp_ids):
             current_app.logger.error(
                 f"Error generating async bulk archive: {exc}", exc_info=True
             )
-            notification = DownloadNotification.query.get(notification_id)
+            notification = db.session.get(DownloadNotification, notification_id)
             if notification and notification.status != "cancelled":
                 notification.status = "failed"
                 notification.message = "Bulk archive generation failed."

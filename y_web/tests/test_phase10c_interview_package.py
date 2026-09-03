@@ -5,6 +5,7 @@ import types
 from pathlib import Path
 
 import pytest
+from y_web import db
 
 pytestmark = pytest.mark.unit
 
@@ -106,7 +107,7 @@ def test_interview_session_creation_binds_experiment_db_before_agent_lookup():
 
     assert "_ensure_experiment_db_bind(exp)" in routes
     assert routes.index("_ensure_experiment_db_bind(exp)") < routes.index(
-        "agent_user = User_mgmt.query.get(agent_user_id)"
+        "agent_user = db.session.get(User_mgmt, agent_user_id)"
     )
 
 

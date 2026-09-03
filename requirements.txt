@@ -1,26 +1,26 @@
-# --- Web & Database (Conflict-Free) ---
-Flask==2.1.2
-Flask-Login==0.6.1
-Flask-SQLAlchemy==2.5.1
-SQLAlchemy>=1.4.31,<2.0.0
+# --- Web & Database ---
+Flask==3.0.3
+Flask-Login==0.6.3
+Flask-SQLAlchemy==3.1.1
+SQLAlchemy>=2.0,<3.0
 Flask-WTF==1.2.2
-WTForms==2.3.3
-Werkzeug==2.1.2
-Jinja2>=3.1.2
+WTForms>=3.0
+Werkzeug>=3.0,<4.0
+Jinja2>=3.1.4
 MarkupSafe>=2.1.1
-itsdangerous>=2.1.2
+itsdangerous>=2.2.0
 email_validator
 
-# --- FIXED UTILS (Resolved Conflicts) ---
+# --- FIXED UTILS ---
 cryptography>=38.0.3
 importlib-metadata>=6.0.0,<8.8.0
 zipp>=3.8.0
 cffi>=1.15.0
 
 # --- AI Logic ---
-langchain>=0.1.0,<1.0.0
-langchain-core>=0.1.0,<1.0.0
-langchain-ollama>=0.1.0,<1.0.0
+langchain>=0.3.0,<1.0.0
+langchain-core>=0.3.0,<1.0.0
+langchain-ollama>=0.2.0,<1.0.0
 langchain-openai>=0.2,<1.0.0
 ollama
 ray[default]>=2.0.0,<3.0.0

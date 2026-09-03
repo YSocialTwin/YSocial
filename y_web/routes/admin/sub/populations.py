@@ -74,7 +74,7 @@ def _render_custom_population_details(population, exps, agents):
     for agent, _ in agents:
         activity_profile_name = None
         if agent.activity_profile:
-            profile = ActivityProfile.query.get(agent.activity_profile)
+            profile = db.session.get(ActivityProfile, agent.activity_profile)
             activity_profile_name = profile.name if profile else None
         ext_fields = {
             ext.feature_name: ext.feature_value
@@ -799,7 +799,7 @@ def population_details(uid):
     for a in agents:
         if a[0].activity_profile:
             # Get activity profile name
-            profile = ActivityProfile.query.get(a[0].activity_profile)
+            profile = db.session.get(ActivityProfile, a[0].activity_profile)
             if profile:
                 profile_name = profile.name
                 if profile_name in activity_prof["profiles"]:
@@ -1047,7 +1047,7 @@ def download_population(uid):
         # Get activity profile name if set
         activity_profile_name = None
         if a[0].activity_profile:
-            activity_profile_obj = ActivityProfile.query.get(a[0].activity_profile)
+            activity_profile_obj = db.session.get(ActivityProfile, a[0].activity_profile)
             if activity_profile_obj:
                 activity_profile_name = activity_profile_obj.name
 
@@ -1098,7 +1098,7 @@ def download_population(uid):
         # Get activity profile name if set
         page_activity_profile_name = None
         if p[0].activity_profile:
-            page_activity_profile_obj = ActivityProfile.query.get(p[0].activity_profile)
+            page_activity_profile_obj = db.session.get(ActivityProfile, p[0].activity_profile)
             if page_activity_profile_obj:
                 page_activity_profile_name = page_activity_profile_obj.name
 

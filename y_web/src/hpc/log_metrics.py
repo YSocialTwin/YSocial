@@ -931,7 +931,7 @@ def _restart_failed_schedule_experiment(exp_id: int, reason: str = "") -> bool:
             if not schedule_item:
                 return False
 
-            group = ExperimentScheduleGroup.query.get(schedule_status.current_group_id)
+            group = db.session.get(ExperimentScheduleGroup, schedule_status.current_group_id)
             group_name = group.name if group else "Unknown"
             restart_reason = f" ({reason})" if reason else ""
 

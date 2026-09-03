@@ -135,7 +135,7 @@ def api_interview_create_session(exp_id: int):
         else None
     )
     if agent_user is None:
-        agent_user = User_mgmt.query.get(agent_user_id)
+        agent_user = db.session.get(User_mgmt, agent_user_id)
     if not agent_user:
         return _json_error("Agent not found", 404, code="not_found")
 
@@ -329,7 +329,7 @@ def api_interview_get_session(exp_id: int, session_id: int):
     if not admin_user:
         return _json_error("Forbidden", 403, code="forbidden")
 
-    sess = AdminInterviewSession.query.get(int(session_id))
+    sess = db.session.get(AdminInterviewSession, int(session_id))
     if not sess or int(sess.exp_id) != int(exp_id):
         return _json_error("Session not found", 404, code="not_found")
 
@@ -382,7 +382,7 @@ def api_interview_refresh_context(exp_id: int, session_id: int):
     if not admin_user:
         return _json_error("Forbidden", 403, code="forbidden")
 
-    sess = AdminInterviewSession.query.get(int(session_id))
+    sess = db.session.get(AdminInterviewSession, int(session_id))
     if not sess or int(sess.exp_id) != int(exp_id):
         return _json_error("Session not found", 404, code="not_found")
 
@@ -435,7 +435,7 @@ def api_interview_send_message(exp_id: int, session_id: int):
         if not admin_user:
             return _json_error("Forbidden", 403, code="forbidden")
 
-        sess = AdminInterviewSession.query.get(int(session_id))
+        sess = db.session.get(AdminInterviewSession, int(session_id))
         if not sess or int(sess.exp_id) != int(exp_id):
             return _json_error("Session not found", 404, code="not_found")
 
@@ -469,7 +469,7 @@ def api_interview_send_message(exp_id: int, session_id: int):
             else None
         )
         if agent_user is None:
-            agent_user = User_mgmt.query.get(normalized_agent_user_id)
+            agent_user = db.session.get(User_mgmt, normalized_agent_user_id)
         if not agent_user:
             return _json_error("Agent not found", 404, code="not_found")
 
