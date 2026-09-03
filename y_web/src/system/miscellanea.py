@@ -7,10 +7,9 @@ database connection testing, and Ollama LLM service status checking.
 
 from flask import redirect, url_for
 from flask_login import login_user
-from sqlalchemy import select
+from sqlalchemy import select, text
 
 from y_web import db
-from sqlalchemy import select, text
 from y_web.src.models import (
     Admin_users,
     User_mgmt,

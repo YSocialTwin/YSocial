@@ -21,6 +21,7 @@ from flask import (
 from flask_login import current_user, login_required
 from sqlalchemy import select
 
+from y_web import db
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
     user_can_manage_experiment,
@@ -48,8 +49,6 @@ from y_web.src.system.miscellanea import (
 )
 
 from .sub.experiments._helpers import _experiment_has_started_once
-from sqlalchemy import select
-from y_web import db
 
 admin = Blueprint("admin", __name__)
 

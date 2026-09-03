@@ -656,8 +656,11 @@ class TestHPCExecutionLogMonitoring:
                     patch("y_web.src.hpc.log_parser.db") as mock_db,
                 ):
                     from unittest.mock import MagicMock as _MM
-                    _metrics_r = _MM(); _metrics_r.first.return_value = None
-                    _exec_r = _MM(); _exec_r.first.return_value = mock_exec
+
+                    _metrics_r = _MM()
+                    _metrics_r.first.return_value = None
+                    _exec_r = _MM()
+                    _exec_r.first.return_value = mock_exec
                     mock_db.session.scalars.side_effect = [_metrics_r, _exec_r]
 
                     new_offset, metrics = parse_client_log_incremental(
@@ -715,10 +718,18 @@ class TestHPCExecutionLogMonitoring:
                     patch("y_web.src.hpc.client.stop_hpc_client") as mock_stop,
                 ):
                     from unittest.mock import MagicMock as _MM
-                    _metrics_r = _MM(); _metrics_r.first.return_value = None
-                    _exec_r = _MM(); _exec_r.first.return_value = mock_exec
-                    _client_r = _MM(); _client_r.first.return_value = mock_client
-                    mock_db.session.scalars.side_effect = [_metrics_r, _exec_r, _client_r]
+
+                    _metrics_r = _MM()
+                    _metrics_r.first.return_value = None
+                    _exec_r = _MM()
+                    _exec_r.first.return_value = mock_exec
+                    _client_r = _MM()
+                    _client_r.first.return_value = mock_client
+                    mock_db.session.scalars.side_effect = [
+                        _metrics_r,
+                        _exec_r,
+                        _client_r,
+                    ]
 
                     new_offset, metrics = parse_client_log_incremental(
                         log_path, exp_id=1, client_id=1, start_offset=0, is_hpc=True

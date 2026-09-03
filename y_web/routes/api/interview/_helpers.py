@@ -9,9 +9,9 @@ from flask import jsonify
 from flask_login import current_user
 from sqlalchemy import select
 
+from y_web import db
 from y_web.src.models import Admin_users
 
-from y_web import db
 from ._blueprint import (
     _INTERVIEW_MEMORY_MODE_DEFAULT,
     _MEMORY_MODE_LEGACY,

@@ -13,9 +13,8 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import select
 from werkzeug.security import generate_password_hash
 
-from y_web.src.telemetry import Telemetry
-from sqlalchemy import select
 from y_web import db
+from y_web.src.telemetry import Telemetry
 
 pytestmark = pytest.mark.integration
 
