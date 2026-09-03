@@ -20,54 +20,89 @@ pytestmark = pytest.mark.unit
 # We'll use the conftest fixtures
 
 
-
 # ---------------------------------------------------------------------------
 # SA2 test stubs — bypass select() ORM validation for unit-test stubs
 # ---------------------------------------------------------------------------
 class _FakeSelect:
     """Captures model/args without invoking SQLAlchemy ORM coercions."""
+
     def __init__(self, *models, **kw):
         self._models = models
         self._kw = {}
-    def filter_by(self, **kw): self._kw = kw; return self
-    def filter(self, *a): return self
-    def select_from(self, m): return self
-    def where(self, *a): return self
-    def order_by(self, *a): return self
-    def limit(self, n): return self
+
+    def filter_by(self, **kw):
+        self._kw = kw
+        return self
+
+    def filter(self, *a):
+        return self
+
+    def select_from(self, m):
+        return self
+
+    def where(self, *a):
+        return self
+
+    def order_by(self, *a):
+        return self
+
+    def limit(self, n):
+        return self
+
 
 class _ScalarsResult:
     """Wraps a legacy query so .all()/.first() work uniformly."""
-    def __init__(self, q): self._q = q
+
+    def __init__(self, q):
+        self._q = q
+
     def all(self):
-        return self._q.all() if hasattr(self._q, 'all') else []
+        return self._q.all() if hasattr(self._q, "all") else []
+
     def first(self):
-        return self._q.first() if hasattr(self._q, 'first') else None
+        return self._q.first() if hasattr(self._q, "first") else None
+
     def one_or_none(self):
-        return self._q.one_or_none() if hasattr(self._q, 'one_or_none') else None
+        return self._q.one_or_none() if hasattr(self._q, "one_or_none") else None
+
     def one(self):
-        return self._q.one() if hasattr(self._q, 'one') else None
+        return self._q.one() if hasattr(self._q, "one") else None
+
 
 class _SelectRoutingSession:
     """Routes scalars(select(Model).filter_by(…)) → Model.query.filter_by(…)."""
-    def __init__(self, inner=None): self._inner = inner
+
+    def __init__(self, inner=None):
+        self._inner = inner
+
     def scalars(self, stmt):
         if isinstance(stmt, _FakeSelect) and stmt._models:
             model = stmt._models[0]
-            q = getattr(model, 'query', None)
+            q = getattr(model, "query", None)
             if q is not None:
                 if stmt._kw:
                     q = q.filter_by(**stmt._kw)
                 return _ScalarsResult(q)
         return _ScalarsResult(
-            type('_Empty', (), {'all': lambda s: [], 'first': lambda s: None,
-                                'one_or_none': lambda s: None})()
+            type(
+                "_Empty",
+                (),
+                {
+                    "all": lambda s: [],
+                    "first": lambda s: None,
+                    "one_or_none": lambda s: None,
+                },
+            )()
         )
-    def scalar(self, stmt): return None
+
+    def scalar(self, stmt):
+        return None
+
     def __getattr__(self, name):
         if self._inner is not None:
             return getattr(self._inner, name)
-        raise AttributeError(f'_SelectRoutingSession has no attribute {name!r}')
+        raise AttributeError(f"_SelectRoutingSession has no attribute {name!r}")
+
 
 def test_copy_experiment_validation():
     """Test copy experiment input validation logic."""
@@ -271,7 +306,9 @@ def test_get_suggested_port_reuses_completed_experiment_port(monkeypatch):
     monkeypatch.setattr(_helpers, "Exps", SimpleNamespace(query=FakeQuery()))
     monkeypatch.setattr(_helpers, "is_port_free", lambda port: port == 5000)
     monkeypatch.setattr(_helpers, "select", lambda *a, **kw: _FakeSelect(*a))
-    monkeypatch.setattr(_helpers, "db", SimpleNamespace(session=_SelectRoutingSession()))
+    monkeypatch.setattr(
+        _helpers, "db", SimpleNamespace(session=_SelectRoutingSession())
+    )
 
     assert _helpers.get_suggested_port() == 5000
 
@@ -317,7 +354,9 @@ def test_get_suggested_port_skips_non_completed_experiment_ports(monkeypatch):
     )
     monkeypatch.setattr(_helpers, "is_port_free", lambda port: port == 5003)
     monkeypatch.setattr(_helpers, "select", lambda *a, **kw: _FakeSelect(*a))
-    monkeypatch.setattr(_helpers, "db", SimpleNamespace(session=_SelectRoutingSession()))
+    monkeypatch.setattr(
+        _helpers, "db", SimpleNamespace(session=_SelectRoutingSession())
+    )
 
     assert _helpers.get_suggested_port() == 5003
 
@@ -370,7 +409,9 @@ def test_get_suggested_port_reuses_legacy_stopped_experiment_port(monkeypatch):
     )
     monkeypatch.setattr(_helpers, "is_port_free", lambda port: port == 5000)
     monkeypatch.setattr(_helpers, "select", lambda *a, **kw: _FakeSelect(*a))
-    monkeypatch.setattr(_helpers, "db", SimpleNamespace(session=_SelectRoutingSession()))
+    monkeypatch.setattr(
+        _helpers, "db", SimpleNamespace(session=_SelectRoutingSession())
+    )
 
     assert _helpers.get_suggested_port() == 5000
 
@@ -388,7 +429,9 @@ def test_get_suggested_port_scans_past_6000(monkeypatch):
     monkeypatch.setattr(_helpers, "Exps", SimpleNamespace(query=FakeQuery()))
     monkeypatch.setattr(_helpers, "is_port_free", lambda port: port == 6001)
     monkeypatch.setattr(_helpers, "select", lambda *a, **kw: _FakeSelect(*a))
-    monkeypatch.setattr(_helpers, "db", SimpleNamespace(session=_SelectRoutingSession()))
+    monkeypatch.setattr(
+        _helpers, "db", SimpleNamespace(session=_SelectRoutingSession())
+    )
 
     assert _helpers.get_suggested_port() == 6001
 
@@ -424,7 +467,9 @@ def test_get_suggested_port_falls_back_to_os_port_when_scan_is_exhausted(monkeyp
     monkeypatch.setattr(_helpers, "count", lambda start: iter([5000, 5001, 65536]))
     monkeypatch.setattr(_helpers.socket, "socket", lambda *args, **kwargs: FakeSocket())
     monkeypatch.setattr(_helpers, "select", lambda *a, **kw: _FakeSelect(*a))
-    monkeypatch.setattr(_helpers, "db", SimpleNamespace(session=_SelectRoutingSession()))
+    monkeypatch.setattr(
+        _helpers, "db", SimpleNamespace(session=_SelectRoutingSession())
+    )
 
     assert _helpers.get_suggested_port() == 61000
 

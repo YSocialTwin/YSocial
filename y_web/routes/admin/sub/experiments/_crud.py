@@ -159,9 +159,10 @@ def _external_repo_availability():
     }
 
 
+from sqlalchemy import select
+
 from ._notifications import _enqueue_user_notification, _resolve_bulk_experiment_ids
 from ._schedule import _get_clients_to_start
-from sqlalchemy import select
 
 
 @experiments.route("/admin/experiments")
@@ -173,7 +174,9 @@ def settings():
     Shows list of experiments, users, and database configuration.
     """
     # Get current user
-    user = db.session.scalars(select(Admin_users).filter_by(username=current_user.username)).first()
+    user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
     # Filter experiments based on role + visibility grants
     if user.role in ("admin", "researcher"):
@@ -190,10 +193,14 @@ def settings():
 
     # Check and update status for stopped experiments that are actually completed.
     # Use batched queries to avoid per-experiment N+1 work on page load.
-    stopped_experiments = db.session.scalars(select(Exps).filter_by(exp_status="stopped")).all()
+    stopped_experiments = db.session.scalars(
+        select(Exps).filter_by(exp_status="stopped")
+    ).all()
     stopped_ids = [exp.idexp for exp in stopped_experiments]
     if stopped_ids:
-        clients = db.session.scalars(select(Client).filter(Client.id_exp.in_(stopped_ids))).all()
+        clients = db.session.scalars(
+            select(Client).filter(Client.id_exp.in_(stopped_ids))
+        ).all()
         clients_by_exp = defaultdict(list)
         client_ids = []
         for client in clients:
@@ -202,9 +209,11 @@ def settings():
 
         exec_by_client_id = {}
         if client_ids:
-            exec_rows = db.session.scalars(select(Client_Execution).filter(
-                Client_Execution.client_id.in_(client_ids)
-            )).all()
+            exec_rows = db.session.scalars(
+                select(Client_Execution).filter(
+                    Client_Execution.client_id.in_(client_ids)
+                )
+            ).all()
             exec_by_client_id = {row.client_id: row for row in exec_rows}
 
         updated_any = False
@@ -238,7 +247,9 @@ def settings():
     preview_ids = [exp.idexp for exp in experiments]
     preview_clients = []
     if preview_ids:
-        preview_clients = db.session.scalars(select(Client).filter(Client.id_exp.in_(preview_ids))).all()
+        preview_clients = db.session.scalars(
+            select(Client).filter(Client.id_exp.in_(preview_ids))
+        ).all()
     preview_clients_by_exp = defaultdict(list)
     for client in preview_clients:
         preview_clients_by_exp[client.id_exp].append(client)
@@ -294,7 +305,9 @@ def visibility_settings():
         return redirect(url_for("admin.dashboard"))
 
     if is_admin:
-        manageable_experiments = db.session.scalars(select(Exps).order_by(Exps.exp_name.asc())).all()
+        manageable_experiments = db.session.scalars(
+            select(Exps).order_by(Exps.exp_name.asc())
+        ).all()
     else:
         manageable_experiments = (
             Exps.query.filter_by(owner=user.username)
@@ -405,9 +418,11 @@ def visibility_settings_add_experiment():
     if action == "grant":
         newly_granted_user_ids = []
         for researcher_id in researcher_ids:
-            existing = db.session.scalars(select(User_Experiment).filter_by(
-                user_id=researcher_id, exp_id=experiment.idexp
-            )).first()
+            existing = db.session.scalars(
+                select(User_Experiment).filter_by(
+                    user_id=researcher_id, exp_id=experiment.idexp
+                )
+            ).first()
             if existing:
                 continue
             db.session.add(
@@ -479,9 +494,11 @@ def visibility_settings_add_group():
         for researcher_id in researcher_ids:
             user_got_new_visibility = False
             for exp in group_experiments:
-                existing = db.session.scalars(select(User_Experiment).filter_by(
-                    user_id=researcher_id, exp_id=exp.idexp
-                )).first()
+                existing = db.session.scalars(
+                    select(User_Experiment).filter_by(
+                        user_id=researcher_id, exp_id=exp.idexp
+                    )
+                ).first()
                 if existing:
                     continue
                 db.session.add(User_Experiment(user_id=researcher_id, exp_id=exp.idexp))
@@ -736,7 +753,9 @@ def change_active_experiment(exp_id):
 
     # Reload user session from admin database (not experiment database)
     # Use Admin_users which is in the main database
-    admin_user = db.session.scalars(select(Admin_users).filter_by(username=uname)).first()
+    admin_user = db.session.scalars(
+        select(Admin_users).filter_by(username=uname)
+    ).first()
     if admin_user:
         login_user(admin_user, remember=True, force=True)
 
@@ -1099,7 +1118,9 @@ def upload_experiment():
             topic_name = topic_name.strip()
             if topic_name:
                 # Check if topic already exists in Topic_List
-                existing_topic = db.session.scalars(select(Topic_List).filter_by(name=topic_name)).first()
+                existing_topic = db.session.scalars(
+                    select(Topic_List).filter_by(name=topic_name)
+                ).first()
                 if not existing_topic:
                     existing_topic = Topic_List(name=topic_name)
                     db.session.add(existing_topic)
@@ -1140,7 +1161,9 @@ def upload_experiment():
         )
 
         # check if the population already exists
-        existing_population = db.session.scalars(select(Population).filter_by(name=original_name)).first()
+        existing_population = db.session.scalars(
+            select(Population).filter_by(name=original_name)
+        ).first()
         population_created_or_reused = None  # Track if we need to create agents
 
         if existing_population:
@@ -1153,18 +1176,18 @@ def upload_experiment():
             # Get agent names from existing population
             existing_agent_names = set()
             # Get agents linked to this population
-            agent_pop_links = db.session.scalars(select(Agent_Population).filter_by(
-                population_id=existing_population.id
-            )).all()
+            agent_pop_links = db.session.scalars(
+                select(Agent_Population).filter_by(population_id=existing_population.id)
+            ).all()
             for link in agent_pop_links:
                 agent = db.session.get(Agent, link.agent_id)
                 if agent:
                     existing_agent_names.add(agent.name)
 
             # Get pages linked to this population
-            page_pop_links = db.session.scalars(select(Page_Population).filter_by(
-                population_id=existing_population.id
-            )).all()
+            page_pop_links = db.session.scalars(
+                select(Page_Population).filter_by(population_id=existing_population.id)
+            ).all()
             for link in page_pop_links:
                 page = db.session.get(Page, link.page_id)
                 if page:
@@ -1187,7 +1210,9 @@ def upload_experiment():
                 # Find a unique name by appending a counter
                 counter = 1
                 new_name = f"{original_name}_{counter}"
-                while db.session.scalars(select(Population).filter_by(name=new_name)).first():
+                while db.session.scalars(
+                    select(Population).filter_by(name=new_name)
+                ).first():
                     counter += 1
                     new_name = f"{original_name}_{counter}"
 
@@ -1250,7 +1275,9 @@ def upload_experiment():
             for agent in pop["agents"]:
                 if agent["is_page"] == 1:
                     # check if the page already exists
-                    page = db.session.scalars(select(Page).filter_by(name=agent["name"])).first()
+                    page = db.session.scalars(
+                        select(Page).filter_by(name=agent["name"])
+                    ).first()
 
                     if page:
                         # add page to the population
@@ -1288,9 +1315,11 @@ def upload_experiment():
                     activity_profile_id = None
                     activity_profile_name = agent.get("activity_profile", "default")
                     if activity_profile_name:
-                        existing_profile = db.session.scalars(select(ActivityProfile).filter_by(
-                            name=activity_profile_name
-                        )).first()
+                        existing_profile = db.session.scalars(
+                            select(ActivityProfile).filter_by(
+                                name=activity_profile_name
+                            )
+                        ).first()
                         if existing_profile:
                             activity_profile_id = existing_profile.id
                         else:
@@ -2264,7 +2293,9 @@ def create_experiment():
         # check if the topic already exists in Topics
         topic = topic.strip()
         if topic:
-            existing_topic = db.session.scalars(select(Topic_List).filter_by(name=topic)).first()
+            existing_topic = db.session.scalars(
+                select(Topic_List).filter_by(name=topic)
+            ).first()
             if not existing_topic:
                 existing_topic = Topic_List(name=topic)
                 db.session.add(existing_topic)
@@ -2627,11 +2658,15 @@ def stop_experiment(uid):
         and schedule_status.is_running
         and schedule_status.current_group_id
     ):
-        schedule_item = db.session.scalars(select(ExperimentScheduleItem).filter_by(
-            experiment_id=uid, group_id=schedule_status.current_group_id
-        )).first()
+        schedule_item = db.session.scalars(
+            select(ExperimentScheduleItem).filter_by(
+                experiment_id=uid, group_id=schedule_status.current_group_id
+            )
+        ).first()
         if schedule_item:
-            group = db.session.get(ExperimentScheduleGroup, schedule_status.current_group_id)
+            group = db.session.get(
+                ExperimentScheduleGroup, schedule_status.current_group_id
+            )
             group_name = group.name if group else "Unknown"
             log_msg = (
                 f"Experiment '{exp.exp_name}' was manually stopped in running schedule "
@@ -3315,7 +3350,9 @@ def experiment_matrix():
             )
             base_candidate = new_exp_name
             name_suffix_index = 2
-            while db.session.scalars(select(Exps).filter_by(exp_name=new_exp_name)).first():
+            while db.session.scalars(
+                select(Exps).filter_by(exp_name=new_exp_name)
+            ).first():
                 new_exp_name = f"{base_candidate[:40]}_{name_suffix_index}"
                 if len(new_exp_name) > 50:
                     new_exp_name = new_exp_name[:50]
@@ -3675,7 +3712,9 @@ def _matrix_recsys_catalog(experiment):
             "category": recsys.category,
             "enabled": recsys.enabled,
         }
-        for recsys in db.session.scalars(select(Content_Recsys).order_by(Content_Recsys.id.asc())).all()
+        for recsys in db.session.scalars(
+            select(Content_Recsys).order_by(Content_Recsys.id.asc())
+        ).all()
         if recsys.enabled and mode_lower in recsys.enabled.lower()
     ]
     follow_recsys = [
@@ -3685,7 +3724,9 @@ def _matrix_recsys_catalog(experiment):
             "category": recsys.category,
             "enabled": recsys.enabled,
         }
-        for recsys in db.session.scalars(select(Follow_Recsys).order_by(Follow_Recsys.id.asc())).all()
+        for recsys in db.session.scalars(
+            select(Follow_Recsys).order_by(Follow_Recsys.id.asc())
+        ).all()
         if recsys.enabled and mode_lower in recsys.enabled.lower()
     ]
     return {"content": content_recsys, "follow": follow_recsys}
@@ -4353,7 +4394,9 @@ def _matrix_collect_config_reports(exp, exp_folder):
 
     client_records = []
     if exp.idexp is not None:
-        client_records = db.session.scalars(select(Client).filter_by(id_exp=exp.idexp)).all()
+        client_records = db.session.scalars(
+            select(Client).filter_by(id_exp=exp.idexp)
+        ).all()
 
     def _matrix_match_client_file(candidate_names):
         for candidate in candidate_names:
@@ -4368,7 +4411,9 @@ def _matrix_collect_config_reports(exp, exp_folder):
     recsys_catalog = _matrix_recsys_catalog(exp) if exp else {}
     if client_records:
         for client in client_records:
-            population = db.session.scalars(select(Population).filter_by(id=client.population_id)).first()
+            population = db.session.scalars(
+                select(Population).filter_by(id=client.population_id)
+            ).first()
             population_name = (population.name if population else "").strip()
             candidate_names = _matrix_client_file_candidates(client, population_name)
             file_name, file_path = _matrix_match_client_file(candidate_names)
@@ -5314,7 +5359,9 @@ def _create_single_experiment_copy(
     db.session.commit()
 
     # Copy Exp_stats
-    source_stats = db.session.scalars(select(Exp_stats).filter_by(exp_id=source_exp.idexp)).first()
+    source_stats = db.session.scalars(
+        select(Exp_stats).filter_by(exp_id=source_exp.idexp)
+    ).first()
     if source_stats:
         new_stats = Exp_stats(
             exp_id=new_exp.idexp,
@@ -5328,16 +5375,18 @@ def _create_single_experiment_copy(
         db.session.commit()
 
     # Copy Exp_Topic relationships
-    source_topics = db.session.scalars(select(Exp_Topic).filter_by(exp_id=source_exp.idexp)).all()
+    source_topics = db.session.scalars(
+        select(Exp_Topic).filter_by(exp_id=source_exp.idexp)
+    ).all()
     for topic in source_topics:
         new_topic = Exp_Topic(exp_id=new_exp.idexp, topic_id=topic.topic_id)
         db.session.add(new_topic)
     db.session.commit()
 
     # Copy Population_Experiment relationships
-    source_pop_exps = db.session.scalars(select(Population_Experiment).filter_by(
-        id_exp=source_exp.idexp
-    )).all()
+    source_pop_exps = db.session.scalars(
+        select(Population_Experiment).filter_by(id_exp=source_exp.idexp)
+    ).all()
     for pop_exp in source_pop_exps:
         new_pop_exp = Population_Experiment(
             id_exp=new_exp.idexp, id_population=pop_exp.id_population
@@ -5346,11 +5395,15 @@ def _create_single_experiment_copy(
     db.session.commit()
 
     # Copy Client records
-    source_clients = db.session.scalars(select(Client).filter_by(id_exp=source_exp.idexp)).all()
+    source_clients = db.session.scalars(
+        select(Client).filter_by(id_exp=source_exp.idexp)
+    ).all()
     overrides_by_file = _matrix_override_index(config_variations)
     updated_population_files = set()
     for source_client in source_clients:
-        population = db.session.scalars(select(Population).filter_by(id=source_client.population_id)).first()
+        population = db.session.scalars(
+            select(Population).filter_by(id=source_client.population_id)
+        ).first()
         population_name = (population.name if population else "").strip()
         candidate_files = _matrix_client_file_candidates(source_client, population_name)
         client_config_path = None

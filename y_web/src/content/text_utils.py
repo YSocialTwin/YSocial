@@ -10,8 +10,9 @@ import re
 from html.parser import HTMLParser
 from io import StringIO
 
-from y_web.src.models import Admin_users, Hashtags, Post_Toxicity, User_mgmt
 from sqlalchemy import select
+
+from y_web.src.models import Admin_users, Hashtags, Post_Toxicity, User_mgmt
 
 # Optional imports
 try:
@@ -143,7 +144,11 @@ def augment_text(text, exp_id):
     # Get the mentioned user id
     for m in mentions:
         try:
-            mentioned_users[m] = db.session.scalars(select(User_mgmt).filter_by(username=m[1:])).first().id
+            mentioned_users[m] = (
+                db.session.scalars(select(User_mgmt).filter_by(username=m[1:]))
+                .first()
+                .id
+            )
         except:
             pass
 
@@ -151,12 +156,16 @@ def augment_text(text, exp_id):
     for h in hashtags:
         try:
             # Try exact match first
-            hashtag_obj = db.session.scalars(select(Hashtags).filter_by(hashtag=h)).first()
+            hashtag_obj = db.session.scalars(
+                select(Hashtags).filter_by(hashtag=h)
+            ).first()
             if hashtag_obj:
                 used_hastag[h] = hashtag_obj.id
             else:
                 # Try without # prefix for HPC compatibility
-                hashtag_obj = db.session.scalars(select(Hashtags).filter_by(hashtag=h[1:])).first()
+                hashtag_obj = db.session.scalars(
+                    select(Hashtags).filter_by(hashtag=h[1:])
+                ).first()
                 if hashtag_obj:
                     used_hastag[h] = hashtag_obj.id
         except:

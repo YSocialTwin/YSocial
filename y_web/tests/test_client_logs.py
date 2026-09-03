@@ -11,9 +11,10 @@ import pytest
 from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash
-from y_web import db
 from sqlalchemy import select
+from werkzeug.security import generate_password_hash
+
+from y_web import db
 
 pytestmark = pytest.mark.integration
 
@@ -114,7 +115,9 @@ def app():
 
     def check_privileges(username):
         """Mock privilege check"""
-        admin = db.session.scalars(select(Admin_users).filter_by(username=username)).first()
+        admin = db.session.scalars(
+            select(Admin_users).filter_by(username=username)
+        ).first()
         if not admin or admin.role != "admin":
             raise PermissionError("Access denied")
 
@@ -133,7 +136,9 @@ def app():
             return jsonify({"error": "Client not found"}), 404
 
         # Get experiment details
-        experiment = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()
+        experiment = db.session.scalars(
+            select(Exps).filter_by(idexp=client.id_exp)
+        ).first()
         if not experiment:
             return jsonify({"error": "Experiment not found"}), 404
 
@@ -223,7 +228,9 @@ def app():
         user = db.session.scalars(select(Admin_users).filter_by(email=email)).first()
 
         if user and check_password_hash(user.password, password):
-            user_mgmt = db.session.scalars(select(User_mgmt).filter_by(username=user.username)).first()
+            user_mgmt = db.session.scalars(
+                select(User_mgmt).filter_by(username=user.username)
+            ).first()
             if user_mgmt:
                 login_user(user_mgmt)
                 return redirect("/admin/dashboard")

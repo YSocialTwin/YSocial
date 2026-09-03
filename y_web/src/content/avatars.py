@@ -204,7 +204,9 @@ def resolve_forum_profile_pic(user, exp_id: int | None = None) -> str:
         if agent and getattr(agent, "profile_pic", None):
             return agent.profile_pic
 
-        admin = db.session.scalars(select(Admin_users).filter_by(username=username)).first()
+        admin = db.session.scalars(
+            select(Admin_users).filter_by(username=username)
+        ).first()
         if admin and getattr(admin, "profile_pic", None):
             return admin.profile_pic
     except Exception:
@@ -235,7 +237,9 @@ def resolve_forum_username_avatar(username: str, exp_id: int | None = None) -> s
     try:
         from y_web.src.models import Admin_users
 
-        admin = db.session.scalars(select(Admin_users).filter_by(username=username)).first()
+        admin = db.session.scalars(
+            select(Admin_users).filter_by(username=username)
+        ).first()
         if admin and getattr(admin, "profile_pic", None):
             return admin.profile_pic
     except Exception:

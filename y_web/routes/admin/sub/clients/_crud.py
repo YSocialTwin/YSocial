@@ -18,6 +18,7 @@ import networkx as nx
 import numpy as np
 from flask import current_app, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
+from sqlalchemy import delete, select
 
 from y_web import db
 from y_web.routes.admin.sub.experiments._helpers import (
@@ -71,7 +72,6 @@ from y_web.src.system.path_utils import get_resource_path
 
 from ._blueprint import clientsr
 from ._helpers import _forum_effective_link_share, allocate_topics_by_percentage
-from sqlalchemy import delete, select
 
 PLUGIN_REGISTRY_RELATIVE_PATHS = (
     Path("meta") / "registry.json",
@@ -444,10 +444,14 @@ def _adhoc_agent_specs() -> list[dict]:
 
 
 def _adhoc_population_choices(idexp: str, specs: list[dict]) -> dict[str, list[dict]]:
-    pop_exp_associations = db.session.scalars(select(Population_Experiment).filter_by(id_exp=idexp)).all()
+    pop_exp_associations = db.session.scalars(
+        select(Population_Experiment).filter_by(id_exp=idexp)
+    ).all()
     population_ids = [pe.id_population for pe in pop_exp_associations]
     pops = (
-        db.session.scalars(select(Population).filter(~Population.id.in_(population_ids))).all()
+        db.session.scalars(
+            select(Population).filter(~Population.id.in_(population_ids))
+        ).all()
         if population_ids
         else db.session.scalars(select(Population)).all()
     )
@@ -511,7 +515,9 @@ def _global_target_filter_options(idexp: str) -> dict:
 
     leaning_values = {
         str(item.leaning).strip()
-        for item in db.session.scalars(select(Leanings).order_by(Leanings.leaning.asc())).all()
+        for item in db.session.scalars(
+            select(Leanings).order_by(Leanings.leaning.asc())
+        ).all()
         if str(item.leaning).strip()
     }
     leaning_values.update(
@@ -521,7 +527,9 @@ def _global_target_filter_options(idexp: str) -> dict:
     )
     language_values = {
         str(item.language).strip()
-        for item in db.session.scalars(select(Languages).order_by(Languages.language.asc())).all()
+        for item in db.session.scalars(
+            select(Languages).order_by(Languages.language.asc())
+        ).all()
         if str(item.language).strip()
     }
     language_values.update(
@@ -531,7 +539,9 @@ def _global_target_filter_options(idexp: str) -> dict:
     )
     education_values = {
         str(item.education_level).strip()
-        for item in db.session.scalars(select(Education).order_by(Education.education_level.asc())).all()
+        for item in db.session.scalars(
+            select(Education).order_by(Education.education_level.asc())
+        ).all()
         if str(item.education_level).strip()
     }
     education_values.update(
@@ -561,7 +571,9 @@ def _global_target_filter_options(idexp: str) -> dict:
         .order_by(Topic_List.name.asc())
         .all()
         if topic_ids
-        else db.session.scalars(select(Topic_List).order_by(Topic_List.name.asc())).all()
+        else db.session.scalars(
+            select(Topic_List).order_by(Topic_List.name.asc())
+        ).all()
     )
     topic_values = {
         str(topic.name).strip() for topic in topic_rows if str(topic.name).strip()
@@ -888,7 +900,9 @@ def _coerce_adhoc_client_setting(
 
 
 def _build_adhoc_client_agent_settings(spec: dict, experiment) -> dict:
-    topics = db.session.scalars(select(Exp_Topic).filter_by(exp_id=experiment.idexp)).all()
+    topics = db.session.scalars(
+        select(Exp_Topic).filter_by(exp_id=experiment.idexp)
+    ).all()
     topic_ids = [topic.topic_id for topic in topics]
     topic_rows = (
         db.session.query(Topic_List).filter(Topic_List.id.in_(topic_ids)).all()
@@ -904,7 +918,9 @@ def _build_adhoc_client_agent_settings(spec: dict, experiment) -> dict:
             "upper_bound": float(group.upper_bound),
             "value": (float(group.lower_bound) + float(group.upper_bound)) / 2.0,
         }
-        for group in db.session.scalars(select(OpinionGroup).order_by(OpinionGroup.lower_bound.asc())).all()
+        for group in db.session.scalars(
+            select(OpinionGroup).order_by(OpinionGroup.lower_bound.asc())
+        ).all()
     }
     age_classes_by_name = {
         str(age_class.name): {
@@ -912,11 +928,15 @@ def _build_adhoc_client_agent_settings(spec: dict, experiment) -> dict:
             "age_start": int(age_class.age_start),
             "age_end": int(age_class.age_end),
         }
-        for age_class in db.session.scalars(select(AgeClass).order_by(AgeClass.age_start.asc())).all()
+        for age_class in db.session.scalars(
+            select(AgeClass).order_by(AgeClass.age_start.asc())
+        ).all()
     }
     leaning_names = {
         str(leaning.leaning)
-        for leaning in db.session.scalars(select(Leanings).order_by(Leanings.leaning.asc())).all()
+        for leaning in db.session.scalars(
+            select(Leanings).order_by(Leanings.leaning.asc())
+        ).all()
     }
     population_id = request.form.get("population_id")
     population_filter_options = (
@@ -1139,7 +1159,9 @@ def _apply_adhoc_client_form_updates(config: dict, spec: dict, exp) -> dict:
 
 
 def _adhoc_activity_profiles_for_population(population_id: int) -> dict[str, str]:
-    agent_links = db.session.scalars(select(Agent_Population).filter_by(population_id=population_id)).all()
+    agent_links = db.session.scalars(
+        select(Agent_Population).filter_by(population_id=population_id)
+    ).all()
     agent_ids = [link.agent_id for link in agent_links]
     if not agent_ids:
         return {"Always On": ",".join(str(slot) for slot in range(24))}
@@ -1164,13 +1186,20 @@ def _adhoc_activity_profiles_for_population(population_id: int) -> dict[str, str
 
 
 def _export_adhoc_population_json(population, spec: dict, *, owner: str | None) -> dict:
-    agent_links = db.session.scalars(select(Agent_Population).filter_by(population_id=population.id)).all()
-    agents = [db.session.scalars(select(Agent).filter_by(id=link.agent_id)).first() for link in agent_links]
+    agent_links = db.session.scalars(
+        select(Agent_Population).filter_by(population_id=population.id)
+    ).all()
+    agents = [
+        db.session.scalars(select(Agent).filter_by(id=link.agent_id)).first()
+        for link in agent_links
+    ]
     agents = [agent for agent in agents if agent is not None]
     ext_entries = (
-        db.session.scalars(select(Agent_Ext).filter(
-            Agent_Ext.agent_id.in_([agent.id for agent in agents])
-        )).all()
+        db.session.scalars(
+            select(Agent_Ext).filter(
+                Agent_Ext.agent_id.in_([agent.id for agent in agents])
+            )
+        ).all()
         if agents
         else []
     )
@@ -1250,9 +1279,9 @@ def _adhoc_llm_defaults_for_experiment(idexp):
         "llm_v_max_tokens": 300,
         "llm_v_temperature": 0.5,
     }
-    latest_client = (
-        db.session.scalars(select(Client).filter_by(id_exp=idexp).order_by(Client.id.desc())).first()
-    )
+    latest_client = db.session.scalars(
+        select(Client).filter_by(id_exp=idexp).order_by(Client.id.desc())
+    ).first()
     if latest_client is None:
         return defaults
     defaults.update(
@@ -1335,7 +1364,9 @@ def _adhoc_stress_reward_config_for_experiment(exp) -> dict:
 
 def _collect_population_agent_attributes(population_id):
     """Return normalized per-agent attributes for a population, skipping broken rows."""
-    agent_links = db.session.scalars(select(Agent_Population).filter_by(population_id=population_id)).all()
+    agent_links = db.session.scalars(
+        select(Agent_Population).filter_by(population_id=population_id)
+    ).all()
     agents = []
     for link in agent_links:
         agent = db.session.scalars(select(Agent).filter_by(id=link.agent_id)).first()
@@ -1421,11 +1452,15 @@ def _build_client_creation_context(idexp, recsys_mode):
     ensure_population_username_type_column()
     exp = db.session.scalars(select(Exps).filter_by(idexp=idexp)).first()
 
-    pop_exp_associations = db.session.scalars(select(Population_Experiment).filter_by(id_exp=idexp)).all()
+    pop_exp_associations = db.session.scalars(
+        select(Population_Experiment).filter_by(id_exp=idexp)
+    ).all()
     population_ids = [pe.id_population for pe in pop_exp_associations]
 
     pops = (
-        db.session.scalars(select(Population).filter(~Population.id.in_(population_ids))).all()
+        db.session.scalars(
+            select(Population).filter(~Population.id.in_(population_ids))
+        ).all()
         if population_ids
         else db.session.scalars(select(Population)).all()
     )
@@ -1535,7 +1570,9 @@ def _build_client_creation_context(idexp, recsys_mode):
             "lower_bound": group.lower_bound,
             "upper_bound": group.upper_bound,
         }
-        for group in db.session.scalars(select(OpinionGroup).order_by(OpinionGroup.lower_bound.asc())).all()
+        for group in db.session.scalars(
+            select(OpinionGroup).order_by(OpinionGroup.lower_bound.asc())
+        ).all()
     ]
 
     if exp is not None:
@@ -1589,9 +1626,9 @@ def _build_client_creation_context(idexp, recsys_mode):
         memory_configuration_supported = bool(llm_agents_enabled)
 
     if exp is not None and getattr(exp, "platform_type", "microblogging") == "forum":
-        latest_client = (
-            db.session.scalars(select(Client).filter_by(id_exp=idexp).order_by(Client.id.desc())).first()
-        )
+        latest_client = db.session.scalars(
+            select(Client).filter_by(id_exp=idexp).order_by(Client.id.desc())
+        ).first()
         if latest_client is not None:
             exp_llm_defaults.update(
                 {
@@ -1822,9 +1859,9 @@ def clients_adhoc(idexp):
                     "upper_bound": group.upper_bound,
                     "value": (group.lower_bound + group.upper_bound) / 2.0,
                 }
-                for group in db.session.scalars(select(OpinionGroup).order_by(
-                    OpinionGroup.lower_bound.asc()
-                )).all()
+                for group in db.session.scalars(
+                    select(OpinionGroup).order_by(OpinionGroup.lower_bound.asc())
+                ).all()
             ],
             "adhoc_age_classes": [
                 {
@@ -1832,13 +1869,17 @@ def clients_adhoc(idexp):
                     "age_start": age_class.age_start,
                     "age_end": age_class.age_end,
                 }
-                for age_class in db.session.scalars(select(AgeClass).order_by(AgeClass.age_start.asc())).all()
+                for age_class in db.session.scalars(
+                    select(AgeClass).order_by(AgeClass.age_start.asc())
+                ).all()
             ],
             "adhoc_leanings": [
                 {
                     "name": leaning.leaning,
                 }
-                for leaning in db.session.scalars(select(Leanings).order_by(Leanings.leaning.asc())).all()
+                for leaning in db.session.scalars(
+                    select(Leanings).order_by(Leanings.leaning.asc())
+                ).all()
             ],
             "adhoc_form_mode": "create",
             "adhoc_form_action": "/admin/create_adhoc_client",
@@ -1916,7 +1957,9 @@ def edit_adhoc_client(idexp, client_key):
             str(item.get("id")) == str(selected_population_id)
             for item in existing_choices
         ):
-            population = db.session.scalars(select(Population).filter_by(id=selected_population_id)).first()
+            population = db.session.scalars(
+                select(Population).filter_by(id=selected_population_id)
+            ).first()
             if population is not None:
                 existing_choices.append(
                     {
@@ -1942,9 +1985,9 @@ def edit_adhoc_client(idexp, client_key):
                     "upper_bound": group.upper_bound,
                     "value": (group.lower_bound + group.upper_bound) / 2.0,
                 }
-                for group in db.session.scalars(select(OpinionGroup).order_by(
-                    OpinionGroup.lower_bound.asc()
-                )).all()
+                for group in db.session.scalars(
+                    select(OpinionGroup).order_by(OpinionGroup.lower_bound.asc())
+                ).all()
             ],
             "adhoc_age_classes": [
                 {
@@ -1952,11 +1995,15 @@ def edit_adhoc_client(idexp, client_key):
                     "age_start": age_class.age_start,
                     "age_end": age_class.age_end,
                 }
-                for age_class in db.session.scalars(select(AgeClass).order_by(AgeClass.age_start.asc())).all()
+                for age_class in db.session.scalars(
+                    select(AgeClass).order_by(AgeClass.age_start.asc())
+                ).all()
             ],
             "adhoc_leanings": [
                 {"name": leaning.leaning}
-                for leaning in db.session.scalars(select(Leanings).order_by(Leanings.leaning.asc())).all()
+                for leaning in db.session.scalars(
+                    select(Leanings).order_by(Leanings.leaning.asc())
+                ).all()
             ],
             "adhoc_form_mode": "edit",
             "adhoc_form_action": f"/admin/update_adhoc_client/{idexp}/{client_key}",
@@ -2018,14 +2065,18 @@ def create_adhoc_client():
         )
         return redirect(url_for("clientsr.clients_adhoc", idexp=exp_id))
 
-    population = db.session.scalars(select(Population).filter_by(id=population_id)).first()
+    population = db.session.scalars(
+        select(Population).filter_by(id=population_id)
+    ).first()
     if population is None or population.pop_type not in spec["accepted_slugs"]:
         flash(
             "Select a population compatible with the chosen ad hoc agent type.", "error"
         )
         return redirect(url_for("clientsr.clients_adhoc", idexp=exp_id))
 
-    agent_links = db.session.scalars(select(Agent_Population).filter_by(population_id=population.id)).all()
+    agent_links = db.session.scalars(
+        select(Agent_Population).filter_by(population_id=population.id)
+    ).all()
     if not agent_links:
         flash("The selected population does not contain any agents.", "error")
         return redirect(url_for("clientsr.clients_adhoc", idexp=exp_id))
@@ -2316,7 +2367,9 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
     BASE_DIR = get_writable_path()
 
     # Get population
-    population = db.session.scalars(select(Population).filter_by(id=population_id)).first()
+    population = db.session.scalars(
+        select(Population).filter_by(id=population_id)
+    ).first()
     if not population:
         flash("Population not found")
         return redirect(request.referrer)
@@ -2747,9 +2800,9 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
         }
         photo_opinion_groups = {
             group.name: [group.lower_bound, group.upper_bound]
-            for group in db.session.scalars(select(OpinionGroup).order_by(
-                OpinionGroup.lower_bound.asc()
-            )).all()
+            for group in db.session.scalars(
+                select(OpinionGroup).order_by(OpinionGroup.lower_bound.asc())
+            ).all()
         }
         if llm_backend == "ollama":
             llm_config.setdefault("backend", "ollama")
@@ -3025,8 +3078,13 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
     population_filename = f"{exp_dir}{os.sep}{population.name}.json"
 
     # Get agents for this population
-    agents = db.session.scalars(select(Agent_Population).filter_by(population_id=population.id)).all()
-    agents = [db.session.scalars(select(Agent).filter_by(id=a.agent_id)).first() for a in agents]
+    agents = db.session.scalars(
+        select(Agent_Population).filter_by(population_id=population.id)
+    ).all()
+    agents = [
+        db.session.scalars(select(Agent).filter_by(id=a.agent_id)).first()
+        for a in agents
+    ]
 
     # Assign archetypes to agents based on distribution probabilities
     num_agents = len(agents)
@@ -3086,9 +3144,11 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
     population_data = {"agents": []}
     feature_map = summarize_agent_custom_features_bulk([agent.id for agent in agents])
     agent_ext_rows = (
-        db.session.scalars(select(Agent_Ext).filter(
-            Agent_Ext.agent_id.in_([agent.id for agent in agents])
-        )).all()
+        db.session.scalars(
+            select(Agent_Ext).filter(
+                Agent_Ext.agent_id.in_([agent.id for agent in agents])
+            )
+        ).all()
         if agents
         else []
     )
@@ -3098,7 +3158,9 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
             entry.feature_name
         ] = entry.feature_value
     for idx, agent in enumerate(agents):
-        custom_prompt = db.session.scalars(select(Agent_Profile).filter_by(agent_id=agent.id)).first()
+        custom_prompt = db.session.scalars(
+            select(Agent_Profile).filter_by(agent_id=agent.id)
+        ).first()
         custom_prompt = custom_prompt.profile if custom_prompt else None
 
         # Allocate topics based on specified percentages
@@ -3163,8 +3225,12 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
         population_data["agents"].append(agent_data)
 
     # Add pages to population data
-    pages = db.session.scalars(select(Page_Population).filter_by(population_id=population.id)).all()
-    pages = [db.session.scalars(select(Page).filter_by(id=p.page_id)).first() for p in pages]
+    pages = db.session.scalars(
+        select(Page_Population).filter_by(population_id=population.id)
+    ).all()
+    pages = [
+        db.session.scalars(select(Page).filter_by(id=p.page_id)).first() for p in pages
+    ]
 
     for page in pages:
         # Get page topics
@@ -3246,9 +3312,11 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
         shutil.copyfile(prompts_src, prompts_dest)
 
     # Create population assignment if not exists
-    pop_exp = db.session.scalars(select(Population_Experiment).filter_by(
-        id_population=population_id, id_exp=exp.idexp
-    )).first()
+    pop_exp = db.session.scalars(
+        select(Population_Experiment).filter_by(
+            id_population=population_id, id_exp=exp.idexp
+        )
+    ).first()
     if not pop_exp:
         pop_exp = Population_Experiment(id_population=population_id, id_exp=exp.idexp)
         db.session.add(pop_exp)
@@ -3328,12 +3396,22 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
 
     if network_model or (network_file and network_file.filename):
         # Get agents and pages for the population (same logic as Standard)
-        agent_pops = db.session.scalars(select(Agent_Population).filter_by(population_id=population_id)).all()
-        agents = [db.session.scalars(select(Agent).filter_by(id=ap.agent_id)).first() for ap in agent_pops]
+        agent_pops = db.session.scalars(
+            select(Agent_Population).filter_by(population_id=population_id)
+        ).all()
+        agents = [
+            db.session.scalars(select(Agent).filter_by(id=ap.agent_id)).first()
+            for ap in agent_pops
+        ]
         agent_ids = [a.name for a in agents if a]
 
-        page_pops = db.session.scalars(select(Page_Population).filter_by(population_id=population_id)).all()
-        pages_list = [db.session.scalars(select(Page).filter_by(id=pp.page_id)).first() for pp in page_pops]
+        page_pops = db.session.scalars(
+            select(Page_Population).filter_by(population_id=population_id)
+        ).all()
+        pages_list = [
+            db.session.scalars(select(Page).filter_by(id=pp.page_id)).first()
+            for pp in page_pops
+        ]
         page_ids = [p.name for p in pages_list if p]
 
         # Combine agent and page IDs
@@ -3356,51 +3434,67 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
                                 continue
 
                             # Validate agent_1 (same logic as Standard)
-                            agent_1 = db.session.scalars(select(Agent).filter_by(name=l[0])).all()
+                            agent_1 = db.session.scalars(
+                                select(Agent).filter_by(name=l[0])
+                            ).all()
                             aids = [a.id for a in agent_1]
 
                             if agent_1 is not None:
-                                test = db.session.scalars(select(Agent_Population).filter(
-                                    Agent_Population.agent_id.in_(aids),
-                                    Agent_Population.population_id
-                                    == client.population_id,
-                                )).all()
+                                test = db.session.scalars(
+                                    select(Agent_Population).filter(
+                                        Agent_Population.agent_id.in_(aids),
+                                        Agent_Population.population_id
+                                        == client.population_id,
+                                    )
+                                ).all()
                                 error = len(test) == 0
                             else:
-                                agent_1 = db.session.scalars(select(Page).filter_by(name=l[0])).all()
+                                agent_1 = db.session.scalars(
+                                    select(Page).filter_by(name=l[0])
+                                ).all()
                                 aids = [a.id for a in agent_1]
 
                                 if agent_1 is not None:
-                                    test = db.session.scalars(select(Page_Population).filter(
-                                        Page_Population.page_id.in_(aids),
-                                        Page_Population.population_id
-                                        == client.population_id,
-                                    )).all()
+                                    test = db.session.scalars(
+                                        select(Page_Population).filter(
+                                            Page_Population.page_id.in_(aids),
+                                            Page_Population.population_id
+                                            == client.population_id,
+                                        )
+                                    ).all()
                                     error = len(test) == 0
                                 if agent_1 is None:
                                     error = True
 
                             # Validate agent_2 (same logic as Standard)
-                            agent_2 = db.session.scalars(select(Agent).filter_by(name=l[1])).all()
+                            agent_2 = db.session.scalars(
+                                select(Agent).filter_by(name=l[1])
+                            ).all()
                             aids = [a.id for a in agent_2]
 
                             if agent_2 is not None:
-                                test = db.session.scalars(select(Agent_Population).filter(
-                                    Agent_Population.agent_id.in_(aids),
-                                    Agent_Population.population_id
-                                    == client.population_id,
-                                )).all()
+                                test = db.session.scalars(
+                                    select(Agent_Population).filter(
+                                        Agent_Population.agent_id.in_(aids),
+                                        Agent_Population.population_id
+                                        == client.population_id,
+                                    )
+                                ).all()
                                 error2 = len(test) == 0
                             else:
-                                agent_2 = db.session.scalars(select(Page).filter_by(name=l[1])).all()
+                                agent_2 = db.session.scalars(
+                                    select(Page).filter_by(name=l[1])
+                                ).all()
                                 aids = [a.id for a in agent_2]
 
                                 if agent_2 is not None:
-                                    test = db.session.scalars(select(Page_Population).filter(
-                                        Page_Population.page_id.in_(aids),
-                                        Page_Population.population_id
-                                        == client.population_id,
-                                    )).all()
+                                    test = db.session.scalars(
+                                        select(Page_Population).filter(
+                                            Page_Population.page_id.in_(aids),
+                                            Page_Population.population_id
+                                            == client.population_id,
+                                        )
+                                    ).all()
                                     error2 = len(test) == 0
 
                                 if agent_2 is None:
@@ -3972,7 +4066,9 @@ def _create_standard_client_internal():
     exp = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
 
     # get population
-    population = db.session.scalars(select(Population).filter_by(id=population_id)).first()
+    population = db.session.scalars(
+        select(Population).filter_by(id=population_id)
+    ).first()
 
     if population is None:
         flash("Population not found.", "error")
@@ -3997,9 +4093,11 @@ def _create_standard_client_internal():
 
     # check if the population is already assigned to the experiment
     # if not, add it
-    pop_exp = db.session.scalars(select(Population_Experiment).filter_by(
-        id_population=population_id, id_exp=exp_id
-    )).first()
+    pop_exp = db.session.scalars(
+        select(Population_Experiment).filter_by(
+            id_population=population_id, id_exp=exp_id
+        )
+    ).first()
     if not pop_exp:
         pop_exp = Population_Experiment(id_population=population_id, id_exp=exp_id)
         db.session.add(pop_exp)
@@ -4393,9 +4491,14 @@ def _create_standard_client_internal():
             f"{population.name.replace(' ', '')}.json",
         )
 
-    agents = db.session.scalars(select(Agent_Population).filter_by(population_id=population.id)).all()
+    agents = db.session.scalars(
+        select(Agent_Population).filter_by(population_id=population.id)
+    ).all()
     # get the agent details
-    agents = [db.session.scalars(select(Agent).filter_by(id=a.agent_id)).first() for a in agents]
+    agents = [
+        db.session.scalars(select(Agent).filter_by(id=a.agent_id)).first()
+        for a in agents
+    ]
 
     # Assign archetypes to agents based on distribution probabilities
     num_agents = len(agents)
@@ -4440,9 +4543,11 @@ def _create_standard_client_internal():
     res = {"agents": []}
     feature_map = summarize_agent_custom_features_bulk([agent.id for agent in agents])
     agent_ext_rows = (
-        db.session.scalars(select(Agent_Ext).filter(
-            Agent_Ext.agent_id.in_([agent.id for agent in agents])
-        )).all()
+        db.session.scalars(
+            select(Agent_Ext).filter(
+                Agent_Ext.agent_id.in_([agent.id for agent in agents])
+            )
+        ).all()
         if agents
         else []
     )
@@ -4452,7 +4557,9 @@ def _create_standard_client_internal():
             entry.feature_name
         ] = entry.feature_value
     for idx, a in enumerate(agents):
-        custom_prompt = db.session.scalars(select(Agent_Profile).filter_by(agent_id=a.id)).first()
+        custom_prompt = db.session.scalars(
+            select(Agent_Profile).filter_by(agent_id=a.id)
+        ).first()
 
         if custom_prompt:
             custom_prompt = custom_prompt.profile
@@ -4511,8 +4618,12 @@ def _create_standard_client_internal():
         res["agents"].append(agent_payload)
 
     # get the pages associated with the population
-    pages = db.session.scalars(select(Page_Population).filter_by(population_id=population.id)).all()
-    pages = [db.session.scalars(select(Page).filter_by(id=p.page_id)).first() for p in pages]
+    pages = db.session.scalars(
+        select(Page_Population).filter_by(population_id=population.id)
+    ).all()
+    pages = [
+        db.session.scalars(select(Page).filter_by(id=p.page_id)).first() for p in pages
+    ]
 
     for p in pages:
         # get pages topics
@@ -4567,13 +4678,20 @@ def _create_standard_client_internal():
     # Handle optional network configuration
     if network_model or network_file:
         # get populations for client
-        populations = db.session.scalars(select(Population).filter_by(id=client.population_id)).all()
+        populations = db.session.scalars(
+            select(Population).filter_by(id=client.population_id)
+        ).all()
         # get agents for the populations
-        agents = db.session.scalars(select(Agent_Population).filter(
-            Agent_Population.population_id.in_([p.id for p in populations])
-        )).all()
+        agents = db.session.scalars(
+            select(Agent_Population).filter(
+                Agent_Population.population_id.in_([p.id for p in populations])
+            )
+        ).all()
         # get agent ids for all agents in populations
-        agent_ids = [db.session.scalars(select(Agent).filter_by(id=a.agent_id)).first().name for a in agents]
+        agent_ids = [
+            db.session.scalars(select(Agent).filter_by(id=a.agent_id)).first().name
+            for a in agents
+        ]
 
         from y_web.src.system.path_utils import get_writable_path
 
@@ -4601,50 +4719,66 @@ def _create_standard_client_internal():
                             if len(l) < 2:
                                 continue
 
-                            agent_1 = db.session.scalars(select(Agent).filter_by(name=l[0])).all()
+                            agent_1 = db.session.scalars(
+                                select(Agent).filter_by(name=l[0])
+                            ).all()
                             aids = [a.id for a in agent_1]
 
                             if agent_1 is not None:
-                                test = db.session.scalars(select(Agent_Population).filter(
-                                    Agent_Population.agent_id.in_(aids),
-                                    Agent_Population.population_id
-                                    == client.population_id,
-                                )).all()
+                                test = db.session.scalars(
+                                    select(Agent_Population).filter(
+                                        Agent_Population.agent_id.in_(aids),
+                                        Agent_Population.population_id
+                                        == client.population_id,
+                                    )
+                                ).all()
                                 error = len(test) == 0
                             else:
-                                agent_1 = db.session.scalars(select(Page).filter_by(name=l[0])).all()
+                                agent_1 = db.session.scalars(
+                                    select(Page).filter_by(name=l[0])
+                                ).all()
                                 aids = [a.id for a in agent_1]
 
                                 if agent_1 is not None:
-                                    test = db.session.scalars(select(Page_Population).filter(
-                                        Page_Population.page_id.in_(aids),
-                                        Page_Population.population_id
-                                        == client.population_id,
-                                    )).all()
+                                    test = db.session.scalars(
+                                        select(Page_Population).filter(
+                                            Page_Population.page_id.in_(aids),
+                                            Page_Population.population_id
+                                            == client.population_id,
+                                        )
+                                    ).all()
                                     error = len(test) == 0
                                 if agent_1 is None:
                                     error = True
 
-                            agent_2 = db.session.scalars(select(Agent).filter_by(name=l[1])).all()
+                            agent_2 = db.session.scalars(
+                                select(Agent).filter_by(name=l[1])
+                            ).all()
                             aids = [a.id for a in agent_2]
 
                             if agent_2 is not None:
-                                test = db.session.scalars(select(Agent_Population).filter(
-                                    Agent_Population.agent_id.in_(aids),
-                                    Agent_Population.population_id
-                                    == client.population_id,
-                                )).all()
+                                test = db.session.scalars(
+                                    select(Agent_Population).filter(
+                                        Agent_Population.agent_id.in_(aids),
+                                        Agent_Population.population_id
+                                        == client.population_id,
+                                    )
+                                ).all()
                                 error2 = len(test) == 0
                             else:
-                                agent_2 = db.session.scalars(select(Page).filter_by(name=l[1])).all()
+                                agent_2 = db.session.scalars(
+                                    select(Page).filter_by(name=l[1])
+                                ).all()
                                 aids = [a.id for a in agent_2]
 
                                 if agent_2 is not None:
-                                    test = db.session.scalars(select(Page_Population).filter(
-                                        Page_Population.page_id.in_(aids),
-                                        Page_Population.population_id
-                                        == client.population_id,
-                                    )).all()
+                                    test = db.session.scalars(
+                                        select(Page_Population).filter(
+                                            Page_Population.page_id.in_(aids),
+                                            Page_Population.population_id
+                                            == client.population_id,
+                                        )
+                                    ).all()
                                     error2 = len(test) == 0
 
                                 if agent_2 is None:
@@ -5258,7 +5392,9 @@ def _create_forum_client_internal():
     exp = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
 
     # get population
-    population = db.session.scalars(select(Population).filter_by(id=population_id)).first()
+    population = db.session.scalars(
+        select(Population).filter_by(id=population_id)
+    ).first()
 
     if population is None:
         flash("Population not found.", "error")
@@ -5283,9 +5419,11 @@ def _create_forum_client_internal():
 
     # check if the population is already assigned to the experiment
     # if not, add it
-    pop_exp = db.session.scalars(select(Population_Experiment).filter_by(
-        id_population=population_id, id_exp=exp_id
-    )).first()
+    pop_exp = db.session.scalars(
+        select(Population_Experiment).filter_by(
+            id_population=population_id, id_exp=exp_id
+        )
+    ).first()
     if not pop_exp:
         pop_exp = Population_Experiment(id_population=population_id, id_exp=exp_id)
         db.session.add(pop_exp)
@@ -5685,9 +5823,14 @@ def _create_forum_client_internal():
             f"{population.name.replace(' ', '')}.json",
         )
 
-    agents = db.session.scalars(select(Agent_Population).filter_by(population_id=population.id)).all()
+    agents = db.session.scalars(
+        select(Agent_Population).filter_by(population_id=population.id)
+    ).all()
     # get the agent details
-    agents = [db.session.scalars(select(Agent).filter_by(id=a.agent_id)).first() for a in agents]
+    agents = [
+        db.session.scalars(select(Agent).filter_by(id=a.agent_id)).first()
+        for a in agents
+    ]
 
     # Assign archetypes to agents based on distribution probabilities
     num_agents = len(agents)
@@ -5732,7 +5875,9 @@ def _create_forum_client_internal():
     res = {"agents": []}
     feature_map = summarize_agent_custom_features_bulk([agent.id for agent in agents])
     for idx, a in enumerate(agents):
-        custom_prompt = db.session.scalars(select(Agent_Profile).filter_by(agent_id=a.id)).first()
+        custom_prompt = db.session.scalars(
+            select(Agent_Profile).filter_by(agent_id=a.id)
+        ).first()
 
         if custom_prompt:
             custom_prompt = custom_prompt.profile
@@ -5789,8 +5934,12 @@ def _create_forum_client_internal():
         res["agents"].append(agent_payload)
 
     # get the pages associated with the population
-    pages = db.session.scalars(select(Page_Population).filter_by(population_id=population.id)).all()
-    pages = [db.session.scalars(select(Page).filter_by(id=p.page_id)).first() for p in pages]
+    pages = db.session.scalars(
+        select(Page_Population).filter_by(population_id=population.id)
+    ).all()
+    pages = [
+        db.session.scalars(select(Page).filter_by(id=p.page_id)).first() for p in pages
+    ]
 
     for p in pages:
         # get pages topics
@@ -5845,13 +5994,20 @@ def _create_forum_client_internal():
     # Handle optional network configuration
     if network_model or network_file:
         # get populations for client
-        populations = db.session.scalars(select(Population).filter_by(id=client.population_id)).all()
+        populations = db.session.scalars(
+            select(Population).filter_by(id=client.population_id)
+        ).all()
         # get agents for the populations
-        agents = db.session.scalars(select(Agent_Population).filter(
-            Agent_Population.population_id.in_([p.id for p in populations])
-        )).all()
+        agents = db.session.scalars(
+            select(Agent_Population).filter(
+                Agent_Population.population_id.in_([p.id for p in populations])
+            )
+        ).all()
         # get agent ids for all agents in populations
-        agent_ids = [db.session.scalars(select(Agent).filter_by(id=a.agent_id)).first().name for a in agents]
+        agent_ids = [
+            db.session.scalars(select(Agent).filter_by(id=a.agent_id)).first().name
+            for a in agents
+        ]
 
         from y_web.src.system.path_utils import get_writable_path
 
@@ -5879,50 +6035,66 @@ def _create_forum_client_internal():
                             if len(l) < 2:
                                 continue
 
-                            agent_1 = db.session.scalars(select(Agent).filter_by(name=l[0])).all()
+                            agent_1 = db.session.scalars(
+                                select(Agent).filter_by(name=l[0])
+                            ).all()
                             aids = [a.id for a in agent_1]
 
                             if agent_1 is not None:
-                                test = db.session.scalars(select(Agent_Population).filter(
-                                    Agent_Population.agent_id.in_(aids),
-                                    Agent_Population.population_id
-                                    == client.population_id,
-                                )).all()
+                                test = db.session.scalars(
+                                    select(Agent_Population).filter(
+                                        Agent_Population.agent_id.in_(aids),
+                                        Agent_Population.population_id
+                                        == client.population_id,
+                                    )
+                                ).all()
                                 error = len(test) == 0
                             else:
-                                agent_1 = db.session.scalars(select(Page).filter_by(name=l[0])).all()
+                                agent_1 = db.session.scalars(
+                                    select(Page).filter_by(name=l[0])
+                                ).all()
                                 aids = [a.id for a in agent_1]
 
                                 if agent_1 is not None:
-                                    test = db.session.scalars(select(Page_Population).filter(
-                                        Page_Population.page_id.in_(aids),
-                                        Page_Population.population_id
-                                        == client.population_id,
-                                    )).all()
+                                    test = db.session.scalars(
+                                        select(Page_Population).filter(
+                                            Page_Population.page_id.in_(aids),
+                                            Page_Population.population_id
+                                            == client.population_id,
+                                        )
+                                    ).all()
                                     error = len(test) == 0
                                 if agent_1 is None:
                                     error = True
 
-                            agent_2 = db.session.scalars(select(Agent).filter_by(name=l[1])).all()
+                            agent_2 = db.session.scalars(
+                                select(Agent).filter_by(name=l[1])
+                            ).all()
                             aids = [a.id for a in agent_2]
 
                             if agent_2 is not None:
-                                test = db.session.scalars(select(Agent_Population).filter(
-                                    Agent_Population.agent_id.in_(aids),
-                                    Agent_Population.population_id
-                                    == client.population_id,
-                                )).all()
+                                test = db.session.scalars(
+                                    select(Agent_Population).filter(
+                                        Agent_Population.agent_id.in_(aids),
+                                        Agent_Population.population_id
+                                        == client.population_id,
+                                    )
+                                ).all()
                                 error2 = len(test) == 0
                             else:
-                                agent_2 = db.session.scalars(select(Page).filter_by(name=l[1])).all()
+                                agent_2 = db.session.scalars(
+                                    select(Page).filter_by(name=l[1])
+                                ).all()
                                 aids = [a.id for a in agent_2]
 
                                 if agent_2 is not None:
-                                    test = db.session.scalars(select(Page_Population).filter(
-                                        Page_Population.page_id.in_(aids),
-                                        Page_Population.population_id
-                                        == client.population_id,
-                                    )).all()
+                                    test = db.session.scalars(
+                                        select(Page_Population).filter(
+                                            Page_Population.page_id.in_(aids),
+                                            Page_Population.population_id
+                                            == client.population_id,
+                                        )
+                                    ).all()
                                     error2 = len(test) == 0
 
                                 if agent_2 is None:
@@ -6187,13 +6359,15 @@ def delete_client(uid):
     db.session.commit()
 
     # delete association of population and experiment if no other client is using it
-    pop_exp = db.session.scalars(select(Population_Experiment).filter_by(
-        id_population=client.population_id, id_exp=exp_id
-    )).first()
+    pop_exp = db.session.scalars(
+        select(Population_Experiment).filter_by(
+            id_population=client.population_id, id_exp=exp_id
+        )
+    ).first()
     if pop_exp:
-        other_clients = db.session.scalars(select(Client).filter_by(
-            id_exp=exp_id, population_id=client.population_id
-        )).all()
+        other_clients = db.session.scalars(
+            select(Client).filter_by(id_exp=exp_id, population_id=client.population_id)
+        ).all()
         if len(other_clients) == 0:
             db.session.delete(pop_exp)
             db.session.commit()

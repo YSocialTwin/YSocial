@@ -33,6 +33,7 @@ from flask import (
     url_for,
 )
 from flask_login import current_user, login_required, login_user
+from sqlalchemy import select
 
 from y_web import db  # , app
 from y_web.migrations.add_hpc_monitor_settings import (
@@ -116,7 +117,6 @@ from ._blueprint import (
     experiments,
 )
 from ._helpers import *  # noqa: F401,F403
-from sqlalchemy import select
 
 
 @experiments.route("/admin/test_remote_server/<int:exp_id>", methods=["POST"])

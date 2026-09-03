@@ -99,6 +99,7 @@ def _redirect_create_sqlite_db(monkeypatch):
     """
     import shutil
     import tempfile
+
     from sqlalchemy.pool import NullPool
 
     _REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -147,7 +148,6 @@ def _redirect_create_sqlite_db(monkeypatch):
             pass
 
 
-
 @pytest.fixture(autouse=True)
 def _patch_db_schema_guard(monkeypatch):
     """
@@ -161,7 +161,6 @@ def _patch_db_schema_guard(monkeypatch):
         "y_web.src.agents.platform.ensure_population_username_type_column",
         lambda: None,
     )
-
 
 
 @pytest.fixture

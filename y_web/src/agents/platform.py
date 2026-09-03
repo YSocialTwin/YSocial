@@ -50,16 +50,18 @@ def infer_population_username_type(population):
     if explicit in VALID_POPULATION_TYPES:
         return explicit
 
-    associations = db.session.scalars(select(Population_Experiment).filter_by(
-        id_population=population.id
-    )).all()
+    associations = db.session.scalars(
+        select(Population_Experiment).filter_by(id_population=population.id)
+    ).all()
     if not associations:
         return None
 
     experiment_ids = [assoc.id_exp for assoc in associations]
     experiment_types = {
         normalize_population_username_type(exp.platform_type, default="")
-        for exp in db.session.scalars(select(Exps).filter(Exps.idexp.in_(experiment_ids))).all()
+        for exp in db.session.scalars(
+            select(Exps).filter(Exps.idexp.in_(experiment_ids))
+        ).all()
     }
     experiment_types.discard("")
     if len(experiment_types) == 1:

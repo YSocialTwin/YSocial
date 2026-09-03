@@ -9,9 +9,10 @@ import pytest
 from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash
-from y_web import db
 from sqlalchemy import select
+from werkzeug.security import generate_password_hash
+
+from y_web import db
 
 pytestmark = pytest.mark.integration
 
@@ -195,12 +196,16 @@ def app():
 
         # For non-admin users, get the User_mgmt version
         if user.role != "admin":
-            user_agent = db.session.scalars(select(User_mgmt).filter_by(username=user.username)).first()
+            user_agent = db.session.scalars(
+                select(User_mgmt).filter_by(username=user.username)
+            ).first()
             if user_agent:
                 login_user(user_agent)
                 return "Login successful - regular user"
         else:
-            user_agent = db.session.scalars(select(User_mgmt).filter_by(username=user.username)).first()
+            user_agent = db.session.scalars(
+                select(User_mgmt).filter_by(username=user.username)
+            ).first()
             if user_agent:
                 login_user(user_agent)
                 return "Login successful - admin user"

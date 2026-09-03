@@ -12,9 +12,10 @@ import pytest
 from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash
-from y_web import db
 from sqlalchemy import select
+from werkzeug.security import generate_password_hash
+
+from y_web import db
 
 pytestmark = pytest.mark.integration
 
@@ -141,7 +142,9 @@ def app():
         # Handle different roles
         if user.role == "user":
             # Regular users need User_mgmt entry
-            user_agent = db.session.scalars(select(User_mgmt).filter_by(username=user.username)).first()
+            user_agent = db.session.scalars(
+                select(User_mgmt).filter_by(username=user.username)
+            ).first()
             if user_agent:
                 login_user(user_agent, remember=remember)
                 return "Login successful - regular user"

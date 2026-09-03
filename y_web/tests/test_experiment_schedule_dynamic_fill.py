@@ -67,9 +67,13 @@ def test_dynamic_fill_helper_uses_no_autoflush_for_read_queries():
 
     assert "with db.session.no_autoflush:" in schedule_source
     assert (
-        "db.session.scalars(select(Population).filter_by(id=client.population_id)).first()" in schedule_source
+        "db.session.scalars(select(Population).filter_by(id=client.population_id)).first()"
+        in schedule_source
     )
-    assert "db.session.scalars(select(Client).filter_by(id_exp=exp.idexp)).all()" in schedule_source
+    assert (
+        "db.session.scalars(select(Client).filter_by(id_exp=exp.idexp)).all()"
+        in schedule_source
+    )
     assert "with _schedule_check_lock:" in schedule_source
 
 
@@ -240,9 +244,7 @@ def test_failed_experiment_does_not_free_dynamic_fill_slot(app):
                 "y_web.routes.admin.sub.experiments._schedule._get_ordered_schedule_items",
                 return_value=current_items,
             ),
-            patch(
-                "y_web.routes.admin.sub.experiments._schedule.db"
-            ) as mock_db,
+            patch("y_web.routes.admin.sub.experiments._schedule.db") as mock_db,
         ):
             mock_db.session.get.side_effect = _fake_session_get
             result = _advance_dynamic_schedule(status, [])

@@ -5,6 +5,7 @@ import types
 from pathlib import Path
 
 import pytest
+
 from y_web import db
 
 pytestmark = pytest.mark.unit

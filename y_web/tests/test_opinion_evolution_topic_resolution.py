@@ -14,7 +14,9 @@ def test_opinion_evolution_prefers_experiment_interests():
     assert "db.session.query(Interests).all()" in source
     assert "if topics:" in source
     assert "return topics" in source
-    assert "db.session.scalars(select(Exp_Topic).filter_by(exp_id=expid)).all()" in source
+    assert (
+        "db.session.scalars(select(Exp_Topic).filter_by(exp_id=expid)).all()" in source
+    )
     assert "db.session.query(Topic_List)" in source
 
 
@@ -59,9 +61,13 @@ def test_opinion_evolution_bootstraps_missing_agent_opinions():
     assert (
         "def _bootstrap_initial_agent_opinions_if_missing(expid, experiment):" in source
     )
-    assert "db.session.execute(delete(OpinionEvolutionCache).filter_by(exp_id=expid))" in source
     assert (
-        "db.session.execute(delete(OpinionEvolutionSampledAgents).filter_by(exp_id=expid))" in source
+        "db.session.execute(delete(OpinionEvolutionCache).filter_by(exp_id=expid))"
+        in source
+    )
+    assert (
+        "db.session.execute(delete(OpinionEvolutionSampledAgents).filter_by(exp_id=expid))"
+        in source
     )
     assert "_bootstrap_initial_agent_opinions_if_missing(expid, experiment)" in source
 

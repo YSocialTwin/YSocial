@@ -9,9 +9,10 @@ import pytest
 from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash
-from y_web import db
 from sqlalchemy import select
+from werkzeug.security import generate_password_hash
+
+from y_web import db
 
 pytestmark = pytest.mark.integration
 
@@ -141,7 +142,9 @@ def app():
     @login_required
     def follow(user_id, follower_id):
         # Get the last round id from Rounds
-        current_round = db.session.scalars(select(Rounds).order_by(Rounds.id.desc())).first()
+        current_round = db.session.scalars(
+            select(Rounds).order_by(Rounds.id.desc())
+        ).first()
         if not current_round:
             return "No rounds available", 400
 
@@ -188,7 +191,9 @@ def app():
         if not original:
             return "Post not found", 404
 
-        current_round = db.session.scalars(select(Rounds).order_by(Rounds.id.desc())).first()
+        current_round = db.session.scalars(
+            select(Rounds).order_by(Rounds.id.desc())
+        ).first()
         if not current_round:
             return "No rounds available", 400
 
@@ -212,14 +217,16 @@ def app():
         if not post_id:
             return "Missing post_id", 400
 
-        current_round = db.session.scalars(select(Rounds).order_by(Rounds.id.desc())).first()
+        current_round = db.session.scalars(
+            select(Rounds).order_by(Rounds.id.desc())
+        ).first()
         if not current_round:
             return "No rounds available", 400
 
         # Check if already reacted
-        existing_reaction = db.session.scalars(select(Reactions).filter_by(
-            user_id=current_user.id, post_id=post_id
-        )).first()
+        existing_reaction = db.session.scalars(
+            select(Reactions).filter_by(user_id=current_user.id, post_id=post_id)
+        ).first()
 
         if existing_reaction:
             return "Already reacted", 400
@@ -247,7 +254,9 @@ def app():
         if not text:
             return "Missing text", 400
 
-        current_round = db.session.scalars(select(Rounds).order_by(Rounds.id.desc())).first()
+        current_round = db.session.scalars(
+            select(Rounds).order_by(Rounds.id.desc())
+        ).first()
         if not current_round:
             return "No rounds available", 400
 
@@ -285,7 +294,9 @@ def app():
         if not post_id:
             return "Missing post_id", 400
 
-        post = db.session.scalars(select(Post).filter_by(id=post_id, user_id=current_user.id)).first()
+        post = db.session.scalars(
+            select(Post).filter_by(id=post_id, user_id=current_user.id)
+        ).first()
         if not post:
             return "Post not found or not owned by user", 404
 
@@ -309,10 +320,14 @@ def app():
 
         from werkzeug.security import check_password_hash
 
-        admin_user = db.session.scalars(select(Admin_users).filter_by(email=email)).first()
+        admin_user = db.session.scalars(
+            select(Admin_users).filter_by(email=email)
+        ).first()
 
         if admin_user and check_password_hash(admin_user.password, password):
-            user_mgmt = db.session.scalars(select(User_mgmt).filter_by(username=admin_user.username)).first()
+            user_mgmt = db.session.scalars(
+                select(User_mgmt).filter_by(username=admin_user.username)
+            ).first()
             if user_mgmt:
                 login_user(user_mgmt)
                 return "Login successful"

@@ -15,9 +15,10 @@ from flask_login import (
     login_user,
 )
 from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import check_password_hash, generate_password_hash
-from y_web import db
 from sqlalchemy import select
+from werkzeug.security import check_password_hash, generate_password_hash
+
+from y_web import db
 
 pytestmark = pytest.mark.integration
 
@@ -169,7 +170,9 @@ def test_auth_integration():
             username = request.form.get("username")
             password = request.form.get("password")
 
-            user = db.session.scalars(select(TestUser).filter_by(username=username)).first()
+            user = db.session.scalars(
+                select(TestUser).filter_by(username=username)
+            ).first()
             if user and check_password_hash(user.password, password):
                 login_user(user)
                 return "Login successful"

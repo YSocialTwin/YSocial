@@ -6,10 +6,10 @@ to follow based on network structure, shared interests, and user preferences.
 """
 
 import numpy as np
+from sqlalchemy import select
 from sqlalchemy.sql.expression import func
 
 from y_web import db
-from sqlalchemy import select
 from y_web.src.models import (
     Admin_users,
     Agent,
@@ -65,7 +65,9 @@ def get_suggested_users(username, pages=False):
             for page in pages:
                 # check if user_id is following the page
                 if (
-                    db.session.scalars(select(Follow).filter_by(user_id=user_id, follower_id=page.id)).first()
+                    db.session.scalars(
+                        select(Follow).filter_by(user_id=user_id, follower_id=page.id)
+                    ).first()
                     is None
                 ):
                     res.append(
@@ -73,13 +75,22 @@ def get_suggested_users(username, pages=False):
                     )
 
     for user in res:
-        if db.session.scalars(select(User_mgmt).filter_by(id=user["id"])).first().is_page == 1:
-            pg = db.session.scalars(select(Page).filter_by(name=user["username"])).first()
+        if (
+            db.session.scalars(select(User_mgmt).filter_by(id=user["id"]))
+            .first()
+            .is_page
+            == 1
+        ):
+            pg = db.session.scalars(
+                select(Page).filter_by(name=user["username"])
+            ).first()
             if pg is not None:
                 user["profile_pic"] = pg.logo
         else:
             try:
-                ag = db.session.scalars(select(Agent).filter_by(name=user["username"])).first()
+                ag = db.session.scalars(
+                    select(Agent).filter_by(name=user["username"])
+                ).first()
                 user["profile_pic"] = (
                     ag.profile_pic
                     if ag is not None and ag.profile_pic is not None
@@ -156,7 +167,14 @@ def __follow_suggestions(rectype, user_id, n_neighbors, leaning_biased):
         for target in res:
             res[target] = sum(
                 [
-                    1 / np.log(len(db.session.scalars(select(Follow).filter_by(user_id=neighbor)).all()))
+                    1
+                    / np.log(
+                        len(
+                            db.session.scalars(
+                                select(Follow).filter_by(user_id=neighbor)
+                            ).all()
+                        )
+                    )
                     for neighbor in res[target]
                 ]
             )
@@ -171,14 +189,18 @@ def __follow_suggestions(rectype, user_id, n_neighbors, leaning_biased):
         for user in users:
             res[user.id] = 1 / n_neighbors
 
-    l_source = db.session.scalars(select(User_mgmt).filter_by(id=user_id)).first().leaning
+    l_source = (
+        db.session.scalars(select(User_mgmt).filter_by(id=user_id)).first().leaning
+    )
     leanings = __get_users_leanings(res.keys())
     for user in res:
         if leanings[user] == l_source:
             res[user] = res[user] * leaning_biased
 
     res = [k for k, v in res.items() if v > 0]
-    users = [db.session.scalars(select(User_mgmt).filter_by(id=user)).first() for user in res]
+    users = [
+        db.session.scalars(select(User_mgmt).filter_by(id=user)).first() for user in res
+    ]
     if len(users) > n_neighbors:
         users = users[:n_neighbors]
     return users
@@ -228,5 +250,7 @@ def __get_users_leanings(agents):
         the political leaning of the users"""
     leanings = {}
     for agent in agents:
-        leanings[agent] = db.session.scalars(select(User_mgmt).filter_by(id=agent)).first().leaning
+        leanings[agent] = (
+            db.session.scalars(select(User_mgmt).filter_by(id=agent)).first().leaning
+        )
     return leanings

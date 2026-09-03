@@ -71,7 +71,9 @@ def check_tutorial_status():
     Returns:
         JSON with show_tutorial boolean and user role
     """
-    user = db.session.scalars(select(Admin_users).filter_by(username=current_user.username)).first()
+    user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
     if not user or user.role not in ["admin", "researcher"]:
         return jsonify({"show_tutorial": False, "role": None})
@@ -88,7 +90,9 @@ def dismiss_tutorial():
     Returns:
         JSON response with success status
     """
-    user = db.session.scalars(select(Admin_users).filter_by(username=current_user.username)).first()
+    user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
     if not user or user.role not in ["admin", "researcher"]:
         return jsonify({"success": False, "message": "Access denied"}), 403
@@ -108,7 +112,9 @@ def reset_tutorial():
     Returns:
         JSON response with success status
     """
-    user = db.session.scalars(select(Admin_users).filter_by(username=current_user.username)).first()
+    user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
     if not user or user.role not in ["admin", "researcher"]:
         return jsonify({"success": False, "message": "Access denied"}), 403
@@ -272,7 +278,9 @@ def create_tutorial_experiment():
             )
 
         # Check for existing names
-        if db.session.scalars(select(Population).filter_by(name=population_name)).first():
+        if db.session.scalars(
+            select(Population).filter_by(name=population_name)
+        ).first():
             return (
                 jsonify(
                     {
@@ -300,7 +308,9 @@ def create_tutorial_experiment():
         political_str = ",".join(str(p) for p in political_leanings)
 
         # Default toxicity to "None" (ID 1 typically)
-        none_toxicity = db.session.scalars(select(Toxicity_Levels).filter_by(toxicity_level="None")).first()
+        none_toxicity = db.session.scalars(
+            select(Toxicity_Levels).filter_by(toxicity_level="None")
+        ).first()
         toxicity_str = str(none_toxicity.id) if none_toxicity else "1"
 
         # Build percentages dict with equal distribution
@@ -373,7 +383,9 @@ def create_tutorial_experiment():
                 profile_id = profile_data.get("id")
                 percentage = float(profile_data.get("percentage", 0))
                 if profile_id and percentage > 0:
-                    profile = db.session.scalars(select(ActivityProfile).filter_by(id=profile_id)).first()
+                    profile = db.session.scalars(
+                        select(ActivityProfile).filter_by(id=profile_id)
+                    ).first()
                     if profile:
                         profile_assoc = PopulationActivityProfile(
                             population=pop.id,
@@ -384,7 +396,9 @@ def create_tutorial_experiment():
             db.session.commit()
         else:
             # Default to "Always On" at 100% if no profiles specified
-            selected_profile = db.session.scalars(select(ActivityProfile).filter_by(name="Always On")).first()
+            selected_profile = db.session.scalars(
+                select(ActivityProfile).filter_by(name="Always On")
+            ).first()
             if selected_profile:
                 profile_assoc = PopulationActivityProfile(
                     population=pop.id,
@@ -576,7 +590,9 @@ def create_tutorial_experiment():
 
         # Create topics for the experiment
         for topic_name in experiment_topics:
-            existing_topic = db.session.scalars(select(Topic_List).filter_by(name=topic_name)).first()
+            existing_topic = db.session.scalars(
+                select(Topic_List).filter_by(name=topic_name)
+            ).first()
             if not existing_topic:
                 existing_topic = Topic_List(name=topic_name)
                 db.session.add(existing_topic)
@@ -687,8 +703,13 @@ def create_tutorial_experiment():
 
         # Create client config file
         # Get agents in the population
-        agents = db.session.scalars(select(Agent_Population).filter_by(population_id=pop.id)).all()
-        agents = [db.session.scalars(select(Agent).filter_by(id=a.agent_id)).first() for a in agents]
+        agents = db.session.scalars(
+            select(Agent_Population).filter_by(population_id=pop.id)
+        ).all()
+        agents = [
+            db.session.scalars(select(Agent).filter_by(id=a.agent_id)).first()
+            for a in agents
+        ]
 
         # Build agent population file
         res = {"agents": []}
@@ -866,7 +887,9 @@ def create_tutorial_experiment():
         # on first run so that first_run detection works correctly
 
         # Mark tutorial as shown
-        user = db.session.scalars(select(Admin_users).filter_by(username=current_user.username)).first()
+        user = db.session.scalars(
+            select(Admin_users).filter_by(username=current_user.username)
+        ).first()
         if user:
             user.tutorial_shown = True
             db.session.commit()
@@ -954,7 +977,9 @@ def run_tutorial_simulation():
             return jsonify({"success": False, "message": "Client not found"}), 404
 
         # Get the population
-        population = db.session.scalars(select(Population).filter_by(id=client.population_id)).first()
+        population = db.session.scalars(
+            select(Population).filter_by(id=client.population_id)
+        ).first()
         if not population:
             return jsonify({"success": False, "message": "Population not found"}), 404
 
@@ -1009,7 +1034,9 @@ def check_exp_details_tutorial_status():
     Returns:
         JSON with show_tutorial boolean and user role
     """
-    user = db.session.scalars(select(Admin_users).filter_by(username=current_user.username)).first()
+    user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
     if not user or user.role not in ["admin", "researcher"]:
         return jsonify({"show_tutorial": False, "role": None})
@@ -1029,7 +1056,9 @@ def dismiss_exp_details_tutorial():
     Returns:
         JSON response with success status
     """
-    user = db.session.scalars(select(Admin_users).filter_by(username=current_user.username)).first()
+    user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
     if not user or user.role not in ["admin", "researcher"]:
         return jsonify({"success": False, "message": "Access denied"}), 403
@@ -1049,7 +1078,9 @@ def reset_exp_details_tutorial():
     Returns:
         JSON response with success status
     """
-    user = db.session.scalars(select(Admin_users).filter_by(username=current_user.username)).first()
+    user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
     if not user or user.role not in ["admin", "researcher"]:
         return jsonify({"success": False, "message": "Access denied"}), 403

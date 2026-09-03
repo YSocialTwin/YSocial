@@ -11,8 +11,9 @@ import os
 from collections import defaultdict
 from datetime import datetime
 
-from y_web import db
 from sqlalchemy import func, select
+
+from y_web import db
 from y_web.src.hpc.log_offset import (
     _commit_with_retry,
     get_log_file_offset,
@@ -250,9 +251,15 @@ def parse_server_log_incremental(log_file_path, exp_id, start_offset=0, is_hpc=F
                 simulation_time = 0
 
             # Check if record exists
-            metric = db.session.scalars(select(ServerLogMetrics).filter_by(
-                exp_id=exp_id, aggregation_level="daily", day=day, hour=None, path=path
-            )).first()
+            metric = db.session.scalars(
+                select(ServerLogMetrics).filter_by(
+                    exp_id=exp_id,
+                    aggregation_level="daily",
+                    day=day,
+                    hour=None,
+                    path=path,
+                )
+            ).first()
 
             if metric:
                 # Update existing record
@@ -300,9 +307,15 @@ def parse_server_log_incremental(log_file_path, exp_id, start_offset=0, is_hpc=F
                 simulation_time = 0
 
             # Check if record exists
-            metric = db.session.scalars(select(ServerLogMetrics).filter_by(
-                exp_id=exp_id, aggregation_level="hourly", day=day, hour=hour, path=path
-            )).first()
+            metric = db.session.scalars(
+                select(ServerLogMetrics).filter_by(
+                    exp_id=exp_id,
+                    aggregation_level="hourly",
+                    day=day,
+                    hour=hour,
+                    path=path,
+                )
+            ).first()
 
             if metric:
                 # Update existing record
@@ -336,12 +349,16 @@ def parse_server_log_incremental(log_file_path, exp_id, start_offset=0, is_hpc=F
 
     # Verify database writes for HPC experiments
     if is_hpc:
-        daily_count = db.session.scalar(select(func.count()).select_from(ServerLogMetrics).filter_by(
-            exp_id=exp_id, aggregation_level="daily"
-        ))
-        hourly_count = db.session.scalar(select(func.count()).select_from(ServerLogMetrics).filter_by(
-            exp_id=exp_id, aggregation_level="hourly"
-        ))
+        daily_count = db.session.scalar(
+            select(func.count())
+            .select_from(ServerLogMetrics)
+            .filter_by(exp_id=exp_id, aggregation_level="daily")
+        )
+        hourly_count = db.session.scalar(
+            select(func.count())
+            .select_from(ServerLogMetrics)
+            .filter_by(exp_id=exp_id, aggregation_level="hourly")
+        )
         print(f"\n=== HPC Database Write Verification (exp_id={exp_id}) ===")
         print(f"Daily records in database: {daily_count}")
         print(f"Hourly records in database: {hourly_count}")
@@ -515,14 +532,16 @@ def parse_client_log_incremental(
     for day, methods in daily_data.items():
         for method_name, data in methods.items():
             # Check if record exists
-            metric = db.session.scalars(select(ClientLogMetrics).filter_by(
-                exp_id=exp_id,
-                client_id=client_id,
-                aggregation_level="daily",
-                day=day,
-                hour=None,
-                method_name=method_name,
-            )).first()
+            metric = db.session.scalars(
+                select(ClientLogMetrics).filter_by(
+                    exp_id=exp_id,
+                    client_id=client_id,
+                    aggregation_level="daily",
+                    day=day,
+                    hour=None,
+                    method_name=method_name,
+                )
+            ).first()
 
             if metric:
                 # Update existing record
@@ -554,14 +573,16 @@ def parse_client_log_incremental(
 
         for method_name, data in methods.items():
             # Check if record exists
-            metric = db.session.scalars(select(ClientLogMetrics).filter_by(
-                exp_id=exp_id,
-                client_id=client_id,
-                aggregation_level="hourly",
-                day=day,
-                hour=hour,
-                method_name=method_name,
-            )).first()
+            metric = db.session.scalars(
+                select(ClientLogMetrics).filter_by(
+                    exp_id=exp_id,
+                    client_id=client_id,
+                    aggregation_level="hourly",
+                    day=day,
+                    hour=hour,
+                    method_name=method_name,
+                )
+            ).first()
 
             if metric:
                 # Update existing record
@@ -594,7 +615,9 @@ def parse_client_log_incremental(
             f"HPC: Updating Client_Execution for client {client_id} with max_day={max_day}, max_hour={max_hour}"
         )
         try:
-            client_exec = db.session.scalars(select(Client_Execution).filter_by(client_id=client_id)).first()
+            client_exec = db.session.scalars(
+                select(Client_Execution).filter_by(client_id=client_id)
+            ).first()
             if client_exec:
                 # Update last active day and hour
                 client_exec.last_active_day = max_day
@@ -617,7 +640,9 @@ def parse_client_log_incremental(
                 expected_rounds = client_exec.expected_duration_rounds or 0
                 if expected_rounds > 0 and current_round >= expected_rounds:
                     # Get the client and mark as stopped
-                    client = db.session.scalars(select(Client).filter_by(id=client_id)).first()
+                    client = db.session.scalars(
+                        select(Client).filter_by(id=client_id)
+                    ).first()
                     if not client:
                         logger.warning(
                             f"HPC client {client_id} not found while handling completion"
@@ -653,12 +678,16 @@ def parse_client_log_incremental(
                     exp_id = client.id_exp
 
                     # Get the experiment first to check status
-                    exp = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
+                    exp = db.session.scalars(
+                        select(Exps).filter_by(idexp=exp_id)
+                    ).first()
 
                     # Only proceed with auto-stop if experiment is not already completed
                     # This prevents race conditions when multiple clients finish simultaneously
                     if exp and exp.exp_status != "completed":
-                        all_clients = db.session.scalars(select(Client).filter_by(id_exp=exp_id)).all()
+                        all_clients = db.session.scalars(
+                            select(Client).filter_by(id_exp=exp_id)
+                        ).all()
 
                         # Check if all clients are stopped (status = 0)
                         all_stopped = all(c.status == 0 for c in all_clients)
@@ -703,7 +732,9 @@ def parse_client_log_incremental(
 
                                 # Update experiment status to completed
                                 # Re-query to get fresh instance
-                                exp = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
+                                exp = db.session.scalars(
+                                    select(Exps).filter_by(idexp=exp_id)
+                                ).first()
                                 if exp:
                                     exp.exp_status = "completed"
                                     _commit_with_retry(db.session)

@@ -9,9 +9,10 @@ import pytest
 from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash
-from y_web import db
 from sqlalchemy import select
+from werkzeug.security import generate_password_hash
+
+from y_web import db
 
 pytestmark = pytest.mark.integration
 
@@ -135,7 +136,9 @@ def app():
 
     def check_privileges(username):
         """Mock privilege check function"""
-        user = db.session.scalars(select(Admin_users).filter_by(username=username)).first()
+        user = db.session.scalars(
+            select(Admin_users).filter_by(username=username)
+        ).first()
         if not user or user.role != "admin":
             raise PermissionError("Access denied")
 
@@ -200,7 +203,9 @@ def app():
         for e in paginated_experiments:
             exps[e.idexp] = {
                 "experiment": e,
-                "clients": db.session.scalars(select(Client).filter_by(id_exp=e.idexp)).all(),
+                "clients": db.session.scalars(
+                    select(Client).filter_by(id_exp=e.idexp)
+                ).all(),
             }
 
         res = {}
@@ -208,7 +213,9 @@ def app():
         for exp, data in exps.items():
             res[exp] = {"experiment": data["experiment"], "clients": []}
             for client in data["clients"]:
-                cl = db.session.scalars(select(Client_Execution).filter_by(client_id=client.id)).first()
+                cl = db.session.scalars(
+                    select(Client_Execution).filter_by(client_id=client.id)
+                ).first()
                 client_executions = cl if cl is not None else -1
                 res[exp]["clients"].append((client, client_executions))
 
@@ -279,10 +286,14 @@ def app():
 
             from werkzeug.security import check_password_hash
 
-            user = db.session.scalars(select(Admin_users).filter_by(email=email)).first()
+            user = db.session.scalars(
+                select(Admin_users).filter_by(email=email)
+            ).first()
 
             if user and check_password_hash(user.password, password):
-                user_mgmt = db.session.scalars(select(User_mgmt).filter_by(username=user.username)).first()
+                user_mgmt = db.session.scalars(
+                    select(User_mgmt).filter_by(username=user.username)
+                ).first()
                 if user_mgmt:
                     login_user(user_mgmt)
                     return redirect("/admin/dashboard")

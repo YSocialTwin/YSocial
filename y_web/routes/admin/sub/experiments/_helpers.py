@@ -36,6 +36,7 @@ from flask import (
     url_for,
 )
 from flask_login import current_user, login_required, login_user
+from sqlalchemy import select
 
 from y_web import db  # , app
 from y_web.src.content.avatars import normalize_forum_avatar_mode
@@ -102,7 +103,6 @@ from y_web.src.system.miscellanea import (
     reload_current_user,
 )
 from y_web.src.system.path_utils import get_resource_path
-from sqlalchemy import select
 
 from ._blueprint import (
     _EXP_IDS_MARKER_RE,
@@ -559,7 +559,9 @@ def _sanitize_filename(name, fallback):
 
 def _current_admin_user():
     """Resolve current authenticated admin user record."""
-    return db.session.scalars(select(Admin_users).filter_by(username=current_user.username)).first()
+    return db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
 
 def _current_admin_user_or_none():
@@ -594,10 +596,14 @@ def _experiment_has_started_once(experiment, clients=None):
         return True
 
     if clients is None:
-        clients = db.session.scalars(select(Client).filter_by(id_exp=experiment.idexp)).all()
+        clients = db.session.scalars(
+            select(Client).filter_by(id_exp=experiment.idexp)
+        ).all()
 
     for client in clients:
-        ce = db.session.scalars(select(Client_Execution).filter_by(client_id=client.id)).first()
+        ce = db.session.scalars(
+            select(Client_Execution).filter_by(client_id=client.id)
+        ).first()
         if not ce:
             continue
         if (ce.elapsed_time or 0) > 0:
@@ -607,12 +613,24 @@ def _experiment_has_started_once(experiment, clients=None):
         ):
             return True
 
-    if db.session.scalars(select(ServerLogMetrics).filter_by(exp_id=experiment.idexp)).first() is not None:
+    if (
+        db.session.scalars(
+            select(ServerLogMetrics).filter_by(exp_id=experiment.idexp)
+        ).first()
+        is not None
+    ):
         return True
-    if db.session.scalars(select(ClientLogMetrics).filter_by(exp_id=experiment.idexp)).first() is not None:
+    if (
+        db.session.scalars(
+            select(ClientLogMetrics).filter_by(exp_id=experiment.idexp)
+        ).first()
+        is not None
+    ):
         return True
 
-    stats = db.session.scalars(select(Exp_stats).filter_by(exp_id=experiment.idexp)).first()
+    stats = db.session.scalars(
+        select(Exp_stats).filter_by(exp_id=experiment.idexp)
+    ).first()
     if stats and any(
         int(getattr(stats, field, 0) or 0) > 0
         for field in ("rounds", "posts", "reactions", "mentions")
@@ -981,7 +999,9 @@ def _serialize_download_notification(notification):
     )
     related_experiments = []
     if related_exp_ids:
-        experiments = db.session.scalars(select(Exps).filter(Exps.idexp.in_(related_exp_ids))).all()
+        experiments = db.session.scalars(
+            select(Exps).filter(Exps.idexp.in_(related_exp_ids))
+        ).all()
         exp_map = {exp.idexp: exp for exp in experiments}
         for exp_id in related_exp_ids:
             exp = exp_map.get(exp_id)
@@ -1108,9 +1128,9 @@ def get_suggested_port():
 
             all_completed = True
             for client in clients:
-                client_exec = db.session.scalars(select(Client_Execution).filter_by(
-                    client_id=client.id
-                )).first()
+                client_exec = db.session.scalars(
+                    select(Client_Execution).filter_by(client_id=client.id)
+                ).first()
                 if client_exec is None:
                     all_completed = False
                     break

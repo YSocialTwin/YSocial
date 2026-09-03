@@ -9,13 +9,13 @@ import uuid
 
 from flask import flash, redirect, request, url_for
 from flask_login import current_user, login_required
+from sqlalchemy import select
 
 from y_web import db
 from y_web.routes.interactions._blueprint import user
 from y_web.src.content.article_extractor import extract_article_info
 from y_web.src.content.text_utils import toxicity, vader_sentiment
 from y_web.src.llm import Annotator, ContentAnnotator
-from sqlalchemy import select
 from y_web.src.models import (
     Admin_users,
     Articles,
@@ -48,12 +48,16 @@ def publish_post_reddit(exp_id):
     text = request.args.get("post")
     url = request.args.get("url")
 
-    user = db.session.scalars(select(Admin_users).filter_by(username=current_user.username)).first()
+    user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
     llm = user.llm if user.llm != "" else "llama3.2:latest"
     llm_url = user.llm_url if user.llm_url != "" else None
 
     # Get experiment user (not admin user)
-    exp_user = db.session.scalars(select(User_mgmt).filter_by(username=current_user.username)).first()
+    exp_user = db.session.scalars(
+        select(User_mgmt).filter_by(username=current_user.username)
+    ).first()
     if not exp_user:
         flash("User not found in experiment", "error")
         return redirect(request.referrer)
@@ -105,7 +109,9 @@ def publish_post_reddit(exp_id):
             pass
 
     # get the last round id from Rounds
-    current_round = db.session.scalars(select(Rounds).order_by(Rounds.day.desc(), Rounds.hour.desc())).first()
+    current_round = db.session.scalars(
+        select(Rounds).order_by(Rounds.day.desc(), Rounds.hour.desc())
+    ).first()
 
     # Handle article URL storage
     news_id = None
@@ -117,7 +123,9 @@ def publish_post_reddit(exp_id):
         )
     ):
         # Check if article already exists
-        existing_article = db.session.scalars(select(Articles).filter_by(link=url)).first()
+        existing_article = db.session.scalars(
+            select(Articles).filter_by(link=url)
+        ).first()
         if existing_article:
             news_id = existing_article.id
         else:
@@ -127,7 +135,9 @@ def publish_post_reddit(exp_id):
             article_info = extract_article_info(url)
 
             # Get or create website entry
-            website = db.session.scalars(select(Websites).filter_by(name=article_info["source"])).first()
+            website = db.session.scalars(
+                select(Websites).filter_by(name=article_info["source"])
+            ).first()
             if not website:
                 try:
                     website = Websites(
@@ -234,7 +244,9 @@ def publish_post_reddit(exp_id):
                 interest = Interests(iid=str(uuid.uuid4()), interest=topic)
                 db.session.add(interest)
                 db.session.commit()
-            res = db.session.scalars(select(Interests).filter_by(interest=topic)).first()
+            res = db.session.scalars(
+                select(Interests).filter_by(interest=topic)
+            ).first()
 
         topic_id = res.iid
 
@@ -337,7 +349,9 @@ def publish_post_reddit(exp_id):
         if len(mention) < 1:
             continue
 
-        us = db.session.scalars(select(User_mgmt).filter_by(username=mention.strip("@"))).first()
+        us = db.session.scalars(
+            select(User_mgmt).filter_by(username=mention.strip("@"))
+        ).first()
 
         # existing user and not self
         if us is not None and us.id != exp_user_id:
@@ -375,7 +389,9 @@ def publish_comment(exp_id):
         Redirect to thread page after commenting
     """
     # Get experiment user (not admin user)
-    exp_user = db.session.scalars(select(User_mgmt).filter_by(username=current_user.username)).first()
+    exp_user = db.session.scalars(
+        select(User_mgmt).filter_by(username=current_user.username)
+    ).first()
     if not exp_user:
         flash("User not found in experiment", "error")
         return (
@@ -396,7 +412,9 @@ def publish_comment(exp_id):
         pass
 
     # get the last round id from Rounds
-    current_round = db.session.scalars(select(Rounds).order_by(Rounds.day.desc(), Rounds.hour.desc())).first()
+    current_round = db.session.scalars(
+        select(Rounds).order_by(Rounds.day.desc(), Rounds.hour.desc())
+    ).first()
 
     # get the thread if of the post with id pid
     parent_post = db.session.scalars(select(Post).filter_by(id=pid)).first()
@@ -444,7 +462,9 @@ def publish_comment(exp_id):
         db.session.commit()
 
     # get sentiment of the post is responding to
-    sentiment_root = db.session.scalars(select(Post_Sentiment).filter_by(post_id=pid)).first()
+    sentiment_root = db.session.scalars(
+        select(Post_Sentiment).filter_by(post_id=pid)
+    ).first()
 
     if sentiment_root is not None:
         values = {
@@ -462,12 +482,16 @@ def publish_comment(exp_id):
     toxicity(text, current_user.username, post.id, db)
 
     # check if the comment is to answer a mention
-    mention = db.session.scalars(select(Mentions).filter_by(post_id=pid, user_id=exp_user_id)).first()
+    mention = db.session.scalars(
+        select(Mentions).filter_by(post_id=pid, user_id=exp_user_id)
+    ).first()
     if mention:
         mention.answered = 1
         db.session.commit()
 
-    user = db.session.scalars(select(Admin_users).filter_by(username=current_user.username)).first()
+    user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
     llm = user.llm if user.llm != "" else "llama3.1"
     llm_url = user.llm_url if user.llm_url != "" else None
 
@@ -476,7 +500,9 @@ def publish_comment(exp_id):
     hashtags = annotator.extract_components(text, c_type="hashtags")
     mentions = annotator.extract_components(text, c_type="mentions")
 
-    topics_id = db.session.scalars(select(Post_topics).filter_by(post_id=thread_id)).all()
+    topics_id = db.session.scalars(
+        select(Post_topics).filter_by(post_id=thread_id)
+    ).all()
     topics_id = [t.topic_id for t in topics_id]
 
     if len(topics_id) > 0:
@@ -582,7 +608,9 @@ def publish_comment(exp_id):
         if len(mention) < 1:
             continue
 
-        us = db.session.scalars(select(User_mgmt).filter_by(username=mention.strip("@"))).first()
+        us = db.session.scalars(
+            select(User_mgmt).filter_by(username=mention.strip("@"))
+        ).first()
 
         # existing user and not self
         # @todo: check ghost mentions to the current user...

@@ -26,7 +26,6 @@ from sqlalchemy import select
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-
 db = SQLAlchemy()
 login_manager = LoginManager()
 login_manager.login_view = "auth.login"
@@ -276,10 +275,14 @@ def create_app(db_type="sqlite", desktop_mode=False):
             exp = None
             exp_id = get_current_experiment_id()
             if exp_id is not None:
-                exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
+                exp = db.session.scalars(
+                    select(Exps).filter_by(idexp=int(exp_id))
+                ).first()
 
             if exp is None:
-                active_exps = db.session.scalars(select(Exps).filter(Exps.status != 0)).all()
+                active_exps = db.session.scalars(
+                    select(Exps).filter(Exps.status != 0)
+                ).all()
                 if not active_exps:
                     return dict(feed_home_url="/")
                 if len(active_exps) > 1:
@@ -296,9 +299,11 @@ def create_app(db_type="sqlite", desktop_mode=False):
             if user_id_str.isdigit():
                 feed_user_id = int(user_id_str)
             else:
-                exp_user = db.session.scalars(select(User_mgmt).filter_by(
-                    username=getattr(current_user, "username", None)
-                )).first()
+                exp_user = db.session.scalars(
+                    select(User_mgmt).filter_by(
+                        username=getattr(current_user, "username", None)
+                    )
+                ).first()
                 if exp_user is not None:
                     feed_user_id = int(exp_user.id)
 
@@ -335,9 +340,9 @@ def create_app(db_type="sqlite", desktop_mode=False):
         try:
             if not current_user.is_authenticated:
                 return dict(active_experiments=[])
-            admin_user = db.session.scalars(select(Admin_users).filter_by(
-                username=current_user.username
-            )).first()
+            admin_user = db.session.scalars(
+                select(Admin_users).filter_by(username=current_user.username)
+            ).first()
             if not admin_user:
                 return dict(active_experiments=[])
             if admin_user.role in ("admin", "researcher"):
@@ -359,9 +364,9 @@ def create_app(db_type="sqlite", desktop_mode=False):
 
         if current_user.is_authenticated:
             try:
-                admin_user = db.session.scalars(select(Admin_users).filter_by(
-                    username=current_user.username
-                )).first()
+                admin_user = db.session.scalars(
+                    select(Admin_users).filter_by(username=current_user.username)
+                ).first()
                 if admin_user:
                     return dict(
                         current_user_role=admin_user.role, current_user_id=admin_user.id
@@ -379,9 +384,9 @@ def create_app(db_type="sqlite", desktop_mode=False):
 
         if current_user.is_authenticated:
             try:
-                admin_user = db.session.scalars(select(Admin_users).filter_by(
-                    username=current_user.username
-                )).first()
+                admin_user = db.session.scalars(
+                    select(Admin_users).filter_by(username=current_user.username)
+                ).first()
                 if admin_user and admin_user.role == "admin":
                     # Get release info
                     release_info = db.session.scalars(select(ReleaseInfo)).first()
@@ -402,9 +407,9 @@ def create_app(db_type="sqlite", desktop_mode=False):
 
         if current_user.is_authenticated:
             try:
-                admin_user = db.session.scalars(select(Admin_users).filter_by(
-                    username=current_user.username
-                )).first()
+                admin_user = db.session.scalars(
+                    select(Admin_users).filter_by(username=current_user.username)
+                ).first()
                 if admin_user and admin_user.role == "admin":
                     # Get unread blog posts
                     latest_post = (

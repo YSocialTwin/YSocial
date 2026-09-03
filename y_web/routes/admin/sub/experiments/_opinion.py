@@ -35,6 +35,7 @@ from flask import (
     url_for,
 )
 from flask_login import current_user, login_required, login_user
+from sqlalchemy import delete, select
 
 from y_web import db  # , app
 from y_web.src.content.avatars import normalize_forum_avatar_mode
@@ -115,7 +116,6 @@ from ._blueprint import (
     experiments,
 )
 from ._helpers import *  # noqa: F401,F403
-from sqlalchemy import delete, select
 from ._helpers import (
     _current_admin_user_or_none,
     _load_stress_reward_experiment_context,
@@ -1152,7 +1152,9 @@ def _bootstrap_initial_agent_opinions_if_missing(expid, experiment):
     if inserted:
         db.session.commit()
         db.session.execute(delete(OpinionEvolutionCache).filter_by(exp_id=expid))
-        db.session.execute(delete(OpinionEvolutionSampledAgents).filter_by(exp_id=expid))
+        db.session.execute(
+            delete(OpinionEvolutionSampledAgents).filter_by(exp_id=expid)
+        )
         db.session.commit()
 
     return inserted
@@ -1354,7 +1356,9 @@ def update_opinion_group():
         )
 
     # Check for overlaps with other existing groups
-    existing_groups = db.session.scalars(select(OpinionGroup).filter(OpinionGroup.id != group_id)).all()
+    existing_groups = db.session.scalars(
+        select(OpinionGroup).filter(OpinionGroup.id != group_id)
+    ).all()
     for existing in existing_groups:
         # Check if the updated group overlaps with any other existing group
         # Two ranges [a1, a2] and [b1, b2] overlap if: a1 < b2 AND b1 < a2
@@ -1814,9 +1818,11 @@ def get_or_sample_agents(expid, topic_id, sample_percentage, all_agent_ids):
         List of sampled agent IDs
     """
     # Try to get existing sample
-    sample_entry = db.session.scalars(select(OpinionEvolutionSampledAgents).filter_by(
-        exp_id=expid, topic_id=topic_id, sample_percentage=sample_percentage
-    )).first()
+    sample_entry = db.session.scalars(
+        select(OpinionEvolutionSampledAgents).filter_by(
+            exp_id=expid, topic_id=topic_id, sample_percentage=sample_percentage
+        )
+    ).first()
 
     # If sample exists and is recent (< 1 hour), use it
     if sample_entry and (datetime.now() - sample_entry.created_at) < timedelta(hours=1):
@@ -2248,9 +2254,11 @@ def get_or_compute_opinion_stats(expid, filter_day, filter_hour, filter_topic_id
         cache_entry = None
 
     if cache_entry and _is_invalid_opinion_cache_entry(cache_entry):
-        db.session.execute(delete(OpinionEvolutionCache).filter_by(
-            exp_id=expid, topic_id=filter_topic_id
-        ))
+        db.session.execute(
+            delete(OpinionEvolutionCache).filter_by(
+                exp_id=expid, topic_id=filter_topic_id
+            )
+        )
         db.session.commit()
         cache_entry = None
 
@@ -2295,9 +2303,11 @@ def get_or_compute_opinion_stats(expid, filter_day, filter_hour, filter_topic_id
             previous_cache = None
 
     if previous_cache and _is_invalid_opinion_cache_entry(previous_cache):
-        db.session.execute(delete(OpinionEvolutionCache).filter_by(
-            exp_id=expid, topic_id=filter_topic_id
-        ))
+        db.session.execute(
+            delete(OpinionEvolutionCache).filter_by(
+                exp_id=expid, topic_id=filter_topic_id
+            )
+        )
         db.session.commit()
         previous_cache = None
 

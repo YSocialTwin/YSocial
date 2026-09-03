@@ -5,8 +5,9 @@ Contains ``get_safe_profile_pic`` — the single function in this module —
 which resolves a display picture URL for any user or page in the system.
 """
 
-from y_web.src.models import Admin_users, Agent, Page
 from sqlalchemy import select
+
+from y_web.src.models import Admin_users, Agent, Page
 
 
 def get_safe_profile_pic(username, is_page=0):
@@ -38,7 +39,9 @@ def get_safe_profile_pic(username, is_page=0):
             pass
 
         try:
-            admin_user = db.session.scalars(select(Admin_users).filter_by(username=username)).first()
+            admin_user = db.session.scalars(
+                select(Admin_users).filter_by(username=username)
+            ).first()
             if (
                 admin_user is not None
                 and hasattr(admin_user, "profile_pic")

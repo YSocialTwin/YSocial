@@ -30,6 +30,7 @@ from flask import (
     url_for,
 )
 from flask_login import current_user, login_required
+from sqlalchemy import select
 from werkzeug.utils import secure_filename
 
 from y_web import db
@@ -49,7 +50,6 @@ from y_web.src.models import Exps, User_mgmt
 from y_web.src.models.admin import Admin_users, Agent, Page
 from y_web.src.models.experiment import Rounds
 from y_web.src.recsys.follow_recsys import get_suggested_users
-from sqlalchemy import select
 
 
 def _photo_logged_user_id():
@@ -170,9 +170,11 @@ def _photo_latest_round_id(exp: Optional[Exps] = None) -> str:
             pass
 
     try:
-        current_round = db.session.scalars(select(Rounds).order_by(
-            Rounds.day.desc(), Rounds.hour.desc(), Rounds.id.desc()
-        )).first()
+        current_round = db.session.scalars(
+            select(Rounds).order_by(
+                Rounds.day.desc(), Rounds.hour.desc(), Rounds.id.desc()
+            )
+        ).first()
         if current_round is not None and getattr(current_round, "id", None) is not None:
             return str(current_round.id)
     except Exception:
@@ -1995,9 +1997,9 @@ def photo_feed_logged():
     Redirects the logged-in participant to the first active photo-sharing
     experiment.
     """
-    exps = db.session.scalars(select(Exps).filter(
-        Exps.status != 0, Exps.platform_type == "photo_sharing"
-    )).all()
+    exps = db.session.scalars(
+        select(Exps).filter(Exps.status != 0, Exps.platform_type == "photo_sharing")
+    ).all()
     if not exps:
         flash("No active photo-sharing experiment. Please activate one first.")
         return redirect("/admin/experiments")
@@ -3240,19 +3242,25 @@ def api_photo_profile_update(exp_id):
     profile_username = str(updated_user["username"] or "").strip()
     if profile_username:
         try:
-            page = db.session.scalars(select(Page).filter_by(name=profile_username)).first()
+            page = db.session.scalars(
+                select(Page).filter_by(name=profile_username)
+            ).first()
             if page is not None and profile_pic:
                 page.logo = profile_pic
         except Exception:
             pass
         try:
-            agent = db.session.scalars(select(Agent).filter_by(name=profile_username)).first()
+            agent = db.session.scalars(
+                select(Agent).filter_by(name=profile_username)
+            ).first()
             if agent is not None and profile_pic:
                 agent.profile_pic = profile_pic
         except Exception:
             pass
         try:
-            admin_user = db.session.scalars(select(Admin_users).filter_by(username=profile_username)).first()
+            admin_user = db.session.scalars(
+                select(Admin_users).filter_by(username=profile_username)
+            ).first()
             if admin_user is not None and profile_pic:
                 admin_user.profile_pic = profile_pic
         except Exception:

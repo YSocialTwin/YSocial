@@ -5,6 +5,7 @@ import os
 
 from flask import flash, redirect, request
 from flask_login import current_user, login_required
+from sqlalchemy import select
 
 from y_web import db
 from y_web.src.models import (
@@ -15,7 +16,6 @@ from y_web.src.models import (
 from y_web.src.system.miscellanea import check_privileges
 
 from ._blueprint import clientsr
-from sqlalchemy import select
 
 
 @clientsr.route("/admin/update_agents_activity/<int:uid>", methods=["POST"])
@@ -32,7 +32,9 @@ def update_agents_activity(uid):
     # get client details
     client = db.session.scalars(select(Client).filter_by(id=uid)).first()
     experiment = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()
-    population = db.session.scalars(select(Population).filter_by(id=client.population_id)).first()
+    population = db.session.scalars(
+        select(Population).filter_by(id=client.population_id)
+    ).first()
 
     from y_web.src.system.path_utils import get_writable_path
 
@@ -62,7 +64,9 @@ def reset_agents_activity(uid):
     # get client details
     client = db.session.scalars(select(Client).filter_by(id=uid)).first()
     experiment = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()
-    population = db.session.scalars(select(Population).filter_by(id=client.population_id)).first()
+    population = db.session.scalars(
+        select(Population).filter_by(id=client.population_id)
+    ).first()
 
     from y_web.src.system.path_utils import get_writable_path
 
@@ -195,7 +199,9 @@ def update_agent_archetypes(uid):
 
     # Update client configuration JSON file
     experiment = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()
-    population = db.session.scalars(select(Population).filter_by(id=client.population_id)).first()
+    population = db.session.scalars(
+        select(Population).filter_by(id=client.population_id)
+    ).first()
 
     from y_web.src.system.path_utils import get_writable_path
 
@@ -277,7 +283,9 @@ def reset_agent_archetypes(uid):
 
     # Update client configuration JSON file
     experiment = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()
-    population = db.session.scalars(select(Population).filter_by(id=client.population_id)).first()
+    population = db.session.scalars(
+        select(Population).filter_by(id=client.population_id)
+    ).first()
 
     from y_web.src.system.path_utils import get_writable_path
 

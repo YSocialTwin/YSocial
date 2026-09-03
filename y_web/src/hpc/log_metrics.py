@@ -11,9 +11,10 @@ import logging
 import os
 import time
 
+from sqlalchemy import select
+
 from y_web import db
 from y_web.src.hpc.client import resolve_hpc_client_log_path
-from sqlalchemy import select
 from y_web.src.hpc.log_offset import (
     _commit_with_retry,
     _ensure_session_clean,
@@ -331,9 +332,11 @@ def update_server_log_metrics(exp_id, log_file_path, is_hpc=False):
         # For HPC experiments, check if we have old incorrectly parsed data
         # If simulation time is missing/zero, reset and re-parse from beginning
         if is_hpc:
-            existing_metric = db.session.scalars(select(ServerLogMetrics).filter_by(
-                exp_id=exp_id, aggregation_level="daily"
-            )).first()
+            existing_metric = db.session.scalars(
+                select(ServerLogMetrics).filter_by(
+                    exp_id=exp_id, aggregation_level="daily"
+                )
+            ).first()
 
             if (
                 existing_metric
@@ -416,9 +419,11 @@ def update_client_log_metrics(exp_id, client_id, log_file_path, is_hpc=False):
         # For HPC experiments, check if we have old incorrectly parsed data
         # If we find "unknown" method name, reset and re-parse from beginning
         if is_hpc:
-            has_unknown = db.session.scalars(select(ClientLogMetrics).filter_by(
-                exp_id=exp_id, client_id=client_id, method_name="unknown"
-            )).first()
+            has_unknown = db.session.scalars(
+                select(ClientLogMetrics).filter_by(
+                    exp_id=exp_id, client_id=client_id, method_name="unknown"
+                )
+            ).first()
 
             if has_unknown:
                 logger.info(
@@ -510,7 +515,9 @@ def check_hpc_client_execution_completion(exp_id, client_id, execution_log_path)
         print(f"[HPC Monitor] Message field: '{message}'")
 
         try:
-            client_exec = db.session.scalars(select(Client_Execution).filter_by(client_id=client_id)).first()
+            client_exec = db.session.scalars(
+                select(Client_Execution).filter_by(client_id=client_id)
+            ).first()
         except Exception:
             client_exec = None
         terminal_state = (
@@ -651,7 +658,9 @@ def update_client_execution_from_log(client_id, client_log_path):
         )
 
         # Get the client_execution record
-        client_exec = db.session.scalars(select(Client_Execution).filter_by(client_id=client_id)).first()
+        client_exec = db.session.scalars(
+            select(Client_Execution).filter_by(client_id=client_id)
+        ).first()
 
         if not client_exec:
             print(
@@ -703,7 +712,9 @@ def mark_hpc_client_as_completed(exp_id, client_id):
         print(f"[HPC Monitor] Marking client {client_id} as completed...")
 
         # Get client execution record
-        client_exec = db.session.scalars(select(Client_Execution).filter_by(client_id=client_id)).first()
+        client_exec = db.session.scalars(
+            select(Client_Execution).filter_by(client_id=client_id)
+        ).first()
         if not client_exec:
             logger.warning(f"No client_execution record found for client {client_id}")
             print(
@@ -785,7 +796,9 @@ def _mark_hpc_client_as_failed(exp_id, client_id, *, reason: str = "") -> bool:
     try:
         print(f"[HPC Monitor] Marking client {client_id} as failed... {reason}")
 
-        client_exec = db.session.scalars(select(Client_Execution).filter_by(client_id=client_id)).first()
+        client_exec = db.session.scalars(
+            select(Client_Execution).filter_by(client_id=client_id)
+        ).first()
         client = db.session.scalars(select(Client).filter_by(id=client_id)).first()
         if not client:
             logger.warning(f"Client {client_id} not found while marking failure")
@@ -823,10 +836,12 @@ def _experiment_is_in_active_schedule_group(exp_id: int) -> bool:
             return False
 
         return (
-            db.session.scalars(select(ExperimentScheduleItem).filter_by(
-                experiment_id=exp_id,
-                group_id=schedule_status.current_group_id,
-            )).first()
+            db.session.scalars(
+                select(ExperimentScheduleItem).filter_by(
+                    experiment_id=exp_id,
+                    group_id=schedule_status.current_group_id,
+                )
+            ).first()
             is not None
         )
     except Exception as exc:
@@ -917,7 +932,9 @@ def _restart_failed_schedule_experiment(exp_id: int, reason: str = "") -> bool:
             if not exp:
                 return False
 
-            schedule_status = db.session.scalars(select(ExperimentScheduleStatus)).first()
+            schedule_status = db.session.scalars(
+                select(ExperimentScheduleStatus)
+            ).first()
             if (
                 not schedule_status
                 or not schedule_status.is_running
@@ -925,14 +942,18 @@ def _restart_failed_schedule_experiment(exp_id: int, reason: str = "") -> bool:
             ):
                 return False
 
-            schedule_item = db.session.scalars(select(ExperimentScheduleItem).filter_by(
-                experiment_id=exp_id,
-                group_id=schedule_status.current_group_id,
-            )).first()
+            schedule_item = db.session.scalars(
+                select(ExperimentScheduleItem).filter_by(
+                    experiment_id=exp_id,
+                    group_id=schedule_status.current_group_id,
+                )
+            ).first()
             if not schedule_item:
                 return False
 
-            group = db.session.get(ExperimentScheduleGroup, schedule_status.current_group_id)
+            group = db.session.get(
+                ExperimentScheduleGroup, schedule_status.current_group_id
+            )
             group_name = group.name if group else "Unknown"
             restart_reason = f" ({reason})" if reason else ""
 
@@ -986,7 +1007,9 @@ def _restart_failed_schedule_experiment(exp_id: int, reason: str = "") -> bool:
             for client in clients_to_start:
                 if client.status != 0:
                     continue
-                population = db.session.scalars(select(Population).filter_by(id=client.population_id)).first()
+                population = db.session.scalars(
+                    select(Population).filter_by(id=client.population_id)
+                ).first()
                 if not population:
                     continue
                 start_client_for_experiment(exp, client, population, resume=True)
@@ -1057,7 +1080,9 @@ def check_and_terminate_hpc_experiment(exp_id):
                 print(
                     f"[HPC Monitor] Recovered {recovered} client(s) with stale stopped status for experiment {exp.exp_name}"
                 )
-                clients = db.session.scalars(select(Client).filter_by(id_exp=exp_id)).all()
+                clients = db.session.scalars(
+                    select(Client).filter_by(id_exp=exp_id)
+                ).all()
         except Exception:
             pass
 
@@ -1077,9 +1102,9 @@ def check_and_terminate_hpc_experiment(exp_id):
             else:
                 # Check if this stopped client was properly completed
                 try:
-                    client_exec = db.session.scalars(select(Client_Execution).filter_by(
-                        client_id=client.id
-                    )).first()
+                    client_exec = db.session.scalars(
+                        select(Client_Execution).filter_by(client_id=client.id)
+                    ).first()
                 except Exception:
                     client_exec = None
                 if client_exec and client_exec.expected_duration_rounds > 0:
@@ -1214,7 +1239,9 @@ def monitor_hpc_client_execution_logs():
 
     try:
         # Get all running HPC experiments
-        hpc_experiments = db.session.scalars(select(Exps).filter_by(simulator_type="HPC", running=1)).all()
+        hpc_experiments = db.session.scalars(
+            select(Exps).filter_by(simulator_type="HPC", running=1)
+        ).all()
         active_exp_ids = {int(exp.idexp) for exp in hpc_experiments}
         # Drop session markers for experiments that are no longer running.
         for tracked_exp_id in list(_HPC_EXP_HAS_SEEN_RUNNING_CLIENT.keys()):
@@ -1274,7 +1301,9 @@ def monitor_hpc_client_execution_logs():
                     )
 
                 # Get all running clients for this experiment
-                clients = db.session.scalars(select(Client).filter_by(id_exp=exp.idexp, status=1)).all()
+                clients = db.session.scalars(
+                    select(Client).filter_by(id_exp=exp.idexp, status=1)
+                ).all()
                 print(f"[HPC Monitor] Found {len(clients)} running client(s)")
                 if clients:
                     _mark_hpc_experiment_seen_running_client(exp.idexp)
@@ -1285,9 +1314,9 @@ def monitor_hpc_client_execution_logs():
                     )
                     client_exec = None
                     try:
-                        client_exec = db.session.scalars(select(Client_Execution).filter_by(
-                            client_id=client.id
-                        )).first()
+                        client_exec = db.session.scalars(
+                            select(Client_Execution).filter_by(client_id=client.id)
+                        ).first()
                     except Exception:
                         client_exec = None
 

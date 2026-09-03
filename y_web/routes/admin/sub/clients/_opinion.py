@@ -108,7 +108,9 @@ def _opinion_configuration_internal(idexp, expected_mode):
     topics = [{"id": t.id, "name": t.name} for t in topics]
 
     # Get population and load population JSON file to get actual segment values
-    population = db.session.scalars(select(Population).filter_by(id=client.population_id)).first()
+    population = db.session.scalars(
+        select(Population).filter_by(id=client.population_id)
+    ).first()
     if not population:
         flash("Population not found.", "error")
         return redirect(url_for("experiments.experiment_details", uid=idexp))
@@ -230,7 +232,9 @@ def _opinion_configuration_internal(idexp, expected_mode):
     distribution_names = [d["name"] for d in distributions]
 
     # Fetch opinion groups from the database
-    opinion_groups = db.session.scalars(select(OpinionGroup).order_by(OpinionGroup.lower_bound)).all()
+    opinion_groups = db.session.scalars(
+        select(OpinionGroup).order_by(OpinionGroup.lower_bound)
+    ).all()
 
     # Create bins and labels from opinion groups
     # If no groups exist, use default bins
@@ -468,7 +472,9 @@ def _get_segment_index(segment_name, dimensions, pop_data_agents, age_class_map)
 
 def _build_opinion_groups_dict():
     """Load opinion groups as config-friendly bounds."""
-    opinion_groups = db.session.scalars(select(OpinionGroup).order_by(OpinionGroup.lower_bound)).all()
+    opinion_groups = db.session.scalars(
+        select(OpinionGroup).order_by(OpinionGroup.lower_bound)
+    ).all()
     opinion_groups_dict = {}
     for group in opinion_groups:
         opinion_groups_dict[group.name.rstrip()] = [
@@ -534,7 +540,9 @@ def _resolve_opinion_submission_context(expected_mode):
         flash("Client not found or does not belong to this experiment.", "error")
         return None, redirect(url_for("experiments.experiment_details", uid=idexp))
 
-    population = db.session.scalars(select(Population).filter_by(id=client.population_id)).first()
+    population = db.session.scalars(
+        select(Population).filter_by(id=client.population_id)
+    ).first()
     if not population:
         flash("Population not found.", "error")
         return None, redirect(url_for("experiments.experiment_details", uid=idexp))
@@ -553,7 +561,10 @@ def _resolve_opinion_submission_context(expected_mode):
     )
     topic_id_to_name = {t.id: t.name for t in topics_list}
 
-    age_class_map = {ac.name: (ac.age_start, ac.age_end) for ac in db.session.scalars(select(AgeClass)).all()}
+    age_class_map = {
+        ac.name: (ac.age_start, ac.age_end)
+        for ac in db.session.scalars(select(AgeClass)).all()
+    }
 
     from y_web.src.system.path_utils import get_writable_path
 
@@ -776,7 +787,9 @@ def _invalidate_opinion_evolution_cache_for_experiment(exp_id):
     """Clear opinion-evolution cache and stable samples for an experiment."""
     try:
         db.session.execute(delete(OpinionEvolutionCache).filter_by(exp_id=exp_id))
-        db.session.execute(delete(OpinionEvolutionSampledAgents).filter_by(exp_id=exp_id))
+        db.session.execute(
+            delete(OpinionEvolutionSampledAgents).filter_by(exp_id=exp_id)
+        )
         db.session.commit()
     except Exception:
         db.session.rollback()

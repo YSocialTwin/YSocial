@@ -5,9 +5,10 @@ from __future__ import annotations
 import json
 from typing import Iterable
 
+from sqlalchemy import delete, select
+
 from y_web import db
 from y_web.src.models import Agent_Custom_Feature, OpinionGroup
-from sqlalchemy import delete, select
 
 
 def _truthy(value) -> bool:
@@ -176,7 +177,9 @@ def summarize_agent_custom_features_bulk(agent_ids: Iterable[int]) -> dict[int, 
 def opinion_group_by_name() -> dict[str, OpinionGroup]:
     return {
         str(group.name).strip(): group
-        for group in db.session.scalars(select(OpinionGroup).order_by(OpinionGroup.lower_bound.asc())).all()
+        for group in db.session.scalars(
+            select(OpinionGroup).order_by(OpinionGroup.lower_bound.asc())
+        ).all()
     }
 
 
@@ -187,7 +190,9 @@ def opinion_group_for_value(opinion_value) -> OpinionGroup | None:
         numeric = float(opinion_value)
     except (TypeError, ValueError):
         return None
-    groups = db.session.scalars(select(OpinionGroup).order_by(OpinionGroup.lower_bound.asc())).all()
+    groups = db.session.scalars(
+        select(OpinionGroup).order_by(OpinionGroup.lower_bound.asc())
+    ).all()
     for index, group in enumerate(groups):
         lower = float(group.lower_bound)
         upper = float(group.upper_bound)

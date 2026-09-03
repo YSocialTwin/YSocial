@@ -10,6 +10,7 @@ from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash
+
 from y_web import db
 
 pytestmark = pytest.mark.integration

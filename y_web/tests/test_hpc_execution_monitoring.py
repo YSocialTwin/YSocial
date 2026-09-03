@@ -338,13 +338,17 @@ class TestHPCExecutionLogMonitoring:
             assert execution_log.exists()
             assert execution_log.read_text(encoding="utf-8") == ""
 
-            updated_exp = db.session.scalars(select(Exps).filter_by(idexp=exp.idexp)).first()
+            updated_exp = db.session.scalars(
+                select(Exps).filter_by(idexp=exp.idexp)
+            ).first()
             assert updated_exp.running == 1
             assert updated_exp.exp_status == "active"
 
-            logs = db.session.scalars(select(ExperimentScheduleLog).order_by(
-                ExperimentScheduleLog.created_at.asc()
-            )).all()
+            logs = db.session.scalars(
+                select(ExperimentScheduleLog).order_by(
+                    ExperimentScheduleLog.created_at.asc()
+                )
+            ).all()
             assert any("Restarting automatically" in log.message for log in logs)
             assert any("restarted automatically" in log.message for log in logs)
 
@@ -596,15 +600,21 @@ class TestHPCExecutionLogMonitoring:
             assert result is True
 
             # Verify updates
-            updated_exec = db.session.scalars(select(Client_Execution).filter_by(client_id=client.id)).first()
+            updated_exec = db.session.scalars(
+                select(Client_Execution).filter_by(client_id=client.id)
+            ).first()
             assert updated_exec.elapsed_time == 24
             # With 24 rounds: round 1 = day 1, hour 1; round 24 = day 1, hour 24
             assert updated_exec.last_active_day == 1
             assert updated_exec.last_active_hour == 24
 
-            updated_client = db.session.scalars(select(Client).filter_by(id=client.id)).first()
+            updated_client = db.session.scalars(
+                select(Client).filter_by(id=client.id)
+            ).first()
             assert updated_client.status == 0
-            updated_exec = db.session.scalars(select(Client_Execution).filter_by(client_id=client.id)).first()
+            updated_exec = db.session.scalars(
+                select(Client_Execution).filter_by(client_id=client.id)
+            ).first()
             assert updated_exec.terminal_state == "completed"
 
     def test_parse_client_log_incremental_does_not_complete_infinite_client(self, app):
@@ -807,7 +817,9 @@ class TestHPCExecutionLogMonitoring:
             assert result is True
 
             # Verify experiment was terminated
-            updated_exp = db.session.scalars(select(Exps).filter_by(idexp=exp.idexp)).first()
+            updated_exp = db.session.scalars(
+                select(Exps).filter_by(idexp=exp.idexp)
+            ).first()
             assert updated_exp.running == 0
             assert updated_exp.exp_status == "completed"
             mock_stop.assert_called_once_with(exp.idexp)
@@ -856,7 +868,9 @@ class TestHPCExecutionLogMonitoring:
             assert result is False
 
             # Verify experiment was NOT terminated
-            updated_exp = db.session.scalars(select(Exps).filter_by(idexp=exp.idexp)).first()
+            updated_exp = db.session.scalars(
+                select(Exps).filter_by(idexp=exp.idexp)
+            ).first()
             assert updated_exp.running == 1
             mock_stop.assert_not_called()
 
@@ -915,7 +929,9 @@ class TestHPCExecutionLogMonitoring:
 
             result = check_and_terminate_hpc_experiment(exp.idexp)
             assert result is False
-            updated_exp = db.session.scalars(select(Exps).filter_by(idexp=exp.idexp)).first()
+            updated_exp = db.session.scalars(
+                select(Exps).filter_by(idexp=exp.idexp)
+            ).first()
             assert updated_exp.running == 1
             mock_stop.assert_not_called()
 
@@ -1010,8 +1026,12 @@ class TestHPCExecutionLogMonitoring:
                 exp.idexp, client.id, reason="unit test failure"
             )
 
-            updated_client = db.session.scalars(select(Client).filter_by(id=client.id)).first()
-            updated_exec = db.session.scalars(select(Client_Execution).filter_by(client_id=client.id)).first()
+            updated_client = db.session.scalars(
+                select(Client).filter_by(id=client.id)
+            ).first()
+            updated_exec = db.session.scalars(
+                select(Client_Execution).filter_by(client_id=client.id)
+            ).first()
             assert updated_client.status == 0
             assert updated_client.pid is None
             assert updated_exec.terminal_state == "failed"
@@ -1093,7 +1113,9 @@ class TestHPCExecutionLogMonitoring:
                     reason=f"PID {client.pid} no longer alive for client {client.name}",
                 )
                 mock_stop_after_failure.assert_not_called()
-                updated_exp = db.session.scalars(select(Exps).filter_by(idexp=exp.idexp)).first()
+                updated_exp = db.session.scalars(
+                    select(Exps).filter_by(idexp=exp.idexp)
+                ).first()
                 assert updated_exp.running == 1
                 assert updated_exp.exp_status == "active"
 
@@ -1150,6 +1172,8 @@ class TestHPCExecutionLogMonitoring:
             result = check_and_terminate_hpc_experiment(exp.idexp)
             assert result is False
 
-            updated_exp = db.session.scalars(select(Exps).filter_by(idexp=exp.idexp)).first()
+            updated_exp = db.session.scalars(
+                select(Exps).filter_by(idexp=exp.idexp)
+            ).first()
             assert updated_exp.running == 1
             mock_stop.assert_not_called()

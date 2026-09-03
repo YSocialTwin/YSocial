@@ -7,6 +7,7 @@ from pathlib import Path
 
 from flask import flash, redirect, request, url_for
 from flask_login import current_user, login_required
+from sqlalchemy import select
 
 from y_web import db
 from y_web.routes.admin.sub.experiments._helpers import (
@@ -27,7 +28,6 @@ from y_web.src.system.miscellanea import check_privileges, get_db_type
 from y_web.src.system.path_utils import get_resource_path
 
 from ._blueprint import clientsr
-from sqlalchemy import select
 
 
 def _sync_duration_fields_in_client_config(config: dict, days: int) -> dict:
@@ -93,7 +93,9 @@ def reset_client(uid):
     # delete experiment json files
     client = db.session.scalars(select(Client).filter_by(id=uid)).first()
     exp = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()
-    population = db.session.scalars(select(Population).filter_by(id=client.population_id)).first()
+    population = db.session.scalars(
+        select(Population).filter_by(id=client.population_id)
+    ).first()
     exp_folder = exp.db_name.split(os.sep)[1]
     exp_dir = Path(BASE_DIR) / "y_web" / "experiments" / exp_folder
 
@@ -168,7 +170,9 @@ def extend_simulation(id_client):
     days = int(request.form.get("days"))
 
     # get the client execution
-    client_execution = db.session.scalars(select(Client_Execution).filter_by(client_id=id_client)).first()
+    client_execution = db.session.scalars(
+        select(Client_Execution).filter_by(client_id=id_client)
+    ).first()
 
     # update the client days field
     client = db.session.query(Client).filter_by(id=id_client).first()
@@ -204,7 +208,9 @@ def extend_simulation(id_client):
                 exp_folder = exp.db_name.removeprefix("experiments_")
 
             # Get population for the client
-            population = db.session.scalars(select(Population).filter_by(id=client.population_id)).first()
+            population = db.session.scalars(
+                select(Population).filter_by(id=client.population_id)
+            ).first()
             if not population:
                 flash(
                     "Warning: Could not find population record. Extension applied to database only.",
@@ -412,7 +418,9 @@ def run_client(uid, idexp):
         return redirect(request.referrer)
 
     # get population of the experiment
-    population = db.session.scalars(select(Population).filter_by(id=client.population_id)).first()
+    population = db.session.scalars(
+        select(Population).filter_by(id=client.population_id)
+    ).first()
 
     try:
         start_client_for_experiment(exp, client, population, resume=True)
@@ -464,7 +472,9 @@ def resume_client(uid, idexp):
         return redirect(request.referrer)
 
     # get population of the experiment
-    population = db.session.scalars(select(Population).filter_by(id=client.population_id)).first()
+    population = db.session.scalars(
+        select(Population).filter_by(id=client.population_id)
+    ).first()
 
     try:
         start_client_for_experiment(exp, client, population, resume=True)

@@ -33,6 +33,7 @@ from flask import (
     url_for,
 )
 from flask_login import current_user, login_required, login_user
+from sqlalchemy import delete, func, select
 
 from y_web import db  # , app
 from y_web.migrations.add_hpc_monitor_settings import (
@@ -116,7 +117,6 @@ from ._blueprint import (
     experiments,
 )
 from ._helpers import *  # noqa: F401,F403
-from sqlalchemy import delete, func, select
 
 
 @experiments.route("/admin/schedule/groups", methods=["GET"])
@@ -280,9 +280,11 @@ def add_experiment_to_group(group_id):
         return jsonify({"success": False, "message": "Experiment not found"}), 404
 
     # Check if already in this group
-    existing = db.session.scalars(select(ExperimentScheduleItem).filter_by(
-        group_id=group_id, experiment_id=data["experiment_id"]
-    )).first()
+    existing = db.session.scalars(
+        select(ExperimentScheduleItem).filter_by(
+            group_id=group_id, experiment_id=data["experiment_id"]
+        )
+    ).first()
     if existing:
         return (
             jsonify({"success": False, "message": "Experiment already in group"}),
@@ -500,7 +502,9 @@ def _get_clients_to_start(exp):
 
     for client in clients:
         # Check if client has completed
-        client_exec = db.session.scalars(select(Client_Execution).filter_by(client_id=client.id)).first()
+        client_exec = db.session.scalars(
+            select(Client_Execution).filter_by(client_id=client.id)
+        ).first()
         if client_exec:
             # Infinite clients (expected_duration_rounds = -1) are never considered completed
             if client_exec.expected_duration_rounds == -1:
@@ -585,7 +589,9 @@ def _start_scheduled_experiment(exp, logs, *, wait_for_server=True):
             logs.append(msg)
             db.session.add(ExperimentScheduleLog(message=msg, log_type="info"))
             with db.session.no_autoflush:
-                population = db.session.scalars(select(Population).filter_by(id=client.population_id)).first()
+                population = db.session.scalars(
+                    select(Population).filter_by(id=client.population_id)
+                ).first()
             if population:
                 start_client_for_experiment(exp, client, population, resume=True)
                 client.status = 1
@@ -608,7 +614,11 @@ def _delete_group_if_empty(group):
     """Delete a schedule group when it no longer has items."""
     if not group:
         return False
-    remaining = db.session.scalar(select(func.count()).select_from(ExperimentScheduleItem).filter_by(group_id=group.id))
+    remaining = db.session.scalar(
+        select(func.count())
+        .select_from(ExperimentScheduleItem)
+        .filter_by(group_id=group.id)
+    )
     if remaining > 0:
         return False
     db.session.delete(group)
@@ -621,9 +631,11 @@ def _clear_completed_experiment_from_current_group(group, exp, logs):
     if not group or not exp or exp.exp_status != "completed":
         return
 
-    item = db.session.scalars(select(ExperimentScheduleItem).filter_by(
-        group_id=group.id, experiment_id=exp.idexp
-    )).first()
+    item = db.session.scalars(
+        select(ExperimentScheduleItem).filter_by(
+            group_id=group.id, experiment_id=exp.idexp
+        )
+    ).first()
 
     if exp.running == 1:
         msg = f"Stopping experiment '{exp.exp_name}'..."
@@ -631,7 +643,9 @@ def _clear_completed_experiment_from_current_group(group, exp, logs):
         db.session.add(ExperimentScheduleLog(message=msg, log_type="info"))
 
         with db.session.no_autoflush:
-            clients = db.session.scalars(select(Client).filter_by(id_exp=exp.idexp)).all()
+            clients = db.session.scalars(
+                select(Client).filter_by(id_exp=exp.idexp)
+            ).all()
         for client in clients:
             if client.status == 1:
                 stop_result = True
@@ -799,9 +813,13 @@ def _advance_dynamic_schedule(status, logs):
         )
         db.session.commit()
 
-        completed_groups = db.session.scalars(select(ExperimentScheduleGroup).filter_by(is_completed=1)).all()
+        completed_groups = db.session.scalars(
+            select(ExperimentScheduleGroup).filter_by(is_completed=1)
+        ).all()
         for group in completed_groups:
-            db.session.execute(delete(ExperimentScheduleItem).filter_by(group_id=group.id))
+            db.session.execute(
+                delete(ExperimentScheduleItem).filter_by(group_id=group.id)
+            )
             db.session.delete(group)
         db.session.commit()
 
@@ -904,7 +922,9 @@ def start_schedule():
         )
 
     # Start all experiments in first group
-    items = db.session.scalars(select(ExperimentScheduleItem).filter_by(group_id=first_group.id)).all()
+    items = db.session.scalars(
+        select(ExperimentScheduleItem).filter_by(group_id=first_group.id)
+    ).all()
     if not items:
         return (
             jsonify({"success": False, "message": "First group has no experiments"}),
@@ -987,14 +1007,18 @@ def stop_schedule():
 
         # Stop all experiments in current group
         if status.current_group_id:
-            items = db.session.scalars(select(ExperimentScheduleItem).filter_by(
-                group_id=status.current_group_id
-            )).all()
+            items = db.session.scalars(
+                select(ExperimentScheduleItem).filter_by(
+                    group_id=status.current_group_id
+                )
+            ).all()
             for item in items:
                 exp = db.session.get(Exps, item.experiment_id)
                 if exp and exp.running == 1:
                     # Stop all clients first
-                    clients = db.session.scalars(select(Client).filter_by(id_exp=exp.idexp)).all()
+                    clients = db.session.scalars(
+                        select(Client).filter_by(id_exp=exp.idexp)
+                    ).all()
                     for client in clients:
                         if client.status == 1:
                             stop_result = True
@@ -1104,7 +1128,9 @@ def _do_check_schedule_progress():
                 logs.append(msg)
                 db.session.add(ExperimentScheduleLog(message=msg, log_type="info"))
                 # Stop clients
-                clients = db.session.scalars(select(Client).filter_by(id_exp=exp.idexp)).all()
+                clients = db.session.scalars(
+                    select(Client).filter_by(id_exp=exp.idexp)
+                ).all()
                 for client in clients:
                     if client.status == 1:
                         stop_result = True
@@ -1146,11 +1172,13 @@ def _do_check_schedule_progress():
             db.session.commit()
 
             # Clean up all completed groups from the database
-            completed_groups = db.session.scalars(select(ExperimentScheduleGroup).filter_by(
-                is_completed=1
-            )).all()
+            completed_groups = db.session.scalars(
+                select(ExperimentScheduleGroup).filter_by(is_completed=1)
+            ).all()
             for group in completed_groups:
-                db.session.execute(delete(ExperimentScheduleItem).filter_by(group_id=group.id))
+                db.session.execute(
+                    delete(ExperimentScheduleItem).filter_by(group_id=group.id)
+                )
                 db.session.delete(group)
             db.session.commit()
 
@@ -1173,9 +1201,9 @@ def _do_check_schedule_progress():
         status.current_group_id = next_group.id
         db.session.commit()
 
-        next_items = db.session.scalars(select(ExperimentScheduleItem).filter_by(
-            group_id=next_group.id
-        )).all()
+        next_items = db.session.scalars(
+            select(ExperimentScheduleItem).filter_by(group_id=next_group.id)
+        ).all()
         for item in next_items:
             exp = db.session.get(Exps, item.experiment_id)
             if exp and exp.running == 0:
@@ -1226,9 +1254,9 @@ def _do_check_schedule_progress():
                                 log_type="info",
                             )
                         )
-                        population = db.session.scalars(select(Population).filter_by(
-                            id=client.population_id
-                        )).first()
+                        population = db.session.scalars(
+                            select(Population).filter_by(id=client.population_id)
+                        ).first()
                         if population:
                             start_client_for_experiment(
                                 exp, client, population, resume=True
@@ -1278,7 +1306,9 @@ def get_available_experiments_for_schedule():
     check_privileges(current_user.username)
 
     # Get current user
-    user = db.session.scalars(select(Admin_users).filter_by(username=current_user.username)).first()
+    user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
     # Get experiments based on role
     if user.role == "admin":
@@ -1290,7 +1320,8 @@ def get_available_experiments_for_schedule():
 
     # Get experiments already in groups
     scheduled_exp_ids = set(
-        item.experiment_id for item in db.session.scalars(select(ExperimentScheduleItem)).all()
+        item.experiment_id
+        for item in db.session.scalars(select(ExperimentScheduleItem)).all()
     )
 
     # Get experiment IDs that have infinite clients (clients with days = -1)
@@ -1469,7 +1500,9 @@ def auto_create_groups():
     group_filter = data.get("group_filter", None)
 
     # Get current user
-    user = db.session.scalars(select(Admin_users).filter_by(username=current_user.username)).first()
+    user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
     if user.role == "admin":
         experiments_query = Exps.query
@@ -1486,7 +1519,8 @@ def auto_create_groups():
 
     # Filter out experiments already in groups
     scheduled_exp_ids = set(
-        item.experiment_id for item in db.session.scalars(select(ExperimentScheduleItem)).all()
+        item.experiment_id
+        for item in db.session.scalars(select(ExperimentScheduleItem)).all()
     )
 
     # Filter out experiments with infinite clients (days = -1)
@@ -1630,7 +1664,9 @@ def cleanup_completed_groups():
     check_privileges(current_user.username)
 
     # Find and delete completed groups
-    completed_groups = db.session.scalars(select(ExperimentScheduleGroup).filter_by(is_completed=1)).all()
+    completed_groups = db.session.scalars(
+        select(ExperimentScheduleGroup).filter_by(is_completed=1)
+    ).all()
     count = len(completed_groups)
 
     for group in completed_groups:

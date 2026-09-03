@@ -21,6 +21,7 @@ from flask import (
     url_for,
 )
 from flask_login import current_user, login_required
+from sqlalchemy import delete, select
 from werkzeug.security import generate_password_hash
 
 from y_web import db  # , app
@@ -28,7 +29,6 @@ from y_web.src.content.cover_images import random_cover_image_url
 from y_web.src.experiment.helpers import ensure_experiment_user
 from y_web.src.llm.vllm_manager import get_llm_models
 from y_web.src.models import Admin_users, Exps, User_Experiment, User_mgmt
-from sqlalchemy import delete, select
 from y_web.src.system.miscellanea import (
     check_privileges,
     llm_backend_status,
@@ -52,7 +52,9 @@ def user_data():
         Rendered user data template with available models and ollama status
     """
     # Check if user is admin or researcher
-    user = db.session.scalars(select(Admin_users).filter_by(username=current_user.username)).first()
+    user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
     if user.role not in ["admin", "researcher"]:
         flash(
             "Access denied. This page is only accessible to administrators and researchers.",
@@ -72,7 +74,9 @@ def user_data():
     experiments = db.session.scalars(select(Exps)).all()
 
     # Get all users for bulk assignment
-    all_users = db.session.scalars(select(Admin_users).order_by(Admin_users.username)).all()
+    all_users = db.session.scalars(
+        select(Admin_users).order_by(Admin_users.username)
+    ).all()
 
     return render_template(
         "admin/users.html",
@@ -166,9 +170,9 @@ def update():
         abort(400)
 
     # Get current user's role
-    current_admin_user = db.session.scalars(select(Admin_users).filter_by(
-        username=current_user.username
-    )).first()
+    current_admin_user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
     user = db.session.get(Admin_users, data["id"])
 
@@ -201,9 +205,9 @@ def update():
 def user_details(uid):
     """Handle user details operation."""
     # Get current user
-    current_admin_user = db.session.scalars(select(Admin_users).filter_by(
-        username=current_user.username
-    )).first()
+    current_admin_user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
     # Allow access if user is admin/researcher OR if user is viewing their own profile
     if (
@@ -223,11 +227,16 @@ def user_details(uid):
     all_experiments = db.session.scalars(select(Exps)).all()
 
     # get user experiments
-    joined_exp = db.session.scalars(select(User_Experiment).filter_by(user_id=uid)).all()
+    joined_exp = db.session.scalars(
+        select(User_Experiment).filter_by(user_id=uid)
+    ).all()
 
     # get user experiments details for the ones joined
     joined_exp = [
-        (j.exp_id, db.session.scalars(select(Exps).filter_by(idexp=j.exp_id)).first().exp_name)
+        (
+            j.exp_id,
+            db.session.scalars(select(Exps).filter_by(idexp=j.exp_id)).first().exp_name,
+        )
         for j in joined_exp
     ]
 
@@ -275,9 +284,9 @@ def add_user():
     check_privileges(current_user.username)
 
     # Get current user's role
-    current_admin_user = db.session.scalars(select(Admin_users).filter_by(
-        username=current_user.username
-    )).first()
+    current_admin_user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
     username = request.form.get("username")
     email = request.form.get("email")
@@ -321,9 +330,9 @@ def delete_user(uid):
         return redirect(url_for("users.user_data"))
 
     # Check if user can be deleted (not self-delete)
-    current_admin_user = db.session.scalars(select(Admin_users).filter_by(
-        username=current_user.username
-    )).first()
+    current_admin_user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
     if current_admin_user.id == uid:
         flash("You cannot delete your own account.", "error")
         return redirect(url_for("users.user_data"))
@@ -396,9 +405,9 @@ def add_user_to_experiment():
         )
         return user_details(user_id)
 
-    user_exp_record = db.session.scalars(select(User_Experiment).filter_by(
-        user_id=user_id, exp_id=experiment_id
-    )).first()
+    user_exp_record = db.session.scalars(
+        select(User_Experiment).filter_by(user_id=user_id, exp_id=experiment_id)
+    ).first()
 
     if user_exp_record is None:
         user_exp_record = User_Experiment(user_id=user_id, exp_id=experiment_id)
@@ -436,9 +445,9 @@ def update_user_llm():
         return redirect(url_for("admin.dashboard"))
 
     # Get current user
-    current_admin_user = db.session.scalars(select(Admin_users).filter_by(
-        username=current_user.username
-    )).first()
+    current_admin_user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
     # Allow access if user is admin/researcher OR if user is updating their own LLM settings
     if (
@@ -477,9 +486,9 @@ def set_perspective_api_user():
         return redirect(url_for("admin.dashboard"))
 
     # Get current user
-    current_admin_user = db.session.scalars(select(Admin_users).filter_by(
-        username=current_user.username
-    )).first()
+    current_admin_user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
     # Allow access if user is admin/researcher OR if user is updating their own API key
     if (
@@ -572,9 +581,9 @@ def update_user_password():
         return redirect(url_for("admin.dashboard"))
 
     # Get current user
-    current_admin_user = db.session.scalars(select(Admin_users).filter_by(
-        username=current_user.username
-    )).first()
+    current_admin_user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
     # Allow access if user is admin/researcher OR if user is updating their own password
     if (
@@ -629,9 +638,9 @@ def update_user_email():
         return redirect(url_for("admin.dashboard"))
 
     # Get current user
-    current_admin_user = db.session.scalars(select(Admin_users).filter_by(
-        username=current_user.username
-    )).first()
+    current_admin_user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
     # Allow access if user is admin/researcher OR if user is updating their own email
     if (
@@ -649,7 +658,9 @@ def update_user_email():
         return user_details(user_id_int)
 
     # Check if email is already taken by another user
-    existing_user = db.session.scalars(select(Admin_users).filter_by(email=new_email)).first()
+    existing_user = db.session.scalars(
+        select(Admin_users).filter_by(email=new_email)
+    ).first()
     if existing_user and existing_user.id != user_id_int:
         flash("Email is already in use by another user", "error")
         return user_details(user_id_int)
@@ -686,9 +697,9 @@ def bulk_create_users():
     check_privileges(current_user.username)
 
     # Get current user's role
-    current_admin_user = db.session.scalars(select(Admin_users).filter_by(
-        username=current_user.username
-    )).first()
+    current_admin_user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
     is_admin = current_admin_user.role == "admin"
 
     users_data = request.form.get("users_data", "").strip()
@@ -737,9 +748,11 @@ def bulk_create_users():
             continue
 
         # Check if user already exists
-        existing = db.session.scalars(select(Admin_users).filter(
-            (Admin_users.username == username) | (Admin_users.email == email)
-        )).first()
+        existing = db.session.scalars(
+            select(Admin_users).filter(
+                (Admin_users.username == username) | (Admin_users.email == email)
+            )
+        ).first()
 
         if existing:
             errors.append(
@@ -809,16 +822,18 @@ def bulk_assign_users():
         for user_id_str in user_ids:
             try:
                 user_id = int(user_id_str)
-                user = db.session.scalars(select(Admin_users).filter_by(id=user_id)).first()
+                user = db.session.scalars(
+                    select(Admin_users).filter_by(id=user_id)
+                ).first()
 
                 if not user:
                     errors.append(f"User ID {user_id} not found")
                     continue
 
                 # Check if already assigned
-                existing = db.session.scalars(select(User_Experiment).filter_by(
-                    user_id=user_id, exp_id=exp_id
-                )).first()
+                existing = db.session.scalars(
+                    select(User_Experiment).filter_by(user_id=user_id, exp_id=exp_id)
+                ).first()
 
                 if existing:
                     errors.append(
@@ -891,9 +906,9 @@ def update_telemetry_preference():
         return redirect(url_for("admin.dashboard"))
 
     # Check if user is admin
-    current_admin_user = db.session.scalars(select(Admin_users).filter_by(
-        username=current_user.username
-    )).first()
+    current_admin_user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
     if not current_admin_user or current_admin_user.role != "admin":
         flash(
@@ -935,9 +950,9 @@ def update_telemetry_preference_ajax():
         JSON response with success status
     """
     # Check if user is admin
-    current_admin_user = db.session.scalars(select(Admin_users).filter_by(
-        username=current_user.username
-    )).first()
+    current_admin_user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
     if not current_admin_user or current_admin_user.role != "admin":
         return jsonify({"success": False, "message": "Access denied"}), 403
@@ -965,9 +980,9 @@ def check_for_updates_route():
         Redirect to user details page with status message
     """
     # Check if user is admin
-    current_admin_user = db.session.scalars(select(Admin_users).filter_by(
-        username=current_user.username
-    )).first()
+    current_admin_user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
     if not current_admin_user or current_admin_user.role != "admin":
         flash("Access denied. Only administrators can check for updates.", "error")
@@ -1092,9 +1107,9 @@ def watchdog_status():
         JSON response with watchdog status
     """
     # Check if user is admin
-    current_admin_user = db.session.scalars(select(Admin_users).filter_by(
-        username=current_user.username
-    )).first()
+    current_admin_user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
     if not current_admin_user or current_admin_user.role != "admin":
         return jsonify({"error": "Access denied"}), 403
@@ -1118,9 +1133,9 @@ def watchdog_run_now():
         JSON response with the results of the watchdog run
     """
     # Check if user is admin
-    current_admin_user = db.session.scalars(select(Admin_users).filter_by(
-        username=current_user.username
-    )).first()
+    current_admin_user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
     if not current_admin_user or current_admin_user.role != "admin":
         return jsonify({"error": "Access denied"}), 403
@@ -1154,9 +1169,9 @@ def watchdog_set_interval():
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest" or not user_id
 
     # Check if user is admin
-    current_admin_user = db.session.scalars(select(Admin_users).filter_by(
-        username=current_user.username
-    )).first()
+    current_admin_user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
     if not current_admin_user or current_admin_user.role != "admin":
         if is_ajax:
@@ -1215,9 +1230,9 @@ def watchdog_toggle():
         JSON response with success status
     """
     # Check if user is admin
-    current_admin_user = db.session.scalars(select(Admin_users).filter_by(
-        username=current_user.username
-    )).first()
+    current_admin_user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
     if not current_admin_user or current_admin_user.role != "admin":
         return jsonify({"success": False, "message": "Access denied"}), 403

@@ -147,7 +147,9 @@ def _resolve_sidebar_community(items, community_slug):
 @main.get("/<int:exp_id>/interview")
 @login_required
 def interview(exp_id):
-    admin_user = db.session.scalars(select(Admin_users).filter_by(username=current_user.username)).first()
+    admin_user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
     if not admin_user or admin_user.role not in {"admin", "researcher"}:
         abort(403)
 
@@ -163,11 +165,15 @@ def interview(exp_id):
         )
         if platform_type == "forum":
             return redirect(f"/{exp_id}/rfeed/all/feed/rf/1?feed_type=new")
-        exp_user = db.session.scalars(select(User_mgmt).filter_by(username=current_user.username)).first()
+        exp_user = db.session.scalars(
+            select(User_mgmt).filter_by(username=current_user.username)
+        ).first()
         feed_user_id = exp_user.id if exp_user else "all"
         return redirect(f"/{exp_id}/feed/{feed_user_id}/feed/rf/1")
 
-    exp_user = db.session.scalars(select(User_mgmt).filter_by(username=current_user.username)).first()
+    exp_user = db.session.scalars(
+        select(User_mgmt).filter_by(username=current_user.username)
+    ).first()
     logged_id = exp_user.id if exp_user else (getattr(current_user, "id", 0) or 0)
 
     mentions = []
@@ -191,11 +197,15 @@ def interview(exp_id):
 
     profile_pic = ""
     try:
-        ag = db.session.scalars(select(Agent).filter_by(name=current_user.username)).first()
+        ag = db.session.scalars(
+            select(Agent).filter_by(name=current_user.username)
+        ).first()
         if ag is not None and ag.profile_pic is not None:
             profile_pic = ag.profile_pic
         else:
-            admin = db.session.scalars(select(Admin_users).filter_by(username=current_user.username)).first()
+            admin = db.session.scalars(
+                select(Admin_users).filter_by(username=current_user.username)
+            ).first()
             profile_pic = admin.profile_pic if admin else ""
     except Exception:
         profile_pic = ""
@@ -228,7 +238,10 @@ def get_thread_reddit(exp_id, post_id):
         return redirect(f"/{exp_id}/rfeed/all/feed/rf/1?feed_type=new")
 
     thread_id = getattr(requested_post, "thread_id", None) or requested_post.id
-    root_post = db.session.scalars(select(Post).filter_by(id=thread_id)).first() or requested_post
+    root_post = (
+        db.session.scalars(select(Post).filter_by(id=thread_id)).first()
+        or requested_post
+    )
     thread_id = root_post.id
     posts = (
         Post.query.filter(Post.thread_id == thread_id, Post.id != thread_id)
@@ -258,11 +271,15 @@ def get_thread_reddit(exp_id, post_id):
     title, content = process_reddit_post(root_post.tweet)
     processed_content = augment_text(content, exp_id) if content else ""
 
-    article = db.session.scalars(select(Articles).filter_by(id=root_post.news_id)).first()
+    article = db.session.scalars(
+        select(Articles).filter_by(id=root_post.news_id)
+    ).first()
     if article is None:
         art = 0
     else:
-        website = db.session.scalars(select(Websites).filter_by(id=article.website_id)).first()
+        website = db.session.scalars(
+            select(Websites).filter_by(id=article.website_id)
+        ).first()
         art = {
             "title": article.title,
             "summary": strip_tags(article.summary),
@@ -300,25 +317,41 @@ def get_thread_reddit(exp_id, post_id):
         "article": art,
         "children": [],
         "likes": len(
-            list(db.session.scalars(select(Reactions).filter_by(post_id=root_post.id, type="like")).all())
+            list(
+                db.session.scalars(
+                    select(Reactions).filter_by(post_id=root_post.id, type="like")
+                ).all()
+            )
         ),
         "dislikes": len(
-            list(db.session.scalars(select(Reactions).filter_by(post_id=root_post.id, type="dislike")).all())
+            list(
+                db.session.scalars(
+                    select(Reactions).filter_by(post_id=root_post.id, type="dislike")
+                ).all()
+            )
         ),
-        "is_liked": db.session.scalars(select(Reactions).filter_by(
-            post_id=root_post.id, user_id=viewer_id, type="like"
-        )).first()
+        "is_liked": db.session.scalars(
+            select(Reactions).filter_by(
+                post_id=root_post.id, user_id=viewer_id, type="like"
+            )
+        ).first()
         is not None,
-        "is_disliked": db.session.scalars(select(Reactions).filter_by(
-            post_id=root_post.id, user_id=viewer_id, type="dislike"
-        )).first()
+        "is_disliked": db.session.scalars(
+            select(Reactions).filter_by(
+                post_id=root_post.id, user_id=viewer_id, type="dislike"
+            )
+        ).first()
         is not None,
-        "is_reported": db.session.scalars(select(Reported).filter_by(
-            to_post=root_post.id, from_uid=viewer_id
-        )).first()
+        "is_reported": db.session.scalars(
+            select(Reported).filter_by(to_post=root_post.id, from_uid=viewer_id)
+        ).first()
         is not None,
-        "report_count": db.session.scalar(select(func.count()).select_from(Reported).filter_by(to_post=root_post.id)),
-        "is_shared": len(db.session.scalars(select(Post).filter_by(shared_from=root_post.id)).all()),
+        "report_count": db.session.scalar(
+            select(func.count()).select_from(Reported).filter_by(to_post=root_post.id)
+        ),
+        "is_shared": len(
+            db.session.scalars(select(Post).filter_by(shared_from=root_post.id)).all()
+        ),
         "emotions": get_elicited_emotions(root_post.id),
         "topics": get_topics(root_post.id, root_post.user_id),
     }
@@ -345,11 +378,15 @@ def get_thread_reddit(exp_id, post_id):
             augment_text(comment_content, exp_id) if comment_content else ""
         )
 
-        article = db.session.scalars(select(Articles).filter_by(id=post.news_id)).first()
+        article = db.session.scalars(
+            select(Articles).filter_by(id=post.news_id)
+        ).first()
         if article is None:
             art = 0
         else:
-            website = db.session.scalars(select(Websites).filter_by(id=article.website_id)).first()
+            website = db.session.scalars(
+                select(Websites).filter_by(id=article.website_id)
+            ).first()
             art = {
                 "title": article.title,
                 "summary": strip_tags(article.summary),
@@ -370,25 +407,41 @@ def get_thread_reddit(exp_id, post_id):
             "article": art,
             "children": [],
             "likes": len(
-                list(db.session.scalars(select(Reactions).filter_by(post_id=post.id, type="like")).all())
+                list(
+                    db.session.scalars(
+                        select(Reactions).filter_by(post_id=post.id, type="like")
+                    ).all()
+                )
             ),
             "dislikes": len(
-                list(db.session.scalars(select(Reactions).filter_by(post_id=post.id, type="dislike")).all())
+                list(
+                    db.session.scalars(
+                        select(Reactions).filter_by(post_id=post.id, type="dislike")
+                    ).all()
+                )
             ),
-            "is_liked": db.session.scalars(select(Reactions).filter_by(
-                post_id=post.id, user_id=viewer_id, type="like"
-            )).first()
+            "is_liked": db.session.scalars(
+                select(Reactions).filter_by(
+                    post_id=post.id, user_id=viewer_id, type="like"
+                )
+            ).first()
             is None,
-            "is_disliked": db.session.scalars(select(Reactions).filter_by(
-                post_id=post.id, user_id=viewer_id, type="dislike"
-            )).first()
+            "is_disliked": db.session.scalars(
+                select(Reactions).filter_by(
+                    post_id=post.id, user_id=viewer_id, type="dislike"
+                )
+            ).first()
             is None,
-            "is_reported": db.session.scalars(select(Reported).filter_by(
-                to_post=post.id, from_uid=viewer_id
-            )).first()
+            "is_reported": db.session.scalars(
+                select(Reported).filter_by(to_post=post.id, from_uid=viewer_id)
+            ).first()
             is not None,
-            "report_count": db.session.scalar(select(func.count()).select_from(Reported).filter_by(to_post=post.id)),
-            "is_shared": len(db.session.scalars(select(Post).filter_by(shared_from=post.id)).all()),
+            "report_count": db.session.scalar(
+                select(func.count()).select_from(Reported).filter_by(to_post=post.id)
+            ),
+            "is_shared": len(
+                db.session.scalars(select(Post).filter_by(shared_from=post.id)).all()
+            ),
             "emotions": get_elicited_emotions(post.id),
             "topics": get_topics(post.id, post.user_id),
         }
@@ -498,7 +551,9 @@ def rnotifications(exp_id):
             enumerate=enumerate,
         )
 
-    state = db.session.scalars(select(ReplyInboxState).filter_by(user_id=exp_user_id)).first()
+    state = db.session.scalars(
+        select(ReplyInboxState).filter_by(user_id=exp_user_id)
+    ).first()
     if not state:
         state = ReplyInboxState(user_id=exp_user_id, last_seen_reply_id=0)
         db.session.add(state)

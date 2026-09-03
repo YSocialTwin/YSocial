@@ -1,3 +1,5 @@
+from sqlalchemy import select
+
 from y_web import db
 from y_web.routes.admin.sub.agents import _ensure_interest_topics_exist
 from y_web.routes.admin.sub.clients._crud import _export_adhoc_population_json
@@ -7,7 +9,6 @@ from y_web.src.agents.custom_features import (
     replace_agent_custom_features,
     summarize_agent_custom_features,
 )
-from sqlalchemy import select
 from y_web.src.models import (
     ActivityProfile,
     Agent,
@@ -153,6 +154,8 @@ def test_ensure_interest_topics_exist_creates_missing_topics_case_insensitively(
 
         topics = [
             topic.name
-            for topic in db.session.scalars(select(Topic_List).order_by(Topic_List.name.asc())).all()
+            for topic in db.session.scalars(
+                select(Topic_List).order_by(Topic_List.name.asc())
+            ).all()
         ]
         assert topics == ["Climate", "New Topic"]

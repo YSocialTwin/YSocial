@@ -25,6 +25,8 @@ try:
     from y_web.src.llm.url_summarizer import UrlSummarizer
 except Exception:
     UrlSummarizer = None
+from sqlalchemy import delete, func, select
+
 from y_web.routes.api.interview._facts import (
     _build_facts_snapshot,
     _format_facts_pack,
@@ -82,7 +84,6 @@ from y_web.src.models import (
     User_mgmt,
 )
 from y_web.src.system.path_utils import get_writable_path
-from sqlalchemy import delete, func, select
 
 try:
     from y_web.src.models import ContentShown
@@ -113,15 +114,19 @@ def _json_error(message: str, status: int = 400):
 
 
 def _forum_chat_owner_user() -> User_mgmt | None:
-    return db.session.scalars(select(User_mgmt).filter_by(
-        username=getattr(current_user, "username", "") or ""
-    )).first()
+    return db.session.scalars(
+        select(User_mgmt).filter_by(
+            username=getattr(current_user, "username", "") or ""
+        )
+    ).first()
 
 
 def _forum_viewer_id() -> int:
-    viewer = db.session.scalars(select(User_mgmt).filter_by(
-        username=getattr(current_user, "username", "") or ""
-    )).first()
+    viewer = db.session.scalars(
+        select(User_mgmt).filter_by(
+            username=getattr(current_user, "username", "") or ""
+        )
+    ).first()
     return int(viewer.id) if viewer is not None else int(current_user.id)
 
 
@@ -155,17 +160,23 @@ def _forum_chat_followed_agent_ids(owner_user_id: int) -> set[int]:
 def _forum_chat_admin_user(exp: Exps) -> Admin_users | None:
     owner_name = str(getattr(exp, "owner", "") or "").strip()
     if owner_name:
-        owner_admin = db.session.scalars(select(Admin_users).filter_by(username=owner_name)).first()
+        owner_admin = db.session.scalars(
+            select(Admin_users).filter_by(username=owner_name)
+        ).first()
         if owner_admin is not None:
             return owner_admin
 
-    current_admin = db.session.scalars(select(Admin_users).filter_by(
-        username=getattr(current_user, "username", "") or ""
-    )).first()
+    current_admin = db.session.scalars(
+        select(Admin_users).filter_by(
+            username=getattr(current_user, "username", "") or ""
+        )
+    ).first()
     if current_admin is not None:
         return current_admin
 
-    return db.session.scalars(select(Admin_users).order_by(Admin_users.id.asc())).first()
+    return db.session.scalars(
+        select(Admin_users).order_by(Admin_users.id.asc())
+    ).first()
 
 
 def _forum_chat_message_payload(message: ForumChatMessage) -> dict:
@@ -567,13 +578,13 @@ def _upload_media_response(exp_id: int):
 
 
 def _forum_posts_html(exp_id: int, items, user_id=None):
-    logged_user = db.session.scalars(select(User_mgmt).filter_by(
-        username=getattr(current_user, "username", "")
-    )).first()
+    logged_user = db.session.scalars(
+        select(User_mgmt).filter_by(username=getattr(current_user, "username", ""))
+    ).first()
     logged_id = logged_user.id if logged_user else current_user.id
-    admin_user = db.session.scalars(select(Admin_users).filter_by(
-        username=getattr(current_user, "username", "")
-    )).first()
+    admin_user = db.session.scalars(
+        select(Admin_users).filter_by(username=getattr(current_user, "username", ""))
+    ).first()
     is_admin_user = bool(admin_user and getattr(admin_user, "role", "") == "admin")
     return render_template(
         "forum/components/posts.html",
@@ -632,7 +643,9 @@ def _get_admin_llm_settings(username: str) -> tuple[str, str]:
     Return (model, llm_url) for the current logged-in dashboard user, if present.
     llm_url may be empty.
     """
-    admin_user = db.session.scalars(select(Admin_users).filter_by(username=username)).first()
+    admin_user = db.session.scalars(
+        select(Admin_users).filter_by(username=username)
+    ).first()
     model = "llama3.2:latest"
     llm_url = ""
     if admin_user:
@@ -853,7 +866,9 @@ def api_enrich_pending(exp_id: int):
     enriched_images = 0
 
     if summarizer and max_articles:
-        candidates = db.session.scalars(select(Articles).order_by(Articles.id.desc()).limit(200)).all()
+        candidates = db.session.scalars(
+            select(Articles).order_by(Articles.id.desc()).limit(200)
+        ).all()
         for art in candidates:
             if enriched_articles >= max_articles:
                 break
@@ -869,7 +884,9 @@ def api_enrich_pending(exp_id: int):
                 enriched_articles += 1
 
     if annotator and max_images:
-        candidates = db.session.scalars(select(Images).order_by(Images.id.desc()).limit(200)).all()
+        candidates = db.session.scalars(
+            select(Images).order_by(Images.id.desc()).limit(200)
+        ).all()
         for img in candidates:
             if enriched_images >= max_images:
                 break
@@ -927,9 +944,11 @@ def _serialize_comment(comment: Post, skip_metadata: bool = False) -> dict:
     else:
         emotions = get_elicited_emotions(comment.id)
         topics = get_topics(comment.id, comment.user_id)
-    viewer_user = db.session.scalars(select(User_mgmt).filter_by(
-        username=getattr(current_user, "username", "") or ""
-    )).first()
+    viewer_user = db.session.scalars(
+        select(User_mgmt).filter_by(
+            username=getattr(current_user, "username", "") or ""
+        )
+    ).first()
 
     return {
         "post_id": comment.id,
@@ -949,11 +968,15 @@ def _serialize_comment(comment: Post, skip_metadata: bool = False) -> dict:
         "is_disliked": False,
         "is_reported": bool(
             viewer_user
-            and db.session.scalars(select(Reported).filter_by(
-                to_post=comment.id, from_uid=viewer_user.id
-            )).first()
+            and db.session.scalars(
+                select(Reported).filter_by(to_post=comment.id, from_uid=viewer_user.id)
+            ).first()
         ),
-        "report_count": int(db.session.scalar(select(func.count()).select_from(Reported).filter_by(to_post=comment.id))),
+        "report_count": int(
+            db.session.scalar(
+                select(func.count()).select_from(Reported).filter_by(to_post=comment.id)
+            )
+        ),
         "emotions": emotions,
         "topics": topics,
         "is_moderation_comment": bool(
@@ -975,7 +998,9 @@ def api_feed(exp_id: int):
     community_slug = (request.args.get("community_slug") or "").strip()
 
     if target_user_id:
-        user = db.session.scalars(select(User_mgmt).filter_by(id=target_user_id)).first()
+        user = db.session.scalars(
+            select(User_mgmt).filter_by(id=target_user_id)
+        ).first()
         if user is None:
             return _json_error("User not found.", 404)
 
@@ -1181,11 +1206,13 @@ def api_delete_post(exp_id: int, post_id: int):
     if post is None:
         return _json_error("Post not found.", 404)
 
-    exp_user = db.session.scalars(select(User_mgmt).filter_by(username=current_user.username)).first()
+    exp_user = db.session.scalars(
+        select(User_mgmt).filter_by(username=current_user.username)
+    ).first()
     is_admin_user = (
-        db.session.scalars(select(Admin_users).filter_by(
-            username=current_user.username, role="admin"
-        )).first()
+        db.session.scalars(
+            select(Admin_users).filter_by(username=current_user.username, role="admin")
+        ).first()
         is not None
     )
     actor_ids = {int(current_user.id)}
@@ -1244,9 +1271,11 @@ def api_delete_post(exp_id: int, post_id: int):
             synchronize_session=False
         )
         if ContentShown is not None:
-            db.session.execute(delete(ContentShown).filter(
-                ContentShown.content_id.in_(target_post_ids)
-            ))
+            db.session.execute(
+                delete(ContentShown).filter(
+                    ContentShown.content_id.in_(target_post_ids)
+                )
+            )
         Post.query.filter(Post.id.in_(target_post_ids)).delete(
             synchronize_session=False
         )
@@ -1387,9 +1416,11 @@ def api_forum_chat_get_session(exp_id: int, session_id: int):
         return _json_error("Forum user not found for current session.", 404)
     followed_agent_ids = _forum_chat_followed_agent_ids(int(owner_user.id))
 
-    session = db.session.scalars(select(ForumChatSession).filter_by(
-        id=int(session_id), owner_user_id=int(owner_user.id)
-    )).first()
+    session = db.session.scalars(
+        select(ForumChatSession).filter_by(
+            id=int(session_id), owner_user_id=int(owner_user.id)
+        )
+    ).first()
     if session is None:
         return _json_error("Chat session not found.", 404)
     if int(session.target_user_id) not in followed_agent_ids:
@@ -1413,15 +1444,19 @@ def api_forum_chat_send_message(exp_id: int, session_id: int):
         return _json_error("Forum user not found for current session.", 404)
     followed_agent_ids = _forum_chat_followed_agent_ids(int(owner_user.id))
 
-    session = db.session.scalars(select(ForumChatSession).filter_by(
-        id=int(session_id), owner_user_id=int(owner_user.id)
-    )).first()
+    session = db.session.scalars(
+        select(ForumChatSession).filter_by(
+            id=int(session_id), owner_user_id=int(owner_user.id)
+        )
+    ).first()
     if session is None:
         return _json_error("Chat session not found.", 404)
     if int(session.target_user_id) not in followed_agent_ids:
         return _json_error("You can chat only with followed agents.", 403)
 
-    target_user = db.session.scalars(select(User_mgmt).filter_by(id=int(session.target_user_id))).first()
+    target_user = db.session.scalars(
+        select(User_mgmt).filter_by(id=int(session.target_user_id))
+    ).first()
     if target_user is None:
         return _json_error("Target agent not found.", 404)
 

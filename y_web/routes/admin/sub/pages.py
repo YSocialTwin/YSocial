@@ -11,6 +11,7 @@ import os
 
 from flask import Blueprint, flash, redirect, render_template, request
 from flask_login import current_user, login_required
+from sqlalchemy import select
 
 from y_web import db
 from y_web.src.content.feeds import get_feed
@@ -27,7 +28,6 @@ from y_web.src.models import (
     Topic_List,
 )
 from y_web.src.system.desktop_file_handler import send_file_desktop
-from sqlalchemy import select
 from y_web.src.system.miscellanea import (
     check_privileges,
     llm_backend_status,
@@ -207,7 +207,9 @@ def delete_page(uid):
     page = db.session.scalars(select(Page).filter_by(id=uid)).first()
 
     # check if page is assigned to any population
-    page_pop = db.session.scalars(select(Page_Population).filter_by(page_id=uid)).first()
+    page_pop = db.session.scalars(
+        select(Page_Population).filter_by(page_id=uid)
+    ).first()
     if page_pop:
         # show an error message
         flash("Page is assigned to a population. Cannot delete.")
@@ -217,7 +219,9 @@ def delete_page(uid):
     db.session.commit()
 
     # delete page_population entries
-    page_population = db.session.scalars(select(Page_Population).filter_by(page_id=uid)).all()
+    page_population = db.session.scalars(
+        select(Page_Population).filter_by(page_id=uid)
+    ).all()
     for pp in page_population:
         db.session.delete(pp)
         db.session.commit()
@@ -252,7 +256,8 @@ def page_details(uid):
 
     # get topic names for page_topics from Topic_List
     page_topics = [
-        db.session.scalars(select(Topic_List).filter_by(id=pt.topic_id)).first().name for pt in page_topics
+        db.session.scalars(select(Topic_List).filter_by(id=pt.topic_id)).first().name
+        for pt in page_topics
     ]
 
     feed = get_feed(page.feed)
@@ -286,7 +291,9 @@ def add_topic_to_page():
     topic_id = request.form.get("topic_id")
 
     # check if the topic is already in the page
-    pt = db.session.scalars(select(Page_Topic).filter_by(page_id=page_id, topic_id=topic_id)).first()
+    pt = db.session.scalars(
+        select(Page_Topic).filter_by(page_id=page_id, topic_id=topic_id)
+    ).first()
     if pt:
         return page_details(page_id)
 
@@ -308,9 +315,9 @@ def add_page_to_population():
     population_id = request.form.get("population_id")
 
     # check if the page is already in the population
-    ap = db.session.scalars(select(Page_Population).filter_by(
-        page_id=page_id, population_id=population_id
-    )).first()
+    ap = db.session.scalars(
+        select(Page_Population).filter_by(page_id=page_id, population_id=population_id)
+    ).first()
     if ap:
         return page_details(page_id)
 
@@ -343,9 +350,9 @@ def upload_page_collection():
         pages_data = json.load(open(os.path.join(temp_data_dir, collection.filename)))
         for page_data in pages_data:
             # check if the page already exists (by name and feed)
-            existing_page = db.session.scalars(select(Page).filter_by(
-                name=page_data["name"], feed=page_data["feed"]
-            )).first()
+            existing_page = db.session.scalars(
+                select(Page).filter_by(name=page_data["name"], feed=page_data["feed"])
+            ).first()
             if existing_page:
                 continue
 
@@ -360,9 +367,11 @@ def upload_page_collection():
             # Resolve activity_profile by name if provided
             activity_profile_id = None
             if page_data.get("activity_profile"):
-                activity_profile_obj = db.session.scalars(select(ActivityProfile).filter_by(
-                    name=page_data["activity_profile"]
-                )).first()
+                activity_profile_obj = db.session.scalars(
+                    select(ActivityProfile).filter_by(
+                        name=page_data["activity_profile"]
+                    )
+                ).first()
                 if activity_profile_obj:
                     activity_profile_id = activity_profile_obj.id
 
@@ -404,7 +413,9 @@ def download_pages():
         # Get activity profile name if set
         activity_profile_name = None
         if page.activity_profile:
-            activity_profile_obj = db.session.get(ActivityProfile, page.activity_profile)
+            activity_profile_obj = db.session.get(
+                ActivityProfile, page.activity_profile
+            )
             if activity_profile_obj:
                 activity_profile_name = activity_profile_obj.name
 

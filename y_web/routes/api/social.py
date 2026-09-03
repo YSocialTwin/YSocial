@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 
 from flask import Blueprint, jsonify, request, session
 from flask_login import current_user, login_required
+from sqlalchemy import select
 
 from y_web import db
 from y_web.routes.api.interview._facts import (
@@ -35,7 +36,6 @@ from y_web.routes.api.interview._server import (
 )
 from y_web.routes.social.helpers import _experiment_memory_enabled
 from y_web.src.experiment.helpers import ensure_experiment_user
-from sqlalchemy import select
 from y_web.src.models import (
     Admin_users,
     Exps,
@@ -261,17 +261,23 @@ def _social_chat_photo_contacts(exp: Exps, owner_user_id) -> list[User_mgmt]:
 def _social_chat_admin_user(exp: Exps) -> Admin_users | None:
     owner_name = str(getattr(exp, "owner", "") or "").strip()
     if owner_name:
-        owner_admin = db.session.scalars(select(Admin_users).filter_by(username=owner_name)).first()
+        owner_admin = db.session.scalars(
+            select(Admin_users).filter_by(username=owner_name)
+        ).first()
         if owner_admin is not None:
             return owner_admin
 
-    current_admin = db.session.scalars(select(Admin_users).filter_by(
-        username=getattr(current_user, "username", "") or ""
-    )).first()
+    current_admin = db.session.scalars(
+        select(Admin_users).filter_by(
+            username=getattr(current_user, "username", "") or ""
+        )
+    ).first()
     if current_admin is not None:
         return current_admin
 
-    return db.session.scalars(select(Admin_users).order_by(Admin_users.id.asc())).first()
+    return db.session.scalars(
+        select(Admin_users).order_by(Admin_users.id.asc())
+    ).first()
 
 
 def _social_chat_message_payload(message: ForumChatMessage) -> dict:

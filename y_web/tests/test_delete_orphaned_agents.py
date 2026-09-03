@@ -9,9 +9,10 @@ import pytest
 from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash
-from y_web import db
 from sqlalchemy import select
+from werkzeug.security import generate_password_hash
+
+from y_web import db
 
 pytestmark = pytest.mark.integration
 
@@ -234,7 +235,9 @@ def test_orphaned_agents_deletion_logic(app):
         deleted_count = 0
         for agent in orphaned:
             # Delete profiles first
-            profiles = db.session.scalars(select(Agent_Profile).filter_by(agent_id=agent.id)).all()
+            profiles = db.session.scalars(
+                select(Agent_Profile).filter_by(agent_id=agent.id)
+            ).all()
             for p in profiles:
                 db.session.delete(p)
 

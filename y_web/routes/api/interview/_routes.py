@@ -5,9 +5,9 @@ from typing import Any, Dict, List, Optional
 
 from flask import request
 from flask_login import current_user, login_required
+from sqlalchemy import select
 
 from y_web import db
-from sqlalchemy import select
 from y_web.src.models import (
     AdminInterviewMessage,
     AdminInterviewSession,

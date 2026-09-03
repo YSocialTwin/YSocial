@@ -2,9 +2,9 @@ import platform
 import sys
 
 import requests
+from sqlalchemy import select
 
 import y_web.pyinstaller_utils.installation_id as installation_id
-from sqlalchemy import select
 
 _HTTP_TIMEOUT_SECONDS = 5
 

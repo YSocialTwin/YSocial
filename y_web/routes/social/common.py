@@ -254,9 +254,9 @@ def index():
                         "db_exp"
                     ] = db.get_app().config["SQLALCHEMY_BINDS"][bind_key]
 
-                    exp_user = db.session.scalars(select(User_mgmt).filter_by(
-                        username=current_user.username
-                    )).first()
+                    exp_user = db.session.scalars(
+                        select(User_mgmt).filter_by(username=current_user.username)
+                    ).first()
                     if exp_user:
                         exp_user_id = exp_user.id
 
@@ -305,7 +305,9 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
         return redirect(url_for("main.index"))
 
     # Get experiment user (not admin user) for logged_id
-    logged_user = db.session.scalars(select(User_mgmt).filter_by(username=current_user.username)).first()
+    logged_user = db.session.scalars(
+        select(User_mgmt).filter_by(username=current_user.username)
+    ).first()
     if not logged_user:
         if getattr(exp, "platform_type", "") == "forum":
             logged_id = current_user.id
@@ -346,11 +348,21 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
         Post.user_id == user_id,
         and_(Post.comment_to.isnot(None), Post.comment_to != -1),
     ).count()
-    total_likes = db.session.scalar(select(func.count()).select_from(Reactions).filter_by(user_id=user_id, type="like"))
-    total_dislikes = db.session.scalar(select(func.count()).select_from(Reactions).filter_by(user_id=user_id, type="dislike"))
-    total_articles = db.session.scalar(select(func.count()).select_from(Post).filter(
-        Post.user_id == user_id, Post.news_id.isnot(None)
-    ))
+    total_likes = db.session.scalar(
+        select(func.count())
+        .select_from(Reactions)
+        .filter_by(user_id=user_id, type="like")
+    )
+    total_dislikes = db.session.scalar(
+        select(func.count())
+        .select_from(Reactions)
+        .filter_by(user_id=user_id, type="dislike")
+    )
+    total_articles = db.session.scalar(
+        select(func.count())
+        .select_from(Post)
+        .filter(Post.user_id == user_id, Post.news_id.isnot(None))
+    )
 
     hashtags = (
         db.session.query(
@@ -400,11 +412,15 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
             if ag and ag.profile_pic:
                 profile_pic = ag.profile_pic
             else:
-                admin = db.session.scalars(select(Admin_users).filter_by(username=user.username)).first()
+                admin = db.session.scalars(
+                    select(Admin_users).filter_by(username=user.username)
+                ).first()
                 profile_pic = admin.profile_pic if admin else ""
 
     agent_custom_features = {}
-    dashboard_agent = db.session.scalars(select(Agent).filter_by(name=user.username)).first()
+    dashboard_agent = db.session.scalars(
+        select(Agent).filter_by(name=user.username)
+    ).first()
     if dashboard_agent is not None:
         try:
             agent_custom_features = (
@@ -541,11 +557,15 @@ def edit_profile(exp_id, user_id):
         if ag is not None and ag.profile_pic is not None:
             profile_pic = ag.profile_pic
         else:
-            admin_user = db.session.scalars(select(Admin_users).filter_by(username=user.username)).first()
+            admin_user = db.session.scalars(
+                select(Admin_users).filter_by(username=user.username)
+            ).first()
             profile_pic = admin_user.profile_pic if admin_user else ""
 
     # Get experiment user (not admin user)
-    logged_user = db.session.scalars(select(User_mgmt).filter_by(username=current_user.username)).first()
+    logged_user = db.session.scalars(
+        select(User_mgmt).filter_by(username=current_user.username)
+    ).first()
     if not logged_user:
         flash("User not found in experiment", "error")
         return redirect(url_for("main.index"))
@@ -627,7 +647,9 @@ def update_profile_data(exp_id, user_id):
         if agent is not None:
             agent.profile_pic = profile_pic
 
-    admin_user = db.session.scalars(select(Admin_users).filter_by(username=user.username)).first()
+    admin_user = db.session.scalars(
+        select(Admin_users).filter_by(username=user.username)
+    ).first()
     if admin_user is not None:
         admin_user.profile_pic = profile_pic
 

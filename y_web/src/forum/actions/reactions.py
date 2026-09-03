@@ -95,7 +95,9 @@ def apply_vote(user, post_id: int, action: str) -> Tuple[int, int]:
 
         # Get sentiment parent for tracking
         sentiment_parent = ""
-        post_sentiment_record = db.session.scalars(select(Post_Sentiment).filter_by(post_id=post_id)).first()
+        post_sentiment_record = db.session.scalars(
+            select(Post_Sentiment).filter_by(post_id=post_id)
+        ).first()
         if post_sentiment_record is not None:
             compound = post_sentiment_record.compound
             if compound > 0.05:
@@ -106,7 +108,9 @@ def apply_vote(user, post_id: int, action: str) -> Tuple[int, int]:
                 sentiment_parent = "neu"
 
         # Create reaction sentiment records for each topic
-        post_topics_list = db.session.scalars(select(Post_topics).filter_by(post_id=post_id)).all()
+        post_topics_list = db.session.scalars(
+            select(Post_topics).filter_by(post_id=post_id)
+        ).all()
         for post_topic in post_topics_list:
             topic_id = post_topic.topic_id
 

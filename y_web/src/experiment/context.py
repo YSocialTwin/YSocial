@@ -9,9 +9,9 @@ import os
 from contextlib import contextmanager
 
 from flask import current_app, g, request
+from sqlalchemy import select
 
 from y_web import db
-from sqlalchemy import select
 
 
 def get_db_bind_key_for_exp(exp_id):

@@ -97,7 +97,9 @@ def get_safe_profile_pic(username, is_page=0):
             pass
 
         try:
-            admin_user = db.session.scalars(select(Admin_users).filter_by(username=username)).first()
+            admin_user = db.session.scalars(
+                select(Admin_users).filter_by(username=username)
+            ).first()
             if (
                 admin_user is not None
                 and hasattr(admin_user, "profile_pic")
@@ -180,7 +182,9 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
 
     # Get experiment user ID if not provided
     if exp_user_id is None:
-        exp_user = db.session.scalars(select(User_mgmt).filter_by(username=current_user.username)).first()
+        exp_user = db.session.scalars(
+            select(User_mgmt).filter_by(username=current_user.username)
+        ).first()
         exp_user_id = exp_user.id if exp_user else current_user.id
 
     for post in posts.items:
@@ -212,11 +216,15 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
             else:
                 profile_pic = ""
                 if user.is_page == 1:
-                    pg = db.session.scalars(select(Page).filter_by(name=user.username)).first()
+                    pg = db.session.scalars(
+                        select(Page).filter_by(name=user.username)
+                    ).first()
                     if page is not None and pg is not None:
                         profile_pic = pg.logo
                 else:
-                    ag = db.session.scalars(select(Agent).filter_by(name=user.username)).first()
+                    ag = db.session.scalars(
+                        select(Agent).filter_by(name=user.username)
+                    ).first()
                     profile_pic = (
                         ag.profile_pic
                         if ag is not None and ag.profile_pic is not None
@@ -254,23 +262,39 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
                     "author_id": c.user_id,
                     "post": augment_text(text, exp_id),
                     "round": c.round,
-                    "day": db.session.scalars(select(Rounds).filter_by(id=c.round)).first().day,
-                    "hour": db.session.scalars(select(Rounds).filter_by(id=c.round)).first().hour,
+                    "day": db.session.scalars(select(Rounds).filter_by(id=c.round))
+                    .first()
+                    .day,
+                    "hour": db.session.scalars(select(Rounds).filter_by(id=c.round))
+                    .first()
+                    .hour,
                     "likes": len(
-                        db.session.scalars(select(Reactions).filter_by(post_id=c.id, type="like")).all()
+                        db.session.scalars(
+                            select(Reactions).filter_by(post_id=c.id, type="like")
+                        ).all()
                     ),
                     "dislikes": len(
-                        db.session.scalars(select(Reactions).filter_by(post_id=c.id, type="dislike")).all()
+                        db.session.scalars(
+                            select(Reactions).filter_by(post_id=c.id, type="dislike")
+                        ).all()
                     ),
-                    "is_liked": db.session.scalars(select(Reactions).filter_by(
-                        post_id=c.id, user_id=exp_user_id, type="like"
-                    )).first()
+                    "is_liked": db.session.scalars(
+                        select(Reactions).filter_by(
+                            post_id=c.id, user_id=exp_user_id, type="like"
+                        )
+                    ).first()
                     is None,
-                    "is_disliked": db.session.scalars(select(Reactions).filter_by(
-                        post_id=c.id, user_id=exp_user_id, type="dislike"
-                    )).first()
+                    "is_disliked": db.session.scalars(
+                        select(Reactions).filter_by(
+                            post_id=c.id, user_id=exp_user_id, type="dislike"
+                        )
+                    ).first()
                     is None,
-                    "is_shared": len(db.session.scalars(select(Post).filter_by(shared_from=c.id)).all()),
+                    "is_shared": len(
+                        db.session.scalars(
+                            select(Post).filter_by(shared_from=c.id)
+                        ).all()
+                    ),
                     "report_count": get_report_count(c.id),
                     "emotions": emotions,
                     "topics": topics,
@@ -281,7 +305,9 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
                 }
             )
 
-        article = db.session.scalars(select(Articles).filter_by(id=post.news_id)).first()
+        article = db.session.scalars(
+            select(Articles).filter_by(id=post.news_id)
+        ).first()
         if article is None:
             art = 0
         else:
@@ -289,7 +315,11 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
                 "title": article.title,
                 "summary": strip_tags(article.summary),
                 "url": article.link,
-                "source": db.session.scalars(select(Websites).filter_by(id=article.website_id)).first().name,
+                "source": db.session.scalars(
+                    select(Websites).filter_by(id=article.website_id)
+                )
+                .first()
+                .name,
             }
 
         image = db.session.scalars(select(Images).filter_by(id=post.image_id)).first()
@@ -324,12 +354,16 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
         else:
             profile_pic = ""
             if aa.is_page == 1:
-                pg = db.session.scalars(select(Page).filter_by(name=aa.username)).first()
+                pg = db.session.scalars(
+                    select(Page).filter_by(name=aa.username)
+                ).first()
                 if pg is not None:
                     profile_pic = pg.logo
             else:
                 try:
-                    ag = db.session.scalars(select(Agent).filter_by(name=aa.username)).first()
+                    ag = db.session.scalars(
+                        select(Agent).filter_by(name=aa.username)
+                    ).first()
                     profile_pic = (
                         ag.profile_pic
                         if ag is not None and ag.profile_pic is not None
@@ -348,7 +382,9 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
         )
 
         # Get author username safely
-        author_user = db.session.scalars(select(User_mgmt).filter_by(id=post.user_id)).first()
+        author_user = db.session.scalars(
+            select(User_mgmt).filter_by(id=post.user_id)
+        ).first()
         author_username = author_user.username if author_user else "Unknown"
         title, body = process_reddit_post(post.tweet)
         processed_body = augment_text(body, exp_id) if body else ""
@@ -391,20 +427,32 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
                     else None
                 ),
                 "likes": len(
-                    db.session.scalars(select(Reactions).filter_by(post_id=post.id, type="like")).all()
+                    db.session.scalars(
+                        select(Reactions).filter_by(post_id=post.id, type="like")
+                    ).all()
                 ),
                 "dislikes": len(
-                    db.session.scalars(select(Reactions).filter_by(post_id=post.id, type="dislike")).all()
+                    db.session.scalars(
+                        select(Reactions).filter_by(post_id=post.id, type="dislike")
+                    ).all()
                 ),
-                "is_liked": db.session.scalars(select(Reactions).filter_by(
-                    post_id=post.id, user_id=exp_user_id, type="like"
-                )).first()
+                "is_liked": db.session.scalars(
+                    select(Reactions).filter_by(
+                        post_id=post.id, user_id=exp_user_id, type="like"
+                    )
+                ).first()
                 is None,
-                "is_disliked": db.session.scalars(select(Reactions).filter_by(
-                    post_id=post.id, user_id=exp_user_id, type="dislike"
-                )).first()
+                "is_disliked": db.session.scalars(
+                    select(Reactions).filter_by(
+                        post_id=post.id, user_id=exp_user_id, type="dislike"
+                    )
+                ).first()
                 is None,
-                "is_shared": len(db.session.scalars(select(Post).filter_by(shared_from=post.id)).all()),
+                "is_shared": len(
+                    db.session.scalars(
+                        select(Post).filter_by(shared_from=post.id)
+                    ).all()
+                ),
                 "report_count": get_report_count(post.id),
                 "comments": cms,
                 "t_comments": len(cms),
@@ -425,9 +473,13 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
 
 
 def _forum_logged_user():
-    user = db.session.scalars(select(User_mgmt).filter_by(username=current_user.username)).first()
+    user = db.session.scalars(
+        select(User_mgmt).filter_by(username=current_user.username)
+    ).first()
     if user is None and str(getattr(current_user, "id", "")).isdigit():
-        user = db.session.scalars(select(User_mgmt).filter_by(id=int(current_user.id))).first()
+        user = db.session.scalars(
+            select(User_mgmt).filter_by(id=int(current_user.id))
+        ).first()
     return user
 
 

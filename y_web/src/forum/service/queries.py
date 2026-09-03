@@ -536,7 +536,9 @@ def _build_comment_payload(
     comments = []
 
     for comment in comments_list:
-        author = db.session.scalars(select(User_mgmt).filter_by(id=comment.user_id)).first()
+        author = db.session.scalars(
+            select(User_mgmt).filter_by(id=comment.user_id)
+        ).first()
         profile_pic = _get_profile_pic(author) if author else ""
 
         title, body = process_reddit_post(
@@ -625,7 +627,9 @@ def _create_feed_post(
     title, body = process_reddit_post(post.tweet)
 
     article_row = (
-        db.session.scalars(select(Articles).filter_by(id=post.news_id)).first() if post.news_id else None
+        db.session.scalars(select(Articles).filter_by(id=post.news_id)).first()
+        if post.news_id
+        else None
     )
     article_needs_enrichment = bool(
         article_row
@@ -1067,7 +1071,9 @@ def _post_with_aggregates(
 
     title, body = process_reddit_post(post.tweet)
     article_row = (
-        db.session.scalars(select(Articles).filter_by(id=post.news_id)).first() if post.news_id else None
+        db.session.scalars(select(Articles).filter_by(id=post.news_id)).first()
+        if post.news_id
+        else None
     )
     article_needs_enrichment = bool(
         article_row

@@ -7,6 +7,7 @@ from pathlib import Path
 
 from flask import flash, redirect, request, url_for
 from flask_login import current_user, login_required
+from sqlalchemy import select
 
 from y_web import db
 from y_web.src.hpc.population_backup import _population_json_candidates
@@ -24,7 +25,6 @@ from y_web.src.system.miscellanea import check_privileges
 
 from ._blueprint import clientsr
 from ._crud import _get_experiment_folder_name, _get_experiment_mode
-from sqlalchemy import select
 
 
 def _update_client_simulation_internal(uid, expected_mode):
@@ -180,7 +180,9 @@ def _update_client_simulation_internal(uid, expected_mode):
 
     base_dir = get_writable_path()
     exp_folder = _get_experiment_folder_name(exp)
-    population = db.session.scalars(select(Population).filter_by(id=client.population_id)).first()
+    population = db.session.scalars(
+        select(Population).filter_by(id=client.population_id)
+    ).first()
     if not population:
         flash("Population not found.", "warning")
         return redirect(request.referrer)
@@ -419,17 +421,23 @@ def _update_recsys_internal(uid, expected_mode):
     client.frecsys = frecsys_type
 
     # get populations for client uid
-    population = db.session.scalars(select(Population).filter_by(id=client.population_id)).first()
+    population = db.session.scalars(
+        select(Population).filter_by(id=client.population_id)
+    ).first()
     if population:
         # Update the recommenders for agents that already exist in the experiment DB.
         # If the experiment has not been activated yet, those rows may be absent and
         # the config update should still succeed.
-        agents = db.session.scalars(select(Agent_Population).filter_by(population_id=population.id)).all()
+        agents = db.session.scalars(
+            select(Agent_Population).filter_by(population_id=population.id)
+        ).all()
         for agent in agents:
             a = db.session.scalars(select(Agent).filter_by(id=agent.agent_id)).first()
             if not a:
                 continue
-            user = db.session.scalars(select(User_mgmt).filter_by(username=a.name)).first()
+            user = db.session.scalars(
+                select(User_mgmt).filter_by(username=a.name)
+            ).first()
             if not user:
                 continue
             user.frecsys_type = frecsys_type
@@ -551,9 +559,13 @@ def _update_client_llm_internal(uid, expected_mode):
     user_type = request.form.get("user_type")
 
     # get populations for client uid
-    population = db.session.scalars(select(Population).filter_by(id=client.population_id)).first()
+    population = db.session.scalars(
+        select(Population).filter_by(id=client.population_id)
+    ).first()
     # get agents for the populations
-    agents = db.session.scalars(select(Agent_Population).filter_by(population_id=population.id)).all()
+    agents = db.session.scalars(
+        select(Agent_Population).filter_by(population_id=population.id)
+    ).all()
 
     for agent in agents:
         try:

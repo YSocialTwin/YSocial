@@ -1,7 +1,9 @@
-import pytest
 from contextlib import contextmanager
 from pathlib import Path
 from types import SimpleNamespace
+
+import pytest
+from sqlalchemy import select
 
 from y_web import create_app, db
 from y_web.routes.social.photo import (
@@ -20,7 +22,6 @@ from y_web.routes.social.photo import (
 )
 from y_web.src.experiment.helpers import get_experiment_engine_uri
 from y_web.src.models import Exps
-from sqlalchemy import select
 
 
 @contextmanager

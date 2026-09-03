@@ -11,7 +11,10 @@ def test_forum_server_topic_routes_fall_back_to_thread_root():
         "/Users/rossetti/PycharmProjects/YWeb/external/YServerReddit/y_server/routes/content_management.py"
     ).read_text()
 
-    assert "post = db.session.scalars(select(Post).filter_by(id=post_id)).first()" in source
+    assert (
+        "post = db.session.scalars(select(Post).filter_by(id=post_id)).first()"
+        in source
+    )
     assert "if not direct_topics and post.thread_id is not None:" in source
     assert "topic_post_id = post.thread_id" in source
     assert "Post_topics.query.filter_by(post_id=topic_post_id)" in source
