@@ -22,6 +22,7 @@ from y_web import db
 from y_web.src.models import Client_Execution
 from y_web.src.simulation.subprocess_env import build_subprocess_env
 from y_web.src.system.path_utils import get_base_path, get_writable_path
+from sqlalchemy import select
 
 
 def _tracked_process_is_alive(pid):
@@ -493,7 +494,7 @@ def _set_client_execution_terminal_state(cli, terminal_state: str) -> bool:
     if client_id is None:
         return False
 
-    client_exec = Client_Execution.query.filter_by(client_id=client_id).first()
+    client_exec = db.session.scalars(select(Client_Execution).filter_by(client_id=client_id)).first()
     if not client_exec:
         return False
 
@@ -794,7 +795,7 @@ def start_hpc_client(exp, cli, population):
 
     # Initialize or get Client_Execution record for progress tracking
     # This is essential for HPC clients to track simulation progress
-    client_exec = Client_Execution.query.filter_by(client_id=cli.id).first()
+    client_exec = db.session.scalars(select(Client_Execution).filter_by(client_id=cli.id)).first()
     if not client_exec:
         # Create new Client_Execution record
         client_exec = Client_Execution(

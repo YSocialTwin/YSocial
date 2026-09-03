@@ -11,6 +11,7 @@ from contextlib import contextmanager
 from flask import current_app, g, request
 
 from y_web import db
+from sqlalchemy import select
 
 
 def get_db_bind_key_for_exp(exp_id):
@@ -79,7 +80,7 @@ def _activate_db_exp_bind(exp_id):
 
     bind_key = get_db_bind_key_for_exp(exp_id)
     if bind_key not in current_app.config["SQLALCHEMY_BINDS"]:
-        exp = Exps.query.filter_by(idexp=exp_id).first()
+        exp = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
         if exp is not None:
             register_experiment_database(current_app, exp_id, exp.db_name)
 
@@ -124,7 +125,7 @@ def get_active_experiments():
     """
     from y_web.src.models import Exps
 
-    return Exps.query.filter_by(status=1).all()
+    return db.session.scalars(select(Exps).filter_by(status=1)).all()
 
 
 def setup_experiment_context():
@@ -152,7 +153,7 @@ def setup_experiment_context():
             # Bind the explicit experiment referenced by the route even if it is not
             # currently active, so direct admin/forum routes never fall back to the
             # legacy dummy bind.
-            exp = Exps.query.filter_by(idexp=exp_id).first()
+            exp = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
             if exp:
                 register_experiment_database(current_app, exp_id, exp.db_name)
 
@@ -255,7 +256,7 @@ def initialize_active_experiment_databases(app):
     with app.app_context():
         from y_web.src.models import Exps
 
-        active_experiments = Exps.query.filter_by(status=1).all()
+        active_experiments = db.session.scalars(select(Exps).filter_by(status=1)).all()
 
         for exp in active_experiments:
             register_experiment_database(app, exp.idexp, exp.db_name)

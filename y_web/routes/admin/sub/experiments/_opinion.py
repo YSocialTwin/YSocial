@@ -115,6 +115,7 @@ from ._blueprint import (
     experiments,
 )
 from ._helpers import *  # noqa: F401,F403
+from sqlalchemy import select
 from ._helpers import (
     _current_admin_user_or_none,
     _load_stress_reward_experiment_context,
@@ -139,7 +140,7 @@ def _resolve_opinion_evolution_topics(expid):
     except Exception:
         pass
 
-    topic_links = Exp_Topic.query.filter_by(exp_id=expid).all()
+    topic_links = db.session.scalars(select(Exp_Topic).filter_by(exp_id=expid)).all()
     if topic_links:
         topic_ids = [link.topic_id for link in topic_links]
         topic_rows = (
@@ -159,7 +160,7 @@ def _resolve_opinion_evolution_topics(expid):
 
 def _get_ordered_opinion_groups():
     """Return opinion groups sorted by numeric lower bound."""
-    groups = OpinionGroup.query.all()
+    groups = db.session.scalars(select(OpinionGroup)).all()
     return sorted(groups, key=lambda group: float(group.lower_bound))
 
 
@@ -1302,7 +1303,7 @@ def update_opinion_group():
 
     data = request.get_json()
     group_id = data.get("id")
-    group = OpinionGroup.query.filter_by(id=group_id).first()
+    group = db.session.scalars(select(OpinionGroup).filter_by(id=group_id)).first()
 
     if not group:
         return jsonify({"success": False, "message": "Opinion group not found"}), 404
@@ -1402,7 +1403,7 @@ def create_opinion_group():
         return redirect(request.referrer)
 
     # Check for overlaps with existing groups
-    existing_groups = OpinionGroup.query.all()
+    existing_groups = db.session.scalars(select(OpinionGroup)).all()
     for existing in existing_groups:
         # Check if the new group overlaps with any existing group
         # Two ranges [a1, a2] and [b1, b2] overlap if: a1 < b2 AND b1 < a2
@@ -1428,7 +1429,7 @@ def delete_opinion_group(group_id):
     """Delete opinion group."""
     check_privileges(current_user.username)
 
-    group = OpinionGroup.query.filter_by(id=group_id).first()
+    group = db.session.scalars(select(OpinionGroup).filter_by(id=group_id)).first()
     if not group:
         return jsonify({"success": False, "message": "Opinion group not found"}), 404
 
@@ -1503,7 +1504,7 @@ def update_opinion_distribution():
 
     data = request.get_json()
     dist_id = data.get("id")
-    dist = OpinionDistribution.query.filter_by(id=dist_id).first()
+    dist = db.session.scalars(select(OpinionDistribution).filter_by(id=dist_id)).first()
 
     if not dist:
         return (
@@ -1553,7 +1554,7 @@ def delete_opinion_distribution(dist_id):
     """Delete opinion distribution."""
     check_privileges(current_user.username)
 
-    dist = OpinionDistribution.query.filter_by(id=dist_id).first()
+    dist = db.session.scalars(select(OpinionDistribution).filter_by(id=dist_id)).first()
     if not dist:
         return (
             jsonify({"success": False, "message": "Opinion distribution not found"}),
@@ -1581,7 +1582,7 @@ def generate_group_trends_data(expid, filter_day, filter_hour, filter_topic_id):
     Returns:
         dict: Time series data with timestamps and group percentages
     """
-    from sqlalchemy import and_, or_
+    from sqlalchemy import and_, or_, select
 
     from y_web.src.models import Agent_Opinion, Rounds
 
@@ -1813,9 +1814,9 @@ def get_or_sample_agents(expid, topic_id, sample_percentage, all_agent_ids):
         List of sampled agent IDs
     """
     # Try to get existing sample
-    sample_entry = OpinionEvolutionSampledAgents.query.filter_by(
+    sample_entry = db.session.scalars(select(OpinionEvolutionSampledAgents).filter_by(
         exp_id=expid, topic_id=topic_id, sample_percentage=sample_percentage
-    ).first()
+    )).first()
 
     # If sample exists and is recent (< 1 hour), use it
     if sample_entry and (datetime.now() - sample_entry.created_at) < timedelta(hours=1):
@@ -2571,7 +2572,7 @@ def opinion_evolution(expid):
     check_privileges(current_user.username)
 
     # Get experiment
-    experiment = Exps.query.filter_by(idexp=expid).first()
+    experiment = db.session.scalars(select(Exps).filter_by(idexp=expid)).first()
     if not experiment:
         flash("Experiment not found.")
         return redirect("/admin/experiments")
@@ -2877,7 +2878,7 @@ def opinion_evolution_data(expid):
     check_privileges(current_user.username)
 
     # Get experiment
-    experiment = Exps.query.filter_by(idexp=expid).first()
+    experiment = db.session.scalars(select(Exps).filter_by(idexp=expid)).first()
     if not experiment:
         return jsonify({"error": "Experiment not found"}), 404
 
@@ -3928,7 +3929,7 @@ def _load_annotation_experiment_context(
     """Load an experiment where a specific annotation is enabled."""
     check_privileges(current_user.username)
 
-    experiment = Exps.query.filter_by(idexp=uid).first()
+    experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     if not experiment:
         flash("Experiment not found", "error")
         return None, None, redirect(url_for("experiments.settings"))
@@ -3975,7 +3976,7 @@ def _load_network_experiment_context(uid, require_manage=False):
     """Load an experiment for network analytics."""
     check_privileges(current_user.username)
 
-    experiment = Exps.query.filter_by(idexp=uid).first()
+    experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     if not experiment:
         flash("Experiment not found", "error")
         return None, None, redirect(url_for("experiments.settings"))

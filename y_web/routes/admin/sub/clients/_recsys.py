@@ -24,18 +24,19 @@ from y_web.src.system.miscellanea import check_privileges
 
 from ._blueprint import clientsr
 from ._crud import _get_experiment_folder_name, _get_experiment_mode
+from sqlalchemy import select
 
 
 def _update_client_simulation_internal(uid, expected_mode):
     """Update visible simulation parameters and action likelihoods."""
     check_privileges(current_user.username)
 
-    client = Client.query.filter_by(id=uid).first()
+    client = db.session.scalars(select(Client).filter_by(id=uid)).first()
     if not client:
         flash("Client not found.", "error")
         return redirect(url_for("experiments.settings"))
 
-    exp = Exps.query.filter_by(idexp=client.id_exp).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()
     if not exp:
         flash("Experiment not found.", "error")
         return redirect(url_for("experiments.settings"))
@@ -157,7 +158,7 @@ def _update_client_simulation_internal(uid, expected_mode):
 
     db.session.commit()
 
-    topics = Exp_Topic.query.filter_by(exp_id=exp.idexp).all()
+    topics = db.session.scalars(select(Exp_Topic).filter_by(exp_id=exp.idexp)).all()
     topics_ids = [t.topic_id for t in topics]
     topics_objs = (
         db.session.query(Topic_List).filter(Topic_List.id.in_(topics_ids)).all()
@@ -179,7 +180,7 @@ def _update_client_simulation_internal(uid, expected_mode):
 
     base_dir = get_writable_path()
     exp_folder = _get_experiment_folder_name(exp)
-    population = Population.query.filter_by(id=client.population_id).first()
+    population = db.session.scalars(select(Population).filter_by(id=client.population_id)).first()
     if not population:
         flash("Population not found.", "warning")
         return redirect(request.referrer)
@@ -394,12 +395,12 @@ def _update_recsys_internal(uid, expected_mode):
     recsys_type = request.form.get("recsys_type")
     frecsys_type = request.form.get("frecsys_type")
 
-    client = Client.query.filter_by(id=uid).first()
+    client = db.session.scalars(select(Client).filter_by(id=uid)).first()
     if not client:
         flash("Client not found.", "error")
         return redirect(url_for("experiments.settings"))
 
-    exp = Exps.query.filter_by(idexp=client.id_exp).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()
     if not exp:
         flash("Experiment not found.", "error")
         return redirect(url_for("experiments.settings"))
@@ -418,17 +419,17 @@ def _update_recsys_internal(uid, expected_mode):
     client.frecsys = frecsys_type
 
     # get populations for client uid
-    population = Population.query.filter_by(id=client.population_id).first()
+    population = db.session.scalars(select(Population).filter_by(id=client.population_id)).first()
     if population:
         # Update the recommenders for agents that already exist in the experiment DB.
         # If the experiment has not been activated yet, those rows may be absent and
         # the config update should still succeed.
-        agents = Agent_Population.query.filter_by(population_id=population.id).all()
+        agents = db.session.scalars(select(Agent_Population).filter_by(population_id=population.id)).all()
         for agent in agents:
-            a = Agent.query.filter_by(id=agent.agent_id).first()
+            a = db.session.scalars(select(Agent).filter_by(id=agent.agent_id)).first()
             if not a:
                 continue
-            user = User_mgmt.query.filter_by(username=a.name).first()
+            user = db.session.scalars(select(User_mgmt).filter_by(username=a.name)).first()
             if not user:
                 continue
             user.frecsys_type = frecsys_type
@@ -503,12 +504,12 @@ def update_recsys(uid):
     """Backward-compatible dispatcher for recommender updates."""
     check_privileges(current_user.username)
 
-    client = Client.query.filter_by(id=uid).first()
+    client = db.session.scalars(select(Client).filter_by(id=uid)).first()
     if not client:
         flash("Client not found.", "error")
         return redirect(url_for("experiments.settings"))
 
-    exp = Exps.query.filter_by(idexp=client.id_exp).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()
     if not exp:
         flash("Experiment not found.", "error")
         return redirect(url_for("experiments.settings"))
@@ -524,12 +525,12 @@ def _update_client_llm_internal(uid, expected_mode):
     """Update client LLM using the modality-specific route."""
     check_privileges(current_user.username)
 
-    client = Client.query.filter_by(id=uid).first()
+    client = db.session.scalars(select(Client).filter_by(id=uid)).first()
     if not client:
         flash("Client not found.", "error")
         return redirect(url_for("experiments.settings"))
 
-    exp = Exps.query.filter_by(idexp=client.id_exp).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()
     if not exp:
         flash("Experiment not found.", "error")
         return redirect(url_for("experiments.settings"))
@@ -550,13 +551,13 @@ def _update_client_llm_internal(uid, expected_mode):
     user_type = request.form.get("user_type")
 
     # get populations for client uid
-    population = Population.query.filter_by(id=client.population_id).first()
+    population = db.session.scalars(select(Population).filter_by(id=client.population_id)).first()
     # get agents for the populations
-    agents = Agent_Population.query.filter_by(population_id=population.id).all()
+    agents = db.session.scalars(select(Agent_Population).filter_by(population_id=population.id)).all()
 
     for agent in agents:
         try:
-            a = Agent.query.filter_by(id=agent.agent_id).first()
+            a = db.session.scalars(select(Agent).filter_by(id=agent.agent_id)).first()
             user = (User_mgmt.query.filter_by(username=a.name)).first()
             user.user_type = user_type
             db.session.commit()
@@ -615,12 +616,12 @@ def update_llm(uid):
     """Backward-compatible dispatcher for client LLM updates."""
     check_privileges(current_user.username)
 
-    client = Client.query.filter_by(id=uid).first()
+    client = db.session.scalars(select(Client).filter_by(id=uid)).first()
     if not client:
         flash("Client not found.", "error")
         return redirect(url_for("experiments.settings"))
 
-    exp = Exps.query.filter_by(idexp=client.id_exp).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()
     if not exp:
         flash("Experiment not found.", "error")
         return redirect(url_for("experiments.settings"))

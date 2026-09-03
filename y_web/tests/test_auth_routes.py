@@ -11,6 +11,7 @@ from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash
 from y_web import db
+from sqlalchemy import select
 
 pytestmark = pytest.mark.integration
 
@@ -125,7 +126,7 @@ def app():
         name = request.form.get("name")
         password = request.form.get("password")
 
-        user = Admin_users.query.filter_by(email=email).first()
+        user = db.session.scalars(select(Admin_users).filter_by(email=email)).first()
 
         if user:
             flash("Email address already exists")
@@ -143,7 +144,7 @@ def app():
         # Check if experiment exists and create user_mgmt entry
         try:
             # Create experiment if it doesn't exist for testing
-            if not Exps.query.first():
+            if not db.session.scalars(select(Exps)).first():
                 exp = Exps(
                     exp_name="Test Experiment",
                     exp_descr="Test Description",
@@ -186,7 +187,7 @@ def app():
 
         from werkzeug.security import check_password_hash
 
-        user = Admin_users.query.filter_by(email=email).first()
+        user = db.session.scalars(select(Admin_users).filter_by(email=email)).first()
 
         if not user or not check_password_hash(user.password, password):
             flash("Please check your login details and try again.")
@@ -194,12 +195,12 @@ def app():
 
         # For non-admin users, get the User_mgmt version
         if user.role != "admin":
-            user_agent = User_mgmt.query.filter_by(username=user.username).first()
+            user_agent = db.session.scalars(select(User_mgmt).filter_by(username=user.username)).first()
             if user_agent:
                 login_user(user_agent)
                 return "Login successful - regular user"
         else:
-            user_agent = User_mgmt.query.filter_by(username=user.username).first()
+            user_agent = db.session.scalars(select(User_mgmt).filter_by(username=user.username)).first()
             if user_agent:
                 login_user(user_agent)
                 return "Login successful - admin user"

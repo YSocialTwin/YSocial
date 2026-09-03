@@ -21,6 +21,7 @@ from sqlalchemy.exc import OperationalError, PendingRollbackError
 
 from y_web import db
 from y_web.src.models import ClientLogMetrics, LogFileOffset, ServerLogMetrics
+from sqlalchemy import select
 
 logger = logging.getLogger(__name__)
 
@@ -108,12 +109,12 @@ def get_log_file_offset(exp_id, log_file_type, file_path, client_id=None):
     Returns:
         int: Last read offset in bytes (0 if not found)
     """
-    offset_record = LogFileOffset.query.filter_by(
+    offset_record = db.session.scalars(select(LogFileOffset).filter_by(
         exp_id=exp_id,
         log_file_type=log_file_type,
         file_path=file_path,
         client_id=client_id,
-    ).first()
+    )).first()
 
     if offset_record:
         return offset_record.last_offset
@@ -133,12 +134,12 @@ def update_log_file_offset(
         new_offset: New offset in bytes
         client_id: Client ID (only for client logs)
     """
-    offset_record = LogFileOffset.query.filter_by(
+    offset_record = db.session.scalars(select(LogFileOffset).filter_by(
         exp_id=exp_id,
         log_file_type=log_file_type,
         file_path=file_path,
         client_id=client_id,
-    ).first()
+    )).first()
 
     if offset_record:
         offset_record.last_offset = new_offset

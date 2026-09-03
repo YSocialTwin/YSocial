@@ -4,6 +4,7 @@ import sys
 import requests
 
 import y_web.pyinstaller_utils.installation_id as installation_id
+from sqlalchemy import select
 
 _HTTP_TIMEOUT_SECONDS = 5
 
@@ -217,7 +218,7 @@ def update_release_info_in_db():
         from y_web.src.models import ReleaseInfo
 
         # Get or create the single row
-        record = ReleaseInfo.query.first()
+        record = db.session.scalars(select(ReleaseInfo)).first()
 
         if record is None:
             record = ReleaseInfo()

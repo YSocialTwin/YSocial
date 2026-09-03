@@ -13,6 +13,7 @@ from y_web import db
 from y_web.src.experiment.context import register_experiment_database
 from y_web.src.models import Exps
 from y_web.src.system.path_utils import get_writable_path
+from sqlalchemy import select
 
 from ._helpers import (
     _coerce_experiment_user_id,
@@ -184,7 +185,7 @@ def _get_latest_experiment_runtime(exp: Exps) -> Exps:
         db.session.expire_all()
     except Exception:
         pass
-    latest = Exps.query.filter_by(idexp=exp_id).first()
+    latest = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
     return latest or exp
 
 

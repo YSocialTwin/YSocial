@@ -8,6 +8,55 @@ from y_web.src.data_access import users as users_module
 pytestmark = pytest.mark.unit
 
 
+
+# ---------------------------------------------------------------------------
+# SA2 test stubs — bypass select() ORM validation for unit-test stubs
+# ---------------------------------------------------------------------------
+class _FakeSelect:
+    """Captures model/args without invoking SQLAlchemy ORM coercions."""
+    def __init__(self, *models, **kw):
+        self._models = models
+        self._kw = {}
+    def filter_by(self, **kw): self._kw = kw; return self
+    def filter(self, *a): return self
+    def select_from(self, m): return self
+    def where(self, *a): return self
+    def order_by(self, *a): return self
+    def limit(self, n): return self
+
+class _ScalarsResult:
+    """Wraps a legacy query so .all()/.first() work uniformly."""
+    def __init__(self, q): self._q = q
+    def all(self):
+        return self._q.all() if hasattr(self._q, 'all') else []
+    def first(self):
+        return self._q.first() if hasattr(self._q, 'first') else None
+    def one_or_none(self):
+        return self._q.one_or_none() if hasattr(self._q, 'one_or_none') else None
+    def one(self):
+        return self._q.one() if hasattr(self._q, 'one') else None
+
+class _SelectRoutingSession:
+    """Routes scalars(select(Model).filter_by(…)) → Model.query.filter_by(…)."""
+    def __init__(self, inner=None): self._inner = inner
+    def scalars(self, stmt):
+        if isinstance(stmt, _FakeSelect) and stmt._models:
+            model = stmt._models[0]
+            q = getattr(model, 'query', None)
+            if q is not None:
+                if stmt._kw:
+                    q = q.filter_by(**stmt._kw)
+                return _ScalarsResult(q)
+        return _ScalarsResult(
+            type('_Empty', (), {'all': lambda s: [], 'first': lambda s: None,
+                                'one_or_none': lambda s: None})()
+        )
+    def scalar(self, stmt): return None
+    def __getattr__(self, name):
+        if self._inner is not None:
+            return getattr(self._inner, name)
+        raise AttributeError(f'_SelectRoutingSession has no attribute {name!r}')
+
 def test_reduce_latest_follow_map_preserves_uuid_keys():
     events = [
         SimpleNamespace(
@@ -107,6 +156,8 @@ def test_get_user_friends_returns_uuid_followers_and_followees(monkeypatch):
             )
         ),
     )
+    monkeypatch.setattr(users_module, "select", lambda *a, **kw: _FakeSelect(*a))
+    monkeypatch.setattr(users_module, "db", SimpleNamespace(session=_SelectRoutingSession()))
 
     followers, followees, number_followers, number_followees = (
         users_module.get_user_friends("target-1", limit=10, page=1)

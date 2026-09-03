@@ -10,7 +10,7 @@ from urllib.parse import urlparse
 
 import requests
 from flask import current_app, g
-from sqlalchemy import and_
+from sqlalchemy import and_, select
 from sqlalchemy.exc import IntegrityError
 
 from y_web import db
@@ -105,17 +105,17 @@ def _ensure_experiment_context(user) -> None:
     )
     if user_exp is None:
         # Fallback: any user experiment, or any active experiment
-        user_exp = User_Experiment.query.filter_by(user_id=user.id).first()
+        user_exp = db.session.scalars(select(User_Experiment).filter_by(user_id=user.id)).first()
 
     if user_exp is None:
         # Try to find any active experiment as fallback
-        active_exp = Exps.query.filter_by(status=1).first()
+        active_exp = db.session.scalars(select(Exps).filter_by(status=1)).first()
         if active_exp is None:
             raise ValueError("No active experiment found")
         exp_id = active_exp.idexp
         db_name = active_exp.db_name
     else:
-        exp = Exps.query.filter_by(idexp=user_exp.exp_id).first()
+        exp = db.session.scalars(select(Exps).filter_by(idexp=user_exp.exp_id)).first()
         if exp is None:
             raise ValueError("User's experiment not found")
         exp_id = exp.idexp
@@ -144,7 +144,7 @@ def _ensure_experiment_context(user) -> None:
 def _resolve_experiment_actor(user):
     username = str(getattr(user, "username", "") or "").strip()
     if username:
-        exp_user = User_mgmt.query.filter_by(username=username).first()
+        exp_user = db.session.scalars(select(User_mgmt).filter_by(username=username)).first()
         if exp_user is not None:
             return exp_user
     return user
@@ -181,7 +181,7 @@ def create_comment_reddit(
     _ensure_experiment_context(user)
     actor_user = _resolve_experiment_actor(user)
 
-    parent = Post.query.filter_by(id=parent_id).first()
+    parent = db.session.scalars(select(Post).filter_by(id=parent_id)).first()
     if parent is None:
         raise ValueError(f"Parent post {parent_id} not found")
 
@@ -193,20 +193,20 @@ def create_comment_reddit(
     try:
         # Idempotency token guard (request-level dedupe)
         if safe_action_id:
-            existing = Post.query.filter_by(
+            existing = db.session.scalars(select(Post).filter_by(
                 user_id=actor_user.id, client_action_id=safe_action_id
-            ).first()
+            )).first()
             if existing is not None:
                 return existing, True
 
         # Same-parent/same-round/same-text guard
         if dedupe_key:
-            existing = Post.query.filter_by(
+            existing = db.session.scalars(select(Post).filter_by(
                 user_id=actor_user.id,
                 comment_to=parent_id,
                 round=round_id,
                 dedupe_key=dedupe_key,
-            ).first()
+            )).first()
             if existing is not None:
                 return existing, True
 
@@ -228,23 +228,23 @@ def create_comment_reddit(
             db.session.rollback()
             existing = None
             if safe_action_id:
-                existing = Post.query.filter_by(
+                existing = db.session.scalars(select(Post).filter_by(
                     user_id=actor_user.id, client_action_id=safe_action_id
-                ).first()
+                )).first()
             if existing is None and dedupe_key:
-                existing = Post.query.filter_by(
+                existing = db.session.scalars(select(Post).filter_by(
                     user_id=actor_user.id,
                     comment_to=parent_id,
                     round=round_id,
                     dedupe_key=dedupe_key,
-                ).first()
+                )).first()
             if existing is not None:
                 return existing, True
             raise
 
         # Get parent sentiment for tracking
         sentiment_parent = ""
-        parent_sentiment = Post_Sentiment.query.filter_by(post_id=parent_id).first()
+        parent_sentiment = db.session.scalars(select(Post_Sentiment).filter_by(post_id=parent_id)).first()
         if parent_sentiment is not None:
             compound = parent_sentiment.compound
             if compound > 0.05:
@@ -261,7 +261,7 @@ def create_comment_reddit(
         toxicity(content, actor_user.username, comment.id, db)
 
         # Get user's LLM for annotations
-        admin_user = Admin_users.query.filter_by(username=actor_user.username).first()
+        admin_user = db.session.scalars(select(Admin_users).filter_by(username=actor_user.username)).first()
         llm = "llama3.2:latest"
         if admin_user and admin_user.llm:
             llm = admin_user.llm
@@ -278,7 +278,7 @@ def create_comment_reddit(
             mentions = []
 
         # Inherit topics from thread root
-        post_topics_list = Post_topics.query.filter_by(post_id=thread_id).all()
+        post_topics_list = db.session.scalars(select(Post_topics).filter_by(post_id=thread_id)).all()
         for topic in post_topics_list:
             topic_id = topic.topic_id
             db.session.add(Post_topics(post_id=comment.id, topic_id=topic_id))
@@ -303,7 +303,7 @@ def create_comment_reddit(
         for emotion_name in emotions:
             if len(emotion_name) < 1:
                 continue
-            emotion = Emotions.query.filter_by(emotion=emotion_name).first()
+            emotion = db.session.scalars(select(Emotions).filter_by(emotion=emotion_name)).first()
             if emotion is not None:
                 post_emotion = Post_emotions(post_id=comment.id, emotion_id=emotion.id)
                 db.session.add(post_emotion)
@@ -313,12 +313,12 @@ def create_comment_reddit(
         for tag in hashtags:
             if len(tag) < 4:
                 continue
-            hashtag = Hashtags.query.filter_by(hashtag=tag).first()
+            hashtag = db.session.scalars(select(Hashtags).filter_by(hashtag=tag)).first()
             if hashtag is None:
                 hashtag = Hashtags(hashtag=tag)
                 db.session.add(hashtag)
                 db.session.commit()
-                hashtag = Hashtags.query.filter_by(hashtag=tag).first()
+                hashtag = db.session.scalars(select(Hashtags).filter_by(hashtag=tag)).first()
 
             post_hashtag = Post_hashtags(post_id=comment.id, hashtag_id=hashtag.id)
             db.session.add(post_hashtag)
@@ -330,9 +330,9 @@ def create_comment_reddit(
         for mention in mentions:
             if len(mention) < 1:
                 continue
-            mentioned_user = User_mgmt.query.filter_by(
+            mentioned_user = db.session.scalars(select(User_mgmt).filter_by(
                 username=mention.strip("@")
-            ).first()
+            )).first()
 
             if mentioned_user is not None and mentioned_user.id != actor_user.id:
                 if mentioned_user.id not in mentioned_user_ids:
@@ -417,7 +417,7 @@ def create_post_reddit(
         normalized_url = normalized_url[:200]
 
     # Admin user is stored in the admin DB; used for optional LLM URL/model config.
-    admin_user = Admin_users.query.filter_by(username=actor_user.username).first()
+    admin_user = db.session.scalars(select(Admin_users).filter_by(username=actor_user.username)).first()
     llm = "llama3.2:latest"
     llm_url = None
     if admin_user:
@@ -474,7 +474,7 @@ def create_post_reddit(
                             # Image annotation is optional; proceed without it.
                             annotation = None
 
-                img = Images.query.filter_by(url=stored_url).first()
+                img = db.session.scalars(select(Images).filter_by(url=stored_url)).first()
                 if img is None:
                     img = Images(
                         url=stored_url, description=annotation, article_id=None
@@ -484,7 +484,7 @@ def create_post_reddit(
                 img_id = img.id
             else:
                 # Non-media URL: treat as an article link and store in Articles/Websites.
-                existing_article = Articles.query.filter_by(link=normalized_url).first()
+                existing_article = db.session.scalars(select(Articles).filter_by(link=normalized_url)).first()
                 if existing_article:
                     news_id = existing_article.id
                 else:
@@ -493,7 +493,7 @@ def create_post_reddit(
                     source = (article_info.get("source") or "").strip() or urlparse(
                         normalized_url
                     ).netloc
-                    website = Websites.query.filter_by(name=source).first()
+                    website = db.session.scalars(select(Websites).filter_by(name=source)).first()
                     if not website:
                         website = Websites(
                             name=source[:50],
@@ -527,13 +527,13 @@ def create_post_reddit(
 
                     image_url = (article_info.get("image") or "").strip()
                     if image_url and len(image_url) <= 200:
-                        existing_image = Images.query.filter_by(
+                        existing_image = db.session.scalars(select(Images).filter_by(
                             article_id=article.id
-                        ).first()
+                        )).first()
                         if existing_image is None:
-                            existing_image = Images.query.filter_by(
+                            existing_image = db.session.scalars(select(Images).filter_by(
                                 url=image_url
-                            ).first()
+                            )).first()
                         if existing_image is None:
                             db.session.add(Images(url=image_url, article_id=article.id))
                             db.session.commit()
@@ -582,12 +582,12 @@ def create_post_reddit(
 
         # Process topics (create if doesn't exist)
         for topic_name in topics:
-            interest = Interests.query.filter_by(interest=topic_name).first()
+            interest = db.session.scalars(select(Interests).filter_by(interest=topic_name)).first()
             if interest is None:
                 interest = Interests(interest=topic_name)
                 db.session.add(interest)
                 db.session.commit()
-                interest = Interests.query.filter_by(interest=topic_name).first()
+                interest = db.session.scalars(select(Interests).filter_by(interest=topic_name)).first()
 
             topic_id = interest.iid
 
@@ -621,7 +621,7 @@ def create_post_reddit(
         for emotion_name in emotions:
             if len(emotion_name) < 1:
                 continue
-            emotion = Emotions.query.filter_by(emotion=emotion_name).first()
+            emotion = db.session.scalars(select(Emotions).filter_by(emotion=emotion_name)).first()
             if emotion is not None:
                 post_emotion = Post_emotions(post_id=post.id, emotion_id=emotion.id)
                 db.session.add(post_emotion)
@@ -631,12 +631,12 @@ def create_post_reddit(
         for tag in hashtags:
             if len(tag) < 4:
                 continue
-            hashtag = Hashtags.query.filter_by(hashtag=tag).first()
+            hashtag = db.session.scalars(select(Hashtags).filter_by(hashtag=tag)).first()
             if hashtag is None:
                 hashtag = Hashtags(hashtag=tag)
                 db.session.add(hashtag)
                 db.session.commit()
-                hashtag = Hashtags.query.filter_by(hashtag=tag).first()
+                hashtag = db.session.scalars(select(Hashtags).filter_by(hashtag=tag)).first()
 
             post_hashtag = Post_hashtags(post_id=post.id, hashtag_id=hashtag.id)
             db.session.add(post_hashtag)
@@ -647,9 +647,9 @@ def create_post_reddit(
         for mention in mentions:
             if len(mention) < 1:
                 continue
-            mentioned_user = User_mgmt.query.filter_by(
+            mentioned_user = db.session.scalars(select(User_mgmt).filter_by(
                 username=mention.strip("@")
-            ).first()
+            )).first()
 
             if mentioned_user is not None and mentioned_user.id != user.id:
                 mention_record = Mentions(

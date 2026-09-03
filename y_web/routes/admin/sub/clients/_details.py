@@ -43,6 +43,7 @@ from ._crud import (
     _read_json_if_exists,
 )
 from ._helpers import _forum_effective_link_share
+from sqlalchemy import select
 
 
 @clientsr.route("/admin/client_details/<int:uid>")
@@ -52,8 +53,8 @@ def client_details(uid):
     check_privileges(current_user.username)
 
     # get client details
-    client = Client.query.filter_by(id=uid).first()
-    experiment = Exps.query.filter_by(idexp=client.id_exp).first()
+    client = db.session.scalars(select(Client).filter_by(id=uid)).first()
+    experiment = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()
 
     # Redirect HPC clients to dedicated HPC client details page
     if (
@@ -65,7 +66,7 @@ def client_details(uid):
     if experiment and experiment.platform_type == "forum":
         return redirect(url_for("clientsr.client_details_forum", uid=uid))
 
-    population = Population.query.filter_by(id=client.population_id).first()
+    population = db.session.scalars(select(Population).filter_by(id=client.population_id)).first()
     pages = _get_client_population_pages(client)
 
     from y_web.src.system.path_utils import get_writable_path
@@ -100,8 +101,8 @@ def client_details(uid):
     llm_backend = llm_backend_status()
 
     # Get all recsys and filter by enabled field for Standard clients
-    frecsys_all = Follow_Recsys.query.all()
-    crecsys_all = Content_Recsys.query.all()
+    frecsys_all = db.session.scalars(select(Follow_Recsys)).all()
+    crecsys_all = db.session.scalars(select(Content_Recsys)).all()
 
     # Filter recsys based on enabled field - Standard clients only get ones with "Standard" in enabled
     frecsys = [r for r in frecsys_all if r.enabled and "Standard" in r.enabled]
@@ -130,12 +131,12 @@ def client_details_forum(uid):
     """Handle forum client details operation."""
     check_privileges(current_user.username)
 
-    client = Client.query.filter_by(id=uid).first()
+    client = db.session.scalars(select(Client).filter_by(id=uid)).first()
     if not client:
         flash("Client not found.", "error")
         return redirect(url_for("experiments.settings"))
 
-    experiment = Exps.query.filter_by(idexp=client.id_exp).first()
+    experiment = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()
     if not experiment:
         flash("Experiment not found.", "error")
         return redirect(url_for("experiments.settings"))
@@ -145,7 +146,7 @@ def client_details_forum(uid):
     if experiment.platform_type != "forum":
         return redirect(url_for("clientsr.client_details", uid=uid))
 
-    population = Population.query.filter_by(id=client.population_id).first()
+    population = db.session.scalars(select(Population).filter_by(id=client.population_id)).first()
     pages = _get_client_population_pages(client)
 
     from y_web.src.system.path_utils import get_writable_path
@@ -178,8 +179,8 @@ def client_details_forum(uid):
     models = get_llm_models()
     llm_backend = llm_backend_status()
 
-    frecsys_all = Follow_Recsys.query.all()
-    crecsys_all = Content_Recsys.query.all()
+    frecsys_all = db.session.scalars(select(Follow_Recsys)).all()
+    crecsys_all = db.session.scalars(select(Content_Recsys)).all()
     frecsys = [r for r in frecsys_all if r.enabled and "Standard" in r.enabled]
     crecsys = [r for r in crecsys_all if r.enabled and "Standard" in r.enabled]
 
@@ -219,17 +220,17 @@ def client_details_hpc(uid):
     check_privileges(current_user.username)
 
     # get client details
-    client = Client.query.filter_by(id=uid).first()
+    client = db.session.scalars(select(Client).filter_by(id=uid)).first()
     if not client:
         flash("Client not found.", "error")
         return redirect(url_for("experiments.settings"))
 
-    experiment = Exps.query.filter_by(idexp=client.id_exp).first()
+    experiment = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()
     if not experiment:
         flash("Experiment not found.", "error")
         return redirect(url_for("experiments.settings"))
 
-    population = Population.query.filter_by(id=client.population_id).first()
+    population = db.session.scalars(select(Population).filter_by(id=client.population_id)).first()
     pages = _get_client_population_pages(client)
 
     from y_web.src.system.path_utils import get_writable_path
@@ -381,8 +382,8 @@ def client_details_hpc(uid):
     llm_backend = llm_backend_status()
 
     # Get all recsys and filter by enabled field for HPC clients
-    frecsys_all = Follow_Recsys.query.all()
-    crecsys_all = Content_Recsys.query.all()
+    frecsys_all = db.session.scalars(select(Follow_Recsys)).all()
+    crecsys_all = db.session.scalars(select(Content_Recsys)).all()
 
     # Filter recsys based on enabled field - HPC clients only get ones with "HPC" in enabled
     frecsys = [r for r in frecsys_all if r.enabled and "HPC" in r.enabled]
@@ -434,11 +435,11 @@ def get_progress(client_id):
     For infinite clients (expected_duration_rounds = -1): returns elapsed time info
     """
     # get client_execution
-    client_execution = Client_Execution.query.filter_by(client_id=client_id).first()
-    client = Client.query.filter_by(id=client_id).first()
+    client_execution = db.session.scalars(select(Client_Execution).filter_by(client_id=client_id)).first()
+    client = db.session.scalars(select(Client).filter_by(id=client_id)).first()
     if client and client_execution:
         try:
-            experiment = Exps.query.filter_by(idexp=client.id_exp).first()
+            experiment = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()
             if experiment and getattr(experiment, "simulator_type", None) == "HPC":
                 if client_execution.elapsed_time <= 0 or (
                     client_execution.expected_duration_rounds > 0
@@ -450,9 +451,9 @@ def get_progress(client_id):
                     )
                     if client_log_path and os.path.exists(client_log_path):
                         update_client_execution_from_log(client.id, client_log_path)
-                        client_execution = Client_Execution.query.filter_by(
+                        client_execution = db.session.scalars(select(Client_Execution).filter_by(
                             client_id=client_id
-                        ).first()
+                        )).first()
         except Exception:
             pass
 
@@ -495,7 +496,7 @@ def get_progress(client_id):
 @clientsr.route("/admin/progress_adhoc/<int:idexp>/<path:client_key>")
 def get_adhoc_progress(idexp, client_key):
     """Return progress payload for a file-backed ad hoc client."""
-    experiment = Exps.query.filter_by(idexp=idexp).first()
+    experiment = db.session.scalars(select(Exps).filter_by(idexp=idexp)).first()
     if experiment is None:
         return json.dumps({"progress": 0, "infinite": False})
 
@@ -513,16 +514,16 @@ def set_network(uid):
     import networkx as nx
 
     # get client
-    client = Client.query.filter_by(id=uid).first()
+    client = db.session.scalars(select(Client).filter_by(id=uid)).first()
 
     # get populations for client uid
-    populations = Population.query.filter_by(id=client.population_id).all()
+    populations = db.session.scalars(select(Population).filter_by(id=client.population_id)).all()
     # get agents for the populations
     agents = Agent_Population.query.filter(
         Agent_Population.population_id.in_([p.id for p in populations])
     ).all()
     # get agent ids for all agents in populations
-    agent_ids = [Agent.query.filter_by(id=a.agent_id).first().name for a in agents]
+    agent_ids = [db.session.scalars(select(Agent).filter_by(id=a.agent_id)).first().name for a in agents]
 
     # get data from form
     network = request.form.get("network_model")
@@ -584,7 +585,7 @@ def set_network(uid):
         g = nx.erdos_renyi_graph(n, p=p)
 
     # get the client experiment
-    exp = Exps.query.filter_by(idexp=client.id_exp).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()
     # get the experiment folder
     from y_web.src.system.path_utils import get_writable_path
 
@@ -619,10 +620,10 @@ def upload_network(uid):
     check_privileges(current_user.username)
 
     # get client
-    client = Client.query.filter_by(id=uid).first()
+    client = db.session.scalars(select(Client).filter_by(id=uid)).first()
 
     # get the client experiment
-    exp = Exps.query.filter_by(idexp=client.id_exp).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()
     # get the experiment folder
     from y_web.src.system.path_utils import get_writable_path
 
@@ -649,7 +650,7 @@ def upload_network(uid):
                 for l in f:
                     l = l.rstrip().split(",")
 
-                    agent_1 = Agent.query.filter_by(name=l[0]).all()
+                    agent_1 = db.session.scalars(select(Agent).filter_by(name=l[0])).all()
                     aids = [a.id for a in agent_1]
 
                     if agent_1 is not None:
@@ -660,7 +661,7 @@ def upload_network(uid):
                         ).all()
                         error = len(test) == 0
                     else:
-                        agent_1 = Page.query.filter_by(name=l[0]).all()
+                        agent_1 = db.session.scalars(select(Page).filter_by(name=l[0])).all()
                         aids = [a.id for a in agent_1]
 
                         if agent_1 is not None:
@@ -673,7 +674,7 @@ def upload_network(uid):
                         if agent_1 is None:
                             error = True
 
-                    agent_2 = Agent.query.filter_by(name=l[1]).all()
+                    agent_2 = db.session.scalars(select(Agent).filter_by(name=l[1])).all()
                     aids = [a.id for a in agent_2]
 
                     if agent_2 is not None:
@@ -684,7 +685,7 @@ def upload_network(uid):
                         ).all()
                         error2 = len(test) == 0
                     else:
-                        agent_2 = Page.query.filter_by(name=l[1]).all()
+                        agent_2 = db.session.scalars(select(Page).filter_by(name=l[1])).all()
                         aids = [a.id for a in agent_2]
 
                         if agent_2 is not None:
@@ -729,10 +730,10 @@ def download_agent_list(uid):
     check_privileges(current_user.username)
 
     # get client
-    client = Client.query.filter_by(id=uid).first()
+    client = db.session.scalars(select(Client).filter_by(id=uid)).first()
 
     # get populations associated to the client
-    populations = Population_Experiment.query.filter_by(id_exp=client.id_exp).all()
+    populations = db.session.scalars(select(Population_Experiment).filter_by(id_exp=client.id_exp)).all()
 
     # get agents in the populations
     agents = Agent_Population.query.filter(
@@ -740,7 +741,7 @@ def download_agent_list(uid):
     ).all()
 
     # get the experiment
-    exp = Exps.query.filter_by(idexp=client.id_exp).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()
 
     from y_web.src.system.path_utils import get_writable_path
 
@@ -759,7 +760,7 @@ def download_agent_list(uid):
         "w",
     ) as f:
         for a in agents:
-            agent = Agent.query.filter_by(id=a.agent_id).first()
+            agent = db.session.scalars(select(Agent).filter_by(id=a.agent_id)).first()
             f.write(f"{agent.name}\n")
         f.flush()
 

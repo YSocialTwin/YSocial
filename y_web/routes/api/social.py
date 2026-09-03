@@ -35,6 +35,7 @@ from y_web.routes.api.interview._server import (
 )
 from y_web.routes.social.helpers import _experiment_memory_enabled
 from y_web.src.experiment.helpers import ensure_experiment_user
+from sqlalchemy import select
 from y_web.src.models import (
     Admin_users,
     Exps,
@@ -113,7 +114,7 @@ def _social_chat_owner_user(exp: Exps) -> User_mgmt | None:
             pass
         return None
 
-    user = User_mgmt.query.filter_by(username=username).first()
+    user = db.session.scalars(select(User_mgmt).filter_by(username=username)).first()
     if user is not None:
         return user
 
@@ -260,13 +261,13 @@ def _social_chat_photo_contacts(exp: Exps, owner_user_id) -> list[User_mgmt]:
 def _social_chat_admin_user(exp: Exps) -> Admin_users | None:
     owner_name = str(getattr(exp, "owner", "") or "").strip()
     if owner_name:
-        owner_admin = Admin_users.query.filter_by(username=owner_name).first()
+        owner_admin = db.session.scalars(select(Admin_users).filter_by(username=owner_name)).first()
         if owner_admin is not None:
             return owner_admin
 
-    current_admin = Admin_users.query.filter_by(
+    current_admin = db.session.scalars(select(Admin_users).filter_by(
         username=getattr(current_user, "username", "") or ""
-    ).first()
+    )).first()
     if current_admin is not None:
         return current_admin
 
@@ -355,7 +356,7 @@ def _social_chat_view_payload(
     peer_user = (
         _load_experiment_user_sqlite(exp, peer_user_id)
         if is_photo
-        else User_mgmt.query.filter_by(id=peer_user_id).first()
+        else db.session.scalars(select(User_mgmt).filter_by(id=peer_user_id)).first()
     )
     if peer_user is not None and getattr(peer_user, "username", None):
         peer_username = str(peer_user.username or "").strip()
@@ -606,7 +607,7 @@ def _strip_social_chat_hashtags(text_value: str) -> str:
 @api_social.get("/<int:exp_id>/chat/bootstrap")
 @login_required
 def api_social_chat_bootstrap(exp_id: int):
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if exp is None:
         return _json_error("Experiment not found.", 404)
     _ensure_experiment_db_bind(exp)
@@ -725,7 +726,7 @@ def api_social_chat_bootstrap(exp_id: int):
 @api_social.post("/<int:exp_id>/chat/session")
 @login_required
 def api_social_chat_open_session(exp_id: int):
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if exp is None:
         return _json_error("Experiment not found.", 404)
     _ensure_experiment_db_bind(exp)
@@ -795,7 +796,7 @@ def api_social_chat_open_session(exp_id: int):
 @api_social.get("/<int:exp_id>/chat/session/<int:session_id>")
 @login_required
 def api_social_chat_get_session(exp_id: int, session_id: int):
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if exp is None:
         return _json_error("Experiment not found.", 404)
     _ensure_experiment_db_bind(exp)
@@ -840,7 +841,7 @@ def api_social_chat_get_session(exp_id: int, session_id: int):
 @api_social.post("/<int:exp_id>/chat/session/<int:session_id>/message")
 @login_required
 def api_social_chat_send_message(exp_id: int, session_id: int):
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if exp is None:
         return _json_error("Experiment not found.", 404)
     _ensure_experiment_db_bind(exp)

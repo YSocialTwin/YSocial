@@ -82,6 +82,7 @@ from y_web.src.models import (
     User_mgmt,
 )
 from y_web.src.system.path_utils import get_writable_path
+from sqlalchemy import func, select
 
 try:
     from y_web.src.models import ContentShown
@@ -112,15 +113,15 @@ def _json_error(message: str, status: int = 400):
 
 
 def _forum_chat_owner_user() -> User_mgmt | None:
-    return User_mgmt.query.filter_by(
+    return db.session.scalars(select(User_mgmt).filter_by(
         username=getattr(current_user, "username", "") or ""
-    ).first()
+    )).first()
 
 
 def _forum_viewer_id() -> int:
-    viewer = User_mgmt.query.filter_by(
+    viewer = db.session.scalars(select(User_mgmt).filter_by(
         username=getattr(current_user, "username", "") or ""
-    ).first()
+    )).first()
     return int(viewer.id) if viewer is not None else int(current_user.id)
 
 
@@ -154,13 +155,13 @@ def _forum_chat_followed_agent_ids(owner_user_id: int) -> set[int]:
 def _forum_chat_admin_user(exp: Exps) -> Admin_users | None:
     owner_name = str(getattr(exp, "owner", "") or "").strip()
     if owner_name:
-        owner_admin = Admin_users.query.filter_by(username=owner_name).first()
+        owner_admin = db.session.scalars(select(Admin_users).filter_by(username=owner_name)).first()
         if owner_admin is not None:
             return owner_admin
 
-    current_admin = Admin_users.query.filter_by(
+    current_admin = db.session.scalars(select(Admin_users).filter_by(
         username=getattr(current_user, "username", "") or ""
-    ).first()
+    )).first()
     if current_admin is not None:
         return current_admin
 
@@ -566,13 +567,13 @@ def _upload_media_response(exp_id: int):
 
 
 def _forum_posts_html(exp_id: int, items, user_id=None):
-    logged_user = User_mgmt.query.filter_by(
+    logged_user = db.session.scalars(select(User_mgmt).filter_by(
         username=getattr(current_user, "username", "")
-    ).first()
+    )).first()
     logged_id = logged_user.id if logged_user else current_user.id
-    admin_user = Admin_users.query.filter_by(
+    admin_user = db.session.scalars(select(Admin_users).filter_by(
         username=getattr(current_user, "username", "")
-    ).first()
+    )).first()
     is_admin_user = bool(admin_user and getattr(admin_user, "role", "") == "admin")
     return render_template(
         "forum/components/posts.html",
@@ -631,7 +632,7 @@ def _get_admin_llm_settings(username: str) -> tuple[str, str]:
     Return (model, llm_url) for the current logged-in dashboard user, if present.
     llm_url may be empty.
     """
-    admin_user = Admin_users.query.filter_by(username=username).first()
+    admin_user = db.session.scalars(select(Admin_users).filter_by(username=username)).first()
     model = "llama3.2:latest"
     llm_url = ""
     if admin_user:
@@ -664,7 +665,7 @@ def api_enrich_article(exp_id: int, article_id: int):
     payload = request.get_json(silent=True) or {}
     force = bool(payload.get("force"))
 
-    article = Articles.query.filter_by(id=article_id).first()
+    article = db.session.scalars(select(Articles).filter_by(id=article_id)).first()
     if not article:
         return _json_error("Article not found.", 404)
 
@@ -750,7 +751,7 @@ def api_enrich_image(exp_id: int, image_id: int):
     payload = request.get_json(silent=True) or {}
     force = bool(payload.get("force"))
 
-    image = Images.query.filter_by(id=image_id).first()
+    image = db.session.scalars(select(Images).filter_by(id=image_id)).first()
     if not image:
         return _json_error("Image not found.", 404)
 
@@ -906,12 +907,12 @@ def _serialize_comment(comment: Post, skip_metadata: bool = False) -> dict:
         comment: The Post object to serialize
         skip_metadata: If True, skip expensive queries for emotions/topics (use for new comments)
     """
-    author = User_mgmt.query.filter_by(id=comment.user_id).first()
+    author = db.session.scalars(select(User_mgmt).filter_by(id=comment.user_id)).first()
     author_username = author.username if author else "Unknown"
     author_profile_pic = _get_profile_pic(author) if author else ""
 
     # Get round info
-    round_obj = Rounds.query.filter_by(id=comment.round).first()
+    round_obj = db.session.scalars(select(Rounds).filter_by(id=comment.round)).first()
     day = str(round_obj.day) if round_obj else "None"
     hour = f"{round_obj.hour:02d}" if round_obj else "00"
     comment_created_at = getattr(comment, "created_at", None)
@@ -926,9 +927,9 @@ def _serialize_comment(comment: Post, skip_metadata: bool = False) -> dict:
     else:
         emotions = get_elicited_emotions(comment.id)
         topics = get_topics(comment.id, comment.user_id)
-    viewer_user = User_mgmt.query.filter_by(
+    viewer_user = db.session.scalars(select(User_mgmt).filter_by(
         username=getattr(current_user, "username", "") or ""
-    ).first()
+    )).first()
 
     return {
         "post_id": comment.id,
@@ -948,11 +949,11 @@ def _serialize_comment(comment: Post, skip_metadata: bool = False) -> dict:
         "is_disliked": False,
         "is_reported": bool(
             viewer_user
-            and Reported.query.filter_by(
+            and db.session.scalars(select(Reported).filter_by(
                 to_post=comment.id, from_uid=viewer_user.id
-            ).first()
+            )).first()
         ),
-        "report_count": int(Reported.query.filter_by(to_post=comment.id).count()),
+        "report_count": int(db.session.scalar(select(func.count()).select_from(Reported).filter_by(to_post=comment.id))),
         "emotions": emotions,
         "topics": topics,
         "is_moderation_comment": bool(
@@ -974,7 +975,7 @@ def api_feed(exp_id: int):
     community_slug = (request.args.get("community_slug") or "").strip()
 
     if target_user_id:
-        user = User_mgmt.query.filter_by(id=target_user_id).first()
+        user = db.session.scalars(select(User_mgmt).filter_by(id=target_user_id)).first()
         if user is None:
             return _json_error("User not found.", 404)
 
@@ -1176,15 +1177,15 @@ def api_post(exp_id: int):
 @api_reddit.post("/<int:exp_id>/post/<int:post_id>/delete")
 @login_required
 def api_delete_post(exp_id: int, post_id: int):
-    post = Post.query.filter_by(id=post_id).first()
+    post = db.session.scalars(select(Post).filter_by(id=post_id)).first()
     if post is None:
         return _json_error("Post not found.", 404)
 
-    exp_user = User_mgmt.query.filter_by(username=current_user.username).first()
+    exp_user = db.session.scalars(select(User_mgmt).filter_by(username=current_user.username)).first()
     is_admin_user = (
-        Admin_users.query.filter_by(
+        db.session.scalars(select(Admin_users).filter_by(
             username=current_user.username, role="admin"
-        ).first()
+        )).first()
         is not None
     )
     actor_ids = {int(current_user.id)}
@@ -1266,7 +1267,7 @@ def api_delete_post(exp_id: int, post_id: int):
 @api_reddit.get("/<int:exp_id>/chat/bootstrap")
 @login_required
 def api_forum_chat_bootstrap(exp_id: int):
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if exp is None:
         return _json_error("Experiment not found.", 404)
     if not _experiment_memory_enabled(exp_id):
@@ -1334,7 +1335,7 @@ def api_forum_chat_bootstrap(exp_id: int):
 @api_reddit.post("/<int:exp_id>/chat/session")
 @login_required
 def api_forum_chat_open_session(exp_id: int):
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if exp is None:
         return _json_error("Experiment not found.", 404)
     if not _experiment_memory_enabled(exp_id):
@@ -1374,7 +1375,7 @@ def api_forum_chat_open_session(exp_id: int):
 @api_reddit.get("/<int:exp_id>/chat/session/<int:session_id>")
 @login_required
 def api_forum_chat_get_session(exp_id: int, session_id: int):
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if exp is None:
         return _json_error("Experiment not found.", 404)
     if not _experiment_memory_enabled(exp_id):
@@ -1386,9 +1387,9 @@ def api_forum_chat_get_session(exp_id: int, session_id: int):
         return _json_error("Forum user not found for current session.", 404)
     followed_agent_ids = _forum_chat_followed_agent_ids(int(owner_user.id))
 
-    session = ForumChatSession.query.filter_by(
+    session = db.session.scalars(select(ForumChatSession).filter_by(
         id=int(session_id), owner_user_id=int(owner_user.id)
-    ).first()
+    )).first()
     if session is None:
         return _json_error("Chat session not found.", 404)
     if int(session.target_user_id) not in followed_agent_ids:
@@ -1400,7 +1401,7 @@ def api_forum_chat_get_session(exp_id: int, session_id: int):
 @api_reddit.post("/<int:exp_id>/chat/session/<int:session_id>/message")
 @login_required
 def api_forum_chat_send_message(exp_id: int, session_id: int):
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if exp is None:
         return _json_error("Experiment not found.", 404)
     if not _experiment_memory_enabled(exp_id):
@@ -1412,15 +1413,15 @@ def api_forum_chat_send_message(exp_id: int, session_id: int):
         return _json_error("Forum user not found for current session.", 404)
     followed_agent_ids = _forum_chat_followed_agent_ids(int(owner_user.id))
 
-    session = ForumChatSession.query.filter_by(
+    session = db.session.scalars(select(ForumChatSession).filter_by(
         id=int(session_id), owner_user_id=int(owner_user.id)
-    ).first()
+    )).first()
     if session is None:
         return _json_error("Chat session not found.", 404)
     if int(session.target_user_id) not in followed_agent_ids:
         return _json_error("You can chat only with followed agents.", 403)
 
-    target_user = User_mgmt.query.filter_by(id=int(session.target_user_id)).first()
+    target_user = db.session.scalars(select(User_mgmt).filter_by(id=int(session.target_user_id))).first()
     if target_user is None:
         return _json_error("Target agent not found.", 404)
 

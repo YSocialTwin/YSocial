@@ -7,6 +7,7 @@ from flask import request
 from flask_login import current_user, login_required
 
 from y_web import db
+from sqlalchemy import select
 from y_web.src.models import (
     AdminInterviewMessage,
     AdminInterviewSession,
@@ -71,7 +72,7 @@ def api_interview_agents(exp_id: int):
     if not admin_user:
         return _json_error("Forbidden", 403, code="forbidden")
 
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if not exp:
         return _json_error("Experiment not found", 404, code="not_found")
     _ensure_experiment_db_bind(exp)
@@ -123,7 +124,7 @@ def api_interview_create_session(exp_id: int):
     if agent_user_id is None:
         return _json_error("agent_user_id required", 400, code="bad_request")
 
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if not exp:
         return _json_error("Experiment not found", 404, code="not_found")
     _ensure_experiment_db_bind(exp)
@@ -386,7 +387,7 @@ def api_interview_refresh_context(exp_id: int, session_id: int):
     if not sess or int(sess.exp_id) != int(exp_id):
         return _json_error("Session not found", 404, code="not_found")
 
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if not exp:
         return _json_error("Experiment not found", 404, code="not_found")
     db_binding = _ensure_experiment_server_db_binding(exp)
@@ -456,7 +457,7 @@ def api_interview_send_message(exp_id: int, session_id: int):
         db.session.add(admin_msg)
         db.session.commit()
 
-        exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+        exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
         if not exp:
             return _json_error("Experiment not found", 404, code="not_found")
         _ensure_experiment_db_bind(exp)

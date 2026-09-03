@@ -14,6 +14,7 @@ from y_web import db
 from y_web.routes.auth._blueprint import auth
 from y_web.src.experiment.helpers import ensure_experiment_user
 from y_web.src.models import Admin_users, Exps, User_Experiment, User_mgmt
+from sqlalchemy import select
 
 
 @auth.route("/login")
@@ -46,7 +47,7 @@ def login_post():
     password = request.form.get("password")
     remember = True if request.form.get("remember") else False
 
-    user = Admin_users.query.filter_by(email=email).first()
+    user = db.session.scalars(select(Admin_users).filter_by(email=email)).first()
 
     # check if the user actually exists
     # take the user-supplied password, hash it, and compare it to the hashed password in the database
@@ -68,7 +69,7 @@ def login_post():
         # Regular users: need to select experiment
         # Do NOT log them in yet - just show experiment selection
         # Get experiments this user is assigned to
-        user_experiments = User_Experiment.query.filter_by(user_id=user.id).all()
+        user_experiments = db.session.scalars(select(User_Experiment).filter_by(user_id=user.id)).all()
 
         if not user_experiments:
             flash(
@@ -151,7 +152,7 @@ def select_experiment():
     session.pop("exp_select_remember", None)
 
     # Get user
-    user = Admin_users.query.filter_by(id=user_id).first()
+    user = db.session.scalars(select(Admin_users).filter_by(id=user_id)).first()
     if not user:
         flash("User not found.")
         return redirect(url_for("auth.login"))
@@ -161,15 +162,15 @@ def select_experiment():
     password = str(getattr(user, "password", "") or "")
 
     # Verify user has access to this experiment
-    user_exp = User_Experiment.query.filter_by(
+    user_exp = db.session.scalars(select(User_Experiment).filter_by(
         user_id=user.id, exp_id=int(exp_id)
-    ).first()
+    )).first()
     if not user_exp:
         flash("You do not have access to this experiment.")
         return redirect(url_for("auth.login"))
 
     # Get experiment
-    exp = Exps.query.filter_by(idexp=int(exp_id), status=1).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id), status=1)).first()
     if not exp:
         flash("Experiment not found or not active.")
         return redirect(url_for("auth.login"))

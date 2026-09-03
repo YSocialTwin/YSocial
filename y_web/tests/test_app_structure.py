@@ -8,6 +8,7 @@ import tempfile
 import pytest
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import select
 
 pytestmark = pytest.mark.integration
 
@@ -58,7 +59,7 @@ class TestFlaskAppBasics:
             db.session.commit()
 
             # Test model retrieval
-            retrieved = TestModel.query.first()
+            retrieved = db.session.scalars(select(TestModel)).first()
             assert retrieved is not None
             assert retrieved.name == "test"
 

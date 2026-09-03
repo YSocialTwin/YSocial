@@ -9,6 +9,7 @@ from flask import redirect, url_for
 from flask_login import login_user
 
 from y_web import db
+from sqlalchemy import select
 from y_web.src.models import (
     Admin_users,
     User_mgmt,
@@ -25,7 +26,7 @@ def check_privileges(username):
     Returns:
         Redirect to main.index if not admin/researcher, None if authorized
     """
-    user = Admin_users.query.filter_by(username=username).first()
+    user = db.session.scalars(select(Admin_users).filter_by(username=username)).first()
 
     if user.role not in ["admin", "researcher"]:
         return redirect(url_for("main.index"))

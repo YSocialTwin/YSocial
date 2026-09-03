@@ -11,7 +11,7 @@ from urllib.parse import parse_qs, urlparse
 from zoneinfo import ZoneInfo
 
 from bs4 import BeautifulSoup
-from sqlalchemy import text
+from sqlalchemy import select, text
 from sqlalchemy.exc import OperationalError
 
 from y_web import db
@@ -147,7 +147,7 @@ def _fetch_and_cache_og_image(article) -> Optional[Dict[str, str]]:
                 image = {"url": og_img, "description": ""}
                 # Cache in DB for future lookups (persists across restarts)
                 try:
-                    existing = Images.query.filter_by(article_id=article.id).first()
+                    existing = db.session.scalars(select(Images).filter_by(article_id=article.id)).first()
                     if not existing:
                         img_record = Images(url=og_img, article_id=article.id)
                         db.session.add(img_record)
@@ -183,7 +183,7 @@ def _article_summary_needs_enrichment(summary: Optional[str]) -> bool:
 def _resolve_article(article: Optional[Articles]) -> Optional[ArticlePreview]:
     if article is None:
         return None
-    website = Websites.query.filter_by(id=article.website_id).first()
+    website = db.session.scalars(select(Websites).filter_by(id=article.website_id)).first()
     source = website.name if website else ""
     subreddit = ""
     if website:
@@ -200,7 +200,7 @@ def _resolve_article(article: Optional[Articles]) -> Optional[ArticlePreview]:
     # Fetch image associated with this article
     image = None
     try:
-        img = Images.query.filter_by(article_id=article.id).first()
+        img = db.session.scalars(select(Images).filter_by(article_id=article.id)).first()
         if img and img.url:
             image = {
                 "url": img.url,
@@ -249,7 +249,7 @@ def _resolve_image(image_id: Optional[int]) -> Optional[str]:
     if not image_id:
         return ""
     try:
-        image = Images.query.filter_by(id=image_id).first()
+        image = db.session.scalars(select(Images).filter_by(id=image_id)).first()
     except OperationalError as exc:
         message = str(exc).lower()
         if "no such column" in message and "remote_article_id" in message:
@@ -385,8 +385,8 @@ def _is_agent_or_page_author(user: Optional[User_mgmt]) -> bool:
     if username in _author_agent_page_cache:
         return _author_agent_page_cache[username]
 
-    is_agent = Agent.query.filter_by(name=username).first() is not None
-    is_page = Page.query.filter_by(name=username).first() is not None
+    is_agent = db.session.scalars(select(Agent).filter_by(name=username)).first() is not None
+    is_page = db.session.scalars(select(Page).filter_by(name=username)).first() is not None
     result = bool(is_agent or is_page)
     _author_agent_page_cache[username] = result
     return result
@@ -395,7 +395,7 @@ def _is_agent_or_page_author(user: Optional[User_mgmt]) -> bool:
 def _format_round(round_id: Optional[int]) -> Tuple[str, str]:
     if round_id is None:
         return "None", "00"
-    round_obj = Rounds.query.filter_by(id=round_id).first()
+    round_obj = db.session.scalars(select(Rounds).filter_by(id=round_id)).first()
     if not round_obj:
         return "None", "00"
     return str(round_obj.day), f"{round_obj.hour:02d}"
@@ -421,7 +421,7 @@ def _resolve_experiment_clock() -> Dict[str, Any]:
         return default_clock_config()
 
     try:
-        experiment = Exps.query.filter_by(idexp=exp_id).first()
+        experiment = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
         if not experiment:
             return default_clock_config()
 

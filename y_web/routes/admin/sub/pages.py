@@ -27,6 +27,7 @@ from y_web.src.models import (
     Topic_List,
 )
 from y_web.src.system.desktop_file_handler import send_file_desktop
+from sqlalchemy import select
 from y_web.src.system.miscellanea import (
     check_privileges,
     llm_backend_status,
@@ -49,8 +50,8 @@ def page_data():
 
     models = get_llm_models()  # Use generic function for any LLM server
     llm_backend = llm_backend_status()
-    leanings = Leanings.query.all()
-    activity_profiles = ActivityProfile.query.all()
+    leanings = db.session.scalars(select(Leanings)).all()
+    activity_profiles = db.session.scalars(select(ActivityProfile)).all()
     return render_template(
         "admin/pages.html",
         models=models,
@@ -77,7 +78,7 @@ def create_page():
     activity_profile_id = request.form.get("activity_profile")
 
     # Validate that page name is unique
-    existing_page = Page.query.filter_by(name=name).first()
+    existing_page = db.session.scalars(select(Page).filter_by(name=name)).first()
     if existing_page:
         flash(f"Page name '{name}' already exists. Please choose a different name.")
         return page_data()
@@ -203,10 +204,10 @@ def delete_page(uid):
     """Delete page."""
     check_privileges(current_user.username)
 
-    page = Page.query.filter_by(id=uid).first()
+    page = db.session.scalars(select(Page).filter_by(id=uid)).first()
 
     # check if page is assigned to any population
-    page_pop = Page_Population.query.filter_by(page_id=uid).first()
+    page_pop = db.session.scalars(select(Page_Population).filter_by(page_id=uid)).first()
     if page_pop:
         # show an error message
         flash("Page is assigned to a population. Cannot delete.")
@@ -216,7 +217,7 @@ def delete_page(uid):
     db.session.commit()
 
     # delete page_population entries
-    page_population = Page_Population.query.filter_by(page_id=uid).all()
+    page_population = db.session.scalars(select(Page_Population).filter_by(page_id=uid)).all()
     for pp in page_population:
         db.session.delete(pp)
         db.session.commit()
@@ -231,7 +232,7 @@ def page_details(uid):
     check_privileges(current_user.username)
 
     # get page details
-    page = Page.query.filter_by(id=uid).first()
+    page = db.session.scalars(select(Page).filter_by(id=uid)).first()
 
     # get agent populations along with population names and ids
     page_populations = (
@@ -244,14 +245,14 @@ def page_details(uid):
     pops = [(p[1].name, p[1].id) for p in page_populations]
 
     # get all populations
-    populations = Population.query.all()
+    populations = db.session.scalars(select(Population)).all()
 
-    topics = Topic_List.query.all()
-    page_topics = Page_Topic.query.filter_by(page_id=uid).all()
+    topics = db.session.scalars(select(Topic_List)).all()
+    page_topics = db.session.scalars(select(Page_Topic).filter_by(page_id=uid)).all()
 
     # get topic names for page_topics from Topic_List
     page_topics = [
-        Topic_List.query.filter_by(id=pt.topic_id).first().name for pt in page_topics
+        db.session.scalars(select(Topic_List).filter_by(id=pt.topic_id)).first().name for pt in page_topics
     ]
 
     feed = get_feed(page.feed)
@@ -285,7 +286,7 @@ def add_topic_to_page():
     topic_id = request.form.get("topic_id")
 
     # check if the topic is already in the page
-    pt = Page_Topic.query.filter_by(page_id=page_id, topic_id=topic_id).first()
+    pt = db.session.scalars(select(Page_Topic).filter_by(page_id=page_id, topic_id=topic_id)).first()
     if pt:
         return page_details(page_id)
 
@@ -307,9 +308,9 @@ def add_page_to_population():
     population_id = request.form.get("population_id")
 
     # check if the page is already in the population
-    ap = Page_Population.query.filter_by(
+    ap = db.session.scalars(select(Page_Population).filter_by(
         page_id=page_id, population_id=population_id
-    ).first()
+    )).first()
     if ap:
         return page_details(page_id)
 
@@ -342,9 +343,9 @@ def upload_page_collection():
         pages_data = json.load(open(os.path.join(temp_data_dir, collection.filename)))
         for page_data in pages_data:
             # check if the page already exists (by name and feed)
-            existing_page = Page.query.filter_by(
+            existing_page = db.session.scalars(select(Page).filter_by(
                 name=page_data["name"], feed=page_data["feed"]
-            ).first()
+            )).first()
             if existing_page:
                 continue
 
@@ -352,16 +353,16 @@ def upload_page_collection():
             base_name = page_data["name"]
             page_name = base_name
             suffix = 0
-            while Page.query.filter_by(name=page_name).first():
+            while db.session.scalars(select(Page).filter_by(name=page_name)).first():
                 suffix += 1
                 page_name = f"{base_name}_{suffix}"
 
             # Resolve activity_profile by name if provided
             activity_profile_id = None
             if page_data.get("activity_profile"):
-                activity_profile_obj = ActivityProfile.query.filter_by(
+                activity_profile_obj = db.session.scalars(select(ActivityProfile).filter_by(
                     name=page_data["activity_profile"]
-                ).first()
+                )).first()
                 if activity_profile_obj:
                     activity_profile_id = activity_profile_obj.id
 
@@ -396,7 +397,7 @@ def download_pages():
     """
     check_privileges(current_user.username)
 
-    pages = Page.query.all()
+    pages = db.session.scalars(select(Page)).all()
 
     data = []
     for page in pages:

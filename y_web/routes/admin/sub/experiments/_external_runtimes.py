@@ -32,6 +32,7 @@ from y_web.src.models import Admin_users, Exps
 from y_web.src.system.miscellanea import check_privileges
 
 from ._blueprint import experiments
+from sqlalchemy import select
 
 _MUTATING_ACTIONS = {
     "acquire",
@@ -48,7 +49,7 @@ _GITHUB_TOKEN_SESSION_KEY = "external_runtime_github_token"
 
 def _require_admin_user():
     check_privileges(current_user.username)
-    admin_user = Admin_users.query.filter_by(username=current_user.username).first()
+    admin_user = db.session.scalars(select(Admin_users).filter_by(username=current_user.username)).first()
     if admin_user is None or admin_user.role != "admin":
         flash("Only administrators can manage external runtime repositories.", "error")
         return None

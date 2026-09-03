@@ -29,6 +29,7 @@ from y_web.src.content.cover_images import available_cover_image_urls
 from y_web.src.external_runtime.registry import EXTERNAL_DIR, runtime_spec
 from y_web.src.llm.ollama_manager import get_ollama_models
 from y_web.src.llm.vllm_manager import get_llm_models
+from sqlalchemy import func, select
 from y_web.src.models import (
     ActivityProfile,
     Agent,
@@ -325,17 +326,17 @@ def _agent_builder_context(**overrides):
         "populations": Population.query.filter(Population.pop_type.is_(None)).all(),
         "models": get_llm_models(),
         "llm_backend": llm_backend_status(),
-        "professions": Profession.query.all(),
-        "nationalities": Nationalities.query.all(),
-        "education_levels": Education.query.all(),
-        "leanings": Leanings.query.all(),
-        "languages": Languages.query.all(),
+        "professions": db.session.scalars(select(Profession)).all(),
+        "nationalities": db.session.scalars(select(Nationalities)).all(),
+        "education_levels": db.session.scalars(select(Education)).all(),
+        "leanings": db.session.scalars(select(Leanings)).all(),
+        "languages": db.session.scalars(select(Languages)).all(),
         "interest_topics": Topic_List.query.order_by(Topic_List.name.asc()).all(),
         "opinion_groups": OpinionGroup.query.order_by(
             OpinionGroup.lower_bound.asc()
         ).all(),
-        "toxicity_levels": Toxicity_Levels.query.all(),
-        "activity_profiles": ActivityProfile.query.all(),
+        "toxicity_levels": db.session.scalars(select(Toxicity_Levels)).all(),
+        "activity_profiles": db.session.scalars(select(ActivityProfile)).all(),
         "page_kind": "standard",
         "table_title": "Available Agents",
         "create_title": "Create Agent",
@@ -382,9 +383,9 @@ def _custom_population_rows(slug: str, accepted_slugs: list[str]) -> list[dict]:
                 "id": population.id,
                 "name": population.name,
                 "descr": population.descr,
-                "agent_count": Agent_Population.query.filter_by(
+                "agent_count": db.session.scalar(select(func.count()).select_from(Agent_Population).filter_by(
                     population_id=population.id
-                ).count(),
+                )),
             }
         )
     return rows
@@ -462,7 +463,7 @@ def _render_custom_agent_builder(spec: dict):
         )
         .order_by(Population.name.asc())
         .all(),
-        activity_profiles=ActivityProfile.query.all(),
+        activity_profiles=db.session.scalars(select(ActivityProfile)).all(),
     )
 
 
@@ -483,7 +484,7 @@ def _resolve_custom_population_assignment(spec: dict):
         if not new_population_name:
             flash(f"A new {spec['display_name']} population name is required.", "error")
             return None
-        existing = Population.query.filter_by(name=new_population_name).first()
+        existing = db.session.scalars(select(Population).filter_by(name=new_population_name)).first()
         if existing:
             flash(
                 f"Population name '{new_population_name}' already exists. Please choose a different name.",
@@ -508,7 +509,7 @@ def _resolve_custom_population_assignment(spec: dict):
         )
         return None
 
-    pop = Population.query.filter_by(id=population).first()
+    pop = db.session.scalars(select(Population).filter_by(id=population)).first()
     if pop is None or pop.pop_type not in spec["accepted_slugs"]:
         flash(
             f"{spec['display_name']} agents can only be assigned to matching custom populations.",
@@ -535,9 +536,9 @@ def _agent_ext_map(agent_ids):
 
 
 def _upsert_agent_ext(agent_id, feature_name, feature_value):
-    entry = Agent_Ext.query.filter_by(
+    entry = db.session.scalars(select(Agent_Ext).filter_by(
         agent_id=agent_id, feature_name=feature_name
-    ).first()
+    )).first()
     if entry is None:
         entry = Agent_Ext(
             agent_id=agent_id,
@@ -614,7 +615,7 @@ def _custom_agent_form_value(parameter: dict):
 
 
 def _delete_agent_ext(agent_id):
-    for ext_entry in Agent_Ext.query.filter_by(agent_id=agent_id).all():
+    for ext_entry in db.session.scalars(select(Agent_Ext).filter_by(agent_id=agent_id)).all():
         db.session.delete(ext_entry)
 
 
@@ -790,19 +791,19 @@ def agents_dashboard():
     """Display the agent resource hub used to access agent construction pages."""
     check_privileges(current_user.username)
 
-    synthetic_agent_count = Agent.query.count()
-    page_count = Page.query.count()
-    forum_rss_feed_count = ForumRssFeedResource.query.count()
-    forum_image_feed_count = ForumImageFeedResource.query.count()
-    population_count = Population.query.count()
-    activity_profile_count = ActivityProfile.query.count()
+    synthetic_agent_count = db.session.scalar(select(func.count()).select_from(Agent))
+    page_count = db.session.scalar(select(func.count()).select_from(Page))
+    forum_rss_feed_count = db.session.scalar(select(func.count()).select_from(ForumRssFeedResource))
+    forum_image_feed_count = db.session.scalar(select(func.count()).select_from(ForumImageFeedResource))
+    population_count = db.session.scalar(select(func.count()).select_from(Population))
+    activity_profile_count = db.session.scalar(select(func.count()).select_from(ActivityProfile))
     populations_with_agents = (
         db.session.query(Agent_Population.population_id).distinct().count()
     )
     populations_with_pages = (
         db.session.query(Page_Population.population_id).distinct().count()
     )
-    media_page_count = Page.query.filter_by(page_type="media").count()
+    media_page_count = db.session.scalar(select(func.count()).select_from(Page).filter_by(page_type="media"))
     plugin_agent_cards = _discover_plugin_agent_types()
     agent_resource_cards = [
         {
@@ -1011,13 +1012,13 @@ def create_agent():
         return _agent_builder_for_type(user_type)
 
     # Validate that agent name is unique
-    existing_agent = Agent.query.filter_by(name=name).first()
+    existing_agent = db.session.scalars(select(Agent).filter_by(name=name)).first()
     if existing_agent:
         flash(f"Agent name '{name}' already exists. Please choose a different name.")
         return _agent_builder_for_type(user_type)
 
     if population not in (None, "", "none"):
-        assigned_population = Population.query.filter_by(id=population).first()
+        assigned_population = db.session.scalars(select(Population).filter_by(id=population)).first()
         if assigned_population is None or not _population_matches_agent_type(
             user_type, assigned_population.pop_type
         ):
@@ -1084,7 +1085,7 @@ def create_custom_agent(agent_slug):
     if assigned_population is None:
         return _render_custom_agent_builder(spec)
 
-    existing_agent = Agent.query.filter_by(name=name).first()
+    existing_agent = db.session.scalars(select(Agent).filter_by(name=name)).first()
     if existing_agent:
         flash(f"Agent name '{name}' already exists. Please choose a different name.")
         return _render_custom_agent_builder(spec)
@@ -1150,7 +1151,7 @@ def agent_details(uid):
     """Handle agent details operation."""
     check_privileges(current_user.username)
     # get agent details
-    agent = Agent.query.filter_by(id=uid).first()
+    agent = db.session.scalars(select(Agent).filter_by(id=uid)).first()
 
     # get agent populations along with population names and ids
     agent_populations = (
@@ -1161,7 +1162,7 @@ def agent_details(uid):
     )
 
     # get agent profiles
-    agent_profiles = Agent_Profile.query.filter_by(agent_id=uid).first()
+    agent_profiles = db.session.scalars(select(Agent_Profile).filter_by(agent_id=uid)).first()
 
     pops = [(p[1].name, p[1].id) for p in agent_populations]
 
@@ -1189,14 +1190,14 @@ def agent_details(uid):
     # Get agent's activity profile
     activity_profile = None
     if agent.activity_profile:
-        activity_profile = ActivityProfile.query.filter_by(
+        activity_profile = db.session.scalars(select(ActivityProfile).filter_by(
             id=agent.activity_profile
-        ).first()
+        )).first()
 
     llm_backend = llm_backend_status()
     ext_features = {
         ext.feature_name: ext.feature_value
-        for ext in Agent_Ext.query.filter_by(agent_id=uid).all()
+        for ext in db.session.scalars(select(Agent_Ext).filter_by(agent_id=uid)).all()
     }
     structured_features = summarize_agent_custom_features(uid)
     back_href = (
@@ -1232,8 +1233,8 @@ def add_to_population():
 
     agent_id = request.form.get("agent_id")
     population_id = request.form.get("population_id")
-    agent = Agent.query.filter_by(id=agent_id).first()
-    target_population = Population.query.filter_by(id=population_id).first()
+    agent = db.session.scalars(select(Agent).filter_by(id=agent_id)).first()
+    target_population = db.session.scalars(select(Population).filter_by(id=population_id)).first()
 
     if agent is None or target_population is None:
         flash("Invalid agent or population selection.", "error")
@@ -1253,9 +1254,9 @@ def add_to_population():
         return agent_details(agent_id)
 
     # check if the agent is already in the population
-    ap = Agent_Population.query.filter_by(
+    ap = db.session.scalars(select(Agent_Population).filter_by(
         agent_id=agent_id, population_id=population_id
-    ).first()
+    )).first()
     if ap:
         return agent_details(agent_id)
 
@@ -1273,14 +1274,14 @@ def delete_agent(uid):
     """Delete agent."""
     check_privileges(current_user.username)
 
-    agent = Agent.query.filter_by(id=uid).first()
+    agent = db.session.scalars(select(Agent).filter_by(id=uid)).first()
     if agent is None:
         flash("Agent not found.", "error")
         return redirect("/admin/agents")
 
     agent_type = agent.ag_type if agent else None
 
-    agent_population = Agent_Population.query.filter_by(agent_id=uid).all()
+    agent_population = db.session.scalars(select(Agent_Population).filter_by(agent_id=uid)).all()
     if agent_population and agent_type in (None, ""):
         flash("Agent is assigned to a population. Cannot delete.")
         return _agent_builder_for_type(agent_type)
@@ -1292,7 +1293,7 @@ def delete_agent(uid):
         db.session.delete(ap)
 
     # delete agent_profile entries
-    agent_profile = Agent_Profile.query.filter_by(agent_id=uid).all()
+    agent_profile = db.session.scalars(select(Agent_Profile).filter_by(agent_id=uid)).all()
     for ap in agent_profile:
         db.session.delete(ap)
 
@@ -1320,7 +1321,7 @@ def delete_orphaned_agents():
     deleted_count = 0
     for agent in orphaned_agents:
         # Delete associated agent profiles first
-        agent_profiles = Agent_Profile.query.filter_by(agent_id=agent.id).all()
+        agent_profiles = db.session.scalars(select(Agent_Profile).filter_by(agent_id=agent.id)).all()
         for profile in agent_profiles:
             db.session.delete(profile)
 

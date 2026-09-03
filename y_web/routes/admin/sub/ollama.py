@@ -26,6 +26,7 @@ from y_web.src.llm.ollama_manager import (
 )
 from y_web.src.models import Ollama_Pull
 from y_web.src.system.miscellanea import check_privileges
+from sqlalchemy import select
 
 ollama = Blueprint("ollama", __name__)
 
@@ -140,7 +141,7 @@ def get_pull_progress(model_name):
         JSON with 'progress' (0-100) and 'model_name'
     """
     # get client_execution
-    model = Ollama_Pull.query.filter_by(model_name=model_name).first()
+    model = db.session.scalars(select(Ollama_Pull).filter_by(model_name=model_name)).first()
 
     if model is None:
         return json.dumps({"progress": 0})

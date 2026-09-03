@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Dict, Optional
 
 from flask import current_app
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, select, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
@@ -390,7 +390,7 @@ def active_simulation_clock() -> Optional[Dict[str, object]]:
     """
     Helper to fetch the clock for the currently active experiment, if any.
     """
-    active = Exps.query.filter_by(status=1).first()
+    active = db.session.scalars(select(Exps).filter_by(status=1)).first()
     if not active:
         return None
     return fetch_simulation_clock(active)

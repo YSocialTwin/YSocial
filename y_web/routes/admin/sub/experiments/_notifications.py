@@ -113,6 +113,7 @@ from ._blueprint import (
     experiments,
 )
 from ._helpers import *  # noqa: F401,F403
+from sqlalchemy import func, select
 from ._helpers import (
     _current_admin_user,
     _get_database_type,
@@ -130,7 +131,7 @@ def _create_sqlite_copy_for_postgresql(experiment, folder):
     import sqlite3
     from urllib.parse import urlparse
 
-    from sqlalchemy import create_engine, inspect, text
+    from sqlalchemy import create_engine, func, inspect, select, text
 
     current_uri = current_app.config["SQLALCHEMY_DATABASE_URI"]
     parsed_uri = urlparse(current_uri)
@@ -198,7 +199,7 @@ def _build_single_experiment_zip(eid, output_zip_path):
     from y_web.src.system.path_utils import get_writable_path
 
     base_dir = get_writable_path()
-    experiment = Exps.query.filter_by(idexp=eid).first()
+    experiment = db.session.scalars(select(Exps).filter_by(idexp=eid)).first()
     if not experiment:
         raise ValueError(f"Experiment {eid} not found")
 
@@ -235,7 +236,7 @@ def _build_bulk_experiments_zip(exp_ids, output_zip_path):
     used_names = set()
     try:
         for eid in exp_ids:
-            experiment = Exps.query.filter_by(idexp=eid).first()
+            experiment = db.session.scalars(select(Exps).filter_by(idexp=eid)).first()
             if not experiment:
                 continue
 
@@ -451,7 +452,7 @@ def download_experiment_file(eid):
     """Queue asynchronous experiment archive generation and notify when ready."""
     check_privileges(current_user.username)
 
-    experiment = Exps.query.filter_by(idexp=eid).first()
+    experiment = db.session.scalars(select(Exps).filter_by(idexp=eid)).first()
     if not experiment:
         flash("Experiment not found.", "error")
         return redirect(url_for("experiments.settings"))
@@ -578,9 +579,9 @@ def download_notifications_data():
         user_id=admin_user.id, is_read=False
     ).order_by(DownloadNotification.created_at.desc(), DownloadNotification.id.desc())
     notifications = query.limit(limit).all()
-    unread_count = DownloadNotification.query.filter_by(
+    unread_count = db.session.scalar(select(func.count()).select_from(DownloadNotification).filter_by(
         user_id=admin_user.id, is_read=False
-    ).count()
+    ))
     return jsonify(
         {
             "items": [_serialize_download_notification(item) for item in notifications],
@@ -601,9 +602,9 @@ def mark_download_notification_read(notification_id):
     if not admin_user:
         return jsonify({"success": False, "error": "User not found"}), 404
 
-    notification = DownloadNotification.query.filter_by(
+    notification = db.session.scalars(select(DownloadNotification).filter_by(
         id=notification_id, user_id=admin_user.id
-    ).first()
+    )).first()
     if not notification:
         return jsonify({"success": False, "error": "Notification not found"}), 404
 
@@ -626,9 +627,9 @@ def cancel_download_notification(notification_id):
     if not admin_user:
         return jsonify({"success": False, "error": "User not found"}), 404
 
-    notification = DownloadNotification.query.filter_by(
+    notification = db.session.scalars(select(DownloadNotification).filter_by(
         id=notification_id, user_id=admin_user.id
-    ).first()
+    )).first()
     if not notification:
         return jsonify({"success": False, "error": "Notification not found"}), 404
 
@@ -669,9 +670,9 @@ def delete_notification(notification_id):
     if not admin_user:
         return jsonify({"success": False, "error": "User not found"}), 404
 
-    notification = DownloadNotification.query.filter_by(
+    notification = db.session.scalars(select(DownloadNotification).filter_by(
         id=notification_id, user_id=admin_user.id
-    ).first()
+    )).first()
     if not notification:
         return jsonify({"success": False, "error": "Notification not found"}), 404
 
@@ -702,9 +703,9 @@ def download_notification_resource(notification_id):
         flash("Unable to resolve current admin user.", "error")
         return redirect(url_for("experiments.download_notifications_page"))
 
-    notification = DownloadNotification.query.filter_by(
+    notification = db.session.scalars(select(DownloadNotification).filter_by(
         id=notification_id, user_id=admin_user.id
-    ).first()
+    )).first()
     if not notification:
         flash("Notification not found.", "error")
         return redirect(url_for("experiments.download_notifications_page"))

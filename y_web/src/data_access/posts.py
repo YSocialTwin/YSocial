@@ -8,7 +8,7 @@ sentiment, and unanswered @-mentions.
 
 from typing import Optional
 
-from sqlalchemy import desc, or_
+from sqlalchemy import desc, func, or_, select
 
 from y_web import db
 from y_web.src.models import (
@@ -132,17 +132,17 @@ def augment_text(text, exp_id):
 
     for m in mentions:
         try:
-            mentioned_users[m] = User_mgmt.query.filter_by(username=m[1:]).first().id
+            mentioned_users[m] = db.session.scalars(select(User_mgmt).filter_by(username=m[1:])).first().id
         except:
             pass
 
     for h in hashtags:
         try:
-            hashtag_obj = Hashtags.query.filter_by(hashtag=h).first()
+            hashtag_obj = db.session.scalars(select(Hashtags).filter_by(hashtag=h)).first()
             if hashtag_obj:
                 used_hastag[h] = hashtag_obj.id
             else:
-                hashtag_obj = Hashtags.query.filter_by(hashtag=h[1:]).first()
+                hashtag_obj = db.session.scalars(select(Hashtags).filter_by(hashtag=h[1:])).first()
                 if hashtag_obj:
                     used_hastag[h] = hashtag_obj.id
         except:
@@ -194,18 +194,18 @@ def get_topics(post_id, user_id):
     Returns:
         List of topics with sentiment information
     """
-    post = Post.query.filter_by(id=post_id).first()
+    post = db.session.scalars(select(Post).filter_by(id=post_id)).first()
     if post is None:
         return []
     if post.image_id is not None:
         return []
 
-    sentiment = Post_Sentiment.query.filter_by(post_id=post_id, user_id=user_id).all()
+    sentiment = db.session.scalars(select(Post_Sentiment).filter_by(post_id=post_id, user_id=user_id)).all()
 
     cleaned = {}
     for topic in sentiment:
         if topic.topic_id != -1:
-            interest = Interests.query.filter_by(iid=topic.topic_id).first()
+            interest = db.session.scalars(select(Interests).filter_by(iid=topic.topic_id)).first()
             if interest is None:
                 continue
             name = interest.interest
@@ -262,7 +262,7 @@ def get_unanswered_mentions(username):
     Returns:
         List of ORM row objects (Mentions joined with Post and User_mgmt)
     """
-    user = User_mgmt.query.filter_by(username=username).first()
+    user = db.session.scalars(select(User_mgmt).filter_by(username=username)).first()
     if user is None:
         return []
     user_id = user.id
@@ -278,7 +278,7 @@ def get_unanswered_mentions(username):
 
 def get_report_count(post_id):
     """Return how many report records exist for a given post or comment."""
-    return Reported.query.filter_by(to_post=post_id).count()
+    return db.session.scalar(select(func.count()).select_from(Reported).filter_by(to_post=post_id))
 
 
 def get_user_recent_posts(
@@ -304,7 +304,7 @@ def get_user_recent_posts(
         page = 1
 
     exp = (
-        Exps.query.filter_by(idexp=int(exp_id)).first() if exp_id is not None else None
+        db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first() if exp_id is not None else None
     )
     is_forum = getattr(exp, "platform_type", "") == "forum"
 
@@ -319,7 +319,7 @@ def get_user_recent_posts(
             _primary_community_payload,
         )
 
-    user = User_mgmt.query.filter_by(id=user_id).first()
+    user = db.session.scalars(select(User_mgmt).filter_by(id=user_id)).first()
     username = user.username if user else "Unknown"
 
     if mode == "recent":
@@ -394,10 +394,10 @@ def get_user_recent_posts(
             else:
                 text = c.tweet.split(":")[-1]
 
-            user = User_mgmt.query.filter_by(username=author).first()
+            user = db.session.scalars(select(User_mgmt).filter_by(username=author)).first()
             profile_pic = _safe_author_profile_pic(user)
 
-            comment_round = Rounds.query.filter_by(id=c.round).first()
+            comment_round = db.session.scalars(select(Rounds).filter_by(id=c.round)).first()
             comment_day = comment_round.day if comment_round is not None else "None"
             comment_hour = comment_round.hour if comment_round is not None else "00"
             comment_display_time = (
@@ -447,15 +447,15 @@ def get_user_recent_posts(
                     "dislikes": len(
                         list(Reactions.query.filter_by(post_id=c.id, type="dislike"))
                     ),
-                    "is_liked": Reactions.query.filter_by(
+                    "is_liked": db.session.scalars(select(Reactions).filter_by(
                         post_id=c.id, user_id=current_user, type="like"
-                    ).first()
+                    )).first()
                     is None,
-                    "is_disliked": Reactions.query.filter_by(
+                    "is_disliked": db.session.scalars(select(Reactions).filter_by(
                         post_id=c.id, user_id=current_user, type="dislike"
-                    ).first()
+                    )).first()
                     is None,
-                    "is_shared": len(Post.query.filter_by(shared_from=c.id).all()),
+                    "is_shared": len(db.session.scalars(select(Post).filter_by(shared_from=c.id)).all()),
                     "report_count": get_report_count(c.id),
                     "emotions": emotions,
                     "topics": comment_topics,
@@ -466,7 +466,7 @@ def get_user_recent_posts(
                 }
             )
 
-        article = Articles.query.filter_by(id=post.news_id).first()
+        article = db.session.scalars(select(Articles).filter_by(id=post.news_id)).first()
         if article is None:
             art = 0
             article_preview = None
@@ -475,11 +475,11 @@ def get_user_recent_posts(
                 "title": article.title,
                 "summary": _strip_tags(article.summary),
                 "url": article.link,
-                "source": Websites.query.filter_by(id=article.website_id).first().name,
+                "source": db.session.scalars(select(Websites).filter_by(id=article.website_id)).first().name,
             }
             article_preview = _resolve_article(article) if is_forum else None
 
-        c = Rounds.query.filter_by(id=post.round).first()
+        c = db.session.scalars(select(Rounds).filter_by(id=post.round)).first()
         if c is None:
             day = "None"
             hour = "00"
@@ -500,11 +500,11 @@ def get_user_recent_posts(
         )
 
         emotions = get_elicited_emotions(post.id)
-        image = Images.query.filter_by(id=post.image_id).first()
+        image = db.session.scalars(select(Images).filter_by(id=post.image_id)).first()
         if image is None:
             image = ""
 
-        author = User_mgmt.query.filter_by(id=post.user_id).first()
+        author = db.session.scalars(select(User_mgmt).filter_by(id=post.user_id)).first()
 
         profile_pic = _safe_author_profile_pic(author)
         topics = get_topics(post.id, post.user_id)
@@ -529,7 +529,7 @@ def get_user_recent_posts(
                 "post_id": post.id,
                 "profile_pic": profile_pic,
                 "author": (lambda u: u.username if u else "Unknown")(
-                    User_mgmt.query.filter_by(id=post.user_id).first()
+                    db.session.scalars(select(User_mgmt).filter_by(id=post.user_id)).first()
                 ),
                 "author_id": post.user_id,
                 "title": title if is_forum else "",
@@ -544,22 +544,22 @@ def get_user_recent_posts(
                     else None
                 ),
                 "likes": len(
-                    list(Reactions.query.filter_by(post_id=post.id, type="like").all())
+                    list(db.session.scalars(select(Reactions).filter_by(post_id=post.id, type="like")).all())
                 ),
                 "dislikes": len(
                     list(
-                        Reactions.query.filter_by(post_id=post.id, type="dislike").all()
+                        db.session.scalars(select(Reactions).filter_by(post_id=post.id, type="dislike")).all()
                     )
                 ),
-                "is_liked": Reactions.query.filter_by(
+                "is_liked": db.session.scalars(select(Reactions).filter_by(
                     post_id=post.id, user_id=current_user, type="like"
-                ).first()
+                )).first()
                 is None,
-                "is_disliked": Reactions.query.filter_by(
+                "is_disliked": db.session.scalars(select(Reactions).filter_by(
                     post_id=post.id, user_id=current_user, type="dislike"
-                ).first()
+                )).first()
                 is None,
-                "is_shared": len(Post.query.filter_by(shared_from=post.id).all()),
+                "is_shared": len(db.session.scalars(select(Post).filter_by(shared_from=post.id)).all()),
                 "report_count": get_report_count(post.id),
                 "comments": cms,
                 "t_comments": len(cms),
@@ -619,7 +619,7 @@ def get_posts_associated_to_hashtags(
 
             emotions = get_elicited_emotions(c.id)
 
-            user = User_mgmt.query.filter_by(id=c.user_id).first()
+            user = db.session.scalars(select(User_mgmt).filter_by(id=c.user_id)).first()
 
             profile_pic = _safe_author_profile_pic(user)
 
@@ -632,23 +632,23 @@ def get_posts_associated_to_hashtags(
                     "author_id": c.user_id,
                     "post": augment_text(c.tweet.split(":")[-1], exp_id),
                     "round": c.round,
-                    "day": Rounds.query.filter_by(id=c.round).first().day,
-                    "hour": Rounds.query.filter_by(id=c.round).first().hour,
+                    "day": db.session.scalars(select(Rounds).filter_by(id=c.round)).first().day,
+                    "hour": db.session.scalars(select(Rounds).filter_by(id=c.round)).first().hour,
                     "likes": len(
                         list(Reactions.query.filter_by(post_id=c.id, type="like"))
                     ),
                     "dislikes": len(
                         list(Reactions.query.filter_by(post_id=c.id, type="dislike"))
                     ),
-                    "is_liked": Reactions.query.filter_by(
+                    "is_liked": db.session.scalars(select(Reactions).filter_by(
                         post_id=c.id, user_id=current_user, type="like"
-                    ).first()
+                    )).first()
                     is None,
-                    "is_disliked": Reactions.query.filter_by(
+                    "is_disliked": db.session.scalars(select(Reactions).filter_by(
                         post_id=c.id, user_id=current_user, type="dislike"
-                    ).first()
+                    )).first()
                     is None,
-                    "is_shared": len(Post.query.filter_by(shared_from=c.id).all()),
+                    "is_shared": len(db.session.scalars(select(Post).filter_by(shared_from=c.id)).all()),
                     "report_count": get_report_count(c.id),
                     "emotions": emotions,
                     "topics": get_topics(c.id, c.user_id),
@@ -659,7 +659,7 @@ def get_posts_associated_to_hashtags(
                 }
             )
 
-        article = Articles.query.filter_by(id=post.news_id).first()
+        article = db.session.scalars(select(Articles).filter_by(id=post.news_id)).first()
         if article is None:
             art = 0
         else:
@@ -667,10 +667,10 @@ def get_posts_associated_to_hashtags(
                 "title": article.title,
                 "summary": _strip_tags(article.summary),
                 "url": article.link,
-                "source": Websites.query.filter_by(id=article.website_id).first().name,
+                "source": db.session.scalars(select(Websites).filter_by(id=article.website_id)).first().name,
             }
 
-        c = Rounds.query.filter_by(id=post.round).first()
+        c = db.session.scalars(select(Rounds).filter_by(id=post.round)).first()
         if c is None:
             day = "None"
             hour = "00"
@@ -679,11 +679,11 @@ def get_posts_associated_to_hashtags(
             hour = c.hour
 
         emotions = get_elicited_emotions(post.id)
-        image = Images.query.filter_by(id=post.image_id).first()
+        image = db.session.scalars(select(Images).filter_by(id=post.image_id)).first()
         if image is None:
             image = ""
 
-        author = User_mgmt.query.filter_by(id=post.user_id).first()
+        author = db.session.scalars(select(User_mgmt).filter_by(id=post.user_id)).first()
 
         profile_pic = _safe_author_profile_pic(author)
 
@@ -696,7 +696,7 @@ def get_posts_associated_to_hashtags(
                 "shared_from": _render_shared_from(post),
                 "post_id": post.id,
                 "author": (lambda u: u.username if u else "Unknown")(
-                    User_mgmt.query.filter_by(id=post.user_id).first()
+                    db.session.scalars(select(User_mgmt).filter_by(id=post.user_id)).first()
                 ),
                 "author_id": post.user_id,
                 "post": augment_text(post.tweet.split(":")[-1], exp_id),
@@ -704,22 +704,22 @@ def get_posts_associated_to_hashtags(
                 "day": day,
                 "hour": hour,
                 "likes": len(
-                    list(Reactions.query.filter_by(post_id=post.id, type="like").all())
+                    list(db.session.scalars(select(Reactions).filter_by(post_id=post.id, type="like")).all())
                 ),
                 "dislikes": len(
                     list(
-                        Reactions.query.filter_by(post_id=post.id, type="dislike").all()
+                        db.session.scalars(select(Reactions).filter_by(post_id=post.id, type="dislike")).all()
                     )
                 ),
-                "is_liked": Reactions.query.filter_by(
+                "is_liked": db.session.scalars(select(Reactions).filter_by(
                     post_id=post.id, user_id=current_user, type="like"
-                ).first()
+                )).first()
                 is None,
-                "is_disliked": Reactions.query.filter_by(
+                "is_disliked": db.session.scalars(select(Reactions).filter_by(
                     post_id=post.id, user_id=current_user, type="dislike"
-                ).first()
+                )).first()
                 is None,
-                "is_shared": len(Post.query.filter_by(shared_from=post.id).all()),
+                "is_shared": len(db.session.scalars(select(Post).filter_by(shared_from=post.id)).all()),
                 "report_count": get_report_count(post.id),
                 "comments": cms,
                 "t_comments": len(cms),
@@ -778,7 +778,7 @@ def get_posts_associated_to_interest(
 
             emotions = get_elicited_emotions(c.id)
 
-            c_user = User_mgmt.query.filter_by(id=c.user_id).first()
+            c_user = db.session.scalars(select(User_mgmt).filter_by(id=c.user_id)).first()
 
             profile_pic = _safe_author_profile_pic(c_user)
 
@@ -791,23 +791,23 @@ def get_posts_associated_to_interest(
                     "author_id": c.user_id,
                     "post": augment_text(c.tweet.split(":")[-1], exp_id),
                     "round": c.round,
-                    "day": Rounds.query.filter_by(id=c.round).first().day,
-                    "hour": Rounds.query.filter_by(id=c.round).first().hour,
+                    "day": db.session.scalars(select(Rounds).filter_by(id=c.round)).first().day,
+                    "hour": db.session.scalars(select(Rounds).filter_by(id=c.round)).first().hour,
                     "likes": len(
                         list(Reactions.query.filter_by(post_id=c.id, type="like"))
                     ),
                     "dislikes": len(
                         list(Reactions.query.filter_by(post_id=c.id, type="dislike"))
                     ),
-                    "is_liked": Reactions.query.filter_by(
+                    "is_liked": db.session.scalars(select(Reactions).filter_by(
                         post_id=c.id, user_id=current_user, type="like"
-                    ).first()
+                    )).first()
                     is None,
-                    "is_disliked": Reactions.query.filter_by(
+                    "is_disliked": db.session.scalars(select(Reactions).filter_by(
                         post_id=c.id, user_id=current_user, type="dislike"
-                    ).first()
+                    )).first()
                     is None,
-                    "is_shared": len(Post.query.filter_by(shared_from=c.id).all()),
+                    "is_shared": len(db.session.scalars(select(Post).filter_by(shared_from=c.id)).all()),
                     "report_count": get_report_count(c.id),
                     "emotions": emotions,
                     "topics": get_topics(c.id, c.user_id),
@@ -818,7 +818,7 @@ def get_posts_associated_to_interest(
                 }
             )
 
-        article = Articles.query.filter_by(id=post.news_id).first()
+        article = db.session.scalars(select(Articles).filter_by(id=post.news_id)).first()
         if article is None:
             art = 0
         else:
@@ -826,10 +826,10 @@ def get_posts_associated_to_interest(
                 "title": article.title,
                 "summary": _strip_tags(article.summary),
                 "url": article.link,
-                "source": Websites.query.filter_by(id=article.website_id).first().name,
+                "source": db.session.scalars(select(Websites).filter_by(id=article.website_id)).first().name,
             }
 
-        c = Rounds.query.filter_by(id=post.round).first()
+        c = db.session.scalars(select(Rounds).filter_by(id=post.round)).first()
         if c is None:
             day = "None"
             hour = "00"
@@ -838,11 +838,11 @@ def get_posts_associated_to_interest(
             hour = c.hour
 
         emotions = get_elicited_emotions(post.id)
-        image = Images.query.filter_by(id=post.image_id).first()
+        image = db.session.scalars(select(Images).filter_by(id=post.image_id)).first()
         if image is None:
             image = ""
 
-        author = User_mgmt.query.filter_by(id=post.user_id).first()
+        author = db.session.scalars(select(User_mgmt).filter_by(id=post.user_id)).first()
 
         profile_pic = _safe_author_profile_pic(author)
 
@@ -855,7 +855,7 @@ def get_posts_associated_to_interest(
                 "shared_from": _render_shared_from(post),
                 "post_id": post.id,
                 "author": (lambda u: u.username if u else "Unknown")(
-                    User_mgmt.query.filter_by(id=post.user_id).first()
+                    db.session.scalars(select(User_mgmt).filter_by(id=post.user_id)).first()
                 ),
                 "author_id": post.user_id,
                 "post": augment_text(post.tweet.split(":")[-1], exp_id),
@@ -863,22 +863,22 @@ def get_posts_associated_to_interest(
                 "day": day,
                 "hour": hour,
                 "likes": len(
-                    list(Reactions.query.filter_by(post_id=post.id, type="like").all())
+                    list(db.session.scalars(select(Reactions).filter_by(post_id=post.id, type="like")).all())
                 ),
                 "dislikes": len(
                     list(
-                        Reactions.query.filter_by(post_id=post.id, type="dislike").all()
+                        db.session.scalars(select(Reactions).filter_by(post_id=post.id, type="dislike")).all()
                     )
                 ),
-                "is_liked": Reactions.query.filter_by(
+                "is_liked": db.session.scalars(select(Reactions).filter_by(
                     post_id=post.id, user_id=current_user, type="like"
-                ).first()
+                )).first()
                 is None,
-                "is_disliked": Reactions.query.filter_by(
+                "is_disliked": db.session.scalars(select(Reactions).filter_by(
                     post_id=post.id, user_id=current_user, type="dislike"
-                ).first()
+                )).first()
                 is None,
-                "is_shared": len(Post.query.filter_by(shared_from=post.id).all()),
+                "is_shared": len(db.session.scalars(select(Post).filter_by(shared_from=post.id)).all()),
                 "report_count": get_report_count(post.id),
                 "comments": cms,
                 "t_comments": len(cms),
@@ -937,7 +937,7 @@ def get_posts_associated_to_emotion(
 
             emotions = get_elicited_emotions(c.id)
 
-            user = User_mgmt.query.filter_by(username=author).first()
+            user = db.session.scalars(select(User_mgmt).filter_by(username=author)).first()
 
             profile_pic = _safe_author_profile_pic(user)
 
@@ -967,23 +967,23 @@ def get_posts_associated_to_emotion(
                     "author_id": c.user_id,
                     "post": augment_text(c.tweet.split(":")[-1], exp_id),
                     "round": c.round,
-                    "day": Rounds.query.filter_by(id=c.round).first().day,
-                    "hour": Rounds.query.filter_by(id=c.round).first().hour,
+                    "day": db.session.scalars(select(Rounds).filter_by(id=c.round)).first().day,
+                    "hour": db.session.scalars(select(Rounds).filter_by(id=c.round)).first().hour,
                     "likes": len(
                         list(Reactions.query.filter_by(post_id=c.id, type="like"))
                     ),
                     "dislikes": len(
                         list(Reactions.query.filter_by(post_id=c.id, type="dislike"))
                     ),
-                    "is_liked": Reactions.query.filter_by(
+                    "is_liked": db.session.scalars(select(Reactions).filter_by(
                         post_id=c.id, user_id=current_user, type="like"
-                    ).first()
+                    )).first()
                     is None,
-                    "is_disliked": Reactions.query.filter_by(
+                    "is_disliked": db.session.scalars(select(Reactions).filter_by(
                         post_id=c.id, user_id=current_user, type="dislike"
-                    ).first()
+                    )).first()
                     is None,
-                    "is_shared": len(Post.query.filter_by(shared_from=c.id).all()),
+                    "is_shared": len(db.session.scalars(select(Post).filter_by(shared_from=c.id)).all()),
                     "emotions": emotions,
                     "topics": get_topics(c.id, c.user_id),
                     "report_count": get_report_count(c.id),
@@ -994,7 +994,7 @@ def get_posts_associated_to_emotion(
                 }
             )
 
-        article = Articles.query.filter_by(id=post.news_id).first()
+        article = db.session.scalars(select(Articles).filter_by(id=post.news_id)).first()
         if article is None:
             art = 0
         else:
@@ -1002,10 +1002,10 @@ def get_posts_associated_to_emotion(
                 "title": article.title,
                 "summary": _strip_tags(article.summary),
                 "url": article.link,
-                "source": Websites.query.filter_by(id=article.website_id).first().name,
+                "source": db.session.scalars(select(Websites).filter_by(id=article.website_id)).first().name,
             }
 
-        c = Rounds.query.filter_by(id=post.round).first()
+        c = db.session.scalars(select(Rounds).filter_by(id=post.round)).first()
         if c is None:
             day = "None"
             hour = "00"
@@ -1014,11 +1014,11 @@ def get_posts_associated_to_emotion(
             hour = c.hour
 
         emotions = get_elicited_emotions(post.id)
-        image = Images.query.filter_by(id=post.image_id).first()
+        image = db.session.scalars(select(Images).filter_by(id=post.image_id)).first()
         if image is None:
             image = ""
 
-        author = User_mgmt.query.filter_by(id=post.user_id).first()
+        author = db.session.scalars(select(User_mgmt).filter_by(id=post.user_id)).first()
 
         profile_pic = _safe_author_profile_pic(author)
 
@@ -1048,7 +1048,7 @@ def get_posts_associated_to_emotion(
                 "post_id": post.id,
                 "profile_pic": profile_pic,
                 "author": (lambda u: u.username if u else "Unknown")(
-                    User_mgmt.query.filter_by(id=post.user_id).first()
+                    db.session.scalars(select(User_mgmt).filter_by(id=post.user_id)).first()
                 ),
                 "author_id": post.user_id,
                 "post": augment_text(post.tweet.split(":")[-1], exp_id),
@@ -1056,22 +1056,22 @@ def get_posts_associated_to_emotion(
                 "day": day,
                 "hour": hour,
                 "likes": len(
-                    list(Reactions.query.filter_by(post_id=post.id, type="like").all())
+                    list(db.session.scalars(select(Reactions).filter_by(post_id=post.id, type="like")).all())
                 ),
                 "dislikes": len(
                     list(
-                        Reactions.query.filter_by(post_id=post.id, type="dislike").all()
+                        db.session.scalars(select(Reactions).filter_by(post_id=post.id, type="dislike")).all()
                     )
                 ),
-                "is_liked": Reactions.query.filter_by(
+                "is_liked": db.session.scalars(select(Reactions).filter_by(
                     post_id=post.id, user_id=current_user, type="like"
-                ).first()
+                )).first()
                 is None,
-                "is_disliked": Reactions.query.filter_by(
+                "is_disliked": db.session.scalars(select(Reactions).filter_by(
                     post_id=post.id, user_id=current_user, type="dislike"
-                ).first()
+                )).first()
                 is None,
-                "is_shared": len(Post.query.filter_by(shared_from=post.id).all()),
+                "is_shared": len(db.session.scalars(select(Post).filter_by(shared_from=post.id)).all()),
                 "comments": cms,
                 "t_comments": len(cms),
                 "emotions": emotions,

@@ -11,6 +11,7 @@ from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import check_password_hash, generate_password_hash
 from y_web import db
+from sqlalchemy import select
 
 pytestmark = pytest.mark.integration
 
@@ -96,7 +97,7 @@ def app():
 
     def check_privileges(username):
         """Mock privilege check function"""
-        user = Admin_users.query.filter_by(username=username).first()
+        user = db.session.scalars(select(Admin_users).filter_by(username=username)).first()
         if not user or user.role != "admin":
             raise PermissionError("Access denied")
 
@@ -136,7 +137,7 @@ def app():
         except PermissionError:
             return "Access denied", 403
 
-        user = Admin_users.query.filter_by(id=uid).first()
+        user = db.session.scalars(select(Admin_users).filter_by(id=uid)).first()
         if not user:
             return "User not found", 404
 
@@ -180,7 +181,7 @@ def app():
             flash(error_message, "error")
             return user_details(user_id)
 
-        user = Admin_users.query.filter_by(id=user_id).first()
+        user = db.session.scalars(select(Admin_users).filter_by(id=user_id)).first()
         if not user:
             flash("User not found", "error")
             return user_details(user_id)
@@ -207,12 +208,12 @@ def app():
             flash(error_message, "error")
             return user_details(user_id)
 
-        existing_user = Admin_users.query.filter_by(email=new_email).first()
+        existing_user = db.session.scalars(select(Admin_users).filter_by(email=new_email)).first()
         if existing_user and existing_user.id != int(user_id):
             flash("Email is already in use by another user", "error")
             return user_details(user_id)
 
-        user = Admin_users.query.filter_by(id=user_id).first()
+        user = db.session.scalars(select(Admin_users).filter_by(id=user_id)).first()
         if not user:
             flash("User not found", "error")
             return user_details(user_id)
@@ -239,10 +240,10 @@ def app():
 
             from werkzeug.security import check_password_hash
 
-            user = Admin_users.query.filter_by(email=email).first()
+            user = db.session.scalars(select(Admin_users).filter_by(email=email)).first()
 
             if user and check_password_hash(user.password, password):
-                user_mgmt = User_mgmt.query.filter_by(username=user.username).first()
+                user_mgmt = db.session.scalars(select(User_mgmt).filter_by(username=user.username)).first()
                 if user_mgmt:
                     login_user(user_mgmt)
                     return redirect("/admin/user_details/1")

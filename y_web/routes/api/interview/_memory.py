@@ -9,7 +9,7 @@ from types import SimpleNamespace
 from typing import Any, Dict, List, Optional
 
 from flask import current_app
-from sqlalchemy import desc, func, text
+from sqlalchemy import desc, func, select, text
 
 from y_web import db
 from y_web.src.content.avatars import resolve_forum_profile_pic
@@ -83,14 +83,14 @@ def _resolve_interview_profile_pic(user: User_mgmt, exp: Exps) -> str:
         return ""
 
     if bool(getattr(user, "is_page", False)):
-        page = Page.query.filter_by(name=username).first()
+        page = db.session.scalars(select(Page).filter_by(name=username)).first()
         return getattr(page, "logo", "") if page else ""
 
-    agent = Agent.query.filter_by(name=username).first()
+    agent = db.session.scalars(select(Agent).filter_by(name=username)).first()
     if agent and getattr(agent, "profile_pic", None):
         return agent.profile_pic
 
-    admin = Admin_users.query.filter_by(username=username).first()
+    admin = db.session.scalars(select(Admin_users).filter_by(username=username)).first()
     if admin and getattr(admin, "profile_pic", None):
         return admin.profile_pic
     return ""

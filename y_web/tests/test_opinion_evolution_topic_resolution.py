@@ -1,4 +1,5 @@
 import pytest
+from sqlalchemy import select
 
 pytestmark = pytest.mark.unit
 
@@ -13,7 +14,7 @@ def test_opinion_evolution_prefers_experiment_interests():
     assert "db.session.query(Interests).all()" in source
     assert "if topics:" in source
     assert "return topics" in source
-    assert "Exp_Topic.query.filter_by(exp_id=expid).all()" in source
+    assert "db.session.scalars(select(Exp_Topic).filter_by(exp_id=expid)).all()" in source
     assert "db.session.query(Topic_List)" in source
 
 

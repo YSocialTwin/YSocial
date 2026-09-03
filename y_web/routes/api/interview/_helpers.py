@@ -9,6 +9,7 @@ from flask import jsonify
 from flask_login import current_user
 
 from y_web.src.models import Admin_users
+from sqlalchemy import select
 
 from ._blueprint import (
     _INTERVIEW_MEMORY_MODE_DEFAULT,
@@ -77,7 +78,7 @@ def _require_privileged() -> Optional[Admin_users]:
     username = (getattr(current_user, "username", "") or "").strip()
     if not username:
         return None
-    admin_user = Admin_users.query.filter_by(username=username).first()
+    admin_user = db.session.scalars(select(Admin_users).filter_by(username=username)).first()
     if not admin_user or admin_user.role not in {"admin", "researcher"}:
         return None
     return admin_user

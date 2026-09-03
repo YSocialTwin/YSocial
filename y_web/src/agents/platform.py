@@ -1,6 +1,6 @@
 """Helpers for population platform typing and compatibility."""
 
-from sqlalchemy import inspect, text
+from sqlalchemy import inspect, select, text
 
 from y_web import db
 from y_web.src.models import Exps, Population_Experiment
@@ -50,9 +50,9 @@ def infer_population_username_type(population):
     if explicit in VALID_POPULATION_TYPES:
         return explicit
 
-    associations = Population_Experiment.query.filter_by(
+    associations = db.session.scalars(select(Population_Experiment).filter_by(
         id_population=population.id
-    ).all()
+    )).all()
     if not associations:
         return None
 

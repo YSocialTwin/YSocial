@@ -10,6 +10,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
+from sqlalchemy import select
 
 pytestmark = pytest.mark.unit
 
@@ -66,9 +67,9 @@ def test_dynamic_fill_helper_uses_no_autoflush_for_read_queries():
 
     assert "with db.session.no_autoflush:" in schedule_source
     assert (
-        "Population.query.filter_by(id=client.population_id).first()" in schedule_source
+        "db.session.scalars(select(Population).filter_by(id=client.population_id)).first()" in schedule_source
     )
-    assert "Client.query.filter_by(id_exp=exp.idexp).all()" in schedule_source
+    assert "db.session.scalars(select(Client).filter_by(id_exp=exp.idexp)).all()" in schedule_source
     assert "with _schedule_check_lock:" in schedule_source
 
 

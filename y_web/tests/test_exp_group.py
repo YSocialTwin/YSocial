@@ -6,6 +6,7 @@ and can be set during experiment creation.
 """
 
 import pytest
+from sqlalchemy import select
 
 pytestmark = pytest.mark.integration
 
@@ -61,7 +62,7 @@ def test_exp_group_field_in_database(app):
             db.session.commit()
 
             # Retrieve the experiment
-            retrieved_exp = Exps.query.filter_by(exp_name="Test Experiment").first()
+            retrieved_exp = db.session.scalars(select(Exps).filter_by(exp_name="Test Experiment")).first()
 
             # Verify the group field was saved correctly
             assert retrieved_exp is not None, "Experiment should be created"
@@ -95,9 +96,9 @@ def test_exp_group_field_optional(app):
             db.session.commit()
 
             # Retrieve the experiment
-            retrieved_exp = Exps.query.filter_by(
+            retrieved_exp = db.session.scalars(select(Exps).filter_by(
                 exp_name="Test Experiment No Group"
-            ).first()
+            )).first()
 
             # Verify the experiment was created without a group
             assert retrieved_exp is not None, "Experiment should be created"

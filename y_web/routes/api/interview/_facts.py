@@ -5,7 +5,7 @@ import sqlite3
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
-from sqlalchemy import case, desc, func, or_
+from sqlalchemy import case, desc, func, or_, select
 
 from y_web import db
 from y_web.src.models import (
@@ -624,9 +624,9 @@ def _build_facts_snapshot(
         # Reading signal: replies up to this cursor were seen in notifications inbox.
         last_seen_reply_id = 0
         try:
-            st = ReplyInboxState.query.filter_by(
+            st = db.session.scalars(select(ReplyInboxState).filter_by(
                 user_id=normalized_agent_user_id
-            ).first()
+            )).first()
             if st is not None:
                 last_seen_reply_id = int(getattr(st, "last_seen_reply_id", 0) or 0)
         except Exception:

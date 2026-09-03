@@ -116,6 +116,7 @@ from ._blueprint import (
     experiments,
 )
 from ._helpers import *  # noqa: F401,F403
+from sqlalchemy import select
 
 
 @experiments.route("/admin/test_remote_server/<int:exp_id>", methods=["POST"])
@@ -200,7 +201,7 @@ def update_remote_server(exp_id):
             return jsonify({"success": False, "message": "Invalid port number"})
 
         # Get experiment
-        exp = Exps.query.filter_by(idexp=exp_id).first()
+        exp = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
         if not exp:
             return jsonify({"success": False, "message": "Experiment not found"})
 
@@ -239,7 +240,7 @@ def update_remote_server(exp_id):
                     json.dump(config, f, indent=4)
 
             # Update all client configuration files
-            clients = Client.query.filter_by(id_exp=exp_id).all()
+            clients = db.session.scalars(select(Client).filter_by(id_exp=exp_id)).all()
             for client in clients:
                 if exp.simulator_type == "HPC":
                     # HPC client config format: "server": {"address": null, "port": null}
@@ -296,7 +297,7 @@ def get_hpc_monitor_settings():
     ensure_hpc_monitor_settings_schema()
 
     # Get or create default settings
-    settings = HpcMonitorSettings.query.first()
+    settings = db.session.scalars(select(HpcMonitorSettings)).first()
     if not settings:
         settings = HpcMonitorSettings(
             enabled=True,
@@ -345,7 +346,7 @@ def update_hpc_monitor_settings():
     ensure_hpc_monitor_settings_schema()
 
     # Get or create settings
-    settings = HpcMonitorSettings.query.first()
+    settings = db.session.scalars(select(HpcMonitorSettings)).first()
     if not settings:
         settings = HpcMonitorSettings(
             enabled=True,

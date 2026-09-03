@@ -10,6 +10,7 @@ import logging
 import threading
 import time
 from datetime import datetime, timezone
+from sqlalchemy import select
 
 logger = logging.getLogger(__name__)
 
@@ -115,7 +116,7 @@ class LogSyncScheduler:
 
         ensure_hpc_monitor_settings_schema()
 
-        settings = HpcMonitorSettings.query.first()
+        settings = db.session.scalars(select(HpcMonitorSettings)).first()
         if not settings:
             # Use get_or_create pattern with proper exception handling
             try:
@@ -127,7 +128,7 @@ class LogSyncScheduler:
             except IntegrityError:
                 # Another thread created settings, rollback and fetch
                 db.session.rollback()
-                settings = HpcMonitorSettings.query.first()
+                settings = db.session.scalars(select(HpcMonitorSettings)).first()
         return settings
 
     def _update_hpc_monitor_last_check(self):
@@ -140,7 +141,7 @@ class LogSyncScheduler:
 
         try:
             ensure_hpc_monitor_settings_schema()
-            settings = HpcMonitorSettings.query.first()
+            settings = db.session.scalars(select(HpcMonitorSettings)).first()
             if settings:
                 settings.last_check = datetime.now(timezone.utc)
                 db.session.commit()

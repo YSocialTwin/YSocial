@@ -58,6 +58,7 @@ from y_web.src.models import (
     Toxicity_Levels,
 )
 from y_web.src.system.desktop_file_handler import send_file_desktop
+from sqlalchemy import func, select
 from y_web.src.system.miscellanea import (
     check_privileges,
     llm_backend_status,
@@ -78,7 +79,7 @@ def _render_custom_population_details(population, exps, agents):
             activity_profile_name = profile.name if profile else None
         ext_fields = {
             ext.feature_name: ext.feature_value
-            for ext in Agent_Ext.query.filter_by(agent_id=agent.id).all()
+            for ext in db.session.scalars(select(Agent_Ext).filter_by(agent_id=agent.id)).all()
         }
         agent_rows.append(
             {
@@ -562,9 +563,9 @@ def populations_data():
         population_profiles[pop.id] = [p.name for p in profiles]
 
     # Get lookup dictionaries for education, leanings, and toxicity
-    education_dict = {str(e.id): e.education_level for e in Education.query.all()}
-    leanings_dict = {str(l.id): l.leaning for l in Leanings.query.all()}
-    toxicity_dict = {str(t.id): t.toxicity_level for t in Toxicity_Levels.query.all()}
+    education_dict = {str(e.id): e.education_level for e in db.session.scalars(select(Education)).all()}
+    leanings_dict = {str(l.id): l.leaning for l in db.session.scalars(select(Leanings)).all()}
+    toxicity_dict = {str(t.id): t.toxicity_level for t in db.session.scalars(select(Toxicity_Levels)).all()}
 
     return {
         "data": [
@@ -614,13 +615,13 @@ def populations():
 
     models = get_llm_models()  # Use generic function for any LLM server
     llm_backend = llm_backend_status()
-    leanings = Leanings.query.all()
-    education_levels = Education.query.all()
-    nationalities = Nationalities.query.all()
-    languages = Languages.query.all()
-    toxicity_levels = Toxicity_Levels.query.all()
-    age_classes = AgeClass.query.all()
-    activity_profiles = ActivityProfile.query.all()
+    leanings = db.session.scalars(select(Leanings)).all()
+    education_levels = db.session.scalars(select(Education)).all()
+    nationalities = db.session.scalars(select(Nationalities)).all()
+    languages = db.session.scalars(select(Languages)).all()
+    toxicity_levels = db.session.scalars(select(Toxicity_Levels)).all()
+    age_classes = db.session.scalars(select(AgeClass)).all()
+    activity_profiles = db.session.scalars(select(ActivityProfile)).all()
 
     # Get unique profession backgrounds
     profession_backgrounds = (
@@ -652,7 +653,7 @@ def population_details(uid):
     """Handle population details operation."""
     check_privileges(current_user.username)
     # get population details
-    population = Population.query.filter_by(id=uid).first()
+    population = db.session.scalars(select(Population).filter_by(id=uid)).first()
 
     # get experiment populations along with experiment names and ids
     experiment_populations = (
@@ -676,9 +677,9 @@ def population_details(uid):
         return _render_custom_population_details(population, exps, agents)
 
     # Fetch label mappings from database
-    leanings_map = {str(l.id): l.leaning for l in Leanings.query.all()}
-    education_map = {str(e.id): e.education_level for e in Education.query.all()}
-    toxicity_map = {str(t.id): t.toxicity_level for t in Toxicity_Levels.query.all()}
+    leanings_map = {str(l.id): l.leaning for l in db.session.scalars(select(Leanings)).all()}
+    education_map = {str(e.id): e.education_level for e in db.session.scalars(select(Education)).all()}
+    toxicity_map = {str(t.id): t.toxicity_level for t in db.session.scalars(select(Toxicity_Levels)).all()}
 
     ln = {"leanings": [], "total": []}
 
@@ -908,8 +909,8 @@ def population_details(uid):
     models = get_llm_models()  # Use generic function for any LLM server
     llm_backend = llm_backend_status()
 
-    crecsys = Content_Recsys.query.all()
-    frecsys = Follow_Recsys.query.all()
+    crecsys = db.session.scalars(select(Content_Recsys)).all()
+    frecsys = db.session.scalars(select(Follow_Recsys)).all()
 
     return render_template(
         "admin/population_details.html",
@@ -940,9 +941,9 @@ def add_to_experiment():
     experiment_id = request.form.get("experiment_id")
 
     # check if the population is already in the experiment
-    ap = Population_Experiment.query.filter_by(
+    ap = db.session.scalars(select(Population_Experiment).filter_by(
         id_population=population_id, id_exp=experiment_id
-    ).first()
+    )).first()
     if ap:
         return population_details(population_id)
 
@@ -960,22 +961,22 @@ def delete_population(uid):
     """Delete population."""
     check_privileges(current_user.username)
 
-    population = Population.query.filter_by(id=uid).first()
+    population = db.session.scalars(select(Population).filter_by(id=uid)).first()
 
     # check if the population is assigned to any experiment
-    pop_exp = Population_Experiment.query.filter_by(id_population=uid).first()
+    pop_exp = db.session.scalars(select(Population_Experiment).filter_by(id_population=uid)).first()
     if pop_exp:
         # if the population is assigned to any experiment, do not delete raise a warning
         flash("Population is assigned to an experiment. Cannot delete.")
         return populations()
 
     if population.pop_type is not None:
-        linked_agents = Agent_Population.query.filter_by(population_id=uid).all()
+        linked_agents = db.session.scalars(select(Agent_Population).filter_by(population_id=uid)).all()
         for link in linked_agents:
-            assigned_count = Agent_Population.query.filter_by(
+            assigned_count = db.session.scalar(select(func.count()).select_from(Agent_Population).filter_by(
                 agent_id=link.agent_id
-            ).count()
-            agent = Agent.query.filter_by(id=link.agent_id).first()
+            ))
+            agent = db.session.scalars(select(Agent).filter_by(id=link.agent_id)).first()
             if agent and agent.ag_type == population.pop_type and assigned_count <= 1:
                 flash(
                     "Cannot delete this custom population because at least one custom agent would be left without a population.",
@@ -987,15 +988,15 @@ def delete_population(uid):
     db.session.commit()
 
     # delete agent_population entries
-    agent_population = Agent_Population.query.filter_by(population_id=uid).all()
+    agent_population = db.session.scalars(select(Agent_Population).filter_by(population_id=uid)).all()
     for ap in agent_population:
         db.session.delete(ap)
         db.session.commit()
 
     # delete population_experiment entries
-    population_experiment = Population_Experiment.query.filter_by(
+    population_experiment = db.session.scalars(select(Population_Experiment).filter_by(
         id_population=uid
-    ).all()
+    )).all()
     for pe in population_experiment:
         db.session.delete(pe)
         db.session.commit()
@@ -1028,7 +1029,7 @@ def download_population(uid):
     )
 
     # get population details
-    population = Population.query.filter_by(id=uid).first()
+    population = db.session.scalars(select(Population).filter_by(id=uid)).first()
     feature_map = summarize_agent_custom_features_bulk([a[0].id for a in agents])
 
     res = {
@@ -1076,8 +1077,8 @@ def download_population(uid):
             "profession": a[0].profession,
             "activity_profile": activity_profile_name,
             "profile": (
-                Agent_Profile.query.filter_by(agent_id=a[0].id).first().profile
-                if Agent_Profile.query.filter_by(agent_id=a[0].id).first() is not None
+                db.session.scalars(select(Agent_Profile).filter_by(agent_id=a[0].id)).first().profile
+                if db.session.scalars(select(Agent_Profile).filter_by(agent_id=a[0].id)).first() is not None
                 else None
             ),
         }
@@ -1167,7 +1168,7 @@ def upload_population():
     base_name = population_data["name"]
     population_name = base_name
     suffix = 0
-    while Population.query.filter_by(name=population_name).first():
+    while db.session.scalars(select(Population).filter_by(name=population_name)).first():
         suffix += 1
         population_name = f"{base_name}_{suffix}"
 
@@ -1185,14 +1186,14 @@ def upload_population():
     # add the agents to the database
     for a in data.get("agents", []):
         # check if the agent already exists
-        agent = Agent.query.filter_by(name=a["name"]).first()
+        agent = db.session.scalars(select(Agent).filter_by(name=a["name"])).first()
         if not agent:
             # Resolve activity_profile by name if provided
             activity_profile_id = None
             if a.get("activity_profile"):
-                activity_profile_obj = ActivityProfile.query.filter_by(
+                activity_profile_obj = db.session.scalars(select(ActivityProfile).filter_by(
                     name=a["activity_profile"]
-                ).first()
+                )).first()
                 if activity_profile_obj:
                     activity_profile_id = activity_profile_obj.id
 
@@ -1268,14 +1269,14 @@ def upload_population():
     # add the pages to the database
     for p in data.get("pages", []):
         # check if the page already exists
-        page = Page.query.filter_by(name=p["name"]).first()
+        page = db.session.scalars(select(Page).filter_by(name=p["name"])).first()
         if not page:
             # Resolve activity_profile by name if provided
             page_activity_profile_id = None
             if p.get("activity_profile"):
-                page_activity_profile_obj = ActivityProfile.query.filter_by(
+                page_activity_profile_obj = db.session.scalars(select(ActivityProfile).filter_by(
                     name=p["activity_profile"]
-                ).first()
+                )).first()
                 if page_activity_profile_obj:
                     page_activity_profile_id = page_activity_profile_obj.id
 
@@ -1310,13 +1311,13 @@ def update_recsys(uid):
     frecsys_type = request.form.get("frecsys_type")
 
     # get populations for client uid
-    population = Population.query.filter_by(id=uid).first()
+    population = db.session.scalars(select(Population).filter_by(id=uid)).first()
     # get agents for the populations
-    agents = Agent_Population.query.filter_by(population_id=uid).all()
+    agents = db.session.scalars(select(Agent_Population).filter_by(population_id=uid)).all()
 
     # updating the recommenders of the agents in the specific simulation instance (not in the population)
     for agent in agents:
-        ag = Agent.query.filter_by(id=agent.agent_id).first()
+        ag = db.session.scalars(select(Agent).filter_by(id=agent.agent_id)).first()
         ag.frecsys = frecsys_type
         ag.crecsys = recsys_type
         db.session.commit()
@@ -1337,12 +1338,12 @@ def update_llm(uid):
     user_type = request.form.get("user_type")
 
     # get populations for client uid
-    population = Population.query.filter_by(id=uid).first()
+    population = db.session.scalars(select(Population).filter_by(id=uid)).first()
     # get agents for the populations
-    agents = Agent_Population.query.filter_by(population_id=population.id).all()
+    agents = db.session.scalars(select(Agent_Population).filter_by(population_id=population.id)).all()
 
     for agent in agents:
-        ag = Agent.query.filter_by(id=agent.agent_id).first()
+        ag = db.session.scalars(select(Agent).filter_by(id=agent.agent_id)).first()
         ag.ag_type = user_type
         db.session.commit()
 
@@ -1397,7 +1398,7 @@ def merge_populations():
         return redirect(request.referrer)
 
     # Check if merged population name already exists
-    existing_pop = Population.query.filter_by(name=merged_name).first()
+    existing_pop = db.session.scalars(select(Population).filter_by(name=merged_name)).first()
     if existing_pop:
         flash(f"Population with name '{merged_name}' already exists.")
         return redirect(request.referrer)
@@ -1405,7 +1406,7 @@ def merge_populations():
     # Verify all selected populations exist
     source_populations = []
     for pop_id in population_ids:
-        pop = Population.query.filter_by(id=pop_id).first()
+        pop = db.session.scalars(select(Population).filter_by(id=pop_id)).first()
         if not pop:
             flash(f"Population with ID {pop_id} not found.")
             return redirect(request.referrer)

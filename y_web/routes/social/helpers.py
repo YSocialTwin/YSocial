@@ -15,7 +15,7 @@ from typing import Optional
 
 from flask import request
 from flask_login import current_user
-from sqlalchemy import or_
+from sqlalchemy import or_, select
 
 from y_web import db
 from y_web.src.content.avatars import (
@@ -83,21 +83,21 @@ def get_safe_profile_pic(username, is_page=0):
     """
     if is_page == 1:
         try:
-            pg = Page.query.filter_by(name=username).first()
+            pg = db.session.scalars(select(Page).filter_by(name=username)).first()
             if pg is not None and hasattr(pg, "logo") and pg.logo:
                 return pg.logo
         except:
             pass
     else:
         try:
-            ag = Agent.query.filter_by(name=username).first()
+            ag = db.session.scalars(select(Agent).filter_by(name=username)).first()
             if ag is not None and hasattr(ag, "profile_pic") and ag.profile_pic:
                 return ag.profile_pic
         except:
             pass
 
         try:
-            admin_user = Admin_users.query.filter_by(username=username).first()
+            admin_user = db.session.scalars(select(Admin_users).filter_by(username=username)).first()
             if (
                 admin_user is not None
                 and hasattr(admin_user, "profile_pic")
@@ -120,7 +120,7 @@ def is_admin(username):
     Returns:
         True if user is admin, False otherwise
     """
-    user = Admin_users.query.filter_by(username=username).first()
+    user = db.session.scalars(select(Admin_users).filter_by(username=username)).first()
     if user.role != "admin":
         return False
     return True
@@ -169,7 +169,7 @@ def recursive_visit(data):
 def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
     """Handle get discussions operation."""
     res = []
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     is_forum = getattr(exp, "platform_type", "") == "forum"
 
     from y_web.src.forum.service import (
@@ -180,7 +180,7 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
 
     # Get experiment user ID if not provided
     if exp_user_id is None:
-        exp_user = User_mgmt.query.filter_by(username=current_user.username).first()
+        exp_user = db.session.scalars(select(User_mgmt).filter_by(username=current_user.username)).first()
         exp_user_id = exp_user.id if exp_user else current_user.id
 
     for post in posts.items:
@@ -206,17 +206,17 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
             else:
                 text = c.tweet.split(":")[-1]
 
-            user = User_mgmt.query.filter_by(id=c.user_id).first()
+            user = db.session.scalars(select(User_mgmt).filter_by(id=c.user_id)).first()
             if is_forum:
                 profile_pic = _forum_profile_pic(user)
             else:
                 profile_pic = ""
                 if user.is_page == 1:
-                    pg = Page.query.filter_by(name=user.username).first()
+                    pg = db.session.scalars(select(Page).filter_by(name=user.username)).first()
                     if page is not None and pg is not None:
                         profile_pic = pg.logo
                 else:
-                    ag = Agent.query.filter_by(name=user.username).first()
+                    ag = db.session.scalars(select(Agent).filter_by(name=user.username)).first()
                     profile_pic = (
                         ag.profile_pic
                         if ag is not None and ag.profile_pic is not None
@@ -254,23 +254,23 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
                     "author_id": c.user_id,
                     "post": augment_text(text, exp_id),
                     "round": c.round,
-                    "day": Rounds.query.filter_by(id=c.round).first().day,
-                    "hour": Rounds.query.filter_by(id=c.round).first().hour,
+                    "day": db.session.scalars(select(Rounds).filter_by(id=c.round)).first().day,
+                    "hour": db.session.scalars(select(Rounds).filter_by(id=c.round)).first().hour,
                     "likes": len(
                         list(Reactions.query.filter_by(post_id=c.id, type="like"))
                     ),
                     "dislikes": len(
                         list(Reactions.query.filter_by(post_id=c.id, type="dislike"))
                     ),
-                    "is_liked": Reactions.query.filter_by(
+                    "is_liked": db.session.scalars(select(Reactions).filter_by(
                         post_id=c.id, user_id=exp_user_id, type="like"
-                    ).first()
+                    )).first()
                     is None,
-                    "is_disliked": Reactions.query.filter_by(
+                    "is_disliked": db.session.scalars(select(Reactions).filter_by(
                         post_id=c.id, user_id=exp_user_id, type="dislike"
-                    ).first()
+                    )).first()
                     is None,
-                    "is_shared": len(Post.query.filter_by(shared_from=c.id).all()),
+                    "is_shared": len(db.session.scalars(select(Post).filter_by(shared_from=c.id)).all()),
                     "report_count": get_report_count(c.id),
                     "emotions": emotions,
                     "topics": topics,
@@ -281,7 +281,7 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
                 }
             )
 
-        article = Articles.query.filter_by(id=post.news_id).first()
+        article = db.session.scalars(select(Articles).filter_by(id=post.news_id)).first()
         if article is None:
             art = 0
         else:
@@ -289,14 +289,14 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
                 "title": article.title,
                 "summary": strip_tags(article.summary),
                 "url": article.link,
-                "source": Websites.query.filter_by(id=article.website_id).first().name,
+                "source": db.session.scalars(select(Websites).filter_by(id=article.website_id)).first().name,
             }
 
-        image = Images.query.filter_by(id=post.image_id).first()
+        image = db.session.scalars(select(Images).filter_by(id=post.image_id)).first()
         if image is None:
             image = ""
 
-        c = Rounds.query.filter_by(id=post.round).first()
+        c = db.session.scalars(select(Rounds).filter_by(id=post.round)).first()
         if c is None:
             day = "None"
             hour = "00"
@@ -312,7 +312,7 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
 
         # get elicited emotions names
         emotions = get_elicited_emotions(post.id)
-        aa = User_mgmt.query.filter_by(id=post.user_id).first()
+        aa = db.session.scalars(select(User_mgmt).filter_by(id=post.user_id)).first()
 
         # Handle case where user doesn't exist
         if aa is None:
@@ -324,12 +324,12 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
         else:
             profile_pic = ""
             if aa.is_page == 1:
-                pg = Page.query.filter_by(name=aa.username).first()
+                pg = db.session.scalars(select(Page).filter_by(name=aa.username)).first()
                 if pg is not None:
                     profile_pic = pg.logo
             else:
                 try:
-                    ag = Agent.query.filter_by(name=aa.username).first()
+                    ag = db.session.scalars(select(Agent).filter_by(name=aa.username)).first()
                     profile_pic = (
                         ag.profile_pic
                         if ag is not None and ag.profile_pic is not None
@@ -348,7 +348,7 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
         )
 
         # Get author username safely
-        author_user = User_mgmt.query.filter_by(id=post.user_id).first()
+        author_user = db.session.scalars(select(User_mgmt).filter_by(id=post.user_id)).first()
         author_username = author_user.username if author_user else "Unknown"
         title, body = process_reddit_post(post.tweet)
         processed_body = augment_text(body, exp_id) if body else ""
@@ -396,15 +396,15 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
                 "dislikes": len(
                     list(Reactions.query.filter_by(post_id=post.id, type="dislike"))
                 ),
-                "is_liked": Reactions.query.filter_by(
+                "is_liked": db.session.scalars(select(Reactions).filter_by(
                     post_id=post.id, user_id=exp_user_id, type="like"
-                ).first()
+                )).first()
                 is None,
-                "is_disliked": Reactions.query.filter_by(
+                "is_disliked": db.session.scalars(select(Reactions).filter_by(
                     post_id=post.id, user_id=exp_user_id, type="dislike"
-                ).first()
+                )).first()
                 is None,
-                "is_shared": len(Post.query.filter_by(shared_from=post.id).all()),
+                "is_shared": len(db.session.scalars(select(Post).filter_by(shared_from=post.id)).all()),
                 "report_count": get_report_count(post.id),
                 "comments": cms,
                 "t_comments": len(cms),
@@ -425,9 +425,9 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
 
 
 def _forum_logged_user():
-    user = User_mgmt.query.filter_by(username=current_user.username).first()
+    user = db.session.scalars(select(User_mgmt).filter_by(username=current_user.username)).first()
     if user is None and str(getattr(current_user, "id", "")).isdigit():
-        user = User_mgmt.query.filter_by(id=int(current_user.id)).first()
+        user = db.session.scalars(select(User_mgmt).filter_by(id=int(current_user.id))).first()
     return user
 
 
@@ -442,7 +442,7 @@ def _forum_current_profile_pic(exp_id, forum_user=None):
 
 
 def _experiment_memory_enabled(exp_id):
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if not exp or getattr(exp, "platform_type", "") not in {
         "forum",
         "microblogging",
@@ -519,7 +519,7 @@ def _experiment_memory_enabled(exp_id):
 
 
 def _forum_memory_enabled(exp_id):
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if not exp or getattr(exp, "platform_type", "") != "forum":
         return False
     return _experiment_memory_enabled(exp_id)

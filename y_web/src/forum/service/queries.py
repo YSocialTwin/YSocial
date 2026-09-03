@@ -5,7 +5,7 @@ import re
 import sys
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
-from sqlalchemy import and_, case, func, or_, text
+from sqlalchemy import and_, case, func, or_, select, text
 from sqlalchemy.orm import aliased
 
 from y_web import db
@@ -536,7 +536,7 @@ def _build_comment_payload(
     comments = []
 
     for comment in comments_list:
-        author = User_mgmt.query.filter_by(id=comment.user_id).first()
+        author = db.session.scalars(select(User_mgmt).filter_by(id=comment.user_id)).first()
         profile_pic = _get_profile_pic(author) if author else ""
 
         title, body = process_reddit_post(
@@ -606,7 +606,7 @@ def _create_feed_post(
     viewer_report_map: Dict[int, bool],
     report_count_map: Dict[int, int],
 ) -> FeedPost:
-    author = User_mgmt.query.filter_by(id=post.user_id).first()
+    author = db.session.scalars(select(User_mgmt).filter_by(id=post.user_id)).first()
     author_username = author.username if author else ""
     author_is_page = bool(author.is_page) if author else False
     profile_pic = _get_profile_pic(author) if author else ""
@@ -625,7 +625,7 @@ def _create_feed_post(
     title, body = process_reddit_post(post.tweet)
 
     article_row = (
-        Articles.query.filter_by(id=post.news_id).first() if post.news_id else None
+        db.session.scalars(select(Articles).filter_by(id=post.news_id)).first() if post.news_id else None
     )
     article_needs_enrichment = bool(
         article_row
@@ -650,7 +650,7 @@ def _create_feed_post(
     processed_body = augment_text(body, exp_id) if body else ""
 
     image_row = (
-        Images.query.filter_by(id=post.image_id).first()
+        db.session.scalars(select(Images).filter_by(id=post.image_id)).first()
         if getattr(post, "image_id", None)
         else None
     )
@@ -1057,7 +1057,7 @@ def _post_with_aggregates(
 ) -> Dict[str, Any]:
     likes, dislikes = reaction_map.get(post.id, (0, 0))
     viewer_vote = viewer_vote_map.get(post.id)
-    author = User_mgmt.query.filter_by(id=post.user_id).first()
+    author = db.session.scalars(select(User_mgmt).filter_by(id=post.user_id)).first()
     profile_pic = _get_profile_pic(author) if author else ""
     day, hour = _format_round(post.round)
     post_created_at = getattr(post, "created_at", None)
@@ -1067,7 +1067,7 @@ def _post_with_aggregates(
 
     title, body = process_reddit_post(post.tweet)
     article_row = (
-        Articles.query.filter_by(id=post.news_id).first() if post.news_id else None
+        db.session.scalars(select(Articles).filter_by(id=post.news_id)).first() if post.news_id else None
     )
     article_needs_enrichment = bool(
         article_row
@@ -1092,7 +1092,7 @@ def _post_with_aggregates(
     processed_body = augment_text(body, exp_id) if body else ""
 
     image_row = (
-        Images.query.filter_by(id=post.image_id).first()
+        db.session.scalars(select(Images).filter_by(id=post.image_id)).first()
         if getattr(post, "image_id", None)
         else None
     )
@@ -1139,7 +1139,7 @@ def _post_with_aggregates(
 
 
 def fetch_thread(post_id: int, viewer_id: int) -> Dict[str, Any]:
-    post = Post.query.filter_by(id=post_id).first()
+    post = db.session.scalars(select(Post).filter_by(id=post_id)).first()
     if not post:
         raise ValueError(f"Post {post_id} not found")
 

@@ -52,7 +52,7 @@ def _opinion_configuration_internal(idexp, expected_mode):
         return redirect(url_for("experiments.experiment_details", uid=idexp))
 
     # Get experiment details
-    exp = Exps.query.filter_by(idexp=idexp).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=idexp)).first()
     if not exp:
         flash("Experiment not found.", "error")
         return redirect(url_for("experiments.settings"))
@@ -92,7 +92,7 @@ def _opinion_configuration_internal(idexp, expected_mode):
         )
 
     # Get client details
-    client = Client.query.filter_by(id=client_id).first()
+    client = db.session.scalars(select(Client).filter_by(id=client_id)).first()
     if not client or client.id_exp != idexp:
         flash("Client not found or does not belong to this experiment.", "error")
         return redirect(url_for("experiments.experiment_details", uid=idexp))
@@ -102,13 +102,13 @@ def _opinion_configuration_internal(idexp, expected_mode):
         return redirect(url_for("experiments.experiment_details", uid=idexp))
 
     # Get experiment topics
-    topics = Exp_Topic.query.filter_by(exp_id=idexp).all()
+    topics = db.session.scalars(select(Exp_Topic).filter_by(exp_id=idexp)).all()
     topics_ids = [t.topic_id for t in topics]
     topics = db.session.query(Topic_List).filter(Topic_List.id.in_(topics_ids)).all()
     topics = [{"id": t.id, "name": t.name} for t in topics]
 
     # Get population and load population JSON file to get actual segment values
-    population = Population.query.filter_by(id=client.population_id).first()
+    population = db.session.scalars(select(Population).filter_by(id=client.population_id)).first()
     if not population:
         flash("Population not found.", "error")
         return redirect(url_for("experiments.experiment_details", uid=idexp))
@@ -145,7 +145,7 @@ def _opinion_configuration_internal(idexp, expected_mode):
         )
 
     # Load age classes from database to map individual ages to age groups
-    age_classes = AgeClass.query.all()
+    age_classes = db.session.scalars(select(AgeClass)).all()
     age_class_map = {}
     for ac in age_classes:
         age_class_map[ac.name] = (ac.age_start, ac.age_end)
@@ -207,7 +207,7 @@ def _opinion_configuration_internal(idexp, expected_mode):
     print(f"Extracted segment values: {segment_values}")
 
     # Fetch available distribution types from the OpinionDistribution table
-    opinion_distributions = OpinionDistribution.query.all()
+    opinion_distributions = db.session.scalars(select(OpinionDistribution)).all()
 
     # Create a list of distribution dictionaries with name, type, and parameters
     distributions = []
@@ -307,7 +307,7 @@ def opinion_configuration(idexp):
     """Backward-compatible dispatcher for opinion configuration routes."""
     check_privileges(current_user.username)
 
-    exp = Exps.query.filter_by(idexp=idexp).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=idexp)).first()
     if not exp:
         flash("Experiment not found.", "error")
         return redirect(url_for("experiments.settings"))
@@ -490,7 +490,7 @@ def _resolve_opinion_submission_context(expected_mode):
         flash("Client ID is missing.", "error")
         return None, redirect(url_for("experiments.experiment_details", uid=idexp))
 
-    exp = Exps.query.filter_by(idexp=idexp).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=idexp)).first()
     if not exp:
         flash("Experiment not found.", "error")
         return None, redirect(url_for("experiments.settings"))
@@ -529,12 +529,12 @@ def _resolve_opinion_submission_context(expected_mode):
             )
         )
 
-    client = Client.query.filter_by(id=client_id).first()
+    client = db.session.scalars(select(Client).filter_by(id=client_id)).first()
     if not client or client.id_exp != int(idexp):
         flash("Client not found or does not belong to this experiment.", "error")
         return None, redirect(url_for("experiments.experiment_details", uid=idexp))
 
-    population = Population.query.filter_by(id=client.population_id).first()
+    population = db.session.scalars(select(Population).filter_by(id=client.population_id)).first()
     if not population:
         flash("Population not found.", "error")
         return None, redirect(url_for("experiments.experiment_details", uid=idexp))
@@ -546,14 +546,14 @@ def _resolve_opinion_submission_context(expected_mode):
     ]
     topic_segment_distributions = _build_topic_segment_distributions()
 
-    topics = Exp_Topic.query.filter_by(exp_id=idexp).all()
+    topics = db.session.scalars(select(Exp_Topic).filter_by(exp_id=idexp)).all()
     topics_ids = [t.topic_id for t in topics]
     topics_list = (
         db.session.query(Topic_List).filter(Topic_List.id.in_(topics_ids)).all()
     )
     topic_id_to_name = {t.id: t.name for t in topics_list}
 
-    age_class_map = {ac.name: (ac.age_start, ac.age_end) for ac in AgeClass.query.all()}
+    age_class_map = {ac.name: (ac.age_start, ac.age_end) for ac in db.session.scalars(select(AgeClass)).all()}
 
     from y_web.src.system.path_utils import get_writable_path
 
@@ -578,7 +578,7 @@ def _resolve_opinion_submission_context(expected_mode):
         return None, redirect(url_for("experiments.experiment_details", uid=idexp))
 
     distributions_map = {}
-    for dist in OpinionDistribution.query.all():
+    for dist in db.session.scalars(select(OpinionDistribution)).all():
         try:
             distributions_map[dist.name] = {
                 "type": dist.distribution_type,
@@ -951,7 +951,7 @@ def set_opinion_distributions():
     check_privileges(current_user.username)
 
     idexp = request.form.get("idexp")
-    exp = Exps.query.filter_by(idexp=idexp).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=idexp)).first()
     if not exp:
         flash("Experiment not found.", "error")
         return redirect(url_for("experiments.settings"))

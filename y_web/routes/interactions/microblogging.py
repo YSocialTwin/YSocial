@@ -13,6 +13,7 @@ from y_web import db
 from y_web.routes.interactions._blueprint import user
 from y_web.src.content.text_utils import toxicity, vader_sentiment
 from y_web.src.llm import Annotator, ContentAnnotator
+from sqlalchemy import select
 from y_web.src.models import (
     Admin_users,
     Emotions,
@@ -44,13 +45,13 @@ def publish_post(exp_id):
     url = request.args.get("url")
 
     # Get experiment user (not admin user)
-    exp_user = User_mgmt.query.filter_by(username=current_user.username).first()
+    exp_user = db.session.scalars(select(User_mgmt).filter_by(username=current_user.username)).first()
     if not exp_user:
         flash("User not found in experiment", "error")
         return redirect(request.referrer)
     exp_user_id = exp_user.id
 
-    user = Admin_users.query.filter_by(username=current_user.username).first()
+    user = db.session.scalars(select(Admin_users).filter_by(username=current_user.username)).first()
     llm = user.llm if user.llm != "" else "llama3.2:latest"
     llm_url = user.llm_url if user.llm_url != "" else None
 
@@ -60,7 +61,7 @@ def publish_post(exp_id):
         image_annotator = Annotator(llm_v, llm_url=llm_url)
         annotation = image_annotator.annotate(url)
 
-        img = Images.query.filter_by(url=url).first()
+        img = db.session.scalars(select(Images).filter_by(url=url)).first()
         if img is None:
             try:
                 img = Images(url=url, description=annotation, article_id=-1)
@@ -119,7 +120,7 @@ def publish_post(exp_id):
     topics = annotator.annotate_topics(text)
 
     for topic in topics:
-        res = Interests.query.filter_by(interest=topic).first()
+        res = db.session.scalars(select(Interests).filter_by(interest=topic)).first()
         if res is None:
             try:
                 interest = Interests(interest=topic)
@@ -131,7 +132,7 @@ def publish_post(exp_id):
                 db.session.add(interest)
                 db.session.commit()
 
-            res = Interests.query.filter_by(interest=topic).first()
+            res = db.session.scalars(select(Interests).filter_by(interest=topic)).first()
 
         topic_id = res.iid
 
@@ -187,7 +188,7 @@ def publish_post(exp_id):
         if len(emotion) < 1:
             continue
 
-        em = Emotions.query.filter_by(emotion=emotion).first()
+        em = db.session.scalars(select(Emotions).filter_by(emotion=emotion)).first()
         if em is not None:
             try:
                 post_emotion = Post_emotions(post_id=post.id, emotion_id=em.id)
@@ -205,7 +206,7 @@ def publish_post(exp_id):
         if len(tag) < 4:
             continue
 
-        ht = Hashtags.query.filter_by(hashtag=tag).first()
+        ht = db.session.scalars(select(Hashtags).filter_by(hashtag=tag)).first()
         if ht is None:
             try:
                 ht = Hashtags(hashtag=tag)
@@ -216,7 +217,7 @@ def publish_post(exp_id):
                 ht = Hashtags(id=str(uuid.uuid4()), hashtag=tag)
                 db.session.add(ht)
                 db.session.commit()
-            ht = Hashtags.query.filter_by(hashtag=tag).first()
+            ht = db.session.scalars(select(Hashtags).filter_by(hashtag=tag)).first()
 
         try:
             post_tag = Post_hashtags(post_id=post.id, hashtag_id=ht.id)
@@ -234,7 +235,7 @@ def publish_post(exp_id):
         if len(mention) < 1:
             continue
 
-        us = User_mgmt.query.filter_by(username=mention.strip("@")).first()
+        us = db.session.scalars(select(User_mgmt).filter_by(username=mention.strip("@"))).first()
 
         # existing user and not self
         if us is not None and us.id != exp_user_id:

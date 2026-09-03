@@ -13,6 +13,7 @@ from sqlalchemy.exc import OperationalError
 from y_web import db
 from y_web.routes.interactions._blueprint import user
 from y_web.src.experiment.helpers import open_experiment_session
+from sqlalchemy import func, select
 from y_web.src.models import (
     Follow,
     Mentions,
@@ -36,7 +37,7 @@ def _resolve_follow_round_id(exp_id):
     try:
         from y_web.src.models import Exps
 
-        exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+        exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
         if exp is not None:
             session, engine = open_experiment_session(exp)
             if session is not None and engine is not None:
@@ -112,7 +113,7 @@ def follow(exp_id, user_id, follower_id):
     """
     from y_web.src.models import Exps
 
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     session = None
     engine = None
     if exp is not None:
@@ -150,7 +151,7 @@ def follow(exp_id, user_id, follower_id):
                 except Exception:
                     acting_user = None
         else:
-            acting_user = User_mgmt.query.filter_by(username=acting_username).first()
+            acting_user = db.session.scalars(select(User_mgmt).filter_by(username=acting_username)).first()
 
         if acting_user is not None:
             source_user_id = acting_user.id
@@ -240,7 +241,7 @@ def share_content(exp_id):
         Redirect to referrer page
     """
     # Get experiment user (not admin user)
-    exp_user = User_mgmt.query.filter_by(username=current_user.username).first()
+    exp_user = db.session.scalars(select(User_mgmt).filter_by(username=current_user.username)).first()
     if not exp_user:
         flash("User not found in experiment", "error")
         return (
@@ -253,7 +254,7 @@ def share_content(exp_id):
     post_id = request.args.get("post_id")
 
     # get the post
-    original = Post.query.filter_by(id=post_id).first()
+    original = db.session.scalars(select(Post).filter_by(id=post_id)).first()
     current_round = Rounds.query.order_by(Rounds.day.desc(), Rounds.hour.desc()).first()
 
     try:
@@ -287,7 +288,7 @@ def share_content(exp_id):
         db.session.commit()
 
     # get topics of the original post
-    topics_id = Post_topics.query.filter_by(post_id=post_id).all()
+    topics_id = db.session.scalars(select(Post_topics).filter_by(post_id=post_id)).all()
     # add the topics to the shared post
     for t in topics_id:
         ti = Post_topics(post_id=post.id, topic_id=t.topic_id)
@@ -305,7 +306,7 @@ def react(exp_id):
     action = request.args.get("action")
 
     # Get experiment user (not admin user)
-    exp_user = User_mgmt.query.filter_by(username=current_user.username).first()
+    exp_user = db.session.scalars(select(User_mgmt).filter_by(username=current_user.username)).first()
     if not exp_user:
         flash("User not found in experiment", "error")
         return (
@@ -317,9 +318,9 @@ def react(exp_id):
 
     current_round = Rounds.query.order_by(Rounds.day.desc(), Rounds.hour.desc()).first()
 
-    record = Reactions.query.filter_by(
+    record = db.session.scalars(select(Reactions).filter_by(
         post_id=post_id, user_id=exp_user_id, round=current_round.id
-    ).first()
+    )).first()
 
     if record:
         if record.type == action:
@@ -353,7 +354,7 @@ def react(exp_id):
             db.session.commit()
 
     # update the reaction count of the post
-    post = Post.query.filter_by(id=post_id).first()
+    post = db.session.scalars(select(Post).filter_by(id=post_id)).first()
     if post is not None:
         post.reaction_count += 1
         db.session.commit()
@@ -375,7 +376,7 @@ def report_content(exp_id):
         flash("Unsupported report type.", "error")
         return redirect(request.referrer or url_for("main.index"))
 
-    exp_user = User_mgmt.query.filter_by(username=current_user.username).first()
+    exp_user = db.session.scalars(select(User_mgmt).filter_by(username=current_user.username)).first()
     if not exp_user:
         if is_ajax:
             return (
@@ -390,7 +391,7 @@ def report_content(exp_id):
     except (ValueError, TypeError):
         post_id_converted = post_id
 
-    target_post = Post.query.filter_by(id=post_id_converted).first()
+    target_post = db.session.scalars(select(Post).filter_by(id=post_id_converted)).first()
     current_round = Rounds.query.order_by(Rounds.day.desc(), Rounds.hour.desc()).first()
     if target_post is None or current_round is None:
         if is_ajax:
@@ -398,10 +399,10 @@ def report_content(exp_id):
         flash("Content not found.", "error")
         return redirect(request.referrer or url_for("main.index"))
 
-    existing_report = Reported.query.filter_by(
+    existing_report = db.session.scalars(select(Reported).filter_by(
         to_post=target_post.id, from_uid=exp_user.id
-    ).first()
-    current_count = Reported.query.filter_by(to_post=target_post.id).count()
+    )).first()
+    current_count = db.session.scalar(select(func.count()).select_from(Reported).filter_by(to_post=target_post.id))
     if existing_report is not None:
         if is_ajax:
             return jsonify(
@@ -429,7 +430,7 @@ def report_content(exp_id):
     report = Reported(**report_kwargs)
     db.session.add(report)
     db.session.commit()
-    new_count = Reported.query.filter_by(to_post=target_post.id).count()
+    new_count = db.session.scalar(select(func.count()).select_from(Reported).filter_by(to_post=target_post.id))
     if is_ajax:
         return jsonify(
             {
@@ -468,7 +469,7 @@ def delete_post(exp_id):
 def cancel_notification(exp_id):
     """Handle cancel notification operation."""
     # Get experiment user (not admin user)
-    exp_user = User_mgmt.query.filter_by(username=current_user.username).first()
+    exp_user = db.session.scalars(select(User_mgmt).filter_by(username=current_user.username)).first()
     if not exp_user:
         return {"message": "User not found in experiment", "status": 404}
     exp_user_id = exp_user.id
@@ -476,7 +477,7 @@ def cancel_notification(exp_id):
     pid = request.args.get("post_id")
 
     # check if the comment is to answer a mention
-    mention = Mentions.query.filter_by(post_id=pid, user_id=exp_user_id).first()
+    mention = db.session.scalars(select(Mentions).filter_by(post_id=pid, user_id=exp_user_id)).first()
     if mention:
         mention.answered = 1
         db.session.commit()

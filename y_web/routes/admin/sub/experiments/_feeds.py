@@ -115,6 +115,7 @@ from ._blueprint import (
     experiments,
 )
 from ._helpers import *  # noqa: F401,F403
+from sqlalchemy import select
 from ._helpers import (
     _load_forum_experiment_context,
     _load_memory_capable_experiment_context,
@@ -630,9 +631,9 @@ def create_forum_rss_resource():
         flash(str(exc), "error")
         return redirect("/admin/forum_rss_resources")
 
-    existing = ForumRssFeedResource.query.filter_by(
+    existing = db.session.scalars(select(ForumRssFeedResource).filter_by(
         feed_url=normalized["feed_url"]
-    ).first()
+    )).first()
     if existing is None:
         existing = ForumRssFeedResource(feed_url=normalized["feed_url"])
         db.session.add(existing)
@@ -859,9 +860,9 @@ def create_forum_image_resource():
         flash(str(exc), "error")
         return redirect("/admin/forum_image_resources")
 
-    existing = ForumImageFeedResource.query.filter_by(
+    existing = db.session.scalars(select(ForumImageFeedResource).filter_by(
         subreddit=normalized["subreddit"]
-    ).first()
+    )).first()
     if existing is None:
         existing = ForumImageFeedResource(subreddit=normalized["subreddit"])
         db.session.add(existing)

@@ -6,6 +6,7 @@ which resolves a display picture URL for any user or page in the system.
 """
 
 from y_web.src.models import Admin_users, Agent, Page
+from sqlalchemy import select
 
 
 def get_safe_profile_pic(username, is_page=0):
@@ -23,21 +24,21 @@ def get_safe_profile_pic(username, is_page=0):
     """
     if is_page == 1:
         try:
-            pg = Page.query.filter_by(name=username).first()
+            pg = db.session.scalars(select(Page).filter_by(name=username)).first()
             if pg is not None and hasattr(pg, "logo") and pg.logo:
                 return pg.logo
         except:
             pass
     else:
         try:
-            ag = Agent.query.filter_by(name=username).first()
+            ag = db.session.scalars(select(Agent).filter_by(name=username)).first()
             if ag is not None and hasattr(ag, "profile_pic") and ag.profile_pic:
                 return ag.profile_pic
         except:
             pass
 
         try:
-            admin_user = Admin_users.query.filter_by(username=username).first()
+            admin_user = db.session.scalars(select(Admin_users).filter_by(username=username)).first()
             if (
                 admin_user is not None
                 and hasattr(admin_user, "profile_pic")

@@ -17,6 +17,55 @@ from y_web.src.agents.population import (
 pytestmark = pytest.mark.unit
 
 
+
+# ---------------------------------------------------------------------------
+# SA2 test stubs — bypass select() ORM validation for unit-test stubs
+# ---------------------------------------------------------------------------
+class _FakeSelect:
+    """Captures model/args without invoking SQLAlchemy ORM coercions."""
+    def __init__(self, *models, **kw):
+        self._models = models
+        self._kw = {}
+    def filter_by(self, **kw): self._kw = kw; return self
+    def filter(self, *a): return self
+    def select_from(self, m): return self
+    def where(self, *a): return self
+    def order_by(self, *a): return self
+    def limit(self, n): return self
+
+class _ScalarsResult:
+    """Wraps a legacy query so .all()/.first() work uniformly."""
+    def __init__(self, q): self._q = q
+    def all(self):
+        return self._q.all() if hasattr(self._q, 'all') else []
+    def first(self):
+        return self._q.first() if hasattr(self._q, 'first') else None
+    def one_or_none(self):
+        return self._q.one_or_none() if hasattr(self._q, 'one_or_none') else None
+    def one(self):
+        return self._q.one() if hasattr(self._q, 'one') else None
+
+class _SelectRoutingSession:
+    """Routes scalars(select(Model).filter_by(…)) → Model.query.filter_by(…)."""
+    def __init__(self, inner=None): self._inner = inner
+    def scalars(self, stmt):
+        if isinstance(stmt, _FakeSelect) and stmt._models:
+            model = stmt._models[0]
+            q = getattr(model, 'query', None)
+            if q is not None:
+                if stmt._kw:
+                    q = q.filter_by(**stmt._kw)
+                return _ScalarsResult(q)
+        return _ScalarsResult(
+            type('_Empty', (), {'all': lambda s: [], 'first': lambda s: None,
+                                'one_or_none': lambda s: None})()
+        )
+    def scalar(self, stmt): return None
+    def __getattr__(self, name):
+        if self._inner is not None:
+            return getattr(self._inner, name)
+        raise AttributeError(f'_SelectRoutingSession has no attribute {name!r}')
+
 def test_generate_population_uses_bulk_insert():
     """Test that generate_population uses bulk_save_objects for efficiency."""
 
@@ -53,6 +102,8 @@ def test_generate_population_uses_bulk_insert():
             "y_web.src.agents.population.PopulationActivityProfile"
         ) as mock_profile_cls,
         patch("y_web.src.agents.population.db") as mock_db,
+        patch("y_web.src.agents.population.select",
+              side_effect=lambda *a, **kw: _FakeSelect(*a)),
         patch("y_web.src.agents.population.AgeClass") as mock_age_class,
         patch("y_web.src.agents.population.Toxicity_Levels") as mock_toxicity,
         patch("y_web.src.agents.population.Leanings") as mock_leanings,
@@ -60,6 +111,7 @@ def test_generate_population_uses_bulk_insert():
         patch("y_web.src.agents.population.Education") as mock_education,
     ):
         mock_session = mock_db.session
+        mock_session.scalars.side_effect = _SelectRoutingSession().scalars
 
         # Setup mocks
         mock_population_cls.query.filter_by.return_value.first.return_value = (
@@ -156,6 +208,8 @@ def test_bulk_insert_preserves_agent_count():
             "y_web.src.agents.population.PopulationActivityProfile"
         ) as mock_profile_cls,
         patch("y_web.src.agents.population.db") as mock_db,
+        patch("y_web.src.agents.population.select",
+              side_effect=lambda *a, **kw: _FakeSelect(*a)),
         patch("y_web.src.agents.population.AgeClass") as mock_age_class,
         patch("y_web.src.agents.population.Toxicity_Levels") as mock_toxicity,
         patch("y_web.src.agents.population.Leanings") as mock_leanings,
@@ -163,6 +217,7 @@ def test_bulk_insert_preserves_agent_count():
         patch("y_web.src.agents.population.Education") as mock_education,
     ):
         mock_session = mock_db.session
+        mock_session.scalars.side_effect = _SelectRoutingSession().scalars
 
         # Setup mocks
         mock_population_cls.query.filter_by.return_value.first.return_value = (

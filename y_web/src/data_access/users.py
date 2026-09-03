@@ -5,7 +5,7 @@ Provides functions for retrieving a user's friends (followers/followees),
 mutual friends with another user, and the user's most recent interests.
 """
 
-from sqlalchemy import desc
+from sqlalchemy import desc, func, select
 from sqlalchemy.sql.expression import func
 
 from y_web import db
@@ -30,14 +30,14 @@ def _normalize_user_key(user_id):
 
 
 def _lookup_user_by_id(user_id):
-    user = User_mgmt.query.filter_by(id=user_id).first()
+    user = db.session.scalars(select(User_mgmt).filter_by(id=user_id)).first()
     if user is not None:
         return user
 
     user_key = _normalize_user_key(user_id)
     if user_key.isdigit():
         try:
-            return User_mgmt.query.filter_by(id=int(user_key)).first()
+            return db.session.scalars(select(User_mgmt).filter_by(id=int(user_key))).first()
         except Exception:
             return None
     return None
@@ -123,15 +123,15 @@ def get_mutual_friends(user_a, user_b, limit=10):
             continue
         profile_pic = ""
         if user.is_page == 1:
-            page = Page.query.filter_by(name=user.username).first()
+            page = db.session.scalars(select(Page).filter_by(name=user.username)).first()
             if page is not None:
                 profile_pic = page.logo
         else:
-            ag = Agent.query.filter_by(name=user.username).first()
+            ag = db.session.scalars(select(Agent).filter_by(name=user.username)).first()
             if ag is not None and ag.profile_pic is not None:
                 profile_pic = ag.profile_pic
             else:
-                admin_user = Admin_users.query.filter_by(username=user.username).first()
+                admin_user = db.session.scalars(select(Admin_users).filter_by(username=user.username)).first()
                 profile_pic = admin_user.profile_pic if admin_user else ""
 
         if user.id not in added:
@@ -191,9 +191,9 @@ def get_user_friends(user_id, limit=12, page=1):
                 {
                     "id": uid_f,
                     "username": f.username,
-                    "number_reactions": Reactions.query.filter_by(
+                    "number_reactions": db.session.scalar(select(func.count()).select_from(Reactions).filter_by(
                         user_id=uid_f
-                    ).count(),
+                    )),
                     "number_followers": count_followers(uid_f),
                     "number_followees": count_followees(uid_f),
                 }
@@ -208,9 +208,9 @@ def get_user_friends(user_id, limit=12, page=1):
                 {
                     "id": uid_f,
                     "username": f.username,
-                    "number_reactions": Reactions.query.filter_by(
+                    "number_reactions": db.session.scalar(select(func.count()).select_from(Reactions).filter_by(
                         user_id=uid_f
-                    ).count(),
+                    )),
                     "number_followers": count_followers(uid_f),
                     "number_followees": count_followees(uid_f),
                 }

@@ -8,6 +8,7 @@ from y_web.src.experiment.helpers import get_experiment_dir
 from y_web.src.models import Exps, Jupyter_instances
 from y_web.src.system.jupyter_utils import *
 from y_web.src.system.miscellanea import ollama_status
+from sqlalchemy import select
 
 lab = Blueprint("lab", __name__)
 
@@ -201,7 +202,7 @@ def jupyter_page(exp_id):
     current_host, current_port = _get_request_host_and_port()
     jupyter_url = f"http://{current_host}:{inst['port']}/lab?token=embed-jupyter-token"
 
-    experiment = Exps.query.filter_by(idexp=exp_id).first()
+    experiment = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
 
     return render_template(
         "admin/jupyter.html",
