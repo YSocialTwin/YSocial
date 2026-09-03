@@ -7,6 +7,7 @@ and can be set during experiment creation.
 
 import pytest
 from sqlalchemy import select
+from y_web import db
 
 pytestmark = pytest.mark.integration
 

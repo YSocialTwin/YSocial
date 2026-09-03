@@ -71,8 +71,7 @@ def cleanup_db_jupyter_with_new_app():
             print("No existing app context, creating new app for cleanup")
 
         if app_context_exists:
-            # Use existing context
-            from y_web import db
+            # Use existing context — db is the module-level SQLAlchemy instance
             from y_web.src.simulation.process_registry import stop_all_exps
             from y_web.src.system.jupyter_utils import stop_all_jupyter_instances
 
@@ -94,7 +93,6 @@ def cleanup_db_jupyter_with_new_app():
                 try:
                     app = create_app(dbms)
                     with app.app_context():
-                        from y_web import db
                         from y_web.src.simulation.process_registry import stop_all_exps
                         from y_web.src.system.jupyter_utils import (
                             stop_all_jupyter_instances,

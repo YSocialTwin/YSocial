@@ -6,6 +6,7 @@ which resolves a display picture URL for any user or page in the system.
 """
 
 from sqlalchemy import select
+from y_web import db
 
 from y_web.src.models import Admin_users, Agent, Page
 

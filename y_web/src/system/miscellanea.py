@@ -10,6 +10,7 @@ from flask_login import login_user
 from sqlalchemy import select
 
 from y_web import db
+from sqlalchemy import select, text
 from y_web.src.models import (
     Admin_users,
     User_mgmt,
@@ -152,7 +153,8 @@ def check_connection():
         True if database is accessible, False otherwise
     """
     try:
-        db.engine.execute("SELECT 1")
+        with db.engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
         return True
     except Exception as e:
         print(f"PostgreSQL connection error: {e}")

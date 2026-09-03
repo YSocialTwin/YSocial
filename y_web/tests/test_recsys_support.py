@@ -8,6 +8,7 @@ import tempfile
 import pytest
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from y_web import db
 
 pytestmark = pytest.mark.integration
 

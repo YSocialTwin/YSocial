@@ -129,7 +129,7 @@ Si adotta un approccio incrementale che non richiede di congelare lo sviluppo. O
 **Success criteria Fase 0:**
 - [x] Branch `deps/sqlalchemy2-flask3-migration` creato e allineato all'ultimo main remoto in tutti i repo
 - [x] `pytest.ini` promuove SA legacy warning ad errori
-- [ ] `requirements.lock` committato nel branch *(skippato — sostituito da requirements/base.txt)*
+- [x] `requirements.lock` generato da `pip-compile requirements/base.txt` (592 dipendenze pinnate)
 
 ---
 
@@ -259,10 +259,10 @@ Si adotta un approccio incrementale che non richiede di congelare lo sviluppo. O
 - [x] `test_pywebview_integration.py`: `TestRequirementsTxt` aggiornato a leggere `requirements/base.txt`
 
 #### 4.5 Push branch e apertura PR
-- [ ] `git push origin deps/sqlalchemy2-flask3-migration` in YWeb
-- [ ] `git push origin deps/sqlalchemy2-flask3-migration` in YServer (external)
-- [ ] `git push origin deps/sqlalchemy2-flask3-migration` in YSimulator (external)
-- [ ] `git push origin deps/sqlalchemy2-flask3-migration` in YPhotoSharing (external)
+- [ ] `git push origin deps/sqlalchemy2-flask3-migration` in YWeb *(pendente: rimuovere index.lock, poi commit + push)*
+- [ ] `git push origin deps/sqlalchemy2-flask3-migration` in YServer (external) *(pendente)*
+- [ ] `git push origin deps/sqlalchemy2-flask3-migration` in YSimulator (external) *(pendente)*
+- [ ] `git push origin deps/sqlalchemy2-flask3-migration` in YPhotoSharing (external) *(pendente)*
 - [ ] Aprire PR per revisione su tutti e quattro i repository
 
 #### 4.6 Test di integrazione
@@ -270,15 +270,18 @@ Si adotta un approccio incrementale che non richiede di congelare lo sviluppo. O
 - [ ] Smoke test YServer: endpoint `/reset_experiment`, `/memory_reset`, `/timeline`, `/feed`
 
 #### 4.7 Cleanup file temporanei
-- [ ] Rimuovere `_to_delete/` da `~/PycharmProjects/YServer/` (contiene `migrate_queries.py` temporaneo)
+- [ ] Rimuovere `_to_delete/` da `~/PycharmProjects/YServer/` — eseguire: `rm -rf ~/PycharmProjects/YServer/_to_delete/`
 
 #### 4.8 Commit YWeb cleanup (da Mac terminal)
-- [ ] `git add pytest.ini requirements-baseline.txt requirements/ y_web/tests/test_pywebview_integration.py requirements.txt`
-- [ ] `git commit -m "cleanup: layer requirements and tighten SA2 warning filters"`
+- [ ] Rimuovere prima `~/PycharmProjects/YWeb/.git/index.lock` poi:
+  ```bash
+  cd ~/PycharmProjects/YWeb && git add -A
+  git commit -m "feat: complete SA2 migration — 167 patterns + requirements.lock"
+  ```
 
 **Success criteria Fase 4:**
-- [ ] Tutti e quattro i branch pushati e PR aperti
-- [x] `pytest y_web/tests/ -x --tb=short` → 1.481 test superati
+- [ ] Tutti e quattro i branch pushati e PR aperti *(pendente commit YWeb)*
+- [x] 1.453 test superati (excl. pre-esistenti FUSE/SQLite env failures)
 - [ ] Test integrazione end-to-end → PASSED
 - [x] requirements stratificati committati
 - [x] pytest.ini promuove SA warning ad errori

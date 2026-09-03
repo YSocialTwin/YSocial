@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 from sqlalchemy import select
+from y_web import db
 
 pytestmark = [pytest.mark.unit, pytest.mark.external_repo]
 

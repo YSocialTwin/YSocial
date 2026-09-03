@@ -653,21 +653,12 @@ class TestHPCExecutionLogMonitoring:
 
                 with (
                     patch("y_web.src.hpc.log_parser._commit_with_retry") as mock_commit,
-                    patch(
-                        "y_web.src.hpc.log_parser.Client_Execution.query"
-                    ) as mock_exec_query,
-                    patch("y_web.src.hpc.log_parser.Client.query") as mock_client_query,
-                    patch(
-                        "y_web.src.hpc.log_parser.ClientLogMetrics.query"
-                    ) as mock_metrics_query,
+                    patch("y_web.src.hpc.log_parser.db") as mock_db,
                 ):
-                    mock_exec_query.filter_by.return_value.first.return_value = (
-                        mock_exec
-                    )
-                    mock_client_query.filter_by.return_value.first.return_value = (
-                        mock_client
-                    )
-                    mock_metrics_query.filter_by.return_value.first.return_value = None
+                    from unittest.mock import MagicMock as _MM
+                    _metrics_r = _MM(); _metrics_r.first.return_value = None
+                    _exec_r = _MM(); _exec_r.first.return_value = mock_exec
+                    mock_db.session.scalars.side_effect = [_metrics_r, _exec_r]
 
                     new_offset, metrics = parse_client_log_incremental(
                         log_path, exp_id=1, client_id=1, start_offset=0, is_hpc=True
@@ -720,22 +711,14 @@ class TestHPCExecutionLogMonitoring:
 
                 with (
                     patch("y_web.src.hpc.log_parser._commit_with_retry") as mock_commit,
-                    patch(
-                        "y_web.src.hpc.log_parser.Client_Execution.query"
-                    ) as mock_exec_query,
-                    patch("y_web.src.hpc.log_parser.Client.query") as mock_client_query,
-                    patch(
-                        "y_web.src.hpc.log_parser.ClientLogMetrics.query"
-                    ) as mock_metrics_query,
+                    patch("y_web.src.hpc.log_parser.db") as mock_db,
                     patch("y_web.src.hpc.client.stop_hpc_client") as mock_stop,
                 ):
-                    mock_exec_query.filter_by.return_value.first.return_value = (
-                        mock_exec
-                    )
-                    mock_client_query.filter_by.return_value.first.return_value = (
-                        mock_client
-                    )
-                    mock_metrics_query.filter_by.return_value.first.return_value = None
+                    from unittest.mock import MagicMock as _MM
+                    _metrics_r = _MM(); _metrics_r.first.return_value = None
+                    _exec_r = _MM(); _exec_r.first.return_value = mock_exec
+                    _client_r = _MM(); _client_r.first.return_value = mock_client
+                    mock_db.session.scalars.side_effect = [_metrics_r, _exec_r, _client_r]
 
                     new_offset, metrics = parse_client_log_incremental(
                         log_path, exp_id=1, client_id=1, start_offset=0, is_hpc=True
@@ -954,13 +937,13 @@ class TestHPCExecutionLogMonitoring:
 
         with app.app_context():
             with (
-                patch.object(log_metrics.Client, "query") as mock_query,
+                patch.object(log_metrics, "db") as mock_db,
                 patch.object(
                     log_metrics, "_is_hpc_client_tracked_process_alive"
                 ) as mock_alive,
                 patch.object(log_metrics, "_commit_with_retry") as mock_commit,
             ):
-                mock_query.filter_by.return_value.all.return_value = [
+                mock_db.session.scalars.return_value.all.return_value = [
                     stale_client,
                     already_running_client,
                 ]

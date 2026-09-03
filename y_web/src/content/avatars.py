@@ -9,6 +9,7 @@ from urllib.parse import quote
 
 from flask import current_app
 from sqlalchemy import select
+from y_web import db
 
 DEFAULT_FORUM_AVATAR_MODE = "placeholder"
 _FORUM_AVATAR_MODE_CACHE = {}

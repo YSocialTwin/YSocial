@@ -11,6 +11,7 @@ from html.parser import HTMLParser
 from io import StringIO
 
 from sqlalchemy import select
+from y_web import db
 
 from y_web.src.models import Admin_users, Hashtags, Post_Toxicity, User_mgmt
 

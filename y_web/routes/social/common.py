@@ -244,7 +244,6 @@ def index():
             exp_user_id = current_user.id  # fallback to admin ID
             try:
                 # Use the experiment's database bind
-                from y_web import db
                 from y_web.src.models import User_mgmt
 
                 # Temporarily override db_exp bind to query correct database

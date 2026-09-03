@@ -9,7 +9,7 @@ import pytest
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import select
-from werkzeug.security import check_password_hash, generate_password_hash
+from y_web import db
 
 pytestmark = pytest.mark.integration
 
