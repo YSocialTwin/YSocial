@@ -170,6 +170,7 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
     # Centralized configuration (y_web/config.py)                         #
     # ------------------------------------------------------------------ #
     from dotenv import load_dotenv
+
     from y_web.config import get_config
 
     load_dotenv()
@@ -193,7 +194,6 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
         create_postgresql_db(app)
     else:
         raise ValueError("Unsupported db_type, use 'sqlite' or 'postgresql'")
-
 
     db.init_app(app)
     login_manager.init_app(app)
