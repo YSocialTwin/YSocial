@@ -222,16 +222,19 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
                     if page is not None and pg is not None:
                         profile_pic = pg.logo
                 else:
-                    ag = db.session.scalars(
-                        select(Agent).filter_by(name=user.username)
-                    ).first()
-                    profile_pic = (
-                        ag.profile_pic
-                        if ag is not None and ag.profile_pic is not None
-                        else Admin_users.query.filter_by(username=user.username)
-                        .first()
-                        .profile_pic
-                    )
+                    try:
+                        ag = db.session.scalars(
+                            select(Agent).filter_by(name=user.username)
+                        ).first()
+                        profile_pic = (
+                            ag.profile_pic
+                            if ag is not None and ag.profile_pic is not None
+                            else Admin_users.query.filter_by(username=user.username)
+                            .first()
+                            .profile_pic
+                        )
+                    except Exception:
+                        profile_pic = ""
 
             topics = get_topics(c.id, c.user_id)
             if len(topics) == 0:
@@ -311,15 +314,14 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
         if article is None:
             art = 0
         else:
+            _website = db.session.scalars(
+                select(Websites).filter_by(id=article.website_id)
+            ).first()
             art = {
                 "title": article.title,
                 "summary": strip_tags(article.summary),
                 "url": article.link,
-                "source": db.session.scalars(
-                    select(Websites).filter_by(id=article.website_id)
-                )
-                .first()
-                .name,
+                "source": _website.name if _website is not None else "",
             }
 
         image = db.session.scalars(select(Images).filter_by(id=post.image_id)).first()
