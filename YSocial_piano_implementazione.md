@@ -13,7 +13,7 @@
 | C1 — Secret Key hardcoded | 2h | ✅ Risolto — commit `69c766b9` |
 | C2 — Database runtime in git | 3h | ✅ Risolto — commit `53b518c6` |
 | C3 — Flask-Migrate | 3-5gg | ⏳ Da fare |
-| C4 — Eliminazione shim SA2 | 3-5gg | 🔄 Parziale — commit `ecd16971` |
+| C4 — Eliminazione shim SA2 | 3-5gg | ✅ Risolto — commit `d7981a38` |
 | C5 — Pulizia branch stale | 3h | ⏳ Da fare |
 | C6 — Bug `BASE_DIR` helpers.py | 2h | ✅ Risolto — commit in HEAD |
 | C8 — Config centralizzata | 1-2gg | ✅ Risolto — commit `607b858f` |
