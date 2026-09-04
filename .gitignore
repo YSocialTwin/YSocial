@@ -192,3 +192,4 @@ cython_debug/
 
 # Guard against experiment data accidentally written under src/ again (bug was in helpers.py BASE_DIR)
 /y_web/src/experiments/
+/y_web/static/uploads/forum_feed_images/
