@@ -101,6 +101,55 @@ _SQLITE_TABLES = {
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     """,
+    "photos": """
+        CREATE TABLE IF NOT EXISTS photos (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL REFERENCES user_mgmt(id) ON DELETE CASCADE,
+            round TEXT NOT NULL REFERENCES rounds(id) ON DELETE CASCADE,
+            image_url TEXT NOT NULL,
+            thumbnail_url TEXT,
+            caption TEXT,
+            alt_text TEXT,
+            filter_name TEXT,
+            location_name TEXT,
+            latitude REAL,
+            longitude REAL,
+            is_carousel INTEGER DEFAULT 0,
+            carousel_index INTEGER DEFAULT 0,
+            parent_photo_id TEXT REFERENCES photos(id) ON DELETE SET NULL,
+            num_likes INTEGER DEFAULT 0,
+            num_comments INTEGER DEFAULT 0,
+            num_shares INTEGER DEFAULT 0,
+            is_sponsored INTEGER DEFAULT 0,
+            embedding TEXT,
+            aesthetic_score REAL,
+            viral_score REAL DEFAULT 0.0,
+            sentiment_score REAL,
+            media_url TEXT,
+            is_removed INTEGER DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            deleted_at DATETIME
+        )
+    """,
+    "stories": """
+        CREATE TABLE IF NOT EXISTS stories (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL REFERENCES user_mgmt(id) ON DELETE CASCADE,
+            round TEXT NOT NULL REFERENCES rounds(id) ON DELETE CASCADE,
+            media_url TEXT NOT NULL,
+            media_type TEXT DEFAULT 'carousel',
+            duration_seconds INTEGER DEFAULT 5,
+            sticker_type TEXT,
+            sticker_data TEXT,
+            caption TEXT,
+            title TEXT NOT NULL,
+            description TEXT NOT NULL,
+            image_urls TEXT NOT NULL DEFAULT '[]',
+            view_count INTEGER DEFAULT 0,
+            expires_at DATETIME,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    """,
     "saved_photos": """
         CREATE TABLE IF NOT EXISTS saved_photos (
             id TEXT PRIMARY KEY,
