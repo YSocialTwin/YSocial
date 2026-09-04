@@ -484,7 +484,7 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
             # have never had `flask db stamp 0001_baseline` run against them.
             insp = sa_inspect(db.engine)
             if not insp.has_table("alembic_version"):
-                alembic_stamp("0001_baseline")
+                alembic_stamp(directory=_alembic_dir, revision="0001_baseline")
             alembic_upgrade()
     except ImportError:
         # Flask-Migrate not installed — fall back to manual migration runner.

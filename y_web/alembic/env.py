@@ -24,7 +24,12 @@ config = context.config
 
 # Set up Python logging from the config file when present.
 if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
+    try:
+        fileConfig(config.config_file_name)
+    except Exception:
+        # Flask-Migrate may pass a config path without a [formatters] section;
+        # logging is already configured by Flask, so this is safe to skip.
+        pass
 
 # Flask-Migrate injects target_metadata via the Flask app's extensions.
 # We fall back to the db object imported directly if the extension is absent.
