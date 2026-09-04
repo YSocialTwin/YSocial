@@ -164,7 +164,30 @@ def create_app(db_type="sqlite", desktop_mode=False):
     """
     app = Flask(__name__, static_url_path="/static")
 
-    app.config["SECRET_KEY"] = "4323432nldsf"
+    # ------------------------------------------------------------------ #
+    # Secret key — read from environment (never hardcoded)                #
+    # ------------------------------------------------------------------ #
+    from dotenv import load_dotenv
+    load_dotenv()
+
+    _secret_key = os.environ.get("YSOCIAL_SECRET_KEY")
+    if not _secret_key:
+        _flask_env = os.environ.get("FLASK_ENV", "development")
+        if _flask_env == "production":
+            raise RuntimeError(
+                "YSOCIAL_SECRET_KEY environment variable is not set. "
+                "Copy .env.example to .env and generate a key with:\n"
+                "  python -c \"import secrets; print(secrets.token_hex(32))\""
+            )
+        import secrets as _secrets
+        _secret_key = _secrets.token_hex(32)
+        print(
+            "WARNING: YSOCIAL_SECRET_KEY not set — using a temporary key. "
+            "Sessions will not survive a restart. "
+            "Copy .env.example to .env to fix this.",
+            flush=True,
+        )
+    app.config["SECRET_KEY"] = _secret_key
     app.config["DESKTOP_MODE"] = desktop_mode
 
     # ------------------------------------------------------------------ #
