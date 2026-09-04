@@ -231,3 +231,41 @@ class TestSecurityConfiguration:
 
         assert app.config["TESTING"] is True
         assert app.testing is True
+
+
+# ---------------------------------------------------------------------------
+# C4 — SA2 migration sentinels
+# ---------------------------------------------------------------------------
+
+def test_fix_tests_script_does_not_exist():
+    """fix_tests.py non deve esistere una volta completata la migrazione SA2.
+
+    Se questo test fallisce: rimuovere fix_tests.py dal repository e migrare
+    i test che ancora usano _FakeSelect/_SelectRoutingSession al pattern SA2.
+    """
+    import os
+    assert not os.path.exists(
+        os.path.join(os.path.dirname(__file__), "..", "..", "fix_tests.py")
+    ), "fix_tests.py ancora presente — migrazione SA2 non completata (C4)"
+
+
+def test_no_sa1_shim_in_test_files():
+    """Nessun file di test deve definire _FakeSelect o _SelectRoutingSession.
+
+    Questi shim bypassano SQLAlchemy 2 e mascherano pattern SA1 legacy.
+    Migrare i test al pattern SA2: db.session.scalars(select(Model)...).
+    """
+    import os
+    test_dir = os.path.dirname(__file__)
+    violations = []
+    for fname in sorted(os.listdir(test_dir)):
+        if not fname.endswith(".py"):
+            continue
+        path = os.path.join(test_dir, fname)
+        source = open(path).read()
+        if "_FakeSelect" in source or "_SelectRoutingSession" in source:
+            violations.append(fname)
+    assert violations == [], (
+        f"Shim SA2 legacy trovati in {len(violations)} file: {violations}\n"
+        "Migrare a db.session.scalars(select(Model)...) e rimuovere gli shim."
+    )
