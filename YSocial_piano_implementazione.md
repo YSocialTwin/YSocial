@@ -13,7 +13,7 @@
 | C1 — Secret Key hardcoded | 2h | ✅ Risolto — commit `69c766b9` |
 | C2 — Database runtime in git | 3h | ✅ Risolto — commit `53b518c6` |
 | C3 — Flask-Migrate | 3-5gg | ⏳ Da fare |
-| C4 — Eliminazione shim SA2 | 3-5gg | ⏳ Da fare |
+| C4 — Eliminazione shim SA2 | 3-5gg | 🔄 Parziale — commit `ecd16971` |
 | C5 — Pulizia branch stale | 3h | ⏳ Da fare |
 | C6 — Bug `BASE_DIR` helpers.py | 2h | ✅ Risolto — commit in HEAD |
 | C8 — Config centralizzata | 1-2gg | ✅ Risolto — commit `607b858f` |
@@ -113,85 +113,6 @@ research/<descrizione>— branch sperimentale/ricerca
 - [ ] `deps/sqlalchemy2-flask3-migration` ha upstream remoto (`origin/deps/...`)
 - [ ] Auto-delete branch abilitato su GitHub
 - [ ] Naming convention documentata in `CONTRIBUTING.md`
-
----
-
-### C4 — Completamento Migrazione SA2 (Eliminazione Shim `fix_tests.py`)
-
-**Severità:** 🟠 Alta | **Effort:** 3-5 giorni | **Rischio rollback:** Medio
-
-#### Contesto
-
-`fix_tests.py` (28 KB) è uno script che inietta shim di compatibilità (`_FakeSelect`, `_SelectRoutingSession`, `_ScalarsResult`) nei file di test che ancora usano l'API legacy SQLAlchemy 1.x (`Model.query.*`). L'esistenza di questo file significa che una porzione dei 165 test non verifica il comportamento reale del codice di produzione (già migrato a SA2).
-
-Il `pytest.ini` ha già `error::sqlalchemy.exc.LegacyAPIWarning` e `error::sqlalchemy.exc.MovedIn20Warning`, ma lo shim aggira questi filtri intercettando le chiamate prima che raggiungano SQLAlchemy.
-
-#### Passi di implementazione
-
-**1. Identificare i test che dipendono dallo shim:**
-
-```bash
-pytest y_web/tests/ --tb=line -q 2>&1 | grep FAILED > /tmp/failing_tests.txt
-cat /tmp/failing_tests.txt | wc -l
-```
-
-**2. Migrare ogni test fallito al pattern SA2:**
-
-```python
-# Pattern legacy (da rimuovere):
-result = SomeModel.query.filter_by(field=value).first()
-results = SomeModel.query.all()
-obj = SomeModel.query.get(pk)
-
-# Pattern SA2 (corretto):
-from sqlalchemy import select
-result = db.session.scalars(select(SomeModel).filter_by(field=value)).first()
-results = db.session.scalars(select(SomeModel)).all()
-obj = db.session.get(SomeModel, pk)
-```
-
-**3. Priorità di migrazione:**
-- P1: `test_simple_models.py`, `test_phase1_src_models.py`, `test_phase2_src_data_access.py`
-- P2: `test_phase3_src_experiment.py`, `test_phase4_src_packages.py`
-- P3: Test di route (`test_auth_routes.py`, `test_admin_routes.py`, ecc.)
-- P4: Test HPC e simulazione
-
-**4. Aggiungere test sentinella** in `test_sa2_compliance.py`:
-
-```python
-def test_no_legacy_query_patterns_in_tests():
-    import os
-    test_dir = os.path.join(os.path.dirname(__file__))
-    violations = []
-    for fname in os.listdir(test_dir):
-        if not fname.endswith(".py"):
-            continue
-        source = open(os.path.join(test_dir, fname)).read()
-        if any(p in source for p in [".query.filter_by", ".query.all()", ".query.get("]):
-            violations.append(fname)
-    assert violations == [], f"Pattern SA1 trovati in: {violations}"
-
-def test_fix_tests_script_does_not_exist():
-    import os
-    assert not os.path.exists(
-        os.path.join(os.path.dirname(__file__), "..", "..", "fix_tests.py")
-    ), "fix_tests.py ancora presente — migrazione SA2 non completata"
-```
-
-**5. Rimuovere `fix_tests.py`** solo quando tutti i test passano senza di esso:
-
-```bash
-git rm fix_tests.py
-git commit -m "chore(C4): rimuovi shim SA2 fix_tests.py — migrazione test completata"
-```
-
-#### Definizione di "Done"
-
-- [ ] `fix_tests.py` non esiste nel repository
-- [ ] Tutti i 165 test passano senza shim applicato
-- [ ] `pytest.ini` mantiene `error::sqlalchemy.exc.LegacyAPIWarning`
-- [ ] `test_fix_tests_script_does_not_exist` passa
-- [ ] Zero occorrenze di `.query.filter_by`, `.query.all()`, `.query.get()` nei file di test
 
 ---
 
