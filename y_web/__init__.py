@@ -145,7 +145,7 @@ if _should_register_cleanup_handler():
     atexit.register(cleanup_db_jupyter_with_new_app)
 
 
-def create_app(db_type="sqlite", desktop_mode=False):
+def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
     """
     Create and configure the Flask application (factory pattern).
 
@@ -155,6 +155,8 @@ def create_app(db_type="sqlite", desktop_mode=False):
     Args:
         db_type: Database type to use, either "sqlite" or "postgresql"
         desktop_mode: Whether the app is running in desktop mode with PyWebview
+        config_class: Optional config class from y_web.config (auto-detected from
+            FLASK_ENV if not provided)
 
     Returns:
         Configured Flask application instance
@@ -165,29 +167,19 @@ def create_app(db_type="sqlite", desktop_mode=False):
     app = Flask(__name__, static_url_path="/static")
 
     # ------------------------------------------------------------------ #
-    # Secret key — read from environment (never hardcoded)                #
+    # Centralized configuration (y_web/config.py)                         #
     # ------------------------------------------------------------------ #
     from dotenv import load_dotenv
+    from y_web.config import get_config
+
     load_dotenv()
 
-    _secret_key = os.environ.get("YSOCIAL_SECRET_KEY")
-    if not _secret_key:
-        _flask_env = os.environ.get("FLASK_ENV", "development")
-        if _flask_env == "production":
-            raise RuntimeError(
-                "YSOCIAL_SECRET_KEY environment variable is not set. "
-                "Copy .env.example to .env and generate a key with:\n"
-                "  python -c \"import secrets; print(secrets.token_hex(32))\""
-            )
-        import secrets as _secrets
-        _secret_key = _secrets.token_hex(32)
-        print(
-            "WARNING: YSOCIAL_SECRET_KEY not set — using a temporary key. "
-            "Sessions will not survive a restart. "
-            "Copy .env.example to .env to fix this.",
-            flush=True,
-        )
-    app.config["SECRET_KEY"] = _secret_key
+    if config_class is None:
+        config_class = get_config()
+
+    app.config.from_object(config_class)
+
+    # Runtime-only settings (not part of static config classes)
     app.config["DESKTOP_MODE"] = desktop_mode
 
     # ------------------------------------------------------------------ #
@@ -202,19 +194,9 @@ def create_app(db_type="sqlite", desktop_mode=False):
     else:
         raise ValueError("Unsupported db_type, use 'sqlite' or 'postgresql'")
 
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
-    # Disable static file caching for development mode to ensure JS/CSS updates are loaded
-    # This ensures loading indicators and other static assets work in development mode
-    app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
-
-    # Enable template auto-reload in development mode
-    app.config["TEMPLATES_AUTO_RELOAD"] = True
 
     db.init_app(app)
     login_manager.init_app(app)
-
-    app.config["SESSION_COOKIE_NAME"] = "YSocial_session"
 
     from y_web.src.agents.platform import ensure_population_username_type_column
     from y_web.src.models import Admin_users, User_mgmt
