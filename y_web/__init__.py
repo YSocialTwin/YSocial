@@ -474,10 +474,17 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
     # ------------------------------------------------------------------ #
     _alembic_dir = os.path.join(os.path.dirname(__file__), "alembic")
     try:
-        from flask_migrate import Migrate, upgrade as alembic_upgrade
+        from flask_migrate import Migrate, upgrade as alembic_upgrade, stamp as alembic_stamp
+        from sqlalchemy import inspect as sa_inspect
 
         migrate_ext = Migrate(app, db, directory=_alembic_dir)
         with app.app_context():
+            # Auto-stamp databases that pre-date Alembic (no alembic_version table).
+            # This covers DBs created by the previous manual migration runner that
+            # have never had `flask db stamp 0001_baseline` run against them.
+            insp = sa_inspect(db.engine)
+            if not insp.has_table("alembic_version"):
+                alembic_stamp("0001_baseline")
             alembic_upgrade()
     except ImportError:
         # Flask-Migrate not installed — fall back to manual migration runner.
