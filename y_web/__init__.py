@@ -472,9 +472,19 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
     # ------------------------------------------------------------------ #
     # Database migrations + startup checks                                 #
     # ------------------------------------------------------------------ #
-    from y_web.db_init.migrations import run_migrations
+    _alembic_dir = os.path.join(os.path.dirname(__file__), "alembic")
+    try:
+        from flask_migrate import Migrate, upgrade as alembic_upgrade
 
-    run_migrations(app, db_type, db)
+        migrate_ext = Migrate(app, db, directory=_alembic_dir)
+        with app.app_context():
+            alembic_upgrade()
+    except ImportError:
+        # Flask-Migrate not installed — fall back to manual migration runner.
+        # Install it with: pip install Flask-Migrate>=4.0.0
+        from y_web.db_init.migrations import run_migrations
+
+        run_migrations(app, db_type, db)
 
     # Log service start event
     try:
