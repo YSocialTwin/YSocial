@@ -12,7 +12,7 @@
 |---|---|---|
 | C1 — Secret Key hardcoded | 2h | ✅ Risolto — commit `69c766b9` |
 | C2 — Database runtime in git | 3h | ✅ Risolto — commit `53b518c6` |
-| C3 — Flask-Migrate | 3-5gg | ⏳ Da fare |
+| C3 — Flask-Migrate | 3-5gg | ✅ Risolto — commit `6f38891d` |
 | C4 — Eliminazione shim SA2 | 3-5gg | ✅ Risolto — commit `d7981a38` |
 | C5 — Pulizia branch stale | 3h | ⏳ Da fare |
 | C6 — Bug `BASE_DIR` helpers.py | 2h | ✅ Risolto — commit in HEAD |
@@ -117,103 +117,6 @@ research/<descrizione>— branch sperimentale/ricerca
 ---
 
 ## FASE 2 — Sprint 2 (entro 1 mese)
-
----
-
-### C3 — Sistema di Migrazione Senza Framework
-
-**Severità:** 🟠 Alta | **Effort:** 3-5 giorni | **Rischio rollback:** Alto — procedere con cautela
-
-#### Contesto
-
-Le 31 migration in `y_web/migrations/` sono script Python manuali eseguiti da `y_web/db_init/migrations.py`. Non esiste tracking dello stato applicato: l'applicazione non sa quali migration sono già state eseguite su un dato database. Con la crescita del progetto, la manutenzione di questo sistema diventa progressivamente più onerosa.
-
-#### Strategia consigliata
-
-Adottare **Flask-Migrate** (wrapper Alembic per Flask-SQLAlchemy). Il passaggio è incrementale: le migration esistenti rimangono come documentazione, Alembic gestisce solo le future.
-
-#### Passi di implementazione
-
-**1. Aggiungere Flask-Migrate alle dipendenze** (`requirements/base.in`):
-
-```
-Flask-Migrate>=4.0.0
-```
-
-Rigenerare il lock:
-```bash
-pip-compile requirements/base.in --output-file requirements/base.txt
-```
-
-**2. Inizializzare Alembic:**
-
-```bash
-flask --app y_social.py db init --directory y_web/alembic
-```
-
-**3. Configurare `y_web/alembic/env.py`:**
-
-```python
-from y_web import db
-from y_web.src.models import *
-target_metadata = db.metadata
-```
-
-**4. Creare la migration "baseline":**
-
-```bash
-flask --app y_social.py db migrate \
-  --directory y_web/alembic \
-  -m "baseline: stato schema post-migrazione-manuale" \
-  --rev-id 0001_baseline
-```
-
-**5. Marcare i database esistenti come "già alla baseline":**
-
-```bash
-flask --app y_social.py db stamp --directory y_web/alembic 0001_baseline
-```
-
-**6. Aggiornare `create_app()` in `y_web/__init__.py`:**
-
-```python
-# Prima:
-from y_web.db_init.migrations import run_migrations
-run_migrations(app, db_type, db)
-
-# Dopo:
-from flask_migrate import upgrade as alembic_upgrade
-with app.app_context():
-    alembic_upgrade()
-```
-
-**7. Aggiungere `y_web/migrations/README.md`:**
-
-```markdown
-# Migration manuali (storiche)
-
-Questa directory contiene i 31 script di migrazione manuale usati
-prima dell'adozione di Flask-Migrate (settembre 2026).
-Sono mantenuti come riferimento storico.
-Le nuove migration vanno create in y_web/alembic/versions/ con:
-    flask db migrate -m "descrizione"
-```
-
-**8. Aggiungere check alla CI:**
-
-```yaml
-- name: Verifica migration Alembic up-to-date
-  run: flask --app y_social.py db check --directory y_web/alembic
-```
-
-#### Definizione di "Done"
-
-- [ ] `y_web/alembic/` inizializzato con revisione baseline
-- [ ] `flask db upgrade` applicato su un database SQLite vuoto senza errori
-- [ ] `flask db current` riporta la revisione corrente
-- [ ] `create_app()` chiama `alembic_upgrade()` invece di `run_migrations()`
-- [ ] La CI esegue `flask db check` su ogni PR
-- [ ] `y_web/migrations/README.md` documenta il cambio di sistema
 
 ---
 
