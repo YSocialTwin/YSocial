@@ -14,6 +14,8 @@ Environment variables (see .env.example at repository root):
     RAY_ADDRESS         — Ray cluster address
 """
 
+from __future__ import annotations
+
 import os
 import secrets
 
