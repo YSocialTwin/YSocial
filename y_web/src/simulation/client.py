@@ -50,9 +50,9 @@ def _is_client_process(pid):
         cmdline_str = " ".join(cmdline).lower()
 
         is_client = (
-            "y_client_process_runner" in cmdline_str
+            "client_runner" in cmdline_str  # matches client_runner.py (source) and y_client_process_runner (frozen)
             or "--run-client-subprocess" in cmdline_str
-            or "_client.log" in cmdline_str
+            or "--client-id" in cmdline_str  # unique CLI arg present in all client invocations
         )
 
         if not is_client:
