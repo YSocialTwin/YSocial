@@ -68,7 +68,13 @@ instance/
 
 # Database files
 *.db
+*.db-shm
+*.db-wal
 y_web/db/*.db
+y_web/system/*.db
+y_web/*.db
+*.fuse_hidden*
+!data_schema/*.db
 
 # Scrapy stuff:
 .scrapy
