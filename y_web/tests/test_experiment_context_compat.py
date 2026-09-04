@@ -28,7 +28,9 @@ def test_experiment_db_bind_refresh_works_without_db_engines(app, monkeypatch):
         bind_key = bind or "db_exp"
         return FakeEngine(app.config["SQLALCHEMY_BINDS"][bind_key])
 
-    fake_db = types.SimpleNamespace(session=FakeSession(), get_engine=fake_get_engine, engines={})
+    fake_db = types.SimpleNamespace(
+        session=FakeSession(), get_engine=fake_get_engine, engines={}
+    )
 
     monkeypatch.setattr(context, "db", fake_db)
     monkeypatch.setattr(
@@ -75,7 +77,9 @@ def test_setup_experiment_context_uses_get_engine_compat_path(app, monkeypatch):
         bind_key = bind or "db_exp"
         return FakeEngine(app.config["SQLALCHEMY_BINDS"][bind_key])
 
-    fake_db = types.SimpleNamespace(session=FakeSession(), get_engine=fake_get_engine, engines={})
+    fake_db = types.SimpleNamespace(
+        session=FakeSession(), get_engine=fake_get_engine, engines={}
+    )
 
     monkeypatch.setattr(context, "db", fake_db)
     monkeypatch.setattr(

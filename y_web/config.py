@@ -90,7 +90,7 @@ class ProductionConfig(BaseConfig):
         if not cls.SECRET_KEY:
             raise RuntimeError(
                 "YSOCIAL_SECRET_KEY environment variable is not set in production.\n"
-                "Generate one with: python -c \"import secrets; print(secrets.token_hex(32))\""
+                'Generate one with: python -c "import secrets; print(secrets.token_hex(32))"'
             )
 
 
