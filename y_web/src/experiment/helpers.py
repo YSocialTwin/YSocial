@@ -18,7 +18,7 @@ from y_web.src.experiment.schema import ensure_experiment_schema_for_uri
 from y_web.src.models import Exps, User_mgmt
 from y_web.src.system.path_utils import get_writable_path
 
-BASE_DIR = get_writable_path() / "y_web"
+BASE_DIR = Path(get_writable_path()) / "y_web"
 
 
 def get_experiment_uid_from_db_name(db_name: str) -> Optional[str]:
