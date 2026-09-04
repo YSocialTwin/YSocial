@@ -33,7 +33,7 @@ def _photo_experiment():
             if uri and uri.endswith("/yphotosharing.db"):
                 yield exp
                 return
-    raise AssertionError("No photo-sharing experiment found")
+    pytest.skip("No photo-sharing experiment found in this database")
 
 
 def test_photo_feed_template_uses_collapsible_left_sidebar_and_instagram_layout():
@@ -225,6 +225,7 @@ def test_photo_routes_order_by_round_chronology_for_visual_feeds():
     )
 
 
+@pytest.mark.external_repo
 def test_photo_recsys_uses_round_freshness_not_wall_clock():
     ranking_source = Path(
         "/Users/rossetti/PycharmProjects/YWeb/external/YPhotoSharing/YPhotoSharing/YServer/recsys/feed_ranking_service.py"

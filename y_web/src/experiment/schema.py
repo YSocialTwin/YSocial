@@ -8,6 +8,41 @@ _ENSURED_SCHEMAS: set[str] = set()
 _SCHEMA_LOCK = threading.Lock()
 
 _SQLITE_TABLES = {
+    "user_mgmt": """
+        CREATE TABLE IF NOT EXISTS user_mgmt (
+            id TEXT PRIMARY KEY,
+            username TEXT NOT NULL UNIQUE,
+            email TEXT,
+            password TEXT NOT NULL,
+            user_type TEXT,
+            leaning TEXT,
+            age INTEGER,
+            oe TEXT,
+            co TEXT,
+            ex TEXT,
+            ag TEXT,
+            ne TEXT,
+            recsys_type TEXT,
+            language TEXT,
+            owner TEXT,
+            education_level TEXT,
+            joined_on TEXT,
+            frecsys_type TEXT,
+            round_actions INTEGER NOT NULL DEFAULT 3,
+            gender TEXT,
+            nationality TEXT,
+            toxicity TEXT,
+            is_page INTEGER NOT NULL DEFAULT 0,
+            left_on TEXT,
+            daily_activity_level INTEGER DEFAULT 1,
+            profession TEXT,
+            activity_profile TEXT,
+            archetype TEXT,
+            profile_picture TEXT,
+            bio TEXT,
+            cover_image VARCHAR(400) DEFAULT ''
+        )
+    """,
     "rounds": """
         CREATE TABLE IF NOT EXISTS rounds (
             id TEXT PRIMARY KEY,
