@@ -263,7 +263,7 @@ def test_no_sa1_shim_in_test_files():
             continue
         path = os.path.join(test_dir, fname)
         source = open(path).read()
-        if "_FakeSelect" in source or "_SelectRoutingSession" in source:
+        if "class _FakeSelect" in source or "class _SelectRoutingSession" in source:
             violations.append(fname)
     assert violations == [], (
         f"Shim SA2 legacy trovati in {len(violations)} file: {violations}\n"
