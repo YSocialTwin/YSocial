@@ -474,18 +474,63 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
     # ------------------------------------------------------------------ #
     _alembic_dir = os.path.join(os.path.dirname(__file__), "alembic")
     try:
-        from flask_migrate import Migrate, upgrade as alembic_upgrade, stamp as alembic_stamp
-        from sqlalchemy import inspect as sa_inspect
+        from flask_migrate import Migrate, upgrade as alembic_upgrade
+        from alembic.config import Config as AlembicConfig
+        from alembic.script import ScriptDirectory
+        from alembic.runtime.migration import MigrationContext
 
         migrate_ext = Migrate(app, db, directory=_alembic_dir)
         with app.app_context():
-            # Auto-stamp databases that pre-date Alembic (no alembic_version table).
-            # This covers DBs created by the previous manual migration runner that
-            # have never had `flask db stamp 0001_baseline` run against them.
-            insp = sa_inspect(db.engine)
-            if not insp.has_table("alembic_version"):
-                alembic_stamp(directory=_alembic_dir, revision="0001_baseline")
+            # Build a minimal Alembic config pointing at our script directory.
+            # This lets us stamp arbitrary engines directly — not just the default
+            # bind that flask_migrate.stamp() targets.
+            _alembic_cfg = AlembicConfig()
+            _alembic_cfg.set_main_option("script_location", _alembic_dir)
+            _alembic_script = ScriptDirectory.from_config(_alembic_cfg)
+
+            def _stamp_engine_if_needed(engine, bind_key):
+                """Stamp *engine* with 0001_baseline if it has no alembic_version row."""
+                with engine.begin() as conn:
+                    ctx = MigrationContext.configure(conn)
+                    if not ctx.get_current_heads():
+                        print(f"  ↳ [{bind_key}] no alembic_version found — stamping 0001_baseline")
+                        ctx.stamp(_alembic_script, "0001_baseline")
+                    else:
+                        print(f"  ↳ [{bind_key}] alembic_version OK ({', '.join(ctx.get_current_heads())})")
+
+            # Check every bound engine at startup (db_admin = dashboard.db,
+            # db_exp = dummy.db placeholder).  De-duplicate by engine identity
+            # because the default URI and "db_admin" can resolve to the same file.
+            print("✦ Alembic: checking bound databases…")
+            _seen_engine_ids: set = set()
+            for _bind_key, _engine in db.engines.items():
+                if id(_engine) not in _seen_engine_ids:
+                    _seen_engine_ids.add(id(_engine))
+                    _stamp_engine_if_needed(_engine, _bind_key)
+
+            # Upgrade the primary (db_admin) schema to HEAD.
+            print("✦ Alembic: upgrading primary schema (db_admin) to HEAD…")
             alembic_upgrade()
+            print("✓ Alembic: primary schema up to date")
+
+            # Bring every active experiment database up to date.
+            # Experiment DBs (experiments/<UUID>/database_server.db) are NOT
+            # managed through Alembic revision files — their schema is kept
+            # current by ensure_experiment_schema_for_uri(), which creates
+            # missing tables and adds new columns via ALTER TABLE ADD COLUMN.
+            # initialize_active_experiment_databases() iterates the Exps table,
+            # re-registers each active experiment's DB URI and runs that function
+            # against it, exactly as the old manual migration runner did.
+            print("✦ Alembic: migrating active experiment databases…")
+            try:
+                from y_web.src.experiment.context import (
+                    initialize_active_experiment_databases,
+                )
+
+                initialize_active_experiment_databases(app)
+                print("✓ Alembic: experiment databases up to date")
+            except Exception as _exp_err:
+                print(f"⚠ Warning: failed to migrate experiment databases: {_exp_err}")
     except ImportError:
         # Flask-Migrate not installed — fall back to manual migration runner.
         # Install it with: pip install Flask-Migrate>=4.0.0

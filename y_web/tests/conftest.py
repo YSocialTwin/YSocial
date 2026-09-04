@@ -2,7 +2,6 @@
 Pytest configuration and fixtures for y_web tests
 """
 
-import builtins
 import os
 import tempfile
 from pathlib import Path
@@ -18,37 +17,6 @@ from werkzeug.security import generate_password_hash
 from y_web import db
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
-_LEGACY_ROOT = Path("/Users/rossetti/PycharmProjects/YWeb")
-_ORIG_OPEN = builtins.open
-_ORIG_PATH_OPEN = Path.open
-
-
-def _remap_legacy_repo_path(path_like):
-    try:
-        raw = os.fspath(path_like)
-    except Exception:
-        return path_like
-    if isinstance(raw, str) and raw.startswith(str(_LEGACY_ROOT)):
-        suffix = raw[len(str(_LEGACY_ROOT)) :].lstrip("/\\")
-        candidate = _REPO_ROOT / suffix
-        if candidate.exists():
-            return candidate
-    return path_like
-
-
-def _patched_open(file, *args, **kwargs):
-    return _ORIG_OPEN(_remap_legacy_repo_path(file), *args, **kwargs)
-
-
-def _patched_path_open(self, *args, **kwargs):
-    remapped = _remap_legacy_repo_path(self)
-    if isinstance(remapped, Path):
-        return _ORIG_PATH_OPEN(remapped, *args, **kwargs)
-    return _ORIG_PATH_OPEN(self, *args, **kwargs)
-
-
-builtins.open = _patched_open
-Path.open = _patched_path_open
 
 
 def pytest_collection_modifyitems(config, items):

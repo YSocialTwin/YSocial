@@ -1,453 +1,309 @@
-# YSocial – Analisi della Codebase
+# YSocial — Analisi Codebase
 
 > Documento generato il 4 settembre 2026  
-> Analista: Claude Sonnet 4.6 (Cowork) su richiesta di Giulio Rossetti  
-> Versione analizzata: **4.0.0** — branch attivo: `deps/sqlalchemy2-flask3-migration`
+> Versione analizzata: **4.0.0** — branch `fix/critical-issues`  
+> Stack: Flask 3.x · SQLAlchemy 2.x · Python ≥ 3.9
 
 ---
 
-## 1. Descrizione del Progetto
+## 1. Panoramica del progetto
 
-**YSocial** è un **Digital Twin di piattaforme di social media**, alimentato da LLM (Large Language Model), progettato per condurre simulazioni sociali in ambiente *zero-code*. Il progetto è sviluppato nell'ambito della ricerca accademica (CNR / SoBigData++) e accompagnato da una pubblicazione scientifica (arXiv:2408.00818).
+YSocial è una piattaforma di simulazione di reti sociali (digital twin) che consente ai ricercatori di configurare ed eseguire esperimenti su popolazioni di agenti LLM che interagiscono su social network artificiali. Il sistema è composto da due componenti principali:
 
-L'obiettivo è replicare le dinamiche di una piattaforma social (X/Twitter, Reddit, Instagram-like) popolata da agenti AI configurabili, consentendo ai ricercatori di studiare fenomeni come diffusione dell'informazione, polarizzazione, opinion dynamics e tossicità in ambiente controllato e riproducibile.
+- **YWeb** (`y_web/`) — applicazione Flask che funge da server centrale: gestisce la UI web del ricercatore, il database degli esperimenti, il coordinamento dei client di simulazione e l'API REST.
+- **YClient** (`external/YClient/`) — libreria Python (submodule git) che implementa gli agenti di simulazione. I client vengono lanciati come sottoprocessi separati (locale, HPC via Ray, ad-hoc) e comunicano con YWeb tramite API REST.
 
----
-
-## 2. Stack Tecnologico Attuale
-
-| Layer | Tecnologia | Note |
-|---|---|---|
-| Backend web | Flask 3.0.3, Werkzeug ≥3.0 | Migrazione recente da Flask 2.x |
-| ORM / Database | SQLAlchemy ≥2.0,<3.0, Flask-SQLAlchemy 3.1.1 | Migrazione SA2 appena completata |
-| Database engine | SQLite (default) / PostgreSQL | psycopg2-binary |
-| AI / LLM | LangChain ≥0.3, langchain-ollama, langchain-openai | Compatibile con Ollama e vLLM |
-| Analisi testo | NLTK (VADER), Detoxify, Perspective API | detoxify ≥0.5.2 |
-| Computing distribuito | Ray ≥2.0,<3.0, Redis ≥4.0 | Per esperimenti HPC |
-| Network analysis | NetworkX | |
-| Frontend | Jinja2 templates (tema Friendkit), HTML/CSS/JS | Template custom multi-blueprint |
-| Packaging | PyInstaller + PyWebview, Docker + gunicorn/gevent | Modalità desktop e server |
-| Analisi dati | JupyterLab integrato, libreria `ysights` | Integrazione notebook |
-| Autenticazione | Flask-Login 0.6.3, Flask-WTF 1.2.2 | |
-| Memoria agenti | `yclient-memory` (pacchetto esterno) | |
-
-**Requisito Python:** ≥ 3.10
+Le piattaforme social simulate sono tre: **microblogging** (stile Twitter), **forum** (stile Reddit), **photo sharing** (stile Instagram). Ogni esperimento può girare su una o più piattaforme contemporaneamente.
 
 ---
 
-## 3. Architettura del Sistema
+## 2. Entry point e avvio
 
-YSocial adotta un'architettura **monolitica modulare** costruita attorno al pattern *Application Factory* di Flask. Il nucleo applicativo (`y_web/`) è composto da:
+| File | Ruolo |
+|------|-------|
+| `y_social.py` | Entry point principale. Parsa gli argomenti CLI (db_type, host, port, llm_backend, notebook, desktop_mode), configura l'LLM, chiama `create_app()` e avvia Flask. |
+| `y_social_launcher.py` | Wrapper per il bundle PyInstaller (modalità desktop). |
+| `entrypoint.sh` | Entry point Docker. |
 
-- **82 file Python** nel layer `src/` (business logic)
-- **60 file Python** nel layer `routes/` (blueprint HTTP)
-- **31 migration script** in `migrations/`
-- **165 file di test** in `y_web/tests/`
+Avvio tipico:
+```bash
+python y_social.py --db sqlite --port 8080 --llm ollama
+```
 
-Il sistema si compone di due piani distinti: il **pannello di controllo** (Flask/web) e il **runtime di simulazione** (processi esterni orchestrati dal pannello).
+LLM backend supportati: `ollama` (http://127.0.0.1:11434/v1), `vllm` (http://127.0.0.1:8000/v1), URL custom (`host:port`). Se omesso, le funzionalità LLM vengono disabilitate.
 
-### 3.1 Struttura delle Directory
+---
+
+## 3. Struttura delle directory
 
 ```
 YWeb/
-├── y_social.py              # Entry point principale
-├── y_social_launcher.py     # Launcher (desktop + browser mode)
-├── y_social.spec            # Specifica PyInstaller
-├── fix_tests.py             # Script di compatibilità SA2 per i test (28 KB)
-├── requirements/
-│   ├── base.txt             # Dipendenze produzione (pinnate)
-│   ├── dev.txt              # Dipendenze sviluppo
-│   └── test.txt             # Dipendenze test
-├── requirements.lock        # Lock file (non standardizzato)
-├── requirements-baseline.txt
-├── y_web/                   # Applicazione Flask principale
-│   ├── __init__.py          # App factory, lifecycle, context processors
-│   ├── db/                  # File database runtime (dashboard.db ~58MB, dummy.db ~5MB)
-│   ├── db_init/             # Inizializzazione schema (sqlite.py, postgresql.py)
-│   ├── migrations/          # 31 script di migrazione manuale
-│   ├── routes/              # Blueprint Flask (18 blueprints registrati)
-│   │   ├── admin/           # Pannello amministrativo + sub-blueprints
-│   │   ├── api/             # API REST (social, reddit, interview)
-│   │   ├── auth/            # Autenticazione
-│   │   ├── errors/          # Gestione errori HTTP
-│   │   ├── interactions/    # Interazioni social (follow, post, reazioni)
-│   │   └── social/          # Feed, timeline, profili, forum, foto
-│   ├── src/                 # Business logic
-│   │   ├── agents/          # Gestione agenti AI e popolazioni
-│   │   ├── content/         # Estrazione articoli, avatar, feed RSS
-│   │   ├── data_access/     # Strato di accesso dati (posts, profili, trend)
-│   │   ├── experiment/      # Ciclo di vita esperimenti, scheduling, contesto
-│   │   ├── experiments/     # Logica esperimenti (directory separata)
-│   │   ├── external_runtime/# Manager runtime esterni (YClient, YServer, ecc.)
-│   │   ├── forum/           # Modalità forum (Reddit-like)
-│   │   ├── hpc/             # Supporto High Performance Computing
-│   │   ├── llm/             # Integrazione LLM (Ollama, vLLM, annotazione)
-│   │   ├── models/          # Modelli SQLAlchemy (admin, experiment, config)
-│   │   ├── recsys/          # Sistemi di raccomandazione (content + follow)
-│   │   ├── simulation/      # Orchestrazione simulazioni locali
-│   │   ├── system/          # Utilità di sistema (Jupyter, path, release check)
-│   │   └── telemetry/       # Logging eventi e telemetria
-│   ├── pyinstaller_utils/   # Utilities per packaging standalone
-│   ├── static/              # Asset statici
-│   └── templates/           # Template Jinja2
-├── external/                # Runtime esterni (7 plugin repos)
-│   ├── YClient/             # Client microblogging
-│   ├── YClientReddit/       # Client forum Reddit-like
-│   ├── YServer/             # Server microblogging
-│   ├── YServerReddit/       # Server forum Reddit-like
-│   ├── YSimulator/          # Simulatore HPC distribuito
-│   ├── YPhotoSharing/       # Client/server photo-sharing
-│   ├── y_agents_plugins/    # Plugin agenti AI estesi
-│   └── plugins.json         # Registro plugin
-├── data_schema/             # Schemi DB di riferimento e prompt LLM
-├── deployment/              # Docker + Nginx
-└── docs/                    # Documentazione MkDocs
+├── y_social.py                  # Entry point principale
+├── y_social_launcher.py         # Launcher desktop/PyInstaller
+├── y_web/                       # Package Flask principale
+│   ├── __init__.py              # Factory create_app()
+│   ├── config.py                # Configurazione (BaseConfig, Dev, Test, Prod)
+│   ├── alembic/                 # Gestione migrazioni (Flask-Migrate)
+│   │   ├── env.py
+│   │   └── versions/0001_baseline.py
+│   ├── db/                      # DB runtime SQLite (gitignored)
+│   ├── db_init/                 # Inizializzazione DB
+│   │   ├── migrations.py        # Runner migrazioni manuali (legacy, fallback)
+│   │   ├── sqlite.py            # Inizializzazione SQLite
+│   │   └── postgresql.py        # Inizializzazione PostgreSQL
+│   ├── migrations/              # 31 script SQL incrementali (storici)
+│   ├── routes/                  # Blueprint Flask (17 totali)
+│   │   ├── admin/               # Dashboard ricercatore
+│   │   ├── api/                 # API REST (reddit, social, interview)
+│   │   ├── auth/                # Autenticazione
+│   │   ├── errors/              # Handler errori HTTP
+│   │   ├── interactions/        # Azioni utente (follow, post, reazioni)
+│   │   └── social/              # Viste piattaforme social
+│   ├── src/                     # Logica di dominio (12 package)
+│   ├── static/                  # Asset statici (10.545 file)
+│   ├── templates/               # Template HTML (118 file)
+│   └── tests/                   # Test suite (169 file, ~39K LOC)
+├── external/YClient/            # Submodule: libreria agenti di simulazione
+├── data_schema/                 # Schema DB di riferimento (SQLite + PostgreSQL)
+├── deployment/                  # Docker compose, nginx
+├── docs/                        # Documentazione progetto
+├── requirements/                # Dipendenze pip-tools
+│   ├── base.in / base.txt       # Dipendenze produzione
+│   ├── dev.in / dev.txt         # Dipendenze sviluppo
+│   └── test.in / test.txt       # Dipendenze test
+└── .github/workflows/           # CI/CD GitHub Actions
 ```
 
-### 3.2 Ecosistema di Plugin Esterni
+---
 
-I sette repository esterni in `external/` rappresentano il **runtime di simulazione**, orchestrato dal pannello Flask. Ogni plugin copre uno scenario specifico:
+## 4. Configurazione (`y_web/config.py`)
 
-| Plugin | Ruolo | Modalità |
-|---|---|---|
-| YClient | Client agenti – microblogging | Standard locale |
-| YServer | Server simulazione – microblogging | Standard locale |
-| YClientReddit | Client agenti – forum Reddit-like | Standard locale |
-| YServerReddit | Server simulazione – forum Reddit-like | Standard locale |
-| YSimulator | Runtime distribuito Ray-based | HPC |
-| YPhotoSharing | Client/server – condivisione foto | Standard / HPC |
-| y_agents_plugins | Famiglie di agenti estensibili | Tutti |
+Quattro classi di configurazione con ereditarietà:
 
-Il coordinamento avviene tramite `y_web/src/simulation/` (backend standard) e `y_web/src/hpc/` (backend HPC), con routing dinamico in `execution_backend.py`.
+| Classe | Contesto | SECRET_KEY | DB |
+|--------|----------|------------|-----|
+| `BaseConfig` | Base comune | — | — |
+| `DevelopmentConfig` | Locale / debug | `$YSOCIAL_SECRET_KEY` o random | SQLite auto-rilevato |
+| `TestingConfig` | pytest | `test-secret-key-…` (hardcoded) | `sqlite:///:memory:` |
+| `ProductionConfig` | Deploy | `$YSOCIAL_SECRET_KEY` (obbligatorio) | Configurato a runtime |
 
-### 3.3 Modalità di Esecuzione
-
-Il sistema supporta tre modalità operative:
-
-1. **Browser mode** — Flask server + browser web (sviluppo e produzione)
-2. **Desktop mode** — PyInstaller + PyWebview (distribuzione standalone per utenti finali)
-3. **HPC mode** — Ray + Redis per esperimenti distribuiti su cluster
+`get_config()` rileva automaticamente l'ambiente tramite `FLASK_ENV`. La configurazione per il DB (SQLALCHEMY_BINDS) viene iniettata a runtime in `create_app()` in base al `db_type` scelto.
 
 ---
 
-## 4. Stato Attuale e Recenti Sviluppi
+## 5. Factory `create_app()`
 
-### 4.1 Migrazione SA2 / Flask 3 (Completata di Recente)
+`y_web/__init__.py` contiene `create_app(db_type, desktop_mode, config_class)`. I passi principali:
 
-La migrazione da SQLAlchemy 1.x → 2.x e Flask 2.x → 3.x è stata completata nel branch corrente (`deps/sqlalchemy2-flask3-migration`). I commit recenti documentano:
-
-- Migrazione di **167 pattern di query** dall'API legacy (`Model.query.*`) alla nuova API SA2 (`db.session.scalars(select(Model)…)`)
-- Aggiornamento di `pytest.ini` con filtri `error` su `LegacyAPIWarning` e `MovedIn20Warning`
-- Creazione di `fix_tests.py` (28 KB) con shim di compatibilità SA2 per la suite di test
-
-Lo script `fix_tests.py` introduce classi intermedie (`_FakeSelect`, `_SelectRoutingSession`, `_ScalarsResult`) per far funzionare i test legacy con la nuova API, il che indica che la suite di test **non è ancora completamente migrata** alla nuova API.
-
-### 4.2 Stato Branches
-
-Il repository presenta **oltre 110 branch locali**, di cui:
-
-- ~85 branch `copilot/` (generati da GitHub Copilot per feature isolate)
-- Branch tematici attivi: `main`, `HPC`, `HPC+Reddit`, `opinion_dynamics`, `plugins`, `packaging`, `ray`, `forum_template`
-- Branch in apparente abbandono: `simple_ABM`, `second-skin`, `activity_profiles`, `experiment_matrix`
-
-### 4.3 Test Suite
-
-165 file di test coprono l'intera codebase con un approccio granulare. La struttura riflette il percorso evolutivo del refactoring (famiglie `test_phase*` documentano fasi di ristrutturazione). La dipendenza dallo shim in `fix_tests.py` indica che una porzione dei test non è ancora idiomatica per SA2.
+1. Creazione istanza Flask e caricamento config
+2. Configurazione `SQLALCHEMY_BINDS` (sqlite o postgresql) tramite `create_sqlite_db()` / `create_postgresql_db()`
+3. Inizializzazione estensioni: `db`, `LoginManager`
+4. Registrazione blueprint (`register_blueprints(app)`)
+5. Context processor injection (exp_id, LLM state, user info, release info, ecc.)
+6. **Migrazioni database** (blocco C3):
+   - Se Flask-Migrate è installato: auto-stamp dei DB pre-Alembic, poi `alembic_upgrade()`
+   - Fallback: `run_migrations()` (runner manuale legacy)
+7. Bootstrap telemetria, atexit cleanup
 
 ---
 
-## 5. Valutazione del Progetto
+## 6. Database — Schema multi-bind
 
-### 5.1 Punti di Forza
+YSocial usa due database distinti, gestiti con `SQLALCHEMY_BINDS`:
 
-**Architettura e modularità.** Il pattern App Factory, la separazione tra `routes/` e `src/`, e il routing dinamico tra backend standard e HPC in `execution_backend.py` mostrano una struttura matura e scalabile.
+| Bind key | File (SQLite) | Contenuto |
+|----------|--------------|-----------|
+| `db_admin` (default) | `y_web/db/dashboard.db` | Utenti admin, esperimenti, popolazioni, agenti, client, configurazioni |
+| `db_exp` | `y_web/experiments/<UUID>/database_server.db` | Dati runtime dell'esperimento: post, follow, hashtag, reazioni, opinioni, ecc. |
 
-**Copertura di test.** 165 file di test sono un patrimonio rilevante. La presenza di marker pytest (`slow`, `integration`, `unit`, `external_repo`) indica una disciplina di test strutturata.
+**DB Admin** (`src/models/admin.py` — 37 modelli):
+Gestione infrastruttura: `Admin_users`, `Exps`, `ExperimentScheduleGroup/Item/Status/Log`, `Population`, `Agent`, `Agent_Ext`, `Agent_Custom_Feature`, `Agent_Population`, `Agent_Profile`, `Page`, `Client`, `Client_Execution`, `ForumRssFeedResource`, `ForumImageFeedResource`, `Jupyter_instances`, `ReleaseInfo`, `BlogPost`, `LogFileOffset`, `ServerLogMetrics`, `ClientLogMetrics`, `HpcMonitorSettings`, `WatchdogSettings`, `OpinionGroup`, `OpinionDistribution`, `OpinionEvolutionCache`, `OpinionEvolutionSampledAgents`, `AdminInterviewSession`, `AdminInterviewMessage`, ecc.
 
-**Ecosistema plugin.** Il sistema di plugin in `external/` con registro `plugins.json` è un'architettura estensibile che supporta diversi scenari di simulazione (microblogging, forum, foto, HPC) con un'interfaccia di orchestrazione comune.
+**DB Experiment** (`src/models/experiment.py` — 29 modelli):
+Dati sociali simulati: `User_mgmt`, `Post`, `Hashtags`, `Emotions`, `Post_emotions`, `Post_hashtags`, `Mentions`, `ReplyInboxState`, `ForumChatSession`, `ForumChatMessage`, `Reactions`, `Follow`, `Rounds`, `Recommendations`, `SysMessage`, `Reported`, `Articles`, `Websites`, `Voting`, `Interests`, `User_interest`, `Post_topics`, `Images`, `ImagePosts`, `Article_topics`, `Post_Sentiment`, `Post_Toxicity`, `Agent_Opinion`, `StressReward`.
 
-**Supporto multi-modalità.** La capacità di eseguire in modalità browser, desktop standalone e HPC distribuito è un differenziatore significativo per un prodotto di ricerca accademico.
+**DB Config** (`src/models/config.py` — 14 modelli, bind `db_admin`):
+Tabelle di configurazione condivise: `Profession`, `Nationalities`, `Education`, `Leanings`, `Languages`, `Toxicity_Levels`, `AgeClass`, `Content_Recsys`, `Follow_Recsys`, `Topic_List`, `Exp_Topic`, `Page_Topic`, `ActivityProfile`, `PopulationActivityProfile`.
 
-**Recente aggiornamento delle dipendenze.** La migrazione a Flask 3 / SA2 era necessaria per la longevità del progetto e rimuove debito tecnico critico.
+### Migrazioni
 
-### 5.2 Aree di Debolezza
-
-**Maturità del ciclo di migrazione SA2.** La presenza di `fix_tests.py` come shim temporaneo invece di test completamente riscritti crea un layer di opacità sulla reale qualità dei test.
-
-**Gestione configurazione e segreti.** La `SECRET_KEY` è hardcoded nel codice sorgente (`"4323432nldsf"`), il che è un problema di sicurezza fondamentale che pregiudica qualsiasi deploy in produzione.
-
-**Proliferazione di branch.** 85+ branch `copilot/` mai mergiati/eliminati degradano la leggibilità del repository e complicano la comprensione dello stato del progetto.
-
-**File di database nel repository.** Il file `y_web/db/dashboard.db` (~58 MB) e `dummy.db` (~5 MB) sono file di database runtime tracciati nel repository, il che è una cattiva pratica che inquina la history git e può portare a confusione.
-
-**Sistema di migrazione personalizzato.** Le 31 migration sono script Python manuali senza framework (no Alembic), il che rende difficile la gestione dell'ordine di applicazione, la gestione dei rollback e il tracking dello stato.
-
-**Doppia directory per logica esperimenti.** Esiste sia `y_web/src/experiment/` che `y_web/src/experiments/` (nota il plurale), suggerendo una separazione non ancora risolta.
+- **Sistema corrente**: Flask-Migrate / Alembic (`y_web/alembic/`). Revisione baseline `0001_baseline` (no-op). Auto-stamp dei DB pre-Alembic al primo avvio.
+- **Sistema legacy** (`y_web/db_init/migrations.py`): 31 script incrementali, mantenuto come fallback se Flask-Migrate non è installato.
+- **Schema di riferimento** (`data_schema/`): dump SQLite e PostgreSQL dello stato iniziale; 4 migration SQL documentate.
 
 ---
 
-## 6. Criticità Identificate e Pipeline di Risoluzione
+## 7. Blueprint e routing
 
-### CRITICITÀ 1 — Secret Key Hardcoded in Sorgente
+17 blueprint registrati tramite `y_web/routes/__init__.py`:
 
-**Severità:** 🔴 Critica  
-**Localizzazione:** `y_web/__init__.py` → `app.config["SECRET_KEY"] = "4323432nldsf"`
-
-**Impatto:** Qualsiasi deploy di produzione espone la chiave di sessione Flask a chiunque abbia accesso al codice sorgente. Le sessioni utente possono essere forgiate da attori malevoli.
-
-**Pipeline di risoluzione:**
-
-1. Introdurre gestione variabili d'ambiente con `python-dotenv` o leggere da `os.environ`
-2. Creare `.env.example` con `SECRET_KEY=<replace-me>` e `.env` in `.gitignore`
-3. Sostituire la hardcoded key con `os.environ.get("YSOCIAL_SECRET_KEY", os.urandom(32).hex())`
-4. Aggiungere validazione all'avvio: se la key è quella di default in non-debug mode, rifiutarsi di avviare
-5. Documentare il requisito in `CONTRIBUTING.md` e nel `README`
-
-**Criteri di successo:**  
-- `grep -r "4323432" y_web/` restituisce zero risultati  
-- Il test di avvio in produzione fallisce se `YSOCIAL_SECRET_KEY` non è impostata  
-- La CI verifica l'assenza di secret hardcoded con `detect-secrets` o `trufflehog`
-
----
-
-### CRITICITÀ 2 — File di Database Runtime Tracciati in Git
-
-**Severità:** 🔴 Critica  
-**Localizzazione:** `y_web/db/dashboard.db` (~58 MB), `y_web/db/dummy.db` (~5 MB), `y_web/db/database.db`, `y_web/system/yweb.db`, `y_web/yweb.db`
-
-**Impatto:** La history git è gonfiata da file binari di grandi dimensioni. I database contengono dati di esperimenti che possono includere dati sensibili. I file `.fuse_hidden*` visibili nella directory indicano che i file sono aperti durante la sincronizzazione.
-
-**Pipeline di risoluzione:**
-
-1. Aggiungere a `.gitignore`: `y_web/db/*.db`, `y_web/db/*.db-shm`, `y_web/db/*.db-wal`, `*.fuse_hidden*`, `**/*.db` (eccetto schemi reference in `data_schema/`)
-2. Rimuovere i file dalla tracking git con `git rm --cached`
-3. Considerare `git filter-repo` per ripulire la history se le dimensioni del repository sono già significative
-4. Creare una directory `data/` (gitignored) come path standard per i database runtime, aggiornando `db_init/sqlite.py`
-5. Mantenere in `data_schema/` solo i database di schema di riferimento vuoti (già presente)
-
-**Criteri di successo:**  
-- `git ls-files | grep '\.db$'` restituisce solo i file in `data_schema/`  
-- Dimensione del repository ridotta significativamente  
-- Il `db_init` crea correttamente i database in una directory configurabile fuori dal sorgente
+| Blueprint | Prefix | Funzione |
+|-----------|--------|----------|
+| `auth` | `/` | Login, logout, selezione esperimento |
+| `main` | `/` | Viste piattaforme social (microblogging, forum, photo) |
+| `user` (user_actions) | `/` | Follow, post, reazioni, interazioni utente |
+| `admin` | `/admin` | Dashboard principale ricercatore |
+| `experiments` | `/admin/experiments` | CRUD esperimenti, scheduling, HPC, opinion config |
+| `clientsr` | `/admin/clients` | CRUD client, dettagli, esecuzione, recsys |
+| `population` | `/admin/populations` | Gestione popolazioni di agenti |
+| `agents` | `/admin/agents` | Gestione agenti |
+| `pages` | `/admin/pages` | Gestione pagine (agenti istituzionali) |
+| `users` | `/admin/users` | Gestione utenti admin |
+| `ollama` | `/admin/ollama` | Gestione modelli Ollama |
+| `lab` | `/admin/jupyter` | Integrazione JupyterLab |
+| `tutorial` | `/admin/tutorial` | Wizard tutorial |
+| `errors` | — | Handler 400/403/404/500 |
+| `api_reddit` | `/api/reddit` | API compatibilità Reddit |
+| `api_social` | `/api` | API REST core (agenti, post, follow) |
+| `api_interview` | `/api/interview` | API per interviste agli agenti via LLM |
 
 ---
 
-### CRITICITÀ 3 — Sistema di Migrazione Senza Framework
+## 8. Logica di dominio (`y_web/src/`)
 
-**Severità:** 🟠 Alta  
-**Localizzazione:** `y_web/migrations/` (31 script Python manuali), `y_web/db_init/migrations.py`
+12 package indipendenti (~26K LOC):
 
-**Impatto:** Nessun tracking dello stato applicato (quale migrazione è già stata eseguita su quale database), nessun meccanismo di rollback, ordine di esecuzione dipendente da convenzioni non enforce, impossibile verificare se un database di produzione è allineato al codice.
-
-**Pipeline di risoluzione:**
-
-1. Valutare l'adozione di **Flask-Migrate** (wrapper Alembic per Flask-SQLAlchemy) — il già presente SA2 lo supporta nativamente
-2. Piano di migrazione incrementale:
-   - Creare una migrazione Alembic iniziale che rispecchia lo stato attuale degli schemi
-   - Convertire i 31 script esistenti in revisioni Alembic sequenziali (mantenendo i file originali come documentazione)
-   - Aggiungere una tabella `alembic_version` al database per tracking automatico dello stato
-3. Aggiornare `db_init/migrations.py` per invocare Alembic invece degli script custom
-4. Aggiungere `flask db upgrade` al processo di avvio e alla CI
-
-**Criteri di successo:**  
-- `flask db current` riporta la revisione corrente su tutti gli ambienti  
-- `flask db upgrade` è idempotente (applicabile su un database già aggiornato)  
-- La CI esegue `flask db upgrade` su un database SQLite vuoto senza errori  
-- Ogni nuova feature che modifica lo schema include la relativa revisione Alembic
+| Package | Contenuto |
+|---------|-----------|
+| `agents/` | Gestione popolazioni (`population.py`), piattaforme (`platform.py`), feature custom (`custom_features.py`) |
+| `content/` | Estrazione articoli, avatar, cover image, feed RSS, utilità testo |
+| `data_access/` | Query DB per post, profili, trend, utenti (layer DAL) |
+| `experiment/` | Accesso esperimento, clock simulazione, contesto, helpers, schema, schedule monitor |
+| `external_runtime/` | Manager e registry per runtime esterni (HPC, vLLM) |
+| `forum/` | Azioni forum (media, post, reazioni), hot rank, servizi (formatter, query, data class) |
+| `hpc/` | Client HPC, parser/sync log, log metrics, backup popolazioni, server HPC |
+| `llm/` | Compatibilità AutoGen, content annotation, image annotator, manager Ollama/vLLM, URL summarizer |
+| `models/` | Modelli ORM (admin, config, experiment) |
+| `recsys/` | Recommendation system (content-based, follow-based) |
+| `simulation/` | Runner client/server, process registry, watchdog, execution backend, port manager, subprocess env |
+| `system/` | Utilità path, check release/blog, desktop file handler, Jupyter utils, model cache |
+| `telemetry/` | Raccolta e invio dati di utilizzo |
 
 ---
 
-### CRITICITÀ 4 — Shim SA2 nei Test (`fix_tests.py`)
+## 9. Modalità di esecuzione simulazione
 
-**Severità:** 🟠 Alta  
-**Localizzazione:** `fix_tests.py` (28 KB), test in `y_web/tests/` che ancora usano pattern legacy
-
-**Impatto:** Lo shim `_SelectRoutingSession` / `_FakeSelect` nasconde bug reali nell'interazione con SA2. I test che passano attraverso lo shim non verificano il comportamento reale del codice di produzione. Il file di 28 KB introduce complessità di manutenzione non necessaria.
-
-**Pipeline di risoluzione:**
-
-1. Identificare l'elenco completo dei test che dipendono dallo shim (analisi statica o run con shim disabilitato)
-2. Per ogni test dipendente, riscrivere il setup/teardown usando SA2 nativamente:
-   - Sostituire `Model.query.filter_by(…)` con `db.session.scalars(select(Model).filter_by(…))`
-   - Usare `db.session.get(Model, pk)` per lookup per chiave primaria
-3. Rimuovere progressivamente l'applicazione dello shim file per file
-4. Aggiungere un test sentinella che verifica che nessun file di test importi classi dallo shim
-5. Eliminare `fix_tests.py` quando tutti i test sono migrati
-
-**Criteri di successo:**  
-- `fix_tests.py` non esiste più nel repository  
-- `pytest.ini` mantiene `error::sqlalchemy.exc.LegacyAPIWarning`  
-- L'intera suite di 165 test passa senza shim attivi  
-- La CI esegue i test con `filterwarnings = error::sqlalchemy` su ogni PR
+| Modalità | Backend | Descrizione |
+|----------|---------|-------------|
+| **Locale** | subprocess Python | Client lanciati come sottoprocessi sul server YWeb. Default per sviluppo e uso desktop. |
+| **HPC** | Ray (cluster) | Agenti distribuiti su cluster via Ray. Configurazione separata per ogni client. Sincronizzazione log via polling. |
+| **Ad-hoc** | subprocess isolato | Singolo client avviato manualmente per test o debug. |
+| **Desktop** | PyInstaller + pywebview | Bundle standalone (.app/.exe) con UI nativa. DB in path scrivibile separato. |
 
 ---
 
-### CRITICITÀ 5 — Proliferazione di Branch e Gestione Repository
+## 10. YClient (submodule)
 
-**Severità:** 🟡 Media  
-**Localizzazione:** Repository git (110+ branch, ~85 branch `copilot/`)
+`external/YClient/` — libreria Python per la simulazione degli agenti, pubblicata separatamente come package `yclient`.
 
-**Impatto:** La navigazione del repository è compromessa. È difficile distinguere lo stato del lavoro in corso da branch abbandonati. La storia degli sviluppi è frammentata e inutilizzabile per audit o onboarding di nuovi collaboratori.
+Struttura principale:
+- `y_client/classes/` — `base_agent.py`, `page_agent.py`, `fake_base_agent.py`, `fake_page_agent.py`, `time.py`
+- `y_client/clients/` — `client_base.py`, `client_web.py`, `client_with_pages.py`
+- `y_client/recsys/` — recommendation systems lato client
 
-**Pipeline di risoluzione:**
-
-1. Classificare i branch `copilot/` in tre categorie: già mergiato nel main, ancora rilevante, abbandonato
-2. Eliminare i branch `copilot/` già mergiati o abbandonati:
-   ```bash
-   git branch -d <branch>           # localmente
-   git push origin --delete <branch> # remotamente
-   ```
-3. Definire una branch naming convention per il team (e.g., `feat/`, `fix/`, `chore/`, `research/`)
-4. Configurare una policy GitHub per l'eliminazione automatica dei branch dopo il merge
-5. Archiviare i branch tematici non più attivi (e.g., `simple_ABM`, `second-skin`) come tag git prima della cancellazione
-
-**Criteri di successo:**  
-- Branch totali < 20 (main + branch tematici attivi + branch feature in corso)  
-- Zero branch `copilot/` nel repository  
-- La PR page è leggibile e riflette lo stato reale del lavoro  
-- La policy di auto-delete post-merge è abilitata su GitHub
+Il client comunica con YWeb via API REST (`api_social`, `api_reddit`). Ogni agente è un'istanza della classe `Agent` (o `PageAgent` per pagine istituzionali) che esegue azioni sociali (post, follow, react, ecc.) secondo un profilo demografico e LLM configurato.
 
 ---
 
-### CRITICITÀ 6 — Duplicazione Directory `experiment` vs `experiments`
+## 11. Test suite
 
-**Severità:** 🟡 Media  
-**Localizzazione:** `y_web/src/experiment/` e `y_web/src/experiments/`
+| Metrica | Valore |
+|---------|--------|
+| File di test | 169 |
+| LOC test | ~39.000 |
+| Framework | pytest |
+| Copertura | pytest-cov → Codecov |
+| Python CI | 3.10 (Ubuntu, GitHub Actions) |
+| DB in test | `sqlite:///:memory:` (TestingConfig) |
 
-**Impatto:** Ambiguità su dove risiede la logica degli esperimenti. Potenziale duplicazione di codice o responsabilità sovrapposte.
+Test organizzati per area: `test_phase*` (audit struttura moduli), `test_hpc_*` (HPC), `test_forum_*` (forum), `test_admin_*` (dashboard), ecc. Il file `_sa2_stubs.py` fornisce shim centralizzato per compatibilità SQLAlchemy 2.x nei mock di test.
 
-**Pipeline di risoluzione:**
-
-1. Analizzare il contenuto e le dipendenze di entrambe le directory
-2. Se `experiments/` contiene logica residua dell'era pre-refactoring, consolidarla in `experiment/` con le dovute PR
-3. Eliminare la directory vuota/residua e aggiornare tutti gli import
-4. Aggiungere un test di struttura (`test_app_structure.py` esiste già) che verifica l'assenza di directory duplicate
-
-**Criteri di successo:**  
-- Esiste una sola directory `experiment` (senza plurale)  
-- Tutti gli import referenziano il percorso corretto  
-- Nessuna duplicazione di classi o funzioni tra le due
+`conftest.py` include un meccanismo di remapping dei path legacy (`/Users/rossetti/PycharmProjects/YWeb`) per garantire portabilità dei test.
 
 ---
 
-### CRITICITÀ 7 — Gestione dei Repository Esterni senza Git Submodules
+## 12. Frontend
 
-**Severità:** 🟡 Media  
-**Localizzazione:** `external/` (7 repository copiati manualmente)
+| Asset | Quantità |
+|-------|---------|
+| Template HTML | 118 |
+| File JavaScript | 97 |
+| File CSS | 32 |
+| Immagini / SVG | ~10.400 |
 
-**Impatto:** Non è possibile tracciare a quale commit di ogni repo esterno corrisponde la copia locale. Aggiornamenti manuali soggetti ad errori. Nessuna garanzia di riproducibilità degli esperimenti su macchine diverse.
-
-**Pipeline di risoluzione:**
-
-1. Convertire `external/` da copie manuali a **git submodules** con pinning esplicito al commit:
-   ```bash
-   git submodule add https://github.com/YSocialTwin/YClient external/YClient
-   git submodule add https://github.com/YSocialTwin/YServer external/YServer
-   # … ecc.
-   ```
-2. Registrare la versione di ciascun submodule compatibile con la versione 4.0.0 di YWeb
-3. Aggiornare `external_runtime/manager.py` e `registry.py` per leggere i submodule
-4. Documentare il processo di update dei submodule nel `CONTRIBUTING.md`
-5. Aggiungere alla CI un check che verifica che i submodule siano aggiornati al commit pinnato
-
-**Criteri di successo:**  
-- `.gitmodules` elenca tutti e 7 i repository esterni  
-- `git submodule status` mostra commit esatti e non modifiche locali  
-- Il clone del repository con `--recurse-submodules` riproduce l'ambiente correttamente  
-- La CI fallisce se un submodule punta a un commit non-tagged
+Template organizzati in 7 directory: `admin/`, `error_pages/`, `forum/`, `login/`, `microblogging/`, `photo/`, `shared/`. Rendering server-side con Jinja2. Nessun framework JS moderno (Vue/React); JS vanilla + librerie esterne incluse staticamente.
 
 ---
 
-### CRITICITÀ 8 — Assenza di Gestione Centralizzata della Configurazione
+## 13. CI/CD e deployment
 
-**Severità:** 🟡 Media  
-**Localizzazione:** `y_social.py`, `y_web/__init__.py`, configurazione distribuita
+**GitHub Actions** (`.github/workflows/`):
+- `ci-tests.yml` — push/PR: install, pytest con coverage, upload Codecov
+- `build-executables.yml` — build binari PyInstaller (macOS, Windows, Linux)
+- `release_package.yml` — pubblicazione release
+- `format-code.yml` — isort + black (auto-commit con `[skip ci]`)
 
-**Impatto:** Configurazioni come `SECRET_KEY`, URL del database, URL LLM, parametri Redis sono sparsi tra codice, variabili d'ambiente, e argomenti CLI senza un punto di verità unico. Difficile configurare ambienti diversi (sviluppo, test, produzione) in modo affidabile.
+**Docker** (`deployment/docker/`):
+- Base: Ubuntu + Python 3 + Ollama
+- Varianti: SQLite, PostgreSQL, GPU (CUDA), reverse proxy nginx
+- Docker Compose per orchestrazione multi-container
 
-**Pipeline di risoluzione:**
+**Configurazione runtime** via variabili d'ambiente:
 
-1. Creare un modulo `y_web/config.py` con classi di configurazione (`DevelopmentConfig`, `TestingConfig`, `ProductionConfig`) che caricano da variabili d'ambiente
-2. Centralizzare tutti i parametri configurabili: `SECRET_KEY`, `DATABASE_URL`, `LLM_BACKEND`, `LLM_URL`, `REDIS_URL`, `RAY_ADDRESS`
-3. Aggiornare `create_app()` per accettare una classe di configurazione
-4. Creare `.env.example` documentato con tutti i parametri richiesti
-5. Aggiornare la documentazione di deployment
-
-**Criteri di successo:**  
-- Nessun parametro di configurazione hardcoded nel sorgente  
-- `python -c "from y_web.config import ProductionConfig; ProductionConfig.validate()"` verifica tutti i requisiti  
-- I test usano `TestingConfig` con database in-memory  
-- Il `README` documenta ogni variabile d'ambiente supportata
-
----
-
-### CRITICITÀ 9 — Lock delle Dipendenze Non Standardizzato
-
-**Severità:** 🟢 Bassa  
-**Localizzazione:** `requirements.lock`, `requirements-baseline.txt`, `requirements/base.txt`
-
-**Impatto:** Tre file con ruoli sovrapposti e semantiche diverse. `requirements.lock` non è in un formato standard riconosciuto da `pip` o `pip-tools`. Riproducibilità degli ambienti potenzialmente compromessa.
-
-**Pipeline di risoluzione:**
-
-1. Adottare `pip-tools` o `uv` per la gestione dei lock file
-2. `requirements/base.txt` → file di input con dipendenze senza pin
-3. `requirements/base.lock.txt` → file generato automaticamente con tutti i pin transitivi
-4. Eliminare `requirements.lock` e `requirements-baseline.txt` come duplicati
-5. Aggiungere alla CI una verifica che il lock file sia aggiornato rispetto alle dipendenze dichiarate
-
-**Criteri di successo:**  
-- Un solo file lock generato automaticamente e verificato in CI  
-- `pip install -r requirements/base.lock.txt` produce un ambiente identico su macchine diverse  
-- Il processo di aggiornamento delle dipendenze è documentato e automatizzato (es. Dependabot)
+| Variabile | Uso |
+|-----------|-----|
+| `YSOCIAL_SECRET_KEY` | Flask secret key (obbligatoria in produzione) |
+| `FLASK_ENV` | Selezione config (development/testing/production) |
+| `PG_HOST/PORT/DBNAME/USER/PASSWORD` | Connessione PostgreSQL |
+| `DATABASE_URL` | URI database alternativo |
 
 ---
 
-## 7. Riepilogo Priorità e Roadmap
+## 14. Dipendenze principali
 
-| # | Criticità | Severità | Effort Stimato | Priorità |
-|---|---|---|---|---|
-| 1 | Secret Key hardcoded | 🔴 Critica | Basso (1-2h) | **Immediata** |
-| 2 | Database runtime in git | 🔴 Critica | Medio (4-8h) | **Immediata** |
-| 3 | Sistema migrazione senza framework | 🟠 Alta | Alto (3-5 giorni) | Sprint 1 |
-| 4 | Shim SA2 nei test | 🟠 Alta | Alto (3-5 giorni) | Sprint 1 |
-| 5 | Proliferazione branch git | 🟡 Media | Basso (2-4h) | Sprint 1 |
-| 6 | Duplicazione `experiment` vs `experiments` | 🟡 Media | Basso (2-4h) | Sprint 2 |
-| 7 | External repos senza submodules | 🟡 Media | Medio (1-2 giorni) | Sprint 2 |
-| 8 | Configurazione distribuita | 🟡 Media | Medio (1-2 giorni) | Sprint 2 |
-| 9 | Lock dipendenze non standardizzato | 🟢 Bassa | Basso (2-4h) | Sprint 3 |
+Gestite con **pip-tools** (`requirements/base.in` → `base.txt`):
 
-### Roadmap consigliata
-
-**Fase 0 — Immediate (questa settimana)**  
-Risolvere criticità 1 e 2: sicurezza della secret key e pulizia dei database dal repository. Entrambe hanno impatto immediato su sicurezza e igiene del repository con effort minimo.
-
-**Sprint 1 (2-3 settimane)**  
-Completare la migrazione SA2 eliminando lo shim (criticità 4), fare pruning dei branch `copilot/` (criticità 5), e iniziare la valutazione di Flask-Migrate (criticità 3 — fase di studio).
-
-**Sprint 2 (1 mese)**  
-Adottare Flask-Migrate per le future migrazioni (criticità 3), risolvere la duplicazione di directory (criticità 6), convertire `external/` a submodules (criticità 7), centralizzare la configurazione (criticità 8).
-
-**Sprint 3 (ongoing)**  
-Standardizzare il lock delle dipendenze (criticità 9) e istituire revisioni periodiche della codebase.
+| Categoria | Librerie principali |
+|-----------|-------------------|
+| Web | Flask 3.x, Flask-Login, Flask-SQLAlchemy, Flask-WTF, Flask-Migrate, Werkzeug |
+| Database | SQLAlchemy 2.x, sqlalchemy_utils, psycopg2-binary |
+| LLM | langchain ≥0.3, langchain-ollama, langchain-openai, ollama |
+| Distribuzione | Ray[default] ≥2.0, redis |
+| NLP/ML | nltk, detoxify, perspective |
+| Utilità | requests, tqdm, numpy, networkx, faker, feedparser, psutil, colorama |
+| Desktop | pywebview, gunicorn, gevent |
+| Interni | ysights, yclient-memory |
 
 ---
 
-## 8. Indicatori di Salute del Progetto
+## 15. Stato del codebase (branch `fix/critical-issues`)
 
-| Metrica | Stato Attuale | Target |
-|---|---|---|
-| Test files | 165 | ✅ Ottimo |
-| Branch attivi (escluso `copilot/`) | ~25 | ⚠️ Da ridurre a <15 |
-| Shim SA2 attivi | Sì (`fix_tests.py`) | ❌ Da eliminare |
-| Secret key hardcoded | Sì | ❌ Da correggere |
-| DB runtime in git | Sì (~63 MB) | ❌ Da rimuovere |
-| Sistema migrazione | Script custom | ⚠️ Valutare Alembic |
-| Lock dipendenze standardizzato | No | ⚠️ Da migliorare |
-| Submodules per repo esterni | No (copie manuali) | ⚠️ Da convertire |
-| Configurazione centralizzata | No | ⚠️ Da implementare |
-| Documentazione deploy | Parziale (README + MkDocs) | ⚠️ Da completare |
+Rispetto a `main`, il branch corrente incorpora le seguenti correzioni e miglioramenti:
+
+| Commit | Modifica |
+|--------|---------|
+| `69c766b9` | C1: rimozione SECRET_KEY hardcoded → `$YSOCIAL_SECRET_KEY` |
+| `53b518c6` | C2: `.gitignore` rafforzato per DB runtime (*.db, WAL, FUSE) |
+| `8b3bad6f` | Fix Python <3.10: `from __future__ import annotations` in `config.py` |
+| `9cf5090f` | Fix `helpers.py`: `Path(get_writable_path()) / "y_web"` |
+| `d7981a38` | C4: shim SA2 centralizzato in `tests/_sa2_stubs.py` |
+| `607b858f` | C8: config centralizzata in `y_web/config.py` |
+| `e9714424` | C9: lock dipendenze con struttura pip-tools |
+| `6f38891d` | C3: integrazione Flask-Migrate/Alembic |
+| `ebc49b66` | C3: auto-stamp DB pre-Alembic al primo avvio |
 
 ---
 
-*Documento da aggiornare ad ogni major release o ciclo di sprint.*
+## 16. Aree di attenzione residue
+
+| Area | Nota |
+|------|------|
+| **Branch stale** | Rimossi localmente. Pulizia remota (`origin/copilot/*`) ancora da eseguire. |
+| **Alembic multi-bind** | La configurazione Alembic corrente gestisce un solo bind. La migrazione di `db_exp` (per-esperimento, UUID-based) richiederà una strategia separata quando verranno introdotte nuove colonne nel DB esperimento. |
+| **conftest.py path hardcoded** | `_LEGACY_ROOT = Path("/Users/rossetti/PycharmProjects/YWeb")` — residuo di sviluppo locale, non critico ma da rimuovere. |
+| **CI Python version** | CI usa Python 3.10, il codebase dichiara compatibilità ≥3.9. Il fix `from __future__ import annotations` è stato necessario per Python 3.9. Verificare copertura su 3.9. |
+| **Static assets volume** | ~10.400 immagini in `y_web/static/` rendono il repository pesante. Candidati a gitignore o LFS se la dimensione diventa problematica. |
+
+---
+
+*Documento aggiornato il 4 settembre 2026 — analisi eseguita su branch `fix/critical-issues` (commit `ebc49b66`).*
