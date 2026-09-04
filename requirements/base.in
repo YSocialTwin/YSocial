@@ -1,6 +1,7 @@
-# Baseline requirements for YWeb (SQLAlchemy 2.x / Flask 3.x)
-# This file tracks the minimum pinned versions for reproducible installs.
-# For development, use requirements.txt which may have looser bounds.
+# Direct dependencies for YWeb (SQLAlchemy 2.x / Flask 3.x)
+# INPUT for pip-compile — edit this file, then run:
+#   pip-compile requirements/base.in --output-file requirements/base.txt
+# DO NOT edit requirements/base.txt manually.
 
 # --- Web & Database ---
 Flask>=3.0
@@ -8,6 +9,7 @@ Flask-Login>=0.6.2
 Flask-SQLAlchemy>=3.0
 SQLAlchemy>=2.0,<3.0
 Flask-WTF>=1.2
+python-dotenv>=1.0
 WTForms>=3.0
 Werkzeug>=3.0,<4.0
 Jinja2>=3.1

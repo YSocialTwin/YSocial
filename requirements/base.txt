@@ -1,4 +1,6 @@
-# Production dependencies for YWeb (SQLAlchemy 2.x / Flask 3.x)
+# Generated lock file — DO NOT edit manually.
+# To regenerate: pip-compile requirements/base.in --output-file requirements/base.txt
+# To add/change a dependency: edit requirements/base.in, then re-run pip-compile.
 
 # --- Web & Database ---
 Flask==3.0.3

@@ -1,4 +1,22 @@
-# Main requirements — delegates to requirements/base.txt
-# For development: pip install -r requirements/dev.txt
-# For testing:     pip install -r requirements/test.txt
+# YSocial — main requirements entry point
+#
+# Structure:
+#   requirements/base.in   — direct production deps (edit this)
+#   requirements/base.txt  — generated production lock (pip-compile output)
+#   requirements/dev.in    — direct dev deps (edit this)
+#   requirements/dev.txt   — generated dev lock
+#   requirements/test.in   — direct test deps (edit this)
+#   requirements/test.txt  — generated test lock
+#
+# Usage:
+#   Production install:    pip install -r requirements/base.txt
+#   Development install:   pip install -r requirements/dev.txt
+#   Test install:          pip install -r requirements/test.txt
+#
+# To regenerate locks after editing .in files:
+#   pip install pip-tools
+#   pip-compile requirements/base.in  --output-file requirements/base.txt
+#   pip-compile requirements/dev.in   --output-file requirements/dev.txt
+#   pip-compile requirements/test.in  --output-file requirements/test.txt
+
 -r requirements/base.txt
