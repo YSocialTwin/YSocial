@@ -11,7 +11,7 @@
 | Criticità | Effort | Stato |
 |---|---|---|
 | C1 — Secret Key hardcoded | 2h | ✅ Risolto — commit `69c766b9` |
-| C2 — Database runtime in git | 3h | ⏳ Da fare |
+| C2 — Database runtime in git | 3h | ✅ Risolto — commit `53b518c6` |
 | C3 — Flask-Migrate | 3-5gg | ⏳ Da fare |
 | C4 — Eliminazione shim SA2 | 3-5gg | ⏳ Da fare |
 | C5 — Pulizia branch stale | 3h | ⏳ Da fare |
@@ -33,88 +33,6 @@ Ogni criticità è strutturata in:
 ---
 
 ## FASE 0 — Immediata
-
----
-
-### C2 — File di Database Runtime Tracciati in Git
-
-**Severità:** 🔴 Critica | **Effort:** ~3 ore | **Rischio rollback:** Basso
-
-#### Contesto
-
-I seguenti file sono attualmente tracciati da git ma non dovrebbero esserlo:
-
-| File | Dimensione | Problema |
-|---|---|---|
-| `y_web/db/dashboard.db` | ~58 MB | Database runtime attivo |
-| `y_web/db/dummy.db` | ~5 MB | Database runtime di test |
-| `y_web/db/database.db` | 0 B | File vuoto residuo |
-| `y_web/system/yweb.db` | 0 B | File vuoto residuo |
-| `y_web/yweb.db` | 0 B | File vuoto residuo |
-
-I `.fuse_hidden*` in `y_web/db/` sono file temporanei del filesystem FUSE (visibili perché i database sono aperti da un processo) — non devono mai essere tracciati.
-
-#### Passi di implementazione
-
-**1. Aggiornare `.gitignore`** nella root del repository. Aggiungere:
-
-```gitignore
-# --- Database runtime (mai committare) ---
-y_web/db/*.db
-y_web/db/*.db-shm
-y_web/db/*.db-wal
-y_web/system/*.db
-y_web/*.db
-*.fuse_hidden*
-
-# Eccezione: schemi di riferimento vuoti in data_schema/ sono OK
-!data_schema/*.db
-```
-
-**2. Rimuovere i file dal tracking git** (senza cancellarli dal disco):
-
-```bash
-git rm --cached y_web/db/dashboard.db
-git rm --cached y_web/db/dummy.db
-git rm --cached y_web/db/database.db
-git rm --cached y_web/system/yweb.db
-git rm --cached y_web/yweb.db
-git rm --cached "y_web/db/.fuse_hidden*"  # se presenti nel tracking
-```
-
-**3. Committare la rimozione:**
-
-```bash
-git add .gitignore
-git commit -m "chore(C2): rimuovi database runtime dal tracking git
-
-I file .db in y_web/db/ e y_web/system/ sono database runtime
-che non devono essere versionati. Aggiornato .gitignore di conseguenza.
-Il contenuto su disco non viene modificato."
-```
-
-**4. Nota su history passata**  
-Se la dimensione del repository è un problema (i ~63 MB sono già nella history), valutare `git filter-repo --path y_web/db/dashboard.db --invert-paths` — ma questa operazione riscrive la history e richiede il coordinamento di tutto il team prima di eseguirla. Trattare come task separato.
-
-#### Verifica
-
-```bash
-# Deve restituire solo i file in data_schema/
-git ls-files | grep '\.db$'
-
-# Deve essere vuoto (nessun file .db tracciato fuori da data_schema/)
-git ls-files | grep '\.db$' | grep -v '^data_schema/'
-
-# Il file esiste ancora su disco (non è stato cancellato)
-ls -lh y_web/db/dashboard.db
-```
-
-#### Definizione di "Done"
-
-- [ ] `git ls-files | grep '\.db$' | grep -v '^data_schema/'` → nessun risultato
-- [ ] I file database esistono ancora su disco e l'applicazione funziona normalmente
-- [ ] `.gitignore` contiene le regole per `*.db`, `*.db-shm`, `*.db-wal`, `.fuse_hidden*`
-- [ ] Un nuovo database creato dall'applicazione non compare in `git status`
 
 ---
 
