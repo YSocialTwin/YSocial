@@ -33,6 +33,7 @@ from flask import (
     url_for,
 )
 from flask_login import current_user, login_required, login_user
+from sqlalchemy import select
 
 from y_web import db  # , app
 from y_web.src.content.avatars import normalize_forum_avatar_mode
@@ -336,8 +337,10 @@ def rss_feeds(uid):
         return error_response
 
     url_feeds_path = os.path.join(experiment_dir, "url_feeds.txt")
-    available_rss_resources = ForumRssFeedResource.query.order_by(
-        ForumRssFeedResource.name.asc(), ForumRssFeedResource.id.asc()
+    available_rss_resources = db.session.scalars(
+        select(ForumRssFeedResource).order_by(
+            ForumRssFeedResource.name.asc(), ForumRssFeedResource.id.asc()
+        )
     ).all()
     selected_rss_resource_ids = _selected_rss_resource_ids(
         experiment_dir, available_rss_resources
@@ -377,8 +380,10 @@ def update_rss_feeds(uid):
             continue
 
     resources = (
-        ForumRssFeedResource.query.filter(
-            ForumRssFeedResource.id.in_(selected_ids)
+        db.session.scalars(
+            select(ForumRssFeedResource).filter(
+                ForumRssFeedResource.id.in_(selected_ids)
+            )
         ).all()
         if selected_ids
         else []
@@ -589,8 +594,10 @@ def upload_url_feeds(uid):
 def forum_rss_resources():
     """Manage reusable RSS feed resources for forum simulations."""
     check_privileges(current_user.username)
-    resources = ForumRssFeedResource.query.order_by(
-        ForumRssFeedResource.name.asc(), ForumRssFeedResource.id.asc()
+    resources = db.session.scalars(
+        select(ForumRssFeedResource).order_by(
+            ForumRssFeedResource.name.asc(), ForumRssFeedResource.id.asc()
+        )
     ).all()
     return render_template(
         "admin/forum_rss_resources.html",
@@ -630,8 +637,8 @@ def create_forum_rss_resource():
         flash(str(exc), "error")
         return redirect("/admin/forum_rss_resources")
 
-    existing = ForumRssFeedResource.query.filter_by(
-        feed_url=normalized["feed_url"]
+    existing = db.session.scalars(
+        select(ForumRssFeedResource).filter_by(feed_url=normalized["feed_url"])
     ).first()
     if existing is None:
         existing = ForumRssFeedResource(feed_url=normalized["feed_url"])
@@ -653,7 +660,7 @@ def create_forum_rss_resource():
 def delete_forum_rss_resource(resource_id):
     """Delete a reusable forum RSS resource."""
     check_privileges(current_user.username)
-    resource = ForumRssFeedResource.query.get(resource_id)
+    resource = db.session.get(ForumRssFeedResource, resource_id)
     if resource is None:
         flash("RSS feed resource not found.", "error")
         return redirect("/admin/forum_rss_resources")
@@ -672,8 +679,10 @@ def image_feeds(uid):
     if error_response is not None:
         return error_response
 
-    available_image_resources = ForumImageFeedResource.query.order_by(
-        ForumImageFeedResource.subreddit.asc(), ForumImageFeedResource.id.asc()
+    available_image_resources = db.session.scalars(
+        select(ForumImageFeedResource).order_by(
+            ForumImageFeedResource.subreddit.asc(), ForumImageFeedResource.id.asc()
+        )
     ).all()
     selected_image_resource_ids = _selected_image_resource_ids(
         experiment_dir, available_image_resources
@@ -706,8 +715,10 @@ def update_image_feeds(uid):
             continue
 
     resources = (
-        ForumImageFeedResource.query.filter(
-            ForumImageFeedResource.id.in_(selected_ids)
+        db.session.scalars(
+            select(ForumImageFeedResource).filter(
+                ForumImageFeedResource.id.in_(selected_ids)
+            )
         ).all()
         if selected_ids
         else []
@@ -808,8 +819,10 @@ def upload_image_feeds(uid):
 def forum_image_resources():
     """Manage reusable image feed resources for forum simulations."""
     check_privileges(current_user.username)
-    resources = ForumImageFeedResource.query.order_by(
-        ForumImageFeedResource.subreddit.asc(), ForumImageFeedResource.id.asc()
+    resources = db.session.scalars(
+        select(ForumImageFeedResource).order_by(
+            ForumImageFeedResource.subreddit.asc(), ForumImageFeedResource.id.asc()
+        )
     ).all()
     return render_template(
         "admin/forum_image_resources.html",
@@ -859,8 +872,8 @@ def create_forum_image_resource():
         flash(str(exc), "error")
         return redirect("/admin/forum_image_resources")
 
-    existing = ForumImageFeedResource.query.filter_by(
-        subreddit=normalized["subreddit"]
+    existing = db.session.scalars(
+        select(ForumImageFeedResource).filter_by(subreddit=normalized["subreddit"])
     ).first()
     if existing is None:
         existing = ForumImageFeedResource(subreddit=normalized["subreddit"])
@@ -880,7 +893,7 @@ def create_forum_image_resource():
 def delete_forum_image_resource(resource_id):
     """Delete a reusable forum image feed resource."""
     check_privileges(current_user.username)
-    resource = ForumImageFeedResource.query.get(resource_id)
+    resource = db.session.get(ForumImageFeedResource, resource_id)
     if resource is None:
         flash("Image feed resource not found.", "error")
         return redirect("/admin/forum_image_resources")

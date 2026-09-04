@@ -7,6 +7,7 @@ from pathlib import Path
 
 from flask import flash, redirect, request, url_for
 from flask_login import current_user, login_required
+from sqlalchemy import select
 
 from y_web import db
 from y_web.routes.admin.sub.experiments._helpers import (
@@ -90,9 +91,11 @@ def reset_client(uid):
     BASE_DIR = get_writable_path()
 
     # delete experiment json files
-    client = Client.query.filter_by(id=uid).first()
-    exp = Exps.query.filter_by(idexp=client.id_exp).first()
-    population = Population.query.filter_by(id=client.population_id).first()
+    client = db.session.scalars(select(Client).filter_by(id=uid)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()
+    population = db.session.scalars(
+        select(Population).filter_by(id=client.population_id)
+    ).first()
     exp_folder = exp.db_name.split(os.sep)[1]
     exp_dir = Path(BASE_DIR) / "y_web" / "experiments" / exp_folder
 
@@ -158,7 +161,7 @@ def extend_simulation(id_client):
     check_privileges(current_user.username)
 
     # check if the client exists
-    client = Client.query.filter_by(id=id_client).first()
+    client = db.session.scalars(select(Client).filter_by(id=id_client)).first()
     if client is None:
         flash("Client not found.", "error")
         return redirect(request.referrer)
@@ -167,7 +170,9 @@ def extend_simulation(id_client):
     days = int(request.form.get("days"))
 
     # get the client execution
-    client_execution = Client_Execution.query.filter_by(client_id=id_client).first()
+    client_execution = db.session.scalars(
+        select(Client_Execution).filter_by(client_id=id_client)
+    ).first()
 
     # update the client days field
     client = db.session.query(Client).filter_by(id=id_client).first()
@@ -179,7 +184,7 @@ def extend_simulation(id_client):
     db.session.commit()
 
     # Check if the experiment was completed, and reset to stopped if so
-    exp = Exps.query.filter_by(idexp=client.id_exp).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()
     if exp and exp.exp_status == "completed":
         exp.exp_status = "stopped"
         db.session.commit()
@@ -203,7 +208,9 @@ def extend_simulation(id_client):
                 exp_folder = exp.db_name.removeprefix("experiments_")
 
             # Get population for the client
-            population = Population.query.filter_by(id=client.population_id).first()
+            population = db.session.scalars(
+                select(Population).filter_by(id=client.population_id)
+            ).first()
             if not population:
                 flash(
                     "Warning: Could not find population record. Extension applied to database only.",
@@ -395,7 +402,7 @@ def run_client(uid, idexp):
     check_privileges(current_user.username)
 
     # get experiment
-    exp = Exps.query.filter_by(idexp=idexp).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=idexp)).first()
     if _experiment_configuration_update_required(exp):
         flash(
             "Update Experiment Configuration before running clients for this experiment.",
@@ -403,7 +410,7 @@ def run_client(uid, idexp):
         )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
     # get the client
-    client = Client.query.filter_by(id=uid).first()
+    client = db.session.scalars(select(Client).filter_by(id=uid)).first()
 
     # For remote experiments, allow running clients without server check
     # For local experiments, check if the experiment is already running
@@ -411,7 +418,9 @@ def run_client(uid, idexp):
         return redirect(request.referrer)
 
     # get population of the experiment
-    population = Population.query.filter_by(id=client.population_id).first()
+    population = db.session.scalars(
+        select(Population).filter_by(id=client.population_id)
+    ).first()
 
     try:
         start_client_for_experiment(exp, client, population, resume=True)
@@ -447,7 +456,7 @@ def resume_client(uid, idexp):
     check_privileges(current_user.username)
 
     # get experiment
-    exp = Exps.query.filter_by(idexp=idexp).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=idexp)).first()
     if _experiment_configuration_update_required(exp):
         flash(
             "Update Experiment Configuration before running clients for this experiment.",
@@ -455,7 +464,7 @@ def resume_client(uid, idexp):
         )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
     # get the client
-    client = Client.query.filter_by(id=uid).first()
+    client = db.session.scalars(select(Client).filter_by(id=uid)).first()
 
     # For remote experiments, allow running clients without server check
     # For local experiments, check if the experiment is already running
@@ -463,7 +472,9 @@ def resume_client(uid, idexp):
         return redirect(request.referrer)
 
     # get population of the experiment
-    population = Population.query.filter_by(id=client.population_id).first()
+    population = db.session.scalars(
+        select(Population).filter_by(id=client.population_id)
+    ).first()
 
     try:
         start_client_for_experiment(exp, client, population, resume=True)
@@ -498,7 +509,7 @@ def pause_client(uid, idexp):
     """Handle pause client operation."""
     check_privileges(current_user.username)
 
-    exp = Exps.query.filter_by(idexp=idexp).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=idexp)).first()
     if _experiment_configuration_update_required(exp):
         flash(
             "Update Experiment Configuration before changing client execution state.",
@@ -507,7 +518,7 @@ def pause_client(uid, idexp):
         return redirect(url_for("experiments.experiment_details", uid=idexp))
 
     # get client and experiment
-    client = Client.query.filter_by(id=uid).first()
+    client = db.session.scalars(select(Client).filter_by(id=uid)).first()
     if client is None:
         flash("Client not found.", "error")
         return redirect(url_for("experiments.experiment_details", uid=idexp))
@@ -528,7 +539,7 @@ def pause_client(uid, idexp):
 
     # For remote experiments, check if all clients are stopped
     if exp.is_remote == 1:
-        all_clients = Client.query.filter_by(id_exp=idexp).all()
+        all_clients = db.session.scalars(select(Client).filter_by(id_exp=idexp)).all()
         any_running = any(c.status == 1 for c in all_clients)
         if not any_running and exp.running == 1:
             # All clients stopped, set experiment to stopped
@@ -549,8 +560,8 @@ def stop_client(uid, idexp):
     check_privileges(current_user.username)
 
     # get client and experiment
-    client = Client.query.filter_by(id=uid).first()
-    exp = Exps.query.filter_by(idexp=idexp).first()
+    client = db.session.scalars(select(Client).filter_by(id=uid)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=idexp)).first()
     if client is None:
         flash("Client not found.", "error")
         return redirect(url_for("experiments.experiment_details", uid=idexp))
@@ -574,7 +585,7 @@ def stop_client(uid, idexp):
 
     # For remote experiments, check if all clients are stopped
     if exp.is_remote == 1:
-        all_clients = Client.query.filter_by(id_exp=idexp).all()
+        all_clients = db.session.scalars(select(Client).filter_by(id_exp=idexp)).all()
         any_running = any(c.status == 1 for c in all_clients)
         if not any_running and exp.running == 1:
             # All clients stopped, set experiment to stopped
@@ -594,7 +605,7 @@ def run_adhoc_client(idexp, client_key):
     """Start a file-backed ad hoc plugin client."""
     check_privileges(current_user.username)
 
-    exp = Exps.query.filter_by(idexp=idexp).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=idexp)).first()
     if _experiment_configuration_update_required(exp):
         flash(
             "Update Experiment Configuration before running ad hoc clients for this experiment.",
@@ -622,7 +633,7 @@ def pause_adhoc_client(idexp, client_key):
     """Pause a file-backed ad hoc plugin client."""
     check_privileges(current_user.username)
 
-    exp = Exps.query.filter_by(idexp=idexp).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=idexp)).first()
     if _experiment_configuration_update_required(exp):
         flash(
             "Update Experiment Configuration before changing ad hoc client execution state.",

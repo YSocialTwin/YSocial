@@ -17,6 +17,7 @@ import logging
 import time
 from datetime import datetime
 
+from sqlalchemy import delete, select
 from sqlalchemy.exc import OperationalError, PendingRollbackError
 
 from y_web import db
@@ -108,11 +109,13 @@ def get_log_file_offset(exp_id, log_file_type, file_path, client_id=None):
     Returns:
         int: Last read offset in bytes (0 if not found)
     """
-    offset_record = LogFileOffset.query.filter_by(
-        exp_id=exp_id,
-        log_file_type=log_file_type,
-        file_path=file_path,
-        client_id=client_id,
+    offset_record = db.session.scalars(
+        select(LogFileOffset).filter_by(
+            exp_id=exp_id,
+            log_file_type=log_file_type,
+            file_path=file_path,
+            client_id=client_id,
+        )
     ).first()
 
     if offset_record:
@@ -133,11 +136,13 @@ def update_log_file_offset(
         new_offset: New offset in bytes
         client_id: Client ID (only for client logs)
     """
-    offset_record = LogFileOffset.query.filter_by(
-        exp_id=exp_id,
-        log_file_type=log_file_type,
-        file_path=file_path,
-        client_id=client_id,
+    offset_record = db.session.scalars(
+        select(LogFileOffset).filter_by(
+            exp_id=exp_id,
+            log_file_type=log_file_type,
+            file_path=file_path,
+            client_id=client_id,
+        )
     ).first()
 
     if offset_record:
@@ -170,12 +175,16 @@ def reset_hpc_client_metrics(exp_id, client_id):
     """
     try:
         # Delete existing client metrics
-        ClientLogMetrics.query.filter_by(exp_id=exp_id, client_id=client_id).delete()
+        db.session.execute(
+            delete(ClientLogMetrics).filter_by(exp_id=exp_id, client_id=client_id)
+        )
 
         # Delete file offsets for this client
-        LogFileOffset.query.filter_by(
-            exp_id=exp_id, log_file_type="client", client_id=client_id
-        ).delete()
+        db.session.execute(
+            delete(LogFileOffset).filter_by(
+                exp_id=exp_id, log_file_type="client", client_id=client_id
+            )
+        )
 
         success = _commit_with_retry(db.session)
         if success:
@@ -200,10 +209,12 @@ def reset_hpc_server_metrics(exp_id):
     """
     try:
         # Delete existing server metrics
-        ServerLogMetrics.query.filter_by(exp_id=exp_id).delete()
+        db.session.execute(delete(ServerLogMetrics).filter_by(exp_id=exp_id))
 
         # Delete file offsets for server logs
-        LogFileOffset.query.filter_by(exp_id=exp_id, log_file_type="server").delete()
+        db.session.execute(
+            delete(LogFileOffset).filter_by(exp_id=exp_id, log_file_type="server")
+        )
 
         success = _commit_with_retry(db.session)
         if success:

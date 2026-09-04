@@ -10,6 +10,9 @@ import tempfile
 import pytest
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func, select
+
+from y_web import db
 
 pytestmark = pytest.mark.integration
 
@@ -61,7 +64,7 @@ def test_session_cleanup_on_request():
                 assert response.status_code == 200
 
             # Verify all objects were created
-            count = TestModel.query.count()
+            count = db.session.scalar(select(func.count()).select_from(TestModel))
             assert count == 10
 
     # Cleanup
@@ -119,7 +122,7 @@ def test_session_with_nullpool():
                 assert response.status_code == 200
 
             # Verify all objects were created
-            count = TestModel.query.count()
+            count = db.session.scalar(select(func.count()).select_from(TestModel))
             assert count == 50
 
     # Cleanup
@@ -194,7 +197,7 @@ def test_session_removal_after_exception():
 
             # Verify that the success object was created
             # The error route committed before raising, so both objects should exist
-            count = TestModel.query.count()
+            count = db.session.scalar(select(func.count()).select_from(TestModel))
             assert count == 2
 
     # Cleanup
@@ -261,7 +264,7 @@ def test_concurrent_requests():
 
     # Verify all objects were created
     with app.app_context():
-        count = TestModel.query.count()
+        count = db.session.scalar(select(func.count()).select_from(TestModel))
         assert count == 10
 
     # Cleanup

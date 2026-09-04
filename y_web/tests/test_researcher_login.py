@@ -12,7 +12,10 @@ import pytest
 from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import select
 from werkzeug.security import generate_password_hash
+
+from y_web import db
 
 pytestmark = pytest.mark.integration
 
@@ -95,9 +98,9 @@ def app():
         user_id_str = str(user_id)
         if user_id_str.startswith("admin_"):
             admin_id = int(user_id_str.replace("admin_", ""))
-            return Admin_users.query.get(admin_id)
+            return db.session.get(Admin_users, admin_id)
         else:
-            return User_mgmt.query.get(int(user_id))
+            return db.session.get(User_mgmt, int(user_id))
 
     # Create auth blueprint
     from flask import (
@@ -130,7 +133,7 @@ def app():
 
         from werkzeug.security import check_password_hash
 
-        user = Admin_users.query.filter_by(email=email).first()
+        user = db.session.scalars(select(Admin_users).filter_by(email=email)).first()
 
         if not user or not check_password_hash(user.password, password):
             flash("Please check your login details and try again.")
@@ -139,7 +142,9 @@ def app():
         # Handle different roles
         if user.role == "user":
             # Regular users need User_mgmt entry
-            user_agent = User_mgmt.query.filter_by(username=user.username).first()
+            user_agent = db.session.scalars(
+                select(User_mgmt).filter_by(username=user.username)
+            ).first()
             if user_agent:
                 login_user(user_agent, remember=remember)
                 return "Login successful - regular user"

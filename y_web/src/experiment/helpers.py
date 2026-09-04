@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Dict, Optional
 
 from flask import current_app
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, select, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
@@ -18,7 +18,7 @@ from y_web.src.experiment.schema import ensure_experiment_schema_for_uri
 from y_web.src.models import Exps, User_mgmt
 from y_web.src.system.path_utils import get_writable_path
 
-BASE_DIR = Path(__file__).resolve().parents[1]
+BASE_DIR = get_writable_path() / "y_web"
 
 
 def get_experiment_uid_from_db_name(db_name: str) -> Optional[str]:
@@ -390,7 +390,7 @@ def active_simulation_clock() -> Optional[Dict[str, object]]:
     """
     Helper to fetch the clock for the currently active experiment, if any.
     """
-    active = Exps.query.filter_by(status=1).first()
+    active = db.session.scalars(select(Exps).filter_by(status=1)).first()
     if not active:
         return None
     return fetch_simulation_clock(active)

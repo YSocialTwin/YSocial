@@ -87,6 +87,82 @@ def pytest_collection_modifyitems(config, items):
             item.add_marker(skip_jupyter_utils_marker)
 
 
+@pytest.fixture(autouse=True)
+def _redirect_create_sqlite_db(monkeypatch):
+    """
+    Redirect create_sqlite_db() to copy real DB files to temp locations.
+
+    The y_web/db/dashboard.db may have a stale SQLite journal from a previous
+    interrupted write, causing disk I/O errors in any test that calls create_app().
+    Copying just the .db file (not the journal) to a writable temp location gives
+    each test an isolated, journal-free copy with the original seeded data intact.
+    """
+    import shutil
+    import tempfile
+
+    from sqlalchemy.pool import NullPool
+
+    _REPO_ROOT = Path(__file__).resolve().parents[2]
+    _DB_DIR = _REPO_ROOT / "y_web" / "db"
+    _REAL_DASHBOARD = _DB_DIR / "dashboard.db"
+    _REAL_DUMMY = _DB_DIR / "dummy.db"
+
+    handles = []
+
+    def _copy_create_sqlite_db(app):
+        fd_admin, path_admin = tempfile.mkstemp(suffix=".db")
+        fd_exp, path_exp = tempfile.mkstemp(suffix=".db")
+        os.close(fd_admin)
+        os.close(fd_exp)
+
+        # Copy real DB files if they exist (preserving seeded data),
+        # otherwise leave as empty SQLite files.
+        if _REAL_DASHBOARD.exists():
+            shutil.copy2(str(_REAL_DASHBOARD), path_admin)
+        if _REAL_DUMMY.exists():
+            shutil.copy2(str(_REAL_DUMMY), path_exp)
+
+        handles.extend([path_admin, path_exp])
+        app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{path_admin}"
+        app.config["SQLALCHEMY_BINDS"] = {
+            "db_admin": f"sqlite:///{path_admin}",
+            "db_exp": f"sqlite:///{path_exp}",
+        }
+        app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+            "connect_args": {"check_same_thread": False},
+            "poolclass": NullPool,
+        }
+        # Required by run_migrations() to locate the SQLite files for direct migrations
+        app.config["DASHBOARD_DB_PATH"] = path_admin
+        app.config["DUMMY_DB_PATH"] = path_exp
+
+    monkeypatch.setattr("y_web.db_init.create_sqlite_db", _copy_create_sqlite_db)
+    monkeypatch.setattr("y_web.db_init.sqlite.create_sqlite_db", _copy_create_sqlite_db)
+
+    yield
+
+    for path in handles:
+        try:
+            os.unlink(path)
+        except Exception:
+            pass
+
+
+@pytest.fixture(autouse=True)
+def _patch_db_schema_guard(monkeypatch):
+    """
+    Suppress ensure_population_username_type_column() during tests.
+
+    This function inspects the real on-disk dashboard.db to add a schema column.
+    It is irrelevant to unit/integration tests that use temp or in-memory databases,
+    and fails with a disk I/O error when the real DB has a stale SQLite journal.
+    """
+    monkeypatch.setattr(
+        "y_web.src.agents.platform.ensure_population_username_type_column",
+        lambda: None,
+    )
+
+
 @pytest.fixture
 def app():
     """Create and configure a new app instance for each test."""
@@ -161,7 +237,7 @@ def app():
         # Set up user loader for flask-login
         @login_manager.user_loader
         def load_user(user_id):
-            return User_mgmt.query.get(int(user_id))
+            return db.session.get(User_mgmt, int(user_id))
 
     yield app
 

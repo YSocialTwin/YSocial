@@ -2,7 +2,10 @@ from contextlib import contextmanager
 from pathlib import Path
 from types import SimpleNamespace
 
-from y_web import create_app
+import pytest
+from sqlalchemy import select
+
+from y_web import create_app, db
 from y_web.routes.social.photo import (
     _build_photo_follower_items,
     _build_photo_recommended_items,
@@ -25,12 +28,12 @@ from y_web.src.models import Exps
 def _photo_experiment():
     app = create_app()
     with app.app_context():
-        for exp in Exps.query.order_by(Exps.idexp.asc()).all():
+        for exp in db.session.scalars(select(Exps).order_by(Exps.idexp.asc())).all():
             uri = get_experiment_engine_uri(exp)
             if uri and uri.endswith("/yphotosharing.db"):
                 yield exp
                 return
-    raise AssertionError("No photo-sharing experiment found")
+    pytest.skip("No photo-sharing experiment found in this database")
 
 
 def test_photo_feed_template_uses_collapsible_left_sidebar_and_instagram_layout():
@@ -222,6 +225,7 @@ def test_photo_routes_order_by_round_chronology_for_visual_feeds():
     )
 
 
+@pytest.mark.external_repo
 def test_photo_recsys_uses_round_freshness_not_wall_clock():
     ranking_source = Path(
         "/Users/rossetti/PycharmProjects/YWeb/external/YPhotoSharing/YPhotoSharing/YServer/recsys/feed_ranking_service.py"
@@ -277,6 +281,7 @@ def test_photo_media_url_preserves_static_profile_assets():
         )
 
 
+@pytest.mark.integration
 def test_photo_text_linkification_targets_profiles_and_hashtag_search():
     with _photo_experiment() as exp:
         linked = _photo_linkify_text(exp, "Hello @KatherineJones #pizza")
@@ -285,6 +290,7 @@ def test_photo_text_linkification_targets_profiles_and_hashtag_search():
         assert "@KatherineJones" in linked or "KatherineJones" in linked
 
 
+@pytest.mark.integration
 def test_photo_build_item_exposes_linked_caption_and_author_href():
     with _photo_experiment() as exp:
         item = _photo_build_item(
@@ -311,6 +317,7 @@ def test_photo_build_item_exposes_linked_caption_and_author_href():
         )
 
 
+@pytest.mark.integration
 def test_photo_feed_timelines_use_recommendations_and_social_contacts():
     with _photo_experiment() as exp:
         user_id = "b49b2daa-0560-466e-bd45-95222c7a4a10"
@@ -339,6 +346,7 @@ def test_photo_media_root_matches_photo_experiment_directory():
         assert media_root.parent.name == Path(_photo_db_path(exp)).parent.name
 
 
+@pytest.mark.integration
 def test_photo_suggested_contacts_never_returns_empty_list_for_photo_experiment():
     with _photo_experiment() as exp:
         contact_ids = set(
@@ -393,6 +401,7 @@ def test_photo_profile_page_is_wired_and_uses_photo_shell():
     assert "photo/components/sidebar.html" in base_template
 
 
+@pytest.mark.integration
 def test_photo_search_page_is_wired_and_returns_all_search_domains():
     route_source = Path(
         "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/photo.py"

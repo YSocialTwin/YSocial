@@ -11,6 +11,7 @@ import tempfile
 import pytest
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import select
 
 from y_web.src.hpc.log_parser import (
     get_log_file_offset,
@@ -124,8 +125,10 @@ class TestIncrementalLogReading:
                 assert new_offset > 0
 
                 # Check that metrics were stored in database
-                daily_metrics = ServerLogMetrics.query.filter_by(
-                    exp_id=exp_id, aggregation_level="daily", day=0
+                daily_metrics = db.session.scalars(
+                    select(ServerLogMetrics).filter_by(
+                        exp_id=exp_id, aggregation_level="daily", day=0
+                    )
                 ).all()
 
                 assert len(daily_metrics) > 0
@@ -187,8 +190,13 @@ class TestIncrementalLogReading:
                 assert newer_offset > new_offset
 
                 # Check metrics - should have 2 feed calls total (1 from first parse + 1 from second)
-                feed_metric = ServerLogMetrics.query.filter_by(
-                    exp_id=exp_id, aggregation_level="daily", day=0, path="/api/feed"
+                feed_metric = db.session.scalars(
+                    select(ServerLogMetrics).filter_by(
+                        exp_id=exp_id,
+                        aggregation_level="daily",
+                        day=0,
+                        path="/api/feed",
+                    )
                 ).first()
 
                 assert feed_metric is not None
@@ -233,8 +241,13 @@ class TestIncrementalLogReading:
                 assert new_offset > 0
 
                 # Check that metrics were stored in database
-                daily_metrics = ClientLogMetrics.query.filter_by(
-                    exp_id=exp_id, client_id=client_id, aggregation_level="daily", day=0
+                daily_metrics = db.session.scalars(
+                    select(ClientLogMetrics).filter_by(
+                        exp_id=exp_id,
+                        client_id=client_id,
+                        aggregation_level="daily",
+                        day=0,
+                    )
                 ).all()
 
                 assert len(daily_metrics) > 0
@@ -285,8 +298,10 @@ class TestIncrementalLogReading:
                 new_offset, metrics = parse_server_log_incremental(log_file, exp_id, 0)
 
                 # Should have parsed 2 valid entries
-                daily_metrics = ServerLogMetrics.query.filter_by(
-                    exp_id=exp_id, aggregation_level="daily", day=0
+                daily_metrics = db.session.scalars(
+                    select(ServerLogMetrics).filter_by(
+                        exp_id=exp_id, aggregation_level="daily", day=0
+                    )
                 ).all()
 
                 # We should have metrics for both valid entries
@@ -329,12 +344,14 @@ class TestIncrementalLogReading:
                 assert result is True
 
                 # Verify initial metrics
-                post_metric = ClientLogMetrics.query.filter_by(
-                    exp_id=exp_id,
-                    client_id=client_id,
-                    aggregation_level="daily",
-                    day=0,
-                    method_name="post",
+                post_metric = db.session.scalars(
+                    select(ClientLogMetrics).filter_by(
+                        exp_id=exp_id,
+                        client_id=client_id,
+                        aggregation_level="daily",
+                        day=0,
+                        method_name="post",
+                    )
                 ).first()
                 assert post_metric is not None
                 assert post_metric.call_count == 2
@@ -361,12 +378,14 @@ class TestIncrementalLogReading:
                 assert result is True
 
                 # Verify the new entry was processed (day 1 metric should exist)
-                read_metric = ClientLogMetrics.query.filter_by(
-                    exp_id=exp_id,
-                    client_id=client_id,
-                    aggregation_level="daily",
-                    day=1,
-                    method_name="read",
+                read_metric = db.session.scalars(
+                    select(ClientLogMetrics).filter_by(
+                        exp_id=exp_id,
+                        client_id=client_id,
+                        aggregation_level="daily",
+                        day=1,
+                        method_name="read",
+                    )
                 ).first()
                 assert read_metric is not None
                 assert read_metric.call_count == 1

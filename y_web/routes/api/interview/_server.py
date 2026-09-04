@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import requests
 from flask import current_app
+from sqlalchemy import select
 
 from y_web import db
 from y_web.src.experiment.context import register_experiment_database
@@ -184,7 +185,7 @@ def _get_latest_experiment_runtime(exp: Exps) -> Exps:
         db.session.expire_all()
     except Exception:
         pass
-    latest = Exps.query.filter_by(idexp=exp_id).first()
+    latest = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
     return latest or exp
 
 

@@ -9,6 +9,7 @@ Routes: feeed_logged, feed, get_post_hashtags, get_post_interest,
 
 from flask import flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
+from sqlalchemy import select
 
 from y_web import db
 from y_web.routes.social._blueprint import main
@@ -61,30 +62,30 @@ def _build_friends_view_model(user_id, page, active_tab):
 
     profile_pic_follower = {}
     for f in followers:
-        u = User_mgmt.query.filter_by(id=f["id"]).first()
+        u = db.session.scalars(select(User_mgmt).filter_by(id=f["id"])).first()
         if u is None:
             continue
         if u.is_page == 1:
-            pg = Page.query.filter_by(name=f["username"]).first()
+            pg = db.session.scalars(select(Page).filter_by(name=f["username"])).first()
             if pg is not None:
                 profile_pic_follower[f["id"]] = pg.logo
         else:
-            ag = Agent.query.filter_by(name=f["username"]).first()
+            ag = db.session.scalars(select(Agent).filter_by(name=f["username"])).first()
             profile_pic_follower[f["id"]] = (
                 ag.profile_pic if ag is not None and ag.profile_pic is not None else ""
             )
 
     profile_pic_followee = {}
     for f in followees:
-        u = User_mgmt.query.filter_by(id=f["id"]).first()
+        u = db.session.scalars(select(User_mgmt).filter_by(id=f["id"])).first()
         if u is None:
             continue
         if u.is_page == 1:
-            pg = Page.query.filter_by(name=f["username"]).first()
+            pg = db.session.scalars(select(Page).filter_by(name=f["username"])).first()
             if pg is not None:
                 profile_pic_followee[f["id"]] = pg.logo
         else:
-            ag = Agent.query.filter_by(name=f["username"]).first()
+            ag = db.session.scalars(select(Agent).filter_by(name=f["username"])).first()
             profile_pic_followee[f["id"]] = (
                 ag.profile_pic if ag is not None and ag.profile_pic is not None else ""
             )
@@ -128,7 +129,7 @@ def feeed_logged():
         Redirect to feed with experiment ID and user ID
     """
     # Get active experiments
-    exps = Exps.query.filter(Exps.status != 0).all()
+    exps = db.session.scalars(select(Exps).filter(Exps.status != 0)).all()
     if not exps:
         flash("No active experiment. Please activate an experiment first.")
         return redirect("/admin/experiments")
@@ -148,7 +149,6 @@ def feeed_logged():
     user_id = current_user.id  # fallback to admin ID
     try:
         # Use the experiment's database bind
-        from y_web import db
         from y_web.src.models import User_mgmt
 
         # Temporarily override db_exp bind to query correct database
@@ -158,7 +158,9 @@ def feeed_logged():
                 "SQLALCHEMY_BINDS"
             ][bind_key]
 
-            exp_user = User_mgmt.query.filter_by(username=current_user.username).first()
+            exp_user = db.session.scalars(
+                select(User_mgmt).filter_by(username=current_user.username)
+            ).first()
             if exp_user:
                 user_id = exp_user.id
 
@@ -189,10 +191,12 @@ def feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
             posts, additional = get_suggested_posts("all", "", page, max_post_per_page)
 
         elif user_id != "all":
-            user = User_mgmt.query.filter_by(id=user_id).first()
+            user = db.session.scalars(select(User_mgmt).filter_by(id=user_id)).first()
             if not user:
                 # Try to find user by username instead of ID
-                user = User_mgmt.query.filter_by(username=current_user.username).first()
+                user = db.session.scalars(
+                    select(User_mgmt).filter_by(username=current_user.username)
+                ).first()
                 if not user:
                     flash(
                         "User not found in experiment. Please contact administrator.",
@@ -209,7 +213,9 @@ def feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
         res, res_additional = [], []
 
         # Get experiment user ID for reactions
-        exp_user = User_mgmt.query.filter_by(username=current_user.username).first()
+        exp_user = db.session.scalars(
+            select(User_mgmt).filter_by(username=current_user.username)
+        ).first()
         exp_user_id = exp_user.id if exp_user else current_user.id
 
         if posts is not None:
@@ -234,7 +240,9 @@ def feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
         spages = get_suggested_users(current_user.username, pages=True)
 
         try:
-            ag = Agent.query.filter_by(name=current_user.username).first()
+            ag = db.session.scalars(
+                select(Agent).filter_by(name=current_user.username)
+            ).first()
             profile_pic = (
                 ag.profile_pic
                 if ag is not None and ag.profile_pic is not None
@@ -245,15 +253,19 @@ def feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
         except:
             profile_pic = ""
 
-        user = User_mgmt.query.filter_by(username=current_user.username).first()
+        user = db.session.scalars(
+            select(User_mgmt).filter_by(username=current_user.username)
+        ).first()
         profile_pic_feed = ""
         if user.is_page == 1:
-            pg = Page.query.filter_by(name=user.username).first()
+            pg = db.session.scalars(select(Page).filter_by(name=user.username)).first()
             if pg is not None:
                 profile_pic_feed = pg.logo
         else:
             try:
-                ag = Agent.query.filter_by(name=user.username).first()
+                ag = db.session.scalars(
+                    select(Agent).filter_by(name=user.username)
+                ).first()
                 profile_pic_feed = (
                     ag.profile_pic
                     if ag is not None and ag.profile_pic is not None
@@ -265,7 +277,9 @@ def feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
                 profile_pic_feed = ""
 
         # Get experiment user (not admin user)
-        logged_user = User_mgmt.query.filter_by(username=current_user.username).first()
+        logged_user = db.session.scalars(
+            select(User_mgmt).filter_by(username=current_user.username)
+        ).first()
         if not logged_user:
             flash("User not found in experiment", "error")
             return redirect(url_for("main.index"))
@@ -322,20 +336,24 @@ def get_post_hashtags(exp_id, hashtag_id, page=1):
         return redirect(f"/{exp_id}/hashtag_posts/{hashtag_id}/{page - 1}")
 
     # get hashtag name
-    hashtag = Hashtags.query.filter_by(id=hashtag_id).first().hashtag
+    hashtag = (
+        db.session.scalars(select(Hashtags).filter_by(id=hashtag_id)).first().hashtag
+    )
 
     trending_ht = get_trending_hashtags()
 
     # get user profile pic
-    user = User_mgmt.query.filter_by(username=current_user.username).first()
+    user = db.session.scalars(
+        select(User_mgmt).filter_by(username=current_user.username)
+    ).first()
     profile_pic = ""
     if user.is_page == 1:
-        pg = Page.query.filter_by(name=user.username).first()
+        pg = db.session.scalars(select(Page).filter_by(name=user.username)).first()
         if pg is not None:
             profile_pic = pg.logo
     else:
         try:
-            ag = Agent.query.filter_by(name=user.username).first()
+            ag = db.session.scalars(select(Agent).filter_by(name=user.username)).first()
             profile_pic = (
                 ag.profile_pic
                 if ag is not None and ag.profile_pic is not None
@@ -395,20 +413,26 @@ def get_post_interest(exp_id, interest_id, page=1):
         return redirect(f"/{exp_id}/interest/{interest_id}/{page - 1}")
 
     # get topic name
-    interest = Interests.query.filter_by(iid=interest_id).first().interest
+    interest = (
+        db.session.scalars(select(Interests).filter_by(iid=interest_id))
+        .first()
+        .interest
+    )
 
     trending_tp = get_trending_topics()
 
     # get user profile pic
-    user = User_mgmt.query.filter_by(username=current_user.username).first()
+    user = db.session.scalars(
+        select(User_mgmt).filter_by(username=current_user.username)
+    ).first()
     profile_pic = ""
     if user.is_page == 1:
-        pg = Page.query.filter_by(name=user.username).first()
+        pg = db.session.scalars(select(Page).filter_by(name=user.username)).first()
         if pg is not None:
             profile_pic = pg.logo
     else:
         try:
-            ag = Agent.query.filter_by(name=user.username).first()
+            ag = db.session.scalars(select(Agent).filter_by(name=user.username)).first()
             profile_pic = (
                 ag.profile_pic
                 if ag is not None and ag.profile_pic is not None
@@ -468,21 +492,23 @@ def get_post_emotion(exp_id, emotion_id, page=1):
         return redirect(f"/{exp_id}/emotion/{emotion_id}/{page - 1}")
 
     # get emotion name
-    emotion = Emotions.query.filter_by(id=emotion_id).first()
+    emotion = db.session.scalars(select(Emotions).filter_by(id=emotion_id)).first()
     emotion = (emotion_id, emotion.emotion, emotion.icon)
 
     trending_tp = get_trending_emotions()
 
     # get user profile pic
-    user = User_mgmt.query.filter_by(username=current_user.username).first()
+    user = db.session.scalars(
+        select(User_mgmt).filter_by(username=current_user.username)
+    ).first()
     profile_pic = ""
     if user.is_page == 1:
-        pg = Page.query.filter_by(name=user.username).first()
+        pg = db.session.scalars(select(Page).filter_by(name=user.username)).first()
         if pg is not None:
             profile_pic = pg.logo
     else:
         try:
-            ag = Agent.query.filter_by(name=user.username).first()
+            ag = db.session.scalars(select(Agent).filter_by(name=user.username)).first()
             profile_pic = (
                 ag.profile_pic
                 if ag is not None and ag.profile_pic is not None
@@ -543,8 +569,10 @@ def get_friends(exp_id, user_id, page=1):
     view_model = _build_friends_view_model(user_id, page, active_tab)
     mentions = get_unanswered_mentions(current_user.id)
 
-    cu = User_mgmt.query.filter_by(username=current_user.username).first()
-    viewed_user = User_mgmt.query.filter_by(id=user_id).first()
+    cu = db.session.scalars(
+        select(User_mgmt).filter_by(username=current_user.username)
+    ).first()
+    viewed_user = db.session.scalars(select(User_mgmt).filter_by(id=user_id)).first()
 
     profile_pic = (
         get_safe_profile_pic(cu.username, getattr(cu, "is_page", 0) or 0) if cu else ""
@@ -728,19 +756,24 @@ def get_thread(exp_id, post_id):
         pass
 
     # Get experiment user (not admin user)
-    logged_user = User_mgmt.query.filter_by(username=current_user.username).first()
+    logged_user = db.session.scalars(
+        select(User_mgmt).filter_by(username=current_user.username)
+    ).first()
     if not logged_user:
         flash("User not found in experiment", "error")
         return redirect(url_for("main.index"))
     exp_user_id = logged_user.id
 
-    requested_post = Post.query.filter_by(id=post_id).first()
+    requested_post = db.session.scalars(select(Post).filter_by(id=post_id)).first()
     if not requested_post:
         flash("Post not found", "error")
         return redirect(url_for("main.index"))
 
     thread_root_id = getattr(requested_post, "thread_id", None) or requested_post.id
-    root_post = Post.query.filter_by(id=thread_root_id).first() or requested_post
+    root_post = (
+        db.session.scalars(select(Post).filter_by(id=thread_root_id)).first()
+        or requested_post
+    )
     thread_root_id = root_post.id
 
     # Get all comments with this thread_id
@@ -752,7 +785,7 @@ def get_thread(exp_id, post_id):
 
     root = root_post.id
 
-    c = Rounds.query.filter_by(id=root_post.round).first()
+    c = db.session.scalars(select(Rounds).filter_by(id=root_post.round)).first()
     if c is None:
         day = "None"
         hour = "00"
@@ -767,17 +800,17 @@ def get_thread(exp_id, post_id):
         f"{int(hour):02d}" if str(hour).isdigit() else str(hour),
     )
 
-    image = Images.query.filter_by(id=root_post.image_id).first()
+    image = db.session.scalars(select(Images).filter_by(id=root_post.image_id)).first()
 
-    user = User_mgmt.query.filter_by(id=root_post.user_id).first()
+    user = db.session.scalars(select(User_mgmt).filter_by(id=root_post.user_id)).first()
     profile_pic = ""
     if user.is_page == 1:
-        pg = Page.query.filter_by(name=user.username).first()
+        pg = db.session.scalars(select(Page).filter_by(name=user.username)).first()
         if pg is not None:
             profile_pic = pg.logo
     else:
         try:
-            ag = Agent.query.filter_by(name=user.username).first()
+            ag = db.session.scalars(select(Agent).filter_by(name=user.username)).first()
             profile_pic = (
                 ag.profile_pic
                 if ag is not None and ag.profile_pic is not None
@@ -819,20 +852,34 @@ def get_thread(exp_id, post_id):
         "display_time": root_display_time,
         "children": [],
         "likes": len(
-            list(Reactions.query.filter_by(post_id=root_post.id, type="like").all())
+            list(
+                db.session.scalars(
+                    select(Reactions).filter_by(post_id=root_post.id, type="like")
+                ).all()
+            )
         ),
         "dislikes": len(
-            list(Reactions.query.filter_by(post_id=root_post.id, type="dislike").all())
+            list(
+                db.session.scalars(
+                    select(Reactions).filter_by(post_id=root_post.id, type="dislike")
+                ).all()
+            )
         ),
-        "is_liked": Reactions.query.filter_by(
-            post_id=root_post.id, user_id=exp_user_id, type="like"
+        "is_liked": db.session.scalars(
+            select(Reactions).filter_by(
+                post_id=root_post.id, user_id=exp_user_id, type="like"
+            )
         ).first()
         is None,
-        "is_disliked": Reactions.query.filter_by(
-            post_id=root_post.id, user_id=exp_user_id, type="dislike"
+        "is_disliked": db.session.scalars(
+            select(Reactions).filter_by(
+                post_id=root_post.id, user_id=exp_user_id, type="dislike"
+            )
         ).first()
         is None,
-        "is_shared": len(Post.query.filter_by(shared_from=root_post.id).all()),
+        "is_shared": len(
+            db.session.scalars(select(Post).filter_by(shared_from=root_post.id)).all()
+        ),
         "report_count": get_report_count(root_post.id),
         "emotions": get_elicited_emotions(root_post.id),
         "topics": get_topics(root_post.id, root_post.user_id),
@@ -846,7 +893,7 @@ def get_thread(exp_id, post_id):
     post_to_data = {root_post.id: discussion_tree}
 
     for post in comment_posts:
-        c = Rounds.query.filter_by(id=post.round).first()
+        c = db.session.scalars(select(Rounds).filter_by(id=post.round)).first()
         if c is None:
             day = "None"
             hour = "00"
@@ -861,15 +908,17 @@ def get_thread(exp_id, post_id):
             f"{int(hour):02d}" if str(hour).isdigit() else str(hour),
         )
 
-        user = User_mgmt.query.filter_by(id=post.user_id).first()
+        user = db.session.scalars(select(User_mgmt).filter_by(id=post.user_id)).first()
         profile_pic = ""
         if user.is_page == 1:
-            pg = Page.query.filter_by(name=user.username).first()
+            pg = db.session.scalars(select(Page).filter_by(name=user.username)).first()
             if pg is not None:
                 profile_pic = pg.logo
         else:
             try:
-                ag = Agent.query.filter_by(name=user.username).first()
+                ag = db.session.scalars(
+                    select(Agent).filter_by(name=user.username)
+                ).first()
                 profile_pic = (
                     ag.profile_pic
                     if ag is not None and ag.profile_pic is not None
@@ -891,20 +940,34 @@ def get_thread(exp_id, post_id):
             "display_time": display_time,
             "children": [],
             "likes": len(
-                list(Reactions.query.filter_by(post_id=post.id, type="like").all())
+                list(
+                    db.session.scalars(
+                        select(Reactions).filter_by(post_id=post.id, type="like")
+                    ).all()
+                )
             ),
             "dislikes": len(
-                list(Reactions.query.filter_by(post_id=post.id, type="dislike").all())
+                list(
+                    db.session.scalars(
+                        select(Reactions).filter_by(post_id=post.id, type="dislike")
+                    ).all()
+                )
             ),
-            "is_liked": Reactions.query.filter_by(
-                post_id=post.id, user_id=exp_user_id, type="like"
+            "is_liked": db.session.scalars(
+                select(Reactions).filter_by(
+                    post_id=post.id, user_id=exp_user_id, type="like"
+                )
             ).first()
             is None,
-            "is_disliked": Reactions.query.filter_by(
-                post_id=post.id, user_id=exp_user_id, type="dislike"
+            "is_disliked": db.session.scalars(
+                select(Reactions).filter_by(
+                    post_id=post.id, user_id=exp_user_id, type="dislike"
+                )
             ).first()
             is None,
-            "is_shared": len(Post.query.filter_by(shared_from=post.id).all()),
+            "is_shared": len(
+                db.session.scalars(select(Post).filter_by(shared_from=post.id)).all()
+            ),
             "report_count": get_report_count(post.id),
             "emotions": get_elicited_emotions(post.id),
             "topics": get_topics(post.id, post.user_id),
@@ -923,15 +986,17 @@ def get_thread(exp_id, post_id):
     mentions = get_unanswered_mentions(exp_user_id)
 
     # get user profile pic
-    user = User_mgmt.query.filter_by(username=current_user.username).first()
+    user = db.session.scalars(
+        select(User_mgmt).filter_by(username=current_user.username)
+    ).first()
     profile_pic = ""
     if user.is_page == 1:
-        pg = Page.query.filter_by(name=user.username).first()
+        pg = db.session.scalars(select(Page).filter_by(name=user.username)).first()
         if pg is not None:
             profile_pic = pg.logo
     else:
         try:
-            ag = Agent.query.filter_by(name=user.username).first()
+            ag = db.session.scalars(select(Agent).filter_by(name=user.username)).first()
             profile_pic = (
                 ag.profile_pic
                 if ag is not None and ag.profile_pic is not None
@@ -987,9 +1052,11 @@ def api_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
         if user_id == "all":
             posts, additional = get_suggested_posts("all", "", page, max_post_per_page)
         elif user_id != "all":
-            user = User_mgmt.query.filter_by(id=user_id).first()
+            user = db.session.scalars(select(User_mgmt).filter_by(id=user_id)).first()
             if not user:
-                user = User_mgmt.query.filter_by(username=current_user.username).first()
+                user = db.session.scalars(
+                    select(User_mgmt).filter_by(username=current_user.username)
+                ).first()
             if not user:
                 return jsonify({"html": "", "has_more": False}), 404
             render_user_id = user.id
@@ -1002,7 +1069,9 @@ def api_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
         res, res_additional = [], []
 
         # Get experiment user ID for reactions
-        exp_user = User_mgmt.query.filter_by(username=current_user.username).first()
+        exp_user = db.session.scalars(
+            select(User_mgmt).filter_by(username=current_user.username)
+        ).first()
         exp_user_id = exp_user.id if exp_user else current_user.id
 
         if posts is not None:
@@ -1141,7 +1210,7 @@ def api_profile_posts(exp_id, user_id, page=1, mode="recent"):
         pass
 
     rp = get_user_recent_posts(user_id, page, 10, mode, current_user.id, exp_id)
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if getattr(exp, "platform_type", "") == "forum":
         logged_user = _forum_logged_user()
         html = render_template(

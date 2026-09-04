@@ -11,6 +11,7 @@ import time
 from multiprocessing import Process
 
 import requests
+from sqlalchemy import select
 
 from y_web import db
 from y_web.src.models import Ollama_Pull
@@ -93,7 +94,9 @@ def start_ollama_pull(model_name):
     )
 
     for progress in ol_client.pull(model_name, stream=True):
-        model = Ollama_Pull.query.filter_by(model_name=model_name).first()
+        model = db.session.scalars(
+            select(Ollama_Pull).filter_by(model_name=model_name)
+        ).first()
         if not model:
             model = Ollama_Pull(model_name=model_name, status=0)
             db.session.add(model)
@@ -104,7 +107,9 @@ def start_ollama_pull(model_name):
         if completed is not None:
             current = float(completed) / float(total)
             # update the model status
-            model = Ollama_Pull.query.filter_by(model_name=model_name).first()
+            model = db.session.scalars(
+                select(Ollama_Pull).filter_by(model_name=model_name)
+            ).first()
             model.status = current
             db.session.commit()
 
@@ -161,6 +166,8 @@ def delete_model_pull(model_name):
         process.terminate()
         process.join()
 
-    model = Ollama_Pull.query.filter_by(model_name=model_name).first()
+    model = db.session.scalars(
+        select(Ollama_Pull).filter_by(model_name=model_name)
+    ).first()
     db.session.delete(model)
     db.session.commit()

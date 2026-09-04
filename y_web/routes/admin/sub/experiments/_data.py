@@ -33,6 +33,7 @@ from flask import (
     url_for,
 )
 from flask_login import current_user, login_required, login_user
+from sqlalchemy import select
 
 from y_web import db  # , app
 from y_web.src.content.avatars import normalize_forum_avatar_mode
@@ -146,8 +147,10 @@ def _sync_detoxify_download_notification(admin_user, state):
     if not admin_user or not notification_id:
         return
 
-    notification = DownloadNotification.query.filter_by(
-        id=notification_id, user_id=admin_user.id
+    notification = db.session.scalars(
+        select(DownloadNotification).filter_by(
+            id=notification_id, user_id=admin_user.id
+        )
     ).first()
     if not notification:
         return
@@ -235,7 +238,9 @@ def experiments_data():
         Rendered experiments list template
     """
     # Get current user
-    user = Admin_users.query.filter_by(username=current_user.username).first()
+    user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
     # Filter experiments based on role + visibility grants
     if user.role in ("admin", "researcher"):
@@ -300,7 +305,7 @@ def experiments_data():
     import psutil
 
     jupyter_status = {}
-    jupyter_instances = Jupyter_instances.query.all()
+    jupyter_instances = db.session.scalars(select(Jupyter_instances)).all()
     for jupyter in jupyter_instances:
         is_running = False
         if jupyter.process is not None:
@@ -316,15 +321,17 @@ def experiments_data():
     clients_by_exp = defaultdict(list)
     client_ids = []
     if exp_ids:
-        all_clients = Client.query.filter(Client.id_exp.in_(exp_ids)).all()
+        all_clients = db.session.scalars(
+            select(Client).filter(Client.id_exp.in_(exp_ids))
+        ).all()
         for client in all_clients:
             clients_by_exp[client.id_exp].append(client)
             client_ids.append(client.id)
 
     client_exec_by_client_id = {}
     if client_ids:
-        client_exec_rows = Client_Execution.query.filter(
-            Client_Execution.client_id.in_(client_ids)
+        client_exec_rows = db.session.scalars(
+            select(Client_Execution).filter(Client_Execution.client_id.in_(client_ids))
         ).all()
         client_exec_by_client_id = {row.client_id: row for row in client_exec_rows}
 
@@ -380,12 +387,14 @@ def experiment_clients(exp_id):
     """
     try:
         # Get experiment
-        experiment = Exps.query.filter_by(idexp=exp_id).first()
+        experiment = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
         if not experiment:
             return jsonify({"error": "Experiment not found"}), 404
 
         # Check user permissions
-        user = Admin_users.query.filter_by(username=current_user.username).first()
+        user = db.session.scalars(
+            select(Admin_users).filter_by(username=current_user.username)
+        ).first()
         if not user_can_view_experiment(user, experiment):
             return jsonify({"error": "Access denied"}), 403
 
@@ -408,7 +417,7 @@ def experiment_clients(exp_id):
         )
 
         # Get clients for this experiment
-        clients = Client.query.filter_by(id_exp=exp_id).all()
+        clients = db.session.scalars(select(Client).filter_by(id_exp=exp_id)).all()
         client_ids = [client.id for client in clients]
         for client in clients:
             # Update client log metrics before reading execution data
@@ -445,8 +454,10 @@ def experiment_clients(exp_id):
 
         client_exec_by_id = {}
         if client_ids:
-            client_exec_rows = Client_Execution.query.filter(
-                Client_Execution.client_id.in_(client_ids)
+            client_exec_rows = db.session.scalars(
+                select(Client_Execution).filter(
+                    Client_Execution.client_id.in_(client_ids)
+                )
             ).all()
             client_exec_by_id = {row.client_id: row for row in client_exec_rows}
 
@@ -511,7 +522,7 @@ def experiment_details(uid):
     check_privileges(current_user.username)
 
     # get experiment details
-    experiment = Exps.query.filter_by(idexp=uid).first()
+    experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     admin_user = _current_admin_user_or_none()
     if not user_can_view_experiment(admin_user, experiment):
         flash("You are not allowed to view this experiment.", "error")
@@ -540,14 +551,14 @@ def experiment_details(uid):
     )
 
     # get experiment clients
-    clients = Client.query.filter_by(id_exp=uid).all()
+    clients = db.session.scalars(select(Client).filter_by(id_exp=uid)).all()
     client_ids = [client.id for client in clients]
 
     # get client execution data to check if clients have been run
     client_executions = {}
     if client_ids:
-        execution_rows = Client_Execution.query.filter(
-            Client_Execution.client_id.in_(client_ids)
+        execution_rows = db.session.scalars(
+            select(Client_Execution).filter(Client_Execution.client_id.in_(client_ids))
         ).all()
         execution_by_client_id = {row.client_id: row for row in execution_rows}
         for client in clients:
@@ -578,7 +589,9 @@ def experiment_details(uid):
 
     # get jupyter instance for this experiment if exists
 
-    jupyter_instance = Jupyter_instances.query.filter_by(exp_id=uid).first()
+    jupyter_instance = db.session.scalars(
+        select(Jupyter_instances).filter_by(exp_id=uid)
+    ).first()
 
     # Pass telemetry flag independently to avoid issues with current_user object
     # User is already authenticated due to @login_required decorator
@@ -789,7 +802,7 @@ def update_experiment_descr(uid):
     """Update a forum experiment description shown to forum agents."""
     check_privileges(current_user.username)
 
-    exp = Exps.query.filter_by(idexp=uid).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     if not exp:
         return jsonify({"success": False, "message": "Experiment not found"}), 404
 
@@ -831,7 +844,7 @@ def update_experiment_name(uid):
     """Rename an experiment before it starts."""
     check_privileges(current_user.username)
 
-    exp = Exps.query.filter_by(idexp=uid).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     if not exp:
         flash("Experiment not found.", "error")
         return redirect(url_for("experiments.settings"))
@@ -853,8 +866,8 @@ def update_experiment_name(uid):
         flash("Experiment name must be 50 characters or fewer.", "warning")
         return redirect(url_for("experiments.experiment_details", uid=uid))
 
-    duplicate_exp = Exps.query.filter(
-        Exps.exp_name == new_exp_name, Exps.idexp != uid
+    duplicate_exp = db.session.scalars(
+        select(Exps).filter(Exps.exp_name == new_exp_name, Exps.idexp != uid)
     ).first()
     if duplicate_exp:
         flash("An experiment with that name already exists.", "warning")
@@ -910,7 +923,7 @@ def update_experiment_config(uid):
     """Update experiment config toggles and persist changes in server/client JSON files."""
     check_privileges(current_user.username)
 
-    exp = Exps.query.filter_by(idexp=uid).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     if not exp:
         flash("Experiment not found.", "error")
         return redirect(url_for("experiments.settings"))
@@ -1020,9 +1033,11 @@ def update_experiment_config(uid):
         with open(cfg_path, "w") as f:
             json.dump(config, f, indent=4)
 
-        clients = Client.query.filter_by(id_exp=uid).all()
+        clients = db.session.scalars(select(Client).filter_by(id_exp=uid)).all()
         for client in clients:
-            population = Population.query.filter_by(id=client.population_id).first()
+            population = db.session.scalars(
+                select(Population).filter_by(id=client.population_id)
+            ).first()
             if not population:
                 continue
             pop_name = population.name
@@ -1228,9 +1243,11 @@ def update_stress_reward_settings(uid):
         with open(config_path, "w", encoding="utf-8") as handle:
             json.dump(config, handle, indent=4)
 
-        clients = Client.query.filter_by(id_exp=uid).all()
+        clients = db.session.scalars(select(Client).filter_by(id_exp=uid)).all()
         for client in clients:
-            population = Population.query.filter_by(id=client.population_id).first()
+            population = db.session.scalars(
+                select(Population).filter_by(id=client.population_id)
+            ).first()
             if not population:
                 continue
             pop_name = population.name
@@ -1275,7 +1292,7 @@ def update_experiment_topics(uid):
     """Update experiment topics in admin DB and persisted server config."""
     check_privileges(current_user.username)
 
-    exp = Exps.query.filter_by(idexp=uid).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     if not exp:
         flash("Experiment not found.", "error")
         return redirect(url_for("experiments.settings"))
@@ -1305,7 +1322,9 @@ def update_experiment_topics(uid):
     try:
         db.session.query(Exp_Topic).filter_by(exp_id=uid).delete()
         for topic in topics:
-            existing_topic = Topic_List.query.filter_by(name=topic).first()
+            existing_topic = db.session.scalars(
+                select(Topic_List).filter_by(name=topic)
+            ).first()
             if existing_topic is None:
                 existing_topic = Topic_List(name=topic)
                 db.session.add(existing_topic)
@@ -1344,7 +1363,7 @@ def clear_experiment_logs(uid):
     """Delete runtime log files for an experiment without removing the experiment itself."""
     check_privileges(current_user.username)
 
-    exp = Exps.query.filter_by(idexp=uid).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     if not exp:
         flash("Experiment not found.", "error")
         return redirect(url_for("experiments.settings"))
@@ -1394,7 +1413,7 @@ def reset_hpc_experiment(uid):
     """Reset stopped HPC experiment state to initial conditions."""
     check_privileges(current_user.username)
 
-    exp = Exps.query.filter_by(idexp=uid).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     if not exp:
         flash("Experiment not found.", "error")
         return redirect(url_for("experiments.settings"))
@@ -1405,7 +1424,7 @@ def reset_hpc_experiment(uid):
         flash("HPC reset is available only when the experiment is stopped.", "warning")
         return redirect(url_for("experiments.experiment_details", uid=uid))
 
-    clients = Client.query.filter_by(id_exp=uid).all()
+    clients = db.session.scalars(select(Client).filter_by(id_exp=uid)).all()
     has_started_once = _experiment_has_started_once(exp, clients=clients)
     if not has_started_once:
         flash(
@@ -1436,7 +1455,9 @@ def reset_hpc_experiment(uid):
 
         restored_count = 0
         for client in clients:
-            population = Population.query.filter_by(id=client.population_id).first()
+            population = db.session.scalars(
+                select(Population).filter_by(id=client.population_id)
+            ).first()
             if restore_population_for_hpc_client(exp, client, population):
                 restored_count += 1
 
@@ -1462,7 +1483,9 @@ def reset_hpc_experiment(uid):
 
         for client in clients:
             expected_rounds = -1 if client.days == -1 else max(int(client.days), 0) * 24
-            client_exec = Client_Execution.query.filter_by(client_id=client.id).first()
+            client_exec = db.session.scalars(
+                select(Client_Execution).filter_by(client_id=client.id)
+            ).first()
             if client_exec:
                 client_exec.elapsed_time = 0
                 client_exec.last_active_day = -1
@@ -1483,7 +1506,7 @@ def reset_hpc_experiment(uid):
         exp.status = 0
         exp.exp_status = "stopped"
 
-        exp_stats = Exp_stats.query.filter_by(exp_id=uid).first()
+        exp_stats = db.session.scalars(select(Exp_stats).filter_by(exp_id=uid)).first()
         if not exp_stats:
             exp_stats = Exp_stats(
                 exp_id=uid, rounds=0, agents=0, posts=0, reactions=0, mentions=0
@@ -1524,7 +1547,7 @@ def submit_experiment_logs(exp_id):
     from y_web.src.telemetry import Telemetry
 
     # Get experiment details
-    experiment = Exps.query.filter_by(idexp=exp_id).first()
+    experiment = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
     if not experiment:
         return jsonify({"success": False, "message": "Experiment not found"}), 404
 
@@ -1578,7 +1601,7 @@ def experiment_logs(exp_id):
         check_privileges(current_user.username)
 
         # Get experiment details
-        experiment = Exps.query.filter_by(idexp=exp_id).first()
+        experiment = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
         if not experiment:
             return jsonify({"error": "Experiment not found"}), 404
 
@@ -1626,8 +1649,10 @@ def experiment_logs(exp_id):
 
         # Retrieve aggregated metrics from database (daily aggregation for overview)
         try:
-            metrics = ServerLogMetrics.query.filter_by(
-                exp_id=exp_id, aggregation_level="daily"
+            metrics = db.session.scalars(
+                select(ServerLogMetrics).filter_by(
+                    exp_id=exp_id, aggregation_level="daily"
+                )
             ).all()
         except Exception as e:
             # Handle PendingRollbackError by rolling back and retrying
@@ -1635,8 +1660,10 @@ def experiment_logs(exp_id):
                 f"Session error during metrics query, retrying: {e}"
             )
             db.session.rollback()
-            metrics = ServerLogMetrics.query.filter_by(
-                exp_id=exp_id, aggregation_level="daily"
+            metrics = db.session.scalars(
+                select(ServerLogMetrics).filter_by(
+                    exp_id=exp_id, aggregation_level="daily"
+                )
             ).all()
 
         # Aggregate by path across all days
@@ -1684,7 +1711,7 @@ def experiment_trends(exp_id):
         check_privileges(current_user.username)
 
         # Get experiment details
-        experiment = Exps.query.filter_by(idexp=exp_id).first()
+        experiment = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
         if not experiment:
             return jsonify({"error": "Experiment not found"}), 404
 
@@ -1736,8 +1763,8 @@ def experiment_trends(exp_id):
 
         # Retrieve aggregated metrics from database
         # Get daily metrics
-        daily_metrics = ServerLogMetrics.query.filter_by(
-            exp_id=exp_id, aggregation_level="daily"
+        daily_metrics = db.session.scalars(
+            select(ServerLogMetrics).filter_by(exp_id=exp_id, aggregation_level="daily")
         ).all()
 
         daily_durations = defaultdict(float)
@@ -1756,8 +1783,10 @@ def experiment_trends(exp_id):
                     daily_simulation[metric.day] = sim_time
 
         # Get hourly metrics
-        hourly_metrics = ServerLogMetrics.query.filter_by(
-            exp_id=exp_id, aggregation_level="hourly"
+        hourly_metrics = db.session.scalars(
+            select(ServerLogMetrics).filter_by(
+                exp_id=exp_id, aggregation_level="hourly"
+            )
         ).all()
 
         hourly_durations = defaultdict(float)
@@ -1775,7 +1804,7 @@ def experiment_trends(exp_id):
                     hourly_simulation[key] = sim_time
 
         # Get total expected duration from client_execution table
-        clients = Client.query.filter_by(id_exp=exp_id).all()
+        clients = db.session.scalars(select(Client).filter_by(id_exp=exp_id)).all()
         client_ids = [c.id for c in clients]
 
         max_expected_rounds = 0
@@ -1783,8 +1812,10 @@ def experiment_trends(exp_id):
         client_progress = {}
 
         if client_ids:
-            client_executions = Client_Execution.query.filter(
-                Client_Execution.client_id.in_(client_ids)
+            client_executions = db.session.scalars(
+                select(Client_Execution).filter(
+                    Client_Execution.client_id.in_(client_ids)
+                )
             ).all()
             if client_executions:
                 # Filter out infinite clients (-1) and get max from finite ones
@@ -1862,12 +1893,16 @@ def experiment_trends(exp_id):
                     )
 
             # Retrieve aggregated client metrics from database
-            client_daily_metrics = ClientLogMetrics.query.filter_by(
-                exp_id=exp_id, client_id=client.id, aggregation_level="daily"
+            client_daily_metrics = db.session.scalars(
+                select(ClientLogMetrics).filter_by(
+                    exp_id=exp_id, client_id=client.id, aggregation_level="daily"
+                )
             ).all()
 
-            client_hourly_metrics = ClientLogMetrics.query.filter_by(
-                exp_id=exp_id, client_id=client.id, aggregation_level="hourly"
+            client_hourly_metrics = db.session.scalars(
+                select(ClientLogMetrics).filter_by(
+                    exp_id=exp_id, client_id=client.id, aggregation_level="hourly"
+                )
             ).all()
 
             # Aggregate by day
@@ -1952,12 +1987,14 @@ def client_logs(client_id):
         check_privileges(current_user.username)
 
         # Get client details
-        client = Client.query.filter_by(id=client_id).first()
+        client = db.session.scalars(select(Client).filter_by(id=client_id)).first()
         if not client:
             return jsonify({"error": "Client not found"}), 404
 
         # Get experiment details
-        experiment = Exps.query.filter_by(idexp=client.id_exp).first()
+        experiment = db.session.scalars(
+            select(Exps).filter_by(idexp=client.id_exp)
+        ).first()
         if not experiment:
             return jsonify({"error": "Experiment not found"}), 404
 
@@ -2022,8 +2059,10 @@ def client_logs(client_id):
             )
 
         # Retrieve aggregated metrics from database (daily aggregation for overview)
-        metrics = ClientLogMetrics.query.filter_by(
-            exp_id=experiment.idexp, client_id=client_id, aggregation_level="daily"
+        metrics = db.session.scalars(
+            select(ClientLogMetrics).filter_by(
+                exp_id=experiment.idexp, client_id=client_id, aggregation_level="daily"
+            )
         ).all()
 
         # Aggregate by method across all days
@@ -2078,7 +2117,9 @@ def miscellanea():
     from y_web.src.llm.vllm_manager import get_llm_models
 
     # Check if user is admin (researchers should not access this page)
-    user = Admin_users.query.filter_by(username=current_user.username).first()
+    user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
     if user.role != "admin":
         flash("Access denied. This page is only accessible to administrators.", "error")
         return redirect(url_for("admin.dashboard"))
@@ -2113,7 +2154,7 @@ def miscellanea():
         pass
 
     # Get active Ollama pulls
-    ollama_pulls = Ollama_Pull.query.all()
+    ollama_pulls = db.session.scalars(select(Ollama_Pull)).all()
     ollama_pulls = [(pull.model_name, float(pull.status)) for pull in ollama_pulls]
     detoxify_download_state = refresh_detoxify_download_state()
 
@@ -2133,7 +2174,9 @@ def miscellanea():
 @experiments.route("/admin/detoxify_download/status", methods=["GET"])
 @login_required
 def detoxify_download_status():
-    user = Admin_users.query.filter_by(username=current_user.username).first()
+    user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
     if user.role != "admin":
         return jsonify({"error": "Access denied"}), 403
 
@@ -2146,7 +2189,9 @@ def detoxify_download_status():
 @experiments.route("/admin/detoxify_download/start", methods=["POST"])
 @login_required
 def detoxify_download_start():
-    user = Admin_users.query.filter_by(username=current_user.username).first()
+    user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
     if user.role != "admin":
         return jsonify({"error": "Access denied"}), 403
 
@@ -2526,7 +2571,9 @@ def create_topic():
     topic = request.form.get("topic")
 
     # check if the topic already exists
-    existing_topic = Topic_List.query.filter_by(name=topic).first()
+    existing_topic = db.session.scalars(
+        select(Topic_List).filter_by(name=topic)
+    ).first()
     if existing_topic:
         flash("The topic already exists.")
         return redirect(request.referrer)
@@ -2593,7 +2640,7 @@ def delete_topic(topic_id):
     """Delete topic."""
     check_privileges(current_user.username)
 
-    topic = Topic_List.query.filter_by(id=topic_id).first()
+    topic = db.session.scalars(select(Topic_List).filter_by(id=topic_id)).first()
     if not topic:
         flash("Topic not found.")
         return miscellanea()
@@ -2608,7 +2655,7 @@ def delete_language(language_id):
     """Delete language."""
     check_privileges(current_user.username)
 
-    language = Languages.query.filter_by(id=language_id).first()
+    language = db.session.scalars(select(Languages).filter_by(id=language_id)).first()
     if not language:
         flash("Language not found.")
         return miscellanea()
@@ -2623,7 +2670,7 @@ def delete_leaning(leaning_id):
     """Delete leaning."""
     check_privileges(current_user.username)
 
-    leaning = Leanings.query.filter_by(id=leaning_id).first()
+    leaning = db.session.scalars(select(Leanings).filter_by(id=leaning_id)).first()
     if not leaning:
         flash("Leaning not found.")
         return miscellanea()
@@ -2638,7 +2685,9 @@ def delete_nationality(nationality_id):
     """Delete nationality."""
     check_privileges(current_user.username)
 
-    nationality = Nationalities.query.filter_by(id=nationality_id).first()
+    nationality = db.session.scalars(
+        select(Nationalities).filter_by(id=nationality_id)
+    ).first()
     if not nationality:
         flash("Nationality not found.")
         return miscellanea()
@@ -2655,7 +2704,9 @@ def delete_education_level(education_level_id):
     """Delete education level."""
     check_privileges(current_user.username)
 
-    education_level = Education.query.filter_by(id=education_level_id).first()
+    education_level = db.session.scalars(
+        select(Education).filter_by(id=education_level_id)
+    ).first()
     if not education_level:
         flash("Education level not found.")
         return miscellanea()
@@ -2670,7 +2721,9 @@ def delete_profession(profession_id):
     """Delete profession."""
     check_privileges(current_user.username)
 
-    profession = Profession.query.filter_by(id=profession_id).first()
+    profession = db.session.scalars(
+        select(Profession).filter_by(id=profession_id)
+    ).first()
     if not profession:
         flash("Profession not found.")
         return miscellanea()
@@ -2752,7 +2805,9 @@ def delete_toxicity_level(toxicity_level_id):
     """Delete toxicity level."""
     check_privileges(current_user.username)
 
-    toxicity_level = Toxicity_Levels.query.filter_by(id=toxicity_level_id).first()
+    toxicity_level = db.session.scalars(
+        select(Toxicity_Levels).filter_by(id=toxicity_level_id)
+    ).first()
     if not toxicity_level:
         flash("Toxicity level not found.")
         return miscellanea()
@@ -2769,7 +2824,9 @@ def age_classes_data():
         # Handle inline edit
         data = request.get_json()
         age_class_id = data.get("id")
-        age_class = AgeClass.query.filter_by(id=age_class_id).first()
+        age_class = db.session.scalars(
+            select(AgeClass).filter_by(id=age_class_id)
+        ).first()
         if age_class:
             try:
                 if "name" in data:
@@ -2864,7 +2921,7 @@ def delete_age_class(age_class_id):
     """Delete age class."""
     check_privileges(current_user.username)
 
-    age_class = AgeClass.query.filter_by(id=age_class_id).first()
+    age_class = db.session.scalars(select(AgeClass).filter_by(id=age_class_id)).first()
     if not age_class:
         flash("Age class not found.")
         return miscellanea()
@@ -2881,7 +2938,9 @@ def activity_profiles_data():
         # Handle inline edit
         data = request.get_json()
         profile_id = data.get("id")
-        profile = ActivityProfile.query.filter_by(id=profile_id).first()
+        profile = db.session.scalars(
+            select(ActivityProfile).filter_by(id=profile_id)
+        ).first()
         if profile:
             if "name" in data:
                 profile.name = data["name"]
@@ -2949,7 +3008,9 @@ def create_activity_profile():
         return redirect(request.referrer)
 
     # Check if the profile already exists
-    existing_profile = ActivityProfile.query.filter_by(name=name).first()
+    existing_profile = db.session.scalars(
+        select(ActivityProfile).filter_by(name=name)
+    ).first()
     if existing_profile:
         flash("An activity profile with this name already exists.")
         return redirect(request.referrer)
@@ -2969,7 +3030,9 @@ def delete_activity_profile(profile_id):
     """Delete activity profile."""
     check_privileges(current_user.username)
 
-    profile = ActivityProfile.query.filter_by(id=profile_id).first()
+    profile = db.session.scalars(
+        select(ActivityProfile).filter_by(id=profile_id)
+    ).first()
     if not profile:
         flash("Activity profile not found.")
         return miscellanea()

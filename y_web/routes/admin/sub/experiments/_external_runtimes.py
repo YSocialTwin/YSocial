@@ -7,7 +7,9 @@ import sys
 
 from flask import flash, jsonify, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_required
+from sqlalchemy import select
 
+from y_web import db
 from y_web.src.external_runtime import (
     ExternalRuntimeError,
     clone_runtime_repo,
@@ -48,7 +50,9 @@ _GITHUB_TOKEN_SESSION_KEY = "external_runtime_github_token"
 
 def _require_admin_user():
     check_privileges(current_user.username)
-    admin_user = Admin_users.query.filter_by(username=current_user.username).first()
+    admin_user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
     if admin_user is None or admin_user.role != "admin":
         flash("Only administrators can manage external runtime repositories.", "error")
         return None

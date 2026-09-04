@@ -155,15 +155,15 @@ def get_llm_models(llm_url=None):
             add(base_url)
             return candidates
 
-        add(f"{base_url}/v1/models")
-        add(f"{base_url}/models")
-        add(f"{base_url}/api/tags")
-
         if path.endswith("/v1"):
             trimmed = base_url[: -len("/v1")]
             add(f"{base_url}/models")
             add(f"{trimmed}/models")
             add(f"{trimmed}/api/tags")
+        else:
+            add(f"{base_url}/v1/models")
+            add(f"{base_url}/models")
+            add(f"{base_url}/api/tags")
 
         if path:
             add(f"{root_url}/v1/models")

@@ -5,6 +5,8 @@ from pathlib import Path
 
 import pytest
 
+from y_web import db
+
 pytestmark = [pytest.mark.unit, pytest.mark.external_repo]
 
 

@@ -8,6 +8,9 @@ import os
 from urllib.parse import quote
 
 from flask import current_app
+from sqlalchemy import select
+
+from y_web import db
 
 DEFAULT_FORUM_AVATAR_MODE = "placeholder"
 _FORUM_AVATAR_MODE_CACHE = {}
@@ -117,7 +120,7 @@ def _forum_experiment_config_path(exp_id: int) -> str:
     from y_web.src.models import Exps
     from y_web.src.system.path_utils import get_writable_path
 
-    experiment = Exps.query.filter_by(idexp=exp_id).first()
+    experiment = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
     if not experiment:
         return ""
 
@@ -194,16 +197,18 @@ def resolve_forum_profile_pic(user, exp_id: int | None = None) -> str:
         from y_web.src.models import Admin_users, Agent, Page
 
         if bool(getattr(user, "is_page", False)):
-            page = Page.query.filter_by(name=username).first()
+            page = db.session.scalars(select(Page).filter_by(name=username)).first()
             if page and getattr(page, "logo", None):
                 return page.logo
             return deterministic_forum_avatar_url(username)
 
-        agent = Agent.query.filter_by(name=username).first()
+        agent = db.session.scalars(select(Agent).filter_by(name=username)).first()
         if agent and getattr(agent, "profile_pic", None):
             return agent.profile_pic
 
-        admin = Admin_users.query.filter_by(username=username).first()
+        admin = db.session.scalars(
+            select(Admin_users).filter_by(username=username)
+        ).first()
         if admin and getattr(admin, "profile_pic", None):
             return admin.profile_pic
     except Exception:
@@ -234,7 +239,9 @@ def resolve_forum_username_avatar(username: str, exp_id: int | None = None) -> s
     try:
         from y_web.src.models import Admin_users
 
-        admin = Admin_users.query.filter_by(username=username).first()
+        admin = db.session.scalars(
+            select(Admin_users).filter_by(username=username)
+        ).first()
         if admin and getattr(admin, "profile_pic", None):
             return admin.profile_pic
     except Exception:

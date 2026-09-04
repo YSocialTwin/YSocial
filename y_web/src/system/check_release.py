@@ -2,6 +2,7 @@ import platform
 import sys
 
 import requests
+from sqlalchemy import select
 
 import y_web.pyinstaller_utils.installation_id as installation_id
 
@@ -217,7 +218,7 @@ def update_release_info_in_db():
         from y_web.src.models import ReleaseInfo
 
         # Get or create the single row
-        record = ReleaseInfo.query.first()
+        record = db.session.scalars(select(ReleaseInfo)).first()
 
         if record is None:
             record = ReleaseInfo()

@@ -8,6 +8,9 @@ import tempfile
 import pytest
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import select
+
+from y_web import db
 
 pytestmark = pytest.mark.integration
 
@@ -58,7 +61,7 @@ class TestFlaskAppBasics:
             db.session.commit()
 
             # Test model retrieval
-            retrieved = TestModel.query.first()
+            retrieved = db.session.scalars(select(TestModel)).first()
             assert retrieved is not None
             assert retrieved.name == "test"
 
@@ -83,7 +86,7 @@ class TestY_WebModuleImports:
     def test_import_y_web_models(self):
         """Test importing y_web models"""
         try:
-            from y_web import models
+            from y_web import db, models
 
             # Test that some key models exist
             assert hasattr(models, "User_mgmt")

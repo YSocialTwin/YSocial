@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 from typing import Iterable
 
+from sqlalchemy import delete, select
+
 from y_web import db
 from y_web.src.models import Agent_Custom_Feature, OpinionGroup
 
@@ -49,7 +51,7 @@ def decode_opinion_feature(raw_value) -> dict:
 
 
 def replace_agent_custom_features(agent_id: int, feature_entries: list[dict]) -> None:
-    Agent_Custom_Feature.query.filter_by(agent_id=int(agent_id)).delete()
+    db.session.execute(delete(Agent_Custom_Feature).filter_by(agent_id=int(agent_id)))
     for entry in feature_entries:
         feature_type = str(entry.get("feature_type") or "").strip().lower()
         key = str(entry.get("key") or "").strip()
@@ -70,7 +72,7 @@ def replace_agent_custom_features(agent_id: int, feature_entries: list[dict]) ->
 
 
 def delete_agent_custom_features(agent_id: int) -> None:
-    Agent_Custom_Feature.query.filter_by(agent_id=int(agent_id)).delete()
+    db.session.execute(delete(Agent_Custom_Feature).filter_by(agent_id=int(agent_id)))
 
 
 def summarize_agent_custom_features(agent_id: int) -> dict:
@@ -175,7 +177,9 @@ def summarize_agent_custom_features_bulk(agent_ids: Iterable[int]) -> dict[int, 
 def opinion_group_by_name() -> dict[str, OpinionGroup]:
     return {
         str(group.name).strip(): group
-        for group in OpinionGroup.query.order_by(OpinionGroup.lower_bound.asc()).all()
+        for group in db.session.scalars(
+            select(OpinionGroup).order_by(OpinionGroup.lower_bound.asc())
+        ).all()
     }
 
 
@@ -186,7 +190,9 @@ def opinion_group_for_value(opinion_value) -> OpinionGroup | None:
         numeric = float(opinion_value)
     except (TypeError, ValueError):
         return None
-    groups = OpinionGroup.query.order_by(OpinionGroup.lower_bound.asc()).all()
+    groups = db.session.scalars(
+        select(OpinionGroup).order_by(OpinionGroup.lower_bound.asc())
+    ).all()
     for index, group in enumerate(groups):
         lower = float(group.lower_bound)
         upper = float(group.upper_bound)

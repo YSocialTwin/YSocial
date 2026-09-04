@@ -1,11 +1,13 @@
 """Helpers for experiment visibility and management permissions."""
 
+from sqlalchemy import select
+
 from y_web import db
 from y_web.src.models import Exps, User_Experiment
 
 
 def _get_shared_exp_ids(user_id):
-    rows = User_Experiment.query.filter_by(user_id=user_id).all()
+    rows = db.session.scalars(select(User_Experiment).filter_by(user_id=user_id)).all()
     return [row.exp_id for row in rows]
 
 
@@ -60,8 +62,10 @@ def user_can_view_experiment(admin_user, experiment):
     if experiment.owner == admin_user.username:
         return True
 
-    direct = User_Experiment.query.filter_by(
-        user_id=admin_user.id, exp_id=experiment.idexp
+    direct = db.session.scalars(
+        select(User_Experiment).filter_by(
+            user_id=admin_user.id, exp_id=experiment.idexp
+        )
     ).first()
     if direct:
         return True
@@ -94,8 +98,10 @@ def user_can_manage_experiment(admin_user, experiment):
     if admin_user.role != "researcher":
         return False
 
-    direct = User_Experiment.query.filter_by(
-        user_id=admin_user.id, exp_id=experiment.idexp
+    direct = db.session.scalars(
+        select(User_Experiment).filter_by(
+            user_id=admin_user.id, exp_id=experiment.idexp
+        )
     ).first()
     if direct:
         return True

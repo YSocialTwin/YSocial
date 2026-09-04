@@ -26,7 +26,7 @@ from flask import (
     url_for,
 )
 from flask_login import current_user, login_required
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, select, text
 from werkzeug.security import generate_password_hash
 
 from y_web import db
@@ -71,7 +71,9 @@ def check_tutorial_status():
     Returns:
         JSON with show_tutorial boolean and user role
     """
-    user = Admin_users.query.filter_by(username=current_user.username).first()
+    user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
     if not user or user.role not in ["admin", "researcher"]:
         return jsonify({"show_tutorial": False, "role": None})
@@ -88,7 +90,9 @@ def dismiss_tutorial():
     Returns:
         JSON response with success status
     """
-    user = Admin_users.query.filter_by(username=current_user.username).first()
+    user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
     if not user or user.role not in ["admin", "researcher"]:
         return jsonify({"success": False, "message": "Access denied"}), 403
@@ -108,7 +112,9 @@ def reset_tutorial():
     Returns:
         JSON response with success status
     """
-    user = Admin_users.query.filter_by(username=current_user.username).first()
+    user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
     if not user or user.role not in ["admin", "researcher"]:
         return jsonify({"success": False, "message": "Access denied"}), 403
@@ -133,11 +139,11 @@ def get_tutorial_data():
 
     check_privileges(current_user.username)
 
-    education_levels = Education.query.all()
-    leanings = Leanings.query.all()
-    activity_profiles = ActivityProfile.query.all()
-    crecsys = Content_Recsys.query.all()
-    frecsys = Follow_Recsys.query.all()
+    education_levels = db.session.scalars(select(Education)).all()
+    leanings = db.session.scalars(select(Leanings)).all()
+    activity_profiles = db.session.scalars(select(ActivityProfile)).all()
+    crecsys = db.session.scalars(select(Content_Recsys)).all()
+    frecsys = db.session.scalars(select(Follow_Recsys)).all()
 
     # Check if Ollama is running
     ollama_available = False
@@ -272,7 +278,9 @@ def create_tutorial_experiment():
             )
 
         # Check for existing names
-        if Population.query.filter_by(name=population_name).first():
+        if db.session.scalars(
+            select(Population).filter_by(name=population_name)
+        ).first():
             return (
                 jsonify(
                     {
@@ -282,7 +290,7 @@ def create_tutorial_experiment():
                 ),
                 400,
             )
-        if Exps.query.filter_by(exp_name=experiment_name).first():
+        if db.session.scalars(select(Exps).filter_by(exp_name=experiment_name)).first():
             return (
                 jsonify(
                     {
@@ -300,7 +308,9 @@ def create_tutorial_experiment():
         political_str = ",".join(str(p) for p in political_leanings)
 
         # Default toxicity to "None" (ID 1 typically)
-        none_toxicity = Toxicity_Levels.query.filter_by(toxicity_level="None").first()
+        none_toxicity = db.session.scalars(
+            select(Toxicity_Levels).filter_by(toxicity_level="None")
+        ).first()
         toxicity_str = str(none_toxicity.id) if none_toxicity else "1"
 
         # Build percentages dict with equal distribution
@@ -320,7 +330,7 @@ def create_tutorial_experiment():
         }
 
         # Query all age classes from database and build percentages
-        all_age_classes = AgeClass.query.all()
+        all_age_classes = db.session.scalars(select(AgeClass)).all()
         age_class_percentages = {}
         for age_class in all_age_classes:
             # Use default percentage if available, otherwise distribute evenly
@@ -373,7 +383,9 @@ def create_tutorial_experiment():
                 profile_id = profile_data.get("id")
                 percentage = float(profile_data.get("percentage", 0))
                 if profile_id and percentage > 0:
-                    profile = ActivityProfile.query.filter_by(id=profile_id).first()
+                    profile = db.session.scalars(
+                        select(ActivityProfile).filter_by(id=profile_id)
+                    ).first()
                     if profile:
                         profile_assoc = PopulationActivityProfile(
                             population=pop.id,
@@ -384,7 +396,9 @@ def create_tutorial_experiment():
             db.session.commit()
         else:
             # Default to "Always On" at 100% if no profiles specified
-            selected_profile = ActivityProfile.query.filter_by(name="Always On").first()
+            selected_profile = db.session.scalars(
+                select(ActivityProfile).filter_by(name="Always On")
+            ).first()
             if selected_profile:
                 profile_assoc = PopulationActivityProfile(
                     population=pop.id,
@@ -576,7 +590,9 @@ def create_tutorial_experiment():
 
         # Create topics for the experiment
         for topic_name in experiment_topics:
-            existing_topic = Topic_List.query.filter_by(name=topic_name).first()
+            existing_topic = db.session.scalars(
+                select(Topic_List).filter_by(name=topic_name)
+            ).first()
             if not existing_topic:
                 existing_topic = Topic_List(name=topic_name)
                 db.session.add(existing_topic)
@@ -687,8 +703,13 @@ def create_tutorial_experiment():
 
         # Create client config file
         # Get agents in the population
-        agents = Agent_Population.query.filter_by(population_id=pop.id).all()
-        agents = [Agent.query.filter_by(id=a.agent_id).first() for a in agents]
+        agents = db.session.scalars(
+            select(Agent_Population).filter_by(population_id=pop.id)
+        ).all()
+        agents = [
+            db.session.scalars(select(Agent).filter_by(id=a.agent_id)).first()
+            for a in agents
+        ]
 
         # Build agent population file
         res = {"agents": []}
@@ -866,7 +887,9 @@ def create_tutorial_experiment():
         # on first run so that first_run detection works correctly
 
         # Mark tutorial as shown
-        user = Admin_users.query.filter_by(username=current_user.username).first()
+        user = db.session.scalars(
+            select(Admin_users).filter_by(username=current_user.username)
+        ).first()
         if user:
             user.tutorial_shown = True
             db.session.commit()
@@ -944,17 +967,19 @@ def run_tutorial_simulation():
 
     try:
         # Get the experiment
-        exp = Exps.query.filter_by(idexp=experiment_id).first()
+        exp = db.session.scalars(select(Exps).filter_by(idexp=experiment_id)).first()
         if not exp:
             return jsonify({"success": False, "message": "Experiment not found"}), 404
 
         # Get the client
-        client = Client.query.filter_by(id=client_id).first()
+        client = db.session.scalars(select(Client).filter_by(id=client_id)).first()
         if not client:
             return jsonify({"success": False, "message": "Client not found"}), 404
 
         # Get the population
-        population = Population.query.filter_by(id=client.population_id).first()
+        population = db.session.scalars(
+            select(Population).filter_by(id=client.population_id)
+        ).first()
         if not population:
             return jsonify({"success": False, "message": "Population not found"}), 404
 
@@ -1009,7 +1034,9 @@ def check_exp_details_tutorial_status():
     Returns:
         JSON with show_tutorial boolean and user role
     """
-    user = Admin_users.query.filter_by(username=current_user.username).first()
+    user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
     if not user or user.role not in ["admin", "researcher"]:
         return jsonify({"show_tutorial": False, "role": None})
@@ -1029,7 +1056,9 @@ def dismiss_exp_details_tutorial():
     Returns:
         JSON response with success status
     """
-    user = Admin_users.query.filter_by(username=current_user.username).first()
+    user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
     if not user or user.role not in ["admin", "researcher"]:
         return jsonify({"success": False, "message": "Access denied"}), 403
@@ -1049,7 +1078,9 @@ def reset_exp_details_tutorial():
     Returns:
         JSON response with success status
     """
-    user = Admin_users.query.filter_by(username=current_user.username).first()
+    user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
     if not user or user.role not in ["admin", "researcher"]:
         return jsonify({"success": False, "message": "Access denied"}), 403

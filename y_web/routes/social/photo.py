@@ -30,6 +30,7 @@ from flask import (
     url_for,
 )
 from flask_login import current_user, login_required
+from sqlalchemy import select
 from werkzeug.utils import secure_filename
 
 from y_web import db
@@ -169,8 +170,10 @@ def _photo_latest_round_id(exp: Optional[Exps] = None) -> str:
             pass
 
     try:
-        current_round = Rounds.query.order_by(
-            Rounds.day.desc(), Rounds.hour.desc(), Rounds.id.desc()
+        current_round = db.session.scalars(
+            select(Rounds).order_by(
+                Rounds.day.desc(), Rounds.hour.desc(), Rounds.id.desc()
+            )
         ).first()
         if current_round is not None and getattr(current_round, "id", None) is not None:
             return str(current_round.id)
@@ -1994,8 +1997,8 @@ def photo_feed_logged():
     Redirects the logged-in participant to the first active photo-sharing
     experiment.
     """
-    exps = Exps.query.filter(
-        Exps.status != 0, Exps.platform_type == "photo_sharing"
+    exps = db.session.scalars(
+        select(Exps).filter(Exps.status != 0, Exps.platform_type == "photo_sharing")
     ).all()
     if not exps:
         flash("No active photo-sharing experiment. Please activate one first.")
@@ -2011,7 +2014,7 @@ def photo_feed_logged():
 @main.get("/<int:exp_id>/photo/suggestions")
 @login_required
 def photo_suggestions(exp_id):
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         abort(404)
 
@@ -2051,7 +2054,7 @@ def photo_suggestions(exp_id):
 @main.get("/<int:exp_id>/api/photo/switch/users")
 @login_required
 def api_photo_switch_users(exp_id):
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         return {"ok": False, "error": "not_found"}, 404
     if not is_admin(current_user.username):
@@ -2099,7 +2102,7 @@ def api_photo_switch_users(exp_id):
 @main.post("/<int:exp_id>/api/photo/switch/user")
 @login_required
 def api_photo_switch_user(exp_id):
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         return {"ok": False, "error": "not_found"}, 404
     if not is_admin(current_user.username):
@@ -2136,7 +2139,7 @@ def api_photo_switch_user(exp_id):
 @main.get("/<int:exp_id>/photo/profile/<user_id>/<string:mode>/<int:page>")
 @login_required
 def photo_profile(exp_id, user_id, mode="recent", page=1):
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         abort(404)
 
@@ -2273,7 +2276,7 @@ def photo_profile(exp_id, user_id, mode="recent", page=1):
 @main.get("/<int:exp_id>/photo/search")
 @login_required
 def photo_search(exp_id):
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         abort(404)
 
@@ -2307,7 +2310,7 @@ def photo_search(exp_id):
 @main.get("/<int:exp_id>/photo/messages")
 @login_required
 def photo_messages(exp_id):
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         abort(404)
 
@@ -2335,7 +2338,7 @@ def photo_messages(exp_id):
 @main.get("/<int:exp_id>/api/photo/search")
 @login_required
 def api_photo_search(exp_id):
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         return {"ok": False, "error": "not_found"}, 404
 
@@ -2352,7 +2355,7 @@ def api_photo_search(exp_id):
 @main.get("/<int:exp_id>/photo/media/<path:filename>")
 @login_required
 def photo_media(exp_id, filename):
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         abort(404)
 
@@ -2366,7 +2369,7 @@ def photo_media(exp_id, filename):
 @main.get("/<int:exp_id>/api/photo/post/<photo_id>")
 @login_required
 def api_photo_post(exp_id, photo_id):
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         return {"ok": False, "error": "not_found"}, 404
 
@@ -2396,7 +2399,7 @@ def api_photo_post(exp_id, photo_id):
 @main.post("/<int:exp_id>/api/photo/post/<photo_id>/comments")
 @login_required
 def api_photo_create_comment(exp_id, photo_id):
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         return {"ok": False, "error": "not_found"}, 404
 
@@ -2494,7 +2497,7 @@ def api_photo_create_comment(exp_id, photo_id):
 @main.post("/<int:exp_id>/api/photo/post/<photo_id>/like")
 @login_required
 def api_photo_toggle_like(exp_id, photo_id):
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         return {"ok": False, "error": "not_found"}, 404
 
@@ -2602,7 +2605,7 @@ def api_photo_toggle_like(exp_id, photo_id):
 @main.post("/<int:exp_id>/api/photo/post/<photo_id>/bookmark")
 @login_required
 def api_photo_toggle_bookmark(exp_id, photo_id):
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         return {"ok": False, "error": "not_found"}, 404
 
@@ -2657,7 +2660,7 @@ def api_photo_toggle_bookmark(exp_id, photo_id):
 @main.post("/<int:exp_id>/api/photo/post/<photo_id>/share")
 @login_required
 def api_photo_share_post(exp_id, photo_id):
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         return {"ok": False, "error": "not_found"}, 404
 
@@ -2800,7 +2803,7 @@ def api_photo_share_post(exp_id, photo_id):
 @main.post("/<int:exp_id>/api/photo/post/<photo_id>/delete")
 @login_required
 def api_photo_delete_post(exp_id, photo_id):
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         return {"ok": False, "error": "not_found"}, 404
 
@@ -2853,7 +2856,7 @@ def api_photo_delete_post(exp_id, photo_id):
 @main.post("/<int:exp_id>/api/photo/story/create")
 @login_required
 def api_photo_create_story(exp_id):
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         return {"ok": False, "error": "not_found"}, 404
 
@@ -2972,7 +2975,7 @@ def api_photo_create_story(exp_id):
 @main.post("/<int:exp_id>/api/photo/story/<story_id>/view")
 @login_required
 def api_photo_story_view(exp_id, story_id):
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         return {"ok": False, "error": "not_found"}, 404
 
@@ -3062,7 +3065,7 @@ def api_photo_story_view(exp_id, story_id):
 @main.post("/<int:exp_id>/api/photo/share")
 @login_required
 def api_photo_share(exp_id):
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         return {"ok": False, "error": "not_found"}, 404
 
@@ -3166,7 +3169,7 @@ def api_photo_share(exp_id):
 @main.post("/<int:exp_id>/api/photo/profile/update")
 @login_required
 def api_photo_profile_update(exp_id):
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         return {"ok": False, "error": "not_found"}, 404
 
@@ -3239,19 +3242,25 @@ def api_photo_profile_update(exp_id):
     profile_username = str(updated_user["username"] or "").strip()
     if profile_username:
         try:
-            page = Page.query.filter_by(name=profile_username).first()
+            page = db.session.scalars(
+                select(Page).filter_by(name=profile_username)
+            ).first()
             if page is not None and profile_pic:
                 page.logo = profile_pic
         except Exception:
             pass
         try:
-            agent = Agent.query.filter_by(name=profile_username).first()
+            agent = db.session.scalars(
+                select(Agent).filter_by(name=profile_username)
+            ).first()
             if agent is not None and profile_pic:
                 agent.profile_pic = profile_pic
         except Exception:
             pass
         try:
-            admin_user = Admin_users.query.filter_by(username=profile_username).first()
+            admin_user = db.session.scalars(
+                select(Admin_users).filter_by(username=profile_username)
+            ).first()
             if admin_user is not None and profile_pic:
                 admin_user.profile_pic = profile_pic
         except Exception:
@@ -3315,7 +3324,7 @@ def api_photo_profile_update(exp_id):
 @main.get("/<int:exp_id>/api/photo/profile/<user_id>/connections/<kind>")
 @login_required
 def api_photo_profile_connections(exp_id, user_id, kind):
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         return {"ok": False, "error": "not_found"}, 404
 
@@ -3337,7 +3346,7 @@ def photo_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     The feed keeps the microblogging/forum data contract but presents the
     content in a photo-first layout.
     """
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         abort(404)
 
@@ -3443,7 +3452,7 @@ def photo_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
 )
 @login_required
 def api_photo_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if not exp or getattr(exp, "platform_type", "") != "photo_sharing":
         return {"html": "", "has_more": False}, 404
 

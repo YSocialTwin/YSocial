@@ -10,8 +10,10 @@ import tempfile
 import pytest
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import select
 from werkzeug.security import generate_password_hash
 
+from y_web import db
 from y_web.src.telemetry import Telemetry
 
 pytestmark = pytest.mark.integration
@@ -58,7 +60,9 @@ def test_admin_user_model_has_telemetry_fields():
         db.session.commit()
 
         # Verify telemetry fields exist and have correct defaults
-        user = Admin_users.query.filter_by(username="testadmin").first()
+        user = db.session.scalars(
+            select(Admin_users).filter_by(username="testadmin")
+        ).first()
         assert user is not None
         assert hasattr(user, "telemetry_enabled")
         assert hasattr(user, "telemetry_notice_shown")
@@ -110,7 +114,9 @@ def test_telemetry_enabled_default_value():
         db.session.add(user)
         db.session.commit()
 
-        user = Admin_users.query.filter_by(username="newuser").first()
+        user = db.session.scalars(
+            select(Admin_users).filter_by(username="newuser")
+        ).first()
         assert user.telemetry_enabled is True
 
         db.session.close()
@@ -158,7 +164,9 @@ def test_telemetry_notice_shown_default_value():
         db.session.add(user)
         db.session.commit()
 
-        user = Admin_users.query.filter_by(username="newuser").first()
+        user = db.session.scalars(
+            select(Admin_users).filter_by(username="newuser")
+        ).first()
         assert user.telemetry_notice_shown is False
 
         db.session.close()

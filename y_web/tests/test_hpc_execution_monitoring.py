@@ -14,6 +14,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from flask import Flask
+from sqlalchemy import select
 
 pytestmark = pytest.mark.integration
 
@@ -337,12 +338,16 @@ class TestHPCExecutionLogMonitoring:
             assert execution_log.exists()
             assert execution_log.read_text(encoding="utf-8") == ""
 
-            updated_exp = Exps.query.filter_by(idexp=exp.idexp).first()
+            updated_exp = db.session.scalars(
+                select(Exps).filter_by(idexp=exp.idexp)
+            ).first()
             assert updated_exp.running == 1
             assert updated_exp.exp_status == "active"
 
-            logs = ExperimentScheduleLog.query.order_by(
-                ExperimentScheduleLog.created_at.asc()
+            logs = db.session.scalars(
+                select(ExperimentScheduleLog).order_by(
+                    ExperimentScheduleLog.created_at.asc()
+                )
             ).all()
             assert any("Restarting automatically" in log.message for log in logs)
             assert any("restarted automatically" in log.message for log in logs)
@@ -595,15 +600,21 @@ class TestHPCExecutionLogMonitoring:
             assert result is True
 
             # Verify updates
-            updated_exec = Client_Execution.query.filter_by(client_id=client.id).first()
+            updated_exec = db.session.scalars(
+                select(Client_Execution).filter_by(client_id=client.id)
+            ).first()
             assert updated_exec.elapsed_time == 24
             # With 24 rounds: round 1 = day 1, hour 1; round 24 = day 1, hour 24
             assert updated_exec.last_active_day == 1
             assert updated_exec.last_active_hour == 24
 
-            updated_client = Client.query.filter_by(id=client.id).first()
+            updated_client = db.session.scalars(
+                select(Client).filter_by(id=client.id)
+            ).first()
             assert updated_client.status == 0
-            updated_exec = Client_Execution.query.filter_by(client_id=client.id).first()
+            updated_exec = db.session.scalars(
+                select(Client_Execution).filter_by(client_id=client.id)
+            ).first()
             assert updated_exec.terminal_state == "completed"
 
     def test_parse_client_log_incremental_does_not_complete_infinite_client(self, app):
@@ -642,21 +653,15 @@ class TestHPCExecutionLogMonitoring:
 
                 with (
                     patch("y_web.src.hpc.log_parser._commit_with_retry") as mock_commit,
-                    patch(
-                        "y_web.src.hpc.log_parser.Client_Execution.query"
-                    ) as mock_exec_query,
-                    patch("y_web.src.hpc.log_parser.Client.query") as mock_client_query,
-                    patch(
-                        "y_web.src.hpc.log_parser.ClientLogMetrics.query"
-                    ) as mock_metrics_query,
+                    patch("y_web.src.hpc.log_parser.db") as mock_db,
                 ):
-                    mock_exec_query.filter_by.return_value.first.return_value = (
-                        mock_exec
-                    )
-                    mock_client_query.filter_by.return_value.first.return_value = (
-                        mock_client
-                    )
-                    mock_metrics_query.filter_by.return_value.first.return_value = None
+                    from unittest.mock import MagicMock as _MM
+
+                    _metrics_r = _MM()
+                    _metrics_r.first.return_value = None
+                    _exec_r = _MM()
+                    _exec_r.first.return_value = mock_exec
+                    mock_db.session.scalars.side_effect = [_metrics_r, _exec_r]
 
                     new_offset, metrics = parse_client_log_incremental(
                         log_path, exp_id=1, client_id=1, start_offset=0, is_hpc=True
@@ -709,22 +714,22 @@ class TestHPCExecutionLogMonitoring:
 
                 with (
                     patch("y_web.src.hpc.log_parser._commit_with_retry") as mock_commit,
-                    patch(
-                        "y_web.src.hpc.log_parser.Client_Execution.query"
-                    ) as mock_exec_query,
-                    patch("y_web.src.hpc.log_parser.Client.query") as mock_client_query,
-                    patch(
-                        "y_web.src.hpc.log_parser.ClientLogMetrics.query"
-                    ) as mock_metrics_query,
+                    patch("y_web.src.hpc.log_parser.db") as mock_db,
                     patch("y_web.src.hpc.client.stop_hpc_client") as mock_stop,
                 ):
-                    mock_exec_query.filter_by.return_value.first.return_value = (
-                        mock_exec
-                    )
-                    mock_client_query.filter_by.return_value.first.return_value = (
-                        mock_client
-                    )
-                    mock_metrics_query.filter_by.return_value.first.return_value = None
+                    from unittest.mock import MagicMock as _MM
+
+                    _metrics_r = _MM()
+                    _metrics_r.first.return_value = None
+                    _exec_r = _MM()
+                    _exec_r.first.return_value = mock_exec
+                    _client_r = _MM()
+                    _client_r.first.return_value = mock_client
+                    mock_db.session.scalars.side_effect = [
+                        _metrics_r,
+                        _exec_r,
+                        _client_r,
+                    ]
 
                     new_offset, metrics = parse_client_log_incremental(
                         log_path, exp_id=1, client_id=1, start_offset=0, is_hpc=True
@@ -806,7 +811,9 @@ class TestHPCExecutionLogMonitoring:
             assert result is True
 
             # Verify experiment was terminated
-            updated_exp = Exps.query.filter_by(idexp=exp.idexp).first()
+            updated_exp = db.session.scalars(
+                select(Exps).filter_by(idexp=exp.idexp)
+            ).first()
             assert updated_exp.running == 0
             assert updated_exp.exp_status == "completed"
             mock_stop.assert_called_once_with(exp.idexp)
@@ -855,7 +862,9 @@ class TestHPCExecutionLogMonitoring:
             assert result is False
 
             # Verify experiment was NOT terminated
-            updated_exp = Exps.query.filter_by(idexp=exp.idexp).first()
+            updated_exp = db.session.scalars(
+                select(Exps).filter_by(idexp=exp.idexp)
+            ).first()
             assert updated_exp.running == 1
             mock_stop.assert_not_called()
 
@@ -914,7 +923,9 @@ class TestHPCExecutionLogMonitoring:
 
             result = check_and_terminate_hpc_experiment(exp.idexp)
             assert result is False
-            updated_exp = Exps.query.filter_by(idexp=exp.idexp).first()
+            updated_exp = db.session.scalars(
+                select(Exps).filter_by(idexp=exp.idexp)
+            ).first()
             assert updated_exp.running == 1
             mock_stop.assert_not_called()
 
@@ -937,13 +948,13 @@ class TestHPCExecutionLogMonitoring:
 
         with app.app_context():
             with (
-                patch.object(log_metrics.Client, "query") as mock_query,
+                patch.object(log_metrics, "db") as mock_db,
                 patch.object(
                     log_metrics, "_is_hpc_client_tracked_process_alive"
                 ) as mock_alive,
                 patch.object(log_metrics, "_commit_with_retry") as mock_commit,
             ):
-                mock_query.filter_by.return_value.all.return_value = [
+                mock_db.session.scalars.return_value.all.return_value = [
                     stale_client,
                     already_running_client,
                 ]
@@ -1009,8 +1020,12 @@ class TestHPCExecutionLogMonitoring:
                 exp.idexp, client.id, reason="unit test failure"
             )
 
-            updated_client = Client.query.filter_by(id=client.id).first()
-            updated_exec = Client_Execution.query.filter_by(client_id=client.id).first()
+            updated_client = db.session.scalars(
+                select(Client).filter_by(id=client.id)
+            ).first()
+            updated_exec = db.session.scalars(
+                select(Client_Execution).filter_by(client_id=client.id)
+            ).first()
             assert updated_client.status == 0
             assert updated_client.pid is None
             assert updated_exec.terminal_state == "failed"
@@ -1092,7 +1107,9 @@ class TestHPCExecutionLogMonitoring:
                     reason=f"PID {client.pid} no longer alive for client {client.name}",
                 )
                 mock_stop_after_failure.assert_not_called()
-                updated_exp = Exps.query.filter_by(idexp=exp.idexp).first()
+                updated_exp = db.session.scalars(
+                    select(Exps).filter_by(idexp=exp.idexp)
+                ).first()
                 assert updated_exp.running == 1
                 assert updated_exp.exp_status == "active"
 
@@ -1149,6 +1166,8 @@ class TestHPCExecutionLogMonitoring:
             result = check_and_terminate_hpc_experiment(exp.idexp)
             assert result is False
 
-            updated_exp = Exps.query.filter_by(idexp=exp.idexp).first()
+            updated_exp = db.session.scalars(
+                select(Exps).filter_by(idexp=exp.idexp)
+            ).first()
             assert updated_exp.running == 1
             mock_stop.assert_not_called()

@@ -19,7 +19,7 @@ from flask import (
     url_for,
 )
 from flask_login import current_user, login_required
-from sqlalchemy import and_, desc, or_
+from sqlalchemy import and_, desc, func, or_, select
 from sqlalchemy.sql.expression import func
 from werkzeug.security import generate_password_hash
 
@@ -185,7 +185,7 @@ def _default_cover_image_url():
 def _get_user_cover_image(user_id):
     default_cover = _default_cover_image_url()
     try:
-        user = User_mgmt.query.filter_by(id=user_id).first()
+        user = db.session.scalars(select(User_mgmt).filter_by(id=user_id)).first()
     except Exception:
         return default_cover
 
@@ -205,7 +205,7 @@ def _get_user_cover_image(user_id):
 
 
 def _set_user_cover_image(user_id, cover_image):
-    user = User_mgmt.query.filter_by(id=user_id).first()
+    user = db.session.scalars(select(User_mgmt).filter_by(id=user_id)).first()
     if user is not None:
         user.cover_image = normalize_cover_image_url(cover_image)
 
@@ -226,7 +226,7 @@ def index():
     """
     if current_user.is_authenticated:
         # get active experiments
-        exps = Exps.query.filter(Exps.status != 0).all()
+        exps = db.session.scalars(select(Exps).filter(Exps.status != 0)).all()
         if exps:
             # If multiple experiments, redirect to join menu
             if len(exps) > 1:
@@ -244,7 +244,6 @@ def index():
             exp_user_id = current_user.id  # fallback to admin ID
             try:
                 # Use the experiment's database bind
-                from y_web import db
                 from y_web.src.models import User_mgmt
 
                 # Temporarily override db_exp bind to query correct database
@@ -254,8 +253,8 @@ def index():
                         "db_exp"
                     ] = db.get_app().config["SQLALCHEMY_BINDS"][bind_key]
 
-                    exp_user = User_mgmt.query.filter_by(
-                        username=current_user.username
+                    exp_user = db.session.scalars(
+                        select(User_mgmt).filter_by(username=current_user.username)
                     ).first()
                     if exp_user:
                         exp_user_id = exp_user.id
@@ -282,7 +281,7 @@ def index():
 def profile():
     """Handle profile operation - legacy route."""
     # Get active experiments
-    exps = Exps.query.filter(Exps.status != 0).all()
+    exps = db.session.scalars(select(Exps).filter(Exps.status != 0)).all()
     if not exps:
         flash("No active experiment. Please activate an experiment first.")
         return redirect("/admin/experiments")
@@ -299,13 +298,15 @@ def profile():
 @login_required
 def profile_logged(exp_id, user_id, page=1, mode="recent"):
     """Handle profile logged operation."""
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if not exp:
         flash("Experiment not found", "error")
         return redirect(url_for("main.index"))
 
     # Get experiment user (not admin user) for logged_id
-    logged_user = User_mgmt.query.filter_by(username=current_user.username).first()
+    logged_user = db.session.scalars(
+        select(User_mgmt).filter_by(username=current_user.username)
+    ).first()
     if not logged_user:
         if getattr(exp, "platform_type", "") == "forum":
             logged_id = current_user.id
@@ -322,9 +323,9 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
         # Keep as string if it's a UUID
         pass
 
-    user = User_mgmt.query.get(user_id)
+    user = db.session.get(User_mgmt, user_id)
     if not user:
-        user = User_mgmt.query.filter_by(username=user_id).first()
+        user = db.session.scalars(select(User_mgmt).filter_by(username=user_id)).first()
 
     # If user still not found, redirect with error message
     if not user:
@@ -346,11 +347,21 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
         Post.user_id == user_id,
         and_(Post.comment_to.isnot(None), Post.comment_to != -1),
     ).count()
-    total_likes = Reactions.query.filter_by(user_id=user_id, type="like").count()
-    total_dislikes = Reactions.query.filter_by(user_id=user_id, type="dislike").count()
-    total_articles = Post.query.filter(
-        Post.user_id == user_id, Post.news_id.isnot(None)
-    ).count()
+    total_likes = db.session.scalar(
+        select(func.count())
+        .select_from(Reactions)
+        .filter_by(user_id=user_id, type="like")
+    )
+    total_dislikes = db.session.scalar(
+        select(func.count())
+        .select_from(Reactions)
+        .filter_by(user_id=user_id, type="dislike")
+    )
+    total_articles = db.session.scalar(
+        select(func.count())
+        .select_from(Post)
+        .filter(Post.user_id == user_id, Post.news_id.isnot(None))
+    )
 
     hashtags = (
         db.session.query(
@@ -392,19 +403,23 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
     else:
         profile_pic = ""
         if user.is_page == 1:
-            pg = Page.query.filter_by(name=user.username).first()
+            pg = db.session.scalars(select(Page).filter_by(name=user.username)).first()
             if pg:
                 profile_pic = pg.logo
         else:
-            ag = Agent.query.filter_by(name=user.username).first()
+            ag = db.session.scalars(select(Agent).filter_by(name=user.username)).first()
             if ag and ag.profile_pic:
                 profile_pic = ag.profile_pic
             else:
-                admin = Admin_users.query.filter_by(username=user.username).first()
+                admin = db.session.scalars(
+                    select(Admin_users).filter_by(username=user.username)
+                ).first()
                 profile_pic = admin.profile_pic if admin else ""
 
     agent_custom_features = {}
-    dashboard_agent = Agent.query.filter_by(name=user.username).first()
+    dashboard_agent = db.session.scalars(
+        select(Agent).filter_by(name=user.username)
+    ).first()
     if dashboard_agent is not None:
         try:
             agent_custom_features = (
@@ -527,25 +542,29 @@ def edit_profile(exp_id, user_id):
         # Keep as string if it's a UUID
         pass
 
-    user = User_mgmt.query.filter_by(id=user_id).first()
+    user = db.session.scalars(select(User_mgmt).filter_by(id=user_id)).first()
 
     profile_pic = ""
 
     # is the agent a page?
     if user.is_page == 1:
-        pg = Page.query.filter_by(name=user.username).first()
+        pg = db.session.scalars(select(Page).filter_by(name=user.username)).first()
         if pg is not None:
             profile_pic = pg.logo
     else:
-        ag = Agent.query.filter_by(name=user.username).first()
+        ag = db.session.scalars(select(Agent).filter_by(name=user.username)).first()
         if ag is not None and ag.profile_pic is not None:
             profile_pic = ag.profile_pic
         else:
-            admin_user = Admin_users.query.filter_by(username=user.username).first()
+            admin_user = db.session.scalars(
+                select(Admin_users).filter_by(username=user.username)
+            ).first()
             profile_pic = admin_user.profile_pic if admin_user else ""
 
     # Get experiment user (not admin user)
-    logged_user = User_mgmt.query.filter_by(username=current_user.username).first()
+    logged_user = db.session.scalars(
+        select(User_mgmt).filter_by(username=current_user.username)
+    ).first()
     if not logged_user:
         flash("User not found in experiment", "error")
         return redirect(url_for("main.index"))
@@ -604,7 +623,7 @@ def update_profile_data(exp_id, user_id):
         # Keep as string if it's a UUID
         pass
 
-    user = User_mgmt.query.filter_by(id=user_id).first()
+    user = db.session.scalars(select(User_mgmt).filter_by(id=user_id)).first()
 
     user.email = request.form.get("email")
     user.gender = request.form.get("gender")
@@ -619,15 +638,17 @@ def update_profile_data(exp_id, user_id):
     cover_image = request.form.get("cover_image") or random_cover_image_url()
 
     if user.is_page == 1:
-        page = Page.query.filter_by(name=user.username).first()
+        page = db.session.scalars(select(Page).filter_by(name=user.username)).first()
         if page is not None:
             page.logo = profile_pic
     else:
-        agent = Agent.query.filter_by(name=user.username).first()
+        agent = db.session.scalars(select(Agent).filter_by(name=user.username)).first()
         if agent is not None:
             agent.profile_pic = profile_pic
 
-    admin_user = Admin_users.query.filter_by(username=user.username).first()
+    admin_user = db.session.scalars(
+        select(Admin_users).filter_by(username=user.username)
+    ).first()
     if admin_user is not None:
         admin_user.profile_pic = profile_pic
 
@@ -671,7 +692,7 @@ def update_password(exp_id, user_id):
         # Keep as string if it's a UUID
         pass
 
-    user = User_mgmt.query.filter_by(id=user_id).first()
+    user = db.session.scalars(select(User_mgmt).filter_by(id=user_id)).first()
 
     npassword = request.form.get("new_password")
     npassword2 = request.form.get("new_password2")

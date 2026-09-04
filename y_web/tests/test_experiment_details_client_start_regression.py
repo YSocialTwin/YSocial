@@ -7,6 +7,7 @@ These tests are source-level guards for the expensive details-page render path.
 from pathlib import Path
 
 import pytest
+from sqlalchemy import select
 
 pytestmark = pytest.mark.unit
 
@@ -38,7 +39,7 @@ def test_experiment_details_batches_client_execution_lookup():
 
     assert "Client_Execution.client_id.in_(client_ids)" in experiment_details_source
     assert (
-        "Client_Execution.query.filter_by(client_id=client.id).first()"
+        "db.session.scalars(select(Client_Execution).filter_by(client_id=client.id)).first()"
         not in experiment_details_source
     )
 

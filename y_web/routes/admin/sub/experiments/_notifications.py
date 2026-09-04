@@ -33,6 +33,7 @@ from flask import (
     url_for,
 )
 from flask_login import current_user, login_required, login_user
+from sqlalchemy import func, select
 
 from y_web import db  # , app
 from y_web.src.content.avatars import normalize_forum_avatar_mode
@@ -130,7 +131,7 @@ def _create_sqlite_copy_for_postgresql(experiment, folder):
     import sqlite3
     from urllib.parse import urlparse
 
-    from sqlalchemy import create_engine, inspect, text
+    from sqlalchemy import create_engine, func, inspect, select, text
 
     current_uri = current_app.config["SQLALCHEMY_DATABASE_URI"]
     parsed_uri = urlparse(current_uri)
@@ -198,7 +199,7 @@ def _build_single_experiment_zip(eid, output_zip_path):
     from y_web.src.system.path_utils import get_writable_path
 
     base_dir = get_writable_path()
-    experiment = Exps.query.filter_by(idexp=eid).first()
+    experiment = db.session.scalars(select(Exps).filter_by(idexp=eid)).first()
     if not experiment:
         raise ValueError(f"Experiment {eid} not found")
 
@@ -235,7 +236,7 @@ def _build_bulk_experiments_zip(exp_ids, output_zip_path):
     used_names = set()
     try:
         for eid in exp_ids:
-            experiment = Exps.query.filter_by(idexp=eid).first()
+            experiment = db.session.scalars(select(Exps).filter_by(idexp=eid)).first()
             if not experiment:
                 continue
 
@@ -309,7 +310,7 @@ def _enqueue_user_notification(
 def _run_single_download_job(app, notification_id, eid):
     """Background worker for single experiment export."""
     with app.app_context():
-        notification = DownloadNotification.query.get(notification_id)
+        notification = db.session.get(DownloadNotification, notification_id)
         if not notification:
             return
 
@@ -320,7 +321,7 @@ def _run_single_download_job(app, notification_id, eid):
             output_zip_path = os.path.join(temp_data_dir, f"{file_base}.zip")
             download_name = _build_single_experiment_zip(eid, output_zip_path)
 
-            notification = DownloadNotification.query.get(notification_id)
+            notification = db.session.get(DownloadNotification, notification_id)
             if not notification:
                 return
             if notification.status == "cancelled":
@@ -343,7 +344,7 @@ def _run_single_download_job(app, notification_id, eid):
                 f"Error generating async experiment archive (eid={eid}): {exc}",
                 exc_info=True,
             )
-            notification = DownloadNotification.query.get(notification_id)
+            notification = db.session.get(DownloadNotification, notification_id)
             if notification and notification.status != "cancelled":
                 notification.status = "failed"
                 notification.message = "Archive generation failed."
@@ -356,7 +357,7 @@ def _run_single_download_job(app, notification_id, eid):
 def _run_bulk_download_job(app, notification_id, exp_ids):
     """Background worker for bulk experiments export."""
     with app.app_context():
-        notification = DownloadNotification.query.get(notification_id)
+        notification = db.session.get(DownloadNotification, notification_id)
         if not notification:
             return
 
@@ -367,7 +368,7 @@ def _run_bulk_download_job(app, notification_id, exp_ids):
             output_zip_path = os.path.join(temp_data_dir, f"{file_base}.zip")
             download_name = _build_bulk_experiments_zip(exp_ids, output_zip_path)
 
-            notification = DownloadNotification.query.get(notification_id)
+            notification = db.session.get(DownloadNotification, notification_id)
             if not notification:
                 return
             if notification.status == "cancelled":
@@ -389,7 +390,7 @@ def _run_bulk_download_job(app, notification_id, exp_ids):
             current_app.logger.error(
                 f"Error generating async bulk archive: {exc}", exc_info=True
             )
-            notification = DownloadNotification.query.get(notification_id)
+            notification = db.session.get(DownloadNotification, notification_id)
             if notification and notification.status != "cancelled":
                 notification.status = "failed"
                 notification.message = "Bulk archive generation failed."
@@ -451,7 +452,7 @@ def download_experiment_file(eid):
     """Queue asynchronous experiment archive generation and notify when ready."""
     check_privileges(current_user.username)
 
-    experiment = Exps.query.filter_by(idexp=eid).first()
+    experiment = db.session.scalars(select(Exps).filter_by(idexp=eid)).first()
     if not experiment:
         flash("Experiment not found.", "error")
         return redirect(url_for("experiments.settings"))
@@ -578,9 +579,11 @@ def download_notifications_data():
         user_id=admin_user.id, is_read=False
     ).order_by(DownloadNotification.created_at.desc(), DownloadNotification.id.desc())
     notifications = query.limit(limit).all()
-    unread_count = DownloadNotification.query.filter_by(
-        user_id=admin_user.id, is_read=False
-    ).count()
+    unread_count = db.session.scalar(
+        select(func.count())
+        .select_from(DownloadNotification)
+        .filter_by(user_id=admin_user.id, is_read=False)
+    )
     return jsonify(
         {
             "items": [_serialize_download_notification(item) for item in notifications],
@@ -601,8 +604,10 @@ def mark_download_notification_read(notification_id):
     if not admin_user:
         return jsonify({"success": False, "error": "User not found"}), 404
 
-    notification = DownloadNotification.query.filter_by(
-        id=notification_id, user_id=admin_user.id
+    notification = db.session.scalars(
+        select(DownloadNotification).filter_by(
+            id=notification_id, user_id=admin_user.id
+        )
     ).first()
     if not notification:
         return jsonify({"success": False, "error": "Notification not found"}), 404
@@ -626,8 +631,10 @@ def cancel_download_notification(notification_id):
     if not admin_user:
         return jsonify({"success": False, "error": "User not found"}), 404
 
-    notification = DownloadNotification.query.filter_by(
-        id=notification_id, user_id=admin_user.id
+    notification = db.session.scalars(
+        select(DownloadNotification).filter_by(
+            id=notification_id, user_id=admin_user.id
+        )
     ).first()
     if not notification:
         return jsonify({"success": False, "error": "Notification not found"}), 404
@@ -669,8 +676,10 @@ def delete_notification(notification_id):
     if not admin_user:
         return jsonify({"success": False, "error": "User not found"}), 404
 
-    notification = DownloadNotification.query.filter_by(
-        id=notification_id, user_id=admin_user.id
+    notification = db.session.scalars(
+        select(DownloadNotification).filter_by(
+            id=notification_id, user_id=admin_user.id
+        )
     ).first()
     if not notification:
         return jsonify({"success": False, "error": "Notification not found"}), 404
@@ -702,8 +711,10 @@ def download_notification_resource(notification_id):
         flash("Unable to resolve current admin user.", "error")
         return redirect(url_for("experiments.download_notifications_page"))
 
-    notification = DownloadNotification.query.filter_by(
-        id=notification_id, user_id=admin_user.id
+    notification = db.session.scalars(
+        select(DownloadNotification).filter_by(
+            id=notification_id, user_id=admin_user.id
+        )
     ).first()
     if not notification:
         flash("Notification not found.", "error")

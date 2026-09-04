@@ -13,6 +13,7 @@ import re
 
 import faker
 import numpy as np
+from sqlalchemy import select
 from sqlalchemy.sql import func
 
 from y_web import db
@@ -137,21 +138,27 @@ def __sample_age_degree_profession(age_class, edu_classes, profession_category=N
     age = random.randint(age_class.age_start, age_class.age_end)
 
     if age < 18:
-        profession = Profession.query.filter_by(profession="Student").first()
+        profession = db.session.scalars(
+            select(Profession).filter_by(profession="Student")
+        ).first()
     else:
         # If a profession category is provided, sample from professions in that category
         if profession_category:
             # Get professions matching the category (background column)
-            category_professions = Profession.query.filter_by(
-                background=profession_category
+            category_professions = db.session.scalars(
+                select(Profession).filter_by(background=profession_category)
             ).all()
             if category_professions:
                 profession = random.choice(category_professions)
             else:
                 # Fallback to random if no professions found for category
-                profession = Profession.query.order_by(func.random()).first()
+                profession = db.session.scalars(
+                    select(Profession).order_by(func.random())
+                ).first()
         else:
-            profession = Profession.query.order_by(func.random()).first()
+            profession = db.session.scalars(
+                select(Profession).order_by(func.random())
+            ).first()
 
     sampled = random.choices(
         population=list(edu_classes.keys()), weights=list(edu_classes.values()), k=1
@@ -159,7 +166,9 @@ def __sample_age_degree_profession(age_class, edu_classes, profession_category=N
     education_level = int(sampled)
     # get education level object
     education_level = (
-        Education.query.filter_by(id=education_level).first().education_level
+        db.session.scalars(select(Education).filter_by(id=education_level))
+        .first()
+        .education_level
     )
 
     return age, profession, education_level
@@ -380,11 +389,13 @@ def generate_population(
     """
 
     # get population by name
-    population = Population.query.filter_by(name=population_name).first()
+    population = db.session.scalars(
+        select(Population).filter_by(name=population_name)
+    ).first()
 
     # Get activity profile distribution for this population
-    profile_distributions = PopulationActivityProfile.query.filter_by(
-        population=population.id
+    profile_distributions = db.session.scalars(
+        select(PopulationActivityProfile).filter_by(population=population.id)
     ).all()
 
     # Build cumulative distribution for activity profile assignment

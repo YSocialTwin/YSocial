@@ -15,7 +15,10 @@ from flask_login import (
     login_user,
 )
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import select
 from werkzeug.security import check_password_hash, generate_password_hash
+
+from y_web import db
 
 pytestmark = pytest.mark.integration
 
@@ -79,7 +82,7 @@ def test_user_model_with_flask_login():
 
     @login_manager.user_loader
     def load_user(user_id):
-        return TestUser.query.get(int(user_id))
+        return db.session.get(TestUser, int(user_id))
 
     with app.app_context():
         db.create_all()
@@ -156,7 +159,7 @@ def test_auth_integration():
 
     @login_manager.user_loader
     def load_user(user_id):
-        return TestUser.query.get(int(user_id))
+        return db.session.get(TestUser, int(user_id))
 
     # Create auth blueprint
     auth_bp = Blueprint("auth", __name__)
@@ -167,7 +170,9 @@ def test_auth_integration():
             username = request.form.get("username")
             password = request.form.get("password")
 
-            user = TestUser.query.filter_by(username=username).first()
+            user = db.session.scalars(
+                select(TestUser).filter_by(username=username)
+            ).first()
             if user and check_password_hash(user.password, password):
                 login_user(user)
                 return "Login successful"
@@ -245,7 +250,7 @@ def test_failed_login_attempts():
 
     @login_manager.user_loader
     def load_user(user_id):
-        return TestUser.query.get(int(user_id))
+        return db.session.get(TestUser, int(user_id))
 
     auth_bp = Blueprint("auth", __name__)
 
@@ -254,7 +259,7 @@ def test_failed_login_attempts():
         username = request.form.get("username")
         password = request.form.get("password")
 
-        user = TestUser.query.filter_by(username=username).first()
+        user = db.session.scalars(select(TestUser).filter_by(username=username)).first()
         if user and check_password_hash(user.password, password):
             return "Login successful"
         return "Login failed"

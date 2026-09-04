@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Tuple
 
-from sqlalchemy import func
+from sqlalchemy import func, select
 
 from y_web import db
 from y_web.src.forum.actions.posts import (
@@ -53,7 +53,7 @@ def apply_vote(user, post_id: int, action: str) -> Tuple[int, int]:
     _ensure_experiment_context(user)
     actor_user = _resolve_experiment_actor(user)
 
-    post = Post.query.filter_by(id=post_id).first()
+    post = db.session.scalars(select(Post).filter_by(id=post_id)).first()
     if post is None:
         raise ValueError(f"Post {post_id} not found")
 
@@ -95,7 +95,9 @@ def apply_vote(user, post_id: int, action: str) -> Tuple[int, int]:
 
         # Get sentiment parent for tracking
         sentiment_parent = ""
-        post_sentiment_record = Post_Sentiment.query.filter_by(post_id=post_id).first()
+        post_sentiment_record = db.session.scalars(
+            select(Post_Sentiment).filter_by(post_id=post_id)
+        ).first()
         if post_sentiment_record is not None:
             compound = post_sentiment_record.compound
             if compound > 0.05:
@@ -106,7 +108,9 @@ def apply_vote(user, post_id: int, action: str) -> Tuple[int, int]:
                 sentiment_parent = "neu"
 
         # Create reaction sentiment records for each topic
-        post_topics_list = Post_topics.query.filter_by(post_id=post_id).all()
+        post_topics_list = db.session.scalars(
+            select(Post_topics).filter_by(post_id=post_id)
+        ).all()
         for post_topic in post_topics_list:
             topic_id = post_topic.topic_id
 

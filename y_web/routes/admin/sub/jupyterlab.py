@@ -1,6 +1,7 @@
 import psutil
 from flask import Blueprint, current_app, jsonify, render_template, request
 from flask_login import login_required
+from sqlalchemy import select
 
 from y_web import db
 from y_web.routes.admin.sub.experiments import experiment_details
@@ -201,7 +202,7 @@ def jupyter_page(exp_id):
     current_host, current_port = _get_request_host_and_port()
     jupyter_url = f"http://{current_host}:{inst['port']}/lab?token=embed-jupyter-token"
 
-    experiment = Exps.query.filter_by(idexp=exp_id).first()
+    experiment = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
 
     return render_template(
         "admin/jupyter.html",

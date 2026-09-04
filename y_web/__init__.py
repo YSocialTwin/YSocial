@@ -18,96 +18,13 @@ import json
 import os
 import sys
 
-import flask_sqlalchemy
-import sqlalchemy
-import sqlalchemy.orm
 from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import select
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-
-def _ensure_flask_sqlalchemy_legacy_compat() -> None:
-    """
-    Flask-SQLAlchemy 2.x expects sqlalchemy.__all__ and sqlalchemy.orm.__all__,
-    which were removed in SQLAlchemy 2.x.
-
-    Recreate only the legacy symbol subset that Flask-SQLAlchemy commonly copies
-    onto the extension object, instead of mirroring every public SQLAlchemy 2.x
-    attribute. A broad copy drags in names like ``engine`` that trigger runtime
-    errors during bootstrap.
-    """
-
-    if not hasattr(sqlalchemy.orm, "relation") and hasattr(
-        sqlalchemy.orm, "relationship"
-    ):
-        sqlalchemy.orm.relation = sqlalchemy.orm.relationship
-
-    sqlalchemy_public = [
-        "Column",
-        "Integer",
-        "BigInteger",
-        "REAL",
-        "Float",
-        "Boolean",
-        "String",
-        "Text",
-        "DateTime",
-        "ForeignKey",
-        "Index",
-        "Table",
-        "func",
-        "text",
-        "or_",
-    ]
-    orm_public = [
-        "relationship",
-        "relation",
-        "dynamic_loader",
-        "backref",
-    ]
-
-    if not hasattr(sqlalchemy, "__all__"):
-        sqlalchemy.__all__ = [
-            name for name in sqlalchemy_public if hasattr(sqlalchemy, name)
-        ]
-    if not hasattr(sqlalchemy.orm, "__all__"):
-        sqlalchemy.orm.__all__ = [
-            name for name in orm_public if hasattr(sqlalchemy.orm, name)
-        ]
-
-    session_base = getattr(flask_sqlalchemy, "SessionBase", None)
-    signalling_session = getattr(flask_sqlalchemy, "SignallingSession", None)
-    if session_base is not None and signalling_session is not None:
-        original_get_bind = signalling_session.get_bind
-        if not getattr(original_get_bind, "_ysocial_sa2_compat", False):
-
-            def _compat_get_bind(self, mapper=None, clause=None):
-                if mapper is not None:
-                    try:
-                        persist_selectable = mapper.persist_selectable
-                    except AttributeError:
-                        persist_selectable = mapper.mapped_table
-
-                    info = getattr(persist_selectable, "info", {})
-                    bind_key = info.get("bind_key")
-                    if bind_key is not None:
-                        binds = {}
-                        try:
-                            binds = self.app.config.get("SQLALCHEMY_BINDS", {}) or {}
-                        except Exception:
-                            binds = {}
-                        if bind_key in binds:
-                            state = flask_sqlalchemy.get_state(self.app)
-                            return state.db.get_engine(self.app, bind=bind_key)
-                return session_base.get_bind(self, mapper, clause=clause)
-
-            _compat_get_bind._ysocial_sa2_compat = True
-            signalling_session.get_bind = _compat_get_bind
-
-
-_ensure_flask_sqlalchemy_legacy_compat()
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -154,8 +71,7 @@ def cleanup_db_jupyter_with_new_app():
             print("No existing app context, creating new app for cleanup")
 
         if app_context_exists:
-            # Use existing context
-            from y_web import db
+            # Use existing context — db is the module-level SQLAlchemy instance
             from y_web.src.simulation.process_registry import stop_all_exps
             from y_web.src.system.jupyter_utils import stop_all_jupyter_instances
 
@@ -177,7 +93,6 @@ def cleanup_db_jupyter_with_new_app():
                 try:
                     app = create_app(dbms)
                     with app.app_context():
-                        from y_web import db
                         from y_web.src.simulation.process_registry import stop_all_exps
                         from y_web.src.system.jupyter_utils import (
                             stop_all_jupyter_instances,
@@ -302,10 +217,10 @@ def create_app(db_type="sqlite", desktop_mode=False):
         if user_id_str.startswith("admin_"):
             # Admin or researcher user
             admin_id = user_id_str.replace("admin_", "")
-            return Admin_users.query.get(admin_id)
+            return db.session.get(Admin_users, admin_id)
         else:
             # Regular experiment participant
-            return User_mgmt.query.get(user_id)
+            return db.session.get(User_mgmt, user_id)
 
     # Setup experiment context handler
     from y_web.src.experiment.context import (
@@ -358,10 +273,14 @@ def create_app(db_type="sqlite", desktop_mode=False):
             exp = None
             exp_id = get_current_experiment_id()
             if exp_id is not None:
-                exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+                exp = db.session.scalars(
+                    select(Exps).filter_by(idexp=int(exp_id))
+                ).first()
 
             if exp is None:
-                active_exps = Exps.query.filter(Exps.status != 0).all()
+                active_exps = db.session.scalars(
+                    select(Exps).filter(Exps.status != 0)
+                ).all()
                 if not active_exps:
                     return dict(feed_home_url="/")
                 if len(active_exps) > 1:
@@ -378,8 +297,10 @@ def create_app(db_type="sqlite", desktop_mode=False):
             if user_id_str.isdigit():
                 feed_user_id = int(user_id_str)
             else:
-                exp_user = User_mgmt.query.filter_by(
-                    username=getattr(current_user, "username", None)
+                exp_user = db.session.scalars(
+                    select(User_mgmt).filter_by(
+                        username=getattr(current_user, "username", None)
+                    )
                 ).first()
                 if exp_user is not None:
                     feed_user_id = int(exp_user.id)
@@ -417,8 +338,8 @@ def create_app(db_type="sqlite", desktop_mode=False):
         try:
             if not current_user.is_authenticated:
                 return dict(active_experiments=[])
-            admin_user = Admin_users.query.filter_by(
-                username=current_user.username
+            admin_user = db.session.scalars(
+                select(Admin_users).filter_by(username=current_user.username)
             ).first()
             if not admin_user:
                 return dict(active_experiments=[])
@@ -427,7 +348,7 @@ def create_app(db_type="sqlite", desktop_mode=False):
                     get_visible_experiment_query(admin_user).filter_by(status=1).all()
                 )
             else:
-                active_exps = Exps.query.filter_by(status=1).all()
+                active_exps = db.session.scalars(select(Exps).filter_by(status=1)).all()
             return dict(active_experiments=active_exps)
         except Exception:
             return dict(active_experiments=[])
@@ -441,8 +362,8 @@ def create_app(db_type="sqlite", desktop_mode=False):
 
         if current_user.is_authenticated:
             try:
-                admin_user = Admin_users.query.filter_by(
-                    username=current_user.username
+                admin_user = db.session.scalars(
+                    select(Admin_users).filter_by(username=current_user.username)
                 ).first()
                 if admin_user:
                     return dict(
@@ -461,12 +382,12 @@ def create_app(db_type="sqlite", desktop_mode=False):
 
         if current_user.is_authenticated:
             try:
-                admin_user = Admin_users.query.filter_by(
-                    username=current_user.username
+                admin_user = db.session.scalars(
+                    select(Admin_users).filter_by(username=current_user.username)
                 ).first()
                 if admin_user and admin_user.role == "admin":
                     # Get release info
-                    release_info = ReleaseInfo.query.first()
+                    release_info = db.session.scalars(select(ReleaseInfo)).first()
                     if release_info and release_info.latest_version_tag:
                         return dict(
                             new_release_available=True, release_info=release_info
@@ -484,8 +405,8 @@ def create_app(db_type="sqlite", desktop_mode=False):
 
         if current_user.is_authenticated:
             try:
-                admin_user = Admin_users.query.filter_by(
-                    username=current_user.username
+                admin_user = db.session.scalars(
+                    select(Admin_users).filter_by(username=current_user.username)
                 ).first()
                 if admin_user and admin_user.role == "admin":
                     # Get unread blog posts
