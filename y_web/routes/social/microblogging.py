@@ -210,7 +210,8 @@ def feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
             # Resolve experiment engine and FilterBubble settings when needed
             _exp_engine = None
             _fb_settings = {}
-            if str(recsys).lower() in ("filterbubble", "fb", "personalizedfeed", "pf"):
+            _recsys_compact = str(recsys or "").replace("_", "").replace("-", "").replace(" ", "").lower()
+            if _recsys_compact in ("filterbubble", "fb", "personalizedfeed", "pf", "filterbubblev1"):
                 try:
                     _exp_engine = db.engines.get("db_exp")
                     if _exp_engine is None:
@@ -1093,7 +1094,8 @@ def api_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
             # Resolve experiment engine and FilterBubble settings when needed
             _exp_engine = None
             _fb_settings = {}
-            if str(recsys).lower() in ("filterbubble", "fb", "personalizedfeed", "pf"):
+            _recsys_compact = str(recsys or "").replace("_", "").replace("-", "").replace(" ", "").lower()
+            if _recsys_compact in ("filterbubble", "fb", "personalizedfeed", "pf", "filterbubblev1"):
                 try:
                     _exp_engine = db.engines.get("db_exp")
                     if _exp_engine is None:

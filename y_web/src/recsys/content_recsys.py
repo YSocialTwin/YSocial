@@ -69,6 +69,8 @@ def _normalize_content_recsys_mode(mode):
         "fb":               "FilterBubble",
         "personalizedfeed": "FilterBubble",
         "pf":               "FilterBubble",
+        # db row stored as filter_bubble_v1 → compact = filterbubblev1
+        "filterbubblev1":   "FilterBubble",
     }
     return mode_aliases.get(compact, raw)
 
