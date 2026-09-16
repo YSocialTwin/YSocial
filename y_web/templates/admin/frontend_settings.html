@@ -737,7 +737,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
     const txt = (sel.options[sel.selectedIndex]?.text || '').toLowerCase();
     const val = (sel.value || '').toLowerCase();
     const show = txt.includes('personalized') || val.includes('filter_bubble') || val.includes('filterbubble');
-    panel.style.display = show ? '' : 'none';
+    panel.style.display = show ? 'block' : 'none';
   }
 
   function syncMasterVisual(masterId, childrenId) {
