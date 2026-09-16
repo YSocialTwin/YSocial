@@ -29,18 +29,24 @@ def migrate_sqlite(db_path):
     try:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
-        exists = cursor.execute(
-            "SELECT 1 FROM content_recsys WHERE name = ?", (_NAME,)
+        row = cursor.execute(
+            "SELECT enabled, category FROM content_recsys WHERE name = ?", (_NAME,)
         ).fetchone()
-        if not exists:
+        if not row:
             cursor.execute(
                 "INSERT INTO content_recsys (name, value, category, enabled) "
                 "VALUES (?, ?, ?, ?)",
                 (_NAME, _VALUE, _CATEGORY, _ENABLED),
             )
             print(f"✓ Inserted {_NAME} into content_recsys (SQLite)")
+        elif row[0] != _ENABLED or row[1] != _CATEGORY:
+            cursor.execute(
+                "UPDATE content_recsys SET enabled = ?, category = ? WHERE name = ?",
+                (_ENABLED, _CATEGORY, _NAME),
+            )
+            print(f"✓ Fixed {_NAME} columns in content_recsys (SQLite)")
         else:
-            print(f"○ {_NAME} already present in content_recsys (SQLite)")
+            print(f"○ {_NAME} already correct in content_recsys (SQLite)")
         conn.commit()
         conn.close()
         return True
@@ -59,17 +65,25 @@ def migrate_postgresql(host, port, database, user, password):
             host=host, port=port, database=database, user=user, password=password
         )
         cursor = conn.cursor()
-        cursor.execute("SELECT 1 FROM content_recsys WHERE name = %s", (_NAME,))
-        exists = cursor.fetchone()
-        if not exists:
+        cursor.execute(
+            "SELECT enabled, category FROM content_recsys WHERE name = %s", (_NAME,)
+        )
+        row = cursor.fetchone()
+        if not row:
             cursor.execute(
                 "INSERT INTO content_recsys (name, value, category, enabled) "
                 "VALUES (%s, %s, %s, %s)",
                 (_NAME, _VALUE, _CATEGORY, _ENABLED),
             )
             print(f"✓ Inserted {_NAME} into content_recsys (PostgreSQL)")
+        elif row[0] != _ENABLED or row[1] != _CATEGORY:
+            cursor.execute(
+                "UPDATE content_recsys SET enabled = %s, category = %s WHERE name = %s",
+                (_ENABLED, _CATEGORY, _NAME),
+            )
+            print(f"✓ Fixed {_NAME} columns in content_recsys (PostgreSQL)")
         else:
-            print(f"○ {_NAME} already present in content_recsys (PostgreSQL)")
+            print(f"○ {_NAME} already correct in content_recsys (PostgreSQL)")
         conn.commit()
         conn.close()
         return True
