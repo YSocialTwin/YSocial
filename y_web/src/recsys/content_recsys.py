@@ -133,9 +133,15 @@ def _filter_bubble_score(uid, exp_engine, settings):
     every non-owned root post. Returns {} when no onboarding data is found,
     triggering a silent reverse-chrono fallback in get_suggested_posts.
 
+    Author opinion priority per (author, topic, post):
+      1. agent_opinion row whose id_post = post.id (recorded at write time)
+      2. author's most recent agent_opinion with tid <= post.round (before publication)
+      3. neutral weight (w_op = 0.5) when no opinion record is available
+
     settings keys: filter_bubble_alpha, filter_bubble_beta, filter_bubble_gamma,
                    filter_bubble_wr, filter_bubble_wc, filter_bubble_ws
     """
+    import bisect
     import math
     from sqlalchemy import text as _text
 
@@ -191,53 +197,12 @@ def _filter_bubble_score(uid, exp_engine, settings):
             if not post_topics_map:
                 return {}
 
-            # 4. Author opinions at post-write time (priority 1)
             all_pids_str = ",".join(post_topics_map.keys())
-            author_opinions_at_post = {}
-            try:
-                ao_rows = conn.execute(
-                    _text("SELECT agent_id, id_post, topic_id, opinion "
-                          "FROM agent_opinion "
-                          "WHERE id_post IN (" + all_pids_str + ")"),
-                ).fetchall()
-                for agent_id, id_post, topic_id, opinion in ao_rows:
-                    author_opinions_at_post[
-                        (str(agent_id), str(id_post), str(topic_id))
-                    ] = float(opinion)
-            except Exception:
-                pass
 
-            # 5. Author latest opinions as fallback (priority 2)
-            author_latest_opinions = {}
-            try:
-                al_rows = conn.execute(
-                    _text("SELECT agent_id, topic_id, opinion "
-                          "FROM agent_opinion "
-                          "WHERE (agent_id, topic_id, id) IN ("
-                          "  SELECT agent_id, topic_id, MAX(id) "
-                          "  FROM agent_opinion GROUP BY agent_id, topic_id"
-                          ")")
-                ).fetchall()
-                for agent_id, topic_id, opinion in al_rows:
-                    author_latest_opinions[(str(agent_id), str(topic_id))] = float(opinion)
-            except Exception:
-                pass
-
-            # 6. VADER sentiment — last-resort opinion proxy (priority 3)
-            post_sentiments = {}
-            try:
-                sent_rows = conn.execute(
-                    _text("SELECT post_id, topic_id, compound FROM post_sentiment "
-                          "WHERE is_post = 1")
-                ).fetchall()
-                for pid, tid, compound in sent_rows:
-                    post_sentiments[(str(pid), str(tid))] = (float(compound) + 1.0) / 2.0
-            except Exception:
-                pass
-
-            # 7. Post metadata: author, round, base engagement
+            # 4. Post metadata: author, raw round FK (for opinion lookup),
+            #    round_val (day*24+hour, for recency), base engagement.
             meta_rows = conn.execute(
-                _text("SELECT p.id, p.user_id, p.reaction_count, r.day, r.hour "
+                _text("SELECT p.id, p.user_id, p.reaction_count, p.round, r.day, r.hour "
                       "FROM post p LEFT JOIN rounds r ON r.id = p.round "
                       "WHERE p.user_id != :uid "
                       "  AND (p.comment_to IS NULL OR p.comment_to = -1)"),
@@ -245,15 +210,64 @@ def _filter_bubble_score(uid, exp_engine, settings):
             ).fetchall()
             post_meta = {}
             max_round_val = 1
-            for pid, author_id, reaction_count, day, hour in meta_rows:
+            all_author_ids = set()
+            for pid, author_id, reaction_count, round_id, day, hour in meta_rows:
                 rv = (day or 0) * 24 + (hour or 0)
                 if rv > max_round_val:
                     max_round_val = rv
+                all_author_ids.add(str(author_id))
                 post_meta[str(pid)] = {
-                    "author_id": str(author_id),
+                    "author_id":      str(author_id),
                     "reaction_count": int(reaction_count or 0),
-                    "round_val": rv,
+                    "round_val":      rv,
+                    "round_id":       int(round_id) if round_id is not None else 0,
                 }
+
+            # 5a. Author opinions explicitly tied to a specific post (highest priority).
+            #     Keyed as opinions_at_post[agent_id][post_id][topic_id].
+            opinions_at_post = {}
+            try:
+                ap_rows = conn.execute(
+                    _text("SELECT agent_id, id_post, topic_id, opinion "
+                          "FROM agent_opinion "
+                          "WHERE id_post IN (" + all_pids_str + ")"),
+                ).fetchall()
+                for agent_id, id_post, topic_id, opinion in ap_rows:
+                    (
+                        opinions_at_post
+                        .setdefault(str(agent_id), {})
+                        .setdefault(str(id_post), {})
+                    )[str(topic_id)] = float(opinion)
+            except Exception:
+                pass
+
+            # 5b. Author opinion history — last 36 simulation rounds only,
+            #     to avoid loading unbounded history on long experiments.
+            #     opinion_history[agent_id][topic_id] = [(tid, opinion), ...]
+            #     sorted by tid ASC so bisect can find the latest entry <= post.round.
+            max_round_id = max(
+                (m["round_id"] for m in post_meta.values()), default=0
+            )
+            opinion_history = {}
+            if all_author_ids:
+                ids_lit = ",".join(f"'{a}'" for a in all_author_ids)
+                window_start = max(0, max_round_id - 36)
+                try:
+                    oh_rows = conn.execute(
+                        _text(f"SELECT agent_id, topic_id, tid, opinion "
+                              f"FROM agent_opinion "
+                              f"WHERE agent_id IN ({ids_lit}) "
+                              f"  AND tid >= {window_start} "
+                              f"ORDER BY tid ASC")
+                    ).fetchall()
+                    for agent_id, topic_id, tid, opinion in oh_rows:
+                        (
+                            opinion_history
+                            .setdefault(str(agent_id), {})
+                            .setdefault(str(topic_id), [])
+                        ).append((int(tid or 0), float(opinion)))
+                except Exception:
+                    pass
 
             comment_counts = {}
             share_counts = {}
@@ -277,13 +291,20 @@ def _filter_bubble_score(uid, exp_engine, settings):
     except Exception:
         return {}
 
-    # 8. Compute scores
+    def _latest_opinion_before(history_list, post_round_id):
+        """Return the most recent opinion with tid <= post_round_id, or None."""
+        tids = [x[0] for x in history_list]
+        idx = bisect.bisect_right(tids, post_round_id) - 1
+        return history_list[idx][1] if idx >= 0 else None
+
+    # 6. Compute scores
     scores = {}
     current_round_val = max_round_val
 
     for post_id_str, topic_ids in post_topics_map.items():
         meta = post_meta.get(post_id_str, {})
-        author_id = meta.get("author_id", "")
+        author_id     = meta.get("author_id", "")
+        post_round_id = meta.get("round_id", 0)
         thematic = 0.0
 
         for topic_id in topic_ids:
@@ -291,17 +312,26 @@ def _filter_bubble_score(uid, exp_engine, settings):
             if w_int == 0.0:
                 continue
             u_op = user_opinions.get(topic_id)
+
+            # Priority 1: opinion explicitly recorded at post write time
             p_op = (
-                author_opinions_at_post.get((author_id, post_id_str, topic_id))
-                or author_latest_opinions.get((author_id, topic_id))
-                or post_sentiments.get((post_id_str, topic_id))
+                opinions_at_post
+                .get(author_id, {})
+                .get(post_id_str, {})
+                .get(topic_id)
             )
+            # Priority 2: most recent opinion before (or at) post publication round
+            if p_op is None:
+                hist = opinion_history.get(author_id, {}).get(topic_id)
+                if hist:
+                    p_op = _latest_opinion_before(hist, post_round_id)
+
             if u_op is not None and p_op is not None:
                 w_op = math.exp(-alpha * (u_op - p_op) ** 2)
             elif u_op is None:
                 w_op = 1.0
             else:
-                w_op = 0.5
+                w_op = 0.5  # author opinion unknown — neutral weight
             thematic += w_int * w_op
 
         if thematic == 0.0:

@@ -121,7 +121,7 @@ def frontend_settings():
         for e in micro_exps
     ])
 
-    recsys = _load_recsys_options()
+    recsys = _load_recsys_options(include_human_only=True)
     recsys_json = json.dumps(recsys)
 
     return render_template(
@@ -153,7 +153,7 @@ def frontend_settings_get():
         "exp_name": exp.exp_name,
         "simulator_type": exp.simulator_type or "Standard",
         "settings": _load_settings(exp_id),
-        "recsys_options": _load_recsys_options(exp.simulator_type or "Standard"),
+        "recsys_options": _load_recsys_options(exp.simulator_type or "Standard", include_human_only=True),
     })
 
 
@@ -182,13 +182,18 @@ def frontend_settings_save():
             continue
         if isinstance(default, bool):
             safe[k] = bool(new_settings[k])
+        elif isinstance(default, float):
+            try:
+                safe[k] = float(new_settings[k])
+            except (TypeError, ValueError):
+                safe[k] = default
         elif isinstance(default, int):
             try:
                 safe[k] = int(new_settings[k])
             except (TypeError, ValueError):
                 safe[k] = default
         else:
-            # string settings (recsys names)
+            # string settings (recsys names, sort mode…)
             safe[k] = str(new_settings[k])
 
     row = db.session.get(ExpFrontendSettings, exp_id)
