@@ -72,29 +72,33 @@ def _load_settings(exp_id: int) -> dict:
     return merged
 
 
-def _load_recsys_options(simulator_type: str = "Standard", include_human_only: bool = False):
+def _load_recsys_options(simulator_type: str = "Standard", all_algorithms: bool = False):
     """Return content and follow recsys lists, filtered by experiment type.
 
     For HPC experiments all algorithms are shown; for Standard experiments
-    only those whose ``enabled`` column contains 'Standard' are included.
+    only those whose ``enabled`` column contains 'Standard' or 'HumanOnly'
+    are included.
 
-    Args:
-        simulator_type: "HPC" or "Standard"
-        include_human_only: when True, also include rows with enabled='HumanOnly'
-            (e.g. FilterBubble/Personalized Feed for human user profiles)
+    Pass ``all_algorithms=True`` (admin configuration context) to return every
+    row that has a non-empty ``enabled`` value, regardless of experiment type.
+    This is appropriate for admin pages where the operator should see the full
+    catalogue of registered recommenders.
     """
     is_hpc = (simulator_type or "").upper() == "HPC"
 
     def _to_list(model):
         rows = db.session.scalars(select(model).order_by(model.id.asc())).all()
-        return [
-            {"name": r.name, "label": r.value, "category": r.category or "Other"}
-            for r in rows
-            if r.enabled and (
-                (is_hpc or "standard" in (r.enabled or "").lower())
-                or (include_human_only and "humanonly" in (r.enabled or "").lower())
-            )
-        ]
+        result = []
+        for r in rows:
+            if not r.enabled:
+                continue
+            enabled_lc = (r.enabled or "").lower()
+            if (all_algorithms
+                    or is_hpc
+                    or "standard" in enabled_lc
+                    or "humanonly" in enabled_lc):
+                result.append({"name": r.name, "label": r.value, "category": r.category or "Other"})
+        return result
 
     return {
         "content": _to_list(Content_Recsys),
@@ -121,7 +125,7 @@ def frontend_settings():
         for e in micro_exps
     ])
 
-    recsys = _load_recsys_options(include_human_only=True)
+    recsys = _load_recsys_options(all_algorithms=True)
     recsys_json = json.dumps(recsys)
 
     return render_template(
@@ -153,7 +157,7 @@ def frontend_settings_get():
         "exp_name": exp.exp_name,
         "simulator_type": exp.simulator_type or "Standard",
         "settings": _load_settings(exp_id),
-        "recsys_options": _load_recsys_options(exp.simulator_type or "Standard", include_human_only=True),
+        "recsys_options": _load_recsys_options(exp.simulator_type or "Standard", all_algorithms=True),
     })
 
 
