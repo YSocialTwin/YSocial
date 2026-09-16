@@ -140,36 +140,21 @@ def feeed_logged():
 
     exp = exps[0]
 
-    # Get experiment user ID (not admin user ID)
-    # Temporarily bind to experiment database to query user
-    from y_web.src.experiment.context import get_db_bind_key_for_exp
-
-    bind_key = get_db_bind_key_for_exp(exp.idexp)
-
-    # Query User_mgmt from experiment database
-    user_id = current_user.id  # fallback to admin ID
+    # Get experiment user UUID via the proper DB bind context manager.
+    # The config["SQLALCHEMY_BINDS"] swap approach does NOT affect already-
+    # resolved engines; experiment_db_bind() does.
+    user_id = str(current_user.id)  # fallback (integer admin id as string)
     try:
-        # Use the experiment's database bind
+        from y_web.src.experiment.context import experiment_db_bind
         from y_web.src.models import User_mgmt
-
-        # Temporarily override db_exp bind to query correct database
-        original_bind = db.get_app().config["SQLALCHEMY_BINDS"].get("db_exp")
-        if bind_key in db.get_app().config["SQLALCHEMY_BINDS"]:
-            db.get_app().config["SQLALCHEMY_BINDS"]["db_exp"] = db.get_app().config[
-                "SQLALCHEMY_BINDS"
-            ][bind_key]
-
+        with experiment_db_bind(exp.idexp):
             exp_user = db.session.scalars(
                 select(User_mgmt).filter_by(username=current_user.username)
             ).first()
             if exp_user:
-                user_id = exp_user.id
-
-            # Restore original bind
-            if original_bind:
-                db.get_app().config["SQLALCHEMY_BINDS"]["db_exp"] = original_bind
+                user_id = str(exp_user.id)
     except Exception:
-        pass  # Use fallback admin ID if query fails
+        pass  # fallback: integer id; feed() will re-resolve by username
 
     return redirect(f"/{exp.idexp}/feed/{user_id}/feed/rf/1")
 
@@ -223,8 +208,11 @@ def feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
                 except Exception:
                     _exp_engine = None
 
+            # Use the resolved DB id (UUID) — not the URL parameter which
+            # may be the admin's integer id (fallback from feeed_logged).
+            effective_uid = str(user.id)
             posts, additional = get_suggested_posts(
-                user_id, recsys, page, max_post_per_page,
+                effective_uid, recsys, page, max_post_per_page,
                 exp_engine=_exp_engine, fb_settings=_fb_settings,
             )
             username = user.username
