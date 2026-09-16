@@ -148,6 +148,48 @@ input:checked + .slider-small:before { transform: translateX(16px); }
 .ys-fs-save-status.is-err { color: #dc2626; }
 
 /* ── experiment badge ──────────────────────────────────────── */
+
+/* ── nested FilterBubble config section ───────────────────────────────── */
+#fb-config-section {
+    display: none;
+    margin: 4px 0 8px 0;
+    border: 1px solid #e0e7ff;
+    border-left: 3px solid #6366f1;
+    border-radius: 6px;
+    background: #f5f7ff;
+    padding: 14px 16px 10px;
+}
+#fb-config-section .fb-section-title {
+    font-weight: 700;
+    font-size: .78rem;
+    color: #4338ca;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+#fb-config-section .fb-inner-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 0 28px;
+}
+#fb-config-section .fb-col-title {
+    font-weight: 700;
+    font-size: .75rem;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    padding: 4px 0 5px;
+    border-bottom: 1px solid #c7d2fe;
+    margin-bottom: 2px;
+}
+#fb-config-section .ys-toggle-row {
+    border-bottom-color: #e0e7ff;
+}
+#fb-config-section .ys-toggle-row:last-child { border-bottom: none; }
+
 .ys-fs-exp-badge {
     display: inline-block;
     padding: 3px 10px;
@@ -361,6 +403,96 @@ input:checked + .slider-small:before { transform: translateX(16px); }
                 <select id="default_content_recsys" class="input" style="width:100%;max-width:380px;"></select>
               </div>
 
+
+              <!-- ── Personalized Feed nested config (shown only when selected) ── -->
+              <div id="fb-config-section">
+                <div class="fb-section-title">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+                  Personalized Feed parameters
+                </div>
+                <div class="fb-inner-grid">
+
+                  <!-- Core parameters column -->
+                  <div>
+                    <div class="fb-col-title">Core parameters</div>
+
+                    <div class="ys-toggle-row">
+                      <span class="ys-toggle-label">Opinion width (&alpha;)
+                        <small>Gaussian bandwidth for opinion alignment. Higher&nbsp;= narrower bubble.</small>
+                      </span>
+                      <input type="number" id="filter_bubble_alpha" min="0" max="20" step="0.1" value="2.0"
+                             style="width:72px;padding:0.25rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;font-size:.9rem;">
+                    </div>
+
+                    <div class="ys-toggle-row">
+                      <span class="ys-toggle-label">Recency decay (&beta;)
+                        <small>Exponential decay over simulation rounds. 0&nbsp;= disabled.</small>
+                      </span>
+                      <input type="number" id="filter_bubble_beta" min="0" max="1" step="0.01" value="0.0"
+                             style="width:72px;padding:0.25rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;font-size:.9rem;">
+                    </div>
+
+                    <div class="ys-toggle-row">
+                      <span class="ys-toggle-label">Engagement boost (&gamma;)
+                        <small>Amplification of popular posts. 0&nbsp;= disabled.</small>
+                      </span>
+                      <input type="number" id="filter_bubble_gamma" min="0" max="5" step="0.1" value="0.0"
+                             style="width:72px;padding:0.25rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;font-size:.9rem;">
+                    </div>
+
+                    <div class="ys-toggle-row">
+                      <span class="ys-toggle-label">Interest learning rate (&lambda;)
+                        <small>EMA rate for real-time interest updates after reactions.</small>
+                      </span>
+                      <input type="number" id="filter_bubble_lr" min="0" max="1" step="0.01" value="0.05"
+                             style="width:72px;padding:0.25rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;font-size:.9rem;">
+                    </div>
+
+                    <div class="ys-toggle-row" style="flex-direction:column;align-items:flex-start;gap:6px;padding-bottom:8px;">
+                      <span class="ys-toggle-label" style="font-weight:700;color:#1f2937;">Ranking mode
+                        <small>How to order posts when scores are equal</small>
+                      </span>
+                      <select id="filter_bubble_sort" class="input" style="width:100%;max-width:220px;">
+                        <option value="score">Score only</option>
+                        <option value="recency">Recency first</option>
+                        <option value="engagement">Engagement first</option>
+                        <option value="hybrid">Hybrid (score &times; recency)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- Engagement weights column -->
+                  <div>
+                    <div class="fb-col-title">Engagement weights</div>
+                    <p style="color:#9ca3af;font-size:.8rem;margin-bottom:8px;">Applied when engagement boost (&gamma;)&nbsp;&gt;&nbsp;0.</p>
+
+                    <div class="ys-toggle-row">
+                      <span class="ys-toggle-label">Reaction weight (w<sub>r</sub>)
+                        <small>Weight for likes / reactions</small>
+                      </span>
+                      <input type="number" id="filter_bubble_wr" min="0" max="10" step="0.1" value="1.0"
+                             style="width:72px;padding:0.25rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;font-size:.9rem;">
+                    </div>
+
+                    <div class="ys-toggle-row">
+                      <span class="ys-toggle-label">Comment weight (w<sub>c</sub>)
+                        <small>Weight for comments / replies</small>
+                      </span>
+                      <input type="number" id="filter_bubble_wc" min="0" max="10" step="0.1" value="1.5"
+                             style="width:72px;padding:0.25rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;font-size:.9rem;">
+                    </div>
+
+                    <div class="ys-toggle-row">
+                      <span class="ys-toggle-label">Share weight (w<sub>s</sub>)
+                        <small>Weight for shares / reposts</small>
+                      </span>
+                      <input type="number" id="filter_bubble_ws" min="0" max="10" step="0.1" value="2.0"
+                             style="width:72px;padding:0.25rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;font-size:.9rem;">
+                    </div>
+                  </div>
+
+                </div><!-- /fb-inner-grid -->
+              </div><!-- /#fb-config-section -->
               <!-- Follow recsys -->
               <div class="ys-toggle-row" style="flex-direction:column;align-items:flex-start;gap:6px;padding-bottom:14px;border-bottom:1px solid #f1f3f5;">
                 <span class="ys-toggle-label" style="font-weight:700;color:#1f2937;">
@@ -422,106 +554,6 @@ input:checked + .slider-small:before { transform: translateX(16px); }
             </div>
           </div>
 
-          <!-- ══ BOX 5 — Personalized Feed (FilterBubble) ══════════════ -->
-          <div class="misc-compact-box" id="box-filter-bubble" style="grid-column:1/-1;">
-            <h3>Personalized Feed <span style="font-size:.75rem;font-weight:500;color:#6b7280;">(FilterBubble recommender)</span></h3>
-            <div class="box-content">
-              <p style="color:#6b7280;font-size:.85rem;margin-bottom:14px;">
-                Parameters for the <strong>Personalized Feed</strong> algorithm.
-                Active when a human user's content recommender is set to <em>Personalized Feed</em>.
-              </p>
-
-              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:0 32px;">
-
-                <!-- ── Core parameters ──────────────────────────────────── -->
-                <div>
-                  <div style="font-weight:700;font-size:.78rem;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;padding:8px 0 6px;border-bottom:1px solid #e5e7eb;margin-bottom:4px;">Core parameters</div>
-
-                  <div class="ys-toggle-row">
-                    <span class="ys-toggle-label">Opinion width (α)
-                      <small>Gaussian bandwidth for opinion alignment. Higher = narrower bubble.</small>
-                    </span>
-                    <input type="number" id="filter_bubble_alpha" min="0" max="20" step="0.1" value="2.0"
-                           style="width:72px;padding:0.25rem 0.4rem;border:1px solid #ccc;border-radius:4px;font-size:.9rem;">
-                  </div>
-
-                  <div class="ys-toggle-row">
-                    <span class="ys-toggle-label">Recency decay (β)
-                      <small>Exponential decay over simulation rounds. 0 = disabled.</small>
-                    </span>
-                    <input type="number" id="filter_bubble_beta" min="0" max="1" step="0.01" value="0.0"
-                           style="width:72px;padding:0.25rem 0.4rem;border:1px solid #ccc;border-radius:4px;font-size:.9rem;">
-                  </div>
-
-                  <div class="ys-toggle-row">
-                    <span class="ys-toggle-label">Engagement boost (γ)
-                      <small>Amplification of popular posts. 0 = disabled.</small>
-                    </span>
-                    <input type="number" id="filter_bubble_gamma" min="0" max="5" step="0.1" value="0.0"
-                           style="width:72px;padding:0.25rem 0.4rem;border:1px solid #ccc;border-radius:4px;font-size:.9rem;">
-                  </div>
-
-                  <div class="ys-toggle-row">
-                    <span class="ys-toggle-label">Interest learning rate (λ)
-                      <small>EMA rate for real-time interest updates after reactions.</small>
-                    </span>
-                    <input type="number" id="filter_bubble_lr" min="0" max="1" step="0.01" value="0.05"
-                           style="width:72px;padding:0.25rem 0.4rem;border:1px solid #ccc;border-radius:4px;font-size:.9rem;">
-                  </div>
-
-                  <div class="ys-toggle-row" style="flex-direction:column;align-items:flex-start;gap:6px;padding-bottom:10px;">
-                    <span class="ys-toggle-label" style="font-weight:700;color:#1f2937;">Ranking mode
-                      <small>How to break ties when scores are equal</small>
-                    </span>
-                    <select id="filter_bubble_sort" class="input" style="width:100%;max-width:240px;">
-                      <option value="score">Score only</option>
-                      <option value="recency">Recency first</option>
-                      <option value="engagement">Engagement first</option>
-                      <option value="hybrid">Hybrid (score × recency)</option>
-                    </select>
-                  </div>
-                </div>
-
-                <!-- ── Engagement weights ────────────────────────────────── -->
-                <div>
-                  <div style="font-weight:700;font-size:.78rem;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;padding:8px 0 6px;border-bottom:1px solid #e5e7eb;margin-bottom:4px;">Engagement weights</div>
-                  <p style="color:#9ca3af;font-size:.8rem;margin-bottom:10px;">
-                    Applied when engagement boost (γ) &gt; 0.
-                  </p>
-
-                  <div class="ys-toggle-row">
-                    <span class="ys-toggle-label">Reaction weight (w<sub>r</sub>)
-                      <small>Weight for likes / reactions</small>
-                    </span>
-                    <input type="number" id="filter_bubble_wr" min="0" max="10" step="0.1" value="1.0"
-                           style="width:72px;padding:0.25rem 0.4rem;border:1px solid #ccc;border-radius:4px;font-size:.9rem;">
-                  </div>
-
-                  <div class="ys-toggle-row">
-                    <span class="ys-toggle-label">Comment weight (w<sub>c</sub>)
-                      <small>Weight for comments / replies</small>
-                    </span>
-                    <input type="number" id="filter_bubble_wc" min="0" max="10" step="0.1" value="1.5"
-                           style="width:72px;padding:0.25rem 0.4rem;border:1px solid #ccc;border-radius:4px;font-size:.9rem;">
-                  </div>
-
-                  <div class="ys-toggle-row">
-                    <span class="ys-toggle-label">Share weight (w<sub>s</sub>)
-                      <small>Weight for shares / reposts</small>
-                    </span>
-                    <input type="number" id="filter_bubble_ws" min="0" max="10" step="0.1" value="2.0"
-                           style="width:72px;padding:0.25rem 0.4rem;border:1px solid #ccc;border-radius:4px;font-size:.9rem;">
-                  </div>
-                </div>
-
-              </div><!-- /inner grid -->
-
-              <div class="ys-fs-save-row" style="margin-top:16px;">
-                <button class="button is-solid primary-button" onclick="saveSection(event,'filter-bubble')">Save personalized feed</button>
-                <span class="ys-fs-save-status" id="status-filter-bubble"></span>
-              </div>
-            </div>
-          </div>
 
         </div><!-- /grid -->
       </div><!-- #ys-fs-grid -->
@@ -636,8 +668,11 @@ input:checked + .slider-small:before { transform: translateX(16px); }
     }
     _fill('default_content_recsys', recsys.content);
     _fill('default_follow_recsys',  recsys.follow);
+    syncFilterBubbleSection();
   }
   _buildRecsysSelects();
+  document.getElementById('default_content_recsys')
+    ?.addEventListener('change', syncFilterBubbleSection);
 
   function applySettings(s, expName) {
     badgeName.textContent = expName;
@@ -680,16 +715,29 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       const el = document.getElementById(key);
       if (el) el.value = s[key] || '';
     });
+    syncFilterBubbleSection();
 
     // Sync master toggle visual states for children groups
     syncMasterVisual('interactions_enabled', 'interactions-children');
     syncMasterVisual('annotations_enabled',  'annotations-children');
 
     // Clear any stale save-status messages
-    ['interactions','annotations','notifications','feed-profile','filter-bubble'].forEach(sec => {
+    ['interactions','annotations','notifications','feed-profile'].forEach(sec => {
       const st = document.getElementById('status-' + sec);
       if (st) { st.textContent = ''; st.className = 'ys-fs-save-status'; }
     });
+  }
+
+
+  /* ── Show/hide FilterBubble config when content recommender changes ─── */
+  function syncFilterBubbleSection() {
+    const sel   = document.getElementById('default_content_recsys');
+    const panel = document.getElementById('fb-config-section');
+    if (!sel || !panel) return;
+    const txt = (sel.options[sel.selectedIndex]?.text || '').toLowerCase();
+    const val = (sel.value || '').toLowerCase();
+    const show = txt.includes('personalized') || val.includes('filter_bubble') || val.includes('filterbubble');
+    panel.style.display = show ? '' : 'none';
   }
 
   function syncMasterVisual(masterId, childrenId) {
