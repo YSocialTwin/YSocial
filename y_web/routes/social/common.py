@@ -684,10 +684,12 @@ def edit_profile(exp_id, user_id):
     except Exception:
         pass
 
-    # Recsys options filtered by simulator_type for this experiment
+    # Recsys options filtered by simulator_type for this experiment.
+    # Human users also get HumanOnly modes (e.g. FilterBubble/Personalized Feed).
     _exp = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
     _sim_type = (_exp.simulator_type or "Standard") if _exp else "Standard"
-    _recsys_opts = _load_recsys_options(_sim_type)
+    _is_human_profile = getattr(user, "user_type", "agent") not in ("agent", "bot") and                         not getattr(user, "is_page", 0)
+    _recsys_opts = _load_recsys_options(_sim_type, include_human_only=_is_human_profile)
     return render_template(
         "microblogging/edit_profile.html",
         user=user,

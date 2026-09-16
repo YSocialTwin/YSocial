@@ -649,3 +649,59 @@ def _forum_resolve_back_url(exp_id):
     if f"/{exp_id}/rfeed" in referrer or f"/{exp_id}/rsearch" in referrer:
         return referrer
     return f"/{exp_id}/rfeed/all/feed/rf/1?feed_type=new"
+
+
+# ---------------------------------------------------------------------------
+# Frontend UI settings — loaded per experiment for public-facing pages
+# ---------------------------------------------------------------------------
+_UI_DEFAULTS = {
+    "interactions_enabled": True,
+    "interaction_post": True,
+    "interaction_comment": True,
+    "interaction_like": True,
+    "interaction_dislike": True,
+    "interaction_share": True,
+    "annotations_enabled": True,
+    "annotation_emotions": True,
+    "annotation_topics": True,
+    "annotation_sentiment": True,
+    "annotation_toxicity": True,
+    "annotation_agent_type": True,
+    "notifications_menu": True,
+    "default_content_recsys": "",
+    "default_follow_recsys": "",
+    "profile_topics_box": True,
+    "onboarding_enabled": True,
+    "infinite_scroll_enabled": True,
+    "posts_per_page": 10,
+    # FilterBubble (Personalized Feed) parameters
+    "filter_bubble_alpha": 2.0,
+    "filter_bubble_beta":  0.0,
+    "filter_bubble_gamma": 0.0,
+    "filter_bubble_lr":    0.05,
+    "filter_bubble_sort":  "score",
+    "filter_bubble_wr":    1.0,
+    "filter_bubble_wc":    1.5,
+    "filter_bubble_ws":    2.0,
+}
+
+
+def _load_ui_settings(exp_id: int) -> dict:
+    """Return the frontend settings dict for *exp_id*, merged with defaults.
+
+    Imported lazily to avoid a circular-import cycle at module load time.
+    Safe to call both inside and outside an experiment_db_bind context
+    (settings live in the *dashboard* DB, not the experiment DB).
+    """
+    try:
+        from y_web.src.models import ExpFrontendSettings  # noqa: PLC0415
+
+        row = db.session.get(ExpFrontendSettings, exp_id)
+        if row is None:
+            return dict(_UI_DEFAULTS)
+        loaded = json.loads(row.settings_json or "{}")
+        merged = dict(_UI_DEFAULTS)
+        merged.update(loaded)
+        return merged
+    except Exception:
+        return dict(_UI_DEFAULTS)

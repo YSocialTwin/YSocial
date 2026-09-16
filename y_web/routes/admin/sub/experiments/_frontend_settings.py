@@ -47,6 +47,15 @@ DEFAULT_SETTINGS = {
     # Infinite scroll & pagination
     "infinite_scroll_enabled": True,  # enable infinite scroll (False = paginate)
     "posts_per_page": 10,             # posts per page when infinite scroll is disabled
+    # FilterBubble (Personalized Feed) recommender parameters
+    "filter_bubble_alpha": 2.0,   # opinion similarity width (Gaussian)
+    "filter_bubble_beta":  0.0,   # recency decay (0 = disabled)
+    "filter_bubble_gamma": 0.0,   # engagement amplification (0 = disabled)
+    "filter_bubble_lr":    0.05,  # EMA learning rate for real-time interest update
+    "filter_bubble_sort":  "score",  # ranking mode: score | recency | engagement | hybrid
+    "filter_bubble_wr":    1.0,   # weight for reactions in engagement score
+    "filter_bubble_wc":    1.5,   # weight for comments in engagement score
+    "filter_bubble_ws":    2.0,   # weight for shares in engagement score
 }
 
 
@@ -63,11 +72,16 @@ def _load_settings(exp_id: int) -> dict:
     return merged
 
 
-def _load_recsys_options(simulator_type: str = "Standard"):
+def _load_recsys_options(simulator_type: str = "Standard", include_human_only: bool = False):
     """Return content and follow recsys lists, filtered by experiment type.
 
     For HPC experiments all algorithms are shown; for Standard experiments
     only those whose ``enabled`` column contains 'Standard' are included.
+
+    Args:
+        simulator_type: "HPC" or "Standard"
+        include_human_only: when True, also include rows with enabled='HumanOnly'
+            (e.g. FilterBubble/Personalized Feed for human user profiles)
     """
     is_hpc = (simulator_type or "").upper() == "HPC"
 
@@ -76,7 +90,10 @@ def _load_recsys_options(simulator_type: str = "Standard"):
         return [
             {"name": r.name, "label": r.value, "category": r.category or "Other"}
             for r in rows
-            if r.enabled and (is_hpc or "standard" in (r.enabled or "").lower())
+            if r.enabled and (
+                (is_hpc or "standard" in (r.enabled or "").lower())
+                or (include_human_only and "humanonly" in (r.enabled or "").lower())
+            )
         ]
 
     return {

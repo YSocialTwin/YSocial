@@ -7,13 +7,14 @@ Routes: feeed_logged, feed, get_post_hashtags, get_post_interest,
         api_profile_posts.
 """
 
-from flask import flash, jsonify, redirect, render_template, request, url_for
+from flask import current_app, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from sqlalchemy import select
 
 from y_web import db
 from y_web.routes.social._blueprint import main
 from y_web.routes.social.helpers import (
+    _load_ui_settings,
     _forum_logged_user,
     _get_discussions,
     build_thread_tree,
@@ -183,7 +184,8 @@ def feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
         if page < 1:
             page = 1
 
-        max_post_per_page = 10
+        ui = _load_ui_settings(exp_id)
+        max_post_per_page = int(ui.get("posts_per_page", 10))
         username = ""
         posts, additional = None, None
 
@@ -205,8 +207,24 @@ def feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
                     return redirect(f"/admin/experiments")
             recsys = user.recsys_type
 
+            # Resolve experiment engine and FilterBubble settings when needed
+            _exp_engine = None
+            _fb_settings = {}
+            if str(recsys).lower() in ("filterbubble", "fb", "personalizedfeed", "pf"):
+                try:
+                    _exp_engine = db.engines.get("db_exp")
+                    if _exp_engine is None:
+                        _exp_engine = db.get_engine(current_app, bind="db_exp")
+                    _fb_settings = {
+                        k: v for k, v in ui.items()
+                        if k.startswith("filter_bubble_")
+                    }
+                except Exception:
+                    _exp_engine = None
+
             posts, additional = get_suggested_posts(
-                user_id, recsys, page, max_post_per_page
+                user_id, recsys, page, max_post_per_page,
+                exp_engine=_exp_engine, fb_settings=_fb_settings,
             )
             username = user.username
 
@@ -229,6 +247,8 @@ def feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
         if len(res_additional) > 0:
             for add in res_additional:
                 res.append(add)
+        # cap to max posts per page
+        res = res[:max_post_per_page]
 
         # not enough posts to display
         if len(res) == 0 and page > 1:
@@ -306,6 +326,7 @@ def feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
             is_admin=is_admin(current_user.username),
             sfollow=sfollow,
             spages=spages,
+            ui=ui,
         )
 
 
@@ -383,6 +404,7 @@ def get_post_hashtags(exp_id, hashtag_id, page=1):
         str=str,
         bool=bool,
         is_admin=is_admin(current_user.username),
+            ui=_load_ui_settings(exp_id),
     )
 
 
@@ -462,6 +484,7 @@ def get_post_interest(exp_id, interest_id, page=1):
         str=str,
         bool=bool,
         is_admin=is_admin(current_user.username),
+            ui=_load_ui_settings(exp_id),
     )
 
 
@@ -538,6 +561,7 @@ def get_post_emotion(exp_id, emotion_id, page=1):
         str=str,
         bool=bool,
         is_admin=is_admin(current_user.username),
+            ui=_load_ui_settings(exp_id),
     )
 
 
@@ -619,6 +643,7 @@ def get_friends(exp_id, user_id, page=1):
         bool=bool,
         mentions=mentions,
         is_admin=is_admin(current_user.username),
+            ui=_load_ui_settings(exp_id),
     )
 
 
@@ -654,6 +679,7 @@ def api_friends(exp_id, user_id, page=1):
         number_followees=view_model["number_followees"],
         profile_pic_follower=view_model["profile_pic_follower"],
         profile_pic_followee=view_model["profile_pic_followee"],
+            ui=_load_ui_settings(exp_id),
     )
     return jsonify(
         {
@@ -1024,6 +1050,7 @@ def get_thread(exp_id, post_id):
         len=len,
         mentions=mentions,
         is_admin=is_admin(current_user.username),
+            ui=_load_ui_settings(exp_id),
     )
 
 
@@ -1044,7 +1071,8 @@ def api_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
         if page < 1:
             page = 1
 
-        max_post_per_page = 10
+        ui = _load_ui_settings(exp_id)
+        max_post_per_page = int(ui.get("posts_per_page", 10))
         username = ""
         render_user_id = current_user.id
         posts, additional = None, None
@@ -1061,8 +1089,25 @@ def api_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
                 return jsonify({"html": "", "has_more": False}), 404
             render_user_id = user.id
             recsys = user.recsys_type
+
+            # Resolve experiment engine and FilterBubble settings when needed
+            _exp_engine = None
+            _fb_settings = {}
+            if str(recsys).lower() in ("filterbubble", "fb", "personalizedfeed", "pf"):
+                try:
+                    _exp_engine = db.engines.get("db_exp")
+                    if _exp_engine is None:
+                        _exp_engine = db.get_engine(current_app, bind="db_exp")
+                    _fb_settings = {
+                        k: v for k, v in ui.items()
+                        if k.startswith("filter_bubble_")
+                    }
+                except Exception:
+                    _exp_engine = None
+
             posts, additional = get_suggested_posts(
-                user.id, recsys, page, max_post_per_page
+                user.id, recsys, page, max_post_per_page,
+                exp_engine=_exp_engine, fb_settings=_fb_settings,
             )
             username = user.username
 
@@ -1085,6 +1130,8 @@ def api_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
         if len(res_additional) > 0:
             for add in res_additional:
                 res.append(add)
+        # cap to max posts per page
+        res = res[:max_post_per_page]
 
         has_more = bool(
             (posts is not None and getattr(posts, "has_next", False))
@@ -1099,6 +1146,7 @@ def api_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
             str=str,
             bool=bool,
             len=len,
+            ui=_load_ui_settings(exp_id),
         )
         return jsonify({"html": html, "has_more": has_more})
 
@@ -1128,6 +1176,7 @@ def api_hashtag_posts(exp_id, hashtag_id, page=1):
         str=str,
         bool=bool,
         len=len,
+            ui=_load_ui_settings(exp_id),
     )
     return jsonify({"html": html, "has_more": len(res) > 0})
 
@@ -1157,6 +1206,7 @@ def api_interest_posts(exp_id, interest_id, page=1):
         str=str,
         bool=bool,
         len=len,
+            ui=_load_ui_settings(exp_id),
     )
     return jsonify({"html": html, "has_more": len(res) > 0})
 
@@ -1190,6 +1240,7 @@ def api_emotion_posts(exp_id, emotion_id, page=1):
         str=str,
         bool=bool,
         len=len,
+            ui=_load_ui_settings(exp_id),
     )
     return jsonify({"html": html, "has_more": len(res) > 0})
 
@@ -1235,5 +1286,6 @@ def api_profile_posts(exp_id, user_id, page=1, mode="recent"):
             str=str,
             bool=bool,
             len=len,
+            ui=_load_ui_settings(exp_id),
         )
     return jsonify({"html": html, "has_more": len(rp) > 0})

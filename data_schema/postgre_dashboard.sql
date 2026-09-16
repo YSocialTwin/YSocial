@@ -453,7 +453,8 @@ INSERT INTO content_recsys (name, value, enabled, category) VALUES
   ('ContentBasedVector', '(CBV) ContentBasedVector', 'HPC', 'Content-Based Filtering'),
   ('CollaborativeUserUser', '(CUU) CollaborativeUserUser', 'HPC', 'Collaborative Filtering'),
   ('CollaborativeItemItem', '(CII) CollaborativeItemItem', 'HPC', 'Collaborative Filtering'),
-  ('HybridLinearRanker', '(HLR) Hybrid Linear Ranker', 'HPC', 'Ensemble');
+  ('HybridLinearRanker', '(HLR) Hybrid Linear Ranker', 'HPC', 'Ensemble'),
+  ('FilterBubble', 'Personalized Feed', 'Personalization', 'HumanOnly');
 
 INSERT INTO follow_recsys (name, value, category, enabled) VALUES
 ('FollowRecSys', 'Random', 'Baseline & Exploration', 'HPC,Standard'),
