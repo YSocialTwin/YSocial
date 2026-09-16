@@ -72,17 +72,17 @@ def _load_settings(exp_id: int) -> dict:
     return merged
 
 
-def _load_recsys_options(simulator_type: str = "Standard", all_algorithms: bool = False):
+def _load_recsys_options(simulator_type: str = "Standard", all_algorithms: bool = False,
+                         include_human_only: bool = False):
     """Return content and follow recsys lists, filtered by experiment type.
 
     For HPC experiments all algorithms are shown; for Standard experiments
-    only those whose ``enabled`` column contains 'Standard' or 'HumanOnly'
-    are included.
+    only those whose ``enabled`` column contains 'Standard' are included.
 
     Pass ``all_algorithms=True`` (admin configuration context) to return every
     row that has a non-empty ``enabled`` value, regardless of experiment type.
-    This is appropriate for admin pages where the operator should see the full
-    catalogue of registered recommenders.
+    Pass ``include_human_only=True`` to also include rows with enabled='HumanOnly'
+    (e.g. FilterBubble/Personalized Feed for human user profiles).
     """
     is_hpc = (simulator_type or "").upper() == "HPC"
 
@@ -96,7 +96,7 @@ def _load_recsys_options(simulator_type: str = "Standard", all_algorithms: bool 
             if (all_algorithms
                     or is_hpc
                     or "standard" in enabled_lc
-                    or "humanonly" in enabled_lc):
+                    or (include_human_only and "humanonly" in enabled_lc)):
                 result.append({"name": r.name, "label": r.value, "category": r.category or "Other"})
         return result
 
