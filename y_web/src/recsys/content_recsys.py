@@ -134,6 +134,20 @@ def _reverse_chrono_fallback(uid, page, per_page):
     return _order_query_by_simulation_time(q)
 
 
+def _fallback_page(uid, page, per_page, primary_page):
+    """Build a deduplicated fallback page and fill cold-start pages."""
+    selected_ids = [post.id for post in getattr(primary_page, "items", [])]
+    query = Post.query.filter(Post.user_id != uid, _root_post_filter())
+    if selected_ids:
+        query = query.filter(~Post.id.in_(selected_ids))
+        fallback_size = max(1, per_page - len(selected_ids))
+    else:
+        fallback_size = per_page
+    return _order_query_by_simulation_time(query).paginate(
+        page=page, per_page=fallback_size, error_out=False
+    )
+
+
 def _declared_topic_ids(uid):
     """Return profile-selected topic IDs, when the preference table exists.
 
@@ -676,12 +690,7 @@ def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6,
         posts = _order_query_by_simulation_time(posts_query).paginate(
             page=page, per_page=int(per_page * follower_ratio), error_out=False
         )
-        additional_query = Post.query.filter(Post.user_id != uid, _root_post_filter())
-        additional_posts = _order_query_by_simulation_time(additional_query).paginate(
-            page=page,
-            per_page=int(per_page * (1 - follower_ratio)),
-            error_out=False,
-        )
+        additional_posts = _fallback_page(uid, page, per_page, posts)
 
     elif mode == "ReverseChronoFollowersPopularity":
         follower = Follow.query.filter_by(action="follow", user_id=uid)
@@ -702,12 +711,7 @@ def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6,
                 page=page, per_page=int(per_page * follower_ratio), error_out=False
             )
         )
-        additional_query = Post.query.filter(Post.user_id != uid, _root_post_filter())
-        additional_posts = _order_query_by_simulation_time(additional_query).paginate(
-            page=page,
-            per_page=int(per_page * (1 - follower_ratio)),
-            error_out=False,
-        )
+        additional_posts = _fallback_page(uid, page, per_page, posts)
 
     # ── New Standard (HPC,Standard) modes ───────────────────────────────
 
@@ -782,11 +786,7 @@ def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6,
             posts = _order_query_by_simulation_time(posts_query).paginate(
                 page=page, per_page=int(per_page * follower_ratio), error_out=False
             )
-            additional_posts = _reverse_chrono_fallback(uid, page, per_page).paginate(
-                page=page,
-                per_page=int(per_page * (1 - follower_ratio)),
-                error_out=False,
-            )
+            additional_posts = _fallback_page(uid, page, per_page, posts)
         else:
             posts = _reverse_chrono_fallback(uid, page, per_page).paginate(
                 page=page, per_page=per_page, error_out=False
@@ -819,11 +819,7 @@ def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6,
             posts = _order_query_by_simulation_time(posts_query).paginate(
                 page=page, per_page=int(per_page * follower_ratio), error_out=False
             )
-            additional_posts = _reverse_chrono_fallback(uid, page, per_page).paginate(
-                page=page,
-                per_page=int(per_page * (1 - follower_ratio)),
-                error_out=False,
-            )
+            additional_posts = _fallback_page(uid, page, per_page, posts)
         else:
             posts = _reverse_chrono_fallback(uid, page, per_page).paginate(
                 page=page, per_page=per_page, error_out=False
@@ -848,11 +844,7 @@ def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6,
         posts = _order_query_by_simulation_time(posts_query).paginate(
             page=page, per_page=int(per_page * follower_ratio), error_out=False
         )
-        additional_posts = _reverse_chrono_fallback(uid, page, per_page).paginate(
-            page=page,
-            per_page=int(per_page * (1 - follower_ratio)),
-            error_out=False,
-        )
+        additional_posts = _fallback_page(uid, page, per_page, posts)
 
     # ── HPC-only modes (YWeb implementation — admin-gated to HPC experiments) ─
 
