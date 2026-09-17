@@ -7,7 +7,7 @@ from types import SimpleNamespace
 
 import pytest
 from flask import Flask
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.pool import NullPool
 
 from y_web import db
@@ -318,5 +318,23 @@ def test_linked_experiment_declared_topics_drive_profile_recommenders(tmp_path):
             )
             assert additional is None
             assert [str(post.id) for post in posts.items] == EXPECTED_CLIMATE_POSTS
+
+        for mode in ("ContentBasedVector", "HybridLinearRanker"):
+            posts, additional = get_suggested_posts(
+                "8", mode, page=1, per_page=3
+            )
+            assert additional is None
+            assert posts.items
+            with db.engines["db_exp"].connect() as connection:
+                topic_values = [
+                    str(topic_id)
+                    for post in posts.items
+                    for topic_id in connection.execute(
+                        text("SELECT topic_id FROM post_topics WHERE post_id = :pid"),
+                        {"pid": post.id},
+                    ).scalars().all()
+                ]
+            assert topic_values
+            assert set(topic_values) == {CLIMATE_TOPIC}
 
         db.session.remove()

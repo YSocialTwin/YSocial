@@ -191,6 +191,57 @@ def _users_with_declared_topics(topic_ids, exclude_uid=None):
     return values
 
 
+def _rank_feature_based_posts(uid, topic_ids, page, per_page, hybrid=False):
+    """Rank topic-tagged posts deterministically for CBV/HLR modes.
+
+    The project does not persist a universal embedding column, so the vector
+    representation is the sparse topic vector.  HLR adds a bounded engagement
+    component; both modes use the same stable simulation-time/ID tie breaker.
+    """
+    post_ids = _post_ids_for_topic_ids(topic_ids)
+    if not post_ids:
+        return _reverse_chrono_fallback(uid, page, per_page).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+
+    topic_set = set(topic_ids)
+    try:
+        with db.engines["db_exp"].connect() as connection:
+            topic_rows = connection.execute(
+                text(
+                    "SELECT post_id, topic_id FROM post_topics "
+                    "WHERE CAST(post_id AS TEXT) IN :post_ids"
+                ).bindparams(bindparam("post_ids", expanding=True)),
+                {"post_ids": [str(value) for value in post_ids]},
+            ).all()
+    except Exception:
+        topic_rows = []
+
+    post_topics = {}
+    for post_id, topic_id in topic_rows:
+        post_topics.setdefault(str(post_id), set()).add(str(topic_id))
+
+    candidates = Post.query.filter(
+        Post.id.in_(post_ids), Post.user_id != uid, _root_post_filter()
+    ).all()
+    if not candidates:
+        return _reverse_chrono_fallback(uid, page, per_page).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+
+    max_reactions = max((int(post.reaction_count or 0) for post in candidates), default=0)
+
+    def rank_key(post):
+        overlap = len(post_topics.get(str(post.id), set()) & topic_set)
+        engagement = (int(post.reaction_count or 0) / max_reactions) if max_reactions else 0.0
+        score = float(overlap) + (0.35 * engagement if hybrid else 0.0)
+        return (-score, -int(post.reaction_count or 0), str(post.id))
+
+    candidates.sort(key=rank_key)
+    start = max(0, (page - 1) * per_page)
+    return _make_pagination(candidates[start:start + per_page], page, per_page, len(candidates))
+
+
 
 def _make_pagination(items, page, per_page, total):
     """Lightweight pagination wrapper compatible with Flask-SQLAlchemy Pagination."""
@@ -883,6 +934,21 @@ def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6,
             posts = _reverse_chrono_fallback(uid, page, per_page).paginate(
                 page=page, per_page=per_page, error_out=False
             )
+        additional_posts = None
+
+    elif mode == "ContentBasedVector":
+        # Sparse topic-vector similarity.  This is deliberately deterministic
+        # and remains useful for UUID-backed HPC experiments.
+        posts = _rank_feature_based_posts(
+            uid, _user_interest_topic_ids(uid), page, per_page, hybrid=False
+        )
+        additional_posts = None
+
+    elif mode == "HybridLinearRanker":
+        # Topic similarity plus a bounded engagement component.
+        posts = _rank_feature_based_posts(
+            uid, _user_interest_topic_ids(uid), page, per_page, hybrid=True
+        )
         additional_posts = None
 
     elif mode == "FilterBubble":
