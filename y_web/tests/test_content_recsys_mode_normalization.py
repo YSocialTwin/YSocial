@@ -6,11 +6,17 @@ pytestmark = pytest.mark.unit
 
 
 def test_normalize_content_recsys_mode_reverse_chrono_alias():
-    from y_web.src.recsys.content_recsys import _normalize_content_recsys_mode
+    from y_web.src.recsys.content_recsys import (
+        _normalize_content_recsys_mode,
+        is_supported_content_recsys_mode,
+    )
 
     assert _normalize_content_recsys_mode("Reverse Chrono") == "ReverseChrono"
     assert _normalize_content_recsys_mode("reverse_chrono") == "ReverseChrono"
     assert _normalize_content_recsys_mode("RC") == "ReverseChrono"
+    assert is_supported_content_recsys_mode("ContentBasedVector")
+    assert is_supported_content_recsys_mode("HybridLinearRanker")
+    assert not is_supported_content_recsys_mode("typo-mode")
 
 
 def test_get_suggested_posts_reverse_chrono_alias_does_not_fallback_to_random(

@@ -76,6 +76,10 @@ from y_web.src.models import (
     User_mgmt,
 )
 from y_web.src.recsys import get_suggested_users
+from y_web.src.recsys.content_recsys import (
+    _normalize_content_recsys_mode,
+    is_supported_content_recsys_mode,
+)
 from y_web.routes.admin.sub.experiments._frontend_settings import _load_recsys_options
 from y_web.src.system.path_utils import get_writable_path
 
@@ -735,7 +739,16 @@ def update_profile_data(exp_id, user_id):
     user.language = request.form.get("language")
     user.leaning = request.form.get("leaning")
     user.education_level = request.form.get("education_level")
-    user.recsys_type = request.form.get("recsys_type")
+    requested_recsys = request.form.get("recsys_type")
+    if requested_recsys is not None:
+        canonical_recsys = _normalize_content_recsys_mode(requested_recsys)
+        if not is_supported_content_recsys_mode(canonical_recsys):
+            message = "Unsupported content recommendation system."
+            if request.is_json or "application/json" in request.headers.get("Accept", ""):
+                return jsonify({"ok": False, "error": message}), 400
+            flash(message, "error")
+            return redirect(request.referrer or url_for("main.edit_profile", exp_id=exp_id, user_id=user_id))
+        user.recsys_type = canonical_recsys
     user.frecsys_type = request.form.get("frecsys_type")
     user.age = int(request.form.get("age"))
     profile_pic = request.form.get("profile_pic")

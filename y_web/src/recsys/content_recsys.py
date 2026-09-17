@@ -28,6 +28,26 @@ from y_web.src.models import (
 logger = logging.getLogger(__name__)
 
 
+SUPPORTED_CONTENT_RECSYS_MODES = frozenset({
+    "Random",
+    "ReverseChrono",
+    "ReverseChronoPopularity",
+    "ReverseChronoFollowers",
+    "ReverseChronoFollowersPopularity",
+    "ReverseChronoComments",
+    "CommonInterests",
+    "CommonUserInterests",
+    "SimilarUsersReactions",
+    "SimilarUsersPosts",
+    "CollaborativeUserUser",
+    "CollaborativeItemItem",
+    "ContentBasedFeatures",
+    "ContentBasedVector",
+    "HybridLinearRanker",
+    "FilterBubble",
+})
+
+
 class PersonalizedFeedRankingError(RuntimeError):
     """Raised when Personalized Feed data exists but cannot be ranked."""
 
@@ -83,6 +103,11 @@ def _normalize_content_recsys_mode(mode):
         "filterbubblev1":   "FilterBubble",
     }
     return mode_aliases.get(compact, raw)
+
+
+def is_supported_content_recsys_mode(mode):
+    """Return whether a stored/UI value resolves to executable code."""
+    return _normalize_content_recsys_mode(mode) in SUPPORTED_CONTENT_RECSYS_MODES
 
 
 def _order_query_by_simulation_time(query):
