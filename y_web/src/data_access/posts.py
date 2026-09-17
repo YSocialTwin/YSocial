@@ -61,6 +61,11 @@ def _adhoc_agent_badge(user) -> Optional[str]:
     return _ADHOC_AGENT_BADGE_LABELS.get(user_type)
 
 
+def _author_type_badge(user) -> str:
+    user_type = str(getattr(user, "user_type", "") or "").strip().lower()
+    return "AI Agent" if user_type == "agent" else "Human"
+
+
 def _is_root_reference(column):
     """Match both the legacy -1 sentinel and NULL root references."""
     return or_(column.is_(None), column == -1)
@@ -492,6 +497,7 @@ def get_user_recent_posts(
                     "emotions": emotions,
                     "topics": comment_topics,
                     "adhoc_agent_badge": _adhoc_agent_badge(user),
+                    "author_type_badge": _author_type_badge(user),
                     "is_moderation_comment": int(
                         getattr(c, "is_moderation_comment", 0) or 0
                     ),
@@ -622,6 +628,7 @@ def get_user_recent_posts(
                 "emotions": emotions,
                 "topics": topics,
                 "adhoc_agent_badge": _adhoc_agent_badge(author),
+                "author_type_badge": _author_type_badge(author),
                 "is_moderation_comment": int(
                     getattr(post, "is_moderation_comment", 0) or 0
                 ),
@@ -725,6 +732,7 @@ def get_posts_associated_to_hashtags(
                     "emotions": emotions,
                     "topics": get_topics(c.id, c.user_id),
                     "adhoc_agent_badge": _adhoc_agent_badge(user),
+                    "author_type_badge": _author_type_badge(user),
                     "is_moderation_comment": int(
                         getattr(c, "is_moderation_comment", 0) or 0
                     ),
@@ -822,6 +830,7 @@ def get_posts_associated_to_hashtags(
                 "emotions": emotions,
                 "topics": get_topics(post.id, post.user_id),
                 "adhoc_agent_badge": _adhoc_agent_badge(author),
+                "author_type_badge": _author_type_badge(author),
                 "is_moderation_comment": int(
                     getattr(post, "is_moderation_comment", 0) or 0
                 ),
@@ -926,6 +935,7 @@ def get_posts_associated_to_interest(
                     "emotions": emotions,
                     "topics": get_topics(c.id, c.user_id),
                     "adhoc_agent_badge": _adhoc_agent_badge(c_user),
+                    "author_type_badge": _author_type_badge(c_user),
                     "is_moderation_comment": int(
                         getattr(c, "is_moderation_comment", 0) or 0
                     ),
@@ -1023,6 +1033,7 @@ def get_posts_associated_to_interest(
                 "emotions": emotions,
                 "topics": get_topics(post.id, post.user_id),
                 "adhoc_agent_badge": _adhoc_agent_badge(author),
+                "author_type_badge": _author_type_badge(author),
                 "is_moderation_comment": int(
                     getattr(post, "is_moderation_comment", 0) or 0
                 ),
@@ -1144,6 +1155,7 @@ def get_posts_associated_to_emotion(
                     "topics": get_topics(c.id, c.user_id),
                     "report_count": get_report_count(c.id),
                     "adhoc_agent_badge": _adhoc_agent_badge(user),
+                    "author_type_badge": _author_type_badge(user),
                     "is_moderation_comment": int(
                         getattr(c, "is_moderation_comment", 0) or 0
                     ),
@@ -1257,6 +1269,7 @@ def get_posts_associated_to_emotion(
                 "emotions": emotions,
                 "topics": get_topics(post.id, post.user_id),
                 "adhoc_agent_badge": _adhoc_agent_badge(author),
+                "author_type_badge": _author_type_badge(author),
                 "is_moderation_comment": int(
                     getattr(post, "is_moderation_comment", 0) or 0
                 ),
