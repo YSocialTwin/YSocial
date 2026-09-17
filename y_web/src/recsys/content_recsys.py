@@ -1022,12 +1022,24 @@ def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6,
             posts = _make_pagination(fetched, page, per_page, total)
         additional_posts = None
 
-    else:
-        # Random / unrecognised mode — ContentRecSys default
+    elif mode == "Random":
+        # Explicit baseline requested by ContentRecSys/default/random aliases.
         posts = (
             Post.query.filter(Post.user_id != uid, _root_post_filter())
             .order_by(func.random())
             .paginate(page=page, per_page=per_page, error_out=False)
+        )
+        additional_posts = None
+
+    else:
+        # A stale database/catalog value must not silently become random.
+        logger.warning(
+            "Unsupported content recommender %r for user %s; using reverse chronology",
+            mode,
+            uid,
+        )
+        posts = _reverse_chrono_fallback(uid, page, per_page).paginate(
+            page=page, per_page=per_page, error_out=False
         )
         additional_posts = None
 
