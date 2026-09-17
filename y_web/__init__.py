@@ -461,6 +461,36 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
 
     register_blueprints(app)
 
+    # ------------------------------------------------------------------
+    # Frontend plugin suites (e.g. EducatYon) — registered ONLY for suites
+    # that are installed under external/<repo> AND pass manifest validation.
+    # A suite that is absent, partially installed, or fails validation
+    # contributes zero routes/blueprints: this is the app-startup half of
+    # the "zero impact when not installed" guarantee (the per-experiment
+    # enable/disable half is enforced per-request inside each module's own
+    # blueprint — see external/EducatYon/modules/*/backend).
+    # ------------------------------------------------------------------
+    try:
+        from y_web.src.external_runtime.plugin_loader import (
+            register_frontend_plugin_suites,
+        )
+
+        _frontend_plugin_report = register_frontend_plugin_suites(app)
+        for _repo_key, _suite_report in _frontend_plugin_report.get("suites", {}).items():
+            if _suite_report.get("installed"):
+                if _suite_report.get("valid"):
+                    print(
+                        f"✓ Frontend plugin suite '{_repo_key}': "
+                        f"{len(_suite_report.get('registered_modules', []))} module(s) registered"
+                    )
+                else:
+                    print(
+                        f"⚠ Frontend plugin suite '{_repo_key}' is installed but failed validation: "
+                        f"{_suite_report.get('errors')}"
+                    )
+    except Exception as e:
+        print(f"Failed to load frontend plugin suites: {e}")
+
     # Add context processor to detect PyInstaller mode
     @app.context_processor
     def inject_pyinstaller_mode():

@@ -231,6 +231,49 @@
                                                         </div>
                                                     </div>
 
+                                                    {% if repo.frontend_modules_report %}
+                                                    <div style="border-top: 1px dashed #e5e7eb; padding-top: 12px;">
+                                                        <div class="ys-text-xs-hint" style="text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px;">
+                                                            Suite modules
+                                                            {% if repo.frontend_modules_report.valid %}
+                                                            <span class="badge badge-success">manifest valid</span>
+                                                            {% else %}
+                                                            <span class="badge badge-danger">manifest invalid</span>
+                                                            {% endif %}
+                                                        </div>
+                                                        {% if repo.frontend_modules_report.errors %}
+                                                        <ul style="margin: 0 0 8px 18px; color: #b91c1c; font-size: 0.78rem;">
+                                                            {% for err in repo.frontend_modules_report.errors %}
+                                                            <li>{{ err }}</li>
+                                                            {% endfor %}
+                                                        </ul>
+                                                        {% endif %}
+                                                        {% if repo.frontend_modules_report.modules %}
+                                                        <div style="display: grid; gap: 6px;">
+                                                            {% for mod in repo.frontend_modules_report.modules %}
+                                                            <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 6px 10px; border: 1px solid #e5e7eb; border-radius: 6px;">
+                                                                <div>
+                                                                    <strong>{{ mod.display_name or mod.module_id }}</strong>
+                                                                    <span class="ys-text-xs-hint">v{{ mod.version }}</span>
+                                                                </div>
+                                                                {% if mod.valid %}
+                                                                <span class="badge badge-success">ok</span>
+                                                                {% else %}
+                                                                <span class="badge badge-danger" title="{{ mod.errors|join('; ') }}">error</span>
+                                                                {% endif %}
+                                                            </div>
+                                                            {% endfor %}
+                                                        </div>
+                                                        <div class="ys-text-xs-hint" style="margin-top: 8px;">
+                                                            Enable and configure these modules per experiment from
+                                                            <a href="{{ url_for('experiments.frontend_settings') }}">Frontend Settings</a>.
+                                                        </div>
+                                                        {% else %}
+                                                        <div class="ys-text-xs-hint">No modules declared in meta/registry.json.</div>
+                                                        {% endif %}
+                                                    </div>
+                                                    {% endif %}
+
                                                     {% if not repo.installed %}
                                                     <form method="POST" action="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='acquire') }}" style="display: grid; gap: 12px;" data-external-runtime-action-form="acquire" data-repo-key="{{ repo.key }}">
                                                         <div class="ys-text-sm-dark" style="font-weight: 700;">Installation source</div>

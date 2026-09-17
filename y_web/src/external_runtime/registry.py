@@ -234,6 +234,22 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         validate_import=None,
         is_private=False,
     ),
+    "educatyon": ExternalRuntimeSpec(
+        key="educatyon",
+        group="frontend_plugins",
+        group_label="Frontend Plugins",
+        category="frontend_extensions",
+        category_label="Frontend Extensions",
+        label="EducatYon",
+        path=EXTERNAL_DIR / "EducatYon",
+        github_repo="YSocialTwin/educatYon",
+        repo_url="https://github.com/YSocialTwin/educatYon.git",
+        default_branch="main",
+        install_commands=(),
+        validate_entrypoints=(),
+        validate_import=None,
+        is_private=True,
+    ),
 }
 
 
@@ -248,7 +264,7 @@ def grouped_runtime_specs() -> list[tuple[str, str, Sequence[ExternalRuntimeSpec
         groups.setdefault(spec.group, []).append(spec)
         labels[spec.group] = spec.group_label
 
-    ordered_groups = ["microblogging", "forum", "photo_sharing", "hpc", "agent_plugins"]
+    ordered_groups = ["microblogging", "forum", "photo_sharing", "hpc", "agent_plugins", "frontend_plugins"]
     return [
         (group_key, labels[group_key], tuple(groups.get(group_key, [])))
         for group_key in ordered_groups

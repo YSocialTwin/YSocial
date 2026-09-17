@@ -30,6 +30,7 @@ from y_web.src.external_runtime import (
     update_runtime_repo,
     validate_runtime_repo,
 )
+from y_web.src.external_runtime.frontend_plugins import validate_frontend_suite
 from y_web.src.models import Admin_users, Exps
 from y_web.src.system.miscellanea import check_privileges
 
@@ -72,6 +73,11 @@ def _runtime_group_active_experiments(group_key: str) -> list[Exps]:
     elif group_key == "hpc":
         query = base_query.filter(Exps.simulator_type == "HPC")
     elif group_key == "agent_plugins":
+        return []
+    elif group_key == "frontend_plugins":
+        # Frontend plugin suites (e.g. EducatYon) are UI-only extensions; they
+        # are never tied to a running simulation, so mutating actions on them
+        # are never blocked by "active experiment" checks.
         return []
     else:
         return []
@@ -156,6 +162,11 @@ def _visible_runtime_groups(
                     repo["plugin_description"] = ""
                     repo["plugin_authors"] = []
                     repo["plugin_repository_url"] = repo["repo_url"]
+                if repo.get("group") == "frontend_plugins" and repo.get("installed"):
+                    try:
+                        repo["frontend_modules_report"] = validate_frontend_suite(repo["key"])
+                    except Exception:
+                        repo["frontend_modules_report"] = None
                 repos.append(repo)
         if repos:
             visible_groups.append(
