@@ -1,0 +1,14 @@
+{# Frontend plugin loader include (EducatYon-style suites).
+
+   Include this once near the end of a page's body (feed.html, thread.html).
+   `educatyon_modules` is computed server-side, per request, by
+   y_web.src.external_runtime.plugin_loader.active_modules_context(exp_id) —
+   it is an empty list whenever no frontend plugin suite is installed or no
+   module is enabled for the current experiment, in which case this include
+   renders nothing at all (no extra DOM, no extra network request). #}
+{% if educatyon_modules %}
+<script>
+  window.YS_EDUCATYON_MODULES = {{ educatyon_modules | tojson }};
+</script>
+<script src="{{ url_for('static', filename='assets/js/plugin-core.js') }}"></script>
+{% endif %}

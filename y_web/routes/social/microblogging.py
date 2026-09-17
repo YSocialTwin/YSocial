@@ -22,6 +22,7 @@ from y_web.routes.social.helpers import (
     get_author_type_badge,
     is_admin,
 )
+from y_web.src.external_runtime.plugin_loader import active_modules_context
 from y_web.src.data_access import (
     get_posts_associated_to_emotion,
     get_posts_associated_to_hashtags,
@@ -328,6 +329,7 @@ def feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
             sfollow=sfollow,
             spages=spages,
             ui=ui,
+            educatyon_modules=active_modules_context(exp_id),
         )
 
 
@@ -1054,6 +1056,7 @@ def get_thread(exp_id, post_id):
         mentions=mentions,
         is_admin=is_admin(current_user.username),
             ui=_load_ui_settings(exp_id),
+            educatyon_modules=active_modules_context(exp_id),
     )
 
 
