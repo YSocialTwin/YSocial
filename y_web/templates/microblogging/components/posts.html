@@ -120,7 +120,7 @@
 
         <!-- Post footer -->
         {% if not item.get('is_moderation_comment') %}
-        {% if ui.annotations_enabled %}
+        {% if ui.annotations_enabled and (ui.annotation_emotions or ui.annotation_topics) %}
         <div class="post-annotation-section">
  {% if ui.annotation_emotions %}
  <div class="post-meta-group">
@@ -286,7 +286,7 @@
                         {% endif %}
                     </div>
                     </div>
-{% if ui.annotations_enabled %}
+{% if ui.annotations_enabled and (ui.annotation_emotions or ui.annotation_topics) %}
  <div class="post-annotation-section is-threaded">
  <div class="card-footer ys-flex-wrap-py">
 {% if ui.annotation_emotions %}
@@ -410,7 +410,7 @@
                     </div>
                     {% if not cm.get('is_moderation_comment') %}
                     <!-- Actions -->
-{% if ui.annotations_enabled %}
+{% if ui.annotations_enabled and (ui.annotation_emotions or ui.annotation_topics) %}
  <div class="post-annotation-section is-threaded">
  <div class="card-footer ys-flex-wrap-py">
 {% if ui.annotation_emotions %}
