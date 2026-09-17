@@ -230,6 +230,35 @@ def _users_with_declared_topics(topic_ids, exclude_uid=None):
     return values
 
 
+def _users_with_similar_interests(interest_ids, exclude_uid=None):
+    """Find users sharing at least one interest from the user_interest table.
+
+    Uses CAST(interest_id AS TEXT) so both integer (Standard) and UUID-string
+    (HPC) interest IDs resolve correctly, without an isdigit() guard that
+    silently drops non-numeric IDs.
+    """
+    if not interest_ids:
+        return []
+    try:
+        engine = db.engines.get("db_exp")
+        if engine is None:
+            return []
+        statement = text(
+            "SELECT DISTINCT user_id FROM user_interest "
+            "WHERE CAST(interest_id AS TEXT) IN :interest_ids"
+        ).bindparams(bindparam("interest_ids", expanding=True))
+        with engine.connect() as connection:
+            rows = connection.execute(
+                statement, {"interest_ids": interest_ids}
+            ).all()
+    except Exception:
+        return []
+    values = [row[0] for row in rows if row[0] is not None]
+    if exclude_uid is not None:
+        values = [value for value in values if str(value) != str(exclude_uid)]
+    return values
+
+
 def _rank_feature_based_posts(uid, topic_ids, page, per_page, hybrid=False):
     """Rank topic-tagged posts deterministically for CBV/HLR modes.
 
@@ -772,14 +801,11 @@ def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6,
         interest_ids = _user_interest_topic_ids(uid)
 
         if interest_ids:
-            similar_user_ids = db.session.scalars(
-                sa_select(User_interest.user_id)
-                .where(
-                    User_interest.interest_id.in_([value for value in interest_ids if value.isdigit()]),
-                    User_interest.user_id != uid,
-                )
-                .distinct()
-            ).all()
+            # UUID-safe: use text SQL with CAST so both integer (Standard)
+            # and UUID-string (HPC) interest IDs match in user_interest.
+            similar_user_ids = _users_with_similar_interests(
+                interest_ids, exclude_uid=uid
+            )
             similar_user_ids.extend(
                 _users_with_declared_topics(interest_ids, exclude_uid=uid)
             )
