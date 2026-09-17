@@ -27,6 +27,7 @@ from y_web.src.models.admin import (
     Client_Execution,
     ClientLogMetrics,
     DownloadNotification,
+    EducatyonExpModuleSettings,
     Exp_stats,
     ExperimentScheduleGroup,
     ExperimentScheduleItem,

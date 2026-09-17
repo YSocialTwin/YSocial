@@ -734,6 +734,25 @@ def _run_all_migrations(app, db_type, db):
         print(f"Failed to run exp_frontend_settings table migration: {e}")
 
     # ------------------------------------------------------------------
+    # educatyon_exp_module_settings table (EducatYon frontend plugin suite)
+    # ------------------------------------------------------------------
+    try:
+        if db_type == "sqlite":
+            from y_web.migrations.add_educatyon_module_settings import migrate_sqlite
+
+            if dashboard_db_path:
+                migrate_sqlite(dashboard_db_path)
+        elif db_type == "postgresql":
+            from y_web.migrations.add_educatyon_module_settings import migrate_postgresql
+
+            if pg["password"]:
+                migrate_postgresql(
+                    pg["host"], pg["port"], pg["database"], pg["user"], pg["password"]
+                )
+    except Exception as e:
+        print(f"Failed to run educatyon_exp_module_settings table migration: {e}")
+
+    # ------------------------------------------------------------------
     # FilterBubble (Personalized Feed) entry in content_recsys
     # ------------------------------------------------------------------
     try:
