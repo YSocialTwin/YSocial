@@ -1,0 +1,179 @@
+{% include "admin/head.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-components.css') }}"/>
+
+<div class="view-wrapper is-dashboard">
+    <!--Dashboard container-->
+    <div id="creator-dashboard" class="dashboard-container">
+        <!--Toolbar-->
+        {% include "admin/dash_head.html" %}
+
+        <div class="dashboard-body">
+
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <a href="/admin/experiments">Experiments</a> > Simulation: <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }} </a> > Opinion Configuration
+                    </div>
+                </div>
+            </div>
+
+            <div class="columns">
+                <!--Dashboard column-->
+                <div class="column is-12">
+                    <!--Dashboard box-->
+
+                    <div class="dashboard-box" id="box-opinion-config">
+                        <h3 class="title is-5 is-thin">Opinion Distribution Configuration</h3>
+ <p class="ys-mb-hint">
+                            Configure how opinions are distributed across different population segments for each simulation topic.
+                        </p>
+                        
+                        <form id="opinion-form" action="/admin/set_hpc_opinion_distributions" method="POST">
+                            <input type="hidden" name="idexp" value="{{ experiment.idexp }}">
+                            <input type="hidden" name="client_id" value="{{ client.id }}">
+                            <input type="hidden" name="segmentation" id="segmentation-input" value="">
+
+                            <!-- Segmentation Selection -->
+ <div class="box-content ys-mb-20">
+                                <div class="form-section-header">1. Select Population Segmentation Dimensions (Optional)</div>
+                                <div class="form-section-description">
+                                    Click on dimensions to add or remove them from segmentation. Active dimensions are shown in blue. Without selection, a global "All Population" segment is used.
+                                </div>
+                                
+                                <div class="dimensions-container" id="dimensions-container">
+                                    {% for dim in segmentation_options %}
+                                    <span class="dimension-tag inactive" data-id="{{ dim.id }}" data-name="{{ dim.name }}">
+                                        {{ dim.name }}
+                                    </span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <!-- Topic Configuration -->
+                            <div class="box-content" id="topic-configuration">
+                                <div class="form-section-header">2. Configure Opinion Distributions for Each Topic</div>
+                                <div class="form-section-description">
+                                    For each topic, select the opinion distribution for every population segment.
+                                </div>
+                                
+                                <!-- Distribution Visualizations -->
+ <div class="ys-info-card">
+ <div class="ys-label-dark">Available Distributions:</div>
+ <div id="distributions-grid" class="ys-grid-180">
+                                        <!-- Distributions will be dynamically generated here -->
+                                    </div>
+                                </div>
+                                
+                                <div id="topics-container">
+                                    {% for topic in topics %}
+                                    <div class="topic-config-box" data-topic-id="{{ topic.id }}">
+                                        <h5>{{ topic.name }}</h5>
+                                        <div class="segments-container" id="segments-topic-{{ topic.id }}">
+                                            <!-- Segments will be dynamically added here -->
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <!-- Opinion Update Rule Configuration -->
+ <div class="box-content ys-mt-20" id="update-rule-configuration">
+                                <div class="form-section-header">3. Select Opinion Update Rule</div>
+                                <div class="form-section-description">
+                                    Choose how agent opinions are updated during the simulation.
+                                </div>
+                                
+                                <input type="hidden" name="update_rule" id="update_rule_input" value="bounded_confidence">
+                                
+ <div class="ys-mb-flex-wrap">
+                                    <button type="button" class="update-rule-button selected" data-rule="bounded_confidence" onclick="selectUpdateRule(this, 'bounded_confidence')">
+ <div class="ys-label-sm">Bounded Confidence</div>
+ <div class="ys-text-xs-faded">Agents update opinions based on similarity with others</div>
+                                    </button>
+                                    
+                                    <button type="button" class="update-rule-button{% if not llm_agents_enabled %} disabled{% endif %}" data-rule="llm_evaluation" onclick="selectUpdateRule(this, 'llm_evaluation')" {% if not llm_agents_enabled %}disabled{% endif %}>
+ <div class="ys-label-sm">LLM Evaluation</div>
+ <div class="ys-text-xs-faded">Agents use LLM to evaluate and update opinions</div>
+ {% if not llm_agents_enabled %}<div class="ys-text-amber-mt">⚠ Requires LLM agents enabled</div>{% endif %}
+                                    </button>
+                                </div>
+                                
+                                <!-- Bounded Confidence Parameters -->
+ <div id="bounded-confidence-params" class="ys-block-panel">
+ <div class="ys-label-md">Bounded Confidence Parameters</div>
+                                    
+ <div class="ys-grid-200">
+                                        <div>
+ <label class="label ys-text-sm-mb">Epsilon (Confidence Bound)</label>
+ <input type="number" class="input ys-input-sm" name="bc_epsilon" value="0.25" min="0" max="1" step="0.01">
+ <small class="ys-text-xs-gray">Range: 0-1, Default: 0.25</small>
+                                        </div>
+                                        
+                                        <div>
+ <label class="label ys-text-sm-mb">Mu (Averaging Weight)</label>
+ <input type="number" class="input ys-input-sm" name="bc_mu" value="0.5" min="0" max="1" step="0.01">
+ <small class="ys-text-xs-gray">Range: 0-1, Default: 0.5</small>
+                                        </div>
+                                        
+                                        <div>
+ <label class="label ys-text-sm-mb">Theta (Backfire Strength)</label>
+ <input type="number" class="input ys-input-sm" name="bc_theta" value="0" min="0" max="1" step="0.01">
+ <small class="ys-text-xs-gray">Range: 0-1, Default: 0</small>
+                                        </div>
+                                        
+                                        <div>
+ <label class="label ys-text-sm-mb">Cold Start Strategy</label>
+ <select class="input ys-input-sm" name="bc_cold_start">
+                                                <option value="neutral">Neutral (0.5)</option>
+                                                <option value="inherited">Inherited</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- LLM Evaluation Parameters -->
+ <div id="llm-evaluation-params" class="ys-hidden-panel">
+ <div class="ys-label-md">LLM Evaluation Parameters</div>
+                                    
+ <div class="ys-grid-250">
+                                        <div>
+ <label class="label ys-text-sm-mb">Cold Start Strategy</label>
+ <select class="input ys-input-sm" name="llm_cold_start">
+                                                <option value="neutral">Neutral (0.5)</option>
+                                                <option value="inherited">Inherited</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div>
+ <label class="label ys-text-sm-mb">Evaluation Scope</label>
+ <select class="input ys-input-sm" name="llm_evaluation_scope">
+                                                <option value="interlocutor_only">Interlocutor Only</option>
+                                                <option value="interlocutor_and_friends">Interlocutor + First-Order Friends</option>
+                                            </select>
+ <small class="ys-text-xs-gray">Choose whether to consider only the interlocutor's opinion or also first-order friends' opinions</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+ <div class="box-content ys-mt-flex-gap">
+                                <button type="submit" class="button is-solid accent-button" id="submit-btn">
+                                    Save Configuration
+                                </button>
+                                <button type="button" class="button is-solid grey-button" id="close-btn" data-redirect-url="/admin/experiment_details/{{ experiment.idexp }}">
+                                    Close
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>var YS_DATA_OPINION = { topics: {{ topics | tojson }}, distributions: {{ distributions | tojson }}, segmentationOptions: {{ segmentation_options | tojson }}, segmentValues: {{ segment_values | tojson }}, bins: {{ bins | tojson }}, labels: {{ labels | tojson }} };</script>
+
+<script src="{{ url_for('static', filename='assets/js/admin-opinion.js') }}"></script>
+{% include "admin/footer.html" %}

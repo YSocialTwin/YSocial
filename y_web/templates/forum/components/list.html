@@ -1,0 +1,15 @@
+<div>
+    {% include "forum/components/comment.html" %}
+    <div id="child-{{ thread['post_id'] }}">
+        {% if len(thread['children'])>0 %}
+        {% set data = thread['children'] %}
+        {% for c in data %}
+        <div style="padding-left: 24px; border-left: 1px solid #e1e8ed; margin-left: 12px;">
+            {% with thread=c %}
+            {% include "forum/components/list.html" %}
+            {% endwith %}
+        </div>
+        {% endfor %}
+        {% endif %}
+    </div>
+</div>

@@ -1,0 +1,274 @@
+{% include "admin/head.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-components.css') }}"/>
+
+<div class="view-wrapper is-dashboard">
+    <div id="creator-dashboard" class="dashboard-container">
+        {% include "admin/dash_head.html" %}
+
+        <div class="dashboard-body">
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <a href="/admin/experiments">Experiments</a> >
+                        <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }}</a> >
+                        Stress / Reward Evolution
+                    </div>
+                </div>
+            </div>
+
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin ys-mb-15">Temporal Controls</h3>
+
+                        <div class="filter-section">
+                            <div class="slider-container">
+                                <div class="slider-label">
+                                    <label>Time Period</label>
+                                    <div style="display: flex; gap: 4px;">
+                                        <button class="sr-granularity-button active" data-granularity="hourly"
+                                                style="padding: 2px 6px; font-size: 0.7em; border: 1px solid #d1d5db; border-radius: 3px; background: #039be5; color: white; cursor: pointer; transition: all 0.2s;">
+                                            Hourly
+                                        </button>
+                                        <button class="sr-granularity-button" data-granularity="daily"
+                                                style="padding: 2px 6px; font-size: 0.7em; border: 1px solid #d1d5db; border-radius: 3px; background: white; color: #374151; cursor: pointer; transition: all 0.2s;">
+                                            Daily
+                                        </button>
+                                        <button class="sr-granularity-button" data-granularity="weekly"
+                                                style="padding: 2px 6px; font-size: 0.7em; border: 1px solid #d1d5db; border-radius: 3px; background: white; color: #374151; cursor: pointer; transition: all 0.2s;">
+                                            Weekly
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="slider-controls">
+                                    <button id="sr-play-button" class="play-button" title="Play">
+                                        <i class="mdi mdi-play"></i>
+                                    </button>
+                                    <input type="range" id="sr-time-slider" class="time-slider"
+                                           min="0" max="{{ max_day * 24 + max_hour }}"
+                                           step="1"
+                                           value="{{ filter_day * 24 + filter_hour }}">
+                                    <div class="speed-controls">
+                                        <button id="sr-speed-down" class="speed-button" title="Slower">
+                                            <i class="mdi mdi-minus"></i>
+                                        </button>
+                                        <span class="speed-display" id="sr-speed-display">1x</span>
+                                        <button id="sr-speed-up" class="speed-button" title="Faster">
+                                            <i class="mdi mdi-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="stats-row">
+                                <div class="stat-box" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                                    <div class="stat-value"><span id="sr-average-stress">{{ '%.3f'|format(snapshot.average_stress) }}</span></div>
+                                    <div class="stat-label">Average Stress</div>
+                                </div>
+                                <div class="stat-box" style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);">
+                                    <div class="stat-value"><span id="sr-average-reward">{{ '%.3f'|format(snapshot.average_reward) }}</span></div>
+                                    <div class="stat-label">Average Reward</div>
+                                </div>
+                                <div class="stat-box" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
+                                    <div class="stat-value"><span id="sr-unique-agents">{{ snapshot.unique_agents }}</span></div>
+                                    <div class="stat-label">Tracked Agents</div>
+                                </div>
+                                <div class="stat-box" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+                                    <div class="stat-value"><span id="sr-aggregate-rows">{{ snapshot.aggregate_rows }}</span></div>
+                                    <div class="stat-label">Tracked Aggregates</div>
+                                </div>
+                                <div class="stat-box" style="background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);">
+                                    <div class="stat-value">Day <span id="sr-current-day">{{ filter_day }}</span></div>
+                                    <div class="stat-label">Current Day</div>
+                                </div>
+                                <div class="stat-box" style="background: linear-gradient(135deg, #14b8a6 0%, #0f766e 100%);">
+                                    <div class="stat-value">Hour <span id="sr-current-hour">{{ filter_hour }}</span></div>
+                                    <div class="stat-label">Current Hour</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="columns">
+                <div class="column is-4">
+                    <div class="dashboard-box chart-box-container">
+                        <div class="annotation-chart-head ys-mb-15">
+                            <h3 class="title is-6 is-thin">Stress Distribution</h3>
+                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="stressDistributionChartContainer" title="Expand plot">
+                                <i class="mdi mdi-fullscreen"></i>
+                            </button>
+                        </div>
+                        <div class="chart-container ys-chart-fullscreen-target" id="stressDistributionChartContainer" data-chart-filename="stress-distribution">
+                            <canvas id="stressDistributionChart" height="250"></canvas>
+                        </div>
+                        <p class="ys-text-xs-center-mt">
+                            Latest aggregate stress state binned across tracked agents.
+                        </p>
+                    </div>
+                </div>
+                <div class="column is-4">
+                    <div class="dashboard-box chart-box-container">
+                        <div class="annotation-chart-head ys-mb-15">
+                            <h3 class="title is-6 is-thin">Reward Distribution</h3>
+                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="rewardDistributionChartContainer" title="Expand plot">
+                                <i class="mdi mdi-fullscreen"></i>
+                            </button>
+                        </div>
+                        <div class="chart-container ys-chart-fullscreen-target" id="rewardDistributionChartContainer" data-chart-filename="reward-distribution">
+                            <canvas id="rewardDistributionChart" height="250"></canvas>
+                        </div>
+                        <p class="ys-text-xs-center-mt">
+                            Latest aggregate reward state binned across tracked agents.
+                        </p>
+                    </div>
+                </div>
+                <div class="column is-4">
+                    <div class="dashboard-box chart-box-container">
+                        <div class="annotation-chart-head ys-mb-15">
+                            <h3 class="title is-6 is-thin">Average Aggregate Trends</h3>
+                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="stressRewardTrendChartContainer" title="Expand plot">
+                                <i class="mdi mdi-fullscreen"></i>
+                            </button>
+                        </div>
+                        <div class="chart-container ys-chart-fullscreen-target" id="stressRewardTrendChartContainer" data-chart-filename="stress-reward-trends">
+                            <canvas id="stressRewardTrendChart" height="250"></canvas>
+                        </div>
+                        <p class="ys-text-xs-center-mt">
+                            Evolution of average aggregate stress and reward over time.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {% if sa_targets.available %}
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
+                            <div>
+                                <h3 class="title is-5 is-thin ys-mb-10">Stress Attacker Target Drill-down</h3>
+                                <p style="margin: 0; color: #6b7280;">
+                                    Inspect one SA target at a time using aggregate stress/reward trends and the timing of SA interactions.
+                                </p>
+                            </div>
+                            <div class="stat-box" style="min-width: 180px; background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);">
+                                <div class="stat-value"><span id="sr-sa-deployed">{{ sa_targets.deployed_agents }}</span></div>
+                                <div class="stat-label">Deployed SA Agents</div>
+                            </div>
+                        </div>
+
+                        <div id="sr-sa-target-panel" style="margin-top: 20px;">
+                            <div class="columns">
+                                <div class="column is-4">
+                                    <label class="label" for="sr-sa-target-select">Target</label>
+                                    <div class="select is-fullwidth">
+                                        <select id="sr-sa-target-select">
+                                            {% for option in sa_targets.options %}
+                                            <option value="{{ option.uid }}" {% if option.uid == sa_targets.selected_uid %}selected{% endif %}>
+                                                {{ option.username }} ({{ option.interaction_count }} interactions)
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="column is-8">
+                                    <div class="stats-row" style="margin-top: 0;">
+                                        <div class="stat-box" style="background: linear-gradient(135deg, #334155 0%, #1e293b 100%);">
+                                            <div class="stat-value" id="sr-sa-target-name">{{ sa_targets.selected_username }}</div>
+                                            <div class="stat-label">Selected Target</div>
+                                        </div>
+                                        <div class="stat-box" style="background: linear-gradient(135deg, #b45309 0%, #92400e 100%);">
+                                            <div class="stat-value" id="sr-sa-interaction-count">{{ sa_targets.interaction_count }}</div>
+                                            <div class="stat-label">SA Interactions</div>
+                                        </div>
+                                        <div class="stat-box" style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);">
+                                            <div class="stat-value" id="sr-sa-attacker-names">{{ sa_targets.attacker_usernames|join(', ') if sa_targets.attacker_usernames else '—' }}</div>
+                                            <div class="stat-label">Attacker Agents</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <article id="sr-sa-empty-state" class="message is-info" style="margin-top: 16px; {% if sa_targets.options %}display: none;{% endif %}">
+                                <div class="message-body">
+                                    Stress Attacker agents are deployed, but no target interactions have been recorded up to the selected time.
+                                </div>
+                            </article>
+
+                            <div class="columns">
+                                <div class="column is-7" id="sr-sa-chart-column" {% if not sa_targets.options %}style="display: none;"{% endif %}>
+                                    <div class="dashboard-box chart-box-container" style="margin-bottom: 0;">
+                                        <div class="annotation-chart-head ys-mb-15">
+                                            <h3 class="title is-6 is-thin">Selected Target Trend</h3>
+                                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="srSaTargetTrendChartContainer" title="Expand plot">
+                                                <i class="mdi mdi-fullscreen"></i>
+                                            </button>
+                                        </div>
+                                        <div class="chart-container ys-chart-fullscreen-target" id="srSaTargetTrendChartContainer" data-chart-filename="stress-attacker-target-trend">
+                                            <canvas id="srSaTargetTrendChart" height="280"></canvas>
+                                        </div>
+                                        <p class="ys-text-xs-center-mt">
+                                            Target aggregate stress/reward by day, with SA interaction volume shown on the secondary axis.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="column is-5" id="sr-sa-events-column" {% if not sa_targets.options %}style="display: none;"{% endif %}>
+                                    <div class="dashboard-box" style="margin-bottom: 0;">
+                                        <h3 class="title is-6 is-thin ys-mb-15">Recent SA Interactions</h3>
+                                        <div style="max-height: 360px; overflow-y: auto;">
+                                            <table class="table is-fullwidth is-striped is-hoverable is-size-7">
+                                                <thead>
+                                                <tr>
+                                                    <th>When</th>
+                                                    <th>Type</th>
+                                                    <th>Count</th>
+                                                    <th>Attackers</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody id="sr-sa-events-body">
+                                                {% for event in sa_targets.interaction_events %}
+                                                <tr>
+                                                    <td>Day {{ event.day }}, Hour {{ event.hour }}</td>
+                                                    <td>{{ event.interaction_type|capitalize }}</td>
+                                                    <td>{{ event.interaction_count }}</td>
+                                                    <td>{{ event.attacker_usernames|join(', ') if event.attacker_usernames else '—' }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+<div id="sr-loading-overlay" class="loading-overlay">
+    <div class="spinner"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script>
+var YS_DATA_STRESS_REWARD = {
+  expId: {{ experiment.idexp }},
+  maxTick: {{ max_day * 24 + max_hour }},
+  snapshot: {{ snapshot | tojson }},
+  trendData: {{ trend_data | tojson }},
+  saTargets: {{ sa_targets | tojson }},
+  filterDay: {{ filter_day }},
+  filterHour: {{ filter_hour }}
+};
+</script>
+<script src="{{ url_for('static', filename='assets/js/admin-chart-fullscreen.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/admin-stress-reward.js') }}"></script>
+{% include "admin/footer.html" %}

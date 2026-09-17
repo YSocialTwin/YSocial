@@ -1,0 +1,36 @@
+{% with flashes = get_flashed_messages(with_categories=true) %}
+{% if flashes %}
+<div class="ys-admin-flash-strip">
+    {% for category, message in flashes %}
+    {% set alert_class = 'warning' %}
+    {% if category in ['error', 'danger'] %}
+    {% set alert_class = 'danger' %}
+    {% elif category == 'success' %}
+    {% set alert_class = 'success' %}
+    {% elif category == 'info' %}
+    {% set alert_class = 'info' %}
+    {% endif %}
+    <div class="alert alert-{{ alert_class }} ys-admin-flash-alert" role="alert">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">&times;</button>
+        {% if message is mapping and message.get('failures') %}
+            <div><strong>{{ message.get('title') or 'Notice' }}</strong></div>
+            <div>{{ message.get('summary') }}</div>
+            <ul class="ys-mt-05">
+                {% for failure in message.get('failures') %}
+                <li>
+                    <strong>{{ failure.get('source') }}</strong>
+                    {% if failure.get('target') %}
+                    - target <code>{{ failure.get('target') }}</code>
+                    {% endif %}
+                    : {{ failure.get('reason') }}
+                </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            {{ message }}
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endwith %}

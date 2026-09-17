@@ -1,0 +1,238 @@
+{% include "admin/head.html" %}
+
+<div class="view-wrapper is-dashboard">
+    <!--Dashboard container-->
+    <div id="creator-dashboard" class="dashboard-container">
+        <!--Toolbar-->
+        {% include "admin/dash_head.html" %}
+
+        <div class="dashboard-body">
+
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <a href="/admin/populations">Populations</a> > Details: {{ population.name }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="columns">
+                <!--Dashboard column-->
+                <div class="column is-6">
+
+                    <!--Dashboard box-->
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Population Overview</h3>
+ <p class="ys-text-small">
+                            Core information about this synthetic population, including configuration and agent demographics.
+                        </p>
+
+                        <div class="box-content">
+                            <div class="box-lines">
+                                <b>Basic Information</b>
+ <p class="ys-label-hint">Population name, description, and configuration settings.</p>
+                                <div class="box-line">
+                                    <span class="left">Name</span>
+                                    <span class="right">{{ population.name }}</span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">Description</span>
+                                    <span class="right">{{ population.descr }}</span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">Initial Size<small>(initial agents)</small></span>
+                                    <span class="right">{{ population.size }}</span>
+                                </div>
+
+                            </div>
+                                <div class="buttons" style="display: flex; justify-content: right; gap: 10px; margin-top: 20px;">
+ <a class="button is-info ys-flex-gap-5" href="/admin/download_population/{{ population.id }}">
+                                        <i class="mdi mdi-download"></i>
+                                        <span>Download</span>
+                                    </a>
+ <a class="button is-danger ys-flex-gap-5" href="/admin/delete_population/{{ population.id }}">
+                                        <i class="mdi mdi-delete"></i>
+                                        <span>Delete</span>
+                                    </a>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div class="column is-6">
+
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Experiment Deployments</h3>
+ <p class="ys-text-small">
+                            Experiments where this population is currently deployed.
+                        </p>
+                        <div class="box-content">
+                            <div class="box-lines">
+                                {% if population_experiments %}
+                                <div class="box-line">
+                                    <span class="left">Active Experiments</span>
+                                    <span class="right">
+                                        <ul>
+                                        {% for exp in population_experiments %}
+                                            <li><a href="/admin/experiment_details/{{ exp[1] }}">{{ exp[0] }}</a></li>
+                                        {% endfor %}
+                                        </ul>
+                                    </span>
+                                </div>
+                                {% else %}
+                                <div class="box-line">
+                                    <span class="left">No experiments yet</span>
+                                </div>
+                                {% endif %}
+                                <div class="box-line">
+                                    <span class="left">
+                                        <small>ℹ️ Populations are automatically assigned to experiments when creating a client.</small>
+                                    </span>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+
+                <!--Dashboard box-->
+
+                <!--Dashboard column-->
+
+            </div>
+
+
+
+            <div class="columns">
+
+                <div class="column is-12">
+                    <hr style="margin: 2em 0;">
+ <h3 class="title is-5 is-thin text-center">Population Statistics & Analytics</h3>
+                <p style="text-align: center; font-size: 0.9em; color: #666; margin-top: 0.5em;">
+                    Visual analysis of agent distribution across demographics, attributes, and behavior patterns.
+                </p>
+                </div>
+            </div>
+
+            <!-- Demographics Row 1 -->
+            <div class="columns">
+                <div class="column is-4">
+                     <div class="dashboard-box">
+                        <div class="box-content">
+ <canvas id="ages" class="ys-w100-h250"></canvas>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div class="column is-4">
+                    <div class="dashboard-box">
+                        <div class="box-content">
+ <canvas id="gender" class="ys-w100-h250"></canvas>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div class="column is-4">
+                    <div class="dashboard-box">
+                        <div class="box-content">
+ <canvas id="nationalities" class="ys-w100-h250"></canvas>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Demographics Row 2 -->
+            <div class="columns">
+                <div class="column is-4">
+                    <div class="dashboard-box">
+                        <div class="box-content">
+ <canvas id="edu" class="ys-w100-h250"></canvas>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div class="column is-4">
+                    <div class="dashboard-box">
+                        <div class="box-content">
+ <canvas id="languages" class="ys-w100-h250"></canvas>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div class="column is-4">
+                    <div class="dashboard-box">
+                        <div class="box-content">
+ <canvas id="professions" class="ys-w100-h250"></canvas>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attributes Row -->
+            <div class="columns">
+                <div class="column is-4">
+                     <div class="dashboard-box">
+                        <div class="box-content">
+ <canvas id="leanings" class="ys-w100-h250"></canvas>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div class="column is-4">
+                    <div class="dashboard-box">
+                        <div class="box-content">
+ <canvas id="tox" class="ys-w100-h250"></canvas>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div class="column is-4">
+                    <div class="dashboard-box">
+                        <div class="box-content">
+ <canvas id="activity" class="ys-w100-h250"></canvas>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Profiles Row -->
+            <div class="columns">
+                <div class="column is-4">
+                    <div class="dashboard-box">
+                        <div class="box-content">
+ <canvas id="activity_profiles" class="ys-w100-h250"></canvas>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+</div>
+
+<script>
+var YS_DATA_POP_DETAILS = {
+    ages: { data: {{ data["age"]["total"] }}, labels: {{ data["age"]["age"]|tojson }} },
+    gender: { data: {{ data["gender"]["total"] }}, labels: {{ data["gender"]["genders"]|tojson }} },
+    nationalities: { data: {{ data["nationalities"]["total"] }}, labels: {{ data["nationalities"]["nationalities"]|tojson }} },
+    education: { data: {{ data["education"]["total"] }}, labels: {{ data["education"]["education"]|tojson }} },
+    languages: { data: {{ data["languages"]["total"] }}, labels: {{ data["languages"]["languages"]|tojson }} },
+    professions: { data: {{ data["professions"]["total"] }}, labels: {{ data["professions"]["professions"]|tojson }} },
+    leanings: { data: {{ data["leaning"]["total"] }}, labels: {{ data["leaning"]["leanings"]|tojson }} },
+    toxicity: { data: {{ data["toxicity"]["total"] }}, labels: {{ data["toxicity"]["toxicity"]|tojson }} },
+    activity: { data: {{ data["activity"]["total"] }}, levels: {{ data["activity"]["activity"]|tojson }} },
+    activityProfiles: { data: {{ data["activity_profiles"]["total"] }}, labels: {{ data["activity_profiles"]["profiles"]|tojson }} }
+};
+</script>
+<script src="{{ url_for('static', filename='assets/js/admin-populations.js') }}"></script>
+{% include "admin/footer.html" %}

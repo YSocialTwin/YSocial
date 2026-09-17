@@ -889,25 +889,3 @@ class OpinionEvolutionSampledAgents(db.Model):
             "idx_sampled_agents_lookup", "exp_id", "topic_id", "sample_percentage"
         ),
     )
-
-
-class ExpFrontendSettings(db.Model):
-    """Per-experiment frontend UI settings (interactions, annotations, notifications)."""
-
-    __bind_key__ = "db_admin"
-    __tablename__ = "exp_frontend_settings"
-
-    exp_id = db.Column(
-        db.Integer,
-        db.ForeignKey("exps.idexp"),
-        primary_key=True,
-        nullable=False,
-    )
-    # JSON blob holding all UI flags; defaults to empty = everything shown/enabled
-    settings_json = db.Column(db.Text, nullable=False, default="{}")
-    updated_at = db.Column(
-        db.DateTime,
-        nullable=False,
-        default=db.func.now(),
-        onupdate=db.func.now(),
-    )

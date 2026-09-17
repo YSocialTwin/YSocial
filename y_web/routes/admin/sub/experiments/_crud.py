@@ -87,7 +87,6 @@ from y_web.src.models import (
     ServerLogMetrics,
     Topic_List,
     Toxicity_Levels,
-    ExpFrontendSettings,
     User_Experiment,
     User_mgmt,
 )
@@ -164,24 +163,6 @@ from sqlalchemy import select
 
 from ._notifications import _enqueue_user_notification, _resolve_bulk_experiment_ids
 from ._schedule import _get_clients_to_start
-
-
-def _get_exp_default_recsys(exp_id: int):
-    """Return (content_recsys, follow_recsys) defaults from ExpFrontendSettings.
-
-    Returns "default" for either field when no override is configured.
-    """
-    try:
-        row = db.session.get(ExpFrontendSettings, exp_id)
-        if row is None:
-            return "default", "default"
-        settings = json.loads(row.settings_json or "{}")
-    except Exception:
-        return "default", "default"
-    content = settings.get("default_content_recsys") or "default"
-    follow  = settings.get("default_follow_recsys")  or "default"
-    return content, follow
-
 
 
 @experiments.route("/admin/experiments")
@@ -648,7 +629,6 @@ def join_experiment(exp_id):
     user_email = str(getattr(current_user, "email", "") or "")
     user_password = str(getattr(current_user, "password", "") or "")
     user_cover_image = random_cover_image_url()
-    _content_recsys, _follow_recsys = _get_exp_default_recsys(exp_id)
     user_record, created = ensure_experiment_user(
         exp,
         user_id=user_id,
@@ -657,8 +637,6 @@ def join_experiment(exp_id):
         password=user_password,
         cover_image=user_cover_image,
         joined_on=int(time.time()),
-        recsys_type=_content_recsys,
-        frecsys_type=_follow_recsys,
     )
     if user_record is None:
         flash("Unable to prepare your experiment profile.")
@@ -732,11 +710,13 @@ def change_active_experiment(exp_id):
 
         if exp.platform_type == "photo_sharing":
             participant_id = admin_user_id
+            participant_recsys = "default"
         elif exp.simulator_type == "HPC":
             participant_id = str(uuid.uuid4())
+            participant_recsys = "rchrono"
         else:
             participant_id = admin_user_id
-        _exp_content_recsys, _exp_follow_recsys = _get_exp_default_recsys(exp_id)
+            participant_recsys = "default"
         participant, created = ensure_experiment_user(
             exp,
             user_id=participant_id,
@@ -744,8 +724,8 @@ def change_active_experiment(exp_id):
             email=admin_user_email,
             password=admin_user_password,
             cover_image=random_cover_image_url(),
-            recsys_type=_exp_content_recsys,
-            frecsys_type=_exp_follow_recsys,
+            recsys_type=participant_recsys,
+            frecsys_type="default",
             joined_on=int(time.time()),
         )
         if participant is None:

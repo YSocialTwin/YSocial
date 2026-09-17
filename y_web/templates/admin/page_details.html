@@ -1,0 +1,214 @@
+{% include "admin/head.html" %}
+
+<div class="view-wrapper is-dashboard">
+    <!--Dashboard container-->
+    <div id="creator-dashboard" class="dashboard-container">
+        <!--Toolbar-->
+        {% include "admin/dash_head.html" %}
+
+        <div class="dashboard-body">
+
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <a href="/admin/pages">Pages</a> > Details: {{ page.name }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="columns">
+                <!--Dashboard column-->
+                <div class="column is-6">
+
+                    <!--Dashboard box-->
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Page Overview</h3>
+ <p class="ys-text-small">
+                            Information about this content source page, including topics and populations where it's deployed.
+                        </p>
+
+                        <div class="box-content">
+                            <div class="box-lines">
+                                <b>Basic Information</b>
+ <p class="ys-label-hint">Page identification and RSS feed configuration.</p>
+
+                                <div class="box-line">
+                                    <span class="left">Page Name</span>
+                                    <span class="right">{{ page.name }}</span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">Type</span>
+                                    <span class="right">{{ page.page_type }}</span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">Description</span>
+                                    <span class="right">{{ page.descr }}</span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">Feed URL</span>
+ <span class="right ys-word-break">{{ page.feed }}</span>
+                                </div>
+
+                                <hr>
+                                <b>Content & Deployment</b>
+ <p class="ys-label-hint">Topics covered and population assignments.</p>
+
+                                <div class="box-line">
+                                    <span class="left">Topics</span>
+                                    <span class="right">
+                                        {% if page_topics %}
+                                        <ul>
+                                        {% for pt in page_topics %}
+                                            <li>{{ pt }}</li>
+                                        {% endfor %}
+                                        </ul>
+                                        {% else %}
+                                        No topics assigned
+                                        {% endif %}
+                                    </span>
+                                </div>
+
+                                 <div class="box-line">
+                                    <span class="left">Active Populations</span>
+                                    <span class="right">
+                                        {% if page_populations %}
+                                        <ul>
+                                        {% for population in page_populations %}
+                                            <li><a href="/admin/population_details/{{ population[1] }}">{{ population[0] }}</a></li>
+                                        {% endfor %}
+                                        </ul>
+                                        {% else %}
+                                        Not deployed to any population
+                                        {% endif %}
+                                    </span>
+                                </div>
+
+                                <hr>
+                            </div>
+
+ <div class="buttons ys-flex-right">
+                                <a class="link-tooltip" href="/admin/delete_page/{{ page.id }}" title="Delete"><i
+ class="mdi mdi-delete ys-icon-lg"></i></a>
+                            </div>
+
+                        </div>
+                    </div>
+
+
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Add to Population</h3>
+ <p class="ys-text-small">
+                            Deploy this page to agent populations so they can interact with its content.
+                        </p>
+                        <div class="box-content">
+                            <form action="/admin/add_page_to_population" enctype="multipart/form-data" method="POST">
+                                <div class="box-lines">
+                                    <div class="box-line">
+                                        <span class="left">
+ <small class="ys-text-gray">ℹ️ A page can be added to multiple populations.</small>
+                                        </span>
+                                    </div>
+                                    <div class="box-line">
+                                        <input type="hidden" name="page_id" value="{{ page.id }}">
+                                        <span class="left">Population</span>
+                                        <div class="select">
+                                            <select name="population_id">
+                                                {% for population in populations %}
+                                                <option value="{{ population.id }}">{{ population.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth">
+                                        Update
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Add Topic to Page</h3>
+ <p class="ys-text-small">
+                            Associate content topics with this page for better categorization.
+                        </p>
+                        <div class="box-content">
+                            <form action="/admin/add_topic_to_page" enctype="multipart/form-data" method="POST">
+                                <div class="box-lines">
+                                    <div class="box-line">
+                                        <span class="left">
+ <small class="ys-text-gray">ℹ️ Multiple topics can be associated with the same page.</small>
+                                        </span>
+                                    </div>
+                                    <div class="box-line">
+                                        <input type="hidden" name="page_id" value="{{ page.id }}">
+                                        <span class="left">Topic</span>
+                                        <div class="select">
+                                            <select name="topic_id">
+                                                {% for topic in topics %}
+                                                <option value="{{ topic.id }}">{{ topic.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth">
+                                        Update
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!--Dashboard box-->
+
+                <!--Dashboard column-->
+                <div class="column is-6">
+                    <!--Box-->
+                    <div class="dashboard-box">
+
+                        <div class="box-content">
+ <div class="box-lines ys-flex-center">
+ <img src="{{ page.logo }}" alt="Logo" class="ys-w-50-auto">
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Recent News</h3>
+ <p class="ys-text-small">
+                            Latest articles from this page's RSS feed.
+                        </p>
+
+                        <div class="box-content">
+
+                            <div class="box-lines">
+                                {% for feed in feeds %}
+                                <div class="box-line">
+                                    <span class="right"><a href="{{ feed.link }}">{{ feed.title }}</a></span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="right">{{ feed.summary }}</span>
+                                </div>
+                                <hr>
+                                {% endfor %}
+                            </div>
+
+
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% include "admin/footer.html" %}

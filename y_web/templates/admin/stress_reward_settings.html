@@ -1,0 +1,121 @@
+{% include "admin/head.html" %}
+
+<div class="view-wrapper is-dashboard">
+    <div id="creator-dashboard" class="dashboard-container">
+        {% include "admin/dash_head.html" %}
+
+        <div class="dashboard-body">
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <a href="/admin/experiments">Experiments</a> > Simulation: <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }}</a> > Stress / Reward Settings
+                    </div>
+                </div>
+            </div>
+
+            <div class="columns">
+                <div class="column is-8">
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Stress / Reward Settings</h3>
+                        <p class="ys-text-small">
+                            Configure the stress/reward event weights, coupling values, and optional churn logic used by the experiment client runtime.
+                        </p>
+
+                        <form action="/admin/update_stress_reward_settings/{{ experiment.idexp }}" method="POST">
+                            <div class="box-content">
+                                <div class="box-line">
+                                    <span class="left">Stress/Reward Churn</span>
+                                    <span class="right">
+                                        <label class="switch-small">
+                                            <input type="checkbox" name="sr_churn_enabled" {% if stress_reward_config['system']['churn']['enabled'] %}checked{% endif %}>
+                                            <span class="slider-small round"></span>
+                                        </label>
+                                    </span>
+                                </div>
+
+                                <div class="box-line">
+                                    <span class="left">Coupling: reward buffers stress</span>
+                                    <span class="right ys-w-50">
+                                        <input class="input" type="number" step="0.001" name="sr_coupling_reward_buffers_stress_alpha" value="{{ stress_reward_config['system']['coupling']['reward_buffers_stress_alpha'] }}">
+                                    </span>
+                                </div>
+
+                                <div class="box-line">
+                                    <span class="left">Coupling: stress reduces reward</span>
+                                    <span class="right ys-w-50">
+                                        <input class="input" type="number" step="0.001" name="sr_coupling_stress_reduces_reward_beta" value="{{ stress_reward_config['system']['coupling']['stress_reduces_reward_beta'] }}">
+                                    </span>
+                                </div>
+
+                                <div class="ys-mt-12" style="overflow-x:auto;">
+                                    <table class="table is-fullwidth is-narrow">
+                                        <thead>
+                                            <tr>
+                                                <th>Event</th>
+                                                <th>Stress</th>
+                                                <th>Recognition</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for family, subtype, label in [
+                                                ('reaction', 'like', 'Reaction: Like'),
+                                                ('reaction', 'dislike', 'Reaction: Dislike'),
+                                                ('comment', 'positive', 'Comment: Positive'),
+                                                ('comment', 'neutral', 'Comment: Neutral'),
+                                                ('comment', 'critical', 'Comment: Critical'),
+                                                ('comment', 'hostile', 'Comment: Hostile'),
+                                                ('comment', 'supportive', 'Comment: Supportive'),
+                                                ('share', 'positive', 'Share: Positive'),
+                                                ('share', 'hostile', 'Share: Hostile'),
+                                                ('moderation', 'protected', 'Moderation: Protected'),
+                                                ('moderation', 'sanctioned', 'Moderation: Sanctioned')
+                                            ] %}
+                                            <tr>
+                                                <td>{{ label }}</td>
+                                                <td>
+                                                    <input class="input is-small" type="number" step="0.001" name="sr_event_{{ family }}_{{ subtype }}_stress" value="{{ stress_reward_config['system']['events'][family][subtype]['stress'] }}">
+                                                </td>
+                                                <td>
+                                                    <input class="input is-small" type="number" step="0.001" name="sr_event_{{ family }}_{{ subtype }}_reward" value="{{ stress_reward_config['system']['events'][family][subtype]['reward'] }}">
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="button-wrap ys-mt-15em">
+                                    <button type="submit" class="button is-solid primary-button is-fullwidth">Save Stress / Reward Settings</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="column is-4">
+                    <div class="dashboard-box is-compact">
+                        <h3 class="title is-5 is-thin">Quick Reference Guide</h3>
+                        <div class="help-block">
+                            <p>
+                                <b>Event weights</b><br>
+                                These values define how much each reaction, comment, share, or moderation event shifts stress and recognition.
+                            </p>
+                            <hr>
+                            <p>
+                                <b>Coupling</b><br>
+                                Coupling values control how reward buffers stress and how stress dampens reward accumulation.
+                            </p>
+                            <hr>
+                            <p>
+                                <b>Churn</b><br>
+                                When enabled, the client computes a churn probability from the latest aggregate stress and reward at activation time and may ask the server to mark the agent as left.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% include "admin/footer.html" %}

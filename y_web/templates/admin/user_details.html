@@ -1,0 +1,334 @@
+{% include "admin/head.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-components.css') }}"/>
+
+<div class="view-wrapper is-dashboard">
+    <!--Dashboard container-->
+    <div id="creator-dashboard" class="dashboard-container">
+        <!--Toolbar-->
+        {% include "admin/dash_head.html" %}
+
+        <div class="dashboard-body">
+
+             <div class="columns">
+
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        {% if current_user_role == "admin" %}
+                        <a href="/admin/users">Users</a> > Details: {{ user.username }}
+                        {% else %}
+                        <!-- Researcher view: no breadcrumb link back to users -->
+                        Details: {{ user.username }}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 3: Guide (3 columns) -->
+            <!-- <div class="columns">
+                <div class="column is-12">
+
+                    <div class="dashboard-box is-compact">
+                        <h3 class="title is-5 is-thin">Guide</h3>
+                        <div class="help-block">
+
+                            <p>
+                                Users can own and join experiments.
+                                <br><br>
+                                <b>Owners</b> have full access to the experiment and can edit, and delete users, experiments, and populations.
+                                <br><br>
+                                <b>Joined</b> can take part to hybrid simulations.
+                                <br><br>
+                                Users that are not owners nor have joined and experiment can not access its website since they lack an active account.
+                            </p>
+                            <br>
+                        </div>
+                    </div>
+                </div>
+            </div> -->
+
+            <!-- Row 1: User box (1 column), Experiments (1 column), Add to Experiments (1 column) -->
+ <div class="columns ys-align-stretch">
+            </div>
+
+ <div class="columns is-multiline ys-align-stretch">
+
+                <!--Dashboard column-->
+ <div class="column is-12-mobile is-4-tablet d-flex">
+ <div class="dashboard-box ys-flex-col-1" id="box-user-profile">
+                        <h3 class="title is-5 is-thin">User Profile</h3>
+ <p class="ys-text-small">
+                            Account information and API configurations for this user.
+                        </p>
+
+                        <div class="box-content">
+                            {% if user.profile_pic != "" %}
+ <div class="box-lines ys-flex-center">
+                                <img src="{{ user.profile_pic }}" alt="Profile Picture" style="width: 40%; height: auto; border-radius: 8px;">
+                            </div>
+                            {% endif %}
+                            <div class="box-lines">
+                                <b>Account Details</b>
+ <p class="ys-label-hint">Basic user information and role.</p>
+                                <div class="box-line">
+                                    <span class="left">Username</span>
+                                    <span class="right">{{ user.username }}</span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">Email</span>
+                                    <span class="right">{{ user.email }}</span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">Role</span>
+                                    <span class="right">{{ user.role }}</span>
+                                </div>
+                                <hr>
+                                <b>API Configuration</b>
+ <p class="ys-label-hint">LLM and toxicity analysis settings.</p>
+                                <div class="box-line">
+                                    <span class="left">LLM Model</span>
+                                    <span class="right">{{ user.llm }}</span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">LLM Server URL</span>
+ <span class="right ys-word-break">{{ user.llm_url if user.llm_url else (llm_backend['url'] if llm_backend else 'Not configured') }}</span>
+                                </div>
+                            </div>
+
+ <div class="buttons ys-flex-right">
+                                <a class="link-tooltip" href="/admin/delete_user/{{ user.id }}" title="Delete"><i
+ class="mdi mdi-delete ys-icon-lg"></i></a>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+ <div class="column is-12-mobile is-8-tablet d-flex">
+
+ <div class="dashboard-box ys-flex-col-1" id="box-update-llm">
+                        <h3 class="title is-5 is-thin">Update LLM Configuration</h3>
+ <p class="ys-text-small">
+                            Configure the LLM server URL and select a model for text generation tasks.
+                        </p>
+                        <div class="box-content">
+                            <form action="/admin/update_user_llm" enctype="multipart/form-data" method="POST">
+                                <div class="box-lines">
+                                    <div class="box-line">
+                                        <span class="left">
+ <small class="ys-text-gray">ℹ️ Update the LLM server and model for this user.</small>
+                                        </span>
+                                    </div>
+                                    <div class="box-line">
+                                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                                        <label class="label">Custom LLM URL (optional)</label>
+                                        <input type="text" id="custom_llm_url" name="custom_llm_url" class="input"
+                                               value="{{ user.llm_url if user.llm_url else (llm_backend['url'] if llm_backend else '') }}"
+                                               placeholder="e.g., http://localhost:8000/v1">
+                                        <button type="button" class="button is-solid primary-button is-1-desktop" onclick="fetchModelsForUser()" style="margin-top: 0px; margin-left: 10px;">
+                                            Fetch Models
+                                        </button>
+                                    </div>
+                                    <div id="fetch-status-user" style="min-height: 20px; margin-top: 5px; font-size: 0.9rem;"></div>
+
+                                    <div class="box-line">
+                                        <label class="label">LLM Model</label>
+                                        <div class="select">
+                                            <select name="llm" id="llm_model_select">
+                                                {% for model in models %}
+                                                <option value="{{ model }}" {% if model == user.llm %}selected{% endif %}>{{ model }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth">
+                                        Update LLM Configuration
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 2: Update Password, Update Email -->
+ <div class="columns is-multiline ys-align-stretch">
+ <div class="column is-12-mobile is-4-tablet d-flex">
+ <div class="dashboard-box ys-flex-col-1" id="box-update-password">
+                        <h3 class="title is-5 is-thin">Update Password</h3>
+ <p class="ys-text-small">
+                            Change the user's password with secure validation.
+                        </p>
+                        <div class="box-content">
+                            <form action="/admin/update_user_password" method="POST">
+                                <div class="box-lines">
+                                    <div class="box-line">
+                                        <span class="left">
+ <small class="ys-text-gray">
+                                            ℹ️ Password must be at least 8 characters long and include:
+                                            <ul style="margin-top: 0.5em; margin-left: 1em;">
+                                                <li>At least one uppercase letter</li>
+                                                <li>At least one number</li>
+                                                <li>At least one special symbol</li>
+                                            </ul>
+                                            </small>
+                                        </span>
+                                    </div>
+                                    <div class="box-line">
+                                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                                        <label class="label">New Password</label>
+                                        <input type="password" name="new_password" class="input" required 
+                                               pattern="^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?&quot;:{}|&lt;&gt;_\-+=\[\]\\\/;'`~]).{8,}$"
+                                               title="Password must be at least 8 characters with one uppercase, one number, and one special symbol">
+                                    </div>
+                                    <div class="box-line">
+                                        <label class="label">Confirm Password</label>
+                                        <input type="password" name="confirm_password" class="input" required>
+                                    </div>
+                                </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth">
+                                        Update Password
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+ <div class="column is-12-mobile is-4-tablet d-flex">
+ <div class="dashboard-box ys-flex-col-1" id="box-update-email">
+                        <h3 class="title is-5 is-thin">Update Email</h3>
+ <p class="ys-text-small">
+                            Change the user's email address.
+                        </p>
+                        <div class="box-content">
+                            <form action="/admin/update_user_email" method="POST">
+                                <div class="box-lines">
+                                    <div class="box-line">
+                                        <span class="left">
+ <small class="ys-text-gray">
+                                            ℹ️ Enter a valid email address. Email must be unique across all users.
+                                            </small>
+                                        </span>
+                                    </div>
+                                    <div class="box-line">
+                                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                                        <label class="label">Current Email</label>
+                                        <input type="email" value="{{ user.email }}" class="input" disabled>
+                                    </div>
+                                    <div class="box-line">
+                                        <label class="label">New Email</label>
+                                        <input type="email" name="new_email" class="input" required 
+                                               pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$"
+                                               title="Please enter a valid email address">
+                                    </div>
+                                </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth">
+                                        Update Email
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Row 3: Experiment Participation and Add to Experiment -->
+ <div class="columns is-multiline ys-align-stretch">
+                <!-- Experiment Participation -->
+ <div class="column is-12-mobile is-6-tablet d-flex">
+                    <!--Box-->
+ <div class="dashboard-box ys-flex-col-1" id="box-experiment-participation">
+                        <h3 class="title is-5 is-thin">Experiment Participation</h3>
+ <p class="ys-text-small">
+                            Experiments this user owns or participates in.
+                        </p>
+ <div class="box-content ys-flex-1">
+                            <div class="box-lines">
+ <div class="ys-mb-15">
+ <b class="ys-block-mb8">Owned Experiments</b>
+ <div class="ys-flex-wrap-gap-8">
+                                        {% if user_experiments %}
+                                        {% for exp in user_experiments %}
+                                            <a href="/admin/experiment_details/{{ exp.idexp }}" 
+                                               style="display: inline-block; padding: 6px 12px; background: #039be5; color: white; border-radius: 4px; text-decoration: none; font-size: 0.85em; transition: background 0.2s;">
+                                                {{ exp.exp_name }}
+                                            </a>
+                                        {% endfor %}
+                                        {% else %}
+ <span class="ys-text-italic-sm">Not owning any experiments</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <hr style="margin: 15px 0;">
+                                <div>
+ <b class="ys-block-mb8">Joined Experiments</b>
+ <div class="ys-flex-wrap-gap-8">
+                                        {% if user_experiments_joined %}
+                                        {% for exp in user_experiments_joined %}
+                                            <a href="/admin/experiment_details/{{ exp[0] }}" 
+                                               style="display: inline-block; padding: 6px 12px; background: #00d1b2; color: white; border-radius: 4px; text-decoration: none; font-size: 0.85em; transition: background 0.2s;">
+                                                {{ exp[1] }}
+                                            </a>
+                                        {% endfor %}
+                                        {% else %}
+ <span class="ys-text-italic-sm">Not participating in any experiments</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                {% if current_user_role == "admin" %}
+                <!-- Add to Experiment section (admin only) -->
+ <div class="column is-12-mobile is-6-tablet d-flex">
+ <div class="dashboard-box ys-flex-col-1" id="box-add-to-experiment">
+                        <h3 class="title is-5 is-thin">Add to Experiment</h3>
+ <p class="ys-text-small">
+                            Grant this user access to participate in an experiment.
+                        </p>
+ <div class="box-content ys-flex-1">
+                            <form action="/admin/add_user_to_experiment" enctype="multipart/form-data" method="POST">
+                                <div class="box-lines">
+                                    <div class="box-line">
+                                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                                        <span class="left">Select Experiment</span>
+                                        <div class="select">
+                                            <select name="experiment_id">
+                                                {% for exp in all_experiments %}
+                                                <option value="{{ exp.idexp }}">{{ exp.exp_name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth">
+                                        Update
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+
+
+{% include "admin/tutorials/user_details_tutorial.html" %}
+<script src="{{ url_for('static', filename='assets/js/admin-users.js') }}"></script>
+{% include "admin/footer.html" %}

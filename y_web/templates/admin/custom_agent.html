@@ -1,0 +1,169 @@
+{% include "admin/head.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-components.css') }}"/>
+
+<div class="view-wrapper is-dashboard">
+    <div id="creator-dashboard" class="dashboard-container">
+        {% include "admin/dash_head.html" %}
+
+        <div class="dashboard-body">
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box" style="margin-bottom: 24px;">
+                        <h3 class="title is-5 is-thin">Available {{ custom_spec.display_name }} Populations</h3>
+                        <div class="box-content">
+                            <div
+                                id="custom-populations-table"
+                                data-populations='{{ custom_populations|tojson }}'
+                            ></div>
+                            <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Available {{ custom_spec.display_name }}s</h3>
+                        <div class="box-content">
+                            <div
+                                id="custom-agents-table"
+                                data-agents='{{ custom_agents|tojson }}'
+                                data-columns='{{ custom_agent_columns|tojson }}'
+                            ></div>
+                            <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="columns">
+                <div class="column is-8">
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Create {{ custom_spec.display_name }}</h3>
+                        <div class="box-content">
+                            <form action="/admin/create_custom_agent/{{ custom_spec.slug }}" method="POST" onsubmit="showLoading('Creating custom agent...');">
+                                <div class="box-lines">
+                                    <div class="tutorial-section">
+                                        <b>Simulation Configuration</b>
+                                        <div class="box-line">
+                                            <span class="left">Target Population</span>
+                                            <div class="select">
+                                                <select name="population" id="hello_target_population">
+                                                    <option value="none"></option>
+                                                    <option value="__new__">Create new {{ custom_spec.display_name }} population...</option>
+                                                    {% for population in populations %}
+                                                    <option value="{{ population.id }}">{{ population.name }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div id="hello-new-population-fields" style="display: none;">
+                                            <div class="box-line">
+                                                <span class="left">New Population Name</span>
+                                                <span class="right ys-w-70"><input type="text" name="new_population_name" class="input"></span>
+                                            </div>
+                                            <div class="box-line">
+                                                <span class="left">New Population Description</span>
+                                                <span class="right ys-w-70"><input type="text" name="new_population_descr" class="input"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="tutorial-section">
+                                        <b>{{ custom_spec.display_name }} Parameters</b>
+                                        {% for section in custom_parameter_sections %}
+                                        <div class="custom-agent-parameter-section" style="margin-top: 18px;">
+                                            <div style="margin-bottom: 10px;">
+                                                <div style="font-weight: 600; color: #1f2937;">{{ section.label }}</div>
+                                                {% if section.description %}
+                                                <small style="color: #6b7280;">{{ section.description }}</small>
+                                                {% endif %}
+                                            </div>
+                                        {% for parameter in section.parameters %}
+                                        {% set form_value = _custom_agent_form_value(parameter) %}
+                                        {% set visible_if = parameter.visible_if if parameter.visible_if is defined else none %}
+                                        <div class="box-line">
+                                            <div
+                                                class="ys-custom-agent-param"
+                                                {% if visible_if %}
+                                                data-visible-if-field="{{ visible_if.field }}"
+                                                data-visible-if-equals="{{ visible_if.equals }}"
+                                                {% endif %}
+                                                style="display: contents;"
+                                            ></div>
+                                            <span class="left">
+                                                {{ parameter.name.replace('_', ' ').title() }}{% if parameter.required %} <small>(required)</small>{% endif %}
+                                            </span>
+                                            <span class="right ys-w-70">
+                                                {% set parameter_type = parameter.type|string %}
+                                                {% if parameter.name == 'activity_profile' %}
+                                                <div class="select is-fullwidth">
+                                                    <select name="activity_profile" class="input" {% if parameter.required %}required{% endif %}>
+                                                        {% for profile in activity_profiles %}
+                                                        <option value="{{ profile.id }}" {% if form_value|string == profile.id|string %}selected{% endif %}>{{ profile.name }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                                {% elif parameter_type.startswith('enum[') and parameter_type.endswith(']') %}
+                                                {% set enum_options = parameter_type[5:-1].split(',') %}
+                                                <div class="select is-fullwidth">
+                                                    <select name="{{ parameter.name }}" class="input" {% if parameter.required %}required{% endif %}>
+                                                        <option value=""></option>
+                                                        {% for option in enum_options %}
+                                                        {% set option_value = option.strip() %}
+                                                        <option value="{{ option_value }}" {% if form_value|string == option_value|string %}selected{% endif %}>{{ option_value }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                                {% elif parameter_type.startswith('enum_multi[') and parameter_type.endswith(']') %}
+                                                {% set enum_options = parameter_type[11:-1].split(',') %}
+                                                <div class="select is-multiple is-fullwidth">
+                                                    <select name="{{ parameter.name }}" class="input" multiple size="{{ [enum_options|length, 6]|min }}">
+                                                        {% for option in enum_options %}
+                                                        {% set option_value = option.strip() %}
+                                                        <option value="{{ option_value }}" {% if option_value in form_value %}selected{% endif %}>{{ option_value }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                                <small style="display: block; color: #6b7280; margin-top: 6px;">Hold Cmd/Ctrl to select multiple values.</small>
+                                                {% elif parameter_type == 'number' %}
+                                                <input type="number" step="any" name="{{ parameter.name }}" class="input" value="{{ form_value }}" {% if parameter.required %}required{% endif %}>
+                                                {% elif parameter_type.startswith('array') %}
+                                                <textarea name="{{ parameter.name }}" class="textarea" placeholder="Comma-separated values" {% if parameter.required %}required{% endif %}>{{ form_value }}</textarea>
+                                                {% else %}
+                                                <input type="text" name="{{ parameter.name }}" class="input" value="{{ form_value }}" {% if parameter.required %}required{% endif %}>
+                                                {% endif %}
+                                                {% if parameter.description %}
+                                                <small style="display: block; color: #6b7280; margin-top: 6px;">{{ parameter.description }}</small>
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                        {% endfor %}
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth">Create {{ custom_spec.display_name }}</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="column is-4">
+                    <div class="dashboard-box is-compact">
+                        <h3 class="title is-5 is-thin">{{ custom_spec.display_name }}</h3>
+                        <div class="help-block">
+                            <p>{{ custom_spec.description }}</p>
+                            <hr>
+                            <p><b>Generated Slug</b><br>{{ custom_spec.slug }}</p>
+                            <hr>
+                            <p><b>Plugin Source</b><br>{{ custom_spec.repo_name }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='assets/js/admin-pages.js') }}"></script>
+{% include "admin/footer.html" %}

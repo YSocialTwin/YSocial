@@ -1,0 +1,36 @@
+<!-- Concatenated js plugins and jQuery -->
+<script src="{{ url_for('static', filename='assets/js/app.js') }}"></script>
+<script src="https://js.stripe.com/v3/"></script>
+
+<!-- Core js -->
+<script src="{{ url_for('static', filename='assets/js/global.js') }}"></script>
+
+<!-- Navigation options js -->
+<script src="{{ url_for('static', filename='assets/js/navbar-v1.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-v2.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-mobile.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-options.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/sidebar-v1.js') }}"></script>
+
+<!-- Core instance js -->
+<script src="{{ url_for('static', filename='assets/js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/chat.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/touch.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/tour.js') }}"></script>
+
+<!-- Components js -->
+<script src="{{ url_for('static', filename='assets/js/explorer.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/widgets.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/modal-uploader.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/popovers-users.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/popovers-pages.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/lightbox.js') }}"></script>
+
+<!-- Admin layout and navigation js (extracted from head.html / dash_head.html) -->
+<script src="{{ url_for('static', filename='assets/js/admin-layout.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/admin-nav.js') }}"></script>
+{% include "admin/tutorials/generic_admin_tutorial.html" %}
+
+</body>
+
+</html>

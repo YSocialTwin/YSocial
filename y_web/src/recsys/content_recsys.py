@@ -230,35 +230,6 @@ def _users_with_declared_topics(topic_ids, exclude_uid=None):
     return values
 
 
-def _users_with_similar_interests(interest_ids, exclude_uid=None):
-    """Find users sharing at least one interest from the user_interest table.
-
-    Uses CAST(interest_id AS TEXT) so both integer (Standard) and UUID-string
-    (HPC) interest IDs resolve correctly, without an isdigit() guard that
-    silently drops non-numeric IDs.
-    """
-    if not interest_ids:
-        return []
-    try:
-        engine = db.engines.get("db_exp")
-        if engine is None:
-            return []
-        statement = text(
-            "SELECT DISTINCT user_id FROM user_interest "
-            "WHERE CAST(interest_id AS TEXT) IN :interest_ids"
-        ).bindparams(bindparam("interest_ids", expanding=True))
-        with engine.connect() as connection:
-            rows = connection.execute(
-                statement, {"interest_ids": interest_ids}
-            ).all()
-    except Exception:
-        return []
-    values = [row[0] for row in rows if row[0] is not None]
-    if exclude_uid is not None:
-        values = [value for value in values if str(value) != str(exclude_uid)]
-    return values
-
-
 def _rank_feature_based_posts(uid, topic_ids, page, per_page, hybrid=False):
     """Rank topic-tagged posts deterministically for CBV/HLR modes.
 
@@ -379,9 +350,7 @@ def _filter_bubble_score(uid, exp_engine, settings):
                     {"uid": uid_str},
                 ).fetchall()
             }
-            print(f"[RECSYS DEBUG] _filter_bubble_score: uid={uid_str!r} interests={interests}")
             if not interests:
-                print(f"[RECSYS DEBUG] _filter_bubble_score: NO INTERESTS FOUND for uid={uid_str!r} -> returning empty scores")
                 return {}
 
             # 2. User opinions at onboarding (tid = 0)
@@ -675,9 +644,7 @@ def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6,
         and additional_posts may contain supplementary content
     """
 
-    raw_mode = mode
     mode = _normalize_content_recsys_mode(mode)
-    print(f"[RECSYS DEBUG] get_suggested_posts called: uid={uid!r} raw_mode={raw_mode!r} -> mode={mode!r} page={page} exp_engine={exp_engine is not None}")
 
     if uid == "all":
         posts_query = db.session.query(Post).filter(_root_post_filter())
@@ -704,9 +671,9 @@ def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6,
         posts = (
             posts_query.outerjoin(Rounds, Post.round == Rounds.id)
             .order_by(
-                desc(Post.reaction_count),
                 desc(func.coalesce(Rounds.day, -1)),
                 desc(func.coalesce(Rounds.hour, -1)),
+                desc(Post.reaction_count),
                 desc(Post.id),
             )
             .paginate(page=page, per_page=per_page, error_out=False)
@@ -735,9 +702,9 @@ def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6,
         posts = (
             posts_query.outerjoin(Rounds, Post.round == Rounds.id)
             .order_by(
-                desc(Post.reaction_count),
                 desc(func.coalesce(Rounds.day, -1)),
                 desc(func.coalesce(Rounds.hour, -1)),
+                desc(Post.reaction_count),
                 desc(Post.id),
             )
             .paginate(
@@ -766,9 +733,9 @@ def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6,
             .outerjoin(Rounds, Post.round == Rounds.id)
             .filter(Post.user_id != uid, _root_post_filter())
             .order_by(
+                desc(func.coalesce(comment_counts.c.n_comments, 0)),
                 desc(func.coalesce(Rounds.day, -1)),
                 desc(func.coalesce(Rounds.hour, -1)),
-                desc(func.coalesce(comment_counts.c.n_comments, 0)),
                 desc(Post.id),
             )
         )
@@ -801,11 +768,14 @@ def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6,
         interest_ids = _user_interest_topic_ids(uid)
 
         if interest_ids:
-            # UUID-safe: use text SQL with CAST so both integer (Standard)
-            # and UUID-string (HPC) interest IDs match in user_interest.
-            similar_user_ids = _users_with_similar_interests(
-                interest_ids, exclude_uid=uid
-            )
+            similar_user_ids = db.session.scalars(
+                sa_select(User_interest.user_id)
+                .where(
+                    User_interest.interest_id.in_([value for value in interest_ids if value.isdigit()]),
+                    User_interest.user_id != uid,
+                )
+                .distinct()
+            ).all()
             similar_user_ids.extend(
                 _users_with_declared_topics(interest_ids, exclude_uid=uid)
             )
@@ -999,7 +969,6 @@ def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6,
         additional_posts = None
 
     elif mode == "FilterBubble":
-        print(f"[RECSYS DEBUG] FilterBubble branch: uid={uid!r} exp_engine={exp_engine is not None} fb_settings_keys={list((fb_settings or {}).keys())}")
         try:
             if exp_engine is None:
                 raise PersonalizedFeedRankingError(
@@ -1014,7 +983,6 @@ def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6,
                 uid,
             )
             bubble_scores = {}
-        print(f"[RECSYS DEBUG] FilterBubble: bubble_scores count={len(bubble_scores)} ({'FALLBACK chrono' if not bubble_scores else 'personalized'})")
         if not bubble_scores:
             # Availability fallback for either an observable ranking error or a
             # genuine cold start. _filter_bubble_score only returns {} for the

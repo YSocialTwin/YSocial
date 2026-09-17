@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8"/>
+    <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <meta http-equiv="x-ua-compatible" content="ie=edge"/>
+
+
+    <title>Y Social</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='assets/img/favicon_orange.png') }}"/>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Reddit+Sans:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+    <link
+            href="https://fonts.googleapis.com/css?family=Montserrat:600,700,800,900"
+            rel="stylesheet"
+    />
+    <link
+            href="https://fonts.googleapis.com/css?family=Roboto:400,500"
+            rel="stylesheet"
+    />
+    <link
+            href="{{ url_for('static', filename='assets/vendor/fontisto/css/fontisto/fontisto-brands.min.css') }}"
+            rel="stylesheet"
+    />
+    <!-- Core CSS -->
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='assets/css/reddit/app.css') }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='assets/css/reddit/core.css') }}"/>
+    <link href="{{ url_for('static', filename='assets/vendor/mdi/css/materialdesignicons.min.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/reddit/forum-components.css') }}"/>
+</head>
+<body>
+{% include 'shared/browser_sync.html' %}
+
+<!-- Google Tag Manager (noscript) -->
+<noscript
+>
+    <iframe
+            src="https://www.googletagmanager.com/ns.html?id=GTM-KQHJPZP"
+            height="0"
+            width="0"
+ class="ys-invisible"
+    ></iframe
+    >
+</noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- Pageloader -->
+<div class="pageloader"></div>
+<div class="infraloader is-active"></div>
+
+<div class="app-overlay"></div>
+
+<div
+        id="main-navbar"
+        class="navbar navbar-v1 is-inline-flex is-transparent no-shadow is-hidden-mobile"
+>
+    <div class="container is-fluid">
+        <div class="navbar-brand">
+            <a href="{{ feed_home_url }}" class="navbar-item js-feed-home-link" data-feed-home-link="1">
+                <img
+                        class="logo light-image"
+                        src="{{ url_for('static', filename='assets/img/vector/logo/Ysocial_orange.png') }}"
+                        alt="YSocial Logo"
+                />
+                <img
+                        class="logo dark-image"
+                        src="{{ url_for('static', filename='assets/img/vector/logo/Ysocial_orange.png') }}"
+                        alt="YSocial Logo"
+                />
+            </a>
+        </div>
+        <div class="navbar-menu">
+            <div class="navbar-end">
+                {% if is_admin and active_sim_clock %}
+                <div class="navbar-item is-hidden-touch">
+                    <div class="sim-clock-pill {{ active_sim_clock.status_class }}">
+                        <span class="status-dot"></span>
+                        <div class="sim-clock-label">
+                            <span>{{ active_sim_clock.label }}</span>
+                            <small>{{ active_sim_clock.status_text }}</small>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if reply_notif_url %}
+                <a class="navbar-item reply-notif-bell" href="{{ reply_notif_url }}" aria-label="Notifications">
+                    <i class="mdi mdi-bell-outline" style="{% if (reply_notif_unread_count|default(0))|int > 0 %} color: #ff4500;{% endif %}" {# dynamic #}></i>
+                    {% if (reply_notif_unread_count|default(0))|int > 0 %}
+                    <span class="reply-notif-badge">{{ reply_notif_unread_count }}</span>
+                    {% endif %}
+                </a>
+                {% endif %}
+
+                <div
+                        id="account-dropdown"
+                        class="navbar-item is-account drop-trigger has-caret"
+                >
+
+                    <div class="user-image">
+                        <img
+                                src="https://via.placeholder.com/400x400"
+                                data-demo-src="{{ profile_pic or 'https://via.placeholder.com/400x400' }}"
+                                alt=""
+                        />
+                        <span class="indicator"></span>
+                    </div>
+
+                    <div class="nav-drop is-account-dropdown">
+                        <div class="inner">
+                            <div class="nav-drop-header">
+                                <span class="username">{{ logged_username }}</span>
+                                <label class="theme-toggle">
+                                    <input type="checkbox"/>
+                                    <span class="toggler">
+            <span class="dark">
+              <i data-feather="moon"></i>
+            </span>
+            <span class="light">
+              <i data-feather="sun"></i>
+            </span>
+          </span>
+                                </label>
+                            </div>
+                            <div class="nav-drop-body account-items">
+                                <!-- Forum mode: user profiles are disabled -->
+
+                                {% if forum_memory_enabled and current_user_role in ['admin', 'researcher'] %}
+                                <a href="/{{ exp_id }}/interview" class="account-item">
+                                    <div class="media">
+                                        <div class="icon-wrap">
+                                            <i data-feather="message-square"></i>
+                                        </div>
+                                        <div class="media-content">
+                                            <h3>Interview</h3>
+                                            <small>Interview an LLM agent with memory context.</small>
+                                        </div>
+                                    </div>
+                                </a>
+                                {% endif %}
+
+                                {% if is_admin==True %}
+                                <hr class="account-divider"/>
+                                <a href="/admin/dashboard" class="account-item">
+                                    <div class="media">
+                                        <div class="icon-wrap">
+                                            <i data-feather="settings"></i>
+                                        </div>
+                                        <div class="media-content">
+                                            <h3>Admin Dashboard</h3>
+                                            <small>You got the power!</small>
+                                        </div>
+                                    </div>
+                                </a>
+                                {% endif %}
+                                <!-- <a class="account-item">
+                                  <div class="media">
+                                    <div class="icon-wrap">
+                                      <i data-feather="life-buoy"></i>
+                                    </div>
+                                    <div class="media-content">
+                                      <h3>Help</h3>
+                                      <small>Contact our support.</small>
+                                    </div>
+                                  </div>
+                                </a> -->
+                                <a class="account-item" href="{{ url_for('auth.logout') }}">
+                                    <div class="media">
+                                        <div class="icon-wrap">
+                                            <i data-feather="power"></i>
+                                        </div>
+                                        <div class="media-content">
+                                            <h3>Log out</h3>
+                                            <small>Log out from your account.</small>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+<nav class="navbar mobile-navbar is-hidden-desktop" aria-label="main navigation">
+    <!-- Brand -->
+    <div class="navbar-brand">
+        <a class="navbar-item js-feed-home-link" data-feed-home-link="1" href="{{ feed_home_url }}">
+            <img
+                    class="light-image"
+                    src="{{ url_for('static', filename='assets/img/vector/logo/Ysocial_orange.png') }}"
+                    alt=""
+            />
+            <img
+                    class="dark-image"
+                    src="{{ url_for('static', filename='assets/img/vector/logo/Ysocial_orange.png') }}"
+                    alt=""
+            />
+        </a>
+        {% if is_admin and active_sim_clock %}
+        <div class="navbar-item">
+            <div class="sim-clock-pill {{ active_sim_clock.status_class }}">
+                <span class="status-dot"></span>
+                <div class="sim-clock-label">
+                    <span>{{ active_sim_clock.label }}</span>
+                    <small>{{ active_sim_clock.status_text }}</small>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Mobile menu toggler icon -->
+    <div class="navbar-burger">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+    <!-- Navbar mobile menu -->
+    <div class="navbar-menu">
+        <!-- Account -->
+        <div class="navbar-item has-dropdown is-active">
+            <a href="javascript:void(0)" class="navbar-link">
+                <img
+                        src="https://via.placeholder.com/150x150"
+                        data-demo-src="{{ profile_pic or 'https://via.placeholder.com/150x150' }}"
+                        alt=""
+                />
+                <span class="is-heading">{{ logged_username }}</span>
+            </a>
+
+            <!-- Mobile Dropdown -->
+            <div class="navbar-dropdown">
+                <a
+                        href="{{ feed_home_url }}"
+                        data-feed-home-link="1"
+                        class="navbar-item is-flex is-mobile-icon"
+                >
+                    <span><i data-feather="activity"></i>Feed</span>
+                </a>
+                {% if reply_notif_url %}
+                <a
+                        href="{{ reply_notif_url }}"
+                        class="navbar-item is-flex is-mobile-icon"
+                >
+                    <span><i class="mdi mdi-bell-outline"></i>Notifications</span>
+                    {% if (reply_notif_unread_count|default(0))|int > 0 %}
+                    <span class="menu-badge">{{ reply_notif_unread_count }}</span>
+                    {% endif %}
+                </a>
+                {% endif %}
+                {% if exp_id and current_user_role in ['admin', 'researcher'] and forum_memory_enabled %}
+                <a
+                        href="/{{ exp_id }}/interview"
+                        class="navbar-item is-flex is-mobile-icon"
+                >
+                    <span><i class="mdi mdi-account-voice-outline"></i>Interview</span>
+                </a>
+                {% endif %}
+                {% if is_admin == True %}
+                <a
+                        href="/admin/dashboard"
+                        class="navbar-item is-flex is-mobile-icon"
+                >
+                    <span><i data-feather="settings"></i>Admin Dashboard</span>
+                </a>
+                {% endif %}
+                <!-- Forum mode: user profiles are disabled -->
+
+            </div>
+        </div>
+
+        <!-- More -->
+        <div class="navbar-item has-dropdown">
+            <a href="/navbar-v1-settings.html" class="navbar-link">
+                <i data-feather="user"></i>
+                <span class="is-heading">Account</span>
+            </a>
+
+            <!-- Mobile Dropdown -->
+            <div class="navbar-dropdown">
+                <!-- <a href="#" class="navbar-item is-flex is-mobile-icon">
+                  <span><i data-feather="life-buoy"></i>Support</span>
+                </a>
+                <a
+                  href="#"
+                  class="navbar-item is-flex is-mobile-icon"
+                >
+                  <span><i data-feather="settings"></i>Settings</span>
+                </a> -->
+                <a href="{{ url_for('auth.logout') }}" class="navbar-item is-flex is-mobile-icon">
+                    <span><i data-feather="log-out"></i>Logout</span>
+                </a>
+            </div>
+        </div>
+    </div>
+    <!--Search-->
+    <div class="mobile-search is-hidden">
+        <div class="control">
+            <input
+                    id="tipue_drop_input_mobile"
+                    class="input"
+                    placeholder="Search..."
+            />
+            <div class="form-icon">
+                <i data-feather="search"></i>
+            </div>
+            <div class="close-icon">
+                <i data-feather="x"></i>
+            </div>
+            <div id="tipue_drop_content_mobile" class="tipue-drop-content"></div>
+        </div>
+    </div>
+</nav>

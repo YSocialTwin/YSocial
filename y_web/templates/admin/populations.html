@@ -1,0 +1,696 @@
+{% include "admin/head.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-components.css') }}"/>
+
+ <div class="view-wrapper is-dashboard">
+        <!--Dashboard container-->
+        <div id="creator-dashboard" class="dashboard-container">
+            <!--Toolbar-->
+            {% include "admin/dash_head.html" %}
+
+            <div class="dashboard-body">
+                <div class="columns">
+                    <div class="column is-12">
+                        <div class="dashboard-box" id="box-available-populations">
+                            <h3 class="title is-5 is-thin">Available Populations</h3>
+
+                            <div class="box-content">
+
+                                <div id="table"></div>
+
+                                <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
+
+
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="columns">
+                    <!--Dashboard column-->
+                    <div class="column is-8">
+
+                        <!--Dashboard box-->
+                        <div class="dashboard-box" id="box-create-population">
+                            <h3 class="title is-5 is-thin">Create Synthetic Population</h3>
+                            <div class="box-content">
+                                <form action="/admin/create_population" id="popcreate_form" enctype="multipart/form-data" method="POST" onsubmit="showLoading('Creating population...');">
+                                <div class="box-lines">
+
+                                    <div id="section-basic-info" class="tutorial-section">
+                                    <div class="form-section-header">Basic Information</div>
+                                    <div class="form-section-description">
+                                        Define the population name, description, and size. These settings identify the population and determine the number of synthetic agents to generate.
+                                    </div>
+
+                                    <div class="box-line">
+ <span class="left text-danger">Population Name <span>*</span></span>
+ <span class="right ys-w-70"><input type="text" id="pop_name" name="pop_name" class="input" required></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">Description</span>
+ <span class="right ys-w-70"><input type="text" name="pop_descr" class="input"></span>
+                                    </div>
+                                    <div class="box-line">
+ <span class="left text-danger">Population Platform <span>*</span></span>
+ <span class="right ys-w-70">
+                                            <div class="select is-fullwidth">
+                                                <select name="username_type" id="population_username_type" class="input" required onchange="togglePhotoSharingConfigPanel()">
+                                                    <option value="microblogging">Microblogging</option>
+                                                    <option value="photo_sharing">Photo Sharing</option>
+                                                    <option value="forum">Forum</option>
+                                                </select>
+                                            </div>
+                                        </span>
+                                    </div>
+                                    <div class="box-line">
+ <span class="left text-danger">Population Size <span>*</span></span>
+                                        <div class="slider-timeline">
+                                            <input id="n_agents" name="n_agents" type="number" value="100" min="1" class="input" required>
+                                        </div>
+                                    </div>
+                                    </div><!-- End section-basic-info -->
+
+                                    <div id="section-demographics" class="tutorial-section">
+                                    <div class="form-section-header">Demographics</div>
+                                    <div class="form-section-description">
+                                        Configure demographic attributes including age range, nationality, and language to define the population's basic characteristics.
+                                    </div>
+
+                                    <div class="box-line">
+                                        <span class="left">Nationalities</span>
+
+                                            <div class="select">
+                                            <select name="nationalities">
+                                                {% for nationality in nationalities %}
+                                                <option value="{{ nationality.nationality }}">{{ nationality.nationality }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            </div>
+                                        </span>
+                                    </div>
+                                     <div class="box-line">
+                                        <span class="left">Spoken Language</span>
+
+                                            <div class="select">
+                                            <select name="languages">
+                                                {% for lang in languages %}
+                                                <option value="{{ lang.language }}">{{ lang.language }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            </div>
+                                        </span>
+                                    </div>
+
+                                    <div class="box-line">
+ <span class="left text-danger">Age Classes <span>*</span></span>
+ <span class="right ys-w-70">
+                                            <div class="multi-select-wrapper">
+                                                <div class="multi-select-display" id="age_classes_display_wrapper" onclick="toggleDropdown('age_classes')">
+                                                    <span id="age_classes_display" class="multi-select-placeholder">Click to select age classes...</span>
+                                                </div>
+                                                <div class="multi-select-dropdown" id="age_classes_dropdown">
+                                                    {% for age_class in age_classes %}
+                                                    <div class="multi-select-option" onclick="toggleOption('age_classes', '{{ age_class.name }}', '{{ age_class.id }}')">
+                                                        {{ age_class.name }} ({{ age_class.age_start }}-{{ age_class.age_end }})
+                                                    </div>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        </span>
+                                    </div>
+ <div class="box-line d-none" id="age_classes_percentages_container">
+                                        <span class="left">Age Classes %</span>
+ <span class="right ys-w-70">
+ <div id="age_classes_percentages" class="ys-flex-col-gap-8"></div>
+ <div id="age_classes_validation" class="percentage-validation-compact ys-hidden-mt"></div>
+                                        </span>
+                                    </div>
+
+                                    <div class="box-line">
+                                        <span class="left">Gender Distribution</span>
+                                        <span class="right" style="width: 70%; display: flex; align-items: center; gap: 15px;">
+ <div class="ys-flex-gap-5">
+ <label for="male_percentage" class="ys-m0-sm">Male:</label>
+                                                <input type="number" id="male_percentage" name="male_percentage" value="50" min="0" max="100" 
+ class="ys-num-input2"
+                                                       oninput="updateFemalePercentage()">
+ <span class="ys-text-090">%</span>
+                                            </div>
+ <div class="ys-flex-gap-5">
+ <label for="female_percentage" class="ys-m0-sm">Female:</label>
+                                                <input type="number" id="female_percentage" name="female_percentage" value="50" min="0" max="100" 
+ class="ys-num-input2"
+                                                       oninput="updateMalePercentage()">
+ <span class="ys-text-090">%</span>
+                                            </div>
+                                            <small id="gender_validation" style="color: #666; display: none;">Total must equal 100%</small>
+                                        </span>
+                                    </div>
+                                    </div><!-- End section-demographics -->
+
+                                    <div id="section-social-attributes" class="tutorial-section">
+                                    <div class="form-section-header">Social Attributes</div>
+                                    <div class="form-section-description">
+                                        Select diverse values for education, political leanings, and toxicity levels to create a varied and realistic population. Click to select multiple options.
+                                    </div>
+
+                                    <div class="box-line">
+ <span class="left text-danger">Education Levels <span>*</span></span>
+ <span class="right ys-w-70">
+                                            <div class="multi-select-wrapper">
+                                                <div class="multi-select-display" id="education_levels_display_wrapper" onclick="toggleDropdown('education_levels')">
+                                                    <span id="education_levels_display" class="multi-select-placeholder">Click to select education levels...</span>
+                                                </div>
+                                                <div class="multi-select-dropdown" id="education_levels_dropdown">
+                                                    {% for education_level in education_levels %}
+                                                    <div class="multi-select-option" onclick="toggleOption('education_levels', '{{ education_level.education_level }}', '{{ education_level.id }}')">
+                                                        {{ education_level.education_level }}
+                                                    </div>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        </span>
+                                    </div>
+ <div class="box-line d-none" id="education_levels_percentages_container">
+                                        <span class="left">Education %</span>
+ <span class="right ys-w-70">
+ <div id="education_levels_percentages" class="ys-flex-col-gap-8"></div>
+ <div id="education_levels_validation" class="percentage-validation-compact ys-hidden-mt"></div>
+                                        </span>
+                                    </div>
+                                    <div class="box-line">
+ <span class="left text-danger">Political Leanings <span>*</span></span>
+ <span class="right ys-w-70">
+                                            <div class="multi-select-wrapper">
+                                                <div class="multi-select-display" id="political_leanings_display_wrapper" onclick="toggleDropdown('political_leanings')">
+                                                    <span id="political_leanings_display" class="multi-select-placeholder">Click to select political leanings...</span>
+                                                </div>
+                                                <div class="multi-select-dropdown" id="political_leanings_dropdown">
+                                                    {% for political_leaning in leanings %}
+                                                    <div class="multi-select-option" onclick="toggleOption('political_leanings', '{{ political_leaning.leaning }}', '{{ political_leaning.id }}')">
+                                                        {{ political_leaning.leaning }}
+                                                    </div>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        </span>
+                                    </div>
+ <div class="box-line d-none" id="political_leanings_percentages_container">
+                                        <span class="left">Political %</span>
+ <span class="right ys-w-70">
+ <div id="political_leanings_percentages" class="ys-flex-col-gap-8"></div>
+ <div id="political_leanings_validation" class="percentage-validation-compact ys-hidden-mt"></div>
+                                        </span>
+                                    </div>
+                                    <div class="box-line">
+ <span class="left text-danger">Toxicity Levels <span>*</span></span>
+ <span class="right ys-w-70">
+                                            <div class="multi-select-wrapper">
+                                                <div class="multi-select-display" id="toxicity_levels_display_wrapper" onclick="toggleDropdown('toxicity_levels')">
+                                                    <span id="toxicity_levels_display" class="multi-select-placeholder">Click to select toxicity levels...</span>
+                                                </div>
+                                                <div class="multi-select-dropdown" id="toxicity_levels_dropdown">
+                                                    {% for toxicity_level in toxicity_levels %}
+                                                    <div class="multi-select-option" onclick="toggleOption('toxicity_levels', '{{ toxicity_level.toxicity_level }}', '{{ toxicity_level.id }}')">
+                                                        {{ toxicity_level.toxicity_level }}
+                                                    </div>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        </span>
+                                    </div>
+ <div class="box-line d-none" id="toxicity_levels_percentages_container">
+                                        <span class="left">Toxicity %</span>
+ <span class="right ys-w-70">
+ <div id="toxicity_levels_percentages" class="ys-flex-col-gap-8"></div>
+ <div id="toxicity_levels_validation" class="percentage-validation-compact ys-hidden-mt"></div>
+                                        </span>
+                                    </div>
+                                    </div><!-- End section-social-attributes -->
+
+                                    <div id="photo-sharing-config-wrapper" class="tutorial-section d-none">
+                                        <details id="photo-sharing-config-panel" open>
+                                            <summary class="form-section-header ys-clickable">
+                                                Photo Sharing Configuration <span class="ys-text-sm-normal">(Only for Photo Sharing populations)</span>
+                                            </summary>
+                                            <div class="form-section-description">
+                                                Configure photo-sharing specific fields. Percentages are applied per generated agent and the favorite filters define the pool used for random agent tag assignment.
+                                            </div>
+
+                                            <div class="box-line">
+                                                <span class="left">Is Private %</span>
+                                                <span class="right ys-w-70">
+                                                    <input type="number" id="photo_is_private_percentage" name="photo_is_private_percentage" class="input" min="0" max="100" value="20">
+                                                </span>
+                                            </div>
+                                            <div class="box-line">
+                                                <span class="left">Is Verified %</span>
+                                                <span class="right ys-w-70">
+                                                    <input type="number" id="photo_is_verified_percentage" name="photo_is_verified_percentage" class="input" min="0" max="100" value="10">
+                                                </span>
+                                            </div>
+
+                                            <div class="box-line">
+                                                <span class="left">Attention Budget</span>
+                                                <span class="right ys-w-70">
+                                                    <div class="ys-flex-col-gap-12">
+                                                        <div class="ys-flex-gap-10">
+                                                            <label class="ys-col-60">Min:</label>
+                                                            <input type="number" id="photo_attention_budget_min" name="photo_attention_budget_min" class="input ys-flex-input" min="1" value="50">
+                                                        </div>
+                                                        <div class="ys-flex-gap-10">
+                                                            <label class="ys-col-60">Max:</label>
+                                                            <input type="number" id="photo_attention_budget_max" name="photo_attention_budget_max" class="input ys-flex-input" min="1" value="150">
+                                                        </div>
+                                                        <div class="ys-flex-gap-10">
+                                                            <label class="ys-col-60">Distribution:</label>
+                                                            <select id="photo_attention_budget_distribution" name="photo_attention_budget_distribution" class="input ys-flex-input" onchange="updatePhotoAttentionBudgetDistributionParams()">
+                                                                <option value="Uniform" selected>Uniform</option>
+                                                                <option value="Poisson">Poisson</option>
+                                                                <option value="Geometric">Geometric</option>
+                                                                <option value="Zipf">Zipf</option>
+                                                            </select>
+                                                        </div>
+                                                        <div id="photo_attention_budget_poisson_params" class="ys-hidden-sub">
+                                                            <div class="ys-flex-gap-10">
+                                                                <label class="ys-col-60">Lambda (λ):</label>
+                                                                <input type="number" id="photo_attention_budget_distribution_param" name="photo_attention_budget_distribution_param" class="input ys-flex-input" step="0.01" value="0.88" disabled>
+                                                            </div>
+                                                        </div>
+                                                        <div id="photo_attention_budget_geometric_params" class="ys-hidden-sub">
+                                                            <div class="ys-flex-gap-10">
+                                                                <label class="ys-col-60">p:</label>
+                                                                <input type="number" id="photo_attention_budget_distribution_param_geometric" name="photo_attention_budget_distribution_param" class="input ys-flex-input" step="0.01" min="0" max="1" value="0.6667" disabled>
+                                                            </div>
+                                                        </div>
+                                                        <div id="photo_attention_budget_zipf_params" class="ys-hidden-sub">
+                                                            <div class="ys-flex-gap-10">
+                                                                <label class="ys-col-60">s:</label>
+                                                                <input type="number" id="photo_attention_budget_distribution_param_zipf" name="photo_attention_budget_distribution_param" class="input ys-flex-input" step="0.1" value="2.5" disabled>
+                                                            </div>
+                                                        </div>
+                                                        <small class="ys-text-tiny-gray">The selected distribution controls how attention budgets are sampled between min and max.</small>
+                                                    </div>
+                                                </span>
+                                            </div>
+
+                                            <div class="box-line">
+                                                <span class="left">Favorite Filters</span>
+                                                <span class="right ys-w-70">
+                                                    <input type="hidden" id="photo_favorite_filters" name="photo_favorite_filters" value='["warm","vintage","mono","grain","bright","clean"]'>
+                                                    <div class="ys-flex-col-gap-10">
+                                                        <div id="photo_favorite_filters_tags" class="profession-tags-container"></div>
+                                                        <div class="ys-flex-gap-10">
+                                                            <input type="text" id="photo_favorite_filter_new" class="input" placeholder="Add a new filter tag">
+                                                            <button type="button" class="button is-light" onclick="addPhotoFavoriteFilter()">Add Tag</button>
+                                                        </div>
+                                                        <small class="ys-text-tiny-gray">Click tags to toggle them. Selected tags are used as the available favorite filter pool.</small>
+                                                    </div>
+                                                </span>
+                                            </div>
+
+                                            <div class="box-line">
+                                                <span class="left">Story Visibility %</span>
+                                                <span class="right ys-w-70">
+                                                    <div class="ys-flex-col-gap-8">
+                                                        <div class="ys-flex-gap-10">
+                                                            <label class="ys-col-60">Public:</label>
+                                                            <input type="number" id="photo_story_public_percentage" name="photo_story_public_percentage" class="input ys-flex-input" min="0" max="100" value="20" oninput="validatePhotoSharingDistributions()">
+                                                        </div>
+                                                        <div class="ys-flex-gap-10">
+                                                            <label class="ys-col-60">Followers:</label>
+                                                            <input type="number" id="photo_story_followers_percentage" name="photo_story_followers_percentage" class="input ys-flex-input" min="0" max="100" value="65" oninput="validatePhotoSharingDistributions()">
+                                                        </div>
+                                                        <div class="ys-flex-gap-10">
+                                                            <label class="ys-col-60">Private:</label>
+                                                            <input type="number" id="photo_story_private_percentage" name="photo_story_private_percentage" class="input ys-flex-input" min="0" max="100" value="15" oninput="validatePhotoSharingDistributions()">
+                                                        </div>
+                                                        <small id="photo_story_visibility_validation" class="percentage-validation-compact ys-hidden-mt">Totals must equal 100%.</small>
+                                                    </div>
+                                                </span>
+                                            </div>
+
+                                            <div class="box-line">
+                                                <span class="left">Creator Tier %</span>
+                                                <span class="right ys-w-70">
+                                                    <div class="ys-flex-col-gap-8">
+                                                        <div class="ys-flex-gap-10">
+                                                            <label class="ys-col-60">Standard:</label>
+                                                            <input type="number" id="photo_creator_standard_percentage" name="photo_creator_standard_percentage" class="input ys-flex-input" min="0" max="100" value="60" oninput="validatePhotoSharingDistributions()">
+                                                        </div>
+                                                        <div class="ys-flex-gap-10">
+                                                            <label class="ys-col-60">Pro:</label>
+                                                            <input type="number" id="photo_creator_pro_percentage" name="photo_creator_pro_percentage" class="input ys-flex-input" min="0" max="100" value="25" oninput="validatePhotoSharingDistributions()">
+                                                        </div>
+                                                        <div class="ys-flex-gap-10">
+                                                            <label class="ys-col-60">Influencer:</label>
+                                                            <input type="number" id="photo_creator_influencer_percentage" name="photo_creator_influencer_percentage" class="input ys-flex-input" min="0" max="100" value="15" oninput="validatePhotoSharingDistributions()">
+                                                        </div>
+                                                        <small id="photo_creator_tier_validation" class="percentage-validation-compact ys-hidden-mt">Totals must equal 100%.</small>
+                                                    </div>
+                                                </span>
+                                            </div>
+                                        </details>
+                                    </div>
+
+                                    <div id="section-profession-categories" class="tutorial-section">
+ <div class="form-section-header ys-clickable" onclick="toggleProfessionBackgrounds()">
+ <span id="profession-backgrounds-toggle">▶</span> Profession Categories <span class="ys-text-sm-normal">(Optional - Click to expand)</span>
+                                    </div>
+                                    <div class="form-section-description">
+                                        Select profession categories to be used during agent generation. By default, all categories are available.
+                                    </div>
+
+                                    <div class="profession-backgrounds-section" id="profession-backgrounds-section">
+                                        <div class="box-line">
+                                            <span class="left">Available Categories</span>
+ <span class="right ys-w-70">
+                                                <div class="profession-tags-container" id="profession-tags-container">
+                                                    {% for background in profession_backgrounds %}
+                                                    <span class="profession-tag" data-background="{{ background }}" onclick="toggleProfessionTag(this)">
+                                                        {{ background }}
+                                                    </span>
+                                                    {% endfor %}
+                                                </div>
+                                                <small style="color: #6b7280; font-size: 0.8em; margin-top: 8px; display: block;">
+                                                    Click to activate/deactivate categories. Active categories are highlighted in green.
+                                                </small>
+                                            </span>
+                                        </div>
+                                    </div>
+
+
+
+
+                                    </div><!-- End section-profession-categories -->
+
+                                    <div id="section-activity-engagement" class="tutorial-section">
+ <div class="form-section-header ys-clickable" onclick="toggleActivityProfiles()">
+ <span id="activity-profiles-toggle">▼</span> Activity & Engagement Configuration <span class="ys-text-sm-normal">(Optional - Click to expand)</span>
+                                    </div>
+                                    <div class="form-section-description">
+                                        Configure agent activity patterns and engagement behavior. Define when agents are active during the day by assigning activity profiles, and specify how many actions users perform once active using statistical distributions.
+                                    </div>
+
+                                    <div class="activity-profiles-section" id="activity-profiles-section">
+                                        <div class="activity-profiles-compact">
+                                            <div class="profiles-section">
+                                                <div class="profiles-section-title">Available Profiles (Drag to assign)</div>
+                                                <div id="available-profiles">
+                                                    {% if activity_profiles %}
+                                                        {% for profile in activity_profiles %}
+                                                        <div class="profile-item-compact" draggable="true" data-profile-id="{{ profile.id }}" data-profile-name="{{ profile.name }}" data-profile-hours="{{ profile.hours }}">
+                                                            <div class="profile-name-compact" title="{{ profile.name }}">{{ profile.name }}</div>
+                                                            <div class="profile-heatmap-compact">
+                                                                {% set hours_list = profile.hours.split(',') %}
+                                                                {% for hour in range(24) %}
+                                                                    <div class="heatmap-hour {% if hour|string in hours_list %}active{% endif %}" title="Hour {{ hour }}"></div>
+                                                                {% endfor %}
+                                                            </div>
+                                                        </div>
+                                                        {% endfor %}
+                                                    {% else %}
+                                                        <div class="empty-state-compact">No activity profiles available. Create some in the Miscellanea page first.</div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+
+                                            <div class="profiles-section">
+                                                <div class="profiles-section-title">Assigned Profiles & Percentages</div>
+                                                <div id="assigned-profiles">
+                                                    <div class="empty-state-compact">Drag profiles here to assign them</div>
+                                                </div>
+ <div id="percentage-validation" class="percentage-validation-compact d-none"></div>
+                                            </div>
+
+                                            <div class="profiles-section">
+                                                <div class="profiles-section-title">Actions Per User Once Active</div>
+ <div class="ys-flex-col-gap-12">
+ <div class="ys-flex-gap-10">
+ <label class="ys-col-60">Min:</label>
+                                                        <input type="number" 
+                                                               id="actions_min" 
+                                                               name="actions_min" 
+                                                               class="input" 
+ class="ys-flex-input" 
+                                                               min="1" 
+                                                               value="1"
+                                                               placeholder="Minimum actions">
+                                                    </div>
+ <div class="ys-flex-gap-10">
+ <label class="ys-col-60">Max:</label>
+                                                        <input type="number" 
+                                                               id="actions_max" 
+                                                               name="actions_max" 
+                                                               class="input" 
+ class="ys-flex-input" 
+                                                               min="1" 
+                                                               value="10"
+                                                               placeholder="Maximum actions">
+                                                    </div>
+ <div class="ys-flex-gap-10">
+ <label class="ys-col-60">Distribution:</label>
+                                                        <select id="actions_distribution" 
+                                                                name="actions_distribution" 
+                                                                class="input" 
+ class="ys-flex-input"
+                                                                onchange="updateDistributionParams()">
+                                                            <option value="Uniform" selected>Uniform</option>
+                                                            <option value="Poisson">Poisson</option>
+                                                            <option value="Geometric">Geometric</option>
+                                                            <option value="Zipf">Zipf</option>
+                                                        </select>
+                                                    </div>
+                                                    
+                                                    <!-- Distribution-specific parameter fields -->
+ <div id="poisson-params" class="ys-hidden-sub">
+ <div class="ys-flex-gap-10">
+ <label class="ys-col-60">Lambda (λ):</label>
+                                                            <input type="number" 
+                                                                   id="poisson_lambda" 
+                                                                   name="poisson_lambda" 
+                                                                   class="input" 
+ class="ys-flex-input" 
+                                                                   step="0.01" 
+                                                                   value="0.88"
+                                                                   placeholder="Lambda parameter"
+                                                                   disabled>
+ <span class="ys-text-tiny-gray">Rate parameter</span>
+                                                        </div>
+                                                    </div>
+                                                    
+ <div id="geometric-params" class="ys-hidden-sub">
+ <div class="ys-flex-gap-10">
+ <label class="ys-col-60">p:</label>
+                                                            <input type="number" 
+                                                                   id="geometric_p" 
+                                                                   name="geometric_p" 
+                                                                   class="input" 
+ class="ys-flex-input" 
+                                                                   step="0.01" 
+                                                                   min="0" 
+                                                                   max="1" 
+                                                                   value="0.6667"
+                                                                   placeholder="Probability parameter"
+                                                                   disabled>
+ <span class="ys-text-tiny-gray">Success probability (0-1)</span>
+                                                        </div>
+                                                    </div>
+                                                    
+ <div id="zipf-params" class="ys-hidden-sub">
+ <div class="ys-flex-gap-10">
+ <label class="ys-col-60">s:</label>
+                                                            <input type="number" 
+                                                                   id="zipf_s" 
+                                                                   name="zipf_s" 
+                                                                   class="input" 
+ class="ys-flex-input" 
+                                                                   step="0.1" 
+                                                                   value="2.5"
+                                                                   placeholder="Exponent parameter"
+                                                                   disabled>
+ <span class="ys-text-tiny-gray">Exponent parameter</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <input type="hidden" name="activity_profiles_data" id="activity_profiles_data" value="">
+
+
+                                    </div><!-- End section-activity-engagement -->
+
+                                </div>
+                                <div class="button-wrap">
+                                    <button id="create_population_btn" class="button is-solid primary-button is-fullwidth" disabled>
+                                        Create
+                                    </button>
+                                </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!--Dashboard box-->
+
+                    </div>
+
+                    <!--Dashboard column-->
+                    <div class="column is-4">
+                        <div class="sidebar-box">
+                            <h3>Guide</h3>
+                            <div class="help-block">
+                                <p>
+                                    <b>What is a Population?</b><br>
+                                    A population is a group of agents/pages that are used in a simulation.
+                                </p>
+                                <p>
+                                    <b>Empty Populations</b><br>
+                                    Create populations from scratch. Once created, you can add agents to them.
+                                </p>
+                                <p>
+                                    <b>Synthetic Populations</b><br>
+                                    Created using predefined parameters. Agents are automatically generated.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="sidebar-box" id="box-load-population">
+                            <h3>Load Population from file</h3>
+                            <form action="/admin/upload_population" enctype="multipart/form-data" method="POST">
+                                <div class="file-upload-wrapper">
+                                    <input type="file" id="population_file" name="population_file" accept=".json" onchange="displayFileName(this)">
+                                    <label for="population_file" class="file-upload-label">
+                                        <span class="file-upload-icon">📁</span>
+                                        <span class="file-upload-text">Choose JSON file...</span>
+                                    </label>
+                                    <div id="file-name-display" class="file-name-display"></div>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">Population Platform</span>
+                                    <span class="right">
+                                        <div class="select is-fullwidth">
+                                            <select name="upload_population_type" class="input">
+                                                <option value="microblogging">Microblogging</option>
+                                                <option value="photo_sharing">Photo Sharing</option>
+                                                <option value="forum">Forum</option>
+                                            </select>
+                                        </div>
+                                    </span>
+                                </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth">
+                                        Upload
+                                    </button>
+                                </div>
+                            </form>
+
+                        </div>
+
+                        <div class="sidebar-box" id="box-empty-population">
+                            <h3>Create Empty Population</h3>
+                            <form action="/admin/create_population_empty" enctype="multipart/form-data" method="POST" onsubmit="showLoading('Creating empty population...');">
+                                <div class="box-line">
+                                    <span class="left">Population Name</span>
+                                    <span class="right"><input type="text" name="empty_population_name" class="input" placeholder="Enter name"></span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">Description</span>
+                                    <span class="right"><input type="text" name="empty_population_descr" class="input" placeholder="Enter description"></span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">Population Platform</span>
+                                    <span class="right">
+                                        <div class="select is-fullwidth">
+                                            <select name="empty_population_type" class="input">
+                                                <option value="microblogging">Microblogging</option>
+                                                <option value="photo_sharing">Photo Sharing</option>
+                                                <option value="forum">Forum</option>
+                                            </select>
+                                        </div>
+                                    </span>
+                                </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth">
+                                        Create
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="sidebar-box" id="box-merge-populations">
+                            <h3>Merge Populations</h3>
+                            <form action="/admin/merge_populations" method="POST" id="merge_populations_form">
+                                <p style="font-size: 0.85em; color: #6b7280; margin-bottom: 12px; line-height: 1.4;">
+                                    Create a new population by merging multiple existing populations. Agents and pages will be combined without duplicates.
+                                </p>
+                                
+                                <div class="box-line">
+                                    <span class="left">New Population Name</span>
+                                    <span class="right"><input type="text" name="merged_population_name" class="input" placeholder="Enter name" required></span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">Population Platform</span>
+                                    <span class="right">
+                                        <div class="select is-fullwidth">
+                                            <select name="merged_population_type" id="merged_population_type" class="input">
+                                                <option value="microblogging">Microblogging</option>
+                                                <option value="photo_sharing">Photo Sharing</option>
+                                                <option value="forum">Forum</option>
+                                            </select>
+                                        </div>
+                                    </span>
+                                </div>
+
+                                        <div class="merge-populations-container">
+                                            <div class="merge-section-title">Available Populations (Drag to select)</div>
+                                            <div class="merge-available-populations" id="merge-available-populations">
+                                                <div class="merge-empty-state">Loading populations...</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="merge-populations-container">
+                                            <div class="merge-section-title">Selected Populations to Merge</div>
+                                            <div class="merge-selected-populations" id="merge-selected-populations">
+                                                <div class="merge-empty-state">Drag populations here</div>
+                                            </div>
+                                        </div>
+
+                                        <input type="hidden" name="selected_population_ids" id="selected_population_ids" value="">
+
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth" type="submit">
+                                        Merge Populations
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+{% include "admin/tutorials/populations_tutorial.html" %}
+<script>
+var YS_DATA_POPULATIONS = {
+    professionBackgrounds: {{ profession_backgrounds | tojson | safe }},
+    ageClasses: {
+        {% for age_class in age_classes %}
+        '{{ age_class.id }}': {
+            label: '{{ age_class.name }} ({{ age_class.age_start }}-{{ age_class.age_end }})',
+            name: '{{ age_class.name }}'
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    },
+    alwaysOnProfile: {% if activity_profiles %}{% for profile in activity_profiles %}{% if profile.name == 'Always On' %}{ id: '{{ profile.id }}', name: '{{ profile.name }}', hours: '{{ profile.hours }}' }{% endif %}{% endfor %}{% else %}null{% endif %}
+};
+</script>
+<script src="{{ url_for('static', filename='assets/js/admin-populations.js') }}"></script>
+{% include "admin/footer.html" %}

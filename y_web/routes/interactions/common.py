@@ -12,10 +12,6 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import OperationalError
 
 from y_web import db
-from y_web.src.recsys.content_recsys import (
-    _normalize_content_recsys_mode,
-    _update_filter_bubble_interests,
-)
 from y_web.routes.interactions._blueprint import user
 from y_web.src.experiment.helpers import open_experiment_session
 from y_web.src.models import (
@@ -28,40 +24,6 @@ from y_web.src.models import (
     Rounds,
     User_mgmt,
 )
-
-
-
-def _maybe_update_fb_interests(exp_id, exp_user, post_id, interaction_type):
-    """
-    If the user is using FilterBubble mode, update their topic interests.
-    Silently no-ops when not applicable (wrong mode, missing engine, etc.).
-    """
-    try:
-        if _normalize_content_recsys_mode(
-            getattr(exp_user, "recsys_type", "")
-        ) != "FilterBubble":
-            return
-        from flask import current_app
-        exp_engine = db.engines.get("db_exp")
-        if exp_engine is None:
-            exp_engine = db.get_engine(current_app, bind="db_exp")
-        from y_web.routes.social.helpers import _load_ui_settings
-
-        settings = _load_ui_settings(exp_id)
-        try:
-            learning_rate = float(settings.get("filter_bubble_lr", 0.05))
-        except (TypeError, ValueError):
-            learning_rate = 0.05
-        learning_rate = max(0.0, min(1.0, learning_rate))
-        _update_filter_bubble_interests(
-            user_id=exp_user.id,
-            post_id=post_id,
-            interaction_type=interaction_type,
-            exp_engine=exp_engine,
-            lr=learning_rate,
-        )
-    except Exception:
-        pass
 
 
 def _resolve_follow_round_id(exp_id):
@@ -297,19 +259,8 @@ def share_content(exp_id):
 
     post_id = request.args.get("post_id")
 
-    # Normalise post_id: Standard experiments use integer IDs, HPC experiments use UUID strings.
-    # Try numeric conversion so SQLAlchemy can match the Integer column; keep as string for UUIDs.
-    try:
-        post_id_norm = int(post_id)
-    except (ValueError, TypeError):
-        post_id_norm = post_id
-
     # get the post
-    original = db.session.scalars(select(Post).filter_by(id=post_id_norm)).first()
-    if original is None:
-        # Post not found (e.g. race condition or already deleted); the client
-        # already updated the counter visually, so just return silently.
-        return ("", 204)
+    original = db.session.scalars(select(Post).filter_by(id=post_id)).first()
     current_round = db.session.scalars(
         select(Rounds).order_by(Rounds.day.desc(), Rounds.hour.desc())
     ).first()
@@ -320,7 +271,7 @@ def share_content(exp_id):
             round=current_round.id,
             user_id=exp_user_id,
             comment_to=-1,
-            shared_from=post_id_norm,
+            shared_from=post_id,
             image_id=original.image_id,
             news_id=original.news_id,
             post_img=original.post_img,
@@ -335,7 +286,7 @@ def share_content(exp_id):
             round=current_round.id,
             user_id=exp_user_id,
             comment_to=-1,
-            shared_from=post_id_norm,
+            shared_from=post_id,
             image_id=original.image_id,
             news_id=original.news_id,
             post_img=original.post_img,
@@ -345,15 +296,12 @@ def share_content(exp_id):
         db.session.commit()
 
     # get topics of the original post
-    topics_id = db.session.scalars(select(Post_topics).filter_by(post_id=post_id_norm)).all()
+    topics_id = db.session.scalars(select(Post_topics).filter_by(post_id=post_id)).all()
     # add the topics to the shared post
     for t in topics_id:
         ti = Post_topics(post_id=post.id, topic_id=t.topic_id)
         db.session.add(ti)
         db.session.commit()
-
-    # Update filter bubble interests for human users using Personalized Feed
-    _maybe_update_fb_interests(exp_id, exp_user, post_id_norm, "share")
 
     return redirect(request.referrer)
 
@@ -424,9 +372,6 @@ def react(exp_id):
     if post is not None:
         post.reaction_count += 1
         db.session.commit()
-
-    # Update filter bubble interests for human users using Personalized Feed
-    _maybe_update_fb_interests(exp_id, exp_user, post_id, action)
 
     return {"message": "Reaction added successfully", "status": 200}
 

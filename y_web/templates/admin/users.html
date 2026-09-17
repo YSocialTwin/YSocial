@@ -1,0 +1,216 @@
+{% include "admin/head.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-components.css') }}"/>
+
+<div class="view-wrapper is-dashboard">
+    <!--Dashboard container-->
+    <div id="creator-dashboard" class="dashboard-container">
+        <!--Toolbar-->
+        {% include "admin/dash_head.html" %}
+
+        <div class="dashboard-body">
+            <div class="columns">
+                <!--Dashboard column-->
+                <div class="column is-8">
+                    <!--Dashboard box-->
+
+                    <div class="dashboard-box" id="box-registered-users">
+                        <h3 class="title is-5 is-thin">Registered Users</h3>
+
+                        <div class="box-content">
+
+                            <div id="table"></div>
+
+                            <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
+<script>var YS_DATA_USERS = { currentUserRole: '{{ current_user_role }}' };</script>
+
+                        </div>
+                    </div>
+
+                    <div class="dashboard-box" id="box-add-user">
+                        <h3 class="title is-5 is-thin">Add User</h3>
+                        <div class="box-content">
+                            <form action="/admin/add_user" enctype="multipart/form-data" method="POST">
+                                <div class="box-lines">
+
+                                    <div class="box-line">
+                                        <span class="left">Username</span>
+ <span class="right ys-w-70"><input type="text" name="username"
+                                                                                       class="input"></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">Password</span>
+ <span class="right ys-w-70"><input type="password" name="password"
+                                                                                       class="input"></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">Email</span>
+ <span class="right ys-w-70"><input type="text" name="email"
+                                                                                       class="input" value=""></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">Role</span>
+                                        <div class="select">
+                                            <select name="role">
+                                                {% if current_user_role == 'admin' %}
+                                                <option value="admin">Admin</option>
+                                                <option value="researcher" selected>Researcher</option>
+                                                {% endif %}
+                                                <option value="user" {% if current_user_role != 'admin' %}selected{% endif %}>User</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">Custom LLM URL <small>(optional)</small></span>
+                                        <input type="text" id="custom_llm_url_add" name="custom_llm_url" class="input"
+                                               value="{{ llm_backend['url'] if llm_backend and llm_backend.get('url') else '' }}"
+                                               placeholder="e.g., http://localhost:8000/v1">
+ <button type="button" class="button is-solid primary-button is-1-desktop ys-mt-10" onclick="fetchModelsForAddUser()">
+                                            Fetch Models
+                                        </button>
+                                    </div>
+                                    <div id="fetch-status-add-user" style="min-height: 20px; margin-top: 5px; margin-bottom: 10px; font-size: 0.9rem;"></div>
+
+                                    <div class="box-line">
+                                        <span class="left">LLM <small>(for text annotation)</small></span>
+                                        <div class="select">
+                                            <select name="llm" id="llm_model_select_add">
+                                                <option value="">Select a model</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="box-line">
+                                        <span class="left">Profile Picture <small>(url, optional)</small></span>
+ <span class="right ys-w-70"><input type="text" name="profile_pic"
+                                                                                       class="input" value=""></span>
+                                    </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth">
+                                        Create
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <!--Dashboard box-->
+
+                    <div class="dashboard-box" id="box-bulk-create-users">
+                        <h3 class="title is-5 is-thin">Bulk Create Users</h3>
+                        <div class="box-content">
+                            <form action="/admin/bulk_create_users" method="POST">
+                                <div class="box-lines">
+ <div class="box-line d-block">
+ <label class="ys-block-mb10">
+                                            <b>Users Data</b><br>
+                                            <small>Format: username,email,role,password (one per line)<br>
+                                            {% if current_user_role == 'admin' %}
+                                            Role can be: admin, researcher, or user<br>
+                                            {% else %}
+                                            Role must be: user (you can only create regular users)<br>
+                                            {% endif %}
+                                            Password is optional (will be auto-generated as username123!)</small>
+                                        </label>
+                                        <textarea name="users_data" class="textarea" rows="8" 
+                                                  {% if current_user_role == 'admin' %}
+                                                  placeholder="john_doe,john@example.com,researcher,SecurePass1!&#10;jane_smith,jane@example.com,user&#10;admin_user,admin@example.com,admin,AdminPass1!" 
+                                                  {% else %}
+                                                  placeholder="john_doe,john@example.com,user,SecurePass1!&#10;jane_smith,jane@example.com,user&#10;bob_wilson,bob@example.com,user,BobPass1!" 
+                                                  {% endif %}
+                                                  style="width: 100%; font-family: monospace; font-size: 0.9em;"></textarea>
+                                    </div>
+                                </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth" type="submit">
+                                        Bulk Create Users
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-box" id="box-bulk-assign-users">
+                        <h3 class="title is-5 is-thin">Bulk Assign Users to Experiment</h3>
+                        <div class="box-content">
+                            <form action="/admin/bulk_assign_users" method="POST">
+                                <div class="box-lines">
+                                    <div class="box-line">
+                                        <span class="left">Select Experiment</span>
+ <div class="select ys-w-70">
+ <select name="experiment_id" required class="w-100">
+                                                <option value="">-- Select Experiment --</option>
+                                                {% if experiments %}
+                                                    {% for exp in experiments %}
+                                                    <option value="{{ exp.idexp }}">{{ exp.exp_name }}</option>
+                                                    {% endfor %}
+                                                {% endif %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="box-line" style="display: block; margin-top: 15px;">
+ <label class="ys-block-mb10">
+                                            <b>Select Users</b><br>
+                                            <small>Hold Ctrl (Cmd on Mac) to select multiple users</small>
+                                        </label>
+                                        <select name="user_ids" multiple size="10" required 
+                                                style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                            {% if all_users %}
+                                                {% for user in all_users %}
+                                                <option value="{{ user.id }}">{{ user.username }} ({{ user.email }}) - {{ user.role }}</option>
+                                                {% endfor %}
+                                            {% endif %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth" type="submit">
+                                        Assign Users to Experiment
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!--Dashboard column-->
+                <div class="column is-4">
+                    <!--Box-->
+                    <div class="dashboard-box is-compact">
+                        <h3 class="title is-5 is-thin">Quick Reference Guide</h3>
+                        <div class="help-block">
+
+                            <p>
+                                <b>User Types</b><br>
+                                YSocial supports three types of users with different access levels:
+                            </p>
+                            <hr>
+                            <p>
+                                <b>Admin</b><br>
+                                Full system access. Can create, edit, and delete users, experiments, and populations. Can create users with any role and change roles of non-admin users.
+                            </p>
+                            <hr>
+                            <p>
+                                <b>Researcher</b><br>
+                                Full admin panel access. Can manage experiments and participate in simulations. Can only create regular users (not admin or researcher).
+                            </p>
+                            <hr>
+                            <p>
+                                <b>User</b><br>
+                                Limited access to assigned experiments only. Cannot access admin panel.
+                            </p>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+
+{% include "admin/tutorials/users_tutorial.html" %}
+<script src="{{ url_for('static', filename='assets/js/admin-users.js') }}"></script>
+{% include "admin/footer.html" %}

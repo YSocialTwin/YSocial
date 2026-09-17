@@ -1,0 +1,81 @@
+<aside
+    id="forum-chat-panel"
+    class="forum-chat-panel is-collapsed"
+    data-exp-id="{{ exp_id }}"
+    data-page-kind="{{ forum_chat_page_kind|default('feed', true) }}"
+>
+    <button
+        id="forum-chat-collapse-handle"
+        type="button"
+        class="forum-chat-collapse-handle"
+        aria-expanded="false"
+        aria-controls="forum-chat-card"
+        title="Toggle chat panel"
+    >
+        <i data-feather="message-circle"></i>
+        <span
+            id="forum-chat-collapse-badge"
+            class="forum-chat-collapse-badge is-hidden"
+            aria-hidden="true"
+        ></span>
+    </button>
+
+    <div id="forum-chat-card" class="forum-chat-card">
+        <div class="forum-chat-card-header">
+            <div>
+                <div class="forum-chat-title">Chat</div>
+                <div class="forum-chat-subtitle">Private chats with simulation agents</div>
+            </div>
+            <div class="forum-chat-header-actions">
+                <button id="forum-chat-refresh" type="button" class="forum-chat-icon-btn" title="Refresh">
+                    <i data-feather="refresh-cw"></i>
+                </button>
+                <button id="forum-chat-collapse" type="button" class="forum-chat-icon-btn" title="Collapse">
+                    <i data-feather="chevron-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="forum-chat-browser" class="forum-chat-browser">
+            <div class="forum-chat-search-row">
+                <input
+                    id="forum-chat-search"
+                    type="search"
+                    class="input forum-chat-search-input"
+                    placeholder="Search agents"
+                />
+            </div>
+            <div id="forum-chat-list" class="forum-chat-list"></div>
+        </div>
+
+        <div id="forum-chat-thread" class="forum-chat-thread is-hidden">
+            <div class="forum-chat-thread-head">
+                <button id="forum-chat-back" type="button" class="forum-chat-icon-btn" title="Back">
+                    <i data-feather="arrow-left"></i>
+                </button>
+                <div class="forum-chat-thread-target">
+                    <div id="forum-chat-target-avatar" class="forum-chat-thread-avatar"></div>
+                    <div class="forum-chat-thread-meta">
+                        <div id="forum-chat-target-name" class="forum-chat-thread-name">Agent</div>
+                        <div id="forum-chat-target-subtitle" class="forum-chat-thread-subtitle">Private chat</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="forum-chat-messages" class="forum-chat-messages"></div>
+
+            <form id="forum-chat-compose" class="forum-chat-compose">
+                <textarea
+                    id="forum-chat-input"
+                    class="textarea forum-chat-input"
+                    rows="2"
+                    placeholder="Write a message..."
+                ></textarea>
+                <button id="forum-chat-send" type="submit" class="forum-chat-send-btn">
+                    <i data-feather="send"></i>
+                    <span>Send</span>
+                </button>
+            </form>
+        </div>
+    </div>
+</aside>

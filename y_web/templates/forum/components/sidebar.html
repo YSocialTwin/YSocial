@@ -1,0 +1,67 @@
+<aside class="forum-community-rail">
+    <div class="forum-community-card">
+        <div class="forum-community-card-header">
+            <span class="forum-community-eyebrow">Now</span>
+            <h3>Communities</h3>
+            <p>Most recently active communities across posts and discussions.</p>
+        </div>
+        <div class="forum-community-list">
+            {% for community in recent_communities %}
+            <a
+                class="forum-community-link{% if current_subforum_slug == community.slug %} is-active{% endif %}"
+                href="/{{ exp_id }}/subforum/{{ community.slug }}?feed_type={{ feed_type }}"
+            >
+                <span class="forum-community-icon">y/</span>
+                <span class="forum-community-meta">
+                    <strong>{{ community.label }}</strong>
+                    <small>
+                        {% if community.kind == 'subreddit' %}
+                        Active feed thread
+                        {% else %}
+                        Active generated topic
+                        {% endif %}
+                    </small>
+                </span>
+            </a>
+            {% endfor %}
+            {% if not recent_communities %}
+            <div class="forum-community-empty">
+                No active communities detected yet.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="forum-community-card forum-community-card-secondary">
+        <div class="forum-community-card-header">
+            <span class="forum-community-eyebrow">Mine</span>
+            <h3>My Communities</h3>
+            <p>Communities where you have recently posted or commented.</p>
+        </div>
+        <div class="forum-community-list">
+            {% for community in my_communities %}
+            <a
+                class="forum-community-link{% if current_subforum_slug == community.slug %} is-active{% endif %}"
+                href="/{{ exp_id }}/subforum/{{ community.slug }}?feed_type={{ feed_type }}"
+            >
+                <span class="forum-community-icon">y/</span>
+                <span class="forum-community-meta">
+                    <strong>{{ community.label }}</strong>
+                    <small>
+                        {% if community.kind == 'subreddit' %}
+                        You joined the discussion
+                        {% else %}
+                        You posted on this topic
+                        {% endif %}
+                    </small>
+                </span>
+            </a>
+            {% endfor %}
+            {% if not my_communities %}
+            <div class="forum-community-empty">
+                You have not posted in any community yet.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</aside>

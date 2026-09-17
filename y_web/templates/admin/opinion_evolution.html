@@ -1,0 +1,417 @@
+{% include "admin/head.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-components.css') }}"/>
+
+<div class="view-wrapper is-dashboard">
+    <div id="creator-dashboard" class="dashboard-container">
+        {% include "admin/dash_head.html" %}
+
+        <div class="dashboard-body">
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <a href="/admin/experiments">Experiments</a> > 
+                        <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }}</a> > 
+                        Opinion Evolution
+                    </div>
+                </div>
+            </div>
+
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+ <h3 class="title is-5 is-thin ys-mb-15">Temporal Controls</h3>
+                        
+                        <div class="filter-section">
+                            <div class="slider-container">
+                                <div class="slider-label">
+                                    <label>Time Period</label>
+                                    <!-- Granularity selector -->
+                                    <div style="display: flex; gap: 4px;">
+                                        <button class="granularity-button active" data-granularity="hourly" 
+                                                style="padding: 2px 6px; font-size: 0.7em; border: 1px solid #d1d5db; border-radius: 3px; background: #039be5; color: white; cursor: pointer; transition: all 0.2s;">
+                                            Hourly
+                                        </button>
+                                        <button class="granularity-button" data-granularity="daily"
+                                                style="padding: 2px 6px; font-size: 0.7em; border: 1px solid #d1d5db; border-radius: 3px; background: white; color: #374151; cursor: pointer; transition: all 0.2s;">
+                                            Daily
+                                        </button>
+                                        <button class="granularity-button" data-granularity="weekly"
+                                                style="padding: 2px 6px; font-size: 0.7em; border: 1px solid #d1d5db; border-radius: 3px; background: white; color: #374151; cursor: pointer; transition: all 0.2s;">
+                                            Weekly
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="slider-controls">
+                                    <button id="play-button" class="play-button" title="Play">
+                                        <i class="mdi mdi-play"></i>
+                                    </button>
+                                    <input type="range" id="time-slider" class="time-slider" 
+                                           min="25" max="{{ max_day * 24 + max_hour }}" 
+                                           step="1"
+                                           value="{{ filter_day * 24 + filter_hour if filter_day * 24 + filter_hour >= 25 else 25 }}">
+                                    <div class="speed-controls">
+                                        <button id="speed-down" class="speed-button" title="Slower">
+                                            <i class="mdi mdi-minus"></i>
+                                        </button>
+                                        <span class="speed-display" id="speed-display">1x</span>
+                                        <button id="speed-up" class="speed-button" title="Faster">
+                                            <i class="mdi mdi-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="topics-container">
+                                <label class="topics-label">Topics (select to visualize)</label>
+                                <div class="topics-tags">
+                                    {% for topic in topics %}
+                                    <div class="topic-tag {% if loop.first %}active{% endif %}" data-topic-id="{{ topic.iid }}" data-topic-name="{{ topic.interest }}">
+                                        {{ topic.interest }}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            
+                            <!-- Statistics boxes moved here -->
+                            <div class="stats-row">
+                                <div class="stat-box" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+                                    <div class="stat-value"><span id="total-opinions">{{ total_opinions }}</span></div>
+                                    <div class="stat-label">Total Opinions</div>
+                                </div>
+                                
+                                <div class="stat-box" style="background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);">
+                                    <div class="stat-value"><span id="social-interactions">{{ social_interactions }}</span></div>
+                                    <div class="stat-label">Social Interactions</div>
+                                </div>
+                                
+                                <div class="stat-box" style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);">
+                                    <div class="stat-value"><span id="unique-agents">{{ unique_agents }}</span></div>
+                                    <div class="stat-label">Unique Agents</div>
+                                </div>
+                                
+                                <div class="stat-box" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                                    <div class="stat-value">Day <span id="current-day">{{ filter_day }}</span></div>
+                                    <div class="stat-label">Current Day</div>
+                                </div>
+                                
+                                <div class="stat-box" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                                    <div class="stat-value">Hour <span id="current-hour">{{ filter_hour }}</span></div>
+                                    <div class="stat-label">Current Hour</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Opinion Distribution Chart -->
+            <div class="columns">
+                <div class="column is-4">
+                    <div class="dashboard-box chart-box-container">
+                        <div class="annotation-chart-head ys-mb-15">
+ <h3 class="title is-6 is-thin">Opinion Distribution</h3>
+                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="opinionChartContainer" title="Expand plot">
+                                <i class="mdi mdi-fullscreen"></i>
+                            </button>
+                        </div>
+                        <div class="chart-container ys-chart-fullscreen-target" id="opinionChartContainer" data-chart-filename="opinion-distribution">
+                            <canvas id="opinionChart" height="250"></canvas>
+                        </div>
+                        
+ <p class="ys-text-xs-center-mt" id="chart-description">
+                            Distribution of agent opinions across different opinion groups.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Opinion Group Trends Chart -->
+                <div class="column is-4">
+                    <div class="dashboard-box chart-box-container">
+                        <div class="annotation-chart-head ys-mb-15">
+ <h3 class="title is-6 is-thin">Opinion Group Trends</h3>
+                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="groupTrendsChartContainer" title="Expand plot">
+                                <i class="mdi mdi-fullscreen"></i>
+                            </button>
+                        </div>
+                        <div class="chart-container ys-chart-fullscreen-target" id="groupTrendsChartContainer" data-chart-filename="opinion-group-trends">
+                            <canvas id="groupTrendsChart" height="250"></canvas>
+                        </div>
+                        
+ <p class="ys-text-xs-center-mt">
+                            Evolution of opinion group volumes (percentage of agents in each group over time).
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Agent Opinion Time Series Chart -->
+                <div class="column is-4">
+                    <div class="dashboard-box chart-box-container">
+                        <div class="annotation-chart-head ys-mb-15">
+ <h3 class="title is-6 is-thin mb-0">Agent Opinion Evolution</h3>
+                            
+                            <!-- Sample size text input in upper right corner -->
+ <div class="ys-flex-gap-8" style="align-items: center;">
+                                <label style="font-size: 0.85em; font-weight: 600; color: #374151;">Sample Size:</label>
+                                <input type="number" id="sample-input" 
+                                       min="1" max="100" value="50"
+                                       style="width: 60px; padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 0.85em;">
+                                <span style="font-size: 0.85em; color: #6b7280;">%</span>
+                                <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="timeseriesChartContainer" title="Expand plot">
+                                    <i class="mdi mdi-fullscreen"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-container ys-chart-fullscreen-target" id="timeseriesChartContainer" data-chart-filename="agent-opinion-evolution">
+                            <canvas id="timeseriesChart" height="250"></canvas>
+                        </div>
+                        
+ <p class="ys-text-xs-center-mt">
+                            Individual agent opinion trajectories over time (colored by initial opinion group).
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {% if propaganda_targets.available %}
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
+                            <div>
+                                <h3 class="title is-5 is-thin ys-mb-10">Propaganda Target Drill-down</h3>
+                                <p style="margin: 0; color: #6b7280;">
+                                    For the currently selected topic, inspect targeted agents and compare their opinion trajectory with the timing of propaganda interactions.
+                                </p>
+                            </div>
+                            <div class="stat-box" style="min-width: 180px; background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);">
+                                <div class="stat-value"><span id="propaganda-deployed">{{ propaganda_targets.deployed_agents }}</span></div>
+                                <div class="stat-label">Deployed Propaganda Agents</div>
+                            </div>
+                        </div>
+
+                        <div id="propaganda-target-panel" style="margin-top: 20px;">
+                            <div class="columns">
+                                <div class="column is-4">
+                                    <label class="label" for="propaganda-target-select">Target</label>
+                                    <div class="select is-fullwidth">
+                                        <select id="propaganda-target-select">
+                                            {% for option in propaganda_targets.options %}
+                                            <option value="{{ option.uid }}" {% if option.uid == propaganda_targets.selected_uid %}selected{% endif %}>
+                                                {{ option.username }} ({{ option.interaction_count }} interactions)
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="column is-8">
+                                    <div class="stats-row" style="margin-top: 0;">
+                                        <div class="stat-box" style="background: linear-gradient(135deg, #334155 0%, #1e293b 100%);">
+                                            <div class="stat-value" id="propaganda-target-name">{{ propaganda_targets.selected_username or '—' }}</div>
+                                            <div class="stat-label">Selected Target</div>
+                                        </div>
+                                        <div class="stat-box" style="background: linear-gradient(135deg, #b45309 0%, #92400e 100%);">
+                                            <div class="stat-value" id="propaganda-interaction-count">{{ propaganda_targets.interaction_count }}</div>
+                                            <div class="stat-label">Interactions</div>
+                                        </div>
+                                        <div class="stat-box" style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);">
+                                            <div class="stat-value" id="propaganda-attacker-names">{{ propaganda_targets.attacker_usernames|join(', ') if propaganda_targets.attacker_usernames else '—' }}</div>
+                                            <div class="stat-label">Propaganda Agents</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <article id="propaganda-empty-state" class="message is-info" style="margin-top: 16px; {% if propaganda_targets.options %}display: none;{% endif %}">
+                                <div class="message-body">
+                                    Propaganda agents are deployed, but no target interactions have been recorded for the selected topic up to the selected time.
+                                    {% if propaganda_targets.active_topics %}
+                                    Active propaganda topics in this experiment:
+                                    <strong>{{ propaganda_targets.active_topics | map(attribute='topic_name') | join(', ') }}</strong>.
+                                    {% endif %}
+                                </div>
+                            </article>
+
+                            <div class="columns">
+                                <div class="column is-7" id="propaganda-chart-column" {% if not propaganda_targets.options %}style="display: none;"{% endif %}>
+                                    <div class="dashboard-box chart-box-container" style="margin-bottom: 0;">
+                                        <div class="annotation-chart-head ys-mb-15">
+                                            <h3 class="title is-6 is-thin">Selected Target Opinion Trend</h3>
+                                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="propagandaTargetTrendChartContainer" title="Expand plot">
+                                                <i class="mdi mdi-fullscreen"></i>
+                                            </button>
+                                        </div>
+                                        <div class="chart-container ys-chart-fullscreen-target" id="propagandaTargetTrendChartContainer" data-chart-filename="propaganda-target-trend">
+                                            <canvas id="propagandaTargetTrendChart" height="280"></canvas>
+                                        </div>
+                                        <p class="ys-text-xs-center-mt">
+                                            Topic-specific target opinion over time, with propaganda interaction volume shown on the secondary axis.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="column is-5" id="propaganda-events-column" {% if not propaganda_targets.options %}style="display: none;"{% endif %}>
+                                    <div class="dashboard-box" style="margin-bottom: 0;">
+                                        <h3 class="title is-6 is-thin ys-mb-15">Recent Propaganda Interactions</h3>
+                                        <div style="max-height: 360px; overflow-y: auto;">
+                                            <table class="table is-fullwidth is-striped is-hoverable is-size-7">
+                                                <thead>
+                                                <tr>
+                                                    <th>When</th>
+                                                    <th>Count</th>
+                                                    <th>Attackers</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody id="propaganda-events-body">
+                                                {% for event in propaganda_targets.interaction_events %}
+                                                <tr>
+                                                    <td>Day {{ event.day }}, Hour {{ event.hour }}</td>
+                                                    <td>{{ event.interaction_count }}</td>
+                                                    <td>{{ event.attacker_usernames|join(', ') if event.attacker_usernames else '—' }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if mop_targets.available %}
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
+                            <div>
+                                <h3 class="title is-5 is-thin ys-mb-10">Master of Puppets Target Drill-down</h3>
+                                <p style="margin: 0; color: #6b7280;">
+                                    For the currently selected topic, inspect agents targeted by MoP campaigns and compare their opinion trajectory with the timing of MoP interactions.
+                                </p>
+                            </div>
+                            <div class="stat-box" style="min-width: 180px; background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);">
+                                <div class="stat-value"><span id="mop-deployed">{{ mop_targets.deployed_agents }}</span></div>
+                                <div class="stat-label">Deployed MoP Agents</div>
+                            </div>
+                        </div>
+
+                        <div id="mop-target-panel" style="margin-top: 20px;">
+                            <div class="columns">
+                                <div class="column is-4">
+                                    <label class="label" for="mop-target-select">Target</label>
+                                    <div class="select is-fullwidth">
+                                        <select id="mop-target-select">
+                                            {% for option in mop_targets.options %}
+                                            <option value="{{ option.uid }}" {% if option.uid == mop_targets.selected_uid %}selected{% endif %}>
+                                                {{ option.username }} ({{ option.interaction_count }} interactions)
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="column is-8">
+                                    <div class="stats-row" style="margin-top: 0;">
+                                        <div class="stat-box" style="background: linear-gradient(135deg, #334155 0%, #1e293b 100%);">
+                                            <div class="stat-value" id="mop-target-name">{{ mop_targets.selected_username or '—' }}</div>
+                                            <div class="stat-label">Selected Target</div>
+                                        </div>
+                                        <div class="stat-box" style="background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);">
+                                            <div class="stat-value" id="mop-interaction-count">{{ mop_targets.interaction_count }}</div>
+                                            <div class="stat-label">Interactions</div>
+                                        </div>
+                                        <div class="stat-box" style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);">
+                                            <div class="stat-value" id="mop-attacker-names">{{ mop_targets.attacker_usernames|join(', ') if mop_targets.attacker_usernames else '—' }}</div>
+                                            <div class="stat-label">MoP Accounts</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <article id="mop-empty-state" class="message is-info" style="margin-top: 16px; {% if mop_targets.options %}display: none;{% endif %}">
+                                <div class="message-body">
+                                    Master of Puppets agents are deployed, but no topic-matched target interactions have been recorded up to the selected time.
+                                </div>
+                            </article>
+
+                            <div class="columns">
+                                <div class="column is-7" id="mop-chart-column" {% if not mop_targets.options %}style="display: none;"{% endif %}>
+                                    <div class="dashboard-box chart-box-container" style="margin-bottom: 0;">
+                                        <div class="annotation-chart-head ys-mb-15">
+                                            <h3 class="title is-6 is-thin">Selected Target Opinion Trend</h3>
+                                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="mopTargetTrendChartContainer" title="Expand plot">
+                                                <i class="mdi mdi-fullscreen"></i>
+                                            </button>
+                                        </div>
+                                        <div class="chart-container ys-chart-fullscreen-target" id="mopTargetTrendChartContainer" data-chart-filename="mop-target-trend">
+                                            <canvas id="mopTargetTrendChart" height="280"></canvas>
+                                        </div>
+                                        <p class="ys-text-xs-center-mt">
+                                            Topic-specific target opinion over time, with MoP interaction volume shown on the secondary axis.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="column is-5" id="mop-events-column" {% if not mop_targets.options %}style="display: none;"{% endif %}>
+                                    <div class="dashboard-box" style="margin-bottom: 0;">
+                                        <h3 class="title is-6 is-thin ys-mb-15">Recent MoP Interactions</h3>
+                                        <div style="max-height: 360px; overflow-y: auto;">
+                                            <table class="table is-fullwidth is-striped is-hoverable is-size-7">
+                                                <thead>
+                                                <tr>
+                                                    <th>When</th>
+                                                    <th>Type</th>
+                                                    <th>Count</th>
+                                                    <th>Accounts</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody id="mop-events-body">
+                                                {% for event in mop_targets.interaction_events %}
+                                                <tr>
+                                                    <td>Day {{ event.day }}, Hour {{ event.hour }}</td>
+                                                    <td>{{ event.interaction_type|capitalize }}</td>
+                                                    <td>{{ event.interaction_count }}</td>
+                                                    <td>{{ event.attacker_usernames|join(', ') if event.attacker_usernames else '—' }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+<!-- Loading overlay -->
+<div id="loading-overlay" class="loading-overlay">
+    <div class="spinner"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script>var YS_DATA_EVOLUTION = {
+  expId: {{ experiment.idexp }},
+  chartLabels: {{ chart_labels | tojson }},
+  chartValues: {{ chart_values | tojson }},
+  groupTrendsData: {{ group_trends_data | tojson }},
+  timeseriesData: {{ timeseries_data | tojson }},
+  propagandaTargets: {{ propaganda_targets | tojson }},
+  mopTargets: {{ mop_targets | tojson }},
+  filterTopicId: {{ filter_topic_id | tojson if filter_topic_id else 'null' }},
+  maxTick: {{ max_day * 24 + max_hour }},
+  maxDay: {{ max_day }},
+  maxHour: {{ max_hour }}
+};</script>
+
+<script src="{{ url_for('static', filename='assets/js/admin-chart-fullscreen.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/admin-opinion.js') }}"></script>
+{% include "admin/footer.html" %}

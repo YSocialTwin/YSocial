@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+    <meta http-equiv="x-ua-compatible" content="ie=edge"/>
+
+    <title>Y Social | Dashboard</title>
+    <link rel="icon" type="image/png') }}" href="{{ url_for('static', filename='assets/img/favicon.png') }}"/>
+
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:600,700,800,900" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,500" rel="stylesheet"/>
+    <link href="{{ url_for('static', filename='assets/vendor/fontisto/css/fontisto/fontisto-brands.min.css') }}" rel="stylesheet"/>
+    <link href="{{ url_for('static', filename='assets/vendor/mdi/css/materialdesignicons.min.css') }}" rel="stylesheet"/>
+
+
+
+    <!-- Core CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/app.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/core.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-components.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-layout.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-responsive.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-tutorials.css') }}"/>
+
+    <link href="{{ url_for('static', filename='assets/vendor/css/gridjs-mermaid.min.css') }}" rel="stylesheet"/>
+    <script src="{{ url_for('static', filename='assets/vendor/js/chart.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/vendor/js/jquery-3.6.0.min.js') }}"></script>
+       <link rel="stylesheet" href="{{ url_for('static', filename='assets/vendor/css/bootstrap.min.css') }}">
+    
+    <!-- Loading Indicator - Cache-busting version parameter ensures updates are loaded -->
+    <script src="{{ url_for('static', filename='assets/js/loading-indicator.js') }}?v=1.2"></script>
+    
+</head>
+
+<body>
+
+{% include 'shared/browser_sync.html' %}
+
+<!-- Google Tag Manager (noscript) -->
+<noscript>
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KQHJPZP" height="0" width="0"
+ class="ys-invisible"></iframe>
+</noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- Pageloader -->
+<div class="pageloader"></div>
+<div class="infraloader is-active"></div>
+<!-- Mobile Sidebar Toggle Button -->
+<button id="sidebar-toggle" class="sidebar-toggle-btn" onclick="toggleSidebar()" aria-label="Toggle menu">
+    <i data-feather="menu"></i>
+</button>
+
+<!-- Mobile Sidebar Overlay -->
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="dashboard-aside" id="dashboard-sidebar">
+    <a class="dashboard-aside-brand">
+        <img
+                class="logo light-image"
+                src="{{ url_for('static', filename='assets/img/vector/logo/Ysocial_l.png') }}"
+                width="112"
+                height="28"
+                alt=""
+        />
+        <img
+                class="logo dark-image"
+                src="{{ url_for('static', filename='assets/img/vector/logo/Ysocial_I_white.png') }}"
+                width="112"
+                height="28"
+                alt=""
+        />
+    </a>
+
+    <div class="dashboard-aside-body">
+        <hr>
+        <a href="/admin/dashboard" class="dashboard-aside-link" id="sidebar-home">
+            <div>
+                <i data-feather="home"></i>
+                <span>Home</span>
+            </div>
+        </a>
+
+        {% if current_user_role == "admin" %}
+        <a href="/admin/users" class="dashboard-aside-link sidebar-collapsible" id="sidebar-users">
+            <div>
+                <i data-feather="users"></i>
+                <span>Users</span>
+            </div>
+        </a>
+        {% endif %}
+        <hr class="sidebar-collapsible">
+
+        <a href="/admin/experiments" class="dashboard-aside-link sidebar-collapsible" id="sidebar-experiments">
+            <div>
+                <i data-feather="server"></i>
+                <span>Experiments</span>
+            </div>
+        </a>
+        <a href="/admin/populations" class="dashboard-aside-link sidebar-collapsible" id="sidebar-populations">
+            <div>
+                <i data-feather="codesandbox"></i>
+                <span>Populations</span>
+            </div>
+        </a>
+        <hr class="sidebar-collapsible">
+        <a href="/admin/agents_dashboard" class="dashboard-aside-link sidebar-collapsible" id="sidebar-agents-dashboard">
+            <div>
+                <i data-feather="cpu"></i>
+                <span>Agent Resources</span>
+            </div>
+        </a>
+
+        <hr class="sidebar-collapsible">
+
+        {% if current_user_role == "admin" %}
+        <a href="{{ url_for('experiments.miscellanea') }}" class="dashboard-aside-link sidebar-collapsible" id="sidebar-miscellanea">
+            <div>
+                <i data-feather="more-horizontal"></i>
+                <span>Miscellanea</span>
+            </div>
+        </a>
+        <a href="{{ url_for('experiments.external_runtimes') }}" class="dashboard-aside-link sidebar-collapsible" id="sidebar-external-runtimes">
+            <div>
+                <i data-feather="package"></i>
+                <span>Plugins</span>
+            </div>
+        </a>
+        {% endif %}
+        <a href="/admin/about" class="dashboard-aside-link sidebar-collapsible" id="sidebar-about">
+            <div>
+                <i data-feather="compass"></i>
+                <span>About</span>
+            </div>
+        </a>
+
+    </div>
+    <!--<<div class="dashboard-aside-end">
+        {% if current_user_role == "admin" %}
+        <a href="/admin/miscellanea" class="dashboard-aside-link sidebar-collapsible" id="sidebar-miscellanea">
+            <div>
+                <i data-feather="more-horizontal"></i>
+                <span>Miscellanea</span>
+            </div>
+        </a>
+        {% endif %}
+        <a href="/admin/about" class="dashboard-aside-link sidebar-collapsible" id="sidebar-about">
+            <div>
+                <i data-feather="compass"></i>
+                <span>About</span>
+            </div>
+        </a>
+        <a href="navbar-v1-profile-main.html" class="dashboard-aside-link">
+            <img class="link-avatar" src="https://via.placeholder.com/400x400" data-demo-src="assets/img/avatars/jenna.png" alt="" />
+        </a>
+    </div>-->
+</div>
+

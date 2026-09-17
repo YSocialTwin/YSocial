@@ -1,0 +1,94 @@
+<div class="ys-friends-list-head">
+    <div class="ys-friends-tabs" role="tablist" aria-label="Friends filters">
+        <a
+            class="ys-friends-tab{% if active_tab == 'followers' %} is-active{% endif %}"
+            href="/{{exp_id}}/friends/{{ user_id }}/1?tab=followers"
+            data-friends-url="/{{exp_id}}/friends/{{ user_id }}/1?tab=followers"
+        >
+            People Following Me
+            <span class="ys-friends-tab__count">{{ number_followers }}</span>
+        </a>
+        <a
+            class="ys-friends-tab{% if active_tab == 'followees' %} is-active{% endif %}"
+            href="/{{exp_id}}/friends/{{ user_id }}/1?tab=followees"
+            data-friends-url="/{{exp_id}}/friends/{{ user_id }}/1?tab=followees"
+        >
+            People I Follow
+            <span class="ys-friends-tab__count">{{ number_followees }}</span>
+        </a>
+    </div>
+    <div class="ys-friends-list-meta">
+        {% if active_total %}
+            Showing {{ page_start }}-{{ page_end }} of {{ active_total }}
+        {% else %}
+            No profiles to show
+        {% endif %}
+    </div>
+</div>
+
+{% if active_cards %}
+<div class="ys-friends-grid">
+    {% for card in active_cards %}
+    {% set card_pic = (profile_pic_follower if active_tab == 'followers' else profile_pic_followee).get(card['id'], '') %}
+    <article class="ys-friends-profile-card">
+        <a class="ys-friends-profile-card__avatar" href="/{{exp_id}}/profile/{{ card['id'] }}/recent/1">
+            <img
+                src="https://via.placeholder.com/300x300"
+                {% if card_pic %}
+                    data-demo-src="{{ card_pic }}"
+                {% else %}
+                    data-demo-src="{{ url_for('static', filename='assets/img/users/'+ (card['id']|user_image_id) +'.png') }}"
+                {% endif %}
+                alt=""
+            />
+        </a>
+        <div class="ys-friends-profile-card__body">
+            <a class="ys-friends-profile-card__name" href="/{{exp_id}}/profile/{{ card['id'] }}/recent/1">
+                {{ card['username'] }}
+            </a>
+            <div class="ys-friends-profile-card__stats">
+                <span><strong>{{ card['number_followers'] }}</strong> followers</span>
+                <span><strong>{{ card['number_followees'] }}</strong> following</span>
+                <span><strong>{{ card['number_reactions'] }}</strong> reactions</span>
+            </div>
+        </div>
+    </article>
+    {% endfor %}
+</div>
+{% else %}
+<div class="ys-friends-empty">
+    <img src="{{ url_for('static', filename='assets/img/robots/alone.png') }}" alt="" />
+    <h3>No {{ "people following this profile" if active_tab == "followers" else "followed profiles" }} yet</h3>
+    <p>This profile does not have visible {{ "incoming follow ties" if active_tab == "followers" else "outgoing follow ties" }} in the current simulation state.</p>
+</div>
+{% endif %}
+
+<div class="ys-friends-pagination">
+    <a
+        class="ys-friends-pagination__btn{% if not has_prev_page %} is-disabled{% endif %}"
+        {% if has_prev_page %}
+            href="/{{exp_id}}/friends/{{ user_id }}/{{ page - 1 }}?tab={{ active_tab }}"
+            data-friends-url="/{{exp_id}}/friends/{{ user_id }}/{{ page - 1 }}?tab={{ active_tab }}"
+        {% else %}
+            href="#"
+            aria-disabled="true"
+        {% endif %}
+    >
+        <i class="mdi mdi-chevron-left"></i>
+        <span>Previous</span>
+    </a>
+    <span class="ys-friends-pagination__status">Page {{ page }} of {{ total_pages }}</span>
+    <a
+        class="ys-friends-pagination__btn{% if not has_next_page %} is-disabled{% endif %}"
+        {% if has_next_page %}
+            href="/{{exp_id}}/friends/{{ user_id }}/{{ page + 1 }}?tab={{ active_tab }}"
+            data-friends-url="/{{exp_id}}/friends/{{ user_id }}/{{ page + 1 }}?tab={{ active_tab }}"
+        {% else %}
+            href="#"
+            aria-disabled="true"
+        {% endif %}
+    >
+        <span>Next</span>
+        <i class="mdi mdi-chevron-right"></i>
+    </a>
+</div>

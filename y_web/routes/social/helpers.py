@@ -68,6 +68,15 @@ def get_adhoc_agent_badge(user) -> Optional[str]:
     return _ADHOC_AGENT_BADGE_LABELS.get(user_type)
 
 
+
+
+def get_author_type_badge(user) -> str:
+    """Return a badge label identifying whether the author is an AI agent or a human."""
+    user_type = str(getattr(user, "user_type", "") or "").strip().lower()
+    if user_type == "agent":
+        return "AI Agent"
+    return "Human"
+
 def get_safe_profile_pic(username, is_page=0):
     """
     Safely retrieve profile picture URL for a user or page.
@@ -302,6 +311,7 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
                     "emotions": emotions,
                     "topics": topics,
                     "adhoc_agent_badge": get_adhoc_agent_badge(user),
+                    "author_type_badge": get_author_type_badge(user),
                     "is_moderation_comment": int(
                         getattr(c, "is_moderation_comment", 0) or 0
                     ),
@@ -461,6 +471,7 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
                 "emotions": emotions,
                 "topics": topics,
                 "adhoc_agent_badge": get_adhoc_agent_badge(aa),
+                "author_type_badge": get_author_type_badge(aa),
                 "is_moderation_comment": int(
                     getattr(post, "is_moderation_comment", 0) or 0
                 ),
@@ -667,6 +678,7 @@ _UI_DEFAULTS = {
     "annotation_sentiment": True,
     "annotation_toxicity": True,
     "annotation_agent_type": True,
+    "annotation_author_type": True,
     "notifications_menu": True,
     "default_content_recsys": "",
     "default_follow_recsys": "",

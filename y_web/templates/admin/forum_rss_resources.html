@@ -1,0 +1,103 @@
+{% include "admin/head.html" %}
+
+<div class="view-wrapper is-dashboard">
+    <div id="creator-dashboard" class="dashboard-container">
+        {% include "admin/dash_head.html" %}
+
+        <div class="dashboard-body">
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <a href="/admin/agents_dashboard">Agent Resources Dashboard</a> > Forum RSS Resources
+                    </div>
+                </div>
+            </div>
+
+            <div class="columns">
+                <div class="column is-7">
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Reusable Forum RSS Resources</h3>
+                        <p class="ys-text-small">
+                            Validate a source once, save it to the dashboard database, and reuse it across multiple forum experiments.
+                        </p>
+                        <p class="ys-label-hint">
+                            Supported sources include standard RSS or Atom feeds and Reddit JSON listing feeds such as <code>https://www.reddit.com/r/politics/new.json?limit=100</code>.
+                            Direct article URLs remain experiment-specific and are still managed from <code>admin/rss_feeds</code>.
+                        </p>
+
+                        <form action="/admin/create_forum_rss_resource" method="POST" class="box-content">
+                            <div class="box-line">
+                                <span class="left">Feed URL</span>
+                                <span class="right ys-w-70">
+                                    <input type="url" name="feed_url" class="input" placeholder="https://example.com/feed.xml or https://www.reddit.com/r/politics/new.json?limit=100" required>
+                                </span>
+                            </div>
+                            <div class="button-wrap ys-mt-1em">
+                                <button type="submit" class="button is-solid primary-button">Validate And Save RSS Resource</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="column is-5">
+                    <div class="dashboard-box is-compact">
+                        <h3 class="title is-5 is-thin">Usage</h3>
+                        <div class="help-block">
+                            <p>
+                                <b>Central catalog</b><br>
+                                These feeds live in the dashboard DB and can be assigned to any forum experiment from <code>admin/rss_feeds</code>.
+                            </p>
+                            <hr>
+                            <p>
+                                <b>Validation</b><br>
+                                Saving here validates the feed URL immediately and stores the canonical metadata returned by the feed source.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <h4 class="title is-6 is-thin">Saved RSS Resources ({{ resources|length }})</h4>
+                        <div class="box-content">
+                            {% if resources %}
+                            <table class="table is-fullwidth is-striped ys-text-090">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Site</th>
+                                        <th>Feed URL</th>
+                                        <th>Description</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for resource in resources %}
+                                    <tr>
+                                        <td>{{ resource.name }}</td>
+                                        <td>{{ resource.url_site }}</td>
+                                        <td class="ys-word-break">{{ resource.feed_url }}</td>
+                                        <td>{{ resource.description }}</td>
+                                        <td>
+                                            <form action="/admin/delete_forum_rss_resource/{{ resource.id }}" method="POST" onsubmit="return confirm('Delete this reusable RSS resource?');">
+                                                <button type="submit" class="button is-small is-danger is-light">Delete</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            {% else %}
+                            <p class="ys-text-light">No reusable RSS resources stored yet.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% include "admin/footer.html" %}

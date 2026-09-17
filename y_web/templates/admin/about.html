@@ -1,0 +1,250 @@
+{% include "admin/head.html" %}
+
+<div class="view-wrapper is-dashboard">
+    <!--Dashboard container-->
+
+    <div id="creator-dashboard" class="dashboard-container">
+        <!--Toolbar-->
+
+        {% include "admin/dash_head.html" %}
+
+        <div class="dashboard-body">
+            <div class="columns">
+                <!--Dashboard column-->
+
+                <div class="column is-8">
+
+                    <!--Dashboard box-->
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">About Us</h3>
+                        <div class="box-content">
+
+                            <div class="box-line">
+                                <span class="left">We are a team of multidisciplinary researchers that share a common interest in the study of social networks and human behavior.</span>
+                            </div>
+                            <hr>
+ <div class="box-line ys-text-center-mt">
+ <span class="left ys-w-30">
+ <img src="{{ url_for('static', filename='assets/img/about/giulio_rossetti.png') }}" class="ys-mb-5">
+                                    Principal Investigator <br>
+                                    Senior Researcher<br>
+                                    <a href="https://twitter.com/GiulioRossetti">@GiulioRossetti</a>
+                                </span>
+ <span class="left ys-w-30">
+ <img src="{{ url_for('static', filename='assets/img/about/massimo_stella.png') }}" class="ys-mb-5">
+                                    Associate Prof.<br>
+                                    Cognitive NetSci<br>
+                                    <a href="https://twitter.com/MassimoSt">@MassimoSt</a>
+                                </span>
+ <span class="left ys-w-30">
+ <img src="{{ url_for('static', filename='assets/img/about/remy_cazabet.png') }}" class="ys-mb-5">
+                                    Associate Prof.<br>
+                                    Network Science<br>
+                                    <a href="https://twitter.com/Yquetzal">@Yquetzal</a>
+                                </span>
+                            </div>
+
+ <div class="box-line ys-text-center-mt">
+ <span class="left ys-w-30">
+ <img src="{{ url_for('static', filename='assets/img/about/katherine_abramski.png') }}" class="ys-mb-5">
+                                    PhD Student in AI<br>
+                                    LLMs & Cognition<br>
+                                    <a href="https://twitter.com/katie_abramski">@katie_abramski</a>
+                                </span>
+ <span class="left ys-w-30">
+ <img src="{{ url_for('static', filename='assets/img/about/erica_cau.png') }}" class="ys-mb-5">
+                                    PhD Student in AI<br>
+                                    LLMs & Opinion Dynamics<br>
+                                    <a href="https://twitter.com/CauErica">@CauErica</a>
+                                </span>
+ <span class="left ys-w-30">
+ <img src="{{ url_for('static', filename='assets/img/about/salvatore_citraro.png') }}" class="ys-mb-5">
+                                    PostDoc Researcher<br>
+                                    Feature-rich Modeling<br>
+                                    <a href="https://twitter.com/dsalvaz">@dsalvaz</a>
+                                </span>
+                            </div>
+
+ <div class="box-line ys-text-center-mt">
+ <span class="left ys-w-30">
+ <img src="{{ url_for('static', filename='assets/img/about/andrea_failla.png') }}" class="ys-mb-5">
+                                    PhD Student in AI<br>
+                                    Higher-order Modeling<br>
+                                    <a href="https://twitter.com/AndreaFailla4">@AndreaFailla4</a>
+                                </span>
+ <span class="left ys-w-30">
+ <img src="{{ url_for('static', filename='assets/img/about/valentina_pansanella.png') }}" class="ys-mb-5">
+                                    PostDoc Researcher<br>
+                                    Opinion Modeling<br>
+                                    <a href="https://twitter.com/VPansanella">@VPansanella</a>
+                                </span>
+ <span class="left ys-w-30">
+ <img src="{{ url_for('static', filename='assets/img/about/virginia_morini.png') }}" class="ys-mb-5">
+                                    PostDoc Researcher<br>
+                                    Computational Social Science<br>
+                                    <a href="https://twitter.com/Virgiiim">@Virgiiim</a>
+                                </span>
+                            </div>
+ <div class="box-line ys-text-center-mt">
+ <span class="left ys-w-30">
+ <img src="{{ url_for('static', filename='assets/img/about/veronicamesina.png') }}" class="ys-mb-5">
+                                    PhD Student in AI<br>
+                                    Silent Majorities<br>
+                                    <a href="https://www.linkedin.com/in/veronica-mesina/">Linkedin</a>
+                                </span>
+ <span class="left ys-w-30">
+ <img src="{{ url_for('static', filename='assets/img/about/atomasevic.png') }}" class="ys-mb-5">
+                                    Research Associate <br>
+                                    Computational Social Science<br>
+                                    <a href="https://twitter.com/atomasevic">@atomasevic</a>
+                                </span>
+ <span class="left ys-w-30">
+
+                                </span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Supporting Institutions</h3>
+                        <div class="box-content">
+                            <div class="box-lines">
+                                <div class="box-line">
+                                <span class="left">
+                                    YSocial is the result of a joint effort of <a href="https://www.isti.cnr.it/en/">ISTI-CNR</a>, <a href="https://www.unipi.it/">University of Pisa</a>, <a href="https://www.unitn.it/">University of Trento</a>, <a href="https://www.univ-lyon1.fr/">Université Lyon 1</a>, and
+                                    <a href="https://www.ipb.ac.rs/en/research/laboratories/scientific-computing-laboratory/">University of Belgrade</a>.
+                                </span>
+                                </div>
+ <div class="box-line ys-text-center-mt">
+                                    <table style="margin: 0 auto; vertical-align: middle;">
+                                        <tr>
+                                            <td colspan="3">
+                                                <img src="{{ url_for('static', filename='assets/img/about/isti.png') }}" style="width: 600px; margin-bottom: 20px;">
+                                            </td>
+                                        </tr>
+                                        <tr>
+ <td><img src="{{ url_for('static', filename='assets/img/about/unitn.jpg') }}" class="ys-w-230"> </td>
+ <td><img src="{{ url_for('static', filename='assets/img/about/unipi.webp') }}" class="ys-w-230"> </td>
+                                        </tr>
+                                        <tr>
+ <td><img src="{{ url_for('static', filename='assets/img/about/lyon.jpg') }}" class="ys-w-230"> </td>
+ <td><img src="{{ url_for('static', filename='assets/img/about/ubelgrade.png') }}" class="ys-w-230"></td>
+                                        </tr>
+                                    </table>
+                                </div>
+
+                            </div>
+
+
+                        </div>
+                    </div>
+                </div>
+
+
+                <!--Dashboard column-->
+                <div class="column is-4">
+                    <!--Dashboard box-->
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Supporting Projects</h3>
+                        <div class="box-content">
+                            <div class="box-lines">
+                                <div class="box-line">
+                                    <span class="left">YSocial has been developed thanks to the support of the following national and european projects</span>
+
+                                </div>
+                                <hr>
+                                <div class="box-line" style="margin-top: 20px; margin-bottom: 20px;">
+ <span class="left text-center ys-w-70"><a href="https://pnrr.sobigdata.it/"><img src="{{ url_for('static', filename='assets/img/about/sbdit.png') }}"></a> </span>
+                                </div>
+                                <hr>
+ <div class="box-line ys-my-10">
+ <span class="left text-center ys-w-70"><a href="http://sobigdata.eu/"><img src="{{ url_for('static', filename='assets/img/about/sbd.png') }}"></a> </span>
+                                </div>
+                                <hr>
+ <div class="box-line ys-my-10">
+ <span class="left text-center ys-w-50"><a href="https://fondazione-fair.it/en/"><img src="{{ url_for('static', filename='assets/img/about/fair.png') }}"></a> </span>
+                                </div>
+                                <hr>
+ <div class="box-line ys-my-10">
+ <span class="left text-center ys-w-50"><a href="https://www.ctrust.ac.rs/#project"><img src="{{ url_for('static', filename='assets/img/about/ctrust.png') }}"></a> </span>
+                                </div>
+                                <hr>
+                            </div>
+
+
+                        </div>
+                    </div>
+
+                    <div class="dashboard-box">
+                        <div class="box-content">
+                            <h3 class="title is-5 is-thin">Get in Touch!</h3>
+                            <div class="box-lines">
+ <div class="box-line ys-mb-20">
+                                    <span class="left">
+                                        We are always looking for new collaborations and opportunities to share our research. If you are interested in our work, feel free to contact us!
+                                    </span>
+                                </div>
+                                <hr>
+                                <div class="box-line">
+                                    <span class="left">
+                                        Website:
+                                    </span>
+                                    <span class="right">
+                                        <a href="https://y-not.social/">y-not.social</a>
+                                    </span>
+                                </div>
+
+                                <div class="box-line">
+                                    <span class="left">
+                                        GitHub:
+                                    </span>
+                                    <span class="right">
+                                        <a href="https://github.com/orgs/YSocialTwin/">YSocialTwin</a>
+                                    </span>
+                                </div>
+
+                                <div class="box-line">
+                                    <span class="left">
+                                        Discussion Board
+                                    </span>
+                                    <span class="right">
+                                        <a href="https://github.com/orgs/YSocialTwin/discussions">GitHub Discussions</a>
+                                    </span>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-box">
+                        <div class="box-content">
+                            <h3 class="title is-5 is-thin">Scientific Papers</h3>
+                            <div class="box-lines">
+ <div class="box-line ys-mb-20">
+                                    <span class="left">
+                                        Are you using YSocial for your research? Please cite us!
+                                    </span>
+                                </div>
+                                <hr>
+                                <div class="box-line">
+                                    <span class="right">
+                                        Rossetti, Giulio, et al. <em>"Y social: an LLM-powered social media Digital Twin."</em> arXiv preprint <a href="https://arxiv.org/abs/2408.00818">arXiv:2408.00818</a> (2024).
+                                    </span>
+                                </div>
+
+
+
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% include "admin/footer.html" %}

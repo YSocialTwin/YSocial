@@ -1,0 +1,170 @@
+{% include "forum/header.html" %}
+
+
+<div class="view-wrapper">
+    <div class="container is-fluid forum-profile-shell">
+        <div class="forum-profile-hero">
+            <div class="forum-profile-banner"></div>
+            <div class="forum-profile-summary">
+                <div class="forum-profile-avatar">
+                    <img src="{{ viewed_profile_pic or 'https://via.placeholder.com/300x300' }}" alt="{{ user['user_data']['username'] }} avatar"/>
+                </div>
+                <div class="forum-profile-meta">
+                    <div class="forum-profile-name-row">
+                        <div class="forum-profile-name">{{ user['user_data']['username'] }}</div>
+                        {% if can_follow_profile %}
+                        <a
+                            href="/{{ exp_id }}/follow/{{ user['user_data']['id'] }}/{{ logged_id }}"
+                            class="forum-profile-follow-btn {% if is_following %}is-following{% endif %}"
+                        >
+                            {% if is_following %}Unfollow{% else %}Follow{% endif %}
+                        </a>
+                        {% endif %}
+                    </div>
+                    <div class="forum-profile-subline">
+                        {% if user['user_data'].is_page == 1 %}
+                        Community Page
+                        {% else %}
+                        {{ user['user_data']['profession'] or 'Forum participant' }}{% if user['user_data']['leaning'] %} · {{ user['user_data']['leaning'] }}{% endif %}
+                        {% endif %}
+                    </div>
+                    <div class="forum-profile-stats">
+                        <div class="forum-profile-stat"><strong>{{ user['total_posts'] }}</strong><span>Posts</span></div>
+                        <div class="forum-profile-stat"><strong>{{ user['total_comments'] }}</strong><span>Comments</span></div>
+                        <div class="forum-profile-stat"><strong>{{ user['total_likes'] }}</strong><span>Likes</span></div>
+                        <div class="forum-profile-stat"><strong>{{ user['total_dislikes'] }}</strong><span>Dislikes</span></div>
+                        <div class="forum-profile-stat"><strong>{{ user['total_followers'] }}</strong><span>Followers</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="forum-profile-layout{% if forum_memory_enabled %} has-chat{% endif %}">
+            <aside class="forum-profile-sidebar">
+                {% if stress_reward_active and is_page != 1 %}
+                <div class="forum-profile-card">
+                    <h3>Stress / Reward</h3>
+                    <div class="forum-profile-about">
+                        <div class="forum-profile-about-row forum-profile-scale-row">
+                            <span>Recognition</span>
+                            <span class="forum-profile-scale" aria-label="Current reward level">
+                                {% for idx in range(5) %}
+                                <span class="forum-profile-scale-dot reward {% if idx < stress_reward_indicator['reward']['level'] %}is-active{% endif %}"></span>
+                                {% endfor %}
+                            </span>
+                        </div>
+                        <div class="forum-profile-about-row forum-profile-scale-row">
+                            <span>Stress</span>
+                            <span class="forum-profile-scale" aria-label="Current stress level">
+                                {% for idx in range(5) %}
+                                <span class="forum-profile-scale-dot stress {% if idx < stress_reward_indicator['stress']['level'] %}is-active{% endif %}"></span>
+                                {% endfor %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="forum-profile-card">
+                    <h3>About</h3>
+                    <div class="forum-profile-about">
+                        {% if user['user_data'].is_page != 1 %}
+                        <div class="forum-profile-about-row"><span>Age</span><span>{{ user['user_data']['age'] or 'n/a' }}</span></div>
+                        <div class="forum-profile-about-row"><span>Gender</span><span>{{ user['user_data']['gender'] or 'n/a' }}</span></div>
+                        <div class="forum-profile-about-row"><span>Nationality</span><span>{{ user['user_data']['nationality'] or 'n/a' }}</span></div>
+                        <div class="forum-profile-about-row"><span>Languages</span><span>{{ user['user_data']['language'].replace('|', ', ') if user['user_data']['language'] else 'n/a' }}</span></div>
+                        <div class="forum-profile-about-row"><span>Education</span><span>{{ user['user_data']['education_level'] or 'n/a' }}</span></div>
+                        <div class="forum-profile-about-row"><span>Profession</span><span>{{ user['user_data']['profession'] or 'n/a' }}</span></div>
+                        <div class="forum-profile-about-row"><span>Political Leaning</span><span>{{ user['user_data']['leaning'] or 'n/a' }}</span></div>
+                        {% for custom_key, custom_value in agent_custom_features.items() %}
+                        <div class="forum-profile-about-row"><span>{{ custom_key }}</span><span>{{ custom_value }}</span></div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="forum-profile-empty">This page represents a forum community page.</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="forum-profile-card">
+                    <h3>Interests</h3>
+                    {% if interests %}
+                    <div class="forum-profile-interest-list">
+                        {% for interest in interests %}
+                        <a href="/{{exp_id}}/interest/{{ interest[1] }}/1" class="forum-profile-interest">{{ interest[0] }} ({{ interest[2] }})</a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="forum-profile-empty">No recent interests available.</div>
+                    {% endif %}
+                </div>
+            </aside>
+
+            <section>
+                <div class="forum-profile-card">
+                    <div class="forum-profile-tabs">
+                        <a class="forum-profile-tab {% if mode == 'recent' %}is-active{% endif %}" href="/{{exp_id}}/profile/{{ user['user_data']['id'] }}/recent/1">Posts</a>
+                        {% if is_page != 1 %}
+                        <a class="forum-profile-tab {% if mode == 'comments' %}is-active{% endif %}" href="/{{exp_id}}/profile/{{ user['user_data']['id'] }}/comments/1">Comments</a>
+                        <a class="forum-profile-tab {% if mode == 'liked' %}is-active{% endif %}" href="/{{exp_id}}/profile/{{ user['user_data']['id'] }}/liked/1">Likes</a>
+                        <a class="forum-profile-tab {% if mode == 'disliked' %}is-active{% endif %}" href="/{{exp_id}}/profile/{{ user['user_data']['id'] }}/disliked/1">Dislikes</a>
+                        {% endif %}
+                    </div>
+
+                    <div id="posts-container">
+                        {% include "forum/components/posts.html" %}
+                    </div>
+                </div>
+            </section>
+
+            {% if forum_memory_enabled %}
+            <aside class="forum-profile-chat-column is-hidden-touch">
+                {% set forum_chat_page_kind = 'profile' %}
+                {% include "forum/components/chat_panel.html" %}
+            </aside>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    window.EXP_ID = {{ exp_id if exp_id else 'null' }};
+    window.EXP_PREFIX = window.EXP_ID ? '/' + window.EXP_ID : '';
+    window.redditContext = Object.freeze({
+        loggedUserId: {{ logged_id }},
+        isAdmin: {{ 'true' if is_admin else 'false' }},
+        loggedUsername: {{ logged_username|tojson }},
+        profilePic: {{ profile_pic|tojson }},
+        profilePicFeed: {{ profile_pic_feed|tojson }}
+    });
+    window.redditFeedConfig = Object.freeze({
+        expId: {{ exp_id }},
+        currentPage: {{ page }},
+        perPage: 10,
+        feedType: 'new',
+        searchQuery: '',
+        userId: {{ user_id }},
+        hasMore: false,
+        viewMode: 'profile'
+    });
+</script>
+<script src="{{ url_for('static', filename='assets/js/reddit/app.js') }}"></script>
+<script src="https://js.stripe.com/v3/"></script>
+<script src="{{ url_for('static', filename='assets/js/global.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-v1.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-v2.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-mobile.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-options.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/sidebar-v1.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/touch.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/reddit/api_client.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/reddit/async_updates.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/infinite-scroll.js') }}"></script>
+<script>var YS_DATA_FORUM_PROFILE = { expId: "{{exp_id}}", userId: "{{user_id}}", mode: "{{mode}}", page: {{ page }} };</script>
+
+<script src="{{ url_for('static', filename='assets/js/forum-profile.js') }}"></script>
+{% if forum_memory_enabled %}
+<script src="{{ url_for('static', filename='assets/js/reddit/forum-chat.js') }}"></script>
+{% endif %}
+</body>
+</html>
