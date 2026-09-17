@@ -118,6 +118,15 @@
 
         <hr class="sidebar-collapsible">
 
+        <a href="{{ url_for('experiments.frontend_settings') }}" class="dashboard-aside-link sidebar-collapsible" id="sidebar-frontend-settings">
+            <div>
+                <i data-feather="sliders"></i>
+                <span>Frontend Settings</span>
+            </div>
+        </a>
+
+        <hr class="sidebar-collapsible">
+
         {% if current_user_role == "admin" %}
         <a href="{{ url_for('experiments.miscellanea') }}" class="dashboard-aside-link sidebar-collapsible" id="sidebar-miscellanea">
             <div>

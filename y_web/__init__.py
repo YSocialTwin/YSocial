@@ -532,11 +532,56 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
             except Exception as _exp_err:
                 print(f"⚠ Warning: failed to migrate experiment databases: {_exp_err}")
     except ImportError:
-        # Flask-Migrate not installed — fall back to manual migration runner.
-        # Install it with: pip install Flask-Migrate>=4.0.0
-        from y_web.db_init.migrations import run_migrations
+        # Flask-Migrate not installed — try standalone Alembic, then legacy runner.
+        try:
+            from alembic.config import Config as _AlembicConfig
+            from alembic.script import ScriptDirectory as _AlembicScript
+            from alembic.runtime.migration import MigrationContext as _MigCtx
+            from alembic import command as _alembic_cmd
 
-        run_migrations(app, db_type, db)
+            with app.app_context():
+                _sa_url = app.config.get("SQLALCHEMY_DATABASE_URI", "")
+                _sa_cfg = _AlembicConfig()
+                _sa_cfg.set_main_option("script_location", _alembic_dir)
+                _sa_cfg.set_main_option("sqlalchemy.url", _sa_url)
+                _sa_script = _AlembicScript.from_config(_sa_cfg)
+
+                def _stamp_if_needed(engine, bind_key):
+                    with engine.begin() as _conn:
+                        _ctx = _MigCtx.configure(_conn)
+                        if not _ctx.get_current_heads():
+                            print(f"  ↳ [{bind_key}] no alembic_version — stamping 0001_baseline")
+                            _ctx.stamp(_sa_script, "0001_baseline")
+                        else:
+                            print(f"  ↳ [{bind_key}] alembic_version OK ({', '.join(_ctx.get_current_heads())})")
+
+                print("✦ Alembic (standalone): checking bound databases…")
+                _seen: set = set()
+                for _bk, _eng in db.engines.items():
+                    if id(_eng) not in _seen:
+                        _seen.add(id(_eng))
+                        _stamp_if_needed(_eng, _bk)
+
+                print("✦ Alembic (standalone): upgrading primary schema to HEAD…")
+                _alembic_cmd.upgrade(_sa_cfg, "head")
+                print("✓ Alembic (standalone): primary schema up to date")
+
+                try:
+                    from y_web.src.experiment.context import (
+                        initialize_active_experiment_databases,
+                    )
+                    initialize_active_experiment_databases(app)
+                    print("✓ Alembic (standalone): experiment databases up to date")
+                except Exception as _exp_err:
+                    print(f"⚠ Warning: failed to migrate experiment databases: {_exp_err}")
+
+        except ImportError:
+            # Neither Flask-Migrate nor standalone Alembic available.
+            # Fall back to manual migration runner.
+            # Install with: pip install Flask-Migrate>=4.0.0
+            from y_web.db_init.migrations import run_migrations
+
+            run_migrations(app, db_type, db)
 
     # Log service start event
     try:

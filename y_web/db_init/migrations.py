@@ -713,6 +713,44 @@ def _run_all_migrations(app, db_type, db):
     except Exception as e:
         print(f"Failed to run population pop_type migration: {e}")
 
+
+    # ------------------------------------------------------------------
+    # exp_frontend_settings table
+    # ------------------------------------------------------------------
+    try:
+        if db_type == "sqlite":
+            from y_web.migrations.add_frontend_settings_table import migrate_sqlite
+
+            if dashboard_db_path:
+                migrate_sqlite(dashboard_db_path)
+        elif db_type == "postgresql":
+            from y_web.migrations.add_frontend_settings_table import migrate_postgresql
+
+            if pg["password"]:
+                migrate_postgresql(
+                    pg["host"], pg["port"], pg["database"], pg["user"], pg["password"]
+                )
+    except Exception as e:
+        print(f"Failed to run exp_frontend_settings table migration: {e}")
+
+    # ------------------------------------------------------------------
+    # FilterBubble (Personalized Feed) entry in content_recsys
+    # ------------------------------------------------------------------
+    try:
+        from y_web.migrations.add_filter_bubble_recsys import migrate_sqlite as _fb_sqlite
+        from y_web.migrations.add_filter_bubble_recsys import migrate_postgresql as _fb_pg
+
+        if db_type == "sqlite":
+            if dashboard_db_path:
+                _fb_sqlite(dashboard_db_path)
+        elif db_type == "postgresql":
+            if pg["password"]:
+                _fb_pg(
+                    pg["host"], pg["port"], pg["database"], pg["user"], pg["password"]
+                )
+    except Exception as e:
+        print(f"Failed to run FilterBubble recsys migration: {e}")
+
     # ------------------------------------------------------------------
     # Ensure all tables defined in models exist (including release_info)
     # ------------------------------------------------------------------

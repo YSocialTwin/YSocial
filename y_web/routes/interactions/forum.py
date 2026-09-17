@@ -12,6 +12,7 @@ from flask_login import current_user, login_required
 from sqlalchemy import select
 
 from y_web import db
+from y_web.routes.interactions.common import _maybe_update_fb_interests
 from y_web.routes.interactions._blueprint import user
 from y_web.src.content.article_extractor import extract_article_info
 from y_web.src.content.text_utils import toxicity, vader_sentiment
@@ -376,6 +377,9 @@ def publish_post_reddit(exp_id):
             post.tweet = text.lstrip().rstrip()
             db.session.commit()
 
+    # Update filter bubble interests for human users using Personalized Feed
+    _maybe_update_fb_interests(exp_id, exp_user, pid, "comment")
+
     return {"message": "Published successfully", "status": 200}
 
 
@@ -635,5 +639,7 @@ def publish_comment(exp_id):
             # update post
             post.tweet = text.lstrip().rstrip()
             db.session.commit()
+
+    _maybe_update_fb_interests(exp_id, exp_user, pid, "comment")
 
     return {"message": "Published successfully", "status": 200}

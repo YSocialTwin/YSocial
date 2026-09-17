@@ -366,7 +366,7 @@ function initLoadMore() {
 
 //Post Comment sections toggling
 function initPostComments() {
-  $('.fab-wrapper.is-comment, .close-comments').on('click', function (e) {
+  $(document).off('click.postComments').on('click.postComments', '.fab-wrapper.is-comment, .close-comments', function (e) {
     $(this)
       .addClass('is-active')
       .closest('.card')

@@ -307,16 +307,10 @@ $(document).on('click', '.meta-chip-toggle', function (e) {
 
 
 $(document).on('click','.like-count',function(e) {
-    let idc = e.target.id;
-    if (e.target.id){
-        idc = e.target.id;
-    }
-    else{
-        idc = e.target.parentElement.id;
-    }
-    let base = document.getElementById(idc);
-
-    let elem_id = idc.split('-')[2];
+    // 'this' in delegated handlers is always the matched element (.like-count div)
+    let base = this;
+    let idc = base.id;  // 'like-count-{post_id}' — works for both int and UUID IDs
+    let elem_id = idc.replace(/^like-count-/, '');
 
     if (rgbToHex(base.lastElementChild.style.color) !== "#69a2e6") {
 
@@ -353,16 +347,9 @@ $(document).on('click','.like-count',function(e) {
     });
 
 $(document).on('click','.dislike-count',function(e) {
-
-    let idc = e.target.id;
-    if (e.target.id){
-        idc = e.target.id;
-    }
-    else{
-        idc = e.target.parentElement.id;
-    }
-    let base = document.getElementById(idc);
-    let elem_id = idc.split('-')[2];
+    let base = this;
+    let idc = base.id;  // 'dislike-count-{post_id}'
+    let elem_id = idc.replace(/^dislike-count-/, '');
 
     if (rgbToHex(base.lastElementChild.style.color) !== "#69a2e6") {
 
@@ -399,16 +386,9 @@ $(document).on('click','.dislike-count',function(e) {
 
 
 $(document).on('click','.share-count',function(e) {
-
-    let idc = e.target.id;
-    if (e.target.id){
-        idc = e.target.id;
-    }
-    else{
-        idc = e.target.parentElement.id;
-    }
-    let base = document.getElementById(idc);
-    let elem_id = idc.split('-')[2];
+    let base = this;
+    let idc = base.id;  // 'share-count-{post_id}'
+    let elem_id = idc.replace(/^share-count-/, '');
 
     if (rgbToHex(base.lastElementChild.style.color) !== "#69a2e6") {
 
