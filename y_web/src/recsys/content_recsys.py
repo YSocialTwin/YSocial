@@ -675,9 +675,9 @@ def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6,
         posts = (
             posts_query.outerjoin(Rounds, Post.round == Rounds.id)
             .order_by(
+                desc(Post.reaction_count),
                 desc(func.coalesce(Rounds.day, -1)),
                 desc(func.coalesce(Rounds.hour, -1)),
-                desc(Post.reaction_count),
                 desc(Post.id),
             )
             .paginate(page=page, per_page=per_page, error_out=False)
@@ -706,9 +706,9 @@ def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6,
         posts = (
             posts_query.outerjoin(Rounds, Post.round == Rounds.id)
             .order_by(
+                desc(Post.reaction_count),
                 desc(func.coalesce(Rounds.day, -1)),
                 desc(func.coalesce(Rounds.hour, -1)),
-                desc(Post.reaction_count),
                 desc(Post.id),
             )
             .paginate(
@@ -737,9 +737,9 @@ def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6,
             .outerjoin(Rounds, Post.round == Rounds.id)
             .filter(Post.user_id != uid, _root_post_filter())
             .order_by(
-                desc(func.coalesce(comment_counts.c.n_comments, 0)),
                 desc(func.coalesce(Rounds.day, -1)),
                 desc(func.coalesce(Rounds.hour, -1)),
+                desc(func.coalesce(comment_counts.c.n_comments, 0)),
                 desc(Post.id),
             )
         )
