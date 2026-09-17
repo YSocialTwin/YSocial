@@ -196,16 +196,8 @@ def select_experiment():
 
         login_user(user_agent, remember=remember)
 
-        # Redirect to appropriate feed
-        if exp.platform_type == "microblogging":
-            return redirect(f"/{exp.idexp}/feed/{user_agent.id}/feed/rf/1")
-        elif exp.platform_type == "forum":
-            return redirect(f"/{exp.idexp}/rfeed/{user_agent.id}/rfeed/rf/1")
-        elif exp.platform_type == "photo_sharing":
-            return redirect(f"/{exp.idexp}/photo/feed/all/feed/rf/1")
-        else:
-            flash("Unknown platform type.")
-            return redirect(url_for("auth.login"))
+        # Redirect to onboarding — it will skip to feed if already completed
+        return redirect(f"/{exp.idexp}/onboarding/{user_agent.id}")
 
     except Exception as e:
         flash(f"Error accessing experiment: {str(e)}")

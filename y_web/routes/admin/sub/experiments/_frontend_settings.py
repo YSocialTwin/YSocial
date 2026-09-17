@@ -93,10 +93,16 @@ def _load_recsys_options(simulator_type: str = "Standard", all_algorithms: bool 
             if not r.enabled:
                 continue
             enabled_lc = (r.enabled or "").lower()
-            if (all_algorithms
-                    or is_hpc
-                    or "standard" in enabled_lc
-                    or (include_human_only and "humanonly" in enabled_lc)):
+            is_human_only = "humanonly" in enabled_lc
+            if all_algorithms:
+                include = True
+            elif is_human_only:
+                include = include_human_only
+            elif is_hpc:
+                include = "hpc" in enabled_lc
+            else:
+                include = "standard" in enabled_lc
+            if include:
                 result.append({"name": r.name, "label": r.value, "category": r.category or "Other"})
         return result
 

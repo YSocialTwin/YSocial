@@ -140,6 +140,7 @@
             </div>
             <div class="navbar-end">
 
+                {% if ui is not defined or ui.notifications_menu %}
                 <div class="navbar-item is-account drop-trigger has-caret"
                      style="{% if len(mentions)>0 %} color: red;{% endif %}" {# dynamic #}>
                     <i class="mdi mdi-message-text" style="{% if len(mentions)>0 %} color: red;{% endif %}" {# dynamic #}></i>
@@ -186,6 +187,7 @@
                     </div>
                     {% endif %}
                 </div>
+                {% endif %}{# notifications_menu #}
                 <div
                         id="account-dropdown"
                         class="navbar-item is-account drop-trigger has-caret"

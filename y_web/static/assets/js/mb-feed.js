@@ -30,7 +30,7 @@ var MB_FEED = (function() {
         state.postsContainer = document.getElementById('posts-container');
         state.liveRefreshEnabled = Number(config.page || 1) === 1;
 
-        if (window.InfiniteScroll) {
+        if (window.InfiniteScroll && config.infiniteScrollEnabled !== false) {
             InfiniteScroll.init({
                 apiEndpoint: state.apiEndpoint,
                 postsContainerId: 'posts-container',
@@ -185,7 +185,7 @@ var MB_FEED = (function() {
         initializeDynamicFeedContent(state.postsContainer);
         hideRefreshNotice();
 
-        if (window.InfiniteScroll) {
+        if (window.InfiniteScroll && (state.config && state.config.infiniteScrollEnabled !== false)) {
             InfiniteScroll.init({
                 apiEndpoint: state.apiEndpoint,
                 postsContainerId: 'posts-container',

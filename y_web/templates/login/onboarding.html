@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+    <meta http-equiv="x-ua-compatible" content="ie=edge"/>
+    <title>Y Social | Setup Your Profile</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='assets/img/favicon.png') }}"/>
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:600,700,800,900" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,500" rel="stylesheet"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/app.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/core.css') }}"/>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body.ys-onboarding { background: #f2f4f8; margin: 0; font-family: 'Roboto', sans-serif; color: #1a1a2e; }
+
+        .ys-ob-hero { background: linear-gradient(135deg, #4a85d5 0%, #6b4f99 100%); color: #fff; padding: 36px 28px 32px; text-align: center; }
+        .ys-ob-hero h1 { font-family: 'Montserrat', sans-serif; font-size: 1.7rem; font-weight: 800; margin: 0 0 8px; }
+        .ys-ob-hero p { font-size: .9rem; opacity: .88; max-width: 560px; margin: 0 auto; line-height: 1.6; }
+
+        .ys-ob-page { max-width: 1060px; margin: 0 auto; padding: 32px 18px 60px; }
+
+        .ys-ob-columns { display: grid; grid-template-columns: 1fr 400px; gap: 22px; align-items: start; }
+        @media (max-width: 800px) { .ys-ob-columns { grid-template-columns: 1fr; } }
+
+        .ys-ob-card { background: #fff; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,.06); overflow: hidden; }
+        .ys-ob-card__head { padding: 18px 22px 14px; border-bottom: 1px solid #f0f0f6; display: flex; align-items: center; gap: 12px; }
+        .ys-ob-card__icon { width: 36px; height: 36px; border-radius: 9px; background: linear-gradient(135deg, #5596e6, #7b5ea7); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1rem; flex-shrink: 0; }
+        .ys-ob-card__title { font-family: 'Montserrat', sans-serif; font-size: .95rem; font-weight: 700; color: #1a1a2e; margin: 0 0 2px; }
+        .ys-ob-card__subtitle { font-size: .78rem; color: #999; margin: 0; }
+        .ys-ob-card__body { padding: 20px 22px; }
+
+        .ys-ob-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px; }
+        @media (max-width: 500px) { .ys-ob-grid { grid-template-columns: 1fr; } }
+        .ys-ob-field { display: flex; flex-direction: column; gap: 5px; }
+        .ys-ob-field.full { grid-column: 1 / -1; }
+        .ys-ob-field > label { font-size: .73rem; font-weight: 700; color: #777; text-transform: uppercase; letter-spacing: .05em; }
+        .ys-ob-field input, .ys-ob-field select { border: 1.5px solid #e2e2ee; border-radius: 7px; padding: 8px 10px; font-size: .88rem; color: #1a1a2e; background: #fafbff; transition: border-color .18s; width: 100%; }
+        .ys-ob-field input:focus, .ys-ob-field select:focus { outline: none; border-color: #5596e6; background: #fff; }
+
+        .ys-ob-avatar-row { display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+        .ys-ob-avatar-row img { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid #e2e2ee; flex-shrink: 0; }
+        .ys-ob-gallery { display: flex; flex-wrap: wrap; gap: 6px; max-height: 110px; overflow-y: auto; }
+        .ys-ob-gallery button { border: 2px solid transparent; border-radius: 6px; padding: 2px; cursor: pointer; background: #fff; transition: border-color .15s; }
+        .ys-ob-gallery button.selected { border-color: #5596e6; }
+
+        .ys-ob-topics-wrap { display: flex; flex-direction: column; gap: 0; }
+
+        .ys-ob-topic { padding: 16px 0; border-bottom: 1px solid #f0f0f6; }
+        .ys-ob-topic:last-child { border-bottom: none; padding-bottom: 4px; }
+        .ys-ob-topic__name { font-family: 'Montserrat', sans-serif; font-size: .82rem; font-weight: 700; color: #1a1a2e; margin-bottom: 12px; display: flex; align-items: center; gap: 5px; }
+        .ys-ob-topic__name i { color: #5596e6; font-size: .85rem; }
+
+        .ys-ob-topic__q {
+            font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+            color: #aaa; margin-bottom: 6px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .ys-ob-topic__q-val {
+            font-size: .75rem; font-weight: 700; text-transform: none;
+            letter-spacing: 0; color: #5596e6; transition: color .2s;
+        }
+
+        .ys-ob-spacer { height: 14px; }
+
+        /* ── Sliders ── */
+        .ys-slider-wrap { padding-bottom: 22px; }
+
+        .ys-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 5px;
+            border-radius: 3px;
+            outline: none;
+            cursor: pointer;
+            background: #e2e2ee;
+            transition: background .15s;
+        }
+        .ys-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #fff;
+            border: 3px solid #5596e6;
+            box-shadow: 0 1px 6px rgba(85,150,230,.35);
+            cursor: pointer;
+            transition: transform .12s, border-color .2s;
+        }
+        .ys-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+        .ys-slider::-moz-range-thumb {
+            width: 20px; height: 20px; border-radius: 50%;
+            background: #fff; border: 3px solid #5596e6;
+            box-shadow: 0 1px 6px rgba(85,150,230,.35); cursor: pointer;
+        }
+        /* Opinion slider: static red→green track, thumb border matches position */
+        .ys-slider.opinion-slider {
+            background: linear-gradient(to right, #c0392b, #e07b39, #949494, #3da05e, #1e7d3c) !important;
+        }
+        .ys-slider.opinion-slider::-webkit-slider-thumb { border-color: var(--thumb-col, #888); }
+        .ys-slider.opinion-slider::-moz-range-thumb { border-color: var(--thumb-col, #888); }
+
+        .ys-slider-ticks {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 7px;
+            padding: 0 1px;
+        }
+        .ys-slider-ticks span {
+            font-size: .58rem;
+            color: #ccc;
+            text-align: center;
+            flex: 1;
+            line-height: 1.3;
+            transition: color .15s, font-weight .15s;
+        }
+        .ys-slider-ticks span.active { color: #5596e6; font-weight: 700; }
+        .ys-slider-ticks.opinion span.active { color: #555; }
+
+        /* Submit */
+        .ys-ob-submit { background: #fff; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,.06); padding: 20px 22px; margin-top: 18px; text-align: center; }
+        .ys-ob-submit-btn { display: inline-flex; align-items: center; gap: 9px; background: linear-gradient(135deg, #5596e6, #7b5ea7); color: #fff; border: none; border-radius: 9px; padding: 12px 32px; font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: .95rem; cursor: pointer; box-shadow: 0 3px 12px rgba(85,150,230,.3); transition: transform .15s, box-shadow .15s; width: 100%; justify-content: center; }
+        .ys-ob-submit-btn:hover { transform: translateY(-1px); box-shadow: 0 5px 18px rgba(85,150,230,.4); }
+        .ys-ob-submit-hint { font-size: .74rem; color: #bbb; margin-top: 8px; }
+        .ys-ob-no-topics { text-align: center; color: #bbb; font-size: .85rem; padding: 16px 0; }
+    </style>
+</head>
+<body class="ys-onboarding">
+{% include 'shared/browser_sync.html' %}
+</div>
+
+<div class="ys-ob-hero">
+    <h1>Welcome {{ user.username }}!</h1>
+    <p>Before entering your feed, personalise your profile and share your interest level and opinion for each active discussion topic.</p>
+</div>
+
+<div class="ys-ob-page">
+    <form id="onboarding-form" action="/{{ exp_id }}/save_onboarding/{{ user_id }}" method="POST" enctype="multipart/form-data" novalidate>
+        <div class="ys-ob-columns">
+
+            <!-- LEFT: Profile -->
+            <div class="ys-ob-card">
+                <div class="ys-ob-card__head">
+                    <div class="ys-ob-card__icon"><i class="mdi mdi-account-edit"></i></div>
+                    <div>
+                        <p class="ys-ob-card__title">Your Profile</p>
+                        <p class="ys-ob-card__subtitle">Personalise your account details.</p>
+                    </div>
+                </div>
+                <div class="ys-ob-card__body">
+                    <div class="ys-ob-grid">
+
+                        <div class="ys-ob-field">
+                            <label>Age</label>
+                            <input name="age" id="field-age" type="number" min="13" max="120" value="{{ user.age or '' }}" required>
+                        </div>
+
+                        <div class="ys-ob-field">
+                            <label>Gender</label>
+                            <select name="gender" id="field-gender" required>
+                                <option value=""></option>
+                                <option value="male"   {{ 'selected' if user.gender == 'male'   }}>Male</option>
+                                <option value="female" {{ 'selected' if user.gender == 'female' }}>Female</option>
+                            </select>
+                        </div>
+
+                        <div class="ys-ob-field">
+                            <label>Education Level</label>
+                            <select name="education_level" id="field-education" required>
+                                <option value=""></option>
+                                <option value="high school" {{ 'selected' if user.education_level == 'high school' }}>High School</option>
+                                <option value=" bachelor"   {{ 'selected' if user.education_level == ' bachelor'   }}>Bachelor</option>
+                                <option value=" master"     {{ 'selected' if user.education_level == ' master'     }}>Master</option>
+                                <option value=" phd"        {{ 'selected' if user.education_level == ' phd'        }}>PhD</option>
+                            </select>
+                        </div>
+
+                        <input id="profile-pic-input" name="profile_pic" type="hidden" value="{{ profile_pic or '' }}">
+                        <input id="cover-image-input" name="cover_image" type="hidden" value="{{ cover_image or '' }}">
+
+                        {% if available_profile_pics %}
+                        <div class="ys-ob-field full">
+                            <label>Profile Picture</label>
+                            <div class="ys-ob-avatar-row">
+                                <img id="profile-pic-preview"
+                                     src="{{ profile_pic or url_for('static', filename='assets/img/users/' + available_profile_pics[0]) }}"
+                                     alt="">
+                                <div id="profile-pic-gallery" class="ys-ob-gallery"></div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if available_cover_images %}
+                        <div class="ys-ob-field full">
+                            <label>Profile Header</label>
+                            <img id="cover-image-preview"
+                                 src="{{ cover_image or url_for('static', filename='assets/img/demo/bg/4.png') }}"
+                                 style="width:100%;max-height:80px;object-fit:cover;border-radius:7px;border:1.5px solid #e2e2ee;margin-bottom:6px;"
+                                 alt="">
+                            <div id="cover-image-gallery" class="ys-ob-gallery"></div>
+                        </div>
+                        {% endif %}
+
+                    </div>
+                </div>
+            </div><!-- /profile card -->
+
+            <!-- RIGHT: Topics -->
+            <div class="ys-ob-topics-wrap">
+                <div class="ys-ob-card">
+                    <div class="ys-ob-card__head">
+                        <div class="ys-ob-card__icon"><i class="mdi mdi-tag-multiple"></i></div>
+                        <div>
+                            <p class="ys-ob-card__title">Topics &amp; Opinions</p>
+                            <p class="ys-ob-card__subtitle">Rate interest and opinion for each topic.</p>
+                        </div>
+                    </div>
+                    <div class="ys-ob-card__body">
+
+                        {% if topics and opinion_groups %}
+                        {% set n_op = opinion_groups|length %}
+                        {% set mid_op = (n_op - 1) // 2 %}
+
+                        {% for topic in topics %}
+                        <div class="ys-ob-topic" data-topic-id="{{ topic.id }}">
+                            <div class="ys-ob-topic__name">
+                                <i class="mdi mdi-pound"></i>{{ topic.name }}
+                            </div>
+
+                            <!-- Interest level slider -->
+                            <div class="ys-ob-topic__q">
+                                Interest level
+                                <span class="ys-ob-topic__q-val" id="interest-val-{{ topic.id }}">Not Interested</span>
+                            </div>
+                            {% set i_idx = saved_interest_idx.get(topic.id|string, 0) %}
+                            <div class="ys-slider-wrap">
+                                <input type="hidden" name="interest_{{ topic.id }}" id="interest-hidden-{{ topic.id }}" value="{{ ['0.0','0.33','0.67','1.0'][i_idx] }}">
+                                <input type="range" min="0" max="3" step="1" value="{{ i_idx }}"
+                                       class="ys-slider interest-slider"
+                                       data-topic="{{ topic.id }}" data-type="interest"
+                                       id="interest-slider-{{ topic.id }}">
+                                <div class="ys-slider-ticks">
+                                    <span {% if i_idx == 0 %}class="active"{% endif %}>Not<br>Interested</span>
+                                    <span {% if i_idx == 1 %}class="active"{% endif %}>Low<br>Interest</span>
+                                    <span {% if i_idx == 2 %}class="active"{% endif %}>High<br>Interest</span>
+                                    <span {% if i_idx == 3 %}class="active"{% endif %}>Extreme<br>Interest</span>
+                                </div>
+                            </div>
+
+                            <div class="ys-ob-spacer"></div>
+
+                            <!-- Opinion slider -->
+                            {% set o_idx = saved_opinions.get(topic.id|string, mid_op) %}
+                            <div class="ys-ob-topic__q">
+                                Opinion
+                                <span class="ys-ob-topic__q-val" id="opinion-val-{{ topic.id }}" style="color:#949494;">{{ opinion_groups[o_idx].name.strip() }}</span>
+                            </div>
+                            <div class="ys-slider-wrap">
+                                <input type="hidden" name="opinion_{{ topic.id }}" id="opinion-hidden-{{ topic.id }}" value="{{ opinion_groups[o_idx].id }}">
+                                <input type="range" min="0" max="{{ n_op - 1 }}" step="1" value="{{ o_idx }}"
+                                       class="ys-slider opinion-slider"
+                                       data-topic="{{ topic.id }}" data-type="opinion"
+                                       id="opinion-slider-{{ topic.id }}">
+                                <div class="ys-slider-ticks opinion" id="opinion-ticks-{{ topic.id }}">
+                                    {% for og in opinion_groups %}
+                                    <span {% if loop.index0 == o_idx %}class="active"{% endif %}>{{ og.name.strip() }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+
+                        {% elif topics %}
+                        <div class="ys-ob-no-topics">Opinion scale not yet configured.</div>
+                        {% else %}
+                        <div class="ys-ob-no-topics">No active discussion topics for this experiment.</div>
+                        {% endif %}
+
+                    </div>
+                </div><!-- /topics card -->
+
+                <div id="ob-error-banner" hidden style="background:#fff0f0;border:1px solid #f5c6c6;border-radius:8px;padding:12px 16px;margin-bottom:12px;color:#b22;font-size:.83rem;font-weight:600;"></div>
+                <div class="ys-ob-submit">
+                    <button type="submit" class="ys-ob-submit-btn">
+                        <i class="mdi mdi-check-circle-outline"></i>
+                        Save &amp; Enter My Feed
+                    </button>
+                    <div class="ys-ob-submit-hint">You can edit your profile later from the Settings menu.</div>
+                </div>
+
+            </div><!-- /topics wrap -->
+        </div><!-- /columns -->
+    </form>
+</div><!-- /page -->
+
+<script src="{{ url_for('static', filename='assets/js/app.js') }}"></script>
+<script>
+(function () {
+    var INTEREST_LABELS = ['Not Interested', 'Low Interest', 'High Interest', 'Extreme Interest'];
+    var INTEREST_VALUES = ['0.0', '0.33', '0.67', '1.0'];
+    var INTEREST_COLORS = ['#a0b8e0', '#5596e6', '#3a74c7', '#1a4fa0'];
+
+    var OPINION_GROUPS = [{% for og in opinion_groups %}{ id: {{ og.id }}, name: "{{ og.name.strip() }}" }{% if not loop.last %},{% endif %}{% endfor %}];
+    var OPINION_COLORS = ['#c0392b', '#e07b39', '#949494', '#3da05e', '#1e7d3c'];
+
+    function opinionColor(idx) {
+        return OPINION_COLORS[idx] || OPINION_COLORS[OPINION_COLORS.length - 1];
+    }
+
+    function updateInterestSlider(slider) {
+        var val = parseInt(slider.value);
+        var tid = slider.dataset.topic;
+        var pct = (val / 3) * 100;
+        var col = INTEREST_COLORS[val] || '#5596e6';
+
+        slider.style.background = 'linear-gradient(to right, ' + col + ' ' + pct + '%, #e2e2ee ' + pct + '%)';
+        slider.style.setProperty('--thumb-col', col);
+
+        var hidden = document.getElementById('interest-hidden-' + tid);
+        if (hidden) hidden.value = INTEREST_VALUES[val] || '0.0';
+
+        var lbl = document.getElementById('interest-val-' + tid);
+        if (lbl) { lbl.textContent = INTEREST_LABELS[val] || ''; lbl.style.color = col; }
+
+        var ticks = slider.closest('.ys-slider-wrap').querySelectorAll('.ys-slider-ticks span');
+        ticks.forEach(function (t, i) { t.classList.toggle('active', i === val); });
+    }
+
+    function updateOpinionSlider(slider) {
+        var val = parseInt(slider.value);
+        var tid = slider.dataset.topic;
+        var group = OPINION_GROUPS[val];
+        var col = opinionColor(val);
+
+        slider.style.setProperty('--thumb-col', col);
+
+        if (group) {
+            var hidden = document.getElementById('opinion-hidden-' + tid);
+            if (hidden) hidden.value = group.id;
+
+            var lbl = document.getElementById('opinion-val-' + tid);
+            if (lbl) { lbl.textContent = group.name; lbl.style.color = col; }
+        }
+
+        var ticks = document.getElementById('opinion-ticks-' + tid);
+        if (ticks) ticks.querySelectorAll('span').forEach(function (t, i) {
+            t.classList.toggle('active', i === val);
+        });
+    }
+
+    /* Required-field validation */
+    document.getElementById('onboarding-form').addEventListener('submit', function (e) {
+        var missing = [];
+        var age = document.getElementById('field-age');
+        var gender = document.getElementById('field-gender');
+        var edu = document.getElementById('field-education');
+        if (!age || !age.value || isNaN(parseInt(age.value))) missing.push('Age');
+        if (!gender || !gender.value) missing.push('Gender');
+        if (!edu || !edu.value) missing.push('Education Level');
+        if (missing.length) {
+            e.preventDefault();
+            var banner = document.getElementById('ob-error-banner');
+            banner.textContent = 'Please fill in the following required fields: ' + missing.join(', ') + '.';
+            banner.hidden = false;
+            banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            [age, gender, edu].forEach(function (el) {
+                if (!el) return;
+                var empty = (el.tagName === 'SELECT') ? !el.value : (!el.value || isNaN(parseInt(el.value)));
+                el.style.borderColor = empty ? '#e53e3e' : '';
+            });
+        }
+    });
+    ['field-age','field-gender','field-education'].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('change', function () {
+            el.style.borderColor = '';
+            var allOk = ['field-age','field-gender','field-education'].every(function (fid) {
+                var f = document.getElementById(fid);
+                if (!f) return true;
+                return f.tagName === 'SELECT' ? !!f.value : (!!f.value && !isNaN(parseInt(f.value)));
+            });
+            if (allOk) { var b = document.getElementById('ob-error-banner'); if (b) b.hidden = true; }
+        });
+    });
+
+    /* Init all sliders */
+    document.querySelectorAll('.ys-slider').forEach(function (slider) {
+        if (slider.dataset.type === 'interest') updateInterestSlider(slider);
+        else updateOpinionSlider(slider);
+
+        slider.addEventListener('input', function () {
+            if (slider.dataset.type === 'interest') updateInterestSlider(slider);
+            else updateOpinionSlider(slider);
+        });
+    });
+
+    /* Image pickers */
+    function makePicker(cfg) {
+        var input   = document.getElementById(cfg.inputId);
+        var preview = document.getElementById(cfg.previewId);
+        var gallery = document.getElementById(cfg.galleryId);
+        if (!input || !gallery) return;
+        cfg.images.forEach(function (src) {
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = input.value === src ? 'selected' : '';
+            var img = document.createElement('img');
+            img.src = src; img.alt = ''; img.style.cssText = cfg.imgStyle;
+            btn.appendChild(img);
+            btn.addEventListener('click', function () {
+                input.value = src;
+                if (preview) preview.src = src;
+                gallery.querySelectorAll('button').forEach(function (b) { b.classList.remove('selected'); });
+                btn.classList.add('selected');
+            });
+            gallery.appendChild(btn);
+        });
+    }
+
+    makePicker({
+        inputId: 'profile-pic-input', previewId: 'profile-pic-preview', galleryId: 'profile-pic-gallery',
+        imgStyle: 'width:40px;height:40px;border-radius:50%;object-fit:cover;display:block;',
+        images: [{% for f in available_profile_pics %}"{{ url_for('static', filename='assets/img/users/' + f) }}"{% if not loop.last %},{% endif %}{% endfor %}]
+    });
+    makePicker({
+        inputId: 'cover-image-input', previewId: 'cover-image-preview', galleryId: 'cover-image-gallery',
+        imgStyle: 'width:72px;height:32px;object-fit:cover;border-radius:4px;display:block;',
+        images: [{% for f in available_cover_images %}"{{ url_for('static', filename='assets/img/demo/bg/' + f) }}"{% if not loop.last %},{% endif %}{% endfor %}]
+    });
+})();
+</script>
+</body>
+</html>

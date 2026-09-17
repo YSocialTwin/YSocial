@@ -12,7 +12,8 @@ config      — db_admin lookup/reference tables (professions, languages …)
 """
 
 # Admin (db_admin) models
-from y_web.src.models.admin import (  # noqa: F401
+from y_web.src.models.admin import (
+    ExpFrontendSettings,  # noqa: F401
     Admin_users,
     AdminInterviewMessage,
     AdminInterviewSession,

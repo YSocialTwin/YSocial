@@ -378,7 +378,7 @@ def publish_post_reddit(exp_id):
             db.session.commit()
 
     # Update filter bubble interests for human users using Personalized Feed
-    _maybe_update_fb_interests(exp_user, pid, "comment")
+    _maybe_update_fb_interests(exp_id, exp_user, pid, "comment")
 
     return {"message": "Published successfully", "status": 200}
 
@@ -639,5 +639,7 @@ def publish_comment(exp_id):
             # update post
             post.tweet = text.lstrip().rstrip()
             db.session.commit()
+
+    _maybe_update_fb_interests(exp_id, exp_user, pid, "comment")
 
     return {"message": "Published successfully", "status": 200}

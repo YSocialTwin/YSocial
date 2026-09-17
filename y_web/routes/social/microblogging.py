@@ -144,6 +144,7 @@ def feeed_logged():
     # The config["SQLALCHEMY_BINDS"] swap approach does NOT affect already-
     # resolved engines; experiment_db_bind() does.
     user_id = str(current_user.id)  # fallback (integer admin id as string)
+    print(f"[MICROBLOG DEBUG] feeed_logged: current_user.id={current_user.id!r} username={current_user.username!r} exp={exp.idexp!r}")
     try:
         from y_web.src.experiment.context import experiment_db_bind
         from y_web.src.models import User_mgmt
@@ -153,9 +154,13 @@ def feeed_logged():
             ).first()
             if exp_user:
                 user_id = str(exp_user.id)
-    except Exception:
-        pass  # fallback: integer id; feed() will re-resolve by username
+                print(f"[MICROBLOG DEBUG] feeed_logged: resolved exp_user.id={exp_user.id!r} (UUID)")
+            else:
+                print(f"[MICROBLOG DEBUG] feeed_logged: exp_user NOT FOUND by username={current_user.username!r} -> using integer fallback {user_id!r}")
+    except Exception as e:
+        print(f"[MICROBLOG DEBUG] feeed_logged: exception resolving exp_user: {e}")
 
+    print(f"[MICROBLOG DEBUG] feeed_logged: redirecting to /{exp.idexp}/feed/{user_id}/feed/rf/1")
     return redirect(f"/{exp.idexp}/feed/{user_id}/feed/rf/1")
 
 
@@ -191,6 +196,7 @@ def feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
                     )
                     return redirect(f"/admin/experiments")
             recsys = user.recsys_type
+            print(f"[MICROBLOG DEBUG] feed(): url user_id={user_id!r} -> resolved user.id={user.id!r} username={user.username!r} recsys_type={recsys!r}")
 
             # Resolve experiment engine and FilterBubble settings when needed
             _exp_engine = None
@@ -205,12 +211,17 @@ def feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
                         k: v for k, v in ui.items()
                         if k.startswith("filter_bubble_")
                     }
-                except Exception:
+                    print(f"[MICROBLOG DEBUG] feed(): FilterBubble - exp_engine={_exp_engine is not None} fb_settings={_fb_settings}")
+                except Exception as e:
+                    print(f"[MICROBLOG DEBUG] feed(): exception resolving exp_engine: {e}")
                     _exp_engine = None
+            else:
+                print(f"[MICROBLOG DEBUG] feed(): non-FilterBubble mode ({_recsys_compact!r}) - no exp_engine needed")
 
             # Use the resolved DB id (UUID) — not the URL parameter which
             # may be the admin's integer id (fallback from feeed_logged).
             effective_uid = str(user.id)
+            print(f"[MICROBLOG DEBUG] feed(): calling get_suggested_posts(uid={effective_uid!r}, mode={recsys!r})")
             posts, additional = get_suggested_posts(
                 effective_uid, recsys, page, max_post_per_page,
                 exp_engine=_exp_engine, fb_settings=_fb_settings,

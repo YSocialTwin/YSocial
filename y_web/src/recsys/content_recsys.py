@@ -350,7 +350,9 @@ def _filter_bubble_score(uid, exp_engine, settings):
                     {"uid": uid_str},
                 ).fetchall()
             }
+            print(f"[RECSYS DEBUG] _filter_bubble_score: uid={uid_str!r} interests={interests}")
             if not interests:
+                print(f"[RECSYS DEBUG] _filter_bubble_score: NO INTERESTS FOUND for uid={uid_str!r} -> returning empty scores")
                 return {}
 
             # 2. User opinions at onboarding (tid = 0)
@@ -644,7 +646,9 @@ def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6,
         and additional_posts may contain supplementary content
     """
 
+    raw_mode = mode
     mode = _normalize_content_recsys_mode(mode)
+    print(f"[RECSYS DEBUG] get_suggested_posts called: uid={uid!r} raw_mode={raw_mode!r} -> mode={mode!r} page={page} exp_engine={exp_engine is not None}")
 
     if uid == "all":
         posts_query = db.session.query(Post).filter(_root_post_filter())
@@ -969,6 +973,7 @@ def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6,
         additional_posts = None
 
     elif mode == "FilterBubble":
+        print(f"[RECSYS DEBUG] FilterBubble branch: uid={uid!r} exp_engine={exp_engine is not None} fb_settings_keys={list((fb_settings or {}).keys())}")
         try:
             if exp_engine is None:
                 raise PersonalizedFeedRankingError(
@@ -983,6 +988,7 @@ def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6,
                 uid,
             )
             bubble_scores = {}
+        print(f"[RECSYS DEBUG] FilterBubble: bubble_scores count={len(bubble_scores)} ({'FALLBACK chrono' if not bubble_scores else 'personalized'})")
         if not bubble_scores:
             # Availability fallback for either an observable ranking error or a
             # genuine cold start. _filter_bubble_score only returns {} for the
