@@ -586,7 +586,11 @@ def test_migration_dedupes_pre_existing_duplicates_before_unique_index():
 
         cursor.execute("SELECT name FROM sqlite_master WHERE type='index'")
         indexes = {row[0] for row in cursor.fetchall()}
-        assert "uq_plugin_educatyon_post_annotation_target_user" in indexes
+        assert "uq_plugin_educatyon_post_annotation_target_user_recsys" in indexes
+        # The old 3-column index must be gone -- left in place it would
+        # block the very thing the new index is meant to allow: a second
+        # row for the same user+target under a different recsys.
+        assert "uq_plugin_educatyon_post_annotation_target_user" not in indexes
 
         # A different user annotating the same target is untouched by the
         # dedupe pass (it only ever collapses rows sharing the full triple).
@@ -594,19 +598,36 @@ def test_migration_dedupes_pre_existing_duplicates_before_unique_index():
             "INSERT INTO plugin_educatyon_post_annotation (target_type, target_id, annotator_user_id) "
             "VALUES ('post', '42', 'user-2')"
         )
+        # Give the surviving row (id=2) a real recsys so the uniqueness
+        # check below actually exercises the constraint -- SQLite's UNIQUE
+        # index never treats two NULLs as equal, so leaving this NULL
+        # would let a "duplicate" insert through for the wrong reason.
+        cursor.execute(
+            "UPDATE plugin_educatyon_post_annotation SET recsys_at_annotation = 'R1' "
+            "WHERE target_type='post' AND target_id='42' AND annotator_user_id='user-1'"
+        )
         conn.commit()
         conn.close()
 
-        # Idempotent, and the real unique index now rejects an actual duplicate.
+        # Idempotent, and the real unique index now rejects an actual
+        # duplicate under the SAME recsys.
         assert module.migrate_sqlite_server(db_path, quiet=True) is True
 
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         with pytest.raises(sqlite3.IntegrityError):
             cursor.execute(
-                "INSERT INTO plugin_educatyon_post_annotation (target_type, target_id, annotator_user_id) "
-                "VALUES ('post', '42', 'user-1')"
+                "INSERT INTO plugin_educatyon_post_annotation "
+                "(target_type, target_id, annotator_user_id, recsys_at_annotation) "
+                "VALUES ('post', '42', 'user-1', 'R1')"
             )
+        # But a DIFFERENT recsys for the same user+target is explicitly
+        # allowed -- this is the whole point of tracking recsys per row.
+        cursor.execute(
+            "INSERT INTO plugin_educatyon_post_annotation "
+            "(target_type, target_id, annotator_user_id, recsys_at_annotation) "
+            "VALUES ('post', '42', 'user-1', 'R2')"
+        )
         conn.close()
     finally:
         os.unlink(db_path)
@@ -904,7 +925,7 @@ def test_migration_adds_new_dimension_columns_and_relaxes_topic_nullability():
 
         cursor.execute("PRAGMA table_info(plugin_educatyon_post_annotation)")
         columns = {row[1] for row in cursor.fetchall()}
-        assert {"updated_at", "sentiment_scale", "sentiment_value", "toxicity_level"} <= columns
+        assert {"updated_at", "sentiment_scale", "sentiment_value", "toxicity_level", "recsys_at_annotation"} <= columns
 
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
         tables = {row[0] for row in cursor.fetchall()}
@@ -1061,3 +1082,201 @@ def test_self_heals_schema_once_per_experiment_per_process(educatyon_app, monkey
     # Healed exactly once, on the first touch -- not on the second request,
     # and not zero times (which would mean the self-heal never ran at all).
     assert calls == [("educatyon", "post_annotation", exp_id)]
+
+
+def test_migration_backfills_recsys_at_annotation_from_user_mgmt():
+    """A row that predates the recsys_at_annotation column has no history
+    to draw on, so the migration's best available approximation is that
+    annotator's CURRENT recsys (user_mgmt.recsys_type) -- looked up by
+    joining on annotator_user_id (stored as TEXT) against user_mgmt.id
+    (an INTEGER), which needs an explicit CAST since SQLite never
+    coerces between TEXT and INTEGER storage classes when comparing.
+    A blank/whitespace recsys_type falls back to "default", matching the
+    column's own application-level default in _resolve_current_recsys.
+    """
+    module = plugin_loader._import_from_suite("educatyon", "modules.post_annotation.backend.migrations")
+
+    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
+        db_path = tmp.name
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        # A user_mgmt table living in the same experiment database, as it
+        # always does in production (both tables share one database_server.db).
+        cursor.execute(
+            """
+            CREATE TABLE user_mgmt (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL,
+                recsys_type TEXT
+            )
+            """
+        )
+        cursor.execute("INSERT INTO user_mgmt (id, username, recsys_type) VALUES (1, 'alice', 'ReverseChain')")
+        cursor.execute("INSERT INTO user_mgmt (id, username, recsys_type) VALUES (2, 'bob', '   ')")
+
+        # The OLDEST schema shape: no recsys_at_annotation column at all.
+        cursor.execute(
+            """
+            CREATE TABLE plugin_educatyon_post_annotation (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                target_type TEXT NOT NULL,
+                target_id TEXT NOT NULL,
+                annotator_user_id TEXT NOT NULL,
+                annotator_username TEXT,
+                created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+        cursor.execute(
+            "INSERT INTO plugin_educatyon_post_annotation (target_type, target_id, annotator_user_id) "
+            "VALUES ('post', '1', '1')"
+        )
+        cursor.execute(
+            "INSERT INTO plugin_educatyon_post_annotation (target_type, target_id, annotator_user_id) "
+            "VALUES ('post', '2', '2')"
+        )
+        # An annotator with no matching user_mgmt row at all (e.g. deleted
+        # user) -- must be left NULL, not crash the migration.
+        cursor.execute(
+            "INSERT INTO plugin_educatyon_post_annotation (target_type, target_id, annotator_user_id) "
+            "VALUES ('post', '3', '999')"
+        )
+        conn.commit()
+        conn.close()
+
+        assert module.migrate_sqlite_server(db_path, quiet=True) is True
+
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT annotator_user_id, recsys_at_annotation FROM plugin_educatyon_post_annotation "
+            "ORDER BY annotator_user_id"
+        )
+        by_user = dict(cursor.fetchall())
+        conn.close()
+
+        assert by_user["1"] == "ReverseChain"
+        assert by_user["2"] == "default"  # blank recsys_type falls back to "default"
+        assert by_user["999"] is None  # no matching user_mgmt row -- left NULL
+    finally:
+        os.unlink(db_path)
+
+
+def test_post_annotation_recsys_snapshot_and_scoping(educatyon_app):
+    """Each annotation snapshots the annotator's CURRENT content recsys
+    (User_mgmt.recsys_type) at save time. Re-annotating the same target
+    under the SAME recsys still upserts in place; re-annotating it after
+    the user's recsys has changed inserts a SEPARATE row instead -- e.g.
+    (user1, p1, ann, R1) and (user1, p1, ann2, R2) coexisting side by side
+    -- and both the listing and hydration endpoints only ever surface the
+    row matching the user's CURRENT recsys, so switching back and forth
+    changes what's visible without losing the other episode's data.
+    """
+    from y_web.src.models import EducatyonExpModuleSettings, User_mgmt
+
+    app = educatyon_app
+    client = app.test_client()
+
+    with app.app_context():
+        exp_id = _make_exp(app)
+        db.session.add(EducatyonExpModuleSettings(
+            exp_id=exp_id, module_id="post_annotation", enabled=True,
+            config_json=json.dumps({
+                "enable_topic_annotation": False,
+                "enable_sentiment_annotation": True,
+            }),
+        ))
+        db.session.commit()
+        test_user = db.session.scalars(
+            db.select(User_mgmt).filter_by(username="testuser")
+        ).first()
+        user_id = test_user.id
+        test_user.recsys_type = "R1"
+        db.session.commit()
+
+    _login(client, user_id)
+
+    create_r1 = client.post(
+        f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
+        json={"target_type": "post", "target_id": 200, "sentiment": 1.0},
+    )
+    assert create_r1.status_code == 200, create_r1.data
+    ann_r1 = create_r1.get_json()["annotation"]
+    assert ann_r1["recsys"] == "R1"
+
+    # Re-annotating the SAME target while still under R1 must edit that
+    # row in place (upsert), not create a second one.
+    update_r1 = client.post(
+        f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
+        json={"target_type": "post", "target_id": 200, "sentiment": -1.0},
+    )
+    assert update_r1.status_code == 200, update_r1.data
+    assert update_r1.get_json()["updated"] is True
+    assert update_r1.get_json()["annotation"]["annotation_id"] == ann_r1["annotation_id"]
+
+    hydrate_r1 = client.get(
+        f"/{exp_id}/api/plugins/educatyon/post_annotation/my_annotations",
+        query_string={"target_type": "post", "target_ids": "200"},
+    )
+    assert hydrate_r1.get_json()["annotations"]["200"]["sentiment"]["value"] == -1.0
+
+    # Switch the user's recsys mid-experiment. This must happen inside a
+    # test_request_context() (not a bare app_context()): Flask-SQLAlchemy's
+    # default session scope key is id(current app context), and the test
+    # client's own request dispatch (client.get()/client.post() below)
+    # always pushes its request/app context through the same internal path,
+    # so test_request_context() reliably lands on the SAME scoped session
+    # those calls will see. A bare app_context() instead gets its own,
+    # differently-scoped session, so a mutation made there would silently
+    # go unnoticed by later client.get()/post() calls in this same test.
+    with app.test_request_context():
+        u = db.session.get(User_mgmt, user_id)
+        u.recsys_type = "R2"
+        db.session.commit()
+
+    # Hydration must now show NOTHING for this target: the R1 annotation
+    # is a different episode and must not leak into the R2 view.
+    hydrate_r2_before = client.get(
+        f"/{exp_id}/api/plugins/educatyon/post_annotation/my_annotations",
+        query_string={"target_type": "post", "target_ids": "200"},
+    )
+    assert hydrate_r2_before.get_json()["annotations"] == {}
+
+    # Annotating the same target again under R2 inserts a SEPARATE row.
+    create_r2 = client.post(
+        f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
+        json={"target_type": "post", "target_id": 200, "sentiment": 0.0},
+    )
+    assert create_r2.status_code == 200, create_r2.data
+    ann_r2 = create_r2.get_json()["annotation"]
+    assert create_r2.get_json()["updated"] is False
+    assert ann_r2["annotation_id"] != ann_r1["annotation_id"]
+    assert ann_r2["recsys"] == "R2"
+
+    # Listing (the default "own" visibility) must only show the R2 row now.
+    list_r2 = client.get(
+        f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
+        query_string={"target_type": "post", "target_id": 200},
+    )
+    listed_r2 = list_r2.get_json()["annotations"]
+    assert len(listed_r2) == 1
+    assert listed_r2[0]["recsys"] == "R2"
+    assert listed_r2[0]["sentiment"]["value"] == 0.0
+
+    # Switching back to R1 must resurface the ORIGINAL row, untouched by
+    # anything that happened under R2. (See the comment above on why
+    # test_request_context() -- not app_context() -- is needed here.)
+    with app.test_request_context():
+        u = db.session.get(User_mgmt, user_id)
+        u.recsys_type = "R1"
+        db.session.commit()
+
+    hydrate_r1_again = client.get(
+        f"/{exp_id}/api/plugins/educatyon/post_annotation/my_annotations",
+        query_string={"target_type": "post", "target_ids": "200"},
+    )
+    r1_again = hydrate_r1_again.get_json()["annotations"]["200"]
+    assert r1_again["annotation_id"] == ann_r1["annotation_id"]
+    assert r1_again["recsys"] == "R1"
+    assert r1_again["sentiment"]["value"] == -1.0
