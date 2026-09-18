@@ -596,3 +596,322 @@ def test_migration_dedupes_pre_existing_duplicates_before_unique_index():
         conn.close()
     finally:
         os.unlink(db_path)
+
+
+def test_post_annotation_all_four_dimensions_round_trip(educatyon_app):
+    """With every dimension enabled, a single annotation can carry a topic
+    (with its opinion), an overall sentiment, one or more elicited
+    emotions, and a perceived-toxicity value all at once — and every field
+    comes back correctly from the POST response itself, from GET
+    .../annotations, and from GET .../my_annotations (the hydration
+    endpoint), all three using the same serialization.
+    """
+    from y_web.src.models import EducatyonExpModuleSettings, User_mgmt
+
+    app = educatyon_app
+    client = app.test_client()
+
+    with app.app_context():
+        exp_id = _make_exp(app)
+        db.session.add(EducatyonExpModuleSettings(
+            exp_id=exp_id, module_id="post_annotation", enabled=True,
+            config_json=json.dumps({
+                "enable_topic_annotation": True,
+                "enable_opinion_annotation": True,
+                "enable_sentiment_annotation": True,
+                "enable_emotion_annotation": True,
+                "enable_toxicity_annotation": True,
+            }),
+        ))
+        db.session.commit()
+        test_user = db.session.scalars(
+            db.select(User_mgmt).filter_by(username="testuser")
+        ).first()
+        user_id = test_user.id
+
+    _login(client, user_id)
+
+    create_resp = client.post(
+        f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
+        json={
+            "target_type": "post",
+            "target_id": 55,
+            "topics": [{"label": "Climate change", "opinion": 1.0}],
+            "sentiment": -1.0,
+            "emotions": ["Joy", "Trust"],
+            "toxicity": 2.0,
+        },
+    )
+    assert create_resp.status_code == 200, create_resp.data
+    created = create_resp.get_json()["annotation"]
+    assert created["topics"][0]["label"] == "Climate change"
+    assert created["topics"][0]["opinion_value"] == 1.0
+    assert created["sentiment"] == {"scale": "3point", "value": -1.0}
+    assert sorted(created["emotions"]) == ["Joy", "Trust"]
+    assert created["toxicity"] == {"scale": "3point", "value": 2.0}
+
+    list_resp = client.get(
+        f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
+        query_string={"target_type": "post", "target_id": 55},
+    )
+    listed = list_resp.get_json()["annotations"][0]
+    assert listed["sentiment"]["value"] == -1.0
+    assert listed["toxicity"]["value"] == 2.0
+    assert sorted(listed["emotions"]) == ["Joy", "Trust"]
+
+    hydrate_resp = client.get(
+        f"/{exp_id}/api/plugins/educatyon/post_annotation/my_annotations",
+        query_string={"target_type": "post", "target_ids": "55"},
+    )
+    hydrated = hydrate_resp.get_json()["annotations"]["55"]
+    assert hydrated["sentiment"]["value"] == -1.0
+    assert hydrated["toxicity"]["value"] == 2.0
+    assert sorted(hydrated["emotions"]) == ["Joy", "Trust"]
+    assert hydrated["topics"][0]["opinion_value"] == 1.0
+
+
+def test_post_annotation_topic_without_opinion_when_disabled(educatyon_app):
+    """When the "opinion" sub-dimension is disabled, tagging a topic must
+    store the topic label with no opinion value/scale at all — not a
+    zero or a default, an actual NULL — even if the client sends one
+    anyway (a stale/misconfigured client should never leak that data in).
+    """
+    from y_web.src.models import EducatyonExpModuleSettings, User_mgmt
+
+    app = educatyon_app
+    client = app.test_client()
+
+    with app.app_context():
+        exp_id = _make_exp(app)
+        db.session.add(EducatyonExpModuleSettings(
+            exp_id=exp_id, module_id="post_annotation", enabled=True,
+            config_json=json.dumps({
+                "enable_topic_annotation": True,
+                "enable_opinion_annotation": False,
+            }),
+        ))
+        db.session.commit()
+        test_user = db.session.scalars(
+            db.select(User_mgmt).filter_by(username="testuser")
+        ).first()
+        user_id = test_user.id
+
+    _login(client, user_id)
+
+    create_resp = client.post(
+        f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
+        json={
+            "target_type": "post",
+            "target_id": 66,
+            # A client that still sends an opinion despite the dimension
+            # being disabled must be ignored, not stored.
+            "topics": [{"label": "Vaccines", "opinion": 1.0}],
+        },
+    )
+    assert create_resp.status_code == 200, create_resp.data
+    topic = create_resp.get_json()["annotation"]["topics"][0]
+    assert topic["label"] == "Vaccines"
+    assert topic["opinion_value"] is None
+    assert topic["opinion_scale"] is None
+
+
+def test_post_annotation_disabled_dimensions_are_ignored_not_stored(educatyon_app):
+    """A payload carrying sentiment/emotions/toxicity for an experiment
+    that never enabled those dimensions must have them silently dropped —
+    the module keeps its "zero impact unless enabled" guarantee at the
+    data layer, not just at the config-UI layer.
+    """
+    from y_web.src.models import EducatyonExpModuleSettings, User_mgmt
+
+    app = educatyon_app
+    client = app.test_client()
+
+    with app.app_context():
+        exp_id = _make_exp(app)
+        db.session.add(EducatyonExpModuleSettings(
+            exp_id=exp_id, module_id="post_annotation", enabled=True, config_json="{}",
+        ))
+        db.session.commit()
+        test_user = db.session.scalars(
+            db.select(User_mgmt).filter_by(username="testuser")
+        ).first()
+        user_id = test_user.id
+
+    _login(client, user_id)
+
+    create_resp = client.post(
+        f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
+        json={
+            "target_type": "post",
+            "target_id": 71,
+            "topics": [{"label": "Climate change", "opinion": 1.0}],
+            "sentiment": -1.0,
+            "emotions": ["Joy"],
+            "toxicity": 2.0,
+        },
+    )
+    assert create_resp.status_code == 200, create_resp.data
+    annotation = create_resp.get_json()["annotation"]
+    assert annotation["sentiment"] is None
+    assert annotation["emotions"] == []
+    assert annotation["toxicity"] is None
+    assert annotation["topics"][0]["label"] == "Climate change"
+
+
+def test_post_annotation_rejects_empty_content(educatyon_app):
+    """An annotation must have content in at least one enabled dimension —
+    a payload with nothing usable (e.g. topics enabled but none selected,
+    and no other dimension enabled) is rejected rather than silently
+    stored as an empty row.
+    """
+    from y_web.src.models import EducatyonExpModuleSettings, User_mgmt
+
+    app = educatyon_app
+    client = app.test_client()
+
+    with app.app_context():
+        exp_id = _make_exp(app)
+        db.session.add(EducatyonExpModuleSettings(
+            exp_id=exp_id, module_id="post_annotation", enabled=True, config_json="{}",
+        ))
+        db.session.commit()
+        test_user = db.session.scalars(
+            db.select(User_mgmt).filter_by(username="testuser")
+        ).first()
+        user_id = test_user.id
+
+    _login(client, user_id)
+
+    resp = client.post(
+        f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
+        json={"target_type": "post", "target_id": 88, "topics": []},
+    )
+    assert resp.status_code == 400
+    assert resp.get_json()["ok"] is False
+
+
+def test_post_annotation_sentiment_only_annotation_needs_no_topic(educatyon_app):
+    """When sentiment annotation is enabled (topic annotation disabled),
+    a sentiment-only submission is valid on its own — the "at least one
+    dimension" rule is about the whole annotation, not specifically topics.
+    """
+    from y_web.src.models import EducatyonExpModuleSettings, User_mgmt
+
+    app = educatyon_app
+    client = app.test_client()
+
+    with app.app_context():
+        exp_id = _make_exp(app)
+        db.session.add(EducatyonExpModuleSettings(
+            exp_id=exp_id, module_id="post_annotation", enabled=True,
+            config_json=json.dumps({
+                "enable_topic_annotation": False,
+                "enable_sentiment_annotation": True,
+            }),
+        ))
+        db.session.commit()
+        test_user = db.session.scalars(
+            db.select(User_mgmt).filter_by(username="testuser")
+        ).first()
+        user_id = test_user.id
+
+    _login(client, user_id)
+
+    resp = client.post(
+        f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
+        json={"target_type": "post", "target_id": 99, "sentiment": 1.0},
+    )
+    assert resp.status_code == 200, resp.data
+    annotation = resp.get_json()["annotation"]
+    assert annotation["sentiment"] == {"scale": "3point", "value": 1.0}
+    assert annotation["topics"] == []
+
+
+def test_migration_adds_new_dimension_columns_and_relaxes_topic_nullability():
+    """A database whose module was enabled before sentiment/emotions/
+    toxicity existed (and before topics could be tagged without an
+    opinion) must be upgradeable in place: new columns/table appear, and
+    the topic table's opinion columns become nullable so a topic can be
+    inserted without one — all without touching pre-existing data.
+    """
+    module = plugin_loader._import_from_suite("educatyon", "modules.post_annotation.backend.migrations")
+
+    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
+        db_path = tmp.name
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        # The OLDEST schema shape: no updated_at, no sentiment/toxicity
+        # columns, and opinion_scale/opinion_value declared NOT NULL.
+        cursor.execute(
+            """
+            CREATE TABLE plugin_educatyon_post_annotation (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                target_type TEXT NOT NULL,
+                target_id TEXT NOT NULL,
+                annotator_user_id TEXT NOT NULL,
+                annotator_username TEXT,
+                created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+        cursor.execute(
+            """
+            CREATE TABLE plugin_educatyon_post_annotation_topic (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                annotation_id INTEGER NOT NULL REFERENCES plugin_educatyon_post_annotation(id),
+                topic_label TEXT NOT NULL,
+                topic_id INTEGER,
+                opinion_scale TEXT NOT NULL,
+                opinion_value REAL NOT NULL
+            )
+            """
+        )
+        cursor.execute(
+            "INSERT INTO plugin_educatyon_post_annotation (id, target_type, target_id, annotator_user_id) "
+            "VALUES (1, 'post', '9', 'user-1')"
+        )
+        cursor.execute(
+            "INSERT INTO plugin_educatyon_post_annotation_topic "
+            "(annotation_id, topic_label, opinion_scale, opinion_value) VALUES (1, 'Old topic', '5point', 1.0)"
+        )
+        conn.commit()
+        conn.close()
+
+        assert module.migrate_sqlite_server(db_path, quiet=True) is True
+
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+
+        cursor.execute("PRAGMA table_info(plugin_educatyon_post_annotation)")
+        columns = {row[1] for row in cursor.fetchall()}
+        assert {"updated_at", "sentiment_scale", "sentiment_value", "toxicity_scale", "toxicity_value"} <= columns
+
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        tables = {row[0] for row in cursor.fetchall()}
+        assert "plugin_educatyon_post_annotation_emotion" in tables
+
+        # Pre-existing topic row must have survived the table rebuild intact.
+        cursor.execute("SELECT topic_label, opinion_value FROM plugin_educatyon_post_annotation_topic WHERE id = 1")
+        row = cursor.fetchone()
+        assert row == ("Old topic", 1.0)
+
+        # The opinion columns are now nullable: inserting a topic with no
+        # opinion (the "opinion" dimension disabled case) must succeed,
+        # where it would have violated NOT NULL before the rebuild.
+        cursor.execute(
+            "INSERT INTO plugin_educatyon_post_annotation_topic (annotation_id, topic_label) VALUES (1, 'No-opinion topic')"
+        )
+        conn.commit()
+
+        cursor.execute(
+            "INSERT INTO plugin_educatyon_post_annotation_emotion (annotation_id, emotion_label) VALUES (1, 'Joy')"
+        )
+        conn.commit()
+        conn.close()
+
+        # Idempotent: a second pass over an already-upgraded database
+        # must not error and must not re-rebuild the topic table.
+        assert module.migrate_sqlite_server(db_path, quiet=True) is True
+    finally:
+        os.unlink(db_path)
