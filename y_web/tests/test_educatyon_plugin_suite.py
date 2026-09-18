@@ -301,3 +301,50 @@ def test_post_annotation_rejects_disabled_target_type(educatyon_app):
         json={"target_type": "comment", "target_id": 1, "topics": [{"label": "x", "opinion": 0}]},
     )
     assert resp.status_code == 403
+
+
+
+def test_post_annotation_accepts_uuid_target_id_hpc_style(educatyon_app):
+    """HPC-simulator experiments identify posts/comments by UUID, not by a
+    numeric Post id (Standard-simulator experiments use numeric ids). The
+    module must accept either without ever coercing target_id to int.
+    """
+    from y_web.src.models import EducatyonExpModuleSettings, User_mgmt
+
+    app = educatyon_app
+    client = app.test_client()
+
+    uuid_target_id = "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+
+    with app.app_context():
+        exp_id = _make_exp(app)
+        db.session.add(EducatyonExpModuleSettings(
+            exp_id=exp_id, module_id="post_annotation", enabled=True, config_json="{}",
+        ))
+        db.session.commit()
+        test_user = db.session.scalars(
+            db.select(User_mgmt).filter_by(username="testuser")
+        ).first()
+        user_id = test_user.id
+
+    _login(client, user_id)
+
+    create_resp = client.post(
+        f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
+        json={
+            "target_type": "post",
+            "target_id": uuid_target_id,
+            "topics": [{"label": "Climate change", "opinion": 1.0}],
+        },
+    )
+    assert create_resp.status_code == 200, create_resp.data
+    assert create_resp.get_json()["ok"] is True
+
+    list_resp = client.get(
+        f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
+        query_string={"target_type": "post", "target_id": uuid_target_id},
+    )
+    assert list_resp.status_code == 200
+    listed = list_resp.get_json()
+    assert listed["ok"] is True
+    assert listed["count"] == 1
