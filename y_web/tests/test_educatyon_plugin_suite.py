@@ -157,6 +157,20 @@ def _make_exp(app):
         return exp.idexp
 
 
+def _seed_toxicity_levels(app, levels=("none", "low", "medium", "high")):
+    """Seed db_admin's Toxicity_Levels table the way the real dashboard.db
+    is seeded platform-wide -- the base `app` fixture creates the table via
+    create_all() but leaves it empty, so tests that exercise the toxicity
+    dimension need to seed it explicitly to get a non-empty vocabulary.
+    """
+    from y_web.src.models.config import Toxicity_Levels
+
+    with app.app_context():
+        for level in levels:
+            db.session.add(Toxicity_Levels(toxicity_level=level))
+        db.session.commit()
+
+
 def test_active_modules_context_empty_without_registered_suite(app):
     # Fresh module-level state: nothing registered yet in this process for
     # a throwaway repo key that will never validate.
@@ -610,6 +624,7 @@ def test_post_annotation_all_four_dimensions_round_trip(educatyon_app):
 
     app = educatyon_app
     client = app.test_client()
+    _seed_toxicity_levels(app)
 
     with app.app_context():
         exp_id = _make_exp(app)
@@ -639,7 +654,10 @@ def test_post_annotation_all_four_dimensions_round_trip(educatyon_app):
             "topics": [{"label": "Climate change", "opinion": 1.0}],
             "sentiment": -1.0,
             "emotions": ["Joy", "Trust"],
-            "toxicity": 2.0,
+            # Perceived toxicity is not a configurable scale: it always uses
+            # the platform's own none/low/medium/high vocabulary (dashboard.db's
+            # toxicity_levels table, seeded above via _seed_toxicity_levels).
+            "toxicity": "medium",
         },
     )
     assert create_resp.status_code == 200, create_resp.data
@@ -648,15 +666,16 @@ def test_post_annotation_all_four_dimensions_round_trip(educatyon_app):
     assert created["topics"][0]["opinion_value"] == 1.0
     assert created["sentiment"] == {"scale": "3point", "value": -1.0}
     assert sorted(created["emotions"]) == ["Joy", "Trust"]
-    assert created["toxicity"] == {"scale": "3point", "value": 2.0}
+    assert created["toxicity"] == {"level": "medium"}
 
     list_resp = client.get(
         f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
         query_string={"target_type": "post", "target_id": 55},
+
     )
     listed = list_resp.get_json()["annotations"][0]
     assert listed["sentiment"]["value"] == -1.0
-    assert listed["toxicity"]["value"] == 2.0
+    assert listed["toxicity"]["level"] == "medium"
     assert sorted(listed["emotions"]) == ["Joy", "Trust"]
 
     hydrate_resp = client.get(
@@ -665,7 +684,7 @@ def test_post_annotation_all_four_dimensions_round_trip(educatyon_app):
     )
     hydrated = hydrate_resp.get_json()["annotations"]["55"]
     assert hydrated["sentiment"]["value"] == -1.0
-    assert hydrated["toxicity"]["value"] == 2.0
+    assert hydrated["toxicity"]["level"] == "medium"
     assert sorted(hydrated["emotions"]) == ["Joy", "Trust"]
     assert hydrated["topics"][0]["opinion_value"] == 1.0
 
@@ -747,7 +766,7 @@ def test_post_annotation_disabled_dimensions_are_ignored_not_stored(educatyon_ap
             "topics": [{"label": "Climate change", "opinion": 1.0}],
             "sentiment": -1.0,
             "emotions": ["Joy"],
-            "toxicity": 2.0,
+            "toxicity": "medium",
         },
     )
     assert create_resp.status_code == 200, create_resp.data
@@ -885,7 +904,7 @@ def test_migration_adds_new_dimension_columns_and_relaxes_topic_nullability():
 
         cursor.execute("PRAGMA table_info(plugin_educatyon_post_annotation)")
         columns = {row[1] for row in cursor.fetchall()}
-        assert {"updated_at", "sentiment_scale", "sentiment_value", "toxicity_scale", "toxicity_value"} <= columns
+        assert {"updated_at", "sentiment_scale", "sentiment_value", "toxicity_level"} <= columns
 
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
         tables = {row[0] for row in cursor.fetchall()}
@@ -915,3 +934,68 @@ def test_migration_adds_new_dimension_columns_and_relaxes_topic_nullability():
         assert module.migrate_sqlite_server(db_path, quiet=True) is True
     finally:
         os.unlink(db_path)
+
+
+def test_toxicity_levels_endpoint_returns_platform_vocabulary(educatyon_app):
+    """GET .../toxicity_levels must return the platform's own toxicity
+    vocabulary (db_admin's Toxicity_Levels table -- the same table
+    simulated-agent toxicity is drawn from), lower-cased, rather than any
+    value invented or duplicated into the module's own manifest.
+    """
+    from y_web.src.models import EducatyonExpModuleSettings, User_mgmt
+
+    app = educatyon_app
+    client = app.test_client()
+    _seed_toxicity_levels(app, levels=("None", "Low", "Medium", "High"))
+
+    with app.app_context():
+        exp_id = _make_exp(app)
+        db.session.add(EducatyonExpModuleSettings(
+            exp_id=exp_id, module_id="post_annotation", enabled=True,
+            config_json=json.dumps({"enable_toxicity_annotation": True}),
+        ))
+        db.session.commit()
+        test_user = db.session.scalars(
+            db.select(User_mgmt).filter_by(username="testuser")
+        ).first()
+        user_id = test_user.id
+
+    _login(client, user_id)
+
+    resp = client.get(f"/{exp_id}/api/plugins/educatyon/post_annotation/toxicity_levels")
+    assert resp.status_code == 200, resp.data
+    payload = resp.get_json()
+    assert payload["ok"] is True
+    assert sorted(payload["levels"]) == ["high", "low", "medium", "none"]
+
+
+def test_toxicity_levels_endpoint_gracefully_empty_when_table_unseeded(educatyon_app):
+    """When db_admin's Toxicity_Levels table exists but has no rows (as in
+    a fresh install before an admin has configured any), the endpoint
+    returns an empty list rather than erroring -- a stale/misconfigured
+    client should degrade to "no options", not a 500.
+    """
+    from y_web.src.models import EducatyonExpModuleSettings, User_mgmt
+
+    app = educatyon_app
+    client = app.test_client()
+
+    with app.app_context():
+        exp_id = _make_exp(app)
+        db.session.add(EducatyonExpModuleSettings(
+            exp_id=exp_id, module_id="post_annotation", enabled=True,
+            config_json=json.dumps({"enable_toxicity_annotation": True}),
+        ))
+        db.session.commit()
+        test_user = db.session.scalars(
+            db.select(User_mgmt).filter_by(username="testuser")
+        ).first()
+        user_id = test_user.id
+
+    _login(client, user_id)
+
+    resp = client.get(f"/{exp_id}/api/plugins/educatyon/post_annotation/toxicity_levels")
+    assert resp.status_code == 200, resp.data
+    payload = resp.get_json()
+    assert payload["ok"] is True
+    assert payload["levels"] == []
