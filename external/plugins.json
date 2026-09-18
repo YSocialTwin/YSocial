@@ -1,6 +1,16 @@
 {
   "plugins": [
     {
+      "plugin_name": "EducatYon",
+      "category": "Frontend Extensions",
+      "group": "Frontend Plugins",
+      "description": "Suite of opt-in frontend plugins for YSocial microblogging experiments (annotation tools, educational overlays). Modules are enabled and configured independently, per experiment, from the YWeb admin dashboard.",
+      "authors": [
+        "YSocialTwin"
+      ],
+      "repository_url": "https://github.com/YSocialTwin/educatYon"
+    },
+    {
       "plugin_name": "YClient",
       "category": "Simulation Runtime Stack",
       "group": "Microblogging",
