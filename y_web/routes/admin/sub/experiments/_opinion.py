@@ -4195,9 +4195,21 @@ def _analytics_content_schema(conn):
         row["name"] if isinstance(row, sqlite3.Row) else row[0]
         for row in conn.execute("SELECT name FROM sqlite_master WHERE type = 'table'")
     }
-    is_photo_sharing = any(
+    # A true "photo-sharing" experiment is one built on the YPhotoSharing
+    # plugin's own Photo model. photo_hashtags/photo_topics/photo_emotions
+    # are junction tables created ONLY by that plugin's schema, so any one
+    # of them existing is unambiguous signal -- but a bare "photos" table
+    # is NOT: a microblogging/HPC experiment can carry an unrelated table
+    # of that same name (e.g. for embedded image posts) with a completely
+    # different column set. Requiring both a junction table AND "photos"
+    # itself keeps a microblogging experiment that merely happens to have
+    # its own "photos" table (no matching junction tables) correctly
+    # classified as post-based, instead of the whole schema below --
+    # content_table, content_id_column, content_text_column -- being
+    # silently pointed at the wrong table with the wrong columns.
+    is_photo_sharing = "photos" in table_names and any(
         table_name in table_names
-        for table_name in ("photo_topics", "photo_hashtags", "photo_emotions", "photos")
+        for table_name in ("photo_topics", "photo_hashtags", "photo_emotions")
     )
     reactions_columns = (
         _table_columns(conn, "reactions") if "reactions" in table_names else set()
@@ -4210,12 +4222,11 @@ def _analytics_content_schema(conn):
         if "recommendations" in table_names
         else set()
     )
+    content_table = "photos" if is_photo_sharing else "post"
     return {
         "table_names": table_names,
         "is_photo_sharing": is_photo_sharing,
-        "content_table": (
-            "photos" if is_photo_sharing and "photos" in table_names else "post"
-        ),
+        "content_table": content_table,
         "content_link_table": (
             "photo_topics"
             if is_photo_sharing and "photo_topics" in table_names
@@ -4231,7 +4242,10 @@ def _analytics_content_schema(conn):
             if is_photo_sharing and "photo_emotions" in table_names
             else "post_emotions"
         ),
-        "content_id_column": "photo_id" if is_photo_sharing else "post_id",
+        # Derived from content_table itself (not the is_photo_sharing flag
+        # a second time) so this can never drift out of sync with which
+        # table was actually chosen above.
+        "content_id_column": "photo_id" if content_table == "photos" else "post_id",
         "reaction_content_id_column": (
             "photo_id" if "photo_id" in reactions_columns else "post_id"
         ),
@@ -4250,10 +4264,10 @@ def _analytics_content_schema(conn):
         "recommendation_ids_column": (
             "photo_ids" if "photo_ids" in recommendations_columns else "post_ids"
         ),
-        "content_text_column": "caption" if is_photo_sharing else "tweet",
+        "content_text_column": "caption" if content_table == "photos" else "tweet",
         "content_summary_expression": (
             "COALESCE(NULLIF(TRIM(caption), ''), NULLIF(TRIM(alt_text), ''), NULLIF(TRIM(image_url), ''))"
-            if is_photo_sharing
+            if content_table == "photos"
             else "COALESCE(NULLIF(TRIM(tweet), ''), '')"
         ),
     }

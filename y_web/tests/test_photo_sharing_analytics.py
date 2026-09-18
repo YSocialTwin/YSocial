@@ -5,6 +5,7 @@ import pytest
 
 opinion_module = importlib.import_module("y_web.routes.admin.sub.experiments._opinion")
 from y_web.routes.admin.sub.experiments._opinion import (
+    _analytics_content_schema,
     _build_emotion_analytics_payload,
     _build_hashtag_evolution_payload,
     _build_network_analytics_payload,
@@ -363,3 +364,80 @@ def test_analytics_db_resolver_keeps_legacy_platforms_on_standard_path(
 
     experiment.platform_type = "forum"
     assert _resolve_analytics_db_path(experiment) == "/resolved/legacy.db"
+
+
+
+def test_content_schema_treats_unrelated_photos_table_as_post_based(tmp_path):
+    """A microblogging/HPC experiment can carry its own "photos" table for
+    something unrelated to the YPhotoSharing plugin (e.g. embedded image
+    posts), with a completely different column set from the plugin's Photo
+    model. That table's mere existence must NOT be enough to classify the
+    experiment as photo-sharing -- doing so previously pointed content_table
+    at "photos" while hashtag_link_table correctly fell back to
+    "post_hashtags" (since no photo_hashtags table exists), and the two
+    disagreeing produced content_id_column="photo_id" against a table that
+    only has post_id, i.e. "no such column: ph.photo_id" in production on a
+    real HPC/microblogging experiment.
+    """
+    db_path = tmp_path / "mixed_photos_and_post.db"
+    with sqlite3.connect(db_path) as conn:
+        conn.executescript("""
+            CREATE TABLE user_mgmt (
+                id TEXT PRIMARY KEY,
+                username TEXT NOT NULL,
+                recsys_type TEXT
+            );
+            CREATE TABLE post (
+                id TEXT PRIMARY KEY,
+                tweet TEXT,
+                user_id TEXT NOT NULL,
+                round TEXT NOT NULL
+            );
+            CREATE TABLE post_hashtags (
+                id TEXT PRIMARY KEY,
+                post_id TEXT NOT NULL,
+                hashtag_id TEXT NOT NULL
+            );
+            -- An UNRELATED "photos" table (e.g. embedded image posts),
+            -- with none of the YPhotoSharing plugin's own junction tables
+            -- (photo_hashtags/photo_topics/photo_emotions) alongside it.
+            CREATE TABLE photos (
+                id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                round TEXT NOT NULL,
+                image_url TEXT,
+                caption TEXT
+            );
+        """)
+        conn.commit()
+
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    schema = _analytics_content_schema(conn)
+    conn.close()
+
+    assert schema["is_photo_sharing"] is False
+    assert schema["content_table"] == "post"
+    assert schema["hashtag_link_table"] == "post_hashtags"
+    assert schema["content_id_column"] == "post_id"
+    assert schema["content_text_column"] == "tweet"
+
+
+def test_content_schema_still_detects_genuine_photo_sharing_experiments(tmp_path):
+    """Sanity check for the fix above: a real photo-sharing database (with
+    at least one of the plugin's own junction tables alongside "photos")
+    must still be classified as photo-sharing.
+    """
+    db_path = tmp_path / "genuine_photo_sharing.db"
+    _create_photo_sharing_analytics_db(db_path)
+
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    schema = _analytics_content_schema(conn)
+    conn.close()
+
+    assert schema["is_photo_sharing"] is True
+    assert schema["content_table"] == "photos"
+    assert schema["hashtag_link_table"] == "photo_hashtags"
+    assert schema["content_id_column"] == "photo_id"
+    assert schema["content_text_column"] == "caption"
