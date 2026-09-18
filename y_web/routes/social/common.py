@@ -27,6 +27,7 @@ from werkzeug.security import generate_password_hash
 
 from y_web import db
 from y_web.routes.social._blueprint import main
+from y_web.src.external_runtime.plugin_loader import active_modules_context
 from y_web.routes.social.helpers import (
     _load_ui_settings,
     _forum_current_profile_pic,
@@ -542,6 +543,7 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
         "microblogging/profile.html",
         profile_pic=profile_pic,
         ui=_load_ui_settings(exp_id),
+        educatyon_modules=active_modules_context(exp_id),
         **common_context,
     )
 
