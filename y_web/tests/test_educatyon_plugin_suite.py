@@ -999,3 +999,65 @@ def test_toxicity_levels_endpoint_gracefully_empty_when_table_unseeded(educatyon
     payload = resp.get_json()
     assert payload["ok"] is True
     assert payload["levels"] == []
+
+
+def test_self_heals_schema_once_per_experiment_per_process(educatyon_app, monkeypatch):
+    """A request against an experiment that already had this module enabled
+    *before* a later code deploy adds a new column (e.g. Turn 3's
+    toxicity_level) must not depend on an admin re-visiting and re-saving
+    that module's settings to pick up the schema change -- normally the
+    only thing that calls ensure_module_schema() is the admin "save
+    settings" handler, so a stale schema would otherwise throw a raw
+    OperationalError on every request (surfacing to the annotator as an
+    opaque "Network error.", since the response is an HTML 500 page, not
+    JSON). _require_module_enabled() now self-heals via ensure_module_schema()
+    the first time the module is touched per experiment per process --
+    and only that first time, since the migration is cheap once current
+    but there's no reason to re-check on every single request.
+    """
+    from y_web.src.external_runtime import plugin_loader
+    from y_web.src.models import EducatyonExpModuleSettings, User_mgmt
+
+    app = educatyon_app
+    client = app.test_client()
+
+    backend_module = plugin_loader._import_from_suite(
+        "educatyon", "modules.post_annotation.backend"
+    )
+
+    with app.app_context():
+        exp_id = _make_exp(app)
+        db.session.add(EducatyonExpModuleSettings(
+            exp_id=exp_id, module_id="post_annotation", enabled=True, config_json="{}",
+        ))
+        db.session.commit()
+        test_user = db.session.scalars(
+            db.select(User_mgmt).filter_by(username="testuser")
+        ).first()
+        user_id = test_user.id
+
+    # A fresh exp_id should already be un-healed, but exp_id values can be
+    # reused across test apps (each gets its own empty, autoincrement-reset
+    # Exps table) while this module-level cache persists for the whole test
+    # process -- so force a clean starting state for this specific exp_id
+    # rather than assuming one.
+    backend_module._SCHEMA_HEALED_EXP_IDS.discard(exp_id)
+
+    calls = []
+
+    def fake_ensure_module_schema(repo_key, module_id, exp_id_arg, quiet=True):
+        calls.append((repo_key, module_id, exp_id_arg))
+        return True
+
+    monkeypatch.setattr(plugin_loader, "ensure_module_schema", fake_ensure_module_schema)
+
+    _login(client, user_id)
+
+    first = client.get(f"/{exp_id}/api/plugins/educatyon/post_annotation/topics")
+    second = client.get(f"/{exp_id}/api/plugins/educatyon/post_annotation/topics")
+
+    assert first.status_code == 200, first.data
+    assert second.status_code == 200, second.data
+    # Healed exactly once, on the first touch -- not on the second request,
+    # and not zero times (which would mean the self-heal never ran at all).
+    assert calls == [("educatyon", "post_annotation", exp_id)]
