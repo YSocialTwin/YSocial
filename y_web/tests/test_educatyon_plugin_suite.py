@@ -348,3 +348,251 @@ def test_post_annotation_accepts_uuid_target_id_hpc_style(educatyon_app):
     listed = list_resp.get_json()
     assert listed["ok"] is True
     assert listed["count"] == 1
+
+
+def test_post_annotation_create_upserts_instead_of_duplicating(educatyon_app):
+    """A user may hold at most one annotation per target: annotating the
+    same post twice must edit the existing row (and its topics) in place,
+    never insert a second one. Verified directly against the DB row count,
+    not just through the API's own responses.
+    """
+    from y_web.src.models import EducatyonExpModuleSettings, User_mgmt
+
+    app = educatyon_app
+    client = app.test_client()
+
+    with app.app_context():
+        exp_id = _make_exp(app)
+        db.session.add(EducatyonExpModuleSettings(
+            exp_id=exp_id, module_id="post_annotation", enabled=True, config_json="{}",
+        ))
+        db.session.commit()
+        test_user = db.session.scalars(
+            db.select(User_mgmt).filter_by(username="testuser")
+        ).first()
+        user_id = test_user.id
+
+    _login(client, user_id)
+
+    first_resp = client.post(
+        f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
+        json={
+            "target_type": "post",
+            "target_id": 77,
+            "topics": [{"label": "Climate change", "opinion": 1.0}],
+        },
+    )
+    assert first_resp.status_code == 200, first_resp.data
+    first_payload = first_resp.get_json()
+    assert first_payload["ok"] is True
+    assert first_payload["updated"] is False
+    first_annotation_id = first_payload["annotation_id"]
+
+    # Re-annotate the SAME target with a different topic selection.
+    second_resp = client.post(
+        f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
+        json={
+            "target_type": "post",
+            "target_id": 77,
+            "topics": [{"label": "Vaccines", "opinion": -1.0}],
+        },
+    )
+    assert second_resp.status_code == 200, second_resp.data
+    second_payload = second_resp.get_json()
+    assert second_payload["ok"] is True
+    assert second_payload["updated"] is True
+    assert second_payload["annotation_id"] == first_annotation_id
+
+    with app.app_context():
+        backend_module = plugin_loader._import_from_suite(
+            "educatyon", "modules.post_annotation.backend"
+        )
+        PluginEducatyonPostAnnotation = backend_module.PluginEducatyonPostAnnotation
+        PluginEducatyonPostAnnotationTopic = backend_module.PluginEducatyonPostAnnotationTopic
+
+        rows = PluginEducatyonPostAnnotation.query.filter_by(
+            target_type="post", target_id="77",
+        ).all()
+        assert len(rows) == 1, "annotating the same target twice must not duplicate the row"
+        topics = PluginEducatyonPostAnnotationTopic.query.filter_by(
+            annotation_id=rows[0].id
+        ).all()
+        assert [t.topic_label for t in topics] == ["Vaccines"], (
+            "the old topic set must be replaced, not appended to"
+        )
+
+    # The list endpoint agrees: still exactly one annotation for this target.
+    list_resp = client.get(
+        f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
+        query_string={"target_type": "post", "target_id": 77},
+    )
+    listed = list_resp.get_json()
+    assert listed["count"] == 1
+    assert listed["annotations"][0]["topics"][0]["label"] == "Vaccines"
+
+
+def test_my_annotations_hydrates_existing_annotation(educatyon_app):
+    """/my_annotations is the batched lookup the frontend calls on every
+    fresh page load to know which targets the current user already
+    annotated — this is what makes an annotation survive a page refresh
+    (the client never trusts anything left over in the DOM/JS state; it
+    always re-asks this endpoint). A target the user never annotated must
+    simply be absent from the response, not present with an empty shell.
+    """
+    from y_web.src.models import EducatyonExpModuleSettings, User_mgmt
+
+    app = educatyon_app
+    client = app.test_client()
+
+    with app.app_context():
+        exp_id = _make_exp(app)
+        db.session.add(EducatyonExpModuleSettings(
+            exp_id=exp_id, module_id="post_annotation", enabled=True, config_json="{}",
+        ))
+        db.session.commit()
+        test_user = db.session.scalars(
+            db.select(User_mgmt).filter_by(username="testuser")
+        ).first()
+        user_id = test_user.id
+
+    _login(client, user_id)
+
+    create_resp = client.post(
+        f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
+        json={
+            "target_type": "post",
+            "target_id": 101,
+            "topics": [{"label": "Climate change", "opinion": 2.0}],
+        },
+    )
+    assert create_resp.status_code == 200, create_resp.data
+
+    # Simulate a fresh page load asking, in one batched call, about several
+    # posts on the page — only one of which was ever annotated.
+    hydrate_resp = client.get(
+        f"/{exp_id}/api/plugins/educatyon/post_annotation/my_annotations",
+        query_string={"target_type": "post", "target_ids": "101,202,303"},
+    )
+    assert hydrate_resp.status_code == 200
+    hydrated = hydrate_resp.get_json()
+    assert hydrated["ok"] is True
+    assert set(hydrated["annotations"].keys()) == {"101"}
+    assert hydrated["annotations"]["101"]["topics"][0]["label"] == "Climate change"
+    assert hydrated["annotations"]["101"]["topics"][0]["opinion_value"] == 2.0
+
+    # Missing/required params are rejected cleanly, never a silent empty 200.
+    bad_resp = client.get(
+        f"/{exp_id}/api/plugins/educatyon/post_annotation/my_annotations",
+        query_string={"target_type": "post"},
+    )
+    assert bad_resp.status_code == 400
+
+
+def test_migration_dedupes_pre_existing_duplicates_before_unique_index():
+    """A database whose module was enabled before the "one annotation per
+    user per target" rule existed may already hold duplicate rows for the
+    same (target_type, target_id, annotator_user_id). The migration must
+    collapse those down to one (keeping the most recent) — and drop their
+    now-orphaned topic rows — before it can safely add the unique index
+    that enforces the rule going forward.
+    """
+    module = plugin_loader._import_from_suite("educatyon", "modules.post_annotation.backend.migrations")
+
+    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
+        db_path = tmp.name
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        # Simulate the OLD schema (no updated_at, no unique index) already
+        # holding a pre-existing duplicate for the same user/target.
+        cursor.execute(
+            """
+            CREATE TABLE plugin_educatyon_post_annotation (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                target_type TEXT NOT NULL,
+                target_id TEXT NOT NULL,
+                annotator_user_id TEXT NOT NULL,
+                annotator_username TEXT,
+                created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+        cursor.execute(
+            """
+            CREATE TABLE plugin_educatyon_post_annotation_topic (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                annotation_id INTEGER NOT NULL REFERENCES plugin_educatyon_post_annotation(id),
+                topic_label TEXT NOT NULL,
+                topic_id INTEGER,
+                opinion_scale TEXT NOT NULL,
+                opinion_value REAL NOT NULL
+            )
+            """
+        )
+        cursor.execute(
+            "INSERT INTO plugin_educatyon_post_annotation (id, target_type, target_id, annotator_user_id) "
+            "VALUES (1, 'post', '42', 'user-1')"
+        )
+        cursor.execute(
+            "INSERT INTO plugin_educatyon_post_annotation (id, target_type, target_id, annotator_user_id) "
+            "VALUES (2, 'post', '42', 'user-1')"
+        )
+        cursor.execute(
+            "INSERT INTO plugin_educatyon_post_annotation_topic "
+            "(annotation_id, topic_label, opinion_scale, opinion_value) VALUES (1, 'Old topic', '5point', 0)"
+        )
+        cursor.execute(
+            "INSERT INTO plugin_educatyon_post_annotation_topic "
+            "(annotation_id, topic_label, opinion_scale, opinion_value) VALUES (2, 'New topic', '5point', 1)"
+        )
+        conn.commit()
+        conn.close()
+
+        assert module.migrate_sqlite_server(db_path, quiet=True) is True
+
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+
+        cursor.execute("PRAGMA table_info(plugin_educatyon_post_annotation)")
+        columns = {row[1] for row in cursor.fetchall()}
+        assert "updated_at" in columns
+
+        cursor.execute(
+            "SELECT id FROM plugin_educatyon_post_annotation "
+            "WHERE target_type='post' AND target_id='42' AND annotator_user_id='user-1'"
+        )
+        remaining_ids = [row[0] for row in cursor.fetchall()]
+        assert remaining_ids == [2], "the dedupe pass must keep the most recent row, not both"
+
+        cursor.execute("SELECT topic_label FROM plugin_educatyon_post_annotation_topic")
+        remaining_topics = [row[0] for row in cursor.fetchall()]
+        assert remaining_topics == ["New topic"], (
+            "orphaned topic rows belonging to the deleted duplicate must be removed too"
+        )
+
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='index'")
+        indexes = {row[0] for row in cursor.fetchall()}
+        assert "uq_plugin_educatyon_post_annotation_target_user" in indexes
+
+        # A different user annotating the same target is untouched by the
+        # dedupe pass (it only ever collapses rows sharing the full triple).
+        cursor.execute(
+            "INSERT INTO plugin_educatyon_post_annotation (target_type, target_id, annotator_user_id) "
+            "VALUES ('post', '42', 'user-2')"
+        )
+        conn.commit()
+        conn.close()
+
+        # Idempotent, and the real unique index now rejects an actual duplicate.
+        assert module.migrate_sqlite_server(db_path, quiet=True) is True
+
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        with pytest.raises(sqlite3.IntegrityError):
+            cursor.execute(
+                "INSERT INTO plugin_educatyon_post_annotation (target_type, target_id, annotator_user_id) "
+                "VALUES ('post', '42', 'user-1')"
+            )
+        conn.close()
+    finally:
+        os.unlink(db_path)
