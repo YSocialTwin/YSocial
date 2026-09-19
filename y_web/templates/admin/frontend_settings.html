@@ -202,6 +202,60 @@ input:checked + .slider-small:before { transform: translateX(16px); }
     vertical-align: middle;
 }
 
+/* ── EducatYon module config: per-section grouping ──────────
+ * Mirrors the #fb-config-section visual language above (bordered,
+ * tinted box with a small uppercase header) so every "nested config"
+ * area on this page reads the same way, but generic over however many
+ * sections a module manifest declares. */
+.edu-param-section {
+    margin: 0 0 10px;
+    border: 1px solid #e0e7ff;
+    border-left: 3px solid #6366f1;
+    border-radius: 6px;
+    background: #f5f7ff;
+    padding: 10px 14px 4px;
+}
+.edu-param-section:last-child { margin-bottom: 0; }
+.edu-param-section-header {
+    font-weight: 700;
+    font-size: .78rem;
+    color: #4338ca;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+}
+.edu-param-section-desc {
+    color: #6b7280;
+    font-size: .78rem;
+    margin: 2px 0 8px;
+    line-height: 1.35;
+}
+.edu-param-section .ys-toggle-row { border-bottom-color: #e0e7ff; }
+.edu-param-section .ys-toggle-row:last-child { border-bottom: none; }
+.edu-param-section-info {
+    color: #6b7280;
+    font-size: .78rem;
+    margin: 2px 0 6px;
+    line-height: 1.35;
+}
+/* All-boolean sections (e.g. Scope, Annotation dimensions) render as a
+ * row of compact toggle chips instead of stacked full-width rows — the
+ * single biggest source of the old layout's vertical chaos. */
+.edu-bool-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    padding: 4px 0 8px;
+}
+.edu-bool-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: .85rem;
+    color: #374151;
+}
+.edu-bool-chip .switch-small { flex-shrink: 0; }
+.edu-param-row-hidden { display: none !important; }
+
 /* ── loading spinner overlay on grid ──────────────────────── */
 #ys-fs-grid { position: relative; }
 #ys-fs-loading {
@@ -918,8 +972,10 @@ input:checked + .slider-small:before { transform: translateX(16px); }
     }
     if (param.type === 'string_list') {
       const joined = Array.isArray(value) ? value.join(', ') : '';
-      return '<input type="text" id="' + id + '" value="' + joined.replace(/"/g, '&quot;') +
-        '" placeholder="comma-separated" style="width:100%;padding:0.25rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;">';
+      const escaped = joined.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      return '<textarea id="' + id + '" rows="2" placeholder="comma or newline separated" ' +
+        'style="width:100%;padding:0.35rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;' +
+        'font:inherit;resize:vertical;">' + escaped + '</textarea>';
     }
     return '<input type="text" id="' + id + '" value="' + (value != null ? String(value).replace(/"/g, '&quot;') : '') +
       '" style="width:100%;padding:0.25rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;">';
@@ -932,9 +988,40 @@ input:checked + .slider-small:before { transform: translateX(16px); }
     if (param.type === 'int') return parseInt(el.value, 10) || 0;
     if (param.type === 'float') return parseFloat(el.value) || 0;
     if (param.type === 'string_list') {
-      return el.value.split(',').map(s => s.trim()).filter(Boolean);
+      return el.value.split(/[,\n]+/).map(s => s.trim()).filter(Boolean);
     }
     return el.value;
+  }
+
+  /* A section or a single parameter row can declare `depends_on`, gating
+   * its visibility on another parameter's CURRENT (live, unsaved-included)
+   * value within the same module card:
+   *   "some_bool_param"                       -> visible while truthy
+   *   {"param": "some_param", "equals": "x"}   -> visible while === "x"
+   * An array means "all of these must hold". An unknown/missing referenced
+   * param fails OPEN (never hides anything) so a manifest typo can't hide
+   * a whole section with no way to reach it. */
+  function _eduDependsMet(dependsOn, card) {
+    if (!dependsOn) return true;
+    const specs = Array.isArray(dependsOn) ? dependsOn : [dependsOn];
+    return specs.every(function (spec) {
+      const paramName = typeof spec === 'string' ? spec : spec.param;
+      const el = card.querySelector('#edu-param-' + paramName);
+      if (!el) return true;
+      const current = el.type === 'checkbox' ? el.checked : el.value;
+      if (spec && typeof spec === 'object' && 'equals' in spec) {
+        return String(current) === String(spec.equals);
+      }
+      return !!current;
+    });
+  }
+
+  function _eduSyncDependants(card) {
+    card.querySelectorAll('[data-edu-depends-on]').forEach(function (node) {
+      let spec = null;
+      try { spec = JSON.parse(node.getAttribute('data-edu-depends-on')); } catch (e) { /* ignore */ }
+      node.classList.toggle('edu-param-row-hidden', !_eduDependsMet(spec, card));
+    });
   }
 
   function renderEducatyonModules(expId, modules) {
@@ -955,16 +1042,50 @@ input:checked + .slider-small:before { transform: translateX(16px); }
         (bySection[key] = bySection[key] || []).push(p);
       });
 
-      const sectionsHtml = sections.filter(function (s) { return (bySection[s.key] || []).length; }).map(function (s) {
-        const rows = bySection[s.key].map(function (p) {
-          return '<div class="ys-toggle-row">' +
-            '<span class="ys-toggle-label">' + (p.label || p.name) + '</span>' +
-            _eduParamControl(p, m.config ? m.config[p.name] : p.default) +
-            '</div>';
-        }).join('');
-        return '<div style="margin-bottom:10px;">' +
-          '<div class="ys-text-xs-hint" style="text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;">' + s.label + '</div>' +
-          rows + '</div>';
+      const sectionsHtml = sections.filter(function (s) {
+        // Keep a section that has bound parameters, OR one that has no
+        // parameters but does carry a description (e.g. "Toxicity" is
+        // configured via the platform-wide toxicity_levels vocabulary, not
+        // a parameter here -- it previously vanished from the UI entirely
+        // with no explanation of where to actually configure it).
+        return (bySection[s.key] || []).length || s.description;
+      }).map(function (s) {
+        const params = bySection[s.key] || [];
+        const dependsAttr = s.depends_on
+          ? ' data-edu-depends-on=\'' + JSON.stringify(s.depends_on).replace(/'/g, '&#39;') + '\''
+          : '';
+        const descHtml = s.description
+          ? '<div class="edu-param-section-desc">' + s.description + '</div>' : '';
+
+        let bodyHtml;
+        if (!params.length) {
+          // Info-only section: header + description, no controls.
+          bodyHtml = '';
+        } else if (params.length > 1 && params.every(function (p) { return p.type === 'bool'; })) {
+          // All-boolean section -> compact chip row instead of stacked rows.
+          bodyHtml = '<div class="edu-bool-chip-row">' + params.map(function (p) {
+            const rowDepends = p.depends_on
+              ? ' data-edu-depends-on=\'' + JSON.stringify(p.depends_on).replace(/'/g, '&#39;') + '\''
+              : '';
+            return '<div class="edu-bool-chip"' + rowDepends + '>' +
+              _eduParamControl(p, m.config ? m.config[p.name] : p.default) +
+              '<span>' + (p.label || p.name) + '</span></div>';
+          }).join('') + '</div>';
+        } else {
+          bodyHtml = params.map(function (p) {
+            const rowDepends = p.depends_on
+              ? ' data-edu-depends-on=\'' + JSON.stringify(p.depends_on).replace(/'/g, '&#39;') + '\''
+              : '';
+            return '<div class="ys-toggle-row"' + rowDepends + '>' +
+              '<span class="ys-toggle-label">' + (p.label || p.name) + '</span>' +
+              _eduParamControl(p, m.config ? m.config[p.name] : p.default) +
+              '</div>';
+          }).join('');
+        }
+
+        return '<div class="edu-param-section"' + dependsAttr + '>' +
+          '<div class="edu-param-section-header">' + s.label + '</div>' +
+          descHtml + bodyHtml + '</div>';
       }).join('');
 
       return '<div class="misc-compact-box" style="margin-bottom:12px;" data-edu-module-id="' + m.module_id + '">' +
@@ -992,6 +1113,14 @@ input:checked + .slider-small:before { transform: translateX(16px); }
     list.querySelectorAll('[data-edu-module-id]').forEach(function (card) {
       const moduleId = card.getAttribute('data-edu-module-id');
       const moduleManifest = modules.find(function (m) { return m.module_id === moduleId; });
+
+      // Establish initial section/row visibility, then keep it live as the
+      // admin flips dimension toggles or changes an enum this panel's
+      // fields depend on (e.g. ticking "Enable topic annotation" reveals
+      // the Topics + Opinion sections immediately, no save round-trip).
+      _eduSyncDependants(card);
+      const configurePanel = card.querySelector('.edu-configure-panel');
+      configurePanel.addEventListener('change', function () { _eduSyncDependants(card); });
 
       card.querySelector('.edu-configure-toggle').addEventListener('click', function () {
         const panel = card.querySelector('.edu-configure-panel');
