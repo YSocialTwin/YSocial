@@ -338,7 +338,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
             <h3>User Interactions <span class="ys-fs-exp-badge" id="badge-exp-name"></span></h3>
             <div class="box-content">
               <p style="color:#6b7280;font-size:.85rem;margin-bottom:14px;">
-                Control which actions participants can perform on posts.
+                Control which actions participants can perform on posts, and whether the notification menu is shown.
               </p>
               <div class="ys-toggle-row is-master">
                 <span class="ys-toggle-label">
@@ -371,6 +371,18 @@ input:checked + .slider-small:before { transform: translateX(16px); }
                 <div class="ys-toggle-row">
                   <span class="ys-toggle-label">Share / repost <small>Repost another user's content</small></span>
                   <label class="switch-small"><input type="checkbox" id="interaction_share"><span class="slider-small round"></span></label>
+                </div>
+              </div>
+              <div style="margin-top:12px;border-top:1px solid #f1f3f5;padding-top:10px;">
+                <div class="ys-toggle-row">
+                  <span class="ys-toggle-label">
+                    Notification menu
+                    <small>Bell / mentions icon in the top bar</small>
+                  </span>
+                  <label class="switch-small">
+                    <input type="checkbox" id="notifications_menu">
+                    <span class="slider-small round"></span>
+                  </label>
                 </div>
               </div>
               <div class="ys-fs-save-row">
@@ -427,30 +439,6 @@ input:checked + .slider-small:before { transform: translateX(16px); }
               <div class="ys-fs-save-row">
                 <button class="button is-solid primary-button" onclick="saveSection(event,'annotations')">Save annotations</button>
                 <span class="ys-fs-save-status" id="status-annotations"></span>
-              </div>
-            </div>
-          </div>
-
-          <!-- ══ BOX 3 — Notifications ══════════════════════════ -->
-          <div class="misc-compact-box" id="box-notifications">
-            <h3>Notifications</h3>
-            <div class="box-content">
-              <p style="color:#6b7280;font-size:.85rem;margin-bottom:14px;">
-                Control visibility of the notification / mentions menu in the top navigation bar.
-              </p>
-              <div class="ys-toggle-row is-master">
-                <span class="ys-toggle-label">
-                  Notification menu
-                  <small>Bell / mentions icon in the top bar</small>
-                </span>
-                <label class="switch-small">
-                  <input type="checkbox" id="notifications_menu">
-                  <span class="slider-small round"></span>
-                </label>
-              </div>
-              <div class="ys-fs-save-row">
-                <button class="button is-solid primary-button" onclick="saveSection(event,'notifications')">Save notifications</button>
-                <span class="ys-fs-save-status" id="status-notifications"></span>
               </div>
             </div>
           </div>
@@ -808,7 +796,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
     syncMasterVisual('annotations_enabled',  'annotations-children');
 
     // Clear any stale save-status messages
-    ['interactions','annotations','notifications','feed-profile'].forEach(sec => {
+    ['interactions','annotations','feed-profile'].forEach(sec => {
       const st = document.getElementById('status-' + sec);
       if (st) { st.textContent = ''; st.className = 'ys-fs-save-status'; }
     });

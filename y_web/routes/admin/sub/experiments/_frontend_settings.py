@@ -30,6 +30,7 @@ DEFAULT_SETTINGS = {
     "interaction_like": True,
     "interaction_dislike": True,
     "interaction_share": True,
+    "notifications_menu": True,  # Bell / mentions icon, shown alongside interactions in the admin UI
     # Annotations
     "annotations_enabled": True,
     "annotation_emotions": True,
@@ -38,8 +39,6 @@ DEFAULT_SETTINGS = {
     "annotation_toxicity": True,
     "annotation_agent_type": True,
     "annotation_author_type": True,
-    # Notifications
-    "notifications_menu": True,
     # Feed & Profile
     "default_content_recsys": "",   # empty = system default
     "default_follow_recsys": "",    # empty = system default
