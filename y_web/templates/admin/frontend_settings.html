@@ -231,6 +231,15 @@ input:checked + .slider-small:before { transform: translateX(16px); }
 }
 .edu-param-section .ys-toggle-row { border-bottom-color: #e0e7ff; }
 .edu-param-section .ys-toggle-row:last-child { border-bottom: none; }
+/* A control that needs its own full-width line (currently: the
+ * string_list textarea) stacks label-above-control instead of sitting
+ * side-by-side, where a width:100% textarea would overlap the label. */
+.ys-toggle-row.edu-row-stacked {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+}
+.ys-toggle-row.edu-row-stacked .ys-toggle-label { flex: none; }
 .edu-param-section-info {
     color: #6b7280;
     font-size: .78rem;
@@ -1076,7 +1085,8 @@ input:checked + .slider-small:before { transform: translateX(16px); }
             const rowDepends = p.depends_on
               ? ' data-edu-depends-on=\'' + JSON.stringify(p.depends_on).replace(/'/g, '&#39;') + '\''
               : '';
-            return '<div class="ys-toggle-row"' + rowDepends + '>' +
+            const rowClass = p.type === 'string_list' ? 'ys-toggle-row edu-row-stacked' : 'ys-toggle-row';
+            return '<div class="' + rowClass + '"' + rowDepends + '>' +
               '<span class="ys-toggle-label">' + (p.label || p.name) + '</span>' +
               _eduParamControl(p, m.config ? m.config[p.name] : p.default) +
               '</div>';
