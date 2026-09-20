@@ -236,8 +236,8 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
     ),
     "reactive_agents": ExternalRuntimeSpec(
         key="reactive_agents",
-        group="agent_plugins",
-        group_label="Agent Plugins",
+        group="frontend_plugins",
+        group_label="Frontend Plugins",
         category="agent_extensions",
         category_label="Agent Extensions",
         label="Reactive Agents",
