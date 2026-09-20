@@ -14,7 +14,7 @@ from sqlalchemy import select
 
 pytestmark = pytest.mark.unit
 
-REPO_ROOT = Path("/Users/rossetti/PycharmProjects/YWeb")
+REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_dynamic_fill_ui_and_start_payload_are_wired():

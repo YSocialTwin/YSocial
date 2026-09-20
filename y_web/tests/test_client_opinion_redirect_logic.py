@@ -3,6 +3,9 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
+from pathlib import Path
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
 
 pytestmark = pytest.mark.unit
 
@@ -81,7 +84,7 @@ def test_client_creation_opinion_toggle_falls_back_to_annotations():
 
 def test_client_creation_routes_persist_and_redirect_opinion_configuration():
     source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_crud.py",
+        str(_REPO_ROOT / "y_web/routes/admin/sub/clients/_crud.py"),
         "r",
     ).read()
     assert '"opinion_dynamics": {' in source
@@ -92,7 +95,7 @@ def test_client_creation_routes_persist_and_redirect_opinion_configuration():
 
 def test_client_creation_context_uses_shared_opinion_resolver():
     source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_crud.py",
+        str(_REPO_ROOT / "y_web/routes/admin/sub/clients/_crud.py"),
         "r",
     ).read()
     assert (
@@ -104,7 +107,7 @@ def test_client_creation_context_uses_shared_opinion_resolver():
 
 def test_standard_redirect_is_implemented_in_standard_create_function():
     source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_crud.py",
+        str(_REPO_ROOT / "y_web/routes/admin/sub/clients/_crud.py"),
         "r",
     ).read()
 
@@ -123,7 +126,7 @@ def test_standard_redirect_is_implemented_in_standard_create_function():
 
 def test_forum_redirect_is_implemented_in_forum_create_function():
     source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_crud.py",
+        str(_REPO_ROOT / "y_web/routes/admin/sub/clients/_crud.py"),
         "r",
     ).read()
 

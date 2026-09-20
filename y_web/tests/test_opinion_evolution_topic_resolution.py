@@ -1,12 +1,15 @@
 import pytest
 from sqlalchemy import delete, select
+from pathlib import Path
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
 
 pytestmark = pytest.mark.unit
 
 
 def test_opinion_evolution_prefers_experiment_interests():
     source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_opinion.py",
+        str(_REPO_ROOT / "y_web/routes/admin/sub/experiments/_opinion.py"),
         "r",
     ).read()
 
@@ -22,7 +25,7 @@ def test_opinion_evolution_prefers_experiment_interests():
 
 def test_opinion_evolution_route_uses_topic_resolver():
     source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_opinion.py",
+        str(_REPO_ROOT / "y_web/routes/admin/sub/experiments/_opinion.py"),
         "r",
     ).read()
 
@@ -31,7 +34,7 @@ def test_opinion_evolution_route_uses_topic_resolver():
 
 def test_opinion_evolution_resolves_actual_experiment_db():
     source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_opinion.py",
+        str(_REPO_ROOT / "y_web/routes/admin/sub/experiments/_opinion.py"),
         "r",
     ).read()
 
@@ -43,7 +46,7 @@ def test_opinion_evolution_resolves_actual_experiment_db():
 
 def test_opinion_evolution_route_validates_bound_experiment_schema():
     source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_opinion.py",
+        str(_REPO_ROOT / "y_web/routes/admin/sub/experiments/_opinion.py"),
         "r",
     ).read()
 
@@ -54,7 +57,7 @@ def test_opinion_evolution_route_validates_bound_experiment_schema():
 
 def test_opinion_evolution_bootstraps_missing_agent_opinions():
     source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_opinion.py",
+        str(_REPO_ROOT / "y_web/routes/admin/sub/experiments/_opinion.py"),
         "r",
     ).read()
 
@@ -74,7 +77,7 @@ def test_opinion_evolution_bootstraps_missing_agent_opinions():
 
 def test_opinion_evolution_invalidates_stale_cache_when_db_was_reset():
     source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_opinion.py",
+        str(_REPO_ROOT / "y_web/routes/admin/sub/experiments/_opinion.py"),
         "r",
     ).read()
 
@@ -88,7 +91,7 @@ def test_opinion_evolution_invalidates_stale_cache_when_db_was_reset():
 
 def test_opinion_evolution_template_exposes_max_day_and_hour():
     source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/opinion_evolution.html",
+        str(_REPO_ROOT / "y_web/templates/admin/opinion_evolution.html"),
         "r",
     ).read()
 
@@ -98,7 +101,7 @@ def test_opinion_evolution_template_exposes_max_day_and_hour():
 
 def test_opinion_evolution_template_keeps_all_granularity_buttons_bound():
     source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/opinion_evolution.html",
+        str(_REPO_ROOT / "y_web/templates/admin/opinion_evolution.html"),
         "r",
     ).read()
 
@@ -109,7 +112,7 @@ def test_opinion_evolution_template_keeps_all_granularity_buttons_bound():
 
 def test_opinion_evolution_js_refreshes_group_trends_state():
     source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/js/admin-opinion.js",
+        str(_REPO_ROOT / "y_web/static/assets/js/admin-opinion.js"),
         "r",
     ).read()
 
@@ -123,7 +126,7 @@ def test_opinion_evolution_js_refreshes_group_trends_state():
 
 def test_opinion_evolution_uses_agent_opinion_row_id_tie_breaker():
     source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_opinion.py",
+        str(_REPO_ROOT / "y_web/routes/admin/sub/experiments/_opinion.py"),
         "r",
     ).read()
 
@@ -134,7 +137,7 @@ def test_opinion_evolution_uses_agent_opinion_row_id_tie_breaker():
 
 def test_opinion_evolution_ignores_legacy_cache_without_row_order():
     source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_opinion.py",
+        str(_REPO_ROOT / "y_web/routes/admin/sub/experiments/_opinion.py"),
         "r",
     ).read()
 

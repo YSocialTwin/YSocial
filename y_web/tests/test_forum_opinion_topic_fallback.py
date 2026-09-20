@@ -5,12 +5,14 @@ from sqlalchemy import select
 
 from y_web import db
 
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+
 pytestmark = [pytest.mark.unit, pytest.mark.external_repo]
 
 
 def test_forum_server_topic_routes_fall_back_to_thread_root():
     source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/external/YServerReddit/y_server/routes/content_management.py"
+        str(_REPO_ROOT / "external/YServerReddit/y_server/routes/content_management.py")
     ).read_text()
 
     assert (
@@ -26,7 +28,7 @@ def test_forum_experiment_10_comments_need_thread_root_topic_fallback():
     import sqlite3
 
     uid = "85def307_d1e7_478c_9b0b_0e2f5d46d0c5"
-    db = f"/Users/rossetti/PycharmProjects/YWeb/y_web/experiments/{uid}/database_server.db"
+    db = f"{_REPO_ROOT}/y_web/experiments/{uid}/database_server.db"
     con = sqlite3.connect(db)
     cur = con.cursor()
     cur.execute("""

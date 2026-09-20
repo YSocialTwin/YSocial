@@ -12,7 +12,7 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.external_repo]
 
 
-ROOT = Path("/Users/rossetti/PycharmProjects/YWeb")
+ROOT = Path(__file__).resolve().parents[2]
 EXTERNAL_YSIMULATOR = ROOT / "external" / "YSimulator"
 if str(EXTERNAL_YSIMULATOR) not in sys.path:
     sys.path.insert(0, str(EXTERNAL_YSIMULATOR))

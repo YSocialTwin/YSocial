@@ -7,7 +7,7 @@ from y_web.routes.admin.sub.experiments._helpers import _normalize_subreddit_inp
 
 pytestmark = pytest.mark.unit
 
-REPO_ROOT = Path("/Users/rossetti/PycharmProjects/YWeb")
+REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_normalize_subreddit_input_accepts_slug_and_reddit_urls():

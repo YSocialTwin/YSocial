@@ -7,7 +7,7 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
-ROOT = Path("/Users/rossetti/PycharmProjects/YWeb")
+ROOT = Path(__file__).resolve().parents[2]
 EXTERNAL_YCLIENT = ROOT / "external" / "YClient"
 if str(EXTERNAL_YCLIENT) not in sys.path:
     sys.path.insert(0, str(EXTERNAL_YCLIENT))

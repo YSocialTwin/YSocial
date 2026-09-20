@@ -1,6 +1,8 @@
 """Structural regression tests for the microblogging chat component."""
 
 from pathlib import Path
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
 from types import SimpleNamespace
 
 import pytest
@@ -430,28 +432,28 @@ def test_microblog_chat_routes_are_exposed():
 
 def test_microblog_chat_component_is_reusable_and_mounted():
     panel_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/components/chat_panel.html"
+        str(_REPO_ROOT / "y_web/templates/microblogging/components/chat_panel.html")
     ).read_text()
     feed_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/feed.html"
+        str(_REPO_ROOT / "y_web/templates/microblogging/feed.html")
     ).read_text()
     thread_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/thread.html"
+        str(_REPO_ROOT / "y_web/templates/microblogging/thread.html")
     ).read_text()
     profile_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/profile.html"
+        str(_REPO_ROOT / "y_web/templates/microblogging/profile.html")
     ).read_text()
     friends_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/friends.html"
+        str(_REPO_ROOT / "y_web/templates/microblogging/friends.html")
     ).read_text()
     hashtag_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/hashtag.html"
+        str(_REPO_ROOT / "y_web/templates/microblogging/hashtag.html")
     ).read_text()
     interest_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/interest.html"
+        str(_REPO_ROOT / "y_web/templates/microblogging/interest.html")
     ).read_text()
     emotions_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/emotions.html"
+        str(_REPO_ROOT / "y_web/templates/microblogging/emotions.html")
     ).read_text()
 
     assert 'id="microblog-chat-panel"' in panel_template
@@ -475,7 +477,7 @@ def test_microblog_chat_component_is_reusable_and_mounted():
 
 def test_microblog_chat_js_escapes_rendered_content():
     js_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/js/microblog-chat.js"
+        str(_REPO_ROOT / "y_web/static/assets/js/microblog-chat.js")
     ).read_text()
 
     assert "function escapeHtml" in js_source

@@ -11,7 +11,7 @@ from sqlalchemy import select
 
 pytestmark = pytest.mark.unit
 
-REPO_ROOT = Path("/Users/rossetti/PycharmProjects/YWeb")
+REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_client_action_routes_redirect_back_to_experiment_details():

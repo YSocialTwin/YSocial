@@ -7,6 +7,8 @@ import pytest
 
 from y_web import db
 
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+
 pytestmark = [pytest.mark.unit, pytest.mark.external_repo]
 
 
@@ -65,7 +67,7 @@ def _install_fake_detoxify(prediction):
 def test_yserver_uses_detoxify_when_toxicity_active_without_api_key():
     module = _load_module(
         Path(
-            "/Users/rossetti/PycharmProjects/YWeb/external/YServer/y_server/content_analysis/textual_data.py"
+            str(_REPO_ROOT / "external/YServer/y_server/content_analysis/textual_data.py")
         ),
         "yserver_textual_data_test",
     )
@@ -97,7 +99,7 @@ def test_yserver_uses_detoxify_when_toxicity_active_without_api_key():
 def test_yserver_reddit_uses_detoxify_when_toxicity_active_without_api_key():
     module = _load_module(
         Path(
-            "/Users/rossetti/PycharmProjects/YWeb/external/YServerReddit/y_server/content_analysis/textual_data.py"
+            str(_REPO_ROOT / "external/YServerReddit/y_server/content_analysis/textual_data.py")
         ),
         "yserver_reddit_textual_data_test",
     )

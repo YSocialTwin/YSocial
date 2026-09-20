@@ -5,7 +5,7 @@ import pytest
 
 pytestmark = pytest.mark.unit
 
-REPO_ROOT = Path("/Users/rossetti/PycharmProjects/YWeb")
+REPO_ROOT = Path(__file__).resolve().parents[2]
 STATIC_JS_DIR = REPO_ROOT / "y_web" / "static" / "assets" / "js"
 
 
