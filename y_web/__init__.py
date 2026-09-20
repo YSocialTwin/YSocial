@@ -462,13 +462,13 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
     register_blueprints(app)
 
     # ------------------------------------------------------------------
-    # Frontend plugin suites (e.g. EducatYon) — registered ONLY for suites
+    # Frontend plugin suites (e.g. Frontend Adds-on) — registered ONLY for suites
     # that are installed under external/<repo> AND pass manifest validation.
     # A suite that is absent, partially installed, or fails validation
     # contributes zero routes/blueprints: this is the app-startup half of
     # the "zero impact when not installed" guarantee (the per-experiment
     # enable/disable half is enforced per-request inside each module's own
-    # blueprint — see external/EducatYon/modules/*/backend).
+    # blueprint — see external/frontend_adds-on/modules/*/backend).
     # ------------------------------------------------------------------
     try:
         from y_web.src.external_runtime.plugin_loader import (

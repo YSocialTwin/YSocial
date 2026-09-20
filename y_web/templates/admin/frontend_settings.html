@@ -202,7 +202,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
     vertical-align: middle;
 }
 
-/* ── EducatYon module config: per-section grouping ──────────
+/* ── Frontend Adds-on module config: per-section grouping ──────────
  * Mirrors the #fb-config-section visual language above (bordered,
  * tinted box with a small uppercase header) so every "nested config"
  * area on this page reads the same way, but generic over however many
@@ -325,8 +325,8 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       <div id="ys-fs-grid" style="display:none;"
            data-get-url="{{ url_for('experiments.frontend_settings_get') }}"
            data-save-url="{{ url_for('experiments.frontend_settings_save') }}"
-           data-educatyon-get-url="{{ url_for('experiments.educatyon_settings_get') }}"
-           data-educatyon-save-url="{{ url_for('experiments.educatyon_settings_save') }}">
+           data-frontend_adds_on-get-url="{{ url_for('experiments.frontend_adds_on_settings_get') }}"
+           data-frontend_adds_on-save-url="{{ url_for('experiments.frontend_adds_on_settings_save') }}">
 
         <!-- loading overlay -->
         <div id="ys-fs-loading"><div class="ys-spinner"></div></div>
@@ -611,17 +611,17 @@ input:checked + .slider-small:before { transform: translateX(16px); }
             </div>
           </div>
 
-          <!-- ══ BOX 5 — EducatYon (frontend plugin suite) ═══════════ -->
-          <div class="misc-compact-box" id="box-educatyon" style="display:none;">
-            <h3>EducatYon <span class="ys-fs-exp-badge" id="badge-educatyon-suite-version"></span></h3>
+          <!-- ══ BOX 5 — Frontend Adds-on (frontend plugin suite) ═══════════ -->
+          <div class="misc-compact-box" id="box-frontend_adds_on" style="display:none;">
+            <h3>Frontend Adds-on <span class="ys-fs-exp-badge" id="badge-frontend_adds_on-suite-version"></span></h3>
             <div class="box-content">
               <p style="color:#6b7280;font-size:.85rem;margin-bottom:14px;">
-                Enable and configure EducatYon frontend plugin modules for this experiment.
+                Enable and configure Frontend Adds-on frontend plugin modules for this experiment.
                 Install or update the suite itself from
                 <a href="{{ url_for('experiments.external_runtimes') }}">External Runtimes</a>.
               </p>
-              <div id="educatyon-suite-errors" style="display:none;color:#b91c1c;font-size:.78rem;margin-bottom:10px;"></div>
-              <div id="educatyon-modules-list"></div>
+              <div id="frontend_adds_on-suite-errors" style="display:none;color:#b91c1c;font-size:.78rem;margin-bottom:10px;"></div>
+              <div id="frontend_adds_on-modules-list"></div>
             </div>
           </div>
 
@@ -657,8 +657,8 @@ input:checked + .slider-small:before { transform: translateX(16px); }
 
   const GET_URL  = grid.dataset.getUrl;
   const SAVE_URL = grid.dataset.saveUrl;
-  const EDUCATYON_GET_URL  = grid.dataset.educatyonGetUrl;
-  const EDUCATYON_SAVE_URL = grid.dataset.educatyonSaveUrl;
+  const FRONTEND_ADDS_ON_GET_URL  = grid.dataset.frontend_adds_onGetUrl;
+  const FRONTEND_ADDS_ON_SAVE_URL = grid.dataset.frontend_adds_onSaveUrl;
 
   let currentExpId = null;
 
@@ -705,7 +705,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
         _buildRecsysSelects(data.recsys_options);
       }
       applySettings(data.settings, data.exp_name);
-      loadEducatyonSettings(expId);
+      loadFrontendAddsOnSettings(expId);
       showGrid();
     } catch (e) {
       showEmpty();
@@ -823,7 +823,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
 
   /* ── Visibility helpers ────────────────────────────────── */
   function showGrid()    { grid.style.display = ''; emptyState.style.display = 'none'; feather.replace(); }
-  function showEmpty()   { grid.style.display = 'none'; emptyState.style.display = ''; currentExpId = null; const eduBox = document.getElementById('box-educatyon'); if (eduBox) eduBox.style.display = 'none'; }
+  function showEmpty()   { grid.style.display = 'none'; emptyState.style.display = ''; currentExpId = null; const eduBox = document.getElementById('box-frontend_adds_on'); if (eduBox) eduBox.style.display = 'none'; }
   function showLoading(on) { loading.classList.toggle('active', on); }
 
   /* ── master toggle: enable/disable child group ───────────── */
@@ -906,7 +906,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
 
 
   /* ══════════════════════════════════════════════════════════════════
-   * EducatYon frontend plugin suite — module list, per-module config
+   * Frontend Adds-on frontend plugin suite — module list, per-module config
    * ══════════════════════════════════════════════════════════════════ */
   const STATUS_LABELS = {
     active: ['Active', 'is-ok'],
@@ -917,21 +917,21 @@ input:checked + .slider-small:before { transform: translateX(16px); }
     error: ['Error', 'is-err'],
   };
 
-  async function loadEducatyonSettings(expId) {
-    const box = document.getElementById('box-educatyon');
-    if (!box || !EDUCATYON_GET_URL) return;
+  async function loadFrontendAddsOnSettings(expId) {
+    const box = document.getElementById('box-frontend_adds_on');
+    if (!box || !FRONTEND_ADDS_ON_GET_URL) return;
     try {
-      const resp = await fetch(EDUCATYON_GET_URL + '?exp_id=' + expId);
+      const resp = await fetch(FRONTEND_ADDS_ON_GET_URL + '?exp_id=' + expId);
       const data = await resp.json();
       if (!data.ok || !data.installed) {
         box.style.display = 'none';
         return;
       }
       box.style.display = '';
-      const versionBadge = document.getElementById('badge-educatyon-suite-version');
+      const versionBadge = document.getElementById('badge-frontend_adds_on-suite-version');
       if (versionBadge && data.suite) versionBadge.textContent = 'v' + data.suite.version;
 
-      const errBox = document.getElementById('educatyon-suite-errors');
+      const errBox = document.getElementById('frontend_adds_on-suite-errors');
       if (data.suite_errors && data.suite_errors.length) {
         errBox.style.display = '';
         errBox.innerHTML = data.suite_errors.map(e => '• ' + e).join('<br>');
@@ -940,7 +940,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
         errBox.innerHTML = '';
       }
 
-      renderEducatyonModules(expId, data.modules || []);
+      renderFrontendAddsOnModules(expId, data.modules || []);
     } catch (e) {
       box.style.display = 'none';
     }
@@ -1021,8 +1021,8 @@ input:checked + .slider-small:before { transform: translateX(16px); }
     });
   }
 
-  function renderEducatyonModules(expId, modules) {
-    const list = document.getElementById('educatyon-modules-list');
+  function renderFrontendAddsOnModules(expId, modules) {
+    const list = document.getElementById('frontend_adds_on-modules-list');
     if (!modules.length) {
       list.innerHTML = '<p class="ys-fs-placeholder" style="padding:20px;">No modules declared by this suite.</p>';
       return;
@@ -1135,7 +1135,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
         statusEl.textContent = 'Saving…';
         statusEl.className = 'ys-fs-save-status edu-status';
         try {
-          const resp = await fetch(EDUCATYON_SAVE_URL, {
+          const resp = await fetch(FRONTEND_ADDS_ON_SAVE_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ exp_id: expId, module_id: moduleId, enabled: enabled, config: config }),
@@ -1144,7 +1144,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
           if (data.ok) {
             statusEl.textContent = 'Saved ✓';
             statusEl.className = 'ys-fs-save-status edu-status is-ok';
-            loadEducatyonSettings(expId);
+            loadFrontendAddsOnSettings(expId);
           } else {
             statusEl.textContent = 'Error: ' + (data.error || 'unknown');
             statusEl.className = 'ys-fs-save-status edu-status is-err';

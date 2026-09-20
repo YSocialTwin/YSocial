@@ -543,7 +543,7 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
         "microblogging/profile.html",
         profile_pic=profile_pic,
         ui=_load_ui_settings(exp_id),
-        educatyon_modules=active_modules_context(exp_id),
+        frontend_adds_on_modules=active_modules_context(exp_id),
         **common_context,
     )
 

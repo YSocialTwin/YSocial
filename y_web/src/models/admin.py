@@ -913,8 +913,8 @@ class ExpFrontendSettings(db.Model):
     )
 
 
-class EducatyonExpModuleSettings(db.Model):
-    """Per-experiment, per-module configuration for the EducatYon plugin suite.
+class FrontendAddsOnExpModuleSettings(db.Model):
+    """Per-experiment, per-module configuration for the Frontend Adds-on plugin suite.
 
     One row per (exp_id, module_id) pair -- e.g. (12, "post_annotation").
     ``enabled`` gates whether the module's blueprint routes accept requests
@@ -928,7 +928,7 @@ class EducatyonExpModuleSettings(db.Model):
     """
 
     __bind_key__ = "db_admin"
-    __tablename__ = "educatyon_exp_module_settings"
+    __tablename__ = "frontend_adds_on_exp_module_settings"
 
     exp_id = db.Column(
         db.Integer,

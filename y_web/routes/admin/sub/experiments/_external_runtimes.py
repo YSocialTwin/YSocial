@@ -75,7 +75,7 @@ def _runtime_group_active_experiments(group_key: str) -> list[Exps]:
     elif group_key == "agent_plugins":
         return []
     elif group_key == "frontend_plugins":
-        # Frontend plugin suites (e.g. EducatYon) are UI-only extensions; they
+        # Frontend plugin suites (e.g. Frontend Adds-on) are UI-only extensions; they
         # are never tied to a running simulation, so mutating actions on them
         # are never blocked by "active experiment" checks.
         return []

@@ -225,9 +225,9 @@ def frontend_settings_save():
 
 
 # ------------------------------------------------------------------
-# EducatYon frontend plugin suite — per-experiment module enable/config
+# Frontend Adds-on frontend plugin suite — per-experiment module enable/config
 # ------------------------------------------------------------------
-def _educatyon_module_status(manifest: dict, row) -> str:
+def _frontend_adds_on_module_status(manifest: dict, row) -> str:
     """Compute the admin-facing status label for one module manifest.
 
     One of: "incompatible" | "error" | "active" | "not_configured" |
@@ -257,7 +257,7 @@ def _educatyon_module_status(manifest: dict, row) -> str:
     return "disabled" if row is not None else "available"
 
 
-def _educatyon_module_config(manifest: dict, row) -> dict:
+def _frontend_adds_on_module_config(manifest: dict, row) -> dict:
     merged = {p["name"]: p.get("default") for p in manifest.get("parameters", [])}
     if row is not None:
         try:
@@ -267,9 +267,9 @@ def _educatyon_module_config(manifest: dict, row) -> dict:
     return merged
 
 
-@experiments.route("/admin/frontend_settings/educatyon/get", methods=["GET"])
+@experiments.route("/admin/frontend_settings/frontend_adds_on/get", methods=["GET"])
 @login_required
-def educatyon_settings_get():
+def frontend_adds_on_settings_get():
     check_privileges(current_user.username)
 
     exp_id = request.args.get("exp_id", type=int)
@@ -281,15 +281,15 @@ def educatyon_settings_get():
         return jsonify({"ok": False, "error": "Experiment not found"}), 404
 
     from y_web.src.external_runtime.frontend_plugins import validate_frontend_suite
-    from y_web.src.models import EducatyonExpModuleSettings
+    from y_web.src.models import FrontendAddsOnExpModuleSettings
 
-    report = validate_frontend_suite("educatyon")
+    report = validate_frontend_suite("frontend_adds_on")
     if not report["installed"]:
         return jsonify({"ok": True, "installed": False})
 
     rows = {
         row.module_id: row
-        for row in db.session.query(EducatyonExpModuleSettings)
+        for row in db.session.query(FrontendAddsOnExpModuleSettings)
         .filter_by(exp_id=exp_id)
         .all()
     }
@@ -306,8 +306,8 @@ def educatyon_settings_get():
             "parameter_sections": manifest.get("parameter_sections") or [],
             "parameters": manifest.get("parameters") or [],
             "enabled": bool(row is not None and row.enabled),
-            "config": _educatyon_module_config(manifest, row),
-            "status": _educatyon_module_status(manifest, row),
+            "config": _frontend_adds_on_module_config(manifest, row),
+            "status": _frontend_adds_on_module_status(manifest, row),
             "manifest_errors": manifest.get("errors") or [],
         })
 
@@ -321,7 +321,7 @@ def educatyon_settings_get():
     })
 
 
-def _coerce_educatyon_param(value, param: dict):
+def _coerce_frontend_adds_on_param(value, param: dict):
     ptype = param.get("type")
     if ptype == "bool":
         return bool(value)
@@ -345,9 +345,9 @@ def _coerce_educatyon_param(value, param: dict):
     return str(value) if value is not None else param.get("default", "")
 
 
-@experiments.route("/admin/frontend_settings/educatyon/save", methods=["POST"])
+@experiments.route("/admin/frontend_settings/frontend_adds_on/save", methods=["POST"])
 @login_required
-def educatyon_settings_save():
+def frontend_adds_on_settings_save():
     check_privileges(current_user.username)
 
     data = request.get_json(silent=True) or {}
@@ -365,10 +365,10 @@ def educatyon_settings_save():
 
     from y_web.src.external_runtime.frontend_plugins import discover_frontend_modules
     from y_web.src.external_runtime.plugin_loader import ensure_module_schema
-    from y_web.src.models import EducatyonExpModuleSettings
+    from y_web.src.models import FrontendAddsOnExpModuleSettings
 
     manifest = None
-    for entry in discover_frontend_modules("educatyon"):
+    for entry in discover_frontend_modules("frontend_adds_on"):
         if entry.get("module_id") == module_id:
             manifest = entry
             break
@@ -379,19 +379,19 @@ def educatyon_settings_save():
     for param in manifest.get("parameters", []):
         name = param["name"]
         if name in raw_config:
-            safe_config[name] = _coerce_educatyon_param(raw_config[name], param)
+            safe_config[name] = _coerce_frontend_adds_on_param(raw_config[name], param)
 
     if enabled:
-        migrated = ensure_module_schema("educatyon", module_id, exp_id, quiet=True)
+        migrated = ensure_module_schema("frontend_adds_on", module_id, exp_id, quiet=True)
         if not migrated:
             return jsonify({
                 "ok": False,
                 "error": "Could not prepare the experiment database for this module.",
             }), 500
 
-    row = db.session.get(EducatyonExpModuleSettings, (exp_id, module_id))
+    row = db.session.get(FrontendAddsOnExpModuleSettings, (exp_id, module_id))
     if row is None:
-        row = EducatyonExpModuleSettings(
+        row = FrontendAddsOnExpModuleSettings(
             exp_id=exp_id,
             module_id=module_id,
             enabled=enabled,

@@ -329,7 +329,7 @@ def feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
             sfollow=sfollow,
             spages=spages,
             ui=ui,
-            educatyon_modules=active_modules_context(exp_id),
+            frontend_adds_on_modules=active_modules_context(exp_id),
         )
 
 
@@ -408,7 +408,7 @@ def get_post_hashtags(exp_id, hashtag_id, page=1):
         bool=bool,
         is_admin=is_admin(current_user.username),
             ui=_load_ui_settings(exp_id),
-            educatyon_modules=active_modules_context(exp_id),
+            frontend_adds_on_modules=active_modules_context(exp_id),
     )
 
 
@@ -1057,7 +1057,7 @@ def get_thread(exp_id, post_id):
         mentions=mentions,
         is_admin=is_admin(current_user.username),
             ui=_load_ui_settings(exp_id),
-            educatyon_modules=active_modules_context(exp_id),
+            frontend_adds_on_modules=active_modules_context(exp_id),
     )
 
 

@@ -1,10 +1,10 @@
-"""Runtime loader for EducatYon-style frontend plugin suites.
+"""Runtime loader for Frontend Adds-on-style frontend plugin suites.
 
 Responsible for the parts of the "zero impact when not installed/active"
 guarantee that happen at Flask app-startup and per-request time:
 
 * Dynamically importing a suite module's backend Python package from inside
-  its external git repo (e.g. ``external/EducatYon/modules/post_annotation``)
+  its external git repo (e.g. ``external/frontend_adds-on/modules/post_annotation``)
   WITHOUT adding that repo to ``sys.path`` — this avoids polluting the global
   import namespace and avoids collisions between top-level package names
   used by different suites (many suites may reasonably have a top-level
@@ -120,7 +120,7 @@ def register_frontend_plugin_suites(app) -> dict:
             except Exception as exc:
                 # A broken module must never break the others or the app.
                 app.logger.warning(
-                    "[educatyon] failed to load backend for module '%s' in suite '%s': %s",
+                    "[frontend_adds_on] failed to load backend for module '%s' in suite '%s': %s",
                     module_id, repo_key, exc,
                 )
                 suite_report["errors"].append(f"module '{module_id}' backend import failed: {exc}")
@@ -130,7 +130,7 @@ def register_frontend_plugin_suites(app) -> dict:
         try:
             _register_static_blueprint(app, repo_key)
         except Exception as exc:
-            app.logger.warning("[educatyon] failed to register static assets route for '%s': %s", repo_key, exc)
+            app.logger.warning("[frontend_adds_on] failed to register static assets route for '%s': %s", repo_key, exc)
 
         report["suites"][repo_key] = suite_report
 
@@ -147,7 +147,7 @@ def _register_static_blueprint(app, repo_key: str) -> None:
     """
     from flask import Blueprint, abort, send_from_directory
 
-    endpoint_name = f"educatyon_static_{repo_key}"
+    endpoint_name = f"frontend_adds_on_static_{repo_key}"
     if endpoint_name in app.blueprints:
         return
 
@@ -180,7 +180,7 @@ def is_module_available(repo_key: str, module_id: str) -> bool:
 
     This reflects install+validation+import success — NOT whether any
     experiment has enabled the module (that's a separate, per-experiment
-    check against EducatyonExpModuleSettings).
+    check against FrontendAddsOnExpModuleSettings).
     """
     return module_id in registered_suite_modules(repo_key)
 
@@ -201,7 +201,7 @@ def ensure_module_schema(repo_key: str, module_id: str, exp_id: int, quiet: bool
     """Run the module's own JIT migration against exp_id's database, if any.
 
     Called by the admin "enable module for experiment" handler, right
-    before flipping ``enabled=True`` in ``EducatyonExpModuleSettings``. A
+    before flipping ``enabled=True`` in ``FrontendAddsOnExpModuleSettings``. A
     module without a ``migrations_module`` entry (nothing to create) is a
     no-op success. Never raises — returns False on any failure so the
     caller can surface a clear "could not enable" error instead of a 500.
@@ -240,14 +240,14 @@ def active_modules_context(exp_id: int) -> list[dict]:
     an installed+valid suite, and (b) enabled for *exp_id*. Empty list (zero
     template/JS overhead) whenever no suite is installed or no experiment
     has anything enabled — this is the single choke point that guarantees
-    "no impact when EducatYon is absent or inactive".
+    "no impact when Frontend Adds-on is absent or inactive".
     """
     if not _REGISTERED_SUITES:
         return []
 
     try:
         from y_web import db
-        from y_web.src.models import EducatyonExpModuleSettings
+        from y_web.src.models import FrontendAddsOnExpModuleSettings
     except Exception:
         return []
 
@@ -257,7 +257,7 @@ def active_modules_context(exp_id: int) -> list[dict]:
         if not modules:
             continue
         try:
-            rows = db.session.query(EducatyonExpModuleSettings).filter_by(
+            rows = db.session.query(FrontendAddsOnExpModuleSettings).filter_by(
                 exp_id=exp_id, enabled=True
             ).all()
         except Exception:

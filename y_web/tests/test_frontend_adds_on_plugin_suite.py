@@ -1,14 +1,14 @@
 """
-Tests for the EducatYon frontend plugin suite integration.
+Tests for the Frontend Adds-on frontend plugin suite integration.
 
 Covers:
   * manifest discovery/validation (y_web.src.external_runtime.frontend_plugins)
   * suite/blueprint registration + static asset serving (plugin_loader)
-  * the JIT per-experiment schema migration (external/EducatYon/.../migrations.py)
+  * the JIT per-experiment schema migration (external/frontend_adds-on/.../migrations.py)
   * the "zero impact when not enabled" guarantee for active_modules_context()
   * the minimal post_annotation API end-to-end (enable -> create -> list)
 
-These tests exercise the REAL external/EducatYon repo scaffolded alongside
+These tests exercise the REAL external/frontend_adds-on repo scaffolded alongside
 this change (not a mock), since discovery/validation intentionally reads
 manifests live from disk rather than from a cache.
 """
@@ -29,16 +29,16 @@ from y_web.src.external_runtime import plugin_loader
 # Manifest discovery / validation
 # ---------------------------------------------------------------------------
 def test_discover_frontend_modules_finds_post_annotation():
-    modules = frontend_plugins.discover_frontend_modules("educatyon")
+    modules = frontend_plugins.discover_frontend_modules("frontend_adds_on")
     module_ids = [m.get("module_id") for m in modules]
     assert "post_annotation" in module_ids
 
 
-def test_validate_frontend_suite_valid_for_educatyon():
-    report = frontend_plugins.validate_frontend_suite("educatyon")
+def test_validate_frontend_suite_valid_for_frontend_adds_on():
+    report = frontend_plugins.validate_frontend_suite("frontend_adds_on")
     assert report["installed"] is True
     assert report["valid"] is True, report["errors"]
-    assert report["suite"]["suite_id"] == "educatyon"
+    assert report["suite"]["suite_id"] == "frontend_adds_on"
     module_ids = [m["module_id"] for m in report["modules"]]
     assert "post_annotation" in module_ids
     post_annotation = next(m for m in report["modules"] if m["module_id"] == "post_annotation")
@@ -52,15 +52,15 @@ def test_validate_frontend_suite_unknown_repo_key():
     assert report["errors"]
 
 
-def test_frontend_plugin_repo_keys_includes_educatyon():
-    assert "educatyon" in frontend_plugins.frontend_plugin_repo_keys()
+def test_frontend_plugin_repo_keys_includes_frontend_adds_on():
+    assert "frontend_adds_on" in frontend_plugins.frontend_plugin_repo_keys()
 
 
 # ---------------------------------------------------------------------------
 # JIT migration (module's own schema, applied to one experiment DB)
 # ---------------------------------------------------------------------------
 def test_post_annotation_migration_creates_tables():
-    module = plugin_loader._import_from_suite("educatyon", "modules.post_annotation.backend.migrations")
+    module = plugin_loader._import_from_suite("frontend_adds_on", "modules.post_annotation.backend.migrations")
 
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
         db_path = tmp.name
@@ -76,8 +76,8 @@ def test_post_annotation_migration_creates_tables():
         tables = {row[0] for row in cursor.fetchall()}
         conn.close()
 
-        assert "plugin_educatyon_post_annotation" in tables
-        assert "plugin_educatyon_post_annotation_topic" in tables
+        assert "plugin_frontend_adds_on_post_annotation" in tables
+        assert "plugin_frontend_adds_on_post_annotation_topic" in tables
 
         # Idempotent: calling it again must not error or duplicate anything.
         assert module.migrate_sqlite_server(db_path, quiet=True) is True
@@ -92,20 +92,20 @@ def test_ensure_module_schema_targets_the_right_experiment_db(monkeypatch):
         sqlite3.connect(db_path).close()
         monkeypatch.setattr(plugin_loader, "_experiment_db_path", lambda exp_id: db_path)
 
-        assert plugin_loader.ensure_module_schema("educatyon", "post_annotation", exp_id=999, quiet=True) is True
+        assert plugin_loader.ensure_module_schema("frontend_adds_on", "post_annotation", exp_id=999, quiet=True) is True
 
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
         tables = {row[0] for row in cursor.fetchall()}
         conn.close()
-        assert "plugin_educatyon_post_annotation" in tables
+        assert "plugin_frontend_adds_on_post_annotation" in tables
     finally:
         os.unlink(db_path)
 
 
 def test_ensure_module_schema_unknown_module_returns_false():
-    assert plugin_loader.ensure_module_schema("educatyon", "does_not_exist", exp_id=1) is False
+    assert plugin_loader.ensure_module_schema("frontend_adds_on", "does_not_exist", exp_id=1) is False
 
 
 # ---------------------------------------------------------------------------
@@ -113,25 +113,25 @@ def test_ensure_module_schema_unknown_module_returns_false():
 # ---------------------------------------------------------------------------
 def test_register_frontend_plugin_suites_registers_blueprint_and_static_route(app):
     report = plugin_loader.register_frontend_plugin_suites(app)
-    assert report["suites"]["educatyon"]["installed"] is True
-    assert report["suites"]["educatyon"]["valid"] is True
-    assert "post_annotation" in report["suites"]["educatyon"]["registered_modules"]
-    assert plugin_loader.is_module_available("educatyon", "post_annotation") is True
+    assert report["suites"]["frontend_adds_on"]["installed"] is True
+    assert report["suites"]["frontend_adds_on"]["valid"] is True
+    assert "post_annotation" in report["suites"]["frontend_adds_on"]["registered_modules"]
+    assert plugin_loader.is_module_available("frontend_adds_on", "post_annotation") is True
 
-    assert "educatyon_post_annotation" in app.blueprints
-    assert "educatyon_static_educatyon" in app.blueprints
+    assert "frontend_adds_on_post_annotation" in app.blueprints
+    assert "frontend_adds_on_static_frontend_adds_on" in app.blueprints
 
     client = app.test_client()
-    resp = client.get("/plugins/educatyon/post_annotation/static/modules/post_annotation/frontend/plugin.js")
+    resp = client.get("/plugins/frontend_adds_on/post_annotation/static/modules/post_annotation/frontend/plugin.js")
     assert resp.status_code == 200
-    assert b"EducatYon" in resp.data
+    assert b"Frontend Adds-on" in resp.data
 
     # Path traversal must be refused, not silently served.
-    resp2 = client.get("/plugins/educatyon/post_annotation/static/../../../../etc/passwd")
+    resp2 = client.get("/plugins/frontend_adds_on/post_annotation/static/../../../../etc/passwd")
     assert resp2.status_code == 404
 
     # An unknown module_id under a valid suite must 404, not serve anything.
-    resp3 = client.get("/plugins/educatyon/does_not_exist/static/modules/post_annotation/frontend/plugin.js")
+    resp3 = client.get("/plugins/frontend_adds_on/does_not_exist/static/modules/post_annotation/frontend/plugin.js")
     assert resp3.status_code == 404
 
 
@@ -188,11 +188,11 @@ def test_active_modules_context_empty_when_module_not_enabled(app):
 
 def test_active_modules_context_returns_module_when_enabled(app):
     plugin_loader.register_frontend_plugin_suites(app)
-    from y_web.src.models import EducatyonExpModuleSettings
+    from y_web.src.models import FrontendAddsOnExpModuleSettings
 
     with app.app_context():
         exp_id = _make_exp(app)
-        db.session.add(EducatyonExpModuleSettings(
+        db.session.add(FrontendAddsOnExpModuleSettings(
             exp_id=exp_id,
             module_id="post_annotation",
             enabled=True,
@@ -203,7 +203,7 @@ def test_active_modules_context_returns_module_when_enabled(app):
         modules = plugin_loader.active_modules_context(exp_id)
         assert len(modules) == 1
         assert modules[0]["module_id"] == "post_annotation"
-        assert modules[0]["api_base"] == f"/{exp_id}/api/plugins/educatyon/post_annotation"
+        assert modules[0]["api_base"] == f"/{exp_id}/api/plugins/frontend_adds_on/post_annotation"
         assert modules[0]["frontend_entry"].endswith("modules/post_annotation/frontend/plugin.js")
         assert modules[0]["config"]["opinion_scale"] == "binary"
         # Untouched parameters still carry their manifest default.
@@ -214,7 +214,7 @@ def test_active_modules_context_returns_module_when_enabled(app):
 # End-to-end API flow: enable -> create annotation -> list it back
 # ---------------------------------------------------------------------------
 @pytest.fixture
-def educatyon_app(app):
+def frontend_adds_on_app(app):
     """The shared `app` fixture, with the post_annotation blueprint registered.
 
     Registering the suite imports the module's model classes for the first
@@ -238,15 +238,15 @@ def _login(client, user_id):
         sess["_fresh"] = True
 
 
-def test_post_annotation_api_end_to_end(educatyon_app):
-    from y_web.src.models import EducatyonExpModuleSettings, User_mgmt
+def test_post_annotation_api_end_to_end(frontend_adds_on_app):
+    from y_web.src.models import FrontendAddsOnExpModuleSettings, User_mgmt
 
-    app = educatyon_app
+    app = frontend_adds_on_app
     client = app.test_client()
 
     with app.app_context():
         exp_id = _make_exp(app)
-        db.session.add(EducatyonExpModuleSettings(
+        db.session.add(FrontendAddsOnExpModuleSettings(
             exp_id=exp_id, module_id="post_annotation", enabled=True, config_json="{}",
         ))
         db.session.commit()
@@ -258,12 +258,12 @@ def test_post_annotation_api_end_to_end(educatyon_app):
     _login(client, user_id)
 
     # Not enabled for a *different* experiment -> 404, never a silent 200.
-    resp_disabled = client.get(f"/999999/api/plugins/educatyon/post_annotation/topics")
+    resp_disabled = client.get(f"/999999/api/plugins/frontend_adds_on/post_annotation/topics")
     assert resp_disabled.status_code == 404
 
     # Create an annotation on the enabled experiment.
     create_resp = client.post(
-        f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
+        f"/{exp_id}/api/plugins/frontend_adds_on/post_annotation/annotations",
         json={
             "target_type": "post",
             "target_id": 42,
@@ -277,7 +277,7 @@ def test_post_annotation_api_end_to_end(educatyon_app):
     assert annotation_id
 
     list_resp = client.get(
-        f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
+        f"/{exp_id}/api/plugins/frontend_adds_on/post_annotation/annotations",
         query_string={"target_type": "post", "target_id": 42},
     )
     assert list_resp.status_code == 200
@@ -288,15 +288,15 @@ def test_post_annotation_api_end_to_end(educatyon_app):
     assert listed["annotations"][0]["topics"][0]["opinion_value"] == 1.0
 
 
-def test_post_annotation_rejects_disabled_target_type(educatyon_app):
-    from y_web.src.models import EducatyonExpModuleSettings, User_mgmt
+def test_post_annotation_rejects_disabled_target_type(frontend_adds_on_app):
+    from y_web.src.models import FrontendAddsOnExpModuleSettings, User_mgmt
 
-    app = educatyon_app
+    app = frontend_adds_on_app
     client = app.test_client()
 
     with app.app_context():
         exp_id = _make_exp(app)
-        db.session.add(EducatyonExpModuleSettings(
+        db.session.add(FrontendAddsOnExpModuleSettings(
             exp_id=exp_id,
             module_id="post_annotation",
             enabled=True,
@@ -311,28 +311,28 @@ def test_post_annotation_rejects_disabled_target_type(educatyon_app):
     _login(client, user_id)
 
     resp = client.post(
-        f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
+        f"/{exp_id}/api/plugins/frontend_adds_on/post_annotation/annotations",
         json={"target_type": "comment", "target_id": 1, "topics": [{"label": "x", "opinion": 0}]},
     )
     assert resp.status_code == 403
 
 
 
-def test_post_annotation_accepts_uuid_target_id_hpc_style(educatyon_app):
+def test_post_annotation_accepts_uuid_target_id_hpc_style(frontend_adds_on_app):
     """HPC-simulator experiments identify posts/comments by UUID, not by a
     numeric Post id (Standard-simulator experiments use numeric ids). The
     module must accept either without ever coercing target_id to int.
     """
-    from y_web.src.models import EducatyonExpModuleSettings, User_mgmt
+    from y_web.src.models import FrontendAddsOnExpModuleSettings, User_mgmt
 
-    app = educatyon_app
+    app = frontend_adds_on_app
     client = app.test_client()
 
     uuid_target_id = "3fa85f64-5717-4562-b3fc-2c963f66afa6"
 
     with app.app_context():
         exp_id = _make_exp(app)
-        db.session.add(EducatyonExpModuleSettings(
+        db.session.add(FrontendAddsOnExpModuleSettings(
             exp_id=exp_id, module_id="post_annotation", enabled=True, config_json="{}",
         ))
         db.session.commit()
@@ -344,7 +344,7 @@ def test_post_annotation_accepts_uuid_target_id_hpc_style(educatyon_app):
     _login(client, user_id)
 
     create_resp = client.post(
-        f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
+        f"/{exp_id}/api/plugins/frontend_adds_on/post_annotation/annotations",
         json={
             "target_type": "post",
             "target_id": uuid_target_id,
@@ -355,7 +355,7 @@ def test_post_annotation_accepts_uuid_target_id_hpc_style(educatyon_app):
     assert create_resp.get_json()["ok"] is True
 
     list_resp = client.get(
-        f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
+        f"/{exp_id}/api/plugins/frontend_adds_on/post_annotation/annotations",
         query_string={"target_type": "post", "target_id": uuid_target_id},
     )
     assert list_resp.status_code == 200
@@ -364,20 +364,20 @@ def test_post_annotation_accepts_uuid_target_id_hpc_style(educatyon_app):
     assert listed["count"] == 1
 
 
-def test_post_annotation_create_upserts_instead_of_duplicating(educatyon_app):
+def test_post_annotation_create_upserts_instead_of_duplicating(frontend_adds_on_app):
     """A user may hold at most one annotation per target: annotating the
     same post twice must edit the existing row (and its topics) in place,
     never insert a second one. Verified directly against the DB row count,
     not just through the API's own responses.
     """
-    from y_web.src.models import EducatyonExpModuleSettings, User_mgmt
+    from y_web.src.models import FrontendAddsOnExpModuleSettings, User_mgmt
 
-    app = educatyon_app
+    app = frontend_adds_on_app
     client = app.test_client()
 
     with app.app_context():
         exp_id = _make_exp(app)
-        db.session.add(EducatyonExpModuleSettings(
+        db.session.add(FrontendAddsOnExpModuleSettings(
             exp_id=exp_id, module_id="post_annotation", enabled=True, config_json="{}",
         ))
         db.session.commit()
@@ -389,7 +389,7 @@ def test_post_annotation_create_upserts_instead_of_duplicating(educatyon_app):
     _login(client, user_id)
 
     first_resp = client.post(
-        f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
+        f"/{exp_id}/api/plugins/frontend_adds_on/post_annotation/annotations",
         json={
             "target_type": "post",
             "target_id": 77,
@@ -404,7 +404,7 @@ def test_post_annotation_create_upserts_instead_of_duplicating(educatyon_app):
 
     # Re-annotate the SAME target with a different topic selection.
     second_resp = client.post(
-        f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
+        f"/{exp_id}/api/plugins/frontend_adds_on/post_annotation/annotations",
         json={
             "target_type": "post",
             "target_id": 77,
@@ -419,16 +419,16 @@ def test_post_annotation_create_upserts_instead_of_duplicating(educatyon_app):
 
     with app.app_context():
         backend_module = plugin_loader._import_from_suite(
-            "educatyon", "modules.post_annotation.backend"
+            "frontend_adds_on", "modules.post_annotation.backend"
         )
-        PluginEducatyonPostAnnotation = backend_module.PluginEducatyonPostAnnotation
-        PluginEducatyonPostAnnotationTopic = backend_module.PluginEducatyonPostAnnotationTopic
+        PluginFrontendAddsOnPostAnnotation = backend_module.PluginFrontendAddsOnPostAnnotation
+        PluginFrontendAddsOnPostAnnotationTopic = backend_module.PluginFrontendAddsOnPostAnnotationTopic
 
-        rows = PluginEducatyonPostAnnotation.query.filter_by(
+        rows = PluginFrontendAddsOnPostAnnotation.query.filter_by(
             target_type="post", target_id="77",
         ).all()
         assert len(rows) == 1, "annotating the same target twice must not duplicate the row"
-        topics = PluginEducatyonPostAnnotationTopic.query.filter_by(
+        topics = PluginFrontendAddsOnPostAnnotationTopic.query.filter_by(
             annotation_id=rows[0].id
         ).all()
         assert [t.topic_label for t in topics] == ["Vaccines"], (
@@ -437,7 +437,7 @@ def test_post_annotation_create_upserts_instead_of_duplicating(educatyon_app):
 
     # The list endpoint agrees: still exactly one annotation for this target.
     list_resp = client.get(
-        f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
+        f"/{exp_id}/api/plugins/frontend_adds_on/post_annotation/annotations",
         query_string={"target_type": "post", "target_id": 77},
     )
     listed = list_resp.get_json()
@@ -445,7 +445,7 @@ def test_post_annotation_create_upserts_instead_of_duplicating(educatyon_app):
     assert listed["annotations"][0]["topics"][0]["label"] == "Vaccines"
 
 
-def test_my_annotations_hydrates_existing_annotation(educatyon_app):
+def test_my_annotations_hydrates_existing_annotation(frontend_adds_on_app):
     """/my_annotations is the batched lookup the frontend calls on every
     fresh page load to know which targets the current user already
     annotated — this is what makes an annotation survive a page refresh
@@ -453,14 +453,14 @@ def test_my_annotations_hydrates_existing_annotation(educatyon_app):
     always re-asks this endpoint). A target the user never annotated must
     simply be absent from the response, not present with an empty shell.
     """
-    from y_web.src.models import EducatyonExpModuleSettings, User_mgmt
+    from y_web.src.models import FrontendAddsOnExpModuleSettings, User_mgmt
 
-    app = educatyon_app
+    app = frontend_adds_on_app
     client = app.test_client()
 
     with app.app_context():
         exp_id = _make_exp(app)
-        db.session.add(EducatyonExpModuleSettings(
+        db.session.add(FrontendAddsOnExpModuleSettings(
             exp_id=exp_id, module_id="post_annotation", enabled=True, config_json="{}",
         ))
         db.session.commit()
@@ -472,7 +472,7 @@ def test_my_annotations_hydrates_existing_annotation(educatyon_app):
     _login(client, user_id)
 
     create_resp = client.post(
-        f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
+        f"/{exp_id}/api/plugins/frontend_adds_on/post_annotation/annotations",
         json={
             "target_type": "post",
             "target_id": 101,
@@ -484,7 +484,7 @@ def test_my_annotations_hydrates_existing_annotation(educatyon_app):
     # Simulate a fresh page load asking, in one batched call, about several
     # posts on the page — only one of which was ever annotated.
     hydrate_resp = client.get(
-        f"/{exp_id}/api/plugins/educatyon/post_annotation/my_annotations",
+        f"/{exp_id}/api/plugins/frontend_adds_on/post_annotation/my_annotations",
         query_string={"target_type": "post", "target_ids": "101,202,303"},
     )
     assert hydrate_resp.status_code == 200
@@ -496,7 +496,7 @@ def test_my_annotations_hydrates_existing_annotation(educatyon_app):
 
     # Missing/required params are rejected cleanly, never a silent empty 200.
     bad_resp = client.get(
-        f"/{exp_id}/api/plugins/educatyon/post_annotation/my_annotations",
+        f"/{exp_id}/api/plugins/frontend_adds_on/post_annotation/my_annotations",
         query_string={"target_type": "post"},
     )
     assert bad_resp.status_code == 400
@@ -510,7 +510,7 @@ def test_migration_dedupes_pre_existing_duplicates_before_unique_index():
     now-orphaned topic rows — before it can safely add the unique index
     that enforces the rule going forward.
     """
-    module = plugin_loader._import_from_suite("educatyon", "modules.post_annotation.backend.migrations")
+    module = plugin_loader._import_from_suite("frontend_adds_on", "modules.post_annotation.backend.migrations")
 
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
         db_path = tmp.name
@@ -521,7 +521,7 @@ def test_migration_dedupes_pre_existing_duplicates_before_unique_index():
         # holding a pre-existing duplicate for the same user/target.
         cursor.execute(
             """
-            CREATE TABLE plugin_educatyon_post_annotation (
+            CREATE TABLE plugin_frontend_adds_on_post_annotation (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 target_type TEXT NOT NULL,
                 target_id TEXT NOT NULL,
@@ -533,9 +533,9 @@ def test_migration_dedupes_pre_existing_duplicates_before_unique_index():
         )
         cursor.execute(
             """
-            CREATE TABLE plugin_educatyon_post_annotation_topic (
+            CREATE TABLE plugin_frontend_adds_on_post_annotation_topic (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                annotation_id INTEGER NOT NULL REFERENCES plugin_educatyon_post_annotation(id),
+                annotation_id INTEGER NOT NULL REFERENCES plugin_frontend_adds_on_post_annotation(id),
                 topic_label TEXT NOT NULL,
                 topic_id INTEGER,
                 opinion_scale TEXT NOT NULL,
@@ -544,19 +544,19 @@ def test_migration_dedupes_pre_existing_duplicates_before_unique_index():
             """
         )
         cursor.execute(
-            "INSERT INTO plugin_educatyon_post_annotation (id, target_type, target_id, annotator_user_id) "
+            "INSERT INTO plugin_frontend_adds_on_post_annotation (id, target_type, target_id, annotator_user_id) "
             "VALUES (1, 'post', '42', 'user-1')"
         )
         cursor.execute(
-            "INSERT INTO plugin_educatyon_post_annotation (id, target_type, target_id, annotator_user_id) "
+            "INSERT INTO plugin_frontend_adds_on_post_annotation (id, target_type, target_id, annotator_user_id) "
             "VALUES (2, 'post', '42', 'user-1')"
         )
         cursor.execute(
-            "INSERT INTO plugin_educatyon_post_annotation_topic "
+            "INSERT INTO plugin_frontend_adds_on_post_annotation_topic "
             "(annotation_id, topic_label, opinion_scale, opinion_value) VALUES (1, 'Old topic', '5point', 0)"
         )
         cursor.execute(
-            "INSERT INTO plugin_educatyon_post_annotation_topic "
+            "INSERT INTO plugin_frontend_adds_on_post_annotation_topic "
             "(annotation_id, topic_label, opinion_scale, opinion_value) VALUES (2, 'New topic', '5point', 1)"
         )
         conn.commit()
@@ -567,18 +567,18 @@ def test_migration_dedupes_pre_existing_duplicates_before_unique_index():
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
 
-        cursor.execute("PRAGMA table_info(plugin_educatyon_post_annotation)")
+        cursor.execute("PRAGMA table_info(plugin_frontend_adds_on_post_annotation)")
         columns = {row[1] for row in cursor.fetchall()}
         assert "updated_at" in columns
 
         cursor.execute(
-            "SELECT id FROM plugin_educatyon_post_annotation "
+            "SELECT id FROM plugin_frontend_adds_on_post_annotation "
             "WHERE target_type='post' AND target_id='42' AND annotator_user_id='user-1'"
         )
         remaining_ids = [row[0] for row in cursor.fetchall()]
         assert remaining_ids == [2], "the dedupe pass must keep the most recent row, not both"
 
-        cursor.execute("SELECT topic_label FROM plugin_educatyon_post_annotation_topic")
+        cursor.execute("SELECT topic_label FROM plugin_frontend_adds_on_post_annotation_topic")
         remaining_topics = [row[0] for row in cursor.fetchall()]
         assert remaining_topics == ["New topic"], (
             "orphaned topic rows belonging to the deleted duplicate must be removed too"
@@ -586,16 +586,16 @@ def test_migration_dedupes_pre_existing_duplicates_before_unique_index():
 
         cursor.execute("SELECT name FROM sqlite_master WHERE type='index'")
         indexes = {row[0] for row in cursor.fetchall()}
-        assert "uq_plugin_educatyon_post_annotation_target_user_recsys" in indexes
+        assert "uq_plugin_frontend_adds_on_post_annotation_target_user_recsys" in indexes
         # The old 3-column index must be gone -- left in place it would
         # block the very thing the new index is meant to allow: a second
         # row for the same user+target under a different recsys.
-        assert "uq_plugin_educatyon_post_annotation_target_user" not in indexes
+        assert "uq_plugin_frontend_adds_on_post_annotation_target_user" not in indexes
 
         # A different user annotating the same target is untouched by the
         # dedupe pass (it only ever collapses rows sharing the full triple).
         cursor.execute(
-            "INSERT INTO plugin_educatyon_post_annotation (target_type, target_id, annotator_user_id) "
+            "INSERT INTO plugin_frontend_adds_on_post_annotation (target_type, target_id, annotator_user_id) "
             "VALUES ('post', '42', 'user-2')"
         )
         # Give the surviving row (id=2) a real recsys so the uniqueness
@@ -603,7 +603,7 @@ def test_migration_dedupes_pre_existing_duplicates_before_unique_index():
         # index never treats two NULLs as equal, so leaving this NULL
         # would let a "duplicate" insert through for the wrong reason.
         cursor.execute(
-            "UPDATE plugin_educatyon_post_annotation SET recsys_at_annotation = 'R1' "
+            "UPDATE plugin_frontend_adds_on_post_annotation SET recsys_at_annotation = 'R1' "
             "WHERE target_type='post' AND target_id='42' AND annotator_user_id='user-1'"
         )
         conn.commit()
@@ -617,14 +617,14 @@ def test_migration_dedupes_pre_existing_duplicates_before_unique_index():
         cursor = conn.cursor()
         with pytest.raises(sqlite3.IntegrityError):
             cursor.execute(
-                "INSERT INTO plugin_educatyon_post_annotation "
+                "INSERT INTO plugin_frontend_adds_on_post_annotation "
                 "(target_type, target_id, annotator_user_id, recsys_at_annotation) "
                 "VALUES ('post', '42', 'user-1', 'R1')"
             )
         # But a DIFFERENT recsys for the same user+target is explicitly
         # allowed -- this is the whole point of tracking recsys per row.
         cursor.execute(
-            "INSERT INTO plugin_educatyon_post_annotation "
+            "INSERT INTO plugin_frontend_adds_on_post_annotation "
             "(target_type, target_id, annotator_user_id, recsys_at_annotation) "
             "VALUES ('post', '42', 'user-1', 'R2')"
         )
@@ -633,7 +633,7 @@ def test_migration_dedupes_pre_existing_duplicates_before_unique_index():
         os.unlink(db_path)
 
 
-def test_post_annotation_all_four_dimensions_round_trip(educatyon_app):
+def test_post_annotation_all_four_dimensions_round_trip(frontend_adds_on_app):
     """With every dimension enabled, a single annotation can carry a topic
     (with its opinion), an overall sentiment, one or more elicited
     emotions, and a perceived-toxicity value all at once — and every field
@@ -641,15 +641,15 @@ def test_post_annotation_all_four_dimensions_round_trip(educatyon_app):
     .../annotations, and from GET .../my_annotations (the hydration
     endpoint), all three using the same serialization.
     """
-    from y_web.src.models import EducatyonExpModuleSettings, User_mgmt
+    from y_web.src.models import FrontendAddsOnExpModuleSettings, User_mgmt
 
-    app = educatyon_app
+    app = frontend_adds_on_app
     client = app.test_client()
     _seed_toxicity_levels(app)
 
     with app.app_context():
         exp_id = _make_exp(app)
-        db.session.add(EducatyonExpModuleSettings(
+        db.session.add(FrontendAddsOnExpModuleSettings(
             exp_id=exp_id, module_id="post_annotation", enabled=True,
             config_json=json.dumps({
                 "enable_topic_annotation": True,
@@ -668,7 +668,7 @@ def test_post_annotation_all_four_dimensions_round_trip(educatyon_app):
     _login(client, user_id)
 
     create_resp = client.post(
-        f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
+        f"/{exp_id}/api/plugins/frontend_adds_on/post_annotation/annotations",
         json={
             "target_type": "post",
             "target_id": 55,
@@ -690,7 +690,7 @@ def test_post_annotation_all_four_dimensions_round_trip(educatyon_app):
     assert created["toxicity"] == {"level": "medium"}
 
     list_resp = client.get(
-        f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
+        f"/{exp_id}/api/plugins/frontend_adds_on/post_annotation/annotations",
         query_string={"target_type": "post", "target_id": 55},
 
     )
@@ -700,7 +700,7 @@ def test_post_annotation_all_four_dimensions_round_trip(educatyon_app):
     assert sorted(listed["emotions"]) == ["Joy", "Trust"]
 
     hydrate_resp = client.get(
-        f"/{exp_id}/api/plugins/educatyon/post_annotation/my_annotations",
+        f"/{exp_id}/api/plugins/frontend_adds_on/post_annotation/my_annotations",
         query_string={"target_type": "post", "target_ids": "55"},
     )
     hydrated = hydrate_resp.get_json()["annotations"]["55"]
@@ -710,20 +710,20 @@ def test_post_annotation_all_four_dimensions_round_trip(educatyon_app):
     assert hydrated["topics"][0]["opinion_value"] == 1.0
 
 
-def test_post_annotation_topic_without_opinion_when_disabled(educatyon_app):
+def test_post_annotation_topic_without_opinion_when_disabled(frontend_adds_on_app):
     """When the "opinion" sub-dimension is disabled, tagging a topic must
     store the topic label with no opinion value/scale at all — not a
     zero or a default, an actual NULL — even if the client sends one
     anyway (a stale/misconfigured client should never leak that data in).
     """
-    from y_web.src.models import EducatyonExpModuleSettings, User_mgmt
+    from y_web.src.models import FrontendAddsOnExpModuleSettings, User_mgmt
 
-    app = educatyon_app
+    app = frontend_adds_on_app
     client = app.test_client()
 
     with app.app_context():
         exp_id = _make_exp(app)
-        db.session.add(EducatyonExpModuleSettings(
+        db.session.add(FrontendAddsOnExpModuleSettings(
             exp_id=exp_id, module_id="post_annotation", enabled=True,
             config_json=json.dumps({
                 "enable_topic_annotation": True,
@@ -739,7 +739,7 @@ def test_post_annotation_topic_without_opinion_when_disabled(educatyon_app):
     _login(client, user_id)
 
     create_resp = client.post(
-        f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
+        f"/{exp_id}/api/plugins/frontend_adds_on/post_annotation/annotations",
         json={
             "target_type": "post",
             "target_id": 66,
@@ -755,20 +755,20 @@ def test_post_annotation_topic_without_opinion_when_disabled(educatyon_app):
     assert topic["opinion_scale"] is None
 
 
-def test_post_annotation_disabled_dimensions_are_ignored_not_stored(educatyon_app):
+def test_post_annotation_disabled_dimensions_are_ignored_not_stored(frontend_adds_on_app):
     """A payload carrying sentiment/emotions/toxicity for an experiment
     that never enabled those dimensions must have them silently dropped —
     the module keeps its "zero impact unless enabled" guarantee at the
     data layer, not just at the config-UI layer.
     """
-    from y_web.src.models import EducatyonExpModuleSettings, User_mgmt
+    from y_web.src.models import FrontendAddsOnExpModuleSettings, User_mgmt
 
-    app = educatyon_app
+    app = frontend_adds_on_app
     client = app.test_client()
 
     with app.app_context():
         exp_id = _make_exp(app)
-        db.session.add(EducatyonExpModuleSettings(
+        db.session.add(FrontendAddsOnExpModuleSettings(
             exp_id=exp_id, module_id="post_annotation", enabled=True, config_json="{}",
         ))
         db.session.commit()
@@ -780,7 +780,7 @@ def test_post_annotation_disabled_dimensions_are_ignored_not_stored(educatyon_ap
     _login(client, user_id)
 
     create_resp = client.post(
-        f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
+        f"/{exp_id}/api/plugins/frontend_adds_on/post_annotation/annotations",
         json={
             "target_type": "post",
             "target_id": 71,
@@ -798,20 +798,20 @@ def test_post_annotation_disabled_dimensions_are_ignored_not_stored(educatyon_ap
     assert annotation["topics"][0]["label"] == "Climate change"
 
 
-def test_post_annotation_rejects_empty_content(educatyon_app):
+def test_post_annotation_rejects_empty_content(frontend_adds_on_app):
     """An annotation must have content in at least one enabled dimension —
     a payload with nothing usable (e.g. topics enabled but none selected,
     and no other dimension enabled) is rejected rather than silently
     stored as an empty row.
     """
-    from y_web.src.models import EducatyonExpModuleSettings, User_mgmt
+    from y_web.src.models import FrontendAddsOnExpModuleSettings, User_mgmt
 
-    app = educatyon_app
+    app = frontend_adds_on_app
     client = app.test_client()
 
     with app.app_context():
         exp_id = _make_exp(app)
-        db.session.add(EducatyonExpModuleSettings(
+        db.session.add(FrontendAddsOnExpModuleSettings(
             exp_id=exp_id, module_id="post_annotation", enabled=True, config_json="{}",
         ))
         db.session.commit()
@@ -823,26 +823,26 @@ def test_post_annotation_rejects_empty_content(educatyon_app):
     _login(client, user_id)
 
     resp = client.post(
-        f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
+        f"/{exp_id}/api/plugins/frontend_adds_on/post_annotation/annotations",
         json={"target_type": "post", "target_id": 88, "topics": []},
     )
     assert resp.status_code == 400
     assert resp.get_json()["ok"] is False
 
 
-def test_post_annotation_sentiment_only_annotation_needs_no_topic(educatyon_app):
+def test_post_annotation_sentiment_only_annotation_needs_no_topic(frontend_adds_on_app):
     """When sentiment annotation is enabled (topic annotation disabled),
     a sentiment-only submission is valid on its own — the "at least one
     dimension" rule is about the whole annotation, not specifically topics.
     """
-    from y_web.src.models import EducatyonExpModuleSettings, User_mgmt
+    from y_web.src.models import FrontendAddsOnExpModuleSettings, User_mgmt
 
-    app = educatyon_app
+    app = frontend_adds_on_app
     client = app.test_client()
 
     with app.app_context():
         exp_id = _make_exp(app)
-        db.session.add(EducatyonExpModuleSettings(
+        db.session.add(FrontendAddsOnExpModuleSettings(
             exp_id=exp_id, module_id="post_annotation", enabled=True,
             config_json=json.dumps({
                 "enable_topic_annotation": False,
@@ -858,7 +858,7 @@ def test_post_annotation_sentiment_only_annotation_needs_no_topic(educatyon_app)
     _login(client, user_id)
 
     resp = client.post(
-        f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
+        f"/{exp_id}/api/plugins/frontend_adds_on/post_annotation/annotations",
         json={"target_type": "post", "target_id": 99, "sentiment": 1.0},
     )
     assert resp.status_code == 200, resp.data
@@ -874,7 +874,7 @@ def test_migration_adds_new_dimension_columns_and_relaxes_topic_nullability():
     the topic table's opinion columns become nullable so a topic can be
     inserted without one — all without touching pre-existing data.
     """
-    module = plugin_loader._import_from_suite("educatyon", "modules.post_annotation.backend.migrations")
+    module = plugin_loader._import_from_suite("frontend_adds_on", "modules.post_annotation.backend.migrations")
 
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
         db_path = tmp.name
@@ -885,7 +885,7 @@ def test_migration_adds_new_dimension_columns_and_relaxes_topic_nullability():
         # columns, and opinion_scale/opinion_value declared NOT NULL.
         cursor.execute(
             """
-            CREATE TABLE plugin_educatyon_post_annotation (
+            CREATE TABLE plugin_frontend_adds_on_post_annotation (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 target_type TEXT NOT NULL,
                 target_id TEXT NOT NULL,
@@ -897,9 +897,9 @@ def test_migration_adds_new_dimension_columns_and_relaxes_topic_nullability():
         )
         cursor.execute(
             """
-            CREATE TABLE plugin_educatyon_post_annotation_topic (
+            CREATE TABLE plugin_frontend_adds_on_post_annotation_topic (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                annotation_id INTEGER NOT NULL REFERENCES plugin_educatyon_post_annotation(id),
+                annotation_id INTEGER NOT NULL REFERENCES plugin_frontend_adds_on_post_annotation(id),
                 topic_label TEXT NOT NULL,
                 topic_id INTEGER,
                 opinion_scale TEXT NOT NULL,
@@ -908,11 +908,11 @@ def test_migration_adds_new_dimension_columns_and_relaxes_topic_nullability():
             """
         )
         cursor.execute(
-            "INSERT INTO plugin_educatyon_post_annotation (id, target_type, target_id, annotator_user_id) "
+            "INSERT INTO plugin_frontend_adds_on_post_annotation (id, target_type, target_id, annotator_user_id) "
             "VALUES (1, 'post', '9', 'user-1')"
         )
         cursor.execute(
-            "INSERT INTO plugin_educatyon_post_annotation_topic "
+            "INSERT INTO plugin_frontend_adds_on_post_annotation_topic "
             "(annotation_id, topic_label, opinion_scale, opinion_value) VALUES (1, 'Old topic', '5point', 1.0)"
         )
         conn.commit()
@@ -923,16 +923,16 @@ def test_migration_adds_new_dimension_columns_and_relaxes_topic_nullability():
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
 
-        cursor.execute("PRAGMA table_info(plugin_educatyon_post_annotation)")
+        cursor.execute("PRAGMA table_info(plugin_frontend_adds_on_post_annotation)")
         columns = {row[1] for row in cursor.fetchall()}
         assert {"updated_at", "sentiment_scale", "sentiment_value", "toxicity_level", "recsys_at_annotation"} <= columns
 
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
         tables = {row[0] for row in cursor.fetchall()}
-        assert "plugin_educatyon_post_annotation_emotion" in tables
+        assert "plugin_frontend_adds_on_post_annotation_emotion" in tables
 
         # Pre-existing topic row must have survived the table rebuild intact.
-        cursor.execute("SELECT topic_label, opinion_value FROM plugin_educatyon_post_annotation_topic WHERE id = 1")
+        cursor.execute("SELECT topic_label, opinion_value FROM plugin_frontend_adds_on_post_annotation_topic WHERE id = 1")
         row = cursor.fetchone()
         assert row == ("Old topic", 1.0)
 
@@ -940,12 +940,12 @@ def test_migration_adds_new_dimension_columns_and_relaxes_topic_nullability():
         # opinion (the "opinion" dimension disabled case) must succeed,
         # where it would have violated NOT NULL before the rebuild.
         cursor.execute(
-            "INSERT INTO plugin_educatyon_post_annotation_topic (annotation_id, topic_label) VALUES (1, 'No-opinion topic')"
+            "INSERT INTO plugin_frontend_adds_on_post_annotation_topic (annotation_id, topic_label) VALUES (1, 'No-opinion topic')"
         )
         conn.commit()
 
         cursor.execute(
-            "INSERT INTO plugin_educatyon_post_annotation_emotion (annotation_id, emotion_label) VALUES (1, 'Joy')"
+            "INSERT INTO plugin_frontend_adds_on_post_annotation_emotion (annotation_id, emotion_label) VALUES (1, 'Joy')"
         )
         conn.commit()
         conn.close()
@@ -957,21 +957,21 @@ def test_migration_adds_new_dimension_columns_and_relaxes_topic_nullability():
         os.unlink(db_path)
 
 
-def test_toxicity_levels_endpoint_returns_platform_vocabulary(educatyon_app):
+def test_toxicity_levels_endpoint_returns_platform_vocabulary(frontend_adds_on_app):
     """GET .../toxicity_levels must return the platform's own toxicity
     vocabulary (db_admin's Toxicity_Levels table -- the same table
     simulated-agent toxicity is drawn from), lower-cased, rather than any
     value invented or duplicated into the module's own manifest.
     """
-    from y_web.src.models import EducatyonExpModuleSettings, User_mgmt
+    from y_web.src.models import FrontendAddsOnExpModuleSettings, User_mgmt
 
-    app = educatyon_app
+    app = frontend_adds_on_app
     client = app.test_client()
     _seed_toxicity_levels(app, levels=("None", "Low", "Medium", "High"))
 
     with app.app_context():
         exp_id = _make_exp(app)
-        db.session.add(EducatyonExpModuleSettings(
+        db.session.add(FrontendAddsOnExpModuleSettings(
             exp_id=exp_id, module_id="post_annotation", enabled=True,
             config_json=json.dumps({"enable_toxicity_annotation": True}),
         ))
@@ -983,27 +983,27 @@ def test_toxicity_levels_endpoint_returns_platform_vocabulary(educatyon_app):
 
     _login(client, user_id)
 
-    resp = client.get(f"/{exp_id}/api/plugins/educatyon/post_annotation/toxicity_levels")
+    resp = client.get(f"/{exp_id}/api/plugins/frontend_adds_on/post_annotation/toxicity_levels")
     assert resp.status_code == 200, resp.data
     payload = resp.get_json()
     assert payload["ok"] is True
     assert sorted(payload["levels"]) == ["high", "low", "medium", "none"]
 
 
-def test_toxicity_levels_endpoint_gracefully_empty_when_table_unseeded(educatyon_app):
+def test_toxicity_levels_endpoint_gracefully_empty_when_table_unseeded(frontend_adds_on_app):
     """When db_admin's Toxicity_Levels table exists but has no rows (as in
     a fresh install before an admin has configured any), the endpoint
     returns an empty list rather than erroring -- a stale/misconfigured
     client should degrade to "no options", not a 500.
     """
-    from y_web.src.models import EducatyonExpModuleSettings, User_mgmt
+    from y_web.src.models import FrontendAddsOnExpModuleSettings, User_mgmt
 
-    app = educatyon_app
+    app = frontend_adds_on_app
     client = app.test_client()
 
     with app.app_context():
         exp_id = _make_exp(app)
-        db.session.add(EducatyonExpModuleSettings(
+        db.session.add(FrontendAddsOnExpModuleSettings(
             exp_id=exp_id, module_id="post_annotation", enabled=True,
             config_json=json.dumps({"enable_toxicity_annotation": True}),
         ))
@@ -1015,14 +1015,14 @@ def test_toxicity_levels_endpoint_gracefully_empty_when_table_unseeded(educatyon
 
     _login(client, user_id)
 
-    resp = client.get(f"/{exp_id}/api/plugins/educatyon/post_annotation/toxicity_levels")
+    resp = client.get(f"/{exp_id}/api/plugins/frontend_adds_on/post_annotation/toxicity_levels")
     assert resp.status_code == 200, resp.data
     payload = resp.get_json()
     assert payload["ok"] is True
     assert payload["levels"] == []
 
 
-def test_self_heals_schema_once_per_experiment_per_process(educatyon_app, monkeypatch):
+def test_self_heals_schema_once_per_experiment_per_process(frontend_adds_on_app, monkeypatch):
     """A request against an experiment that already had this module enabled
     *before* a later code deploy adds a new column (e.g. Turn 3's
     toxicity_level) must not depend on an admin re-visiting and re-saving
@@ -1037,18 +1037,18 @@ def test_self_heals_schema_once_per_experiment_per_process(educatyon_app, monkey
     but there's no reason to re-check on every single request.
     """
     from y_web.src.external_runtime import plugin_loader
-    from y_web.src.models import EducatyonExpModuleSettings, User_mgmt
+    from y_web.src.models import FrontendAddsOnExpModuleSettings, User_mgmt
 
-    app = educatyon_app
+    app = frontend_adds_on_app
     client = app.test_client()
 
     backend_module = plugin_loader._import_from_suite(
-        "educatyon", "modules.post_annotation.backend"
+        "frontend_adds_on", "modules.post_annotation.backend"
     )
 
     with app.app_context():
         exp_id = _make_exp(app)
-        db.session.add(EducatyonExpModuleSettings(
+        db.session.add(FrontendAddsOnExpModuleSettings(
             exp_id=exp_id, module_id="post_annotation", enabled=True, config_json="{}",
         ))
         db.session.commit()
@@ -1074,14 +1074,14 @@ def test_self_heals_schema_once_per_experiment_per_process(educatyon_app, monkey
 
     _login(client, user_id)
 
-    first = client.get(f"/{exp_id}/api/plugins/educatyon/post_annotation/topics")
-    second = client.get(f"/{exp_id}/api/plugins/educatyon/post_annotation/topics")
+    first = client.get(f"/{exp_id}/api/plugins/frontend_adds_on/post_annotation/topics")
+    second = client.get(f"/{exp_id}/api/plugins/frontend_adds_on/post_annotation/topics")
 
     assert first.status_code == 200, first.data
     assert second.status_code == 200, second.data
     # Healed exactly once, on the first touch -- not on the second request,
     # and not zero times (which would mean the self-heal never ran at all).
-    assert calls == [("educatyon", "post_annotation", exp_id)]
+    assert calls == [("frontend_adds_on", "post_annotation", exp_id)]
 
 
 def test_migration_backfills_recsys_at_annotation_from_user_mgmt():
@@ -1094,7 +1094,7 @@ def test_migration_backfills_recsys_at_annotation_from_user_mgmt():
     A blank/whitespace recsys_type falls back to "default", matching the
     column's own application-level default in _resolve_current_recsys.
     """
-    module = plugin_loader._import_from_suite("educatyon", "modules.post_annotation.backend.migrations")
+    module = plugin_loader._import_from_suite("frontend_adds_on", "modules.post_annotation.backend.migrations")
 
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
         db_path = tmp.name
@@ -1118,7 +1118,7 @@ def test_migration_backfills_recsys_at_annotation_from_user_mgmt():
         # The OLDEST schema shape: no recsys_at_annotation column at all.
         cursor.execute(
             """
-            CREATE TABLE plugin_educatyon_post_annotation (
+            CREATE TABLE plugin_frontend_adds_on_post_annotation (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 target_type TEXT NOT NULL,
                 target_id TEXT NOT NULL,
@@ -1129,17 +1129,17 @@ def test_migration_backfills_recsys_at_annotation_from_user_mgmt():
             """
         )
         cursor.execute(
-            "INSERT INTO plugin_educatyon_post_annotation (target_type, target_id, annotator_user_id) "
+            "INSERT INTO plugin_frontend_adds_on_post_annotation (target_type, target_id, annotator_user_id) "
             "VALUES ('post', '1', '1')"
         )
         cursor.execute(
-            "INSERT INTO plugin_educatyon_post_annotation (target_type, target_id, annotator_user_id) "
+            "INSERT INTO plugin_frontend_adds_on_post_annotation (target_type, target_id, annotator_user_id) "
             "VALUES ('post', '2', '2')"
         )
         # An annotator with no matching user_mgmt row at all (e.g. deleted
         # user) -- must be left NULL, not crash the migration.
         cursor.execute(
-            "INSERT INTO plugin_educatyon_post_annotation (target_type, target_id, annotator_user_id) "
+            "INSERT INTO plugin_frontend_adds_on_post_annotation (target_type, target_id, annotator_user_id) "
             "VALUES ('post', '3', '999')"
         )
         conn.commit()
@@ -1150,7 +1150,7 @@ def test_migration_backfills_recsys_at_annotation_from_user_mgmt():
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT annotator_user_id, recsys_at_annotation FROM plugin_educatyon_post_annotation "
+            "SELECT annotator_user_id, recsys_at_annotation FROM plugin_frontend_adds_on_post_annotation "
             "ORDER BY annotator_user_id"
         )
         by_user = dict(cursor.fetchall())
@@ -1163,7 +1163,7 @@ def test_migration_backfills_recsys_at_annotation_from_user_mgmt():
         os.unlink(db_path)
 
 
-def test_post_annotation_recsys_snapshot_and_scoping(educatyon_app):
+def test_post_annotation_recsys_snapshot_and_scoping(frontend_adds_on_app):
     """Each annotation snapshots the annotator's CURRENT content recsys
     (User_mgmt.recsys_type) at save time. Re-annotating the same target
     under the SAME recsys still upserts in place; re-annotating it after
@@ -1173,14 +1173,14 @@ def test_post_annotation_recsys_snapshot_and_scoping(educatyon_app):
     row matching the user's CURRENT recsys, so switching back and forth
     changes what's visible without losing the other episode's data.
     """
-    from y_web.src.models import EducatyonExpModuleSettings, User_mgmt
+    from y_web.src.models import FrontendAddsOnExpModuleSettings, User_mgmt
 
-    app = educatyon_app
+    app = frontend_adds_on_app
     client = app.test_client()
 
     with app.app_context():
         exp_id = _make_exp(app)
-        db.session.add(EducatyonExpModuleSettings(
+        db.session.add(FrontendAddsOnExpModuleSettings(
             exp_id=exp_id, module_id="post_annotation", enabled=True,
             config_json=json.dumps({
                 "enable_topic_annotation": False,
@@ -1198,7 +1198,7 @@ def test_post_annotation_recsys_snapshot_and_scoping(educatyon_app):
     _login(client, user_id)
 
     create_r1 = client.post(
-        f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
+        f"/{exp_id}/api/plugins/frontend_adds_on/post_annotation/annotations",
         json={"target_type": "post", "target_id": 200, "sentiment": 1.0},
     )
     assert create_r1.status_code == 200, create_r1.data
@@ -1208,7 +1208,7 @@ def test_post_annotation_recsys_snapshot_and_scoping(educatyon_app):
     # Re-annotating the SAME target while still under R1 must edit that
     # row in place (upsert), not create a second one.
     update_r1 = client.post(
-        f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
+        f"/{exp_id}/api/plugins/frontend_adds_on/post_annotation/annotations",
         json={"target_type": "post", "target_id": 200, "sentiment": -1.0},
     )
     assert update_r1.status_code == 200, update_r1.data
@@ -1216,7 +1216,7 @@ def test_post_annotation_recsys_snapshot_and_scoping(educatyon_app):
     assert update_r1.get_json()["annotation"]["annotation_id"] == ann_r1["annotation_id"]
 
     hydrate_r1 = client.get(
-        f"/{exp_id}/api/plugins/educatyon/post_annotation/my_annotations",
+        f"/{exp_id}/api/plugins/frontend_adds_on/post_annotation/my_annotations",
         query_string={"target_type": "post", "target_ids": "200"},
     )
     assert hydrate_r1.get_json()["annotations"]["200"]["sentiment"]["value"] == -1.0
@@ -1238,14 +1238,14 @@ def test_post_annotation_recsys_snapshot_and_scoping(educatyon_app):
     # Hydration must now show NOTHING for this target: the R1 annotation
     # is a different episode and must not leak into the R2 view.
     hydrate_r2_before = client.get(
-        f"/{exp_id}/api/plugins/educatyon/post_annotation/my_annotations",
+        f"/{exp_id}/api/plugins/frontend_adds_on/post_annotation/my_annotations",
         query_string={"target_type": "post", "target_ids": "200"},
     )
     assert hydrate_r2_before.get_json()["annotations"] == {}
 
     # Annotating the same target again under R2 inserts a SEPARATE row.
     create_r2 = client.post(
-        f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
+        f"/{exp_id}/api/plugins/frontend_adds_on/post_annotation/annotations",
         json={"target_type": "post", "target_id": 200, "sentiment": 0.0},
     )
     assert create_r2.status_code == 200, create_r2.data
@@ -1256,7 +1256,7 @@ def test_post_annotation_recsys_snapshot_and_scoping(educatyon_app):
 
     # Listing (the default "own" visibility) must only show the R2 row now.
     list_r2 = client.get(
-        f"/{exp_id}/api/plugins/educatyon/post_annotation/annotations",
+        f"/{exp_id}/api/plugins/frontend_adds_on/post_annotation/annotations",
         query_string={"target_type": "post", "target_id": 200},
     )
     listed_r2 = list_r2.get_json()["annotations"]
@@ -1273,7 +1273,7 @@ def test_post_annotation_recsys_snapshot_and_scoping(educatyon_app):
         db.session.commit()
 
     hydrate_r1_again = client.get(
-        f"/{exp_id}/api/plugins/educatyon/post_annotation/my_annotations",
+        f"/{exp_id}/api/plugins/frontend_adds_on/post_annotation/my_annotations",
         query_string={"target_type": "post", "target_ids": "200"},
     )
     r1_again = hydrate_r1_again.get_json()["annotations"]["200"]

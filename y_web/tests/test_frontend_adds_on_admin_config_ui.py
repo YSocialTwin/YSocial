@@ -1,10 +1,10 @@
 """
 Regression tests for the redesigned "Post & Comment Annotation" admin
-config box (Admin -> Frontend Settings -> EducatYon).
+config box (Admin -> Frontend Settings -> Frontend Adds-on).
 
 Background: the box is generic, shared infrastructure -- the manifest at
-external/EducatYon/meta/registry.json declares each module's
-`parameter_sections` / `parameters`, and `renderEducatyonModules()` in
+external/frontend_adds-on/meta/registry.json declares each module's
+`parameter_sections` / `parameters`, and `renderFrontendAddsOnModules()` in
 frontend_settings.html renders whatever it's given. Before this change the
 result was a flat wall of ~20 stacked rows with no visual grouping, no
 description text, no relationship between fields that only make sense
@@ -36,7 +36,7 @@ the real manifest-loading pipeline unmodified. The rendering LOGIC itself
 (chip-row layout, live show/hide, string_list textarea parsing) was
 verified separately via a jsdom harness run directly against this
 session's copy of frontend_settings.html (no permanent JS test infra
-exists in this repo, matching the EducatYon post_annotation frontend's
+exists in this repo, matching the Frontend Adds-on post_annotation frontend's
 own established verification approach).
 """
 import json
@@ -45,7 +45,7 @@ from pathlib import Path
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 
 REGISTRY_JSON = (
-    _REPO_ROOT / "external" / "EducatYon" / "meta" / "registry.json"
+    _REPO_ROOT / "external" / "frontend_adds-on" / "meta" / "registry.json"
 )
 FRONTEND_SETTINGS_HTML = (
     _REPO_ROOT / "y_web" / "templates" / "admin" / "frontend_settings.html"
@@ -126,7 +126,7 @@ def test_registry_json_is_well_formed_after_edits():
 
 def test_discover_frontend_modules_passes_depends_on_through_unmodified():
     """
-    educatyon_settings_get() (the admin panel's data source) forwards
+    frontend_adds_on_settings_get() (the admin panel's data source) forwards
     parameter_sections/parameters straight from discover_frontend_modules()
     with no filtering -- so proving depends_on survives THAT call is
     sufficient to know the admin endpoint will see it too.
@@ -136,7 +136,7 @@ def test_discover_frontend_modules_passes_depends_on_through_unmodified():
     sys.path.insert(0, str(_REPO_ROOT))
     from y_web.src.external_runtime import frontend_plugins
 
-    modules = frontend_plugins.discover_frontend_modules("educatyon")
+    modules = frontend_plugins.discover_frontend_modules("frontend_adds_on")
     manifest = next(m for m in modules if m["module_id"] == "post_annotation")
 
     sections_by_key = {s["key"]: s for s in manifest["parameter_sections"]}

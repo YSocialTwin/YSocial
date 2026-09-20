@@ -1,11 +1,11 @@
 """
-Regression tests for extending EducatYon frontend-plugin (post_annotation)
+Regression tests for extending Frontend Adds-on frontend-plugin (post_annotation)
 support beyond the feed page, and for correctly distinguishing a "post"
 target from a "comment" target when the annotated element is a comment.
 
 Background: `shared/plugin_loader.html` is the single template include that
-injects `window.YS_EDUCATYON_MODULES` + `plugin-core.js`; it only renders
-anything when the route also passes `educatyon_modules=
+injects `window.YS_FRONTEND_ADDS_ON_MODULES` + `plugin-core.js`; it only renders
+anything when the route also passes `frontend_adds_on_modules=
 active_modules_context(exp_id)` into `render_template()`. Both pieces
 (the include AND the route kwarg) are required for a page to support
 annotation at all. `/profile` and `/hashtag_posts` were missing both.
@@ -15,7 +15,7 @@ Separately, `post_annotation`'s frontend `findAnchors()` must label a
 id) unless it is genuinely the root post of a `/thread` page -- the
 backend gates real behavior on this label (`annotate_posts` vs
 `annotate_comments` config, in
-`external/EducatYon/modules/post_annotation/backend/__init__.py`), so
+`external/frontend_adds-on/modules/post_annotation/backend/__init__.py`), so
 mislabeling every comment as "post" (the previous behavior) silently
 misapplies that per-type config and, on pages without a nested
 `.card.is-post` per comment (the feed/profile/hashtag comment-preview
@@ -29,7 +29,7 @@ convention -- rather than hardcoding this machine's absolute path, so
 they run the same wherever the repo is checked out). Behavioral
 verification of the JS logic itself was done separately via a jsdom
 harness (no permanent JS test infra exists in this repo, per prior
-EducatYon commits' own stated rationale).
+Frontend Adds-on commits' own stated rationale).
 """
 from pathlib import Path
 
@@ -46,7 +46,7 @@ PLUGIN_LOADER_INCLUDE = '{% include "shared/plugin_loader.html" %}'
 PLUGIN_JS = (
     _REPO_ROOT
     / "external"
-    / "EducatYon"
+    / "frontend_adds-on"
     / "modules"
     / "post_annotation"
     / "frontend"
@@ -61,14 +61,14 @@ def test_profile_route_imports_and_passes_active_modules_context():
         in source
     )
     assert 'render_template(\n        "microblogging/profile.html"' in source
-    # The microblogging profile render must pass educatyon_modules, not just
+    # The microblogging profile render must pass frontend_adds_on_modules, not just
     # import the helper -- otherwise shared/plugin_loader.html's `{% if
-    # educatyon_modules %}` guard always renders nothing on this page.
+    # frontend_adds_on_modules %}` guard always renders nothing on this page.
     render_call_start = source.index(
         'render_template(\n        "microblogging/profile.html"'
     )
     render_call = source[render_call_start : render_call_start + 400]
-    assert "educatyon_modules=active_modules_context(exp_id)" in render_call
+    assert "frontend_adds_on_modules=active_modules_context(exp_id)" in render_call
 
 
 def test_hashtag_route_passes_active_modules_context():
@@ -81,7 +81,7 @@ def test_hashtag_route_passes_active_modules_context():
         'render_template(\n        "microblogging/hashtag.html"'
     )
     render_call = source[render_call_start : render_call_start + 700]
-    assert "educatyon_modules=active_modules_context(exp_id)" in render_call
+    assert "frontend_adds_on_modules=active_modules_context(exp_id)" in render_call
 
 
 def test_profile_and_hashtag_templates_include_plugin_loader():

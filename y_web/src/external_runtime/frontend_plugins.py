@@ -1,4 +1,4 @@
-"""Discovery and validation of EducatYon-style frontend plugin suites.
+"""Discovery and validation of Frontend Adds-on-style frontend plugin suites.
 
 Mirrors the live-manifest-read pattern already used for agent plugins
 (``y_web.routes.admin.sub.agents._plugin_agent_specs`` /
@@ -10,7 +10,7 @@ next request without any migration or restart.
 A "frontend plugin suite" is any repo registered in
 ``SUPPORTED_EXTERNAL_REPOS`` whose ``group`` is ``"frontend_plugins"`` and
 whose ``meta/registry.json`` declares a top-level ``"frontend_plugins"``
-list. EducatYon is the first (and, today, only) such suite.
+list. Frontend Adds-on is the first (and, today, only) such suite.
 """
 from __future__ import annotations
 

@@ -1,7 +1,7 @@
 /**
  * YWeb frontend plugin loader (core).
  *
- * Reads window.YS_EDUCATYON_MODULES (an array injected by
+ * Reads window.YS_FRONTEND_ADDS_ON_MODULES (an array injected by
  * templates/shared/plugin_loader.html, populated server-side by
  * y_web.src.external_runtime.plugin_loader.active_modules_context) and, for
  * each active module, injects its stylesheet and entry script.
@@ -18,7 +18,7 @@
 (function () {
   'use strict';
 
-  var MODULES = window.YS_EDUCATYON_MODULES;
+  var MODULES = window.YS_FRONTEND_ADDS_ON_MODULES;
   if (!Array.isArray(MODULES) || MODULES.length === 0) return;
 
   MODULES.forEach(function (mod) {
@@ -39,10 +39,10 @@
         var script = document.createElement('script');
         script.src = mod.frontend_entry;
         script.async = false; // preserve order + keep document.currentScript reliable
-        script.dataset.educatyonModuleId = mod.module_id;
-        script.dataset.educatyonExpId = String(mod.exp_id);
-        script.dataset.educatyonApiBase = mod.api_base || '';
-        script.dataset.educatyonConfig = JSON.stringify(mod.config || {});
+        script.dataset.frontend_adds_onModuleId = mod.module_id;
+        script.dataset.frontend_adds_onExpId = String(mod.exp_id);
+        script.dataset.frontend_adds_onApiBase = mod.api_base || '';
+        script.dataset.frontend_adds_onConfig = JSON.stringify(mod.config || {});
         script.onerror = function () {
           console.warn('[plugin-core] failed to load script for module "' + mod.module_id + '" — module disabled on this page.');
         };
