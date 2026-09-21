@@ -616,11 +616,13 @@ input:checked + .slider-small:before { transform: translateX(16px); }
           <div class="misc-compact-box" id="box-suite-{{ suite.repo_key }}" style="display:none;">
             <h3>{{ suite.label }} <span class="ys-fs-exp-badge" id="badge-suite-{{ suite.repo_key }}-version"></span></h3>
             <div class="box-content">
+              {% if suite.repo_key != "reactive_agents" %}
               <p style="color:#6b7280;font-size:.85rem;margin-bottom:14px;">
                 Enable and configure {{ suite.label }} frontend plugin modules for this experiment.
                 Install or update the suite itself from
                 <a href="{{ url_for('experiments.external_runtimes') }}">External Runtimes</a>.
               </p>
+              {% endif %}
               <div id="suite-{{ suite.repo_key }}-errors" style="display:none;color:#b91c1c;font-size:.78rem;margin-bottom:10px;"></div>
               <div id="suite-{{ suite.repo_key }}-modules-list"></div>
             </div>
