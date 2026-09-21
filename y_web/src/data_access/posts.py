@@ -269,12 +269,108 @@ def get_topics(post_id, user_id):
     return list(cleaned.values())
 
 
-def get_unanswered_mentions(username):
+def _hidden_author_ids_for_viewer(exp_id, viewer_user_id):
+    """Ask any installed frontend plugin (e.g. reactive_agents' Phase 6
+    selective-visibility feature) which authors' content should be hidden
+    from *viewer_user_id* in experiment *exp_id*.
+
+    Returns an empty set (no filtering at all) whenever *exp_id* or
+    *viewer_user_id* is unknown, nothing is installed, or the lookup fails
+    for any reason -- this must never break a human's feed, profile,
+    hashtag listing, thread view, or notification counts. When *exp_id* is
+    not given, falls back to the current request's own experiment id
+    (``y_web.src.experiment.context.get_current_experiment_id``), since
+    most call sites in this module already run inside a request scoped to
+    one experiment via its URL.
+    """
+    if exp_id is None:
+        try:
+            from y_web.src.experiment.context import get_current_experiment_id
+
+            exp_id = get_current_experiment_id()
+        except Exception:
+            exp_id = None
+
+    if exp_id is None or viewer_user_id is None:
+        return set()
+
+    try:
+        from y_web.src.external_runtime.plugin_loader import get_hidden_user_ids
+
+        return get_hidden_user_ids(exp_id, viewer_user_id)
+    except Exception:
+        return set()
+
+
+def _hidden_post_ids_in_thread(post_records, hidden_author_ids):
+    """Given *post_records* -- an iterable of ``(post_id, author_id,
+    parent_post_id)`` triples for a set of posts considered together (e.g.
+    one thread, or one root post's own replies) -- return the SET of post
+    ids to drop: any post authored by someone in *hidden_author_ids*, plus
+    every other post here that descends from a dropped post via
+    *parent_post_id* (even when that descendant's own author is not itself
+    hidden) -- the "a node and its descendant subtree" visibility
+    semantics Phase 6 was scoped to.
+
+    A post whose parent isn't present in *post_records* at all (e.g. a
+    thread's own root row) never propagates a drop through a chain that
+    isn't actually here. Pure and side-effect free; reused by every
+    visibility-aware read path in this module and in
+    ``y_web.routes.social.helpers``.
+    """
+    if not hidden_author_ids:
+        return set()
+    hidden_author_ids = set(hidden_author_ids)
+    records = list(post_records)
+
+    dropped = {pid for pid, author_id, _parent in records if author_id in hidden_author_ids}
+
+    changed = True
+    while changed:
+        changed = False
+        for pid, _author_id, parent_id in records:
+            if pid in dropped:
+                continue
+            if parent_id is not None and parent_id in dropped:
+                dropped.add(pid)
+                changed = True
+
+    return dropped
+
+
+def _fetch_thread_comments(root_post_id, hidden_author_ids=None):
+    """Fetch every post in the thread rooted at *root_post_id* (joined with
+    its author's username) -- the exact query every "posts associated to
+    X" listing already used before Phase 6 -- optionally pruning any post
+    authored by someone in *hidden_author_ids* together with its own
+    descendant subtree. Passing no *hidden_author_ids* reproduces the
+    original, unfiltered behaviour exactly.
+    """
+    comments = (
+        Post.query.filter_by(thread_id=root_post_id)
+        .join(User_mgmt, Post.user_id == User_mgmt.id)
+        .add_columns(User_mgmt.username)
+        .all()
+    )
+    if not hidden_author_ids:
+        return comments
+
+    records = [(c.id, c.user_id, c.comment_to) for c, _author in comments]
+    dropped = _hidden_post_ids_in_thread(records, hidden_author_ids)
+    return [(c, author) for c, author in comments if c.id not in dropped]
+
+
+def get_unanswered_mentions(username, exp_id=None):
     """
     Get unanswered @-mention notifications for a user.
 
     Args:
         username: Username to look up
+        exp_id: Experiment ID, used only to resolve Phase 6 selective-
+            visibility rules; falls back to the current request's
+            experiment id when omitted. Excludes mentions whose post was
+            authored by someone hidden from this user, when Phase 6's
+            selective visibility is enabled for the experiment.
 
     Returns:
         List of ORM row objects (Mentions joined with Post and User_mgmt)
@@ -284,13 +380,18 @@ def get_unanswered_mentions(username):
         return []
     user_id = user.id
 
-    return (
+    query = (
         Mentions.query.filter_by(user_id=user_id, answered=0)
         .join(Post, Post.id == Mentions.post_id)
         .join(User_mgmt, User_mgmt.id == Post.user_id)
         .add_columns(User_mgmt.username, Post.user_id, Post.tweet)
-        .all()
     )
+
+    hidden_ids = _hidden_author_ids_for_viewer(exp_id, user_id)
+    if hidden_ids:
+        query = query.filter(~Post.user_id.in_(hidden_ids))
+
+    return query.all()
 
 
 def get_report_count(post_id):
@@ -343,6 +444,10 @@ def get_user_recent_posts(
     user = db.session.scalars(select(User_mgmt).filter_by(id=user_id)).first()
     username = user.username if user else "Unknown"
 
+    hidden_ids = _hidden_author_ids_for_viewer(exp_id, current_user)
+    if user_id in hidden_ids:
+        return []
+
     if mode == "recent":
         posts = (
             Post.query.filter(
@@ -394,12 +499,10 @@ def get_user_recent_posts(
         if mode not in ["recent", "comments", "liked", "disliked", "shares"]:
             post = post[0]
 
-        comments = (
-            Post.query.filter_by(thread_id=post.id)
-            .join(User_mgmt, Post.user_id == User_mgmt.id)
-            .add_columns(User_mgmt.username)
-            .all()
-        )
+        if hidden_ids and post.user_id in hidden_ids:
+            continue
+
+        comments = _fetch_thread_comments(post.id, hidden_ids)
 
         cms = []
         idx = 0
@@ -664,14 +767,14 @@ def get_posts_associated_to_hashtags(
         .paginate(page=page, per_page=per_page, error_out=False)
     )
 
+    hidden_ids = _hidden_author_ids_for_viewer(exp_id, current_user)
+
     res = []
     for post in posts.items:
-        comments = (
-            Post.query.filter_by(thread_id=post.id)
-            .join(User_mgmt, Post.user_id == User_mgmt.id)
-            .add_columns(User_mgmt.username)
-            .all()
-        )
+        if hidden_ids and post.user_id in hidden_ids:
+            continue
+
+        comments = _fetch_thread_comments(post.id, hidden_ids)
 
         cms = []
         idx = 0
@@ -865,14 +968,14 @@ def get_posts_associated_to_interest(
         .paginate(page=page, per_page=per_page, error_out=False)
     )
 
+    hidden_ids = _hidden_author_ids_for_viewer(exp_id, current_user)
+
     res = []
     for post in posts.items:
-        comments = (
-            Post.query.filter_by(thread_id=post.id)
-            .join(User_mgmt, Post.user_id == User_mgmt.id)
-            .add_columns(User_mgmt.username)
-            .all()
-        )
+        if hidden_ids and post.user_id in hidden_ids:
+            continue
+
+        comments = _fetch_thread_comments(post.id, hidden_ids)
 
         cms = []
         idx = 0
@@ -1068,14 +1171,14 @@ def get_posts_associated_to_emotion(
         .paginate(page=page, per_page=per_page, error_out=False)
     )
 
+    hidden_ids = _hidden_author_ids_for_viewer(exp_id, current_user)
+
     res = []
     for post in posts.items:
-        comments = (
-            Post.query.filter_by(thread_id=post.id)
-            .join(User_mgmt, Post.user_id == User_mgmt.id)
-            .add_columns(User_mgmt.username)
-            .all()
-        )
+        if hidden_ids and post.user_id in hidden_ids:
+            continue
+
+        comments = _fetch_thread_comments(post.id, hidden_ids)
 
         cms = []
         idx = 0

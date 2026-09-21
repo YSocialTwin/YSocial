@@ -806,12 +806,26 @@ def get_thread(exp_id, post_id):
     )
     thread_root_id = root_post.id
 
+    from y_web.src.data_access.posts import (
+        _hidden_author_ids_for_viewer,
+        _hidden_post_ids_in_thread,
+    )
+
+    hidden_ids = _hidden_author_ids_for_viewer(exp_id, exp_user_id)
+    if hidden_ids and root_post.user_id in hidden_ids:
+        flash("Post not found", "error")
+        return redirect(url_for("main.index"))
+
     # Get all comments with this thread_id
     comment_posts = (
         Post.query.filter(Post.thread_id == thread_root_id, Post.id != thread_root_id)
         .order_by(Post.created_at.asc(), Post.id.asc())
         .all()
     )
+    if hidden_ids:
+        records = [(p.id, p.user_id, p.comment_to) for p in comment_posts]
+        dropped_ids = _hidden_post_ids_in_thread(records, hidden_ids)
+        comment_posts = [p for p in comment_posts if p.id not in dropped_ids]
 
     root = root_post.id
 

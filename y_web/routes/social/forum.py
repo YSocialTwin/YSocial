@@ -243,11 +243,26 @@ def get_thread_reddit(exp_id, post_id):
         or requested_post
     )
     thread_id = root_post.id
+
+    from y_web.src.data_access.posts import (
+        _hidden_author_ids_for_viewer,
+        _hidden_post_ids_in_thread,
+    )
+
+    hidden_ids = _hidden_author_ids_for_viewer(exp_id, viewer_id)
+    if hidden_ids and root_post.user_id in hidden_ids:
+        flash("Thread not found.")
+        return redirect(f"/{exp_id}/rfeed/all/feed/rf/1?feed_type=new")
+
     posts = (
         Post.query.filter(Post.thread_id == thread_id, Post.id != thread_id)
         .order_by(Post.created_at.asc(), Post.id.asc())
         .all()
     )
+    if hidden_ids:
+        records = [(p.id, p.user_id, p.comment_to) for p in posts]
+        dropped_ids = _hidden_post_ids_in_thread(records, hidden_ids)
+        posts = [p for p in posts if p.id not in dropped_ids]
     if root_post is None:
         flash("Thread not found.")
         return redirect(f"/{exp_id}/rfeed/all/feed/rf/1?feed_type=new")
@@ -565,11 +580,17 @@ def rnotifications(exp_id):
     Parent = aliased(Post)
     Author = aliased(User_mgmt)
 
+    from y_web.src.data_access.posts import _hidden_author_ids_for_viewer
+
+    hidden_ids = _hidden_author_ids_for_viewer(exp_id, exp_user_id)
+
     base_filters = (
         Parent.user_id == exp_user_id,
         Reply.user_id != exp_user_id,
         and_(Reply.comment_to.isnot(None), Reply.comment_to != -1),
     )
+    if hidden_ids:
+        base_filters = base_filters + (~Reply.user_id.in_(hidden_ids),)
 
     unread_before_open = (
         db.session.query(func.count(Reply.id))

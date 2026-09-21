@@ -196,11 +196,21 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
         ).first()
         exp_user_id = exp_user.id if exp_user else current_user.id
 
+    from y_web.src.data_access.posts import (
+        _hidden_author_ids_for_viewer,
+        _hidden_post_ids_in_thread,
+    )
+
+    hidden_ids = _hidden_author_ids_for_viewer(exp_id, exp_user_id)
+
     for post in posts.items:
         try:
             post = post[0]
         except:
             pass
+
+        if hidden_ids and post.user_id in hidden_ids:
+            continue
 
         comments = (
             Post.query.filter(Post.thread_id == post.id, Post.id != post.id)
@@ -208,6 +218,10 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
             .add_columns(User_mgmt.username)
             .all()
         )
+        if hidden_ids:
+            records = [(c.id, c.user_id, c.comment_to) for c, _author in comments]
+            dropped_ids = _hidden_post_ids_in_thread(records, hidden_ids)
+            comments = [(c, author) for c, author in comments if c.id not in dropped_ids]
 
         cms = []
         for c, author in comments:

@@ -293,3 +293,45 @@ def active_modules_context(exp_id: int) -> list[dict]:
                 "config": cfg,
             })
     return results
+
+
+def get_hidden_user_ids(exp_id: int, viewer_user_id: int) -> set[int]:
+    """Union of user ids that installed frontend-plugin suites want hidden
+    from *viewer_user_id* (and their content's descendant subtree pruned)
+    when rendering *exp_id* for a human.
+
+    Generic over ``_REGISTERED_SUITES`` exactly like ``active_modules_context``:
+    a suite opts in by adding a ``"visibility_filter": "<dotted.module>:<func>"``
+    key to a module's manifest entry. The referenced callable is resolved via
+    ``_import_from_suite`` (never imported by a hardcoded suite name) and
+    invoked as ``func(exp_id, viewer_user_id) -> Iterable[int]``.
+
+    Returns an empty set with zero overhead when no suite is installed, and
+    silently skips (contributing nothing) any suite whose manifest omits this
+    key, whose callable can't be resolved, or whose call raises -- exactly the
+    "a broken/misconfigured suite must never prevent unrelated pages from
+    rendering" contract every other function in this module already follows.
+    This is the single choke point that guarantees "no impact when no suite
+    registers this capability", the same way ``active_modules_context`` is for
+    frontend-widget metadata.
+    """
+    if not _REGISTERED_SUITES:
+        return set()
+
+    hidden: set[int] = set()
+    for repo_key, state in _REGISTERED_SUITES.items():
+        modules = state.get("modules", {})
+        for module_id, manifest in modules.items():
+            filter_path = manifest.get("visibility_filter")
+            if not filter_path or ":" not in filter_path:
+                continue
+            try:
+                dotted, _, func_name = filter_path.partition(":")
+                module = _import_from_suite(repo_key, dotted)
+                func = getattr(module, func_name)
+                ids = func(exp_id, viewer_user_id)
+                if ids:
+                    hidden.update(int(i) for i in ids)
+            except Exception:
+                continue
+    return hidden
