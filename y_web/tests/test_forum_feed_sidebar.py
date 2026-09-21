@@ -64,9 +64,9 @@ def test_sidebar_can_recover_subreddit_from_url_when_field_missing():
 
 
 def test_forum_compose_template_exposes_community_selector():
-    template = Path(
-        str(_REPO_ROOT / "y_web/templates/forum/feed.html")
-    ).read_text(encoding="utf-8")
+    template = Path(str(_REPO_ROOT / "y_web/templates/forum/feed.html")).read_text(
+        encoding="utf-8"
+    )
 
     assert 'id="post-community"' in template
     assert 'name="community_slug"' in template
@@ -79,9 +79,9 @@ def test_forum_compose_and_api_forward_selected_community_slug():
     js_source = Path(
         str(_REPO_ROOT / "y_web/static/assets/js/reddit/async_updates.js")
     ).read_text(encoding="utf-8")
-    api_source = Path(
-        str(_REPO_ROOT / "y_web/routes/api/reddit.py")
-    ).read_text(encoding="utf-8")
+    api_source = Path(str(_REPO_ROOT / "y_web/routes/api/reddit.py")).read_text(
+        encoding="utf-8"
+    )
     action_source = Path(
         str(_REPO_ROOT / "y_web/src/forum/actions/posts.py")
     ).read_text(encoding="utf-8")

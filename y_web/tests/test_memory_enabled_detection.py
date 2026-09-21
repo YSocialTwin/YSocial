@@ -16,6 +16,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from y_web.tests._sa2_stubs import _FakeSelect, _ScalarsResult, _SelectRoutingSession
 
 pytestmark = pytest.mark.unit
@@ -128,8 +129,6 @@ def exp_tmpdir(tmp_path):
         (exp_dir / f"{name}_config.json").write_text(json.dumps(data))
 
     return exp_dir, write_config, write_hpc_config, write_client, write_hpc_client
-
-
 
 
 class TestExperimentMemoryEnabledMainPy:

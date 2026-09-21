@@ -115,6 +115,7 @@ def get_suggested_users(username, pages=False):
 # Big Five cosine-similarity helpers (used by CosineSimilarity mode)
 # ---------------------------------------------------------------------------
 
+
 def _big5_vec(u):
     """Return a 5-dim float vector from User_mgmt Big Five columns."""
     try:
@@ -134,6 +135,7 @@ def _cosine(a, b):
 # ---------------------------------------------------------------------------
 # Core recommendation dispatcher
 # ---------------------------------------------------------------------------
+
 
 def __follow_suggestions(rectype, user_id, n_neighbors, leaning_biased):
     """Get follow suggestions for a user based on the follow recommender system.
@@ -190,7 +192,9 @@ def __follow_suggestions(rectype, user_id, n_neighbors, leaning_biased):
         for candidate in candidates:
             union = first_order_followers | candidates[candidate]
             if union:
-                res[candidate] = len(first_order_followers & candidates[candidate]) / len(union)
+                res[candidate] = len(
+                    first_order_followers & candidates[candidate]
+                ) / len(union)
 
         total = sum(res.values())
         res = {k: v / total for k, v in res.items() if v > 0} if total else {}
@@ -206,16 +210,18 @@ def __follow_suggestions(rectype, user_id, n_neighbors, leaning_biased):
             s = 0.0
             for neighbor in scores[target]:
                 deg = len(
-                    db.session.scalars(
-                        select(Follow).filter_by(user_id=neighbor)
-                    ).all()
+                    db.session.scalars(select(Follow).filter_by(user_id=neighbor)).all()
                 )
                 if deg > 1:
                     s += 1 / np.log(deg)
             res[target] = s
 
         total = sum(v for v in res.values() if v != np.inf)
-        res = {k: v / total for k, v in res.items() if v > 0 and v != np.inf} if total else {}
+        res = (
+            {k: v / total for k, v in res.items() if v > 0 and v != np.inf}
+            if total
+            else {}
+        )
 
     # -----------------------------------------------------------------------
     # HPC-only modes
@@ -299,8 +305,8 @@ def __follow_suggestions(rectype, user_id, n_neighbors, leaning_biased):
 
     if rectype == "RandomWalkRestart":
         # Personalized PageRank / random walk with restart on the follow graph
-        alpha = 0.15          # restart probability
-        steps = 200           # number of walk steps
+        alpha = 0.15  # restart probability
+        steps = 200  # number of walk steps
 
         # Build adjacency: adj[uid] = list of follower_ids they follow
         all_follows = db.session.scalars(
@@ -348,7 +354,9 @@ def __follow_suggestions(rectype, user_id, n_neighbors, leaning_biased):
             topic_post_ids = set(
                 pt.post_id
                 for pt in db.session.scalars(
-                    select(Post_topics).filter(Post_topics.topic_id.in_(my_interest_ids))
+                    select(Post_topics).filter(
+                        Post_topics.topic_id.in_(my_interest_ids)
+                    )
                 ).all()
             )
             already_followed = set(
@@ -383,9 +391,7 @@ def __follow_suggestions(rectype, user_id, n_neighbors, leaning_biased):
             s = 0.0
             for neighbor in scores[target]:
                 deg = len(
-                    db.session.scalars(
-                        select(Follow).filter_by(user_id=neighbor)
-                    ).all()
+                    db.session.scalars(select(Follow).filter_by(user_id=neighbor)).all()
                 )
                 if deg > 0:
                     s += 1.0 / deg

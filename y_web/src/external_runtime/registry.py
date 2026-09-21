@@ -280,7 +280,14 @@ def grouped_runtime_specs() -> list[tuple[str, str, Sequence[ExternalRuntimeSpec
         groups.setdefault(spec.group, []).append(spec)
         labels[spec.group] = spec.group_label
 
-    ordered_groups = ["microblogging", "forum", "photo_sharing", "hpc", "agent_plugins", "frontend_plugins"]
+    ordered_groups = [
+        "microblogging",
+        "forum",
+        "photo_sharing",
+        "hpc",
+        "agent_plugins",
+        "frontend_plugins",
+    ]
     return [
         (group_key, labels[group_key], tuple(groups.get(group_key, [])))
         for group_key in ordered_groups

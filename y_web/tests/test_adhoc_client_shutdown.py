@@ -4,9 +4,8 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from flask import Flask
+
 from y_web.tests._sa2_stubs import _FakeSelect, _ScalarsResult, _SelectRoutingSession
-
-
 
 
 def test_stop_adhoc_client_terminates_orphan_processes_without_state_pid(monkeypatch):

@@ -12,8 +12,8 @@ config      — db_admin lookup/reference tables (professions, languages …)
 """
 
 # Admin (db_admin) models
+from y_web.src.models.admin import ExpFrontendSettings  # noqa: F401
 from y_web.src.models.admin import (
-    ExpFrontendSettings,  # noqa: F401
     Admin_users,
     AdminInterviewMessage,
     AdminInterviewSession,
@@ -27,7 +27,6 @@ from y_web.src.models.admin import (
     Client_Execution,
     ClientLogMetrics,
     DownloadNotification,
-    FrontendAddsOnExpModuleSettings,
     Exp_stats,
     ExperimentScheduleGroup,
     ExperimentScheduleItem,
@@ -36,6 +35,7 @@ from y_web.src.models.admin import (
     Exps,
     ForumImageFeedResource,
     ForumRssFeedResource,
+    FrontendAddsOnExpModuleSettings,
     HpcMonitorSettings,
     Jupyter_instances,
     LogFileOffset,

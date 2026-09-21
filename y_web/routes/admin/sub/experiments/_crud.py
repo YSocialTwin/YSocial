@@ -65,6 +65,7 @@ from y_web.src.models import (
     ExperimentScheduleItem,
     ExperimentScheduleLog,
     ExperimentScheduleStatus,
+    ExpFrontendSettings,
     Exps,
     Follow_Recsys,
     HpcMonitorSettings,
@@ -87,7 +88,6 @@ from y_web.src.models import (
     ServerLogMetrics,
     Topic_List,
     Toxicity_Levels,
-    ExpFrontendSettings,
     User_Experiment,
     User_mgmt,
 )
@@ -179,9 +179,8 @@ def _get_exp_default_recsys(exp_id: int):
     except Exception:
         return "default", "default"
     content = settings.get("default_content_recsys") or "default"
-    follow  = settings.get("default_follow_recsys")  or "default"
+    follow = settings.get("default_follow_recsys") or "default"
     return content, follow
-
 
 
 @experiments.route("/admin/experiments")

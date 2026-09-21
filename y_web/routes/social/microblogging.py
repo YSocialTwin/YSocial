@@ -7,22 +7,29 @@ Routes: feeed_logged, feed, get_post_hashtags, get_post_interest,
         api_profile_posts.
 """
 
-from flask import current_app, flash, jsonify, redirect, render_template, request, url_for
+from flask import (
+    current_app,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
 from flask_login import current_user, login_required
 from sqlalchemy import select
 
 from y_web import db
 from y_web.routes.social._blueprint import main
 from y_web.routes.social.helpers import (
-    _load_ui_settings,
     _forum_logged_user,
     _get_discussions,
+    _load_ui_settings,
     build_thread_tree,
     get_adhoc_agent_badge,
     get_author_type_badge,
     is_admin,
 )
-from y_web.src.external_runtime.plugin_loader import active_modules_context
 from y_web.src.data_access import (
     get_posts_associated_to_emotion,
     get_posts_associated_to_hashtags,
@@ -37,6 +44,7 @@ from y_web.src.data_access import (
     get_user_recent_posts,
 )
 from y_web.src.experiment.context import experiment_db_bind
+from y_web.src.external_runtime.plugin_loader import active_modules_context
 from y_web.src.forum.service import (
     _format_display_time,
     _format_display_time_from_created_at,
@@ -146,23 +154,32 @@ def feeed_logged():
     # The config["SQLALCHEMY_BINDS"] swap approach does NOT affect already-
     # resolved engines; experiment_db_bind() does.
     user_id = str(current_user.id)  # fallback (integer admin id as string)
-    print(f"[MICROBLOG DEBUG] feeed_logged: current_user.id={current_user.id!r} username={current_user.username!r} exp={exp.idexp!r}")
+    print(
+        f"[MICROBLOG DEBUG] feeed_logged: current_user.id={current_user.id!r} username={current_user.username!r} exp={exp.idexp!r}"
+    )
     try:
         from y_web.src.experiment.context import experiment_db_bind
         from y_web.src.models import User_mgmt
+
         with experiment_db_bind(exp.idexp):
             exp_user = db.session.scalars(
                 select(User_mgmt).filter_by(username=current_user.username)
             ).first()
             if exp_user:
                 user_id = str(exp_user.id)
-                print(f"[MICROBLOG DEBUG] feeed_logged: resolved exp_user.id={exp_user.id!r} (UUID)")
+                print(
+                    f"[MICROBLOG DEBUG] feeed_logged: resolved exp_user.id={exp_user.id!r} (UUID)"
+                )
             else:
-                print(f"[MICROBLOG DEBUG] feeed_logged: exp_user NOT FOUND by username={current_user.username!r} -> using integer fallback {user_id!r}")
+                print(
+                    f"[MICROBLOG DEBUG] feeed_logged: exp_user NOT FOUND by username={current_user.username!r} -> using integer fallback {user_id!r}"
+                )
     except Exception as e:
         print(f"[MICROBLOG DEBUG] feeed_logged: exception resolving exp_user: {e}")
 
-    print(f"[MICROBLOG DEBUG] feeed_logged: redirecting to /{exp.idexp}/feed/{user_id}/feed/rf/1")
+    print(
+        f"[MICROBLOG DEBUG] feeed_logged: redirecting to /{exp.idexp}/feed/{user_id}/feed/rf/1"
+    )
     return redirect(f"/{exp.idexp}/feed/{user_id}/feed/rf/1")
 
 
@@ -198,35 +215,60 @@ def feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
                     )
                     return redirect(f"/admin/experiments")
             recsys = user.recsys_type
-            print(f"[MICROBLOG DEBUG] feed(): url user_id={user_id!r} -> resolved user.id={user.id!r} username={user.username!r} recsys_type={recsys!r}")
+            print(
+                f"[MICROBLOG DEBUG] feed(): url user_id={user_id!r} -> resolved user.id={user.id!r} username={user.username!r} recsys_type={recsys!r}"
+            )
 
             # Resolve experiment engine and FilterBubble settings when needed
             _exp_engine = None
             _fb_settings = {}
-            _recsys_compact = str(recsys or "").replace("_", "").replace("-", "").replace(" ", "").lower()
-            if _recsys_compact in ("filterbubble", "fb", "personalizedfeed", "pf", "filterbubblev1"):
+            _recsys_compact = (
+                str(recsys or "")
+                .replace("_", "")
+                .replace("-", "")
+                .replace(" ", "")
+                .lower()
+            )
+            if _recsys_compact in (
+                "filterbubble",
+                "fb",
+                "personalizedfeed",
+                "pf",
+                "filterbubblev1",
+            ):
                 try:
                     _exp_engine = db.engines.get("db_exp")
                     if _exp_engine is None:
                         _exp_engine = db.get_engine(current_app, bind="db_exp")
                     _fb_settings = {
-                        k: v for k, v in ui.items()
-                        if k.startswith("filter_bubble_")
+                        k: v for k, v in ui.items() if k.startswith("filter_bubble_")
                     }
-                    print(f"[MICROBLOG DEBUG] feed(): FilterBubble - exp_engine={_exp_engine is not None} fb_settings={_fb_settings}")
+                    print(
+                        f"[MICROBLOG DEBUG] feed(): FilterBubble - exp_engine={_exp_engine is not None} fb_settings={_fb_settings}"
+                    )
                 except Exception as e:
-                    print(f"[MICROBLOG DEBUG] feed(): exception resolving exp_engine: {e}")
+                    print(
+                        f"[MICROBLOG DEBUG] feed(): exception resolving exp_engine: {e}"
+                    )
                     _exp_engine = None
             else:
-                print(f"[MICROBLOG DEBUG] feed(): non-FilterBubble mode ({_recsys_compact!r}) - no exp_engine needed")
+                print(
+                    f"[MICROBLOG DEBUG] feed(): non-FilterBubble mode ({_recsys_compact!r}) - no exp_engine needed"
+                )
 
             # Use the resolved DB id (UUID) — not the URL parameter which
             # may be the admin's integer id (fallback from feeed_logged).
             effective_uid = str(user.id)
-            print(f"[MICROBLOG DEBUG] feed(): calling get_suggested_posts(uid={effective_uid!r}, mode={recsys!r})")
+            print(
+                f"[MICROBLOG DEBUG] feed(): calling get_suggested_posts(uid={effective_uid!r}, mode={recsys!r})"
+            )
             posts, additional = get_suggested_posts(
-                effective_uid, recsys, page, max_post_per_page,
-                exp_engine=_exp_engine, fb_settings=_fb_settings,
+                effective_uid,
+                recsys,
+                page,
+                max_post_per_page,
+                exp_engine=_exp_engine,
+                fb_settings=_fb_settings,
             )
             username = user.username
 
@@ -407,8 +449,8 @@ def get_post_hashtags(exp_id, hashtag_id, page=1):
         str=str,
         bool=bool,
         is_admin=is_admin(current_user.username),
-            ui=_load_ui_settings(exp_id),
-            frontend_adds_on_modules=active_modules_context(exp_id),
+        ui=_load_ui_settings(exp_id),
+        frontend_adds_on_modules=active_modules_context(exp_id),
     )
 
 
@@ -488,7 +530,7 @@ def get_post_interest(exp_id, interest_id, page=1):
         str=str,
         bool=bool,
         is_admin=is_admin(current_user.username),
-            ui=_load_ui_settings(exp_id),
+        ui=_load_ui_settings(exp_id),
     )
 
 
@@ -565,7 +607,7 @@ def get_post_emotion(exp_id, emotion_id, page=1):
         str=str,
         bool=bool,
         is_admin=is_admin(current_user.username),
-            ui=_load_ui_settings(exp_id),
+        ui=_load_ui_settings(exp_id),
     )
 
 
@@ -647,7 +689,7 @@ def get_friends(exp_id, user_id, page=1):
         bool=bool,
         mentions=mentions,
         is_admin=is_admin(current_user.username),
-            ui=_load_ui_settings(exp_id),
+        ui=_load_ui_settings(exp_id),
     )
 
 
@@ -683,7 +725,7 @@ def api_friends(exp_id, user_id, page=1):
         number_followees=view_model["number_followees"],
         profile_pic_follower=view_model["profile_pic_follower"],
         profile_pic_followee=view_model["profile_pic_followee"],
-            ui=_load_ui_settings(exp_id),
+        ui=_load_ui_settings(exp_id),
     )
     return jsonify(
         {
@@ -928,7 +970,7 @@ def get_thread(exp_id, post_id):
         "emotions": get_elicited_emotions(root_post.id),
         "topics": get_topics(root_post.id, root_post.user_id),
         "adhoc_agent_badge": get_adhoc_agent_badge(user),
-            "author_type_badge": get_author_type_badge(user),
+        "author_type_badge": get_author_type_badge(user),
         "is_moderation_comment": int(
             getattr(root_post, "is_moderation_comment", 0) or 0
         ),
@@ -1070,8 +1112,8 @@ def get_thread(exp_id, post_id):
         len=len,
         mentions=mentions,
         is_admin=is_admin(current_user.username),
-            ui=_load_ui_settings(exp_id),
-            frontend_adds_on_modules=active_modules_context(exp_id),
+        ui=_load_ui_settings(exp_id),
+        frontend_adds_on_modules=active_modules_context(exp_id),
     )
 
 
@@ -1114,22 +1156,37 @@ def api_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
             # Resolve experiment engine and FilterBubble settings when needed
             _exp_engine = None
             _fb_settings = {}
-            _recsys_compact = str(recsys or "").replace("_", "").replace("-", "").replace(" ", "").lower()
-            if _recsys_compact in ("filterbubble", "fb", "personalizedfeed", "pf", "filterbubblev1"):
+            _recsys_compact = (
+                str(recsys or "")
+                .replace("_", "")
+                .replace("-", "")
+                .replace(" ", "")
+                .lower()
+            )
+            if _recsys_compact in (
+                "filterbubble",
+                "fb",
+                "personalizedfeed",
+                "pf",
+                "filterbubblev1",
+            ):
                 try:
                     _exp_engine = db.engines.get("db_exp")
                     if _exp_engine is None:
                         _exp_engine = db.get_engine(current_app, bind="db_exp")
                     _fb_settings = {
-                        k: v for k, v in ui.items()
-                        if k.startswith("filter_bubble_")
+                        k: v for k, v in ui.items() if k.startswith("filter_bubble_")
                     }
                 except Exception:
                     _exp_engine = None
 
             posts, additional = get_suggested_posts(
-                user.id, recsys, page, max_post_per_page,
-                exp_engine=_exp_engine, fb_settings=_fb_settings,
+                user.id,
+                recsys,
+                page,
+                max_post_per_page,
+                exp_engine=_exp_engine,
+                fb_settings=_fb_settings,
             )
             username = user.username
 
@@ -1198,7 +1255,7 @@ def api_hashtag_posts(exp_id, hashtag_id, page=1):
         str=str,
         bool=bool,
         len=len,
-            ui=_load_ui_settings(exp_id),
+        ui=_load_ui_settings(exp_id),
     )
     return jsonify({"html": html, "has_more": len(res) > 0})
 
@@ -1228,7 +1285,7 @@ def api_interest_posts(exp_id, interest_id, page=1):
         str=str,
         bool=bool,
         len=len,
-            ui=_load_ui_settings(exp_id),
+        ui=_load_ui_settings(exp_id),
     )
     return jsonify({"html": html, "has_more": len(res) > 0})
 
@@ -1262,7 +1319,7 @@ def api_emotion_posts(exp_id, emotion_id, page=1):
         str=str,
         bool=bool,
         len=len,
-            ui=_load_ui_settings(exp_id),
+        ui=_load_ui_settings(exp_id),
     )
     return jsonify({"html": html, "has_more": len(res) > 0})
 

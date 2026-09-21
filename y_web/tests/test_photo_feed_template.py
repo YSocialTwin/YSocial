@@ -39,19 +39,20 @@ def _photo_experiment():
 
 
 def test_photo_feed_template_uses_collapsible_left_sidebar_and_instagram_layout():
-    template = Path(
-        str(_REPO_ROOT / "y_web/templates/photo/feed.html")
-    ).read_text(encoding="utf-8")
-    base_template = Path(
-        str(_REPO_ROOT / "y_web/templates/photo/base.html")
-    ).read_text(encoding="utf-8")
+    template = Path(str(_REPO_ROOT / "y_web/templates/photo/feed.html")).read_text(
+        encoding="utf-8"
+    )
+    base_template = Path(str(_REPO_ROOT / "y_web/templates/photo/base.html")).read_text(
+        encoding="utf-8"
+    )
 
     assert "photo-shell" in base_template
     assert "data-photo-sidebar-toggle" in base_template
-    assert "photo-sidebar__item{% if photo_active_nav == 'home' %} is-active{% endif %}" in Path(
-        str(_REPO_ROOT / "y_web/templates/photo/components/sidebar.html")
-    ).read_text(
-        encoding="utf-8"
+    assert (
+        "photo-sidebar__item{% if photo_active_nav == 'home' %} is-active{% endif %}"
+        in Path(
+            str(_REPO_ROOT / "y_web/templates/photo/components/sidebar.html")
+        ).read_text(encoding="utf-8")
     )
     assert "photo_home_url" in Path(
         str(_REPO_ROOT / "y_web/templates/photo/components/sidebar.html")
@@ -95,9 +96,9 @@ def test_photo_profile_template_exposes_bio_and_story_creation_hooks():
     profile_template = Path(
         str(_REPO_ROOT / "y_web/templates/photo/profile.html")
     ).read_text(encoding="utf-8")
-    base_template = Path(
-        str(_REPO_ROOT / "y_web/templates/photo/base.html")
-    ).read_text(encoding="utf-8")
+    base_template = Path(str(_REPO_ROOT / "y_web/templates/photo/base.html")).read_text(
+        encoding="utf-8"
+    )
 
     assert "data-photo-open-story-create" in profile_template
     assert "data-photo-open-profile-edit" in profile_template
@@ -119,18 +120,18 @@ def test_photo_profile_template_exposes_bio_and_story_creation_hooks():
 
 
 def test_photo_routes_do_not_rely_on_recsys_type_for_feed_rendering():
-    route_source = Path(
-        str(_REPO_ROOT / "y_web/routes/social/photo.py")
-    ).read_text(encoding="utf-8")
+    route_source = Path(str(_REPO_ROOT / "y_web/routes/social/photo.py")).read_text(
+        encoding="utf-8"
+    )
     template_source = Path(
         str(_REPO_ROOT / "y_web/templates/photo/feed.html")
     ).read_text(encoding="utf-8")
-    auth_source = Path(
-        str(_REPO_ROOT / "y_web/routes/auth/routes.py")
-    ).read_text(encoding="utf-8")
-    common_source = Path(
-        str(_REPO_ROOT / "y_web/routes/social/common.py")
-    ).read_text(encoding="utf-8")
+    auth_source = Path(str(_REPO_ROOT / "y_web/routes/auth/routes.py")).read_text(
+        encoding="utf-8"
+    )
+    common_source = Path(str(_REPO_ROOT / "y_web/routes/social/common.py")).read_text(
+        encoding="utf-8"
+    )
     admin_source = Path(
         str(_REPO_ROOT / "y_web/routes/admin/sub/experiments/_crud.py")
     ).read_text(encoding="utf-8")
@@ -211,9 +212,9 @@ def test_photo_latest_round_id_uses_active_experiment_rounds(monkeypatch):
 
 
 def test_photo_routes_order_by_round_chronology_for_visual_feeds():
-    route_source = Path(
-        str(_REPO_ROOT / "y_web/routes/social/photo.py")
-    ).read_text(encoding="utf-8")
+    route_source = Path(str(_REPO_ROOT / "y_web/routes/social/photo.py")).read_text(
+        encoding="utf-8"
+    )
     assert "LEFT JOIN rounds rd ON rd.id = p.round" in route_source
     assert "COALESCE(rd.day, 0) DESC, COALESCE(rd.hour, 0) DESC" in route_source
     assert "COALESCE(rd.day, 0) ASC, COALESCE(rd.hour, 0) ASC" in route_source
@@ -230,10 +231,16 @@ def test_photo_routes_order_by_round_chronology_for_visual_feeds():
 @pytest.mark.external_repo
 def test_photo_recsys_uses_round_freshness_not_wall_clock():
     ranking_source = Path(
-        str(_REPO_ROOT / "external/YPhotoSharing/YPhotoSharing/YServer/recsys/feed_ranking_service.py")
+        str(
+            _REPO_ROOT
+            / "external/YPhotoSharing/YPhotoSharing/YServer/recsys/feed_ranking_service.py"
+        )
     ).read_text(encoding="utf-8")
     trend_source = Path(
-        str(_REPO_ROOT / "external/YPhotoSharing/YPhotoSharing/YServer/recsys/trend_service.py")
+        str(
+            _REPO_ROOT
+            / "external/YPhotoSharing/YPhotoSharing/YServer/recsys/trend_service.py"
+        )
     ).read_text(encoding="utf-8")
 
     assert "current_round_index" in ranking_source
@@ -244,9 +251,9 @@ def test_photo_recsys_uses_round_freshness_not_wall_clock():
 
 
 def test_photo_round_schema_includes_created_at_timestamp():
-    schema_source = Path(
-        str(_REPO_ROOT / "y_web/src/experiment/schema.py")
-    ).read_text(encoding="utf-8")
+    schema_source = Path(str(_REPO_ROOT / "y_web/src/experiment/schema.py")).read_text(
+        encoding="utf-8"
+    )
     assert '"rounds": {' in schema_source
     assert "created_at DATETIME DEFAULT CURRENT_TIMESTAMP" in schema_source
     assert "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" in schema_source
@@ -364,15 +371,15 @@ def test_photo_suggested_contacts_never_returns_empty_list_for_photo_experiment(
 
 
 def test_photo_suggestions_page_is_wired_and_english():
-    route_source = Path(
-        str(_REPO_ROOT / "y_web/routes/social/photo.py")
-    ).read_text(encoding="utf-8")
+    route_source = Path(str(_REPO_ROOT / "y_web/routes/social/photo.py")).read_text(
+        encoding="utf-8"
+    )
     template = Path(
         str(_REPO_ROOT / "y_web/templates/photo/suggestions.html")
     ).read_text(encoding="utf-8")
-    feed_template = Path(
-        str(_REPO_ROOT / "y_web/templates/photo/feed.html")
-    ).read_text(encoding="utf-8")
+    feed_template = Path(str(_REPO_ROOT / "y_web/templates/photo/feed.html")).read_text(
+        encoding="utf-8"
+    )
 
     assert "photo/suggestions" in route_source
     assert "Suggested Contacts" in template
@@ -382,15 +389,15 @@ def test_photo_suggestions_page_is_wired_and_english():
 
 
 def test_photo_profile_page_is_wired_and_uses_photo_shell():
-    route_source = Path(
-        str(_REPO_ROOT / "y_web/routes/social/photo.py")
-    ).read_text(encoding="utf-8")
-    template = Path(
-        str(_REPO_ROOT / "y_web/templates/photo/profile.html")
-    ).read_text(encoding="utf-8")
-    base_template = Path(
-        str(_REPO_ROOT / "y_web/templates/photo/base.html")
-    ).read_text(encoding="utf-8")
+    route_source = Path(str(_REPO_ROOT / "y_web/routes/social/photo.py")).read_text(
+        encoding="utf-8"
+    )
+    template = Path(str(_REPO_ROOT / "y_web/templates/photo/profile.html")).read_text(
+        encoding="utf-8"
+    )
+    base_template = Path(str(_REPO_ROOT / "y_web/templates/photo/base.html")).read_text(
+        encoding="utf-8"
+    )
 
     assert "photo/profile" in route_source
     assert "photo-profile-page" in template
@@ -405,12 +412,12 @@ def test_photo_profile_page_is_wired_and_uses_photo_shell():
 
 @pytest.mark.integration
 def test_photo_search_page_is_wired_and_returns_all_search_domains():
-    route_source = Path(
-        str(_REPO_ROOT / "y_web/routes/social/photo.py")
-    ).read_text(encoding="utf-8")
-    template = Path(
-        str(_REPO_ROOT / "y_web/templates/photo/search.html")
-    ).read_text(encoding="utf-8")
+    route_source = Path(str(_REPO_ROOT / "y_web/routes/social/photo.py")).read_text(
+        encoding="utf-8"
+    )
+    template = Path(str(_REPO_ROOT / "y_web/templates/photo/search.html")).read_text(
+        encoding="utf-8"
+    )
     sidebar_template = Path(
         str(_REPO_ROOT / "y_web/templates/photo/components/sidebar.html")
     ).read_text(encoding="utf-8")

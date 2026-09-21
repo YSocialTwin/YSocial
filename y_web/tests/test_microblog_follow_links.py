@@ -5,7 +5,10 @@ _REPO_ROOT = Path(__file__).resolve().parents[2]
 
 def test_suggested_friend_follow_link_targets_profile_owner():
     template = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/components/suggested_friends.html")
+        str(
+            _REPO_ROOT
+            / "y_web/templates/microblogging/components/suggested_friends.html"
+        )
     ).read_text(encoding="utf-8")
     assert "/follow/{{ friend['id'] }}/{{ user_id }}" in template
     assert "ys-suggestion-card" in template
@@ -14,7 +17,9 @@ def test_suggested_friend_follow_link_targets_profile_owner():
 
 def test_suggested_page_follow_link_targets_page_owner():
     template = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/components/suggested_pages.html")
+        str(
+            _REPO_ROOT / "y_web/templates/microblogging/components/suggested_pages.html"
+        )
     ).read_text(encoding="utf-8")
     assert "/follow/{{ page['id'] }}/{{ user_id }}" in template
     assert "ys-suggestion-card" in template
@@ -52,9 +57,9 @@ def test_profile_activity_tabs_are_single_row_async_controls():
     template = Path(
         str(_REPO_ROOT / "y_web/templates/microblogging/profile.html")
     ).read_text(encoding="utf-8")
-    js = Path(
-        str(_REPO_ROOT / "y_web/static/assets/js/mb-profile.js")
-    ).read_text(encoding="utf-8")
+    js = Path(str(_REPO_ROOT / "y_web/static/assets/js/mb-profile.js")).read_text(
+        encoding="utf-8"
+    )
     css = Path(
         str(_REPO_ROOT / "y_web/static/assets/css/social-components.css")
     ).read_text(encoding="utf-8")
@@ -73,12 +78,12 @@ def test_microblog_header_search_wires_profiles_hashtags_and_topics():
     template = Path(
         str(_REPO_ROOT / "y_web/templates/microblogging/header.html")
     ).read_text(encoding="utf-8")
-    source = Path(
-        str(_REPO_ROOT / "y_web/routes/social/microblogging.py")
-    ).read_text(encoding="utf-8")
-    js = Path(
-        str(_REPO_ROOT / "y_web/static/assets/js/mb-header-search.js")
-    ).read_text(encoding="utf-8")
+    source = Path(str(_REPO_ROOT / "y_web/routes/social/microblogging.py")).read_text(
+        encoding="utf-8"
+    )
+    js = Path(str(_REPO_ROOT / "y_web/static/assets/js/mb-header-search.js")).read_text(
+        encoding="utf-8"
+    )
     css = Path(
         str(_REPO_ROOT / "y_web/static/assets/css/social-components.css")
     ).read_text(encoding="utf-8")
@@ -121,9 +126,9 @@ def test_profile_about_me_supports_agent_custom_feature_rows():
     template = Path(
         str(_REPO_ROOT / "y_web/templates/microblogging/profile.html")
     ).read_text(encoding="utf-8")
-    source = Path(
-        str(_REPO_ROOT / "y_web/routes/social/common.py")
-    ).read_text(encoding="utf-8")
+    source = Path(str(_REPO_ROOT / "y_web/routes/social/common.py")).read_text(
+        encoding="utf-8"
+    )
 
     assert (
         "{% for custom_key, custom_value in agent_custom_features.items() %}"
@@ -159,9 +164,9 @@ def test_edit_profile_template_uses_shared_profile_style_sections():
     template = Path(
         str(_REPO_ROOT / "y_web/templates/microblogging/edit_profile.html")
     ).read_text(encoding="utf-8")
-    source = Path(
-        str(_REPO_ROOT / "y_web/routes/social/common.py")
-    ).read_text(encoding="utf-8")
+    source = Path(str(_REPO_ROOT / "y_web/routes/social/common.py")).read_text(
+        encoding="utf-8"
+    )
     css = Path(
         str(_REPO_ROOT / "y_web/static/assets/css/social-components.css")
     ).read_text(encoding="utf-8")
@@ -206,15 +211,15 @@ def test_microblog_templates_render_adhoc_agent_badges():
 
 
 def test_microblog_helper_wires_adhoc_agent_badges():
-    source = Path(
-        str(_REPO_ROOT / "y_web/routes/social/helpers.py")
-    ).read_text(encoding="utf-8")
+    source = Path(str(_REPO_ROOT / "y_web/routes/social/helpers.py")).read_text(
+        encoding="utf-8"
+    )
     thread_source = Path(
         str(_REPO_ROOT / "y_web/routes/social/microblogging.py")
     ).read_text(encoding="utf-8")
-    posts_source = Path(
-        str(_REPO_ROOT / "y_web/src/data_access/posts.py")
-    ).read_text(encoding="utf-8")
+    posts_source = Path(str(_REPO_ROOT / "y_web/src/data_access/posts.py")).read_text(
+        encoding="utf-8"
+    )
 
     assert "_ADHOC_AGENT_BADGE_LABELS" in source
     assert '"stress_attacker": "Stress Attacker"' in source
@@ -229,7 +234,10 @@ def test_microblog_helper_wires_adhoc_agent_badges():
 
 def test_sidebar_ranked_list_card_is_shared_and_styled():
     component = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/components/sidebar_ranked_list_card.html")
+        str(
+            _REPO_ROOT
+            / "y_web/templates/microblogging/components/sidebar_ranked_list_card.html"
+        )
     ).read_text(encoding="utf-8")
     feed_template = Path(
         str(_REPO_ROOT / "y_web/templates/microblogging/feed.html")
@@ -278,7 +286,10 @@ def test_sidebar_ranked_list_card_is_shared_and_styled():
 
 def test_sidebar_user_card_is_shared_and_styled():
     component = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/components/sidebar_user_card.html")
+        str(
+            _REPO_ROOT
+            / "y_web/templates/microblogging/components/sidebar_user_card.html"
+        )
     ).read_text(encoding="utf-8")
     feed_template = Path(
         str(_REPO_ROOT / "y_web/templates/microblogging/feed.html")
@@ -327,7 +338,10 @@ def test_sidebar_user_card_is_shared_and_styled():
 
 def test_context_hero_is_shared_and_styled():
     component = Path(
-        str(_REPO_ROOT / "y_web/templates/microblogging/components/context_hero_card.html")
+        str(
+            _REPO_ROOT
+            / "y_web/templates/microblogging/components/context_hero_card.html"
+        )
     ).read_text(encoding="utf-8")
     thread_template = Path(
         str(_REPO_ROOT / "y_web/templates/microblogging/thread.html")
@@ -368,9 +382,9 @@ def test_context_hero_is_shared_and_styled():
 
 
 def test_infinite_scroll_supports_profile_mode_reset():
-    js = Path(
-        str(_REPO_ROOT / "y_web/static/assets/js/infinite-scroll.js")
-    ).read_text(encoding="utf-8")
+    js = Path(str(_REPO_ROOT / "y_web/static/assets/js/infinite-scroll.js")).read_text(
+        encoding="utf-8"
+    )
 
     assert "destroyInfiniteScroll" in js
     assert "window.InfiniteScroll = {" in js
@@ -378,9 +392,9 @@ def test_infinite_scroll_supports_profile_mode_reset():
 
 
 def test_microblog_feed_supports_live_refresh_with_existing_recsys_api():
-    js = Path(
-        str(_REPO_ROOT / "y_web/static/assets/js/mb-feed.js")
-    ).read_text(encoding="utf-8")
+    js = Path(str(_REPO_ROOT / "y_web/static/assets/js/mb-feed.js")).read_text(
+        encoding="utf-8"
+    )
     css = Path(
         str(_REPO_ROOT / "y_web/static/assets/css/social-components.css")
     ).read_text(encoding="utf-8")
@@ -399,9 +413,9 @@ def test_microblog_feed_supports_live_refresh_with_existing_recsys_api():
 
 
 def test_build_thread_tree_handles_uuid_out_of_order_replies():
-    source = Path(
-        str(_REPO_ROOT / "y_web/routes/social/helpers.py")
-    ).read_text(encoding="utf-8")
+    source = Path(str(_REPO_ROOT / "y_web/routes/social/helpers.py")).read_text(
+        encoding="utf-8"
+    )
     expand_start = source.index("def _expand_tree(")
     recursive_start = source.index("def recursive_visit(")
     helper_scope = {}

@@ -9,11 +9,10 @@ Ensures that when an experiment server starts or stops:
 from types import SimpleNamespace
 
 import pytest
+
 from y_web.tests._sa2_stubs import _FakeSelect, _ScalarsResult, _SelectRoutingSession
 
 pytestmark = pytest.mark.unit
-
-
 
 
 def test_start_experiment_updates_running_and_exp_status(monkeypatch):

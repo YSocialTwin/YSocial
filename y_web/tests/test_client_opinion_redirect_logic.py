@@ -1,9 +1,9 @@
 import json
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
-from pathlib import Path
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 

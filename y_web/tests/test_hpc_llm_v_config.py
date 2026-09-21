@@ -231,9 +231,7 @@ class TestHPCLLMVConfig:
         template = open(
             str(_REPO_ROOT / "y_web/templates/admin/clients_hpc.html")
         ).read()
-        js = open(
-            str(_REPO_ROOT / "y_web/static/assets/js/admin-clients.js")
-        ).read()
+        js = open(str(_REPO_ROOT / "y_web/static/assets/js/admin-clients.js")).read()
 
         assert 'select name="llm_v_agent" id="llm_v_agent"' in template
         assert "Fetch Vision Models" in template

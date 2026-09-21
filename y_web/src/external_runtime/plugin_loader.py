@@ -26,6 +26,7 @@ Every public function here is defensive: it never raises out to its caller.
 A broken/misconfigured suite must never prevent YWeb from starting or
 prevent unrelated experiments/pages from rendering.
 """
+
 from __future__ import annotations
 
 import importlib
@@ -40,7 +41,9 @@ from y_web.src.external_runtime.frontend_plugins import (
 )
 from y_web.src.external_runtime.registry import runtime_spec
 
-_REGISTERED_SUITES: dict[str, dict] = {}  # repo_key -> {"modules": {module_id: manifest}}
+_REGISTERED_SUITES: dict[str, dict] = (
+    {}
+)  # repo_key -> {"modules": {module_id: manifest}}
 
 
 def _namespace_root_name(repo_key: str) -> str:
@@ -87,7 +90,12 @@ def register_frontend_plugin_suites(app) -> dict:
     report = {"suites": {}}
 
     for repo_key in frontend_plugin_repo_keys():
-        suite_report = {"installed": False, "valid": False, "registered_modules": [], "errors": []}
+        suite_report = {
+            "installed": False,
+            "valid": False,
+            "registered_modules": [],
+            "errors": [],
+        }
         try:
             validation = validate_frontend_suite(repo_key)
         except Exception as exc:
@@ -121,16 +129,24 @@ def register_frontend_plugin_suites(app) -> dict:
                 # A broken module must never break the others or the app.
                 app.logger.warning(
                     "[frontend_adds_on] failed to load backend for module '%s' in suite '%s': %s",
-                    module_id, repo_key, exc,
+                    module_id,
+                    repo_key,
+                    exc,
                 )
-                suite_report["errors"].append(f"module '{module_id}' backend import failed: {exc}")
+                suite_report["errors"].append(
+                    f"module '{module_id}' backend import failed: {exc}"
+                )
 
         _REGISTERED_SUITES[repo_key] = {"modules": modules_by_id}
 
         try:
             _register_static_blueprint(app, repo_key)
         except Exception as exc:
-            app.logger.warning("[frontend_adds_on] failed to register static assets route for '%s': %s", repo_key, exc)
+            app.logger.warning(
+                "[frontend_adds_on] failed to register static assets route for '%s': %s",
+                repo_key,
+                exc,
+            )
 
         report["suites"][repo_key] = suite_report
 
@@ -161,7 +177,10 @@ def _register_static_blueprint(app, repo_key: str) -> None:
             abort(404)
         try:
             requested = (spec.path / filename).resolve()
-            if spec.path.resolve() not in requested.parents and requested != spec.path.resolve():
+            if (
+                spec.path.resolve() not in requested.parents
+                and requested != spec.path.resolve()
+            ):
                 abort(404)
         except Exception:
             abort(404)
@@ -186,10 +205,11 @@ def is_module_available(repo_key: str, module_id: str) -> bool:
 
 
 def _experiment_db_path(exp_id: int) -> str | None:
+    import os as _os
+
     from y_web import db
     from y_web.src.models import Exps
     from y_web.src.system.path_utils import get_writable_path
-    import os as _os
 
     exp = db.session.get(Exps, exp_id)
     if exp is None or not exp.db_name:
@@ -197,7 +217,9 @@ def _experiment_db_path(exp_id: int) -> str | None:
     return get_writable_path(_os.path.join("y_web", exp.db_name))
 
 
-def ensure_module_schema(repo_key: str, module_id: str, exp_id: int, quiet: bool = True) -> bool:
+def ensure_module_schema(
+    repo_key: str, module_id: str, exp_id: int, quiet: bool = True
+) -> bool:
     """Run the module's own JIT migration against exp_id's database, if any.
 
     Called by the admin "enable module for experiment" handler, right
@@ -257,9 +279,11 @@ def active_modules_context(exp_id: int) -> list[dict]:
         if not modules:
             continue
         try:
-            rows = db.session.query(FrontendAddsOnExpModuleSettings).filter_by(
-                exp_id=exp_id, enabled=True
-            ).all()
+            rows = (
+                db.session.query(FrontendAddsOnExpModuleSettings)
+                .filter_by(exp_id=exp_id, enabled=True)
+                .all()
+            )
         except Exception:
             rows = []
 
@@ -278,20 +302,24 @@ def active_modules_context(exp_id: int) -> list[dict]:
 
             frontend_entry = manifest.get("frontend_entry")
             frontend_style = manifest.get("frontend_style")
-            results.append({
-                "module_id": row.module_id,
-                "exp_id": exp_id,
-                "api_base": f"/{exp_id}/api/plugins/{repo_key}/{row.module_id}",
-                "frontend_entry": (
-                    f"/plugins/{repo_key}/{row.module_id}/static/{frontend_entry}"
-                    if frontend_entry else None
-                ),
-                "frontend_style": (
-                    f"/plugins/{repo_key}/{row.module_id}/static/{frontend_style}"
-                    if frontend_style else None
-                ),
-                "config": cfg,
-            })
+            results.append(
+                {
+                    "module_id": row.module_id,
+                    "exp_id": exp_id,
+                    "api_base": f"/{exp_id}/api/plugins/{repo_key}/{row.module_id}",
+                    "frontend_entry": (
+                        f"/plugins/{repo_key}/{row.module_id}/static/{frontend_entry}"
+                        if frontend_entry
+                        else None
+                    ),
+                    "frontend_style": (
+                        f"/plugins/{repo_key}/{row.module_id}/static/{frontend_style}"
+                        if frontend_style
+                        else None
+                    ),
+                    "config": cfg,
+                }
+            )
     return results
 
 

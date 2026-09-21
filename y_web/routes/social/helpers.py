@@ -68,14 +68,13 @@ def get_adhoc_agent_badge(user) -> Optional[str]:
     return _ADHOC_AGENT_BADGE_LABELS.get(user_type)
 
 
-
-
 def get_author_type_badge(user) -> str:
     """Return a badge label identifying whether the author is an AI agent or a human."""
     user_type = str(getattr(user, "user_type", "") or "").strip().lower()
     if user_type == "agent":
         return "AI Agent"
     return "Human"
+
 
 def get_safe_profile_pic(username, is_page=0):
     """
@@ -221,7 +220,9 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
         if hidden_ids:
             records = [(c.id, c.user_id, c.comment_to) for c, _author in comments]
             dropped_ids = _hidden_post_ids_in_thread(records, hidden_ids)
-            comments = [(c, author) for c, author in comments if c.id not in dropped_ids]
+            comments = [
+                (c, author) for c, author in comments if c.id not in dropped_ids
+            ]
 
         cms = []
         for c, author in comments:
@@ -702,13 +703,13 @@ _UI_DEFAULTS = {
     "posts_per_page": 10,
     # FilterBubble (Personalized Feed) parameters
     "filter_bubble_alpha": 2.0,
-    "filter_bubble_beta":  0.0,
+    "filter_bubble_beta": 0.0,
     "filter_bubble_gamma": 0.0,
-    "filter_bubble_lr":    0.05,
-    "filter_bubble_sort":  "score",
-    "filter_bubble_wr":    1.0,
-    "filter_bubble_wc":    1.5,
-    "filter_bubble_ws":    2.0,
+    "filter_bubble_lr": 0.05,
+    "filter_bubble_sort": "score",
+    "filter_bubble_wr": 1.0,
+    "filter_bubble_wc": 1.5,
+    "filter_bubble_ws": 2.0,
 }
 
 

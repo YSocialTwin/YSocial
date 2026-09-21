@@ -21,19 +21,20 @@ from flask import (
     url_for,
 )
 from flask_login import current_user, login_required
-from sqlalchemy import and_, desc, func, or_, select, text as _text
+from sqlalchemy import and_, desc, func, or_, select
+from sqlalchemy import text as _text
 from sqlalchemy.sql.expression import func
 from werkzeug.security import generate_password_hash
 
 from y_web import db
+from y_web.routes.admin.sub.experiments._frontend_settings import _load_recsys_options
 from y_web.routes.social._blueprint import main
-from y_web.src.external_runtime.plugin_loader import active_modules_context
 from y_web.routes.social.helpers import (
-    _load_ui_settings,
     _forum_current_profile_pic,
     _forum_logged_user,
     _forum_memory_enabled,
     _forum_profile_pic,
+    _load_ui_settings,
     get_safe_profile_pic,
     is_admin,
 )
@@ -54,6 +55,7 @@ from y_web.src.data_access import (
     get_user_recent_posts,
 )
 from y_web.src.experiment.helpers import get_experiment_uid_from_db_name
+from y_web.src.external_runtime.plugin_loader import active_modules_context
 from y_web.src.models import (
     Admin_users,
     Agent,
@@ -81,7 +83,6 @@ from y_web.src.recsys.content_recsys import (
     _normalize_content_recsys_mode,
     is_supported_content_recsys_mode,
 )
-from y_web.routes.admin.sub.experiments._frontend_settings import _load_recsys_options
 from y_web.src.system.path_utils import get_writable_path
 
 
@@ -637,32 +638,41 @@ def edit_profile(exp_id, user_id):
     ).all()
 
     saved_interest_idx = {}
-    saved_opinions     = {}
-    INTEREST_STEPS     = [0.0, 0.33, 0.67, 1.0]
+    saved_opinions = {}
+    INTEREST_STEPS = [0.0, 0.33, 0.67, 1.0]
 
     try:
         user_id_str = str(user_id)
-        exp_engine  = _get_exp_engine_ep()
+        exp_engine = _get_exp_engine_ep()
 
         # Build mapping: sim iid → dashboard topic_id
         sim_to_dash = {}
         for et in exp_topic_rows:
-            tl = db.session.scalars(select(Topic_List).filter_by(id=et.topic_id)).first()
+            tl = db.session.scalars(
+                select(Topic_List).filter_by(id=et.topic_id)
+            ).first()
             if tl:
-                sim_int = db.session.scalars(select(Interests).filter_by(interest=tl.name)).first()
+                sim_int = db.session.scalars(
+                    select(Interests).filter_by(interest=tl.name)
+                ).first()
                 if sim_int:
                     sim_to_dash[str(sim_int.iid)] = str(et.topic_id)
 
         with exp_engine.connect() as conn:
             # Interest levels
             rows = conn.execute(
-                _text("SELECT topic_id, interest_level FROM user_topic_interest WHERE user_id = :uid"),
+                _text(
+                    "SELECT topic_id, interest_level FROM user_topic_interest WHERE user_id = :uid"
+                ),
                 {"uid": user_id_str},
             ).fetchall()
             for row in rows:
                 dash_id = sim_to_dash.get(str(row[0]))
                 if dash_id:
-                    best = min(range(len(INTEREST_STEPS)), key=lambda i: abs(INTEREST_STEPS[i] - float(row[1])))
+                    best = min(
+                        range(len(INTEREST_STEPS)),
+                        key=lambda i: abs(INTEREST_STEPS[i] - float(row[1])),
+                    )
                     saved_interest_idx[dash_id] = best
 
             # Opinions
@@ -670,7 +680,9 @@ def edit_profile(exp_id, user_id):
             for tid_sentinel in ("'0'", "0"):
                 try:
                     op_rows = conn.execute(
-                        _text(f"SELECT topic_id, opinion FROM agent_opinion WHERE agent_id = :aid AND tid = {tid_sentinel}"),
+                        _text(
+                            f"SELECT topic_id, opinion FROM agent_opinion WHERE agent_id = :aid AND tid = {tid_sentinel}"
+                        ),
                         {"aid": user_id_str},
                     ).fetchall()
                     if op_rows:
@@ -683,7 +695,10 @@ def edit_profile(exp_id, user_id):
                 dash_id = sim_to_dash.get(str(row[0]))
                 if dash_id:
                     try:
-                        best = min(range(len(og_mids)), key=lambda i: abs(og_mids[i] - float(row[1])))
+                        best = min(
+                            range(len(og_mids)),
+                            key=lambda i: abs(og_mids[i] - float(row[1])),
+                        )
                         saved_opinions[dash_id] = best
                     except Exception:
                         pass
@@ -694,7 +709,10 @@ def edit_profile(exp_id, user_id):
     # Human users also get HumanOnly modes (e.g. FilterBubble/Personalized Feed).
     _exp = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
     _sim_type = (_exp.simulator_type or "Standard") if _exp else "Standard"
-    _is_human_profile = getattr(user, "user_type", "agent") not in ("agent", "bot") and                         not getattr(user, "is_page", 0)
+    _is_human_profile = getattr(user, "user_type", "agent") not in (
+        "agent",
+        "bot",
+    ) and not getattr(user, "is_page", 0)
     _recsys_opts = _load_recsys_options(_sim_type, include_human_only=_is_human_profile)
     return render_template(
         "microblogging/edit_profile.html",
@@ -746,10 +764,15 @@ def update_profile_data(exp_id, user_id):
         canonical_recsys = _normalize_content_recsys_mode(requested_recsys)
         if not is_supported_content_recsys_mode(canonical_recsys):
             message = "Unsupported content recommendation system."
-            if request.is_json or "application/json" in request.headers.get("Accept", ""):
+            if request.is_json or "application/json" in request.headers.get(
+                "Accept", ""
+            ):
                 return jsonify({"ok": False, "error": message}), 400
             flash(message, "error")
-            return redirect(request.referrer or url_for("main.edit_profile", exp_id=exp_id, user_id=user_id))
+            return redirect(
+                request.referrer
+                or url_for("main.edit_profile", exp_id=exp_id, user_id=user_id)
+            )
         user.recsys_type = canonical_recsys
     user.frecsys_type = request.form.get("frecsys_type")
     user.age = int(request.form.get("age"))
@@ -820,7 +843,9 @@ def update_topic_preferences(exp_id, user_id):
     def _agent_opinion_needs_explicit_id_tp(engine):
         try:
             with engine.connect() as conn:
-                rows = conn.execute(_text("PRAGMA table_info(agent_opinion)")).fetchall()
+                rows = conn.execute(
+                    _text("PRAGMA table_info(agent_opinion)")
+                ).fetchall()
             for row in rows:
                 if row[1] == "id":
                     return "INT" not in (row[2] or "").upper()
@@ -853,16 +878,22 @@ def update_topic_preferences(exp_id, user_id):
     opinion_groups = db.session.scalars(
         select(OpinionGroup).order_by(OpinionGroup.lower_bound)
     ).all()
-    group_midpoints = {og.id: (og.lower_bound + og.upper_bound) / 2.0 for og in opinion_groups}
+    group_midpoints = {
+        og.id: (og.lower_bound + og.upper_bound) / 2.0 for og in opinion_groups
+    }
 
     # Build dashboard topic_id → sim iid mapping
-    exp_topic_rows = db.session.scalars(select(Exp_Topic).filter_by(exp_id=exp_id)).all()
+    exp_topic_rows = db.session.scalars(
+        select(Exp_Topic).filter_by(exp_id=exp_id)
+    ).all()
     topic_map = {}
     for et in exp_topic_rows:
         tl = db.session.scalars(select(Topic_List).filter_by(id=et.topic_id)).first()
         if not tl:
             continue
-        sim_interest = db.session.scalars(select(Interests).filter_by(interest=tl.name)).first()
+        sim_interest = db.session.scalars(
+            select(Interests).filter_by(interest=tl.name)
+        ).first()
         if sim_interest is None:
             sim_interest = Interests(interest=tl.name)
             db.session.add(sim_interest)
@@ -871,22 +902,35 @@ def update_topic_preferences(exp_id, user_id):
     db.session.commit()
 
     exp_engine = _get_exp_engine_tp()
-    uuid_mode  = _agent_opinion_needs_explicit_id_tp(exp_engine)
+    uuid_mode = _agent_opinion_needs_explicit_id_tp(exp_engine)
     _ensure_user_topic_interest_table_tp(exp_engine)
 
     with exp_engine.connect() as conn:
         try:
-            conn.execute(_text("DELETE FROM user_topic_interest WHERE user_id = :uid"), {"uid": user_id_str})
+            conn.execute(
+                _text("DELETE FROM user_topic_interest WHERE user_id = :uid"),
+                {"uid": user_id_str},
+            )
             if uuid_mode:
-                conn.execute(_text("DELETE FROM agent_opinion WHERE agent_id = :aid AND tid = '0'"), {"aid": user_id_str})
+                conn.execute(
+                    _text(
+                        "DELETE FROM agent_opinion WHERE agent_id = :aid AND tid = '0'"
+                    ),
+                    {"aid": user_id_str},
+                )
             else:
-                conn.execute(_text("DELETE FROM agent_opinion WHERE agent_id = :aid AND tid = 0 AND id_interacted_with IN (0, -1)"), {"aid": user_id_val})
+                conn.execute(
+                    _text(
+                        "DELETE FROM agent_opinion WHERE agent_id = :aid AND tid = 0 AND id_interacted_with IN (0, -1)"
+                    ),
+                    {"aid": user_id_val},
+                )
         except Exception:
             pass
 
         for topic_id_dash, sim_topic_id in topic_map.items():
             interest_str = request.form.get(f"interest_{topic_id_dash}")
-            opinion_str  = request.form.get(f"opinion_{topic_id_dash}")
+            opinion_str = request.form.get(f"opinion_{topic_id_dash}")
 
             if interest_str is not None:
                 try:
@@ -894,24 +938,35 @@ def update_topic_preferences(exp_id, user_id):
                 except (ValueError, TypeError):
                     interest_val = 0.0
                 conn.execute(
-                    _text("INSERT OR REPLACE INTO user_topic_interest (user_id, topic_id, interest_level) VALUES (:uid, :tid, :lvl)"),
+                    _text(
+                        "INSERT OR REPLACE INTO user_topic_interest (user_id, topic_id, interest_level) VALUES (:uid, :tid, :lvl)"
+                    ),
                     {"uid": user_id_str, "tid": str(sim_topic_id), "lvl": interest_val},
                 )
 
             if opinion_str is not None:
                 try:
-                    og_id       = int(opinion_str)
+                    og_id = int(opinion_str)
                     opinion_val = group_midpoints.get(og_id, 0.5)
                 except (ValueError, TypeError):
                     opinion_val = 0.5
                 if uuid_mode:
                     conn.execute(
-                        _text("INSERT INTO agent_opinion (id, agent_id, tid, topic_id, id_interacted_with, id_post, opinion, stubborn) VALUES (:id, :aid, '0', :tid, NULL, NULL, :op, 0)"),
-                        {"id": str(_uuid.uuid4()), "aid": user_id_str, "tid": str(sim_topic_id), "op": opinion_val},
+                        _text(
+                            "INSERT INTO agent_opinion (id, agent_id, tid, topic_id, id_interacted_with, id_post, opinion, stubborn) VALUES (:id, :aid, '0', :tid, NULL, NULL, :op, 0)"
+                        ),
+                        {
+                            "id": str(_uuid.uuid4()),
+                            "aid": user_id_str,
+                            "tid": str(sim_topic_id),
+                            "op": opinion_val,
+                        },
                     )
                 else:
                     conn.execute(
-                        _text("INSERT INTO agent_opinion (agent_id, tid, topic_id, id_interacted_with, id_post, opinion, stubborn) VALUES (:aid, 0, :tid, 0, 0, :op, 0)"),
+                        _text(
+                            "INSERT INTO agent_opinion (agent_id, tid, topic_id, id_interacted_with, id_post, opinion, stubborn) VALUES (:aid, 0, :tid, 0, 0, :op, 0)"
+                        ),
                         {"aid": user_id_val, "tid": sim_topic_id, "op": opinion_val},
                     )
         conn.commit()
@@ -951,6 +1006,7 @@ def update_password(exp_id, user_id):
 #  ONBOARDING ROUTES
 # ─────────────────────────────────────────────
 
+
 @main.get("/<int:exp_id>/onboarding/<user_id>")
 @login_required
 def onboarding(exp_id, user_id):
@@ -989,7 +1045,9 @@ def onboarding(exp_id, user_id):
                     eng = db.engine
             with eng.connect() as conn:
                 row = conn.execute(
-                    _text("SELECT 1 FROM user_topic_interest WHERE user_id = :uid LIMIT 1"),
+                    _text(
+                        "SELECT 1 FROM user_topic_interest WHERE user_id = :uid LIMIT 1"
+                    ),
                     {"uid": str(uid)},
                 ).fetchone()
                 return row is not None
@@ -1040,9 +1098,7 @@ def onboarding(exp_id, user_id):
     except Exception:
         available_profile_pics = []
 
-    available_cover_images = [
-        os.path.basename(p) for p in available_cover_image_urls()
-    ]
+    available_cover_images = [os.path.basename(p) for p in available_cover_image_urls()]
 
     # Topics assigned to this experiment (dashboard DB)
     exp_topic_rows = db.session.scalars(
@@ -1076,8 +1132,8 @@ def onboarding(exp_id, user_id):
             return db.engine
 
     user_id_str = str(user_id)
-    saved_interests = {}   # dashboard topic_id (str) → float 0-1
-    saved_opinions  = {}   # dashboard topic_id (str) → opinion group index (int)
+    saved_interests = {}  # dashboard topic_id (str) → float 0-1
+    saved_opinions = {}  # dashboard topic_id (str) → opinion group index (int)
 
     try:
         exp_engine = _get_exp_engine_get()
@@ -1085,16 +1141,22 @@ def onboarding(exp_id, user_id):
         # Build mapping: sim topic_id → dashboard topic_id
         sim_to_dash = {}
         for et in db.session.scalars(select(Exp_Topic).filter_by(exp_id=exp_id)).all():
-            tl = db.session.scalars(select(Topic_List).filter_by(id=et.topic_id)).first()
+            tl = db.session.scalars(
+                select(Topic_List).filter_by(id=et.topic_id)
+            ).first()
             if tl:
-                sim_int = db.session.scalars(select(Interests).filter_by(interest=tl.name)).first()
+                sim_int = db.session.scalars(
+                    select(Interests).filter_by(interest=tl.name)
+                ).first()
                 if sim_int:
                     sim_to_dash[str(sim_int.iid)] = str(et.topic_id)
 
         with exp_engine.connect() as conn:
             # Interest levels
             rows = conn.execute(
-                _text("SELECT topic_id, interest_level FROM user_topic_interest WHERE user_id = :uid"),
+                _text(
+                    "SELECT topic_id, interest_level FROM user_topic_interest WHERE user_id = :uid"
+                ),
                 {"uid": user_id_str},
             ).fetchall()
             for row in rows:
@@ -1107,7 +1169,9 @@ def onboarding(exp_id, user_id):
             op_rows = []
             try:
                 op_rows = conn.execute(
-                    _text("SELECT topic_id, opinion FROM agent_opinion WHERE agent_id = :aid AND tid = '0'"),
+                    _text(
+                        "SELECT topic_id, opinion FROM agent_opinion WHERE agent_id = :aid AND tid = '0'"
+                    ),
                     {"aid": user_id_str},
                 ).fetchall()
             except Exception:
@@ -1115,7 +1179,9 @@ def onboarding(exp_id, user_id):
             if not op_rows:
                 try:
                     op_rows = conn.execute(
-                        _text("SELECT topic_id, opinion FROM agent_opinion WHERE agent_id = :aid AND tid = 0"),
+                        _text(
+                            "SELECT topic_id, opinion FROM agent_opinion WHERE agent_id = :aid AND tid = 0"
+                        ),
                         {"aid": user_id_str},
                     ).fetchall()
                 except Exception:
@@ -1125,16 +1191,18 @@ def onboarding(exp_id, user_id):
             og_list = opinion_groups  # already ordered by lower_bound
             og_mids = [(og.lower_bound + og.upper_bound) / 2.0 for og in og_list]
             for row in op_rows:
-                sim_tid = str(row[0])          # topic_id column = sim iid
+                sim_tid = str(row[0])  # topic_id column = sim iid
                 dash_id = sim_to_dash.get(sim_tid)
                 if dash_id is None:
                     continue
                 try:
-                    op_val = float(row[1])     # opinion column
+                    op_val = float(row[1])  # opinion column
                 except Exception:
                     continue
                 # find closest index
-                best_idx = min(range(len(og_mids)), key=lambda i: abs(og_mids[i] - op_val))
+                best_idx = min(
+                    range(len(og_mids)), key=lambda i: abs(og_mids[i] - op_val)
+                )
                 saved_opinions[dash_id] = best_idx
     except Exception:
         pass
@@ -1144,7 +1212,9 @@ def onboarding(exp_id, user_id):
     INTEREST_STEPS = [0.0, 0.33, 0.67, 1.0]
     saved_interest_idx = {}
     for tid, val in saved_interests.items():
-        best = min(range(len(INTEREST_STEPS)), key=lambda i: abs(INTEREST_STEPS[i] - val))
+        best = min(
+            range(len(INTEREST_STEPS)), key=lambda i: abs(INTEREST_STEPS[i] - val)
+        )
         saved_interest_idx[tid] = best
 
     return render_template(
@@ -1166,7 +1236,6 @@ def onboarding(exp_id, user_id):
         len=len,
         bool=bool,
     )
-
 
 
 @main.route("/<int:exp_id>/save_onboarding/<user_id>", methods=["POST"])
@@ -1200,7 +1269,9 @@ def save_onboarding(exp_id, user_id):
         """True when agent_opinion.id is TEXT/VARCHAR (UUID schema, not autoincrement)."""
         try:
             with engine.connect() as conn:
-                rows = conn.execute(_text("PRAGMA table_info(agent_opinion)")).fetchall()
+                rows = conn.execute(
+                    _text("PRAGMA table_info(agent_opinion)")
+                ).fetchall()
             for row in rows:
                 if row[1] == "id":
                     return "INT" not in (row[2] or "").upper()
@@ -1238,7 +1309,7 @@ def save_onboarding(exp_id, user_id):
         return redirect(url_for("auth.login"))
 
     # ── 1. Save profile fields ─────────────────────────────────────────────
-    user.gender          = request.form.get("gender")          or user.gender
+    user.gender = request.form.get("gender") or user.gender
     user.education_level = request.form.get("education_level") or user.education_level
     try:
         age_val = request.form.get("age")
@@ -1247,8 +1318,8 @@ def save_onboarding(exp_id, user_id):
     except (ValueError, TypeError):
         pass
 
-    profile_pic  = request.form.get("profile_pic")
-    cover_image  = request.form.get("cover_image") or random_cover_image_url()
+    profile_pic = request.form.get("profile_pic")
+    cover_image = request.form.get("cover_image") or random_cover_image_url()
 
     if getattr(user, "is_page", 0) == 1:
         page = db.session.scalars(select(Page).filter_by(name=user.username)).first()
@@ -1271,7 +1342,9 @@ def save_onboarding(exp_id, user_id):
     opinion_groups = db.session.scalars(
         select(OpinionGroup).order_by(OpinionGroup.lower_bound)
     ).all()
-    group_midpoints = {og.id: (og.lower_bound + og.upper_bound) / 2.0 for og in opinion_groups}
+    group_midpoints = {
+        og.id: (og.lower_bound + og.upper_bound) / 2.0 for og in opinion_groups
+    }
 
     exp_topic_rows = db.session.scalars(
         select(Exp_Topic).filter_by(exp_id=exp_id)
@@ -1297,7 +1370,7 @@ def save_onboarding(exp_id, user_id):
 
     # ── 3. Raw SQL: interest levels + opinions ─────────────────────────────
     exp_engine = _get_exp_engine()
-    uuid_mode  = _agent_opinion_needs_explicit_id(exp_engine)
+    uuid_mode = _agent_opinion_needs_explicit_id(exp_engine)
     _ensure_user_topic_interest_table(exp_engine)
 
     with exp_engine.connect() as conn:
@@ -1310,15 +1383,19 @@ def save_onboarding(exp_id, user_id):
             )
             if uuid_mode:
                 conn.execute(
-                    _text("DELETE FROM agent_opinion "
-                          "WHERE agent_id = :aid AND tid = '0'"),
+                    _text(
+                        "DELETE FROM agent_opinion "
+                        "WHERE agent_id = :aid AND tid = '0'"
+                    ),
                     {"aid": user_id_str},
                 )
             else:
                 conn.execute(
-                    _text("DELETE FROM agent_opinion "
-                          "WHERE agent_id = :aid AND tid = 0 "
-                          "AND id_interacted_with IN (0, -1)"),
+                    _text(
+                        "DELETE FROM agent_opinion "
+                        "WHERE agent_id = :aid AND tid = 0 "
+                        "AND id_interacted_with IN (0, -1)"
+                    ),
                     {"aid": user_id_val},
                 )
         except Exception:
@@ -1326,7 +1403,7 @@ def save_onboarding(exp_id, user_id):
 
         for topic_id_dash, sim_topic_id in topic_map.items():
             interest_str = request.form.get(f"interest_{topic_id_dash}")
-            opinion_str  = request.form.get(f"opinion_{topic_id_dash}")
+            opinion_str = request.form.get(f"opinion_{topic_id_dash}")
 
             # Interest level → user_topic_interest
             if interest_str is not None:
@@ -1335,43 +1412,49 @@ def save_onboarding(exp_id, user_id):
                 except (ValueError, TypeError):
                     interest_val = 0.0
                 conn.execute(
-                    _text("INSERT OR REPLACE INTO user_topic_interest "
-                          "(user_id, topic_id, interest_level) "
-                          "VALUES (:uid, :tid, :lvl)"),
+                    _text(
+                        "INSERT OR REPLACE INTO user_topic_interest "
+                        "(user_id, topic_id, interest_level) "
+                        "VALUES (:uid, :tid, :lvl)"
+                    ),
                     {"uid": user_id_str, "tid": str(sim_topic_id), "lvl": interest_val},
                 )
 
             # Opinion → agent_opinion
             if opinion_str is not None:
                 try:
-                    og_id       = int(opinion_str)
+                    og_id = int(opinion_str)
                     opinion_val = group_midpoints.get(og_id, 0.5)
                 except (ValueError, TypeError):
                     opinion_val = 0.5
 
                 if uuid_mode:
                     conn.execute(
-                        _text("INSERT INTO agent_opinion "
-                              "(id, agent_id, tid, topic_id, "
-                              " id_interacted_with, id_post, opinion, stubborn) "
-                              "VALUES (:id, :aid, '0', :tid, NULL, NULL, :op, 0)"),
+                        _text(
+                            "INSERT INTO agent_opinion "
+                            "(id, agent_id, tid, topic_id, "
+                            " id_interacted_with, id_post, opinion, stubborn) "
+                            "VALUES (:id, :aid, '0', :tid, NULL, NULL, :op, 0)"
+                        ),
                         {
-                            "id":  str(_uuid.uuid4()),
+                            "id": str(_uuid.uuid4()),
                             "aid": user_id_str,
                             "tid": str(sim_topic_id),
-                            "op":  opinion_val,
+                            "op": opinion_val,
                         },
                     )
                 else:
                     conn.execute(
-                        _text("INSERT INTO agent_opinion "
-                              "(agent_id, tid, topic_id, "
-                              " id_interacted_with, id_post, opinion, stubborn) "
-                              "VALUES (:aid, 0, :tid, 0, 0, :op, 0)"),
+                        _text(
+                            "INSERT INTO agent_opinion "
+                            "(agent_id, tid, topic_id, "
+                            " id_interacted_with, id_post, opinion, stubborn) "
+                            "VALUES (:aid, 0, :tid, 0, 0, :op, 0)"
+                        ),
                         {
                             "aid": user_id_val,
                             "tid": sim_topic_id,
-                            "op":  opinion_val,
+                            "op": opinion_val,
                         },
                     )
 

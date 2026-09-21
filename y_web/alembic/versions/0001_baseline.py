@@ -16,6 +16,7 @@ Revision ID: 0001_baseline
 Revises: (none — this is the root revision)
 Create Date: 2026-09-04
 """
+
 from __future__ import annotations
 
 from typing import Sequence, Union
