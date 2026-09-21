@@ -325,8 +325,8 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       <div id="ys-fs-grid" style="display:none;"
            data-get-url="{{ url_for('experiments.frontend_settings_get') }}"
            data-save-url="{{ url_for('experiments.frontend_settings_save') }}"
-           data-frontend_adds_on-get-url="{{ url_for('experiments.frontend_adds_on_settings_get') }}"
-           data-frontend_adds_on-save-url="{{ url_for('experiments.frontend_adds_on_settings_save') }}">
+           data-suite-get-url-template="{{ url_for('experiments.frontend_plugin_suite_settings_get', repo_key='__REPO_KEY__') }}"
+           data-suite-save-url-template="{{ url_for('experiments.frontend_plugin_suite_settings_save', repo_key='__REPO_KEY__') }}">
 
         <!-- loading overlay -->
         <div id="ys-fs-loading"><div class="ys-spinner"></div></div>
@@ -611,19 +611,21 @@ input:checked + .slider-small:before { transform: translateX(16px); }
             </div>
           </div>
 
-          <!-- ══ BOX 5 — Frontend Adds-on (frontend plugin suite) ═══════════ -->
-          <div class="misc-compact-box" id="box-frontend_adds_on" style="display:none;">
-            <h3>Frontend Adds-on <span class="ys-fs-exp-badge" id="badge-frontend_adds_on-suite-version"></span></h3>
+          <!-- ══ BOX 5+ — Frontend plugin suites (group="frontend_plugins") ══ -->
+          {% for suite in frontend_plugin_suites %}
+          <div class="misc-compact-box" id="box-suite-{{ suite.repo_key }}" style="display:none;">
+            <h3>{{ suite.label }} <span class="ys-fs-exp-badge" id="badge-suite-{{ suite.repo_key }}-version"></span></h3>
             <div class="box-content">
               <p style="color:#6b7280;font-size:.85rem;margin-bottom:14px;">
-                Enable and configure Frontend Adds-on frontend plugin modules for this experiment.
+                Enable and configure {{ suite.label }} frontend plugin modules for this experiment.
                 Install or update the suite itself from
                 <a href="{{ url_for('experiments.external_runtimes') }}">External Runtimes</a>.
               </p>
-              <div id="frontend_adds_on-suite-errors" style="display:none;color:#b91c1c;font-size:.78rem;margin-bottom:10px;"></div>
-              <div id="frontend_adds_on-modules-list"></div>
+              <div id="suite-{{ suite.repo_key }}-errors" style="display:none;color:#b91c1c;font-size:.78rem;margin-bottom:10px;"></div>
+              <div id="suite-{{ suite.repo_key }}-modules-list"></div>
             </div>
           </div>
+          {% endfor %}
 
 
         </div><!-- /grid -->
@@ -657,8 +659,10 @@ input:checked + .slider-small:before { transform: translateX(16px); }
 
   const GET_URL  = grid.dataset.getUrl;
   const SAVE_URL = grid.dataset.saveUrl;
-  const FRONTEND_ADDS_ON_GET_URL  = grid.dataset.frontend_adds_onGetUrl;
-  const FRONTEND_ADDS_ON_SAVE_URL = grid.dataset.frontend_adds_onSaveUrl;
+  const FRONTEND_PLUGIN_SUITES = {{ frontend_plugin_suites | tojson }};
+  const SUITE_GET_URL_TEMPLATE  = grid.dataset.suiteGetUrlTemplate;
+  const SUITE_SAVE_URL_TEMPLATE = grid.dataset.suiteSaveUrlTemplate;
+  function _suiteUrl(tmpl, repoKey) { return tmpl.replace('__REPO_KEY__', encodeURIComponent(repoKey)); }
 
   let currentExpId = null;
 
@@ -705,7 +709,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
         _buildRecsysSelects(data.recsys_options);
       }
       applySettings(data.settings, data.exp_name);
-      loadFrontendAddsOnSettings(expId);
+      FRONTEND_PLUGIN_SUITES.forEach(function (suite) { loadFrontendAddsOnSettings(expId, suite.repo_key); });
       showGrid();
     } catch (e) {
       showEmpty();
@@ -823,7 +827,13 @@ input:checked + .slider-small:before { transform: translateX(16px); }
 
   /* ── Visibility helpers ────────────────────────────────── */
   function showGrid()    { grid.style.display = ''; emptyState.style.display = 'none'; feather.replace(); }
-  function showEmpty()   { grid.style.display = 'none'; emptyState.style.display = ''; currentExpId = null; const eduBox = document.getElementById('box-frontend_adds_on'); if (eduBox) eduBox.style.display = 'none'; }
+  function showEmpty()   {
+    grid.style.display = 'none'; emptyState.style.display = ''; currentExpId = null;
+    FRONTEND_PLUGIN_SUITES.forEach(function (suite) {
+      const box = document.getElementById('box-suite-' + suite.repo_key);
+      if (box) box.style.display = 'none';
+    });
+  }
   function showLoading(on) { loading.classList.toggle('active', on); }
 
   /* ── master toggle: enable/disable child group ───────────── */
@@ -917,21 +927,21 @@ input:checked + .slider-small:before { transform: translateX(16px); }
     error: ['Error', 'is-err'],
   };
 
-  async function loadFrontendAddsOnSettings(expId) {
-    const box = document.getElementById('box-frontend_adds_on');
-    if (!box || !FRONTEND_ADDS_ON_GET_URL) return;
+  async function loadFrontendAddsOnSettings(expId, repoKey) {
+    const box = document.getElementById('box-suite-' + repoKey);
+    if (!box || !SUITE_GET_URL_TEMPLATE) return;
     try {
-      const resp = await fetch(FRONTEND_ADDS_ON_GET_URL + '?exp_id=' + expId);
+      const resp = await fetch(_suiteUrl(SUITE_GET_URL_TEMPLATE, repoKey) + '?exp_id=' + expId);
       const data = await resp.json();
       if (!data.ok || !data.installed) {
         box.style.display = 'none';
         return;
       }
       box.style.display = '';
-      const versionBadge = document.getElementById('badge-frontend_adds_on-suite-version');
+      const versionBadge = document.getElementById('badge-suite-' + repoKey + '-version');
       if (versionBadge && data.suite) versionBadge.textContent = 'v' + data.suite.version;
 
-      const errBox = document.getElementById('frontend_adds_on-suite-errors');
+      const errBox = document.getElementById('suite-' + repoKey + '-errors');
       if (data.suite_errors && data.suite_errors.length) {
         errBox.style.display = '';
         errBox.innerHTML = data.suite_errors.map(e => '• ' + e).join('<br>');
@@ -940,14 +950,14 @@ input:checked + .slider-small:before { transform: translateX(16px); }
         errBox.innerHTML = '';
       }
 
-      renderFrontendAddsOnModules(expId, data.modules || []);
+      renderFrontendAddsOnModules(expId, repoKey, data.modules || []);
     } catch (e) {
       box.style.display = 'none';
     }
   }
 
-  function _eduParamControl(param, value) {
-    const id = 'edu-param-' + param.name;
+  function _eduParamControl(repoKey, moduleId, param, value) {
+    const id = 'edu-param-' + repoKey + '-' + moduleId + '-' + param.name;
     if (param.type === 'bool') {
       return '<label class="switch-small"><input type="checkbox" id="' + id + '"' +
         (value ? ' checked' : '') + '><span class="slider-small round"></span></label>';
@@ -978,8 +988,8 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       '" style="width:100%;padding:0.25rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;">';
   }
 
-  function _eduReadParamValue(param) {
-    const el = document.getElementById('edu-param-' + param.name);
+  function _eduReadParamValue(repoKey, moduleId, param) {
+    const el = document.getElementById('edu-param-' + repoKey + '-' + moduleId + '-' + param.name);
     if (!el) return param.default;
     if (param.type === 'bool') return el.checked;
     if (param.type === 'int') return parseInt(el.value, 10) || 0;
@@ -1000,10 +1010,12 @@ input:checked + .slider-small:before { transform: translateX(16px); }
    * a whole section with no way to reach it. */
   function _eduDependsMet(dependsOn, card) {
     if (!dependsOn) return true;
+    const repoKey = card.getAttribute('data-edu-repo-key') || '';
+    const moduleId = card.getAttribute('data-edu-module-id') || '';
     const specs = Array.isArray(dependsOn) ? dependsOn : [dependsOn];
     return specs.every(function (spec) {
       const paramName = typeof spec === 'string' ? spec : spec.param;
-      const el = card.querySelector('#edu-param-' + paramName);
+      const el = card.querySelector('#edu-param-' + repoKey + '-' + moduleId + '-' + paramName);
       if (!el) return true;
       const current = el.type === 'checkbox' ? el.checked : el.value;
       if (spec && typeof spec === 'object' && 'equals' in spec) {
@@ -1021,8 +1033,8 @@ input:checked + .slider-small:before { transform: translateX(16px); }
     });
   }
 
-  function renderFrontendAddsOnModules(expId, modules) {
-    const list = document.getElementById('frontend_adds_on-modules-list');
+  function renderFrontendAddsOnModules(expId, repoKey, modules) {
+    const list = document.getElementById('suite-' + repoKey + '-modules-list');
     if (!modules.length) {
       list.innerHTML = '<p class="ys-fs-placeholder" style="padding:20px;">No modules declared by this suite.</p>';
       return;
@@ -1065,7 +1077,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
               ? ' data-edu-depends-on=\'' + JSON.stringify(p.depends_on).replace(/'/g, '&#39;') + '\''
               : '';
             return '<div class="edu-bool-chip"' + rowDepends + '>' +
-              _eduParamControl(p, m.config ? m.config[p.name] : p.default) +
+              _eduParamControl(repoKey, m.module_id, p, m.config ? m.config[p.name] : p.default) +
               '<span>' + (p.label || p.name) + '</span></div>';
           }).join('') + '</div>';
         } else {
@@ -1076,7 +1088,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
             const rowClass = p.type === 'string_list' ? 'ys-toggle-row edu-row-stacked' : 'ys-toggle-row';
             return '<div class="' + rowClass + '"' + rowDepends + '>' +
               '<span class="ys-toggle-label">' + (p.label || p.name) + '</span>' +
-              _eduParamControl(p, m.config ? m.config[p.name] : p.default) +
+              _eduParamControl(repoKey, m.module_id, p, m.config ? m.config[p.name] : p.default) +
               '</div>';
           }).join('');
         }
@@ -1086,7 +1098,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
           descHtml + bodyHtml + '</div>';
       }).join('');
 
-      return '<div class="misc-compact-box" style="margin-bottom:12px;" data-edu-module-id="' + m.module_id + '">' +
+      return '<div class="misc-compact-box" style="margin-bottom:12px;" data-edu-module-id="' + m.module_id + '" data-edu-repo-key="' + repoKey + '">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">' +
         '<div><strong>' + m.display_name + '</strong> ' +
         '<span class="ys-text-xs-hint">v' + m.version + '</span> ' +
@@ -1110,6 +1122,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
     // list is small and fully rebuilt on every load, so direct binding is fine).
     list.querySelectorAll('[data-edu-module-id]').forEach(function (card) {
       const moduleId = card.getAttribute('data-edu-module-id');
+      const cardRepoKey = card.getAttribute('data-edu-repo-key');
       const moduleManifest = modules.find(function (m) { return m.module_id === moduleId; });
 
       // Establish initial section/row visibility, then keep it live as the
@@ -1129,13 +1142,13 @@ input:checked + .slider-small:before { transform: translateX(16px); }
         const enabled = card.querySelector('.edu-enable-toggle').checked;
         const config = {};
         (moduleManifest.parameters || []).forEach(function (p) {
-          config[p.name] = _eduReadParamValue(p);
+          config[p.name] = _eduReadParamValue(cardRepoKey, moduleId, p);
         });
         const statusEl = card.querySelector('.edu-status');
         statusEl.textContent = 'Saving…';
         statusEl.className = 'ys-fs-save-status edu-status';
         try {
-          const resp = await fetch(FRONTEND_ADDS_ON_SAVE_URL, {
+          const resp = await fetch(_suiteUrl(SUITE_SAVE_URL_TEMPLATE, cardRepoKey), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ exp_id: expId, module_id: moduleId, enabled: enabled, config: config }),
@@ -1144,7 +1157,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
           if (data.ok) {
             statusEl.textContent = 'Saved ✓';
             statusEl.className = 'ys-fs-save-status edu-status is-ok';
-            loadFrontendAddsOnSettings(expId);
+            loadFrontendAddsOnSettings(expId, cardRepoKey);
           } else {
             statusEl.textContent = 'Error: ' + (data.error || 'unknown');
             statusEl.className = 'ys-fs-save-status edu-status is-err';

@@ -4,6 +4,12 @@ Frontend Settings admin route.
 Allows administrators to configure UI parameters per experiment
 (filtered to microblogging experiments).
 Settings are stored in ExpFrontendSettings (one JSON row per experiment).
+
+Also serves the generic, repo_key-parameterized "frontend plugin suite"
+panel (any installed repo registered with group="frontend_plugins" in
+SUPPORTED_EXTERNAL_REPOS -- today Frontend Adds-on and Reactive Agents),
+letting each such suite's modules be enabled/configured per experiment
+without any suite-specific route or template code.
 """
 
 import json
@@ -134,10 +140,22 @@ def frontend_settings():
     recsys = _load_recsys_options(all_algorithms=True)
     recsys_json = json.dumps(recsys)
 
+    from y_web.src.external_runtime.frontend_plugins import frontend_plugin_repo_keys
+    from y_web.src.external_runtime.registry import runtime_spec
+
+    frontend_plugin_suites = []
+    for repo_key in frontend_plugin_repo_keys():
+        try:
+            spec = runtime_spec(repo_key)
+        except KeyError:
+            continue
+        frontend_plugin_suites.append({"repo_key": repo_key, "label": spec.label})
+
     return render_template(
         "admin/frontend_settings.html",
         exps_json=exps_json,
         recsys_json=recsys_json,
+        frontend_plugin_suites=frontend_plugin_suites,
     )
 
 
@@ -225,9 +243,9 @@ def frontend_settings_save():
 
 
 # ------------------------------------------------------------------
-# Frontend Adds-on frontend plugin suite — per-experiment module enable/config
+# Frontend plugin suites (group="frontend_plugins") — per-experiment module enable/config
 # ------------------------------------------------------------------
-def _frontend_adds_on_module_status(manifest: dict, row) -> str:
+def _frontend_plugin_module_status(manifest: dict, row) -> str:
     """Compute the admin-facing status label for one module manifest.
 
     One of: "incompatible" | "error" | "active" | "not_configured" |
@@ -257,7 +275,7 @@ def _frontend_adds_on_module_status(manifest: dict, row) -> str:
     return "disabled" if row is not None else "available"
 
 
-def _frontend_adds_on_module_config(manifest: dict, row) -> dict:
+def _frontend_plugin_module_config(manifest: dict, row) -> dict:
     merged = {p["name"]: p.get("default") for p in manifest.get("parameters", [])}
     if row is not None:
         try:
@@ -267,9 +285,9 @@ def _frontend_adds_on_module_config(manifest: dict, row) -> dict:
     return merged
 
 
-@experiments.route("/admin/frontend_settings/frontend_adds_on/get", methods=["GET"])
+@experiments.route("/admin/frontend_settings/suite/<repo_key>/get", methods=["GET"])
 @login_required
-def frontend_adds_on_settings_get():
+def frontend_plugin_suite_settings_get(repo_key):
     check_privileges(current_user.username)
 
     exp_id = request.args.get("exp_id", type=int)
@@ -280,10 +298,16 @@ def frontend_adds_on_settings_get():
     if exp is None or exp.platform_type != "microblogging":
         return jsonify({"ok": False, "error": "Experiment not found"}), 404
 
-    from y_web.src.external_runtime.frontend_plugins import validate_frontend_suite
+    from y_web.src.external_runtime.frontend_plugins import (
+        frontend_plugin_repo_keys,
+        validate_frontend_suite,
+    )
     from y_web.src.models import FrontendAddsOnExpModuleSettings
 
-    report = validate_frontend_suite("frontend_adds_on")
+    if repo_key not in frontend_plugin_repo_keys():
+        return jsonify({"ok": False, "error": "Unknown suite"}), 404
+
+    report = validate_frontend_suite(repo_key)
     if not report["installed"]:
         return jsonify({"ok": True, "installed": False})
 
@@ -306,8 +330,8 @@ def frontend_adds_on_settings_get():
             "parameter_sections": manifest.get("parameter_sections") or [],
             "parameters": manifest.get("parameters") or [],
             "enabled": bool(row is not None and row.enabled),
-            "config": _frontend_adds_on_module_config(manifest, row),
-            "status": _frontend_adds_on_module_status(manifest, row),
+            "config": _frontend_plugin_module_config(manifest, row),
+            "status": _frontend_plugin_module_status(manifest, row),
             "manifest_errors": manifest.get("errors") or [],
         })
 
@@ -321,7 +345,7 @@ def frontend_adds_on_settings_get():
     })
 
 
-def _coerce_frontend_adds_on_param(value, param: dict):
+def _coerce_frontend_plugin_param(value, param: dict):
     ptype = param.get("type")
     if ptype == "bool":
         return bool(value)
@@ -345,9 +369,9 @@ def _coerce_frontend_adds_on_param(value, param: dict):
     return str(value) if value is not None else param.get("default", "")
 
 
-@experiments.route("/admin/frontend_settings/frontend_adds_on/save", methods=["POST"])
+@experiments.route("/admin/frontend_settings/suite/<repo_key>/save", methods=["POST"])
 @login_required
-def frontend_adds_on_settings_save():
+def frontend_plugin_suite_settings_save(repo_key):
     check_privileges(current_user.username)
 
     data = request.get_json(silent=True) or {}
@@ -363,12 +387,18 @@ def frontend_adds_on_settings_save():
     if exp is None or exp.platform_type != "microblogging":
         return jsonify({"ok": False, "error": "Experiment not found"}), 404
 
-    from y_web.src.external_runtime.frontend_plugins import discover_frontend_modules
+    from y_web.src.external_runtime.frontend_plugins import (
+        discover_frontend_modules,
+        frontend_plugin_repo_keys,
+    )
     from y_web.src.external_runtime.plugin_loader import ensure_module_schema
     from y_web.src.models import FrontendAddsOnExpModuleSettings
 
+    if repo_key not in frontend_plugin_repo_keys():
+        return jsonify({"ok": False, "error": "Unknown suite"}), 404
+
     manifest = None
-    for entry in discover_frontend_modules("frontend_adds_on"):
+    for entry in discover_frontend_modules(repo_key):
         if entry.get("module_id") == module_id:
             manifest = entry
             break
@@ -379,10 +409,10 @@ def frontend_adds_on_settings_save():
     for param in manifest.get("parameters", []):
         name = param["name"]
         if name in raw_config:
-            safe_config[name] = _coerce_frontend_adds_on_param(raw_config[name], param)
+            safe_config[name] = _coerce_frontend_plugin_param(raw_config[name], param)
 
     if enabled:
-        migrated = ensure_module_schema("frontend_adds_on", module_id, exp_id, quiet=True)
+        migrated = ensure_module_schema(repo_key, module_id, exp_id, quiet=True)
         if not migrated:
             return jsonify({
                 "ok": False,
