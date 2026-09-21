@@ -992,6 +992,23 @@ input:checked + .slider-small:before { transform: translateX(16px); }
         'style="width:100%;padding:0.35rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;' +
         'font:inherit;resize:vertical;">' + escaped + '</textarea>';
     }
+    if (param.type === 'llm_endpoint_host') {
+      const visionArg = param.vision ? 'true' : 'false';
+      const btnLabel = param.vision ? 'Fetch Vision Models' : 'Fetch Models';
+      const statusId = 'edu-fetch-status-' + repoKey + '-' + moduleId + '-' + param.name;
+      return '<div class="ys-flex-row-mb">' +
+        '<input type="text" id="' + id + '" class="input ys-flex-1" placeholder="e.g., http://127.0.0.1:11434/v1" value="' +
+        (value != null ? String(value).replace(/"/g, '&quot;') : '') + '">' +
+        '<button type="button" class="button is-light" onclick="_eduFetchModelsFor(\'' + repoKey + '\',\'' +
+        moduleId + '\',\'' + param.name + '\',\'' + (param.pairs_with || '') + '\',' + visionArg + ')">' +
+        btnLabel + '</button></div><div id="' + statusId + '" class="ys-badge-min"></div>';
+    }
+    if (param.type === 'llm_endpoint_model') {
+      const placeholder = param.vision ? 'Select a vision model' : 'Select a model';
+      const preset = value ? '<option value="' + String(value).replace(/"/g, '&quot;') + '" selected>' + value + '</option>' : '';
+      return '<div class="select"><select id="' + id + '" class="input" style="min-width:220px;">' +
+        '<option value="">' + placeholder + '</option>' + preset + '</select></div>';
+    }
     return '<input type="text" id="' + id + '" value="' + (value != null ? String(value).replace(/"/g, '&quot;') : '') +
       '" style="width:100%;padding:0.25rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;">';
   }
@@ -1006,6 +1023,54 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       return el.value.split(/[,\n]+/).map(s => s.trim()).filter(Boolean);
     }
     return el.value;
+  }
+
+  function _eduIsVisionModelName(modelName) {
+    const lowered = String(modelName || '').trim().toLowerCase();
+    if (!lowered) return false;
+    const markers = [
+      'vision', 'minicpm-v', 'qwen-vl', 'llava', 'internvl', 'pixtral',
+      'molmo', 'gpt-4o', 'gpt-4.1', 'omni', '-vl', '_vl',
+    ];
+    return markers.some(function (marker) { return lowered.includes(marker); });
+  }
+
+  async function _eduFetchModelsFor(repoKey, moduleId, hostParamName, modelParamName, vision) {
+    const hostEl = document.getElementById('edu-param-' + repoKey + '-' + moduleId + '-' + hostParamName);
+    const modelEl = modelParamName ? document.getElementById('edu-param-' + repoKey + '-' + moduleId + '-' + modelParamName) : null;
+    const statusEl = document.getElementById('edu-fetch-status-' + repoKey + '-' + moduleId + '-' + hostParamName);
+    const llmUrl = hostEl ? hostEl.value.trim() : '';
+    if (!llmUrl) {
+      if (statusEl) statusEl.innerHTML = '<span style="color:#b91c1c;">Enter a server URL first</span>';
+      return;
+    }
+    if (statusEl) statusEl.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Fetching...';
+    try {
+      const resp = await fetch('/admin/api/fetch_models?llm_url=' + encodeURIComponent(llmUrl));
+      const data = await resp.json();
+      if (!resp.ok || data.error || data.success === false) {
+        if (statusEl) statusEl.innerHTML = '<span style="color:#b91c1c;"><i class="mdi mdi-alert"></i> ' +
+          (data.error || data.message || 'Fetch failed') + '</span>';
+        return;
+      }
+      let models = data.models || [];
+      if (vision) models = models.filter(_eduIsVisionModelName);
+      if (modelEl) {
+        const previousValue = modelEl.value;
+        const placeholder = vision ? 'Select a vision model' : 'Select a model';
+        modelEl.innerHTML = '<option value="">' + placeholder + '</option>' +
+          models.map(function (m) { return '<option value="' + m + '">' + m + '</option>'; }).join('');
+        if (models.indexOf(previousValue) !== -1) modelEl.value = previousValue;
+      }
+      if (statusEl) {
+        statusEl.innerHTML = models.length
+          ? '<span style="color:green;"><i class="mdi mdi-check"></i> ' + models.length + ' model' + (models.length === 1 ? '' : 's') + ' loaded</span>'
+          : '<span style="color:#b45309;">No ' + (vision ? 'vision ' : '') + 'models found</span>';
+        setTimeout(function () { statusEl.innerHTML = ''; }, 4000);
+      }
+    } catch (e) {
+      if (statusEl) statusEl.innerHTML = '<span style="color:#b91c1c;"><i class="mdi mdi-alert"></i> Connection failed</span>';
+    }
   }
 
   /* A section or a single parameter row can declare `depends_on`, gating
@@ -1106,12 +1171,20 @@ input:checked + .slider-small:before { transform: translateX(16px); }
           descHtml + bodyHtml + '</div>';
       }).join('');
 
+      const memoryEmbeddingsHtml = (repoKey === 'reactive_agents' && m.module_id === 'responsive_agents')
+        ? ('<div class="edu-param-section">' +
+            '<div class="edu-param-section-header">Memory embeddings</div>' +
+            '<div class="edu-param-section-desc">Semantic memory retrieval used by this module\'s persona/memory context is configured once per experiment, not per plugin.</div>' +
+            '<div class="ys-toggle-row"><a class="button is-light" href="/admin/embedding_settings/' + expId + '" target="_blank" rel="noopener">Configure Memory Embeddings</a></div>' +
+            '</div>')
+        : '';
+
       return '<div class="misc-compact-box" style="margin-bottom:12px;" data-edu-module-id="' + m.module_id + '" data-edu-repo-key="' + repoKey + '">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">' +
         '<div><strong>' + m.display_name + '</strong> ' +
         '<span class="ys-text-xs-hint">v' + m.version + '</span> ' +
         '<span class="ys-fs-save-status ' + statusInfo[1] + '" style="display:inline;">' + statusInfo[0] + '</span>' +
-        (m.description ? '<div class="ys-text-xs-hint" style="margin-top:2px;">' + m.description + '</div>' : '') +
+        ((m.description && !(repoKey === 'reactive_agents' && m.module_id === 'responsive_agents')) ? '<div class="ys-text-xs-hint" style="margin-top:2px;">' + m.description + '</div>' : '') +
         '</div>' +
         '<div style="display:flex;gap:10px;align-items:center;">' +
         '<label class="switch-small"><input type="checkbox" class="edu-enable-toggle"' +
@@ -1119,7 +1192,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
         '<button type="button" class="button is-light edu-configure-toggle">Configure</button>' +
         '</div></div>' +
         '<div class="edu-configure-panel" style="display:none;margin-top:12px;border-top:1px solid #f1f3f5;padding-top:10px;">' +
-        sectionsHtml +
+        sectionsHtml + memoryEmbeddingsHtml +
         '<div class="ys-fs-save-row">' +
         '<button class="button is-solid primary-button edu-save-btn">Save module</button>' +
         '<span class="ys-fs-save-status edu-status"></span>' +
