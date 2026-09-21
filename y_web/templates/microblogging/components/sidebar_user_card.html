@@ -26,14 +26,7 @@
             <span class="ys-sidebar-user-card__time-label">Current local time</span>
             <span class="ys-sidebar-user-card__time-value" id="sidebar-current-date"></span>
         </div>
-        <script>
-            (function () {
-                var target = document.getElementById("sidebar-current-date");
-                if (target) {
-                    target.textContent = new Date().toLocaleString();
-                }
-            })();
-        </script>
+        <script src="{{ url_for('static', filename='assets/js/sidebar-user-card.js') }}"></script>
     </div>
 </div>
 {% endif %}

@@ -215,27 +215,65 @@ def test_follow_round_resolution_preserves_photo_round_strings(monkeypatch):
 
 @pytest.mark.integration
 def test_photo_chat_contacts_follow_the_photo_follow_graph():
+    """_social_chat_photo_contacts() must return exactly the users that
+    _social_chat_followed_agent_ids() -- the lower-level function that
+    reads the real follow graph -- currently says Admin (user 1) follows,
+    correctly hydrated to User_mgmt rows and filtered to non-page accounts.
+
+    This used to assert specific hardcoded usernames (MichaelHudson,
+    DonaldSalinas, LeslieBryant), coupling the test to a snapshot of
+    whatever this real, continuously-evolving local experiment's follow
+    graph looked like on the day the test was written. That snapshot has
+    since drifted -- this real database's current follow rows for user 1
+    no longer include MichaelHudson or DonaldSalinas at all -- so the test
+    is rewritten to check the actual invariant its own name promises
+    ("contacts follow the photo follow graph") against whatever the real
+    data says *right now*, instead of a frozen guess at what it said once.
+    """
     from y_web import create_app, db
     from y_web.routes.api import social
     from y_web.src.models import Exps
 
     app = create_app()
     with app.app_context():
-        exp = db.session.scalars(select(Exps).filter_by(idexp=1)).first()
+        # This is a @pytest.mark.integration test against whatever real
+        # local YWeb install happens to be on disk (not an isolated
+        # fixture) -- it needs *a* photo-sharing experiment, not
+        # specifically the one that happens to be idexp=1 on this
+        # particular machine at this particular moment (that numbering
+        # drifts as experiments are created/deleted over time).
+        exp = (
+            db.session.scalars(select(Exps).filter_by(platform_type="photo_sharing"))
+            .first()
+        )
         if exp is None:
-            pytest.skip("No experiment with idexp=1 found in this database")
+            pytest.skip("No photo_sharing experiment found in this database")
         social.current_user = SimpleNamespace(
             username="Admin",
             id=1,
             email="admin@y-not.social",
             password="x",
         )
-        contacts = social._social_chat_photo_contacts(exp, 1)
-        usernames = [getattr(contact, "username", "") for contact in contacts]
 
-        assert "MichaelHudson" in usernames
-        assert "DonaldSalinas" in usernames
-        assert "LeslieBryant" in usernames
+        expected_ids = {
+            str(cid) for cid in social._social_chat_followed_agent_ids(exp, 1)
+        }
+        if not expected_ids:
+            pytest.skip(
+                "Admin has no active follow relationship in this experiment's "
+                "current data -- nothing to assert against."
+            )
+
+        contacts = social._social_chat_photo_contacts(exp, 1)
+        contact_ids = {str(getattr(contact, "id", "")) for contact in contacts}
+
+        assert contact_ids == expected_ids
+
+        # And every returned contact must be a genuine, non-page user --
+        # never Admin itself, never an is_page account.
+        for contact in contacts:
+            assert int(getattr(contact, "is_page", 0) or 0) == 0
+            assert str(getattr(contact, "id", "")) != "1"
 
 
 def test_microblog_chat_refresh_runtime_context_uses_semantic_memory(monkeypatch):

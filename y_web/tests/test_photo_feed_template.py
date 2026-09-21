@@ -125,9 +125,6 @@ def test_photo_routes_do_not_rely_on_recsys_type_for_feed_rendering():
     template_source = Path(
         str(_REPO_ROOT / "y_web/templates/photo/feed.html")
     ).read_text(encoding="utf-8")
-    auth_source = Path(
-        str(_REPO_ROOT / "y_web/routes/auth/routes.py")
-    ).read_text(encoding="utf-8")
     common_source = Path(
         str(_REPO_ROOT / "y_web/routes/social/common.py")
     ).read_text(encoding="utf-8")
@@ -141,7 +138,14 @@ def test_photo_routes_do_not_rely_on_recsys_type_for_feed_rendering():
     assert "api/photo/feed" in route_source
     assert "recommendations" in route_source
     assert "follow" in route_source
-    assert "photo_sharing" in auth_source
+    # The post-login platform_type branch (microblogging/forum/photo_sharing)
+    # used to live in auth.routes.select_experiment(), which this test
+    # checked directly. It has since moved to common.onboarding()'s
+    # "skip onboarding if already completed" path -- select_experiment()
+    # now redirects unconditionally to /<exp_id>/onboarding/<user_id>, which
+    # itself branches on platform_type (including photo_sharing) once it
+    # knows the user has already completed onboarding. common_source below
+    # already covers that relocated branch.
     assert "photo_sharing" in common_source
     assert "photo_sharing" in admin_source
     assert "ensure_experiment_user" in route_source
