@@ -436,6 +436,10 @@ input:checked + .slider-small:before { transform: translateX(16px); }
                   <label class="switch-small"><input type="checkbox" id="annotation_author_type"><span class="slider-small round"></span></label>
                 </div>
               </div>
+              <div class="ys-toggle-row">
+                <span class="ys-toggle-label">Post date &amp; time <small>Show the "Day X - HH:00" timestamp below each post and comment</small></span>
+                <label class="switch-small"><input type="checkbox" id="show_post_time"><span class="slider-small round"></span></label>
+              </div>
               <div class="ys-fs-save-row">
                 <button class="button is-solid primary-button" onclick="saveSection(event,'annotations')">Save annotations</button>
                 <span class="ys-fs-save-status" id="status-annotations"></span>
@@ -763,6 +767,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       'interaction_like','interaction_dislike','interaction_share',
       'annotations_enabled','annotation_emotions','annotation_topics',
       'annotation_sentiment','annotation_toxicity','annotation_agent_type','annotation_author_type',
+      'show_post_time',
       'notifications_menu','profile_topics_box','onboarding_enabled',
       'infinite_scroll_enabled',
     ];
@@ -866,6 +871,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       'interaction_like','interaction_dislike','interaction_share',
       'annotations_enabled','annotation_emotions','annotation_topics',
       'annotation_sentiment','annotation_toxicity','annotation_agent_type','annotation_author_type',
+      'show_post_time',
       'notifications_menu',
       'profile_topics_box','onboarding_enabled',
       'infinite_scroll_enabled',

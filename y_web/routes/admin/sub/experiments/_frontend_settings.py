@@ -45,6 +45,7 @@ DEFAULT_SETTINGS = {
     "annotation_toxicity": True,
     "annotation_agent_type": True,
     "annotation_author_type": True,
+    "show_post_time": True,  # show "Day X - HH:00" below each post/comment
     # Feed & Profile
     "default_content_recsys": "",   # empty = system default
     "default_follow_recsys": "",    # empty = system default
