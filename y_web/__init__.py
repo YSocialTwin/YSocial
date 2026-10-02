@@ -526,45 +526,16 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
 
         return dict(is_pyinstaller=getattr(sys, "frozen", False))
 
-    @app.context_processor
-    def inject_backend_plugin_visibility():
-        """Inject installed+valid status of backend settings suites.
+    # Backend settings suite sidebar visibility (e.g. Scenario Design):
+    # body lives in src/external_runtime/backend_plugins.py, not inline
+    # here, to keep this factory function's line count down (see
+    # y_web/tests/test_phase11_db_init_package.py::
+    # test_y_web_init_line_count_reduced).
+    from y_web.src.external_runtime.backend_plugins import (
+        inject_backend_plugin_visibility,
+    )
 
-        Generic, reusable by any backend settings suite (not Scenario
-        Design-specific): a template conditions a sidebar entry on
-        ``backend_suites_available.get('<repo_key>')`` rather than the suite
-        being unconditionally visible (unlike "Frontend Settings"/"External
-        Runtimes", which are unconditional core pages, not gated on any
-        suite's validity — there was no pre-existing template pattern for
-        this kind of conditional visibility to mirror).
-        """
-        try:
-            from flask import url_for
-            from werkzeug.routing import BuildError
-
-            from y_web.src.external_runtime.backend_plugins import (
-                backend_suite_availability,
-            )
-
-            availability = backend_suite_availability()
-            # Resolve the sidebar URL defensively: a suite can pass manifest
-            # validation yet still fail blueprint registration at startup
-            # (e.g. an import error inside the module) — url_for() on an
-            # endpoint that was never actually registered would otherwise
-            # raise BuildError and break rendering for every page, not just
-            # the sidebar. Hiding the link (None) is the safe degradation.
-            scenario_design_url = None
-            if availability.get("scenario_design"):
-                try:
-                    scenario_design_url = url_for("scenario_design.index")
-                except BuildError:
-                    scenario_design_url = None
-            return dict(
-                backend_suites_available=availability,
-                scenario_design_sidebar_url=scenario_design_url,
-            )
-        except Exception:
-            return dict(backend_suites_available={}, scenario_design_sidebar_url=None)
+    app.context_processor(inject_backend_plugin_visibility)
 
     # ------------------------------------------------------------------ #
     # Database migrations + startup checks                                 #

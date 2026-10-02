@@ -332,3 +332,48 @@ def backend_suite_availability() -> dict[str, bool]:
         except Exception:
             availability[repo_key] = False
     return availability
+
+
+def inject_backend_plugin_visibility() -> dict:
+    """Context-processor body: inject installed+valid status of backend
+    settings suites, plus the resolved Scenario Design sidebar URL.
+
+    Generic, reusable by any backend settings suite (not Scenario
+    Design-specific): a template conditions a sidebar entry on
+    ``backend_suites_available.get('<repo_key>')`` rather than the suite
+    being unconditionally visible (unlike "Frontend Settings"/"External
+    Runtimes", which are unconditional core pages, not gated on any
+    suite's validity — there was no pre-existing template pattern for
+    this kind of conditional visibility to mirror).
+
+    Lives here (not inline in ``y_web/__init__.py``) so the create_app()
+    factory only needs one line (``app.context_processor(
+    inject_backend_plugin_visibility)``) to wire it in -- kept out of
+    ``__init__.py`` specifically to not grow that file's line count (see
+    ``y_web/tests/test_phase11_db_init_package.py::
+    test_y_web_init_line_count_reduced``, a Phase 11 refactor guard this
+    function's body would otherwise have pushed over its threshold).
+    """
+    try:
+        from flask import url_for
+        from werkzeug.routing import BuildError
+
+        availability = backend_suite_availability()
+        # Resolve the sidebar URL defensively: a suite can pass manifest
+        # validation yet still fail blueprint registration at startup
+        # (e.g. an import error inside the module) — url_for() on an
+        # endpoint that was never actually registered would otherwise
+        # raise BuildError and break rendering for every page, not just
+        # the sidebar. Hiding the link (None) is the safe degradation.
+        scenario_design_url = None
+        if availability.get("scenario_design"):
+            try:
+                scenario_design_url = url_for("scenario_design.index")
+            except BuildError:
+                scenario_design_url = None
+        return dict(
+            backend_suites_available=availability,
+            scenario_design_sidebar_url=scenario_design_url,
+        )
+    except Exception:
+        return dict(backend_suites_available={}, scenario_design_sidebar_url=None)
