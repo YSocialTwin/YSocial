@@ -311,8 +311,24 @@ def test_bulk_delete_threads_removes_all(sd_app, sd_client):
         f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}/threads",
         json={"tmp_id": "t2"},
     )
+    # Fase 8: reinforced confirmation (piano tecnico §21) -- a bulk delete
+    # without the scenario's exact name typed back is rejected, server-side,
+    # before anything is deleted.
+    mismatch_resp = client.post(
+        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}/bulk_delete_threads",
+        json={"confirm_name": "wrong name"},
+    )
+    assert mismatch_resp.status_code == 400
+    assert mismatch_resp.get_json()["error"]["code"] == "confirmation_mismatch"
+
+    listing_before = client.get(
+        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}/threads"
+    )
+    assert len(listing_before.get_json()["threads"]) == 2  # nothing deleted yet
+
     resp = client.post(
-        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}/bulk_delete_threads"
+        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}/bulk_delete_threads",
+        json={"confirm_name": "S1"},
     )
     assert resp.status_code == 200
     assert resp.get_json()["deleted_thread_count"] == 2
