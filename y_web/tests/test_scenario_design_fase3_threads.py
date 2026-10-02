@@ -1,0 +1,380 @@
+"""Integration test: Fase 3 thread/post CRUD end-to-end on a real
+create_app() boot, with the Scenario Design suite installed — exercises
+the actual db_exp bind activation (via exp_id in the URL, see
+docs/decisions.md in external/ScenarioDesign for why endpoints 11/12
+deviate from piano tecnico §15's literal path), real User_mgmt author
+validation, and the thread invariants (single root, acyclic, no orphan
+parent) through real HTTP requests, not just the unit-level
+test_thread_invariants.py in the ScenarioDesign repo.
+
+Piano di implementazione, Fase 3.
+"""
+import sqlite3
+
+import pytest
+from werkzeug.security import generate_password_hash
+
+from y_web import db
+from y_web.src.external_runtime import registry
+
+
+def _suite_is_installed():
+    return registry.runtime_spec("scenario_design").path.exists()
+
+
+def _can_actually_write_sqlite_files() -> bool:
+    """Probe for the known sandbox limitation already documented in
+    ScenarioDesign/docs/decisions.md §F1.4/§F1.5: the remote-devices
+    bridge's connected-folder restrictions can make a *new* sqlite file's
+    journal commit fail with ``disk I/O error`` under this repo's
+    ``y_web/experiments/`` subtree specifically (confirmed NOT a general
+    sqlite/sandbox restriction -- the identical write succeeds fine under
+    a plain ``/tmp`` directory; it is specific to this connected-folder
+    mount), even though the plain ``open()``/``os.makedirs()`` calls that
+    create the file and its parent directory succeed. This is an
+    environment artifact, not a code defect -- every test in this module
+    depends on register_experiment_database() actually creating a real
+    per-experiment sqlite file under that exact subtree on first request,
+    so the probe must test that exact subtree, not a generic temp dir.
+    """
+    import os
+    import uuid
+
+    from y_web.src.system.path_utils import get_writable_path
+
+    probe_dir = get_writable_path(os.path.join("y_web", "experiments", f"_probe_{uuid.uuid4().hex}"))
+    try:
+        os.makedirs(probe_dir, exist_ok=True)
+        db_path = os.path.join(probe_dir, "probe.db")
+        conn = sqlite3.connect(db_path)
+        conn.execute("CREATE TABLE probe (id INTEGER PRIMARY KEY)")
+        conn.commit()
+        conn.close()
+        return True
+    except sqlite3.OperationalError:
+        return False
+
+
+def _make_exp(app, name="sd-fase3-exp"):
+    """Create a real Exps row with its own on-disk database file.
+
+    A real create_app() boot's setup_experiment_context() actually calls
+    register_experiment_database() -> ensure_experiment_schema_for_uri(),
+    which creates the sqlite file on disk at db_name's path (resolved via
+    get_writable_path(), i.e. relative to the repo root in dev mode) the
+    first time a request names this exp_id in its URL. Each test gets its
+    own subfolder (keyed by *name*) so distinct tests never share one
+    physical database file.
+    """
+    import os
+
+    from y_web.src.models import Exps
+    from y_web.src.system.path_utils import get_writable_path
+
+    folder = get_writable_path(os.path.join("y_web", "experiments", name))
+    os.makedirs(folder, exist_ok=True)
+
+    with app.app_context():
+        exp = Exps(
+            platform_type="microblogging",
+            exp_name=name,
+            db_name=f"experiments/{name}/database_server.db",
+            owner="admin",
+            exp_descr="test",
+            status=1,
+            running=0,
+            port=5000,
+        )
+        db.session.add(exp)
+        db.session.commit()
+        return exp.idexp
+
+
+def _login(client, user_id):
+    with client.session_transaction() as sess:
+        sess["_user_id"] = str(user_id)
+        sess["_fresh"] = True
+
+
+pytestmark = pytest.mark.integration
+
+
+@pytest.fixture
+def sd_app():
+    """A real create_app() boot (not the minimal `app` fixture): the
+    Scenario Design blueprint is only registered by the actual
+    register_backend_plugin_suites() call inside create_app(), so Fase 3's
+    routes do not exist at all on the generic `app` fixture's bare Flask
+    instance.
+    """
+    if not _suite_is_installed():
+        pytest.skip("ScenarioDesign suite not checked out in this environment")
+    if not _can_actually_write_sqlite_files():
+        pytest.skip(
+            "Sandbox cannot commit new sqlite files under this repo's "
+            "y_web/experiments/ subtree in this environment (known "
+            "limitation, ScenarioDesign/docs/decisions.md §F1.4/§F1.5/§F3.x) "
+            "-- re-run in a real dev environment to exercise this module."
+        )
+
+    from y_web import create_app
+
+    boot_app = create_app(db_type="sqlite")
+    boot_app.config["TESTING"] = True
+    boot_app.config["WTF_CSRF_ENABLED"] = False
+    return boot_app
+
+
+@pytest.fixture
+def sd_client(sd_app):
+    from y_web.src.models import User_mgmt
+
+    client = sd_app.test_client()
+    with sd_app.app_context():
+        test_user = User_mgmt(
+            username="testuser",
+            email="testuser@test.com",
+            password=generate_password_hash("test123"),
+            joined_on=1234567890,
+        )
+        db.session.add(test_user)
+        db.session.commit()
+        user_id = test_user.id
+    _login(client, user_id)
+    return client, user_id
+
+
+def _create_scenario(client, exp_id, name="S1"):
+    resp = client.post(
+        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios",
+        json={"name": name},
+    )
+    assert resp.status_code == 201, resp.data
+    return resp.get_json()["scenario"]["id"]
+
+
+def test_thread_and_root_post_lifecycle(sd_app, sd_client):
+    client, user_id = sd_client
+    exp_id = _make_exp(sd_app)
+    scenario_id = _create_scenario(client, exp_id)
+
+    create_thread = client.post(
+        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}/threads",
+        json={"tmp_id": "t1", "title": "Thread 1"},
+    )
+    assert create_thread.status_code == 201, create_thread.data
+    thread_id = create_thread.get_json()["thread"]["id"]
+
+    add_root = client.post(
+        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}"
+        f"/threads/{thread_id}/posts",
+        json={"tmp_id": "root", "parent_tmp_id": None, "author_user_id": user_id, "content": "hello"},
+    )
+    assert add_root.status_code == 201, add_root.data
+
+    get_thread = client.get(
+        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}/threads/{thread_id}"
+    )
+    assert get_thread.status_code == 200
+    posts = get_thread.get_json()["posts"]
+    assert [p["tmp_id"] for p in posts] == ["root"]
+
+
+def test_second_root_rejected_with_409(sd_app, sd_client):
+    client, user_id = sd_client
+    exp_id = _make_exp(sd_app, "sd-fase3-exp-2root")
+    scenario_id = _create_scenario(client, exp_id)
+    thread_id = client.post(
+        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}/threads",
+        json={"tmp_id": "t1"},
+    ).get_json()["thread"]["id"]
+
+    base = f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}/threads/{thread_id}/posts"
+    r1 = client.post(base, json={"tmp_id": "root1", "parent_tmp_id": None, "author_user_id": user_id})
+    assert r1.status_code == 201
+    r2 = client.post(base, json={"tmp_id": "root2", "parent_tmp_id": None, "author_user_id": user_id})
+    assert r2.status_code == 409
+    assert r2.get_json()["error"]["code"] == "thread_second_root"
+
+
+def test_cycle_rejected_at_write_time(sd_app, sd_client):
+    client, user_id = sd_client
+    exp_id = _make_exp(sd_app, "sd-fase3-exp-cycle")
+    scenario_id = _create_scenario(client, exp_id)
+    thread_id = client.post(
+        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}/threads",
+        json={"tmp_id": "t1"},
+    ).get_json()["thread"]["id"]
+
+    base = f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}/threads/{thread_id}/posts"
+    client.post(base, json={"tmp_id": "root", "parent_tmp_id": None, "author_user_id": user_id})
+    client.post(base, json={"tmp_id": "a", "parent_tmp_id": "root", "author_user_id": user_id})
+
+    # Attempt to make 'root' a child of 'a' -- a direct cycle.
+    resp = client.put(
+        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}/posts/root",
+        json={"parent_tmp_id": "a"},
+    )
+    assert resp.status_code == 409
+    assert resp.get_json()["error"]["code"] == "thread_cycle_detected"
+
+
+def test_orphan_parent_rejected(sd_app, sd_client):
+    client, user_id = sd_client
+    exp_id = _make_exp(sd_app, "sd-fase3-exp-orphan")
+    scenario_id = _create_scenario(client, exp_id)
+    thread_id = client.post(
+        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}/threads",
+        json={"tmp_id": "t1"},
+    ).get_json()["thread"]["id"]
+
+    resp = client.post(
+        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}"
+        f"/threads/{thread_id}/posts",
+        json={"tmp_id": "a", "parent_tmp_id": "does_not_exist", "author_user_id": user_id},
+    )
+    assert resp.status_code == 409
+    assert resp.get_json()["error"]["code"] == "thread_orphan_parent"
+
+
+def test_nonexistent_author_rejected(sd_app, sd_client):
+    client, user_id = sd_client
+    exp_id = _make_exp(sd_app, "sd-fase3-exp-author")
+    scenario_id = _create_scenario(client, exp_id)
+    thread_id = client.post(
+        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}/threads",
+        json={"tmp_id": "t1"},
+    ).get_json()["thread"]["id"]
+
+    resp = client.post(
+        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}"
+        f"/threads/{thread_id}/posts",
+        json={"tmp_id": "root", "parent_tmp_id": None, "author_user_id": 999999},
+    )
+    assert resp.status_code == 404
+    assert resp.get_json()["error"]["code"] == "author_not_found"
+
+
+def test_delete_subtree_removes_exact_descendant_count(sd_app, sd_client):
+    client, user_id = sd_client
+    exp_id = _make_exp(sd_app, "sd-fase3-exp-subtree")
+    scenario_id = _create_scenario(client, exp_id)
+    thread_id = client.post(
+        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}/threads",
+        json={"tmp_id": "t1"},
+    ).get_json()["thread"]["id"]
+
+    base = f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}/threads/{thread_id}/posts"
+    client.post(base, json={"tmp_id": "root", "parent_tmp_id": None, "author_user_id": user_id})
+    client.post(base, json={"tmp_id": "child", "parent_tmp_id": "root", "author_user_id": user_id})
+    client.post(base, json={"tmp_id": "grandchild", "parent_tmp_id": "child", "author_user_id": user_id})
+    client.post(base, json={"tmp_id": "sibling", "parent_tmp_id": "root", "author_user_id": user_id})
+
+    resp = client.post(
+        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}"
+        "/posts/child/delete_subtree"
+    )
+    assert resp.status_code == 200, resp.data
+    body = resp.get_json()
+    assert body["deleted_count"] == 2  # 'child' + 'grandchild', not 'root'/'sibling'
+    assert set(body["deleted_tmp_ids"]) == {"child", "grandchild"}
+
+    get_thread = client.get(
+        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}/threads/{thread_id}"
+    )
+    remaining = {p["tmp_id"] for p in get_thread.get_json()["posts"]}
+    assert remaining == {"root", "sibling"}
+
+
+def test_delete_subtree_already_deleted_is_idempotent_404(sd_app, sd_client):
+    client, user_id = sd_client
+    exp_id = _make_exp(sd_app, "sd-fase3-exp-idempotent")
+    scenario_id = _create_scenario(client, exp_id)
+
+    resp = client.post(
+        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}"
+        "/posts/never_existed/delete_subtree"
+    )
+    assert resp.status_code == 404
+    assert resp.get_json()["error"]["code"] == "post_not_found"
+
+
+def test_bulk_delete_threads_removes_all(sd_app, sd_client):
+    client, user_id = sd_client
+    exp_id = _make_exp(sd_app, "sd-fase3-exp-bulk")
+    scenario_id = _create_scenario(client, exp_id)
+    client.post(
+        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}/threads",
+        json={"tmp_id": "t1"},
+    )
+    client.post(
+        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}/threads",
+        json={"tmp_id": "t2"},
+    )
+    resp = client.post(
+        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}/bulk_delete_threads"
+    )
+    assert resp.status_code == 200
+    assert resp.get_json()["deleted_thread_count"] == 2
+
+    listing = client.get(
+        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}/threads"
+    )
+    assert listing.get_json()["threads"] == []
+
+
+def test_post_not_reachable_through_a_different_scenario(sd_app, sd_client):
+    """tmp_id isolation (_post_or_404 is scoped by scenario_id, not just a
+    global tmp_id lookup) -- a post belonging to scenario A's thread must
+    not be editable/deletable through scenario B's URL."""
+    client, user_id = sd_client
+    exp_id = _make_exp(sd_app, "sd-fase3-exp-isolation")
+    scenario_a = _create_scenario(client, exp_id, name="A")
+    scenario_b = _create_scenario(client, exp_id, name="B")
+
+    thread_id = client.post(
+        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_a}/threads",
+        json={"tmp_id": "t1"},
+    ).get_json()["thread"]["id"]
+    client.post(
+        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_a}"
+        f"/threads/{thread_id}/posts",
+        json={"tmp_id": "root", "parent_tmp_id": None, "author_user_id": user_id},
+    )
+
+    # Attempt to edit scenario A's post through scenario B's URL.
+    resp = client.put(
+        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_b}/posts/root",
+        json={"content": "hijacked"},
+    )
+    assert resp.status_code == 404
+
+
+def test_vocab_and_roles_endpoints(sd_app, sd_client):
+    client, _ = sd_client
+    topics_resp = client.get("/admin/scenario_design/api/vocab/topics")
+    assert topics_resp.status_code == 200
+    assert "technology" in topics_resp.get_json()["topics"]
+
+    roles_resp = client.get("/admin/scenario_design/api/roles")
+    assert roles_resp.status_code == 200
+    roles = roles_resp.get_json()["roles"]
+    assert any(r["key"] == "standard" for r in roles)
+
+
+def test_author_search_filters_by_query(sd_app, sd_client):
+    client, _ = sd_client
+    exp_id = _make_exp(sd_app, "sd-fase3-exp-authors")
+    resp = client.get(
+        f"/admin/scenario_design/api/experiments/{exp_id}/authors/search",
+        query_string={"q": "testuser"},
+    )
+    assert resp.status_code == 200
+    authors = resp.get_json()["authors"]
+    assert any(a["username"] == "testuser" for a in authors)
+
+    resp_no_match = client.get(
+        f"/admin/scenario_design/api/experiments/{exp_id}/authors/search",
+        query_string={"q": "no_such_user_xyz"},
+    )
+    assert resp_no_match.get_json()["authors"] == []

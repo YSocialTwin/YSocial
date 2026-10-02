@@ -62,3 +62,57 @@ def test_unauthenticated_request_is_redirected_or_rejected():
     # login_view is configured, in which case it may 401 -- either is a
     # "not served" outcome, the only thing this test must rule out is 200.
     assert resp.status_code in (302, 401, 403)
+
+
+FASE3_EXPECTED_RULES = {
+    "/admin/scenario_design/api/experiments/<int:exp_id>/scenarios/<int:scenario_id>/threads",
+    "/admin/scenario_design/api/experiments/<int:exp_id>/scenarios/<int:scenario_id>/threads/<int:thread_id>",
+    "/admin/scenario_design/api/experiments/<int:exp_id>/scenarios/<int:scenario_id>"
+    "/threads/<int:thread_id>/posts",
+    "/admin/scenario_design/api/experiments/<int:exp_id>/scenarios/<int:scenario_id>"
+    "/posts/<string:tmp_id>",
+    "/admin/scenario_design/api/experiments/<int:exp_id>/scenarios/<int:scenario_id>"
+    "/posts/<string:tmp_id>/delete_subtree",
+    "/admin/scenario_design/api/experiments/<int:exp_id>/scenarios/<int:scenario_id>/bulk_delete_threads",
+    "/admin/scenario_design/api/experiments/<int:exp_id>/authors/search",
+    "/admin/scenario_design/api/vocab/topics",
+    "/admin/scenario_design/api/roles",
+}
+
+
+def test_fase3_routes_registered_when_suite_installed():
+    """Route-registration-only check for Fase 3 (endpoints 8-16): unlike
+    test_scenario_design_fase3_threads.py, this does not need a real
+    per-experiment sqlite file to be created on disk, so it isn't subject
+    to the sandbox limitation documented there -- it runs in every
+    environment and still catches a route wiring mistake (wrong path,
+    forgotten registration) on its own.
+    """
+    if not _suite_is_installed():
+        import pytest
+
+        pytest.skip("ScenarioDesign suite not checked out in this environment")
+
+    from y_web import create_app
+
+    boot_app = create_app(db_type="sqlite")
+    rules = {
+        r.rule
+        for r in boot_app.url_map.iter_rules()
+        if r.endpoint.startswith("scenario_design.")
+    }
+    assert FASE3_EXPECTED_RULES <= rules, rules
+
+
+def test_fase3_unauthenticated_request_is_redirected_or_rejected():
+    if not _suite_is_installed():
+        import pytest
+
+        pytest.skip("ScenarioDesign suite not checked out in this environment")
+
+    from y_web import create_app
+
+    boot_app = create_app(db_type="sqlite")
+    client = boot_app.test_client()
+    resp = client.get("/admin/scenario_design/api/vocab/topics")
+    assert resp.status_code in (302, 401, 403)
