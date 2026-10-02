@@ -127,6 +127,17 @@
 
         <hr class="sidebar-collapsible">
 
+        {% if scenario_design_sidebar_url %}
+        <a href="{{ scenario_design_sidebar_url }}" class="dashboard-aside-link sidebar-collapsible" id="sidebar-scenario-design">
+            <div>
+                <i data-feather="edit-3"></i>
+                <span>Scenario Design</span>
+            </div>
+        </a>
+
+        <hr class="sidebar-collapsible">
+        {% endif %}
+
         {% if current_user_role == "admin" %}
         <a href="{{ url_for('experiments.miscellanea') }}" class="dashboard-aside-link sidebar-collapsible" id="sidebar-miscellanea">
             <div>
