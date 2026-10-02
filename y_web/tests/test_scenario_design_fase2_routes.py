@@ -116,3 +116,49 @@ def test_fase3_unauthenticated_request_is_redirected_or_rejected():
     client = boot_app.test_client()
     resp = client.get("/admin/scenario_design/api/vocab/topics")
     assert resp.status_code in (302, 401, 403)
+
+
+FASE4_EXPECTED_RULES = {
+    "/admin/scenario_design/api/experiments/<int:exp_id>/scenarios/<int:scenario_id>"
+    "/posts/<string:tmp_id>/generate",
+    "/admin/scenario_design/api/experiments/<int:exp_id>/scenarios/<int:scenario_id>"
+    "/generations/<string:generation_id>/cancel",
+}
+
+
+def test_fase4_routes_registered_when_suite_installed():
+    """Route-registration-only check for Fase 4 (endpoint 17 + the
+    internal generation-cancel route), same reasoning as the Fase 3
+    counterpart above: no real per-experiment sqlite file needed, so it
+    runs in every environment.
+    """
+    if not _suite_is_installed():
+        import pytest
+
+        pytest.skip("ScenarioDesign suite not checked out in this environment")
+
+    from y_web import create_app
+
+    boot_app = create_app(db_type="sqlite")
+    rules = {
+        r.rule
+        for r in boot_app.url_map.iter_rules()
+        if r.endpoint.startswith("scenario_design.")
+    }
+    assert FASE4_EXPECTED_RULES <= rules, rules
+
+
+def test_fase4_unauthenticated_request_is_redirected_or_rejected():
+    if not _suite_is_installed():
+        import pytest
+
+        pytest.skip("ScenarioDesign suite not checked out in this environment")
+
+    from y_web import create_app
+
+    boot_app = create_app(db_type="sqlite")
+    client = boot_app.test_client()
+    resp = client.post(
+        "/admin/scenario_design/api/experiments/1/scenarios/1/posts/x/generate"
+    )
+    assert resp.status_code in (302, 401, 403)
