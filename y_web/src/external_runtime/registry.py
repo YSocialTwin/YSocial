@@ -266,6 +266,22 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         validate_import=None,
         is_private=True,
     ),
+    "scenario_design": ExternalRuntimeSpec(
+        key="scenario_design",
+        group="backend_settings",
+        group_label="Backend Settings",
+        category="backend_extensions",
+        category_label="Backend Extensions",
+        label="Scenario Design",
+        path=EXTERNAL_DIR / "ScenarioDesign",
+        github_repo="GiulioRossetti/ScenarioDesign",
+        repo_url="https://github.com/GiulioRossetti/ScenarioDesign.git",
+        default_branch="main",
+        install_commands=(),
+        validate_entrypoints=(),
+        validate_import=None,
+        is_private=True,
+    ),
 }
 
 
@@ -280,7 +296,7 @@ def grouped_runtime_specs() -> list[tuple[str, str, Sequence[ExternalRuntimeSpec
         groups.setdefault(spec.group, []).append(spec)
         labels[spec.group] = spec.group_label
 
-    ordered_groups = ["microblogging", "forum", "photo_sharing", "hpc", "agent_plugins", "frontend_plugins"]
+    ordered_groups = ["microblogging", "forum", "photo_sharing", "hpc", "agent_plugins", "frontend_plugins", "backend_settings"]
     return [
         (group_key, labels[group_key], tuple(groups.get(group_key, [])))
         for group_key in ordered_groups
