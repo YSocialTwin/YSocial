@@ -1,6 +1,16 @@
 {
   "plugins": [
     {
+      "plugin_name": "Scenario Design",
+      "category": "Backend Extensions",
+      "group": "Backend Settings",
+      "description": "Admin-only authoring tool for designing multi-round interaction scenarios (threads, posts, round scheduling) ahead of an experiment run. Drafts live alongside the experiment they belong to and are promoted/published into the experiment's own data once validated.",
+      "authors": [
+        "YSocialTwin"
+      ],
+      "repository_url": "https://github.com/YSocialTwin/ScenarioDesign"
+    },
+    {
       "plugin_name": "YClient",
       "category": "Simulation Runtime Stack",
       "group": "Microblogging",
