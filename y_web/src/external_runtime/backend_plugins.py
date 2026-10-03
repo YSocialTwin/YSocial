@@ -368,7 +368,7 @@ def inject_backend_plugin_visibility() -> dict:
         scenario_design_url = None
         if availability.get("scenario_design"):
             try:
-                scenario_design_url = url_for("scenario_design.index")
+                scenario_design_url = url_for("scenario_design.app_shell")
             except BuildError:
                 scenario_design_url = None
         return dict(

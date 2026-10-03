@@ -28,7 +28,7 @@ def test_inject_backend_plugin_visibility_exposes_url_when_valid():
     with app.app_context(), app.test_request_context("/"):
         result = injector()
         assert result["backend_suites_available"].get("scenario_design") is True
-        assert result["scenario_design_sidebar_url"] == "/admin/scenario_design/"
+        assert result["scenario_design_sidebar_url"] == "/admin/scenario_design/app"
 
 
 def test_inject_backend_plugin_visibility_hides_link_if_manifest_valid_but_blueprint_missing(monkeypatch):
@@ -59,7 +59,7 @@ def test_inject_backend_plugin_visibility_hides_link_if_manifest_valid_but_bluep
     real_url_for = flask.url_for
 
     def _fake_url_for(endpoint, *args, **kwargs):
-        if endpoint == "scenario_design.index":
+        if endpoint == "scenario_design.app_shell":
             from werkzeug.routing import BuildError
 
             raise BuildError(endpoint, kwargs, "GET")
