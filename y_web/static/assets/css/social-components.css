@@ -2124,6 +2124,86 @@
     stroke-width: 2.5;
 }
 
+/* Author labels share a single, wrapping layout in feeds and threads. */
+.post-author-badges {
+    display: flex;
+    flex: 0 1 auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.card-heading > .post-author-badges {
+    margin-left: auto;
+    margin-right: 14px;
+}
+
+.post-comment-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    min-width: 0;
+}
+
+.post-comment-heading > :first-child {
+    min-width: 0;
+}
+
+.post-author-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    max-width: 180px;
+    padding: 0 9px;
+    overflow: hidden;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    color: #2b6cb0;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    line-height: 1;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.post-author-badge.is-ai {
+    color: #553c9a;
+    background: #f3e8ff;
+    border-color: #d6bcfa;
+}
+
+.post-author-badge.is-human {
+    color: #276749;
+    background: #f0fff4;
+    border-color: #9ae6b4;
+}
+
+.post-author-badge.is-adhoc {
+    color: #2b6cb0;
+    background: #ebf4ff;
+    border-color: #bee3f8;
+}
+
+@media (max-width: 520px) {
+    .card-heading > .post-author-badges {
+        margin-right: 8px;
+    }
+
+    .post-comment-heading {
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .post-comment-heading .post-author-badges {
+        justify-content: flex-start;
+    }
+}
+
 /* ─── Edit-profile page (extracted from templates/microblogging/edit_profile.html) ─── */
 /* ── Edit-profile two-column layout ── */
 .ys-ep-two-col {

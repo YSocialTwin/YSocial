@@ -207,7 +207,9 @@ def test_microblog_templates_render_adhoc_agent_badges():
     assert "item.get('adhoc_agent_badge')" in posts_template
     assert "cm.get('adhoc_agent_badge')" in posts_template
     assert "thread.get('adhoc_agent_badge')" in thread_template
-    assert "background: #ebf4ff" in posts_template
+    assert "post-author-badges" in posts_template
+    assert "post-author-badge is-adhoc" in posts_template
+    assert "post-author-badge {% if thread['author_type_badge'] == 'AI Agent' %}is-ai" in thread_template
 
 
 def test_microblog_helper_wires_adhoc_agent_badges():

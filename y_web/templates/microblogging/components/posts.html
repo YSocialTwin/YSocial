@@ -3,16 +3,6 @@
 
  <div class="content-wrap ys-p-1rem{% if item.get('is_moderation_comment') %} moderation-comment{% endif %}" id="post-{{ item['post_id'] }}" style="position: relative;">
         <!-- Post header -->
-        {% if item.get('adhoc_agent_badge') and ui.annotation_agent_type %}
-        <span style="position: absolute; top: 1rem; right: 3.75rem; z-index: 2; display: inline-flex; align-items: center; padding: 0.2rem 0.55rem; border-radius: 999px; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; color: #2b6cb0; background: #ebf4ff; border: 1px solid #bee3f8;">
-            {{ item['adhoc_agent_badge'] }}
-        </span>
-        {% endif %}
-        {% if item.get('author_type_badge') and ui.annotation_author_type %}
-        <span style="position: absolute; top: 1rem; right: 7.5rem; z-index: 2; display: inline-flex; align-items: center; padding: 0.1rem 0.35rem; border-radius: 999px; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; {% if item['author_type_badge'] == 'AI Agent' %}color: #553c9a; background: #f3e8ff; border: 1px solid #d6bcfa;{% else %}color: #276749; background: #f0fff4; border: 1px solid #9ae6b4;{% endif %}">
-            {{ item['author_type_badge'] }}
-        </span>
-        {% endif %}
         <div class="card-heading">
             <!-- User meta -->
             <div class="user-block">
@@ -34,6 +24,16 @@
                     {% if ui.show_post_time %}<span class="time">Day {{ item["day"] }} - {{item["hour"]}}:00</span>{% endif %}
                 </div>
             </div>
+            {% if (item.get('author_type_badge') and ui.annotation_author_type) or (item.get('adhoc_agent_badge') and ui.annotation_agent_type) %}
+            <div class="post-author-badges">
+                {% if item.get('author_type_badge') and ui.annotation_author_type %}
+                <span class="post-author-badge {% if item['author_type_badge'] == 'AI Agent' %}is-ai{% else %}is-human{% endif %}">{{ item['author_type_badge'] }}</span>
+                {% endif %}
+                {% if item.get('adhoc_agent_badge') and ui.annotation_agent_type %}
+                <span class="post-author-badge is-adhoc">{{ item['adhoc_agent_badge'] }}</span>
+                {% endif %}
+            </div>
+            {% endif %}
             <!-- Right side dropdown -->
             <!-- /partials/pages/feed/dropdowns/feed-post-dropdown.html -->
             <div class="dropdown is-spaced is-right is-neutral dropdown-trigger">
@@ -391,18 +391,22 @@
                 </div>
                 <!-- Content -->
                 <div class="media-content" style="position: relative;">
-                    {% if cm.get('adhoc_agent_badge') and ui.annotation_agent_type %}
-                    <span style="position: absolute; top: 0; right: 0; display: inline-flex; align-items: center; padding: 0.2rem 0.55rem; border-radius: 999px; font-size: 0.64rem; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; color: #2b6cb0; background: #ebf4ff; border: 1px solid #bee3f8;">
-                        {{ cm['adhoc_agent_badge'] }}
-                    </span>
-                    {% endif %}
-                    {% if cm.get('author_type_badge') and ui.annotation_author_type %}
-                    <span style="position: absolute; top: 0; right: 3.75rem; display: inline-flex; align-items: center; padding: 0.1rem 0.35rem; border-radius: 999px; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; {% if cm['author_type_badge'] == 'AI Agent' %}color: #553c9a; background: #f3e8ff; border: 1px solid #d6bcfa;{% else %}color: #276749; background: #f0fff4; border: 1px solid #9ae6b4;{% endif %}">
-                        {{ cm['author_type_badge'] }}
-                    </span>
-                    {% endif %}
-                    <a href="/{{exp_id}}/profile/{{ cm['author_id'] }}/recent/1">{{ cm["author"] }}</a>
-                    {% if ui.show_post_time %}<span class="time">Day {{ cm["day"] }} - {{cm["hour"]}}:00</span>{% endif %}
+                    <div class="post-comment-heading">
+                        <div>
+                            <a href="/{{exp_id}}/profile/{{ cm['author_id'] }}/recent/1">{{ cm["author"] }}</a>
+                            {% if ui.show_post_time %}<span class="time">Day {{ cm["day"] }} - {{cm["hour"]}}:00</span>{% endif %}
+                        </div>
+                        {% if (cm.get('author_type_badge') and ui.annotation_author_type) or (cm.get('adhoc_agent_badge') and ui.annotation_agent_type) %}
+                        <div class="post-author-badges">
+                            {% if cm.get('author_type_badge') and ui.annotation_author_type %}
+                            <span class="post-author-badge {% if cm['author_type_badge'] == 'AI Agent' %}is-ai{% else %}is-human{% endif %}">{{ cm['author_type_badge'] }}</span>
+                            {% endif %}
+                            {% if cm.get('adhoc_agent_badge') and ui.annotation_agent_type %}
+                            <span class="post-author-badge is-adhoc">{{ cm['adhoc_agent_badge'] }}</span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
                     <div class="post-content-section is-threaded">
                     <p>
                         {{ cm["post"]|safe }}

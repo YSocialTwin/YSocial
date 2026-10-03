@@ -71,7 +71,7 @@ def get_adhoc_agent_badge(user) -> Optional[str]:
 def get_author_type_badge(user) -> str:
     """Return a badge label identifying whether the author is an AI agent or a human."""
     user_type = str(getattr(user, "user_type", "") or "").strip().lower()
-    if user_type == "agent":
+    if user_type == "agent" or user_type in _ADHOC_AGENT_BADGE_LABELS:
         return "AI Agent"
     return "Human"
 
