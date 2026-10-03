@@ -15,6 +15,7 @@ test here needs a real per-experiment sqlite file and skips cleanly via
 
 Piano di implementazione, Fase 6.
 """
+
 import sqlite3
 
 import pytest
@@ -34,7 +35,9 @@ def _can_actually_write_sqlite_files() -> bool:
 
     from y_web.src.system.path_utils import get_writable_path
 
-    probe_dir = get_writable_path(os.path.join("y_web", "experiments", f"_probe_{uuid.uuid4().hex}"))
+    probe_dir = get_writable_path(
+        os.path.join("y_web", "experiments", f"_probe_{uuid.uuid4().hex}")
+    )
     try:
         os.makedirs(probe_dir, exist_ok=True)
         db_path = os.path.join(probe_dir, "probe.db")
@@ -122,7 +125,8 @@ def sd_client(sd_app):
 
 def _create_scenario(client, exp_id, name="S1"):
     resp = client.post(
-        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios", json={"name": name}
+        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios",
+        json={"name": name},
     )
     assert resp.status_code == 201, resp.data
     return resp.get_json()["scenario"]["id"]
@@ -137,7 +141,17 @@ def _create_thread(client, exp_id, scenario_id, tmp_id="t1"):
     return resp.get_json()["thread"]["id"]
 
 
-def _add_post(client, exp_id, scenario_id, thread_id, *, tmp_id, parent_tmp_id, author_user_id, content=""):
+def _add_post(
+    client,
+    exp_id,
+    scenario_id,
+    thread_id,
+    *,
+    tmp_id,
+    parent_tmp_id,
+    author_user_id,
+    content="",
+):
     resp = client.post(
         f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}"
         f"/threads/{thread_id}/posts",
@@ -188,8 +202,7 @@ def test_validate_preview_and_publish_materialize_real_rows_with_correct_thread_
     counts, and asserts the grandchild's materialized ``thread_id`` equals
     the *root's* real id, not its immediate parent's (piano tecnico §13).
     """
-    from y_web.src.models import Post
-    from y_web.src.models import Post_topics, Post_Toxicity
+    from y_web.src.models import Post, Post_topics, Post_Toxicity
 
     client, user_id = sd_client
     exp_id = _make_exp(sd_app, "sd-fase6-exp-success")
@@ -198,23 +211,48 @@ def test_validate_preview_and_publish_materialize_real_rows_with_correct_thread_
 
     thread_id = _create_thread(client, exp_id, scenario_id)
     root_id = _add_post(
-        client, exp_id, scenario_id, thread_id,
-        tmp_id="root", parent_tmp_id=None, author_user_id=user_id, content="root content",
+        client,
+        exp_id,
+        scenario_id,
+        thread_id,
+        tmp_id="root",
+        parent_tmp_id=None,
+        author_user_id=user_id,
+        content="root content",
     )
     _add_post(
-        client, exp_id, scenario_id, thread_id,
-        tmp_id="c1", parent_tmp_id="root", author_user_id=user_id, content="child content",
+        client,
+        exp_id,
+        scenario_id,
+        thread_id,
+        tmp_id="c1",
+        parent_tmp_id="root",
+        author_user_id=user_id,
+        content="child content",
     )
     _add_post(
-        client, exp_id, scenario_id, thread_id,
-        tmp_id="c1a", parent_tmp_id="c1", author_user_id=user_id, content="grandchild content",
+        client,
+        exp_id,
+        scenario_id,
+        thread_id,
+        tmp_id="c1a",
+        parent_tmp_id="c1",
+        author_user_id=user_id,
+        content="grandchild content",
     )
 
     with sd_app.app_context():
-        from modules.scenario_editor.backend.models import ScenarioDesignDraftMetadata, ScenarioDesignDraftPost
+        from modules.scenario_editor.backend.models import (
+            ScenarioDesignDraftMetadata,
+            ScenarioDesignDraftPost,
+        )
 
-        root_draft = db.session.query(ScenarioDesignDraftPost).filter_by(tmp_id="root").first()
-        grandchild_draft = db.session.query(ScenarioDesignDraftPost).filter_by(tmp_id="c1a").first()
+        root_draft = (
+            db.session.query(ScenarioDesignDraftPost).filter_by(tmp_id="root").first()
+        )
+        grandchild_draft = (
+            db.session.query(ScenarioDesignDraftPost).filter_by(tmp_id="c1a").first()
+        )
         db.session.add(
             ScenarioDesignDraftMetadata(
                 draft_post_id=root_draft.id,
@@ -272,15 +310,22 @@ def test_validate_preview_and_publish_materialize_real_rows_with_correct_thread_
         assert child_post.comment_to == root_post.id
         assert grandchild_post.comment_to == child_post.id
 
-        toxicity_row = db.session.query(Post_Toxicity).filter_by(post_id=real_root_id).first()
+        toxicity_row = (
+            db.session.query(Post_Toxicity).filter_by(post_id=real_root_id).first()
+        )
         assert toxicity_row is not None
         assert toxicity_row.toxicity == 0.9
 
-        topic_row = db.session.query(Post_topics).filter_by(post_id=real_grandchild_id).first()
+        topic_row = (
+            db.session.query(Post_topics).filter_by(post_id=real_grandchild_id).first()
+        )
         assert topic_row is not None
         assert topic_row.topic_id == topic_id
 
-        from modules.scenario_editor.backend.models import STATUS_PUBLISHED, ScenarioDesignScenario
+        from modules.scenario_editor.backend.models import (
+            STATUS_PUBLISHED,
+            ScenarioDesignScenario,
+        )
 
         scenario = db.session.get(ScenarioDesignScenario, scenario_id)
         assert scenario.status == STATUS_PUBLISHED
@@ -292,14 +337,16 @@ def test_fault_injection_rolls_back_completely(sd_app, sd_client, fail_after_ste
     """Piano di implementazione Fase 6 risk mitigation: the fault
     injection test must be parametrized across several of the 21 steps,
     not just one fixed point."""
-    from y_web.src.models import Post
-
-    from modules.scenario_editor.backend.adapters.standard import StandardMaterializationAdapter
+    from modules.scenario_editor.backend.adapters.standard import (
+        StandardMaterializationAdapter,
+    )
     from modules.scenario_editor.backend.models import (
         ScenarioDesignIdMapping,
         ScenarioDesignPublication,
         ScenarioDesignScenario,
     )
+
+    from y_web.src.models import Post
 
     client, user_id = sd_client
     exp_id = _make_exp(sd_app, f"sd-fase6-exp-fault-{fail_after_step}")
@@ -308,14 +355,25 @@ def test_fault_injection_rolls_back_completely(sd_app, sd_client, fail_after_ste
 
     thread_id = _create_thread(client, exp_id, scenario_id)
     _add_post(
-        client, exp_id, scenario_id, thread_id,
-        tmp_id="root", parent_tmp_id=None, author_user_id=user_id, content="root",
+        client,
+        exp_id,
+        scenario_id,
+        thread_id,
+        tmp_id="root",
+        parent_tmp_id=None,
+        author_user_id=user_id,
+        content="root",
     )
 
     with sd_app.app_context():
-        from modules.scenario_editor.backend.models import ScenarioDesignDraftMetadata, ScenarioDesignDraftPost
+        from modules.scenario_editor.backend.models import (
+            ScenarioDesignDraftMetadata,
+            ScenarioDesignDraftPost,
+        )
 
-        root_draft = db.session.query(ScenarioDesignDraftPost).filter_by(tmp_id="root").first()
+        root_draft = (
+            db.session.query(ScenarioDesignDraftPost).filter_by(tmp_id="root").first()
+        )
         db.session.add(
             ScenarioDesignDraftMetadata(
                 draft_post_id=root_draft.id,
@@ -331,7 +389,9 @@ def test_fault_injection_rolls_back_completely(sd_app, sd_client, fail_after_ste
 
         scenario = db.session.get(ScenarioDesignScenario, scenario_id)
         adapter = StandardMaterializationAdapter()
-        with pytest.raises(RuntimeError, match=f"injected test failure after step {fail_after_step}"):
+        with pytest.raises(
+            RuntimeError, match=f"injected test failure after step {fail_after_step}"
+        ):
             adapter.publish(
                 scenario, requested_by_user_id=user_id, _fail_after_step=fail_after_step
             )
@@ -359,8 +419,13 @@ def test_fingerprint_mismatch_rejects_publish(sd_app, sd_client):
     scenario_id = _create_scenario(client, exp_id)
     thread_id = _create_thread(client, exp_id, scenario_id)
     _add_post(
-        client, exp_id, scenario_id, thread_id,
-        tmp_id="root", parent_tmp_id=None, author_user_id=user_id,
+        client,
+        exp_id,
+        scenario_id,
+        thread_id,
+        tmp_id="root",
+        parent_tmp_id=None,
+        author_user_id=user_id,
     )
 
     # Simulate "the base experiment changed since this scenario was last
@@ -393,8 +458,13 @@ def test_running_experiment_rejects_publish(sd_app, sd_client):
     scenario_id = _create_scenario(client, exp_id)
     thread_id = _create_thread(client, exp_id, scenario_id)
     _add_post(
-        client, exp_id, scenario_id, thread_id,
-        tmp_id="root", parent_tmp_id=None, author_user_id=user_id,
+        client,
+        exp_id,
+        scenario_id,
+        thread_id,
+        tmp_id="root",
+        parent_tmp_id=None,
+        author_user_id=user_id,
     )
 
     with sd_app.app_context():
@@ -415,8 +485,13 @@ def test_idempotency_key_replay_does_not_duplicate(sd_app, sd_client):
     scenario_id = _create_scenario(client, exp_id)
     thread_id = _create_thread(client, exp_id, scenario_id)
     _add_post(
-        client, exp_id, scenario_id, thread_id,
-        tmp_id="root", parent_tmp_id=None, author_user_id=user_id,
+        client,
+        exp_id,
+        scenario_id,
+        thread_id,
+        tmp_id="root",
+        parent_tmp_id=None,
+        author_user_id=user_id,
     )
 
     key = "fase6-idem-key-1"

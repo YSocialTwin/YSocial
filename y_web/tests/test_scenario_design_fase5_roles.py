@@ -3,6 +3,7 @@ role_key round-trip on draft posts, on a real create_app() boot.
 
 Piano di implementazione, Fase 5.
 """
+
 import sqlite3
 
 import pytest
@@ -26,7 +27,9 @@ def _can_actually_write_sqlite_files() -> bool:
 
     from y_web.src.system.path_utils import get_writable_path
 
-    probe_dir = get_writable_path(os.path.join("y_web", "experiments", f"_probe_{uuid.uuid4().hex}"))
+    probe_dir = get_writable_path(
+        os.path.join("y_web", "experiments", f"_probe_{uuid.uuid4().hex}")
+    )
     try:
         os.makedirs(probe_dir, exist_ok=True)
         db_path = os.path.join(probe_dir, "probe.db")
@@ -174,7 +177,8 @@ def test_role_key_round_trips_through_post_create_and_update(
     client = logged_in_client
 
     resp = client.post(
-        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios", json={"name": "S1"}
+        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios",
+        json={"name": "S1"},
     )
     scenario_id = resp.get_json()["scenario"]["id"]
     resp = client.post(

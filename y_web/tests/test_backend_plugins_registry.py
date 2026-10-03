@@ -25,12 +25,12 @@ intentionally reads manifests live from disk rather than from a cache —
 the same convention test_frontend_adds_on_plugin_suite.py uses for
 external/frontend_adds-on.
 """
+
 import json
 
 import pytest
 
-from y_web.src.external_runtime import backend_plugins
-from y_web.src.external_runtime import registry
+from y_web.src.external_runtime import backend_plugins, registry
 
 
 # ---------------------------------------------------------------------------
@@ -47,7 +47,9 @@ def test_validate_backend_suite_valid_for_scenario_design():
     assert report["suite"]["suite_id"] == "scenario_design"
     module_ids = [m["module_id"] for m in report["modules"]]
     assert "scenario_editor" in module_ids
-    scenario_editor = next(m for m in report["modules"] if m["module_id"] == "scenario_editor")
+    scenario_editor = next(
+        m for m in report["modules"] if m["module_id"] == "scenario_editor"
+    )
     assert scenario_editor["valid"] is True, scenario_editor["errors"]
 
 
@@ -58,7 +60,9 @@ def test_validate_backend_suite_unknown_repo_key():
     assert report["errors"]
 
 
-def test_validate_backend_suite_missing_backend_blueprint_field_is_rejected(tmp_path, monkeypatch):
+def test_validate_backend_suite_missing_backend_blueprint_field_is_rejected(
+    tmp_path, monkeypatch
+):
     """Unlike the frontend manifest schema, 'backend_blueprint' is required."""
     repo_path = tmp_path / "broken_suite"
     (repo_path / "meta").mkdir(parents=True)
@@ -106,7 +110,9 @@ def test_register_backend_plugin_suites_registers_blueprint_and_static_route(app
     report = backend_plugins.register_backend_plugin_suites(app)
     assert report["suites"]["scenario_design"]["installed"] is True
     assert report["suites"]["scenario_design"]["valid"] is True
-    assert "scenario_editor" in report["suites"]["scenario_design"]["registered_modules"]
+    assert (
+        "scenario_editor" in report["suites"]["scenario_design"]["registered_modules"]
+    )
 
     assert "scenario_design" in app.blueprints
     assert "backend_settings_static_scenario_design" in app.blueprints
@@ -149,13 +155,17 @@ def test_register_backend_plugin_suites_is_idempotent(app):
     # more defensively from a management command/test harness.
 
 
-def test_fault_isolation_broken_suite_does_not_block_valid_one(app, tmp_path, monkeypatch):
+def test_fault_isolation_broken_suite_does_not_block_valid_one(
+    app, tmp_path, monkeypatch
+):
     """A broken sibling suite must never prevent scenario_design (or any
     other valid suite) from registering, and must never raise out of
     register_backend_plugin_suites()."""
     repo_path = tmp_path / "broken_suite"
     (repo_path / "meta").mkdir(parents=True)
-    (repo_path / "meta" / "registry.json").write_text("{not valid json", encoding="utf-8")
+    (repo_path / "meta" / "registry.json").write_text(
+        "{not valid json", encoding="utf-8"
+    )
 
     fake_spec = registry.ExternalRuntimeSpec(
         key="broken_suite",

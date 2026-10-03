@@ -22,6 +22,7 @@ Every public function here is defensive, exactly like its frontend
 counterpart: it never raises out to its caller, so a broken/misconfigured
 backend suite can never prevent YWeb from starting or break unrelated pages.
 """
+
 from __future__ import annotations
 
 import importlib
@@ -30,14 +31,20 @@ import sys
 import types
 from pathlib import Path
 
-from y_web.src.external_runtime.registry import ROOT, SUPPORTED_EXTERNAL_REPOS, runtime_spec
+from y_web.src.external_runtime.registry import (
+    ROOT,
+    SUPPORTED_EXTERNAL_REPOS,
+    runtime_spec,
+)
 
 REGISTRY_RELATIVE_PATH = Path("meta") / "registry.json"
 INFO_RELATIVE_PATH = Path("meta") / "info.json"
 
 REQUIRED_MODULE_FIELDS = ("module_id", "display_name", "version")
 
-_REGISTERED_SUITES: dict[str, dict] = {}  # repo_key -> {"modules": {module_id: manifest}}
+_REGISTERED_SUITES: dict[str, dict] = (
+    {}
+)  # repo_key -> {"modules": {module_id: manifest}}
 
 
 def _app_version() -> str | None:
@@ -135,7 +142,11 @@ def validate_backend_suite(repo_key: str) -> dict:
         return report
     report["suite"] = suite_meta
 
-    if not _version_in_range(app_version, suite_meta.get("min_app_version"), suite_meta.get("max_app_version")):
+    if not _version_in_range(
+        app_version,
+        suite_meta.get("min_app_version"),
+        suite_meta.get("max_app_version"),
+    ):
         report["errors"].append(
             f"suite requires app version between {suite_meta.get('min_app_version')} "
             f"and {suite_meta.get('max_app_version') or '∞'}, current app version is {app_version}"
@@ -166,7 +177,9 @@ def validate_backend_suite(repo_key: str) -> dict:
         elif module_id:
             seen_ids.add(module_id)
 
-        if not _version_in_range(app_version, entry.get("min_app_version"), entry.get("max_app_version")):
+        if not _version_in_range(
+            app_version, entry.get("min_app_version"), entry.get("max_app_version")
+        ):
             errors.append(
                 f"module requires app version between {entry.get('min_app_version')} "
                 f"and {entry.get('max_app_version') or '∞'}, current app version is {app_version}"
@@ -181,8 +194,13 @@ def validate_backend_suite(repo_key: str) -> dict:
             else:
                 dotted, _, _attr = str(backend_blueprint).partition(":")
                 backend_path = spec.path / Path(*dotted.split("."))
-                if not (backend_path.with_suffix(".py").exists() or (backend_path / "__init__.py").exists()):
-                    errors.append(f"backend_blueprint module not found on disk: {dotted}")
+                if not (
+                    backend_path.with_suffix(".py").exists()
+                    or (backend_path / "__init__.py").exists()
+                ):
+                    errors.append(
+                        f"backend_blueprint module not found on disk: {dotted}"
+                    )
         else:
             errors.append("missing required field 'backend_blueprint'")
 
@@ -190,7 +208,9 @@ def validate_backend_suite(repo_key: str) -> dict:
         module_report["errors"] = errors
         report["modules"].append(module_report)
 
-    report["valid"] = not report["errors"] and all(m.get("valid") for m in report["modules"])
+    report["valid"] = not report["errors"] and all(
+        m.get("valid") for m in report["modules"]
+    )
     return report
 
 
@@ -237,7 +257,12 @@ def register_backend_plugin_suites(app) -> dict:
     report = {"suites": {}}
 
     for repo_key in backend_plugin_repo_keys():
-        suite_report = {"installed": False, "valid": False, "registered_modules": [], "errors": []}
+        suite_report = {
+            "installed": False,
+            "valid": False,
+            "registered_modules": [],
+            "errors": [],
+        }
         try:
             validation = validate_backend_suite(repo_key)
         except Exception as exc:
@@ -268,16 +293,24 @@ def register_backend_plugin_suites(app) -> dict:
             except Exception as exc:
                 app.logger.warning(
                     "[backend_settings] failed to load backend for module '%s' in suite '%s': %s",
-                    module_id, repo_key, exc,
+                    module_id,
+                    repo_key,
+                    exc,
                 )
-                suite_report["errors"].append(f"module '{module_id}' backend import failed: {exc}")
+                suite_report["errors"].append(
+                    f"module '{module_id}' backend import failed: {exc}"
+                )
 
         _REGISTERED_SUITES[repo_key] = {"modules": modules_by_id}
 
         try:
             _register_static_blueprint(app, repo_key)
         except Exception as exc:
-            app.logger.warning("[backend_settings] failed to register static assets route for '%s': %s", repo_key, exc)
+            app.logger.warning(
+                "[backend_settings] failed to register static assets route for '%s': %s",
+                repo_key,
+                exc,
+            )
 
         report["suites"][repo_key] = suite_report
 
@@ -305,7 +338,10 @@ def _register_static_blueprint(app, repo_key: str) -> None:
             abort(404)
         try:
             requested = (spec.path / filename).resolve()
-            if spec.path.resolve() not in requested.parents and requested != spec.path.resolve():
+            if (
+                spec.path.resolve() not in requested.parents
+                and requested != spec.path.resolve()
+            ):
                 abort(404)
         except Exception:
             abort(404)

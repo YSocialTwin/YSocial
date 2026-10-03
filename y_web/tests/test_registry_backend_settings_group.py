@@ -7,6 +7,7 @@ Split out from test_backend_plugins_registry.py so each atomic commit in
 the Scenario Design Fase 1 sequence carries exactly the tests for what it
 changes (piano di implementazione, Fase 1, commit #2: feat(core-registry)).
 """
+
 from y_web.src.external_runtime import registry
 
 
@@ -20,8 +21,9 @@ def test_scenario_design_registered_with_backend_settings_group():
 
 
 def test_grouped_runtime_specs_includes_backend_settings_group():
-    groups = {group_key: label for group_key, label, _specs in registry.grouped_runtime_specs()}
+    groups = {
+        group_key: label
+        for group_key, label, _specs in registry.grouped_runtime_specs()
+    }
     assert "backend_settings" in groups
     assert groups["backend_settings"] == "Backend Settings"
-
-

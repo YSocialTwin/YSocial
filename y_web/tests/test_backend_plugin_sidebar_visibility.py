@@ -31,7 +31,9 @@ def test_inject_backend_plugin_visibility_exposes_url_when_valid():
         assert result["scenario_design_sidebar_url"] == "/admin/scenario_design/app"
 
 
-def test_inject_backend_plugin_visibility_hides_link_if_manifest_valid_but_blueprint_missing(monkeypatch):
+def test_inject_backend_plugin_visibility_hides_link_if_manifest_valid_but_blueprint_missing(
+    monkeypatch,
+):
     """Regression guard for the exact edge case this mechanism was written to
     avoid: validate_backend_suite() says "valid" (manifest-only check) but
     the blueprint's endpoint doesn't actually resolve on *this* app (e.g. an
@@ -46,8 +48,9 @@ def test_inject_backend_plugin_visibility_hides_link_if_manifest_valid_but_bluep
     url_for() raising BuildError for this endpoint is exactly the failure
     mode the try/except in inject_backend_plugin_visibility must absorb.
     """
-    from y_web import create_app
     import flask
+
+    from y_web import create_app
 
     app = create_app(db_type="sqlite")
 

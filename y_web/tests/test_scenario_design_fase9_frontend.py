@@ -15,6 +15,7 @@
 
 Piano di implementazione, Fase 9 (decisions.md, frontend subsection).
 """
+
 import sqlite3
 
 import pytest
@@ -93,6 +94,7 @@ def sd_client(sd_app):
 # app_shell()
 # ---------------------------------------------------------------------
 
+
 def test_app_shell_requires_login_redirects_when_anonymous(sd_client):
     client, _admin_id = sd_client
     resp = client.get("/admin/scenario_design/app")
@@ -114,7 +116,10 @@ def test_app_shell_serves_html_shell_when_logged_in(sd_client):
     # (test_backend_plugins_registry.py) pins down: the route is
     # /plugins/<repo_key>/<module_id>/static/<full repo-relative path>,
     # not a module-local static subfolder.
-    assert "/plugins/scenario_design/scenario_editor/static/modules/scenario_editor/static/js/editor.js" in body
+    assert (
+        "/plugins/scenario_design/scenario_editor/static/modules/scenario_editor/static/js/editor.js"
+        in body
+    )
 
 
 def test_index_health_check_still_unauthenticated_after_app_shell_addition(sd_client):
@@ -131,6 +136,7 @@ def test_index_health_check_still_unauthenticated_after_app_shell_addition(sd_cl
 # publication_id_mapping()
 # ---------------------------------------------------------------------
 
+
 def _make_exp(app, name="sd-fase9-exp"):
     import os
 
@@ -139,7 +145,9 @@ def _make_exp(app, name="sd-fase9-exp"):
 
     folder = get_writable_path(os.path.join("y_web", "experiments", name))
     os.makedirs(folder, exist_ok=True)
-    db_path = os.path.join(folder, "database_server.db")  # noqa: F841 (created lazily by the app)
+    db_path = os.path.join(
+        folder, "database_server.db"
+    )  # noqa: F841 (created lazily by the app)
 
     with app.app_context():
         exp = Exps(
@@ -172,7 +180,8 @@ def test_publication_id_mapping_matches_publish_response(sd_app, sd_client):
     exp_id = _make_exp(sd_app, "sd-fase9-id-mapping")
 
     resp = client.post(
-        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios", json={"name": "S1"}
+        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios",
+        json={"name": "S1"},
     )
     assert resp.status_code == 201, resp.data
     scenario_id = resp.get_json()["scenario"]["id"]
@@ -230,7 +239,8 @@ def test_publication_id_mapping_404_for_unknown_publication(sd_app, sd_client):
     exp_id = _make_exp(sd_app, "sd-fase9-id-mapping-404")
 
     resp = client.post(
-        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios", json={"name": "S1"}
+        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios",
+        json={"name": "S1"},
     )
     assert resp.status_code == 201, resp.data
     scenario_id = resp.get_json()["scenario"]["id"]

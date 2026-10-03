@@ -505,7 +505,9 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
         )
 
         _backend_plugin_report = register_backend_plugin_suites(app)
-        for _repo_key, _suite_report in _backend_plugin_report.get("suites", {}).items():
+        for _repo_key, _suite_report in _backend_plugin_report.get(
+            "suites", {}
+        ).items():
             if _suite_report.get("installed"):
                 if _suite_report.get("valid"):
                     print(

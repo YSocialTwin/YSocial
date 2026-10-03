@@ -9,8 +9,8 @@ plan specifies (piano tecnico §15), and that an unsupported platform_type
 is rejected by `require_supported_experiment` end-to-end through a real
 HTTP request rather than only via the unit-level access.py tests.
 """
-from y_web.src.external_runtime import registry
 
+from y_web.src.external_runtime import registry
 
 EXPECTED_RULES = {
     "/admin/scenario_design/",
@@ -203,5 +203,7 @@ def test_fase6_unauthenticated_request_is_redirected_or_rejected():
 
     boot_app = create_app(db_type="sqlite")
     client = boot_app.test_client()
-    resp = client.get("/admin/scenario_design/api/experiments/1/scenarios/1/publish/preview")
+    resp = client.get(
+        "/admin/scenario_design/api/experiments/1/scenarios/1/publish/preview"
+    )
     assert resp.status_code in (302, 401, 403)
