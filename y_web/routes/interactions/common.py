@@ -12,10 +12,6 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import OperationalError
 
 from y_web import db
-from y_web.src.recsys.content_recsys import (
-    _normalize_content_recsys_mode,
-    _update_filter_bubble_interests,
-)
 from y_web.routes.interactions._blueprint import user
 from y_web.src.experiment.helpers import open_experiment_session
 from y_web.src.models import (
@@ -28,7 +24,10 @@ from y_web.src.models import (
     Rounds,
     User_mgmt,
 )
-
+from y_web.src.recsys.content_recsys import (
+    _normalize_content_recsys_mode,
+    _update_filter_bubble_interests,
+)
 
 
 def _maybe_update_fb_interests(exp_id, exp_user, post_id, interaction_type):
@@ -37,11 +36,13 @@ def _maybe_update_fb_interests(exp_id, exp_user, post_id, interaction_type):
     Silently no-ops when not applicable (wrong mode, missing engine, etc.).
     """
     try:
-        if _normalize_content_recsys_mode(
-            getattr(exp_user, "recsys_type", "")
-        ) != "FilterBubble":
+        if (
+            _normalize_content_recsys_mode(getattr(exp_user, "recsys_type", ""))
+            != "FilterBubble"
+        ):
             return
         from flask import current_app
+
         exp_engine = db.engines.get("db_exp")
         if exp_engine is None:
             exp_engine = db.get_engine(current_app, bind="db_exp")
@@ -345,7 +346,9 @@ def share_content(exp_id):
         db.session.commit()
 
     # get topics of the original post
-    topics_id = db.session.scalars(select(Post_topics).filter_by(post_id=post_id_norm)).all()
+    topics_id = db.session.scalars(
+        select(Post_topics).filter_by(post_id=post_id_norm)
+    ).all()
     # add the topics to the shared post
     for t in topics_id:
         ti = Post_topics(post_id=post.id, topic_id=t.topic_id)

@@ -476,7 +476,9 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
         )
 
         _frontend_plugin_report = register_frontend_plugin_suites(app)
-        for _repo_key, _suite_report in _frontend_plugin_report.get("suites", {}).items():
+        for _repo_key, _suite_report in _frontend_plugin_report.get(
+            "suites", {}
+        ).items():
             if _suite_report.get("installed"):
                 if _suite_report.get("valid"):
                     print(
@@ -542,10 +544,11 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
     # ------------------------------------------------------------------ #
     _alembic_dir = os.path.join(os.path.dirname(__file__), "alembic")
     try:
-        from flask_migrate import Migrate, upgrade as alembic_upgrade
         from alembic.config import Config as AlembicConfig
-        from alembic.script import ScriptDirectory
         from alembic.runtime.migration import MigrationContext
+        from alembic.script import ScriptDirectory
+        from flask_migrate import Migrate
+        from flask_migrate import upgrade as alembic_upgrade
 
         migrate_ext = Migrate(app, db, directory=_alembic_dir)
         with app.app_context():
@@ -561,10 +564,14 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
                 with engine.begin() as conn:
                     ctx = MigrationContext.configure(conn)
                     if not ctx.get_current_heads():
-                        print(f"  ↳ [{bind_key}] no alembic_version found — stamping 0001_baseline")
+                        print(
+                            f"  ↳ [{bind_key}] no alembic_version found — stamping 0001_baseline"
+                        )
                         ctx.stamp(_alembic_script, "0001_baseline")
                     else:
-                        print(f"  ↳ [{bind_key}] alembic_version OK ({', '.join(ctx.get_current_heads())})")
+                        print(
+                            f"  ↳ [{bind_key}] alembic_version OK ({', '.join(ctx.get_current_heads())})"
+                        )
 
             # Check every bound engine at startup (db_admin = dashboard.db,
             # db_exp = dummy.db placeholder).  De-duplicate by engine identity
@@ -602,10 +609,10 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
     except ImportError:
         # Flask-Migrate not installed — try standalone Alembic, then legacy runner.
         try:
-            from alembic.config import Config as _AlembicConfig
-            from alembic.script import ScriptDirectory as _AlembicScript
-            from alembic.runtime.migration import MigrationContext as _MigCtx
             from alembic import command as _alembic_cmd
+            from alembic.config import Config as _AlembicConfig
+            from alembic.runtime.migration import MigrationContext as _MigCtx
+            from alembic.script import ScriptDirectory as _AlembicScript
 
             with app.app_context():
                 _sa_url = app.config.get("SQLALCHEMY_DATABASE_URI", "")
@@ -618,10 +625,14 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
                     with engine.begin() as _conn:
                         _ctx = _MigCtx.configure(_conn)
                         if not _ctx.get_current_heads():
-                            print(f"  ↳ [{bind_key}] no alembic_version — stamping 0001_baseline")
+                            print(
+                                f"  ↳ [{bind_key}] no alembic_version — stamping 0001_baseline"
+                            )
                             _ctx.stamp(_sa_script, "0001_baseline")
                         else:
-                            print(f"  ↳ [{bind_key}] alembic_version OK ({', '.join(_ctx.get_current_heads())})")
+                            print(
+                                f"  ↳ [{bind_key}] alembic_version OK ({', '.join(_ctx.get_current_heads())})"
+                            )
 
                 print("✦ Alembic (standalone): checking bound databases…")
                 _seen: set = set()
@@ -638,10 +649,13 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
                     from y_web.src.experiment.context import (
                         initialize_active_experiment_databases,
                     )
+
                     initialize_active_experiment_databases(app)
                     print("✓ Alembic (standalone): experiment databases up to date")
                 except Exception as _exp_err:
-                    print(f"⚠ Warning: failed to migrate experiment databases: {_exp_err}")
+                    print(
+                        f"⚠ Warning: failed to migrate experiment databases: {_exp_err}"
+                    )
 
         except ImportError:
             # Neither Flask-Migrate nor standalone Alembic available.

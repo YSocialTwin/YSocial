@@ -39,14 +39,13 @@ session's copy of frontend_settings.html (no permanent JS test infra
 exists in this repo, matching the Frontend Adds-on post_annotation frontend's
 own established verification approach).
 """
+
 import json
 from pathlib import Path
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 
-REGISTRY_JSON = (
-    _REPO_ROOT / "external" / "frontend_adds-on" / "meta" / "registry.json"
-)
+REGISTRY_JSON = _REPO_ROOT / "external" / "frontend_adds-on" / "meta" / "registry.json"
 FRONTEND_SETTINGS_HTML = (
     _REPO_ROOT / "y_web" / "templates" / "admin" / "frontend_settings.html"
 )
@@ -71,16 +70,16 @@ def test_dimension_gated_sections_declare_depends_on():
     }
     for key, gate in expected.items():
         assert key in sections_by_key, f"section {key!r} missing from manifest"
-        assert sections_by_key[key].get("depends_on") == gate, (
-            f"section {key!r} should depend on {gate!r}"
-        )
+        assert (
+            sections_by_key[key].get("depends_on") == gate
+        ), f"section {key!r} should depend on {gate!r}"
 
     # Scope/dimensions/limits/display are the always-relevant, top-level
     # sections -- they must NOT be gated behind anything.
     for key in ("scope", "dimensions", "limits", "display"):
-        assert "depends_on" not in sections_by_key[key], (
-            f"section {key!r} should always be visible"
-        )
+        assert (
+            "depends_on" not in sections_by_key[key]
+        ), f"section {key!r} should always be visible"
 
 
 def test_toxicity_section_removed_since_it_has_no_configurable_option():
@@ -109,8 +108,13 @@ def test_dependent_parameters_declare_depends_on():
     params_by_name = {p["name"]: p for p in manifest["parameters"]}
 
     assert params_by_name["opinion_scale"]["depends_on"] == "enable_opinion_annotation"
-    assert params_by_name["max_topics_per_annotation"]["depends_on"] == "allow_multi_topic"
-    assert params_by_name["max_emotions_per_annotation"]["depends_on"] == "allow_multi_emotion"
+    assert (
+        params_by_name["max_topics_per_annotation"]["depends_on"] == "allow_multi_topic"
+    )
+    assert (
+        params_by_name["max_emotions_per_annotation"]["depends_on"]
+        == "allow_multi_emotion"
+    )
     assert params_by_name["custom_topics"]["depends_on"] == {
         "param": "topic_source",
         "equals": "custom",
@@ -179,7 +183,7 @@ def test_string_list_control_is_a_textarea_split_on_comma_or_newline():
     assert "<textarea id=\"' + id + '\"" in template
     # The 28-entry default emotion list was previously a single-line
     # <input>, which made it painful to read or edit.
-    assert "'<input type=\"text\" id=\"' + id + '\" value=\"' + joined" not in template
+    assert '\'<input type="text" id="\' + id + \'" value="\' + joined' not in template
     assert "split(/[,\\n]+/)" in template
 
 

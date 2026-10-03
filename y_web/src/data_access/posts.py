@@ -323,7 +323,9 @@ def _hidden_post_ids_in_thread(post_records, hidden_author_ids):
     hidden_author_ids = set(hidden_author_ids)
     records = list(post_records)
 
-    dropped = {pid for pid, author_id, _parent in records if author_id in hidden_author_ids}
+    dropped = {
+        pid for pid, author_id, _parent in records if author_id in hidden_author_ids
+    }
 
     changed = True
     while changed:

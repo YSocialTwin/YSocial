@@ -237,6 +237,7 @@ class TestSecurityConfiguration:
 # C4 — SA2 migration sentinels
 # ---------------------------------------------------------------------------
 
+
 def test_fix_tests_script_does_not_exist():
     """fix_tests.py non deve esistere una volta completata la migrazione SA2.
 
@@ -244,6 +245,7 @@ def test_fix_tests_script_does_not_exist():
     i test che ancora usano _FakeSelect/_SelectRoutingSession al pattern SA2.
     """
     import os
+
     assert not os.path.exists(
         os.path.join(os.path.dirname(__file__), "..", "..", "fix_tests.py")
     ), "fix_tests.py ancora presente — migrazione SA2 non completata (C4)"
@@ -268,6 +270,7 @@ def test_no_sa1_shim_in_test_files():
     db.session.scalars(select(Model)...).
     """
     import os
+
     test_dir = os.path.dirname(__file__)
     self_name = os.path.basename(__file__)
     shared_shim_name = "_sa2_stubs.py"

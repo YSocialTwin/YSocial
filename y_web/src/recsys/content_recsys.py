@@ -9,8 +9,9 @@ follower-based, interest-based, and collaborative filtering approaches.
 import logging
 import math
 
-from sqlalchemy import bindparam, desc, or_, text
+from sqlalchemy import bindparam, desc, or_
 from sqlalchemy import select as sa_select
+from sqlalchemy import text
 from sqlalchemy.sql.expression import func
 
 from y_web import db
@@ -24,28 +25,29 @@ from y_web.src.models import (
     User_mgmt,
 )
 
-
 logger = logging.getLogger(__name__)
 
 
-SUPPORTED_CONTENT_RECSYS_MODES = frozenset({
-    "Random",
-    "ReverseChrono",
-    "ReverseChronoPopularity",
-    "ReverseChronoFollowers",
-    "ReverseChronoFollowersPopularity",
-    "ReverseChronoComments",
-    "CommonInterests",
-    "CommonUserInterests",
-    "SimilarUsersReactions",
-    "SimilarUsersPosts",
-    "CollaborativeUserUser",
-    "CollaborativeItemItem",
-    "ContentBasedFeatures",
-    "ContentBasedVector",
-    "HybridLinearRanker",
-    "FilterBubble",
-})
+SUPPORTED_CONTENT_RECSYS_MODES = frozenset(
+    {
+        "Random",
+        "ReverseChrono",
+        "ReverseChronoPopularity",
+        "ReverseChronoFollowers",
+        "ReverseChronoFollowersPopularity",
+        "ReverseChronoComments",
+        "CommonInterests",
+        "CommonUserInterests",
+        "SimilarUsersReactions",
+        "SimilarUsersPosts",
+        "CollaborativeUserUser",
+        "CollaborativeItemItem",
+        "ContentBasedFeatures",
+        "ContentBasedVector",
+        "HybridLinearRanker",
+        "FilterBubble",
+    }
+)
 
 
 class PersonalizedFeedRankingError(RuntimeError):
@@ -61,46 +63,46 @@ def _normalize_content_recsys_mode(mode):
     compact = raw.replace("_", "").replace("-", "").replace(" ", "").strip().lower()
     mode_aliases = {
         # ── existing ──────────────────────────────────────────────────────
-        "reversechrono":                    "ReverseChrono",
-        "rc":                               "ReverseChrono",
-        "reversechronopopularity":          "ReverseChronoPopularity",
-        "rcp":                              "ReverseChronoPopularity",
-        "reversechronofollowers":           "ReverseChronoFollowers",
-        "rcf":                              "ReverseChronoFollowers",
+        "reversechrono": "ReverseChrono",
+        "rc": "ReverseChrono",
+        "reversechronopopularity": "ReverseChronoPopularity",
+        "rcp": "ReverseChronoPopularity",
+        "reversechronofollowers": "ReverseChronoFollowers",
+        "rcf": "ReverseChronoFollowers",
         "reversechronofollowerspopularity": "ReverseChronoFollowersPopularity",
-        "fp":                               "ReverseChronoFollowersPopularity",
-        "contentrecsys":                    "Random",
-        "default":                          "Random",
-        "random":                           "Random",
+        "fp": "ReverseChronoFollowersPopularity",
+        "contentrecsys": "Random",
+        "default": "Random",
+        "random": "Random",
         # ── Standard (HPC,Standard) ───────────────────────────────────────
-        "reversechronocomments":            "ReverseChronoComments",
-        "rcc":                              "ReverseChronoComments",
-        "commoninterests":                  "CommonInterests",
-        "ci":                               "CommonInterests",
-        "commonuserinterests":              "CommonUserInterests",
-        "cui":                              "CommonUserInterests",
-        "similarusersreactions":            "SimilarUsersReactions",
-        "sir":                              "SimilarUsersReactions",
-        "similarusersposts":                "SimilarUsersPosts",
-        "sip":                              "SimilarUsersPosts",
+        "reversechronocomments": "ReverseChronoComments",
+        "rcc": "ReverseChronoComments",
+        "commoninterests": "CommonInterests",
+        "ci": "CommonInterests",
+        "commonuserinterests": "CommonUserInterests",
+        "cui": "CommonUserInterests",
+        "similarusersreactions": "SimilarUsersReactions",
+        "sir": "SimilarUsersReactions",
+        "similarusersposts": "SimilarUsersPosts",
+        "sip": "SimilarUsersPosts",
         # ── HPC-only ──────────────────────────────────────────────────────
-        "collaborativeuseruser":            "CollaborativeUserUser",
-        "cuu":                              "CollaborativeUserUser",
-        "collaborativeitemitem":            "CollaborativeItemItem",
-        "cii":                              "CollaborativeItemItem",
-        "contentbasedfeatures":             "ContentBasedFeatures",
-        "cbf":                              "ContentBasedFeatures",
-        "contentbasedvector":               "ContentBasedVector",
-        "cbv":                              "ContentBasedVector",
-        "hybridlinearranker":               "HybridLinearRanker",
-        "hlr":                              "HybridLinearRanker",
+        "collaborativeuseruser": "CollaborativeUserUser",
+        "cuu": "CollaborativeUserUser",
+        "collaborativeitemitem": "CollaborativeItemItem",
+        "cii": "CollaborativeItemItem",
+        "contentbasedfeatures": "ContentBasedFeatures",
+        "cbf": "ContentBasedFeatures",
+        "contentbasedvector": "ContentBasedVector",
+        "cbv": "ContentBasedVector",
+        "hybridlinearranker": "HybridLinearRanker",
+        "hlr": "HybridLinearRanker",
         # ── Human-only ───────────────────────────────────────────────────────
-        "filterbubble":     "FilterBubble",
-        "fb":               "FilterBubble",
+        "filterbubble": "FilterBubble",
+        "fb": "FilterBubble",
         "personalizedfeed": "FilterBubble",
-        "pf":               "FilterBubble",
+        "pf": "FilterBubble",
         # db row stored as filter_bubble_v1 → compact = filterbubblev1
-        "filterbubblev1":   "FilterBubble",
+        "filterbubblev1": "FilterBubble",
     }
     return mode_aliases.get(compact, raw)
 
@@ -171,9 +173,7 @@ def _declared_topic_ids(uid):
     except Exception:
         return []
     return [
-        str(row[0])
-        for row in rows
-        if row[0] is not None and float(row[1] or 0.0) > 0.0
+        str(row[0]) for row in rows if row[0] is not None and float(row[1] or 0.0) > 0.0
     ]
 
 
@@ -248,9 +248,7 @@ def _users_with_similar_interests(interest_ids, exclude_uid=None):
             "WHERE CAST(interest_id AS TEXT) IN :interest_ids"
         ).bindparams(bindparam("interest_ids", expanding=True))
         with engine.connect() as connection:
-            rows = connection.execute(
-                statement, {"interest_ids": interest_ids}
-            ).all()
+            rows = connection.execute(statement, {"interest_ids": interest_ids}).all()
     except Exception:
         return []
     values = [row[0] for row in rows if row[0] is not None]
@@ -297,22 +295,28 @@ def _rank_feature_based_posts(uid, topic_ids, page, per_page, hybrid=False):
             page=page, per_page=per_page, error_out=False
         )
 
-    max_reactions = max((int(post.reaction_count or 0) for post in candidates), default=0)
+    max_reactions = max(
+        (int(post.reaction_count or 0) for post in candidates), default=0
+    )
 
     def rank_key(post):
         overlap = len(post_topics.get(str(post.id), set()) & topic_set)
-        engagement = (int(post.reaction_count or 0) / max_reactions) if max_reactions else 0.0
+        engagement = (
+            (int(post.reaction_count or 0) / max_reactions) if max_reactions else 0.0
+        )
         score = float(overlap) + (0.35 * engagement if hybrid else 0.0)
         return (-score, -int(post.reaction_count or 0), str(post.id))
 
     candidates.sort(key=rank_key)
     start = max(0, (page - 1) * per_page)
-    return _make_pagination(candidates[start:start + per_page], page, per_page, len(candidates))
-
+    return _make_pagination(
+        candidates[start : start + per_page], page, per_page, len(candidates)
+    )
 
 
 def _make_pagination(items, page, per_page, total):
     """Lightweight pagination wrapper compatible with Flask-SQLAlchemy Pagination."""
+
     class _Page:
         def __init__(self, items, page, per_page, total):
             self.items = items
@@ -325,16 +329,21 @@ def _make_pagination(items, page, per_page, total):
             self.prev_num = page - 1 if self.has_prev else None
             self.next_num = page + 1 if self.has_next else None
 
-        def iter_pages(self, left_edge=2, left_current=2, right_current=5, right_edge=2):
+        def iter_pages(
+            self, left_edge=2, left_current=2, right_current=5, right_edge=2
+        ):
             last = 0
             for num in range(1, self.pages + 1):
-                if (num <= left_edge or
-                        self.page - left_current <= num <= self.page + right_current or
-                        num > self.pages - right_edge):
+                if (
+                    num <= left_edge
+                    or self.page - left_current <= num <= self.page + right_current
+                    or num > self.pages - right_edge
+                ):
                     if last + 1 != num:
                         yield None
                     yield num
                     last = num
+
     return _Page(items, page, per_page, total)
 
 
@@ -362,11 +371,11 @@ def _filter_bubble_score(uid, exp_engine, settings):
     """
     uid_str = str(uid)
     alpha = float(settings.get("filter_bubble_alpha", 2.0))
-    beta  = float(settings.get("filter_bubble_beta",  0.0))
+    beta = float(settings.get("filter_bubble_beta", 0.0))
     gamma = float(settings.get("filter_bubble_gamma", 0.0))
-    wr    = float(settings.get("filter_bubble_wr", 1.0))
-    wc    = float(settings.get("filter_bubble_wc", 1.5))
-    ws    = float(settings.get("filter_bubble_ws", 2.0))
+    wr = float(settings.get("filter_bubble_wr", 1.0))
+    wc = float(settings.get("filter_bubble_wc", 1.5))
+    ws = float(settings.get("filter_bubble_ws", 2.0))
 
     try:
         with exp_engine.connect() as conn:
@@ -374,33 +383,43 @@ def _filter_bubble_score(uid, exp_engine, settings):
             interests = {
                 str(r[0]): float(r[1])
                 for r in conn.execute(
-                    text("SELECT topic_id, interest_level FROM user_topic_interest "
-                         "WHERE CAST(user_id AS TEXT) = :uid"),
+                    text(
+                        "SELECT topic_id, interest_level FROM user_topic_interest "
+                        "WHERE CAST(user_id AS TEXT) = :uid"
+                    ),
                     {"uid": uid_str},
                 ).fetchall()
             }
-            print(f"[RECSYS DEBUG] _filter_bubble_score: uid={uid_str!r} interests={interests}")
+            print(
+                f"[RECSYS DEBUG] _filter_bubble_score: uid={uid_str!r} interests={interests}"
+            )
             if not interests:
-                print(f"[RECSYS DEBUG] _filter_bubble_score: NO INTERESTS FOUND for uid={uid_str!r} -> returning empty scores")
+                print(
+                    f"[RECSYS DEBUG] _filter_bubble_score: NO INTERESTS FOUND for uid={uid_str!r} -> returning empty scores"
+                )
                 return {}
 
             # 2. User opinions at onboarding (tid = 0)
             rows = conn.execute(
-                text("SELECT topic_id, opinion FROM agent_opinion "
-                     "WHERE CAST(agent_id AS TEXT) = :aid "
-                     "AND CAST(tid AS TEXT) = '0'"),
+                text(
+                    "SELECT topic_id, opinion FROM agent_opinion "
+                    "WHERE CAST(agent_id AS TEXT) = :aid "
+                    "AND CAST(tid AS TEXT) = '0'"
+                ),
                 {"aid": uid_str},
             ).fetchall()
             user_opinions = {str(r[0]): float(r[1]) for r in rows}
 
             # 3. Post topics for non-owned root posts
             pt_rows = conn.execute(
-                text("SELECT pt.post_id, pt.topic_id "
-                     "FROM post_topics pt "
-                     "JOIN post p ON p.id = pt.post_id "
-                     "WHERE CAST(p.user_id AS TEXT) != :uid "
-                     "  AND (p.comment_to IS NULL "
-                     "       OR CAST(p.comment_to AS TEXT) = '-1')"),
+                text(
+                    "SELECT pt.post_id, pt.topic_id "
+                    "FROM post_topics pt "
+                    "JOIN post p ON p.id = pt.post_id "
+                    "WHERE CAST(p.user_id AS TEXT) != :uid "
+                    "  AND (p.comment_to IS NULL "
+                    "       OR CAST(p.comment_to AS TEXT) = '-1')"
+                ),
                 {"uid": uid_str},
             ).fetchall()
             post_topics_map = {}
@@ -412,11 +431,13 @@ def _filter_bubble_score(uid, exp_engine, settings):
             # 4. Post metadata: author, raw round FK (for opinion lookup),
             #    round_val (day*24+hour, for recency), base engagement.
             meta_rows = conn.execute(
-                text("SELECT p.id, p.user_id, p.reaction_count, p.round, r.day, r.hour "
-                     "FROM post p LEFT JOIN rounds r ON r.id = p.round "
-                     "WHERE CAST(p.user_id AS TEXT) != :uid "
-                     "  AND (p.comment_to IS NULL "
-                     "       OR CAST(p.comment_to AS TEXT) = '-1')"),
+                text(
+                    "SELECT p.id, p.user_id, p.reaction_count, p.round, r.day, r.hour "
+                    "FROM post p LEFT JOIN rounds r ON r.id = p.round "
+                    "WHERE CAST(p.user_id AS TEXT) != :uid "
+                    "  AND (p.comment_to IS NULL "
+                    "       OR CAST(p.comment_to AS TEXT) = '-1')"
+                ),
                 {"uid": uid_str},
             ).fetchall()
             post_meta = {}
@@ -431,10 +452,10 @@ def _filter_bubble_score(uid, exp_engine, settings):
                 pid_key = str(pid)
                 native_post_ids[pid_key] = pid
                 post_meta[pid_key] = {
-                    "author_id":      str(author_id),
+                    "author_id": str(author_id),
                     "reaction_count": int(reaction_count or 0),
-                    "round_val":      rv,
-                    "round_id":       str(round_id) if round_id is not None else "",
+                    "round_val": rv,
+                    "round_id": str(round_id) if round_id is not None else "",
                 }
 
             # 5a. Author opinions explicitly tied to a specific post (highest priority).
@@ -450,9 +471,9 @@ def _filter_bubble_score(uid, exp_engine, settings):
                     stmt, {"post_ids": post_ids}
                 ).fetchall():
                     (
-                        opinions_at_post
-                        .setdefault(str(agent_id), {})
-                        .setdefault(str(id_post), {})
+                        opinions_at_post.setdefault(str(agent_id), {}).setdefault(
+                            str(id_post), {}
+                        )
                     )[str(topic_id)] = float(opinion)
 
             # 5b. Author opinion history. Round IDs are not ordered: UUID HPC
@@ -487,9 +508,9 @@ def _filter_bubble_score(uid, exp_engine, settings):
                 ).fetchall():
                     simulation_hour = int(day or 0) * 24 + int(hour or 0)
                     (
-                        opinion_history
-                        .setdefault(str(agent_id), {})
-                        .setdefault(str(topic_id), [])
+                        opinion_history.setdefault(str(agent_id), {}).setdefault(
+                            str(topic_id), []
+                        )
                     ).append((simulation_hour, float(opinion)))
 
             comment_counts = {}
@@ -497,17 +518,21 @@ def _filter_bubble_score(uid, exp_engine, settings):
             if gamma > 0:
                 try:
                     cc_rows = conn.execute(
-                        text("SELECT comment_to, COUNT(*) FROM post "
-                             "WHERE comment_to IS NOT NULL "
-                             "AND CAST(comment_to AS TEXT) != '-1' "
-                             "GROUP BY comment_to")
+                        text(
+                            "SELECT comment_to, COUNT(*) FROM post "
+                            "WHERE comment_to IS NOT NULL "
+                            "AND CAST(comment_to AS TEXT) != '-1' "
+                            "GROUP BY comment_to"
+                        )
                     ).fetchall()
                     comment_counts = {str(r[0]): int(r[1]) for r in cc_rows}
                     sc_rows = conn.execute(
-                        text("SELECT shared_from, COUNT(*) FROM post "
-                             "WHERE shared_from IS NOT NULL "
-                             "AND CAST(shared_from AS TEXT) != '-1' "
-                             "GROUP BY shared_from")
+                        text(
+                            "SELECT shared_from, COUNT(*) FROM post "
+                            "WHERE shared_from IS NOT NULL "
+                            "AND CAST(shared_from AS TEXT) != '-1' "
+                            "GROUP BY shared_from"
+                        )
                     ).fetchall()
                     share_counts = {str(r[0]): int(r[1]) for r in sc_rows}
                 except Exception as exc:
@@ -533,7 +558,7 @@ def _filter_bubble_score(uid, exp_engine, settings):
 
     for post_id_str, topic_ids in post_topics_map.items():
         meta = post_meta.get(post_id_str, {})
-        author_id     = meta.get("author_id", "")
+        author_id = meta.get("author_id", "")
         post_round_val = meta.get("round_val", 0)
         thematic = 0.0
 
@@ -545,10 +570,7 @@ def _filter_bubble_score(uid, exp_engine, settings):
 
             # Priority 1: opinion explicitly recorded at post write time
             p_op = (
-                opinions_at_post
-                .get(author_id, {})
-                .get(post_id_str, {})
-                .get(topic_id)
+                opinions_at_post.get(author_id, {}).get(post_id_str, {}).get(topic_id)
             )
             # Priority 2: most recent opinion before (or at) post publication round
             if p_op is None:
@@ -583,12 +605,14 @@ def _filter_bubble_score(uid, exp_engine, settings):
             engagement = 1.0
 
         final_score = thematic * recency * engagement
-        scored.append({
-            "post_id": native_post_ids[post_id_str],
-            "score": final_score,
-            "round_val": meta.get("round_val", 0),
-            "engagement": eng if gamma > 0 else meta.get("reaction_count", 0),
-        })
+        scored.append(
+            {
+                "post_id": native_post_ids[post_id_str],
+                "score": final_score,
+                "round_val": meta.get("round_val", 0),
+                "engagement": eng if gamma > 0 else meta.get("reaction_count", 0),
+            }
+        )
 
     sort_mode = str(settings.get("filter_bubble_sort", "score") or "score").lower()
     if sort_mode == "recency":
@@ -602,7 +626,9 @@ def _filter_bubble_score(uid, exp_engine, settings):
     return {item["post_id"]: item["score"] for item in sorted(scored, key=key)}
 
 
-def _update_filter_bubble_interests(user_id, post_id, interaction_type, exp_engine, lr=0.05):
+def _update_filter_bubble_interests(
+    user_id, post_id, interaction_type, exp_engine, lr=0.05
+):
     """
     Update user_topic_interest in the experiment DB after a user interaction.
 
@@ -611,8 +637,14 @@ def _update_filter_bubble_interests(user_id, post_id, interaction_type, exp_engi
     """
     from sqlalchemy import text as _text
 
-    DELTA = {"like": 1.0, "heart": 1.0, "share": 1.0,
-             "comment": 0.8, "dislike": 0.0, "angry": 0.0}
+    DELTA = {
+        "like": 1.0,
+        "heart": 1.0,
+        "share": 1.0,
+        "comment": 0.8,
+        "dislike": 0.0,
+        "angry": 0.0,
+    }
     delta = DELTA.get(str(interaction_type).lower(), 0.5)
     uid_str = str(user_id)
 
@@ -627,35 +659,50 @@ def _update_filter_bubble_interests(user_id, post_id, interaction_type, exp_engi
             for (topic_id,) in topic_rows:
                 tid_str = str(topic_id)
                 existing = conn.execute(
-                    _text("SELECT interest_level FROM user_topic_interest "
-                          "WHERE user_id = :uid AND topic_id = :tid"),
+                    _text(
+                        "SELECT interest_level FROM user_topic_interest "
+                        "WHERE user_id = :uid AND topic_id = :tid"
+                    ),
                     {"uid": uid_str, "tid": tid_str},
                 ).fetchone()
                 if existing:
                     new_level = round(
-                        max(0.0, min(1.0, (1.0 - lr) * float(existing[0]) + lr * delta)), 4
+                        max(
+                            0.0, min(1.0, (1.0 - lr) * float(existing[0]) + lr * delta)
+                        ),
+                        4,
                     )
                     conn.execute(
-                        _text("UPDATE user_topic_interest "
-                              "SET interest_level = :lvl "
-                              "WHERE user_id = :uid AND topic_id = :tid"),
+                        _text(
+                            "UPDATE user_topic_interest "
+                            "SET interest_level = :lvl "
+                            "WHERE user_id = :uid AND topic_id = :tid"
+                        ),
                         {"lvl": new_level, "uid": uid_str, "tid": tid_str},
                     )
                 else:
                     conn.execute(
-                        _text("INSERT INTO user_topic_interest "
-                              "(user_id, topic_id, interest_level) "
-                              "VALUES (:uid, :tid, :lvl)"),
-                        {"uid": uid_str, "tid": tid_str,
-                         "lvl": round(lr * delta, 4)},
+                        _text(
+                            "INSERT INTO user_topic_interest "
+                            "(user_id, topic_id, interest_level) "
+                            "VALUES (:uid, :tid, :lvl)"
+                        ),
+                        {"uid": uid_str, "tid": tid_str, "lvl": round(lr * delta, 4)},
                     )
             conn.commit()
     except Exception:
         pass
 
 
-def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6,
-                        exp_engine=None, fb_settings=None):
+def get_suggested_posts(
+    uid,
+    mode,
+    page=1,
+    per_page=10,
+    follower_ratio=0.6,
+    exp_engine=None,
+    fb_settings=None,
+):
     """
     Get recommended posts for a user based on specified algorithm.
 
@@ -677,7 +724,9 @@ def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6,
 
     raw_mode = mode
     mode = _normalize_content_recsys_mode(mode)
-    print(f"[RECSYS DEBUG] get_suggested_posts called: uid={uid!r} raw_mode={raw_mode!r} -> mode={mode!r} page={page} exp_engine={exp_engine is not None}")
+    print(
+        f"[RECSYS DEBUG] get_suggested_posts called: uid={uid!r} raw_mode={raw_mode!r} -> mode={mode!r} page={page} exp_engine={exp_engine is not None}"
+    )
 
     if uid == "all":
         posts_query = db.session.query(Post).filter(_root_post_filter())
@@ -999,22 +1048,24 @@ def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6,
         additional_posts = None
 
     elif mode == "FilterBubble":
-        print(f"[RECSYS DEBUG] FilterBubble branch: uid={uid!r} exp_engine={exp_engine is not None} fb_settings_keys={list((fb_settings or {}).keys())}")
+        print(
+            f"[RECSYS DEBUG] FilterBubble branch: uid={uid!r} exp_engine={exp_engine is not None} fb_settings_keys={list((fb_settings or {}).keys())}"
+        )
         try:
             if exp_engine is None:
                 raise PersonalizedFeedRankingError(
                     "No experiment engine is available for Personalized Feed"
                 )
-            bubble_scores = _filter_bubble_score(
-                uid, exp_engine, fb_settings or {}
-            )
+            bubble_scores = _filter_bubble_score(uid, exp_engine, fb_settings or {})
         except PersonalizedFeedRankingError:
             logger.exception(
                 "Personalized Feed ranking failed for user %s; using reverse chronology",
                 uid,
             )
             bubble_scores = {}
-        print(f"[RECSYS DEBUG] FilterBubble: bubble_scores count={len(bubble_scores)} ({'FALLBACK chrono' if not bubble_scores else 'personalized'})")
+        print(
+            f"[RECSYS DEBUG] FilterBubble: bubble_scores count={len(bubble_scores)} ({'FALLBACK chrono' if not bubble_scores else 'personalized'})"
+        )
         if not bubble_scores:
             # Availability fallback for either an observable ranking error or a
             # genuine cold start. _filter_bubble_score only returns {} for the
@@ -1030,23 +1081,23 @@ def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6,
             # includes deterministic simulation-time tie breaking.
             ranked_ids = list(bubble_scores)
             unscored_ids = [
-                r[0] for r in
-                _order_query_by_simulation_time(
+                r[0]
+                for r in _order_query_by_simulation_time(
                     db.session.query(Post.id).filter(
                         Post.user_id != uid,
                         _root_post_filter(),
                         Post.id.notin_(ranked_ids),
                     )
-                )
-                .all()
+                ).all()
             ]
             full_ranking = ranked_ids + unscored_ids
             start = (page - 1) * per_page
-            page_ids = full_ranking[start: start + per_page]
+            page_ids = full_ranking[start : start + per_page]
             pos_map = {pid: i for i, pid in enumerate(page_ids)}
             fetched = (
                 db.session.query(Post).filter(Post.id.in_(page_ids)).all()
-                if page_ids else []
+                if page_ids
+                else []
             )
             fetched.sort(key=lambda p: pos_map.get(p.id, 9999))
             total = len(full_ranking)

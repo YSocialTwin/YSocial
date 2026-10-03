@@ -12,6 +12,7 @@ A "frontend plugin suite" is any repo registered in
 whose ``meta/registry.json`` declares a top-level ``"frontend_plugins"``
 list. Frontend Adds-on is the first (and, today, only) such suite.
 """
+
 from __future__ import annotations
 
 import json
@@ -164,7 +165,11 @@ def validate_frontend_suite(repo_key: str) -> dict:
         return report
     report["suite"] = suite_meta
 
-    if not _version_in_range(app_version, suite_meta.get("min_app_version"), suite_meta.get("max_app_version")):
+    if not _version_in_range(
+        app_version,
+        suite_meta.get("min_app_version"),
+        suite_meta.get("max_app_version"),
+    ):
         report["errors"].append(
             f"suite requires app version between {suite_meta.get('min_app_version')} "
             f"and {suite_meta.get('max_app_version') or '∞'}, current app version is {app_version}"
@@ -195,7 +200,9 @@ def validate_frontend_suite(repo_key: str) -> dict:
         elif module_id:
             seen_ids.add(module_id)
 
-        if not _version_in_range(app_version, entry.get("min_app_version"), entry.get("max_app_version")):
+        if not _version_in_range(
+            app_version, entry.get("min_app_version"), entry.get("max_app_version")
+        ):
             errors.append(
                 f"module requires app version between {entry.get('min_app_version')} "
                 f"and {entry.get('max_app_version') or '∞'}, current app version is {app_version}"
@@ -219,19 +226,28 @@ def validate_frontend_suite(repo_key: str) -> dict:
                 dotted, _, _attr = str(backend_blueprint).partition(":")
                 backend_path = spec.path / Path(*dotted.split("."))
                 # accept either a package (dir + __init__.py) or a bare module file
-                if not (backend_path.with_suffix(".py").exists() or (backend_path / "__init__.py").exists()):
-                    errors.append(f"backend_blueprint module not found on disk: {dotted}")
+                if not (
+                    backend_path.with_suffix(".py").exists()
+                    or (backend_path / "__init__.py").exists()
+                ):
+                    errors.append(
+                        f"backend_blueprint module not found on disk: {dotted}"
+                    )
 
         for param in entry.get("parameters", []) or []:
             if not isinstance(param, dict) or not str(param.get("name") or "").strip():
                 errors.append("a parameter entry is missing its 'name'")
                 continue
             if param.get("type") == "enum" and not param.get("options"):
-                errors.append(f"parameter '{param.get('name')}': type 'enum' requires 'options'")
+                errors.append(
+                    f"parameter '{param.get('name')}': type 'enum' requires 'options'"
+                )
 
         module_report["valid"] = not errors
         module_report["errors"] = errors
         report["modules"].append(module_report)
 
-    report["valid"] = not report["errors"] and all(m.get("valid") for m in report["modules"])
+    report["valid"] = not report["errors"] and all(
+        m.get("valid") for m in report["modules"]
+    )
     return report

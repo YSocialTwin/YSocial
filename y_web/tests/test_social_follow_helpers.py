@@ -9,8 +9,6 @@ from y_web.tests._sa2_stubs import _FakeSelect, _ScalarsResult, _SelectRoutingSe
 pytestmark = pytest.mark.unit
 
 
-
-
 def test_reduce_latest_follow_map_preserves_uuid_keys():
     events = [
         SimpleNamespace(

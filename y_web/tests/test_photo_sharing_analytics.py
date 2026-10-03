@@ -366,7 +366,6 @@ def test_analytics_db_resolver_keeps_legacy_platforms_on_standard_path(
     assert _resolve_analytics_db_path(experiment) == "/resolved/legacy.db"
 
 
-
 def test_content_schema_treats_unrelated_photos_table_as_post_based(tmp_path):
     """A microblogging/HPC experiment can carry its own "photos" table for
     something unrelated to the YPhotoSharing plugin (e.g. embedded image

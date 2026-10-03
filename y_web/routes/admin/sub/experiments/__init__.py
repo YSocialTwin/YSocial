@@ -1,11 +1,11 @@
 """Experiment admin routes sub-package."""
 
 from . import (
-    _frontend_settings,
     _crud,
     _data,
     _external_runtimes,
     _feeds,
+    _frontend_settings,
     _hpc,
     _notifications,
     _opinion,

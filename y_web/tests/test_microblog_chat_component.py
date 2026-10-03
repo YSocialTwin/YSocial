@@ -7,11 +7,10 @@ from types import SimpleNamespace
 
 import pytest
 from sqlalchemy import select
+
 from y_web.tests._sa2_stubs import _FakeSelect, _ScalarsResult, _SelectRoutingSession
 
 pytestmark = pytest.mark.unit
-
-
 
 
 def test_microblog_chat_blueprint_prefix():

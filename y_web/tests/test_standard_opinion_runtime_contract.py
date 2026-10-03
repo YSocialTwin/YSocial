@@ -57,9 +57,7 @@ def test_fake_agent_keeps_opinion_write_hooks():
 
 
 def test_generate_user_uses_fake_agent_for_non_llm_configs():
-    source = Path(
-        str(_REPO_ROOT / "external/YClient/y_client/utils.py")
-    ).read_text()
+    source = Path(str(_REPO_ROOT / "external/YClient/y_client/utils.py")).read_text()
     assert "def _rule_based_agents_enabled(config):" in source
     assert "len(llm_agents) == 1" in source
     assert "llm_agents[0] is None" in source

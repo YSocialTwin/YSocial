@@ -8,9 +8,7 @@ pytestmark = pytest.mark.unit
 
 
 def test_get_topics_falls_back_to_post_topics_when_sentiment_rows_are_absent():
-    source = Path(
-        str(_REPO_ROOT / "y_web/src/data_access/posts.py")
-    ).read_text()
+    source = Path(str(_REPO_ROOT / "y_web/src/data_access/posts.py")).read_text()
 
     assert "if not cleaned:" in source
     assert "Post_topics.query.filter_by(post_id=post_id)" in source

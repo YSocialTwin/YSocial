@@ -13,14 +13,13 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
+
 from y_web.tests._sa2_stubs import _FakeSelect, _ScalarsResult, _SelectRoutingSession
 
 pytestmark = pytest.mark.unit
 
 
 # We'll use the conftest fixtures
-
-
 
 
 def test_copy_experiment_validation():

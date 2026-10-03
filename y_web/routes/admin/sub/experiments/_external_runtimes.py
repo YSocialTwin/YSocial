@@ -164,7 +164,9 @@ def _visible_runtime_groups(
                     repo["plugin_repository_url"] = repo["repo_url"]
                 if repo.get("group") == "frontend_plugins" and repo.get("installed"):
                     try:
-                        repo["frontend_modules_report"] = validate_frontend_suite(repo["key"])
+                        repo["frontend_modules_report"] = validate_frontend_suite(
+                            repo["key"]
+                        )
                     except Exception:
                         repo["frontend_modules_report"] = None
                 repos.append(repo)

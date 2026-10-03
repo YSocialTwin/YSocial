@@ -11,6 +11,7 @@ Revision ID: 0005_rename_educatyon_to_frontend_adds_on
 Revises: 0004_add_educatyon_exp_module_settings
 Create Date: 2026-09-20
 """
+
 from __future__ import annotations
 
 from typing import Sequence, Union

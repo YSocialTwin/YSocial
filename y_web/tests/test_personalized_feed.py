@@ -17,7 +17,6 @@ from y_web.src.recsys.content_recsys import (
     get_suggested_posts,
 )
 
-
 pytestmark = pytest.mark.integration
 
 CLIMATE_TOPIC = "d0f183ca-7a16-46fc-9493-553fa45a25ba"
@@ -30,8 +29,7 @@ EXPECTED_CLIMATE_POSTS = [
 
 def _create_uuid_fixture(path: Path) -> None:
     connection = sqlite3.connect(path)
-    connection.executescript(
-        """
+    connection.executescript("""
         CREATE TABLE user_topic_interest (
             id TEXT PRIMARY KEY,
             user_id TEXT NOT NULL,
@@ -78,16 +76,14 @@ def _create_uuid_fixture(path: Path) -> None:
         INSERT INTO post_topics VALUES
             ('pt-close', 'post-close-uuid', 'topic-uuid'),
             ('pt-far', 'post-far-uuid', 'topic-uuid');
-        """
-    )
+        """)
     connection.commit()
     connection.close()
 
 
 def _create_integer_fixture(path: Path) -> None:
     connection = sqlite3.connect(path)
-    connection.executescript(
-        """
+    connection.executescript("""
         CREATE TABLE user_topic_interest (
             id INTEGER PRIMARY KEY,
             user_id INTEGER NOT NULL,
@@ -127,8 +123,7 @@ def _create_integer_fixture(path: Path) -> None:
             (200, 20, 10, -1, -1, 0),
             (300, 30, 10, -1, -1, 0);
         INSERT INTO post_topics VALUES (1, 200, 100), (2, 300, 100);
-        """
-    )
+        """)
     connection.commit()
     connection.close()
 
@@ -313,16 +308,12 @@ def test_linked_experiment_declared_topics_drive_profile_recommenders(tmp_path):
 
     with app.app_context():
         for mode in ("CommonInterests", "ContentBasedFeatures"):
-            posts, additional = get_suggested_posts(
-                "8", mode, page=1, per_page=3
-            )
+            posts, additional = get_suggested_posts("8", mode, page=1, per_page=3)
             assert additional is None
             assert [str(post.id) for post in posts.items] == EXPECTED_CLIMATE_POSTS
 
         for mode in ("ContentBasedVector", "HybridLinearRanker"):
-            posts, additional = get_suggested_posts(
-                "8", mode, page=1, per_page=3
-            )
+            posts, additional = get_suggested_posts("8", mode, page=1, per_page=3)
             assert additional is None
             assert posts.items
             with db.engines["db_exp"].connect() as connection:
@@ -332,7 +323,9 @@ def test_linked_experiment_declared_topics_drive_profile_recommenders(tmp_path):
                     for topic_id in connection.execute(
                         text("SELECT topic_id FROM post_topics WHERE post_id = :pid"),
                         {"pid": post.id},
-                    ).scalars().all()
+                    )
+                    .scalars()
+                    .all()
                 ]
             assert topic_values
             assert set(topic_values) == {CLIMATE_TOPIC}

@@ -38,6 +38,7 @@ try:
 except (RuntimeError, KeyError):
     # Outside Flask application context — used when running alembic directly.
     from y_web import db as _db  # noqa: E402  (import here to avoid circular at top)
+
     target_metadata = _db.metadata
 
 
@@ -47,6 +48,7 @@ def _get_url() -> str:
         return current_app.config.get("SQLALCHEMY_DATABASE_URI", "")
     except RuntimeError:
         import os
+
         return os.environ.get("DATABASE_URL", "sqlite:///y_web/db/dashboard.db")
 
 

@@ -31,6 +31,7 @@ verification of the JS logic itself was done separately via a jsdom
 harness (no permanent JS test infra exists in this repo, per prior
 Frontend Adds-on commits' own stated rationale).
 """
+
 from pathlib import Path
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -129,6 +130,5 @@ def test_find_anchors_labels_comments_by_their_own_id_not_the_threadroots():
     # The old unconditional "any `.media.is-comment` with a `.card.is-post`
     # ancestor is a post" branch must be gone.
     assert (
-        "anchors.push({ el: content, targetType: 'post', targetId: pid })"
-        not in source
+        "anchors.push({ el: content, targetType: 'post', targetId: pid })" not in source
     )

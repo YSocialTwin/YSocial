@@ -182,9 +182,7 @@ def test_forum_chat_js_escapes_rendered_content():
 
 
 def test_profile_route_uses_latest_follow_event_for_forum_state():
-    source = Path(
-        str(_REPO_ROOT / "y_web/routes/social/common.py")
-    ).read_text()
+    source = Path(str(_REPO_ROOT / "y_web/routes/social/common.py")).read_text()
 
     assert "def _latest_follow_action" in source
     assert "Follow.user_id == follower_id, Follow.follower_id == user_id" in source
@@ -192,12 +190,8 @@ def test_profile_route_uses_latest_follow_event_for_forum_state():
 
 
 def test_forum_profile_posts_include_community_metadata_and_feed_type():
-    posts_source = Path(
-        str(_REPO_ROOT / "y_web/src/data_access/posts.py")
-    ).read_text()
-    common_source = Path(
-        str(_REPO_ROOT / "y_web/routes/social/common.py")
-    ).read_text()
+    posts_source = Path(str(_REPO_ROOT / "y_web/src/data_access/posts.py")).read_text()
+    common_source = Path(str(_REPO_ROOT / "y_web/routes/social/common.py")).read_text()
 
     assert '"primary_community": primary_community' in posts_source
     assert '"display_time": display_time if is_forum else None' in posts_source

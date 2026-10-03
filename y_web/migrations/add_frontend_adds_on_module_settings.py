@@ -53,7 +53,9 @@ def migrate_sqlite(db_path):
                 "ALTER TABLE educatyon_exp_module_settings RENAME TO frontend_adds_on_exp_module_settings"
             )
             conn.commit()
-            print("✓ Renamed educatyon_exp_module_settings to frontend_adds_on_exp_module_settings (data preserved)")
+            print(
+                "✓ Renamed educatyon_exp_module_settings to frontend_adds_on_exp_module_settings (data preserved)"
+            )
             table_exists = True
 
         if not table_exists:
@@ -67,9 +69,13 @@ def migrate_sqlite(db_path):
                     PRIMARY KEY (exp_id, module_id)
                 )
             """)
-            print("✓ Created frontend_adds_on_exp_module_settings table in SQLite database")
+            print(
+                "✓ Created frontend_adds_on_exp_module_settings table in SQLite database"
+            )
         else:
-            print("○ frontend_adds_on_exp_module_settings table already exists in SQLite database")
+            print(
+                "○ frontend_adds_on_exp_module_settings table already exists in SQLite database"
+            )
 
         conn.commit()
         conn.close()
@@ -112,7 +118,9 @@ def migrate_postgresql(host, port, database, user, password):
                 "ALTER TABLE educatyon_exp_module_settings RENAME TO frontend_adds_on_exp_module_settings"
             )
             conn.commit()
-            print("✓ Renamed educatyon_exp_module_settings to frontend_adds_on_exp_module_settings (data preserved)")
+            print(
+                "✓ Renamed educatyon_exp_module_settings to frontend_adds_on_exp_module_settings (data preserved)"
+            )
             table_exists = True
 
         if not table_exists:
@@ -126,9 +134,13 @@ def migrate_postgresql(host, port, database, user, password):
                     PRIMARY KEY (exp_id, module_id)
                 )
             """)
-            print("✓ Created frontend_adds_on_exp_module_settings table in PostgreSQL database")
+            print(
+                "✓ Created frontend_adds_on_exp_module_settings table in PostgreSQL database"
+            )
         else:
-            print("○ frontend_adds_on_exp_module_settings table already exists in PostgreSQL database")
+            print(
+                "○ frontend_adds_on_exp_module_settings table already exists in PostgreSQL database"
+            )
 
         conn.commit()
         conn.close()
