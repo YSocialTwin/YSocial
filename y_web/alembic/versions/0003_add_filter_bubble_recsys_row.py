@@ -4,12 +4,13 @@ Revision ID: 0003_add_filter_bubble_recsys_row
 Revises: 0002_add_frontend_settings_table
 Create Date: 2026-09-16
 """
+
 from __future__ import annotations
 
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "0003_add_filter_bubble_recsys_row"
@@ -17,10 +18,10 @@ down_revision: Union[str, None] = "0002_add_frontend_settings_table"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
-_NAME     = "FilterBubble"
-_VALUE    = "Personalized Feed"
+_NAME = "FilterBubble"
+_VALUE = "Personalized Feed"
 _CATEGORY = "Personalization"
-_ENABLED  = "HumanOnly"
+_ENABLED = "HumanOnly"
 
 
 def upgrade() -> None:
@@ -49,7 +50,12 @@ def upgrade() -> None:
                 "INSERT INTO content_recsys (name, value, category, enabled) "
                 "VALUES (:name, :value, :category, :enabled)"
             ),
-            {"name": _NAME, "value": _VALUE, "category": _CATEGORY, "enabled": _ENABLED},
+            {
+                "name": _NAME,
+                "value": _VALUE,
+                "category": _CATEGORY,
+                "enabled": _ENABLED,
+            },
         )
 
 
