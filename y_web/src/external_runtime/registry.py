@@ -464,10 +464,40 @@ def _visibility_overrides() -> dict[str, tuple[str, ...] | str]:
     return result
 
 
+def _development_mode_enabled() -> bool:
+    """Whether the running app was started with ``--development``
+    (``y_social.py``), i.e. ``app.config["DEVELOPMENT_MODE"]`` is truthy.
+
+    Reads the live Flask app config rather than an env var so the one
+    CLI flag at startup is the single source of truth (see
+    ``y_social.py::start_app``'s own docstring comment next to where it
+    sets this key). Defensive about app context: some callers of
+    ``runtime_visible_to_user`` (notably this module's own unit tests)
+    call it with no Flask app pushed at all, so this reads as ``False``
+    there instead of raising -- the same, pre-existing behaviour those
+    callers already expect.
+    """
+    try:
+        from flask import current_app, has_app_context
+
+        if not has_app_context():
+            return False
+        return bool(current_app.config.get("DEVELOPMENT_MODE", False))
+    except RuntimeError:
+        return False
+
+
 def runtime_visible_to_user(spec: ExternalRuntimeSpec, admin_user) -> bool:
     if admin_user is None:
         return False
     if not spec.is_private:
+        return True
+    if _development_mode_enabled():
+        # User-reported requirement: a "development" startup flag should
+        # unlock every plugin repository marked private in this registry
+        # for listing/installing/enabling -- when the flag is absent,
+        # behaviour below is completely unchanged (allow-list/admin-role
+        # gating as before).
         return True
 
     overrides = _visibility_overrides().get(spec.key)

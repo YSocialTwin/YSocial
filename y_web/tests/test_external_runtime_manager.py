@@ -812,6 +812,52 @@ def test_runtime_visibility_respects_private_allowlist(monkeypatch):
     assert registry.runtime_visible_to_user(spec, User("bob", "admin")) is False
 
 
+def test_runtime_visibility_development_mode_unlocks_private_repos(app):
+    """User-reported requirement: a "development" startup flag should
+    list (and so allow installing/enabling) plugin repositories marked
+    private, and hide them again -- same as before this flag existed --
+    when the flag is off. ``app.config["DEVELOPMENT_MODE"]`` is exactly
+    what ``y_social.py --development`` sets at startup (see
+    ``start_app``)."""
+    spec = registry.ExternalRuntimeSpec(
+        key="private_runtime",
+        group="hpc",
+        group_label="HPC",
+        category="agent_extensions",
+        category_label="Agent Extensions",
+        label="PrivateRuntime",
+        path=Path("/tmp/private-runtime"),
+        github_repo="YSocialTwin/PrivateRuntime",
+        repo_url="https://github.com/YSocialTwin/PrivateRuntime.git",
+        default_branch="main",
+        install_commands=(),
+        validate_entrypoints=(),
+        is_private=True,
+        # No allow-list and not an admin -- would be hidden under every
+        # other gate (allow-list, role), so this isolates the dev-mode
+        # short-circuit specifically.
+        visible_to_usernames=(),
+    )
+
+    class User:
+        def __init__(self, username, role):
+            self.username = username
+            self.role = role
+
+    outsider = User("nobody", "user")
+
+    with app.app_context():
+        app.config["DEVELOPMENT_MODE"] = False
+        assert registry.runtime_visible_to_user(spec, outsider) is False
+
+        app.config["DEVELOPMENT_MODE"] = True
+        assert registry.runtime_visible_to_user(spec, outsider) is True
+
+        # Flipping it back off restores the exact pre-existing behaviour.
+        app.config["DEVELOPMENT_MODE"] = False
+        assert registry.runtime_visible_to_user(spec, outsider) is False
+
+
 def test_grouped_runtime_specs_include_agent_plugins():
     grouped = registry.grouped_runtime_specs()
     group_keys = [group_key for group_key, _, _ in grouped]

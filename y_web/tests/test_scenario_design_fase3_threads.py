@@ -378,6 +378,41 @@ def test_vocab_and_roles_endpoints(sd_app, sd_client):
     assert any(r["key"] == "standard" for r in roles)
 
 
+def test_vocab_topics_and_emotions_read_the_real_experiment_tables(sd_app, sd_client):
+    """User-reported 2026-10-03: the generation panel's "Topic" field was
+    backed by a hardcoded 8-item list with no relationship to any given
+    simulation's actual topics ("Topic should be chosen among the ones
+    available in the simulation"); emotions needed the same per-experiment,
+    real-table treatment ("using tag system based on the values present in
+    the admin database relevant tables"). These two new, additive,
+    experiment-scoped endpoints read the real ``interests``/``emotions``
+    tables instead of any hardcoded vocabulary."""
+    client, _ = sd_client
+    exp_id = _make_exp(sd_app, "sd-fase3-exp-vocab")
+    # First request against this exp_id triggers register_experiment_database()
+    # -- same bootstrap authors/search already relies on.
+    client.get(f"/admin/scenario_design/api/experiments/{exp_id}/authors/search")
+
+    with sd_app.app_context():
+        from y_web.src.models import Emotions, Interests
+
+        db.session.add(Interests(interest="quantum computing"))
+        db.session.add(Emotions(emotion="curiosity", icon="🤔"))
+        db.session.commit()
+
+    topics_resp = client.get(
+        f"/admin/scenario_design/api/experiments/{exp_id}/vocab/topics"
+    )
+    assert topics_resp.status_code == 200
+    assert topics_resp.get_json()["topics"] == ["quantum computing"]
+
+    emotions_resp = client.get(
+        f"/admin/scenario_design/api/experiments/{exp_id}/vocab/emotions"
+    )
+    assert emotions_resp.status_code == 200
+    assert emotions_resp.get_json()["emotions"] == ["curiosity"]
+
+
 def test_author_search_filters_by_query(sd_app, sd_client):
     client, _ = sd_client
     exp_id = _make_exp(sd_app, "sd-fase3-exp-authors")

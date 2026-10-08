@@ -10,6 +10,7 @@ def start_app(
     llm_backend=None,
     notebook=False,
     desktop_mode=False,
+    development=False,
 ):
     import sys
 
@@ -109,6 +110,18 @@ def start_app(
         db.session.commit()
 
     app.config["ENABLE_NOTEBOOK"] = notebook
+    # Runtime-only flag (not part of the static config classes, same
+    # convention as DESKTOP_MODE/ENABLE_NOTEBOOK): when set, every plugin
+    # repository marked `is_private=True` in
+    # y_web/src/external_runtime/registry.py becomes listable/installable
+    # for every admin, bypassing the normal per-repo allow-list -- see
+    # registry.py::runtime_visible_to_user for the single gate this flag
+    # feeds. Off by default, so a production/packaged launch never
+    # exposes private plugin repositories unless `--development` is
+    # explicitly passed.
+    app.config["DEVELOPMENT_MODE"] = development
+    if development:
+        print("Development mode enabled: private plugin repositories are listable/installable.")
 
     if db_type.lower() == "sqlite":
         app.run(debug=debug, host=host, port=port, threaded=False)
@@ -145,6 +158,18 @@ if __name__ == "__main__":
         action="store_false",
         help="Enable Jupyter Notebook server launch for experiments",
     )
+    parser.add_argument(
+        "-e",
+        "--development",
+        default=False,
+        action="store_true",
+        help=(
+            "Development mode: list and allow installing/enabling plugin "
+            "repositories marked private in the plugin registry. Off by "
+            "default -- private plugins stay hidden and cannot be "
+            "installed/enabled unless this flag is passed."
+        ),
+    )
 
     args = parser.parse_args()
 
@@ -165,4 +190,5 @@ if __name__ == "__main__":
         port=args.port,
         llm_backend=args.llm_backend,
         notebook=args.no_notebook,
+        development=args.development,
     )
