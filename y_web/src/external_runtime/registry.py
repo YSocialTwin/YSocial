@@ -496,8 +496,9 @@ def runtime_visible_to_user(spec: ExternalRuntimeSpec, admin_user) -> bool:
         # User-reported requirement: a "development" startup flag should
         # unlock every plugin repository marked private in this registry
         # for listing/installing/enabling -- when the flag is absent,
-        # behaviour below is completely unchanged (allow-list/admin-role
-        # gating as before).
+        # behaviour below is completely unchanged (explicit allow-list
+        # gating only; plain admin role is no longer enough on its own,
+        # see the comment at this function's final `return False`).
         return True
 
     overrides = _visibility_overrides().get(spec.key)
@@ -509,7 +510,17 @@ def runtime_visible_to_user(spec: ExternalRuntimeSpec, admin_user) -> bool:
     if spec.visible_to_usernames:
         return admin_user.username in spec.visible_to_usernames
 
-    return getattr(admin_user, "role", None) == "admin"
+    # User-reported gap (2026-10-08): "when the new flag -e is not
+    # specified private plugins that are already installed are still
+    # visible". Root cause -- every repo actually marked private in this
+    # registry (photo_sharing, reactive_agents, frontend_adds_on,
+    # scenario_design) ships with an empty visible_to_usernames and no
+    # override, so every request here used to fall through to "any admin
+    # sees it", which defeated --development entirely for the normal
+    # case of an admin testing without the flag. A private repo with no
+    # explicit allow-list is now hidden unless --development is on;
+    # admin role alone is no longer a visibility bypass.
+    return False
 
 
 def runtime_installed_and_visible(repo_key: str, admin_user) -> bool:

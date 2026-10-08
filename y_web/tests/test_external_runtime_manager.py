@@ -1028,3 +1028,51 @@ def test_runtime_installed_and_visible_requires_both_installed_and_visible(
             )
             is False
         )
+
+
+def test_runtime_visibility_admin_role_alone_no_longer_bypasses_privacy(app):
+    """User-reported (screenshot, 2026-10-08): with no CLI flag passed,
+    logging in as a plain admin still showed every private plugin
+    (Reactive Agents, Frontend Adds-on, Scenario Design) on the catalog
+    page. Root cause: every repo actually marked ``is_private=True`` in
+    SUPPORTED_EXTERNAL_REPOS ships with an empty ``visible_to_usernames``
+    and no override configured, so requests always fell through to the
+    old "any admin role sees it" fallback -- which made --development's
+    gate a no-op for the ordinary case of an admin testing without the
+    flag. A private repo with no explicit allow-list must now stay
+    hidden from a plain admin unless --development is on."""
+    spec = registry.ExternalRuntimeSpec(
+        key="private_runtime_admin_check",
+        group="hpc",
+        group_label="HPC",
+        category="agent_extensions",
+        category_label="Agent Extensions",
+        label="PrivateRuntime",
+        path=Path("/tmp/private-runtime-admin-check"),
+        github_repo="YSocialTwin/PrivateRuntime",
+        repo_url="https://github.com/YSocialTwin/PrivateRuntime.git",
+        default_branch="main",
+        install_commands=(),
+        validate_entrypoints=(),
+        is_private=True,
+        # No allow-list -- exactly how photo_sharing, reactive_agents,
+        # frontend_adds_on and scenario_design are actually configured.
+        visible_to_usernames=(),
+    )
+
+    class User:
+        def __init__(self, username, role):
+            self.username = username
+            self.role = role
+
+    admin = User("giulio", "admin")
+
+    with app.app_context():
+        app.config["DEVELOPMENT_MODE"] = False
+        assert registry.runtime_visible_to_user(spec, admin) is False
+
+        app.config["DEVELOPMENT_MODE"] = True
+        assert registry.runtime_visible_to_user(spec, admin) is True
+
+        app.config["DEVELOPMENT_MODE"] = False
+        assert registry.runtime_visible_to_user(spec, admin) is False

@@ -111,6 +111,18 @@ def suites_app(app):
     templates_dir = _os.path.join(_os.path.dirname(_y_web_pkg.__file__), "templates")
     app.jinja_loader = FileSystemLoader(templates_dir)
 
+    # Both registered suites here (frontend_adds_on, reactive_agents) are
+    # marked is_private=True in SUPPORTED_EXTERNAL_REPOS with no explicit
+    # visible_to_usernames allow-list, so since the admin-role-alone
+    # visibility bypass was removed (user-reported 2026-10-08: "when the
+    # new flag -e is not specified private plugins that are already
+    # installed are still visible"), these routes now require
+    # --development's equivalent, app.config["DEVELOPMENT_MODE"], to be
+    # on for this suite to be served at all -- exactly like production.
+    # test_suite_routes_hidden_without_development_mode below covers the
+    # opposite, un-flagged case this fixture intentionally skips past.
+    app.config["DEVELOPMENT_MODE"] = True
+
     return app
 
 
@@ -242,3 +254,40 @@ def test_frontend_settings_page_renders_a_box_per_registered_suite(suites_app):
     assert 'id="box-suite-frontend_adds_on"' in html
     assert "data-suite-get-url-template=" in html
     assert "data-suite-save-url-template=" in html
+
+
+def test_suite_routes_hidden_without_development_mode(suites_app):
+    """User-reported (2026-10-08): without --development, an installed
+    private suite must stay hidden from this panel even for a logged-in
+    admin -- not just un-offered in the listing, but a hard 404 from the
+    GET/POST suite endpoints themselves (defense in depth)."""
+    suites_app.config["DEVELOPMENT_MODE"] = False
+
+    client = suites_app.test_client()
+    exp_id = _make_exp(suites_app)
+    admin_login_id = _make_admin_login_user(suites_app)
+    _login(client, admin_login_id)
+
+    get_resp = client.get(
+        f"/admin/frontend_settings/suite/reactive_agents/get?exp_id={exp_id}"
+    )
+    assert get_resp.status_code == 404
+    assert get_resp.get_json()["ok"] is False
+
+    save_resp = client.post(
+        "/admin/frontend_settings/suite/reactive_agents/save",
+        json={
+            "exp_id": exp_id,
+            "module_id": "responsive_agents",
+            "enabled": True,
+            "config": {},
+        },
+    )
+    assert save_resp.status_code == 404
+    assert save_resp.get_json()["ok"] is False
+
+    page_resp = client.get("/admin/frontend_settings")
+    assert page_resp.status_code == 200
+    html = page_resp.get_data(as_text=True)
+    assert 'id="box-suite-reactive_agents"' not in html
+    assert 'id="box-suite-frontend_adds_on"' not in html
