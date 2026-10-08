@@ -13550,6 +13550,114 @@ body.is-white {
     border-radius: 50%
 }
 
+/* Two-level sidebar groups (Experiments / Extensions / Administration):
+ * on desktop the sidebar stays an 80px icon dock, so a group's children
+ * open as a flyout card anchored to the right of its toggle icon, rather
+ * than an in-place accordion (which needs horizontal room this column
+ * doesn't have). The accordion variant lives in admin-responsive.css,
+ * under the existing max-width:768px breakpoint, where the sidebar is
+ * already a full-width list. */
+.dashboard-aside .dashboard-aside-group {
+    position: relative;
+}
+
+.dashboard-aside .dashboard-aside-group-toggle {
+    width: 100%;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font: inherit;
+    transition: color .15s ease;
+}
+
+.dashboard-aside .dashboard-aside-group-toggle[aria-expanded="true"],
+.dashboard-aside .dashboard-aside-group-toggle[aria-expanded="true"] span {
+    color: #3d70b2;
+}
+
+/* The chevron is only meaningful once there's room to lay it out next to
+ * a left-aligned label (mobile's full-width row) -- the 80px desktop dock
+ * stays caret-free and relies on the flyout itself as the affordance. */
+.dashboard-aside .dashboard-aside-group-chevron {
+    display: none;
+}
+
+/* Kept mounted (not display:none) so opacity/transform can transition;
+ * visibility + pointer-events keep it inert and untabbable while closed. */
+.dashboard-aside .dashboard-aside-submenu {
+    position: absolute;
+    left: 100%;
+    top: 0;
+    margin-left: 6px;
+    min-width: 212px;
+    background: #fff;
+    border: 1px solid #e9eaf0;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(22, 29, 45, .12);
+    padding: 6px;
+    z-index: 20;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateX(-4px);
+    transition: opacity .15s ease, transform .15s ease, visibility 0s linear .15s;
+}
+
+.dashboard-aside .dashboard-aside-group.is-open .dashboard-aside-submenu {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateX(0);
+    transition-delay: 0s;
+}
+
+.dashboard-aside .dashboard-aside-submenu-title {
+    padding: 8px 12px 6px;
+    font-family: "Roboto", sans-serif;
+    font-size: .68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: #9aa0b4;
+    text-align: left;
+}
+
+.dashboard-aside .dashboard-aside-sublink {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    height: auto;
+    width: 100%;
+    padding: 9px 10px;
+    border-radius: 6px;
+    text-align: left;
+    color: #5c6170;
+    border-left: 3px solid transparent;
+    transition: background-color .12s ease, color .12s ease, border-color .12s ease;
+}
+
+.dashboard-aside .dashboard-aside-sublink svg {
+    height: 16px;
+    width: 16px;
+    flex-shrink: 0
+}
+
+.dashboard-aside .dashboard-aside-sublink span {
+    display: inline;
+    font-size: .8rem;
+    font-weight: 500;
+    text-transform: none;
+    white-space: nowrap
+}
+
+.dashboard-aside .dashboard-aside-sublink:hover,
+.dashboard-aside .dashboard-aside-sublink.is-active {
+    background: #f1f6fd;
+    color: #3d70b2;
+    border-left-color: #3d70b2
+}
+
 @media only screen and (max-width: 767px) {
     .dashboard-aside {
         flex-direction:row;
@@ -43673,6 +43781,27 @@ body.is-dark .sidebar-v1 .bottom-section ul li a:not(.is-active) span {
 
 .is-dark .dashboard-aside .dashboard-aside-link.is-active {
     color: #3d70b2
+}
+
+.is-dark .dashboard-aside .dashboard-aside-submenu {
+    background: #1b212d;
+    border-color: #2a3240;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .35)
+}
+
+.is-dark .dashboard-aside .dashboard-aside-submenu-title {
+    color: #6b7284
+}
+
+.is-dark .dashboard-aside .dashboard-aside-sublink {
+    color: #a2a5b9
+}
+
+.is-dark .dashboard-aside .dashboard-aside-sublink:hover,
+.is-dark .dashboard-aside .dashboard-aside-sublink.is-active {
+    background: #232b3a;
+    color: #5b9bf0;
+    border-left-color: #5b9bf0
 }
 
 /*! _toolbar-dark.scss | Friendkit | © Css Ninja. 2020-2021 */

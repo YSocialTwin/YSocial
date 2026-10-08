@@ -370,9 +370,76 @@ def backend_suite_availability() -> dict[str, bool]:
     return availability
 
 
+def backend_suite_sidebar_entries() -> list[dict]:
+    """Generic list of sidebar entries contributed by installed+valid backend
+    settings suites that declare one.
+
+    This is the generalization of the original Scenario-Design-only sidebar
+    link: a suite opts in by adding an optional ``"sidebar"`` object to its
+    ``meta/registry.json`` top-level ``"suite"`` block, e.g.::
+
+        "suite": {
+            "suite_id": "...",
+            ...
+            "sidebar": {
+                "label": "Scenario Design",
+                "icon": "edit-3",
+                "endpoint": "scenario_design.app_shell"
+            }
+        }
+
+    Any future backend suite gets an "Extensions" sidebar entry for free by
+    declaring this block -- no changes needed to head.html or this module.
+    Suites that omit ``"sidebar"`` (or whose manifest doesn't validate)
+    simply contribute no entry, exactly like before this generalization.
+
+    Resolution is defensive in exactly the same way the original
+    Scenario-Design-specific code was: a suite can pass manifest validation
+    yet still fail blueprint registration at startup (e.g. an import error
+    inside the module), so url_for() on a never-registered endpoint must
+    degrade to omitting that one entry rather than raising and breaking
+    every page's render.
+    """
+    from flask import url_for
+    from werkzeug.routing import BuildError
+
+    entries: list[dict] = []
+    for repo_key in backend_plugin_repo_keys():
+        try:
+            report = validate_backend_suite(repo_key)
+        except Exception:
+            continue
+        if not report.get("valid"):
+            continue
+        sidebar = (report.get("suite") or {}).get("sidebar")
+        if not isinstance(sidebar, dict):
+            continue
+        endpoint = sidebar.get("endpoint")
+        if not endpoint:
+            continue
+        try:
+            url = url_for(endpoint)
+        except BuildError:
+            continue
+        entries.append(
+            {
+                "repo_key": repo_key,
+                "label": sidebar.get("label") or repo_key,
+                "icon": sidebar.get("icon") or "box",
+                "url": url,
+            }
+        )
+    return entries
+
+
 def inject_backend_plugin_visibility() -> dict:
     """Context-processor body: inject installed+valid status of backend
-    settings suites, plus the resolved Scenario Design sidebar URL.
+    settings suites, the generic list of suite-contributed sidebar entries
+    (see :func:`backend_suite_sidebar_entries`), and -- for backward
+    compatibility with code/tests written against the original
+    Scenario-Design-only mechanism -- the resolved Scenario Design sidebar
+    URL on its own, derived from that same generic list rather than
+    computed separately.
 
     Generic, reusable by any backend settings suite (not Scenario
     Design-specific): a template conditions a sidebar entry on
@@ -391,25 +458,20 @@ def inject_backend_plugin_visibility() -> dict:
     function's body would otherwise have pushed over its threshold).
     """
     try:
-        from flask import url_for
-        from werkzeug.routing import BuildError
-
         availability = backend_suite_availability()
-        # Resolve the sidebar URL defensively: a suite can pass manifest
-        # validation yet still fail blueprint registration at startup
-        # (e.g. an import error inside the module) — url_for() on an
-        # endpoint that was never actually registered would otherwise
-        # raise BuildError and break rendering for every page, not just
-        # the sidebar. Hiding the link (None) is the safe degradation.
-        scenario_design_url = None
-        if availability.get("scenario_design"):
-            try:
-                scenario_design_url = url_for("scenario_design.app_shell")
-            except BuildError:
-                scenario_design_url = None
+        entries = backend_suite_sidebar_entries()
+        scenario_design_url = next(
+            (e["url"] for e in entries if e["repo_key"] == "scenario_design"),
+            None,
+        )
         return dict(
             backend_suites_available=availability,
             scenario_design_sidebar_url=scenario_design_url,
+            extension_sidebar_entries=entries,
         )
     except Exception:
-        return dict(backend_suites_available={}, scenario_design_sidebar_url=None)
+        return dict(
+            backend_suites_available={},
+            scenario_design_sidebar_url=None,
+            extension_sidebar_entries=[],
+        )

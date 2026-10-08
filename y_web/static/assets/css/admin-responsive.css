@@ -191,6 +191,72 @@
     .dashboard-container {
         padding-left: 0 !important;
     }
+
+    /* Two-level sidebar groups: on mobile the sidebar is already a
+     * full-width list, so a group's children expand in-place as an
+     * accordion instead of the desktop flyout (see core.css). The
+     * chevron is a real <i data-feather> element (third child of the
+     * icon+label row, after the label) rather than a ::after pseudo --
+     * that row is a flex container here, so `margin-left: auto` pushes
+     * it to the far right for free, with no absolute positioning to
+     * fight with core.css's desktop flyout rules for the same class. */
+    .dashboard-aside-group {
+        width: 100%;
+    }
+
+    .dashboard-aside-submenu-title {
+        display: none; /* redundant: the toggle row above already shows the label while expanded */
+    }
+
+    .dashboard-aside-group-chevron {
+        display: inline-flex !important;
+        margin-left: auto;
+        width: 16px !important;
+        height: 16px !important;
+        color: #999;
+        flex-shrink: 0;
+        transition: transform 0.2s ease;
+    }
+
+    .dashboard-aside-group-toggle[aria-expanded="true"] .dashboard-aside-group-chevron {
+        transform: rotate(90deg);
+        color: #039be5;
+    }
+
+    .dashboard-aside-submenu {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        max-height: 0;
+        overflow: hidden;
+        background: #fafafa;
+        transition: max-height 0.25s ease;
+    }
+
+    .dashboard-aside-group.is-open .dashboard-aside-submenu {
+        max-height: 360px;
+    }
+
+    .dashboard-aside-sublink {
+        padding-left: 52px !important;
+        border-radius: 0 !important;
+    }
+
+    .dashboard-aside-sublink:hover {
+        background: #f0f0f0;
+    }
+
+    .dashboard-aside-sublink.active,
+    .dashboard-aside-sublink.is-active {
+        background: #e3f2fd;
+        border-left-color: #039be5 !important;
+        color: #039be5 !important;
+    }
+
+    .dashboard-aside-sublink.active svg,
+    .dashboard-aside-sublink.is-active svg {
+        color: #039be5 !important;
+    }
 }
 
 /* Tutorial highlighting for sidebar elements - works on both desktop and mobile */

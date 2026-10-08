@@ -85,74 +85,94 @@
                 <span>Home</span>
             </div>
         </a>
+        <hr>
+
+        <!-- Experiments: everything about running/configuring simulations -->
+        <div class="dashboard-aside-group" id="sidebar-group-experiments">
+            <button type="button" class="dashboard-aside-link dashboard-aside-group-toggle" id="sidebar-group-toggle-experiments" data-group="experiments" aria-expanded="false" aria-controls="sidebar-submenu-experiments">
+                <div>
+                    <i data-feather="server"></i>
+                    <span>Experiments</span>
+                    <i data-feather="chevron-right" class="dashboard-aside-group-chevron"></i>
+                </div>
+            </button>
+            <div class="dashboard-aside-submenu" id="sidebar-submenu-experiments">
+                <div class="dashboard-aside-submenu-title">Experiments</div>
+                <a href="/admin/experiments" class="dashboard-aside-link dashboard-aside-sublink" id="sidebar-experiments">
+                    <i data-feather="server"></i>
+                    <span>Experiments</span>
+                </a>
+                <a href="/admin/populations" class="dashboard-aside-link dashboard-aside-sublink" id="sidebar-populations">
+                    <i data-feather="codesandbox"></i>
+                    <span>Populations</span>
+                </a>
+                <a href="/admin/agents_dashboard" class="dashboard-aside-link dashboard-aside-sublink" id="sidebar-agents-dashboard">
+                    <i data-feather="cpu"></i>
+                    <span>Agent Resources</span>
+                </a>
+            </div>
+        </div>
+        <hr>
+
+        <!-- Extensions: plugin-contributed configuration and pages. Any
+             future backend settings suite that declares a "sidebar" block
+             in its own meta/registry.json (see
+             backend_plugins.backend_suite_sidebar_entries()) gets an entry
+             here automatically, with no template change needed. -->
+        <div class="dashboard-aside-group" id="sidebar-group-extensions">
+            <button type="button" class="dashboard-aside-link dashboard-aside-group-toggle" id="sidebar-group-toggle-extensions" data-group="extensions" aria-expanded="false" aria-controls="sidebar-submenu-extensions">
+                <div>
+                    <i data-feather="package"></i>
+                    <span>Extensions</span>
+                    <i data-feather="chevron-right" class="dashboard-aside-group-chevron"></i>
+                </div>
+            </button>
+            <div class="dashboard-aside-submenu" id="sidebar-submenu-extensions">
+                <div class="dashboard-aside-submenu-title">Extensions</div>
+                <a href="{{ url_for('experiments.frontend_settings') }}" class="dashboard-aside-link dashboard-aside-sublink" id="sidebar-frontend-settings">
+                    <i data-feather="sliders"></i>
+                    <span>Frontend Settings</span>
+                </a>
+                {% for entry in extension_sidebar_entries %}
+                <a href="{{ entry.url }}" class="dashboard-aside-link dashboard-aside-sublink" id="sidebar-ext-{{ entry.repo_key }}">
+                    <i data-feather="{{ entry.icon }}"></i>
+                    <span>{{ entry.label }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        <hr>
 
         {% if current_user_role == "admin" %}
-        <a href="/admin/users" class="dashboard-aside-link sidebar-collapsible" id="sidebar-users">
-            <div>
-                <i data-feather="users"></i>
-                <span>Users</span>
+        <!-- Administration: users, platform-wide configuration, plugin install/management -->
+        <div class="dashboard-aside-group" id="sidebar-group-administration">
+            <button type="button" class="dashboard-aside-link dashboard-aside-group-toggle" id="sidebar-group-toggle-administration" data-group="administration" aria-expanded="false" aria-controls="sidebar-submenu-administration">
+                <div>
+                    <i data-feather="shield"></i>
+                    <span>Administration</span>
+                    <i data-feather="chevron-right" class="dashboard-aside-group-chevron"></i>
+                </div>
+            </button>
+            <div class="dashboard-aside-submenu" id="sidebar-submenu-administration">
+                <div class="dashboard-aside-submenu-title">Administration</div>
+                <a href="/admin/users" class="dashboard-aside-link dashboard-aside-sublink" id="sidebar-users">
+                    <i data-feather="users"></i>
+                    <span>Users</span>
+                </a>
+                <a href="{{ url_for('experiments.miscellanea') }}" class="dashboard-aside-link dashboard-aside-sublink" id="sidebar-miscellanea">
+                    <i data-feather="more-horizontal"></i>
+                    <span>Miscellanea</span>
+                </a>
+                <a href="{{ url_for('experiments.external_runtimes') }}" class="dashboard-aside-link dashboard-aside-sublink" id="sidebar-external-runtimes">
+                    <i data-feather="package"></i>
+                    <span>Plugin Manager</span>
+                </a>
             </div>
-        </a>
-        {% endif %}
-        <hr class="sidebar-collapsible">
-
-        <a href="/admin/experiments" class="dashboard-aside-link sidebar-collapsible" id="sidebar-experiments">
-            <div>
-                <i data-feather="server"></i>
-                <span>Experiments</span>
-            </div>
-        </a>
-        <a href="/admin/populations" class="dashboard-aside-link sidebar-collapsible" id="sidebar-populations">
-            <div>
-                <i data-feather="codesandbox"></i>
-                <span>Populations</span>
-            </div>
-        </a>
-        <hr class="sidebar-collapsible">
-        <a href="/admin/agents_dashboard" class="dashboard-aside-link sidebar-collapsible" id="sidebar-agents-dashboard">
-            <div>
-                <i data-feather="cpu"></i>
-                <span>Agent Resources</span>
-            </div>
-        </a>
-
-        <hr class="sidebar-collapsible">
-
-        <a href="{{ url_for('experiments.frontend_settings') }}" class="dashboard-aside-link sidebar-collapsible" id="sidebar-frontend-settings">
-            <div>
-                <i data-feather="sliders"></i>
-                <span>Frontend Settings</span>
-            </div>
-        </a>
-
-        <hr class="sidebar-collapsible">
-
-        {% if scenario_design_sidebar_url %}
-        <a href="{{ scenario_design_sidebar_url }}" class="dashboard-aside-link sidebar-collapsible" id="sidebar-scenario-design">
-            <div>
-                <i data-feather="edit-3"></i>
-                <span>Scenario Design</span>
-            </div>
-        </a>
-
-        <hr class="sidebar-collapsible">
+        </div>
+        <hr>
         {% endif %}
 
-        {% if current_user_role == "admin" %}
-        <a href="{{ url_for('experiments.miscellanea') }}" class="dashboard-aside-link sidebar-collapsible" id="sidebar-miscellanea">
-            <div>
-                <i data-feather="more-horizontal"></i>
-                <span>Miscellanea</span>
-            </div>
-        </a>
-        <a href="{{ url_for('experiments.external_runtimes') }}" class="dashboard-aside-link sidebar-collapsible" id="sidebar-external-runtimes">
-            <div>
-                <i data-feather="package"></i>
-                <span>Plugins</span>
-            </div>
-        </a>
-        {% endif %}
-        <a href="/admin/about" class="dashboard-aside-link sidebar-collapsible" id="sidebar-about">
+        <a href="/admin/about" class="dashboard-aside-link" id="sidebar-about">
             <div>
                 <i data-feather="compass"></i>
                 <span>About</span>
