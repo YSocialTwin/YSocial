@@ -16,6 +16,20 @@ already covered without this limitation in ScenarioDesign's own
 standalone suite (tests/test_prompt_builder.py, test_secrets_redaction.py,
 test_llm_client.py).
 
+User-reported (2026-10-08, "yes please" to extending the fase3 fix): this
+file had the exact same two-layer login/author bug as
+test_scenario_design_fase3_threads.py -- see that module's docstring for
+the full root-cause explanation. Summary: (1) the login identity must be
+an ``Admin_users`` row (``__bind_key__ = "db_admin"``, never repointed by
+the per-request ``db_exp`` bind swap), not a ``User_mgmt`` row; (2) any
+``User_mgmt`` author row must be created inside the *target experiment's*
+own database via ``experiment_db_bind(exp_id)``, with an explicit small
+numeric-string ``id`` (the real per-experiment ``user_mgmt`` table is
+``id TEXT PRIMARY KEY`` with no autoincrement); and (3) deterministic
+experiment folder names collide on repeated test runs since
+``y_web/experiments/`` is real, persistent, gitignored disk state, not an
+ephemeral temp dir -- fixed with a random suffix, as in fase3.
+
 Piano di implementazione, Fase 4.
 """
 import sqlite3
@@ -55,19 +69,24 @@ def _can_actually_write_sqlite_files() -> bool:
 
 
 def _make_exp(app, name="sd-fase4-exp"):
+    """Random suffix avoids colliding with a previous run's leftover,
+    gitignored experiment folder on disk (y_web/experiments/ is real,
+    persistent state -- see test_scenario_design_fase3_threads.py)."""
     import os
+    import uuid
 
     from y_web.src.models import Exps
     from y_web.src.system.path_utils import get_writable_path
 
-    folder = get_writable_path(os.path.join("y_web", "experiments", name))
+    folder_name = f"{name}-{uuid.uuid4().hex[:8]}"
+    folder = get_writable_path(os.path.join("y_web", "experiments", folder_name))
     os.makedirs(folder, exist_ok=True)
 
     with app.app_context():
         exp = Exps(
             platform_type="microblogging",
-            exp_name=name,
-            db_name=f"experiments/{name}/database_server.db",
+            exp_name=folder_name,
+            db_name=f"experiments/{folder_name}/database_server.db",
             owner="admin",
             exp_descr="test",
             status=1,
@@ -77,6 +96,29 @@ def _make_exp(app, name="sd-fase4-exp"):
         db.session.add(exp)
         db.session.commit()
         return exp.idexp
+
+
+def _make_author(app, exp_id, username="agent1", user_id="1"):
+    """Create a real User_mgmt row inside *exp_id*'s own per-experiment
+    database (see test_scenario_design_fase3_threads.py's ``_make_author``
+    for the full rationale: the explicit numeric-string id, and why this
+    must go through ``experiment_db_bind`` rather than the ambient
+    ``app.app_context()`` default db_exp bind)."""
+    from y_web.src.experiment.context import experiment_db_bind
+    from y_web.src.models import User_mgmt
+
+    with app.app_context():
+        with experiment_db_bind(exp_id):
+            author = User_mgmt(
+                id=user_id,
+                username=username,
+                email=f"{username}@test.com",
+                password=generate_password_hash("test123"),
+                joined_on=1234567890,
+            )
+            db.session.add(author)
+            db.session.commit()
+    return user_id
 
 
 def _login(client, user_id):
@@ -110,28 +152,28 @@ def sd_app():
 
 @pytest.fixture
 def sd_client(sd_app):
-    from y_web.src.models import User_mgmt
+    """Logs in as a real Admin_users account -- these are admin-only
+    routes in production, and (unlike a User_mgmt participant row,
+    __bind_key__ = "db_exp") Admin_users is __bind_key__ = "db_admin",
+    which setup_experiment_context() never repoints per-request, so the
+    login survives every exp_id-scoped request regardless of which
+    experiment it names (see test_scenario_design_fase3_threads.py)."""
+    from y_web.src.models import Admin_users
 
     client = sd_app.test_client()
     with sd_app.app_context():
-        author = User_mgmt(
-            username="agent1",
-            email="agent1@test.com",
+        admin_user = Admin_users(
+            username="sd_fase4_admin",
+            email="sd_fase4_admin@test.com",
             password=generate_password_hash("test123"),
-            joined_on=1234567890,
+            last_seen="",
+            role="admin",
         )
-        admin_user = User_mgmt(
-            username="testadmin",
-            email="testadmin@test.com",
-            password=generate_password_hash("test123"),
-            joined_on=1234567890,
-        )
-        db.session.add_all([author, admin_user])
+        db.session.add(admin_user)
         db.session.commit()
-        author_id = author.id
         admin_id = admin_user.id
-    _login(client, admin_id)
-    return client, author_id
+    _login(client, f"admin_{admin_id}")
+    return client
 
 
 def _setup_thread_with_root(client, exp_id, author_id, scenario_name="S1"):
@@ -212,7 +254,19 @@ def _generate(client, exp_id, scenario_id, tmp_id="c1", **payload_extra):
 
 
 def _latest_audit_row(sd_app, exp_id):
-    from modules.scenario_editor.backend.models import ScenarioDesignLlmGenerationAudit
+    # The plugin's own backend package is never importable as a plain
+    # top-level ``modules...`` dotted path -- production deliberately
+    # avoids adding the suite's repo to sys.path (see
+    # y_web/src/external_runtime/backend_plugins.py's module docstring:
+    # "avoids polluting the global import namespace and avoids collisions
+    # between top-level package names used by different suites"), and
+    # instead imports it under a private, suite-scoped synthetic
+    # namespace. Reuse that same helper here rather than reimplementing
+    # (or working around) the import mechanism.
+    from y_web.src.external_runtime.backend_plugins import _import_from_suite
+
+    models = _import_from_suite("scenario_design", "modules.scenario_editor.backend.models")
+    ScenarioDesignLlmGenerationAudit = models.ScenarioDesignLlmGenerationAudit
 
     with sd_app.app_context():
         from y_web.src.experiment.context import _activate_db_exp_bind
@@ -227,8 +281,9 @@ def _latest_audit_row(sd_app, exp_id):
 
 
 def test_successful_generation_writes_draft_and_audit(sd_app, sd_client, monkeypatch):
-    client, author_id = sd_client
+    client = sd_client
     exp_id = _make_exp(sd_app)
+    author_id = _make_author(sd_app, exp_id)
     scenario_id, _thread_id = _setup_thread_with_root(client, exp_id, author_id)
     _patch_session(monkeypatch, [_success("A thoughtful reply about transit.")])
 
@@ -245,8 +300,9 @@ def test_successful_generation_writes_draft_and_audit(sd_app, sd_client, monkeyp
 
 
 def test_missing_llm_fields_rejected_before_any_call(sd_app, sd_client, monkeypatch):
-    client, author_id = sd_client
+    client = sd_client
     exp_id = _make_exp(sd_app)
+    author_id = _make_author(sd_app, exp_id)
     scenario_id, _ = _setup_thread_with_root(client, exp_id, author_id)
     calls = _patch_session(monkeypatch, [])
 
@@ -260,8 +316,9 @@ def test_missing_llm_fields_rejected_before_any_call(sd_app, sd_client, monkeypa
 
 
 def test_timeout_is_explicit_and_not_retried(sd_app, sd_client, monkeypatch):
-    client, author_id = sd_client
+    client = sd_client
     exp_id = _make_exp(sd_app)
+    author_id = _make_author(sd_app, exp_id)
     scenario_id, _ = _setup_thread_with_root(client, exp_id, author_id)
     calls = _patch_session(monkeypatch, [requests.exceptions.Timeout("slow backend")])
 
@@ -273,17 +330,11 @@ def test_timeout_is_explicit_and_not_retried(sd_app, sd_client, monkeypatch):
     audit = _latest_audit_row(sd_app, exp_id)
     assert audit["outcome"] == "timeout"
 
-    get_resp = client.get(
-        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}/threads/{_}"
-    )
-    # (thread_id placeholder unused on purpose -- the real assertion is
-    # the draft post itself was never touched, checked below via a fresh
-    # thread GET instead.)
-
 
 def test_transient_error_then_success_retries_once(sd_app, sd_client, monkeypatch):
-    client, author_id = sd_client
+    client = sd_client
     exp_id = _make_exp(sd_app)
+    author_id = _make_author(sd_app, exp_id)
     scenario_id, _ = _setup_thread_with_root(client, exp_id, author_id)
     calls = _patch_session(
         monkeypatch,
@@ -297,8 +348,9 @@ def test_transient_error_then_success_retries_once(sd_app, sd_client, monkeypatc
 
 
 def test_two_consecutive_errors_fail_without_infinite_retry(sd_app, sd_client, monkeypatch):
-    client, author_id = sd_client
+    client = sd_client
     exp_id = _make_exp(sd_app)
+    author_id = _make_author(sd_app, exp_id)
     scenario_id, _ = _setup_thread_with_root(client, exp_id, author_id)
     calls = _patch_session(
         monkeypatch,
@@ -315,8 +367,9 @@ def test_two_consecutive_errors_fail_without_infinite_retry(sd_app, sd_client, m
 
 
 def test_empty_response_is_not_persisted(sd_app, sd_client, monkeypatch):
-    client, author_id = sd_client
+    client = sd_client
     exp_id = _make_exp(sd_app)
+    author_id = _make_author(sd_app, exp_id)
     scenario_id, thread_id = _setup_thread_with_root(client, exp_id, author_id)
     _patch_session(monkeypatch, [_FakeResponse(200, {"choices": []})])
 
@@ -338,8 +391,9 @@ def test_empty_response_is_not_persisted(sd_app, sd_client, monkeypatch):
 
 
 def test_backend_unavailable_http_5xx(sd_app, sd_client, monkeypatch):
-    client, author_id = sd_client
+    client = sd_client
     exp_id = _make_exp(sd_app)
+    author_id = _make_author(sd_app, exp_id)
     scenario_id, _ = _setup_thread_with_root(client, exp_id, author_id)
     _patch_session(monkeypatch, [_FakeResponse(503, {}, text="service unavailable")])
 
@@ -354,8 +408,9 @@ def test_prompt_injection_from_thread_content_does_not_alter_system_prompt(
     """piano di implementazione Fase 4: "verificato con asserzione sul
     prompt effettivo costruito, non solo sull'output" -- the audit row's
     prompt_redacted field is exactly that effective prompt."""
-    client, author_id = sd_client
+    client = sd_client
     exp_id = _make_exp(sd_app)
+    author_id = _make_author(sd_app, exp_id)
     scenario_id, thread_id = _setup_thread_with_root(client, exp_id, author_id)
 
     # Overwrite the root post's content with an injection attempt, via a
@@ -389,8 +444,9 @@ def test_prompt_injection_from_thread_content_does_not_alter_system_prompt(
 
 
 def test_secrets_in_backend_url_are_redacted_in_audit(sd_app, sd_client, monkeypatch):
-    client, author_id = sd_client
+    client = sd_client
     exp_id = _make_exp(sd_app)
+    author_id = _make_author(sd_app, exp_id)
     scenario_id, _ = _setup_thread_with_root(client, exp_id, author_id)
     _patch_session(monkeypatch, [_success("fine")])
 
@@ -408,8 +464,9 @@ def test_secrets_in_backend_url_are_redacted_in_audit(sd_app, sd_client, monkeyp
 
 
 def test_post_not_found_returns_404(sd_app, sd_client, monkeypatch):
-    client, author_id = sd_client
+    client = sd_client
     exp_id = _make_exp(sd_app)
+    author_id = _make_author(sd_app, exp_id)
     scenario_id, _ = _setup_thread_with_root(client, exp_id, author_id)
     calls = _patch_session(monkeypatch, [])
 

@@ -118,19 +118,24 @@ def test_roles_endpoint_merges_real_adhoc_roles_when_repo_present(logged_in_clie
 
 
 def _make_exp(app, name="sd-fase5-exp"):
+    """Random suffix avoids colliding with a previous run's leftover,
+    gitignored experiment folder on disk (y_web/experiments/ is real,
+    persistent state -- see test_scenario_design_fase3_threads.py)."""
     import os
+    import uuid
 
     from y_web.src.models import Exps
     from y_web.src.system.path_utils import get_writable_path
 
-    folder = get_writable_path(os.path.join("y_web", "experiments", name))
+    folder_name = f"{name}-{uuid.uuid4().hex[:8]}"
+    folder = get_writable_path(os.path.join("y_web", "experiments", folder_name))
     os.makedirs(folder, exist_ok=True)
 
     with app.app_context():
         exp = Exps(
             platform_type="microblogging",
-            exp_name=name,
-            db_name=f"experiments/{name}/database_server.db",
+            exp_name=folder_name,
+            db_name=f"experiments/{folder_name}/database_server.db",
             owner="admin",
             exp_descr="test",
             status=1,
@@ -140,6 +145,27 @@ def _make_exp(app, name="sd-fase5-exp"):
         db.session.add(exp)
         db.session.commit()
         return exp.idexp
+
+
+def _make_author(app, exp_id, username="agent_x", user_id="1"):
+    """Create a real User_mgmt row inside *exp_id*'s own per-experiment
+    database (see test_scenario_design_fase3_threads.py's ``_make_author``
+    for the full rationale)."""
+    from y_web.src.experiment.context import experiment_db_bind
+    from y_web.src.models import User_mgmt
+
+    with app.app_context():
+        with experiment_db_bind(exp_id):
+            author = User_mgmt(
+                id=user_id,
+                username=username,
+                email=f"{username}@test.com",
+                password=generate_password_hash("x"),
+                joined_on=1,
+            )
+            db.session.add(author)
+            db.session.commit()
+    return user_id
 
 
 @pytest.fixture
@@ -154,24 +180,47 @@ def sd_app_with_sqlite(boot_app):
     return boot_app
 
 
-def test_role_key_round_trips_through_post_create_and_update(
-    sd_app_with_sqlite, logged_in_client
-):
-    from y_web.src.models import User_mgmt
+@pytest.fixture
+def admin_client(boot_app):
+    """Logs in as a real Admin_users account -- these are admin-only
+    routes in production, and (unlike a User_mgmt participant row,
+    __bind_key__ = "db_exp") Admin_users is __bind_key__ = "db_admin",
+    which setup_experiment_context() never repoints per-request, so the
+    login survives every exp_id-scoped request regardless of which
+    experiment it names.
 
-    with sd_app_with_sqlite.app_context():
-        author = User_mgmt(
-            username="agent_x",
-            email="agent_x@test.com",
-            password=generate_password_hash("x"),
-            joined_on=1,
+    User-reported (2026-10-08, "yes please" to extending the fase3 fix):
+    only the one test below that hits an exp_id-scoped
+    ``/experiments/<exp_id>/...`` URL needs this; the other two tests in
+    this module call a route with no exp_id at all, so the plain
+    ``logged_in_client`` fixture above (a User_mgmt login) is fine for
+    them -- see test_scenario_design_fase3_threads.py's docstring for the
+    full root-cause explanation of why a User_mgmt login specifically
+    breaks under the db_exp bind swap."""
+    from y_web.src.models import Admin_users
+
+    client = boot_app.test_client()
+    with boot_app.app_context():
+        admin_user = Admin_users(
+            username="sd_fase5_admin",
+            email="sd_fase5_admin@test.com",
+            password=generate_password_hash("test123"),
+            last_seen="",
+            role="admin",
         )
-        db.session.add(author)
+        db.session.add(admin_user)
         db.session.commit()
-        author_id = author.id
+        admin_id = admin_user.id
+    _login(client, f"admin_{admin_id}")
+    return client
 
+
+def test_role_key_round_trips_through_post_create_and_update(
+    sd_app_with_sqlite, admin_client
+):
     exp_id = _make_exp(sd_app_with_sqlite)
-    client = logged_in_client
+    author_id = _make_author(sd_app_with_sqlite, exp_id)
+    client = admin_client
 
     resp = client.post(
         f"/admin/scenario_design/api/experiments/{exp_id}/scenarios", json={"name": "S1"}
