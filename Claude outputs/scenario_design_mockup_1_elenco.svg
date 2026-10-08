@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <style>
+    .page { fill:#f4f5f7; }
+    .sidebar { fill:#20262e; }
+    .side-item { fill:#2c333d; }
+    .side-item-active { fill:#3a6df0; }
+    .side-text { fill:#c9ced6; font-size:13px; }
+    .side-text-active { fill:#ffffff; font-size:13px; font-weight:bold; }
+    .topbar { fill:#ffffff; stroke:#dfe2e6; stroke-width:1; }
+    .title { fill:#1b1f24; font-size:20px; font-weight:bold; }
+    .subtitle { fill:#6b7280; font-size:12px; }
+    .btn-primary { fill:#3a6df0; }
+    .btn-primary-text { fill:#ffffff; font-size:12px; font-weight:bold; }
+    .card { fill:#ffffff; stroke:#dfe2e6; stroke-width:1; }
+    .filter-chip { fill:#eef1f6; stroke:#d7dce3; stroke-width:1; }
+    .filter-text { fill:#374151; font-size:11px; }
+    .th { fill:#6b7280; font-size:11px; font-weight:bold; }
+    .td { fill:#1b1f24; font-size:12px; }
+    .row-line { stroke:#eef0f3; stroke-width:1; }
+    .badge-std { fill:#e4edff; stroke:#b7cdfb; }
+    .badge-std-text { fill:#2651c7; font-size:10px; font-weight:bold; }
+    .badge-hpc { fill:#fdeee0; stroke:#f6c69a; }
+    .badge-hpc-text { fill:#b2590a; font-size:10px; font-weight:bold; }
+    .status-draft { fill:#eef1f6; }
+    .status-draft-t { fill:#4b5563; font-size:10px; font-weight:bold; }
+    .status-validated { fill:#fff6d6; }
+    .status-validated-t { fill:#8a6d00; font-size:10px; font-weight:bold; }
+    .status-published { fill:#e2f7e8; }
+    .status-published-t { fill:#1b7a3b; font-size:10px; font-weight:bold; }
+    .status-archived { fill:#f1f1f1; }
+    .status-archived-t { fill:#6b7280; font-size:10px; font-weight:bold; }
+    .icon-dot { fill:#9aa3af; }
+  </style>
+
+  <rect class="page" x="0" y="0" width="960" height="560"/>
+
+  <!-- Sidebar -->
+  <rect class="sidebar" x="0" y="0" width="190" height="560"/>
+  <text x="20" y="34" fill="#ffffff" font-size="15" font-weight="bold">YSocial Admin</text>
+
+  <rect class="side-item" x="14" y="66" width="162" height="28" rx="5"/>
+  <text class="side-text" x="26" y="84">Esperimenti</text>
+
+  <rect class="side-item" x="14" y="100" width="162" height="28" rx="5"/>
+  <text class="side-text" x="26" y="118">External Runtimes</text>
+
+  <rect class="side-item" x="14" y="134" width="162" height="28" rx="5"/>
+  <text class="side-text" x="26" y="152">Frontend Settings</text>
+
+  <rect class="side-item-active" x="14" y="168" width="162" height="28" rx="5"/>
+  <text class="side-text-active" x="26" y="186">Scenario Design</text>
+
+  <rect class="side-item" x="14" y="202" width="162" height="28" rx="5"/>
+  <text class="side-text" x="26" y="220">Utenti</text>
+
+  <text x="26" y="540" fill="#6b7280" font-size="10">voce di primo livello,</text>
+  <text x="26" y="552" fill="#6b7280" font-size="10">non annidata (§10, §14)</text>
+
+  <!-- Topbar -->
+  <rect class="topbar" x="190" y="0" width="770" height="60"/>
+  <text class="title" x="214" y="34">Scenario Design — Elenco scenari</text>
+  <rect class="btn-primary" x="840" y="16" width="100" height="30" rx="6"/>
+  <text class="btn-primary-text" x="856" y="36">+ Nuovo</text>
+
+  <!-- Filters row -->
+  <rect class="filter-chip" x="214" y="76" width="110" height="26" rx="13"/>
+  <text class="filter-text" x="228" y="93">Stato: Tutti ▾</text>
+  <rect class="filter-chip" x="332" y="76" width="130" height="26" rx="13"/>
+  <text class="filter-text" x="346" y="93">Esperimento ▾</text>
+  <rect class="filter-chip" x="470" y="76" width="110" height="26" rx="13"/>
+  <text class="filter-text" x="484" y="93">Famiglia ▾</text>
+
+  <!-- Table card -->
+  <rect class="card" x="214" y="114" width="726" height="420" rx="8"/>
+
+  <text class="th" x="232" y="140">NOME SCENARIO</text>
+  <text class="th" x="432" y="140">ESPERIMENTO</text>
+  <text class="th" x="582" y="140">FAMIGLIA</text>
+  <text class="th" x="672" y="140">STATO</text>
+  <text class="th" x="792" y="140">ULTIMA MODIFICA</text>
+  <line class="row-line" x1="214" y1="150" x2="940" y2="150"/>
+
+  <!-- Row 1 -->
+  <text class="td" x="232" y="176">Ondata di disinformazione #3</text>
+  <text class="td" x="432" y="176">exp_042 (standard)</text>
+  <rect class="badge-std" x="582" y="162" width="64" height="20" rx="10"/>
+  <text class="badge-std-text" x="594" y="176">STANDARD</text>
+  <rect class="status-draft" x="672" y="162" width="70" height="20" rx="10"/>
+  <text class="status-draft-t" x="684" y="176">draft</text>
+  <text class="td" x="792" y="176">2 ore fa</text>
+  <line class="row-line" x1="214" y1="192" x2="940" y2="192"/>
+
+  <!-- Row 2 -->
+  <text class="td" x="232" y="218">Dibattito su policy clima</text>
+  <text class="td" x="432" y="218">exp_017 (hpc)</text>
+  <rect class="badge-hpc" x="582" y="204" width="48" height="20" rx="10"/>
+  <text class="badge-hpc-text" x="592" y="218">HPC</text>
+  <rect class="status-validated" x="672" y="204" width="90" height="20" rx="10"/>
+  <text class="status-validated-t" x="684" y="218">validated</text>
+  <text class="td" x="792" y="218">ieri</text>
+  <line class="row-line" x1="214" y1="234" x2="940" y2="234"/>
+
+  <!-- Row 3 -->
+  <text class="td" x="232" y="260">Lancio prodotto fittizio</text>
+  <text class="td" x="432" y="260">exp_009 (standard)</text>
+  <rect class="badge-std" x="582" y="246" width="64" height="20" rx="10"/>
+  <text class="badge-std-text" x="594" y="260">STANDARD</text>
+  <rect class="status-published" x="672" y="246" width="90" height="20" rx="10"/>
+  <text class="status-published-t" x="684" y="260">published</text>
+  <text class="td" x="792" y="260">3 giorni fa</text>
+  <line class="row-line" x1="214" y1="276" x2="940" y2="276"/>
+
+  <!-- Row 4 -->
+  <text class="td" x="232" y="302">Scenario pilota HPC</text>
+  <text class="td" x="432" y="302">exp_017 (hpc)</text>
+  <rect class="badge-hpc" x="582" y="288" width="48" height="20" rx="10"/>
+  <text class="badge-hpc-text" x="592" y="302">HPC</text>
+  <rect class="status-archived" x="672" y="288" width="90" height="20" rx="10"/>
+  <text class="status-archived-t" x="684" y="302">archived</text>
+  <text class="td" x="792" y="302">2 settimane fa</text>
+  <line class="row-line" x1="214" y1="318" x2="940" y2="318"/>
+
+  <text x="232" y="500" fill="#9aa3af" font-size="11">Forum e photo-sharing non compaiono mai nel selettore esperimento (§14).</text>
+  <text x="232" y="516" fill="#9aa3af" font-size="10" font-style="italic">Wireframe illustrativo — non design finale [P]</text>
+</svg>

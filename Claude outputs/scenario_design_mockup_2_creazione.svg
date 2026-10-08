@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <style>
+    .page { fill:#f4f5f7; }
+    .overlay { fill:#1b1f24; opacity:0.35; }
+    .modal { fill:#ffffff; stroke:#dfe2e6; stroke-width:1; }
+    .title { fill:#1b1f24; font-size:17px; font-weight:bold; }
+    .label { fill:#374151; font-size:12px; font-weight:bold; }
+    .hint { fill:#9aa3af; font-size:10px; font-style:italic; }
+    .field { fill:#f9fafb; stroke:#d7dce3; stroke-width:1; }
+    .field-text { fill:#6b7280; font-size:12px; }
+    .badge-std { fill:#e4edff; stroke:#b7cdfb; }
+    .badge-std-text { fill:#2651c7; font-size:10px; font-weight:bold; }
+    .badge-hpc { fill:#fdeee0; stroke:#f6c69a; }
+    .badge-hpc-text { fill:#b2590a; font-size:10px; font-weight:bold; }
+    .checkbox { fill:#ffffff; stroke:#9aa3af; stroke-width:1.5; }
+    .check-mark { stroke:#3a6df0; stroke-width:2; fill:none; }
+    .radio { fill:#ffffff; stroke:#9aa3af; stroke-width:1.5; }
+    .radio-sel { fill:#3a6df0; }
+    .btn-primary { fill:#3a6df0; }
+    .btn-primary-text { fill:#ffffff; font-size:12px; font-weight:bold; }
+    .btn-secondary { fill:#ffffff; stroke:#d7dce3; }
+    .btn-secondary-text { fill:#374151; font-size:12px; font-weight:bold; }
+    .section-box { fill:#f9fafb; stroke:#eef0f3; stroke-width:1; }
+  </style>
+
+  <rect class="page" x="0" y="0" width="960" height="560"/>
+  <rect class="overlay" x="0" y="0" width="960" height="560"/>
+
+  <rect class="modal" x="190" y="46" width="580" height="468" rx="10"/>
+  <text class="title" x="218" y="84">Nuovo scenario</text>
+  <line x1="190" y1="100" x2="770" y2="100" stroke="#eef0f3"/>
+
+  <!-- Step 1: esperimento -->
+  <text class="label" x="218" y="128">1. Esperimento base</text>
+  <rect class="field" x="218" y="140" width="524" height="36" rx="6"/>
+  <text class="field-text" x="232" y="163">exp_017 — "Dibattito su policy clima"</text>
+  <rect class="badge-hpc" x="660" y="150" width="46" height="18" rx="9"/>
+  <text class="badge-hpc-text" x="668" y="163">HPC</text>
+  <text class="hint" x="218" y="190">Selettore filtrato server-side: solo esperimenti microblogging (Standard/HPC); forum e photo-sharing non appaiono (§14).</text>
+
+  <!-- Step 2: copia -->
+  <rect class="section-box" x="218" y="206" width="524" height="110" rx="6"/>
+  <rect class="checkbox" x="234" y="220" width="16" height="16" rx="3"/>
+  <path class="check-mark" d="M237 228 l5 5 l9 -11"/>
+  <text class="label" x="258" y="233">Usa una copia dell'esperimento</text>
+  <text class="hint" x="258" y="250">Richiede un db_exp già esistente per l'esperimento sorgente (§2, §6).</text>
+
+  <rect class="radio" cx="262" cy="270" r="7" x="255" y="263" width="14" height="14" rx="7"/>
+  <circle class="radio-sel" cx="262" cy="270" r="4"/>
+  <text class="field-text" x="278" y="275">Copia solo agenti (azzera contenuti generati)</text>
+
+  <rect class="radio" cx="262" cy="294" r="7" x="255" y="287" width="14" height="14" rx="7"/>
+  <text class="field-text" x="278" y="299">Mantieni tutti i contenuti esistenti</text>
+
+  <!-- Step 3: nome -->
+  <text class="label" x="218" y="342">2. Nome e descrizione</text>
+  <rect class="field" x="218" y="354" width="524" height="34" rx="6"/>
+  <text class="field-text" x="232" y="376">Dibattito su policy clima — variante B</text>
+  <rect class="field" x="218" y="396" width="524" height="56" rx="6"/>
+  <text class="field-text" x="232" y="416">Scenario con tre thread di apertura su carbon tax,</text>
+  <text class="field-text" x="232" y="432">due ruoli ad hoc (scettico, attivista)…</text>
+
+  <!-- Footer buttons -->
+  <rect class="btn-secondary" x="520" y="478" width="90" height="32" rx="6"/>
+  <text class="btn-secondary-text" x="540" y="499">Annulla</text>
+  <rect class="btn-primary" x="620" y="478" width="122" height="32" rx="6"/>
+  <text class="btn-primary-text" x="638" y="499">Crea scenario</text>
+
+  <text x="218" y="498" fill="#9aa3af" font-size="10" font-style="italic">Wireframe illustrativo — non design finale [P]</text>
+</svg>
