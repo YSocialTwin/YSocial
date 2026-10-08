@@ -26,14 +26,20 @@ from y_web.src.external_runtime import frontend_plugins, plugin_loader, registry
 
 # This whole suite exercises the REAL external/frontend_adds-on repo (see
 # module docstring above) -- it is not checked out in every environment
-# (gitignored, cloned manually; see external/README.md), so skip the suite
-# wholesale rather than erroring when it is absent, mirroring the
-# `_suite_is_installed()` convention used by the ScenarioDesign integration
-# tests (y_web/tests/test_scenario_design_fase3_threads.py and friends).
-pytestmark = pytest.mark.skipif(
-    not registry.runtime_spec("frontend_adds_on").path.exists(),
-    reason="frontend_adds_on suite not checked out in this environment",
-)
+# (gitignored, cloned manually; see external/README.md). `pytestmark` must
+# stay `pytest.mark.integration` (see test_phase13_markers.py, which only
+# recognizes 'unit'/'integration' module-level marks); the actual
+# skip-when-absent condition is applied via an autouse fixture instead of
+# folding it into `pytestmark` itself, mirroring the `_suite_is_installed()`
+# convention used by the ScenarioDesign integration tests
+# (y_web/tests/test_scenario_design_fase3_threads.py and friends).
+pytestmark = pytest.mark.integration
+
+
+@pytest.fixture(autouse=True)
+def _require_frontend_adds_on():
+    if not registry.runtime_spec("frontend_adds_on").path.exists():
+        pytest.skip("frontend_adds_on suite not checked out in this environment")
 
 
 # ---------------------------------------------------------------------------
