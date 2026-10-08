@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ---------------------------------------------------------------------------
-// Two-level sidebar groups (Experiments / Extensions / Administration)
+// Two-level sidebar groups (Experiments / Extensions / Admin)
 //
 // Desktop: a group's submenu opens as a flyout card next to its icon (see
 // core.css). Mobile: the same markup becomes an in-place accordion (see

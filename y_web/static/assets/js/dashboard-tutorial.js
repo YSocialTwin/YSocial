@@ -9,62 +9,37 @@
             position: 'right'
         },
         {
-            id: 'sidebar-users',
-            selector: '#sidebar-users, #sidebar-profile',
-            title: '👥 Users / My Profile',
-            description: `<p>Manage <b>user accounts</b> (admin) or view your <b>profile settings</b>:</p>
-                <ul style="margin: 10px 0 0 18px; padding: 0; list-style: disc;">
-                    <li>Create and manage users</li>
-                    <li>Configure LLM settings</li>
-                    <li>Update profile information</li>
-                </ul>`,
-            position: 'right'
-        },
-        {
-            id: 'sidebar-experiments',
-            selector: '#sidebar-experiments',
+            id: 'sidebar-group-toggle-experiments',
+            selector: '#sidebar-group-toggle-experiments',
             title: '🧪 Experiments',
-            description: `<p>Create and configure new <b>experiments</b>:</p>
+            description: `<p>Everything about running and configuring your <b>simulations</b>:</p>
                 <ul style="margin: 10px 0 0 18px; padding: 0; list-style: disc;">
-                    <li>Define experiment parameters</li>
-                    <li>Schedule experiment execution</li>
-                    <li>Copy or upload experiments</li>
+                    <li><b>Experiments</b> - define parameters, schedule and run them</li>
+                    <li><b>Populations</b> - demographic distributions and agent behaviors</li>
+                    <li><b>Agent Resources</b> - create synthetic agents, media and institutional pages</li>
                 </ul>`,
             position: 'right'
         },
         {
-            id: 'sidebar-populations',
-            selector: '#sidebar-populations',
-            title: '🌍 Populations',
-            description: `<p>Create and manage <b>agent populations</b> for your simulations:</p>
+            id: 'sidebar-group-toggle-extensions',
+            selector: '#sidebar-group-toggle-extensions',
+            title: '🧩 Extensions',
+            description: `<p>Plugin-contributed configuration and pages:</p>
                 <ul style="margin: 10px 0 0 18px; padding: 0; list-style: disc;">
-                    <li>Define demographic distributions</li>
-                    <li>Configure agent behaviors</li>
-                    <li>Set engagement patterns</li>
+                    <li><b>Frontend Settings</b> - enable and configure frontend plugin modules</li>
+                    <li>Any installed plugin's own page (e.g. Scenario Design) appears here too</li>
                 </ul>`,
             position: 'right'
         },
         {
-            id: 'sidebar-agents-dashboard',
-            selector: '#sidebar-agents-dashboard',
-            title: '🤖 Agent Resources',
-            description: `<p>Open the <b>agent workspace</b> to reach all major actor-construction tools:</p>
+            id: 'sidebar-group-toggle-admin',
+            selector: '#sidebar-group-toggle-admin',
+            title: '🛠️ Admin',
+            description: `<p>Platform-wide administration (visible to admins only):</p>
                 <ul style="margin: 10px 0 0 18px; padding: 0; list-style: disc;">
-                    <li>Create synthetic user agents</li>
-                    <li>Create media and institutional pages</li>
-                    <li>Choose the right construction flow for each resource</li>
-                </ul>`,
-            position: 'right'
-        },
-        {
-            id: 'sidebar-miscellanea',
-            selector: '#sidebar-miscellanea',
-            title: '⚙️ Miscellanea',
-            description: `<p>Access <b>system settings</b> and configurations:</p>
-                <ul style="margin: 10px 0 0 18px; padding: 0; list-style: disc;">
-                    <li>LLM server management</li>
-                    <li>Demographics and content settings</li>
-                    <li>System updates and logs</li>
+                    <li><b>Users</b> - create and manage user accounts</li>
+                    <li><b>Miscellanea</b> - system settings, LLM server, demographics vocabularies</li>
+                    <li><b>Plugin Manager</b> - install and configure external plugin suites</li>
                 </ul>`,
             position: 'right'
         },

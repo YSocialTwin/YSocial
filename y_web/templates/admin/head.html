@@ -78,14 +78,12 @@
     </a>
 
     <div class="dashboard-aside-body">
-        <hr>
         <a href="/admin/dashboard" class="dashboard-aside-link" id="sidebar-home">
             <div>
                 <i data-feather="home"></i>
                 <span>Home</span>
             </div>
         </a>
-        <hr>
 
         <!-- Experiments: everything about running/configuring simulations -->
         <div class="dashboard-aside-group" id="sidebar-group-experiments">
@@ -112,7 +110,6 @@
                 </a>
             </div>
         </div>
-        <hr>
 
         <!-- Extensions: plugin-contributed configuration and pages. Any
              future backend settings suite that declares a "sidebar" block
@@ -141,20 +138,25 @@
                 {% endfor %}
             </div>
         </div>
-        <hr>
+    </div>
 
+    <!-- Pinned to the bottom of the sidebar column (margin-top:auto in
+         core.css / border-top treatment in admin-responsive.css) -- Admin
+         and About are not simulation/plugin content, so they sit apart
+         from the main categories above. -->
+    <div class="dashboard-aside-end">
         {% if current_user_role == "admin" %}
-        <!-- Administration: users, platform-wide configuration, plugin install/management -->
-        <div class="dashboard-aside-group" id="sidebar-group-administration">
-            <button type="button" class="dashboard-aside-link dashboard-aside-group-toggle" id="sidebar-group-toggle-administration" data-group="administration" aria-expanded="false" aria-controls="sidebar-submenu-administration">
+        <!-- Admin: users, platform-wide configuration, plugin install/management -->
+        <div class="dashboard-aside-group" id="sidebar-group-admin">
+            <button type="button" class="dashboard-aside-link dashboard-aside-group-toggle" id="sidebar-group-toggle-admin" data-group="admin" aria-expanded="false" aria-controls="sidebar-submenu-admin">
                 <div>
                     <i data-feather="shield"></i>
-                    <span>Administration</span>
+                    <span>Admin</span>
                     <i data-feather="chevron-right" class="dashboard-aside-group-chevron"></i>
                 </div>
             </button>
-            <div class="dashboard-aside-submenu" id="sidebar-submenu-administration">
-                <div class="dashboard-aside-submenu-title">Administration</div>
+            <div class="dashboard-aside-submenu" id="sidebar-submenu-admin">
+                <div class="dashboard-aside-submenu-title">Admin</div>
                 <a href="/admin/users" class="dashboard-aside-link dashboard-aside-sublink" id="sidebar-users">
                     <i data-feather="users"></i>
                     <span>Users</span>
@@ -169,7 +171,6 @@
                 </a>
             </div>
         </div>
-        <hr>
         {% endif %}
 
         <a href="/admin/about" class="dashboard-aside-link" id="sidebar-about">
@@ -178,7 +179,6 @@
                 <span>About</span>
             </div>
         </a>
-
     </div>
     <!--<<div class="dashboard-aside-end">
         {% if current_user_role == "admin" %}

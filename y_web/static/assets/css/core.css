@@ -13550,7 +13550,7 @@ body.is-white {
     border-radius: 50%
 }
 
-/* Two-level sidebar groups (Experiments / Extensions / Administration):
+/* Two-level sidebar groups (Experiments / Extensions / Admin):
  * on desktop the sidebar stays an 80px icon dock, so a group's children
  * open as a flyout card anchored to the right of its toggle icon, rather
  * than an in-place accordion (which needs horizontal room this column
