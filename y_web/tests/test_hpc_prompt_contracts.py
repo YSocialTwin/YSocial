@@ -2,6 +2,8 @@ import json
 from pathlib import Path
 from string import Formatter
 
+from y_web.src.system.path_utils import get_resource_path
+
 
 def _get_placeholder_names(template: str) -> list[str]:
     return [
@@ -10,7 +12,7 @@ def _get_placeholder_names(template: str) -> list[str]:
 
 
 def test_hpc_prompt_json_includes_output_contracts():
-    prompts_path = Path("data_schema/prompts_hpc.json")
+    prompts_path = Path(get_resource_path("data_schema/prompts_hpc.json"))
     data = json.loads(prompts_path.read_text())
 
     comment_prompt = data["generate_comment"]["user_template"]
@@ -41,7 +43,7 @@ def test_hpc_prompt_json_includes_output_contracts():
 
 
 def test_hpc_comment_prompt_placeholders_are_well_formed():
-    prompts_path = Path("data_schema/prompts_hpc.json")
+    prompts_path = Path(get_resource_path("data_schema/prompts_hpc.json"))
     data = json.loads(prompts_path.read_text())
 
     comment_prompt = data["generate_comment"]["user_template"]
