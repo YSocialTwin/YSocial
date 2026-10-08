@@ -14,15 +14,6 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Install external plugin suites
-      # external/ is gitignored (each developer clones these manually; see
-      # external/README.md and external/plugins.json), so a fresh CI
-      # checkout never has them. Several test suites (e.g.
-      # test_backend_plugins_registry.py, test_frontend_adds_on_plugin_suite.py)
-      # intentionally exercise the real repos rather than a mock, so they
-      # need to be present before pytest runs.
-      run: python3 scripts/ci_install_external_plugins.py
-
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
