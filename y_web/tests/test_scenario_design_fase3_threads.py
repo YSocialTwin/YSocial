@@ -8,6 +8,38 @@ parent) through real HTTP requests, not just the unit-level
 test_thread_invariants.py in the ScenarioDesign repo.
 
 Piano di implementazione, Fase 3.
+
+User-reported (2026-10-08, "digg into it and fix the tests"): every test
+below that hit an ``/experiments/<exp_id>/...`` URL was 302-redirecting
+to ``/login`` instead of exercising the route at all. Root cause (two
+layers, both fixed here):
+
+1. The login identity was a ``User_mgmt`` row, which is
+   ``__bind_key__ = "db_exp"``. ``setup_experiment_context()`` (a
+   ``before_request`` hook) repoints the shared ``db_exp`` bind at the
+   *specific* experiment named by ``exp_id`` in the URL for the
+   duration of that request. So the very first request carrying an
+   ``exp_id`` swapped ``db_exp`` away from wherever the fixture's
+   ``User_mgmt`` row actually lived, and Flask-Login's
+   ``load_user()`` -- which looks that id up via ``db.session.get
+   (User_mgmt, user_id)`` -- correctly found no such row in *that*
+   experiment's own database and returned ``None``, failing
+   ``@login_required``. ``Admin_users`` (``__bind_key__ = "db_admin"``)
+   is never touched by that swap, so logging in as an admin -- which is
+   also what these admin-only scenario_design routes are actually for
+   in production -- is stable across every request regardless of which
+   exp_id is in the URL.
+2. Once login was fixed, a *second*, pre-existing issue surfaced: the
+   per-experiment ``user_mgmt`` table's real schema (hand-written raw
+   SQL in ``y_web/src/experiment/schema.py``, not SQLAlchemy's default
+   autoincrement) declares ``id TEXT PRIMARY KEY`` with no autoincrement
+   semantics at all, and production code
+   (``y_web/src/experiment/helpers.py``) always supplies an explicit
+   ``id=`` when creating one. A ``User_mgmt(...)`` row created without
+   an explicit ``id`` silently gets ``id=NULL`` and is unreachable the
+   moment SQLAlchemy's post-commit attribute expiry tries to reload it.
+   Every author fixture below now passes an explicit, small numeric
+   string id, mirroring production.
 """
 import sqlite3
 
@@ -64,21 +96,29 @@ def _make_exp(app, name="sd-fase3-exp"):
     get_writable_path(), i.e. relative to the repo root in dev mode) the
     first time a request names this exp_id in its URL. Each test gets its
     own subfolder (keyed by *name*) so distinct tests never share one
-    physical database file.
+    physical database file -- but these subfolders are real, persistent,
+    gitignored files on disk, not an ephemeral per-test temp dir, so a
+    fixed *name* across repeated runs of this suite would otherwise
+    collide with whatever a previous run left behind (e.g. the fixed
+    "testuser" row _make_author below inserts). A short random suffix
+    keeps every run's folder -- and so every run's author rows --
+    independent of whatever earlier runs left on disk.
     """
     import os
+    import uuid
 
     from y_web.src.models import Exps
     from y_web.src.system.path_utils import get_writable_path
 
-    folder = get_writable_path(os.path.join("y_web", "experiments", name))
+    folder_name = f"{name}-{uuid.uuid4().hex[:8]}"
+    folder = get_writable_path(os.path.join("y_web", "experiments", folder_name))
     os.makedirs(folder, exist_ok=True)
 
     with app.app_context():
         exp = Exps(
             platform_type="microblogging",
-            exp_name=name,
-            db_name=f"experiments/{name}/database_server.db",
+            exp_name=folder_name,
+            db_name=f"experiments/{folder_name}/database_server.db",
             owner="admin",
             exp_descr="test",
             status=1,
@@ -88,6 +128,42 @@ def _make_exp(app, name="sd-fase3-exp"):
         db.session.add(exp)
         db.session.commit()
         return exp.idexp
+
+
+def _make_author(app, exp_id, username="testuser", user_id="1"):
+    """Create a real User_mgmt row inside *exp_id*'s own per-experiment
+    database -- not the shared default db_exp bind -- so it is actually
+    reachable as an author (author_user_id validation, the authors/search
+    endpoint) once a request for that exp_id activates its bind.
+
+    experiment_db_bind() is the same helper production code uses to do
+    this outside of a live request (see
+    y_web/src/experiment/context.py); it activates the per-experiment
+    bind for the duration of the ``with`` block and restores the
+    previous one afterwards, exactly like setup_experiment_context()
+    does per-request.
+
+    An explicit *user_id* is required: the real per-experiment
+    ``user_mgmt`` table is ``id TEXT PRIMARY KEY`` with no autoincrement
+    (see this module's docstring) -- production always supplies one
+    (y_web/src/experiment/helpers.py), and a row inserted without one
+    gets id=NULL and is unreachable.
+    """
+    from y_web.src.experiment.context import experiment_db_bind
+    from y_web.src.models import User_mgmt
+
+    with app.app_context():
+        with experiment_db_bind(exp_id):
+            author = User_mgmt(
+                id=user_id,
+                username=username,
+                email=f"{username}@test.com",
+                password=generate_password_hash("test123"),
+                joined_on=1234567890,
+            )
+            db.session.add(author)
+            db.session.commit()
+    return user_id
 
 
 def _login(client, user_id):
@@ -127,21 +203,28 @@ def sd_app():
 
 @pytest.fixture
 def sd_client(sd_app):
-    from y_web.src.models import User_mgmt
+    """Logs in as a real Admin_users account -- these are admin-only
+    routes in production, and (unlike a User_mgmt participant row,
+    __bind_key__ = "db_exp") Admin_users is __bind_key__ = "db_admin",
+    which setup_experiment_context() never repoints per-request, so the
+    login survives every exp_id-scoped request regardless of which
+    experiment it names (see this module's docstring)."""
+    from y_web.src.models import Admin_users
 
     client = sd_app.test_client()
     with sd_app.app_context():
-        test_user = User_mgmt(
-            username="testuser",
-            email="testuser@test.com",
+        admin_user = Admin_users(
+            username="sd_fase3_admin",
+            email="sd_fase3_admin@test.com",
             password=generate_password_hash("test123"),
-            joined_on=1234567890,
+            last_seen="",
+            role="admin",
         )
-        db.session.add(test_user)
+        db.session.add(admin_user)
         db.session.commit()
-        user_id = test_user.id
-    _login(client, user_id)
-    return client, user_id
+        admin_id = admin_user.id
+    _login(client, f"admin_{admin_id}")
+    return client
 
 
 def _create_scenario(client, exp_id, name="S1"):
@@ -154,8 +237,9 @@ def _create_scenario(client, exp_id, name="S1"):
 
 
 def test_thread_and_root_post_lifecycle(sd_app, sd_client):
-    client, user_id = sd_client
+    client = sd_client
     exp_id = _make_exp(sd_app)
+    author_id = _make_author(sd_app, exp_id)
     scenario_id = _create_scenario(client, exp_id)
 
     create_thread = client.post(
@@ -168,7 +252,7 @@ def test_thread_and_root_post_lifecycle(sd_app, sd_client):
     add_root = client.post(
         f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}"
         f"/threads/{thread_id}/posts",
-        json={"tmp_id": "root", "parent_tmp_id": None, "author_user_id": user_id, "content": "hello"},
+        json={"tmp_id": "root", "parent_tmp_id": None, "author_user_id": author_id, "content": "hello"},
     )
     assert add_root.status_code == 201, add_root.data
 
@@ -181,8 +265,9 @@ def test_thread_and_root_post_lifecycle(sd_app, sd_client):
 
 
 def test_second_root_rejected_with_409(sd_app, sd_client):
-    client, user_id = sd_client
+    client = sd_client
     exp_id = _make_exp(sd_app, "sd-fase3-exp-2root")
+    author_id = _make_author(sd_app, exp_id)
     scenario_id = _create_scenario(client, exp_id)
     thread_id = client.post(
         f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}/threads",
@@ -190,16 +275,17 @@ def test_second_root_rejected_with_409(sd_app, sd_client):
     ).get_json()["thread"]["id"]
 
     base = f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}/threads/{thread_id}/posts"
-    r1 = client.post(base, json={"tmp_id": "root1", "parent_tmp_id": None, "author_user_id": user_id})
+    r1 = client.post(base, json={"tmp_id": "root1", "parent_tmp_id": None, "author_user_id": author_id})
     assert r1.status_code == 201
-    r2 = client.post(base, json={"tmp_id": "root2", "parent_tmp_id": None, "author_user_id": user_id})
+    r2 = client.post(base, json={"tmp_id": "root2", "parent_tmp_id": None, "author_user_id": author_id})
     assert r2.status_code == 409
     assert r2.get_json()["error"]["code"] == "thread_second_root"
 
 
 def test_cycle_rejected_at_write_time(sd_app, sd_client):
-    client, user_id = sd_client
+    client = sd_client
     exp_id = _make_exp(sd_app, "sd-fase3-exp-cycle")
+    author_id = _make_author(sd_app, exp_id)
     scenario_id = _create_scenario(client, exp_id)
     thread_id = client.post(
         f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}/threads",
@@ -207,8 +293,8 @@ def test_cycle_rejected_at_write_time(sd_app, sd_client):
     ).get_json()["thread"]["id"]
 
     base = f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}/threads/{thread_id}/posts"
-    client.post(base, json={"tmp_id": "root", "parent_tmp_id": None, "author_user_id": user_id})
-    client.post(base, json={"tmp_id": "a", "parent_tmp_id": "root", "author_user_id": user_id})
+    client.post(base, json={"tmp_id": "root", "parent_tmp_id": None, "author_user_id": author_id})
+    client.post(base, json={"tmp_id": "a", "parent_tmp_id": "root", "author_user_id": author_id})
 
     # Attempt to make 'root' a child of 'a' -- a direct cycle.
     resp = client.put(
@@ -220,8 +306,9 @@ def test_cycle_rejected_at_write_time(sd_app, sd_client):
 
 
 def test_orphan_parent_rejected(sd_app, sd_client):
-    client, user_id = sd_client
+    client = sd_client
     exp_id = _make_exp(sd_app, "sd-fase3-exp-orphan")
+    author_id = _make_author(sd_app, exp_id)
     scenario_id = _create_scenario(client, exp_id)
     thread_id = client.post(
         f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}/threads",
@@ -231,14 +318,14 @@ def test_orphan_parent_rejected(sd_app, sd_client):
     resp = client.post(
         f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}"
         f"/threads/{thread_id}/posts",
-        json={"tmp_id": "a", "parent_tmp_id": "does_not_exist", "author_user_id": user_id},
+        json={"tmp_id": "a", "parent_tmp_id": "does_not_exist", "author_user_id": author_id},
     )
     assert resp.status_code == 409
     assert resp.get_json()["error"]["code"] == "thread_orphan_parent"
 
 
 def test_nonexistent_author_rejected(sd_app, sd_client):
-    client, user_id = sd_client
+    client = sd_client
     exp_id = _make_exp(sd_app, "sd-fase3-exp-author")
     scenario_id = _create_scenario(client, exp_id)
     thread_id = client.post(
@@ -256,8 +343,9 @@ def test_nonexistent_author_rejected(sd_app, sd_client):
 
 
 def test_delete_subtree_removes_exact_descendant_count(sd_app, sd_client):
-    client, user_id = sd_client
+    client = sd_client
     exp_id = _make_exp(sd_app, "sd-fase3-exp-subtree")
+    author_id = _make_author(sd_app, exp_id)
     scenario_id = _create_scenario(client, exp_id)
     thread_id = client.post(
         f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}/threads",
@@ -265,10 +353,10 @@ def test_delete_subtree_removes_exact_descendant_count(sd_app, sd_client):
     ).get_json()["thread"]["id"]
 
     base = f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}/threads/{thread_id}/posts"
-    client.post(base, json={"tmp_id": "root", "parent_tmp_id": None, "author_user_id": user_id})
-    client.post(base, json={"tmp_id": "child", "parent_tmp_id": "root", "author_user_id": user_id})
-    client.post(base, json={"tmp_id": "grandchild", "parent_tmp_id": "child", "author_user_id": user_id})
-    client.post(base, json={"tmp_id": "sibling", "parent_tmp_id": "root", "author_user_id": user_id})
+    client.post(base, json={"tmp_id": "root", "parent_tmp_id": None, "author_user_id": author_id})
+    client.post(base, json={"tmp_id": "child", "parent_tmp_id": "root", "author_user_id": author_id})
+    client.post(base, json={"tmp_id": "grandchild", "parent_tmp_id": "child", "author_user_id": author_id})
+    client.post(base, json={"tmp_id": "sibling", "parent_tmp_id": "root", "author_user_id": author_id})
 
     resp = client.post(
         f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}"
@@ -287,7 +375,7 @@ def test_delete_subtree_removes_exact_descendant_count(sd_app, sd_client):
 
 
 def test_delete_subtree_already_deleted_is_idempotent_404(sd_app, sd_client):
-    client, user_id = sd_client
+    client = sd_client
     exp_id = _make_exp(sd_app, "sd-fase3-exp-idempotent")
     scenario_id = _create_scenario(client, exp_id)
 
@@ -300,7 +388,7 @@ def test_delete_subtree_already_deleted_is_idempotent_404(sd_app, sd_client):
 
 
 def test_bulk_delete_threads_removes_all(sd_app, sd_client):
-    client, user_id = sd_client
+    client = sd_client
     exp_id = _make_exp(sd_app, "sd-fase3-exp-bulk")
     scenario_id = _create_scenario(client, exp_id)
     client.post(
@@ -343,8 +431,9 @@ def test_post_not_reachable_through_a_different_scenario(sd_app, sd_client):
     """tmp_id isolation (_post_or_404 is scoped by scenario_id, not just a
     global tmp_id lookup) -- a post belonging to scenario A's thread must
     not be editable/deletable through scenario B's URL."""
-    client, user_id = sd_client
+    client = sd_client
     exp_id = _make_exp(sd_app, "sd-fase3-exp-isolation")
+    author_id = _make_author(sd_app, exp_id)
     scenario_a = _create_scenario(client, exp_id, name="A")
     scenario_b = _create_scenario(client, exp_id, name="B")
 
@@ -355,7 +444,7 @@ def test_post_not_reachable_through_a_different_scenario(sd_app, sd_client):
     client.post(
         f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_a}"
         f"/threads/{thread_id}/posts",
-        json={"tmp_id": "root", "parent_tmp_id": None, "author_user_id": user_id},
+        json={"tmp_id": "root", "parent_tmp_id": None, "author_user_id": author_id},
     )
 
     # Attempt to edit scenario A's post through scenario B's URL.
@@ -367,7 +456,7 @@ def test_post_not_reachable_through_a_different_scenario(sd_app, sd_client):
 
 
 def test_vocab_and_roles_endpoints(sd_app, sd_client):
-    client, _ = sd_client
+    client = sd_client
     topics_resp = client.get("/admin/scenario_design/api/vocab/topics")
     assert topics_resp.status_code == 200
     assert "technology" in topics_resp.get_json()["topics"]
@@ -387,18 +476,35 @@ def test_vocab_topics_and_emotions_read_the_real_experiment_tables(sd_app, sd_cl
     the admin database relevant tables"). These two new, additive,
     experiment-scoped endpoints read the real ``interests``/``emotions``
     tables instead of any hardcoded vocabulary."""
-    client, _ = sd_client
+    client = sd_client
     exp_id = _make_exp(sd_app, "sd-fase3-exp-vocab")
     # First request against this exp_id triggers register_experiment_database()
     # -- same bootstrap authors/search already relies on.
     client.get(f"/admin/scenario_design/api/experiments/{exp_id}/authors/search")
 
-    with sd_app.app_context():
-        from y_web.src.models import Emotions, Interests
+    from y_web.src.experiment.context import experiment_db_bind
+    from y_web.src.experiment.helpers import _ensure_experiment_orm_tables
+    from y_web.src.models import Emotions, Interests
 
-        db.session.add(Interests(interest="quantum computing"))
-        db.session.add(Emotions(emotion="curiosity", icon="🤔"))
-        db.session.commit()
+    with sd_app.app_context():
+        # Interests/Emotions are __bind_key__ = "db_exp" too -- same
+        # per-experiment-bind requirement as the author rows above, so
+        # this insert must go through the same exp_id-scoped bind the
+        # requests below will read back from, not whatever db_exp
+        # happens to point at outside of a request.
+        with experiment_db_bind(exp_id):
+            # Unlike user_mgmt (hand-written raw SQL, see this module's
+            # docstring), interests/emotions are plain SQLAlchemy models
+            # with no raw-SQL DDL of their own -- a freshly created
+            # per-experiment sqlite file doesn't have them yet.
+            # Production never hits this gap because
+            # open_experiment_session() (y_web/src/experiment/helpers.py)
+            # always calls this same helper before any ORM access; do the
+            # same here instead of assuming the table exists.
+            _ensure_experiment_orm_tables(db.engines["db_exp"])
+            db.session.add(Interests(interest="quantum computing"))
+            db.session.add(Emotions(emotion="curiosity", icon="🤔"))
+            db.session.commit()
 
     topics_resp = client.get(
         f"/admin/scenario_design/api/experiments/{exp_id}/vocab/topics"
@@ -414,8 +520,9 @@ def test_vocab_topics_and_emotions_read_the_real_experiment_tables(sd_app, sd_cl
 
 
 def test_author_search_filters_by_query(sd_app, sd_client):
-    client, _ = sd_client
+    client = sd_client
     exp_id = _make_exp(sd_app, "sd-fase3-exp-authors")
+    _make_author(sd_app, exp_id)
     resp = client.get(
         f"/admin/scenario_design/api/experiments/{exp_id}/authors/search",
         query_string={"q": "testuser"},
