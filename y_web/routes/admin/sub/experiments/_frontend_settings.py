@@ -47,22 +47,22 @@ DEFAULT_SETTINGS = {
     "annotation_author_type": True,
     "show_post_time": True,  # show "Day X - HH:00" below each post/comment
     # Feed & Profile
-    "default_content_recsys": "",   # empty = system default
-    "default_follow_recsys": "",    # empty = system default
-    "profile_topics_box": True,     # show Topics & Opinions card in edit_profile
-    "onboarding_enabled": True,     # show onboarding screen on first login
+    "default_content_recsys": "",  # empty = system default
+    "default_follow_recsys": "",  # empty = system default
+    "profile_topics_box": True,  # show Topics & Opinions card in edit_profile
+    "onboarding_enabled": True,  # show onboarding screen on first login
     # Infinite scroll & pagination
     "infinite_scroll_enabled": True,  # enable infinite scroll (False = paginate)
-    "posts_per_page": 10,             # posts per page when infinite scroll is disabled
+    "posts_per_page": 10,  # posts per page when infinite scroll is disabled
     # FilterBubble (Personalized Feed) recommender parameters
-    "filter_bubble_alpha": 2.0,   # opinion similarity width (Gaussian)
-    "filter_bubble_beta":  0.0,   # recency decay (0 = disabled)
-    "filter_bubble_gamma": 0.0,   # engagement amplification (0 = disabled)
-    "filter_bubble_lr":    0.05,  # EMA learning rate for real-time interest update
-    "filter_bubble_sort":  "score",  # ranking mode: score | recency | engagement | hybrid
-    "filter_bubble_wr":    1.0,   # weight for reactions in engagement score
-    "filter_bubble_wc":    1.5,   # weight for comments in engagement score
-    "filter_bubble_ws":    2.0,   # weight for shares in engagement score
+    "filter_bubble_alpha": 2.0,  # opinion similarity width (Gaussian)
+    "filter_bubble_beta": 0.0,  # recency decay (0 = disabled)
+    "filter_bubble_gamma": 0.0,  # engagement amplification (0 = disabled)
+    "filter_bubble_lr": 0.05,  # EMA learning rate for real-time interest update
+    "filter_bubble_sort": "score",  # ranking mode: score | recency | engagement | hybrid
+    "filter_bubble_wr": 1.0,  # weight for reactions in engagement score
+    "filter_bubble_wc": 1.5,  # weight for comments in engagement score
+    "filter_bubble_ws": 2.0,  # weight for shares in engagement score
 }
 
 
@@ -79,8 +79,11 @@ def _load_settings(exp_id: int) -> dict:
     return merged
 
 
-def _load_recsys_options(simulator_type: str = "Standard", all_algorithms: bool = False,
-                         include_human_only: bool = False):
+def _load_recsys_options(
+    simulator_type: str = "Standard",
+    all_algorithms: bool = False,
+    include_human_only: bool = False,
+):
     """Return content and follow recsys lists, filtered by experiment type.
 
     For HPC experiments all algorithms are shown; for Standard experiments
@@ -110,7 +113,13 @@ def _load_recsys_options(simulator_type: str = "Standard", all_algorithms: bool 
             else:
                 include = "standard" in enabled_lc
             if include:
-                result.append({"name": r.name, "label": r.value, "category": r.category or "Other"})
+                result.append(
+                    {
+                        "name": r.name,
+                        "label": r.value,
+                        "category": r.category or "Other",
+                    }
+                )
         return result
 
     return {
@@ -133,10 +142,12 @@ def frontend_settings():
         .order_by(Exps.exp_name.asc())
     ).all()
 
-    exps_json = json.dumps([
-        {"id": e.idexp, "name": e.exp_name, "type": "microblogging"}
-        for e in micro_exps
-    ])
+    exps_json = json.dumps(
+        [
+            {"id": e.idexp, "name": e.exp_name, "type": "microblogging"}
+            for e in micro_exps
+        ]
+    )
 
     recsys = _load_recsys_options(all_algorithms=True)
     recsys_json = json.dumps(recsys)
@@ -185,14 +196,18 @@ def frontend_settings_get():
     if exp is None or exp.platform_type != "microblogging":
         return jsonify({"ok": False, "error": "Experiment not found"}), 404
 
-    return jsonify({
-        "ok": True,
-        "exp_id": exp_id,
-        "exp_name": exp.exp_name,
-        "simulator_type": exp.simulator_type or "Standard",
-        "settings": _load_settings(exp_id),
-        "recsys_options": _load_recsys_options(exp.simulator_type or "Standard", all_algorithms=True),
-    })
+    return jsonify(
+        {
+            "ok": True,
+            "exp_id": exp_id,
+            "exp_name": exp.exp_name,
+            "simulator_type": exp.simulator_type or "Standard",
+            "settings": _load_settings(exp_id),
+            "recsys_options": _load_recsys_options(
+                exp.simulator_type or "Standard", all_algorithms=True
+            ),
+        }
+    )
 
 
 # ------------------------------------------------------------------
@@ -249,7 +264,6 @@ def frontend_settings_save():
 
     db.session.commit()
     return jsonify({"ok": True})
-
 
 
 # ------------------------------------------------------------------
@@ -343,27 +357,31 @@ def frontend_plugin_suite_settings_get(repo_key):
     for manifest in report["modules"]:
         module_id = manifest.get("module_id")
         row = rows.get(module_id)
-        modules.append({
-            "module_id": module_id,
-            "display_name": manifest.get("display_name") or module_id,
-            "version": manifest.get("version"),
-            "description": manifest.get("description") or "",
-            "parameter_sections": manifest.get("parameter_sections") or [],
-            "parameters": manifest.get("parameters") or [],
-            "enabled": bool(row is not None and row.enabled),
-            "config": _frontend_plugin_module_config(manifest, row),
-            "status": _frontend_plugin_module_status(manifest, row),
-            "manifest_errors": manifest.get("errors") or [],
-        })
+        modules.append(
+            {
+                "module_id": module_id,
+                "display_name": manifest.get("display_name") or module_id,
+                "version": manifest.get("version"),
+                "description": manifest.get("description") or "",
+                "parameter_sections": manifest.get("parameter_sections") or [],
+                "parameters": manifest.get("parameters") or [],
+                "enabled": bool(row is not None and row.enabled),
+                "config": _frontend_plugin_module_config(manifest, row),
+                "status": _frontend_plugin_module_status(manifest, row),
+                "manifest_errors": manifest.get("errors") or [],
+            }
+        )
 
-    return jsonify({
-        "ok": True,
-        "installed": True,
-        "valid": report["valid"],
-        "suite": report.get("suite"),
-        "suite_errors": report.get("errors") or [],
-        "modules": modules,
-    })
+    return jsonify(
+        {
+            "ok": True,
+            "installed": True,
+            "valid": report["valid"],
+            "suite": report.get("suite"),
+            "suite_errors": report.get("errors") or [],
+            "modules": modules,
+        }
+    )
 
 
 def _coerce_frontend_plugin_param(value, param: dict):
@@ -442,10 +460,15 @@ def frontend_plugin_suite_settings_save(repo_key):
     if enabled:
         migrated = ensure_module_schema(repo_key, module_id, exp_id, quiet=True)
         if not migrated:
-            return jsonify({
-                "ok": False,
-                "error": "Could not prepare the experiment database for this module.",
-            }), 500
+            return (
+                jsonify(
+                    {
+                        "ok": False,
+                        "error": "Could not prepare the experiment database for this module.",
+                    }
+                ),
+                500,
+            )
 
     row = db.session.get(FrontendAddsOnExpModuleSettings, (exp_id, module_id))
     if row is None:

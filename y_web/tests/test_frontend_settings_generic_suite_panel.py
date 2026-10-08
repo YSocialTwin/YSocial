@@ -18,6 +18,7 @@ These tests confirm the generalized routes
 registered suites, reject an unknown repo_key, and that the base
 /admin/frontend_settings page renders one box per suite.
 """
+
 import json
 import sqlite3
 
@@ -105,8 +106,9 @@ def suites_app(app):
     # here that renders frontend_settings.html.
     import os as _os
 
-    import y_web as _y_web_pkg
     from jinja2 import FileSystemLoader
+
+    import y_web as _y_web_pkg
 
     templates_dir = _os.path.join(_os.path.dirname(_y_web_pkg.__file__), "templates")
     app.jinja_loader = FileSystemLoader(templates_dir)
@@ -140,7 +142,9 @@ def test_generic_get_route_serves_reactive_agents_modules(suites_app):
     admin_login_id = _make_admin_login_user(suites_app)
     _login(client, admin_login_id)
 
-    resp = client.get(f"/admin/frontend_settings/suite/reactive_agents/get?exp_id={exp_id}")
+    resp = client.get(
+        f"/admin/frontend_settings/suite/reactive_agents/get?exp_id={exp_id}"
+    )
     assert resp.status_code == 200
     data = resp.get_json()
     assert data["ok"] is True
@@ -158,7 +162,9 @@ def test_generic_get_route_still_serves_frontend_adds_on_modules(suites_app):
     admin_login_id = _make_admin_login_user(suites_app)
     _login(client, admin_login_id)
 
-    resp = client.get(f"/admin/frontend_settings/suite/frontend_adds_on/get?exp_id={exp_id}")
+    resp = client.get(
+        f"/admin/frontend_settings/suite/frontend_adds_on/get?exp_id={exp_id}"
+    )
     assert resp.status_code == 200
     data = resp.get_json()
     assert data["ok"] is True
@@ -173,7 +179,9 @@ def test_generic_get_route_rejects_unknown_repo_key(suites_app):
     admin_login_id = _make_admin_login_user(suites_app)
     _login(client, admin_login_id)
 
-    resp = client.get(f"/admin/frontend_settings/suite/not_a_real_suite/get?exp_id={exp_id}")
+    resp = client.get(
+        f"/admin/frontend_settings/suite/not_a_real_suite/get?exp_id={exp_id}"
+    )
     assert resp.status_code == 404
     assert resp.get_json()["ok"] is False
 
@@ -196,7 +204,9 @@ def test_generic_save_route_enables_reactive_agents_module_and_persists_config(
     # frontend_adds_on's own post_annotation module.
     db_path = tmp_path / "exp_db_exp.sqlite"
     sqlite3.connect(str(db_path)).close()
-    monkeypatch.setattr(plugin_loader, "_experiment_db_path", lambda exp_id: str(db_path))
+    monkeypatch.setattr(
+        plugin_loader, "_experiment_db_path", lambda exp_id: str(db_path)
+    )
 
     save_resp = client.post(
         "/admin/frontend_settings/suite/reactive_agents/save",
@@ -211,13 +221,17 @@ def test_generic_save_route_enables_reactive_agents_module_and_persists_config(
     assert save_resp.get_json()["ok"] is True
 
     with suites_app.app_context():
-        row = db.session.get(FrontendAddsOnExpModuleSettings, (exp_id, "responsive_agents"))
+        row = db.session.get(
+            FrontendAddsOnExpModuleSettings, (exp_id, "responsive_agents")
+        )
         assert row is not None
         assert row.enabled is True
         assert json.loads(row.config_json)["generation_mode"] == "autonomous"
 
     # A follow-up GET reflects the just-saved enabled/config state.
-    get_resp = client.get(f"/admin/frontend_settings/suite/reactive_agents/get?exp_id={exp_id}")
+    get_resp = client.get(
+        f"/admin/frontend_settings/suite/reactive_agents/get?exp_id={exp_id}"
+    )
     modules = {m["module_id"]: m for m in get_resp.get_json()["modules"]}
     assert modules["responsive_agents"]["enabled"] is True
     assert modules["responsive_agents"]["config"]["generation_mode"] == "autonomous"

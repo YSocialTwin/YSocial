@@ -241,10 +241,9 @@ def test_photo_chat_contacts_follow_the_photo_follow_graph():
         # specifically the one that happens to be idexp=1 on this
         # particular machine at this particular moment (that numbering
         # drifts as experiments are created/deleted over time).
-        exp = (
-            db.session.scalars(select(Exps).filter_by(platform_type="photo_sharing"))
-            .first()
-        )
+        exp = db.session.scalars(
+            select(Exps).filter_by(platform_type="photo_sharing")
+        ).first()
         if exp is None:
             pytest.skip("No photo_sharing experiment found in this database")
         social.current_user = SimpleNamespace(

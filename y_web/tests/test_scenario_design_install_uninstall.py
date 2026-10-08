@@ -13,8 +13,8 @@ Piano di implementazione, Fase 1, commit #7
 ("test(integration): installazione/disinstallazione end-to-end del
 plugin ... verifica non-regressione run_tests.py con/senza plugin").
 """
-from y_web.src.external_runtime import backend_plugins
-from y_web.src.external_runtime import registry
+
+from y_web.src.external_runtime import backend_plugins, registry
 
 
 def test_scenario_design_absent_degrades_safely_everywhere(tmp_path, monkeypatch, app):
@@ -27,7 +27,9 @@ def test_scenario_design_absent_degrades_safely_everywhere(tmp_path, monkeypatch
     uninstalled_spec = registry.ExternalRuntimeSpec(
         **{**real_spec.__dict__, "path": empty_dir},
     )
-    monkeypatch.setitem(registry.SUPPORTED_EXTERNAL_REPOS, "scenario_design", uninstalled_spec)
+    monkeypatch.setitem(
+        registry.SUPPORTED_EXTERNAL_REPOS, "scenario_design", uninstalled_spec
+    )
 
     validation = backend_plugins.validate_backend_suite("scenario_design")
     assert validation["installed"] is False
@@ -54,7 +56,9 @@ def test_create_app_boots_cleanly_with_suite_absent(tmp_path, monkeypatch):
     uninstalled_spec = registry.ExternalRuntimeSpec(
         **{**real_spec.__dict__, "path": empty_dir},
     )
-    monkeypatch.setitem(registry.SUPPORTED_EXTERNAL_REPOS, "scenario_design", uninstalled_spec)
+    monkeypatch.setitem(
+        registry.SUPPORTED_EXTERNAL_REPOS, "scenario_design", uninstalled_spec
+    )
 
     from y_web import create_app
 
