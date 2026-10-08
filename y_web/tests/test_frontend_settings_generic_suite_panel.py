@@ -25,7 +25,15 @@ import sqlite3
 import pytest
 
 from y_web import db
-from y_web.src.external_runtime import plugin_loader
+from y_web.src.external_runtime import plugin_loader, registry
+
+
+def _frontend_adds_on_installed():
+    return registry.runtime_spec("frontend_adds_on").path.exists()
+
+
+def _reactive_agents_installed():
+    return registry.runtime_spec("reactive_agents").path.exists()
 
 
 def _make_exp(app):
@@ -88,6 +96,11 @@ def suites_app(app):
     standing up the full create_app() (which would touch this machine's
     real dashboard.db and experiment folders through Alembic).
     """
+    if not (_frontend_adds_on_installed() and _reactive_agents_installed()):
+        pytest.skip(
+            "frontend_adds_on and/or reactive_agents suite not checked out "
+            "in this environment"
+        )
     plugin_loader.register_frontend_plugin_suites(app)
     with app.app_context():
         try:

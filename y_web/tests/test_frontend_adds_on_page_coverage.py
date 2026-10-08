@@ -34,6 +34,10 @@ Frontend Adds-on commits' own stated rationale).
 
 from pathlib import Path
 
+import pytest
+
+from y_web.src.external_runtime import registry
+
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 
 COMMON_PY = _REPO_ROOT / "y_web" / "routes" / "social" / "common.py"
@@ -102,6 +106,10 @@ def test_feed_and_thread_templates_still_include_plugin_loader():
     assert PLUGIN_LOADER_INCLUDE in THREAD_HTML.read_text(encoding="utf-8")
 
 
+def _frontend_adds_on_installed():
+    return registry.runtime_spec("frontend_adds_on").path.exists()
+
+
 def test_find_anchors_labels_comments_by_their_own_id_not_the_threadroots():
     """
     Regression for the bug where EVERY `.media.is-comment` element was
@@ -112,6 +120,9 @@ def test_find_anchors_labels_comments_by_their_own_id_not_the_threadroots():
     since those have no wrapper card of their own and would silently
     resolve to the PARENT post's id instead).
     """
+    if not _frontend_adds_on_installed():
+        pytest.skip("frontend_adds_on suite not checked out in this environment")
+
     source = PLUGIN_JS.read_text(encoding="utf-8")
 
     # The fix must derive each comment's OWN id from a comment-scoped

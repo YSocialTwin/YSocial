@@ -43,12 +43,20 @@ own established verification approach).
 import json
 from pathlib import Path
 
+import pytest
+
+from y_web.src.external_runtime import registry
+
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 
 REGISTRY_JSON = _REPO_ROOT / "external" / "frontend_adds-on" / "meta" / "registry.json"
 FRONTEND_SETTINGS_HTML = (
     _REPO_ROOT / "y_web" / "templates" / "admin" / "frontend_settings.html"
 )
+
+
+def _frontend_adds_on_installed():
+    return registry.runtime_spec("frontend_adds_on").path.exists()
 
 
 def _post_annotation_manifest():
@@ -59,6 +67,8 @@ def _post_annotation_manifest():
 
 
 def test_dimension_gated_sections_declare_depends_on():
+    if not _frontend_adds_on_installed():
+        pytest.skip("frontend_adds_on suite not checked out in this environment")
     manifest = _post_annotation_manifest()
     sections_by_key = {s["key"]: s for s in manifest["parameter_sections"]}
 
@@ -92,6 +102,8 @@ def test_toxicity_section_removed_since_it_has_no_configurable_option():
     itself (the dimensions-section toggle that turns the whole judgment
     on/off) remains.
     """
+    if not _frontend_adds_on_installed():
+        pytest.skip("frontend_adds_on suite not checked out in this environment")
     manifest = _post_annotation_manifest()
     sections_by_key = {s["key"]: s for s in manifest["parameter_sections"]}
     assert "toxicity" not in sections_by_key
@@ -104,6 +116,8 @@ def test_toxicity_section_removed_since_it_has_no_configurable_option():
 
 
 def test_dependent_parameters_declare_depends_on():
+    if not _frontend_adds_on_installed():
+        pytest.skip("frontend_adds_on suite not checked out in this environment")
     manifest = _post_annotation_manifest()
     params_by_name = {p["name"]: p for p in manifest["parameters"]}
 
@@ -122,6 +136,8 @@ def test_dependent_parameters_declare_depends_on():
 
 
 def test_registry_json_is_well_formed_after_edits():
+    if not _frontend_adds_on_installed():
+        pytest.skip("frontend_adds_on suite not checked out in this environment")
     # A hand-edited JSON manifest is an easy place to introduce a trailing
     # comma or an unclosed brace -- catch that here rather than at
     # request time in the admin panel.
@@ -135,6 +151,8 @@ def test_discover_frontend_modules_passes_depends_on_through_unmodified():
     with no filtering -- so proving depends_on survives THAT call is
     sufficient to know the admin endpoint will see it too.
     """
+    if not _frontend_adds_on_installed():
+        pytest.skip("frontend_adds_on suite not checked out in this environment")
     import sys
 
     sys.path.insert(0, str(_REPO_ROOT))

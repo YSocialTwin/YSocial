@@ -33,6 +33,10 @@ import pytest
 from y_web.src.external_runtime import backend_plugins, registry
 
 
+def _scenario_design_installed():
+    return registry.runtime_spec("scenario_design").path.exists()
+
+
 # ---------------------------------------------------------------------------
 # Manifest discovery / validation
 # ---------------------------------------------------------------------------
@@ -41,6 +45,8 @@ def test_backend_plugin_repo_keys_includes_scenario_design():
 
 
 def test_validate_backend_suite_valid_for_scenario_design():
+    if not _scenario_design_installed():
+        pytest.skip("ScenarioDesign suite not checked out in this environment")
     report = backend_plugins.validate_backend_suite("scenario_design")
     assert report["installed"] is True
     assert report["valid"] is True, report["errors"]
@@ -107,6 +113,8 @@ def test_validate_backend_suite_missing_backend_blueprint_field_is_rejected(
 # Blueprint / static asset registration
 # ---------------------------------------------------------------------------
 def test_register_backend_plugin_suites_registers_blueprint_and_static_route(app):
+    if not _scenario_design_installed():
+        pytest.skip("ScenarioDesign suite not checked out in this environment")
     report = backend_plugins.register_backend_plugin_suites(app)
     assert report["suites"]["scenario_design"]["installed"] is True
     assert report["suites"]["scenario_design"]["valid"] is True
@@ -144,6 +152,8 @@ def test_register_backend_plugin_suites_registers_blueprint_and_static_route(app
 
 
 def test_register_backend_plugin_suites_is_idempotent(app):
+    if not _scenario_design_installed():
+        pytest.skip("ScenarioDesign suite not checked out in this environment")
     first = backend_plugins.register_backend_plugin_suites(app)
     second = backend_plugins.register_backend_plugin_suites(app)
     assert first["suites"]["scenario_design"]["valid"] is True
@@ -183,6 +193,8 @@ def test_fault_isolation_broken_suite_does_not_block_valid_one(
         validate_import=None,
         is_private=True,
     )
+    if not _scenario_design_installed():
+        pytest.skip("ScenarioDesign suite not checked out in this environment")
     monkeypatch.setitem(registry.SUPPORTED_EXTERNAL_REPOS, "broken_suite", fake_spec)
 
     report = backend_plugins.register_backend_plugin_suites(app)
@@ -195,5 +207,7 @@ def test_fault_isolation_broken_suite_does_not_block_valid_one(
 
 
 def test_backend_suite_availability_true_when_valid():
+    if not _scenario_design_installed():
+        pytest.skip("ScenarioDesign suite not checked out in this environment")
     availability = backend_plugins.backend_suite_availability()
     assert availability.get("scenario_design") is True

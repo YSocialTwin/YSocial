@@ -22,7 +22,18 @@ import pytest
 from werkzeug.security import generate_password_hash
 
 from y_web import db
-from y_web.src.external_runtime import frontend_plugins, plugin_loader
+from y_web.src.external_runtime import frontend_plugins, plugin_loader, registry
+
+# This whole suite exercises the REAL external/frontend_adds-on repo (see
+# module docstring above) -- it is not checked out in every environment
+# (gitignored, cloned manually; see external/README.md), so skip the suite
+# wholesale rather than erroring when it is absent, mirroring the
+# `_suite_is_installed()` convention used by the ScenarioDesign integration
+# tests (y_web/tests/test_scenario_design_fase3_threads.py and friends).
+pytestmark = pytest.mark.skipif(
+    not registry.runtime_spec("frontend_adds_on").path.exists(),
+    reason="frontend_adds_on suite not checked out in this environment",
+)
 
 
 # ---------------------------------------------------------------------------
