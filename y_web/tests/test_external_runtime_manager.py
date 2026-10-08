@@ -955,3 +955,76 @@ def test_load_plugins_index_detects_legacy_agent_plugin_layout(tmp_path, monkeyp
     plugins = registry.load_plugins_index(refresh=True)
 
     assert any(plugin["plugin_name"] == "y_agents_plugins" for plugin in plugins)
+
+
+def test_runtime_installed_and_visible_requires_both_installed_and_visible(
+    tmp_path, app, monkeypatch
+):
+    """User-reported gap (2026-10-08): "when the new flag -e is not
+    specified private plugins that are already installed are still
+    visible". Several admin pages (experiment creation's simulator-type
+    list, the frontend-plugin settings page and its suite get/save
+    endpoints, agent-plugin feature availability) used to check only
+    ``runtime_spec(repo_key).path.exists()`` with no privacy gate at
+    all, bypassing ``runtime_visible_to_user`` entirely. This test
+    exercises the shared replacement, ``runtime_installed_and_visible``,
+    directly against the registry those call sites import it from."""
+    installed_path = tmp_path / "private-runtime"
+    installed_path.mkdir()
+
+    spec = registry.ExternalRuntimeSpec(
+        key="private_runtime_installed_check",
+        group="hpc",
+        group_label="HPC",
+        category="agent_extensions",
+        category_label="Agent Extensions",
+        label="PrivateRuntime",
+        path=installed_path,
+        github_repo="YSocialTwin/PrivateRuntime",
+        repo_url="https://github.com/YSocialTwin/PrivateRuntime.git",
+        default_branch="main",
+        install_commands=(),
+        validate_entrypoints=(),
+        is_private=True,
+        visible_to_usernames=(),
+    )
+    monkeypatch.setitem(
+        registry.SUPPORTED_EXTERNAL_REPOS, spec.key, spec
+    )
+
+    class User:
+        def __init__(self, username, role):
+            self.username = username
+            self.role = role
+
+    outsider = User("nobody", "user")
+
+    with app.app_context():
+        # Installed on disk, but private and not dev-mode / allow-listed:
+        # must stay hidden, matching the Plugins catalog page.
+        app.config["DEVELOPMENT_MODE"] = False
+        assert (
+            registry.runtime_installed_and_visible(spec.key, outsider) is False
+        )
+
+        # --development unlocks it, exactly like the catalog page.
+        app.config["DEVELOPMENT_MODE"] = True
+        assert (
+            registry.runtime_installed_and_visible(spec.key, outsider) is True
+        )
+        app.config["DEVELOPMENT_MODE"] = False
+
+        # Not installed on disk at all -- hidden regardless of dev mode.
+        spec.path.rmdir()
+        app.config["DEVELOPMENT_MODE"] = True
+        assert (
+            registry.runtime_installed_and_visible(spec.key, outsider) is False
+        )
+
+        # Unknown repo key -- hidden, never raises.
+        assert (
+            registry.runtime_installed_and_visible(
+                "this_repo_key_does_not_exist", outsider
+            )
+            is False
+        )

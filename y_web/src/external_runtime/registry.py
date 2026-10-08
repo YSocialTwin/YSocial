@@ -510,3 +510,30 @@ def runtime_visible_to_user(spec: ExternalRuntimeSpec, admin_user) -> bool:
         return admin_user.username in spec.visible_to_usernames
 
     return getattr(admin_user, "role", None) == "admin"
+
+
+def runtime_installed_and_visible(repo_key: str, admin_user) -> bool:
+    """True iff *repo_key* is both installed on disk AND visible to
+    *admin_user* (``runtime_visible_to_user``).
+
+    User-reported gap (2026-10-08): the Plugins catalog page (and its
+    install/enable/logs actions) all gate on ``runtime_visible_to_user``,
+    but several OTHER admin pages that surface a plugin's feature once
+    it's installed (which simulator types to offer when creating an
+    experiment, the frontend-plugin settings list, agent-plugin
+    features) only ever checked "is this repo's path present on disk" --
+    a bare ``runtime_spec(repo_key).path.exists()`` -- with no privacy
+    gate at all. That meant a private plugin already installed on this
+    machine stayed fully usable through those other pages even for an
+    admin who'd never pass ``runtime_visible_to_user``'s checks, and
+    even with ``--development`` off. Callers that decide whether to
+    surface an installed plugin's feature to the current admin should
+    use this instead of a bare path check.
+    """
+    try:
+        spec = runtime_spec(repo_key)
+    except KeyError:
+        return False
+    if not spec.path.exists():
+        return False
+    return runtime_visible_to_user(spec, admin_user)

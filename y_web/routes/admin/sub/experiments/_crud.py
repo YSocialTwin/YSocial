@@ -44,7 +44,7 @@ from y_web.src.experiment.access import (
     user_can_view_experiment,
 )
 from y_web.src.experiment.helpers import ensure_experiment_user
-from y_web.src.external_runtime import runtime_spec
+from y_web.src.external_runtime import runtime_installed_and_visible
 from y_web.src.hpc.population_backup import restore_population_for_hpc_client
 from y_web.src.models import (
     ActivityProfile,
@@ -140,8 +140,15 @@ def _external_repo_availability():
     """
 
     def _installed(repo_key: str) -> bool:
+        # "Installed" alone is not enough to offer this simulator type:
+        # a private repo that happens to be present on disk must stay
+        # hidden from this admin the same way it's hidden from the
+        # Plugins catalog page, unless --development is on or this
+        # admin is otherwise allow-listed (user-reported 2026-10-08:
+        # "when the new flag is not specified, private plugins that are
+        # already installed are still visible").
         try:
-            return bool(runtime_spec(repo_key).path.exists())
+            return runtime_installed_and_visible(repo_key, current_user)
         except Exception:
             return False
 

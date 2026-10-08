@@ -27,7 +27,10 @@ from y_web.src.agents.custom_features import (
 )
 from y_web.src.agents.platform import normalize_population_username_type
 from y_web.src.content.cover_images import available_cover_image_urls
-from y_web.src.external_runtime.registry import EXTERNAL_DIR, runtime_spec
+from y_web.src.external_runtime.registry import (
+    EXTERNAL_DIR,
+    runtime_installed_and_visible,
+)
 from y_web.src.llm.ollama_manager import get_ollama_models
 from y_web.src.llm.vllm_manager import get_llm_models
 from y_web.src.models import (
@@ -71,8 +74,12 @@ PLUGIN_REGISTRY_RELATIVE_PATHS = (
 
 
 def _runtime_installed(repo_key: str) -> bool:
+    # Installed-on-disk alone isn't enough: a private repo must still
+    # pass the same visibility gate the Plugins catalog page uses
+    # (--development, or an explicit allow-list) before this page
+    # offers anything backed by it (user-reported 2026-10-08).
     try:
-        return runtime_spec(repo_key).path.exists()
+        return runtime_installed_and_visible(repo_key, current_user)
     except Exception:
         return False
 

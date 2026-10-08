@@ -142,13 +142,22 @@ def frontend_settings():
     recsys_json = json.dumps(recsys)
 
     from y_web.src.external_runtime.frontend_plugins import frontend_plugin_repo_keys
-    from y_web.src.external_runtime.registry import runtime_spec
+    from y_web.src.external_runtime.registry import (
+        runtime_installed_and_visible,
+        runtime_spec,
+    )
 
     frontend_plugin_suites = []
     for repo_key in frontend_plugin_repo_keys():
         try:
             spec = runtime_spec(repo_key)
         except KeyError:
+            continue
+        # A private suite must stay hidden here too -- same gate as the
+        # Plugins catalog page, not just "is it installed" (user-reported
+        # 2026-10-08: installed private plugins stayed visible without
+        # --development).
+        if not runtime_installed_and_visible(repo_key, current_user):
             continue
         frontend_plugin_suites.append({"repo_key": repo_key, "label": spec.label})
 
@@ -308,6 +317,17 @@ def frontend_plugin_suite_settings_get(repo_key):
     if repo_key not in frontend_plugin_repo_keys():
         return jsonify({"ok": False, "error": "Unknown suite"}), 404
 
+    from y_web.src.external_runtime.registry import (
+        runtime_installed_and_visible,
+    )
+
+    # Defense in depth: this suite may not even have been offered in the
+    # /admin/frontend_settings listing above, but that listing filtering
+    # it out must not be the ONLY thing stopping a direct call to this
+    # endpoint from reaching a private, not-yet-visible suite.
+    if not runtime_installed_and_visible(repo_key, current_user):
+        return jsonify({"ok": False, "error": "Unknown suite"}), 404
+
     report = validate_frontend_suite(repo_key)
     if not report["installed"]:
         return jsonify({"ok": True, "installed": False})
@@ -396,6 +416,13 @@ def frontend_plugin_suite_settings_save(repo_key):
     from y_web.src.models import FrontendAddsOnExpModuleSettings
 
     if repo_key not in frontend_plugin_repo_keys():
+        return jsonify({"ok": False, "error": "Unknown suite"}), 404
+
+    from y_web.src.external_runtime.registry import (
+        runtime_installed_and_visible,
+    )
+
+    if not runtime_installed_and_visible(repo_key, current_user):
         return jsonify({"ok": False, "error": "Unknown suite"}), 404
 
     manifest = None
