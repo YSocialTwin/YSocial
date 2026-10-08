@@ -121,7 +121,9 @@ def start_app(
     # explicitly passed.
     app.config["DEVELOPMENT_MODE"] = development
     if development:
-        print("Development mode enabled: private plugin repositories are listable/installable.")
+        print(
+            "Development mode enabled: private plugin repositories are listable/installable."
+        )
 
     if db_type.lower() == "sqlite":
         app.run(debug=debug, host=host, port=port, threaded=False)

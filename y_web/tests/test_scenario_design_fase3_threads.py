@@ -41,6 +41,7 @@ layers, both fixed here):
    Every author fixture below now passes an explicit, small numeric
    string id, mirroring production.
 """
+
 import sqlite3
 
 import pytest
@@ -74,7 +75,9 @@ def _can_actually_write_sqlite_files() -> bool:
 
     from y_web.src.system.path_utils import get_writable_path
 
-    probe_dir = get_writable_path(os.path.join("y_web", "experiments", f"_probe_{uuid.uuid4().hex}"))
+    probe_dir = get_writable_path(
+        os.path.join("y_web", "experiments", f"_probe_{uuid.uuid4().hex}")
+    )
     try:
         os.makedirs(probe_dir, exist_ok=True)
         db_path = os.path.join(probe_dir, "probe.db")
@@ -252,7 +255,12 @@ def test_thread_and_root_post_lifecycle(sd_app, sd_client):
     add_root = client.post(
         f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}"
         f"/threads/{thread_id}/posts",
-        json={"tmp_id": "root", "parent_tmp_id": None, "author_user_id": author_id, "content": "hello"},
+        json={
+            "tmp_id": "root",
+            "parent_tmp_id": None,
+            "author_user_id": author_id,
+            "content": "hello",
+        },
     )
     assert add_root.status_code == 201, add_root.data
 
@@ -275,9 +283,15 @@ def test_second_root_rejected_with_409(sd_app, sd_client):
     ).get_json()["thread"]["id"]
 
     base = f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}/threads/{thread_id}/posts"
-    r1 = client.post(base, json={"tmp_id": "root1", "parent_tmp_id": None, "author_user_id": author_id})
+    r1 = client.post(
+        base,
+        json={"tmp_id": "root1", "parent_tmp_id": None, "author_user_id": author_id},
+    )
     assert r1.status_code == 201
-    r2 = client.post(base, json={"tmp_id": "root2", "parent_tmp_id": None, "author_user_id": author_id})
+    r2 = client.post(
+        base,
+        json={"tmp_id": "root2", "parent_tmp_id": None, "author_user_id": author_id},
+    )
     assert r2.status_code == 409
     assert r2.get_json()["error"]["code"] == "thread_second_root"
 
@@ -293,8 +307,13 @@ def test_cycle_rejected_at_write_time(sd_app, sd_client):
     ).get_json()["thread"]["id"]
 
     base = f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}/threads/{thread_id}/posts"
-    client.post(base, json={"tmp_id": "root", "parent_tmp_id": None, "author_user_id": author_id})
-    client.post(base, json={"tmp_id": "a", "parent_tmp_id": "root", "author_user_id": author_id})
+    client.post(
+        base,
+        json={"tmp_id": "root", "parent_tmp_id": None, "author_user_id": author_id},
+    )
+    client.post(
+        base, json={"tmp_id": "a", "parent_tmp_id": "root", "author_user_id": author_id}
+    )
 
     # Attempt to make 'root' a child of 'a' -- a direct cycle.
     resp = client.put(
@@ -318,7 +337,11 @@ def test_orphan_parent_rejected(sd_app, sd_client):
     resp = client.post(
         f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}"
         f"/threads/{thread_id}/posts",
-        json={"tmp_id": "a", "parent_tmp_id": "does_not_exist", "author_user_id": author_id},
+        json={
+            "tmp_id": "a",
+            "parent_tmp_id": "does_not_exist",
+            "author_user_id": author_id,
+        },
     )
     assert resp.status_code == 409
     assert resp.get_json()["error"]["code"] == "thread_orphan_parent"
@@ -353,10 +376,30 @@ def test_delete_subtree_removes_exact_descendant_count(sd_app, sd_client):
     ).get_json()["thread"]["id"]
 
     base = f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}/threads/{thread_id}/posts"
-    client.post(base, json={"tmp_id": "root", "parent_tmp_id": None, "author_user_id": author_id})
-    client.post(base, json={"tmp_id": "child", "parent_tmp_id": "root", "author_user_id": author_id})
-    client.post(base, json={"tmp_id": "grandchild", "parent_tmp_id": "child", "author_user_id": author_id})
-    client.post(base, json={"tmp_id": "sibling", "parent_tmp_id": "root", "author_user_id": author_id})
+    client.post(
+        base,
+        json={"tmp_id": "root", "parent_tmp_id": None, "author_user_id": author_id},
+    )
+    client.post(
+        base,
+        json={"tmp_id": "child", "parent_tmp_id": "root", "author_user_id": author_id},
+    )
+    client.post(
+        base,
+        json={
+            "tmp_id": "grandchild",
+            "parent_tmp_id": "child",
+            "author_user_id": author_id,
+        },
+    )
+    client.post(
+        base,
+        json={
+            "tmp_id": "sibling",
+            "parent_tmp_id": "root",
+            "author_user_id": author_id,
+        },
+    )
 
     resp = client.post(
         f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}"

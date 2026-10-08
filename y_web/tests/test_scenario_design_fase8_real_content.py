@@ -36,6 +36,7 @@ _make_author()/HPC author helper, mirroring fase3/4/6.
 
 Piano di implementazione, Fase 8 (decisions.md §F8.5/§F8.6).
 """
+
 import sqlite3
 
 import pytest
@@ -118,7 +119,6 @@ def _make_exp(app, name="sd-fase8-exp", simulator_type="Standard"):
         _ensure_ysimulator_importable()
 
         from sqlalchemy import create_engine
-
         from YSimulator.YServer.classes.models import Base as HpcBase
 
         engine = create_engine(f"sqlite:///{db_path}")
@@ -265,7 +265,8 @@ def sd_client(sd_app):
 
 def _create_scenario(client, exp_id, name="S1"):
     resp = client.post(
-        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios", json={"name": name}
+        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios",
+        json={"name": name},
     )
     assert resp.status_code == 201, resp.data
     return resp.get_json()["scenario"]["id"]
@@ -280,7 +281,17 @@ def _create_thread(client, exp_id, scenario_id, tmp_id="t1"):
     return resp.get_json()["thread"]["id"]
 
 
-def _add_post(client, exp_id, scenario_id, thread_id, *, tmp_id, parent_tmp_id, author_user_id, content=""):
+def _add_post(
+    client,
+    exp_id,
+    scenario_id,
+    thread_id,
+    *,
+    tmp_id,
+    parent_tmp_id,
+    author_user_id,
+    content="",
+):
     resp = client.post(
         f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}"
         f"/threads/{thread_id}/posts",
@@ -306,7 +317,9 @@ def _publish(client, exp_id, scenario_id):
     return resp.get_json()
 
 
-def _publish_root_child_grandchild(client, exp_id, author_user_id, *, simulator_type="Standard"):
+def _publish_root_child_grandchild(
+    client, exp_id, author_user_id, *, simulator_type="Standard"
+):
     """Publish a three-level real thread (root -> child -> grandchild)
     and return ``{tmp_id: real_post_id}`` from the publish response's
     id_mapping -- the shared setup for every test below. Values are
@@ -316,16 +329,34 @@ def _publish_root_child_grandchild(client, exp_id, author_user_id, *, simulator_
     scenario_id = _create_scenario(client, exp_id)
     thread_id = _create_thread(client, exp_id, scenario_id)
     _add_post(
-        client, exp_id, scenario_id, thread_id,
-        tmp_id="root", parent_tmp_id=None, author_user_id=author_user_id, content="root",
+        client,
+        exp_id,
+        scenario_id,
+        thread_id,
+        tmp_id="root",
+        parent_tmp_id=None,
+        author_user_id=author_user_id,
+        content="root",
     )
     _add_post(
-        client, exp_id, scenario_id, thread_id,
-        tmp_id="child", parent_tmp_id="root", author_user_id=author_user_id, content="child",
+        client,
+        exp_id,
+        scenario_id,
+        thread_id,
+        tmp_id="child",
+        parent_tmp_id="root",
+        author_user_id=author_user_id,
+        content="child",
     )
     _add_post(
-        client, exp_id, scenario_id, thread_id,
-        tmp_id="grandchild", parent_tmp_id="child", author_user_id=author_user_id, content="grandchild",
+        client,
+        exp_id,
+        scenario_id,
+        thread_id,
+        tmp_id="grandchild",
+        parent_tmp_id="child",
+        author_user_id=author_user_id,
+        content="grandchild",
     )
     body = _publish(client, exp_id, scenario_id)
     id_mapping = body["id_mapping"]
@@ -337,6 +368,7 @@ def _publish_root_child_grandchild(client, exp_id, author_user_id, *, simulator_
 # ---------------------------------------------------------------------
 # Standard family
 # ---------------------------------------------------------------------
+
 
 def test_update_real_post_content_and_author_standard(sd_app, sd_client):
     from y_web.src.experiment.context import _activate_db_exp_bind, experiment_db_bind
@@ -352,8 +384,10 @@ def test_update_real_post_content_and_author_standard(sd_app, sd_client):
         with experiment_db_bind(exp_id):
             other_author = User_mgmt(
                 id="2",
-                username="other_author", email="other_author@test.com",
-                password=generate_password_hash("x"), joined_on=1,
+                username="other_author",
+                email="other_author@test.com",
+                password=generate_password_hash("x"),
+                joined_on=1,
             )
             db.session.add(other_author)
             db.session.commit()
@@ -454,7 +488,9 @@ def test_delete_subtree_cascades_across_satellite_tables_standard(sd_app, sd_cli
     body = resp.get_json()
     assert body["deleted_count"] == 3
     assert set(body["deleted_ids"]) == {
-        str(mapping["root"]), str(mapping["child"]), str(mapping["grandchild"]),
+        str(mapping["root"]),
+        str(mapping["child"]),
+        str(mapping["grandchild"]),
     }
 
     with sd_app.app_context():
@@ -462,11 +498,21 @@ def test_delete_subtree_cascades_across_satellite_tables_standard(sd_app, sd_cli
         assert db.session.get(Post, mapping["root"]) is None
         assert db.session.get(Post, mapping["child"]) is None
         assert db.session.get(Post, mapping["grandchild"]) is None
-        assert db.session.query(Post_topics).filter_by(post_id=mapping["child"]).count() == 0
-        assert db.session.query(Post_Toxicity).filter_by(post_id=mapping["grandchild"]).count() == 0
+        assert (
+            db.session.query(Post_topics).filter_by(post_id=mapping["child"]).count()
+            == 0
+        )
+        assert (
+            db.session.query(Post_Toxicity)
+            .filter_by(post_id=mapping["grandchild"])
+            .count()
+            == 0
+        )
 
 
-def test_real_content_operations_blocked_while_experiment_running_standard(sd_app, sd_client):
+def test_real_content_operations_blocked_while_experiment_running_standard(
+    sd_app, sd_client
+):
     from y_web.src.models import Exps
 
     client, _admin_id = sd_client
@@ -503,6 +549,7 @@ def test_real_content_operations_blocked_while_experiment_running_standard(sd_ap
 # ---------------------------------------------------------------------
 # HPC family
 # ---------------------------------------------------------------------
+
 
 @pytest.fixture
 def hpc_only():

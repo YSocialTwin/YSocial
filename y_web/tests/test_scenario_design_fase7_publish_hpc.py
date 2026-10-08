@@ -44,6 +44,7 @@ threaded through both the Exps row and the physical schema seeding.)
 
 Piano di implementazione, Fase 7.
 """
+
 import sqlite3
 
 import pytest
@@ -280,7 +281,8 @@ def sd_client(sd_app):
 
 def _create_scenario(client, exp_id, name="S1"):
     resp = client.post(
-        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios", json={"name": name}
+        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios",
+        json={"name": name},
     )
     assert resp.status_code == 201, resp.data
     return resp.get_json()["scenario"]["id"]
@@ -295,7 +297,17 @@ def _create_thread(client, exp_id, scenario_id, tmp_id="t1"):
     return resp.get_json()["thread"]["id"]
 
 
-def _add_post(client, exp_id, scenario_id, thread_id, *, tmp_id, parent_tmp_id, author_user_id, content=""):
+def _add_post(
+    client,
+    exp_id,
+    scenario_id,
+    thread_id,
+    *,
+    tmp_id,
+    parent_tmp_id,
+    author_user_id,
+    content="",
+):
     resp = client.post(
         f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}"
         f"/threads/{thread_id}/posts",
@@ -316,9 +328,11 @@ def _publish(client, exp_id, scenario_id, *, idempotency_key=None, json_body=Non
     headers = {}
     if idempotency_key:
         headers["X-Idempotency-Key"] = idempotency_key
-    body = json_body if json_body is not None else {
-        "published_experiment_name": f"fase7-published-{uuid.uuid4().hex[:8]}"
-    }
+    body = (
+        json_body
+        if json_body is not None
+        else {"published_experiment_name": f"fase7-published-{uuid.uuid4().hex[:8]}"}
+    )
     return client.post(
         f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}/publish",
         json=body,
@@ -343,16 +357,34 @@ def test_hpc_publish_materializes_real_uuid_rows_with_correct_thread_propagation
 
     thread_id = _create_thread(client, exp_id, scenario_id)
     _add_post(
-        client, exp_id, scenario_id, thread_id,
-        tmp_id="root", parent_tmp_id=None, author_user_id=author_user_id, content="root",
+        client,
+        exp_id,
+        scenario_id,
+        thread_id,
+        tmp_id="root",
+        parent_tmp_id=None,
+        author_user_id=author_user_id,
+        content="root",
     )
     _add_post(
-        client, exp_id, scenario_id, thread_id,
-        tmp_id="c1", parent_tmp_id="root", author_user_id=author_user_id, content="child",
+        client,
+        exp_id,
+        scenario_id,
+        thread_id,
+        tmp_id="c1",
+        parent_tmp_id="root",
+        author_user_id=author_user_id,
+        content="child",
     )
     _add_post(
-        client, exp_id, scenario_id, thread_id,
-        tmp_id="c1a", parent_tmp_id="c1", author_user_id=author_user_id, content="grandchild",
+        client,
+        exp_id,
+        scenario_id,
+        thread_id,
+        tmp_id="c1a",
+        parent_tmp_id="c1",
+        author_user_id=author_user_id,
+        content="grandchild",
     )
 
     with sd_app.app_context():
@@ -368,7 +400,9 @@ def test_hpc_publish_materializes_real_uuid_rows_with_correct_thread_propagation
         ScenarioDesignDraftMetadata = models.ScenarioDesignDraftMetadata
         ScenarioDesignDraftPost = models.ScenarioDesignDraftPost
 
-        root_draft = db.session.query(ScenarioDesignDraftPost).filter_by(tmp_id="root").first()
+        root_draft = (
+            db.session.query(ScenarioDesignDraftPost).filter_by(tmp_id="root").first()
+        )
         db.session.add(
             ScenarioDesignDraftMetadata(
                 draft_post_id=root_draft.id,
@@ -391,6 +425,7 @@ def test_hpc_publish_materializes_real_uuid_rows_with_correct_thread_propagation
 
     with sd_app.app_context():
         from YSimulator.YServer.classes.models import Post as HpcPost
+
         from y_web.src.models import Exps
 
         hpc_session = _hpc_session_module().hpc_session
@@ -413,10 +448,13 @@ def test_hpc_fault_injection_rolls_back_both_halves_of_the_atomic_write(
     must roll back *both* the real content (Post rows, via hpc_session)
     *and* the sd_publication/sd_id_mapping bookkeeping together, since
     both are written through the same session/transaction."""
-    from y_web.src.models import Exps
     from YSimulator.YServer.classes.models import Post as HpcPost
 
-    get_adapter_for = _scenario_design_module("modules.scenario_editor.backend.adapters.base").get_adapter_for
+    from y_web.src.models import Exps
+
+    get_adapter_for = _scenario_design_module(
+        "modules.scenario_editor.backend.adapters.base"
+    ).get_adapter_for
     hpc_session = _hpc_session_module().hpc_session
     models = _scenario_design_module("modules.scenario_editor.backend.models")
     ScenarioDesignIdMapping = models.ScenarioDesignIdMapping
@@ -429,12 +467,24 @@ def test_hpc_fault_injection_rolls_back_both_halves_of_the_atomic_write(
     scenario_id = _create_scenario(client, exp_id)
     thread_id = _create_thread(client, exp_id, scenario_id)
     _add_post(
-        client, exp_id, scenario_id, thread_id,
-        tmp_id="root", parent_tmp_id=None, author_user_id=author_user_id, content="root",
+        client,
+        exp_id,
+        scenario_id,
+        thread_id,
+        tmp_id="root",
+        parent_tmp_id=None,
+        author_user_id=author_user_id,
+        content="root",
     )
     _add_post(
-        client, exp_id, scenario_id, thread_id,
-        tmp_id="c1", parent_tmp_id="root", author_user_id=author_user_id, content="child",
+        client,
+        exp_id,
+        scenario_id,
+        thread_id,
+        tmp_id="c1",
+        parent_tmp_id="root",
+        author_user_id=author_user_id,
+        content="child",
     )
 
     with sd_app.app_context():
@@ -460,7 +510,10 @@ def test_hpc_fault_injection_rolls_back_both_halves_of_the_atomic_write(
         with hpc_session(exp) as hsession:
             assert hsession.query(HpcPost).count() == post_count_before
         db.session.expire_all()
-        assert db.session.query(ScenarioDesignPublication).count() == publication_count_before
+        assert (
+            db.session.query(ScenarioDesignPublication).count()
+            == publication_count_before
+        )
         assert db.session.query(ScenarioDesignIdMapping).count() == mapping_count_before
 
 
@@ -473,8 +526,14 @@ def test_hpc_fingerprint_mismatch_rejects_publish(sd_app, sd_client):
     scenario_id = _create_scenario(client, exp_id)
     thread_id = _create_thread(client, exp_id, scenario_id)
     _add_post(
-        client, exp_id, scenario_id, thread_id,
-        tmp_id="root", parent_tmp_id=None, author_user_id=author_user_id, content="root",
+        client,
+        exp_id,
+        scenario_id,
+        thread_id,
+        tmp_id="root",
+        parent_tmp_id=None,
+        author_user_id=author_user_id,
+        content="root",
     )
 
     # Simulate the base experiment changing after the scenario was opened
@@ -503,8 +562,14 @@ def test_hpc_idempotency_key_replay_does_not_duplicate(sd_app, sd_client):
     scenario_id = _create_scenario(client, exp_id)
     thread_id = _create_thread(client, exp_id, scenario_id)
     _add_post(
-        client, exp_id, scenario_id, thread_id,
-        tmp_id="root", parent_tmp_id=None, author_user_id=author_user_id, content="root",
+        client,
+        exp_id,
+        scenario_id,
+        thread_id,
+        tmp_id="root",
+        parent_tmp_id=None,
+        author_user_id=author_user_id,
+        content="root",
     )
 
     key = "fase7-idem-key-1"
@@ -513,11 +578,14 @@ def test_hpc_idempotency_key_replay_does_not_duplicate(sd_app, sd_client):
     assert first.status_code == 201, first.data
     second = _publish(client, exp_id, scenario_id, idempotency_key=key, json_body=body)
     assert second.status_code == 200, second.data  # idempotent replay -> 200, not 201
-    assert first.get_json()["publication"]["id"] == second.get_json()["publication"]["id"]
+    assert (
+        first.get_json()["publication"]["id"] == second.get_json()["publication"]["id"]
+    )
     assert first.get_json()["id_mapping"] == second.get_json()["id_mapping"]
 
     with sd_app.app_context():
         from YSimulator.YServer.classes.models import Post as HpcPost
+
         from y_web.src.models import Exps
 
         hpc_session = _hpc_session_module().hpc_session

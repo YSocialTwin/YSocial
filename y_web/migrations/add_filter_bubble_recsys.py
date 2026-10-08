@@ -11,6 +11,7 @@ import sqlite3
 
 try:
     import psycopg2
+
     PSYCOPG2_AVAILABLE = True
 except ImportError:
     PSYCOPG2_AVAILABLE = False

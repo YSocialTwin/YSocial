@@ -988,9 +988,7 @@ def test_runtime_installed_and_visible_requires_both_installed_and_visible(
         is_private=True,
         visible_to_usernames=(),
     )
-    monkeypatch.setitem(
-        registry.SUPPORTED_EXTERNAL_REPOS, spec.key, spec
-    )
+    monkeypatch.setitem(registry.SUPPORTED_EXTERNAL_REPOS, spec.key, spec)
 
     class User:
         def __init__(self, username, role):
@@ -1003,23 +1001,17 @@ def test_runtime_installed_and_visible_requires_both_installed_and_visible(
         # Installed on disk, but private and not dev-mode / allow-listed:
         # must stay hidden, matching the Plugins catalog page.
         app.config["DEVELOPMENT_MODE"] = False
-        assert (
-            registry.runtime_installed_and_visible(spec.key, outsider) is False
-        )
+        assert registry.runtime_installed_and_visible(spec.key, outsider) is False
 
         # --development unlocks it, exactly like the catalog page.
         app.config["DEVELOPMENT_MODE"] = True
-        assert (
-            registry.runtime_installed_and_visible(spec.key, outsider) is True
-        )
+        assert registry.runtime_installed_and_visible(spec.key, outsider) is True
         app.config["DEVELOPMENT_MODE"] = False
 
         # Not installed on disk at all -- hidden regardless of dev mode.
         spec.path.rmdir()
         app.config["DEVELOPMENT_MODE"] = True
-        assert (
-            registry.runtime_installed_and_visible(spec.key, outsider) is False
-        )
+        assert registry.runtime_installed_and_visible(spec.key, outsider) is False
 
         # Unknown repo key -- hidden, never raises.
         assert (

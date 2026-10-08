@@ -49,6 +49,7 @@ bootstrap, server_config.json, and HPC User_mgmt password requirement.
 
 Piano di implementazione, Fase 9 follow-up ("link nel composer").
 """
+
 import sqlite3
 
 import pytest
@@ -320,7 +321,8 @@ def sd_client(sd_app):
 
 def _create_scenario(client, exp_id, name="S1"):
     resp = client.post(
-        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios", json={"name": name}
+        f"/admin/scenario_design/api/experiments/{exp_id}/scenarios",
+        json={"name": name},
     )
     assert resp.status_code == 201, resp.data
     return resp.get_json()["scenario"]["id"]
@@ -335,7 +337,17 @@ def _create_thread(client, exp_id, scenario_id, tmp_id="t1"):
     return resp.get_json()["thread"]["id"]
 
 
-def _add_post(client, exp_id, scenario_id, thread_id, *, tmp_id, parent_tmp_id, author_user_id, content=""):
+def _add_post(
+    client,
+    exp_id,
+    scenario_id,
+    thread_id,
+    *,
+    tmp_id,
+    parent_tmp_id,
+    author_user_id,
+    content="",
+):
     resp = client.post(
         f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}"
         f"/threads/{thread_id}/posts",
@@ -358,7 +370,9 @@ def _publish(client, exp_id, scenario_id, *, idempotency_key=None):
         headers["X-Idempotency-Key"] = idempotency_key
     return client.post(
         f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}/publish",
-        json={"published_experiment_name": f"fase9-link-published-{uuid.uuid4().hex[:8]}"},
+        json={
+            "published_experiment_name": f"fase9-link-published-{uuid.uuid4().hex[:8]}"
+        },
         headers=headers,
     )
 
@@ -382,8 +396,13 @@ def _link_preview(client, exp_id, scenario_id, tmp_id, payload):
 # link_preview endpoint
 # ---------------------------------------------------------------------------
 
-def test_link_preview_endpoint_fetches_and_stores_news_preview(sd_app, sd_client, monkeypatch):
-    link_preview_module = _scenario_design_module("modules.scenario_editor.backend.link_preview")
+
+def test_link_preview_endpoint_fetches_and_stores_news_preview(
+    sd_app, sd_client, monkeypatch
+):
+    link_preview_module = _scenario_design_module(
+        "modules.scenario_editor.backend.link_preview"
+    )
 
     def _fake_fetch(url, link_kind, **kwargs):
         assert url == "http://example.com/some-article"
@@ -398,12 +417,21 @@ def test_link_preview_endpoint_fetches_and_stores_news_preview(sd_app, sd_client
     scenario_id = _create_scenario(client, exp_id)
     thread_id = _create_thread(client, exp_id, scenario_id)
     _add_post(
-        client, exp_id, scenario_id, thread_id,
-        tmp_id="root", parent_tmp_id=None, author_user_id=author_id, content="root",
+        client,
+        exp_id,
+        scenario_id,
+        thread_id,
+        tmp_id="root",
+        parent_tmp_id=None,
+        author_user_id=author_id,
+        content="root",
     )
 
     resp = _link_preview(
-        client, exp_id, scenario_id, "root",
+        client,
+        exp_id,
+        scenario_id,
+        "root",
         {"link_url": "http://example.com/some-article", "link_kind": "news"},
     )
     assert resp.status_code == 200, resp.data
@@ -417,7 +445,9 @@ def test_link_preview_endpoint_fetches_and_stores_news_preview(sd_app, sd_client
 def test_link_preview_endpoint_fetches_image_preview_with_empty_title_summary(
     sd_app, sd_client, monkeypatch
 ):
-    link_preview_module = _scenario_design_module("modules.scenario_editor.backend.link_preview")
+    link_preview_module = _scenario_design_module(
+        "modules.scenario_editor.backend.link_preview"
+    )
 
     def _fake_fetch(url, link_kind, **kwargs):
         assert link_kind == "image"
@@ -431,12 +461,21 @@ def test_link_preview_endpoint_fetches_image_preview_with_empty_title_summary(
     scenario_id = _create_scenario(client, exp_id)
     thread_id = _create_thread(client, exp_id, scenario_id)
     _add_post(
-        client, exp_id, scenario_id, thread_id,
-        tmp_id="root", parent_tmp_id=None, author_user_id=author_id, content="root",
+        client,
+        exp_id,
+        scenario_id,
+        thread_id,
+        tmp_id="root",
+        parent_tmp_id=None,
+        author_user_id=author_id,
+        content="root",
     )
 
     resp = _link_preview(
-        client, exp_id, scenario_id, "root",
+        client,
+        exp_id,
+        scenario_id,
+        "root",
         {"link_url": "http://example.com/photo.jpg", "link_kind": "image"},
     )
     assert resp.status_code == 200, resp.data
@@ -446,8 +485,12 @@ def test_link_preview_endpoint_fetches_image_preview_with_empty_title_summary(
     assert post["link_summary"] == ""
 
 
-def test_link_preview_endpoint_maps_fetch_error_to_502_with_its_code(sd_app, sd_client, monkeypatch):
-    link_preview_module = _scenario_design_module("modules.scenario_editor.backend.link_preview")
+def test_link_preview_endpoint_maps_fetch_error_to_502_with_its_code(
+    sd_app, sd_client, monkeypatch
+):
+    link_preview_module = _scenario_design_module(
+        "modules.scenario_editor.backend.link_preview"
+    )
 
     def _fake_fetch(url, link_kind, **kwargs):
         raise link_preview_module.LinkPreviewError("host_not_allowed", "nope")
@@ -460,31 +503,51 @@ def test_link_preview_endpoint_maps_fetch_error_to_502_with_its_code(sd_app, sd_
     scenario_id = _create_scenario(client, exp_id)
     thread_id = _create_thread(client, exp_id, scenario_id)
     _add_post(
-        client, exp_id, scenario_id, thread_id,
-        tmp_id="root", parent_tmp_id=None, author_user_id=author_id, content="root",
+        client,
+        exp_id,
+        scenario_id,
+        thread_id,
+        tmp_id="root",
+        parent_tmp_id=None,
+        author_user_id=author_id,
+        content="root",
     )
 
     resp = _link_preview(
-        client, exp_id, scenario_id, "root",
+        client,
+        exp_id,
+        scenario_id,
+        "root",
         {"link_url": "http://127.0.0.1/", "link_kind": "news"},
     )
     assert resp.status_code == 502, resp.data
     assert resp.get_json()["error"]["code"] == "host_not_allowed"
 
 
-def test_link_preview_endpoint_rejects_invalid_link_kind_and_missing_url(sd_app, sd_client):
+def test_link_preview_endpoint_rejects_invalid_link_kind_and_missing_url(
+    sd_app, sd_client
+):
     client, _admin_id = sd_client
     exp_id = _make_exp(sd_app, "sd-fase9-link-bad-input")
     author_id = _make_author(sd_app, exp_id)
     scenario_id = _create_scenario(client, exp_id)
     thread_id = _create_thread(client, exp_id, scenario_id)
     _add_post(
-        client, exp_id, scenario_id, thread_id,
-        tmp_id="root", parent_tmp_id=None, author_user_id=author_id, content="root",
+        client,
+        exp_id,
+        scenario_id,
+        thread_id,
+        tmp_id="root",
+        parent_tmp_id=None,
+        author_user_id=author_id,
+        content="root",
     )
 
     resp = _link_preview(
-        client, exp_id, scenario_id, "root",
+        client,
+        exp_id,
+        scenario_id,
+        "root",
         {"link_url": "http://example.com/x", "link_kind": "video"},
     )
     assert resp.status_code == 400, resp.data
@@ -499,6 +562,7 @@ def test_link_preview_endpoint_rejects_invalid_link_kind_and_missing_url(sd_app,
 # PUT: admin edits fields by hand / clears the attachment
 # ---------------------------------------------------------------------------
 
+
 def test_put_sets_link_fields_directly_without_fetching(sd_app, sd_client):
     client, _admin_id = sd_client
     exp_id = _make_exp(sd_app, "sd-fase9-link-put-set")
@@ -506,12 +570,21 @@ def test_put_sets_link_fields_directly_without_fetching(sd_app, sd_client):
     scenario_id = _create_scenario(client, exp_id)
     thread_id = _create_thread(client, exp_id, scenario_id)
     _add_post(
-        client, exp_id, scenario_id, thread_id,
-        tmp_id="root", parent_tmp_id=None, author_user_id=author_id, content="root",
+        client,
+        exp_id,
+        scenario_id,
+        thread_id,
+        tmp_id="root",
+        parent_tmp_id=None,
+        author_user_id=author_id,
+        content="root",
     )
 
     resp = _put_post(
-        client, exp_id, scenario_id, "root",
+        client,
+        exp_id,
+        scenario_id,
+        "root",
         {
             "link_url": "http://example.com/article",
             "link_kind": "news",
@@ -527,16 +600,23 @@ def test_put_sets_link_fields_directly_without_fetching(sd_app, sd_client):
     assert post["link_summary"] == "Hand-written summary"
 
 
-def test_put_admin_overrides_fetched_title_and_summary_by_hand(sd_app, sd_client, monkeypatch):
+def test_put_admin_overrides_fetched_title_and_summary_by_hand(
+    sd_app, sd_client, monkeypatch
+):
     """Decision (b): the admin can edit the auto-fetched title/summary
     afterwards -- fetch via link_preview, then PUT a correction, and
     confirm the PUT value wins (never silently re-overwritten)."""
-    link_preview_module = _scenario_design_module("modules.scenario_editor.backend.link_preview")
+    link_preview_module = _scenario_design_module(
+        "modules.scenario_editor.backend.link_preview"
+    )
 
     monkeypatch.setattr(
         link_preview_module,
         "fetch_link_preview",
-        lambda url, link_kind, **kwargs: {"title": "Auto title", "summary": "Auto summary"},
+        lambda url, link_kind, **kwargs: {
+            "title": "Auto title",
+            "summary": "Auto summary",
+        },
     )
 
     client, _admin_id = sd_client
@@ -545,15 +625,26 @@ def test_put_admin_overrides_fetched_title_and_summary_by_hand(sd_app, sd_client
     scenario_id = _create_scenario(client, exp_id)
     thread_id = _create_thread(client, exp_id, scenario_id)
     _add_post(
-        client, exp_id, scenario_id, thread_id,
-        tmp_id="root", parent_tmp_id=None, author_user_id=author_id, content="root",
+        client,
+        exp_id,
+        scenario_id,
+        thread_id,
+        tmp_id="root",
+        parent_tmp_id=None,
+        author_user_id=author_id,
+        content="root",
     )
     _link_preview(
-        client, exp_id, scenario_id, "root",
+        client,
+        exp_id,
+        scenario_id,
+        "root",
         {"link_url": "http://example.com/article", "link_kind": "news"},
     )
 
-    resp = _put_post(client, exp_id, scenario_id, "root", {"link_title": "Admin's own title"})
+    resp = _put_post(
+        client, exp_id, scenario_id, "root", {"link_title": "Admin's own title"}
+    )
     assert resp.status_code == 200, resp.data
     post = resp.get_json()["post"]
     assert post["link_title"] == "Admin's own title"
@@ -567,8 +658,14 @@ def test_put_rejects_invalid_link_kind(sd_app, sd_client):
     scenario_id = _create_scenario(client, exp_id)
     thread_id = _create_thread(client, exp_id, scenario_id)
     _add_post(
-        client, exp_id, scenario_id, thread_id,
-        tmp_id="root", parent_tmp_id=None, author_user_id=author_id, content="root",
+        client,
+        exp_id,
+        scenario_id,
+        thread_id,
+        tmp_id="root",
+        parent_tmp_id=None,
+        author_user_id=author_id,
+        content="root",
     )
 
     resp = _put_post(client, exp_id, scenario_id, "root", {"link_kind": "pdf"})
@@ -583,11 +680,20 @@ def test_put_clearing_link_url_clears_the_whole_attachment(sd_app, sd_client):
     scenario_id = _create_scenario(client, exp_id)
     thread_id = _create_thread(client, exp_id, scenario_id)
     _add_post(
-        client, exp_id, scenario_id, thread_id,
-        tmp_id="root", parent_tmp_id=None, author_user_id=author_id, content="root",
+        client,
+        exp_id,
+        scenario_id,
+        thread_id,
+        tmp_id="root",
+        parent_tmp_id=None,
+        author_user_id=author_id,
+        content="root",
     )
     _put_post(
-        client, exp_id, scenario_id, "root",
+        client,
+        exp_id,
+        scenario_id,
+        "root",
         {
             "link_url": "http://example.com/article",
             "link_kind": "news",
@@ -609,6 +715,7 @@ def test_put_clearing_link_url_clears_the_whole_attachment(sd_app, sd_client):
 # Standard materialization
 # ---------------------------------------------------------------------------
 
+
 def test_standard_publish_materializes_news_link_as_real_article_and_sentinel_website(
     sd_app, sd_client
 ):
@@ -622,11 +729,20 @@ def test_standard_publish_materializes_news_link_as_real_article_and_sentinel_we
     thread_id = _create_thread(client, exp_id, scenario_id)
     root_tmp = "root"
     _add_post(
-        client, exp_id, scenario_id, thread_id,
-        tmp_id=root_tmp, parent_tmp_id=None, author_user_id=author_id, content="root",
+        client,
+        exp_id,
+        scenario_id,
+        thread_id,
+        tmp_id=root_tmp,
+        parent_tmp_id=None,
+        author_user_id=author_id,
+        content="root",
     )
     _put_post(
-        client, exp_id, scenario_id, root_tmp,
+        client,
+        exp_id,
+        scenario_id,
+        root_tmp,
         {
             "link_url": "http://example.com/breaking-news",
             "link_kind": "news",
@@ -664,11 +780,20 @@ def test_standard_publish_materializes_image_link_as_real_image_row(sd_app, sd_c
     thread_id = _create_thread(client, exp_id, scenario_id)
     root_tmp = "root"
     _add_post(
-        client, exp_id, scenario_id, thread_id,
-        tmp_id=root_tmp, parent_tmp_id=None, author_user_id=author_id, content="root",
+        client,
+        exp_id,
+        scenario_id,
+        thread_id,
+        tmp_id=root_tmp,
+        parent_tmp_id=None,
+        author_user_id=author_id,
+        content="root",
     )
     _put_post(
-        client, exp_id, scenario_id, root_tmp,
+        client,
+        exp_id,
+        scenario_id,
+        root_tmp,
         {
             "link_url": "http://example.com/photo.jpg",
             "link_kind": "image",
@@ -702,17 +827,40 @@ def test_standard_publish_reuses_the_same_sentinel_website_across_posts_in_one_s
     scenario_id = _create_scenario(client, exp_id)
     thread_id = _create_thread(client, exp_id, scenario_id)
     _add_post(
-        client, exp_id, scenario_id, thread_id,
-        tmp_id="p1", parent_tmp_id=None, author_user_id=author_id, content="p1",
+        client,
+        exp_id,
+        scenario_id,
+        thread_id,
+        tmp_id="p1",
+        parent_tmp_id=None,
+        author_user_id=author_id,
+        content="p1",
     )
     _add_post(
-        client, exp_id, scenario_id, thread_id,
-        tmp_id="p2", parent_tmp_id="p1", author_user_id=author_id, content="p2",
+        client,
+        exp_id,
+        scenario_id,
+        thread_id,
+        tmp_id="p2",
+        parent_tmp_id="p1",
+        author_user_id=author_id,
+        content="p2",
     )
-    for tmp_id, url in (("p1", "http://example.com/article-one"), ("p2", "http://example.com/article-two")):
+    for tmp_id, url in (
+        ("p1", "http://example.com/article-one"),
+        ("p2", "http://example.com/article-two"),
+    ):
         _put_post(
-            client, exp_id, scenario_id, tmp_id,
-            {"link_url": url, "link_kind": "news", "link_title": "T", "link_summary": "S"},
+            client,
+            exp_id,
+            scenario_id,
+            tmp_id,
+            {
+                "link_url": url,
+                "link_kind": "news",
+                "link_title": "T",
+                "link_summary": "S",
+            },
         )
 
     resp = _publish(client, exp_id, scenario_id)
@@ -728,7 +876,9 @@ def test_standard_publish_reuses_the_same_sentinel_website_across_posts_in_one_s
         assert article1.website_id == article2.website_id  # same sentinel, not two
 
 
-def test_standard_publish_rejects_link_url_too_long_for_standards_schema(sd_app, sd_client):
+def test_standard_publish_rejects_link_url_too_long_for_standards_schema(
+    sd_app, sd_client
+):
     """Images.url/Articles.link are VARCHAR(200) in Standard's own
     schema (unlike HPC's unbounded Text columns) -- a URL over that
     length must be rejected at materialization time (422,
@@ -744,14 +894,28 @@ def test_standard_publish_rejects_link_url_too_long_for_standards_schema(sd_app,
     scenario_id = _create_scenario(client, exp_id)
     thread_id = _create_thread(client, exp_id, scenario_id)
     _add_post(
-        client, exp_id, scenario_id, thread_id,
-        tmp_id="root", parent_tmp_id=None, author_user_id=author_id, content="root",
+        client,
+        exp_id,
+        scenario_id,
+        thread_id,
+        tmp_id="root",
+        parent_tmp_id=None,
+        author_user_id=author_id,
+        content="root",
     )
     long_url = "http://example.com/" + ("x" * 250)
     assert len(long_url) > 200
     _put_post(
-        client, exp_id, scenario_id, "root",
-        {"link_url": long_url, "link_kind": "news", "link_title": "T", "link_summary": "S"},
+        client,
+        exp_id,
+        scenario_id,
+        "root",
+        {
+            "link_url": long_url,
+            "link_kind": "news",
+            "link_title": "T",
+            "link_summary": "S",
+        },
     )
 
     resp = _publish(client, exp_id, scenario_id)
@@ -775,6 +939,7 @@ def test_standard_publish_rejects_link_url_too_long_for_standards_schema(sd_app,
 # HPC materialization
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def _require_hpc():
     if not _ysimulator_is_installed():
@@ -792,17 +957,40 @@ def test_hpc_publish_materializes_news_link_and_reuses_sentinel_across_posts(
     scenario_id = _create_scenario(client, exp_id)
     thread_id = _create_thread(client, exp_id, scenario_id)
     _add_post(
-        client, exp_id, scenario_id, thread_id,
-        tmp_id="p1", parent_tmp_id=None, author_user_id=author_user_id, content="p1",
+        client,
+        exp_id,
+        scenario_id,
+        thread_id,
+        tmp_id="p1",
+        parent_tmp_id=None,
+        author_user_id=author_user_id,
+        content="p1",
     )
     _add_post(
-        client, exp_id, scenario_id, thread_id,
-        tmp_id="p2", parent_tmp_id="p1", author_user_id=author_user_id, content="p2",
+        client,
+        exp_id,
+        scenario_id,
+        thread_id,
+        tmp_id="p2",
+        parent_tmp_id="p1",
+        author_user_id=author_user_id,
+        content="p2",
     )
-    for tmp_id, url in (("p1", "http://example.com/one"), ("p2", "http://example.com/two")):
+    for tmp_id, url in (
+        ("p1", "http://example.com/one"),
+        ("p2", "http://example.com/two"),
+    ):
         _put_post(
-            client, exp_id, scenario_id, tmp_id,
-            {"link_url": url, "link_kind": "news", "link_title": "Headline", "link_summary": "Summary"},
+            client,
+            exp_id,
+            scenario_id,
+            tmp_id,
+            {
+                "link_url": url,
+                "link_kind": "news",
+                "link_title": "Headline",
+                "link_summary": "Summary",
+            },
         )
 
     resp = _publish(client, exp_id, scenario_id)
@@ -838,12 +1026,25 @@ def test_hpc_publish_materializes_image_link(sd_app, sd_client, _require_hpc):
     scenario_id = _create_scenario(client, exp_id)
     thread_id = _create_thread(client, exp_id, scenario_id)
     _add_post(
-        client, exp_id, scenario_id, thread_id,
-        tmp_id="root", parent_tmp_id=None, author_user_id=author_user_id, content="root",
+        client,
+        exp_id,
+        scenario_id,
+        thread_id,
+        tmp_id="root",
+        parent_tmp_id=None,
+        author_user_id=author_user_id,
+        content="root",
     )
     _put_post(
-        client, exp_id, scenario_id, "root",
-        {"link_url": "http://example.com/pic.png", "link_kind": "image", "link_summary": "A picture."},
+        client,
+        exp_id,
+        scenario_id,
+        "root",
+        {
+            "link_url": "http://example.com/pic.png",
+            "link_kind": "image",
+            "link_summary": "A picture.",
+        },
     )
 
     resp = _publish(client, exp_id, scenario_id)
