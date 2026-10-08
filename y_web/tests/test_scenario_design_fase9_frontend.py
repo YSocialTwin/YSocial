@@ -73,20 +73,32 @@ def sd_app():
 
 @pytest.fixture
 def sd_client(sd_app):
-    from y_web.src.models import User_mgmt
+    """Returns (client, admin_id) *without* logging in -- the app_shell()
+    tests below need to exercise both the anonymous and logged-in cases
+    on the same client, so login stays an explicit, separate step (see
+    test_app_shell_serves_html_shell_when_logged_in).
+
+    User-reported (2026-10-08, "yes please" to extending the fase3 fix):
+    this is an Admin_users account, not a User_mgmt one -- see
+    test_scenario_design_fase3_threads.py for the full root-cause
+    explanation of why a User_mgmt login specifically breaks under the
+    db_exp bind swap, which matters here too: both id_mapping tests
+    below hit exp_id-scoped routes."""
+    from y_web.src.models import Admin_users
 
     client = sd_app.test_client()
     with sd_app.app_context():
-        admin_user = User_mgmt(
-            username="fase9_admin",
-            email="fase9_admin@test.com",
+        admin_user = Admin_users(
+            username="sd_fase9_admin",
+            email="sd_fase9_admin@test.com",
             password=generate_password_hash("test123"),
-            joined_on=1234567890,
+            last_seen="",
+            role="admin",
         )
         db.session.add(admin_user)
         db.session.commit()
         admin_id = admin_user.id
-    return client, admin_id
+    return client, f"admin_{admin_id}"
 
 
 # ---------------------------------------------------------------------
@@ -132,21 +144,42 @@ def test_index_health_check_still_unauthenticated_after_app_shell_addition(sd_cl
 # ---------------------------------------------------------------------
 
 def _make_exp(app, name="sd-fase9-exp"):
+    """Random suffix avoids colliding with a previous run's leftover,
+    gitignored experiment folder on disk (see
+    test_scenario_design_fase3_threads.py)."""
     import os
+    import uuid
 
     from y_web.src.models import Exps
     from y_web.src.system.path_utils import get_writable_path
 
-    folder = get_writable_path(os.path.join("y_web", "experiments", name))
+    folder_name = f"{name}-{uuid.uuid4().hex[:8]}"
+    folder = get_writable_path(os.path.join("y_web", "experiments", folder_name))
     os.makedirs(folder, exist_ok=True)
     db_path = os.path.join(folder, "database_server.db")  # noqa: F841 (created lazily by the app)
+
+    # Required by the /publish flow's _create_single_experiment_copy()
+    # (see test_scenario_design_fase6_publish.py's _make_exp()).
+    import json
+
+    with open(os.path.join(folder, "config_server.json"), "w") as f:
+        json.dump(
+            {
+                "platform_type": "microblogging",
+                "name": folder_name,
+                "port": 5000,
+                "database_uri": db_path,
+                "data_path": folder + os.sep,
+            },
+            f,
+        )
 
     with app.app_context():
         exp = Exps(
             platform_type="microblogging",
             simulator_type="Standard",
-            exp_name=name,
-            db_name=f"experiments/{name}/database_server.db",
+            exp_name=folder_name,
+            db_name=f"experiments/{folder_name}/database_server.db",
             owner="admin",
             exp_descr="test",
             status=1,
@@ -156,6 +189,27 @@ def _make_exp(app, name="sd-fase9-exp"):
         db.session.add(exp)
         db.session.commit()
         return exp.idexp
+
+
+def _make_author(app, exp_id, username="fase9_author", user_id="1"):
+    """Create a real User_mgmt row inside *exp_id*'s own per-experiment
+    database (see test_scenario_design_fase3_threads.py's ``_make_author``
+    for the full rationale)."""
+    from y_web.src.experiment.context import experiment_db_bind
+    from y_web.src.models import User_mgmt
+
+    with app.app_context():
+        with experiment_db_bind(exp_id):
+            author = User_mgmt(
+                id=user_id,
+                username=username,
+                email=f"{username}@test.com",
+                password=generate_password_hash("test123"),
+                joined_on=1234567890,
+            )
+            db.session.add(author)
+            db.session.commit()
+    return user_id
 
 
 @pytest.mark.skipif(
@@ -169,7 +223,9 @@ def _make_exp(app, name="sd-fase9-exp"):
 )
 def test_publication_id_mapping_matches_publish_response(sd_app, sd_client):
     client, admin_id = sd_client
+    _login(client, admin_id)
     exp_id = _make_exp(sd_app, "sd-fase9-id-mapping")
+    author_id = _make_author(sd_app, exp_id)
 
     resp = client.post(
         f"/admin/scenario_design/api/experiments/{exp_id}/scenarios", json={"name": "S1"}
@@ -190,15 +246,17 @@ def test_publication_id_mapping_matches_publish_response(sd_app, sd_client):
         json={
             "tmp_id": "root",
             "parent_tmp_id": None,
-            "author_user_id": admin_id,
+            "author_user_id": author_id,
             "content": "hello",
         },
     )
     assert resp.status_code == 201, resp.data
 
+    import uuid
+
     resp = client.post(
         f"/admin/scenario_design/api/experiments/{exp_id}/scenarios/{scenario_id}/publish",
-        json={},
+        json={"published_experiment_name": f"fase9-published-{uuid.uuid4().hex[:8]}"},
     )
     assert resp.status_code == 201, resp.data
     publish_body = resp.get_json()
@@ -226,7 +284,8 @@ def test_publication_id_mapping_matches_publish_response(sd_app, sd_client):
     ),
 )
 def test_publication_id_mapping_404_for_unknown_publication(sd_app, sd_client):
-    client, _admin_id = sd_client
+    client, admin_id = sd_client
+    _login(client, admin_id)
     exp_id = _make_exp(sd_app, "sd-fase9-id-mapping-404")
 
     resp = client.post(
