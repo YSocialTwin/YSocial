@@ -45,6 +45,8 @@ def iter_hooks(name: str):
             ref = (report.get("hooks") or {}).get(name)
             if not (report.get("valid") and ref):
                 continue
+            if not backend_plugins.plugin_enabled(repo_key):
+                continue  # disabled suites receive no hook calls
             dotted, _, attr = ref.partition(":")
             yield repo_key, getattr(
                 backend_plugins._import_from_suite(repo_key, dotted), attr

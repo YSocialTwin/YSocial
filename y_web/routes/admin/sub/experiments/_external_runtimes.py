@@ -45,6 +45,8 @@ _MUTATING_ACTIONS = {
     "install",
     "validate",
     "delete",
+    "enable",
+    "disable",
 }
 _GITHUB_TOKEN_SESSION_KEY = "external_runtime_github_token"
 
@@ -97,6 +99,31 @@ def _run_suite_schema_migration(repo_key: str) -> None:
     )
     if outcome and outcome.get("error"):
         flash(f"Schema migration failed: {outcome['error']}", "error")
+
+
+def _toggle_plugin(repo_key: str, spec, admin_user, enabled: bool):
+    """Enable/disable an installed backend-settings suite (E6)."""
+    from y_web.src.external_runtime.backend_plugins import (
+        set_plugin_enabled,
+        suite_restart_required,
+    )
+
+    if spec.group != "backend_settings" or not spec.path.exists():
+        flash("Only installed backend plugins can be enabled or disabled.", "error")
+        return _external_runtimes_response(
+            repo_key=repo_key, status="error", message="Not supported."
+        )
+    set_plugin_enabled(repo_key, enabled, admin_user.username)
+    if enabled and suite_restart_required(repo_key):
+        flash(
+            f"{spec.label} enabled. Restart required: its routes are loaded at startup.",
+            "warning",
+        )
+    else:
+        flash(f"{spec.label} {'enabled' if enabled else 'disabled'}.", "success")
+    return _external_runtimes_response(
+        repo_key=repo_key, message=f"{spec.label} {'enabled' if enabled else 'disabled'}."
+    )
 
 
 def _session_github_token() -> str | None:
@@ -184,6 +211,15 @@ def _visible_runtime_groups(
                         )
                     except Exception:
                         repo["frontend_modules_report"] = None
+                if repo.get("group") == "backend_settings":
+                    from y_web.src.external_runtime.backend_plugins import (
+                        plugin_enabled,
+                        suite_restart_required,
+                    )
+
+                    repo["plugin_togglable"] = bool(repo.get("installed"))
+                    repo["plugin_enabled"] = plugin_enabled(repo["key"])
+                    repo["restart_required"] = suite_restart_required(repo["key"])
                 repos.append(repo)
         if repos:
             visible_groups.append(
@@ -351,6 +387,9 @@ def external_runtime_action(repo_key: str, action: str):
             repo_key=repo_key, status="error", message="Not visible."
         )
 
+    if action in {"enable", "disable"}:
+        return _toggle_plugin(repo_key, spec, admin_user, action == "enable")
+
     github_token = _session_github_token()
     branch = (request.form.get("branch") or spec.default_branch).strip()
     release_tag = (request.form.get("release_tag") or "").strip() or None
@@ -459,6 +498,15 @@ def external_runtime_action(repo_key: str, action: str):
             validate_runtime_repo(repo_key, admin_user.username)
             flash(f"Validated {spec.label}.", "success")
             _run_suite_schema_migration(repo_key)
+            from y_web.src.external_runtime.backend_plugins import (
+                suite_restart_required,
+            )
+
+            if suite_restart_required(repo_key):
+                flash(
+                    f"Restart required: {spec.label} routes are loaded at startup.",
+                    "warning",
+                )
     except ExternalRuntimeError as exc:
         log_external_runtime_action(
             repo_key,

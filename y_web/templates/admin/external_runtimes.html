@@ -221,6 +221,16 @@
                                                         {% elif repo.installed %}
                                                         <span class="badge badge-warning">Release</span>
                                                         {% endif %}
+                                                        {% if repo.plugin_togglable %}
+                                                        {% if repo.plugin_enabled %}
+                                                        <span class="badge badge-success">Enabled</span>
+                                                        {% else %}
+                                                        <span class="badge badge-warning">Disabled</span>
+                                                        {% endif %}
+                                                        {% if repo.restart_required %}
+                                                        <span class="badge badge-warning">Restart required</span>
+                                                        {% endif %}
+                                                        {% endif %}
                                                         {% if repo.is_private %}
                                                         <span class="badge badge-danger">Private</span>
                                                         {% else %}
@@ -280,6 +290,12 @@
                                                         </button>
                                                         <button type="button" class="button is-light external-runtime-action-button" data-external-runtime-action-button="validate" data-action-url="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='validate') }}" data-repo-key="{{ repo.key }}" data-repo-label="{{ repo.label }}">
                                                             Validate
+                                                        </button>
+                                                        {% endif %}
+                                                        {% if repo.plugin_togglable %}
+                                                        {% set toggle_action = 'disable' if repo.plugin_enabled else 'enable' %}
+                                                        <button type="button" class="button is-light external-runtime-action-button" data-external-runtime-action-button="{{ toggle_action }}" data-action-url="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action=toggle_action) }}" data-repo-key="{{ repo.key }}" data-repo-label="{{ repo.label }}">
+                                                            {{ 'Disable' if repo.plugin_enabled else 'Enable' }}
                                                         </button>
                                                         {% endif %}
                                                         {% if repo.exists %}

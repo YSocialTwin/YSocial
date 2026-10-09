@@ -300,6 +300,81 @@ def _import_blueprint(repo_key: str, backend_blueprint: str):
     return getattr(module, attr)
 
 
+# blueprint name -> repo_key, for the "disabled plugin" request guard
+_BLUEPRINT_OWNERS: dict[str, str] = {}
+
+
+def plugin_enabled(repo_key: str) -> bool:
+    """False only if an admin disabled *repo_key* (row in ``plugin_state``).
+
+    A missing row (or any error reading it) means enabled, so plugins installed
+    before the table existed keep working. Never raises.
+    """
+    try:
+        from y_web import db
+        from y_web.src.models import PluginState
+
+        row = db.session.get(PluginState, repo_key)
+        return True if row is None else bool(row.enabled)
+    except Exception:
+        try:
+            from y_web import db
+
+            db.session.rollback()
+        except Exception:
+            pass
+        return True
+
+
+def set_plugin_enabled(repo_key: str, enabled: bool, updated_by: str | None = None):
+    """Persist the enabled flag of *repo_key* (creates the row on first use)."""
+    from y_web import db
+    from y_web.src.models import PluginState
+
+    row = db.session.get(PluginState, repo_key)
+    if row is None:
+        row = PluginState(repo_key=repo_key)
+        db.session.add(row)
+    row.enabled = bool(enabled)
+    row.updated_by = updated_by
+    db.session.commit()
+    return row
+
+
+def registered_suite_keys() -> set[str]:
+    """Suites whose blueprints were registered at startup (routes are live)."""
+    return set(_REGISTERED_SUITES)
+
+
+def suite_restart_required(repo_key: str) -> bool:
+    """True when the suite is installed and valid but its routes are not live
+    yet: blueprints can only be registered at application startup."""
+    try:
+        report = validate_backend_suite(repo_key)
+    except Exception:
+        return False
+    return bool(
+        report.get("installed")
+        and report.get("valid")
+        and repo_key not in _REGISTERED_SUITES
+    )
+
+
+def _install_disabled_plugin_guard(app) -> None:
+    """Answer 404 on the routes of a disabled suite (once per app)."""
+    if app.extensions.get("backend_plugin_guard"):
+        return
+    app.extensions["backend_plugin_guard"] = True
+
+    from flask import abort, request
+
+    @app.before_request
+    def _disabled_plugin_guard():
+        owner = _BLUEPRINT_OWNERS.get(request.blueprint or "")
+        if owner and not plugin_enabled(owner):
+            abort(404)
+
+
 def register_backend_plugin_suites(app) -> dict:
     """Register blueprints for every installed+valid backend settings suite.
 
@@ -310,6 +385,7 @@ def register_backend_plugin_suites(app) -> dict:
     simply always registered.
     """
     report = {"suites": {}}
+    _install_disabled_plugin_guard(app)
 
     for repo_key in backend_plugin_repo_keys():
         suite_report = {
@@ -344,6 +420,7 @@ def register_backend_plugin_suites(app) -> dict:
             try:
                 bp = _import_blueprint(repo_key, backend_blueprint)
                 app.register_blueprint(bp)
+                _BLUEPRINT_OWNERS[bp.name] = repo_key
                 suite_report["registered_modules"].append(module_id)
             except Exception as exc:
                 app.logger.warning(
@@ -360,6 +437,7 @@ def register_backend_plugin_suites(app) -> dict:
 
         try:
             _register_static_blueprint(app, repo_key)
+            _BLUEPRINT_OWNERS[f"backend_settings_static_{repo_key}"] = repo_key
         except Exception as exc:
             app.logger.warning(
                 "[backend_settings] failed to register static assets route for '%s': %s",
@@ -480,7 +558,9 @@ def backend_suite_availability() -> dict[str, bool]:
     availability: dict[str, bool] = {}
     for repo_key in backend_plugin_repo_keys():
         try:
-            availability[repo_key] = bool(validate_backend_suite(repo_key).get("valid"))
+            availability[repo_key] = bool(
+                validate_backend_suite(repo_key).get("valid")
+            ) and plugin_enabled(repo_key)
         except Exception:
             availability[repo_key] = False
     return availability
@@ -525,7 +605,7 @@ def backend_suite_sidebar_entries() -> list[dict]:
             report = validate_backend_suite(repo_key)
         except Exception:
             continue
-        if not report.get("valid"):
+        if not report.get("valid") or not plugin_enabled(repo_key):
             continue
         sidebar = (report.get("suite") or {}).get("sidebar")
         if not isinstance(sidebar, dict):
