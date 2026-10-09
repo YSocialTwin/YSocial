@@ -99,6 +99,16 @@
         "YSocialTwin"
       ],
       "repository_url": "https://github.com/YSocialTwin/y_agents_plugins"
+    },
+    {
+      "plugin_name": "training_modules",
+      "category": "Backend Extensions",
+      "group": "Backend Settings",
+      "description": "Training modules for YSocial: ordered steps (scenarios or third-party components) assigned to students, with reliable completion gating and per-student activity export.",
+      "authors": [
+        "YSocialTwin"
+      ],
+      "repository_url": "https://github.com/YSocialTwin/TrainingModules"
     }
   ]
 }

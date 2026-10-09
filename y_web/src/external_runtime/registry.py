@@ -282,6 +282,22 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         validate_import=None,
         is_private=True,
     ),
+    "training_modules": ExternalRuntimeSpec(
+        key="training_modules",
+        group="backend_settings",
+        group_label="Backend Settings",
+        category="backend_extensions",
+        category_label="Backend Extensions",
+        label="Training Modules",
+        path=EXTERNAL_DIR / "TrainingModules",
+        github_repo="YSocialTwin/TrainingModules",
+        repo_url="https://github.com/YSocialTwin/TrainingModules.git",
+        default_branch="main",
+        install_commands=(),
+        validate_entrypoints=(),
+        validate_import=None,
+        is_private=True,
+    ),
 }
 
 
