@@ -56,6 +56,7 @@
                                                 <option value="researcher" selected>Researcher</option>
                                                 {% endif %}
                                                 <option value="user" {% if current_user_role != 'admin' %}selected{% endif %}>User</option>
+                                                <option value="student">Student</option>
                                             </select>
                                         </div>
                                     </div>
@@ -104,9 +105,9 @@
                                             <b>Users Data</b><br>
                                             <small>Format: username,email,role,password (one per line)<br>
                                             {% if current_user_role == 'admin' %}
-                                            Role can be: admin, researcher, or user<br>
+                                            Role can be: admin, researcher, user, or student<br>
                                             {% else %}
-                                            Role must be: user (you can only create regular users)<br>
+                                            Role must be: user or student (you can only create participants)<br>
                                             {% endif %}
                                             Password is optional (will be auto-generated as username123!)</small>
                                         </label>

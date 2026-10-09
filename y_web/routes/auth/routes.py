@@ -6,7 +6,7 @@ researchers, and experiment participants. Manages session creation
 and validation for the YSocial platform.
 """
 
-from flask import flash, redirect, render_template, request, url_for
+from flask import flash, redirect, render_template, request, session, url_for
 from flask_login import login_required, login_user, logout_user
 from sqlalchemy import select
 from werkzeug.security import check_password_hash
@@ -14,7 +14,12 @@ from werkzeug.security import check_password_hash
 from y_web import db
 from y_web.routes.auth._blueprint import auth
 from y_web.src.experiment.helpers import ensure_experiment_user
+from y_web.src.external_runtime.plugin_hooks import call_first_non_null, is_local_redirect
 from y_web.src.models import Admin_users, Exps, User_Experiment, User_mgmt
+
+# Roles that log in as experiment participants. "student" is an alias of
+# "user": it follows exactly the same flow (experiment selection, feed).
+PARTICIPANT_ROLES = ("user", "student")
 
 
 @auth.route("/login")
@@ -64,8 +69,20 @@ def login_post():
     except Exception as e:
         print(f"Failed to log start event: {e}")
 
+    # Never carry a platform account id over from an earlier login in this browser
+    session.pop("platform_account_id", None)
+
     # Handle different roles
-    if user.role == "user":
+    if user.role in PARTICIPANT_ROLES:
+        # Platform account id of the participant, available to plugins (the
+        # session may later hold an experiment-specific id instead).
+        session["platform_account_id"] = user.id
+        # Optional plugin hook: may redirect the participant (e.g. to a
+        # training area) before the experiment selection.
+        hook_url = call_first_non_null("post_login", user)
+        if is_local_redirect(hook_url):
+            return redirect(hook_url)
+
         # Regular users: need to select experiment
         # Do NOT log them in yet - just show experiment selection
         # Get experiments this user is assigned to
@@ -91,8 +108,6 @@ def login_post():
 
         # Store credentials in session for experiment selection
         import secrets
-
-        from flask import session
 
         auth_token = secrets.token_urlsafe(32)
         session["exp_select_token"] = auth_token
@@ -133,8 +148,6 @@ def select_experiment():
     Returns:
         Redirect to the selected experiment's feed
     """
-    from flask import session
-
     exp_id = request.form.get("experiment_id")
     auth_token = request.form.get("auth_token")
 
@@ -195,6 +208,7 @@ def select_experiment():
             return redirect(url_for("auth.login"))
 
         login_user(user_agent, remember=remember)
+        session["platform_account_id"] = user.id
 
         # Redirect to onboarding — it will skip to feed if already completed
         return redirect(f"/{exp.idexp}/onboarding/{user_agent.id}")
@@ -225,5 +239,6 @@ def logout():
         print(f"Failed to log start event: {e}")
 
     logout_user()
+    session.pop("platform_account_id", None)
 
     return render_template("login/login.html")

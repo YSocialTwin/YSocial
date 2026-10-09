@@ -734,9 +734,9 @@ def bulk_create_users():
         )  # Auto-generate password
 
         # Validate role
-        if role not in ["admin", "researcher", "user"]:
+        if role not in ["admin", "researcher", "user", "student"]:
             errors.append(
-                f"Line {i}: Invalid role '{role}' (must be admin, researcher, or user)"
+                f"Line {i}: Invalid role '{role}' (must be admin, researcher, user, or student)"
             )
             continue
 
