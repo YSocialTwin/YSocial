@@ -84,6 +84,21 @@ def _runtime_group_active_experiments(group_key: str) -> list[Exps]:
     return query.filter((Exps.running == 1) | (Exps.exp_status == "active")).all()
 
 
+def _run_suite_schema_migration(repo_key: str) -> None:
+    """After an installation, create the plugin's own tables (best effort)."""
+    from flask import current_app
+
+    from y_web.src.external_runtime.backend_plugins import (
+        run_backend_plugin_schema_migrations,
+    )
+
+    outcome = run_backend_plugin_schema_migrations(current_app, [repo_key]).get(
+        repo_key
+    )
+    if outcome and outcome.get("error"):
+        flash(f"Schema migration failed: {outcome['error']}", "error")
+
+
 def _session_github_token() -> str | None:
     token = (session.get(_GITHUB_TOKEN_SESSION_KEY) or "").strip()
     return token or None
@@ -443,6 +458,7 @@ def external_runtime_action(repo_key: str, action: str):
             flash(f"Installed dependencies for {spec.label}.", "success")
             validate_runtime_repo(repo_key, admin_user.username)
             flash(f"Validated {spec.label}.", "success")
+            _run_suite_schema_migration(repo_key)
     except ExternalRuntimeError as exc:
         log_external_runtime_action(
             repo_key,

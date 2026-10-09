@@ -372,6 +372,67 @@ def register_backend_plugin_suites(app) -> dict:
     return report
 
 
+def print_backend_plugin_report(report: dict) -> None:
+    """Startup console summary of :func:`register_backend_plugin_suites`."""
+    for repo_key, suite_report in report.get("suites", {}).items():
+        if not suite_report.get("installed"):
+            continue
+        if suite_report.get("valid"):
+            print(
+                f"✓ Backend settings suite '{repo_key}': "
+                f"{len(suite_report.get('registered_modules', []))} module(s) registered"
+            )
+        else:
+            print(
+                f"⚠ Backend settings suite '{repo_key}' is installed but failed validation: "
+                f"{suite_report.get('errors')}"
+            )
+
+
+def run_backend_plugin_schema_migrations(app, repo_keys=None) -> dict:
+    """Run the optional ``schema_module`` migration of installed+valid suites.
+
+    The manifest key ``schema_module`` ('dotted.module:callable') names a
+    function ``migrate(engine_admin) -> bool`` that must be idempotent. It is
+    called with the ``db_admin`` engine after the core Alembic upgrade and
+    after a suite is installed. Suites without the key are skipped. Never
+    raises: a failing migration is reported (and logged) but does not stop
+    the application or other suites.
+
+    Returns ``{repo_key: {"ran": bool, "ok": bool | None, "error": str | None}}``.
+    """
+    from y_web import db
+
+    report: dict[str, dict] = {}
+    for repo_key in repo_keys if repo_keys is not None else backend_plugin_repo_keys():
+        try:
+            validation = validate_backend_suite(repo_key)
+            ref = validation.get("schema_module")
+            if not (validation.get("installed") and validation.get("valid") and ref):
+                continue
+            entry = {"ran": False, "ok": None, "error": None}
+            report[repo_key] = entry
+            dotted, _, attr = ref.partition(":")
+            migrate = getattr(_import_from_suite(repo_key, dotted), attr)
+            with app.app_context():
+                engines = db.engines
+                engine = engines["db_admin"] if "db_admin" in engines else db.engine
+                entry["ran"] = True
+                entry["ok"] = migrate(engine) is not False
+            if not entry["ok"]:
+                entry["error"] = "schema migration reported failure"
+        except Exception as exc:
+            report.setdefault(repo_key, {"ran": False, "ok": None, "error": None})
+            report[repo_key].update(ok=False, error=str(exc))
+        if report.get(repo_key, {}).get("error"):
+            app.logger.warning(
+                "[backend_settings] schema migration for '%s' failed: %s",
+                repo_key,
+                report[repo_key]["error"],
+            )
+    return report
+
+
 def _register_static_blueprint(app, repo_key: str) -> None:
     """Serve each module's static assets (admin-only editor JS/CSS).
 

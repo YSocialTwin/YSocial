@@ -2,6 +2,7 @@
 validated by ``validate_backend_suite`` (E1). Uses a fake plugin, not TrainingModules."""
 
 import json
+import sys
 
 import pytest
 from flask import Flask
@@ -10,6 +11,9 @@ from y_web.src.external_runtime import backend_plugins, registry
 
 
 def _make_plugin(tmp_path, monkeypatch, extra=None, files=("pkg/schema.py", "pkg/hooks.py")):
+    # the loader caches imported plugin modules by synthetic namespace name
+    for name in [n for n in sys.modules if n.startswith("_ysocial_ext__fake_suite")]:
+        del sys.modules[name]
     repo = tmp_path / "fake_suite"
     (repo / "meta").mkdir(parents=True)
     (repo / "pkg").mkdir()

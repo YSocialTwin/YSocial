@@ -501,24 +501,11 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
     # ------------------------------------------------------------------
     try:
         from y_web.src.external_runtime.backend_plugins import (
+            print_backend_plugin_report,
             register_backend_plugin_suites,
         )
 
-        _backend_plugin_report = register_backend_plugin_suites(app)
-        for _repo_key, _suite_report in _backend_plugin_report.get(
-            "suites", {}
-        ).items():
-            if _suite_report.get("installed"):
-                if _suite_report.get("valid"):
-                    print(
-                        f"✓ Backend settings suite '{_repo_key}': "
-                        f"{len(_suite_report.get('registered_modules', []))} module(s) registered"
-                    )
-                else:
-                    print(
-                        f"⚠ Backend settings suite '{_repo_key}' is installed but failed validation: "
-                        f"{_suite_report.get('errors')}"
-                    )
+        print_backend_plugin_report(register_backend_plugin_suites(app))
     except Exception as e:
         print(f"Failed to load backend settings plugin suites: {e}")
 
@@ -666,6 +653,14 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
             from y_web.db_init.migrations import run_migrations
 
             run_migrations(app, db_type, db)
+
+    # Optional per-suite schema migrations (manifest key "schema_module"),
+    # run after the core Alembic upgrade. Never raises.
+    from y_web.src.external_runtime.backend_plugins import (
+        run_backend_plugin_schema_migrations,
+    )
+
+    run_backend_plugin_schema_migrations(app)
 
     # Log service start event
     try:
