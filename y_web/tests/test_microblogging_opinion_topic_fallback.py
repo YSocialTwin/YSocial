@@ -1,11 +1,15 @@
+from pathlib import Path
+
 import pytest
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
 
 pytestmark = [pytest.mark.unit, pytest.mark.external_repo]
 
 
 def test_microblogging_server_get_post_topics_falls_back_to_thread_root():
     source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/external/YServer/y_server/routes/content_management.py",
+        str(_REPO_ROOT / "external/YServer/y_server/routes/content_management.py"),
         "r",
     ).read()
 

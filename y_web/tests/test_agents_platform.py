@@ -151,9 +151,7 @@ def test_infer_returns_explicit_type_when_valid(app):
 
     with app.app_context():
         # No DB queries fired because explicit attribute is valid
-        with patch("y_web.src.agents.platform.Population_Experiment") as mock_pe:
-            mock_pe.query.filter_by.return_value.all.return_value = []
-            result = infer_population_username_type(pop)
+        result = infer_population_username_type(pop)
 
     assert result == "forum"
 
@@ -165,8 +163,8 @@ def test_infer_returns_none_when_no_associations(app):
     pop = _mock_pop(None)
 
     with app.app_context():
-        with patch("y_web.src.agents.platform.Population_Experiment") as mock_pe:
-            mock_pe.query.filter_by.return_value.all.return_value = []
+        with patch("y_web.src.agents.platform.db") as mock_db:
+            mock_db.session.scalars.return_value.all.return_value = []
             result = infer_population_username_type(pop)
 
     assert result is None

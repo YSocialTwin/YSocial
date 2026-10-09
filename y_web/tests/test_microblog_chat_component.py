@@ -1,9 +1,14 @@
 """Structural regression tests for the microblogging chat component."""
 
 from pathlib import Path
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
 from types import SimpleNamespace
 
 import pytest
+from sqlalchemy import select
+
+from y_web.tests._sa2_stubs import _FakeSelect, _ScalarsResult, _SelectRoutingSession
 
 pytestmark = pytest.mark.unit
 
@@ -124,7 +129,7 @@ def test_photo_sharing_experiment_db_path_prefers_yphotosharing(monkeypatch, tmp
 def test_photo_sharing_open_experiment_session_bootstraps_full_schema(
     monkeypatch, tmp_path
 ):
-    from sqlalchemy import text
+    from sqlalchemy import select, text
 
     from y_web import create_app
     from y_web.src.experiment import helpers
@@ -201,31 +206,72 @@ def test_follow_round_resolution_preserves_photo_round_strings(monkeypatch):
         "open_experiment_session",
         lambda exp: (FakeSession(), FakeEngine()),
     )
+    monkeypatch.setattr(common, "select", lambda *a, **kw: _FakeSelect(*a))
+    monkeypatch.setattr(common, "db", SimpleNamespace(session=_SelectRoutingSession()))
 
     assert common._resolve_follow_round_id(9) == "round-abc"
 
 
+@pytest.mark.integration
 def test_photo_chat_contacts_follow_the_photo_follow_graph():
-    from y_web import create_app
+    """_social_chat_photo_contacts() must return exactly the users that
+    _social_chat_followed_agent_ids() -- the lower-level function that
+    reads the real follow graph -- currently says Admin (user 1) follows,
+    correctly hydrated to User_mgmt rows and filtered to non-page accounts.
+
+    This used to assert specific hardcoded usernames (MichaelHudson,
+    DonaldSalinas, LeslieBryant), coupling the test to a snapshot of
+    whatever this real, continuously-evolving local experiment's follow
+    graph looked like on the day the test was written. That snapshot has
+    since drifted -- this real database's current follow rows for user 1
+    no longer include MichaelHudson or DonaldSalinas at all -- so the test
+    is rewritten to check the actual invariant its own name promises
+    ("contacts follow the photo follow graph") against whatever the real
+    data says *right now*, instead of a frozen guess at what it said once.
+    """
+    from y_web import create_app, db
     from y_web.routes.api import social
     from y_web.src.models import Exps
 
     app = create_app()
     with app.app_context():
-        exp = Exps.query.filter_by(idexp=1).first()
-        assert exp is not None
+        # This is a @pytest.mark.integration test against whatever real
+        # local YWeb install happens to be on disk (not an isolated
+        # fixture) -- it needs *a* photo-sharing experiment, not
+        # specifically the one that happens to be idexp=1 on this
+        # particular machine at this particular moment (that numbering
+        # drifts as experiments are created/deleted over time).
+        exp = db.session.scalars(
+            select(Exps).filter_by(platform_type="photo_sharing")
+        ).first()
+        if exp is None:
+            pytest.skip("No photo_sharing experiment found in this database")
         social.current_user = SimpleNamespace(
             username="Admin",
             id=1,
             email="admin@y-not.social",
             password="x",
         )
-        contacts = social._social_chat_photo_contacts(exp, 1)
-        usernames = [getattr(contact, "username", "") for contact in contacts]
 
-        assert "MichaelHudson" in usernames
-        assert "DonaldSalinas" in usernames
-        assert "LeslieBryant" in usernames
+        expected_ids = {
+            str(cid) for cid in social._social_chat_followed_agent_ids(exp, 1)
+        }
+        if not expected_ids:
+            pytest.skip(
+                "Admin has no active follow relationship in this experiment's "
+                "current data -- nothing to assert against."
+            )
+
+        contacts = social._social_chat_photo_contacts(exp, 1)
+        contact_ids = {str(getattr(contact, "id", "")) for contact in contacts}
+
+        assert contact_ids == expected_ids
+
+        # And every returned contact must be a genuine, non-page user --
+        # never Admin itself, never an is_page account.
+        for contact in contacts:
+            assert int(getattr(contact, "is_page", 0) or 0) == 0
+            assert str(getattr(contact, "id", "")) != "1"
 
 
 def test_microblog_chat_refresh_runtime_context_uses_semantic_memory(monkeypatch):
@@ -422,28 +468,28 @@ def test_microblog_chat_routes_are_exposed():
 
 def test_microblog_chat_component_is_reusable_and_mounted():
     panel_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/components/chat_panel.html"
+        str(_REPO_ROOT / "y_web/templates/microblogging/components/chat_panel.html")
     ).read_text()
     feed_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/feed.html"
+        str(_REPO_ROOT / "y_web/templates/microblogging/feed.html")
     ).read_text()
     thread_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/thread.html"
+        str(_REPO_ROOT / "y_web/templates/microblogging/thread.html")
     ).read_text()
     profile_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/profile.html"
+        str(_REPO_ROOT / "y_web/templates/microblogging/profile.html")
     ).read_text()
     friends_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/friends.html"
+        str(_REPO_ROOT / "y_web/templates/microblogging/friends.html")
     ).read_text()
     hashtag_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/hashtag.html"
+        str(_REPO_ROOT / "y_web/templates/microblogging/hashtag.html")
     ).read_text()
     interest_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/interest.html"
+        str(_REPO_ROOT / "y_web/templates/microblogging/interest.html")
     ).read_text()
     emotions_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/emotions.html"
+        str(_REPO_ROOT / "y_web/templates/microblogging/emotions.html")
     ).read_text()
 
     assert 'id="microblog-chat-panel"' in panel_template
@@ -467,7 +513,7 @@ def test_microblog_chat_component_is_reusable_and_mounted():
 
 def test_microblog_chat_js_escapes_rendered_content():
     js_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/js/microblog-chat.js"
+        str(_REPO_ROOT / "y_web/static/assets/js/microblog-chat.js")
     ).read_text()
 
     assert "function escapeHtml" in js_source

@@ -9,6 +9,7 @@ import os
 from contextlib import contextmanager
 
 from flask import current_app, g, request
+from sqlalchemy import select
 
 from y_web import db
 
@@ -68,25 +69,29 @@ def register_experiment_database(app, exp_id, db_name):
 def _activate_db_exp_bind(exp_id):
     """Point the shared ``db_exp`` bind at the database for ``exp_id``.
 
-    Flask-SQLAlchemy caches engines per bind key. Updating only
-    ``SQLALCHEMY_BINDS`` is not enough because the already-created ``db_exp``
-    engine may still reference the legacy dummy database. This helper refreshes
-    both the bind URI and the cached engine so experiment-scoped ORM queries are
-    executed against the selected experiment database.
+    Flask-SQLAlchemy 3.x caches engines in ``db.engines`` (a plain dict backed
+    by ``app.extensions['sqlalchemy'].engines``).  ``db.get_engine(bind_key)``
+    is implemented as ``return self.engines[bind_key]`` — it never re-reads
+    ``SQLALCHEMY_BINDS``.  We must therefore build a new engine ourselves and
+    write it directly into ``db.engines['db_exp']`` so that all ORM queries on
+    ``db_exp``-bound models (Post, User_mgmt, Rounds, …) hit the correct
+    experiment database instead of the legacy dummy.db.
     """
+    from sqlalchemy import create_engine as _sa_create_engine
 
     from y_web.src.models import Exps
 
     bind_key = get_db_bind_key_for_exp(exp_id)
     if bind_key not in current_app.config["SQLALCHEMY_BINDS"]:
-        exp = Exps.query.filter_by(idexp=exp_id).first()
+        exp = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
         if exp is not None:
             register_experiment_database(current_app, exp_id, exp.db_name)
 
     binds = current_app.config["SQLALCHEMY_BINDS"]
     target_uri = binds.get(bind_key)
     original_bind = binds.get("db_exp")
-    original_engine = db.get_engine(bind="db_exp")
+    # Use .get() so we never raise KeyError on the first request after startup
+    original_engine = db.engines.get("db_exp")
 
     if not target_uri:
         return original_bind, original_engine, None
@@ -95,10 +100,17 @@ def _activate_db_exp_bind(exp_id):
 
     ensure_experiment_schema_for_uri(target_uri)
 
+    # Build a fresh engine for the experiment database using the same options
+    # configured for the app (NullPool, check_same_thread, timeout, …).
+    engine_options = current_app.config.get("SQLALCHEMY_ENGINE_OPTIONS", {}).copy()
+    new_engine = _sa_create_engine(target_uri, **engine_options)
+
+    # Replace the engine in Flask-SQLAlchemy's registry and update the URI.
     binds["db_exp"] = target_uri
+    db.engines["db_exp"] = new_engine
     db.session.remove()
-    refreshed_engine = db.get_engine(bind="db_exp")
-    return original_bind, original_engine, refreshed_engine
+
+    return original_bind, original_engine, new_engine
 
 
 def _restore_db_exp_bind(original_bind, original_engine, refreshed_engine=None):
@@ -110,7 +122,16 @@ def _restore_db_exp_bind(original_bind, original_engine, refreshed_engine=None):
     else:
         binds.pop("db_exp", None)
 
+    # Restore the original engine in Flask-SQLAlchemy's registry.  We must
+    # always keep db.engines["db_exp"] populated because get_engine() is a
+    # bare dict lookup that raises KeyError when the key is absent.
+    if original_engine is not None:
+        db.engines["db_exp"] = original_engine
+    elif "db_exp" in db.engines:
+        db.engines.pop("db_exp", None)
+
     db.session.remove()
+
     if refreshed_engine is not None and refreshed_engine is not original_engine:
         refreshed_engine.dispose()
 
@@ -124,7 +145,7 @@ def get_active_experiments():
     """
     from y_web.src.models import Exps
 
-    return Exps.query.filter_by(status=1).all()
+    return db.session.scalars(select(Exps).filter_by(status=1)).all()
 
 
 def setup_experiment_context():
@@ -152,7 +173,7 @@ def setup_experiment_context():
             # Bind the explicit experiment referenced by the route even if it is not
             # currently active, so direct admin/forum routes never fall back to the
             # legacy dummy bind.
-            exp = Exps.query.filter_by(idexp=exp_id).first()
+            exp = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
             if exp:
                 register_experiment_database(current_app, exp_id, exp.db_name)
 
@@ -164,7 +185,7 @@ def setup_experiment_context():
                 "db_exp"
             )
         if not hasattr(g, "original_db_exp_engine"):
-            g.original_db_exp_engine = db.get_engine(bind="db_exp")
+            g.original_db_exp_engine = db.engines.get("db_exp")
 
         # Dynamically override db_exp bind and cached engine to point to the
         # current experiment's database.
@@ -255,7 +276,7 @@ def initialize_active_experiment_databases(app):
     with app.app_context():
         from y_web.src.models import Exps
 
-        active_experiments = Exps.query.filter_by(status=1).all()
+        active_experiments = db.session.scalars(select(Exps).filter_by(status=1)).all()
 
         for exp in active_experiments:
             register_experiment_database(app, exp.idexp, exp.db_name)

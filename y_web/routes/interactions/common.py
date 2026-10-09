@@ -8,6 +8,7 @@ import uuid
 
 from flask import flash, jsonify, redirect, request, url_for
 from flask_login import current_user, login_required
+from sqlalchemy import func, select
 from sqlalchemy.exc import OperationalError
 
 from y_web import db
@@ -23,6 +24,45 @@ from y_web.src.models import (
     Rounds,
     User_mgmt,
 )
+from y_web.src.recsys.content_recsys import (
+    _normalize_content_recsys_mode,
+    _update_filter_bubble_interests,
+)
+
+
+def _maybe_update_fb_interests(exp_id, exp_user, post_id, interaction_type):
+    """
+    If the user is using FilterBubble mode, update their topic interests.
+    Silently no-ops when not applicable (wrong mode, missing engine, etc.).
+    """
+    try:
+        if (
+            _normalize_content_recsys_mode(getattr(exp_user, "recsys_type", ""))
+            != "FilterBubble"
+        ):
+            return
+        from flask import current_app
+
+        exp_engine = db.engines.get("db_exp")
+        if exp_engine is None:
+            exp_engine = db.get_engine(current_app, bind="db_exp")
+        from y_web.routes.social.helpers import _load_ui_settings
+
+        settings = _load_ui_settings(exp_id)
+        try:
+            learning_rate = float(settings.get("filter_bubble_lr", 0.05))
+        except (TypeError, ValueError):
+            learning_rate = 0.05
+        learning_rate = max(0.0, min(1.0, learning_rate))
+        _update_filter_bubble_interests(
+            user_id=exp_user.id,
+            post_id=post_id,
+            interaction_type=interaction_type,
+            exp_engine=exp_engine,
+            lr=learning_rate,
+        )
+    except Exception:
+        pass
 
 
 def _resolve_follow_round_id(exp_id):
@@ -36,7 +76,7 @@ def _resolve_follow_round_id(exp_id):
     try:
         from y_web.src.models import Exps
 
-        exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+        exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
         if exp is not None:
             session, engine = open_experiment_session(exp)
             if session is not None and engine is not None:
@@ -65,8 +105,10 @@ def _resolve_follow_round_id(exp_id):
         pass
 
     try:
-        current_round = Rounds.query.order_by(
-            Rounds.day.desc(), Rounds.hour.desc(), Rounds.id.desc()
+        current_round = db.session.scalars(
+            select(Rounds).order_by(
+                Rounds.day.desc(), Rounds.hour.desc(), Rounds.id.desc()
+            )
         ).first()
         if current_round is not None and getattr(current_round, "id", None) is not None:
             return current_round.id
@@ -112,7 +154,7 @@ def follow(exp_id, user_id, follower_id):
     """
     from y_web.src.models import Exps
 
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     session = None
     engine = None
     if exp is not None:
@@ -150,7 +192,9 @@ def follow(exp_id, user_id, follower_id):
                 except Exception:
                     acting_user = None
         else:
-            acting_user = User_mgmt.query.filter_by(username=acting_username).first()
+            acting_user = db.session.scalars(
+                select(User_mgmt).filter_by(username=acting_username)
+            ).first()
 
         if acting_user is not None:
             source_user_id = acting_user.id
@@ -240,7 +284,9 @@ def share_content(exp_id):
         Redirect to referrer page
     """
     # Get experiment user (not admin user)
-    exp_user = User_mgmt.query.filter_by(username=current_user.username).first()
+    exp_user = db.session.scalars(
+        select(User_mgmt).filter_by(username=current_user.username)
+    ).first()
     if not exp_user:
         flash("User not found in experiment", "error")
         return (
@@ -252,9 +298,22 @@ def share_content(exp_id):
 
     post_id = request.args.get("post_id")
 
+    # Normalise post_id: Standard experiments use integer IDs, HPC experiments use UUID strings.
+    # Try numeric conversion so SQLAlchemy can match the Integer column; keep as string for UUIDs.
+    try:
+        post_id_norm = int(post_id)
+    except (ValueError, TypeError):
+        post_id_norm = post_id
+
     # get the post
-    original = Post.query.filter_by(id=post_id).first()
-    current_round = Rounds.query.order_by(Rounds.day.desc(), Rounds.hour.desc()).first()
+    original = db.session.scalars(select(Post).filter_by(id=post_id_norm)).first()
+    if original is None:
+        # Post not found (e.g. race condition or already deleted); the client
+        # already updated the counter visually, so just return silently.
+        return ("", 204)
+    current_round = db.session.scalars(
+        select(Rounds).order_by(Rounds.day.desc(), Rounds.hour.desc())
+    ).first()
 
     try:
         post = Post(
@@ -262,7 +321,7 @@ def share_content(exp_id):
             round=current_round.id,
             user_id=exp_user_id,
             comment_to=-1,
-            shared_from=post_id,
+            shared_from=post_id_norm,
             image_id=original.image_id,
             news_id=original.news_id,
             post_img=original.post_img,
@@ -277,7 +336,7 @@ def share_content(exp_id):
             round=current_round.id,
             user_id=exp_user_id,
             comment_to=-1,
-            shared_from=post_id,
+            shared_from=post_id_norm,
             image_id=original.image_id,
             news_id=original.news_id,
             post_img=original.post_img,
@@ -287,12 +346,17 @@ def share_content(exp_id):
         db.session.commit()
 
     # get topics of the original post
-    topics_id = Post_topics.query.filter_by(post_id=post_id).all()
+    topics_id = db.session.scalars(
+        select(Post_topics).filter_by(post_id=post_id_norm)
+    ).all()
     # add the topics to the shared post
     for t in topics_id:
         ti = Post_topics(post_id=post.id, topic_id=t.topic_id)
         db.session.add(ti)
         db.session.commit()
+
+    # Update filter bubble interests for human users using Personalized Feed
+    _maybe_update_fb_interests(exp_id, exp_user, post_id_norm, "share")
 
     return redirect(request.referrer)
 
@@ -305,7 +369,9 @@ def react(exp_id):
     action = request.args.get("action")
 
     # Get experiment user (not admin user)
-    exp_user = User_mgmt.query.filter_by(username=current_user.username).first()
+    exp_user = db.session.scalars(
+        select(User_mgmt).filter_by(username=current_user.username)
+    ).first()
     if not exp_user:
         flash("User not found in experiment", "error")
         return (
@@ -315,10 +381,14 @@ def react(exp_id):
         )
     exp_user_id = exp_user.id
 
-    current_round = Rounds.query.order_by(Rounds.day.desc(), Rounds.hour.desc()).first()
+    current_round = db.session.scalars(
+        select(Rounds).order_by(Rounds.day.desc(), Rounds.hour.desc())
+    ).first()
 
-    record = Reactions.query.filter_by(
-        post_id=post_id, user_id=exp_user_id, round=current_round.id
+    record = db.session.scalars(
+        select(Reactions).filter_by(
+            post_id=post_id, user_id=exp_user_id, round=current_round.id
+        )
     ).first()
 
     if record:
@@ -353,10 +423,13 @@ def react(exp_id):
             db.session.commit()
 
     # update the reaction count of the post
-    post = Post.query.filter_by(id=post_id).first()
+    post = db.session.scalars(select(Post).filter_by(id=post_id)).first()
     if post is not None:
         post.reaction_count += 1
         db.session.commit()
+
+    # Update filter bubble interests for human users using Personalized Feed
+    _maybe_update_fb_interests(exp_id, exp_user, post_id, action)
 
     return {"message": "Reaction added successfully", "status": 200}
 
@@ -375,7 +448,9 @@ def report_content(exp_id):
         flash("Unsupported report type.", "error")
         return redirect(request.referrer or url_for("main.index"))
 
-    exp_user = User_mgmt.query.filter_by(username=current_user.username).first()
+    exp_user = db.session.scalars(
+        select(User_mgmt).filter_by(username=current_user.username)
+    ).first()
     if not exp_user:
         if is_ajax:
             return (
@@ -390,18 +465,24 @@ def report_content(exp_id):
     except (ValueError, TypeError):
         post_id_converted = post_id
 
-    target_post = Post.query.filter_by(id=post_id_converted).first()
-    current_round = Rounds.query.order_by(Rounds.day.desc(), Rounds.hour.desc()).first()
+    target_post = db.session.scalars(
+        select(Post).filter_by(id=post_id_converted)
+    ).first()
+    current_round = db.session.scalars(
+        select(Rounds).order_by(Rounds.day.desc(), Rounds.hour.desc())
+    ).first()
     if target_post is None or current_round is None:
         if is_ajax:
             return jsonify({"message": "Content not found.", "status": 404}), 404
         flash("Content not found.", "error")
         return redirect(request.referrer or url_for("main.index"))
 
-    existing_report = Reported.query.filter_by(
-        to_post=target_post.id, from_uid=exp_user.id
+    existing_report = db.session.scalars(
+        select(Reported).filter_by(to_post=target_post.id, from_uid=exp_user.id)
     ).first()
-    current_count = Reported.query.filter_by(to_post=target_post.id).count()
+    current_count = db.session.scalar(
+        select(func.count()).select_from(Reported).filter_by(to_post=target_post.id)
+    )
     if existing_report is not None:
         if is_ajax:
             return jsonify(
@@ -429,7 +510,9 @@ def report_content(exp_id):
     report = Reported(**report_kwargs)
     db.session.add(report)
     db.session.commit()
-    new_count = Reported.query.filter_by(to_post=target_post.id).count()
+    new_count = db.session.scalar(
+        select(func.count()).select_from(Reported).filter_by(to_post=target_post.id)
+    )
     if is_ajax:
         return jsonify(
             {
@@ -456,7 +539,7 @@ def delete_post(exp_id):
     except (ValueError, TypeError):
         post_id_converted = post_id
 
-    post = Post.query.get(post_id_converted)
+    post = db.session.get(Post, post_id_converted)
     db.session.delete(post)
     db.session.commit()
 
@@ -468,7 +551,9 @@ def delete_post(exp_id):
 def cancel_notification(exp_id):
     """Handle cancel notification operation."""
     # Get experiment user (not admin user)
-    exp_user = User_mgmt.query.filter_by(username=current_user.username).first()
+    exp_user = db.session.scalars(
+        select(User_mgmt).filter_by(username=current_user.username)
+    ).first()
     if not exp_user:
         return {"message": "User not found in experiment", "status": 404}
     exp_user_id = exp_user.id
@@ -476,7 +561,9 @@ def cancel_notification(exp_id):
     pid = request.args.get("post_id")
 
     # check if the comment is to answer a mention
-    mention = Mentions.query.filter_by(post_id=pid, user_id=exp_user_id).first()
+    mention = db.session.scalars(
+        select(Mentions).filter_by(post_id=pid, user_id=exp_user_id)
+    ).first()
     if mention:
         mention.answered = 1
         db.session.commit()

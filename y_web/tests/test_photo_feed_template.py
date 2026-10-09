@@ -2,7 +2,10 @@ from contextlib import contextmanager
 from pathlib import Path
 from types import SimpleNamespace
 
-from y_web import create_app
+import pytest
+from sqlalchemy import select
+
+from y_web import create_app, db
 from y_web.routes.social.photo import (
     _build_photo_follower_items,
     _build_photo_recommended_items,
@@ -20,40 +23,43 @@ from y_web.routes.social.photo import (
 from y_web.src.experiment.helpers import get_experiment_engine_uri
 from y_web.src.models import Exps
 
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+
 
 @contextmanager
 def _photo_experiment():
     app = create_app()
     with app.app_context():
-        for exp in Exps.query.order_by(Exps.idexp.asc()).all():
+        for exp in db.session.scalars(select(Exps).order_by(Exps.idexp.asc())).all():
             uri = get_experiment_engine_uri(exp)
             if uri and uri.endswith("/yphotosharing.db"):
                 yield exp
                 return
-    raise AssertionError("No photo-sharing experiment found")
+    pytest.skip("No photo-sharing experiment found in this database")
 
 
 def test_photo_feed_template_uses_collapsible_left_sidebar_and_instagram_layout():
-    template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/photo/feed.html"
-    ).read_text(encoding="utf-8")
-    base_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/photo/base.html"
-    ).read_text(encoding="utf-8")
+    template = Path(str(_REPO_ROOT / "y_web/templates/photo/feed.html")).read_text(
+        encoding="utf-8"
+    )
+    base_template = Path(str(_REPO_ROOT / "y_web/templates/photo/base.html")).read_text(
+        encoding="utf-8"
+    )
 
     assert "photo-shell" in base_template
     assert "data-photo-sidebar-toggle" in base_template
-    assert "photo-sidebar__item{% if photo_active_nav == 'home' %} is-active{% endif %}" in Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/photo/components/sidebar.html"
-    ).read_text(
-        encoding="utf-8"
+    assert (
+        "photo-sidebar__item{% if photo_active_nav == 'home' %} is-active{% endif %}"
+        in Path(
+            str(_REPO_ROOT / "y_web/templates/photo/components/sidebar.html")
+        ).read_text(encoding="utf-8")
     )
     assert "photo_home_url" in Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/photo/components/sidebar.html"
+        str(_REPO_ROOT / "y_web/templates/photo/components/sidebar.html")
     ).read_text(encoding="utf-8")
     assert "photo-stories" in template
     sidebar_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/photo/components/sidebar.html"
+        str(_REPO_ROOT / "y_web/templates/photo/components/sidebar.html")
     ).read_text(encoding="utf-8")
     assert "YSocial_purple.png" in sidebar_template
     assert "YSocial_l_purple.png" in sidebar_template
@@ -78,7 +84,7 @@ def test_photo_feed_template_uses_collapsible_left_sidebar_and_instagram_layout(
     assert "Suggestions for you" in template
     assert "microblog-chat.js" in base_template
     posts_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/photo/components/posts.html"
+        str(_REPO_ROOT / "y_web/templates/photo/components/posts.html")
     ).read_text(encoding="utf-8")
     assert "data-photo-open-post" in posts_template
     assert "data-photo-post-like" in posts_template
@@ -88,11 +94,11 @@ def test_photo_feed_template_uses_collapsible_left_sidebar_and_instagram_layout(
 
 def test_photo_profile_template_exposes_bio_and_story_creation_hooks():
     profile_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/photo/profile.html"
+        str(_REPO_ROOT / "y_web/templates/photo/profile.html")
     ).read_text(encoding="utf-8")
-    base_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/photo/base.html"
-    ).read_text(encoding="utf-8")
+    base_template = Path(str(_REPO_ROOT / "y_web/templates/photo/base.html")).read_text(
+        encoding="utf-8"
+    )
 
     assert "data-photo-open-story-create" in profile_template
     assert "data-photo-open-profile-edit" in profile_template
@@ -106,28 +112,25 @@ def test_photo_profile_template_exposes_bio_and_story_creation_hooks():
     assert "data-photo-profile-edit-overlay" in base_template
     assert "photo-profile-edit-overlay__gallery-grid" in base_template
     assert "photo/messages.html" in Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/photo.py"
+        str(_REPO_ROOT / "y_web/routes/social/photo.py")
     ).read_text(encoding="utf-8")
     assert "photo-messages.js" in Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/photo/messages.html"
+        str(_REPO_ROOT / "y_web/templates/photo/messages.html")
     ).read_text(encoding="utf-8")
 
 
 def test_photo_routes_do_not_rely_on_recsys_type_for_feed_rendering():
-    route_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/photo.py"
-    ).read_text(encoding="utf-8")
+    route_source = Path(str(_REPO_ROOT / "y_web/routes/social/photo.py")).read_text(
+        encoding="utf-8"
+    )
     template_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/photo/feed.html"
+        str(_REPO_ROOT / "y_web/templates/photo/feed.html")
     ).read_text(encoding="utf-8")
-    auth_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/auth/routes.py"
-    ).read_text(encoding="utf-8")
-    common_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/common.py"
-    ).read_text(encoding="utf-8")
+    common_source = Path(str(_REPO_ROOT / "y_web/routes/social/common.py")).read_text(
+        encoding="utf-8"
+    )
     admin_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_crud.py"
+        str(_REPO_ROOT / "y_web/routes/admin/sub/experiments/_crud.py")
     ).read_text(encoding="utf-8")
 
     assert "photos p" in route_source
@@ -136,7 +139,14 @@ def test_photo_routes_do_not_rely_on_recsys_type_for_feed_rendering():
     assert "api/photo/feed" in route_source
     assert "recommendations" in route_source
     assert "follow" in route_source
-    assert "photo_sharing" in auth_source
+    # The post-login platform_type branch (microblogging/forum/photo_sharing)
+    # used to live in auth.routes.select_experiment(), which this test
+    # checked directly. It has since moved to common.onboarding()'s
+    # "skip onboarding if already completed" path -- select_experiment()
+    # now redirects unconditionally to /<exp_id>/onboarding/<user_id>, which
+    # itself branches on platform_type (including photo_sharing) once it
+    # knows the user has already completed onboarding. common_source below
+    # already covers that relocated branch.
     assert "photo_sharing" in common_source
     assert "photo_sharing" in admin_source
     assert "ensure_experiment_user" in route_source
@@ -153,10 +163,10 @@ def test_photo_routes_do_not_rely_on_recsys_type_for_feed_rendering():
 
 def test_photo_infinite_scroll_uses_query_safe_page_urls_and_custom_end_message():
     infinite_scroll_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/js/infinite-scroll.js"
+        str(_REPO_ROOT / "y_web/static/assets/js/infinite-scroll.js")
     ).read_text(encoding="utf-8")
     photo_feed_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/js/photo-feed.js"
+        str(_REPO_ROOT / "y_web/static/assets/js/photo-feed.js")
     ).read_text(encoding="utf-8")
 
     assert "buildPageUrl" in infinite_scroll_source
@@ -206,9 +216,9 @@ def test_photo_latest_round_id_uses_active_experiment_rounds(monkeypatch):
 
 
 def test_photo_routes_order_by_round_chronology_for_visual_feeds():
-    route_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/photo.py"
-    ).read_text(encoding="utf-8")
+    route_source = Path(str(_REPO_ROOT / "y_web/routes/social/photo.py")).read_text(
+        encoding="utf-8"
+    )
     assert "LEFT JOIN rounds rd ON rd.id = p.round" in route_source
     assert "COALESCE(rd.day, 0) DESC, COALESCE(rd.hour, 0) DESC" in route_source
     assert "COALESCE(rd.day, 0) ASC, COALESCE(rd.hour, 0) ASC" in route_source
@@ -222,12 +232,19 @@ def test_photo_routes_order_by_round_chronology_for_visual_feeds():
     )
 
 
+@pytest.mark.external_repo
 def test_photo_recsys_uses_round_freshness_not_wall_clock():
     ranking_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/external/YPhotoSharing/YPhotoSharing/YServer/recsys/feed_ranking_service.py"
+        str(
+            _REPO_ROOT
+            / "external/YPhotoSharing/YPhotoSharing/YServer/recsys/feed_ranking_service.py"
+        )
     ).read_text(encoding="utf-8")
     trend_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/external/YPhotoSharing/YPhotoSharing/YServer/recsys/trend_service.py"
+        str(
+            _REPO_ROOT
+            / "external/YPhotoSharing/YPhotoSharing/YServer/recsys/trend_service.py"
+        )
     ).read_text(encoding="utf-8")
 
     assert "current_round_index" in ranking_source
@@ -238,9 +255,9 @@ def test_photo_recsys_uses_round_freshness_not_wall_clock():
 
 
 def test_photo_round_schema_includes_created_at_timestamp():
-    schema_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/src/experiment/schema.py"
-    ).read_text(encoding="utf-8")
+    schema_source = Path(str(_REPO_ROOT / "y_web/src/experiment/schema.py")).read_text(
+        encoding="utf-8"
+    )
     assert '"rounds": {' in schema_source
     assert "created_at DATETIME DEFAULT CURRENT_TIMESTAMP" in schema_source
     assert "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" in schema_source
@@ -252,7 +269,7 @@ def test_photo_media_and_avatar_helpers_resolve_browser_safe_urls():
     with _photo_experiment() as exp:
         media_url = _photo_media_url(
             exp,
-            "file:////Users/rossetti/PycharmProjects/YWeb/y_web/experiments/8bd5081e_535f_4cd7_8214_64ffb57de8bc/media/19680620-f4a8-4eac-bf8b-c4901d70fc74.jpg",
+            "file:////opt/y_social/YWeb/y_web/experiments/8bd5081e_535f_4cd7_8214_64ffb57de8bc/media/19680620-f4a8-4eac-bf8b-c4901d70fc74.jpg",
         )
         assert (
             media_url
@@ -277,6 +294,7 @@ def test_photo_media_url_preserves_static_profile_assets():
         )
 
 
+@pytest.mark.integration
 def test_photo_text_linkification_targets_profiles_and_hashtag_search():
     with _photo_experiment() as exp:
         linked = _photo_linkify_text(exp, "Hello @KatherineJones #pizza")
@@ -285,6 +303,7 @@ def test_photo_text_linkification_targets_profiles_and_hashtag_search():
         assert "@KatherineJones" in linked or "KatherineJones" in linked
 
 
+@pytest.mark.integration
 def test_photo_build_item_exposes_linked_caption_and_author_href():
     with _photo_experiment() as exp:
         item = _photo_build_item(
@@ -311,6 +330,7 @@ def test_photo_build_item_exposes_linked_caption_and_author_href():
         )
 
 
+@pytest.mark.integration
 def test_photo_feed_timelines_use_recommendations_and_social_contacts():
     with _photo_experiment() as exp:
         user_id = "b49b2daa-0560-466e-bd45-95222c7a4a10"
@@ -339,6 +359,7 @@ def test_photo_media_root_matches_photo_experiment_directory():
         assert media_root.parent.name == Path(_photo_db_path(exp)).parent.name
 
 
+@pytest.mark.integration
 def test_photo_suggested_contacts_never_returns_empty_list_for_photo_experiment():
     with _photo_experiment() as exp:
         contact_ids = set(
@@ -354,15 +375,15 @@ def test_photo_suggested_contacts_never_returns_empty_list_for_photo_experiment(
 
 
 def test_photo_suggestions_page_is_wired_and_english():
-    route_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/photo.py"
-    ).read_text(encoding="utf-8")
+    route_source = Path(str(_REPO_ROOT / "y_web/routes/social/photo.py")).read_text(
+        encoding="utf-8"
+    )
     template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/photo/suggestions.html"
+        str(_REPO_ROOT / "y_web/templates/photo/suggestions.html")
     ).read_text(encoding="utf-8")
-    feed_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/photo/feed.html"
-    ).read_text(encoding="utf-8")
+    feed_template = Path(str(_REPO_ROOT / "y_web/templates/photo/feed.html")).read_text(
+        encoding="utf-8"
+    )
 
     assert "photo/suggestions" in route_source
     assert "Suggested Contacts" in template
@@ -372,15 +393,15 @@ def test_photo_suggestions_page_is_wired_and_english():
 
 
 def test_photo_profile_page_is_wired_and_uses_photo_shell():
-    route_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/photo.py"
-    ).read_text(encoding="utf-8")
-    template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/photo/profile.html"
-    ).read_text(encoding="utf-8")
-    base_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/photo/base.html"
-    ).read_text(encoding="utf-8")
+    route_source = Path(str(_REPO_ROOT / "y_web/routes/social/photo.py")).read_text(
+        encoding="utf-8"
+    )
+    template = Path(str(_REPO_ROOT / "y_web/templates/photo/profile.html")).read_text(
+        encoding="utf-8"
+    )
+    base_template = Path(str(_REPO_ROOT / "y_web/templates/photo/base.html")).read_text(
+        encoding="utf-8"
+    )
 
     assert "photo/profile" in route_source
     assert "photo-profile-page" in template
@@ -393,15 +414,16 @@ def test_photo_profile_page_is_wired_and_uses_photo_shell():
     assert "photo/components/sidebar.html" in base_template
 
 
+@pytest.mark.integration
 def test_photo_search_page_is_wired_and_returns_all_search_domains():
-    route_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/photo.py"
-    ).read_text(encoding="utf-8")
-    template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/photo/search.html"
-    ).read_text(encoding="utf-8")
+    route_source = Path(str(_REPO_ROOT / "y_web/routes/social/photo.py")).read_text(
+        encoding="utf-8"
+    )
+    template = Path(str(_REPO_ROOT / "y_web/templates/photo/search.html")).read_text(
+        encoding="utf-8"
+    )
     sidebar_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/photo/components/sidebar.html"
+        str(_REPO_ROOT / "y_web/templates/photo/components/sidebar.html")
     ).read_text(encoding="utf-8")
 
     assert "photo/search" in route_source
@@ -410,10 +432,10 @@ def test_photo_search_page_is_wired_and_returns_all_search_domains():
     assert 'type="button" class="photo-search-page__tile"' in template
     assert "photo-search.js" in template
     assert "YSPhotoOpenPost" in Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/js/photo-search.js"
+        str(_REPO_ROOT / "y_web/static/assets/js/photo-search.js")
     ).read_text(encoding="utf-8")
     assert "YS_DATA_PHOTO_SEARCH" in Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/js/photo-overlays.js"
+        str(_REPO_ROOT / "y_web/static/assets/js/photo-overlays.js")
     ).read_text(encoding="utf-8")
     assert "data-photo-search-input" in template
     assert "data-photo-search-kind" in template

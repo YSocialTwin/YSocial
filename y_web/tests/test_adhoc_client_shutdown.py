@@ -5,6 +5,8 @@ from types import SimpleNamespace
 
 from flask import Flask
 
+from y_web.tests._sa2_stubs import _FakeSelect, _ScalarsResult, _SelectRoutingSession
+
 
 def test_stop_adhoc_client_terminates_orphan_processes_without_state_pid(monkeypatch):
     from y_web.src.simulation import adhoc_client as mod
@@ -98,6 +100,8 @@ def test_stop_experiment_also_stops_adhoc_clients_when_exp_already_marked_stoppe
         "stop_all_adhoc_clients",
         lambda exp, pause=False: stopped.append((exp.idexp, pause)),
     )
+    monkeypatch.setattr(mod, "select", lambda *a, **kw: _FakeSelect(*a))
+    monkeypatch.setattr(mod, "db", SimpleNamespace(session=_SelectRoutingSession()))
     monkeypatch.setattr(mod, "Exps", SimpleNamespace(query=_FakeExpsQuery()))
     monkeypatch.setattr(mod, "experiment_details", lambda uid: f"details:{uid}")
 

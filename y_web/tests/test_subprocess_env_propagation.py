@@ -203,7 +203,7 @@ def test_model_cache_refresh_falls_back_from_stale_absolute_path(monkeypatch, tm
     fallback_root = tmp_path / "fallback-cache"
     settings_path = tmp_path / "model_cache_settings.json"
     state_path = tmp_path / "detoxify_download_state.json"
-    stale_root = "/Users/rossetti/.cache/ysocial_models"
+    stale_root = "/Users/someuser/.cache/ysocial_models"
     original_mkdir = Path.mkdir
 
     def fake_mkdir(self, *args, **kwargs):
@@ -221,14 +221,14 @@ def test_model_cache_refresh_falls_back_from_stale_absolute_path(monkeypatch, tm
         {
           "status": "idle",
           "progress": 100,
-          "path": "/Users/rossetti/.cache/ysocial_models",
+          "path": "/Users/someuser/.cache/ysocial_models",
           "pid": null,
           "notification_id": null,
           "message": "Detoxify model is ready.",
           "started_at": null,
           "finished_at": "2026-06-02T16:05:39.929555+00:00",
-          "stdout_log": "/Users/rossetti/PycharmProjects/YWeb/y_web/system/detoxify_download_stdout.log",
-          "stderr_log": "/Users/rossetti/PycharmProjects/YWeb/y_web/system/detoxify_download_stderr.log"
+          "stdout_log": "/Users/someuser/PycharmProjects/YWeb/y_web/system/detoxify_download_stdout.log",
+          "stderr_log": "/Users/someuser/PycharmProjects/YWeb/y_web/system/detoxify_download_stderr.log"
         }
         """.strip(),
         encoding="utf-8",

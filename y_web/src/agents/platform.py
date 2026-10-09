@@ -1,6 +1,6 @@
 """Helpers for population platform typing and compatibility."""
 
-from sqlalchemy import inspect, text
+from sqlalchemy import inspect, select, text
 
 from y_web import db
 from y_web.src.models import Exps, Population_Experiment
@@ -50,8 +50,8 @@ def infer_population_username_type(population):
     if explicit in VALID_POPULATION_TYPES:
         return explicit
 
-    associations = Population_Experiment.query.filter_by(
-        id_population=population.id
+    associations = db.session.scalars(
+        select(Population_Experiment).filter_by(id_population=population.id)
     ).all()
     if not associations:
         return None
@@ -59,7 +59,9 @@ def infer_population_username_type(population):
     experiment_ids = [assoc.id_exp for assoc in associations]
     experiment_types = {
         normalize_population_username_type(exp.platform_type, default="")
-        for exp in Exps.query.filter(Exps.idexp.in_(experiment_ids)).all()
+        for exp in db.session.scalars(
+            select(Exps).filter(Exps.idexp.in_(experiment_ids))
+        ).all()
     }
     experiment_types.discard("")
     if len(experiment_types) == 1:

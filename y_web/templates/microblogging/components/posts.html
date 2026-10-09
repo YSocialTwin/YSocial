@@ -3,11 +3,6 @@
 
  <div class="content-wrap ys-p-1rem{% if item.get('is_moderation_comment') %} moderation-comment{% endif %}" id="post-{{ item['post_id'] }}" style="position: relative;">
         <!-- Post header -->
-        {% if item.get('adhoc_agent_badge') %}
-        <span style="position: absolute; top: 1rem; right: 3.75rem; z-index: 2; display: inline-flex; align-items: center; padding: 0.2rem 0.55rem; border-radius: 999px; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; color: #2b6cb0; background: #ebf4ff; border: 1px solid #bee3f8;">
-            {{ item['adhoc_agent_badge'] }}
-        </span>
-        {% endif %}
         <div class="card-heading">
             <!-- User meta -->
             <div class="user-block">
@@ -26,9 +21,19 @@
                 </div>
                 <div class="user-info">
                     <a href="/{{exp_id}}/profile/{{ item['author_id'] }}/recent/1">{{ item["author"] }}</a>
-                    <span class="time">Day {{ item["day"] }} - {{item["hour"]}}:00</span>
+                    {% if ui.show_post_time %}<span class="time">Day {{ item["day"] }} - {{item["hour"]}}:00</span>{% endif %}
                 </div>
             </div>
+            {% if (item.get('author_type_badge') and ui.annotation_author_type) or (item.get('adhoc_agent_badge') and ui.annotation_agent_type) %}
+            <div class="post-author-badges">
+                {% if item.get('author_type_badge') and ui.annotation_author_type %}
+                <span class="post-author-badge {% if item['author_type_badge'] == 'AI Agent' %}is-ai{% else %}is-human{% endif %}">{{ item['author_type_badge'] }}</span>
+                {% endif %}
+                {% if item.get('adhoc_agent_badge') and ui.annotation_agent_type %}
+                <span class="post-author-badge is-adhoc">{{ item['adhoc_agent_badge'] }}</span>
+                {% endif %}
+            </div>
+            {% endif %}
             <!-- Right side dropdown -->
             <!-- /partials/pages/feed/dropdowns/feed-post-dropdown.html -->
             <div class="dropdown is-spaced is-right is-neutral dropdown-trigger">
@@ -115,7 +120,9 @@
 
         <!-- Post footer -->
         {% if not item.get('is_moderation_comment') %}
+        {% if ui.annotations_enabled and (ui.annotation_emotions or ui.annotation_topics) %}
         <div class="post-annotation-section">
+ {% if ui.annotation_emotions %}
  <div class="post-meta-group">
                 {% if len(item['emotions']) > 0 %}
  <span class="post-meta-label">Emotions</span>
@@ -138,6 +145,8 @@
                 {% endif %}
                 {% endif %}
             </div>
+ {% endif %}{# annotation_emotions #}
+ {% if ui.annotation_topics %}
  <div class="post-meta-group">
                 {% if len(item['topics']) > 0 %}
  <span class="post-meta-label">Topics</span>
@@ -166,13 +175,15 @@
                 {% endif %}
                 {% endif %}
             </div>
+ {% endif %}{# annotation_topics #}
         </div>
+        {% endif %}{# annotations_enabled #}
         <div class="post-action-section">
             <div class="social-count" style="display: flex; flex-wrap: wrap; margin-left: auto; align-items: center;">
 
  <div class="likes-count ys-mr-3" id="share-count-{{ item['post_id'] }}">
                     <div class="like-wrapper" id="share-{{ item['post_id'] }}">
-                        <a class="share-button" id="s{{ item['post_id']}}" >
+                        <a class="share-button{% if not ui.interaction_share %} ys-no-interact{% endif %}" id="s{{ item['post_id']}}" >
                         <i data-feather="repeat"></i>
                         <span id="share-span-{{item['post_id']}}">{{ item['is_shared'] }}</span> </a>
                     </div>
@@ -180,7 +191,7 @@
 
  <div class="likes-count ys-mr-3" id="likes-count-{{ item['post_id'] }}">
                     <div class="like-wrapper" id="like-{{ item['post_id'] }}">
- <a class="like-button" id="l{{ item['post_id']}}">
+ <a class="like-button{% if not ui.interaction_like %} ys-no-interact{% endif %}" id="l{{ item['post_id']}}">
  <i data-feather="thumbs-up"></i>
  <span id="like-span-{{item['post_id']}}">{{ item['likes'] }}</span> </a>
                     </div>
@@ -188,7 +199,7 @@
 
  <div class="likes-count ys-mr-3" id="dislikes-count-{{ item['post_id'] }}">
                     <div class="dislike-wrapper" id="dislike-{{ item['post_id'] }}">
- <a class="dislike-button" id="d{{ item['post_id'] }}">
+ <a class="dislike-button{% if not ui.interaction_dislike %} ys-no-interact{% endif %}" id="d{{ item['post_id'] }}">
  <i data-feather="thumbs-down"></i>
  <span id="dislike-span-{{ item['post_id'] }}">{{ item["dislikes"] }}</span>
                         </a>
@@ -243,22 +254,22 @@
             <div class="original-post{% if item.get('is_moderation_comment') %} moderation-comment{% endif %}">
                 <div class="media-content">
                     <a href="/{{exp_id}}/profile/{{ item['author_id'] }}/recent/1">{{ item["author"] }}</a><br/>
-                    <span class="time">Day {{ item["day"] }} - {{item["hour"]}}:00</span>
+                    {% if ui.show_post_time %}<span class="time">Day {{ item["day"] }} - {{item["hour"]}}:00</span>{% endif %}
                     <div class="post-text post-content-section is-threaded">
                         <p> {{ item["post"]|safe }}</p>
                     </div>
                     {% if not item.get('is_moderation_comment') %}
                     <div class="post-action-section is-threaded">
                     <div class="controls">
-                        <div class="like-count" id="like-count-{{ item['post_id'] }}">
+                        <div class="like-count{% if not ui.interaction_like %} ys-no-interact{% endif %}" id="like-count-{{ item['post_id'] }}">
                             <i data-feather="thumbs-up" {% if not bool(item["is_liked"]) %}class="ys-stroke-blue"{% endif %}></i>
                             <span {% if not bool(item["is_liked"]) %}class="ys-text-light-blue"{% endif %}>{{ item["likes"] }}</span>
                         </div>
-                        <div class="dislike-count" id="dislike-count-{{ item['post_id'] }}">
+                        <div class="dislike-count{% if not ui.interaction_dislike %} ys-no-interact{% endif %}" id="dislike-count-{{ item['post_id'] }}">
                             <i data-feather="thumbs-down" {% if not bool(item["is_disliked"]) %}class="ys-stroke-blue"{% endif %}></i>
                             <span {% if not bool(item["is_disliked"]) %} class="ys-text-light-blue"{% endif %}>{{ item["dislikes"] }}</span>
                         </div>
-                        <div class="share-count" id="share-count-{{ item['post_id'] }}">
+                        <div class="share-count{% if not ui.interaction_share %} ys-no-interact{% endif %}" id="share-count-{{ item['post_id'] }}">
                             <i data-feather="repeat"></i>
                             <span>{{ item["is_shared"] }}</span>
                         </div>
@@ -275,8 +286,10 @@
                         {% endif %}
                     </div>
                     </div>
+{% if ui.annotations_enabled and (ui.annotation_emotions or ui.annotation_topics) %}
  <div class="post-annotation-section is-threaded">
  <div class="card-footer ys-flex-wrap-py">
+{% if ui.annotation_emotions %}
  <div class="post-meta-group in-thread">
                             {% if len(item['emotions']) > 0 %}
  <span class="post-meta-label">Emotions</span>
@@ -299,6 +312,8 @@
                             {% endif %}
                             {% endif %}
                         </div>
+{% endif %}{# annotation_emotions #}
+{% if ui.annotation_topics %}
  <div class="post-meta-group in-thread">
                             {% if len(item['topics']) > 0 %}
  <span class="post-meta-label">Topics</span>
@@ -327,9 +342,12 @@
                             {% endif %}
                             {% endif %}
                         </div>
+{% endif %}{# annotation_topics #}
                     </div>
                     </div>
+{% endif %}{# annotations_enabled #}
 
+ {% if ui.interaction_comment %}
  <div class="post-thread-tools">
                         <button type="button" class="reply-toggle-button" id='{{ item["post_id"] }}' onClick="return editLink(this.id)">
  <i data-feather="corner-down-left" class="ys-icon-xs"></i>
@@ -348,6 +366,7 @@
                     Comment
                     </button>
                     </form>
+                    {% endif %}
                     {% endif %}
 
                 </div>
@@ -372,13 +391,22 @@
                 </div>
                 <!-- Content -->
                 <div class="media-content" style="position: relative;">
-                    {% if cm.get('adhoc_agent_badge') %}
-                    <span style="position: absolute; top: 0; right: 0; display: inline-flex; align-items: center; padding: 0.2rem 0.55rem; border-radius: 999px; font-size: 0.64rem; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; color: #2b6cb0; background: #ebf4ff; border: 1px solid #bee3f8;">
-                        {{ cm['adhoc_agent_badge'] }}
-                    </span>
-                    {% endif %}
-                    <a href="/{{exp_id}}/profile/{{ cm['author_id'] }}/recent/1">{{ cm["author"] }}</a>
-                    <span class="time">Day {{ cm["day"] }} - {{cm["hour"]}}:00</span>
+                    <div class="post-comment-heading">
+                        <div>
+                            <a href="/{{exp_id}}/profile/{{ cm['author_id'] }}/recent/1">{{ cm["author"] }}</a>
+                            {% if ui.show_post_time %}<span class="time">Day {{ cm["day"] }} - {{cm["hour"]}}:00</span>{% endif %}
+                        </div>
+                        {% if (cm.get('author_type_badge') and ui.annotation_author_type) or (cm.get('adhoc_agent_badge') and ui.annotation_agent_type) %}
+                        <div class="post-author-badges">
+                            {% if cm.get('author_type_badge') and ui.annotation_author_type %}
+                            <span class="post-author-badge {% if cm['author_type_badge'] == 'AI Agent' %}is-ai{% else %}is-human{% endif %}">{{ cm['author_type_badge'] }}</span>
+                            {% endif %}
+                            {% if cm.get('adhoc_agent_badge') and ui.annotation_agent_type %}
+                            <span class="post-author-badge is-adhoc">{{ cm['adhoc_agent_badge'] }}</span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
                     <div class="post-content-section is-threaded">
                     <p>
                         {{ cm["post"]|safe }}
@@ -386,8 +414,10 @@
                     </div>
                     {% if not cm.get('is_moderation_comment') %}
                     <!-- Actions -->
+{% if ui.annotations_enabled and (ui.annotation_emotions or ui.annotation_topics) %}
  <div class="post-annotation-section is-threaded">
  <div class="card-footer ys-flex-wrap-py">
+{% if ui.annotation_emotions %}
  <div class="post-meta-group in-thread">
                             {% if len(cm['emotions']) > 0 %}
  <span class="post-meta-label">Emotions</span>
@@ -410,6 +440,8 @@
                             {% endif %}
                             {% endif %}
                         </div>
+{% endif %}{# annotation_emotions #}
+{% if ui.annotation_topics %}
  <div class="post-meta-group in-thread">
                             {% if len(cm['topics']) > 0 %}
  <span class="post-meta-label">Topics</span>
@@ -438,20 +470,22 @@
                             {% endif %}
                             {% endif %}
                         </div>
+{% endif %}{# annotation_topics #}
                     </div>
                     </div>
+{% endif %}{# annotations_enabled #}
                     <div class="post-action-section is-threaded">
                     <div class="controls">
-                        <div class="like-count" id="like-count-{{cm['post_id']}}">
+                        <div class="like-count{% if not ui.interaction_like %} ys-no-interact{% endif %}" id="like-count-{{cm['post_id']}}">
  <i data-feather="thumbs-up" {% if not bool(cm["is_liked"]) %}class="ys-stroke-blue"{% endif %}></i>
  <span {% if not bool(cm["is_liked"]) %}class="ys-text-light-blue"{% endif %}>{{ cm["likes"] }}</span>
                         </div>
 
-                        <div class="dislike-count" id="dislike-count-{{ cm['post_id'] }}">
+                        <div class="dislike-count{% if not ui.interaction_dislike %} ys-no-interact{% endif %}" id="dislike-count-{{ cm['post_id'] }}">
  <i data-feather="thumbs-down" {% if not bool(cm["is_disliked"]) %}class="ys-stroke-blue"{% endif %}></i>
  <span {% if not bool(cm["is_disliked"]) %} class="ys-text-light-blue"{% endif %}>{{ cm["dislikes"] }}</span>
                         </div>
-                        <div class="share-count" id="share-count-{{ cm['post_id'] }}">
+                        <div class="share-count{% if not ui.interaction_share %} ys-no-interact{% endif %}" id="share-count-{{ cm['post_id'] }}">
                             <a class="share-button" id="s{{ cm['post_id'] }}">
  <i data-feather="repeat"></i>
  <span>{{ cm["is_shared"] }}</span>
@@ -470,6 +504,7 @@
                         {% endif %}
                     </div>
                     </div>
+ {% if ui.interaction_comment %}
  <div class="post-thread-tools">
                 <button type="button" class="reply-toggle-button" id='{{ cm["post_id"] }}' onClick="return editLink(this.id)">
  <i data-feather="corner-down-left" class="ys-icon-xs"></i>
@@ -488,6 +523,7 @@
             Comment
             </button>
             </form>
+            {% endif %}
                     {% endif %}
         </div>
         <!-- Right side dropdown -->

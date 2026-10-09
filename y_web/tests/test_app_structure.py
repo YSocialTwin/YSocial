@@ -8,6 +8,9 @@ import tempfile
 import pytest
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import select
+
+from y_web import db
 
 pytestmark = pytest.mark.integration
 
@@ -58,7 +61,7 @@ class TestFlaskAppBasics:
             db.session.commit()
 
             # Test model retrieval
-            retrieved = TestModel.query.first()
+            retrieved = db.session.scalars(select(TestModel)).first()
             assert retrieved is not None
             assert retrieved.name == "test"
 
@@ -83,7 +86,7 @@ class TestY_WebModuleImports:
     def test_import_y_web_models(self):
         """Test importing y_web models"""
         try:
-            from y_web import models
+            from y_web import db, models
 
             # Test that some key models exist
             assert hasattr(models, "User_mgmt")
@@ -228,3 +231,60 @@ class TestSecurityConfiguration:
 
         assert app.config["TESTING"] is True
         assert app.testing is True
+
+
+# ---------------------------------------------------------------------------
+# C4 — SA2 migration sentinels
+# ---------------------------------------------------------------------------
+
+
+def test_fix_tests_script_does_not_exist():
+    """fix_tests.py non deve esistere una volta completata la migrazione SA2.
+
+    Se questo test fallisce: rimuovere fix_tests.py dal repository e migrare
+    i test che ancora usano _FakeSelect/_SelectRoutingSession al pattern SA2.
+    """
+    import os
+
+    assert not os.path.exists(
+        os.path.join(os.path.dirname(__file__), "..", "..", "fix_tests.py")
+    ), "fix_tests.py ancora presente — migrazione SA2 non completata (C4)"
+
+
+def test_no_sa1_shim_in_test_files():
+    """Nessun file di test (a parte lo shim condiviso stesso) deve definire
+    _FakeSelect o _SelectRoutingSession.
+
+    Questi shim bypassano SQLAlchemy 2 e mascherano pattern SA1 legacy. Lo
+    shim condiviso _sa2_stubs.py e' l'eccezione intenzionale: e' importato
+    da altri file di test (test_adhoc_client_shutdown.py,
+    test_copy_experiment.py, test_experiment_server_status_lifecycle.py,
+    test_hpc_progress_tracking.py, test_memory_enabled_detection.py,
+    test_microblog_chat_component.py, test_social_follow_helpers.py) invece
+    di essere duplicato in ognuno di essi, quindi va escluso dalla scansione
+    -- altrimenti questo stesso test si autodenuncia sia contro
+    _sa2_stubs.py sia, per lo stesso motivo, contro se stesso (il suo
+    codice contiene letteralmente le stringhe "class _FakeSelect" e
+    "class _SelectRoutingSession" qui sopra nel controllo).
+    Migrare i test rimanenti al pattern SA2:
+    db.session.scalars(select(Model)...).
+    """
+    import os
+
+    test_dir = os.path.dirname(__file__)
+    self_name = os.path.basename(__file__)
+    shared_shim_name = "_sa2_stubs.py"
+    violations = []
+    for fname in sorted(os.listdir(test_dir)):
+        if not fname.endswith(".py"):
+            continue
+        if fname in (self_name, shared_shim_name):
+            continue
+        path = os.path.join(test_dir, fname)
+        source = open(path).read()
+        if "class _FakeSelect" in source or "class _SelectRoutingSession" in source:
+            violations.append(fname)
+    assert violations == [], (
+        f"Shim SA2 legacy trovati in {len(violations)} file: {violations}\n"
+        "Migrare a db.session.scalars(select(Model)...) e rimuovere gli shim."
+    )

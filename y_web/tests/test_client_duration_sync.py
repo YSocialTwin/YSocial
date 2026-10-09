@@ -7,6 +7,8 @@ database and the on-disk client config aligned with the new total length.
 
 from pathlib import Path
 
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+
 import pytest
 
 pytestmark = pytest.mark.unit
@@ -36,18 +38,18 @@ def test_duration_sync_updates_all_duration_fields():
 
 
 def test_process_runner_reuses_client_days_as_expected_rounds():
-    source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/src/simulation/process_runner.py"
-    ).read_text(encoding="utf-8")
+    source = Path(str(_REPO_ROOT / "y_web/src/simulation/process_runner.py")).read_text(
+        encoding="utf-8"
+    )
 
     assert "expected_rounds = -1 if cli.days == -1 else cli.days * 24" in source
     assert "ce.expected_duration_rounds = expected_rounds" in source
 
 
 def test_hpc_client_reuses_client_days_as_expected_rounds():
-    source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/src/hpc/client.py"
-    ).read_text(encoding="utf-8")
+    source = Path(str(_REPO_ROOT / "y_web/src/hpc/client.py")).read_text(
+        encoding="utf-8"
+    )
 
     assert "_sync_hpc_client_duration_from_config" in source
     assert "_resolve_hpc_client_days_from_config" in source

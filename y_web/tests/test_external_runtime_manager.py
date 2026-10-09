@@ -812,6 +812,52 @@ def test_runtime_visibility_respects_private_allowlist(monkeypatch):
     assert registry.runtime_visible_to_user(spec, User("bob", "admin")) is False
 
 
+def test_runtime_visibility_development_mode_unlocks_private_repos(app):
+    """User-reported requirement: a "development" startup flag should
+    list (and so allow installing/enabling) plugin repositories marked
+    private, and hide them again -- same as before this flag existed --
+    when the flag is off. ``app.config["DEVELOPMENT_MODE"]`` is exactly
+    what ``y_social.py --development`` sets at startup (see
+    ``start_app``)."""
+    spec = registry.ExternalRuntimeSpec(
+        key="private_runtime",
+        group="hpc",
+        group_label="HPC",
+        category="agent_extensions",
+        category_label="Agent Extensions",
+        label="PrivateRuntime",
+        path=Path("/tmp/private-runtime"),
+        github_repo="YSocialTwin/PrivateRuntime",
+        repo_url="https://github.com/YSocialTwin/PrivateRuntime.git",
+        default_branch="main",
+        install_commands=(),
+        validate_entrypoints=(),
+        is_private=True,
+        # No allow-list and not an admin -- would be hidden under every
+        # other gate (allow-list, role), so this isolates the dev-mode
+        # short-circuit specifically.
+        visible_to_usernames=(),
+    )
+
+    class User:
+        def __init__(self, username, role):
+            self.username = username
+            self.role = role
+
+    outsider = User("nobody", "user")
+
+    with app.app_context():
+        app.config["DEVELOPMENT_MODE"] = False
+        assert registry.runtime_visible_to_user(spec, outsider) is False
+
+        app.config["DEVELOPMENT_MODE"] = True
+        assert registry.runtime_visible_to_user(spec, outsider) is True
+
+        # Flipping it back off restores the exact pre-existing behaviour.
+        app.config["DEVELOPMENT_MODE"] = False
+        assert registry.runtime_visible_to_user(spec, outsider) is False
+
+
 def test_grouped_runtime_specs_include_agent_plugins():
     grouped = registry.grouped_runtime_specs()
     group_keys = [group_key for group_key, _, _ in grouped]
@@ -909,3 +955,116 @@ def test_load_plugins_index_detects_legacy_agent_plugin_layout(tmp_path, monkeyp
     plugins = registry.load_plugins_index(refresh=True)
 
     assert any(plugin["plugin_name"] == "y_agents_plugins" for plugin in plugins)
+
+
+def test_runtime_installed_and_visible_requires_both_installed_and_visible(
+    tmp_path, app, monkeypatch
+):
+    """User-reported gap (2026-10-08): "when the new flag -e is not
+    specified private plugins that are already installed are still
+    visible". Several admin pages (experiment creation's simulator-type
+    list, the frontend-plugin settings page and its suite get/save
+    endpoints, agent-plugin feature availability) used to check only
+    ``runtime_spec(repo_key).path.exists()`` with no privacy gate at
+    all, bypassing ``runtime_visible_to_user`` entirely. This test
+    exercises the shared replacement, ``runtime_installed_and_visible``,
+    directly against the registry those call sites import it from."""
+    installed_path = tmp_path / "private-runtime"
+    installed_path.mkdir()
+
+    spec = registry.ExternalRuntimeSpec(
+        key="private_runtime_installed_check",
+        group="hpc",
+        group_label="HPC",
+        category="agent_extensions",
+        category_label="Agent Extensions",
+        label="PrivateRuntime",
+        path=installed_path,
+        github_repo="YSocialTwin/PrivateRuntime",
+        repo_url="https://github.com/YSocialTwin/PrivateRuntime.git",
+        default_branch="main",
+        install_commands=(),
+        validate_entrypoints=(),
+        is_private=True,
+        visible_to_usernames=(),
+    )
+    monkeypatch.setitem(registry.SUPPORTED_EXTERNAL_REPOS, spec.key, spec)
+
+    class User:
+        def __init__(self, username, role):
+            self.username = username
+            self.role = role
+
+    outsider = User("nobody", "user")
+
+    with app.app_context():
+        # Installed on disk, but private and not dev-mode / allow-listed:
+        # must stay hidden, matching the Plugins catalog page.
+        app.config["DEVELOPMENT_MODE"] = False
+        assert registry.runtime_installed_and_visible(spec.key, outsider) is False
+
+        # --development unlocks it, exactly like the catalog page.
+        app.config["DEVELOPMENT_MODE"] = True
+        assert registry.runtime_installed_and_visible(spec.key, outsider) is True
+        app.config["DEVELOPMENT_MODE"] = False
+
+        # Not installed on disk at all -- hidden regardless of dev mode.
+        spec.path.rmdir()
+        app.config["DEVELOPMENT_MODE"] = True
+        assert registry.runtime_installed_and_visible(spec.key, outsider) is False
+
+        # Unknown repo key -- hidden, never raises.
+        assert (
+            registry.runtime_installed_and_visible(
+                "this_repo_key_does_not_exist", outsider
+            )
+            is False
+        )
+
+
+def test_runtime_visibility_admin_role_alone_no_longer_bypasses_privacy(app):
+    """User-reported (screenshot, 2026-10-08): with no CLI flag passed,
+    logging in as a plain admin still showed every private plugin
+    (Reactive Agents, Frontend Adds-on, Scenario Design) on the catalog
+    page. Root cause: every repo actually marked ``is_private=True`` in
+    SUPPORTED_EXTERNAL_REPOS ships with an empty ``visible_to_usernames``
+    and no override configured, so requests always fell through to the
+    old "any admin role sees it" fallback -- which made --development's
+    gate a no-op for the ordinary case of an admin testing without the
+    flag. A private repo with no explicit allow-list must now stay
+    hidden from a plain admin unless --development is on."""
+    spec = registry.ExternalRuntimeSpec(
+        key="private_runtime_admin_check",
+        group="hpc",
+        group_label="HPC",
+        category="agent_extensions",
+        category_label="Agent Extensions",
+        label="PrivateRuntime",
+        path=Path("/tmp/private-runtime-admin-check"),
+        github_repo="YSocialTwin/PrivateRuntime",
+        repo_url="https://github.com/YSocialTwin/PrivateRuntime.git",
+        default_branch="main",
+        install_commands=(),
+        validate_entrypoints=(),
+        is_private=True,
+        # No allow-list -- exactly how photo_sharing, reactive_agents,
+        # frontend_adds_on and scenario_design are actually configured.
+        visible_to_usernames=(),
+    )
+
+    class User:
+        def __init__(self, username, role):
+            self.username = username
+            self.role = role
+
+    admin = User("giulio", "admin")
+
+    with app.app_context():
+        app.config["DEVELOPMENT_MODE"] = False
+        assert registry.runtime_visible_to_user(spec, admin) is False
+
+        app.config["DEVELOPMENT_MODE"] = True
+        assert registry.runtime_visible_to_user(spec, admin) is True
+
+        app.config["DEVELOPMENT_MODE"] = False
+        assert registry.runtime_visible_to_user(spec, admin) is False

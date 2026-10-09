@@ -1,0 +1,18 @@
+YSocial — Alembic migrations directory
+=======================================
+
+Managed by Flask-Migrate (https://flask-migrate.readthedocs.io).
+
+Common commands (run from the repository root):
+
+    flask --app y_social.py db current              # show current revision
+    flask --app y_social.py db upgrade              # apply pending migrations
+    flask --app y_social.py db migrate -m "msg"     # generate new migration
+    flask --app y_social.py db downgrade -1         # roll back one revision
+    flask --app y_social.py db stamp <rev-id>       # mark DB at revision
+
+For existing databases (already at schema baseline):
+
+    flask --app y_social.py db stamp 0001_baseline
+
+See y_web/migrations/README.md for the pre-Alembic migration history.

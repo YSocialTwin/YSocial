@@ -1,0 +1,12 @@
+# Development direct dependencies — INPUT for pip-compile, install with: pip install -r requirements/dev.txt
+-r base.in
+
+# Notebooks & exploration
+jupyterlab
+
+# Code quality
+black>=24.0
+isort>=5.13
+
+# Testing
+-r test.txt

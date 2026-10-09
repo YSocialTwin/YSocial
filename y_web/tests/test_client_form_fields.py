@@ -1,3 +1,6 @@
+from pathlib import Path
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
 """
 Test for new optional client form fields: network structure and hourly activity rates.
 """
@@ -184,12 +187,12 @@ class TestClientFormFields:
 
     def test_follow_back_field_is_wired_in_all_client_forms(self):
         templates = [
-            "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients.html",
-            "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_forum.html",
-            "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_hpc.html",
+            str(_REPO_ROOT / "y_web/templates/admin/clients.html"),
+            str(_REPO_ROOT / "y_web/templates/admin/clients_forum.html"),
+            str(_REPO_ROOT / "y_web/templates/admin/clients_hpc.html"),
         ]
         crud_source = open(
-            "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_crud.py",
+            str(_REPO_ROOT / "y_web/routes/admin/sub/clients/_crud.py"),
             "r",
         ).read()
 
@@ -201,7 +204,7 @@ class TestClientFormFields:
 
     def test_hpc_follow_defaults_enable_network_growth(self):
         template_source = open(
-            "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_hpc.html",
+            str(_REPO_ROOT / "y_web/templates/admin/clients_hpc.html"),
             "r",
         ).read()
 
@@ -216,11 +219,11 @@ class TestClientFormFields:
 
     def test_hpc_details_form_exposes_follow_action(self):
         template_source = open(
-            "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/client_details_hpc.html",
+            str(_REPO_ROOT / "y_web/templates/admin/client_details_hpc.html"),
             "r",
         ).read()
         crud_source = open(
-            "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_recsys.py",
+            str(_REPO_ROOT / "y_web/routes/admin/sub/clients/_recsys.py"),
             "r",
         ).read()
 
@@ -232,7 +235,7 @@ class TestClientFormFields:
 
     def test_hpc_embedded_vllm_model_default_is_updated(self):
         template_source = open(
-            "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_hpc.html",
+            str(_REPO_ROOT / "y_web/templates/admin/clients_hpc.html"),
             "r",
         ).read()
 
@@ -243,8 +246,8 @@ class TestClientFormFields:
 
     def test_hpc_and_photo_llm_backend_selector_is_fixed_to_llm_service(self):
         templates = [
-            "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_hpc.html",
-            "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_photo.html",
+            str(_REPO_ROOT / "y_web/templates/admin/clients_hpc.html"),
+            str(_REPO_ROOT / "y_web/templates/admin/clients_photo.html"),
         ]
 
         for template_path in templates:

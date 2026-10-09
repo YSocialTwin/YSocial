@@ -9,6 +9,7 @@ import xml.etree.ElementTree as ET
 from datetime import datetime
 
 import requests
+from sqlalchemy import select
 
 
 def fetch_latest_blog_post():
@@ -116,7 +117,9 @@ def update_blog_info_in_db():
         from y_web.src.models import BlogPost
 
         # Get the latest blog post from DB
-        latest_in_db = BlogPost.query.order_by(BlogPost.id.desc()).first()
+        latest_in_db = db.session.scalars(
+            select(BlogPost).order_by(BlogPost.id.desc())
+        ).first()
 
         # Update check time
         check_time = datetime.utcnow().isoformat()

@@ -19,14 +19,23 @@
                     </div>
                 </div>
 
-                <div class="media-content" style="position: relative;">
-                    {% if thread.get('adhoc_agent_badge') %}
-                    <span style="position: absolute; top: 0; right: 3rem; display: inline-flex; align-items: center; padding: 0.2rem 0.55rem; border-radius: 999px; font-size: 0.64rem; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; color: #2b6cb0; background: #ebf4ff; border: 1px solid #bee3f8;">
-                        {{ thread['adhoc_agent_badge'] }}
-                    </span>
-                    {% endif %}
-                    <a href="/{{exp_id}}/profile/{{ thread['author_id'] }}/recent/1">{{ thread["author"] }}</a>
-                    <span class="time">Day {{ thread["day"] }} - {{thread["hour"]}}:00</span>
+                <div class="media-content">
+                    <div class="post-comment-heading">
+                        <div>
+                            <a href="/{{exp_id}}/profile/{{ thread['author_id'] }}/recent/1">{{ thread["author"] }}</a>
+                            {% if ui.show_post_time %}<span class="time">Day {{ thread["day"] }} - {{thread["hour"]}}:00</span>{% endif %}
+                        </div>
+                        {% if (thread.get('author_type_badge') and ui.annotation_author_type) or (thread.get('adhoc_agent_badge') and ui.annotation_agent_type) %}
+                        <div class="post-author-badges">
+                            {% if thread.get('author_type_badge') and ui.annotation_author_type %}
+                            <span class="post-author-badge {% if thread['author_type_badge'] == 'AI Agent' %}is-ai{% else %}is-human{% endif %}">{{ thread['author_type_badge'] }}</span>
+                            {% endif %}
+                            {% if thread.get('adhoc_agent_badge') and ui.annotation_agent_type %}
+                            <span class="post-author-badge is-adhoc">{{ thread['adhoc_agent_badge'] }}</span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
                     <div class="post-content-section is-threaded">
                     <p>
                         {{ thread["post"]|safe }}
@@ -34,8 +43,10 @@
                     </div>
 
                     {% if not thread.get('is_moderation_comment') %}
+{% if ui.annotations_enabled and (ui.annotation_emotions or ui.annotation_topics) %}
  <div class="post-annotation-section is-threaded">
  <div class="card-footer ys-flex-wrap-py">
+{% if ui.annotation_emotions %}
  <div class="post-meta-group in-thread">
                             {% if len(thread['emotions']) > 0 %}
  <span class="post-meta-label">Emotions</span>
@@ -58,6 +69,8 @@
                             {% endif %}
                             {% endif %}
                         </div>
+{% endif %}{# annotation_emotions #}
+{% if ui.annotation_topics %}
  <div class="post-meta-group in-thread">
                             {% if len(thread['topics']) > 0 %}
  <span class="post-meta-label">Topics</span>
@@ -86,20 +99,22 @@
                             {% endif %}
                             {% endif %}
                         </div>
+{% endif %}{# annotation_topics #}
                     </div>
                     </div>
+{% endif %}{# annotations_enabled #}
                     <div class="post-action-section is-threaded">
                     <div class="controls">
 
-                        <div class="like-count" id="like-count-{{ thread['post_id'] }}">
+                        <div class="like-count{% if not ui.interaction_like %} ys-no-interact{% endif %}" id="like-count-{{ thread['post_id'] }}">
  <i data-feather="thumbs-up" {% if not bool(thread["is_liked"]) %}class="ys-stroke-blue"{% endif %}></i>
  <span {% if not bool(thread["is_liked"]) %}class="ys-text-light-blue"{% endif %}>{{ thread["likes"] }}</span>
                     </div>
-                    <div class="dislike-count" id="dislike-count-{{ thread['post_id'] }}">
+                    <div class="dislike-count{% if not ui.interaction_dislike %} ys-no-interact{% endif %}" id="dislike-count-{{ thread['post_id'] }}">
  <i data-feather="thumbs-down" {% if not bool(thread["is_disliked"]) %}class="ys-stroke-blue"{% endif %}></i>
  <span {% if not bool(thread["is_disliked"]) %}class="ys-text-light-blue"{% endif %}>{{ thread["dislikes"] }}</span>
                 </div>
-                <div class="share-count" id="share-count-{{ thread['post_id'] }}">
+                <div class="share-count{% if not ui.interaction_share %} ys-no-interact{% endif %}" id="share-count-{{ thread['post_id'] }}">
                     <a class="share-button" id="s{{ thread['post_id'] }}">
  <i data-feather="repeat"></i>
  <span>{{ thread["is_shared"] }}</span>
@@ -125,6 +140,7 @@
             {% else %}
  <div class="post-thread-tools post-thread-tools--reply-only">
             {% endif %}
+                {% if ui.interaction_comment %}
                 <button type="button" class="reply-toggle-button" id='{{ thread["post_id"] }}' onClick="return editLink(this.id)">
  <i data-feather="corner-down-left" class="ys-icon-xs"></i>
  <span>Reply</span>
@@ -142,6 +158,7 @@
             Comment
             </button>
             </form>
+                    {% endif %}
                     {% endif %}
         </div>
 

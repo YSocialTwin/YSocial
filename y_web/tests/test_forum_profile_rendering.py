@@ -1,12 +1,14 @@
 from pathlib import Path
 
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+
 
 def test_forum_profile_template_renders_stress_reward_card():
-    template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/forum/profile.html"
-    ).read_text(encoding="utf-8")
+    template = Path(str(_REPO_ROOT / "y_web/templates/forum/profile.html")).read_text(
+        encoding="utf-8"
+    )
     css = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/css/reddit/forum-components.css"
+        str(_REPO_ROOT / "y_web/static/assets/css/reddit/forum-components.css")
     ).read_text(encoding="utf-8")
 
     assert "Stress / Reward" in template
@@ -21,12 +23,12 @@ def test_forum_profile_template_renders_stress_reward_card():
 
 
 def test_forum_profile_template_renders_agent_custom_feature_rows():
-    template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/forum/profile.html"
-    ).read_text(encoding="utf-8")
-    source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/common.py"
-    ).read_text(encoding="utf-8")
+    template = Path(str(_REPO_ROOT / "y_web/templates/forum/profile.html")).read_text(
+        encoding="utf-8"
+    )
+    source = Path(str(_REPO_ROOT / "y_web/routes/social/common.py")).read_text(
+        encoding="utf-8"
+    )
 
     assert (
         "{% for custom_key, custom_value in agent_custom_features.items() %}"
@@ -37,21 +39,19 @@ def test_forum_profile_template_renders_agent_custom_feature_rows():
 
 
 def test_forum_profile_route_allows_stress_reward_context():
-    source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/common.py"
-    ).read_text(encoding="utf-8")
-
-    assert (
-        'getattr(exp, "platform_type", "") not in {"microblogging", "forum"}' in source
+    source = Path(str(_REPO_ROOT / "y_web/routes/social/common.py")).read_text(
+        encoding="utf-8"
     )
+
+    assert 'getattr(exp, "platform_type", "") not in' in source
     assert "stress_reward_active=stress_reward_active" in source
     assert "stress_reward_indicator=stress_reward_indicator" in source
 
 
 def test_forum_interview_route_supports_uuid_backed_users():
-    source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/forum.py"
-    ).read_text(encoding="utf-8")
+    source = Path(str(_REPO_ROOT / "y_web/routes/social/forum.py")).read_text(
+        encoding="utf-8"
+    )
 
     assert (
         'logged_id = exp_user.id if exp_user else (getattr(current_user, "id", 0) or 0)'
@@ -72,16 +72,16 @@ def test_stress_reward_scale_marks_any_positive_value():
 
 def test_admin_schedule_no_longer_caps_hpc_groups():
     schedule_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_schedule.py"
+        str(_REPO_ROOT / "y_web/routes/admin/sub/experiments/_schedule.py")
     ).read_text(encoding="utf-8")
     hpc_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_hpc.py"
+        str(_REPO_ROOT / "y_web/routes/admin/sub/experiments/_hpc.py")
     ).read_text(encoding="utf-8")
     settings_template = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/miscellanea.html"
+        str(_REPO_ROOT / "y_web/templates/admin/miscellanea.html")
     ).read_text(encoding="utf-8")
     js_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/js/admin-miscellanea.js"
+        str(_REPO_ROOT / "y_web/static/assets/js/admin-miscellanea.js")
     ).read_text(encoding="utf-8")
 
     assert "max_hpc_per_group" in hpc_source

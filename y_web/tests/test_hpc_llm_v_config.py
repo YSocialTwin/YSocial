@@ -1,3 +1,6 @@
+from pathlib import Path
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
 """
 Tests for HPC client llm_v config conditional inclusion.
 
@@ -218,7 +221,7 @@ class TestHPCLLMVConfig:
 
     def test_hpc_ollama_config_source_contains_auto_api_fields(self):
         source = open(
-            "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_crud.py"
+            str(_REPO_ROOT / "y_web/routes/admin/sub/clients/_crud.py")
         ).read()
 
         assert '"api_format": "auto"' in source
@@ -226,11 +229,9 @@ class TestHPCLLMVConfig:
 
     def test_hpc_template_uses_selectable_vision_model_fetch(self):
         template = open(
-            "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_hpc.html"
+            str(_REPO_ROOT / "y_web/templates/admin/clients_hpc.html")
         ).read()
-        js = open(
-            "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/js/admin-clients.js"
-        ).read()
+        js = open(str(_REPO_ROOT / "y_web/static/assets/js/admin-clients.js")).read()
 
         assert 'select name="llm_v_agent" id="llm_v_agent"' in template
         assert "Fetch Vision Models" in template
@@ -240,7 +241,7 @@ class TestHPCLLMVConfig:
 
     def test_create_hpc_client_source_persists_memory_contract(self):
         source = open(
-            "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_crud.py"
+            str(_REPO_ROOT / "y_web/routes/admin/sub/clients/_crud.py")
         ).read()
         create_block = source.split("def create_hpc_client(", 1)[1].split(
             "def generate_hpc_client_config(", 1
@@ -253,7 +254,7 @@ class TestHPCLLMVConfig:
 
     def test_create_hpc_client_source_disables_vllm_shared_pool_limit(self):
         source = open(
-            "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_crud.py"
+            str(_REPO_ROOT / "y_web/routes/admin/sub/clients/_crud.py")
         ).read()
         create_block = source.split('elif llm_backend == "vllm":', 1)[1].split(
             "else:  # ollama", 1
@@ -265,7 +266,7 @@ class TestHPCLLMVConfig:
 
     def test_hpc_template_exposes_memory_configuration_section(self):
         template = open(
-            "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_hpc.html"
+            str(_REPO_ROOT / "y_web/templates/admin/clients_hpc.html")
         ).read()
 
         assert "Agent Memory (Run-Scoped)" in template
@@ -275,7 +276,7 @@ class TestHPCLLMVConfig:
 
     def test_hpc_client_creation_context_supports_memory_gate(self):
         source = open(
-            "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_crud.py"
+            str(_REPO_ROOT / "y_web/routes/admin/sub/clients/_crud.py")
         ).read()
 
         assert '"server_config.json"' in source
@@ -283,7 +284,7 @@ class TestHPCLLMVConfig:
 
     def test_create_hpc_client_initializes_ollama_vision_fields_before_use(self):
         source = open(
-            "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_crud.py"
+            str(_REPO_ROOT / "y_web/routes/admin/sub/clients/_crud.py")
         ).read()
 
         create_block = source.split("def create_hpc_client(", 1)[1].split(
@@ -309,12 +310,12 @@ class TestHPCLLMVConfig:
 
     def test_photo_client_source_contains_yphotosharing_fields(self):
         crud_source = open(
-            "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_crud.py",
+            str(_REPO_ROOT / "y_web/routes/admin/sub/clients/_crud.py"),
             "r",
             encoding="utf-8",
         ).read()
         template_source = open(
-            "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_photo.html",
+            str(_REPO_ROOT / "y_web/templates/admin/clients_photo.html"),
             "r",
             encoding="utf-8",
         ).read()

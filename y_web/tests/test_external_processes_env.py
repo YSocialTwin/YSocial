@@ -8,7 +8,7 @@ pytestmark = pytest.mark.unit
 
 
 def test_detect_env_handler_prefers_running_interpreter(monkeypatch):
-    expected_python = "/Users/rossetti/miniforge3/envs/Y_Social/bin/python3.11"
+    expected_python = "/Users/someuser/miniforge3/envs/Y_Social/bin/python3.11"
 
     monkeypatch.setattr("y_web.src.simulation.server.sys.executable", expected_python)
     monkeypatch.setattr(Path, "exists", lambda self: str(self) == expected_python)

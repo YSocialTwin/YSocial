@@ -68,7 +68,13 @@ instance/
 
 # Database files
 *.db
+*.db-shm
+*.db-wal
 y_web/db/*.db
+y_web/system/*.db
+y_web/*.db
+*.fuse_hidden*
+!data_schema/*.db
 
 # Scrapy stuff:
 .scrapy
@@ -186,3 +192,17 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+.playwright-cli
+# Stale experiment data moved during C6 migration cleanup
+/_to_delete/
+
+# Guard against experiment data accidentally written under src/ again (bug was in helpers.py BASE_DIR)
+/y_web/src/experiments/
+/y_web/static/uploads/forum_feed_images/
+# Local scratch/draft material - never push to the remote
+/Claude outputs/
+/NON_PERSONALIZED_RECSYS_ANALYSIS.md
+/PERSONALIZED_FEED_RECSYS_ANALYSIS.md
+/STRATA_OpenAI_Teen_Development_Grant_Draft.md
+/STRATA_OpenAI_Teen_Development_Grant_Full_Proposal_Draft.md
+/YSocial_analisi_codebase.md

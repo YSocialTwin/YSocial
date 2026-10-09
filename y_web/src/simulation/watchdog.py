@@ -18,6 +18,9 @@ from typing import Callable, Dict, List, Optional, Tuple
 
 import psutil
 import requests
+from sqlalchemy import select
+
+from y_web import db
 
 logger = logging.getLogger(__name__)
 
@@ -712,7 +715,7 @@ def _save_watchdog_last_run(last_run: datetime) -> None:
             from y_web import db
             from y_web.src.models import WatchdogSettings
 
-            settings = WatchdogSettings.query.first()
+            settings = db.session.scalars(select(WatchdogSettings)).first()
             if settings:
                 settings.last_run = last_run
                 db.session.commit()
@@ -740,7 +743,7 @@ def _load_watchdog_settings() -> Dict:
         if current_app:
             from y_web.src.models import WatchdogSettings
 
-            settings = WatchdogSettings.query.first()
+            settings = db.session.scalars(select(WatchdogSettings)).first()
             if settings:
                 return {
                     "enabled": settings.enabled,
@@ -774,7 +777,7 @@ def _save_watchdog_settings(
             from y_web import db
             from y_web.src.models import WatchdogSettings
 
-            settings = WatchdogSettings.query.first()
+            settings = db.session.scalars(select(WatchdogSettings)).first()
             if settings:
                 if enabled is not None:
                     settings.enabled = enabled

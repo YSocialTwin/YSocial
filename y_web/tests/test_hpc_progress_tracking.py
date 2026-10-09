@@ -8,9 +8,12 @@ operations deregister clients cleanly from the orchestrator.
 
 import json
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+from y_web.tests._sa2_stubs import _FakeSelect, _ScalarsResult, _SelectRoutingSession
 
 pytestmark = pytest.mark.unit
 
@@ -271,6 +274,10 @@ def test_start_hpc_client_clears_stale_recycled_pid_and_restarts(monkeypatch):
 
     _FakeClientExecution.query.filter_by.return_value = existing_exec_q
     monkeypatch.setattr("y_web.src.hpc.client.Client_Execution", _FakeClientExecution)
+    monkeypatch.setattr("y_web.src.hpc.client.select", lambda *a, **kw: _FakeSelect(*a))
+    import y_web.src.hpc.client as _hpc_mod
+
+    monkeypatch.setattr(_hpc_mod.db.session, "scalars", _SelectRoutingSession().scalars)
 
     process = start_hpc_client(mock_exp, mock_cli, mock_population)
 
@@ -354,6 +361,11 @@ def test_start_hpc_client_syncs_duration_from_matrix_config(monkeypatch, tmp_pat
         "y_web.src.hpc.client.subprocess.Popen", lambda *a, **k: mock_process
     )
     monkeypatch.setattr("y_web.src.hpc.client.db.session.commit", lambda: None)
+
+    monkeypatch.setattr("y_web.src.hpc.client.select", lambda *a, **kw: _FakeSelect(*a))
+    import y_web.src.hpc.client as _hpc_mod
+
+    monkeypatch.setattr(_hpc_mod.db.session, "scalars", _SelectRoutingSession().scalars)
 
     class _FakeClientExecution:
         query = MagicMock()
@@ -466,6 +478,10 @@ def test_start_hpc_client_photo_sharing_uses_top_level_hpc_layout(
     monkeypatch.setattr(
         "y_web.src.hpc.client.db.session.add", lambda obj: added_objects.append(obj)
     )
+    monkeypatch.setattr("y_web.src.hpc.client.select", lambda *a, **kw: _FakeSelect(*a))
+    import y_web.src.hpc.client as _hpc_mod
+
+    monkeypatch.setattr(_hpc_mod.db.session, "scalars", _SelectRoutingSession().scalars)
 
     process = start_hpc_client(mock_exp, mock_cli, mock_population)
 
@@ -585,6 +601,14 @@ def test_admin_progress_refreshes_hpc_client_log_when_stale():
     refreshed_execution.last_active_hour = 5
 
     with (
+        patch(
+            "y_web.routes.admin.sub.clients._details.select",
+            side_effect=lambda *a, **kw: _FakeSelect(*a),
+        ),
+        patch(
+            "y_web.routes.admin.sub.clients._details.db",
+            new=SimpleNamespace(session=_SelectRoutingSession()),
+        ),
         patch("y_web.routes.admin.sub.clients._details.Client") as client_model,
         patch(
             "y_web.routes.admin.sub.clients._details.Client_Execution"

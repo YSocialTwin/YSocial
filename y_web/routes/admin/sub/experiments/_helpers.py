@@ -36,6 +36,7 @@ from flask import (
     url_for,
 )
 from flask_login import current_user, login_required, login_user
+from sqlalchemy import select
 
 from y_web import db  # , app
 from y_web.src.content.avatars import normalize_forum_avatar_mode
@@ -558,7 +559,9 @@ def _sanitize_filename(name, fallback):
 
 def _current_admin_user():
     """Resolve current authenticated admin user record."""
-    return Admin_users.query.filter_by(username=current_user.username).first()
+    return db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
 
 def _current_admin_user_or_none():
@@ -593,10 +596,14 @@ def _experiment_has_started_once(experiment, clients=None):
         return True
 
     if clients is None:
-        clients = Client.query.filter_by(id_exp=experiment.idexp).all()
+        clients = db.session.scalars(
+            select(Client).filter_by(id_exp=experiment.idexp)
+        ).all()
 
     for client in clients:
-        ce = Client_Execution.query.filter_by(client_id=client.id).first()
+        ce = db.session.scalars(
+            select(Client_Execution).filter_by(client_id=client.id)
+        ).first()
         if not ce:
             continue
         if (ce.elapsed_time or 0) > 0:
@@ -606,12 +613,24 @@ def _experiment_has_started_once(experiment, clients=None):
         ):
             return True
 
-    if ServerLogMetrics.query.filter_by(exp_id=experiment.idexp).first() is not None:
+    if (
+        db.session.scalars(
+            select(ServerLogMetrics).filter_by(exp_id=experiment.idexp)
+        ).first()
+        is not None
+    ):
         return True
-    if ClientLogMetrics.query.filter_by(exp_id=experiment.idexp).first() is not None:
+    if (
+        db.session.scalars(
+            select(ClientLogMetrics).filter_by(exp_id=experiment.idexp)
+        ).first()
+        is not None
+    ):
         return True
 
-    stats = Exp_stats.query.filter_by(exp_id=experiment.idexp).first()
+    stats = db.session.scalars(
+        select(Exp_stats).filter_by(exp_id=experiment.idexp)
+    ).first()
     if stats and any(
         int(getattr(stats, field, 0) or 0) > 0
         for field in ("rounds", "posts", "reactions", "mentions")
@@ -650,7 +669,7 @@ def _load_forum_experiment_context(uid, require_manage=True):
     """Load a forum experiment and its writable directory."""
     check_privileges(current_user.username)
 
-    experiment = Exps.query.filter_by(idexp=uid).first()
+    experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     if not experiment:
         flash("Experiment not found", "error")
         return None, None, redirect(url_for("experiments.settings"))
@@ -689,7 +708,7 @@ def _load_memory_capable_experiment_context(uid, require_manage=True):
     """Load a memory-capable experiment and its writable directory."""
     check_privileges(current_user.username)
 
-    experiment = Exps.query.filter_by(idexp=uid).first()
+    experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     if not experiment:
         flash("Experiment not found", "error")
         return None, None, redirect(url_for("experiments.settings"))
@@ -720,7 +739,7 @@ def _load_stress_reward_experiment_context(uid, require_manage=True):
     """Load a stress/reward-enabled experiment and its directory."""
     check_privileges(current_user.username)
 
-    experiment = Exps.query.filter_by(idexp=uid).first()
+    experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     if not experiment:
         flash("Experiment not found", "error")
         return None, None, redirect(url_for("experiments.settings"))
@@ -865,7 +884,7 @@ def _read_forum_feed_health(experiment, experiment_dir):
             finally:
                 conn.close()
         else:
-            from sqlalchemy import create_engine, text
+            from sqlalchemy import create_engine, select, text
 
             admin_uri = current_app.config["SQLALCHEMY_DATABASE_URI"]
             db_name = str(experiment.db_name or "").strip()
@@ -980,7 +999,9 @@ def _serialize_download_notification(notification):
     )
     related_experiments = []
     if related_exp_ids:
-        experiments = Exps.query.filter(Exps.idexp.in_(related_exp_ids)).all()
+        experiments = db.session.scalars(
+            select(Exps).filter(Exps.idexp.in_(related_exp_ids))
+        ).all()
         exp_map = {exp.idexp: exp for exp in experiments}
         for exp_id in related_exp_ids:
             exp = exp_map.get(exp_id)
@@ -1076,7 +1097,7 @@ def get_suggested_port():
     Returns:
         int: The first available port, or None if the OS cannot provide one
     """
-    experiments = Exps.query.all()
+    experiments = db.session.scalars(select(Exps)).all()
 
     # Release ports for experiments that are already completed.
     # Legacy rows may still be marked "stopped" even though every client
@@ -1101,14 +1122,14 @@ def get_suggested_port():
             if exp_id is None:
                 continue
 
-            clients = Client.query.filter_by(id_exp=exp_id).all()
+            clients = db.session.scalars(select(Client).filter_by(id_exp=exp_id)).all()
             if not clients:
                 continue
 
             all_completed = True
             for client in clients:
-                client_exec = Client_Execution.query.filter_by(
-                    client_id=client.id
+                client_exec = db.session.scalars(
+                    select(Client_Execution).filter_by(client_id=client.id)
                 ).first()
                 if client_exec is None:
                     all_completed = False
@@ -1193,7 +1214,7 @@ def is_port_valid(port):
         return False, "Port must be in the range 5000-6000"
 
     # Check if already assigned to an experiment
-    existing_exp = Exps.query.filter_by(port=port).first()
+    existing_exp = db.session.scalars(select(Exps).filter_by(port=port)).first()
     if existing_exp:
         return (
             False,

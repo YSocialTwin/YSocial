@@ -8,7 +8,10 @@ import tempfile
 import pytest
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import select
 from werkzeug.security import check_password_hash, generate_password_hash
+
+from y_web import db
 
 pytestmark = pytest.mark.integration
 
@@ -52,7 +55,9 @@ def test_user_model_creation():
         db.session.commit()
 
         # Test retrieving the user
-        retrieved_user = TestUser.query.filter_by(username="testuser").first()
+        retrieved_user = db.session.scalars(
+            select(TestUser).filter_by(username="testuser")
+        ).first()
         assert retrieved_user is not None
         assert retrieved_user.username == "testuser"
         assert retrieved_user.email == "test@example.com"
@@ -107,7 +112,7 @@ def test_post_model_creation():
         db.session.commit()
 
         # Test retrieving the post
-        retrieved_post = TestPost.query.first()
+        retrieved_post = db.session.scalars(select(TestPost)).first()
         assert retrieved_post is not None
         assert retrieved_post.content == "This is a test post"
         assert retrieved_post.user_id == user.id
@@ -168,8 +173,8 @@ def test_model_defaults():
         db.session.commit()
 
         # Test defaults were applied
-        retrieved_user = TestUserWithDefaults.query.filter_by(
-            username="defaultuser"
+        retrieved_user = db.session.scalars(
+            select(TestUserWithDefaults).filter_by(username="defaultuser")
         ).first()
         assert retrieved_user.role == "user"
         assert retrieved_user.is_active is True
@@ -213,8 +218,8 @@ def test_activity_profile_model():
         db.session.commit()
 
         # Test retrieving the profile
-        retrieved_profile = TestActivityProfile.query.filter_by(
-            name="Morning Active"
+        retrieved_profile = db.session.scalars(
+            select(TestActivityProfile).filter_by(name="Morning Active")
         ).first()
         assert retrieved_profile is not None
         assert retrieved_profile.name == "Morning Active"
@@ -237,7 +242,7 @@ def test_activity_profile_model():
         db.session.commit()
 
         # Test querying all profiles
-        all_profiles = TestActivityProfile.query.all()
+        all_profiles = db.session.scalars(select(TestActivityProfile)).all()
         assert len(all_profiles) == 2
 
     # Cleanup
@@ -308,7 +313,7 @@ def test_agent_opinion_model():
         db.session.commit()
 
         # Test retrieving the opinion
-        retrieved_opinion = TestAgentOpinion.query.first()
+        retrieved_opinion = db.session.scalars(select(TestAgentOpinion)).first()
         assert retrieved_opinion is not None
         assert retrieved_opinion.agent_id == 1
         assert retrieved_opinion.tid == 100
@@ -318,7 +323,9 @@ def test_agent_opinion_model():
         assert retrieved_opinion.opinion == 0.75
 
         # Test querying by agent_id
-        agent_opinions = TestAgentOpinion.query.filter_by(agent_id=1).all()
+        agent_opinions = db.session.scalars(
+            select(TestAgentOpinion).filter_by(agent_id=1)
+        ).all()
         assert len(agent_opinions) == 1
 
         # Create another opinion for the same agent
@@ -334,11 +341,15 @@ def test_agent_opinion_model():
         db.session.commit()
 
         # Test querying multiple opinions
-        agent_opinions = TestAgentOpinion.query.filter_by(agent_id=1).all()
+        agent_opinions = db.session.scalars(
+            select(TestAgentOpinion).filter_by(agent_id=1)
+        ).all()
         assert len(agent_opinions) == 2
 
         # Test negative opinion value
-        negative_opinion = TestAgentOpinion.query.filter_by(tid=101).first()
+        negative_opinion = db.session.scalars(
+            select(TestAgentOpinion).filter_by(tid=101)
+        ).first()
         assert negative_opinion.opinion == -0.5
 
     # Cleanup

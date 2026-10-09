@@ -10,13 +10,15 @@ from pathlib import Path
 
 import pytest
 
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+
 pytestmark = pytest.mark.unit
 
 
 def test_manual_stop_keeps_experiment_in_schedule_group():
     """Manual stop should no longer remove the experiment from its group."""
     crud_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_crud.py"
+        str(_REPO_ROOT / "y_web/routes/admin/sub/experiments/_crud.py")
     ).read_text(encoding="utf-8")
 
     assert "removed from schedule group" not in crud_source
@@ -27,7 +29,7 @@ def test_manual_stop_keeps_experiment_in_schedule_group():
 def test_schedule_stop_marks_experiment_stopped_not_completed():
     """Schedule stop should not infer natural completion."""
     schedule_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_schedule.py"
+        str(_REPO_ROOT / "y_web/routes/admin/sub/experiments/_schedule.py")
     ).read_text(encoding="utf-8")
 
     assert 'exp.exp_status = "stopped"' in schedule_source
@@ -40,7 +42,7 @@ def test_schedule_stop_marks_experiment_stopped_not_completed():
 def test_schedule_progress_only_advances_on_completed_experiments():
     """Group advancement should still depend on explicit completed status."""
     schedule_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_schedule.py"
+        str(_REPO_ROOT / "y_web/routes/admin/sub/experiments/_schedule.py")
     ).read_text(encoding="utf-8")
 
     assert 'if exp.exp_status != "completed":' in schedule_source
@@ -50,7 +52,7 @@ def test_schedule_progress_only_advances_on_completed_experiments():
 def test_resume_client_is_local_to_the_target_experiment():
     """Resuming one client should not touch sibling experiments."""
     execution_source = Path(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_execution.py"
+        str(_REPO_ROOT / "y_web/routes/admin/sub/clients/_execution.py")
     ).read_text(encoding="utf-8")
 
     assert (

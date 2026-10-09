@@ -14,6 +14,8 @@ from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
 
+from y_web.tests._sa2_stubs import _FakeSelect, _ScalarsResult, _SelectRoutingSession
+
 pytestmark = pytest.mark.unit
 
 
@@ -221,6 +223,10 @@ def test_get_suggested_port_reuses_completed_experiment_port(monkeypatch):
 
     monkeypatch.setattr(_helpers, "Exps", SimpleNamespace(query=FakeQuery()))
     monkeypatch.setattr(_helpers, "is_port_free", lambda port: port == 5000)
+    monkeypatch.setattr(_helpers, "select", lambda *a, **kw: _FakeSelect(*a))
+    monkeypatch.setattr(
+        _helpers, "db", SimpleNamespace(session=_SelectRoutingSession())
+    )
 
     assert _helpers.get_suggested_port() == 5000
 
@@ -265,6 +271,10 @@ def test_get_suggested_port_skips_non_completed_experiment_ports(monkeypatch):
         ),
     )
     monkeypatch.setattr(_helpers, "is_port_free", lambda port: port == 5003)
+    monkeypatch.setattr(_helpers, "select", lambda *a, **kw: _FakeSelect(*a))
+    monkeypatch.setattr(
+        _helpers, "db", SimpleNamespace(session=_SelectRoutingSession())
+    )
 
     assert _helpers.get_suggested_port() == 5003
 
@@ -316,6 +326,10 @@ def test_get_suggested_port_reuses_legacy_stopped_experiment_port(monkeypatch):
         ),
     )
     monkeypatch.setattr(_helpers, "is_port_free", lambda port: port == 5000)
+    monkeypatch.setattr(_helpers, "select", lambda *a, **kw: _FakeSelect(*a))
+    monkeypatch.setattr(
+        _helpers, "db", SimpleNamespace(session=_SelectRoutingSession())
+    )
 
     assert _helpers.get_suggested_port() == 5000
 
@@ -332,6 +346,10 @@ def test_get_suggested_port_scans_past_6000(monkeypatch):
 
     monkeypatch.setattr(_helpers, "Exps", SimpleNamespace(query=FakeQuery()))
     monkeypatch.setattr(_helpers, "is_port_free", lambda port: port == 6001)
+    monkeypatch.setattr(_helpers, "select", lambda *a, **kw: _FakeSelect(*a))
+    monkeypatch.setattr(
+        _helpers, "db", SimpleNamespace(session=_SelectRoutingSession())
+    )
 
     assert _helpers.get_suggested_port() == 6001
 
@@ -366,6 +384,10 @@ def test_get_suggested_port_falls_back_to_os_port_when_scan_is_exhausted(monkeyp
     monkeypatch.setattr(_helpers, "is_port_free", lambda port: False)
     monkeypatch.setattr(_helpers, "count", lambda start: iter([5000, 5001, 65536]))
     monkeypatch.setattr(_helpers.socket, "socket", lambda *args, **kwargs: FakeSocket())
+    monkeypatch.setattr(_helpers, "select", lambda *a, **kw: _FakeSelect(*a))
+    monkeypatch.setattr(
+        _helpers, "db", SimpleNamespace(session=_SelectRoutingSession())
+    )
 
     assert _helpers.get_suggested_port() == 61000
 
@@ -493,6 +515,8 @@ def test_copy_experiment_group_builds_one_copy_per_source_experiment(monkeypatch
         exp_name = FakeColumn()
         query = FakeNameQuery()
 
+    monkeypatch.setattr(_crud, "select", lambda *a, **kw: _FakeSelect(*a))
+    monkeypatch.setattr(_crud, "db", SimpleNamespace(session=_SelectRoutingSession()))
     monkeypatch.setattr(_crud, "_current_admin_user_or_none", lambda: SimpleNamespace())
     monkeypatch.setattr(
         _crud, "get_visible_experiment_query", lambda user: FakeVisibleQuery()
@@ -587,6 +611,8 @@ def test_copy_experiment_group_reports_partial_failure(monkeypatch):
         exp_name = FakeColumn()
         query = FakeNameQuery()
 
+    monkeypatch.setattr(_crud, "select", lambda *a, **kw: _FakeSelect(*a))
+    monkeypatch.setattr(_crud, "db", SimpleNamespace(session=_SelectRoutingSession()))
     monkeypatch.setattr(_crud, "_current_admin_user_or_none", lambda: SimpleNamespace())
     monkeypatch.setattr(
         _crud, "get_visible_experiment_query", lambda user: FakeVisibleQuery()

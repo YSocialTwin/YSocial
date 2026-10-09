@@ -14,7 +14,7 @@ from y_web import db
 class Profession(db.Model):
     """Professional occupation definitions with background context."""
 
-    __bind__ = "db_admin"
+    __bind_key__ = "db_admin"
     __tablename__ = "professions"
     id = db.Column(db.Integer, primary_key=True)
     profession = db.Column(db.String(50), nullable=False)
@@ -24,7 +24,7 @@ class Profession(db.Model):
 class Nationalities(db.Model):
     """Available nationality options for agent profiles."""
 
-    __bind__ = "db_admin"
+    __bind_key__ = "db_admin"
     __tablename__ = "nationalities"
     id = db.Column(db.Integer, primary_key=True)
     nationality = db.Column(db.String(50), nullable=False)
@@ -33,7 +33,7 @@ class Nationalities(db.Model):
 class Education(db.Model):
     """Available education level options for agent profiles."""
 
-    __bind__ = "db_admin"
+    __bind_key__ = "db_admin"
     __tablename__ = "education"
     id = db.Column(db.Integer, primary_key=True)
     education_level = db.Column(db.String(50), nullable=False)
@@ -42,7 +42,7 @@ class Education(db.Model):
 class Leanings(db.Model):
     """Available political leaning options for agent and page profiles."""
 
-    __bind__ = "db_admin"
+    __bind_key__ = "db_admin"
     __tablename__ = "leanings"
     id = db.Column(db.Integer, primary_key=True)
     leaning = db.Column(db.String(50), nullable=False)
@@ -51,7 +51,7 @@ class Leanings(db.Model):
 class Languages(db.Model):
     """Available language options for agent profiles and content."""
 
-    __bind__ = "db_admin"
+    __bind_key__ = "db_admin"
     __tablename__ = "languages"
     id = db.Column(db.Integer, primary_key=True)
     language = db.Column(db.String(50), nullable=False)
@@ -60,7 +60,7 @@ class Languages(db.Model):
 class Toxicity_Levels(db.Model):
     """Available toxicity level options for agent profiles."""
 
-    __bind__ = "db_admin"
+    __bind_key__ = "db_admin"
     __tablename__ = "toxicity_levels"
     id = db.Column(db.Integer, primary_key=True)
     toxicity_level = db.Column(db.String(50), nullable=False)
@@ -69,7 +69,7 @@ class Toxicity_Levels(db.Model):
 class AgeClass(db.Model):
     """Available age class options for agent profiles with age ranges."""
 
-    __bind__ = "db_admin"
+    __bind_key__ = "db_admin"
     __tablename__ = "age_classes"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
@@ -80,7 +80,7 @@ class AgeClass(db.Model):
 class Content_Recsys(db.Model):
     """Content recommendation system configuration options."""
 
-    __bind__ = "db_admin"
+    __bind_key__ = "db_admin"
     __tablename__ = "content_recsys"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
@@ -92,7 +92,7 @@ class Content_Recsys(db.Model):
 class Follow_Recsys(db.Model):
     """Follower recommendation system configuration options."""
 
-    __bind__ = "db_admin"
+    __bind_key__ = "db_admin"
     __tablename__ = "follow_recsys"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)

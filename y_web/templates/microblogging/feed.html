@@ -283,6 +283,7 @@
  <div class="column is-6 ys-px-half">
                     <!-- Publishing Area -->
                     <!-- /partials/pages/feed/compose-card.html -->
+                    {% if ui.interaction_post %}
  <div id="compose-card" class="card is-new-content ys-card-mb">
                         <!-- Top tabs -->
                         <div class="tabs-wrapper">
@@ -615,6 +616,7 @@
                         </div>
                     </div>
 
+                    {% endif %}
                     <!-- Post 1 -->
                     <!-- /partials/pages/feed/posts/feed-post1.html -->
                     <!-- POST #1 -->
@@ -623,18 +625,33 @@
                     </div>
                     <!-- POST #1 -->
 
-                    <!-- Load more posts -->
-                    <div class="load-more-wrap narrow-top has-text-centered">
-                        {% if page-1>0 %}
-                        <a href="#" class="load-more-button"
-                           onclick="window.location.href = '/{{exp_id}}/feed/{{user_id}}/{{timeline}}/{{mode}}/{{ page-1 }}';">Previous
-                            Page</a>
-                        {% endif %}
-                        <a href="#" class="load-more-button"
-                           onclick="window.location.href = '/{{exp_id}}/feed/{{user_id}}/{{timeline}}/{{mode}}/{{ page+1 }}';">Next
-                            Page</a>
+                    <!-- Load more posts / Pagination -->
+                    {% if ui.infinite_scroll_enabled %}
+                    <!-- Infinite scroll sentinel -->
+                    <div id="infinite-scroll-sentinel" class="load-more-wrap narrow-top has-text-centered">
+                        <div class="ys-spinner" id="ys-feed-spinner" style="display:none;">
+                            <i data-feather="loader" class="feather-spin"></i>
+                        </div>
                     </div>
-                    <!-- /Load more posts -->
+                    {% else %}
+                    <!-- Classic pagination (infinite scroll disabled) -->
+                    <nav class="ys-pagination" aria-label="Feed pagination">
+                        {% if page > 1 %}
+                        <a class="ys-page-btn" href="/{{exp_id}}/feed/{{user_id}}/{{timeline}}/{{mode}}/{{ page-1 }}">
+                            <i data-feather="chevron-left"></i> Previous
+                        </a>
+                        {% else %}
+                        <span class="ys-page-btn is-disabled">
+                            <i data-feather="chevron-left"></i> Previous
+                        </span>
+                        {% endif %}
+                        <span class="ys-page-info">Page {{ page }}</span>
+                        <a class="ys-page-btn" href="/{{exp_id}}/feed/{{user_id}}/{{timeline}}/{{mode}}/{{ page+1 }}">
+                            Next <i data-feather="chevron-right"></i>
+                        </a>
+                    </nav>
+                    {% endif %}
+                    <!-- /Load more posts / Pagination -->
                 </div>
                 <!-- /Middle column -->
 
@@ -710,7 +727,7 @@
 <script src="{{ url_for('static', filename='assets/js/compose.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/autocompletes.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/infinite-scroll.js') }}"></script>
-<script>var YS_DATA_MB_FEED = { expId: '{{exp_id}}', userId: '{{user_id}}', timeline: '{{timeline}}', mode: '{{mode}}', page: {{ page }} };</script>
+<script>var YS_DATA_MB_FEED = { expId: '{{exp_id}}', userId: '{{user_id}}', timeline: '{{timeline}}', mode: '{{mode}}', page: {{ page }}, infiniteScrollEnabled: {{ 'true' if ui.infinite_scroll_enabled else 'false' }}, postsPerPage: {{ ui.posts_per_page }} };</script>
 
 <!-- profile js -->
 
@@ -740,5 +757,7 @@
 {% if experiment_memory_enabled %}
 <script src="{{ url_for('static', filename='assets/js/microblog-chat.js') }}"></script>
 {% endif %}
+
+{% include "shared/plugin_loader.html" %}
 </body>
 </html>

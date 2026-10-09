@@ -7,7 +7,9 @@ import sys
 
 from flask import flash, jsonify, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_required
+from sqlalchemy import select
 
+from y_web import db
 from y_web.src.external_runtime import (
     ExternalRuntimeError,
     clone_runtime_repo,
@@ -28,6 +30,7 @@ from y_web.src.external_runtime import (
     update_runtime_repo,
     validate_runtime_repo,
 )
+from y_web.src.external_runtime.frontend_plugins import validate_frontend_suite
 from y_web.src.models import Admin_users, Exps
 from y_web.src.system.miscellanea import check_privileges
 
@@ -48,7 +51,9 @@ _GITHUB_TOKEN_SESSION_KEY = "external_runtime_github_token"
 
 def _require_admin_user():
     check_privileges(current_user.username)
-    admin_user = Admin_users.query.filter_by(username=current_user.username).first()
+    admin_user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
     if admin_user is None or admin_user.role != "admin":
         flash("Only administrators can manage external runtime repositories.", "error")
         return None
@@ -68,6 +73,11 @@ def _runtime_group_active_experiments(group_key: str) -> list[Exps]:
     elif group_key == "hpc":
         query = base_query.filter(Exps.simulator_type == "HPC")
     elif group_key == "agent_plugins":
+        return []
+    elif group_key == "frontend_plugins":
+        # Frontend plugin suites (e.g. Frontend Adds-on) are UI-only extensions; they
+        # are never tied to a running simulation, so mutating actions on them
+        # are never blocked by "active experiment" checks.
         return []
     else:
         return []
@@ -152,6 +162,13 @@ def _visible_runtime_groups(
                     repo["plugin_description"] = ""
                     repo["plugin_authors"] = []
                     repo["plugin_repository_url"] = repo["repo_url"]
+                if repo.get("group") == "frontend_plugins" and repo.get("installed"):
+                    try:
+                        repo["frontend_modules_report"] = validate_frontend_suite(
+                            repo["key"]
+                        )
+                    except Exception:
+                        repo["frontend_modules_report"] = None
                 repos.append(repo)
         if repos:
             visible_groups.append(

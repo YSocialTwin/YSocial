@@ -19,7 +19,9 @@ from flask import (
     url_for,
 )
 from flask_login import current_user, login_required
+from sqlalchemy import select
 
+from y_web import db
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
     user_can_manage_experiment,
@@ -164,7 +166,9 @@ def dashboard():
         Rendered dashboard template with system status information
     """
     # Get current user
-    user = Admin_users.query.filter_by(username=current_user.username).first()
+    user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
     llm_backend = llm_backend_status()
 
@@ -207,15 +211,19 @@ def dashboard():
     clients_by_exp = defaultdict(list)
     client_exec_by_id = {}
     if exp_ids:
-        all_clients = Client.query.filter(Client.id_exp.in_(exp_ids)).all()
+        all_clients = db.session.scalars(
+            select(Client).filter(Client.id_exp.in_(exp_ids))
+        ).all()
         client_ids = []
         for client in all_clients:
             clients_by_exp[client.id_exp].append(client)
             client_ids.append(client.id)
 
         if client_ids:
-            exec_rows = Client_Execution.query.filter(
-                Client_Execution.client_id.in_(client_ids)
+            exec_rows = db.session.scalars(
+                select(Client_Execution).filter(
+                    Client_Execution.client_id.in_(client_ids)
+                )
             ).all()
             client_exec_by_id = {row.client_id: row for row in exec_rows}
 
@@ -318,7 +326,7 @@ def dashboard():
         pass
 
     # get all ollama pulls
-    ollama_pulls = Ollama_Pull.query.all()
+    ollama_pulls = db.session.scalars(select(Ollama_Pull)).all()
     ollama_pulls = [(pull.model_name, float(pull.status)) for pull in ollama_pulls]
 
     dbtype = get_db_type()
@@ -327,7 +335,7 @@ def dashboard():
     db_server = get_db_server()
 
     # Get jupyter instances and create a mapping by exp_id
-    jupyter_instances = Jupyter_instances.query.all()
+    jupyter_instances = db.session.scalars(select(Jupyter_instances)).all()
     jupyter_by_exp = {}
     for jupyter in jupyter_instances:
         # Check if process is actually running
@@ -406,7 +414,9 @@ def dashboard_experiments_by_status(status):
     from flask import flash, redirect, url_for
 
     # Get current user
-    user = Admin_users.query.filter_by(username=current_user.username).first()
+    user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 5, type=int)
@@ -444,8 +454,8 @@ def dashboard_experiments_by_status(status):
     clients_by_exp = defaultdict(list)
     client_exec_by_id = {}
     if paginated_exp_ids:
-        paginated_clients = Client.query.filter(
-            Client.id_exp.in_(paginated_exp_ids)
+        paginated_clients = db.session.scalars(
+            select(Client).filter(Client.id_exp.in_(paginated_exp_ids))
         ).all()
         client_ids = []
         for client in paginated_clients:
@@ -453,8 +463,10 @@ def dashboard_experiments_by_status(status):
             client_ids.append(client.id)
 
         if client_ids:
-            exec_rows = Client_Execution.query.filter(
-                Client_Execution.client_id.in_(client_ids)
+            exec_rows = db.session.scalars(
+                select(Client_Execution).filter(
+                    Client_Execution.client_id.in_(client_ids)
+                )
             ).all()
             client_exec_by_id = {row.client_id: row for row in exec_rows}
 
@@ -528,7 +540,9 @@ def dashboard_status():
         JSON with counts of running, completed, and stopped experiments
     """
     # Get current user
-    user = Admin_users.query.filter_by(username=current_user.username).first()
+    user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
     # Filter experiments based on role + visibility grants
     if user.role in ("admin", "researcher"):
@@ -633,10 +647,12 @@ def jupyter_data():
     check_privileges(current_user.username)
 
     # Get current user
-    user = Admin_users.query.filter_by(username=current_user.username).first()
+    user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
     # Get all jupyter instances from database
-    all_db_instances = Jupyter_instances.query.all()
+    all_db_instances = db.session.scalars(select(Jupyter_instances)).all()
 
     # Filter instances based on user access
     filtered_instances = []
@@ -644,7 +660,7 @@ def jupyter_data():
         exp_id = db_inst.exp_id
 
         # Get experiment details
-        exp = Exps.query.filter_by(idexp=exp_id).first()
+        exp = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
         if not exp:
             continue
 
@@ -652,8 +668,8 @@ def jupyter_data():
         if user.role == "admin":
             has_access = True
         else:
-            user_exp = User_Experiment.query.filter_by(
-                user_id=user.id, exp_id=exp_id
+            user_exp = db.session.scalars(
+                select(User_Experiment).filter_by(user_id=user.id, exp_id=exp_id)
             ).first()
             has_access = user_exp is not None
 
@@ -746,7 +762,9 @@ def dismiss_telemetry_notice():
     """
     from y_web import db
 
-    user = Admin_users.query.filter_by(username=current_user.username).first()
+    user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
 
     if not user or user.role != "admin":
         return jsonify({"success": False, "message": "Access denied"}), 403

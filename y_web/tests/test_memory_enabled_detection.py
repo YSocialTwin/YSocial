@@ -12,9 +12,12 @@ Covers the two bug-fixes introduced to handle:
 import json
 import os
 import tempfile
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+from y_web.tests._sa2_stubs import _FakeSelect, _ScalarsResult, _SelectRoutingSession
 
 pytestmark = pytest.mark.unit
 
@@ -85,13 +88,22 @@ def _call_experiment_memory_enabled(
     mock_exp.simulator_type = simulator_type
     mock_exp.db_name = f"experiments/{uid}"
 
-    with patch("y_web.routes.social.helpers.Exps") as mock_exps:
+    with (
+        patch("y_web.routes.social.helpers.Exps") as mock_exps,
+        patch(
+            "y_web.routes.social.helpers.select",
+            side_effect=lambda *a, **kw: _FakeSelect(*a),
+        ) as _sel,
+        patch(
+            "y_web.routes.social.helpers.db",
+            new=SimpleNamespace(session=_SelectRoutingSession()),
+        ),
+        patch(
+            "y_web.routes.social.helpers.get_writable_path", return_value=writable_base
+        ),
+    ):
         mock_exps.query.filter_by.return_value.first.return_value = mock_exp
-        with patch(
-            "y_web.routes.social.helpers.get_writable_path",
-            return_value=writable_base,
-        ):
-            return _experiment_memory_enabled(1)
+        return _experiment_memory_enabled(1)
 
 
 @pytest.fixture()

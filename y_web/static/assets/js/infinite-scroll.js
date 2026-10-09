@@ -226,56 +226,12 @@
      * This handles the comment section show/hide functionality
      */
     function initializePostCommentsToggle() {
-        // Use jQuery if available to match global.js behavior
-        if (typeof $ !== 'undefined') {
-            // Find all comment fab buttons in the newly added posts
-            $(state.postsContainer).find('.fab-wrapper.is-comment').each(function() {
-                const $fab = $(this);
-                
-                // Remove any existing handlers to avoid duplicates
-                $fab.off('click');
-                
-                // Add click handler (matches global.js initPostComments behavior)
-                $fab.on('click', function(e) {
-                    $(this)
-                        .addClass('is-active')
-                        .closest('.card')
-                        .find('.content-wrap, .comments-wrap')
-                        .toggleClass('is-hidden');
-                    
-                    var jump = $(this).closest('.is-post');
-                    var new_position = $(jump).offset();
-                    $('html, body')
-                        .stop()
-                        .animate({ scrollTop: new_position.top - 70 }, 500);
-                    
-                    e.preventDefault();
-                    
-                    setTimeout(function() {
-                        $('.emojionearea-editor').val('');
-                    }, 400);
-                });
-            });
-            
-            // Also handle close-comments buttons
-            $(state.postsContainer).find('.close-comments').each(function() {
-                const $closeBtn = $(this);
-                $closeBtn.off('click');
-                $closeBtn.on('click', function(e) {
-                    $(this)
-                        .closest('.card')
-                        .find('.content-wrap, .comments-wrap')
-                        .toggleClass('is-hidden');
-                    
-                    var jump = $(this).closest('.is-post');
-                    var new_position = $(jump).offset();
-                    $('html, body')
-                        .stop()
-                        .animate({ scrollTop: new_position.top - 70 }, 500);
-                    
-                    e.preventDefault();
-                });
-            });
+        // global.js registers a document-level delegated handler via initPostComments().
+        // Delegated handlers cover dynamically added elements automatically.
+        // We call initPostComments() here (it is namespaced, so safe to call repeatedly)
+        // to ensure the handler is registered in case the page loaded without #compose-card.
+        if (typeof initPostComments === 'function') {
+            initPostComments();
         }
     }
     

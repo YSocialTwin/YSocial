@@ -5,6 +5,7 @@ from . import (
     _data,
     _external_runtimes,
     _feeds,
+    _frontend_settings,
     _hpc,
     _notifications,
     _opinion,

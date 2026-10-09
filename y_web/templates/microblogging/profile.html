@@ -460,5 +460,6 @@
 {% if experiment_memory_enabled %}
 <script src="{{ url_for('static', filename='assets/js/microblog-chat.js') }}"></script>
 {% endif %}
+{% include "shared/plugin_loader.html" %}
 </body>
 </html>

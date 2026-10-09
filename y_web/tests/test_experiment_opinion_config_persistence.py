@@ -1,6 +1,9 @@
 import json
+from pathlib import Path
 
 import pytest
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
 
 pytestmark = pytest.mark.unit
 
@@ -43,7 +46,7 @@ def test_stress_reward_client_sync_preserves_structured_system_config():
 
 def test_standard_and_hpc_experiment_configs_persist_opinion_toggle():
     source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_crud.py",
+        str(_REPO_ROOT / "y_web/routes/admin/sub/experiments/_crud.py"),
         "r",
     ).read()
     assert '"opinion_dynamics_enabled": opinion_dynamics_enabled' in source
@@ -56,11 +59,11 @@ def test_standard_and_hpc_experiment_configs_persist_opinion_toggle():
 
 def test_experiment_configuration_confirmation_flag_is_persisted():
     crud_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_crud.py",
+        str(_REPO_ROOT / "y_web/routes/admin/sub/experiments/_crud.py"),
         "r",
     ).read()
     data_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_data.py",
+        str(_REPO_ROOT / "y_web/routes/admin/sub/experiments/_data.py"),
         "r",
     ).read()
 
@@ -70,11 +73,11 @@ def test_experiment_configuration_confirmation_flag_is_persisted():
 
 def test_experiment_configuration_helpers_are_explicitly_imported():
     data_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_data.py",
+        str(_REPO_ROOT / "y_web/routes/admin/sub/experiments/_data.py"),
         "r",
     ).read()
     crud_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_crud.py",
+        str(_REPO_ROOT / "y_web/routes/admin/sub/experiments/_crud.py"),
         "r",
     ).read()
 
@@ -87,7 +90,7 @@ def test_experiment_configuration_helpers_are_explicitly_imported():
 
 def test_experiment_topics_update_route_reuses_exp_topic_and_config_storage():
     data_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_data.py",
+        str(_REPO_ROOT / "y_web/routes/admin/sub/experiments/_data.py"),
         "r",
     ).read()
 
@@ -98,15 +101,15 @@ def test_experiment_topics_update_route_reuses_exp_topic_and_config_storage():
 
 def test_hpc_server_config_generation_and_embedding_routes_support_memory():
     crud_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_crud.py",
+        str(_REPO_ROOT / "y_web/routes/admin/sub/experiments/_crud.py"),
         "r",
     ).read()
     helpers_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_helpers.py",
+        str(_REPO_ROOT / "y_web/routes/admin/sub/experiments/_helpers.py"),
         "r",
     ).read()
     feeds_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_feeds.py",
+        str(_REPO_ROOT / "y_web/routes/admin/sub/experiments/_feeds.py"),
         "r",
     ).read()
 
@@ -119,7 +122,7 @@ def test_hpc_server_config_generation_and_embedding_routes_support_memory():
 
 def test_forum_opinion_dynamics_is_not_forced_off_for_rule_based_runs():
     data_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_data.py",
+        str(_REPO_ROOT / "y_web/routes/admin/sub/experiments/_data.py"),
         "r",
     ).read()
 
@@ -133,7 +136,7 @@ def test_forum_opinion_dynamics_is_not_forced_off_for_rule_based_runs():
 
 def test_forum_experiments_always_require_configuration_box_for_lock_workflow():
     helpers_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_helpers.py",
+        str(_REPO_ROOT / "y_web/routes/admin/sub/experiments/_helpers.py"),
         "r",
     ).read()
 
@@ -151,9 +154,9 @@ def test_forum_experiments_always_require_configuration_box_for_lock_workflow():
 
 def test_stopped_experiments_allow_client_configuration_updates():
     template_paths = [
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/experiment_details.html",
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/experiment_details_forum.html",
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/experiment_details_photo.html",
+        str(_REPO_ROOT / "y_web/templates/admin/experiment_details.html"),
+        str(_REPO_ROOT / "y_web/templates/admin/experiment_details_forum.html"),
+        str(_REPO_ROOT / "y_web/templates/admin/experiment_details_photo.html"),
     ]
 
     for template_path in template_paths:
@@ -171,15 +174,15 @@ def test_stopped_experiments_allow_client_configuration_updates():
 
 def test_stopped_experiments_allow_rename_form_and_route():
     data_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_data.py",
+        str(_REPO_ROOT / "y_web/routes/admin/sub/experiments/_data.py"),
         "r",
     ).read()
     standard_template = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/experiment_details.html",
+        str(_REPO_ROOT / "y_web/templates/admin/experiment_details.html"),
         "r",
     ).read()
     forum_template = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/experiment_details_forum.html",
+        str(_REPO_ROOT / "y_web/templates/admin/experiment_details_forum.html"),
         "r",
     ).read()
 
@@ -202,19 +205,19 @@ def test_stopped_experiments_allow_rename_form_and_route():
 
 def test_new_experiment_form_supports_photo_sharing_platform():
     settings_template = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/settings.html",
+        str(_REPO_ROOT / "y_web/templates/admin/settings.html"),
         "r",
     ).read()
     settings_js = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/js/admin-settings.js",
+        str(_REPO_ROOT / "y_web/static/assets/js/admin-settings.js"),
         "r",
     ).read()
     crud_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_crud.py",
+        str(_REPO_ROOT / "y_web/routes/admin/sub/experiments/_crud.py"),
         "r",
     ).read()
     data_source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_data.py",
+        str(_REPO_ROOT / "y_web/routes/admin/sub/experiments/_data.py"),
         "r",
     ).read()
 
@@ -233,11 +236,11 @@ def test_new_experiment_form_supports_photo_sharing_platform():
 
 def test_client_details_pages_expose_editable_simulation_and_action_fields():
     standard_template = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/client_details.html",
+        str(_REPO_ROOT / "y_web/templates/admin/client_details.html"),
         "r",
     ).read()
     forum_template = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/client_details_forum.html",
+        str(_REPO_ROOT / "y_web/templates/admin/client_details_forum.html"),
         "r",
     ).read()
 
@@ -286,7 +289,7 @@ def test_client_details_pages_expose_editable_simulation_and_action_fields():
 
 def test_hpc_client_details_align_model_selection_with_active_vllm_model():
     content = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/client_details_hpc.html",
+        str(_REPO_ROOT / "y_web/templates/admin/client_details_hpc.html"),
         "r",
     ).read()
 
@@ -300,7 +303,7 @@ def test_hpc_client_details_align_model_selection_with_active_vllm_model():
 
 def test_hpc_client_detail_context_includes_current_simulation_and_actions_values():
     source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_details.py",
+        str(_REPO_ROOT / "y_web/routes/admin/sub/clients/_details.py"),
         "r",
     ).read()
 
@@ -314,7 +317,7 @@ def test_hpc_client_detail_context_includes_current_simulation_and_actions_value
 
 def test_hpc_recsys_updates_do_not_require_activation_when_config_exists():
     source = open(
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_recsys.py",
+        str(_REPO_ROOT / "y_web/routes/admin/sub/clients/_recsys.py"),
         "r",
     ).read()
 
@@ -366,9 +369,9 @@ def test_population_recsys_sync_rewrites_all_agents_in_place(tmp_path):
 
 def test_client_details_pages_expose_memory_and_archetype_editors():
     for template_path in [
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/client_details.html",
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/client_details_forum.html",
-        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/client_details_hpc.html",
+        str(_REPO_ROOT / "y_web/templates/admin/client_details.html"),
+        str(_REPO_ROOT / "y_web/templates/admin/client_details_forum.html"),
+        str(_REPO_ROOT / "y_web/templates/admin/client_details_hpc.html"),
     ]:
         content = open(template_path, "r").read()
         assert "box-memory-config" in content

@@ -18,96 +18,13 @@ import json
 import os
 import sys
 
-import flask_sqlalchemy
-import sqlalchemy
-import sqlalchemy.orm
 from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import select
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-
-def _ensure_flask_sqlalchemy_legacy_compat() -> None:
-    """
-    Flask-SQLAlchemy 2.x expects sqlalchemy.__all__ and sqlalchemy.orm.__all__,
-    which were removed in SQLAlchemy 2.x.
-
-    Recreate only the legacy symbol subset that Flask-SQLAlchemy commonly copies
-    onto the extension object, instead of mirroring every public SQLAlchemy 2.x
-    attribute. A broad copy drags in names like ``engine`` that trigger runtime
-    errors during bootstrap.
-    """
-
-    if not hasattr(sqlalchemy.orm, "relation") and hasattr(
-        sqlalchemy.orm, "relationship"
-    ):
-        sqlalchemy.orm.relation = sqlalchemy.orm.relationship
-
-    sqlalchemy_public = [
-        "Column",
-        "Integer",
-        "BigInteger",
-        "REAL",
-        "Float",
-        "Boolean",
-        "String",
-        "Text",
-        "DateTime",
-        "ForeignKey",
-        "Index",
-        "Table",
-        "func",
-        "text",
-        "or_",
-    ]
-    orm_public = [
-        "relationship",
-        "relation",
-        "dynamic_loader",
-        "backref",
-    ]
-
-    if not hasattr(sqlalchemy, "__all__"):
-        sqlalchemy.__all__ = [
-            name for name in sqlalchemy_public if hasattr(sqlalchemy, name)
-        ]
-    if not hasattr(sqlalchemy.orm, "__all__"):
-        sqlalchemy.orm.__all__ = [
-            name for name in orm_public if hasattr(sqlalchemy.orm, name)
-        ]
-
-    session_base = getattr(flask_sqlalchemy, "SessionBase", None)
-    signalling_session = getattr(flask_sqlalchemy, "SignallingSession", None)
-    if session_base is not None and signalling_session is not None:
-        original_get_bind = signalling_session.get_bind
-        if not getattr(original_get_bind, "_ysocial_sa2_compat", False):
-
-            def _compat_get_bind(self, mapper=None, clause=None):
-                if mapper is not None:
-                    try:
-                        persist_selectable = mapper.persist_selectable
-                    except AttributeError:
-                        persist_selectable = mapper.mapped_table
-
-                    info = getattr(persist_selectable, "info", {})
-                    bind_key = info.get("bind_key")
-                    if bind_key is not None:
-                        binds = {}
-                        try:
-                            binds = self.app.config.get("SQLALCHEMY_BINDS", {}) or {}
-                        except Exception:
-                            binds = {}
-                        if bind_key in binds:
-                            state = flask_sqlalchemy.get_state(self.app)
-                            return state.db.get_engine(self.app, bind=bind_key)
-                return session_base.get_bind(self, mapper, clause=clause)
-
-            _compat_get_bind._ysocial_sa2_compat = True
-            signalling_session.get_bind = _compat_get_bind
-
-
-_ensure_flask_sqlalchemy_legacy_compat()
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -154,8 +71,7 @@ def cleanup_db_jupyter_with_new_app():
             print("No existing app context, creating new app for cleanup")
 
         if app_context_exists:
-            # Use existing context
-            from y_web import db
+            # Use existing context — db is the module-level SQLAlchemy instance
             from y_web.src.simulation.process_registry import stop_all_exps
             from y_web.src.system.jupyter_utils import stop_all_jupyter_instances
 
@@ -177,7 +93,6 @@ def cleanup_db_jupyter_with_new_app():
                 try:
                     app = create_app(dbms)
                     with app.app_context():
-                        from y_web import db
                         from y_web.src.simulation.process_registry import stop_all_exps
                         from y_web.src.system.jupyter_utils import (
                             stop_all_jupyter_instances,
@@ -230,7 +145,7 @@ if _should_register_cleanup_handler():
     atexit.register(cleanup_db_jupyter_with_new_app)
 
 
-def create_app(db_type="sqlite", desktop_mode=False):
+def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
     """
     Create and configure the Flask application (factory pattern).
 
@@ -240,6 +155,8 @@ def create_app(db_type="sqlite", desktop_mode=False):
     Args:
         db_type: Database type to use, either "sqlite" or "postgresql"
         desktop_mode: Whether the app is running in desktop mode with PyWebview
+        config_class: Optional config class from y_web.config (auto-detected from
+            FLASK_ENV if not provided)
 
     Returns:
         Configured Flask application instance
@@ -249,7 +166,21 @@ def create_app(db_type="sqlite", desktop_mode=False):
     """
     app = Flask(__name__, static_url_path="/static")
 
-    app.config["SECRET_KEY"] = "4323432nldsf"
+    # ------------------------------------------------------------------ #
+    # Centralized configuration (y_web/config.py)                         #
+    # ------------------------------------------------------------------ #
+    from dotenv import load_dotenv
+
+    from y_web.config import get_config
+
+    load_dotenv()
+
+    if config_class is None:
+        config_class = get_config()
+
+    app.config.from_object(config_class)
+
+    # Runtime-only settings (not part of static config classes)
     app.config["DESKTOP_MODE"] = desktop_mode
 
     # ------------------------------------------------------------------ #
@@ -264,19 +195,8 @@ def create_app(db_type="sqlite", desktop_mode=False):
     else:
         raise ValueError("Unsupported db_type, use 'sqlite' or 'postgresql'")
 
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
-    # Disable static file caching for development mode to ensure JS/CSS updates are loaded
-    # This ensures loading indicators and other static assets work in development mode
-    app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
-
-    # Enable template auto-reload in development mode
-    app.config["TEMPLATES_AUTO_RELOAD"] = True
-
     db.init_app(app)
     login_manager.init_app(app)
-
-    app.config["SESSION_COOKIE_NAME"] = "YSocial_session"
 
     from y_web.src.agents.platform import ensure_population_username_type_column
     from y_web.src.models import Admin_users, User_mgmt
@@ -302,10 +222,10 @@ def create_app(db_type="sqlite", desktop_mode=False):
         if user_id_str.startswith("admin_"):
             # Admin or researcher user
             admin_id = user_id_str.replace("admin_", "")
-            return Admin_users.query.get(admin_id)
+            return db.session.get(Admin_users, admin_id)
         else:
             # Regular experiment participant
-            return User_mgmt.query.get(user_id)
+            return db.session.get(User_mgmt, user_id)
 
     # Setup experiment context handler
     from y_web.src.experiment.context import (
@@ -358,10 +278,14 @@ def create_app(db_type="sqlite", desktop_mode=False):
             exp = None
             exp_id = get_current_experiment_id()
             if exp_id is not None:
-                exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+                exp = db.session.scalars(
+                    select(Exps).filter_by(idexp=int(exp_id))
+                ).first()
 
             if exp is None:
-                active_exps = Exps.query.filter(Exps.status != 0).all()
+                active_exps = db.session.scalars(
+                    select(Exps).filter(Exps.status != 0)
+                ).all()
                 if not active_exps:
                     return dict(feed_home_url="/")
                 if len(active_exps) > 1:
@@ -378,8 +302,10 @@ def create_app(db_type="sqlite", desktop_mode=False):
             if user_id_str.isdigit():
                 feed_user_id = int(user_id_str)
             else:
-                exp_user = User_mgmt.query.filter_by(
-                    username=getattr(current_user, "username", None)
+                exp_user = db.session.scalars(
+                    select(User_mgmt).filter_by(
+                        username=getattr(current_user, "username", None)
+                    )
                 ).first()
                 if exp_user is not None:
                     feed_user_id = int(exp_user.id)
@@ -417,8 +343,8 @@ def create_app(db_type="sqlite", desktop_mode=False):
         try:
             if not current_user.is_authenticated:
                 return dict(active_experiments=[])
-            admin_user = Admin_users.query.filter_by(
-                username=current_user.username
+            admin_user = db.session.scalars(
+                select(Admin_users).filter_by(username=current_user.username)
             ).first()
             if not admin_user:
                 return dict(active_experiments=[])
@@ -427,7 +353,7 @@ def create_app(db_type="sqlite", desktop_mode=False):
                     get_visible_experiment_query(admin_user).filter_by(status=1).all()
                 )
             else:
-                active_exps = Exps.query.filter_by(status=1).all()
+                active_exps = db.session.scalars(select(Exps).filter_by(status=1)).all()
             return dict(active_experiments=active_exps)
         except Exception:
             return dict(active_experiments=[])
@@ -441,8 +367,8 @@ def create_app(db_type="sqlite", desktop_mode=False):
 
         if current_user.is_authenticated:
             try:
-                admin_user = Admin_users.query.filter_by(
-                    username=current_user.username
+                admin_user = db.session.scalars(
+                    select(Admin_users).filter_by(username=current_user.username)
                 ).first()
                 if admin_user:
                     return dict(
@@ -461,12 +387,12 @@ def create_app(db_type="sqlite", desktop_mode=False):
 
         if current_user.is_authenticated:
             try:
-                admin_user = Admin_users.query.filter_by(
-                    username=current_user.username
+                admin_user = db.session.scalars(
+                    select(Admin_users).filter_by(username=current_user.username)
                 ).first()
                 if admin_user and admin_user.role == "admin":
                     # Get release info
-                    release_info = ReleaseInfo.query.first()
+                    release_info = db.session.scalars(select(ReleaseInfo)).first()
                     if release_info and release_info.latest_version_tag:
                         return dict(
                             new_release_available=True, release_info=release_info
@@ -484,8 +410,8 @@ def create_app(db_type="sqlite", desktop_mode=False):
 
         if current_user.is_authenticated:
             try:
-                admin_user = Admin_users.query.filter_by(
-                    username=current_user.username
+                admin_user = db.session.scalars(
+                    select(Admin_users).filter_by(username=current_user.username)
                 ).first()
                 if admin_user and admin_user.role == "admin":
                     # Get unread blog posts
@@ -535,6 +461,67 @@ def create_app(db_type="sqlite", desktop_mode=False):
 
     register_blueprints(app)
 
+    # ------------------------------------------------------------------
+    # Frontend plugin suites (e.g. Frontend Adds-on) — registered ONLY for suites
+    # that are installed under external/<repo> AND pass manifest validation.
+    # A suite that is absent, partially installed, or fails validation
+    # contributes zero routes/blueprints: this is the app-startup half of
+    # the "zero impact when not installed" guarantee (the per-experiment
+    # enable/disable half is enforced per-request inside each module's own
+    # blueprint — see external/frontend_adds-on/modules/*/backend).
+    # ------------------------------------------------------------------
+    try:
+        from y_web.src.external_runtime.plugin_loader import (
+            register_frontend_plugin_suites,
+        )
+
+        _frontend_plugin_report = register_frontend_plugin_suites(app)
+        for _repo_key, _suite_report in _frontend_plugin_report.get(
+            "suites", {}
+        ).items():
+            if _suite_report.get("installed"):
+                if _suite_report.get("valid"):
+                    print(
+                        f"✓ Frontend plugin suite '{_repo_key}': "
+                        f"{len(_suite_report.get('registered_modules', []))} module(s) registered"
+                    )
+                else:
+                    print(
+                        f"⚠ Frontend plugin suite '{_repo_key}' is installed but failed validation: "
+                        f"{_suite_report.get('errors')}"
+                    )
+    except Exception as e:
+        print(f"Failed to load frontend plugin suites: {e}")
+
+    # ------------------------------------------------------------------
+    # Backend settings plugin suites (e.g. Scenario Design) — structurally
+    # parallel to the frontend plugin suites above, but admin-only authoring
+    # tools that are always active once installed and valid (no per-
+    # experiment enable/disable, no entry in /admin/frontend_settings).
+    # ------------------------------------------------------------------
+    try:
+        from y_web.src.external_runtime.backend_plugins import (
+            register_backend_plugin_suites,
+        )
+
+        _backend_plugin_report = register_backend_plugin_suites(app)
+        for _repo_key, _suite_report in _backend_plugin_report.get(
+            "suites", {}
+        ).items():
+            if _suite_report.get("installed"):
+                if _suite_report.get("valid"):
+                    print(
+                        f"✓ Backend settings suite '{_repo_key}': "
+                        f"{len(_suite_report.get('registered_modules', []))} module(s) registered"
+                    )
+                else:
+                    print(
+                        f"⚠ Backend settings suite '{_repo_key}' is installed but failed validation: "
+                        f"{_suite_report.get('errors')}"
+                    )
+    except Exception as e:
+        print(f"Failed to load backend settings plugin suites: {e}")
+
     # Add context processor to detect PyInstaller mode
     @app.context_processor
     def inject_pyinstaller_mode():
@@ -543,12 +530,142 @@ def create_app(db_type="sqlite", desktop_mode=False):
 
         return dict(is_pyinstaller=getattr(sys, "frozen", False))
 
+    # Backend settings suite sidebar visibility (e.g. Scenario Design):
+    # body lives in src/external_runtime/backend_plugins.py, not inline
+    # here, to keep this factory function's line count down (see
+    # y_web/tests/test_phase11_db_init_package.py::
+    # test_y_web_init_line_count_reduced).
+    from y_web.src.external_runtime.backend_plugins import (
+        inject_backend_plugin_visibility,
+    )
+
+    app.context_processor(inject_backend_plugin_visibility)
+
     # ------------------------------------------------------------------ #
     # Database migrations + startup checks                                 #
     # ------------------------------------------------------------------ #
-    from y_web.db_init.migrations import run_migrations
+    _alembic_dir = os.path.join(os.path.dirname(__file__), "alembic")
+    try:
+        from alembic.config import Config as AlembicConfig
+        from alembic.runtime.migration import MigrationContext
+        from alembic.script import ScriptDirectory
+        from flask_migrate import Migrate
+        from flask_migrate import upgrade as alembic_upgrade
 
-    run_migrations(app, db_type, db)
+        migrate_ext = Migrate(app, db, directory=_alembic_dir)
+        with app.app_context():
+            # Build a minimal Alembic config pointing at our script directory.
+            # This lets us stamp arbitrary engines directly — not just the default
+            # bind that flask_migrate.stamp() targets.
+            _alembic_cfg = AlembicConfig()
+            _alembic_cfg.set_main_option("script_location", _alembic_dir)
+            _alembic_script = ScriptDirectory.from_config(_alembic_cfg)
+
+            def _stamp_engine_if_needed(engine, bind_key):
+                """Stamp *engine* with 0001_baseline if it has no alembic_version row."""
+                with engine.begin() as conn:
+                    ctx = MigrationContext.configure(conn)
+                    if not ctx.get_current_heads():
+                        print(
+                            f"  ↳ [{bind_key}] no alembic_version found — stamping 0001_baseline"
+                        )
+                        ctx.stamp(_alembic_script, "0001_baseline")
+                    else:
+                        print(
+                            f"  ↳ [{bind_key}] alembic_version OK ({', '.join(ctx.get_current_heads())})"
+                        )
+
+            # Check every bound engine at startup (db_admin = dashboard.db,
+            # db_exp = dummy.db placeholder).  De-duplicate by engine identity
+            # because the default URI and "db_admin" can resolve to the same file.
+            print("✦ Alembic: checking bound databases…")
+            _seen_engine_ids: set = set()
+            for _bind_key, _engine in db.engines.items():
+                if id(_engine) not in _seen_engine_ids:
+                    _seen_engine_ids.add(id(_engine))
+                    _stamp_engine_if_needed(_engine, _bind_key)
+
+            # Upgrade the primary (db_admin) schema to HEAD.
+            print("✦ Alembic: upgrading primary schema (db_admin) to HEAD…")
+            alembic_upgrade()
+            print("✓ Alembic: primary schema up to date")
+
+            # Bring every active experiment database up to date.
+            # Experiment DBs (experiments/<UUID>/database_server.db) are NOT
+            # managed through Alembic revision files — their schema is kept
+            # current by ensure_experiment_schema_for_uri(), which creates
+            # missing tables and adds new columns via ALTER TABLE ADD COLUMN.
+            # initialize_active_experiment_databases() iterates the Exps table,
+            # re-registers each active experiment's DB URI and runs that function
+            # against it, exactly as the old manual migration runner did.
+            print("✦ Alembic: migrating active experiment databases…")
+            try:
+                from y_web.src.experiment.context import (
+                    initialize_active_experiment_databases,
+                )
+
+                initialize_active_experiment_databases(app)
+                print("✓ Alembic: experiment databases up to date")
+            except Exception as _exp_err:
+                print(f"⚠ Warning: failed to migrate experiment databases: {_exp_err}")
+    except ImportError:
+        # Flask-Migrate not installed — try standalone Alembic, then legacy runner.
+        try:
+            from alembic import command as _alembic_cmd
+            from alembic.config import Config as _AlembicConfig
+            from alembic.runtime.migration import MigrationContext as _MigCtx
+            from alembic.script import ScriptDirectory as _AlembicScript
+
+            with app.app_context():
+                _sa_url = app.config.get("SQLALCHEMY_DATABASE_URI", "")
+                _sa_cfg = _AlembicConfig()
+                _sa_cfg.set_main_option("script_location", _alembic_dir)
+                _sa_cfg.set_main_option("sqlalchemy.url", _sa_url)
+                _sa_script = _AlembicScript.from_config(_sa_cfg)
+
+                def _stamp_if_needed(engine, bind_key):
+                    with engine.begin() as _conn:
+                        _ctx = _MigCtx.configure(_conn)
+                        if not _ctx.get_current_heads():
+                            print(
+                                f"  ↳ [{bind_key}] no alembic_version — stamping 0001_baseline"
+                            )
+                            _ctx.stamp(_sa_script, "0001_baseline")
+                        else:
+                            print(
+                                f"  ↳ [{bind_key}] alembic_version OK ({', '.join(_ctx.get_current_heads())})"
+                            )
+
+                print("✦ Alembic (standalone): checking bound databases…")
+                _seen: set = set()
+                for _bk, _eng in db.engines.items():
+                    if id(_eng) not in _seen:
+                        _seen.add(id(_eng))
+                        _stamp_if_needed(_eng, _bk)
+
+                print("✦ Alembic (standalone): upgrading primary schema to HEAD…")
+                _alembic_cmd.upgrade(_sa_cfg, "head")
+                print("✓ Alembic (standalone): primary schema up to date")
+
+                try:
+                    from y_web.src.experiment.context import (
+                        initialize_active_experiment_databases,
+                    )
+
+                    initialize_active_experiment_databases(app)
+                    print("✓ Alembic (standalone): experiment databases up to date")
+                except Exception as _exp_err:
+                    print(
+                        f"⚠ Warning: failed to migrate experiment databases: {_exp_err}"
+                    )
+
+        except ImportError:
+            # Neither Flask-Migrate nor standalone Alembic available.
+            # Fall back to manual migration runner.
+            # Install with: pip install Flask-Migrate>=4.0.0
+            from y_web.db_init.migrations import run_migrations
+
+            run_migrations(app, db_type, db)
 
     # Log service start event
     try:

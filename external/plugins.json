@@ -1,6 +1,16 @@
 {
   "plugins": [
     {
+      "plugin_name": "Scenario Design",
+      "category": "Backend Extensions",
+      "group": "Backend Settings",
+      "description": "Admin-only authoring tool for designing multi-round interaction scenarios (threads, posts, round scheduling) ahead of an experiment run. Drafts live alongside the experiment they belong to and are promoted/published into the experiment's own data once validated.",
+      "authors": [
+        "YSocialTwin"
+      ],
+      "repository_url": "https://github.com/YSocialTwin/ScenarioDesign"
+    },
+    {
       "plugin_name": "YClient",
       "category": "Simulation Runtime Stack",
       "group": "Microblogging",
@@ -59,6 +69,26 @@
         "YSocialTwin"
       ],
       "repository_url": "https://github.com/YSocialTwin/YSimulator"
+    },
+    {
+      "plugin_name": "Frontend Adds-on",
+      "category": "Frontend Extensions",
+      "group": "Frontend Plugins",
+      "description": "Suite of opt-in frontend plugins for YSocial microblogging experiments (annotation tools, educational overlays). Modules are enabled and configured independently, per experiment, from the YWeb admin dashboard.",
+      "authors": [
+        "YSocialTwin"
+      ],
+      "repository_url": "https://github.com/YSocialTwin/frontend_adds-on"
+    },
+    {
+      "plugin_name": "Reactive Agents",
+      "category": "Agent Extensions",
+      "group": "Agent Extensions",
+      "description": "Makes simulation agents react to human activity between simulation rounds \u2014 mention replies, follow/unfollow, reactions, multi-agent thread continuation, annotation/opinion-dynamics parity, selective per-viewer visibility, ad-hoc agents, and more \u2014 without requiring the simulation to be running, plus a virtual round clock (Phase 7) letting ad-hoc agent clients run against a stopped experiment. Phase 8 adds low-frequency contact continuity: a responsive agent checks in on a followed human who has gone quiet for a configured length of time.",
+      "authors": [
+        "YSocialTwin"
+      ],
+      "repository_url": "https://github.com/YSocialTwin/reactive_agents"
     },
     {
       "plugin_name": "y_agents_plugins",

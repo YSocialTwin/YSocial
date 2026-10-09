@@ -11,6 +11,8 @@ from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash
 
+from y_web import db
+
 pytestmark = pytest.mark.integration
 
 
@@ -103,7 +105,7 @@ def app():
 
     @login_manager.user_loader
     def load_user(user_id):
-        return Admin_users.query.get(int(user_id))
+        return db.session.get(Admin_users, int(user_id))
 
     with app.app_context():
         db.create_all()

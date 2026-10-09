@@ -10,6 +10,7 @@ Verifies that:
 """
 
 import pytest
+from sqlalchemy import func, select
 
 pytestmark = pytest.mark.integration
 
@@ -429,8 +430,8 @@ def test_create_all_with_new_models(app):
         # Verify that the tables exist by querying them — no create_all()
         # call here since that's already done by the fixture and re-running
         # it would collide with the existing MetaData.
-        admin_count = Admin_users.query.count()
-        user_count = User_mgmt.query.count()
+        admin_count = db.session.scalar(select(func.count()).select_from(Admin_users))
+        user_count = db.session.scalar(select(func.count()).select_from(User_mgmt))
         assert admin_count >= 0
         assert user_count >= 0
 

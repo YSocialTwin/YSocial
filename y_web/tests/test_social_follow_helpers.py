@@ -4,6 +4,7 @@ import pytest
 
 from y_web.routes.interactions import common as interactions_common
 from y_web.src.data_access import users as users_module
+from y_web.tests._sa2_stubs import _FakeSelect, _ScalarsResult, _SelectRoutingSession
 
 pytestmark = pytest.mark.unit
 
@@ -106,6 +107,10 @@ def test_get_user_friends_returns_uuid_followers_and_followees(monkeypatch):
                 filter_by=lambda **kwargs: SimpleNamespace(first=lambda: None)
             )
         ),
+    )
+    monkeypatch.setattr(users_module, "select", lambda *a, **kw: _FakeSelect(*a))
+    monkeypatch.setattr(
+        users_module, "db", SimpleNamespace(session=_SelectRoutingSession())
     )
 
     followers, followees, number_followers, number_followees = (

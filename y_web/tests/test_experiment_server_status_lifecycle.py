@@ -10,6 +10,8 @@ from types import SimpleNamespace
 
 import pytest
 
+from y_web.tests._sa2_stubs import _FakeSelect, _ScalarsResult, _SelectRoutingSession
+
 pytestmark = pytest.mark.unit
 
 
@@ -60,7 +62,10 @@ def test_start_experiment_updates_running_and_exp_status(monkeypatch):
         lambda exp: started_servers.append(exp.idexp),
     )
     monkeypatch.setattr(mod, "experiment_details", lambda uid: f"details:{uid}")
-    monkeypatch.setattr(mod, "db", SimpleNamespace(session=fake_session))
+    monkeypatch.setattr(mod, "select", lambda *a, **kw: _FakeSelect(*a))
+    monkeypatch.setattr(
+        mod, "db", SimpleNamespace(session=_SelectRoutingSession(fake_session))
+    )
     monkeypatch.setattr(
         mod,
         "Exps",
@@ -126,7 +131,10 @@ def test_stop_experiment_updates_running_and_exp_status(monkeypatch):
         mod, "stop_server_for_experiment", lambda exp: stopped_servers.append(exp.idexp)
     )
     monkeypatch.setattr(mod, "experiment_details", lambda uid: f"details:{uid}")
-    monkeypatch.setattr(mod, "db", SimpleNamespace(session=fake_session))
+    monkeypatch.setattr(mod, "select", lambda *a, **kw: _FakeSelect(*a))
+    monkeypatch.setattr(
+        mod, "db", SimpleNamespace(session=_SelectRoutingSession(fake_session))
+    )
     monkeypatch.setattr(
         mod,
         "Exps",

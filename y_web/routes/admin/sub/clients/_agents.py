@@ -5,6 +5,7 @@ import os
 
 from flask import flash, redirect, request
 from flask_login import current_user, login_required
+from sqlalchemy import select
 
 from y_web import db
 from y_web.src.models import (
@@ -29,9 +30,11 @@ def update_agents_activity(uid):
         activity[str(x)] = float(request.form.get(str(x)))
 
     # get client details
-    client = Client.query.filter_by(id=uid).first()
-    experiment = Exps.query.filter_by(idexp=client.id_exp).first()
-    population = Population.query.filter_by(id=client.population_id).first()
+    client = db.session.scalars(select(Client).filter_by(id=uid)).first()
+    experiment = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()
+    population = db.session.scalars(
+        select(Population).filter_by(id=client.population_id)
+    ).first()
 
     from y_web.src.system.path_utils import get_writable_path
 
@@ -59,9 +62,11 @@ def reset_agents_activity(uid):
     check_privileges(current_user.username)
 
     # get client details
-    client = Client.query.filter_by(id=uid).first()
-    experiment = Exps.query.filter_by(idexp=client.id_exp).first()
-    population = Population.query.filter_by(id=client.population_id).first()
+    client = db.session.scalars(select(Client).filter_by(id=uid)).first()
+    experiment = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()
+    population = db.session.scalars(
+        select(Population).filter_by(id=client.population_id)
+    ).first()
 
     from y_web.src.system.path_utils import get_writable_path
 
@@ -171,7 +176,7 @@ def update_agent_archetypes(uid):
         return redirect(request.referrer)
 
     # Get client details
-    client = Client.query.filter_by(id=uid).first()
+    client = db.session.scalars(select(Client).filter_by(id=uid)).first()
     if not client:
         flash("Client not found.", "error")
         return redirect(request.referrer)
@@ -193,8 +198,10 @@ def update_agent_archetypes(uid):
     db.session.commit()
 
     # Update client configuration JSON file
-    experiment = Exps.query.filter_by(idexp=client.id_exp).first()
-    population = Population.query.filter_by(id=client.population_id).first()
+    experiment = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()
+    population = db.session.scalars(
+        select(Population).filter_by(id=client.population_id)
+    ).first()
 
     from y_web.src.system.path_utils import get_writable_path
 
@@ -253,7 +260,7 @@ def reset_agent_archetypes(uid):
     check_privileges(current_user.username)
 
     # Get client details
-    client = Client.query.filter_by(id=uid).first()
+    client = db.session.scalars(select(Client).filter_by(id=uid)).first()
     if not client:
         flash("Client not found.", "error")
         return redirect(request.referrer)
@@ -275,8 +282,10 @@ def reset_agent_archetypes(uid):
     db.session.commit()
 
     # Update client configuration JSON file
-    experiment = Exps.query.filter_by(idexp=client.id_exp).first()
-    population = Population.query.filter_by(id=client.population_id).first()
+    experiment = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()
+    population = db.session.scalars(
+        select(Population).filter_by(id=client.population_id)
+    ).first()
 
     from y_web.src.system.path_utils import get_writable_path
 

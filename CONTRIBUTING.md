@@ -17,15 +17,29 @@ git clone --recurse-submodules https://github.com/YSocialTwin/YSocial.git
 cd YSocial
 ```
 
-2. Install dependencies:
+2. Configure the local environment:
+```bash
+cp .env.example .env
+# Generate a secret key and add it to .env:
+python -c "import secrets; print(secrets.token_hex(32))"
+# Set YSOCIAL_SECRET_KEY=<output> in .env
+```
+
+3. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Install development tools:
+4. Install development tools:
 ```bash
-pip install black isort pytest
+pip install pip-tools black isort pytest
 ```
+
+> **Dependency management**: edit `requirements/base.in` (not `requirements/base.txt`)  
+> then regenerate the lock file with:  
+> ```bash
+> pip-compile requirements/base.in --output-file requirements/base.txt
+> ```
 
 ## Code Quality Standards
 

@@ -151,17 +151,25 @@ Assuming you have [Anaconda](https://www.anaconda.com/) installed, you can creat
    - `external/YServerReddit`
    - `external/YPhotoSharing`
    - `external/YSimulator`
-3. **Install dependencies:**  
+3. **Configure the environment:**
+   ```bash
+   cp .env.example .env
+   # Open .env and set YSOCIAL_SECRET_KEY to a random string:
+   python -c "import secrets; print(secrets.token_hex(32))"
+   # Paste the output as the value of YSOCIAL_SECRET_KEY in .env
+   ```
+
+4. **Install dependencies:**  
    ```bash
    pip install -r requirements.txt
    ```
-4. **(Optional) Install [Ollama](https://ollama.com/):** (and pull some LLM models)
+5. **(Optional) Install [Ollama](https://ollama.com/):** (and pull some LLM models)
    ```bash
    curl -fsSL https://ollama.com/install.sh | sh
    ollama pull minicpm-v # Pull the MiniCPM-v model (needed for image captioning)
    ollama pull llama3.1 # Pull the Llama3.1 model (or any other model you want to use)
    ```
-5. **Start YSocial:**  
+6. **Start YSocial:**  
    ```bash
    # Desktop mode (default - native window)
    python y_social_launcher.py --llm-backend ollama

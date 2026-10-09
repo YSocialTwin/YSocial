@@ -234,6 +234,54 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         validate_import=None,
         is_private=False,
     ),
+    "reactive_agents": ExternalRuntimeSpec(
+        key="reactive_agents",
+        group="frontend_plugins",
+        group_label="Frontend Plugins",
+        category="agent_extensions",
+        category_label="Agent Extensions",
+        label="Reactive Agents",
+        path=EXTERNAL_DIR / "reactive_agents",
+        github_repo="YSocialTwin/reactive_agents",
+        repo_url="https://github.com/YSocialTwin/reactive_agents.git",
+        default_branch="main",
+        install_commands=(),
+        validate_entrypoints=(),
+        validate_import=None,
+        is_private=True,
+    ),
+    "frontend_adds_on": ExternalRuntimeSpec(
+        key="frontend_adds_on",
+        group="frontend_plugins",
+        group_label="Frontend Plugins",
+        category="frontend_extensions",
+        category_label="Frontend Extensions",
+        label="Frontend Adds-on",
+        path=EXTERNAL_DIR / "frontend_adds-on",
+        github_repo="YSocialTwin/frontend_adds-on",
+        repo_url="https://github.com/YSocialTwin/frontend_adds-on.git",
+        default_branch="main",
+        install_commands=(),
+        validate_entrypoints=(),
+        validate_import=None,
+        is_private=True,
+    ),
+    "scenario_design": ExternalRuntimeSpec(
+        key="scenario_design",
+        group="backend_settings",
+        group_label="Backend Settings",
+        category="backend_extensions",
+        category_label="Backend Extensions",
+        label="Scenario Design",
+        path=EXTERNAL_DIR / "ScenarioDesign",
+        github_repo="YSocialTwin/ScenarioDesign",
+        repo_url="https://github.com/YSocialTwin/ScenarioDesign.git",
+        default_branch="main",
+        install_commands=(),
+        validate_entrypoints=(),
+        validate_import=None,
+        is_private=True,
+    ),
 }
 
 
@@ -248,7 +296,15 @@ def grouped_runtime_specs() -> list[tuple[str, str, Sequence[ExternalRuntimeSpec
         groups.setdefault(spec.group, []).append(spec)
         labels[spec.group] = spec.group_label
 
-    ordered_groups = ["microblogging", "forum", "photo_sharing", "hpc", "agent_plugins"]
+    ordered_groups = [
+        "microblogging",
+        "forum",
+        "photo_sharing",
+        "hpc",
+        "agent_plugins",
+        "frontend_plugins",
+        "backend_settings",
+    ]
     return [
         (group_key, labels[group_key], tuple(groups.get(group_key, [])))
         for group_key in ordered_groups
@@ -416,10 +472,41 @@ def _visibility_overrides() -> dict[str, tuple[str, ...] | str]:
     return result
 
 
+def _development_mode_enabled() -> bool:
+    """Whether the running app was started with ``--development``
+    (``y_social.py``), i.e. ``app.config["DEVELOPMENT_MODE"]`` is truthy.
+
+    Reads the live Flask app config rather than an env var so the one
+    CLI flag at startup is the single source of truth (see
+    ``y_social.py::start_app``'s own docstring comment next to where it
+    sets this key). Defensive about app context: some callers of
+    ``runtime_visible_to_user`` (notably this module's own unit tests)
+    call it with no Flask app pushed at all, so this reads as ``False``
+    there instead of raising -- the same, pre-existing behaviour those
+    callers already expect.
+    """
+    try:
+        from flask import current_app, has_app_context
+
+        if not has_app_context():
+            return False
+        return bool(current_app.config.get("DEVELOPMENT_MODE", False))
+    except RuntimeError:
+        return False
+
+
 def runtime_visible_to_user(spec: ExternalRuntimeSpec, admin_user) -> bool:
     if admin_user is None:
         return False
     if not spec.is_private:
+        return True
+    if _development_mode_enabled():
+        # User-reported requirement: a "development" startup flag should
+        # unlock every plugin repository marked private in this registry
+        # for listing/installing/enabling -- when the flag is absent,
+        # behaviour below is completely unchanged (explicit allow-list
+        # gating only; plain admin role is no longer enough on its own,
+        # see the comment at this function's final `return False`).
         return True
 
     overrides = _visibility_overrides().get(spec.key)
@@ -431,4 +518,41 @@ def runtime_visible_to_user(spec: ExternalRuntimeSpec, admin_user) -> bool:
     if spec.visible_to_usernames:
         return admin_user.username in spec.visible_to_usernames
 
-    return getattr(admin_user, "role", None) == "admin"
+    # User-reported gap (2026-10-08): "when the new flag -e is not
+    # specified private plugins that are already installed are still
+    # visible". Root cause -- every repo actually marked private in this
+    # registry (photo_sharing, reactive_agents, frontend_adds_on,
+    # scenario_design) ships with an empty visible_to_usernames and no
+    # override, so every request here used to fall through to "any admin
+    # sees it", which defeated --development entirely for the normal
+    # case of an admin testing without the flag. A private repo with no
+    # explicit allow-list is now hidden unless --development is on;
+    # admin role alone is no longer a visibility bypass.
+    return False
+
+
+def runtime_installed_and_visible(repo_key: str, admin_user) -> bool:
+    """True iff *repo_key* is both installed on disk AND visible to
+    *admin_user* (``runtime_visible_to_user``).
+
+    User-reported gap (2026-10-08): the Plugins catalog page (and its
+    install/enable/logs actions) all gate on ``runtime_visible_to_user``,
+    but several OTHER admin pages that surface a plugin's feature once
+    it's installed (which simulator types to offer when creating an
+    experiment, the frontend-plugin settings list, agent-plugin
+    features) only ever checked "is this repo's path present on disk" --
+    a bare ``runtime_spec(repo_key).path.exists()`` -- with no privacy
+    gate at all. That meant a private plugin already installed on this
+    machine stayed fully usable through those other pages even for an
+    admin who'd never pass ``runtime_visible_to_user``'s checks, and
+    even with ``--development`` off. Callers that decide whether to
+    surface an installed plugin's feature to the current admin should
+    use this instead of a bare path check.
+    """
+    try:
+        spec = runtime_spec(repo_key)
+    except KeyError:
+        return False
+    if not spec.path.exists():
+        return False
+    return runtime_visible_to_user(spec, admin_user)

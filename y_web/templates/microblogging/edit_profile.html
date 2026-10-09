@@ -28,6 +28,8 @@
                 </div>
             </section>
 
+            <div class="ys-ep-two-col">
+            <div><!-- left column -->
             <section class="ys-edit-profile-section">
                 <div class="ys-profile-panel-head">
                     <div>
@@ -225,11 +227,9 @@
                                 <label>Follow Recommender</label>
                                 <div class="select is-fullwidth">
                                     <select name="frecsys_type">
-                                        <option value="FollowRecSys" {{ 'selected' if user.frecsys_type == "FollowRecSys" else '' }}>Random</option>
-                                        <option value="CommonNeighbors" {{ 'selected' if user.frecsys_type == "CommonNeighbors" else '' }}>Common Neighbors</option>
-                                        <option value="Jaccard" {{ 'selected' if user.frecsys_type == "Jaccard" else '' }}>Jaccard</option>
-                                        <option value="AdamicAdar" {{ 'selected' if user.frecsys_type == "AdamicAdar" else '' }}>Adamic Adar</option>
-                                        <option value="PreferentialAttachment" {{ 'selected' if user.frecsys_type == "PreferentialAttachment" else '' }}>Preferential Attachment</option>
+                                        {% for opt in recsys_options.follow %}
+                                        <option value="{{ opt.name }}" {{ 'selected' if user.frecsys_type == opt.name else '' }}>{{ opt.label }}</option>
+                                        {% endfor %}
                                     </select>
                                 </div>
                             </div>
@@ -237,11 +237,9 @@
                                 <label>Content Recommender</label>
                                 <div class="select is-fullwidth">
                                     <select name="recsys_type">
-                                        <option value="ContentRecSys" {{ 'selected' if user.recsys_type == "ContentRecSys" else '' }}>Random</option>
-                                        <option value="ReverseChrono" {{ 'selected' if user.recsys_type == "ReverseChrono" else '' }}>(RC) Reverse Chrono</option>
-                                        <option value="ReverseChronoPopularity" {{ 'selected' if user.recsys_type == "ReverseChronoPopularity" else '' }}>(RCP) Popularity</option>
-                                        <option value="ReverseChronoFollowers" {{ 'selected' if user.recsys_type == "ReverseChronoFollowers" else '' }}>(RCF) Followers</option>
-                                        <option value="ReverseChronoFollowersPopularity" {{ 'selected' if user.recsys_type == "ReverseChronoFollowersPopularity" else '' }}>(FP) Followers-Popularity</option>
+                                        {% for opt in recsys_options.content %}
+                                        <option value="{{ opt.name }}" {{ 'selected' if user.recsys_type == opt.name else '' }}>{{ opt.label }}</option>
+                                        {% endfor %}
                                     </select>
                                 </div>
                             </div>
@@ -288,6 +286,79 @@
                     </div>
                 </form>
             </section>
+            </div><!-- /left column -->
+
+            <!-- RIGHT: Topics & Opinions -->
+            <div>
+            {% if topics and opinion_groups %}
+            {% set n_op = opinion_groups|length %}
+            {% set mid_op = (n_op - 1) // 2 %}
+            <form action="/{{ exp_id }}/update_topic_preferences/{{ user_id }}" method="POST" id="ep-topics-form">
+            <div class="ys-ep-topic-card">
+                <div class="ys-ep-topic-card__head">
+                    <div class="ys-ep-topic-card__icon"><i class="mdi mdi-pound"></i></div>
+                    <div>
+                        <p class="ys-ep-topic-card__title">Topics &amp; Opinions</p>
+                        <p class="ys-ep-topic-card__sub">Update your interest and opinion for each topic.</p>
+                    </div>
+                </div>
+
+                {% for topic in topics %}
+                {% set i_idx = saved_interest_idx.get(topic.id|string, 0) %}
+                {% set o_idx = saved_opinions.get(topic.id|string, mid_op) %}
+                <div class="ys-ep-topic">
+                    <div class="ys-ep-topic__name"><i class="mdi mdi-pound"></i>{{ topic.name }}</div>
+
+                    <div class="ys-ep-topic__q">
+                        Interest level
+                        <span class="ys-ep-topic__q-val" id="ep-int-val-{{ topic.id }}">{{ ['Not Interested','Low Interest','High Interest','Extreme Interest'][i_idx] }}</span>
+                    </div>
+                    <div class="ys-ep-slider-wrap">
+                        <input type="hidden" name="interest_{{ topic.id }}" id="ep-int-hidden-{{ topic.id }}" value="{{ ['0.0','0.33','0.67','1.0'][i_idx] }}">
+                        <input type="range" min="0" max="3" step="1" value="{{ i_idx }}"
+                               class="ys-ep-slider interest-slider"
+                               data-topic="{{ topic.id }}" data-type="interest"
+                               id="ep-int-slider-{{ topic.id }}">
+                        <div class="ys-ep-ticks">
+                            <span {% if i_idx == 0 %}class="active"{% endif %}>Not<br>Interested</span>
+                            <span {% if i_idx == 1 %}class="active"{% endif %}>Low<br>Interest</span>
+                            <span {% if i_idx == 2 %}class="active"{% endif %}>High<br>Interest</span>
+                            <span {% if i_idx == 3 %}class="active"{% endif %}>Extreme<br>Interest</span>
+                        </div>
+                    </div>
+
+                    <div class="ys-ep-spacer"></div>
+
+                    <div class="ys-ep-topic__q">
+                        Opinion
+                        <span class="ys-ep-topic__q-val" id="ep-op-val-{{ topic.id }}" style="color:#949494;">{{ opinion_groups[o_idx].name.strip() }}</span>
+                    </div>
+                    <div class="ys-ep-slider-wrap">
+                        <input type="hidden" name="opinion_{{ topic.id }}" id="ep-op-hidden-{{ topic.id }}" value="{{ opinion_groups[o_idx].id }}">
+                        <input type="range" min="0" max="{{ n_op - 1 }}" step="1" value="{{ o_idx }}"
+                               class="ys-ep-slider opinion-slider"
+                               data-topic="{{ topic.id }}" data-type="opinion"
+                               id="ep-op-slider-{{ topic.id }}">
+                        <div class="ys-ep-ticks opinion" id="ep-op-ticks-{{ topic.id }}">
+                            {% for og in opinion_groups %}
+                            <span {% if loop.index0 == o_idx %}class="active"{% endif %}>{{ og.name.strip() }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div><!-- /topic-card -->
+            <div style="margin-top:12px;text-align:right;">
+                <button type="submit" class="button is-solid accent-button form-button">Save Topic Preferences</button>
+            </div>
+            </form>
+            {% elif topics %}
+            <p style="color:#bbb;font-size:.85rem;padding:16px 0;">Opinion scale not yet configured.</p>
+            {% else %}
+            <p style="color:#bbb;font-size:.85rem;padding:16px 0;">No active topics for this experiment.</p>
+            {% endif %}
+            </div><!-- /right column -->
+            </div><!-- /two-col -->
         </div>
     </div>
 </div>
@@ -435,5 +506,38 @@
     });
 </script>
 
+
+<script>
+(function () {
+    var EP_INT_LABELS = ['Not Interested', 'Low Interest', 'High Interest', 'Extreme Interest'];
+    var EP_INT_VALUES = ['0.0', '0.33', '0.67', '1.0'];
+    var EP_INT_COLORS = ['#a0b8e0', '#5596e6', '#3a74c7', '#1a4fa0'];
+    var EP_OP_GROUPS  = [{% for og in opinion_groups %}{ id: {{ og.id }}, name: "{{ og.name.strip() }}" }{% if not loop.last %},{% endif %}{% endfor %}];
+    var EP_OP_COLORS  = ['#c0392b', '#e07b39', '#949494', '#3da05e', '#1e7d3c'];
+    function epOpCol(i) { return EP_OP_COLORS[i] || EP_OP_COLORS[EP_OP_COLORS.length - 1]; }
+
+    function epUpdInt(sl) {
+        var v = parseInt(sl.value), tid = sl.dataset.topic;
+        var col = EP_INT_COLORS[v] || '#5596e6';
+        sl.style.background = 'linear-gradient(to right,' + col + ' ' + (v/3*100) + '%,#e2e2ee ' + (v/3*100) + '%)';
+        sl.style.setProperty('--thumb-col', col);
+        var h = document.getElementById('ep-int-hidden-' + tid); if (h) h.value = EP_INT_VALUES[v] || '0.0';
+        var l = document.getElementById('ep-int-val-' + tid); if (l) { l.textContent = EP_INT_LABELS[v] || ''; l.style.color = col; }
+        sl.closest('.ys-ep-slider-wrap').querySelectorAll('.ys-ep-ticks span').forEach(function(t,i){ t.classList.toggle('active', i===v); });
+    }
+    function epUpdOp(sl) {
+        var v = parseInt(sl.value), tid = sl.dataset.topic, g = EP_OP_GROUPS[v], col = epOpCol(v);
+        sl.style.setProperty('--thumb-col', col);
+        var l = document.getElementById('ep-op-val-' + tid); if (l) { l.textContent = g ? g.name : ''; l.style.color = col; }
+        var h = document.getElementById('ep-op-hidden-' + tid); if (h && g) h.value = g.id;
+        var ticks = document.getElementById('ep-op-ticks-' + tid);
+        if (ticks) ticks.querySelectorAll('span').forEach(function(t,i){ t.classList.toggle('active', i===v); });
+    }
+    document.querySelectorAll('.ys-ep-slider').forEach(function(sl) {
+        if (sl.dataset.type === 'interest') epUpdInt(sl); else epUpdOp(sl);
+        sl.addEventListener('input', function(){ if (sl.dataset.type === 'interest') epUpdInt(sl); else epUpdOp(sl); });
+    });
+})();
+</script>
 </body>
 </html>

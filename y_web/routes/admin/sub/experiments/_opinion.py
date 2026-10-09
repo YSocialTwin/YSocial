@@ -35,6 +35,7 @@ from flask import (
     url_for,
 )
 from flask_login import current_user, login_required, login_user
+from sqlalchemy import delete, select
 
 from y_web import db  # , app
 from y_web.src.content.avatars import normalize_forum_avatar_mode
@@ -139,7 +140,7 @@ def _resolve_opinion_evolution_topics(expid):
     except Exception:
         pass
 
-    topic_links = Exp_Topic.query.filter_by(exp_id=expid).all()
+    topic_links = db.session.scalars(select(Exp_Topic).filter_by(exp_id=expid)).all()
     if topic_links:
         topic_ids = [link.topic_id for link in topic_links]
         topic_rows = (
@@ -159,7 +160,7 @@ def _resolve_opinion_evolution_topics(expid):
 
 def _get_ordered_opinion_groups():
     """Return opinion groups sorted by numeric lower bound."""
-    groups = OpinionGroup.query.all()
+    groups = db.session.scalars(select(OpinionGroup)).all()
     return sorted(groups, key=lambda group: float(group.lower_bound))
 
 
@@ -1150,8 +1151,10 @@ def _bootstrap_initial_agent_opinions_if_missing(expid, experiment):
 
     if inserted:
         db.session.commit()
-        OpinionEvolutionCache.query.filter_by(exp_id=expid).delete()
-        OpinionEvolutionSampledAgents.query.filter_by(exp_id=expid).delete()
+        db.session.execute(delete(OpinionEvolutionCache).filter_by(exp_id=expid))
+        db.session.execute(
+            delete(OpinionEvolutionSampledAgents).filter_by(exp_id=expid)
+        )
         db.session.commit()
 
     return inserted
@@ -1190,8 +1193,8 @@ def _invalidate_stale_opinion_evolution_cache(expid):
     if cache_max_time <= db_max_time:
         return False
 
-    OpinionEvolutionCache.query.filter_by(exp_id=expid).delete()
-    OpinionEvolutionSampledAgents.query.filter_by(exp_id=expid).delete()
+    db.session.execute(delete(OpinionEvolutionCache).filter_by(exp_id=expid))
+    db.session.execute(delete(OpinionEvolutionSampledAgents).filter_by(exp_id=expid))
     db.session.commit()
     return True
 
@@ -1302,7 +1305,7 @@ def update_opinion_group():
 
     data = request.get_json()
     group_id = data.get("id")
-    group = OpinionGroup.query.filter_by(id=group_id).first()
+    group = db.session.scalars(select(OpinionGroup).filter_by(id=group_id)).first()
 
     if not group:
         return jsonify({"success": False, "message": "Opinion group not found"}), 404
@@ -1353,7 +1356,9 @@ def update_opinion_group():
         )
 
     # Check for overlaps with other existing groups
-    existing_groups = OpinionGroup.query.filter(OpinionGroup.id != group_id).all()
+    existing_groups = db.session.scalars(
+        select(OpinionGroup).filter(OpinionGroup.id != group_id)
+    ).all()
     for existing in existing_groups:
         # Check if the updated group overlaps with any other existing group
         # Two ranges [a1, a2] and [b1, b2] overlap if: a1 < b2 AND b1 < a2
@@ -1402,7 +1407,7 @@ def create_opinion_group():
         return redirect(request.referrer)
 
     # Check for overlaps with existing groups
-    existing_groups = OpinionGroup.query.all()
+    existing_groups = db.session.scalars(select(OpinionGroup)).all()
     for existing in existing_groups:
         # Check if the new group overlaps with any existing group
         # Two ranges [a1, a2] and [b1, b2] overlap if: a1 < b2 AND b1 < a2
@@ -1428,7 +1433,7 @@ def delete_opinion_group(group_id):
     """Delete opinion group."""
     check_privileges(current_user.username)
 
-    group = OpinionGroup.query.filter_by(id=group_id).first()
+    group = db.session.scalars(select(OpinionGroup).filter_by(id=group_id)).first()
     if not group:
         return jsonify({"success": False, "message": "Opinion group not found"}), 404
 
@@ -1503,7 +1508,7 @@ def update_opinion_distribution():
 
     data = request.get_json()
     dist_id = data.get("id")
-    dist = OpinionDistribution.query.filter_by(id=dist_id).first()
+    dist = db.session.scalars(select(OpinionDistribution).filter_by(id=dist_id)).first()
 
     if not dist:
         return (
@@ -1553,7 +1558,7 @@ def delete_opinion_distribution(dist_id):
     """Delete opinion distribution."""
     check_privileges(current_user.username)
 
-    dist = OpinionDistribution.query.filter_by(id=dist_id).first()
+    dist = db.session.scalars(select(OpinionDistribution).filter_by(id=dist_id)).first()
     if not dist:
         return (
             jsonify({"success": False, "message": "Opinion distribution not found"}),
@@ -1581,7 +1586,7 @@ def generate_group_trends_data(expid, filter_day, filter_hour, filter_topic_id):
     Returns:
         dict: Time series data with timestamps and group percentages
     """
-    from sqlalchemy import and_, or_
+    from sqlalchemy import and_, or_, select
 
     from y_web.src.models import Agent_Opinion, Rounds
 
@@ -1813,8 +1818,10 @@ def get_or_sample_agents(expid, topic_id, sample_percentage, all_agent_ids):
         List of sampled agent IDs
     """
     # Try to get existing sample
-    sample_entry = OpinionEvolutionSampledAgents.query.filter_by(
-        exp_id=expid, topic_id=topic_id, sample_percentage=sample_percentage
+    sample_entry = db.session.scalars(
+        select(OpinionEvolutionSampledAgents).filter_by(
+            exp_id=expid, topic_id=topic_id, sample_percentage=sample_percentage
+        )
     ).first()
 
     # If sample exists and is recent (< 1 hour), use it
@@ -2247,9 +2254,11 @@ def get_or_compute_opinion_stats(expid, filter_day, filter_hour, filter_topic_id
         cache_entry = None
 
     if cache_entry and _is_invalid_opinion_cache_entry(cache_entry):
-        OpinionEvolutionCache.query.filter_by(
-            exp_id=expid, topic_id=filter_topic_id
-        ).delete()
+        db.session.execute(
+            delete(OpinionEvolutionCache).filter_by(
+                exp_id=expid, topic_id=filter_topic_id
+            )
+        )
         db.session.commit()
         cache_entry = None
 
@@ -2294,9 +2303,11 @@ def get_or_compute_opinion_stats(expid, filter_day, filter_hour, filter_topic_id
             previous_cache = None
 
     if previous_cache and _is_invalid_opinion_cache_entry(previous_cache):
-        OpinionEvolutionCache.query.filter_by(
-            exp_id=expid, topic_id=filter_topic_id
-        ).delete()
+        db.session.execute(
+            delete(OpinionEvolutionCache).filter_by(
+                exp_id=expid, topic_id=filter_topic_id
+            )
+        )
         db.session.commit()
         previous_cache = None
 
@@ -2571,7 +2582,7 @@ def opinion_evolution(expid):
     check_privileges(current_user.username)
 
     # Get experiment
-    experiment = Exps.query.filter_by(idexp=expid).first()
+    experiment = db.session.scalars(select(Exps).filter_by(idexp=expid)).first()
     if not experiment:
         flash("Experiment not found.")
         return redirect("/admin/experiments")
@@ -2877,7 +2888,7 @@ def opinion_evolution_data(expid):
     check_privileges(current_user.username)
 
     # Get experiment
-    experiment = Exps.query.filter_by(idexp=expid).first()
+    experiment = db.session.scalars(select(Exps).filter_by(idexp=expid)).first()
     if not experiment:
         return jsonify({"error": "Experiment not found"}), 404
 
@@ -3928,7 +3939,7 @@ def _load_annotation_experiment_context(
     """Load an experiment where a specific annotation is enabled."""
     check_privileges(current_user.username)
 
-    experiment = Exps.query.filter_by(idexp=uid).first()
+    experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     if not experiment:
         flash("Experiment not found", "error")
         return None, None, redirect(url_for("experiments.settings"))
@@ -3975,7 +3986,7 @@ def _load_network_experiment_context(uid, require_manage=False):
     """Load an experiment for network analytics."""
     check_privileges(current_user.username)
 
-    experiment = Exps.query.filter_by(idexp=uid).first()
+    experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     if not experiment:
         flash("Experiment not found", "error")
         return None, None, redirect(url_for("experiments.settings"))
@@ -4184,9 +4195,21 @@ def _analytics_content_schema(conn):
         row["name"] if isinstance(row, sqlite3.Row) else row[0]
         for row in conn.execute("SELECT name FROM sqlite_master WHERE type = 'table'")
     }
-    is_photo_sharing = any(
+    # A true "photo-sharing" experiment is one built on the YPhotoSharing
+    # plugin's own Photo model. photo_hashtags/photo_topics/photo_emotions
+    # are junction tables created ONLY by that plugin's schema, so any one
+    # of them existing is unambiguous signal -- but a bare "photos" table
+    # is NOT: a microblogging/HPC experiment can carry an unrelated table
+    # of that same name (e.g. for embedded image posts) with a completely
+    # different column set. Requiring both a junction table AND "photos"
+    # itself keeps a microblogging experiment that merely happens to have
+    # its own "photos" table (no matching junction tables) correctly
+    # classified as post-based, instead of the whole schema below --
+    # content_table, content_id_column, content_text_column -- being
+    # silently pointed at the wrong table with the wrong columns.
+    is_photo_sharing = "photos" in table_names and any(
         table_name in table_names
-        for table_name in ("photo_topics", "photo_hashtags", "photo_emotions", "photos")
+        for table_name in ("photo_topics", "photo_hashtags", "photo_emotions")
     )
     reactions_columns = (
         _table_columns(conn, "reactions") if "reactions" in table_names else set()
@@ -4199,12 +4222,11 @@ def _analytics_content_schema(conn):
         if "recommendations" in table_names
         else set()
     )
+    content_table = "photos" if is_photo_sharing else "post"
     return {
         "table_names": table_names,
         "is_photo_sharing": is_photo_sharing,
-        "content_table": (
-            "photos" if is_photo_sharing and "photos" in table_names else "post"
-        ),
+        "content_table": content_table,
         "content_link_table": (
             "photo_topics"
             if is_photo_sharing and "photo_topics" in table_names
@@ -4220,7 +4242,10 @@ def _analytics_content_schema(conn):
             if is_photo_sharing and "photo_emotions" in table_names
             else "post_emotions"
         ),
-        "content_id_column": "photo_id" if is_photo_sharing else "post_id",
+        # Derived from content_table itself (not the is_photo_sharing flag
+        # a second time) so this can never drift out of sync with which
+        # table was actually chosen above.
+        "content_id_column": "photo_id" if content_table == "photos" else "post_id",
         "reaction_content_id_column": (
             "photo_id" if "photo_id" in reactions_columns else "post_id"
         ),
@@ -4239,10 +4264,10 @@ def _analytics_content_schema(conn):
         "recommendation_ids_column": (
             "photo_ids" if "photo_ids" in recommendations_columns else "post_ids"
         ),
-        "content_text_column": "caption" if is_photo_sharing else "tweet",
+        "content_text_column": "caption" if content_table == "photos" else "tweet",
         "content_summary_expression": (
             "COALESCE(NULLIF(TRIM(caption), ''), NULLIF(TRIM(alt_text), ''), NULLIF(TRIM(image_url), ''))"
-            if is_photo_sharing
+            if content_table == "photos"
             else "COALESCE(NULLIF(TRIM(tweet), ''), '')"
         ),
     }

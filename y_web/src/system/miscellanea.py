@@ -7,6 +7,7 @@ database connection testing, and Ollama LLM service status checking.
 
 from flask import redirect, url_for
 from flask_login import login_user
+from sqlalchemy import select, text
 
 from y_web import db
 from y_web.src.models import (
@@ -25,7 +26,7 @@ def check_privileges(username):
     Returns:
         Redirect to main.index if not admin/researcher, None if authorized
     """
-    user = Admin_users.query.filter_by(username=username).first()
+    user = db.session.scalars(select(Admin_users).filter_by(username=username)).first()
 
     if user.role not in ["admin", "researcher"]:
         return redirect(url_for("main.index"))
@@ -151,7 +152,8 @@ def check_connection():
         True if database is accessible, False otherwise
     """
     try:
-        db.engine.execute("SELECT 1")
+        with db.engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
         return True
     except Exception as e:
         print(f"PostgreSQL connection error: {e}")

@@ -5,7 +5,7 @@ import sqlite3
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
-from sqlalchemy import case, desc, func, or_
+from sqlalchemy import case, desc, func, or_, select
 
 from y_web import db
 from y_web.src.models import (
@@ -624,8 +624,8 @@ def _build_facts_snapshot(
         # Reading signal: replies up to this cursor were seen in notifications inbox.
         last_seen_reply_id = 0
         try:
-            st = ReplyInboxState.query.filter_by(
-                user_id=normalized_agent_user_id
+            st = db.session.scalars(
+                select(ReplyInboxState).filter_by(user_id=normalized_agent_user_id)
             ).first()
             if st is not None:
                 last_seen_reply_id = int(getattr(st, "last_seen_reply_id", 0) or 0)
@@ -711,7 +711,9 @@ def _build_facts_snapshot(
                 key=lambda value: str(value),
             )
             users = (
-                User_mgmt.query.filter(User_mgmt.id.in_(author_ids)).all()
+                db.session.scalars(
+                    select(User_mgmt).filter(User_mgmt.id.in_(author_ids))
+                ).all()
                 if author_ids
                 else []
             )
@@ -997,7 +999,9 @@ def _build_facts_snapshot(
 
             parent_map: Dict[int, Post] = {}
             if parent_ids:
-                parents = Post.query.filter(Post.id.in_(parent_ids)).all()
+                parents = db.session.scalars(
+                    select(Post).filter(Post.id.in_(parent_ids))
+                ).all()
                 parent_map = {
                     int(getattr(pp, "id", 0) or 0): pp
                     for pp in parents
@@ -1006,7 +1010,9 @@ def _build_facts_snapshot(
 
             op_map: Dict[int, Post] = {}
             if thread_root_ids:
-                ops = Post.query.filter(Post.id.in_(thread_root_ids)).all()
+                ops = db.session.scalars(
+                    select(Post).filter(Post.id.in_(thread_root_ids))
+                ).all()
                 op_map = {
                     int(getattr(op, "id", 0) or 0): op for op in ops if op is not None
                 }
