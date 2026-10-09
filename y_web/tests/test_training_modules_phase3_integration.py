@@ -120,6 +120,7 @@ def test_pages_render_inside_the_core_admin_layout(core_app):
         ("/admin/training/modules", "Layout check"),
         (f"/admin/training/modules/{uid}/edit", "Publish version"),
         ("/admin/training/components", "Component catalog"),
+        ("/admin/training/library", "Component library"),
     ]:
         resp = admin.get(path)
         html = resp.get_data(as_text=True)
@@ -158,8 +159,11 @@ def test_disabled_plugin_makes_every_page_and_api_unreachable(core_app):
 def test_native_palette_without_third_party_plugins(core_app):
     admin = _client_as(core_app, "admin")
     types = admin.get(f"{API}/types").get_json()["types"]
-    assert [t["type_ref"] for t in types] == ["scenario", "external_component"]
-    assert admin.get(f"{API}/components").get_json()["components"] == []
+    refs = [t["type_ref"] for t in types]
+    assert refs[:2] == ["scenario", "external_component"] and all(r.startswith("tm_native:") for r in refs[2:])
+    # without third-party plugins the catalog lists only the components served by the plugin itself
+    listed = [c["type_ref"] for c in admin.get(f"{API}/components").get_json()["components"]]
+    assert listed == refs[2:] and "tm_native:onboarding" in listed
 
 
 @requires_plugin
