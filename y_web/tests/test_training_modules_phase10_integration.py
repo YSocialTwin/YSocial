@@ -17,10 +17,12 @@ from y_web.tests.test_training_modules_phase6_integration import (  # noqa: F401
 LIB = "/admin/training/api/library"
 PLATFORM, SIMULATOR = PLATFORMS[0]
 ONBOARDING = {
-    "title": "Welcome to the training", "summary": "Please read **everything**.",
-    "sections": [{"heading": "How it works", "body": "You will complete a few steps."}],
-    "objectives": ["Understand the platform"], "duration_minutes": 10, "requirements": [], "contacts": "", "button_label": "",
-    "acknowledgements": [{"id": "read", "label": "I have read this", "required": True}],
+    "title": "Welcome to the training", "subtitle": "", "button_label": "",
+    "blocks": [
+        {"id": "intro", "type": "paragraph", "text": "Please read **everything**."},
+        {"id": "path", "type": "overview"},
+        {"id": "ok", "type": "confirmations", "items": [{"id": "read", "label": "I have read this", "required": True}]},
+    ],
 }
 
 
@@ -75,6 +77,7 @@ def test_native_onboarding_end_to_end_through_the_real_core(core_app):
     assert me.post(f"/training/runs/{rid}/steps/{key}/start", data={"csrf_token": token}).status_code == 303
     page = me.get(f"/training/runs/{rid}/steps/{key}/page").get_data(as_text=True)
     assert "Welcome to the training" in page and "<strong>everything</strong>" in page and "I have read this" in page
+    assert "Onboarding page" in page                                    # the automatic path overview
     assert username not in page and email not in page                    # pseudonymous page
     bad = me.post(f"/training/runs/{rid}/steps/{key}/submit", data={"csrf_token": token})
     assert bad.status_code == 422
@@ -83,6 +86,7 @@ def test_native_onboarding_end_to_end_through_the_real_core(core_app):
     assert ok.status_code == 303
     assert _count(app, "SELECT COUNT(*) FROM tm_step_progress WHERE status='completed' AND step_key=:k", k=key) == 1
     assert _count(app, "SELECT COUNT(*) FROM tm_event WHERE type='onboarding_acknowledged' AND source='native'") == 1
+    assert _count(app, "SELECT COUNT(*) FROM tm_event WHERE type='onboarding_viewed' AND source='native'") == 1
     assert "Thank you" in me.get(f"/training/runs/{rid}").get_data(as_text=True) or "done" in me.get(f"/training/runs/{rid}").get_data(as_text=True)
 
     export = _post(admin, f"{API}/runs/{rid}/exports", {"reason": "native check"})
