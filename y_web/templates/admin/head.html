@@ -138,6 +138,30 @@
                 {% endfor %}
             </div>
         </div>
+
+        <!-- Plugin-contributed top-level groups (manifest suite.sidebar.group,
+             see backend_plugins.backend_suite_sidebar_groups()); same markup
+             as the groups above. -->
+        {% for group in extension_sidebar_groups %}
+        <div class="dashboard-aside-group" id="sidebar-group-{{ group.repo_key }}">
+            <button type="button" class="dashboard-aside-link dashboard-aside-group-toggle" id="sidebar-group-toggle-{{ group.repo_key }}" data-group="{{ group.repo_key }}" aria-expanded="false" aria-controls="sidebar-submenu-{{ group.repo_key }}">
+                <div>
+                    <i data-feather="{{ group.icon }}"></i>
+                    <span>{{ group.label }}</span>
+                    <i data-feather="chevron-right" class="dashboard-aside-group-chevron"></i>
+                </div>
+            </button>
+            <div class="dashboard-aside-submenu" id="sidebar-submenu-{{ group.repo_key }}">
+                <div class="dashboard-aside-submenu-title">{{ group.label }}</div>
+                {% for item in group['items'] %}
+                <a href="{{ item.url }}" class="dashboard-aside-link dashboard-aside-sublink">
+                    <i data-feather="{{ item.icon }}"></i>
+                    <span>{{ item.label }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
     </div>
 
     <!-- Pinned to the bottom of the sidebar column (margin-top:auto in

@@ -149,6 +149,32 @@ def _validate_optional_extension_keys(spec, registry_payload: dict, report: dict
         report["hooks"] = valid_hooks
 
 
+DEFAULT_GROUP_ITEM_ROLES = ("admin", "researcher")
+
+
+def _sidebar_group_problems(sidebar) -> list[str]:
+    """Problems of the optional ``suite.sidebar.group`` declaration (warnings only:
+    a malformed group is simply not rendered)."""
+    if not isinstance(sidebar, dict) or "group" not in sidebar:
+        return []
+    group = sidebar["group"]
+    if not isinstance(group, dict) or not str(group.get("label") or "").strip():
+        return ["must be an object with a 'label'"]
+    items = group.get("items")
+    if not isinstance(items, list) or not items:
+        return ["must have a non-empty 'items' list"]
+    problems = []
+    for i, item in enumerate(items):
+        if not isinstance(item, dict) or not item.get("label") or not item.get("endpoint"):
+            problems.append(f"item #{i + 1} needs 'label' and 'endpoint'")
+        elif "roles" in item and not (
+            isinstance(item["roles"], list)
+            and all(isinstance(r, str) for r in item["roles"])
+        ):
+            problems.append(f"item #{i + 1} 'roles' must be a list of role names")
+    return problems
+
+
 def validate_backend_suite(repo_key: str) -> dict:
     """Full validation report for the backend suite installed at *repo_key*.
 
@@ -194,6 +220,8 @@ def validate_backend_suite(repo_key: str) -> dict:
         report["errors"].append("meta/registry.json: missing or invalid 'suite' object")
         return report
     report["suite"] = suite_meta
+    for problem in _sidebar_group_problems(suite_meta.get("sidebar")):
+        report["warnings"].append(f"meta/registry.json: suite.sidebar.group {problem}")
 
     if not _version_in_range(
         app_version,
@@ -628,6 +656,65 @@ def backend_suite_sidebar_entries() -> list[dict]:
     return entries
 
 
+def backend_suite_sidebar_groups(role: str | None = None) -> list[dict]:
+    """Top-level sidebar groups contributed by installed, valid and enabled suites.
+
+    A suite opts in with ``suite.sidebar.group`` in ``meta/registry.json``::
+
+        "sidebar": {"group": {"label": "Training", "icon": "book-open",
+                              "items": [{"label": "Modules", "icon": "layers",
+                                         "endpoint": "bp.modules",
+                                         "roles": ["admin", "researcher"]}]}}
+
+    Only the items allowed for *role* are returned (``roles`` defaults to admin
+    and researcher; with ``role=None`` nothing is allowed) and a group with no
+    allowed/resolvable item is omitted. Items whose endpoint cannot be built are
+    skipped, never raising. The flat single entry of
+    :func:`backend_suite_sidebar_entries` is independent and unchanged.
+    """
+    from flask import url_for
+    from werkzeug.routing import BuildError
+
+    groups: list[dict] = []
+    for repo_key in backend_plugin_repo_keys():
+        try:
+            report = validate_backend_suite(repo_key)
+            if not report.get("valid") or not plugin_enabled(repo_key):
+                continue
+            sidebar = (report.get("suite") or {}).get("sidebar")
+            if _sidebar_group_problems(sidebar) or "group" not in (sidebar or {}):
+                continue
+        except Exception:
+            continue
+        group = sidebar["group"]
+        items = []
+        for item in group["items"]:
+            allowed = item.get("roles") or DEFAULT_GROUP_ITEM_ROLES
+            if role is None or role not in allowed:
+                continue
+            try:
+                url = url_for(item["endpoint"])
+            except BuildError:
+                continue
+            items.append(
+                {
+                    "label": item["label"],
+                    "icon": item.get("icon") or "circle",
+                    "url": url,
+                }
+            )
+        if items:
+            groups.append(
+                {
+                    "repo_key": repo_key,
+                    "label": group["label"],
+                    "icon": group.get("icon") or "box",
+                    "items": items,
+                }
+            )
+    return groups
+
+
 def inject_backend_plugin_visibility() -> dict:
     """Context-processor body: inject installed+valid status of backend
     settings suites, the generic list of suite-contributed sidebar entries
@@ -654,8 +741,11 @@ def inject_backend_plugin_visibility() -> dict:
     function's body would otherwise have pushed over its threshold).
     """
     try:
+        from flask_login import current_user
+
         availability = backend_suite_availability()
         entries = backend_suite_sidebar_entries()
+        groups = backend_suite_sidebar_groups(getattr(current_user, "role", None))
         scenario_design_url = next(
             (e["url"] for e in entries if e["repo_key"] == "scenario_design"),
             None,
@@ -664,10 +754,12 @@ def inject_backend_plugin_visibility() -> dict:
             backend_suites_available=availability,
             scenario_design_sidebar_url=scenario_design_url,
             extension_sidebar_entries=entries,
+            extension_sidebar_groups=groups,
         )
     except Exception:
         return dict(
             backend_suites_available={},
             scenario_design_sidebar_url=None,
             extension_sidebar_entries=[],
+            extension_sidebar_groups=[],
         )
