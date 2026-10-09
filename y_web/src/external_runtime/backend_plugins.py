@@ -96,6 +96,59 @@ def _load_json(path: Path) -> tuple[dict | list | None, str | None]:
         return None, f"invalid JSON in {path.name}: {exc}"
 
 
+# Optional top-level manifest keys (all opt-in; ignored when absent).
+#   "schema_module": "dotted.module:callable"      -> migrate(engine_admin) -> bool
+#   "hooks":         {"<hook_name>": "dotted.module:callable", ...}
+#   "permissions":   "dotted.module:attr"           -> permissions descriptor
+OPTIONAL_DOTTED_KEYS = ("schema_module", "permissions")
+
+
+def _check_dotted_ref(spec, value, label: str) -> str | None:
+    """Return an error message if *value* is not a usable 'dotted.module:attr'
+    reference inside the plugin repo, else None. Never raises."""
+    if not isinstance(value, str) or ":" not in value:
+        return f"{label} must be in 'dotted.module:attr' form, got {value!r}"
+    dotted, _, attr = value.partition(":")
+    if not dotted.strip() or not attr.strip():
+        return f"{label} must be in 'dotted.module:attr' form, got {value!r}"
+    if not all(part.isidentifier() for part in dotted.split(".")):
+        return f"{label} has an invalid module path: {dotted!r}"
+    path = spec.path / Path(*dotted.split("."))
+    if not (path.with_suffix(".py").exists() or (path / "__init__.py").exists()):
+        return f"{label} module not found on disk: {dotted}"
+    return None
+
+
+def _validate_optional_extension_keys(spec, registry_payload: dict, report: dict):
+    """Validate the optional ``schema_module``, ``hooks`` and ``permissions``
+    manifest keys, appending problems to ``report["errors"]``."""
+    for key in OPTIONAL_DOTTED_KEYS:
+        if key not in registry_payload:
+            continue
+        value = registry_payload[key]
+        err = _check_dotted_ref(spec, value, f"'{key}'")
+        if err:
+            report["errors"].append(f"meta/registry.json: {err}")
+        else:
+            report[key] = value
+
+    if "hooks" in registry_payload:
+        hooks = registry_payload["hooks"]
+        if not isinstance(hooks, dict):
+            report["errors"].append(
+                "meta/registry.json: 'hooks' must be an object {name: 'dotted.module:attr'}"
+            )
+            return
+        valid_hooks = {}
+        for name, ref in hooks.items():
+            err = _check_dotted_ref(spec, ref, f"hook '{name}'")
+            if err:
+                report["errors"].append(f"meta/registry.json: {err}")
+            else:
+                valid_hooks[str(name)] = ref
+        report["hooks"] = valid_hooks
+
+
 def validate_backend_suite(repo_key: str) -> dict:
     """Full validation report for the backend suite installed at *repo_key*.
 
@@ -207,6 +260,8 @@ def validate_backend_suite(repo_key: str) -> dict:
         module_report["valid"] = not errors
         module_report["errors"] = errors
         report["modules"].append(module_report)
+
+    _validate_optional_extension_keys(spec, registry_payload, report)
 
     report["valid"] = not report["errors"] and all(
         m.get("valid") for m in report["modules"]
