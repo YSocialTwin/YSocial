@@ -120,8 +120,9 @@ def test_admin_route_with_same_check_is_fine_for_admin(core_app):
 # ---------------------------------------------------------------------------
 # Login flow facts that the plugin plan relies on (roles, session)
 # ---------------------------------------------------------------------------
-def test_login_rejects_unknown_role_student(core_app):
-    """Today ``student`` is not an accepted role (plan: E3 makes it an alias of user)."""
+def test_login_accepts_student_as_a_participant_role(core_app):
+    """Phase 0 recorded that ``student`` was rejected ("Invalid user role").
+    Since C4 (E3) ``student`` is an alias of ``user``: it is no longer rejected."""
     with core_app.app_context():
         row = _make_admin_user("student")
         email = row.email
@@ -132,12 +133,11 @@ def test_login_rejects_unknown_role_student(core_app):
         data={"email": email, "password": "Passw0rd!"},
         follow_redirects=False,
     )
-    # login_post flashes "Invalid user role" and redirects back to the login page
-    assert response.status_code == 302
-    assert "/login" in response.headers["Location"]
+    assert response.status_code == 302  # bounced: not assigned to any experiment
     with client.session_transaction() as sess:
         flashed = [m for _cat, m in sess.get("_flashes", [])]
-        assert any("Invalid user role" in m for m in flashed)
+        assert not any("Invalid user role" in m for m in flashed)
+        assert any("not assigned" in m for m in flashed)
         assert "_user_id" not in sess
 
 
