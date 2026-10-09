@@ -945,3 +945,25 @@ class FrontendAddsOnExpModuleSettings(db.Model):
         default=db.func.now(),
         onupdate=db.func.now(),
     )
+
+
+class PluginState(db.Model):
+    """Enabled/disabled switch of an installed external plugin suite.
+
+    One row per ``repo_key`` (e.g. ``"training_modules"``). A missing row means
+    enabled, so plugins installed before this table existed keep working.
+    A disabled suite answers 404 on its routes, contributes no menu entry and
+    receives no hook calls; its data is untouched.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "plugin_state"
+
+    repo_key = db.Column(db.String(64), primary_key=True, nullable=False)
+    enabled = db.Column(
+        db.Boolean, nullable=False, default=True, server_default=db.true()
+    )
+    updated_at = db.Column(
+        db.DateTime, nullable=False, default=db.func.now(), onupdate=db.func.now()
+    )
+    updated_by = db.Column(db.String(255), nullable=True)
