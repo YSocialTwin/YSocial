@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import importlib
 import json
+import re
 import sys
 import types
 from pathlib import Path
@@ -147,6 +148,164 @@ def _validate_optional_extension_keys(spec, registry_payload: dict, report: dict
             else:
                 valid_hooks[str(name)] = ref
         report["hooks"] = valid_hooks
+
+
+# --------------------------------------------------------------------------
+# Optional manifest key ``training_components`` (any installed plugin).
+#
+# A plugin that provides third-party step types for the TrainingModules editor
+# (questionnaires, landing/result pages, ...) lists descriptors in its own
+# ``meta/registry.json``::
+#
+#   "training_components": [{
+#       "type_key": "questionnaire",            # [a-z][a-z0-9_]{1,63}, unique per plugin
+#       "label": "Questionnaire", "icon": "clipboard", "category": "Questionnaire",
+#       "contract_version": "1",
+#       "config_schema": {"type": "object", "required": ["title"],
+#                         "properties": {"title": {"type": "string"},
+#                                        "mode": {"type": "string", "enum": ["a", "b"]}}},
+#       "launch": {"endpoint": "/q/launch"},          # local path, required
+#       "instance_picker": {"endpoint": "/q/search"}, # optional
+#       "activity_export": {"endpoint": "/q/export"}, # optional
+#       "health": {"endpoint": "/q/health"},          # optional
+#       "signals": {"declared": true, "verified": false, "advance_button": true}
+#   }]
+#
+# Endpoints are local paths only (never URLs). An invalid descriptor is skipped
+# with a reported problem; it never blocks the loading of the plugin.
+# --------------------------------------------------------------------------
+TRAINING_COMPONENT_CONTRACT_VERSIONS = ("1",)
+_TYPE_KEY_RE = re.compile(r"^[a-z][a-z0-9_]{1,63}$")
+_SCHEMA_PROPERTY_TYPES = ("string", "number", "boolean")
+_ENDPOINT_FIELDS = ("launch", "instance_picker", "activity_export", "health")
+
+
+def _is_local_path(value) -> bool:
+    return (
+        isinstance(value, str)
+        and value.startswith("/")
+        and not value.startswith("//")
+        and "\\" not in value
+        and "://" not in value
+    )
+
+
+def _config_schema_problems(schema) -> list[str]:
+    if not isinstance(schema, dict) or schema.get("type") != "object":
+        return ["config_schema must be an object schema with type 'object'"]
+    props = schema.get("properties", {})
+    if not isinstance(props, dict):
+        return ["config_schema.properties must be an object"]
+    problems = []
+    for name, prop in props.items():
+        if not isinstance(prop, dict) or prop.get("type") not in _SCHEMA_PROPERTY_TYPES:
+            problems.append(
+                f"config_schema property '{name}' must have type "
+                f"{'/'.join(_SCHEMA_PROPERTY_TYPES)} (flat objects only)"
+            )
+        elif "enum" in prop and not (isinstance(prop["enum"], list) and prop["enum"]):
+            problems.append(f"config_schema property '{name}' has an invalid enum")
+    required = schema.get("required", [])
+    if not isinstance(required, list) or any(r not in props for r in required):
+        problems.append("config_schema.required must list declared properties")
+    return problems
+
+
+def validate_training_component(descriptor) -> tuple[dict | None, list[str]]:
+    """Return ``(normalized_descriptor | None, problems)`` for one descriptor."""
+    if not isinstance(descriptor, dict):
+        return None, ["descriptor must be an object"]
+    problems: list[str] = []
+    type_key = descriptor.get("type_key")
+    if not isinstance(type_key, str) or not _TYPE_KEY_RE.match(type_key):
+        problems.append("type_key must match [a-z][a-z0-9_]{1,63}")
+    if not str(descriptor.get("label") or "").strip():
+        problems.append("missing label")
+    contract = str(descriptor.get("contract_version") or "")
+    if contract not in TRAINING_COMPONENT_CONTRACT_VERSIONS:
+        problems.append(
+            f"unsupported contract_version {descriptor.get('contract_version')!r} "
+            f"(supported: {', '.join(TRAINING_COMPONENT_CONTRACT_VERSIONS)})"
+        )
+    schema = descriptor.get("config_schema", {"type": "object", "properties": {}})
+    problems.extend(_config_schema_problems(schema))
+    for field in _ENDPOINT_FIELDS:
+        if field not in descriptor:
+            if field == "launch":
+                problems.append("missing launch endpoint")
+            continue
+        spec = descriptor[field]
+        if not isinstance(spec, dict) or not _is_local_path(spec.get("endpoint")):
+            problems.append(f"{field}.endpoint must be a local path starting with '/'")
+    signals = descriptor.get("signals", {})
+    if not isinstance(signals, dict) or any(
+        not isinstance(v, bool) for v in signals.values()
+    ):
+        problems.append("signals must be an object of booleans")
+    if problems:
+        return None, problems
+    normalized = {
+        "type_key": type_key,
+        "label": str(descriptor["label"]).strip(),
+        "icon": str(descriptor.get("icon") or "box"),
+        "category": str(descriptor.get("category") or "Other"),
+        "contract_version": contract,
+        "config_schema": schema,
+        "signals": {
+            "declared": True,
+            "verified": False,
+            "advance_button": False,
+            **signals,
+        },
+    }
+    for field in _ENDPOINT_FIELDS:
+        if field in descriptor:
+            normalized[field] = {"endpoint": descriptor[field]["endpoint"]}
+    return normalized, []
+
+
+def read_training_components(repo_key: str) -> dict:
+    """Read the ``training_components`` key of an installed plugin's manifest.
+
+    Works for any key of ``SUPPORTED_EXTERNAL_REPOS`` (not only backend suites)
+    and never raises. Returns ``{"components": [...], "problems": [...]}`` where
+    every component carries ``repo_key`` and ``component_ref`` (``repo:type``).
+    """
+    result: dict = {"components": [], "problems": []}
+    try:
+        spec = runtime_spec(repo_key)
+        payload, err = _load_json(spec.path / REGISTRY_RELATIVE_PATH)
+        if err or not isinstance(payload, dict) or "training_components" not in payload:
+            return result
+        raw = payload["training_components"]
+        if not isinstance(raw, list):
+            result["problems"].append("training_components must be a list")
+            return result
+        seen: set[str] = set()
+        for index, descriptor in enumerate(raw, start=1):
+            component, problems = validate_training_component(descriptor)
+            if component is not None and component["type_key"] in seen:
+                component, problems = None, [f"duplicate type_key '{descriptor['type_key']}'"]
+            if component is None:
+                result["problems"].append(f"descriptor #{index}: " + "; ".join(problems))
+                continue
+            seen.add(component["type_key"])
+            component["repo_key"] = repo_key
+            component["component_ref"] = f"{repo_key}:{component['type_key']}"
+            result["components"].append(component)
+    except Exception as exc:
+        result["problems"].append(f"could not read training_components: {exc}")
+    return result
+
+
+def training_component_catalog() -> list[dict]:
+    """Valid third-party step types offered by every installed, enabled plugin."""
+    catalog: list[dict] = []
+    for repo_key in SUPPORTED_EXTERNAL_REPOS:
+        if not plugin_enabled(repo_key):
+            continue
+        catalog.extend(read_training_components(repo_key)["components"])
+    return catalog
 
 
 DEFAULT_GROUP_ITEM_ROLES = ("admin", "researcher")
@@ -290,6 +449,12 @@ def validate_backend_suite(repo_key: str) -> dict:
         report["modules"].append(module_report)
 
     _validate_optional_extension_keys(spec, registry_payload, report)
+    components = read_training_components(repo_key)
+    if components["components"]:
+        report["training_components"] = components["components"]
+    report["warnings"].extend(
+        f"meta/registry.json: training_components: {p}" for p in components["problems"]
+    )
 
     report["valid"] = not report["errors"] and all(
         m.get("valid") for m in report["modules"]
