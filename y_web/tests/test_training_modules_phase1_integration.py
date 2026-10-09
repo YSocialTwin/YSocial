@@ -72,7 +72,7 @@ def test_startup_registers_blueprint_and_creates_tm_tables():
             version = conn.execute(
                 text("SELECT version FROM tm_schema_version")
             ).scalars().all()
-        assert version == [1]
+        assert version == [2]
 
 
 @requires_plugin
@@ -98,7 +98,7 @@ def test_rerunning_the_migration_does_not_duplicate_or_lose_rows():
             versions = conn.execute(
                 text("SELECT version FROM tm_schema_version")
             ).scalars().all()
-    assert titles == ["Keep"] and versions == [1]
+    assert titles == ["Keep"] and versions == [2]
 
 
 @requires_plugin
