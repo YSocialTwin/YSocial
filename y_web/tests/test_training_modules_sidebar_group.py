@@ -5,12 +5,19 @@ import json
 
 import pytest
 
-from y_web.src.external_runtime import backend_plugins
+from y_web.src.external_runtime import backend_plugins, registry
 from y_web.tests.test_training_modules_baseline_auth import (  # noqa: F401
     _make_admin_user,
     core_app,
 )
 from y_web.tests.test_training_modules_manifest_keys import _make_plugin
+
+@pytest.fixture(autouse=True)
+def _without_the_real_training_plugin(monkeypatch):
+    """These C8 tests exercise the generic mechanism with a fake plugin; the real
+    TrainingModules checkout (which declares its own group) must not take part."""
+    monkeypatch.delitem(registry.SUPPORTED_EXTERNAL_REPOS, "training_modules", raising=False)
+
 
 PKG_INIT = '''
 from flask import Blueprint, jsonify
