@@ -11,6 +11,16 @@
       "repository_url": "https://github.com/YSocialTwin/ScenarioDesign"
     },
     {
+      "plugin_name": "Training Modules",
+      "category": "Backend Extensions",
+      "group": "Backend Settings",
+      "description": "Training modules for YSocial: ordered steps (YSocial scenarios or third-party components such as questionnaires and landing pages) assigned to students, with reliable completion gating and per-student activity export.",
+      "authors": [
+        "YSocialTwin"
+      ],
+      "repository_url": "https://github.com/YSocialTwin/TrainingModules"
+    },
+    {
       "plugin_name": "YClient",
       "category": "Simulation Runtime Stack",
       "group": "Microblogging",
@@ -99,16 +109,6 @@
         "YSocialTwin"
       ],
       "repository_url": "https://github.com/YSocialTwin/y_agents_plugins"
-    },
-    {
-      "plugin_name": "training_modules",
-      "category": "Backend Extensions",
-      "group": "Backend Settings",
-      "description": "Training modules for YSocial: ordered steps (scenarios or third-party components) assigned to students, with reliable completion gating and per-student activity export.",
-      "authors": [
-        "YSocialTwin"
-      ],
-      "repository_url": "https://github.com/YSocialTwin/TrainingModules"
     }
   ]
 }

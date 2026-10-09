@@ -2,6 +2,8 @@
 
 import json
 
+import pytest
+
 from y_web.src.external_runtime import backend_plugins, registry
 
 
@@ -22,8 +24,12 @@ def test_backend_settings_group_is_still_listed_once_with_both_suites():
 
 
 def test_plugins_json_has_a_training_modules_card():
+    """external/plugins.json is regenerated from each installed plugin's
+    meta/info.json (Plugin Manager refresh), so the card name is the info.json one."""
+    if not registry.runtime_spec("training_modules").path.exists():
+        pytest.skip("TrainingModules plugin not checked out")
     payload = json.loads(registry.PLUGINS_INDEX_PATH.read_text(encoding="utf-8"))
-    cards = [p for p in payload["plugins"] if p["plugin_name"] == "training_modules"]
+    cards = [p for p in payload["plugins"] if p["plugin_name"] == "Training Modules"]
     assert len(cards) == 1
     assert cards[0]["group"] == "Backend Settings"
     assert cards[0]["repository_url"] == "https://github.com/YSocialTwin/TrainingModules"
