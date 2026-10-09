@@ -157,6 +157,10 @@ def setup_experiment_context():
 
     Dynamically routes queries to the correct experiment database by
     temporarily overriding the db_exp bind for this request.
+
+    Returns ``None`` normally, or a redirect/response when an optional plugin
+    ``experiment_access_guard`` denies a participant session; a before_request
+    handler returning it short-circuits the request.
     """
     # Extract exp_id from URL if present
     exp_id = request.view_args.get("exp_id") if request.view_args else None
@@ -195,10 +199,39 @@ def setup_experiment_context():
         if not hasattr(g, "original_db_exp_engine"):
             g.original_db_exp_engine = original_engine
         g.current_db_exp_engine = refreshed_engine
+        return _run_experiment_access_guard(exp_id)
     else:
         # No exp_id in URL, fall back to legacy behavior
         g.current_exp_id = None
         g.current_db_bind = "db_exp"
+    return None
+
+
+def _run_experiment_access_guard(exp_id):
+    """Ask the optional ``experiment_access_guard`` plugin hook about this request.
+
+    Only participant sessions (those carrying ``platform_account_id``) are
+    checked. The hook returns ``None`` (allow) or a local URL / response to
+    redirect to. With no hook registered, nothing changes; hook errors are
+    logged by the hook runner and the request proceeds.
+    """
+    from flask import redirect, session
+    from werkzeug.wrappers import Response
+
+    account_id = session.get("platform_account_id")
+    if account_id is None:
+        return None
+    from y_web.src.external_runtime.plugin_hooks import (
+        call_first_non_null,
+        is_local_redirect,
+    )
+
+    decision = call_first_non_null("experiment_access_guard", account_id, exp_id)
+    if isinstance(decision, Response):
+        return decision
+    if is_local_redirect(decision):
+        return redirect(decision)
+    return None
 
 
 def get_current_experiment_bind():

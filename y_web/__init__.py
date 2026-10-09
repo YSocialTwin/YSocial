@@ -238,7 +238,9 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
     @app.before_request
     def before_request_handler():
         """Setup experiment context and desktop mode for each request."""
-        setup_experiment_context()
+        denied = setup_experiment_context()
+        if denied is not None:
+            return denied
 
         # If in desktop mode, ensure webview window is accessible
         if app.config.get("DESKTOP_MODE"):
