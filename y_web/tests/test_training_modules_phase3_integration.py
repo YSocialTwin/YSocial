@@ -100,7 +100,8 @@ def test_full_authoring_cycle_with_researcher_scoping(core_app):
     assert bob.get(f"{API}/modules/{uid}").status_code == 404
     assert bob.get(f"/admin/training/modules/{uid}/edit").status_code == 404
     assert _post(bob, f"{API}/modules/{uid}/versions", {}).status_code == 404
-    assert [m["title"] for m in admin.get(f"{API}/modules").get_json()["modules"]] == ["Alice module"]
+    admin_titles = [m["title"] for m in admin.get(f"{API}/modules").get_json()["modules"]]
+    assert "Alice module" in admin_titles  # the seed DB may hold other modules
     assert admin.get(f"/admin/training/modules/{uid}/edit").status_code == 200
 
     # published version is immutable, a new draft leaves it untouched

@@ -98,7 +98,9 @@ def test_rerunning_the_migration_does_not_duplicate_or_lose_rows():
             versions = conn.execute(
                 text("SELECT version FROM tm_schema_version")
             ).scalars().all()
-    assert titles == ["Keep"] and versions == [2]
+    # the temp DB is a copy of the developer's dashboard.db, so it may hold other rows
+    assert titles.count("Keep") == 1
+    assert versions == sorted(set(versions)) and versions[-1] == 2
 
 
 @requires_plugin
@@ -126,5 +128,15 @@ def test_absent_plugin_leaves_startup_and_routes_untouched(tmp_path, monkeypatch
     assert "training_modules" not in app.blueprints
     with app.app_context():
         names = set(inspect(db.engines["db_admin"]).get_table_names())
-        assert not any(n.startswith("tm_") for n in names)
+        # tables already present in the seed dashboard.db are not created by this app
+        import sqlite3
+        from pathlib import Path
+
+        seed = Path(__file__).resolve().parents[1] / "db" / "dashboard.db"
+        with sqlite3.connect(f"file:{seed}?mode=ro", uri=True) as seed_conn:
+            seeded = {
+                r[0]
+                for r in seed_conn.execute("SELECT name FROM sqlite_master WHERE name LIKE 'tm\\_%' ESCAPE '\\'")
+            }
+        assert {n for n in names if n.startswith("tm_")} == seeded
     assert app.test_client().get("/admin/training/health").status_code in (302, 404)
