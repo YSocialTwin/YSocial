@@ -665,6 +665,7 @@ def join_experiment(exp_id):
         joined_on=int(time.time()),
         recsys_type=_content_recsys,
         frecsys_type=_follow_recsys,
+        account_id=user_id,
     )
     if user_record is None:
         flash("Unable to prepare your experiment profile.")
@@ -753,6 +754,7 @@ def change_active_experiment(exp_id):
             recsys_type=_exp_content_recsys,
             frecsys_type=_exp_follow_recsys,
             joined_on=int(time.time()),
+            account_id=admin_user_id,
         )
         if participant is None:
             flash("Unable to prepare the experiment user.")

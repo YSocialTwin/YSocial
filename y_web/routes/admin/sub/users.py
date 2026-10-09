@@ -397,6 +397,7 @@ def add_user_to_experiment():
         password=user.password,
         cover_image=random_cover_image_url(),
         joined_on=0,
+        account_id=user.id,
     )
     if user_exp is None:
         flash(
@@ -850,6 +851,7 @@ def bulk_assign_users():
                     password=user.password,
                     cover_image=random_cover_image_url(),
                     joined_on=0,
+                    account_id=user.id,
                 )
                 if not user_agent:
                     errors.append(

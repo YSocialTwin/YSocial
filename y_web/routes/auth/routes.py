@@ -202,6 +202,7 @@ def select_experiment():
             email=email,
             password=password,
             joined_on=0,
+            account_id=user.id,
         )
         if not user_agent:
             flash("User not found in experiment database.")
