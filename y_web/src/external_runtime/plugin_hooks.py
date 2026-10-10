@@ -25,6 +25,11 @@ Supported hook names:
 ``experiment_user_provisioned(exp, account_id, exp_user_id, created) -> None``
     Event emitted by ``ensure_experiment_user``.
 
+``experiment_page_widget(account_id, exp_id) -> html | None``
+    Called while a microblogging page of an experiment is rendered for a participant session. A returned string
+    (trusted HTML, so the plugin must escape everything it did not write) is placed at the end of the page header,
+    for example a floating button. See :func:`experiment_page_widgets`.
+
 Never raises to the caller.
 """
 
@@ -85,3 +90,31 @@ def is_local_redirect(url) -> bool:
         and not url.startswith("//")
         and "\\" not in url
     )
+
+
+def experiment_page_widgets(exp_id) -> str:
+    """HTML added by the ``experiment_page_widget`` hooks to an experiment page (``""`` for anyone but a participant).
+
+    Only sessions carrying ``platform_account_id`` (participants entered through the login flow) get widgets; every
+    suite declaring the hook contributes, in registry order. A hook that fails or returns something else than a
+    string contributes nothing.
+    """
+    from flask import session
+
+    account_id = session.get("platform_account_id")
+    try:
+        exp_id = int(exp_id)
+    except (TypeError, ValueError):
+        return ""
+    if account_id is None:
+        return ""
+    parts = []
+    for repo_key, hook in iter_hooks("experiment_page_widget"):
+        try:
+            html = hook(account_id, exp_id)
+        except Exception as exc:
+            logger.warning("plugin hook 'experiment_page_widget' of '%s' raised: %s", repo_key, exc)
+            continue
+        if isinstance(html, str) and html:
+            parts.append(html)
+    return "".join(parts)

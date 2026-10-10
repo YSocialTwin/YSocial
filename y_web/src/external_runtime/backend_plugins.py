@@ -880,6 +880,18 @@ def backend_suite_sidebar_groups(role: str | None = None) -> list[dict]:
     return groups
 
 
+def _experiment_widgets(exp_id):
+    """Template helper: the ``experiment_page_widget`` hooks' HTML, marked safe (see plugin_hooks)."""
+    from markupsafe import Markup
+
+    try:
+        from y_web.src.external_runtime.plugin_hooks import experiment_page_widgets
+
+        return Markup(experiment_page_widgets(exp_id))
+    except Exception:
+        return Markup("")
+
+
 def inject_backend_plugin_visibility() -> dict:
     """Context-processor body: inject installed+valid status of backend
     settings suites, the generic list of suite-contributed sidebar entries
@@ -920,6 +932,7 @@ def inject_backend_plugin_visibility() -> dict:
             scenario_design_sidebar_url=scenario_design_url,
             extension_sidebar_entries=entries,
             extension_sidebar_groups=groups,
+            plugin_experiment_widgets=_experiment_widgets,
         )
     except Exception:
         return dict(
@@ -927,4 +940,5 @@ def inject_backend_plugin_visibility() -> dict:
             scenario_design_sidebar_url=None,
             extension_sidebar_entries=[],
             extension_sidebar_groups=[],
+            plugin_experiment_widgets=_experiment_widgets,
         )
