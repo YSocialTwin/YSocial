@@ -951,7 +951,7 @@ def upload_experiment():
         elif db_type == "postgresql":
             from urllib.parse import urlparse
 
-            from sqlalchemy import create_engine, select, text
+            from sqlalchemy import create_engine, text
             from werkzeug.security import generate_password_hash
 
             # Get current URI and parse it
