@@ -72,7 +72,7 @@ def test_startup_registers_blueprint_and_creates_tm_tables():
             version = conn.execute(
                 text("SELECT version FROM tm_schema_version")
             ).scalars().all()
-        assert version == sorted(set(version)) and version[-1] == 7   # schema v7 (the dev DB copy may still hold older stamps)
+        assert version == sorted(set(version)) and version[-1] == 8   # schema v8 (the dev DB copy may still hold older stamps)
 
 
 @requires_plugin
@@ -100,7 +100,7 @@ def test_rerunning_the_migration_does_not_duplicate_or_lose_rows():
             ).scalars().all()
     # the temp DB is a copy of the developer's dashboard.db, so it may hold other rows
     assert titles.count("Keep") == 1
-    assert versions == sorted(set(versions)) and versions[-1] == 7
+    assert versions == sorted(set(versions)) and versions[-1] == 8
 
 
 @requires_plugin
