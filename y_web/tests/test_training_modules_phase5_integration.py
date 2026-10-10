@@ -82,9 +82,12 @@ def test_run_lifecycle_with_real_experiments_and_pseudonymous_enrollment(core_ap
     rid = run["id"]
     key = admin.get(f"{API}/runs/{rid}/bindings").get_json()["bindings"][0]["step_key"]
     assert _post(admin, f"{API}/runs/{rid}/activate").status_code == 409  # slot not bound
-    for bad, code in ((stopped, "experiment_not_activated"), (forum, "platform_mismatch")):
-        r = admin.put(f"{API}/runs/{rid}/bindings/{key}", json={"exp_id": bad}, headers={"X-CSRF-Token": "tok"})
-        assert r.status_code == 422 and r.get_json()["error"] == code
+    r = admin.put(f"{API}/runs/{rid}/bindings/{key}", json={"exp_id": forum}, headers={"X-CSRF-Token": "tok"})
+    assert r.status_code == 422 and r.get_json()["error"] == "platform_mismatch"
+    # a stopped experiment can be chosen (the run page offers to switch it on); the run cannot start with it
+    r = admin.put(f"{API}/runs/{rid}/bindings/{key}", json={"exp_id": stopped}, headers={"X-CSRF-Token": "tok"})
+    assert r.status_code == 200 and r.get_json()["binding"]["problems"] == ["experiment_not_activated"]
+    assert _post(admin, f"{API}/runs/{rid}/activate").status_code == 409
     assert admin.put(f"{API}/runs/{rid}/bindings/{key}", json={"exp_id": exp}, headers={"X-CSRF-Token": "tok"}).status_code == 200
 
     before = _exp_rows(core_app)
