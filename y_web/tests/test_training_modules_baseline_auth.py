@@ -30,6 +30,9 @@ def core_app(monkeypatch, tmp_path):
     )
     app = create_app(db_type="sqlite")
     app.config.update(TESTING=True, WTF_CSRF_ENABLED=False)
+    # Training Modules offers only experiments that have a Scenario Design scenario; most tests do not care about
+    # that, the one that does (test_training_modules_scenarios_integration) removes this default.
+    app.config["TM_EXPERIMENT_HAS_SCENARIO"] = lambda exp: True
     return app
 
 
