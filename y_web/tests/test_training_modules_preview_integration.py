@@ -2,7 +2,7 @@
 
 from y_web.tests.test_training_modules_baseline_auth import core_app  # noqa: F401
 from y_web.tests.test_training_modules_phase3_integration import API, _client_as, _post, requires_plugin
-from y_web.tests.test_training_modules_phase6_integration import _experiment, _experiment_paths_under_tmp  # noqa: F401
+from y_web.tests.test_training_modules_phase6_integration import _experiment, _experiment_paths_under_tmp, _exp_session, _post_as  # noqa: F401
 from y_web.tests.test_training_modules_phase10_integration import _count
 
 
@@ -24,6 +24,19 @@ def _draft(admin, slots=1):
         assert r.status_code == 201, r.get_json()
         rev = r.get_json()["revision"]
     return module
+
+
+def _in_experiment(app, exp_id, user_id):
+    """``(posts of the user, rows of the user)`` in the real experiment database."""
+    from y_web.src.models import Post, User_mgmt
+
+    with app.app_context():
+        session, engine = _exp_session(app, exp_id)
+        try:
+            return (session.query(Post).filter_by(user_id=user_id).count(), session.query(User_mgmt).filter_by(id=user_id).count())
+        finally:
+            session.close()
+            engine.dispose()
 
 
 @requires_plugin
@@ -50,6 +63,11 @@ def test_the_author_rehearses_a_draft_in_the_real_experiment_with_their_own_user
     assert _count(app, "SELECT COUNT(*) FROM tm_launch l JOIN tm_enrollment e ON e.id = l.enrollment_id"
                        " WHERE e.run_id = :r AND l.consumed_at IS NOT NULL", r=rid) == 1
 
+    # what the author does in the experiment is theirs to try, and it is gone when the rehearsal ends
+    author = int(_count(app, "SELECT i.external_user_id FROM tm_identity_map i JOIN tm_enrollment e ON e.id = i.enrollment_id WHERE e.run_id = :r", r=rid))
+    _post_as(app, exp, author, 2)
+    assert _in_experiment(app, exp, author) == (2, 1)
+
     # the author can open any other experiment: the rehearsal never turns into the participant access guard
     page = admin.get(f"/admin/join_experiment/{other}")
     assert page.status_code == 302 and "/training" not in page.headers["Location"]
@@ -58,6 +76,8 @@ def test_the_author_rehearses_a_draft_in_the_real_experiment_with_their_own_user
     assert admin.get(f"/training/runs/{rid}/preview/exit").status_code == 303
     with admin.session_transaction() as s:
         assert "platform_account_id" not in s and "tm_preview_run" not in s
+    assert _in_experiment(app, exp, author) == (0, 0)                             # posts and the user the preview created
+    assert _count(app, "SELECT COUNT(*) FROM tm_preview_trace WHERE run_id = :r", r=rid) == 0
 
 
 @requires_plugin
