@@ -647,8 +647,12 @@ def join_experiment(exp_id):
 
     admin_user = _current_admin_user_or_none()
     if not user_can_view_experiment(admin_user, exp):
-        flash("You are not allowed to access this experiment.", "error")
-        return redirect("/admin/experiments")
+        # a session that owns nothing here may still be let in by a plugin (a teacher rehearsing a training module)
+        from y_web.src.external_runtime.plugin_hooks import call_first_non_null
+
+        if call_first_non_null("staff_experiment_access", current_user, exp_id) is not True:
+            flash("You are not allowed to access this experiment.", "error")
+            return redirect("/admin/experiments")
 
     user_id = current_user.id
     user_email = str(getattr(current_user, "email", "") or "")

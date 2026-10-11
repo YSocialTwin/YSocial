@@ -242,6 +242,14 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
         if denied is not None:
             return denied
 
+        # A teacher reaches the Training area and nothing else (see role_gate). It runs after the experiment context
+        # is set: resolving the session user earlier would read a participant from the wrong database.
+        from y_web.src.system.role_gate import teacher_gate
+
+        closed = teacher_gate()
+        if closed is not None:
+            return closed
+
         # If in desktop mode, ensure webview window is accessible
         if app.config.get("DESKTOP_MODE"):
             try:
@@ -354,6 +362,8 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
                 active_exps = (
                     get_visible_experiment_query(admin_user).filter_by(status=1).all()
                 )
+            elif admin_user.role == "teacher":
+                active_exps = []   # a teacher is told about no experiment
             else:
                 active_exps = db.session.scalars(select(Exps).filter_by(status=1)).all()
             return dict(active_experiments=active_exps)

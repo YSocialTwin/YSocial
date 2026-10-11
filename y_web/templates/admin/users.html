@@ -54,6 +54,7 @@
                                                 {% if current_user_role == 'admin' %}
                                                 <option value="admin">Admin</option>
                                                 <option value="researcher" selected>Researcher</option>
+                                                <option value="teacher">Teacher (training modules only)</option>
                                                 {% endif %}
                                                 <option value="user" {% if current_user_role != 'admin' %}selected{% endif %}>User</option>
                                                 <option value="student">Student</option>
@@ -105,7 +106,7 @@
                                             <b>Users Data</b><br>
                                             <small>Format: username,email,role,password (one per line)<br>
                                             {% if current_user_role == 'admin' %}
-                                            Role can be: admin, researcher, user, or student<br>
+                                            Role can be: admin, researcher, teacher, user, or student<br>
                                             {% else %}
                                             Role must be: user or student (you can only create participants)<br>
                                             {% endif %}

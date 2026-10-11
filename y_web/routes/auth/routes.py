@@ -40,6 +40,7 @@ def login_post():
 
     Validates credentials and redirects based on role:
     - admin/researcher: admin dashboard
+    - teacher: the Training modules page
     - user: experiment selection page (if multiple) or direct to feed
 
     Returns:
@@ -134,6 +135,16 @@ def login_post():
         # Admin and researcher go to admin panel - they login with Admin_users, not User_mgmt
         login_user(user, remember=remember)
         return redirect(url_for("admin.dashboard"))
+
+    elif user.role == "teacher":
+        # A teacher works in the Training area only (see y_web.src.system.role_gate)
+        try:
+            home = url_for("training_modules.modules_page")
+        except Exception:
+            flash("The training area is not available. Please contact an administrator.")
+            return redirect(url_for("auth.login"))
+        login_user(user, remember=remember)
+        return redirect(home)
 
     else:
         flash("Invalid user role. Please contact an administrator.")

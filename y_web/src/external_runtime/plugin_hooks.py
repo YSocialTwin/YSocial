@@ -22,6 +22,10 @@ Supported hook names:
     the default flow.
 ``experiment_access_guard(account_id, exp_id) -> None | redirect``
     See :func:`y_web.src.experiment.context.setup_experiment_context`.
+``staff_experiment_access(user, exp_id) -> True | None``
+    Asked when a staff session that may not view an experiment tries to enter it (``/admin/join_experiment``), and by
+    the teacher gate (:mod:`y_web.src.system.role_gate`) for every experiment URL. ``True`` lets the session in;
+    ``None`` leaves the decision to the core. ``exp_id`` is ``None`` for the feed pages that carry no experiment id.
 ``experiment_user_provisioned(exp, account_id, exp_user_id, created) -> None``
     Event emitted by ``ensure_experiment_user``.
 

@@ -275,7 +275,7 @@ def add_user():
     Create a new admin user from form data.
 
     Role restrictions:
-    - Admin users can create users with any role (admin, researcher, user)
+    - Admin users can create users with any role (admin, researcher, teacher, user)
     - Researcher users can only create users with 'user' role
 
     Returns:
@@ -296,9 +296,9 @@ def add_user():
     profile_pic = request.form.get("profile_pic")
 
     # Enforce role restrictions: researchers can only create 'user' role
-    if current_admin_user.role != "admin" and role in ["admin", "researcher"]:
+    if current_admin_user.role != "admin" and role in ["admin", "researcher", "teacher"]:
         flash(
-            "You do not have permission to create admin or researcher users. Only 'user' role is allowed.",
+            "You do not have permission to create admin, researcher or teacher users. Only 'user' role is allowed.",
             "error",
         )
         return redirect(url_for("users.user_data"))
@@ -735,14 +735,14 @@ def bulk_create_users():
         )  # Auto-generate password
 
         # Validate role
-        if role not in ["admin", "researcher", "user", "student"]:
+        if role not in ["admin", "researcher", "teacher", "user", "student"]:
             errors.append(
-                f"Line {i}: Invalid role '{role}' (must be admin, researcher, user, or student)"
+                f"Line {i}: Invalid role '{role}' (must be admin, researcher, teacher, user, or student)"
             )
             continue
 
         # Enforce role restrictions: researchers can only create 'user' role
-        if not is_admin and role in ["admin", "researcher"]:
+        if not is_admin and role in ["admin", "researcher", "teacher"]:
             errors.append(
                 f"Line {i}: You do not have permission to create '{role}' users. Only 'user' role is allowed."
             )

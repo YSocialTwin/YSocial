@@ -78,6 +78,7 @@
     </a>
 
     <div class="dashboard-aside-body">
+{% if current_user_role != "teacher" %}
         <a href="/admin/dashboard" class="dashboard-aside-link" id="sidebar-home">
             <div>
                 <i data-feather="home"></i>
@@ -139,6 +140,7 @@
             </div>
         </div>
 
+{% endif %}
         <!-- Plugin-contributed top-level groups (manifest suite.sidebar.group,
              see backend_plugins.backend_suite_sidebar_groups()); same markup
              as the groups above. -->
@@ -197,12 +199,12 @@
         </div>
         {% endif %}
 
-        <a href="/admin/about" class="dashboard-aside-link" id="sidebar-about">
+        {% if current_user_role != "teacher" %}<a href="/admin/about" class="dashboard-aside-link" id="sidebar-about">
             <div>
                 <i data-feather="compass"></i>
                 <span>About</span>
             </div>
-        </a>
+        </a>{% endif %}
     </div>
     <!--<<div class="dashboard-aside-end">
         {% if current_user_role == "admin" %}
