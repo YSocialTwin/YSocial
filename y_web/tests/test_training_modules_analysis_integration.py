@@ -60,3 +60,20 @@ def test_the_results_of_a_participant_are_exported_with_consolidated_ids(core_ap
                       headers={"X-CSRF-Token": "tok"}).status_code == 422
     student = _client_as(core_app, "user")
     assert student.post(f"{API}/runs/{rid}/analysis-export", json={"reason": "integration"}, headers={"X-CSRF-Token": "tok"}).status_code == 403
+
+    # the analysis panel, through the real core: same numbers as the export, nothing personal, staff only
+    overview = admin.get(f"{API}/runs/{rid}/analytics/overview")
+    assert overview.status_code == 200, overview.get_data(as_text=True)
+    data = overview.get_json()
+    assert data["participants"]["n"] == 1 and data["scenarios"] and data["scenarios"][0]["participants_acting"] == 1
+    kinds = {k["kind"]: k for k in data["scenarios"][0]["by_kind"]}
+    assert kinds["post"]["summary"]["describe"]["mean"] == 2
+    raw = overview.get_data(as_text=True)
+    for forbidden in (username, email, str(platform_id)):
+        assert forbidden not in raw, forbidden
+    detail = admin.get(f"{API}/runs/{rid}/analytics/participants/{code}")
+    assert detail.status_code == 200 and detail.get_json()["participant"]["participant_code"] == code
+    page = admin.get(f"/admin/training/analysis?run={rid}")
+    assert page.status_code == 200 and 'id="tm-an-root"' in page.get_data(as_text=True)
+    assert student.get(f"{API}/runs/{rid}/analytics/overview").status_code == 403
+    assert student.get(f"/admin/training/analysis?run={rid}").status_code in (302, 403)
