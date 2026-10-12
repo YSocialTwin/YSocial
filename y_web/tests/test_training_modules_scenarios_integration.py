@@ -11,6 +11,13 @@ from y_web.tests.test_training_modules_management_integration import _module_wit
 PLATFORM, SIMULATOR = PLATFORMS[0]
 
 
+def _stamps(session, table):
+    """Timestamp columns the real Scenario Design table may already have (this test creates a minimal one if absent)."""
+    cols = {row[1] for row in session.execute(text(f"PRAGMA table_info({table})"))}
+    present = [c for c in ("created_at", "updated_at", "started_at") if c in cols]
+    return "".join(f", {c}" for c in present), "".join(", CURRENT_TIMESTAMP" for _ in present)
+
+
 def _scenario(app, exp_id, status="published", archived=False, master=None, name="S"):
     """What Scenario Design stores in an experiment's own database: the scenario (``exp_id`` = the master it was
     designed on) and, once published, the publication. A published release is a copy of the master's database."""
@@ -23,11 +30,13 @@ def _scenario(app, exp_id, status="published", archived=False, master=None, name
             session.execute(text(
                 "CREATE TABLE IF NOT EXISTS sd_publication (id INTEGER PRIMARY KEY AUTOINCREMENT, scenario_id INTEGER NOT NULL,"
                 " exp_id INTEGER NOT NULL, status VARCHAR(16) NOT NULL)"))
-            sid = session.execute(text("INSERT INTO sd_scenario (exp_id, name, status, archived_at) VALUES (:e, :n, :s, :a)"),
+            cols, vals = _stamps(session, "sd_scenario")
+            sid = session.execute(text(f"INSERT INTO sd_scenario (exp_id, name, status, archived_at{cols}) VALUES (:e, :n, :s, :a{vals})"),
                                   {"e": master or exp_id, "n": name, "s": "archived" if archived else status,
                                    "a": "2026-01-01" if archived else None}).lastrowid
             if status == "published":
-                session.execute(text("INSERT INTO sd_publication (scenario_id, exp_id, status) VALUES (:i, :e, 'succeeded')"),
+                cols, vals = _stamps(session, "sd_publication")
+                session.execute(text(f"INSERT INTO sd_publication (scenario_id, exp_id, status{cols}) VALUES (:i, :e, 'succeeded'{vals})"),
                                 {"i": sid, "e": master or exp_id})
             session.commit()
         finally:

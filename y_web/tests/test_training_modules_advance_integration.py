@@ -11,6 +11,13 @@ from y_web.tests.test_training_modules_phase6_integration import (  # noqa: F401
 from y_web.tests.test_training_modules_registration_integration import _account, _users_in
 
 
+def _stamps(session, table):
+    """Timestamp columns the real Scenario Design table may already have (this test creates a minimal one if absent)."""
+    cols = {row[1] for row in session.execute(text(f"PRAGMA table_info({table})"))}
+    present = [c for c in ("created_at", "updated_at", "started_at") if c in cols]
+    return "".join(f", {c}" for c in present), "".join(", CURRENT_TIMESTAMP" for _ in present)
+
+
 def _release(app, exp_id, master, rule):
     """A release as Scenario Design leaves it: the published scenario of the master, with its button rule."""
     with app.app_context():
@@ -22,9 +29,11 @@ def _release(app, exp_id, master, rule):
             session.execute(text(
                 "CREATE TABLE IF NOT EXISTS sd_publication (id INTEGER PRIMARY KEY AUTOINCREMENT, scenario_id INTEGER NOT NULL,"
                 " exp_id INTEGER NOT NULL, status VARCHAR(16) NOT NULL)"))
-            sid = session.execute(text("INSERT INTO sd_scenario (exp_id, name, status, advance_rule) VALUES (:m, 'Drill', 'published', :r)"),
+            cols, vals = _stamps(session, "sd_scenario")
+            sid = session.execute(text(f"INSERT INTO sd_scenario (exp_id, name, status, advance_rule{cols}) VALUES (:m, 'Drill', 'published', :r{vals})"),
                                   {"m": master, "r": rule}).lastrowid
-            session.execute(text("INSERT INTO sd_publication (scenario_id, exp_id, status) VALUES (:i, :m, 'succeeded')"), {"i": sid, "m": master})
+            cols, vals = _stamps(session, "sd_publication")
+            session.execute(text(f"INSERT INTO sd_publication (scenario_id, exp_id, status{cols}) VALUES (:i, :m, 'succeeded'{vals})"), {"i": sid, "m": master})
             session.commit()
         finally:
             session.close()
