@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from types import SimpleNamespace
 
 from y_web.routes.admin.sub.experiments import _external_runtimes as route_mod
 from y_web.tests.test_training_modules_baseline_auth import core_app  # noqa: F401
 from y_web.tests.test_training_modules_phase3_integration import _client_as
+
+_STATIC = Path(__file__).resolve().parents[1] / "static" / "assets" / "js"
 
 
 def _repo(key, group, installed=False, label=None):
@@ -156,9 +159,9 @@ def test_the_plugin_pages_load_their_guided_tours(core_app, monkeypatch):  # noq
     monkeypatch.setattr(route_mod, "_runtime_group_active_experiments", lambda g: [])
     html = client.get("/admin/external_runtimes/forum").get_data(as_text=True)
     assert "external-runtime-detail-tutorial.js" in html
-    js = open("y_web/static/assets/js/external-runtime-detail-tutorial.js").read()
+    js = (_STATIC / "external-runtime-detail-tutorial.js").open().read()
     for selector in ("#external-runtime-detail", ".ext-members", ".ext-options", "#external-runtime-output"):
         assert selector.lstrip("#.") in html, selector
         assert selector in js
-    nav = open("y_web/static/assets/js/admin-nav.js").read()
+    nav = (_STATIC / "admin-nav.js").open().read()
     assert "startPluginTutorial" in nav and "startExternalRuntimeDetailTutorial" in nav
