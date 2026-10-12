@@ -48,7 +48,30 @@ def pytest_collection_modifyitems(config, items):
         )
     )
 
+    # Tests that exercise an optional plugin (not part of the core repository) are skipped when the plugin is not
+    # installed under external/, and always on GitHub Actions unless YSOCIAL_TEST_PLUGINS=1 (the plugins are never
+    # checked out there).
+    ci_plugins_off = (
+        str(os.environ.get("GITHUB_ACTIONS", "")).strip().lower() == "true"
+        and str(os.environ.get("YSOCIAL_TEST_PLUGINS", "")).strip() != "1"
+    )
+    external_dir = Path(__file__).resolve().parents[2] / "external"
+    plugin_tests = (
+        ("ScenarioDesign", ("test_scenario_design_", "test_backend_plugin_sidebar_visibility.py")),
+        ("TrainingModules", ("test_training_modules_teacher_integration.py",)),
+    )
+
     for item in items:
+        for plugin, prefixes in plugin_tests:
+            if (ci_plugins_off or not (external_dir / plugin).exists()) and any(
+                prefix in item.nodeid for prefix in prefixes
+            ):
+                item.add_marker(
+                    pytest.mark.skip(
+                        reason=f"the {plugin} plugin is not installed (or this is GitHub Actions); "
+                        "set YSOCIAL_TEST_PLUGINS=1 with the plugin installed to run it"
+                    )
+                )
         if skip_external_marker is not None and "external_repo" in item.keywords:
             item.add_marker(skip_external_marker)
         if ci_skip_jupyter_utils and "test_system_jupyter_utils.py" in item.nodeid:
