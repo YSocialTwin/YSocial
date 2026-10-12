@@ -238,7 +238,10 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
     @app.before_request
     def before_request_handler():
         """Setup experiment context and desktop mode for each request."""
-        from y_web.src.system.role_gate import teacher_gate  # after the experiment context (see role_gate)
+        from y_web.src.system.role_gate import (
+            teacher_gate,  # after the experiment context (see role_gate)
+        )
+
         denied = setup_experiment_context()
         if denied is None:
             denied = teacher_gate()
@@ -366,7 +369,7 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
                     get_visible_experiment_query(admin_user).filter_by(status=1).all()
                 )
             elif admin_user.role == "teacher":
-                active_exps = []   # a teacher is told about no experiment
+                active_exps = []  # a teacher is told about no experiment
             else:
                 active_exps = db.session.scalars(select(Exps).filter_by(status=1)).all()
             return dict(active_experiments=active_exps)
