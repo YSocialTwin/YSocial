@@ -1,498 +1,64 @@
 {% include "admin/head.html" %}
 <style>
-    .ext-runtimes { --ext-border:#e5e7eb; --ext-bg-subtle:#f8fafc; --ext-bg-card:#ffffff; --ext-text-dark:#111827; --ext-radius:12px; --ext-radius-sm:8px; }
-    .ext-runtimes .badge { font-size:.68rem; padding:.3em .5em; font-weight:600; letter-spacing:.01em; }
-    .ext-runtimes code { font-size:.78rem; }
-    .ext-hint { font-size:.72rem; color:#6b7280; }
-
-    .ext-toolbar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; padding:10px 12px; border:1px solid var(--ext-border); border-radius:var(--ext-radius-sm); background:var(--ext-bg-subtle); margin-bottom:14px; }
-    .ext-toolbar-info { display:flex; flex-wrap:wrap; gap:4px 10px; align-items:center; font-size:.78rem; color:#4b5563; }
-    .ext-toolbar-actions { display:flex; gap:8px; flex-wrap:wrap; }
-
-    .ext-settings { border:1px solid var(--ext-border); border-radius:var(--ext-radius-sm); background:var(--ext-bg-card); margin-bottom:16px; }
-    .ext-settings > summary { cursor:pointer; list-style:none; padding:10px 12px; font-weight:700; font-size:.85rem; color:var(--ext-text-dark); display:flex; align-items:center; gap:8px; }
-    .ext-settings > summary::-webkit-details-marker { display:none; }
-    .ext-settings > summary::before { content:'\25b8'; font-size:.7em; display:inline-block; transition:transform .15s; }
-    .ext-settings[open] > summary::before { transform:rotate(90deg); }
-    .ext-settings-body { padding:12px; display:grid; gap:12px; grid-template-columns:repeat(auto-fit, minmax(260px,1fr)); border-top:1px solid var(--ext-border); }
-    .ext-settings-card { border:1px solid var(--ext-border); border-radius:var(--ext-radius-sm); background:var(--ext-bg-subtle); padding:10px 12px; }
-    .ext-card-title { font-weight:700; font-size:.8rem; color:var(--ext-text-dark); margin-bottom:6px; }
-    .ext-session-form { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
-    .ext-session-form .input { min-width:220px; flex:1 1 220px; }
-    .ext-session-status { display:flex; gap:8px; align-items:center; margin-top:8px; flex-wrap:wrap; }
-
-    .ext-category { border:1px solid var(--ext-border); border-radius:var(--ext-radius); margin-bottom:14px; overflow:hidden; background:var(--ext-bg-card); }
-    .ext-category-header { display:flex; justify-content:space-between; gap:12px; align-items:center; flex-wrap:wrap; padding:10px 14px; background:var(--ext-bg-subtle); border-bottom:1px solid var(--ext-border); }
-    .ext-category-title { font-weight:700; font-size:.9rem; color:var(--ext-text-dark); }
-    .ext-category-desc { font-size:.75rem; color:#6b7280; margin-top:2px; }
-    .ext-chip-row { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
-
-    .ext-groups { padding:10px 12px; display:grid; gap:10px; }
-    .ext-group { border:1px solid var(--ext-border); border-radius:var(--ext-radius-sm); background:var(--ext-bg-card); }
-    .ext-group-header { display:flex; justify-content:space-between; gap:10px; align-items:center; flex-wrap:wrap; padding:8px 12px; border-bottom:1px solid var(--ext-border); background:#fbfcfe; }
-    .ext-group-title { font-weight:700; font-size:.82rem; color:var(--ext-text-dark); }
-
-    .ext-repo-list { padding:8px; display:grid; gap:8px; }
-    .ext-repo { border:1px solid var(--ext-border); border-radius:var(--ext-radius-sm); background:var(--ext-bg-card); }
-    .ext-repo > summary { cursor:pointer; list-style:none; padding:9px 12px; display:flex; justify-content:space-between; gap:10px; align-items:center; flex-wrap:wrap; }
-    .ext-repo > summary::-webkit-details-marker { display:none; }
-    .ext-repo-heading { display:flex; gap:6px 8px; align-items:center; flex-wrap:wrap; min-width:220px; flex:1 1 340px; }
-    .ext-repo-heading strong { font-size:.88rem; color:var(--ext-text-dark); }
-    .ext-repo-desc { flex-basis:100%; font-size:.72rem; color:#6b7280; }
-    .ext-repo-meta { display:flex; gap:10px; align-items:center; font-size:.72rem; color:#6b7280; flex-wrap:wrap; justify-content:flex-end; }
-
-    .ext-repo-body { padding:0 12px 12px; border-top:1px dashed var(--ext-border); display:grid; gap:12px; }
-    .ext-repo-info { display:flex; flex-wrap:wrap; gap:16px; padding-top:12px; }
-    .ext-repo-info-col { min-width:220px; flex:1 1 260px; font-size:.74rem; color:#6b7280; display:grid; gap:3px; align-content:start; }
-    .ext-repo-info-col strong { color:#374151; }
-
-    .ext-actions-row { display:flex; flex-wrap:wrap; gap:6px; }
-    .ext-actions-row .button { font-size:.74rem; padding:.35em .7em; height:auto; min-height:2rem; }
+    .ext-runtimes { --ext-border:#e5e7eb; --ext-bg-subtle:#f8fafc; --ext-text-dark:#111827; }
+    .ext-runtimes .badge { font-size:.68rem; padding:.3em .6em; font-weight:600; }
+    .ext-intro { font-size:.82rem; color:#6b7280; margin-bottom:14px; }
+    .ext-plugin-table { width:100%; border-collapse:collapse; }
+    .ext-plugin-table th { text-align:left; font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; color:#6b7280; padding:8px 10px; border-bottom:1px solid var(--ext-border); }
+    .ext-plugin-table td { padding:12px 10px; border-bottom:1px solid var(--ext-border); vertical-align:middle; font-size:.84rem; }
+    .ext-plugin-name { font-weight:700; color:var(--ext-text-dark); }
+    .ext-plugin-sub { font-size:.72rem; color:#6b7280; }
+    .ext-plugin-desc { color:#4b5563; max-width:520px; }
+    .ext-row-actions { display:flex; gap:6px; justify-content:flex-end; flex-wrap:wrap; }
+    .ext-row-actions .button { font-size:.76rem; height:auto; min-height:2rem; padding:.35em .9em; }
     .ext-danger-text { color:#b91c1c; }
-
-    .ext-install-form { display:grid; gap:10px; }
-    .ext-install-options { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:10px; }
-    .ext-install-option { border:1px solid var(--ext-border); border-radius:var(--ext-radius-sm); padding:10px; background:var(--ext-bg-subtle); display:grid; gap:5px; font-size:.78rem; }
-    .ext-install-option.is-muted { background:#fff7ed; }
-    .ext-install-option strong { font-size:.82rem; }
-    .ext-install-option .ext-radio-row { display:flex; gap:8px; align-items:center; }
-
-    .ext-advanced { border:1px solid var(--ext-border); border-radius:var(--ext-radius-sm); padding:8px 10px; background:var(--ext-bg-subtle); }
-    .ext-advanced > summary { cursor:pointer; font-weight:700; font-size:.78rem; color:var(--ext-text-dark); list-style:none; }
-    .ext-advanced > summary::-webkit-details-marker { display:none; }
-    .ext-advanced-body { display:grid; gap:8px; margin-top:8px; }
-    .ext-advanced-row { display:grid; grid-template-columns:minmax(160px,1.3fr) repeat(2, minmax(0,1fr)); gap:6px; align-items:stretch; }
-
-    .ext-modules { border-top:1px dashed var(--ext-border); padding-top:10px; }
-    .ext-modules-title { font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; color:#6b7280; margin-bottom:6px; display:flex; gap:8px; align-items:center; }
-    .ext-module-row { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:5px 8px; border:1px solid var(--ext-border); border-radius:6px; font-size:.78rem; }
-    .ext-modules-errors { margin:0 0 8px 16px; color:#b91c1c; font-size:.74rem; }
-
-    .ext-side-note { font-size:.8rem; color:#6b7280; margin-bottom:12px; }
-    .ext-log-list { display:grid; gap:6px; max-height:640px; overflow:auto; }
-    .ext-log-entry { border:1px solid var(--ext-border); border-radius:var(--ext-radius-sm); background:#fff; }
-    .ext-log-entry > summary { cursor:pointer; list-style:none; padding:8px 10px; font-weight:600; font-size:.78rem; color:var(--ext-text-dark); }
-    .ext-log-entry > summary::-webkit-details-marker { display:none; }
-    .ext-log-meta { font-size:.7rem; color:#6b7280; margin-bottom:6px; }
-    .ext-log-output { margin:0; white-space:pre-wrap; font-size:.7rem; color:#374151; background:var(--ext-bg-subtle); border-radius:6px; padding:8px; max-height:260px; overflow:auto; }
-
-    .ext-recent-list { display:grid; gap:6px; max-height:380px; overflow:auto; }
-    .ext-recent-entry { border:1px solid var(--ext-border); border-radius:var(--ext-radius-sm); padding:8px 10px; background:#fff; font-size:.75rem; }
-    .ext-recent-top { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:4px; }
-
-    .external-runtime-action-button {
-        white-space: normal;
-        overflow-wrap: anywhere;
-        line-height: 1.1;
-    }
 </style>
 
 <div class="view-wrapper is-dashboard ext-runtimes">
     <div id="creator-dashboard" class="dashboard-container">
         {% include "admin/dash_head.html" %}
-
         <div class="dashboard-body">
             <div class="columns">
-                <div class="column is-8">
+                <div class="column is-12">
                     <div class="dashboard-box" id="external-runtimes-main">
-                        <h3 class="title is-5 is-thin">External Runtime Plugins</h3>
+                        <h3 class="title is-5 is-thin">Plugins</h3>
                         <div class="box-content">
-
-                            <div class="ext-toolbar">
-                                <div class="ext-toolbar-info">
-                                    <span>
-                                        Plugins install from GitHub releases by default.
-                                        {% if host_git_available %}
-                                        Git clone / fetch / update remain available per plugin as advanced actions.
-                                        {% else %}
-                                        Git-based actions are hidden because <code>git</code> is not available on this host.
+                            <p class="ext-intro">Available and installed plugins. Open a plugin to install or update it and to follow the output of the operation. Microblogging and Forum each include a server and a client, which are always handled together.</p>
+                            <div class="table-responsive">
+                            <table class="ext-plugin-table" id="external-runtimes-list">
+                                <thead><tr><th>Plugin</th><th>Description</th><th>Status</th><th></th></tr></thead>
+                                <tbody>
+                                {% for entry in plugin_entries %}
+                                <tr data-runtime-repo data-entry-key="{{ entry.key }}">
+                                    <td>
+                                        <div class="ext-plugin-name">{{ entry.label }}</div>
+                                        <div class="ext-plugin-sub">{{ entry.category }}{% if entry.paired %} &middot; server + client{% endif %}</div>
+                                    </td>
+                                    <td class="ext-plugin-desc">{{ entry.description or 'No description available.' }}</td>
+                                    <td>
+                                        {% if entry.state == 'installed' %}<span class="badge badge-success">Installed</span>
+                                        {% elif entry.state == 'partial' %}<span class="badge badge-warning">Partially installed</span>
+                                        {% else %}<span class="badge badge-secondary">Not installed</span>{% endif %}
+                                        {% if entry.togglable and entry.state != 'missing' %}
+                                            {% if entry.enabled %}<span class="badge badge-info">Enabled</span>{% else %}<span class="badge badge-warning">Disabled</span>{% endif %}
                                         {% endif %}
-                                    </span>
-                                    <span>&middot;</span>
-                                    <span>Dependencies install with <code>{{ current_python_executable }}</code></span>
-                                </div>
-                                <div class="ext-toolbar-actions">
-                                    {% if remote_metadata_loaded %}
-                                    <a class="button is-light is-small" href="{{ url_for('experiments.external_runtimes') }}">Load Fast View</a>
-                                    {% else %}
-                                    <a class="button is-light is-small" href="{{ url_for('experiments.external_runtimes', refresh_remote=1) }}">Refresh GitHub Metadata</a>
-                                    {% endif %}
-                                </div>
-                            </div>
-
-                            <details class="ext-settings" id="external-runtimes-github-session">
-                                <summary>
-                                    Session &amp; diagnostics
-                                    {% if github_session_authenticated %}
-                                    <span class="badge badge-success">GitHub authenticated</span>
-                                    {% else %}
-                                    <span class="badge badge-secondary">Anonymous GitHub access</span>
-                                    {% endif %}
-                                </summary>
-                                <div class="ext-settings-body">
-                                    <div class="ext-settings-card">
-                                        <div class="ext-card-title">GitHub session</div>
-                                        <div class="ext-hint" style="margin-bottom: 10px;">
-                                            Optionally connect a GitHub token for this admin session to avoid anonymous API rate limits and access private release assets.
-                                        </div>
-                                        <form method="POST" action="{{ url_for('experiments.external_runtime_github_session') }}" class="ext-session-form" data-external-runtime-session-form="1">
-                                            <input type="hidden" name="github_session_action" value="connect">
-                                            <input type="password" name="github_token" class="input" placeholder="{% if github_session_authenticated %}Token stored for this session{% else %}GitHub personal access token{% endif %}">
-                                            <button type="button" class="button is-solid primary-button" data-external-runtime-session-action="connect">Connect</button>
-                                        </form>
-                                        <div class="ext-session-status">
-                                            {% if github_session_authenticated %}
-                                            <span class="badge badge-success">Authenticated</span>
-                                            <form method="POST" action="{{ url_for('experiments.external_runtime_github_session') }}" data-external-runtime-session-form="1">
-                                                <input type="hidden" name="github_session_action" value="disconnect">
-                                                <button type="button" class="button is-light" data-external-runtime-session-action="disconnect">Disconnect</button>
-                                            </form>
-                                            {% else %}
-                                            <span class="badge badge-secondary">Anonymous GitHub access</span>
+                                        {% if entry.restart_required %}<span class="badge badge-warning">Restart required</span>{% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="ext-row-actions">
+                                            <a class="button is-solid primary-button" href="{{ url_for('experiments.external_runtime_detail', entry_key=entry.key) }}">{{ 'Install' if entry.state == 'missing' else 'Update' }}</a>
+                                            {% if entry.any_exists %}
+                                            <button type="button" class="button is-light ext-danger-text" data-external-runtime-remove data-remove-url="{{ url_for('experiments.external_runtime_action', repo_key=entry.key, action='delete') }}" data-label="{{ entry.label }}">Remove</button>
                                             {% endif %}
                                         </div>
-                                    </div>
-
-                                    {% if external_runtime_bootstrap %}
-                                    <div class="ext-settings-card" id="external-runtimes-bootstrap-info">
-                                        <div class="ext-card-title">Startup runtime diagnostics</div>
-                                        <div class="ext-hint">Writable external path: <code>{{ external_runtime_bootstrap.writable_external_dir }}</code></div>
-                                        <div class="ext-hint">Bundled external path: <code>{{ external_runtime_bootstrap.resource_external_dir }}</code></div>
-                                        <div class="ext-hint">Seeded on startup: {{ external_runtime_bootstrap.seeded_repos|join(', ') if external_runtime_bootstrap.seeded_repos else 'none' }}</div>
-                                        {% if external_runtime_bootstrap.seed_errors %}
-                                        <div class="ext-hint" style="color: #b91c1c;">Seed errors: {{ external_runtime_bootstrap.seed_errors }}</div>
-                                        {% endif %}
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            </details>
-
-                            {% for category in runtime_categories %}
-                            <section class="ext-category" data-runtime-category>
-                                <div class="ext-category-header">
-                                    <div>
-                                        <div class="ext-category-title">{{ category.label }}</div>
-                                        <div class="ext-category-desc">{{ category.description }}</div>
-                                    </div>
-                                    <div class="ext-chip-row">
-                                        <span class="badge badge-info">{{ category.repo_count }} repositories</span>
-                                        <span class="badge badge-success">{{ category.installed_count }} installed</span>
-                                        {% if category.active_experiment_count %}
-                                        <span class="badge badge-warning">{{ category.active_experiment_count }} active experiments</span>
-                                        {% else %}
-                                        <span class="badge badge-secondary">No active experiments</span>
-                                        {% endif %}
-                                    </div>
-                                </div>
-
-                                <div class="ext-groups">
-                                    {% for group_info in category.groups %}
-                                    <div class="ext-group">
-                                        <div class="ext-group-header">
-                                            <div>
-                                                <div class="ext-group-title">{{ group_info.label }}</div>
-                                                {% set active = group_info.active_experiments|default([]) %}
-                                                <div class="ext-category-desc">
-                                                    {% if active %}
-                                                        Active experiments: {{ active|map(attribute='exp_name')|join(', ') }}
-                                                    {% elif group_info.description %}
-                                                        {{ group_info.description }}
-                                                    {% else %}
-                                                        No active experiments using this runtime group.
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-                                            <span class="badge badge-secondary">{{ group_info.repos|length }} repositories</span>
-                                        </div>
-
-                                        <div class="ext-repo-list">
-                                            {% for repo in group_info.repos %}
-                                            <details data-runtime-repo class="ext-repo">
-                                                <summary>
-                                                    <div class="ext-repo-heading">
-                                                        <strong>{{ repo.label }}</strong>
-                                                        {% if repo.installed %}
-                                                        <span class="badge badge-success">Installed</span>
-                                                        {% else %}
-                                                        <span class="badge badge-secondary">Not installed</span>
-                                                        {% endif %}
-                                                        {% if host_git_available and repo.git_managed %}
-                                                        <span class="badge badge-info">Git</span>
-                                                        {% elif repo.installed %}
-                                                        <span class="badge badge-warning">Release</span>
-                                                        {% endif %}
-                                                        {% if repo.plugin_togglable %}
-                                                        {% if repo.plugin_enabled %}
-                                                        <span class="badge badge-success">Enabled</span>
-                                                        {% else %}
-                                                        <span class="badge badge-warning">Disabled</span>
-                                                        {% endif %}
-                                                        {% if repo.restart_required %}
-                                                        <span class="badge badge-warning">Restart required</span>
-                                                        {% endif %}
-                                                        {% endif %}
-                                                        {% if repo.is_private %}
-                                                        <span class="badge badge-danger">Private</span>
-                                                        {% else %}
-                                                        <span class="badge badge-success">Public</span>
-                                                        {% endif %}
-                                                        {% if repo.is_symlink %}
-                                                        <span class="badge badge-warning">Symlink</span>
-                                                        {% endif %}
-                                                        {% if repo.dirty %}
-                                                        <span class="badge badge-danger">Dirty</span>
-                                                        {% endif %}
-                                                        {% if repo.plugin_description %}
-                                                        <span class="ext-repo-desc">{{ repo.plugin_description }}</span>
-                                                        {% endif %}
-                                                    </div>
-                                                    <div class="ext-repo-meta">
-                                                        <span>{{ repo.github_repo }}</span>
-                                                        <span>{% if host_git_available and repo.git_managed %}{{ repo.current_branch or repo.default_branch }}{% if repo.current_commit %} &middot; {{ repo.current_commit }}{% endif %}{% else %}release archive{% endif %}</span>
-                                                    </div>
-                                                </summary>
-
-                                                <div class="ext-repo-body">
-                                                    <div class="ext-repo-info">
-                                                        <div class="ext-repo-info-col">
-                                                            <div><strong>Repository:</strong> {{ repo.github_repo }}</div>
-                                                            {% if repo.plugin_repository_url %}
-                                                            <div><strong>Repository URL:</strong> <a href="{{ repo.plugin_repository_url }}">{{ repo.plugin_repository_url }}</a></div>
-                                                            {% endif %}
-                                                            {% if repo.plugin_authors %}
-                                                            <div><strong>Authors:</strong> {{ repo.plugin_authors|join(', ') }}</div>
-                                                            {% endif %}
-                                                            {% if host_git_available and repo.git_managed %}
-                                                            <div><strong>Source state:</strong> {{ repo.current_branch or 'release archive' }}{% if repo.current_commit %} &middot; {{ repo.current_commit }}{% endif %}</div>
-                                                            <div><strong>Tracking:</strong> {{ repo.tracking_branch or 'n/a' }}{% if repo.ahead is not none and repo.behind is not none %} &middot; ahead {{ repo.ahead }} / behind {{ repo.behind }}{% endif %}</div>
-                                                            {% endif %}
-                                                            <div><strong>Dependencies:</strong> {{ 'ready' if repo.dependency_files_ready else 'missing' }} &middot; <strong>Validation:</strong> {{ 'ready' if repo.validation_ready else 'missing' }}</div>
-                                                        </div>
-
-                                                        <div class="ext-repo-info-col">
-                                                            {% if repo.latest_release_tag %}
-                                                            <div><strong>Latest release:</strong> {{ repo.latest_release_tag }}</div>
-                                                            {% elif repo.release_error %}
-                                                            <div style="color: #b45309;"><strong>Release lookup:</strong> {{ repo.release_error }}</div>
-                                                            {% else %}
-                                                            <div><strong>Release lookup:</strong> no releases published</div>
-                                                            {% endif %}
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="ext-actions-row">
-                                                        <a href="{{ url_for('experiments.external_runtime_logs', repo_key=repo.key) }}" class="button is-light external-runtime-action-button">
-                                                            View Logs
-                                                        </a>
-                                                        {% if host_git_available and repo.installed and repo.git_managed %}
-                                                        <button type="button" class="button is-light external-runtime-action-button" data-external-runtime-action-button="install" data-action-url="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='install') }}" data-repo-key="{{ repo.key }}" data-repo-label="{{ repo.label }}">
-                                                            Dependencies
-                                                        </button>
-                                                        <button type="button" class="button is-light external-runtime-action-button" data-external-runtime-action-button="validate" data-action-url="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='validate') }}" data-repo-key="{{ repo.key }}" data-repo-label="{{ repo.label }}">
-                                                            Validate
-                                                        </button>
-                                                        {% endif %}
-                                                        {% if repo.plugin_togglable %}
-                                                        {% set toggle_action = 'disable' if repo.plugin_enabled else 'enable' %}
-                                                        <button type="button" class="button is-light external-runtime-action-button" data-external-runtime-action-button="{{ toggle_action }}" data-action-url="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action=toggle_action) }}" data-repo-key="{{ repo.key }}" data-repo-label="{{ repo.label }}">
-                                                            {{ 'Disable' if repo.plugin_enabled else 'Enable' }}
-                                                        </button>
-                                                        {% endif %}
-                                                        {% if repo.exists %}
-                                                        <button type="button"
-                                                                class="button is-light external-runtime-action-button ext-danger-text"
-                                                                data-external-runtime-delete
-                                                                data-delete-url="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='delete') }}"
-                                                                data-repo-key="{{ repo.key }}"
-                                                                data-repo-label="{{ repo.label }}">
-                                                            Delete
-                                                        </button>
-                                                        {% endif %}
-                                                    </div>
-
-                                                    {% if repo.frontend_modules_report %}
-                                                    <div class="ext-modules">
-                                                        <div class="ext-modules-title">
-                                                            Suite modules
-                                                            {% if repo.frontend_modules_report.valid %}
-                                                            <span class="badge badge-success">manifest valid</span>
-                                                            {% else %}
-                                                            <span class="badge badge-danger">manifest invalid</span>
-                                                            {% endif %}
-                                                        </div>
-                                                        {% if repo.frontend_modules_report.errors %}
-                                                        <ul class="ext-modules-errors">
-                                                            {% for err in repo.frontend_modules_report.errors %}
-                                                            <li>{{ err }}</li>
-                                                            {% endfor %}
-                                                        </ul>
-                                                        {% endif %}
-                                                        {% if repo.frontend_modules_report.modules %}
-                                                        <div style="display: grid; gap: 6px;">
-                                                            {% for mod in repo.frontend_modules_report.modules %}
-                                                            <div class="ext-module-row">
-                                                                <div>
-                                                                    <strong>{{ mod.display_name or mod.module_id }}</strong>
-                                                                    <span class="ext-hint">v{{ mod.version }}</span>
-                                                                </div>
-                                                                {% if mod.valid %}
-                                                                <span class="badge badge-success">ok</span>
-                                                                {% else %}
-                                                                <span class="badge badge-danger" title="{{ mod.errors|join('; ') }}">error</span>
-                                                                {% endif %}
-                                                            </div>
-                                                            {% endfor %}
-                                                        </div>
-                                                        <div class="ext-category-desc" style="margin-top: 8px;">
-                                                            Enable and configure these modules per experiment from
-                                                            <a href="{{ url_for('experiments.frontend_settings') }}">Frontend Settings</a>.
-                                                        </div>
-                                                        {% else %}
-                                                        <div class="ext-category-desc">No modules declared in meta/registry.json.</div>
-                                                        {% endif %}
-                                                    </div>
-                                                    {% endif %}
-
-                                                    {% if not repo.installed %}
-                                                    <form method="POST" action="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='acquire') }}" class="ext-install-form" data-external-runtime-action-form="acquire" data-repo-key="{{ repo.key }}">
-                                                        <div class="ext-modules-title">Installation source</div>
-                                                        <div class="ext-install-options">
-                                                            <label class="ext-install-option">
-                                                                <span class="ext-radio-row">
-                                                                    <input type="radio" name="install_source" value="release" {% if repo.releases_enabled %}checked{% endif %}>
-                                                                    <strong>GitHub Release</strong>
-                                                                </span>
-                                                                <span class="ext-hint">Standard option. Works without git if releases are published.</span>
-                                                                <select name="release_tag" class="input w-100" {% if not repo.releases_enabled %}disabled{% endif %}>
-                                                                    {% if repo.available_releases %}
-                                                                        {% for release in repo.available_releases %}
-                                                                        <option value="{{ release.tag }}">{{ release.tag }}{% if release.prerelease %} &middot; prerelease{% endif %}{% if release.name and release.name != release.tag %} &middot; {{ release.name }}{% endif %}</option>
-                                                                        {% endfor %}
-                                                                    {% else %}
-                                                                        <option value="">{{ repo.release_error or 'No releases available' }}</option>
-                                                                    {% endif %}
-                                                                </select>
-                                                            </label>
-
-                                                            {% if host_git_available %}
-                                                            <label class="ext-install-option">
-                                                                <span class="ext-radio-row">
-                                                                    <input type="radio" name="install_source" value="git" {% if not repo.releases_enabled %}checked{% endif %}>
-                                                                    <strong>Git checkout</strong>
-                                                                </span>
-                                                                <span class="ext-hint">Advanced option. Use when you need a specific branch.</span>
-                                                                <select name="branch" class="input w-100">
-                                                                    {% for branch_name in repo.available_branches %}
-                                                                    <option value="{{ branch_name }}" {% if branch_name == (repo.current_branch or repo.default_branch) %}selected{% endif %}>{{ branch_name }}</option>
-                                                                    {% endfor %}
-                                                                </select>
-                                                            </label>
-                                                            {% else %}
-                                                            <div class="ext-install-option is-muted">
-                                                                <strong>Git checkout unavailable</strong>
-                                                                <span class="ext-hint">This host does not provide the `git` command, so only release-based installation is available.</span>
-                                                            </div>
-                                                            {% endif %}
-                                                        </div>
-
-                                                        <div>
-                                                            <button type="button"
-                                                                    class="button is-solid primary-button external-runtime-action-button"
-                                                                    data-external-runtime-install
-                                                                    data-install-url="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='acquire') }}"
-                                                                    data-repo-key="{{ repo.key }}"
-                                                                    data-repo-label="{{ repo.label }}"
-                                                                    style="width: auto; padding-left: 1.4em; padding-right: 1.4em;">
-                                                                Install Plugin
-                                                            </button>
-                                                        </div>
-                                                    </form>
-                                                    {% endif %}
-
-                                                    {% if host_git_available and repo.installed and repo.git_managed %}
-                                                    <details class="ext-advanced">
-                                                        <summary>Advanced maintenance</summary>
-                                                        <div class="ext-advanced-body">
-                                                            <div class="ext-hint">Available only for git-managed plugins. Release-installed plugins must be deleted and reinstalled if you want a git checkout.</div>
-                                                            <div class="ext-advanced-row">
-                                                                <select name="branch" class="input" data-external-runtime-branch-select="{{ repo.key }}">
-                                                                    {% for branch_name in repo.available_branches %}
-                                                                    <option value="{{ branch_name }}" {% if branch_name == (repo.current_branch or repo.default_branch) %}selected{% endif %}>{{ branch_name }}</option>
-                                                                    {% endfor %}
-                                                                </select>
-                                                                <button type="button" class="button is-light external-runtime-action-button" data-external-runtime-action-button="fetch" data-action-url="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='fetch') }}" data-repo-key="{{ repo.key }}" data-repo-label="{{ repo.label }}">
-                                                                    Fetch
-                                                                </button>
-                                                                <button type="button" class="button is-light external-runtime-action-button" {% if repo.dirty %}disabled{% endif %} title="{% if repo.dirty %}Clean the worktree before updating.{% endif %}" data-external-runtime-action-button="update" data-action-url="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='update') }}" data-repo-key="{{ repo.key }}" data-repo-label="{{ repo.label }}">
-                                                                    Update
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </details>
-                                                    {% endif %}
-                                                </div>
-                                            </details>
-                                            {% endfor %}
-                                        </div>
-                                    </div>
-                                    {% endfor %}
-                                </div>
-                            </section>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-
-                <div class="column is-4">
-                    <div class="dashboard-box" id="external-runtimes-operation-output">
-                        <h3 class="title is-6 is-thin">Operation Output</h3>
-                        <div class="box-content">
-                            <p class="ext-side-note">
-                                Inspect the latest terminal output for dependency installation and other plugin actions.
-                            </p>
-
-                            {% if selected_repo_key and selected_repo_logs %}
-                            <div class="ext-log-list">
-                                {% for entry in selected_repo_logs %}
-                                <details class="ext-log-entry" {% if loop.first %}open{% endif %}>
-                                    <summary>
-                                        {{ entry.repo_key }} &middot; {{ entry.action }}
-                                        <span class="badge {% if entry.success %}badge-success{% else %}badge-danger{% endif %}" style="margin-left: 8px;">{{ 'success' if entry.success else 'failure' }}</span>
-                                    </summary>
-                                    <div style="padding: 0 10px 10px 10px;">
-                                        <div class="ext-log-meta">
-                                            {{ entry.timestamp }} &middot; {{ entry.actor }}{% if entry.branch %} &middot; {{ entry.branch }}{% endif %}
-                                        </div>
-                                        <pre class="ext-log-output">{{ entry.output }}</pre>
-                                    </div>
-                                </details>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr><td colspan="4" class="ext-plugin-sub">No plugin is available.</td></tr>
                                 {% endfor %}
+                                </tbody>
+                            </table>
                             </div>
-                            {% else %}
-                            <p class="ys-text-sm-muted">Select a plugin action to inspect its terminal output here.</p>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <div class="dashboard-box" id="external-runtimes-recent-ops">
-                        <h3 class="title is-6 is-thin">Recent Runtime Operations</h3>
-                        <div class="box-content">
-                            {% if recent_runtime_logs %}
-                            <div class="ext-recent-list">
-                                {% for entry in recent_runtime_logs[:12] %}
-                                <div class="ext-recent-entry">
-                                    <div class="ext-recent-top">
-                                        <strong>{{ entry.repo_key }}</strong>
-                                        <span class="badge {% if entry.success %}badge-success{% else %}badge-danger{% endif %}">{{ entry.action }}</span>
-                                        <span class="ext-hint">{{ entry.timestamp }}</span>
-                                    </div>
-                                    <div class="ext-hint">{{ entry.actor }}{% if entry.branch %} &middot; {{ entry.branch }}{% endif %}</div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                            {% else %}
-                            <p class="ys-text-sm-muted">No runtime operations have been logged yet.</p>
-                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -503,297 +69,21 @@
 
 {% include "admin/tutorials/external_runtimes_tutorial.html" %}
 <script>
-(function() {
-    function getDashboardRoot() {
-        return document.querySelector('#creator-dashboard');
-    }
-
-    function getPageFragment(url) {
-        return fetch(url, {
-            credentials: 'same-origin',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'text/html'
-            }
-        }).then(async (response) => {
-            if (!response.ok) {
-                throw new Error('Failed to refresh external runtimes page.');
-            }
-            const html = await response.text();
-            return new DOMParser().parseFromString(html, 'text/html');
+document.addEventListener('click', async function (event) {
+    var button = event.target.closest('[data-external-runtime-remove]');
+    if (!button) return;
+    event.preventDefault();
+    var label = button.dataset.label || 'this plugin';
+    if (!window.confirm('Remove ' + label + ' from external/? This deletes the local plugin files.')) return;
+    if (window.showLoading) window.showLoading('Removing ' + label + '...');
+    try {
+        await fetch(button.dataset.removeUrl, {
+            method: 'POST', credentials: 'same-origin',
+            headers: {'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json'}
         });
+    } finally {
+        window.location.reload();
     }
-
-    function replaceDashboardFromDocument(doc) {
-        const currentRoot = getDashboardRoot();
-        const nextRoot = doc.querySelector('#creator-dashboard');
-        if (currentRoot && nextRoot) {
-            currentRoot.replaceWith(nextRoot);
-        }
-    }
-
-    async function refreshDashboard(url) {
-        const doc = await getPageFragment(url);
-        replaceDashboardFromDocument(doc);
-    }
-
-    function removeRuntimeCard(repoKey) {
-        if (!repoKey) return;
-        const escapedKey = CSS && CSS.escape ? CSS.escape(repoKey) : repoKey;
-        const card = document.querySelector(`[data-repo-key="${escapedKey}"]`)?.closest('details[data-runtime-repo]');
-        if (card) {
-            card.remove();
-        }
-    }
-
-    function showLoadingIfAvailable(message) {
-        if (window.showLoading) {
-            window.showLoading(message);
-        }
-    }
-
-    function hideLoadingIfAvailable() {
-        if (window.hideLoading) {
-            window.hideLoading();
-        }
-    }
-
-    function toastIfAvailable(message) {
-        if (message && window.showToast) {
-            window.showToast(message, 'success');
-        }
-    }
-
-    async function runRuntimeRequest(url, options) {
-        const opts = options || {};
-        const method = opts.method || 'POST';
-        const body = opts.body || null;
-        const loadingMessage = opts.loadingMessage || 'Running external runtime action...';
-        const errorMessage = opts.errorMessage || 'External runtime action failed.';
-
-        showLoadingIfAvailable(loadingMessage);
-        try {
-            const response = await fetch(url, {
-                method: method,
-                body: body,
-                credentials: 'same-origin',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                }
-            });
-            const payload = await response.json().catch(() => ({}));
-            if (!response.ok) {
-                throw new Error(payload.message || errorMessage);
-            }
-            return payload;
-        } finally {
-            hideLoadingIfAvailable();
-        }
-    }
-
-    function buildRuntimeActionPayload(button) {
-        const form = button.closest('form');
-        if (form instanceof HTMLFormElement) {
-            const payload = new FormData(form);
-            const branchSelect = button.closest('details[data-runtime-repo]')?.querySelector('[data-external-runtime-branch-select]');
-            if (branchSelect instanceof HTMLSelectElement && !payload.has('branch')) {
-                payload.append('branch', branchSelect.value);
-            }
-            return payload;
-        }
-
-        const payload = new FormData();
-        const repoCard = button.closest('details[data-runtime-repo]');
-        const branchSelect = repoCard?.querySelector('[data-external-runtime-branch-select]');
-        if (branchSelect instanceof HTMLSelectElement) {
-            payload.set('branch', branchSelect.value);
-        }
-        return payload;
-    }
-
-    async function submitRuntimeForm(event) {
-        const form = event.target;
-        if (!(form instanceof HTMLFormElement)) {
-            return;
-        }
-        if (!form.matches('form[data-external-runtime-async="1"]')) {
-            return;
-        }
-
-        event.preventDefault();
-        const submitter = event.submitter;
-        const targetAction = (submitter && submitter.formAction) ? submitter.formAction : form.action;
-        const targetMethod = (submitter && submitter.formMethod) ? submitter.formMethod : (form.method || 'POST');
-
-        const payload = await runRuntimeRequest(targetAction, {
-            method: targetMethod,
-            body: new FormData(form)
-        });
-
-        if ((form.dataset.externalRuntimeAction || '') === 'delete') {
-            removeRuntimeCard(form.dataset.repoKey || '');
-        }
-
-        await refreshDashboard(payload.redirect_url || window.location.href);
-        toastIfAvailable(payload.message);
-    }
-
-    async function handleDeleteClick(event) {
-        const button = event.target.closest('[data-external-runtime-delete]');
-        if (!(button instanceof HTMLButtonElement)) {
-            return;
-        }
-
-        const deleteUrl = button.dataset.deleteUrl || '';
-        const repoKey = button.dataset.repoKey || '';
-        const repoLabel = button.dataset.repoLabel || repoKey || 'this runtime';
-        if (!deleteUrl) {
-            return;
-        }
-
-        if (!window.confirm(`Delete ${repoLabel} from external/? This removes the local plugin files.`)) {
-            return;
-        }
-
-        event.preventDefault();
-        const payload = await runRuntimeRequest(deleteUrl, {
-            errorMessage: 'External runtime delete failed.'
-        });
-        removeRuntimeCard(repoKey);
-        await refreshDashboard(payload.redirect_url || '/admin/external_runtimes');
-        toastIfAvailable(payload.message);
-    }
-
-    async function handleInstallClick(event) {
-        const button = event.target.closest('[data-external-runtime-install]');
-        if (!(button instanceof HTMLButtonElement)) {
-            return;
-        }
-
-        const form = button.closest('form');
-        if (!(form instanceof HTMLFormElement)) {
-            return;
-        }
-
-        const installUrl = button.dataset.installUrl || '';
-        const repoKey = button.dataset.repoKey || '';
-        const repoLabel = button.dataset.repoLabel || repoKey || 'this runtime';
-        if (!installUrl) {
-            return;
-        }
-
-        event.preventDefault();
-        const payload = await runRuntimeRequest(installUrl, {
-            body: new FormData(form),
-            errorMessage: `Failed to install ${repoLabel}.`
-        });
-        await refreshDashboard(payload.redirect_url || '/admin/external_runtimes');
-        toastIfAvailable(payload.message);
-    }
-
-    async function handleRuntimeActionClick(event) {
-        const button = event.target.closest('[data-external-runtime-action-button]');
-        if (!(button instanceof HTMLButtonElement)) {
-            return;
-        }
-
-        const actionUrl = button.dataset.actionUrl || '';
-        const actionName = button.dataset.externalRuntimeActionButton || '';
-        const repoKey = button.dataset.repoKey || '';
-        const repoLabel = button.dataset.repoLabel || repoKey || 'this runtime';
-        if (!actionUrl) {
-            return;
-        }
-
-        event.preventDefault();
-        const payload = await runRuntimeRequest(actionUrl, {
-            body: buildRuntimeActionPayload(button),
-            errorMessage: `Failed to run ${actionName} for ${repoLabel}.`
-        });
-        await refreshDashboard(payload.redirect_url || '/admin/external_runtimes');
-        toastIfAvailable(payload.message);
-    }
-
-    async function handleSessionClick(event) {
-        const button = event.target.closest('[data-external-runtime-session-action]');
-        if (!(button instanceof HTMLButtonElement)) {
-            return;
-        }
-
-        const form = button.closest('form');
-        if (!(form instanceof HTMLFormElement)) {
-            return;
-        }
-
-        const action = button.dataset.externalRuntimeSessionAction || '';
-        const tokenInput = form.querySelector('input[name="github_token"]');
-        const hiddenAction = form.querySelector('input[name="github_session_action"]');
-        if (hiddenAction instanceof HTMLInputElement) {
-            hiddenAction.value = action;
-        }
-        if (action === 'connect' && tokenInput instanceof HTMLInputElement && !tokenInput.value.trim()) {
-            throw new Error('Provide a GitHub token before connecting.');
-        }
-
-        event.preventDefault();
-        const payload = await runRuntimeRequest(form.action, {
-            body: new FormData(form),
-            loadingMessage: 'Updating GitHub session...',
-            errorMessage: 'Failed to update GitHub session.'
-        });
-        await refreshDashboard(payload.redirect_url || '/admin/external_runtimes');
-        toastIfAvailable(payload.message);
-    }
-
-    document.addEventListener('submit', function(event) {
-        const form = event.target;
-        if (!(form instanceof HTMLFormElement)) {
-            return;
-        }
-        if (!form.matches('form[data-external-runtime-async="1"]')) {
-            return;
-        }
-        submitRuntimeForm(event).catch((error) => {
-            console.error(error);
-            window.location.reload();
-        });
-    }, true);
-
-    document.addEventListener('click', function(event) {
-        const target = event.target;
-        if (!(target instanceof Element)) {
-            return;
-        }
-        if (target.closest('[data-external-runtime-session-action]')) {
-            handleSessionClick(event).catch((error) => {
-                console.error(error);
-                window.location.reload();
-            });
-            return;
-        }
-        if (target.closest('[data-external-runtime-action-button]')) {
-            handleRuntimeActionClick(event).catch((error) => {
-                console.error(error);
-                window.location.reload();
-            });
-            return;
-        }
-        if (target.closest('[data-external-runtime-install]')) {
-            handleInstallClick(event).catch((error) => {
-                console.error(error);
-                window.location.reload();
-            });
-            return;
-        }
-        if (!target.closest('[data-external-runtime-delete]')) {
-            return;
-        }
-        handleDeleteClick(event).catch((error) => {
-            console.error(error);
-            window.location.reload();
-        });
-    }, true);
-})();
+});
 </script>
 {% include "admin/footer.html" %}

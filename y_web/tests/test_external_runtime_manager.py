@@ -329,7 +329,7 @@ def test_external_runtime_action_returns_json_for_xhr(app, client, auth, monkeyp
     payload = response.get_json()
     assert payload["status"] == "ok"
     assert payload["repo_key"] == "test_runtime"
-    assert payload["redirect_url"] == "/admin/external_runtimes?repo_key=test_runtime"
+    assert payload["redirect_url"] == "/admin/external_runtimes/test_runtime"
 
 
 def test_external_runtime_delete_json_refreshes_base_page(
@@ -674,23 +674,8 @@ def test_external_runtimes_page_hides_git_controls_when_git_is_unavailable(
         ],
     )
     monkeypatch.setattr(
-        route_mod,
-        "_runtime_categories",
-        lambda grouped_status, active_group_usage: [
-            {
-                "label": "Simulation Runtime Stack",
-                "description": "Repositories classified under Simulation Runtime Stack.",
-                "repo_count": 1,
-                "installed_count": 0,
-                "active_experiment_count": 0,
-                "groups": [],
-            }
-        ],
-    )
-    monkeypatch.setattr(
         route_mod, "read_external_runtime_logs", lambda *args, **kwargs: []
     )
-    monkeypatch.setattr(route_mod, "external_runtime_bootstrap_report", lambda: None)
 
     def fake_render_template(template_name, **context):
         captured.update(context)
@@ -702,7 +687,8 @@ def test_external_runtimes_page_hides_git_controls_when_git_is_unavailable(
         response = route_mod.external_runtimes.__wrapped__()
 
     assert response == "rendered"
-    assert captured["host_git_available"] is False
+    (entry,) = captured["plugin_entries"]
+    assert entry["state"] == "missing" and entry["paired"] is False
 
 
 def test_external_runtime_action_rejects_git_operations_without_git(

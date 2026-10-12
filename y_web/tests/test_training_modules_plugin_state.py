@@ -180,7 +180,9 @@ def test_enabling_a_suite_not_loaded_at_startup_reports_restart_required(
 def test_plugin_manager_page_shows_the_toggle(manager_client):
     app, client = manager_client
     html = client.get("/admin/external_runtimes").get_data(as_text=True)
-    assert "data-external-runtime-action-button=\"disable\"" in html
+    assert "Enabled" in html                                             # the list shows the state
+    assert 'data-run-action="disable"' in client.get("/admin/external_runtimes/fake_suite").get_data(as_text=True)
     client.post("/admin/external_runtimes/fake_suite/disable")
     html = client.get("/admin/external_runtimes").get_data(as_text=True)
-    assert "data-external-runtime-action-button=\"enable\"" in html and "Disabled" in html
+    assert "Disabled" in html
+    assert 'data-run-action="enable"' in client.get("/admin/external_runtimes/fake_suite").get_data(as_text=True)
