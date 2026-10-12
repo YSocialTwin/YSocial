@@ -57,7 +57,10 @@ def pytest_collection_modifyitems(config, items):
     )
     external_dir = Path(__file__).resolve().parents[2] / "external"
     plugin_tests = (
-        ("ScenarioDesign", ("test_scenario_design_", "test_backend_plugin_sidebar_visibility.py")),
+        (
+            "ScenarioDesign",
+            ("test_scenario_design_", "test_backend_plugin_sidebar_visibility.py"),
+        ),
         ("TrainingModules", ("test_training_modules_teacher_integration.py",)),
     )
 
