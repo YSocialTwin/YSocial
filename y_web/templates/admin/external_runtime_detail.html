@@ -169,6 +169,7 @@
     </div>
 </div>
 
+{% include "admin/tutorials/external_runtime_detail_tutorial.html" %}
 <script>
 (function () {
     var base = {{ url_for('experiments.external_runtime_action', repo_key='__KEY__', action='__ACT__')|tojson }};

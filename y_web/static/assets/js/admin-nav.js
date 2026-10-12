@@ -111,6 +111,8 @@ document.addEventListener('DOMContentLoaded', function() {
             'startUserDetailsTutorial',
             'startMiscellaneaTutorial',
             'startExternalRuntimesTutorial',
+            'startExternalRuntimeDetailTutorial',
+            'startPluginTutorial',
             'startClientsAdhocTutorial',
             'startAgentsDashboardTutorial',
             'startGenericAdminTutorial'
@@ -161,6 +163,11 @@ function replayPageTutorial() {
         window.startMiscellaneaTutorial();
     } else if (typeof window.startExternalRuntimesTutorial === 'function') {
         window.startExternalRuntimesTutorial();
+    } else if (typeof window.startExternalRuntimeDetailTutorial === 'function') {
+        window.startExternalRuntimeDetailTutorial();
+    } else if (typeof window.startPluginTutorial === 'function') {
+        // tutorial supplied by a plugin page (Training, Scenario Design, ...)
+        window.startPluginTutorial();
     } else if (typeof window.startClientsAdhocTutorial === 'function') {
         window.startClientsAdhocTutorial();
     } else if (typeof window.startAgentsDashboardTutorial === 'function') {

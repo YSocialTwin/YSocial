@@ -143,3 +143,22 @@ def test_sync_installs_when_missing_updates_a_git_checkout_and_replaces_otherwis
     done = _single_env(monkeypatch, exists=True, git=False)         # installed from a release, release chosen again
     _sync(app, "release")
     assert done == ["delete_runtime_repo", "download_runtime_release", "deps", "validate"]
+
+
+def test_the_plugin_pages_load_their_guided_tours(core_app, monkeypatch):  # noqa: F811
+    client = _client_as(core_app, "admin")
+    assert "external-runtimes-tutorial.js" in client.get("/admin/external_runtimes").get_data(as_text=True)
+    monkeypatch.setattr(route_mod, "get_runtime_status", lambda key, **kw: SimpleNamespace(to_dict=lambda: {
+        **_repo(key, "forum"), "github_repo": "o/" + key, "repo_url": "u", "default_branch": "main", "current_branch": None,
+        "current_commit": None, "ahead": None, "behind": None, "dependency_files_ready": False, "validation_ready": False,
+        "available_branches": ["main"], "available_releases": [], "latest_release_tag": None, "releases_enabled": False,
+        "release_error": None}))
+    monkeypatch.setattr(route_mod, "_runtime_group_active_experiments", lambda g: [])
+    html = client.get("/admin/external_runtimes/forum").get_data(as_text=True)
+    assert "external-runtime-detail-tutorial.js" in html
+    js = open("y_web/static/assets/js/external-runtime-detail-tutorial.js").read()
+    for selector in ("#external-runtime-detail", ".ext-members", ".ext-options", "#external-runtime-output"):
+        assert selector.lstrip("#.") in html, selector
+        assert selector in js
+    nav = open("y_web/static/assets/js/admin-nav.js").read()
+    assert "startPluginTutorial" in nav and "startExternalRuntimeDetailTutorial" in nav
