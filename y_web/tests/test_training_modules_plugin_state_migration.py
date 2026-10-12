@@ -49,7 +49,10 @@ def test_downgrade_then_upgrade_is_clean_and_idempotent(core_app):
         upgrade(directory=core_app.extensions["migrate"].directory)
         assert "plugin_state" in _tables(core_app)
         upgrade(directory=core_app.extensions["migrate"].directory)  # no-op
-        cols = {c["name"] for c in inspect(db.engines["db_admin"]).get_columns("plugin_state")}
+        cols = {
+            c["name"]
+            for c in inspect(db.engines["db_admin"]).get_columns("plugin_state")
+        }
         assert cols == {"repo_key", "enabled", "updated_at", "updated_by"}
 
 
@@ -63,7 +66,8 @@ def test_upgrade_is_a_noop_when_create_all_already_built_the_table(core_app):
         directory = core_app.extensions["migrate"].directory
         downgrade(directory=directory, revision=REV_0005)
         db.metadata.create_all(
-            bind=db.engines["db_admin"], tables=[db.metadatas["db_admin"].tables["plugin_state"]]
+            bind=db.engines["db_admin"],
+            tables=[db.metadatas["db_admin"].tables["plugin_state"]],
         )
         upgrade(directory=directory)
         with db.engines["db_admin"].connect() as conn:

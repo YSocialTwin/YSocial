@@ -10,7 +10,7 @@ from y_web.tests.test_training_modules_baseline_auth import (  # noqa: F401
 )
 from y_web.tests.test_training_modules_manifest_keys import _make_plugin
 
-HOOKS = '''
+HOOKS = """
 CALLS = []
 
 def guard(account_id, exp_id):
@@ -22,12 +22,14 @@ def external_guard(account_id, exp_id):
 
 def raising_guard(account_id, exp_id):
     raise RuntimeError("guard crashed")
-'''
+"""
 
 
 def _install_guard(tmp_path, monkeypatch, name="guard"):
     repo = _make_plugin(
-        tmp_path, monkeypatch, {"hooks": {"experiment_access_guard": f"pkg.hooks:{name}"}}
+        tmp_path,
+        monkeypatch,
+        {"hooks": {"experiment_access_guard": f"pkg.hooks:{name}"}},
     )
     (repo / "pkg" / "hooks.py").write_text(HOOKS)
 
@@ -56,7 +58,9 @@ def test_guard_can_redirect_participant_sessions(core_app, tmp_path, monkeypatch
     _install_guard(tmp_path, monkeypatch)
     client = _participant_client(app)
     denied = client.get("/999/_tm_probe")
-    assert denied.status_code == 302 and denied.headers["Location"].endswith("/training/blocked")
+    assert denied.status_code == 302 and denied.headers["Location"].endswith(
+        "/training/blocked"
+    )
     allowed = client.get("/7/_tm_probe")
     assert allowed.status_code == 200 and allowed.get_json()["exp_id"] == 7
 
@@ -67,11 +71,17 @@ def test_guard_receives_account_and_experiment_ids(core_app, tmp_path, monkeypat
     app = _app_with_probe(core_app)
     _install_guard(tmp_path, monkeypatch)
     _participant_client(app, 42).get("/3/_tm_probe")
-    hooks = [m for n, m in sys.modules.items() if n.endswith("pkg.hooks") and "fake_suite" in n]
+    hooks = [
+        m
+        for n, m in sys.modules.items()
+        if n.endswith("pkg.hooks") and "fake_suite" in n
+    ]
     assert (42, 3) in hooks[-1].CALLS
 
 
-def test_guard_ignores_sessions_without_platform_account_id(core_app, tmp_path, monkeypatch):
+def test_guard_ignores_sessions_without_platform_account_id(
+    core_app, tmp_path, monkeypatch
+):
     app = _app_with_probe(core_app)
     _install_guard(tmp_path, monkeypatch)
     resp = app.test_client().get("/999/_tm_probe")  # anonymous / staff-like session

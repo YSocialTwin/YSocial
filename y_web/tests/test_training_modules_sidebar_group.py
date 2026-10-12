@@ -12,14 +12,17 @@ from y_web.tests.test_training_modules_baseline_auth import (  # noqa: F401
 )
 from y_web.tests.test_training_modules_manifest_keys import _make_plugin
 
+
 @pytest.fixture(autouse=True)
 def _without_the_real_training_plugin(monkeypatch):
     """These C8 tests exercise the generic mechanism with a fake plugin; the real
     TrainingModules checkout (which declares its own group) must not take part."""
-    monkeypatch.delitem(registry.SUPPORTED_EXTERNAL_REPOS, "training_modules", raising=False)
+    monkeypatch.delitem(
+        registry.SUPPORTED_EXTERNAL_REPOS, "training_modules", raising=False
+    )
 
 
-PKG_INIT = '''
+PKG_INIT = """
 from flask import Blueprint, jsonify
 bp = Blueprint("fake_suite_bp", __name__)
 
@@ -30,14 +33,19 @@ def a():
 @bp.route("/fake/b")
 def b():
     return jsonify(ok="b")
-'''
+"""
 
 GROUP = {
     "label": "Training",
     "icon": "book-open",
     "items": [
         {"label": "Modules", "icon": "layers", "endpoint": "fake_suite_bp.a"},
-        {"label": "Settings", "icon": "settings", "endpoint": "fake_suite_bp.b", "roles": ["admin"]},
+        {
+            "label": "Settings",
+            "icon": "settings",
+            "endpoint": "fake_suite_bp.b",
+            "roles": ["admin"],
+        },
         {"label": "Ghost", "icon": "x", "endpoint": "fake_suite_bp.missing"},
     ],
 }
@@ -67,13 +75,17 @@ def _page(app, role):
     return resp.get_data(as_text=True)
 
 
-def test_group_is_rendered_with_the_existing_group_markup(core_app, tmp_path, monkeypatch):
+def test_group_is_rendered_with_the_existing_group_markup(
+    core_app, tmp_path, monkeypatch
+):
     app = _build(core_app, tmp_path, monkeypatch, {"group": GROUP})
     html = _page(app, "admin")
     assert 'id="sidebar-group-fake_suite"' in html
     assert 'class="dashboard-aside-group"' in html
     assert 'id="sidebar-submenu-fake_suite"' in html
-    assert ">Training<" in html and 'href="/fake/a"' in html and 'href="/fake/b"' in html
+    assert (
+        ">Training<" in html and 'href="/fake/a"' in html and 'href="/fake/b"' in html
+    )
 
 
 def test_items_are_filtered_by_role_and_unresolvable_ones_are_skipped(
@@ -81,7 +93,9 @@ def test_items_are_filtered_by_role_and_unresolvable_ones_are_skipped(
 ):
     app = _build(core_app, tmp_path, monkeypatch, {"group": GROUP})
     researcher_html = _page(app, "researcher")
-    assert 'href="/fake/a"' in researcher_html and 'href="/fake/b"' not in researcher_html
+    assert (
+        'href="/fake/a"' in researcher_html and 'href="/fake/b"' not in researcher_html
+    )
     assert "Ghost" not in researcher_html
     with app.test_request_context("/"):
         assert backend_plugins.backend_suite_sidebar_groups(None) == []
@@ -114,17 +128,30 @@ def test_flat_entry_and_group_can_coexist(core_app, tmp_path, monkeypatch):
         {"label": "Fake", "icon": "box", "endpoint": "fake_suite_bp.a", "group": GROUP},
     )
     html = _page(app, "admin")
-    assert 'id="sidebar-ext-fake_suite"' in html and 'id="sidebar-group-fake_suite"' in html
+    assert (
+        'id="sidebar-ext-fake_suite"' in html
+        and 'id="sidebar-group-fake_suite"' in html
+    )
 
 
 @pytest.mark.parametrize(
     "bad",
     [
         {"group": "nope"},
-        {"group": {"label": "", "items": [{"label": "x", "endpoint": "fake_suite_bp.a"}]}},
+        {
+            "group": {
+                "label": "",
+                "items": [{"label": "x", "endpoint": "fake_suite_bp.a"}],
+            }
+        },
         {"group": {"label": "T", "items": []}},
         {"group": {"label": "T", "items": [{"label": "x"}]}},
-        {"group": {"label": "T", "items": [{"label": "x", "endpoint": "e", "roles": "admin"}]}},
+        {
+            "group": {
+                "label": "T",
+                "items": [{"label": "x", "endpoint": "e", "roles": "admin"}],
+            }
+        },
     ],
 )
 def test_malformed_group_warns_but_neither_invalidates_nor_renders(

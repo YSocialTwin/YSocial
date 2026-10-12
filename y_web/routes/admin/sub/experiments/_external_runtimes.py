@@ -139,7 +139,8 @@ def _toggle_plugin(repo_key: str, spec, admin_user, enabled: bool):
     else:
         flash(f"{spec.label} {'enabled' if enabled else 'disabled'}.", "success")
     return _external_runtimes_response(
-        repo_key=repo_key, message=f"{spec.label} {'enabled' if enabled else 'disabled'}."
+        repo_key=repo_key,
+        message=f"{spec.label} {'enabled' if enabled else 'disabled'}.",
     )
 
 
@@ -260,8 +261,12 @@ def _make_entry(key: str, repos: list[dict]) -> dict:
     return {
         "key": key,
         "label": paired["label"] if paired else first["label"],
-        "description": paired["description"] if paired else (first.get("plugin_description") or ""),
-        "category": first.get("plugin_category_label") or first.get("category_label") or "",
+        "description": (
+            paired["description"] if paired else (first.get("plugin_description") or "")
+        ),
+        "category": first.get("plugin_category_label")
+        or first.get("category_label")
+        or "",
         "paired": bool(paired),
         "members": repos,
         "state": state,
@@ -284,7 +289,11 @@ def _plugin_entries(grouped_status) -> list[dict]:
                 if pair_key in seen:
                     continue
                 seen.add(pair_key)
-                members = [by_key[m] for m in _PAIRED_ENTRIES[pair_key]["members"] if m in by_key]
+                members = [
+                    by_key[m]
+                    for m in _PAIRED_ENTRIES[pair_key]["members"]
+                    if m in by_key
+                ]
                 entries.append(_make_entry(pair_key, members))
             else:
                 entries.append(_make_entry(repo["key"], [repo]))
@@ -316,7 +325,9 @@ def external_runtime_detail(entry_key: str):
         return redirect(url_for("experiments.settings"))
 
     member_keys = (
-        _PAIRED_ENTRIES[entry_key]["members"] if entry_key in _PAIRED_ENTRIES else (entry_key,)
+        _PAIRED_ENTRIES[entry_key]["members"]
+        if entry_key in _PAIRED_ENTRIES
+        else (entry_key,)
     )
     github_token = _session_github_token()
     plugins_index = load_plugins_index(refresh=True)
@@ -330,7 +341,9 @@ def external_runtime_detail(entry_key: str):
         if not runtime_visible_to_user(spec, admin_user):
             flash("You do not have visibility on this plugin repository.", "error")
             return redirect(url_for("experiments.external_runtimes"))
-        status = get_runtime_status(key, github_token=github_token, include_remote_metadata=True)
+        status = get_runtime_status(
+            key, github_token=github_token, include_remote_metadata=True
+        )
         repos.append(_decorate_repo(status.to_dict(), spec, plugins_index))
 
     entry = _make_entry(entry_key, repos)
@@ -354,7 +367,9 @@ def external_runtime_detail(entry_key: str):
         releases=releases,
         latest_release_tag=repos[0].get("latest_release_tag"),
         releases_enabled=all(r.get("releases_enabled") for r in repos),
-        release_error=next((r.get("release_error") for r in repos if r.get("release_error")), None),
+        release_error=next(
+            (r.get("release_error") for r in repos if r.get("release_error")), None
+        ),
         runtime_logs=logs[:40],
         active_experiments=active,
         github_session_authenticated=bool(github_token),
@@ -498,7 +513,10 @@ def _external_runtime_action_single(repo_key: str, action: str):
         else:
             action = "reinstall"
         if (wants_git or action == "update") and not git_available:
-            flash(f"Git is not available on this host. Use the release source for {spec.label}.", "error")
+            flash(
+                f"Git is not available on this host. Use the release source for {spec.label}.",
+                "error",
+            )
             return _external_runtimes_response(
                 repo_key=repo_key, status="error", message="Git is not available."
             )
@@ -569,7 +587,9 @@ def _external_runtime_action_single(repo_key: str, action: str):
             update_runtime_repo(repo_key, branch, admin_user.username)
             flash(f"Updated {spec.label} to branch {branch}.", "success")
             if sync:
-                installed_now = True  # an update also refreshes dependencies, validation and schema
+                installed_now = (
+                    True  # an update also refreshes dependencies, validation and schema
+                )
         elif action == "install":
             install_runtime_dependencies(repo_key, admin_user.username)
             flash(f"Installed dependencies for {spec.label}.", "success")

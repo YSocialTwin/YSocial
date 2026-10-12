@@ -296,7 +296,11 @@ def add_user():
     profile_pic = request.form.get("profile_pic")
 
     # Enforce role restrictions: researchers can only create 'user' role
-    if current_admin_user.role != "admin" and role in ["admin", "researcher", "teacher"]:
+    if current_admin_user.role != "admin" and role in [
+        "admin",
+        "researcher",
+        "teacher",
+    ]:
         flash(
             "You do not have permission to create admin, researcher or teacher users. Only 'user' role is allowed.",
             "error",

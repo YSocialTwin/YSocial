@@ -61,7 +61,9 @@ def iter_hooks(name: str):
                 backend_plugins._import_from_suite(repo_key, dotted), attr
             )
         except Exception as exc:  # broken suite must not break the core flow
-            logger.warning("plugin hook '%s' of '%s' unavailable: %s", name, repo_key, exc)
+            logger.warning(
+                "plugin hook '%s' of '%s' unavailable: %s", name, repo_key, exc
+            )
 
 
 def call_first_non_null(name: str, *args, **kwargs):
@@ -117,7 +119,9 @@ def experiment_page_widgets(exp_id) -> str:
         try:
             html = hook(account_id, exp_id)
         except Exception as exc:
-            logger.warning("plugin hook 'experiment_page_widget' of '%s' raised: %s", repo_key, exc)
+            logger.warning(
+                "plugin hook 'experiment_page_widget' of '%s' raised: %s", repo_key, exc
+            )
             continue
         if isinstance(html, str) and html:
             parts.append(html)

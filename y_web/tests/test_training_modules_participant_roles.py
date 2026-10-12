@@ -114,7 +114,7 @@ def test_logout_clears_platform_account_id(core_app):
 
 
 # ---------------------------------------------------------------- post_login hook
-HOOKS = '''
+HOOKS = """
 def redirect_hook(admin_user):
     return "/training/landing"
 
@@ -129,7 +129,7 @@ def raising_hook(admin_user):
 
 def none_hook(admin_user):
     return None
-'''
+"""
 
 
 def _hook_plugin(tmp_path, monkeypatch, hook_name):

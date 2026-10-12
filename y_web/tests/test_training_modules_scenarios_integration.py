@@ -35,8 +35,7 @@ def _scenario(app, exp_id, status="published", archived=False, master=None, name
                                   {"e": master or exp_id, "n": name, "s": "archived" if archived else status,
                                    "a": "2026-01-01" if archived else None}).lastrowid
             if status == "published":
-                cols, vals = _stamps(session, "sd_publication")
-                session.execute(text(f"INSERT INTO sd_publication (scenario_id, exp_id, status{cols}) VALUES (:i, :e, 'succeeded'{vals})"),
+                session.execute(text("INSERT INTO sd_publication (scenario_id, exp_id, status) VALUES (:i, :e, 'succeeded')"),
                                 {"i": sid, "e": master or exp_id})
             session.commit()
         finally:
