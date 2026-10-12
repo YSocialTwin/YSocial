@@ -186,4 +186,4 @@ def test_the_sidebar_lists_the_training_entries_under_their_sections(core_app): 
     block = html[html.index('id="sidebar-submenu-training_modules"'):]
     block = block[:block.index("</div>\n        </div>")]
     assert re.findall(r'dashboard-aside-submenu-section">([^<]+)<', block) == ["Design", "Run", "Results", "Setup", "Help"]
-    assert [html_unescape(t) for t in re.findall(r"<span>([^<]+)</span>", block)] == ["Modules", "Activity library", "Plugin activities", "Runs", "Analysis", "Data & exports", "Settings", "Guide"]
+    assert [html_unescape(t) for t in re.findall(r"<span>([^<]+)</span>", block)] == ["Modules", "Activity library", "Activities Templates", "Runs", "Analysis", "Data & exports", "Settings", "Guide"]
