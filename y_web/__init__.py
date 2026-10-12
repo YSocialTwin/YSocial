@@ -239,6 +239,7 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
     def before_request_handler():
         """Setup experiment context and desktop mode for each request."""
         from y_web.src.system.role_gate import teacher_gate
+
         denied = setup_experiment_context()
         if denied is None:  # the gate runs after the experiment context (see role_gate)
             denied = teacher_gate()
