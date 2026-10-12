@@ -119,8 +119,8 @@ def test_pages_render_inside_the_core_admin_layout(core_app):
     for path, needle in [
         ("/admin/training/modules", "Layout check"),
         (f"/admin/training/modules/{uid}/edit", "Publish version"),
-        ("/admin/training/components", "Component catalog"),
-        ("/admin/training/library", "Component library"),
+        ("/admin/training/components", "Plugin activities"),
+        ("/admin/training/library", "Activity library"),
     ]:
         resp = admin.get(path)
         html = resp.get_data(as_text=True)

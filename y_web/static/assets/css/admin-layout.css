@@ -183,3 +183,15 @@ body.is-dark .dashboard-toolbar .actions .buttons .live-button.is-disabled:hover
 .ys-admin-flash-alert:last-child {
     margin-bottom: 0;
 }
+
+/* Plugin sidebar groups may list their items under small section headings (manifest item "section") */
+.dashboard-aside .dashboard-aside-submenu-section {
+    margin-top: 6px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(154, 160, 180, .25);
+}
+.dashboard-aside .dashboard-aside-submenu-title + .dashboard-aside-submenu-section {
+    margin-top: 0;
+    padding-top: 8px;
+    border-top: 0;
+}

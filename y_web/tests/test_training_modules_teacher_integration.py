@@ -1,6 +1,7 @@
 """The teacher role in the real core: who can create one, where it lands, what it can never open, and the module
 rehearsal inside a real experiment (the only way into an experiment)."""
 import re
+from html import unescape as html_unescape
 
 from sqlalchemy import select
 
@@ -83,7 +84,7 @@ def test_a_teacher_logs_in_to_the_training_area(core_app):  # noqa: F811
         assert f'href="{closed}"' not in html, closed
     with core_app.test_request_context("/"):
         items = [i["label"] for g in backend_plugins.backend_suite_sidebar_groups("teacher") for i in g["items"]]
-    assert items == ["Modules", "Runs", "Activity & export", "Analysis", "Guide"]
+    assert items == ["Modules", "Runs", "Analysis", "Data & exports", "Guide"]
 
 
 @requires_plugin
@@ -176,3 +177,13 @@ def test_a_teachers_run_takes_students_without_any_core_right(core_app):  # noqa
     # what the teacher cannot do, the core still refuses to them
     assert _post(teacher, f"{API}/runs/{rid}/experiments/activate").status_code == 403
     assert teacher.get(f"/admin/experiment_details/{exp}", headers={"Accept": "text/html"}).status_code != 200
+
+
+@requires_plugin
+def test_the_sidebar_lists_the_training_entries_under_their_sections(core_app):  # noqa: F811
+    admin = _client_as(core_app, "admin")
+    html = re.sub(r"<!--.*?-->", "", admin.get("/admin/dashboard").get_data(as_text=True), flags=re.S)
+    block = html[html.index('id="sidebar-submenu-training_modules"'):]
+    block = block[:block.index("</div>\n        </div>")]
+    assert re.findall(r'dashboard-aside-submenu-section">([^<]+)<', block) == ["Design", "Run", "Results", "Setup", "Help"]
+    assert [html_unescape(t) for t in re.findall(r"<span>([^<]+)</span>", block)] == ["Modules", "Activity library", "Plugin activities", "Runs", "Analysis", "Data & exports", "Settings", "Guide"]

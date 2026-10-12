@@ -829,6 +829,7 @@ def backend_suite_sidebar_groups(role: str | None = None) -> list[dict]:
         "sidebar": {"group": {"label": "Training", "icon": "book-open",
                               "items": [{"label": "Modules", "icon": "layers",
                                          "endpoint": "bp.modules",
+                                         "section": "Design",
                                          "roles": ["admin", "researcher"]}]}}
 
     Only the items allowed for *role* are returned (``roles`` defaults to admin
@@ -866,6 +867,8 @@ def backend_suite_sidebar_groups(role: str | None = None) -> list[dict]:
                     "label": item["label"],
                     "icon": item.get("icon") or "circle",
                     "url": url,
+                    # optional heading the item is listed under (consecutive items with the same one share it)
+                    "section": str(item.get("section") or "").strip() or None,
                 }
             )
         if items:

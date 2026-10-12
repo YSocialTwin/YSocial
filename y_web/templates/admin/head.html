@@ -155,7 +155,11 @@
             </button>
             <div class="dashboard-aside-submenu" id="sidebar-submenu-{{ group.repo_key }}">
                 <div class="dashboard-aside-submenu-title">{{ group.label }}</div>
+                {% set ns = namespace(section=None) %}
                 {% for item in group['items'] %}
+                {% if item.section and item.section != ns.section %}{% set ns.section = item.section %}
+                <div class="dashboard-aside-submenu-title dashboard-aside-submenu-section">{{ item.section }}</div>
+                {% endif %}
                 <a href="{{ item.url }}" class="dashboard-aside-link dashboard-aside-sublink">
                     <i data-feather="{{ item.icon }}"></i>
                     <span>{{ item.label }}</span>
