@@ -10,7 +10,7 @@ from y_web.tests.test_training_modules_baseline_auth import (  # noqa: F401
 )
 from y_web.tests.test_training_modules_manifest_keys import _make_plugin
 
-HOOKS = '''
+HOOKS = """
 EVENTS = []
 
 def record(exp, account_id, exp_user_id, created):
@@ -18,18 +18,24 @@ def record(exp, account_id, exp_user_id, created):
 
 def raising(exp, account_id, exp_user_id, created):
     raise RuntimeError("hook crashed")
-'''
+"""
 
 
 def _install(tmp_path, monkeypatch, name="record"):
     repo = _make_plugin(
-        tmp_path, monkeypatch, {"hooks": {"experiment_user_provisioned": f"pkg.hooks:{name}"}}
+        tmp_path,
+        monkeypatch,
+        {"hooks": {"experiment_user_provisioned": f"pkg.hooks:{name}"}},
     )
     (repo / "pkg" / "hooks.py").write_text(HOOKS)
 
 
 def _events():
-    mods = [m for n, m in sys.modules.items() if n.endswith("pkg.hooks") and "fake_suite" in n]
+    mods = [
+        m
+        for n, m in sys.modules.items()
+        if n.endswith("pkg.hooks") and "fake_suite" in n
+    ]
     return mods[-1].EVENTS if mods else []
 
 
@@ -46,7 +52,9 @@ def _ensure(exp, account, **extra):
     )
 
 
-def test_event_carries_explicit_account_id_and_created_flag(core_app, tmp_path, monkeypatch):
+def test_event_carries_explicit_account_id_and_created_flag(
+    core_app, tmp_path, monkeypatch
+):
     _install(tmp_path, monkeypatch)
     with core_app.test_request_context("/"):
         account = _make_admin_user("student")
@@ -102,5 +110,7 @@ def test_select_experiment_flow_emits_the_event(core_app, tmp_path, monkeypatch)
     client.post("/login", data={"email": email, "password": "Passw0rd!"})
     with client.session_transaction() as sess:
         token = sess["exp_select_token"]
-    client.post("/select_experiment", data={"experiment_id": exp_id, "auth_token": token})
+    client.post(
+        "/select_experiment", data={"experiment_id": exp_id, "auth_token": token}
+    )
     assert (exp_id, account_id, account_id, True) in _events()

@@ -51,7 +51,9 @@ def _client_as(app, role):
 
 
 def _post(client, url, body=None, method="post"):
-    return getattr(client, method)(url, json=body or {}, headers={"X-CSRF-Token": "tok"})
+    return getattr(client, method)(
+        url, json=body or {}, headers={"X-CSRF-Token": "tok"}
+    )
 
 
 def _scenario_step(client, uid, revision, slot="s1"):
@@ -62,7 +64,11 @@ def _scenario_step(client, uid, revision, slot="s1"):
             "revision": revision,
             "type": "scenario",
             "title": f"Step {slot}",
-            "config": {"slot_key": slot, "hint_name": "Intro", "platform_type": "microblogging"},
+            "config": {
+                "slot_key": slot,
+                "hint_name": "Intro",
+                "platform_type": "microblogging",
+            },
         },
     )
 
@@ -91,7 +97,11 @@ def test_full_authoring_cycle_with_researcher_scoping(core_app):
     uid = created.get_json()["module"]["module_uid"]
     r = _scenario_step(alice, uid, 1)
     assert r.status_code == 201
-    r = _post(alice, f"{API}/modules/{uid}/versions/1/publish", {"revision": r.get_json()["revision"]})
+    r = _post(
+        alice,
+        f"{API}/modules/{uid}/versions/1/publish",
+        {"revision": r.get_json()["revision"]},
+    )
     assert r.status_code == 200 and r.get_json()["version"]["status"] == "published"
     digest = r.get_json()["version"]["content_hash"]
 
@@ -100,7 +110,9 @@ def test_full_authoring_cycle_with_researcher_scoping(core_app):
     assert bob.get(f"{API}/modules/{uid}").status_code == 404
     assert bob.get(f"/admin/training/modules/{uid}/edit").status_code == 404
     assert _post(bob, f"{API}/modules/{uid}/versions", {}).status_code == 404
-    admin_titles = [m["title"] for m in admin.get(f"{API}/modules").get_json()["modules"]]
+    admin_titles = [
+        m["title"] for m in admin.get(f"{API}/modules").get_json()["modules"]
+    ]
     assert "Alice module" in admin_titles  # the seed DB may hold other modules
     assert admin.get(f"/admin/training/modules/{uid}/edit").status_code == 200
 
@@ -109,13 +121,20 @@ def test_full_authoring_cycle_with_researcher_scoping(core_app):
     assert _scenario_step(alice, uid, v1["revision"], "s2").status_code == 409
     draft = _post(alice, f"{API}/modules/{uid}/versions", {})
     assert draft.status_code == 201 and draft.get_json()["version"]["version_no"] == 2
-    assert alice.get(f"{API}/modules/{uid}/versions/1").get_json()["version"]["content_hash"] == digest
+    assert (
+        alice.get(f"{API}/modules/{uid}/versions/1").get_json()["version"][
+            "content_hash"
+        ]
+        == digest
+    )
 
 
 @requires_plugin
 def test_pages_render_inside_the_core_admin_layout(core_app):
     admin = _client_as(core_app, "admin")
-    uid = _post(admin, f"{API}/modules", {"title": "Layout check"}).get_json()["module"]["module_uid"]
+    uid = _post(admin, f"{API}/modules", {"title": "Layout check"}).get_json()[
+        "module"
+    ]["module_uid"]
     for path, needle in [
         ("/admin/training/modules", "Layout check"),
         (f"/admin/training/modules/{uid}/edit", "Publish version"),
@@ -132,7 +151,12 @@ def test_pages_render_inside_the_core_admin_layout(core_app):
 @requires_plugin
 def test_participants_and_anonymous_users_are_refused(core_app):
     student = _client_as(core_app, "user")
-    for path in (f"{API}/modules", f"{API}/types", "/admin/training/modules", "/admin/training/components"):
+    for path in (
+        f"{API}/modules",
+        f"{API}/types",
+        "/admin/training/modules",
+        "/admin/training/components",
+    ):
         assert student.get(path).status_code == 403, path
     assert _post(student, f"{API}/modules", {"title": "x"}).status_code == 403
     anonymous = core_app.test_client()
@@ -145,7 +169,12 @@ def test_disabled_plugin_makes_every_page_and_api_unreachable(core_app):
     assert admin.get("/admin/training/modules").status_code == 200
     with core_app.app_context():
         backend_plugins.set_plugin_enabled("training_modules", False, "tester")
-    for path in ("/admin/training/modules", "/admin/training/components", f"{API}/modules", f"{API}/types"):
+    for path in (
+        "/admin/training/modules",
+        "/admin/training/components",
+        f"{API}/modules",
+        f"{API}/types",
+    ):
         assert admin.get(path).status_code == 404, path
     assert _post(admin, f"{API}/modules", {"title": "x"}).status_code == 404
     html = admin.get("/admin/dashboard").get_data(as_text=True)
@@ -160,9 +189,13 @@ def test_native_palette_without_third_party_plugins(core_app):
     admin = _client_as(core_app, "admin")
     types = admin.get(f"{API}/types").get_json()["types"]
     refs = [t["type_ref"] for t in types]
-    assert refs[:2] == ["scenario", "external_component"] and all(r.startswith("tm_native:") for r in refs[2:])
+    assert refs[:2] == ["scenario", "external_component"] and all(
+        r.startswith("tm_native:") for r in refs[2:]
+    )
     # without third-party plugins the catalog lists only the components served by the plugin itself
-    listed = [c["type_ref"] for c in admin.get(f"{API}/components").get_json()["components"]]
+    listed = [
+        c["type_ref"] for c in admin.get(f"{API}/components").get_json()["components"]
+    ]
     assert listed == refs[2:] and "tm_native:onboarding" in listed
 
 
@@ -175,7 +208,11 @@ def test_third_party_types_come_from_the_core_catalog(core_app, tmp_path, monkey
         "label": "Questionnaire",
         "category": "Questionnaire",
         "contract_version": "1",
-        "config_schema": {"type": "object", "required": ["form_id"], "properties": {"form_id": {"type": "string"}}},
+        "config_schema": {
+            "type": "object",
+            "required": ["form_id"],
+            "properties": {"form_id": {"type": "string"}},
+        },
         "launch": {"endpoint": "/q/launch"},
     }
     _make_plugin(tmp_path, monkeypatch, {"training_components": [descriptor]})
@@ -184,15 +221,30 @@ def test_third_party_types_come_from_the_core_catalog(core_app, tmp_path, monkey
     types = {t["type_ref"]: t for t in admin.get(f"{API}/types").get_json()["types"]}
     assert ref in types and types[ref]["selectable"] and types[ref]["native"] is False
 
-    uid = _post(admin, f"{API}/modules", {"title": "With survey"}).get_json()["module"]["module_uid"]
+    uid = _post(admin, f"{API}/modules", {"title": "With survey"}).get_json()["module"][
+        "module_uid"
+    ]
     r = _post(
         admin,
         f"{API}/modules/{uid}/versions/1/steps",
-        {"revision": 1, "type": "component", "component_ref": ref, "title": "Survey",
-         "config": {"component_ref": ref, "contract_version": "1", "settings": {"form_id": "f1"}}},
+        {
+            "revision": 1,
+            "type": "component",
+            "component_ref": ref,
+            "title": "Survey",
+            "config": {
+                "component_ref": ref,
+                "contract_version": "1",
+                "settings": {"form_id": "f1"},
+            },
+        },
     )
     assert r.status_code == 201, r.get_json()
-    pub = _post(admin, f"{API}/modules/{uid}/versions/1/publish", {"revision": r.get_json()["revision"]})
+    pub = _post(
+        admin,
+        f"{API}/modules/{uid}/versions/1/publish",
+        {"revision": r.get_json()["revision"]},
+    )
     assert pub.status_code == 200, pub.get_json()
 
     # a disabled plugin offers no types any more -> unresolved step blocks a new draft's publication

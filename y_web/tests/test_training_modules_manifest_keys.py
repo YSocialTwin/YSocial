@@ -1,5 +1,6 @@
 """C2 - optional manifest keys ``schema_module``, ``hooks``, ``permissions``
-validated by ``validate_backend_suite`` (E1). Uses a fake plugin, not TrainingModules."""
+validated by ``validate_backend_suite`` (E1). Uses a fake plugin, not TrainingModules.
+"""
 
 import json
 import sys
@@ -10,7 +11,9 @@ from flask import Flask
 from y_web.src.external_runtime import backend_plugins, registry
 
 
-def _make_plugin(tmp_path, monkeypatch, extra=None, files=("pkg/schema.py", "pkg/hooks.py")):
+def _make_plugin(
+    tmp_path, monkeypatch, extra=None, files=("pkg/schema.py", "pkg/hooks.py")
+):
     # the loader caches imported plugin modules by synthetic namespace name
     for name in [n for n in sys.modules if n.startswith("_ysocial_ext__fake_suite")]:
         del sys.modules[name]
@@ -23,7 +26,9 @@ def _make_plugin(tmp_path, monkeypatch, extra=None, files=("pkg/schema.py", "pkg
     for rel in files:
         target = repo / rel
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text("def migrate(engine):\n    return True\n\ndef hook(*a, **k):\n    return None\n")
+        target.write_text(
+            "def migrate(engine):\n    return True\n\ndef hook(*a, **k):\n    return None\n"
+        )
     manifest = {
         "suite": {"suite_id": "fake_suite"},
         "backend_plugins": [
@@ -71,7 +76,10 @@ def test_valid_optional_keys_are_exposed_in_the_report(tmp_path, monkeypatch):
         monkeypatch,
         {
             "schema_module": "pkg.schema:migrate",
-            "hooks": {"post_login": "pkg.hooks:hook", "experiment_access_guard": "pkg.hooks:hook"},
+            "hooks": {
+                "post_login": "pkg.hooks:hook",
+                "experiment_access_guard": "pkg.hooks:hook",
+            },
             "permissions": "pkg.hooks:hook",
         },
     )

@@ -14,7 +14,10 @@ from werkzeug.security import check_password_hash
 from y_web import db
 from y_web.routes.auth._blueprint import auth
 from y_web.src.experiment.helpers import ensure_experiment_user
-from y_web.src.external_runtime.plugin_hooks import call_first_non_null, is_local_redirect
+from y_web.src.external_runtime.plugin_hooks import (
+    call_first_non_null,
+    is_local_redirect,
+)
 from y_web.src.models import Admin_users, Exps, User_Experiment, User_mgmt
 
 # Roles that log in as experiment participants. "student" is an alias of
@@ -141,7 +144,9 @@ def login_post():
         try:
             home = url_for("training_modules.modules_page")
         except Exception:
-            flash("The training area is not available. Please contact an administrator.")
+            flash(
+                "The training area is not available. Please contact an administrator."
+            )
             return redirect(url_for("auth.login"))
         login_user(user, remember=remember)
         return redirect(home)

@@ -363,7 +363,7 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
                     get_visible_experiment_query(admin_user).filter_by(status=1).all()
                 )
             elif admin_user.role == "teacher":
-                active_exps = []   # a teacher is told about no experiment
+                active_exps = []  # a teacher is told about no experiment
             else:
                 active_exps = db.session.scalars(select(Exps).filter_by(status=1)).all()
             return dict(active_experiments=active_exps)

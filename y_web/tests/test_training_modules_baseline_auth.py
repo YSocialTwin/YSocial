@@ -32,7 +32,10 @@ def core_app(monkeypatch, tmp_path):
     app.config.update(TESTING=True, WTF_CSRF_ENABLED=False)
     # Training Modules offers only the release of a published Scenario Design scenario; most tests do not care about
     # that, the one that does (test_training_modules_scenarios_integration) removes this default.
-    app.config["TM_EXPERIMENT_SCENARIO"] = lambda exp: {"id": exp["idexp"], "name": f"Scenario {exp['idexp']}"}
+    app.config["TM_EXPERIMENT_SCENARIO"] = lambda exp: {
+        "id": exp["idexp"],
+        "name": f"Scenario {exp['idexp']}",
+    }
     return app
 
 
@@ -151,9 +154,7 @@ def test_login_role_user_is_not_logged_in_before_experiment_selection(core_app):
         email = row.email
 
     client = core_app.test_client()
-    response = client.post(
-        "/login", data={"email": email, "password": "Passw0rd!"}
-    )
+    response = client.post("/login", data={"email": email, "password": "Passw0rd!"})
     assert response.status_code == 302
     with client.session_transaction() as sess:
         assert "_user_id" not in sess

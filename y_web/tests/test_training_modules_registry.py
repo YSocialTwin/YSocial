@@ -32,7 +32,9 @@ def test_plugins_json_has_a_training_modules_card():
     cards = [p for p in payload["plugins"] if p["plugin_name"] == "Training Modules"]
     assert len(cards) == 1
     assert cards[0]["group"] == "Backend Settings"
-    assert cards[0]["repository_url"] == "https://github.com/YSocialTwin/TrainingModules"
+    assert (
+        cards[0]["repository_url"] == "https://github.com/YSocialTwin/TrainingModules"
+    )
 
 
 def test_absent_plugin_is_reported_as_not_installed_without_errors(
@@ -40,7 +42,9 @@ def test_absent_plugin_is_reported_as_not_installed_without_errors(
 ):
     """With the plugin folder missing the core behaves as if it did not exist."""
     spec = registry.runtime_spec("training_modules")
-    missing = registry.ExternalRuntimeSpec(**{**spec.__dict__, "path": tmp_path / "nope"})
+    missing = registry.ExternalRuntimeSpec(
+        **{**spec.__dict__, "path": tmp_path / "nope"}
+    )
     monkeypatch.setitem(registry.SUPPORTED_EXTERNAL_REPOS, "training_modules", missing)
 
     report = backend_plugins.validate_backend_suite("training_modules")

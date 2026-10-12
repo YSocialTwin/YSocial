@@ -69,10 +69,14 @@ def test_startup_registers_blueprint_and_creates_tm_tables():
         names = set(inspect(db.engines["db_admin"]).get_table_names())
         assert {"tm_module", "tm_step", "tm_event", "tm_schema_version"} <= names
         with db.engines["db_admin"].connect() as conn:
-            version = conn.execute(
-                text("SELECT version FROM tm_schema_version")
-            ).scalars().all()
-        assert version == sorted(set(version)) and version[-1] == 10   # schema v10 (the dev DB copy may still hold older stamps)
+            version = (
+                conn.execute(text("SELECT version FROM tm_schema_version"))
+                .scalars()
+                .all()
+            )
+        assert (
+            version == sorted(set(version)) and version[-1] == 10
+        )  # schema v10 (the dev DB copy may still hold older stamps)
 
 
 @requires_plugin
@@ -95,9 +99,11 @@ def test_rerunning_the_migration_does_not_duplicate_or_lose_rows():
     with app.app_context():
         with db.engines["db_admin"].connect() as conn:
             titles = conn.execute(text("SELECT title FROM tm_module")).scalars().all()
-            versions = conn.execute(
-                text("SELECT version FROM tm_schema_version")
-            ).scalars().all()
+            versions = (
+                conn.execute(text("SELECT version FROM tm_schema_version"))
+                .scalars()
+                .all()
+            )
     # the temp DB is a copy of the developer's dashboard.db, so it may hold other rows
     assert titles.count("Keep") == 1
     assert versions == sorted(set(versions)) and versions[-1] == 10
@@ -121,7 +127,9 @@ def test_absent_plugin_leaves_startup_and_routes_untouched(tmp_path, monkeypatch
     from y_web import db
 
     spec = registry.runtime_spec("training_modules")
-    missing = registry.ExternalRuntimeSpec(**{**spec.__dict__, "path": tmp_path / "nope"})
+    missing = registry.ExternalRuntimeSpec(
+        **{**spec.__dict__, "path": tmp_path / "nope"}
+    )
     monkeypatch.setitem(registry.SUPPORTED_EXTERNAL_REPOS, "training_modules", missing)
 
     app = _new_app()
@@ -136,7 +144,9 @@ def test_absent_plugin_leaves_startup_and_routes_untouched(tmp_path, monkeypatch
         with sqlite3.connect(f"file:{seed}?mode=ro", uri=True) as seed_conn:
             seeded = {
                 r[0]
-                for r in seed_conn.execute("SELECT name FROM sqlite_master WHERE name LIKE 'tm\\_%' ESCAPE '\\'")
+                for r in seed_conn.execute(
+                    "SELECT name FROM sqlite_master WHERE name LIKE 'tm\\_%' ESCAPE '\\'"
+                )
             }
         assert {n for n in names if n.startswith("tm_")} == seeded
     assert app.test_client().get("/admin/training/health").status_code in (302, 404)

@@ -650,7 +650,10 @@ def join_experiment(exp_id):
         # a session that owns nothing here may still be let in by a plugin (a teacher rehearsing a training module)
         from y_web.src.external_runtime.plugin_hooks import call_first_non_null
 
-        if call_first_non_null("staff_experiment_access", current_user, exp_id) is not True:
+        if (
+            call_first_non_null("staff_experiment_access", current_user, exp_id)
+            is not True
+        ):
             flash("You are not allowed to access this experiment.", "error")
             return redirect("/admin/experiments")
 

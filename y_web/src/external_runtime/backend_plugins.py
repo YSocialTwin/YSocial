@@ -285,9 +285,13 @@ def read_training_components(repo_key: str) -> dict:
         for index, descriptor in enumerate(raw, start=1):
             component, problems = validate_training_component(descriptor)
             if component is not None and component["type_key"] in seen:
-                component, problems = None, [f"duplicate type_key '{descriptor['type_key']}'"]
+                component, problems = None, [
+                    f"duplicate type_key '{descriptor['type_key']}'"
+                ]
             if component is None:
-                result["problems"].append(f"descriptor #{index}: " + "; ".join(problems))
+                result["problems"].append(
+                    f"descriptor #{index}: " + "; ".join(problems)
+                )
                 continue
             seen.add(component["type_key"])
             component["repo_key"] = repo_key
@@ -324,7 +328,11 @@ def _sidebar_group_problems(sidebar) -> list[str]:
         return ["must have a non-empty 'items' list"]
     problems = []
     for i, item in enumerate(items):
-        if not isinstance(item, dict) or not item.get("label") or not item.get("endpoint"):
+        if (
+            not isinstance(item, dict)
+            or not item.get("label")
+            or not item.get("endpoint")
+        ):
             problems.append(f"item #{i + 1} needs 'label' and 'endpoint'")
         elif "roles" in item and not (
             isinstance(item["roles"], list)

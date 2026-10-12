@@ -38,11 +38,20 @@ def good(**over):
 
 def test_valid_descriptor_is_normalized_with_defaults():
     comp, problems = bp.validate_training_component(
-        {"type_key": "landing", "label": "Landing", "contract_version": "1", "launch": {"endpoint": "/l"}}
+        {
+            "type_key": "landing",
+            "label": "Landing",
+            "contract_version": "1",
+            "launch": {"endpoint": "/l"},
+        }
     )
     assert problems == []
     assert comp["icon"] == "box" and comp["category"] == "Other"
-    assert comp["signals"] == {"declared": True, "verified": False, "advance_button": False}
+    assert comp["signals"] == {
+        "declared": True,
+        "verified": False,
+        "advance_button": False,
+    }
     assert comp["config_schema"] == {"type": "object", "properties": {}}
     assert "instance_picker" not in comp
 
@@ -50,7 +59,10 @@ def test_valid_descriptor_is_normalized_with_defaults():
 def test_full_descriptor_keeps_its_declarations():
     comp, problems = bp.validate_training_component(good())
     assert problems == []
-    assert comp["signals"]["advance_button"] is True and comp["signals"]["declared"] is True
+    assert (
+        comp["signals"]["advance_button"] is True
+        and comp["signals"]["declared"] is True
+    )
     assert comp["instance_picker"] == {"endpoint": "/q/search"}
 
 
@@ -63,9 +75,34 @@ def test_full_descriptor_keeps_its_declarations():
         ({"contract_version": "9"}, "contract_version"),
         ({"contract_version": None}, "contract_version"),
         ({"config_schema": {"type": "array"}}, "config_schema"),
-        ({"config_schema": {"type": "object", "properties": {"x": {"type": "object"}}}}, "flat"),
-        ({"config_schema": {"type": "object", "properties": {"x": {"type": "string", "enum": []}}}}, "enum"),
-        ({"config_schema": {"type": "object", "properties": {}, "required": ["ghost"]}}, "required"),
+        (
+            {
+                "config_schema": {
+                    "type": "object",
+                    "properties": {"x": {"type": "object"}},
+                }
+            },
+            "flat",
+        ),
+        (
+            {
+                "config_schema": {
+                    "type": "object",
+                    "properties": {"x": {"type": "string", "enum": []}},
+                }
+            },
+            "enum",
+        ),
+        (
+            {
+                "config_schema": {
+                    "type": "object",
+                    "properties": {},
+                    "required": ["ghost"],
+                }
+            },
+            "required",
+        ),
         ({"launch": {"endpoint": "https://evil.example/x"}}, "launch.endpoint"),
         ({"launch": {"endpoint": "//evil.example/x"}}, "launch.endpoint"),
         ({"launch": "/q/launch"}, "launch.endpoint"),
@@ -88,7 +125,9 @@ def test_missing_launch_and_non_dict_descriptors_are_rejected():
 
 def _fake_repo(tmp_path, monkeypatch, key, group, components, **extra):
     """Install a fake plugin with an arbitrary group (the key works for any plugin)."""
-    repo = _make_plugin(tmp_path, monkeypatch, {"training_components": components, **extra})
+    repo = _make_plugin(
+        tmp_path, monkeypatch, {"training_components": components, **extra}
+    )
     spec = registry.runtime_spec("fake_suite")
     monkeypatch.setitem(
         registry.SUPPORTED_EXTERNAL_REPOS,
@@ -103,11 +142,19 @@ def test_key_is_read_from_any_plugin_group(tmp_path, monkeypatch):
     result = bp.read_training_components("fake_frontend")
     assert result["problems"] == []
     (comp,) = result["components"]
-    assert comp["component_ref"] == "fake_frontend:questionnaire" and comp["repo_key"] == "fake_frontend"
+    assert (
+        comp["component_ref"] == "fake_frontend:questionnaire"
+        and comp["repo_key"] == "fake_frontend"
+    )
 
 
 def test_bad_descriptors_are_reported_and_good_ones_survive(tmp_path, monkeypatch):
-    comps = [good(), good(label=""), good(), "junk"]  # ok, bad label, duplicate, not an object
+    comps = [
+        good(),
+        good(label=""),
+        good(),
+        "junk",
+    ]  # ok, bad label, duplicate, not an object
     _fake_repo(tmp_path, monkeypatch, "fake_suite", "backend_settings", comps)
     result = bp.read_training_components("fake_suite")
     assert [c["type_key"] for c in result["components"]] == ["questionnaire"]
@@ -118,12 +165,17 @@ def test_bad_descriptors_are_reported_and_good_ones_survive(tmp_path, monkeypatc
 def test_non_list_key_is_a_problem_not_a_crash(tmp_path, monkeypatch):
     _fake_repo(tmp_path, monkeypatch, "fake_suite", "backend_settings", {"oops": 1})
     result = bp.read_training_components("fake_suite")
-    assert result["components"] == [] and result["problems"] == ["training_components must be a list"]
+    assert result["components"] == [] and result["problems"] == [
+        "training_components must be a list"
+    ]
 
 
 def test_missing_key_unknown_repo_and_absent_plugin_are_empty(tmp_path, monkeypatch):
     _make_plugin(tmp_path, monkeypatch)
-    assert bp.read_training_components("fake_suite") == {"components": [], "problems": []}
+    assert bp.read_training_components("fake_suite") == {
+        "components": [],
+        "problems": [],
+    }
     assert bp.read_training_components("no_such_repo")["components"] == []
     spec = registry.runtime_spec("training_modules")
     monkeypatch.setitem(
@@ -135,7 +187,9 @@ def test_missing_key_unknown_repo_and_absent_plugin_are_empty(tmp_path, monkeypa
 
 
 def test_invalid_training_components_never_block_plugin_loading(tmp_path, monkeypatch):
-    _fake_repo(tmp_path, monkeypatch, "fake_suite", "backend_settings", [good(label="")])
+    _fake_repo(
+        tmp_path, monkeypatch, "fake_suite", "backend_settings", [good(label="")]
+    )
     report = bp.validate_backend_suite("fake_suite")
     assert report["valid"] is True
     assert any("training_components" in w for w in report["warnings"])

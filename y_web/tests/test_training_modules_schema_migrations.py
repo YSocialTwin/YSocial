@@ -8,7 +8,7 @@ from sqlalchemy import inspect, text
 from y_web.src.external_runtime import backend_plugins, registry
 from y_web.tests.test_training_modules_manifest_keys import _make_plugin
 
-MIGRATE_OK = '''
+MIGRATE_OK = """
 from sqlalchemy import text
 
 CALLS = []
@@ -18,7 +18,7 @@ def migrate(engine):
     with engine.begin() as conn:
         conn.execute(text("CREATE TABLE IF NOT EXISTS fake_tm_probe (id INTEGER PRIMARY KEY, v TEXT)"))
     return True
-'''
+"""
 
 
 def _write_schema(repo, body):
@@ -59,12 +59,16 @@ def test_migration_runs_with_db_admin_engine_and_is_idempotent(
 
 def test_suite_without_schema_module_is_skipped(tmp_path, monkeypatch, app):
     _make_plugin(tmp_path, monkeypatch)
-    assert backend_plugins.run_backend_plugin_schema_migrations(app, ["fake_suite"]) == {}
+    assert (
+        backend_plugins.run_backend_plugin_schema_migrations(app, ["fake_suite"]) == {}
+    )
 
 
 def test_absent_plugin_is_skipped(tmp_path, monkeypatch, app):
     spec = registry.runtime_spec("training_modules")
-    missing = registry.ExternalRuntimeSpec(**{**spec.__dict__, "path": tmp_path / "nope"})
+    missing = registry.ExternalRuntimeSpec(
+        **{**spec.__dict__, "path": tmp_path / "nope"}
+    )
     monkeypatch.setitem(registry.SUPPORTED_EXTERNAL_REPOS, "training_modules", missing)
     assert (
         backend_plugins.run_backend_plugin_schema_migrations(app, ["training_modules"])
@@ -89,7 +93,9 @@ def test_migration_returning_false_is_a_reported_failure(tmp_path, monkeypatch, 
 
 def test_invalid_manifest_does_not_run_the_migration(tmp_path, monkeypatch, app):
     repo = _make_plugin(tmp_path, monkeypatch, {"schema_module": "pkg.missing:migrate"})
-    assert backend_plugins.run_backend_plugin_schema_migrations(app, ["fake_suite"]) == {}
+    assert (
+        backend_plugins.run_backend_plugin_schema_migrations(app, ["fake_suite"]) == {}
+    )
 
 
 def test_create_app_runs_plugin_migrations_after_alembic(tmp_path, monkeypatch):

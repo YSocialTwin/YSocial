@@ -30,7 +30,10 @@ REHEARSAL_PATHS = ("/feed", "/rfeed", "/photo/feed", "/rnotifications", "/profil
 
 def is_teacher(user=None) -> bool:
     user = user if user is not None else current_user
-    return bool(getattr(user, "is_authenticated", False)) and getattr(user, "role", None) == TEACHER_ROLE
+    return (
+        bool(getattr(user, "is_authenticated", False))
+        and getattr(user, "role", None) == TEACHER_ROLE
+    )
 
 
 def _rehearsing(exp_id) -> bool:
