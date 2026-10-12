@@ -23,7 +23,7 @@
                     <div class="dashboard-box" id="external-runtimes-main">
                         <h3 class="title is-5 is-thin">Plugins</h3>
                         <div class="box-content">
-                            <p class="ext-intro">Available and installed plugins. Open a plugin to install or update it and to follow the output of the operation. Microblogging and Forum each include a server and a client, which are always handled together.</p>
+                            <p class="ext-intro">Available and installed plugins. Open a plugin to install or update it and to follow the output of the operation. Microblogging and Forum each include a server and a client, which you install and update independently from the plugin page.</p>
                             <div class="table-responsive">
                             <table class="ext-plugin-table" id="external-runtimes-list">
                                 <thead><tr><th>Plugin</th><th>Description</th><th>Status</th><th></th></tr></thead>
@@ -74,7 +74,7 @@ document.addEventListener('click', async function (event) {
     if (!button) return;
     event.preventDefault();
     var label = button.dataset.label || 'this plugin';
-    if (!window.confirm('Remove ' + label + ' from external/? This deletes the local plugin files.')) return;
+    if (!window.confirm('Remove ' + label + ' (all its components) from external/? This deletes the local plugin files.')) return;
     if (window.showLoading) window.showLoading('Removing ' + label + '...');
     try {
         await fetch(button.dataset.removeUrl, {

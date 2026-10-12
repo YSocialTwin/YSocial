@@ -50,18 +50,18 @@ _MUTATING_ACTIONS = {
     "sync",
 }
 
-# Plugins shown as ONE entry in the plugin list: a server and a client that are always installed, updated and
-# removed together (server first). Everything else is one entry per repository.
+# Plugins shown as ONE entry in the plugin list: a server and a client, each installed/updated/removed independently
+# from the entry's page. Acting on the entry key itself (the list's Remove) applies to both (server first).
 _PAIRED_ENTRIES = {
     "microblogging": {
         "label": "Microblogging",
         "members": ("microblogging_server", "microblogging_client"),
-        "description": "Microblogging simulator (timeline, posts, follows). Server and client are installed, updated and removed together.",
+        "description": "Microblogging simulator (timeline, posts, follows). Server and client are installed and updated independently from its page.",
     },
     "forum": {
         "label": "Forum",
         "members": ("forum_server", "forum_client"),
-        "description": "Forum simulator (threads and replies). Server and client are installed, updated and removed together.",
+        "description": "Forum simulator (threads and replies). Server and client are installed and updated independently from its page.",
     },
 }
 _PAIR_OF_MEMBER = {m: k for k, v in _PAIRED_ENTRIES.items() for m in v["members"]}

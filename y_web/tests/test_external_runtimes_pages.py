@@ -56,7 +56,7 @@ def test_the_list_and_detail_pages_render(core_app, monkeypatch):  # noqa: F811
     detail = client.get("/admin/external_runtimes/forum")
     assert detail.status_code == 200
     html = detail.get_data(as_text=True)
-    assert "forum_server" in html and "forum_client" in html and "/admin/external_runtimes/forum/sync" in html
+    assert "forum_server" in html and "forum_client" in html and "/admin/external_runtimes/forum_server/sync" in html and "/admin/external_runtimes/forum_client/sync" in html
     assert "Operation output" in html
     assert client.get("/admin/external_runtimes/no_such_plugin").status_code in (302, 404)
 

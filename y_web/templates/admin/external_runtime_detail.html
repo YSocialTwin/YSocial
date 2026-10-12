@@ -15,6 +15,7 @@
     .ext-option { border:1px solid var(--ext-border); border-radius:8px; padding:10px; background:var(--ext-bg-subtle); display:grid; gap:6px; font-size:.8rem; }
     .ext-option.is-muted { background:#fff7ed; }
     .ext-radio-row { display:flex; gap:8px; align-items:center; }
+    .ext-component-title { font-weight:700; font-size:.95rem; margin:6px 0 8px; }
     .ext-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
     .ext-danger-text { color:#b91c1c; }
     .ext-warn { border:1px solid #fcd34d; background:#fffbeb; color:#92400e; border-radius:8px; padding:8px 12px; font-size:.8rem; margin-bottom:12px; }
@@ -52,7 +53,7 @@
                             {% endif %}
 
                             <div class="ext-section">
-                                <div class="ext-section-title">{{ 'Components' if entry.paired else 'Source' }}</div>
+                                <div class="ext-section-title">{{ 'Components (independent)' if entry.paired else 'Source' }}</div>
                                 <table class="ext-members">
                                     <thead><tr><th>Repository</th><th>State</th><th>Version</th><th>Latest release</th><th>Checks</th></tr></thead>
                                     <tbody>
@@ -69,26 +70,28 @@
                                 </table>
                             </div>
 
-                            <form class="ext-section" id="external-runtime-sync-form" method="POST" action="{{ url_for('experiments.external_runtime_action', repo_key=entry.key, action='sync') }}">
-                                <div class="ext-section-title">{{ 'Install' if entry.state == 'missing' else 'Update' }}{% if entry.paired %} (server, then client){% endif %}</div>
+                            {% for repo in entry.members %}
+                            <div class="ext-component" data-repo-key="{{ repo.key }}">
+                            {% if entry.paired %}<div class="ext-component-title">{{ repo.label }} <span class="ext-hint">&mdash; installed and updated independently</span></div>{% endif %}
+                            <form class="ext-section ext-sync-form" method="POST" action="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='sync') }}">
+                                <div class="ext-section-title">{{ 'Install' if not repo.installed else 'Update' }}{% if entry.paired %} {{ repo.label }}{% endif %}</div>
+                                {% set has_releases = repo.available_releases|length > 0 %}
                                 <div class="ext-options">
                                     <label class="ext-option">
-                                        <span class="ext-radio-row"><input type="radio" name="install_source" value="release" {% if releases_enabled %}checked{% endif %}><strong>GitHub release</strong></span>
-                                        <span class="ext-hint">Standard option; works without git.{% if entry.paired %} Installs the latest release of each repository.{% endif %}</span>
-                                        {% if not entry.paired %}
-                                        <select name="release_tag" class="input w-100" {% if not releases %}disabled{% endif %}>
-                                            {% if releases %}{% for release in releases %}
+                                        <span class="ext-radio-row"><input type="radio" name="install_source" value="release" {% if has_releases %}checked{% endif %}><strong>GitHub release</strong></span>
+                                        <span class="ext-hint">Standard option; works without git.</span>
+                                        <select name="release_tag" class="input w-100" {% if not has_releases %}disabled{% endif %}>
+                                            {% if has_releases %}{% for release in repo.available_releases %}
                                             <option value="{{ release.tag }}">{{ release.tag }}{% if release.prerelease %} &middot; prerelease{% endif %}{% if release.name and release.name != release.tag %} &middot; {{ release.name }}{% endif %}</option>
-                                            {% endfor %}{% else %}<option value="">{{ release_error or 'No releases available' }}</option>{% endif %}
+                                            {% endfor %}{% else %}<option value="">{{ repo.release_error or 'No releases available' }}</option>{% endif %}
                                         </select>
-                                        {% endif %}
                                     </label>
                                     {% if host_git_available %}
                                     <label class="ext-option">
-                                        <span class="ext-radio-row"><input type="radio" name="install_source" value="git" {% if not releases_enabled %}checked{% endif %}><strong>Git checkout</strong></span>
+                                        <span class="ext-radio-row"><input type="radio" name="install_source" value="git" {% if not has_releases %}checked{% endif %}><strong>Git checkout</strong></span>
                                         <span class="ext-hint">Advanced: follow a branch (an installed git checkout is updated in place).</span>
                                         <select name="branch" class="input w-100">
-                                            {% for b in common_branches %}<option value="{{ b }}" {% if b == default_branch %}selected{% endif %}>{{ b }}</option>{% endfor %}
+                                            {% for b in repo.available_branches %}<option value="{{ b }}" {% if b == (repo.current_branch or repo.default_branch) %}selected{% endif %}>{{ b }}</option>{% endfor %}
                                         </select>
                                     </label>
                                     {% else %}
@@ -96,26 +99,22 @@
                                     {% endif %}
                                 </div>
                                 <div class="ext-actions">
-                                    <button type="submit" class="button is-solid primary-button" id="external-runtime-sync-button" {% if active_experiments %}disabled{% endif %}>{{ 'Install' if entry.state == 'missing' else 'Update' }}</button>
-                                    <span class="ext-hint">Dependencies are installed and the plugin is validated afterwards, using <code>{{ current_python_executable }}</code>. The output appears below.</span>
-                                </div>
-                            </form>
-
-                            {% if entry.any_exists %}
-                            <div class="ext-section">
-                                <div class="ext-section-title">Maintenance</div>
-                                <div class="ext-actions">
-                                    {% for repo in entry.members if repo.installed %}
-                                    <button type="button" class="button is-light" data-run-action="install" data-repo-key="{{ repo.key }}">Dependencies{% if entry.paired %}: {{ repo.label }}{% endif %}</button>
-                                    <button type="button" class="button is-light" data-run-action="validate" data-repo-key="{{ repo.key }}">Validate{% if entry.paired %}: {{ repo.label }}{% endif %}</button>
-                                    {% endfor %}
-                                    {% if entry.togglable %}
-                                    <button type="button" class="button is-light" data-run-action="{{ 'disable' if entry.enabled else 'enable' }}" data-repo-key="{{ entry.key }}">{{ 'Disable' if entry.enabled else 'Enable' }}</button>
+                                    <button type="submit" class="button is-solid primary-button" {% if active_experiments %}disabled{% endif %}>{{ 'Install' if not repo.installed else 'Update' }}</button>
+                                    {% if repo.installed %}
+                                    <button type="button" class="button is-light" data-run-action="install" data-repo-key="{{ repo.key }}">Dependencies</button>
+                                    <button type="button" class="button is-light" data-run-action="validate" data-repo-key="{{ repo.key }}">Validate</button>
+                                    {% if repo.plugin_togglable %}
+                                    <button type="button" class="button is-light" data-run-action="{{ 'disable' if repo.plugin_enabled else 'enable' }}" data-repo-key="{{ repo.key }}">{{ 'Disable' if repo.plugin_enabled else 'Enable' }}</button>
                                     {% endif %}
-                                    <button type="button" class="button is-light ext-danger-text" id="external-runtime-remove" data-label="{{ entry.label }}">Remove{% if entry.paired %} server and client{% endif %}</button>
+                                    {% endif %}
+                                    {% if repo.exists %}
+                                    <button type="button" class="button is-light ext-danger-text" data-remove-repo="{{ repo.key }}" data-label="{{ repo.label }}">Remove</button>
+                                    {% endif %}
                                 </div>
+                                <div class="ext-hint" style="margin-top:8px;">Dependencies are installed and the plugin validated afterwards, using <code>{{ current_python_executable }}</code>. The output appears on the right.</div>
+                            </form>
                             </div>
-                            {% endif %}
+                            {% endfor %}
 
                             {% for repo in entry.members if repo.frontend_modules_report %}
                             <div class="ext-section">
@@ -183,26 +182,29 @@
             window.location.reload();   // shows the flash messages and the new output
         }
     }
-    var form = document.getElementById('external-runtime-sync-form');
-    if (form) form.addEventListener('submit', function (ev) {
-        ev.preventDefault();
-        run(form.action, new FormData(form), 'Running the operation... this can take a few minutes.');
+    document.querySelectorAll('.ext-sync-form').forEach(function (form) {
+        form.addEventListener('submit', function (ev) {
+            ev.preventDefault();
+            run(form.action, new FormData(form), 'Running the operation... this can take a few minutes.');
+        });
     });
     document.querySelectorAll('[data-run-action]').forEach(function (btn) {
         btn.addEventListener('click', function () {
             run(url(btn.dataset.repoKey, btn.dataset.runAction), new FormData(), 'Running ' + btn.dataset.runAction + '...');
         });
     });
-    var remove = document.getElementById('external-runtime-remove');
-    if (remove) remove.addEventListener('click', async function () {
-        if (!window.confirm('Remove ' + remove.dataset.label + ' from external/? This deletes the local plugin files.')) return;
-        if (window.showLoading) window.showLoading('Removing...');
-        try {
-            await fetch(url({{ entry.key|tojson }}, 'delete'), {method: 'POST', credentials: 'same-origin',
-                headers: {'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json'}});
-        } finally {
-            window.location.href = {{ url_for('experiments.external_runtimes')|tojson }};
-        }
+    var entryKey = {{ entry.key|tojson }}, entryPaired = {{ entry.paired|tojson }};
+    document.querySelectorAll('[data-remove-repo]').forEach(function (btn) {
+        btn.addEventListener('click', async function () {
+            if (!window.confirm('Remove ' + btn.dataset.label + ' from external/? This deletes the local plugin files.')) return;
+            if (window.showLoading) window.showLoading('Removing...');
+            try {
+                await fetch(url(btn.dataset.removeRepo, 'delete'), {method: 'POST', credentials: 'same-origin',
+                    headers: {'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json'}});
+            } finally {
+                window.location.href = {{ url_for('experiments.external_runtimes')|tojson }} + (entryPaired ? '/' + entryKey : '');
+            }
+        });
     });
 })();
 </script>
