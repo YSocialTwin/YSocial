@@ -1,8 +1,10 @@
 """
 Frontend Settings admin route.
 
-Allows administrators to configure UI parameters per experiment
-(filtered to microblogging experiments).
+Allows administrators to configure UI parameters per experiment of any
+supported platform (microblogging, forum, photo sharing); the panel shows only
+the settings that exist in the chosen platform's templates (see
+``PLATFORM_CAPABILITIES``).
 Settings are stored in ExpFrontendSettings (one JSON row per experiment).
 
 Also serves the generic, repo_key-parameterized "frontend plugin suite"
@@ -24,6 +26,64 @@ from y_web.src.models.config import Content_Recsys, Follow_Recsys
 from y_web.src.system.miscellanea import check_privileges
 
 from ._blueprint import experiments
+
+# ------------------------------------------------------------------
+# Supported platforms and what each one's templates actually offer
+# ------------------------------------------------------------------
+SUPPORTED_PLATFORMS = ("microblogging", "forum", "photo_sharing")
+PLATFORM_LABELS = {
+    "microblogging": "Microblogging",
+    "forum": "Forum",
+    "photo_sharing": "Photo sharing",
+}
+
+_COMMON_CAPABILITIES = {
+    "interaction_post",
+    "interaction_comment",
+    "interaction_like",
+    "show_post_time",
+    "posts_per_page",
+}
+
+# Settings each platform's templates honour. Anything not listed is hidden
+# in the admin panel for that platform (it would be a switch wired to nothing).
+PLATFORM_CAPABILITIES = {
+    "microblogging": None,  # everything
+    "forum": _COMMON_CAPABILITIES
+    | {
+        "interaction_dislike",  # downvote
+        "notifications_menu",
+        "annotations_enabled",
+        "annotation_emotions",
+        "annotation_topics",
+        "default_forum_feed_type",
+    },
+    "photo_sharing": _COMMON_CAPABILITIES
+    | {
+        "interaction_share",
+        "annotation_agent_type",
+        "default_photo_feed_tab",
+    },
+}
+
+# Platform-specific feed orderings that replace the microblogging recommenders.
+FORUM_FEED_TYPES = [
+    {"name": "new", "label": "New"},
+    {"name": "hot", "label": "Hot"},
+    {"name": "top", "label": "Top"},
+    {"name": "most_commented", "label": "Most commented"},
+]
+PHOTO_FEED_TABS = [
+    {"name": "for_you", "label": "For you (recommended)"},
+    {"name": "follower", "label": "Following"},
+]
+
+
+def capabilities_for(platform_type: str):
+    """Sorted list of setting keys the platform supports, or ``None`` for all."""
+    caps = PLATFORM_CAPABILITIES.get(platform_type)
+    return None if caps is None else sorted(caps)
+
 
 # ------------------------------------------------------------------
 # Default settings — all interactions shown/enabled
@@ -54,6 +114,9 @@ DEFAULT_SETTINGS = {
     # Infinite scroll & pagination
     "infinite_scroll_enabled": True,  # enable infinite scroll (False = paginate)
     "posts_per_page": 10,  # posts per page when infinite scroll is disabled
+    # Platform-specific feed defaults (forum / photo sharing)
+    "default_forum_feed_type": "new",  # new | hot | top | most_commented
+    "default_photo_feed_tab": "for_you",  # for_you | follower
     # FilterBubble (Personalized Feed) recommender parameters
     "filter_bubble_alpha": 2.0,  # opinion similarity width (Gaussian)
     "filter_bubble_beta": 0.0,  # recency decay (0 = disabled)
@@ -63,6 +126,12 @@ DEFAULT_SETTINGS = {
     "filter_bubble_wr": 1.0,  # weight for reactions in engagement score
     "filter_bubble_wc": 1.5,  # weight for comments in engagement score
     "filter_bubble_ws": 2.0,  # weight for shares in engagement score
+}
+
+
+_ENUM_SETTINGS = {
+    "default_forum_feed_type": {item["name"] for item in FORUM_FEED_TYPES},
+    "default_photo_feed_tab": {item["name"] for item in PHOTO_FEED_TABS},
 }
 
 
@@ -136,16 +205,27 @@ def _load_recsys_options(
 def frontend_settings():
     check_privileges(current_user.username)
 
-    micro_exps = db.session.scalars(
+    exps = db.session.scalars(
         select(Exps)
-        .filter(Exps.platform_type == "microblogging")
+        .filter(Exps.platform_type.in_(SUPPORTED_PLATFORMS))
         .order_by(Exps.exp_name.asc())
     ).all()
 
     exps_json = json.dumps(
         [
-            {"id": e.idexp, "name": e.exp_name, "type": "microblogging"}
-            for e in micro_exps
+            {
+                "id": e.idexp,
+                "name": e.exp_name,
+                "type": e.platform_type,
+                "group": (e.exp_group or "").strip(),
+            }
+            for e in exps
+        ]
+    )
+    platforms_json = json.dumps(
+        [
+            {"value": value, "label": PLATFORM_LABELS[value]}
+            for value in SUPPORTED_PLATFORMS
         ]
     )
 
@@ -175,6 +255,7 @@ def frontend_settings():
     return render_template(
         "admin/frontend_settings.html",
         exps_json=exps_json,
+        platforms_json=platforms_json,
         recsys_json=recsys_json,
         frontend_plugin_suites=frontend_plugin_suites,
     )
@@ -193,7 +274,7 @@ def frontend_settings_get():
         return jsonify({"ok": False, "error": "Missing exp_id"}), 400
 
     exp = db.session.get(Exps, exp_id)
-    if exp is None or exp.platform_type != "microblogging":
+    if exp is None or exp.platform_type not in SUPPORTED_PLATFORMS:
         return jsonify({"ok": False, "error": "Experiment not found"}), 404
 
     return jsonify(
@@ -201,11 +282,15 @@ def frontend_settings_get():
             "ok": True,
             "exp_id": exp_id,
             "exp_name": exp.exp_name,
+            "platform_type": exp.platform_type,
+            "capabilities": capabilities_for(exp.platform_type),
             "simulator_type": exp.simulator_type or "Standard",
             "settings": _load_settings(exp_id),
             "recsys_options": _load_recsys_options(
                 exp.simulator_type or "Standard", all_algorithms=True
             ),
+            "forum_feed_types": FORUM_FEED_TYPES,
+            "photo_feed_tabs": PHOTO_FEED_TABS,
         }
     )
 
@@ -226,7 +311,7 @@ def frontend_settings_save():
         return jsonify({"ok": False, "error": "Missing exp_id"}), 400
 
     exp = db.session.get(Exps, exp_id)
-    if exp is None or exp.platform_type != "microblogging":
+    if exp is None or exp.platform_type not in SUPPORTED_PLATFORMS:
         return jsonify({"ok": False, "error": "Experiment not found"}), 404
 
     safe = {}
@@ -247,7 +332,9 @@ def frontend_settings_save():
                 safe[k] = default
         else:
             # string settings (recsys names, sort mode…)
-            safe[k] = str(new_settings[k])
+            value = str(new_settings[k])
+            allowed = _ENUM_SETTINGS.get(k)
+            safe[k] = value if allowed is None or value in allowed else default
 
     row = db.session.get(ExpFrontendSettings, exp_id)
     if row is None:
@@ -319,7 +406,7 @@ def frontend_plugin_suite_settings_get(repo_key):
         return jsonify({"ok": False, "error": "Missing exp_id"}), 400
 
     exp = db.session.get(Exps, exp_id)
-    if exp is None or exp.platform_type != "microblogging":
+    if exp is None or exp.platform_type not in SUPPORTED_PLATFORMS:
         return jsonify({"ok": False, "error": "Experiment not found"}), 404
 
     from y_web.src.external_runtime.frontend_plugins import (
@@ -369,6 +456,11 @@ def frontend_plugin_suite_settings_get(repo_key):
                 "config": _frontend_plugin_module_config(manifest, row),
                 "status": _frontend_plugin_module_status(manifest, row),
                 "manifest_errors": manifest.get("errors") or [],
+                # Modules declare the platforms they work on; one that says
+                # nothing is a microblogging-only module (its original scope).
+                "platforms": manifest.get("platforms") or ["microblogging"],
+                "supported": exp.platform_type
+                in (manifest.get("platforms") or ["microblogging"]),
             }
         )
 
@@ -377,6 +469,7 @@ def frontend_plugin_suite_settings_get(repo_key):
             "ok": True,
             "installed": True,
             "valid": report["valid"],
+            "platform_type": exp.platform_type,
             "suite": report.get("suite"),
             "suite_errors": report.get("errors") or [],
             "modules": modules,
@@ -423,7 +516,7 @@ def frontend_plugin_suite_settings_save(repo_key):
         return jsonify({"ok": False, "error": "Missing exp_id or module_id"}), 400
 
     exp = db.session.get(Exps, exp_id)
-    if exp is None or exp.platform_type != "microblogging":
+    if exp is None or exp.platform_type not in SUPPORTED_PLATFORMS:
         return jsonify({"ok": False, "error": "Experiment not found"}), 404
 
     from y_web.src.external_runtime.frontend_plugins import (
@@ -450,6 +543,16 @@ def frontend_plugin_suite_settings_save(repo_key):
             break
     if manifest is None:
         return jsonify({"ok": False, "error": "Unknown module"}), 404
+    if exp.platform_type not in (manifest.get("platforms") or ["microblogging"]):
+        return (
+            jsonify(
+                {
+                    "ok": False,
+                    "error": "This module is not available for this experiment type.",
+                }
+            ),
+            409,
+        )
 
     safe_config = {}
     for param in manifest.get("parameters", []):

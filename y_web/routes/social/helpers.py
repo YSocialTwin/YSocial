@@ -702,6 +702,8 @@ _UI_DEFAULTS = {
     "onboarding_enabled": True,
     "infinite_scroll_enabled": True,
     "posts_per_page": 10,
+    "default_forum_feed_type": "new",
+    "default_photo_feed_tab": "for_you",
     # FilterBubble (Personalized Feed) parameters
     "filter_bubble_alpha": 2.0,
     "filter_bubble_beta": 0.0,
@@ -733,3 +735,35 @@ def _load_ui_settings(exp_id: int) -> dict:
         return merged
     except Exception:
         return dict(_UI_DEFAULTS)
+
+
+def _platform_ui_context():
+    """Template context for forum / photo-sharing pages.
+
+    Microblogging routes pass ``ui`` explicitly; the forum and photo routes
+    render many templates from many places, so they receive the same
+    per-experiment settings (``/admin/frontend_settings``) from here instead:
+    ``ui`` plus the two derived forum flags that gate the annotation chips.
+    Never touches pages of other blueprints or of microblogging experiments.
+    """
+    try:
+        if request.blueprint != "main":
+            return {}
+        raw = (request.view_args or {}).get("exp_id")
+        if raw is None:
+            return {}
+        from y_web.src.models import Exps  # noqa: PLC0415
+
+        exp = db.session.get(Exps, int(raw))
+        if exp is None or exp.platform_type not in ("forum", "photo_sharing"):
+            return {}
+        ui = _load_ui_settings(int(raw))
+        annotations = bool(ui.get("annotations_enabled", True))
+        return {
+            "ui": ui,
+            "platform_ui": "forum" if exp.platform_type == "forum" else "photo",
+            "forum_show_emotions": annotations and bool(ui.get("annotation_emotions", True)),
+            "forum_show_topics": annotations and bool(ui.get("annotation_topics", True)),
+        }
+    except Exception:
+        return {}

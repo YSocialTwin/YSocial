@@ -36,6 +36,7 @@ from werkzeug.utils import secure_filename
 from y_web import db
 from y_web.routes.social._blueprint import main
 from y_web.routes.social.helpers import (
+    _load_ui_settings,
     _experiment_memory_enabled,
     get_safe_profile_pic,
     is_admin,
@@ -50,6 +51,14 @@ from y_web.src.models import Exps, User_mgmt
 from y_web.src.models.admin import Admin_users, Agent, Page
 from y_web.src.models.experiment import Rounds
 from y_web.src.recsys.follow_recsys import get_suggested_users
+
+
+def _photo_page_size(ui_settings) -> int:
+    """Photos loaded per feed request (``posts_per_page`` in the frontend settings)."""
+    try:
+        return max(1, min(100, int(ui_settings.get("posts_per_page", 10))))
+    except (TypeError, ValueError):
+        return 10
 
 
 def _photo_logged_user_id():
@@ -3353,9 +3362,13 @@ def photo_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     if page < 1:
         page = 1
 
-    max_post_per_page = 10
+    ui_settings = _load_ui_settings(exp_id)
+    max_post_per_page = _photo_page_size(ui_settings)
     username = ""
-    active_tab = str(request.args.get("tab", "for_you") or "for_you").strip().lower()
+    active_tab = str(
+        request.args.get("tab", ui_settings.get("default_photo_feed_tab", "for_you"))
+        or "for_you"
+    ).strip().lower()
     if active_tab not in {"for_you", "follower"}:
         active_tab = "for_you"
 
@@ -3459,8 +3472,12 @@ def api_photo_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1
     if page < 1:
         page = 1
 
-    max_post_per_page = 10
-    active_tab = str(request.args.get("tab", "for_you") or "for_you").strip().lower()
+    ui_settings = _load_ui_settings(exp_id)
+    max_post_per_page = _photo_page_size(ui_settings)
+    active_tab = str(
+        request.args.get("tab", ui_settings.get("default_photo_feed_tab", "for_you"))
+        or "for_you"
+    ).strip().lower()
     if active_tab not in {"for_you", "follower"}:
         active_tab = "for_you"
 

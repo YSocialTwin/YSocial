@@ -296,7 +296,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
 
       <div class="misc-section-description">
         <strong>Frontend Settings:</strong> Configure the UI shown to participants for each experiment.
-        Select the experiment type and name to adjust interactions, post annotations, and the notification menu.
+        Select the experiment type, group and name to adjust interactions, post annotations, and the notification menu.
       </div>
 
       <!-- ── Two-step selector ───────────────────────────────── -->
@@ -307,11 +307,18 @@ input:checked + .slider-small:before { transform: translateX(16px); }
           <label for="type-select">Experiment type</label>
           <select id="type-select" class="input">
             <option value="">— select type —</option>
-            <option value="microblogging">Microblogging</option>
           </select>
         </div>
 
-        <!-- Step 2: name (disabled until type chosen) -->
+        <!-- Step 2: group (disabled until type chosen) -->
+        <div class="ys-fs-step">
+          <label for="group-select">Group</label>
+          <select id="group-select" class="input" disabled>
+            <option value="">— select group —</option>
+          </select>
+        </div>
+
+        <!-- Step 3: name (disabled until group chosen) -->
         <div class="ys-fs-step">
           <label for="exp-select">Experiment name</label>
           <select id="exp-select" class="input" disabled>
@@ -352,29 +359,29 @@ input:checked + .slider-small:before { transform: translateX(16px); }
                 </label>
               </div>
               <div class="ys-toggle-children" id="interactions-children">
-                <div class="ys-toggle-row">
+                <div class="ys-toggle-row" data-cap="interaction_post">
                   <span class="ys-toggle-label">New post <small>Compose and publish new posts</small></span>
                   <label class="switch-small"><input type="checkbox" id="interaction_post"><span class="slider-small round"></span></label>
                 </div>
-                <div class="ys-toggle-row">
+                <div class="ys-toggle-row" data-cap="interaction_comment">
                   <span class="ys-toggle-label">Comment / reply <small>Reply to posts and threads</small></span>
                   <label class="switch-small"><input type="checkbox" id="interaction_comment"><span class="slider-small round"></span></label>
                 </div>
-                <div class="ys-toggle-row">
+                <div class="ys-toggle-row" data-cap="interaction_like">
                   <span class="ys-toggle-label">Like <small>Thumbs-up reaction</small></span>
                   <label class="switch-small"><input type="checkbox" id="interaction_like"><span class="slider-small round"></span></label>
                 </div>
-                <div class="ys-toggle-row">
+                <div class="ys-toggle-row" data-cap="interaction_dislike">
                   <span class="ys-toggle-label">Dislike <small>Thumbs-down reaction</small></span>
                   <label class="switch-small"><input type="checkbox" id="interaction_dislike"><span class="slider-small round"></span></label>
                 </div>
-                <div class="ys-toggle-row">
+                <div class="ys-toggle-row" data-cap="interaction_share">
                   <span class="ys-toggle-label">Share / repost <small>Repost another user's content</small></span>
                   <label class="switch-small"><input type="checkbox" id="interaction_share"><span class="slider-small round"></span></label>
                 </div>
               </div>
               <div style="margin-top:12px;border-top:1px solid #f1f3f5;padding-top:10px;">
-                <div class="ys-toggle-row">
+                <div class="ys-toggle-row" data-cap="notifications_menu">
                   <span class="ys-toggle-label">
                     Notification menu
                     <small>Bell / mentions icon in the top bar</small>
@@ -393,13 +400,13 @@ input:checked + .slider-small:before { transform: translateX(16px); }
           </div>
 
           <!-- ══ BOX 2 — Annotations ═══════════════════════════ -->
-          <div class="misc-compact-box" id="box-annotations">
+          <div class="misc-compact-box" id="box-annotations" data-cap-any="annotations_enabled annotation_agent_type show_post_time">
             <h3>Post Annotations</h3>
             <div class="box-content">
               <p style="color:#6b7280;font-size:.85rem;margin-bottom:14px;">
                 Choose which metadata chips are displayed below each post.
               </p>
-              <div class="ys-toggle-row is-master">
+              <div class="ys-toggle-row is-master" data-cap="annotations_enabled">
                 <span class="ys-toggle-label">
                   All annotations
                   <small>Show or hide every annotation type at once</small>
@@ -410,33 +417,33 @@ input:checked + .slider-small:before { transform: translateX(16px); }
                   <span class="slider-small round"></span>
                 </label>
               </div>
-              <div class="ys-toggle-children" id="annotations-children">
-                <div class="ys-toggle-row">
+              <div class="ys-toggle-children" id="annotations-children" data-cap-any="annotation_emotions annotation_topics annotation_agent_type">
+                <div class="ys-toggle-row" data-cap="annotation_emotions">
                   <span class="ys-toggle-label">Emotions <small>Emotional tone chips (joy, anger…)</small></span>
                   <label class="switch-small"><input type="checkbox" id="annotation_emotions"><span class="slider-small round"></span></label>
                 </div>
-                <div class="ys-toggle-row">
+                <div class="ys-toggle-row" data-cap="annotation_topics">
                   <span class="ys-toggle-label">Topics <small>Topic classification chips</small></span>
                   <label class="switch-small"><input type="checkbox" id="annotation_topics"><span class="slider-small round"></span></label>
                 </div>
-                <div class="ys-toggle-row">
+                <div class="ys-toggle-row" data-cap="annotation_sentiment">
                   <span class="ys-toggle-label">Sentiment <small>Positive / neutral / negative score</small></span>
                   <label class="switch-small"><input type="checkbox" id="annotation_sentiment"><span class="slider-small round"></span></label>
                 </div>
-                <div class="ys-toggle-row">
+                <div class="ys-toggle-row" data-cap="annotation_toxicity">
                   <span class="ys-toggle-label">Toxicity <small>Toxic content warning chip</small></span>
                   <label class="switch-small"><input type="checkbox" id="annotation_toxicity"><span class="slider-small round"></span></label>
                 </div>
-                <div class="ys-toggle-row">
+                <div class="ys-toggle-row" data-cap="annotation_agent_type">
                   <span class="ys-toggle-label">Agent type <small>Badge identifying ad-hoc agents (moderator, propaganda…)</small></span>
                   <label class="switch-small"><input type="checkbox" id="annotation_agent_type"><span class="slider-small round"></span></label>
                 </div>
-                <div class="ys-toggle-row">
+                <div class="ys-toggle-row" data-cap="annotation_author_type">
                   <span class="ys-toggle-label">Author type <small>Badge showing whether content was produced by an AI agent or a Human</small></span>
                   <label class="switch-small"><input type="checkbox" id="annotation_author_type"><span class="slider-small round"></span></label>
                 </div>
               </div>
-              <div class="ys-toggle-row">
+              <div class="ys-toggle-row" data-cap="show_post_time">
                 <span class="ys-toggle-label">Post date &amp; time <small>Show the "Day X - HH:00" timestamp below each post and comment</small></span>
                 <label class="switch-small"><input type="checkbox" id="show_post_time"><span class="slider-small round"></span></label>
               </div>
@@ -456,7 +463,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
               </p>
 
               <!-- Content recsys -->
-              <div class="ys-toggle-row" style="flex-direction:column;align-items:flex-start;gap:6px;padding-bottom:14px;">
+              <div class="ys-toggle-row" data-cap="content_recsys" style="flex-direction:column;align-items:flex-start;gap:6px;padding-bottom:14px;">
                 <span class="ys-toggle-label" style="font-weight:700;color:#1f2937;">
                   Default content recommender
                   <small>Feed algorithm shown to standard users by default</small>
@@ -466,7 +473,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
 
 
               <!-- ── Personalized Feed nested config (shown only when selected) ── -->
-              <div id="fb-config-section">
+              <div id="fb-config-section" data-cap="content_recsys">
                 <div class="fb-section-title">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
                   Personalized Feed parameters
@@ -554,8 +561,24 @@ input:checked + .slider-small:before { transform: translateX(16px); }
 
                 </div><!-- /fb-inner-grid -->
               </div><!-- /#fb-config-section -->
+              <!-- Platform-specific feed defaults: they replace the microblogging recommenders -->
+              <div class="ys-toggle-row" data-cap="default_forum_feed_type" style="flex-direction:column;align-items:flex-start;gap:6px;padding-bottom:14px;">
+                <span class="ys-toggle-label" style="font-weight:700;color:#1f2937;">
+                  Default feed ordering
+                  <small>Ordering of the forum feed when a participant opens it (they can still change it)</small>
+                </span>
+                <select id="default_forum_feed_type" class="input" style="width:100%;max-width:380px;"></select>
+              </div>
+              <div class="ys-toggle-row" data-cap="default_photo_feed_tab" style="flex-direction:column;align-items:flex-start;gap:6px;padding-bottom:14px;">
+                <span class="ys-toggle-label" style="font-weight:700;color:#1f2937;">
+                  Default home tab
+                  <small>Tab of the photo feed shown when a participant opens it</small>
+                </span>
+                <select id="default_photo_feed_tab" class="input" style="width:100%;max-width:380px;"></select>
+              </div>
+
               <!-- Follow recsys -->
-              <div class="ys-toggle-row" style="flex-direction:column;align-items:flex-start;gap:6px;padding-bottom:14px;border-bottom:1px solid #f1f3f5;">
+              <div class="ys-toggle-row" data-cap="follow_recsys" style="flex-direction:column;align-items:flex-start;gap:6px;padding-bottom:14px;border-bottom:1px solid #f1f3f5;">
                 <span class="ys-toggle-label" style="font-weight:700;color:#1f2937;">
                   Default follow recommender
                   <small>"Who to follow" algorithm shown to standard users by default</small>
@@ -564,7 +587,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
               </div>
 
               <!-- Topics box in profile -->
-              <div class="ys-toggle-row is-master" style="margin-top:10px;">
+              <div class="ys-toggle-row is-master" data-cap="profile_topics_box" style="margin-top:10px;">
                 <span class="ys-toggle-label">
                   Topics &amp; Opinions box in profile
                   <small>Show the interest / opinion sliders in the Edit Profile page</small>
@@ -576,7 +599,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
               </div>
 
               <!-- Onboarding screen -->
-              <div class="ys-toggle-row is-master">
+              <div class="ys-toggle-row is-master" data-cap="onboarding_enabled">
                 <span class="ys-toggle-label">
                   Onboarding screen
                   <small>Show the profile-setup wizard to users on their first login</small>
@@ -588,7 +611,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
               </div>
 
               <!-- Infinite scroll -->
-              <div class="ys-toggle-row is-master">
+              <div class="ys-toggle-row is-master" data-cap="infinite_scroll_enabled">
                 <span class="ys-toggle-label">
                   Infinite scrolling
                   <small>Automatically load more posts as the user scrolls down the feed</small>
@@ -599,10 +622,10 @@ input:checked + .slider-small:before { transform: translateX(16px); }
                   <span class="slider-small round"></span>
                 </label>
               </div>
-              <div id="posts-per-page-row" class="ys-toggle-row" style="margin-left:1.5rem;">
+              <div id="posts-per-page-row" class="ys-toggle-row" data-cap="posts_per_page" style="margin-left:1.5rem;">
                 <span class="ys-toggle-label">
                   Posts per page
-                  <small>Number of posts shown per page when infinite scrolling is disabled</small>
+                  <small id="posts-per-page-hint">Number of posts shown per page when infinite scrolling is disabled</small>
                 </span>
                 <input type="number" id="posts_per_page" min="1" max="100" value="10"
                        style="width:70px;padding:0.25rem 0.4rem;border:1px solid #ccc;border-radius:4px;font-size:0.9rem;">
@@ -641,7 +664,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       <div id="ys-fs-empty" class="misc-compact-box" style="margin-top:0;">
         <div class="ys-fs-placeholder">
           <i data-feather="sliders" style="width:56px;height:56px;"></i>
-          <p>Select an experiment type and name to view and edit its frontend settings.</p>
+          <p>Select an experiment type, group and name to view and edit its frontend settings.</p>
         </div>
       </div>
 
@@ -653,10 +676,13 @@ input:checked + .slider-small:before { transform: translateX(16px); }
 (function () {
   /* ── data injected from server ─────────────────────────── */
   const ALL_EXPS   = {{ exps_json | safe }};
+  const PLATFORMS  = {{ platforms_json | safe }};
+  const NO_GROUP   = '__none__';
   const ALL_RECSYS = {{ recsys_json | safe }};
 
   /* ── DOM refs ──────────────────────────────────────────── */
   const typeSelect  = document.getElementById('type-select');
+  const groupSelect = document.getElementById('group-select');
   const expSelect   = document.getElementById('exp-select');
   const grid        = document.getElementById('ys-fs-grid');
   const emptyState  = document.getElementById('ys-fs-empty');
@@ -671,31 +697,149 @@ input:checked + .slider-small:before { transform: translateX(16px); }
   function _suiteUrl(tmpl, repoKey) { return tmpl.replace('__REPO_KEY__', encodeURIComponent(repoKey)); }
 
   let currentExpId = null;
+  let currentPlatform = 'microblogging';
 
-  /* ── Step 1: type selection → populate experiment dropdown ─ */
-  typeSelect.addEventListener('change', function () {
-    const chosen = this.value;
-    expSelect.innerHTML = '<option value="">— select experiment —</option>';
-
-    if (!chosen) {
-      expSelect.disabled = true;
-      showEmpty();
-      return;
+  /* ── Platform adaptation: show only what this platform's templates honour ── */
+  const PLATFORM_LABEL_OVERRIDES = {
+    forum: {
+      interaction_like:    ['Upvote',   'Up-arrow vote on posts and comments'],
+      interaction_dislike: ['Downvote', 'Down-arrow vote on posts and comments'],
+      interaction_comment: ['Comment / reply', 'Reply to threads and to other comments'],
+    },
+    photo_sharing: {
+      interaction_post:    ['New photo', 'Share a new photo'],
+      interaction_like:    ['Like',      'Heart reaction on photos'],
+      interaction_comment: ['Comment',   'Comment on photos and reply to comments'],
+      interaction_share:   ['Send / share', 'Send a photo to others'],
+      annotation_agent_type: ['Agent type', 'Badge identifying ad-hoc agents next to the author name'],
+    },
+  };
+  const BOX_DESCRIPTIONS = {
+    'box-annotations': {
+      microblogging: 'Choose which metadata chips are displayed below each post.',
+      forum: 'Choose which metadata chips are displayed below each post and comment.',
+      photo_sharing: 'Choose which labels are displayed on photos.',
+    },
+  };
+  function _setLabel(row, label, hint) {
+    const span = row.querySelector('.ys-toggle-label');
+    if (!span) return;
+    const small = span.querySelector('small');
+    if (!row.dataset.origLabel) {
+      row.dataset.origLabel = span.firstChild ? span.firstChild.textContent.trim() : '';
+      row.dataset.origHint = small ? small.textContent : '';
     }
+    if (span.firstChild && span.firstChild.nodeType === 3) span.firstChild.textContent = label + ' ';
+    if (small) small.textContent = hint;
+  }
+  function _restoreLabel(row) {
+    if (!row.dataset.origLabel) return;
+    const span = row.querySelector('.ys-toggle-label');
+    const small = span && span.querySelector('small');
+    if (span && span.firstChild && span.firstChild.nodeType === 3) span.firstChild.textContent = row.dataset.origLabel + ' ';
+    if (small) small.textContent = row.dataset.origHint;
+  }
 
-    const filtered = ALL_EXPS.filter(e => e.type === chosen);
+  function applyPlatform(platform, caps, data) {
+    const allowed = caps ? new Set(caps) : null;      // null = everything (microblogging)
+    document.querySelectorAll('[data-cap]').forEach(el => {
+      const key = el.getAttribute('data-cap');
+      // keys that exist only in microblogging are not in any other platform's list
+      el.style.display = (!allowed || allowed.has(key)) ? '' : 'none';
+    });
+    document.querySelectorAll('[data-cap-any]').forEach(el => {
+      const keys = el.getAttribute('data-cap-any').split(/\s+/);
+      el.style.display = (!allowed || keys.some(k => allowed.has(k))) ? '' : 'none';
+    });
+    // labels
+    const overrides = PLATFORM_LABEL_OVERRIDES[platform] || {};
+    document.querySelectorAll('[data-cap]').forEach(row => {
+      const key = row.getAttribute('data-cap');
+      if (overrides[key]) _setLabel(row, overrides[key][0], overrides[key][1]); else _restoreLabel(row);
+    });
+    Object.keys(BOX_DESCRIPTIONS).forEach(id => {
+      const p = document.querySelector('#' + id + ' .box-content > p');
+      if (p) p.textContent = BOX_DESCRIPTIONS[id][platform] || BOX_DESCRIPTIONS[id].microblogging;
+    });
+    // platform-specific selects
+    _fillSimple('default_forum_feed_type', data.forum_feed_types || []);
+    _fillSimple('default_photo_feed_tab', data.photo_feed_tabs || []);
+    const hint = document.getElementById('posts-per-page-hint');
+    if (hint) hint.textContent = platform === 'microblogging'
+      ? 'Number of posts shown per page when infinite scrolling is disabled'
+      : 'Number of items loaded at a time in the feed';
+    // description of the Feed & Profile box
+    const fp = document.querySelector('#box-feed-profile .box-content > p');
+    if (fp) fp.textContent = platform === 'microblogging'
+      ? 'Configure default recommendation algorithms and profile/onboarding options for standard users.'
+      : 'Configure the default feed view of this platform. Recommendation algorithms are specific to each platform and are not shared with microblogging.';
+    toggleInfiniteScrollControls(platform === 'microblogging' ? document.getElementById('infinite_scroll_enabled').checked : false);
+  }
+
+  function _fillSimple(selectId, items) {
+    const sel = document.getElementById(selectId);
+    if (!sel) return;
+    const prev = sel.value;
+    sel.innerHTML = '';
+    items.forEach(it => {
+      const o = document.createElement('option');
+      o.value = it.name; o.textContent = it.label; sel.appendChild(o);
+    });
+    if (prev) sel.value = prev;
+  }
+
+  /* ── Step 1: type → groups → experiments ────────────────── */
+  PLATFORMS.forEach(p => {
+    if (!ALL_EXPS.some(e => e.type === p.value)) return;   // only types that have experiments
+    const opt = document.createElement('option');
+    opt.value = p.value;
+    opt.textContent = p.label;
+    typeSelect.appendChild(opt);
+  });
+
+  function _resetSelect(sel, placeholder, disabled) {
+    sel.innerHTML = '<option value="">' + placeholder + '</option>';
+    sel.disabled = disabled;
+  }
+
+  typeSelect.addEventListener('change', function () {
+    _resetSelect(groupSelect, '— select group —', true);
+    _resetSelect(expSelect, '— select experiment —', true);
+    showEmpty();
+    if (!this.value) return;
+
+    const groups = [];
+    ALL_EXPS.filter(e => e.type === this.value).forEach(e => {
+      const g = e.group || NO_GROUP;
+      if (!groups.includes(g)) groups.push(g);
+    });
+    groups.sort((a, b) => (a === NO_GROUP) - (b === NO_GROUP) || a.localeCompare(b));
+    groups.forEach(g => {
+      const opt = document.createElement('option');
+      opt.value = g;
+      opt.textContent = g === NO_GROUP ? '(no group)' : g;
+      groupSelect.appendChild(opt);
+    });
+    groupSelect.disabled = groups.length === 0;
+    if (groups.length === 1) { groupSelect.value = groups[0]; groupSelect.dispatchEvent(new Event('change')); }
+  });
+
+  /* ── Step 2: group selection → populate experiment dropdown ─ */
+  groupSelect.addEventListener('change', function () {
+    _resetSelect(expSelect, '— select experiment —', true);
+    showEmpty();
+    if (!this.value) return;
+    const filtered = ALL_EXPS.filter(e => e.type === typeSelect.value && (e.group || NO_GROUP) === this.value);
     filtered.forEach(e => {
       const opt = document.createElement('option');
       opt.value = e.id;
       opt.textContent = e.name;
       expSelect.appendChild(opt);
     });
-
     expSelect.disabled = filtered.length === 0;
-    showEmpty();
   });
 
-  /* ── Step 2: experiment selection → fetch & render settings ─ */
+  /* ── Step 3: experiment selection → fetch & render settings ─ */
   expSelect.addEventListener('change', function () {
     const expId = parseInt(this.value, 10);
     if (!expId) { showEmpty(); return; }
@@ -710,6 +854,8 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       const data = await resp.json();
       if (!data.ok) { showEmpty(); return; }
       currentExpId = data.exp_id;
+      currentPlatform = data.platform_type || 'microblogging';
+      applyPlatform(currentPlatform, data.capabilities, data);
       // Rebuild recsys dropdowns for this experiment type (HPC shows all modes)
       if (data.recsys_options) {
         _buildRecsysSelects(data.recsys_options);
@@ -800,6 +946,10 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       const el = document.getElementById(key);
       if (el) el.value = s[key] || '';
     });
+    ['default_forum_feed_type','default_photo_feed_tab'].forEach(key => {
+      const el = document.getElementById(key);
+      if (el && s[key]) el.value = s[key];
+    });
     syncFilterBubbleSection();
 
     // Sync master toggle visual states for children groups
@@ -887,7 +1037,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       out[id] = el ? parseFloat(el.value) || 0 : 0;
     });
     // String settings (select elements)
-    ['default_content_recsys','default_follow_recsys','filter_bubble_sort'].forEach(id => {
+    ['default_content_recsys','default_follow_recsys','filter_bubble_sort','default_forum_feed_type','default_photo_feed_tab'].forEach(id => {
       const el = document.getElementById(id);
       out[id] = el ? el.value : '';
     });
@@ -958,7 +1108,15 @@ input:checked + .slider-small:before { transform: translateX(16px); }
         errBox.innerHTML = '';
       }
 
-      renderFrontendAddsOnModules(expId, repoKey, data.modules || []);
+      const platform = data.platform_type || 'microblogging';
+      const usable = (data.modules || []).filter(m => m.supported !== false);
+      const hidden = (data.modules || []).length - usable.length;
+      renderFrontendAddsOnModules(expId, repoKey, usable);
+      if (hidden && !usable.length) {
+        document.getElementById('suite-' + repoKey + '-modules-list').innerHTML =
+          '<p class="ys-fs-placeholder" style="padding:20px;">No module of this suite is available for ' +
+          (PLATFORMS.find(p => p.value === platform) || {label: platform}).label + ' experiments.</p>';
+      }
     } catch (e) {
       box.style.display = 'none';
     }
@@ -1261,7 +1419,9 @@ input:checked + .slider-small:before { transform: translateX(16px); }
   showEmpty();
   window.toggleInfiniteScrollControls = function(enabled) {
     const row = document.getElementById('posts-per-page-row');
-    if (row) row.style.display = enabled ? 'none' : '';
+    if (!row) return;
+    // Outside microblogging the "per page" value is the batch size and is always editable.
+    row.style.display = (currentPlatform !== 'microblogging' || !enabled) ? '' : 'none';
   };
 
 })();

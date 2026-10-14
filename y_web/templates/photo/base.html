@@ -1614,6 +1614,7 @@
         }
 
         {% block photo_extra_head %}{% endblock %}
+        {% include 'shared/platform_ui_gating.html' %}
     </style>
 </head>
 <body class="photo-base-body {% block photo_body_class %}{% endblock %}">

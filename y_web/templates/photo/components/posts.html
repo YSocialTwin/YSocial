@@ -11,7 +11,7 @@
             <div class="photo-feed-card__author-copy">
                 <strong>
                     {{ item['author'] }}
-                    {% if item.get('adhoc_agent_badge') %}
+                    {% if item.get('adhoc_agent_badge') and (ui is not defined or ui.annotation_agent_type) %}
                     <span class="tag is-rounded is-link is-light">{{ item['adhoc_agent_badge'] }}</span>
                     {% endif %}
                 </strong>

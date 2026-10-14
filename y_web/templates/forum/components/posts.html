@@ -34,7 +34,7 @@
                 </div>
                 <div class="user-info">
                     <a href="/{{exp_id}}/profile/{{ item['author_id'] }}/recent/1">{{ item["author"] }}</a>
-                    <span class="time">
+                    <span class="time forum-post-time">
                         {{ item.get("display_time", "") }}
                         {% if item.get("primary_community") %}
                         <span class="forum-post-community-separator">·</span>
@@ -183,9 +183,9 @@
             </a>
             {% endif %}
             
-            {% if len(item['emotions']) > 0 or len(item['topics']) > 0 %}
+            {% if (forum_show_emotions is not defined or forum_show_emotions) and len(item['emotions']) > 0 or (forum_show_topics is not defined or forum_show_topics) and len(item['topics']) > 0 %}
             <div style="margin-left: auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end;">
-                {% if len(item['emotions']) > 0 %}
+                {% if (forum_show_emotions is not defined or forum_show_emotions) and len(item['emotions']) > 0 %}
                 <div class="forum-meta-group">
                     <span class="forum-meta-label">Emotions</span>
                     {% for em in item['emotions'] %}
@@ -198,7 +198,7 @@
                     {% endfor %}
                 </div>
                 {% endif %}
-                {% if len(item['topics']) > 0 %}
+                {% if (forum_show_topics is not defined or forum_show_topics) and len(item['topics']) > 0 %}
                 <div class="forum-meta-group">
                     <span class="forum-meta-label">Topics</span>
                     {% for tp in item['topics'] %}
@@ -244,7 +244,7 @@
                  style="{% if item.get('is_moderation_comment') %}background: #fff4d6; border-left: 4px solid #f0b429; padding: 0.75rem; border-radius: 10px;{% endif %}">
                 <div class="media-content">
                     <a href="/{{exp_id}}/profile/{{ item['author_id'] }}/recent/1">{{ item["author"] }}</a><br/>
-                    <span class="time">{{ item.get("display_time", "") }}</span>
+                    <span class="time forum-post-time">{{ item.get("display_time", "") }}</span>
  <div class="post-text ys-pre-wrap-lh">
                         {{ item["post"]|safe }}
                     </div>
@@ -273,7 +273,7 @@
                     </div>
  <div class="card-footer d-flex">
  <div class="forum-meta-group">
-                            {% if len(item['emotions']) > 0 %}
+                            {% if (forum_show_emotions is not defined or forum_show_emotions) and len(item['emotions']) > 0 %}
                             <span class="forum-meta-label">Emotions</span>
                             {% for em in item['emotions'] %}
                             <a class="forum-meta-chip forum-emotion-chip" title="{{ em[0] }}" href="/{{exp_id}}/emotion/{{ em[2] }}/1">
@@ -284,7 +284,7 @@
                             {% endif %}
                         </div>
  <div class="forum-meta-group">
-                            {% if len(item['topics']) > 0 %}
+                            {% if (forum_show_topics is not defined or forum_show_topics) and len(item['topics']) > 0 %}
                             <span class="forum-meta-label">Topics</span>
                             {% for tp in item['topics'] %}
                                 {% if tp[2] == 'positive' %}
@@ -336,14 +336,14 @@
                 <!-- Content -->
                 <div class="media-content">
                     <a href="/{{exp_id}}/profile/{{ cm['author_id'] }}/recent/1">{{ cm["author"] }}</a>
-                    <span class="time">{{ cm.get("display_time", "") }}</span>
+                    <span class="time forum-post-time">{{ cm.get("display_time", "") }}</span>
  <div class="ys-pre-wrap-lh">
                         {{ cm["post"]|safe }}
                     </div>
                     <!-- Actions -->
  <div class="card-footer d-flex">
  <div class="forum-meta-group">
-                            {% if len(cm['emotions']) > 0 %}
+                            {% if (forum_show_emotions is not defined or forum_show_emotions) and len(cm['emotions']) > 0 %}
                             <span class="forum-meta-label">Emotions</span>
                             {% for em in cm['emotions'] %}
                             <a class="forum-meta-chip forum-emotion-chip" title="{{ em[0] }}" href="/{{exp_id}}/emotion/{{ em[2] }}/1">
@@ -354,7 +354,7 @@
                             {% endif %}
                         </div>
  <div class="forum-meta-group">
-                            {% if len(cm['topics']) > 0 %}
+                            {% if (forum_show_topics is not defined or forum_show_topics) and len(cm['topics']) > 0 %}
                             <span class="forum-meta-label">Topics</span>
                             {% for tp in cm['topics'] %}
                                 {% if tp[2] == 'positive' %}

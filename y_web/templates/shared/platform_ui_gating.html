@@ -1,0 +1,28 @@
+{# Per-experiment UI switches (/admin/frontend_settings) for the forum and photo-sharing pages.
+
+   Include once inside <head>. `ui` is supplied by routes.social.helpers._platform_ui_context for these two platforms
+   (microblogging pages gate their own markup, and never include this file). Interactions are switched off by hiding the
+   controls rather than by removing markup, because the same controls are also rendered by JavaScript (photo overlay) and
+   by components shared between pages.
+   Notes: annotation chips of the forum and the agent badge of the photo feed are removed server-side in their own
+   templates, not here. #}
+{% if ui is defined and ui %}
+{% set rules = [] %}
+{% if platform_ui == 'forum' %}
+  {% if not ui.interaction_like %}{% set rules = rules + ['.vote-button[data-action="like"]'] %}{% endif %}
+  {% if not ui.interaction_dislike %}{% set rules = rules + ['.vote-button[data-action="dislike"]'] %}{% endif %}
+  {% if not ui.interaction_comment %}{% set rules = rules + ['.toggle-reply-button, .reply.text-end, form.comment_form, .reply_comment'] %}{% endif %}
+  {% if not ui.interaction_post %}{% set rules = rules + ['#create-post-trigger, #compose-card'] %}{% endif %}
+  {% if not ui.show_post_time %}{% set rules = rules + ['.forum-post-time'] %}{% endif %}
+  {% if not ui.notifications_menu %}{% set rules = rules + ['a.reply-notif-bell, .navbar-item[href*="rnotifications"]'] %}{% endif %}
+{% elif platform_ui == 'photo' %}
+  {% if not ui.interaction_like %}{% set rules = rules + ['[data-photo-post-like]'] %}{% endif %}
+  {% if not ui.interaction_comment %}{% set rules = rules + ['.photo-overlay__composer, [data-photo-comment-reply]'] %}{% endif %}
+  {% if not ui.interaction_share %}{% set rules = rules + ['[data-photo-post-share]'] %}{% endif %}
+  {% if not ui.interaction_post %}{% set rules = rules + ['[data-photo-open-share]'] %}{% endif %}
+  {% if not ui.show_post_time %}{% set rules = rules + ['[data-photo-post-time], .photo-feed-card__author-copy small'] %}{% endif %}
+{% endif %}
+{% if rules %}
+<style>{{ rules | join(',\n') | safe }} { display: none !important; }</style>
+{% endif %}
+{% endif %}

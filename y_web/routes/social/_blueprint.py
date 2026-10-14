@@ -16,3 +16,10 @@ Usage::
 from flask import Blueprint
 
 main = Blueprint("main", __name__)
+
+
+@main.app_context_processor
+def _inject_platform_ui():
+    from y_web.routes.social.helpers import _platform_ui_context
+
+    return _platform_ui_context()

@@ -24,7 +24,7 @@
             <span style="font-weight: 500; color: #1c1c1c; margin-right: 6px; font-size: 12px;">
  <a href="/{{exp_id}}/profile/{{ thread['author_id'] }}/recent/1" class="ys-link-inherit">{{ thread["author"] }}</a>
             </span>
-            <span style="color: #7c7c7c; font-size: 11px;">
+            <span class="forum-post-time" style="color: #7c7c7c; font-size: 11px;">
                 {% if thread.get("display_time") %}
                     {{ thread.get("display_time") }}
                 {% elif thread.get("day") != "None" %}

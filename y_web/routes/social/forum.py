@@ -17,6 +17,7 @@ from sqlalchemy.sql.expression import func
 from y_web import db
 from y_web.routes.social._blueprint import main
 from y_web.routes.social.helpers import (
+    _load_ui_settings,
     _experiment_memory_enabled,
     _forum_current_profile_pic,
     _forum_logged_user,
@@ -129,6 +130,20 @@ def _build_forum_sidebar_communities(items):
     return communities
 
 
+def _forum_default_feed_type(exp_id):
+    """Default feed ordering (``default_forum_feed_type`` in the frontend settings)."""
+    value = _load_ui_settings(exp_id).get("default_forum_feed_type", "new")
+    return value if value in ("new", "hot", "top", "most_commented") else "new"
+
+
+def _forum_page_size(exp_id):
+    """Items loaded per feed request (``posts_per_page`` in the frontend settings)."""
+    try:
+        return max(1, min(100, int(_load_ui_settings(exp_id).get("posts_per_page", 10))))
+    except (TypeError, ValueError):
+        return 10
+
+
 def _forum_viewer_id():
     viewer = _forum_logged_user()
     return viewer.id if viewer is not None else current_user.id
@@ -164,7 +179,7 @@ def interview(exp_id):
             "Interview is unavailable because memory is disabled for this experiment."
         )
         if platform_type == "forum":
-            return redirect(f"/{exp_id}/rfeed/all/feed/rf/1?feed_type=new")
+            return redirect(f"/{exp_id}/rfeed/all/feed/rf/1?feed_type={_forum_default_feed_type(exp_id)}")
         exp_user = db.session.scalars(
             select(User_mgmt).filter_by(username=current_user.username)
         ).first()
@@ -235,7 +250,7 @@ def get_thread_reddit(exp_id, post_id):
     requested_post = db.session.scalars(select(Post).filter_by(id=post_id)).first()
     if requested_post is None:
         flash("Thread not found.")
-        return redirect(f"/{exp_id}/rfeed/all/feed/rf/1?feed_type=new")
+        return redirect(f"/{exp_id}/rfeed/all/feed/rf/1?feed_type={_forum_default_feed_type(exp_id)}")
 
     thread_id = getattr(requested_post, "thread_id", None) or requested_post.id
     root_post = (
@@ -252,7 +267,7 @@ def get_thread_reddit(exp_id, post_id):
     hidden_ids = _hidden_author_ids_for_viewer(exp_id, viewer_id)
     if hidden_ids and root_post.user_id in hidden_ids:
         flash("Thread not found.")
-        return redirect(f"/{exp_id}/rfeed/all/feed/rf/1?feed_type=new")
+        return redirect(f"/{exp_id}/rfeed/all/feed/rf/1?feed_type={_forum_default_feed_type(exp_id)}")
 
     posts = (
         Post.query.filter(Post.thread_id == thread_id, Post.id != thread_id)
@@ -265,7 +280,7 @@ def get_thread_reddit(exp_id, post_id):
         posts = [p for p in posts if p.id not in dropped_ids]
     if root_post is None:
         flash("Thread not found.")
-        return redirect(f"/{exp_id}/rfeed/all/feed/rf/1?feed_type=new")
+        return redirect(f"/{exp_id}/rfeed/all/feed/rf/1?feed_type={_forum_default_feed_type(exp_id)}")
 
     root = root_post.id
 
@@ -511,7 +526,7 @@ def feeed_logged_reddit():
         return redirect("/admin/join_simulation")
 
     exp = exps[0]
-    return redirect(f"/{exp.idexp}/rfeed/all/feed/rf/1?feed_type=new")
+    return redirect(f"/{exp.idexp}/rfeed/all/feed/rf/1?feed_type={_forum_default_feed_type(exp.idexp)}")
 
 
 @main.get("/rnotifications")
@@ -683,8 +698,8 @@ def feed_reddit(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     if page < 1:
         page = 1
 
-    max_post_per_page = 10
-    feed_type = request.args.get("feed_type", "new")
+    max_post_per_page = _forum_page_size(exp_id)
+    feed_type = request.args.get("feed_type", _forum_default_feed_type(exp_id))
     page_obj = fetch_feed_page(
         viewer_id=_forum_viewer_id(),
         page=page,
@@ -756,8 +771,8 @@ def feed_reddit(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
 @login_required
 def subforum_reddit(exp_id, community_slug):
     page = max(request.args.get("page", type=int, default=1), 1)
-    max_post_per_page = 10
-    feed_type = request.args.get("feed_type", "new")
+    max_post_per_page = _forum_page_size(exp_id)
+    feed_type = request.args.get("feed_type", _forum_default_feed_type(exp_id))
 
     page_obj = fetch_feed_page(
         viewer_id=_forum_viewer_id(),
@@ -840,7 +855,7 @@ def search_reddit(exp_id):
     page = max(request.args.get("page", type=int, default=1), 1)
     per_page = 10
     search_query = (request.args.get("q") or "").strip()
-    feed_type = request.args.get("feed_type", "new")
+    feed_type = request.args.get("feed_type", _forum_default_feed_type(exp_id))
 
     logged_user = _forum_logged_user()
     exp_user_id = logged_user.id if logged_user else current_user.id
@@ -930,8 +945,8 @@ def api_feed_reddit(exp_id, user_id="all", timeline="timeline", mode="rf", page=
     if page < 1:
         page = 1
 
-    max_post_per_page = 10
-    feed_type = request.args.get("feed_type", "new")
+    max_post_per_page = _forum_page_size(exp_id)
+    feed_type = request.args.get("feed_type", _forum_default_feed_type(exp_id))
     community_slug = request.args.get("community_slug", "")
 
     page_obj = fetch_feed_page(
