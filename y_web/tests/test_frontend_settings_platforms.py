@@ -125,3 +125,26 @@ def test_plugin_core_and_photo_overlay_expose_platform_hooks():
     assert "platform" in (js / "plugin-core.js").read_text(encoding="utf-8")
     overlay = (js / "photo-overlays.js").read_text(encoding="utf-8")
     assert "data-photo-post-id" in overlay and "ys:photo-post-rendered" in overlay
+
+
+def test_manifest_for_platform_drops_scoped_parameters_and_empty_sections():
+    from y_web.routes.admin.sub.experiments._frontend_settings import _manifest_for_platform
+
+    manifest = {
+        "parameter_sections": [{"key": "a"}, {"key": "b", "platforms": ["forum"]}],
+        "parameters": [
+            {"name": "x", "section": "a"},
+            {"name": "y", "section": "b", "platforms": ["forum"]},
+        ],
+    }
+    sections, params = _manifest_for_platform(manifest, "photo_sharing")
+    assert [s["key"] for s in sections] == ["a"] and [p["name"] for p in params] == ["x"]
+    sections, params = _manifest_for_platform(manifest, "forum")
+    assert [s["key"] for s in sections] == ["a", "b"] and len(params) == 2
+
+
+def test_dispatch_platform_event_is_inert_without_suites(monkeypatch):
+    from y_web.src.external_runtime import plugin_loader
+
+    monkeypatch.setattr(plugin_loader, "_REGISTERED_SUITES", {})
+    assert plugin_loader.dispatch_platform_event(object(), 1, "photo_created", {}) == 0

@@ -396,6 +396,28 @@ def _frontend_plugin_module_config(manifest: dict, row) -> dict:
     return merged
 
 
+def _manifest_for_platform(manifest: dict, platform: str):
+    """Parameters and sections of *manifest* that apply to *platform*.
+
+    A parameter or section may carry its own ``platforms`` list; one that
+    does not applies everywhere the module itself does. Sections left with
+    no parameter are dropped, so a platform never sees an empty heading.
+    """
+
+    def applies(item):
+        scoped = item.get("platforms")
+        return not scoped or platform in scoped
+
+    params = [p for p in manifest.get("parameters") or [] if applies(p)]
+    used = {p.get("section") for p in params}
+    sections = [
+        sec
+        for sec in manifest.get("parameter_sections") or []
+        if applies(sec) and sec.get("key") in used
+    ]
+    return sections, params
+
+
 @experiments.route("/admin/frontend_settings/suite/<repo_key>/get", methods=["GET"])
 @login_required
 def frontend_plugin_suite_settings_get(repo_key):
@@ -444,14 +466,15 @@ def frontend_plugin_suite_settings_get(repo_key):
     for manifest in report["modules"]:
         module_id = manifest.get("module_id")
         row = rows.get(module_id)
+        shown_sections, shown_params = _manifest_for_platform(manifest, exp.platform_type)
         modules.append(
             {
                 "module_id": module_id,
                 "display_name": manifest.get("display_name") or module_id,
                 "version": manifest.get("version"),
                 "description": manifest.get("description") or "",
-                "parameter_sections": manifest.get("parameter_sections") or [],
-                "parameters": manifest.get("parameters") or [],
+                "parameter_sections": shown_sections,
+                "parameters": shown_params,
                 "enabled": bool(row is not None and row.enabled),
                 "config": _frontend_plugin_module_config(manifest, row),
                 "status": _frontend_plugin_module_status(manifest, row),
@@ -555,7 +578,8 @@ def frontend_plugin_suite_settings_save(repo_key):
         )
 
     safe_config = {}
-    for param in manifest.get("parameters", []):
+    _, applicable_params = _manifest_for_platform(manifest, exp.platform_type)
+    for param in applicable_params:
         name = param["name"]
         if name in raw_config:
             safe_config[name] = _coerce_frontend_plugin_param(raw_config[name], param)

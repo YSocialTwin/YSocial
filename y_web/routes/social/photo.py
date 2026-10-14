@@ -1997,6 +1997,21 @@ def _photo_search_payload(
     }
 
 
+
+def _photo_announce_event(exp: Exps, event: str, payload: dict) -> None:
+    """Tell installed plugins about a human action (never raises)."""
+    try:
+        from flask import current_app
+
+        from y_web.src.external_runtime.plugin_loader import dispatch_platform_event
+
+        dispatch_platform_event(
+            current_app._get_current_object(), int(exp.idexp), event, payload
+        )
+    except Exception:
+        pass
+
+
 @main.get("/photo/feed")
 @login_required
 def photo_feed_logged():
@@ -2483,6 +2498,11 @@ def api_photo_create_comment(exp_id, photo_id):
         return {"ok": False, "error": "comment_not_created"}, 500
 
     comment = _photo_comment_payload(exp, dict(row))
+    _photo_announce_event(
+        exp,
+        "photo_comment_created",
+        {"photo_id": str(photo_id), "comment_id": comment_id, "user_id": commenter_id},
+    )
     comments_count = _photo_db_rows(
         exp,
         """
@@ -3163,6 +3183,9 @@ def api_photo_share(exp_id):
         return {"ok": False, "error": "photo_not_created"}, 500
 
     item = _photo_build_item(exp, dict(row))
+    _photo_announce_event(
+        exp, "photo_created", {"photo_id": photo_id, "user_id": user_id}
+    )
     html = render_template(
         "photo/components/posts.html",
         items=[item],
