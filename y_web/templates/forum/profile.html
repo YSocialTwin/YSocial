@@ -166,5 +166,6 @@
 {% if forum_memory_enabled %}
 <script src="{{ url_for('static', filename='assets/js/reddit/forum-chat.js') }}"></script>
 {% endif %}
+{% include "shared/plugin_loader.html" %}
 </body>
 </html>

@@ -273,6 +273,14 @@ def active_modules_context(exp_id: int) -> list[dict]:
     except Exception:
         return []
 
+    try:
+        from y_web.src.models import Exps
+
+        _exp = db.session.get(Exps, exp_id)
+        platform = (getattr(_exp, "platform_type", None) or "microblogging") if _exp else "microblogging"
+    except Exception:
+        platform = "microblogging"
+
     results = []
     for repo_key, state in _REGISTERED_SUITES.items():
         modules = state.get("modules", {})
@@ -306,6 +314,7 @@ def active_modules_context(exp_id: int) -> list[dict]:
                 {
                     "module_id": row.module_id,
                     "exp_id": exp_id,
+                    "platform": platform,
                     "api_base": f"/{exp_id}/api/plugins/{repo_key}/{row.module_id}",
                     "frontend_entry": (
                         f"/plugins/{repo_key}/{row.module_id}/static/{frontend_entry}"

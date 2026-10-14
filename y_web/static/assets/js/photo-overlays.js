@@ -1945,7 +1945,12 @@
             window.feather.replace();
         }
 
+        // Expose which photo the overlay shows, and tell page add-ons (e.g. post annotation) that it was re-rendered.
+        state.postOverlay.setAttribute('data-photo-post-id', state.currentPhotoId);
         openOverlay(state.postOverlay);
+        try {
+            document.dispatchEvent(new CustomEvent('ys:photo-post-rendered', { detail: { photoId: state.currentPhotoId } }));
+        } catch (e) { /* add-ons are optional */ }
     }
 
     function fetchJson(url) {

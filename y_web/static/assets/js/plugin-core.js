@@ -41,6 +41,7 @@
         script.async = false; // preserve order + keep document.currentScript reliable
         script.dataset.frontend_adds_onModuleId = mod.module_id;
         script.dataset.frontend_adds_onExpId = String(mod.exp_id);
+        script.dataset.frontend_adds_onPlatform = mod.platform || 'microblogging';
         script.dataset.frontend_adds_onApiBase = mod.api_base || '';
         script.dataset.frontend_adds_onConfig = JSON.stringify(mod.config || {});
         script.onerror = function () {

@@ -108,3 +108,20 @@ def test_gating_hides_only_switched_off_controls(suites_app):
     assert "data-photo-post-share" in photo and "data-photo-comment-reply" in photo
     assert "data-photo-post-like" not in photo
     assert _gating(suites_app, "photo", show_post_time=False).count("data-photo-post-time") == 1
+
+
+def test_plugin_loader_included_in_forum_and_photo_templates():
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1] / "templates"
+    for rel in ("forum/feed.html", "forum/thread.html", "forum/profile.html", "photo/base.html"):
+        assert "plugin_loader.html" in (root / rel).read_text(encoding="utf-8"), rel
+
+
+def test_plugin_core_and_photo_overlay_expose_platform_hooks():
+    from pathlib import Path
+
+    js = Path(__file__).resolve().parents[1] / "static" / "assets" / "js"
+    assert "platform" in (js / "plugin-core.js").read_text(encoding="utf-8")
+    overlay = (js / "photo-overlays.js").read_text(encoding="utf-8")
+    assert "data-photo-post-id" in overlay and "ys:photo-post-rendered" in overlay

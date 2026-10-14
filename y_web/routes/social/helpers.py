@@ -759,7 +759,17 @@ def _platform_ui_context():
             return {}
         ui = _load_ui_settings(int(raw))
         annotations = bool(ui.get("annotations_enabled", True))
+        modules = []
+        try:
+            from y_web.src.external_runtime.plugin_loader import (  # noqa: PLC0415
+                active_modules_context,
+            )
+
+            modules = active_modules_context(int(raw))
+        except Exception:
+            modules = []
         return {
+            "frontend_adds_on_modules": modules,
             "ui": ui,
             "platform_ui": "forum" if exp.platform_type == "forum" else "photo",
             "forum_show_emotions": annotations and bool(ui.get("annotation_emotions", True)),
