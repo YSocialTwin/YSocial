@@ -64,3 +64,11 @@ def test_the_rule_defaults_to_never_and_is_saved_validated_and_copied(
 
     off = sd_client.put(_url(exp_id, sid), json={"advance_rule": {"mode": "never"}})
     assert off.get_json()["scenario"]["advance_rule"] == {"mode": "never"}
+
+
+def test_experiment_list_reports_each_experiments_group(core_app):  # noqa: F811
+    sd_client = _client_as(core_app, "admin")
+    exp_id = _experiment(core_app, *PLATFORMS[0])
+    listed = sd_client.get("/admin/scenario_design/api/experiments").get_json()
+    mine = [e for e in listed["experiments"] if e["id"] == exp_id]
+    assert mine and "group" in mine[0] and isinstance(mine[0]["group"], str)
