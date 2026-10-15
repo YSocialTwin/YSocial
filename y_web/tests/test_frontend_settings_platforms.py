@@ -6,6 +6,7 @@ forum/photo template gating (`shared/platform_ui_gating.html`).
 """
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -311,10 +312,17 @@ def test_side_boxes_render_recsys_and_stats_only_when_asked(suites_app):
         ui={"show_annotation_stats": True}, frontend_adds_on_modules=[]
     )
     out = render(ui={"show_annotation_stats": True}, frontend_adds_on_modules=module)
-    assert (
-        'data-api="/7/api/plugins/frontend_adds_on/post_annotation/my_stats"' in out
-        and "ys:annotation-saved" in out
-    )
+    assert 'data-api="/7/api/plugins/frontend_adds_on/post_annotation/my_stats"' in out
+    # the behaviour lives in a static file (no new inline script: see test_phaseT6_js_extraction)
+    assert "ys-annotation-stats.js" in out and "<script>" not in out
+    js = (
+        Path(__file__).resolve().parents[1]
+        / "static"
+        / "assets"
+        / "js"
+        / "ys-annotation-stats.js"
+    ).read_text(encoding="utf-8")
+    assert "ys:annotation-saved" in js and "ys-annostats-box" in js
     assert "ys-annostats-box" not in render(
         ui={"show_annotation_stats": False}, frontend_adds_on_modules=module
     )

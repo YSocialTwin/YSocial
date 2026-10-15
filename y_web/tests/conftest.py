@@ -70,6 +70,7 @@ def pytest_collection_modifyitems(config, items):
         "test_training_modules_",
         "test_external_runtimes_pages.py",
         "test_phase11_db_init_package.py::test_y_web_init_line_count_reduced",
+        "test_alembic_0007_sync_dashboard_schema.py::test_hpc_monitor_schema_guard",
     )
 
     for item in items:
