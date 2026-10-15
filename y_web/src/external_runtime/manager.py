@@ -193,9 +193,7 @@ _GIT_AUTH_FAILURE_MARKERS = (
 )
 
 
-def _git_remote(
-    command: list[str], cwd: Path, github_token: str | None = None
-) -> str:
+def _git_remote(command: list[str], cwd: Path, github_token: str | None = None) -> str:
     """Run a git command that talks to the remote, with token auth and a clear hint."""
     try:
         return _run_command(command, cwd=cwd, env=_git_auth_env(github_token))

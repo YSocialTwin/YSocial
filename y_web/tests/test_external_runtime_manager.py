@@ -1090,7 +1090,9 @@ def test_clone_passes_the_github_token_to_git(runtime_repo_spec, monkeypatch):
     )
     assert "AUTHORIZATION: basic" in seen["env"]["GIT_CONFIG_VALUE_1"]
     # the token must not end up in the stored remote URL
-    status_origin = manager._safe_git(runtime_repo_spec.path, ["remote", "get-url", "origin"])
+    status_origin = manager._safe_git(
+        runtime_repo_spec.path, ["remote", "get-url", "origin"]
+    )
     assert "tok123" not in status_origin
 
 

@@ -580,8 +580,8 @@ def _external_runtime_action_single(repo_key: str, action: str):
             installed_now = True
         elif action == "clone":
             clone_runtime_repo(
-                    repo_key, branch, admin_user.username, github_token=github_token
-                )
+                repo_key, branch, admin_user.username, github_token=github_token
+            )
             flash(f"Cloned {spec.label} on branch {branch}.", "success")
             installed_now = True
         elif action == "fetch":
