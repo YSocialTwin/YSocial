@@ -1482,3 +1482,24 @@ def test_my_stats_counts_the_current_users_annotation_distributions(frontend_add
     assert {e["label"]: e["count"] for e in stats["emotions"]} == {"Joy": 2, "Trust": 1}
     assert stats["topics"] == [{"label": "Climate change", "count": 3}]
     assert stats["sentiment_scale"] == "3point"
+
+
+    # Only the dimensions currently enabled are reported: switch toxicity and emotions off, keep topics and sentiment.
+    with app.app_context():
+        row = db.session.get(FrontendAddsOnExpModuleSettings, (exp_id, "post_annotation"))
+        row.config_json = json.dumps({
+            "enable_topic_annotation": True, "enable_sentiment_annotation": True,
+            "enable_emotion_annotation": False, "enable_toxicity_annotation": False,
+        })
+        db.session.commit()
+    narrowed = client.get(f"{base}/my_stats").get_json()
+    assert narrowed["toxicity"] == [] and narrowed["emotions"] == []
+    assert narrowed["sentiment"] and narrowed["topics"] and narrowed["total"] == 3
+    with app.app_context():
+        row = db.session.get(FrontendAddsOnExpModuleSettings, (exp_id, "post_annotation"))
+        row.config_json = json.dumps({"enable_topic_annotation": False, "enable_sentiment_annotation": False,
+                                      "enable_emotion_annotation": False, "enable_toxicity_annotation": True})
+        db.session.commit()
+    only_tox = client.get(f"{base}/my_stats").get_json()
+    assert only_tox["sentiment"] == [] and only_tox["topics"] == [] and only_tox["toxicity"]
+    assert only_tox["total"] == 3
