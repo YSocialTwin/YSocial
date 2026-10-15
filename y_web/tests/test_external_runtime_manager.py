@@ -306,7 +306,9 @@ def test_external_runtime_action_returns_json_for_xhr(app, client, auth, monkeyp
         route_mod, "_runtime_group_active_experiments", lambda group: []
     )
     monkeypatch.setattr(
-        route_mod, "update_runtime_repo", lambda repo_key, branch, actor: None
+        route_mod,
+        "update_runtime_repo",
+        lambda repo_key, branch, actor, github_token=None: None,
     )
     monkeypatch.setattr(
         route_mod, "log_external_runtime_action", lambda *args, **kwargs: None
@@ -468,7 +470,7 @@ def test_external_runtime_acquire_json_uses_selected_source(
     monkeypatch.setattr(
         route_mod,
         "clone_runtime_repo",
-        lambda repo_key, branch, actor: called.update(
+        lambda repo_key, branch, actor, github_token=None: called.update(
             {"repo_key": repo_key, "branch": branch, "actor": actor}
         ),
     )
@@ -1054,3 +1056,51 @@ def test_runtime_visibility_admin_role_alone_no_longer_bypasses_privacy(app):
 
         app.config["DEVELOPMENT_MODE"] = False
         assert registry.runtime_visible_to_user(spec, admin) is False
+
+
+def test_git_auth_env_uses_token_without_leaking_it_into_the_url(monkeypatch):
+    monkeypatch.delenv("GH_TOKEN", raising=False)
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+    assert manager._git_auth_env(None) == {}
+
+    env = manager._git_auth_env("  tok123  ")
+    assert env["GIT_CONFIG_KEY_0"] == "credential.helper"
+    assert env["GIT_CONFIG_VALUE_0"] == ""  # a broken helper (missing gh) is bypassed
+    assert env["GIT_CONFIG_KEY_1"] == "http.https://github.com/.extraheader"
+    import base64
+
+    expected = base64.b64encode(b"x-access-token:tok123").decode()
+    assert env["GIT_CONFIG_VALUE_1"] == f"AUTHORIZATION: basic {expected}"
+
+    monkeypatch.setenv("GH_TOKEN", "fromenv")
+    assert manager._git_auth_env(None)["GIT_CONFIG_COUNT"] == "2"
+
+
+def test_clone_passes_the_github_token_to_git(runtime_repo_spec, monkeypatch):
+    seen = {}
+    real = manager._run_command
+
+    def spy(command, cwd, env=None, timeout=300):
+        seen["env"] = env
+        return real(command, cwd=cwd, env=env, timeout=timeout)
+
+    monkeypatch.setattr(manager, "_run_command", spy)
+    manager.clone_runtime_repo(
+        runtime_repo_spec.key, "main", actor="tester", github_token="tok123"
+    )
+    assert "AUTHORIZATION: basic" in seen["env"]["GIT_CONFIG_VALUE_1"]
+    # the token must not end up in the stored remote URL
+    status_origin = manager._safe_git(runtime_repo_spec.path, ["remote", "get-url", "origin"])
+    assert "tok123" not in status_origin
+
+
+def test_git_auth_failure_gets_an_actionable_hint(tmp_path, monkeypatch):
+    def failing(command, cwd, env=None, timeout=300):
+        raise manager.ExternalRuntimeError(
+            "Command failed (git clone x)\nremote: Invalid username or token."
+        )
+
+    monkeypatch.setattr(manager, "_run_command", failing)
+    with pytest.raises(manager.ExternalRuntimeError) as exc:
+        manager._git_remote(["git", "clone", "x"], cwd=tmp_path)
+    assert "private" in str(exc.value) and "GH_TOKEN" in str(exc.value)

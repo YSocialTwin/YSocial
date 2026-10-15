@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 import io
 import json
 import os
@@ -163,6 +164,53 @@ def _github_download_headers(explicit_token: str | None = None) -> dict[str, str
     return headers
 
 
+def _git_auth_env(explicit_token: str | None = None) -> dict[str, str]:
+    """Environment that lets ``git`` authenticate to github.com with a token.
+
+    The token is passed through git's per-process config (``GIT_CONFIG_*``): it is
+    never written to the remote URL, to ``.git/config`` or to the command line, and
+    any configured credential helper is bypassed (a missing ``gh`` binary there
+    would otherwise make every private clone fail).
+    """
+    token = _github_token(explicit_token)
+    if not token:
+        return {}
+    basic = base64.b64encode(f"x-access-token:{token}".encode("utf-8")).decode("ascii")
+    return {
+        "GIT_CONFIG_COUNT": "2",
+        "GIT_CONFIG_KEY_0": "credential.helper",
+        "GIT_CONFIG_VALUE_0": "",
+        "GIT_CONFIG_KEY_1": "http.https://github.com/.extraheader",
+        "GIT_CONFIG_VALUE_1": f"AUTHORIZATION: basic {basic}",
+    }
+
+
+_GIT_AUTH_FAILURE_MARKERS = (
+    "authentication failed",
+    "could not read username",
+    "invalid username or token",
+    "repository not found",
+)
+
+
+def _git_remote(
+    command: list[str], cwd: Path, github_token: str | None = None
+) -> str:
+    """Run a git command that talks to the remote, with token auth and a clear hint."""
+    try:
+        return _run_command(command, cwd=cwd, env=_git_auth_env(github_token))
+    except ExternalRuntimeError as exc:
+        message = str(exc)
+        if any(marker in message.lower() for marker in _GIT_AUTH_FAILURE_MARKERS):
+            hint = (
+                "GitHub refused the credentials. If this repository is private, enter "
+                "a GitHub token with read access to its contents in the installer "
+                "(or set GH_TOKEN / GITHUB_TOKEN for the server process)."
+            )
+            raise ExternalRuntimeError(f"{message}\n{hint}") from exc
+        raise
+
+
 def _run_command(
     command: list[str],
     cwd: Path,
@@ -198,11 +246,13 @@ def _run_command(
     return output.strip()
 
 
-def _safe_git(path: Path, args: list[str]) -> str:
+def _safe_git(path: Path, args: list[str], github_token: str | None = None) -> str:
     if not host_git_available():
         raise ExternalRuntimeError(
             "Git is not available on this host. Use release-based installation instead."
         )
+    if github_token is not None or args[:1] in (["fetch"], ["pull"]):
+        return _git_remote(["git", *args], cwd=path, github_token=github_token)
     return _run_command(["git", *args], cwd=path)
 
 
@@ -624,7 +674,12 @@ def download_runtime_release(
     )
 
 
-def clone_runtime_repo(repo_key: str, branch: str | None, actor: str) -> None:
+def clone_runtime_repo(
+    repo_key: str,
+    branch: str | None,
+    actor: str,
+    github_token: str | None = None,
+) -> None:
     spec = runtime_spec(repo_key)
     branch_name = _resolve_branch(spec, branch)
     if not host_git_available():
@@ -634,14 +689,20 @@ def clone_runtime_repo(repo_key: str, branch: str | None, actor: str) -> None:
     if spec.path.exists():
         raise ExternalRuntimeError(f"{spec.label} already exists at {spec.path}")
     spec.path.parent.mkdir(parents=True, exist_ok=True)
-    output = _run_command(
+    output = _git_remote(
         ["git", "clone", "--branch", branch_name, spec.repo_url, str(spec.path)],
         cwd=spec.path.parent,
+        github_token=github_token,
     )
     log_external_runtime_action(repo_key, "clone", actor, branch_name, True, output)
 
 
-def fetch_runtime_repo(repo_key: str, branch: str | None, actor: str) -> None:
+def fetch_runtime_repo(
+    repo_key: str,
+    branch: str | None,
+    actor: str,
+    github_token: str | None = None,
+) -> None:
     spec = runtime_spec(repo_key)
     status = get_runtime_status(repo_key)
     if not host_git_available():
@@ -657,7 +718,11 @@ def fetch_runtime_repo(repo_key: str, branch: str | None, actor: str) -> None:
     branch_name = _resolve_branch(spec, branch)
     output_parts = [
         _normalize_origin_remote(spec),
-        _safe_git(spec.path, ["fetch", "origin", branch_name, "--prune"]),
+        _safe_git(
+            spec.path,
+            ["fetch", "origin", branch_name, "--prune"],
+            github_token=github_token,
+        ),
     ]
     output = "\n".join(part for part in output_parts if part)
     log_external_runtime_action(repo_key, "fetch", actor, branch_name, True, output)
@@ -728,7 +793,12 @@ def _normalize_origin_remote(spec) -> str:
     return f"Added origin remote {spec.repo_url}"
 
 
-def update_runtime_repo(repo_key: str, branch: str | None, actor: str) -> None:
+def update_runtime_repo(
+    repo_key: str,
+    branch: str | None,
+    actor: str,
+    github_token: str | None = None,
+) -> None:
     spec = runtime_spec(repo_key)
     status = get_runtime_status(repo_key)
     if not host_git_available():
@@ -749,9 +819,17 @@ def update_runtime_repo(repo_key: str, branch: str | None, actor: str) -> None:
     branch_name = _resolve_branch(spec, branch)
     output_parts = [
         _normalize_origin_remote(spec),
-        _safe_git(spec.path, ["fetch", "origin", branch_name, "--prune"]),
+        _safe_git(
+            spec.path,
+            ["fetch", "origin", branch_name, "--prune"],
+            github_token=github_token,
+        ),
         _checkout_branch(spec.path, branch_name),
-        _safe_git(spec.path, ["pull", "--ff-only", "origin", branch_name]),
+        _safe_git(
+            spec.path,
+            ["pull", "--ff-only", "origin", branch_name],
+            github_token=github_token,
+        ),
     ]
     log_external_runtime_action(
         repo_key,
