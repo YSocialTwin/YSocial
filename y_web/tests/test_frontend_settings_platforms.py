@@ -226,5 +226,6 @@ def test_side_boxes_render_recsys_and_stats_only_when_asked(suites_app):
 
 
 def test_feed_templates_with_side_boxes_compile(suites_app):
+    suites_app.jinja_env.filters.setdefault("user_image_id", lambda v: v)   # registered by the real app only
     for name in ("photo/feed.html", "microblogging/feed.html", "admin/frontend_settings.html"):
         assert suites_app.jinja_env.get_template(name) is not None
