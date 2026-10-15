@@ -1121,3 +1121,18 @@ def test_install_dependencies_is_a_noop_without_a_manifest(
     assert manager._effective_install_commands(bare) == ()
     manager.install_runtime_dependencies(bare.key, actor="tester")
     assert manager.get_runtime_status(bare.key).dependency_files_ready is True
+
+
+def test_admin_engine_supports_flask_sqlalchemy_2_and_3():
+    from y_web.src.external_runtime import backend_plugins
+
+    class _New:
+        engines = {"db_admin": "admin-engine"}
+        engine = "default-engine"
+
+    class _Old:  # Flask-SQLAlchemy 2.x: no ``engines`` attribute
+        def get_engine(self, app, bind=None):
+            return f"old-engine:{bind}"
+
+    assert backend_plugins._admin_engine(_New(), None) == "admin-engine"
+    assert backend_plugins._admin_engine(_Old(), object()) == "old-engine:db_admin"

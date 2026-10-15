@@ -668,6 +668,17 @@ def print_backend_plugin_report(report: dict) -> None:
             )
 
 
+def _admin_engine(db, app):
+    """The ``db_admin`` engine, on Flask-SQLAlchemy 3.x and on older 2.x installs."""
+    engines = getattr(db, "engines", None)  # Flask-SQLAlchemy >= 3.0
+    if engines is not None:
+        return engines["db_admin"] if "db_admin" in engines else db.engine
+    try:  # Flask-SQLAlchemy 2.x
+        return db.get_engine(app, bind="db_admin")
+    except Exception:
+        return db.get_engine(app)
+
+
 def run_backend_plugin_schema_migrations(app, repo_keys=None) -> dict:
     """Run the optional ``schema_module`` migration of installed+valid suites.
 
@@ -694,8 +705,7 @@ def run_backend_plugin_schema_migrations(app, repo_keys=None) -> dict:
             dotted, _, attr = ref.partition(":")
             migrate = getattr(_import_from_suite(repo_key, dotted), attr)
             with app.app_context():
-                engines = db.engines
-                engine = engines["db_admin"] if "db_admin" in engines else db.engine
+                engine = _admin_engine(db, app)
                 entry["ran"] = True
                 entry["ok"] = migrate(engine) is not False
             if not entry["ok"]:
