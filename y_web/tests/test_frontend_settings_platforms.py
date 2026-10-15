@@ -227,5 +227,19 @@ def test_side_boxes_render_recsys_and_stats_only_when_asked(suites_app):
 
 def test_feed_templates_with_side_boxes_compile(suites_app):
     suites_app.jinja_env.filters.setdefault("user_image_id", lambda v: v)   # registered by the real app only
-    for name in ("photo/feed.html", "microblogging/feed.html", "admin/frontend_settings.html"):
+    for name in ("photo/feed.html", "microblogging/feed.html", "microblogging/hashtag.html", "microblogging/thread.html", "admin/frontend_settings.html"):
         assert suites_app.jinja_env.get_template(name) is not None
+
+
+def test_show_trending_hashtags_setting(suites_app, logged):
+    micro = _exp(suites_app, "microblogging", "m11")
+    photo = _exp(suites_app, "photo_sharing", "p11")
+    g = lambda e: logged.get(f"/admin/frontend_settings/get_settings?exp_id={e}").get_json()
+    assert g(micro)["capabilities"] is None and g(micro)["settings"]["show_trending_hashtags"] is True
+    assert "show_trending_hashtags" not in g(photo)["capabilities"]   # only microblogging has the box
+    logged.post("/admin/frontend_settings/save", json={"exp_id": micro, "settings": {"show_trending_hashtags": False}})
+    assert g(micro)["settings"]["show_trending_hashtags"] is False
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1] / "templates" / "microblogging"
+    for name in ("feed.html", "hashtag.html", "thread.html"):
+        assert "ui.show_trending_hashtags is not false" in (root / name).read_text(encoding="utf-8")

@@ -696,6 +696,7 @@ _UI_DEFAULTS = {
     "annotation_author_type": True,
     "show_post_time": True,
     "show_suggested_friends": True,
+    "show_trending_hashtags": True,
     "show_recsys_info": False,
     "show_annotation_stats": False,
     "notifications_menu": True,

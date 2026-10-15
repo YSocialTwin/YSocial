@@ -266,6 +266,7 @@
                     <!-- /partials/widgets/weather-widget.html -->
                     {% include "microblogging/components/sidebar_user_card.html" %}
 
+                    {% if ui is not defined or ui.show_trending_hashtags is not false %}
                     {% set ranked_card_title = "Trending Hashtags" %}
                     {% set ranked_card_subtitle = "Live signals from the current conversation" %}
                     {% set ranked_card_items = trending_ht %}
@@ -275,6 +276,7 @@
                     {% set ranked_card_prefix = "#" %}
                     {% set ranked_card_empty = "No hashtags are trending yet." %}
                     {% include "microblogging/components/sidebar_ranked_list_card.html" %}
+                    {% endif %}
 
                 </div>
                 <!-- /Left side column -->

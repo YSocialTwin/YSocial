@@ -109,6 +109,7 @@ DEFAULT_SETTINGS = {
     "annotation_agent_type": True,
     "annotation_author_type": True,
     "show_post_time": True,  # show "Day X - HH:00" below each post/comment
+    "show_trending_hashtags": True,  # show the "Trending Hashtags" box (microblogging only)
     "show_suggested_friends": True,  # show the "Suggested Friends" box (microblogging / photo)
     "show_recsys_info": False,  # box: the user's content recommender system, explained (microblogging / photo)
     "show_annotation_stats": False,  # box: live distributions of the user's annotations (needs the annotation add-on)

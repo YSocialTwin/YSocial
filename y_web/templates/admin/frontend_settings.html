@@ -400,7 +400,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
           </div>
 
           <!-- ══ BOX 2 — Annotations ═══════════════════════════ -->
-          <div class="misc-compact-box" id="box-annotations" data-cap-any="annotations_enabled annotation_agent_type show_post_time show_suggested_friends show_recsys_info show_annotation_stats">
+          <div class="misc-compact-box" id="box-annotations" data-cap-any="annotations_enabled annotation_agent_type show_post_time show_suggested_friends show_trending_hashtags show_recsys_info show_annotation_stats">
             <h3>Annotations</h3>
             <div class="box-content">
               <p style="color:#6b7280;font-size:.85rem;margin-bottom:14px;">
@@ -450,6 +450,10 @@ input:checked + .slider-small:before { transform: translateX(16px); }
               <div class="ys-toggle-row" data-cap="show_suggested_friends">
                 <span class="ys-toggle-label">Suggested Friends <small>Show the "Suggested Friends" box next to the feed</small></span>
                 <label class="switch-small"><input type="checkbox" id="show_suggested_friends"><span class="slider-small round"></span></label>
+              </div>
+              <div class="ys-toggle-row" data-cap="show_trending_hashtags">
+                <span class="ys-toggle-label">Trending Hashtags <small>Show the "Trending Hashtags" box in the side column</small></span>
+                <label class="switch-small"><input type="checkbox" id="show_trending_hashtags"><span class="slider-small round"></span></label>
               </div>
               <div class="ys-toggle-row" data-cap="show_recsys_info">
                 <span class="ys-toggle-label">Recommender info <small>Show a box next to the feed with the participant's content recommender system and a plain-language explanation of how it works</small></span>
@@ -942,7 +946,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       'interaction_like','interaction_dislike','interaction_share',
       'annotations_enabled','annotation_emotions','annotation_topics',
       'annotation_sentiment','annotation_toxicity','annotation_agent_type','annotation_author_type',
-      'show_post_time','show_suggested_friends','show_recsys_info','show_annotation_stats',
+      'show_post_time','show_suggested_friends','show_trending_hashtags','show_recsys_info','show_annotation_stats',
       'notifications_menu','profile_topics_box','onboarding_enabled',
       'infinite_scroll_enabled',
     ];
@@ -1050,7 +1054,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       'interaction_like','interaction_dislike','interaction_share',
       'annotations_enabled','annotation_emotions','annotation_topics',
       'annotation_sentiment','annotation_toxicity','annotation_agent_type','annotation_author_type',
-      'show_post_time','show_suggested_friends','show_recsys_info','show_annotation_stats',
+      'show_post_time','show_suggested_friends','show_trending_hashtags','show_recsys_info','show_annotation_stats',
       'notifications_menu',
       'profile_topics_box','onboarding_enabled',
       'infinite_scroll_enabled',
