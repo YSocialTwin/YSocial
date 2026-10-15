@@ -37,8 +37,8 @@ from y_web import db
 from y_web.routes.social._blueprint import main
 from y_web.routes.social.helpers import (
     _content_recsys_info,
-    _load_ui_settings,
     _experiment_memory_enabled,
+    _load_ui_settings,
     get_safe_profile_pic,
     is_admin,
 )
@@ -1998,7 +1998,6 @@ def _photo_search_payload(
     }
 
 
-
 def _photo_announce_event(exp: Exps, event: str, payload: dict) -> None:
     """Tell installed plugins about a human action (never raises)."""
     try:
@@ -3389,10 +3388,16 @@ def photo_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     ui_settings = _load_ui_settings(exp_id)
     max_post_per_page = _photo_page_size(ui_settings)
     username = ""
-    active_tab = str(
-        request.args.get("tab", ui_settings.get("default_photo_feed_tab", "for_you"))
-        or "for_you"
-    ).strip().lower()
+    active_tab = (
+        str(
+            request.args.get(
+                "tab", ui_settings.get("default_photo_feed_tab", "for_you")
+            )
+            or "for_you"
+        )
+        .strip()
+        .lower()
+    )
     if active_tab not in {"for_you", "follower"}:
         active_tab = "for_you"
 
@@ -3501,10 +3506,16 @@ def api_photo_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1
 
     ui_settings = _load_ui_settings(exp_id)
     max_post_per_page = _photo_page_size(ui_settings)
-    active_tab = str(
-        request.args.get("tab", ui_settings.get("default_photo_feed_tab", "for_you"))
-        or "for_you"
-    ).strip().lower()
+    active_tab = (
+        str(
+            request.args.get(
+                "tab", ui_settings.get("default_photo_feed_tab", "for_you")
+            )
+            or "for_you"
+        )
+        .strip()
+        .lower()
+    )
     if active_tab not in {"for_you", "follower"}:
         active_tab = "for_you"
 

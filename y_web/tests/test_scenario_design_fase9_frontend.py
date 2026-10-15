@@ -314,7 +314,10 @@ def test_publication_id_mapping_404_for_unknown_publication(sd_app, sd_client):
 def test_page_uses_the_frontend_settings_selector_and_description():
     from pathlib import Path
 
-    base = Path(__file__).resolve().parents[2] / "external/ScenarioDesign/modules/scenario_editor"
+    base = (
+        Path(__file__).resolve().parents[2]
+        / "external/ScenarioDesign/modules/scenario_editor"
+    )
     html = (base / "backend/templates/scenario_design_app.html").read_text()
     js = (base / "static/js/editor.js").read_text()
     assert 'class="misc-section-description"' in html and "admin-components.css" in html

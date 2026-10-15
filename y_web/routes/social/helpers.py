@@ -833,8 +833,10 @@ def _platform_ui_context():
             "frontend_adds_on_modules": modules,
             "ui": ui,
             "platform_ui": "forum" if exp.platform_type == "forum" else "photo",
-            "forum_show_emotions": annotations and bool(ui.get("annotation_emotions", True)),
-            "forum_show_topics": annotations and bool(ui.get("annotation_topics", True)),
+            "forum_show_emotions": annotations
+            and bool(ui.get("annotation_emotions", True)),
+            "forum_show_topics": annotations
+            and bool(ui.get("annotation_topics", True)),
         }
     except Exception:
         return {}

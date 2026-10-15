@@ -17,7 +17,6 @@ from sqlalchemy.sql.expression import func
 from y_web import db
 from y_web.routes.social._blueprint import main
 from y_web.routes.social.helpers import (
-    _load_ui_settings,
     _experiment_memory_enabled,
     _forum_current_profile_pic,
     _forum_logged_user,
@@ -25,6 +24,7 @@ from y_web.routes.social.helpers import (
     _forum_profile_pic,
     _forum_resolve_back_url,
     _get_discussions,
+    _load_ui_settings,
     build_thread_tree,
     is_admin,
 )
@@ -139,7 +139,9 @@ def _forum_default_feed_type(exp_id):
 def _forum_page_size(exp_id):
     """Items loaded per feed request (``posts_per_page`` in the frontend settings)."""
     try:
-        return max(1, min(100, int(_load_ui_settings(exp_id).get("posts_per_page", 10))))
+        return max(
+            1, min(100, int(_load_ui_settings(exp_id).get("posts_per_page", 10)))
+        )
     except (TypeError, ValueError):
         return 10
 
@@ -179,7 +181,9 @@ def interview(exp_id):
             "Interview is unavailable because memory is disabled for this experiment."
         )
         if platform_type == "forum":
-            return redirect(f"/{exp_id}/rfeed/all/feed/rf/1?feed_type={_forum_default_feed_type(exp_id)}")
+            return redirect(
+                f"/{exp_id}/rfeed/all/feed/rf/1?feed_type={_forum_default_feed_type(exp_id)}"
+            )
         exp_user = db.session.scalars(
             select(User_mgmt).filter_by(username=current_user.username)
         ).first()
@@ -250,7 +254,9 @@ def get_thread_reddit(exp_id, post_id):
     requested_post = db.session.scalars(select(Post).filter_by(id=post_id)).first()
     if requested_post is None:
         flash("Thread not found.")
-        return redirect(f"/{exp_id}/rfeed/all/feed/rf/1?feed_type={_forum_default_feed_type(exp_id)}")
+        return redirect(
+            f"/{exp_id}/rfeed/all/feed/rf/1?feed_type={_forum_default_feed_type(exp_id)}"
+        )
 
     thread_id = getattr(requested_post, "thread_id", None) or requested_post.id
     root_post = (
@@ -267,7 +273,9 @@ def get_thread_reddit(exp_id, post_id):
     hidden_ids = _hidden_author_ids_for_viewer(exp_id, viewer_id)
     if hidden_ids and root_post.user_id in hidden_ids:
         flash("Thread not found.")
-        return redirect(f"/{exp_id}/rfeed/all/feed/rf/1?feed_type={_forum_default_feed_type(exp_id)}")
+        return redirect(
+            f"/{exp_id}/rfeed/all/feed/rf/1?feed_type={_forum_default_feed_type(exp_id)}"
+        )
 
     posts = (
         Post.query.filter(Post.thread_id == thread_id, Post.id != thread_id)
@@ -280,7 +288,9 @@ def get_thread_reddit(exp_id, post_id):
         posts = [p for p in posts if p.id not in dropped_ids]
     if root_post is None:
         flash("Thread not found.")
-        return redirect(f"/{exp_id}/rfeed/all/feed/rf/1?feed_type={_forum_default_feed_type(exp_id)}")
+        return redirect(
+            f"/{exp_id}/rfeed/all/feed/rf/1?feed_type={_forum_default_feed_type(exp_id)}"
+        )
 
     root = root_post.id
 
@@ -526,7 +536,9 @@ def feeed_logged_reddit():
         return redirect("/admin/join_simulation")
 
     exp = exps[0]
-    return redirect(f"/{exp.idexp}/rfeed/all/feed/rf/1?feed_type={_forum_default_feed_type(exp.idexp)}")
+    return redirect(
+        f"/{exp.idexp}/rfeed/all/feed/rf/1?feed_type={_forum_default_feed_type(exp.idexp)}"
+    )
 
 
 @main.get("/rnotifications")

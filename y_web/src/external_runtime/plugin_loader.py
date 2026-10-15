@@ -277,7 +277,11 @@ def active_modules_context(exp_id: int) -> list[dict]:
         from y_web.src.models import Exps
 
         _exp = db.session.get(Exps, exp_id)
-        platform = (getattr(_exp, "platform_type", None) or "microblogging") if _exp else "microblogging"
+        platform = (
+            (getattr(_exp, "platform_type", None) or "microblogging")
+            if _exp
+            else "microblogging"
+        )
     except Exception:
         platform = "microblogging"
 
