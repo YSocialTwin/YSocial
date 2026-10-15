@@ -446,7 +446,11 @@
 {% endblock %}
 
 {% block photo_content %}
-<div class="photo-feed-layout{% if ui is defined and ui and ui.show_suggested_friends is false %} photo-feed-layout--no-rail{% endif %}">
+{% set _rail_friends = not (ui is defined and ui and ui.show_suggested_friends is false) %}
+{% set _rail_recsys = recsys_info is defined and recsys_info %}
+{% set _rail_stats = ui is defined and ui and ui.show_annotation_stats and frontend_adds_on_modules %}
+{% set _rail_any = _rail_friends or _rail_recsys or _rail_stats %}
+<div class="photo-feed-layout{% if not _rail_any %} photo-feed-layout--no-rail{% endif %}">
     <div class="photo-feed-content">
         <div class="photo-feed-main">
             <div class="photo-feed-top">
@@ -516,8 +520,11 @@
         </div>
     </div>
 
-    {% if not (ui is defined and ui and ui.show_suggested_friends is false) %}
+    {% if _rail_any %}
     <aside class="photo-right-rail">
+        {% set side_variant = 'photo' %}
+        {% include "shared/annotation_side_boxes.html" %}
+        {% if _rail_friends %}
         <div class="photo-right-rail__card">
             <div class="photo-right-rail__card-header">
                 <div>
@@ -567,6 +574,7 @@
                 <a href="/{{ exp_id }}/photo/suggestions" class="photo-right-rail__see-all">See all</a>
             </div>
         </div>
+        {% endif %}
     </aside>
     {% endif %}
 {% endblock %}

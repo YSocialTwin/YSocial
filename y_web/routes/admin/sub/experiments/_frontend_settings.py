@@ -61,6 +61,8 @@ PLATFORM_CAPABILITIES = {
     "photo_sharing": _COMMON_CAPABILITIES
     | {
         "show_suggested_friends",  # "Suggestions for you" rail
+        "show_recsys_info",
+        "show_annotation_stats",
         "interaction_share",
         "annotation_agent_type",
         "default_photo_feed_tab",
@@ -108,6 +110,8 @@ DEFAULT_SETTINGS = {
     "annotation_author_type": True,
     "show_post_time": True,  # show "Day X - HH:00" below each post/comment
     "show_suggested_friends": True,  # show the "Suggested Friends" box (microblogging / photo)
+    "show_recsys_info": False,  # box: the user's content recommender system, explained (microblogging / photo)
+    "show_annotation_stats": False,  # box: live distributions of the user's annotations (needs the annotation add-on)
     # Feed & Profile
     "default_content_recsys": "",  # empty = system default
     "default_follow_recsys": "",  # empty = system default
@@ -263,6 +267,17 @@ def frontend_settings():
     )
 
 
+def annotation_module_enabled(exp_id) -> bool:
+    """Whether the "Post & Comment Annotation" add-on module is enabled for *exp_id*."""
+    try:
+        from y_web.src.models import FrontendAddsOnExpModuleSettings
+
+        row = db.session.get(FrontendAddsOnExpModuleSettings, (exp_id, "post_annotation"))
+        return bool(row is not None and row.enabled)
+    except Exception:
+        return False
+
+
 # ------------------------------------------------------------------
 # GET /admin/frontend_settings/get_settings?exp_id=N  — JSON API
 # ------------------------------------------------------------------
@@ -288,6 +303,7 @@ def frontend_settings_get():
             "capabilities": capabilities_for(exp.platform_type),
             "simulator_type": exp.simulator_type or "Standard",
             "settings": _load_settings(exp_id),
+            "annotation_module_enabled": annotation_module_enabled(exp_id),
             "recsys_options": _load_recsys_options(
                 exp.simulator_type or "Standard", all_algorithms=True
             ),
@@ -337,6 +353,9 @@ def frontend_settings_save():
             value = str(new_settings[k])
             allowed = _ENUM_SETTINGS.get(k)
             safe[k] = value if allowed is None or value in allowed else default
+
+    if safe.get("show_annotation_stats") and not annotation_module_enabled(exp_id):
+        safe["show_annotation_stats"] = False  # nothing to show without the annotation add-on
 
     row = db.session.get(ExpFrontendSettings, exp_id)
     if row is None:

@@ -173,3 +173,58 @@ def test_suggested_friends_templates_are_gated():
     assert "photo-feed-layout--no-rail" in photo and "ui.show_suggested_friends" in photo
     admin = (root / "admin/frontend_settings.html").read_text(encoding="utf-8")
     assert "<h3>Annotations</h3>" in admin and "<h3>Post Annotations</h3>" not in admin
+
+
+def test_recsys_info_and_annotation_stats_settings(suites_app, logged):
+    from y_web.src.models import FrontendAddsOnExpModuleSettings
+
+    photo = _exp(suites_app, "photo_sharing", "p10")
+    forum = _exp(suites_app, "forum", "f10")
+    g = lambda e: logged.get(f"/admin/frontend_settings/get_settings?exp_id={e}").get_json()
+    s = lambda e, **kw: logged.post("/admin/frontend_settings/save", json={"exp_id": e, "settings": kw})
+    caps = g(photo)["capabilities"]
+    assert "show_recsys_info" in caps and "show_annotation_stats" in caps
+    assert "show_recsys_info" not in g(forum)["capabilities"]
+    data = g(photo)
+    assert data["settings"]["show_recsys_info"] is False and data["settings"]["show_annotation_stats"] is False
+    assert data["annotation_module_enabled"] is False
+    # the statistics toggle cannot be switched on while the annotation add-on is off for the experiment
+    assert s(photo, show_recsys_info=True, show_annotation_stats=True).get_json()["ok"] is True
+    st = g(photo)["settings"]
+    assert st["show_recsys_info"] is True and st["show_annotation_stats"] is False
+    with suites_app.app_context():
+        db.session.add(FrontendAddsOnExpModuleSettings(exp_id=photo, module_id="post_annotation", enabled=True, config_json="{}"))
+        db.session.commit()
+    assert g(photo)["annotation_module_enabled"] is True
+    s(photo, show_annotation_stats=True)
+    assert g(photo)["settings"]["show_annotation_stats"] is True
+
+
+def test_side_boxes_render_recsys_and_stats_only_when_asked(suites_app):
+    from y_web.routes.social.helpers import _content_recsys_info
+
+    def render(**ctx):
+        with suites_app.test_request_context("/"):
+            return suites_app.jinja_env.get_template("shared/annotation_side_boxes.html").render(**ctx)
+
+    module = [{"module_id": "post_annotation", "api_base": "/7/api/plugins/frontend_adds_on/post_annotation"}]
+    assert "ys-recsys-box" not in render(ui={}, recsys_info=None) and "ys-annostats-box" not in render(ui={})
+    info = {"name": "ReverseChrono", "label": "Reverse chronological", "description": "Newest first."}
+    out = render(ui={}, recsys_info=info)
+    assert "Reverse chronological" in out and "Newest first." in out and "ys-annostats-box" not in out
+    # statistics need the toggle AND the add-on module
+    assert "ys-annostats-box" not in render(ui={"show_annotation_stats": True}, frontend_adds_on_modules=[])
+    out = render(ui={"show_annotation_stats": True}, frontend_adds_on_modules=module)
+    assert 'data-api="/7/api/plugins/frontend_adds_on/post_annotation/my_stats"' in out and "ys:annotation-saved" in out
+    assert "ys-annostats-box" not in render(ui={"show_annotation_stats": False}, frontend_adds_on_modules=module)
+    with suites_app.app_context():
+        assert _content_recsys_info("ReverseChrono", {"show_recsys_info": False}) is None
+        got = _content_recsys_info("rcp", {"show_recsys_info": True})
+        assert got["name"] == "ReverseChronoPopularity" and "popular" in got["description"].lower()
+        unknown = _content_recsys_info("Whatever", {"show_recsys_info": True})
+        assert unknown["description"] and unknown["name"] == "Whatever"
+
+
+def test_feed_templates_with_side_boxes_compile(suites_app):
+    for name in ("photo/feed.html", "microblogging/feed.html", "admin/frontend_settings.html"):
+        assert suites_app.jinja_env.get_template(name) is not None

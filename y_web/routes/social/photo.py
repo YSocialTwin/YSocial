@@ -36,6 +36,7 @@ from werkzeug.utils import secure_filename
 from y_web import db
 from y_web.routes.social._blueprint import main
 from y_web.routes.social.helpers import (
+    _content_recsys_info,
     _load_ui_settings,
     _experiment_memory_enabled,
     get_safe_profile_pic,
@@ -3472,6 +3473,9 @@ def photo_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
         spages=spages,
         suggested_contacts=suggested_contacts,
         followed_contact_ids=followed_contact_ids,
+        recsys_info=_content_recsys_info(
+            getattr(logged_user, "recsys_type", None), _load_ui_settings(exp_id)
+        ),
         experiment_memory_enabled=_experiment_memory_enabled(exp_id),
         **_photo_sidebar_context(
             exp,

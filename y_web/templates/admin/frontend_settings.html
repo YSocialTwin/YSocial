@@ -400,7 +400,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
           </div>
 
           <!-- ══ BOX 2 — Annotations ═══════════════════════════ -->
-          <div class="misc-compact-box" id="box-annotations" data-cap-any="annotations_enabled annotation_agent_type show_post_time show_suggested_friends">
+          <div class="misc-compact-box" id="box-annotations" data-cap-any="annotations_enabled annotation_agent_type show_post_time show_suggested_friends show_recsys_info show_annotation_stats">
             <h3>Annotations</h3>
             <div class="box-content">
               <p style="color:#6b7280;font-size:.85rem;margin-bottom:14px;">
@@ -450,6 +450,15 @@ input:checked + .slider-small:before { transform: translateX(16px); }
               <div class="ys-toggle-row" data-cap="show_suggested_friends">
                 <span class="ys-toggle-label">Suggested Friends <small>Show the "Suggested Friends" box next to the feed</small></span>
                 <label class="switch-small"><input type="checkbox" id="show_suggested_friends"><span class="slider-small round"></span></label>
+              </div>
+              <div class="ys-toggle-row" data-cap="show_recsys_info">
+                <span class="ys-toggle-label">Recommender info <small>Show a box next to the feed with the participant's content recommender system and a plain-language explanation of how it works</small></span>
+                <label class="switch-small"><input type="checkbox" id="show_recsys_info"><span class="slider-small round"></span></label>
+              </div>
+              <div class="ys-toggle-row" data-cap="show_annotation_stats" id="row-show_annotation_stats">
+                <span class="ys-toggle-label">Annotation statistics <small>Show a box next to the feed with live charts of the participant's own annotations (sentiment, toxicity, emotions, topics)</small>
+                  <small id="annotation-stats-hint" style="display:none;color:#b45309;">Available only when the "Post &amp; Comment Annotation" module is enabled for this experiment (Frontend Add-ons).</small></span>
+                <label class="switch-small"><input type="checkbox" id="show_annotation_stats"><span class="slider-small round"></span></label>
               </div>
               <div class="ys-fs-save-row">
                 <button class="button is-solid primary-button" onclick="saveSection(event,'annotations')">Save annotations</button>
@@ -717,6 +726,8 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       interaction_share:   ['Send / share', 'Send a photo to others'],
       annotation_agent_type: ['Agent type', 'Badge identifying ad-hoc agents next to the author name'],
       show_suggested_friends: ['Suggestions', 'Show the "Suggestions for you" box beside the feed'],
+      show_recsys_info: ['Recommender info', 'Show the content recommender system box beside the feed'],
+      show_annotation_stats: ['Annotation statistics', 'Show the live annotation statistics box beside the feed'],
     },
   };
   const BOX_DESCRIPTIONS = {
@@ -866,6 +877,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
         _buildRecsysSelects(data.recsys_options);
       }
       applySettings(data.settings, data.exp_name);
+      syncAnnotationStatsAvailability(!!data.annotation_module_enabled);
       FRONTEND_PLUGIN_SUITES.forEach(function (suite) { loadFrontendAddsOnSettings(expId, suite.repo_key); });
       showGrid();
     } catch (e) {
@@ -909,6 +921,18 @@ input:checked + .slider-small:before { transform: translateX(16px); }
   document.getElementById('default_content_recsys')
     ?.addEventListener('change', syncFilterBubbleSection);
 
+  /* The statistics box needs the "Post & Comment Annotation" add-on: the toggle is selectable only while it is enabled. */
+  function syncAnnotationStatsAvailability(moduleEnabled) {
+    const el = document.getElementById('show_annotation_stats');
+    const hint = document.getElementById('annotation-stats-hint');
+    if (!el) return;
+    if (!moduleEnabled) el.checked = false;
+    el.disabled = !moduleEnabled;
+    if (hint) hint.style.display = moduleEnabled ? 'none' : 'block';
+    const row = document.getElementById('row-show_annotation_stats');
+    if (row) row.style.opacity = moduleEnabled ? '' : '.6';
+  }
+
   function applySettings(s, expName) {
     badgeName.textContent = expName;
 
@@ -918,7 +942,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       'interaction_like','interaction_dislike','interaction_share',
       'annotations_enabled','annotation_emotions','annotation_topics',
       'annotation_sentiment','annotation_toxicity','annotation_agent_type','annotation_author_type',
-      'show_post_time','show_suggested_friends',
+      'show_post_time','show_suggested_friends','show_recsys_info','show_annotation_stats',
       'notifications_menu','profile_topics_box','onboarding_enabled',
       'infinite_scroll_enabled',
     ];
@@ -1026,7 +1050,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       'interaction_like','interaction_dislike','interaction_share',
       'annotations_enabled','annotation_emotions','annotation_topics',
       'annotation_sentiment','annotation_toxicity','annotation_agent_type','annotation_author_type',
-      'show_post_time','show_suggested_friends',
+      'show_post_time','show_suggested_friends','show_recsys_info','show_annotation_stats',
       'notifications_menu',
       'profile_topics_box','onboarding_enabled',
       'infinite_scroll_enabled',

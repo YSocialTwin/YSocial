@@ -696,6 +696,8 @@ _UI_DEFAULTS = {
     "annotation_author_type": True,
     "show_post_time": True,
     "show_suggested_friends": True,
+    "show_recsys_info": False,
+    "show_annotation_stats": False,
     "notifications_menu": True,
     "default_content_recsys": "",
     "default_follow_recsys": "",
@@ -736,6 +738,60 @@ def _load_ui_settings(exp_id: int) -> dict:
         return merged
     except Exception:
         return dict(_UI_DEFAULTS)
+
+
+# Plain-language explanations of the content recommender systems, keyed by canonical mode name
+# (see y_web.src.recsys.content_recsys._normalize_content_recsys_mode). Shown to participants.
+_RECSYS_DESCRIPTIONS = {
+    "Random": "Posts are picked at random from those available, so what you see is not tailored to you.",
+    "ReverseChrono": "The newest posts come first, like a plain timeline: nothing is hidden or boosted.",
+    "ReverseChronoPopularity": "Recent posts are ranked by how much attention they got (likes and replies), so popular posts rise to the top.",
+    "ReverseChronoFollowers": "You see recent posts from the people you follow, newest first.",
+    "ReverseChronoFollowersPopularity": "You see recent posts from the people you follow, with the most popular ones shown first.",
+    "ReverseChronoComments": "Recent posts that sparked the most discussion are shown first.",
+    "CommonInterests": "Posts are chosen because they match the topics you are interested in.",
+    "CommonUserInterests": "Posts are chosen from people who share your interests.",
+    "SimilarUsersReactions": "You see posts that people with tastes similar to yours reacted to.",
+    "SimilarUsersPosts": "You see posts written by people whose own posts are similar to yours.",
+    "CollaborativeUserUser": "You see what people like you enjoyed: the system finds users with similar behaviour and suggests what they liked.",
+    "CollaborativeItemItem": "You see posts similar to the ones you already liked, judged by who else liked them.",
+    "ContentBasedFeatures": "Posts are matched to you by comparing their characteristics (topics, tone, style) with those of posts you engaged with.",
+    "ContentBasedVector": "Posts are matched to you by measuring how close their meaning is to what you engaged with before.",
+    "HybridLinearRanker": "Several signals (recency, popularity, your interests and your network) are combined into a single score to rank posts.",
+    "FilterBubble": "Your feed is personalised: the more you engage with some content, the more similar content you are shown, which can narrow what you see.",
+}
+_RECSYS_FALLBACK = "This is the algorithm that decides which posts appear in your feed and in what order."
+
+
+def _content_recsys_info(recsys_type, ui=None):
+    """``{"name", "label", "description"}`` of a user's content recommender system, or ``None``.
+
+    ``None`` when the experiment's ``show_recsys_info`` setting is off, so templates can test it directly.
+    """
+    if ui is not None and not ui.get("show_recsys_info"):
+        return None
+    try:
+        from y_web.src.models.config import Content_Recsys  # noqa: PLC0415
+        from y_web.src.recsys.content_recsys import (  # noqa: PLC0415
+            _normalize_content_recsys_mode,
+        )
+
+        raw = str(recsys_type or "").strip() or "default"
+        mode = _normalize_content_recsys_mode(raw)
+        label = None
+        for row in db.session.scalars(db.select(Content_Recsys)).all():
+            if _normalize_content_recsys_mode(row.name) == mode:
+                label = row.value
+                break
+        if label is None:
+            label = {"Random": "Random"}.get(mode, mode)
+        return {
+            "name": mode,
+            "label": label,
+            "description": _RECSYS_DESCRIPTIONS.get(mode, _RECSYS_FALLBACK),
+        }
+    except Exception:
+        return None
 
 
 def _platform_ui_context():
