@@ -273,7 +273,9 @@ def annotation_module_enabled(exp_id) -> bool:
     try:
         from y_web.src.models import FrontendAddsOnExpModuleSettings
 
-        row = db.session.get(FrontendAddsOnExpModuleSettings, (exp_id, "post_annotation"))
+        row = db.session.get(
+            FrontendAddsOnExpModuleSettings, (exp_id, "post_annotation")
+        )
         return bool(row is not None and row.enabled)
     except Exception:
         return False
@@ -356,7 +358,9 @@ def frontend_settings_save():
             safe[k] = value if allowed is None or value in allowed else default
 
     if safe.get("show_annotation_stats") and not annotation_module_enabled(exp_id):
-        safe["show_annotation_stats"] = False  # nothing to show without the annotation add-on
+        safe["show_annotation_stats"] = (
+            False  # nothing to show without the annotation add-on
+        )
 
     row = db.session.get(ExpFrontendSettings, exp_id)
     if row is None:
@@ -488,7 +492,9 @@ def frontend_plugin_suite_settings_get(repo_key):
     for manifest in report["modules"]:
         module_id = manifest.get("module_id")
         row = rows.get(module_id)
-        shown_sections, shown_params = _manifest_for_platform(manifest, exp.platform_type)
+        shown_sections, shown_params = _manifest_for_platform(
+            manifest, exp.platform_type
+        )
         modules.append(
             {
                 "module_id": module_id,

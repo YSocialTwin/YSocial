@@ -22,9 +22,9 @@ from sqlalchemy import select
 from y_web import db
 from y_web.routes.social._blueprint import main
 from y_web.routes.social.helpers import (
+    _content_recsys_info,
     _forum_logged_user,
     _get_discussions,
-    _content_recsys_info,
     _load_ui_settings,
     build_thread_tree,
     get_adhoc_agent_badge,
@@ -372,7 +372,9 @@ def feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
             sfollow=sfollow,
             spages=spages,
             ui=ui,
-            recsys_info=_content_recsys_info(getattr(logged_user, "recsys_type", None), ui),
+            recsys_info=_content_recsys_info(
+                getattr(logged_user, "recsys_type", None), ui
+            ),
             frontend_adds_on_modules=active_modules_context(exp_id),
         )
 

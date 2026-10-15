@@ -30,7 +30,11 @@ depends_on: Union[str, Sequence[str], None] = None
 # (table, column, DDL type/default) for columns that older dashboard databases lack.
 _COLUMNS = (
     ("experiment_schedule_status", "current_group_capacity", "INTEGER"),
-    ("experiment_schedule_status", "dynamic_filling_enabled", "INTEGER NOT NULL DEFAULT 0"),
+    (
+        "experiment_schedule_status",
+        "dynamic_filling_enabled",
+        "INTEGER NOT NULL DEFAULT 0",
+    ),
     ("experiment_schedule_status", "launch_in_progress", "INTEGER NOT NULL DEFAULT 0"),
     ("population", "username_type", "VARCHAR(50) NOT NULL DEFAULT 'microblogging'"),
     ("population", "pop_type", "VARCHAR(50) DEFAULT NULL"),
@@ -56,13 +60,17 @@ def upgrade() -> None:
             continue
         if column in {c["name"] for c in inspector.get_columns(table)}:
             continue
-        op.execute(f'ALTER TABLE {table} ADD COLUMN {column} {ddl}')
+        op.execute(f"ALTER TABLE {table} ADD COLUMN {column} {ddl}")
 
     # 3. The schedule status is a single-row table the scheduler expects to find.
     if "experiment_schedule_status" in existing_tables:
-        has_row = bind.exec_driver_sql("SELECT 1 FROM experiment_schedule_status LIMIT 1").first()
+        has_row = bind.exec_driver_sql(
+            "SELECT 1 FROM experiment_schedule_status LIMIT 1"
+        ).first()
         if has_row is None:
-            bind.exec_driver_sql("INSERT INTO experiment_schedule_status (is_running) VALUES (0)")
+            bind.exec_driver_sql(
+                "INSERT INTO experiment_schedule_status (is_running) VALUES (0)"
+            )
 
 
 def downgrade() -> None:
