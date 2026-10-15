@@ -743,22 +743,28 @@ def _load_ui_settings(exp_id: int) -> dict:
 # Plain-language explanations of the content recommender systems, keyed by canonical mode name
 # (see y_web.src.recsys.content_recsys._normalize_content_recsys_mode). Shown to participants.
 _RECSYS_DESCRIPTIONS = {
-    "Random": "Posts are picked at random from those available, so what you see is not tailored to you.",
-    "ReverseChrono": "The newest posts come first, like a plain timeline: nothing is hidden or boosted.",
-    "ReverseChronoPopularity": "Recent posts are ranked by how much attention they got (likes and replies), so popular posts rise to the top.",
-    "ReverseChronoFollowers": "You see recent posts from the people you follow, newest first.",
-    "ReverseChronoFollowersPopularity": "You see recent posts from the people you follow, with the most popular ones shown first.",
-    "ReverseChronoComments": "Recent posts that sparked the most discussion are shown first.",
-    "CommonInterests": "Posts are chosen because they match the topics you are interested in.",
-    "CommonUserInterests": "Posts are chosen from people who share your interests.",
-    "SimilarUsersReactions": "You see posts that people with tastes similar to yours reacted to.",
-    "SimilarUsersPosts": "You see posts written by people whose own posts are similar to yours.",
-    "CollaborativeUserUser": "You see what people like you enjoyed: the system finds users with similar behaviour and suggests what they liked.",
-    "CollaborativeItemItem": "You see posts similar to the ones you already liked, judged by who else liked them.",
-    "ContentBasedFeatures": "Posts are matched to you by comparing their characteristics (topics, tone, style) with those of posts you engaged with.",
-    "ContentBasedVector": "Posts are matched to you by measuring how close their meaning is to what you engaged with before.",
-    "HybridLinearRanker": "Several signals (recency, popularity, your interests and your network) are combined into a single score to rank posts.",
-    "FilterBubble": "Your feed is personalised: the more you engage with some content, the more similar content you are shown, which can narrow what you see.",
+    "Random": "Posts written by other users are shown in random order. Nothing about you or about the posts influences what you see first.",
+    "ReverseChrono": "All posts written by other users, newest first. There is no personalisation: the order depends only on when posts were published.",
+    "ReverseChronoPopularity": "Posts written by other users, ordered by how many reactions they received (most reacted first). Posts with the same number of reactions are shown newest first.",
+    "ReverseChronoFollowers": "Part of your feed (by default about 60%) shows posts from the people you follow, newest first. The rest is filled with the newest posts from everybody else.",
+    "ReverseChronoFollowersPopularity": "Part of your feed (by default about 60%) shows posts from the people you follow, the most reacted first. The rest is filled with the newest posts from everybody else.",
+    "ReverseChronoComments": "Posts from other users, newest first. When several posts were published in the same simulated hour, the ones with more comments come first.",
+    "CommonInterests": "Only posts about topics you are interested in (the ones in your profile, plus those inferred from what you did), newest first. If the system knows no interests for you, you see the newest posts instead.",
+    "CommonUserInterests": "Part of your feed shows posts written by users who share at least one interest with you, newest first. The rest is filled with the newest posts from everybody else.",
+    "SimilarUsersReactions": "Part of your feed shows posts that were reacted to by users with the same political leaning as you, newest first. The rest is filled with the newest posts from everybody else.",
+    "SimilarUsersPosts": "Part of your feed shows posts written by users with the same political leaning as you, newest first. The rest is filled with the newest posts from everybody else.",
+    "CollaborativeUserUser": "The system looks for users who reacted to the same posts as you, then shows you other posts those users reacted to (that you have not reacted to yet), newest first. Until you react to something, you see the newest posts.",
+    "CollaborativeItemItem": "The system looks at who reacted to the same posts as you and shows you the other posts that these people reacted to, newest first. Until you react to something, you see the newest posts.",
+    "ContentBasedFeatures": "Posts about topics you are interested in, newest first; among posts published in the same simulated hour, the most reacted come first. Without known interests you see the newest posts.",
+    "ContentBasedVector": "Posts are ranked by how many of your topics of interest they cover (more matching topics, higher in the feed); ties go to the posts with more reactions. Without known interests you see the newest posts.",
+    "HybridLinearRanker": "Like the topic-matching ranking (more of your topics of interest, higher in the feed) but with a bonus for posts that received many reactions. Without known interests you see the newest posts.",
+    "FilterBubble": (
+        "Each post gets a score from the topics it covers: topics you care about count more, and so do posts whose author "
+        "holds an opinion close to yours on that topic. Depending on the experiment settings, recent and widely reacted posts "
+        "can get a bonus (or posts can be sorted by recency or by reactions instead). Your interests keep changing: likes, shares and comments on a topic raise your interest in it, "
+        "dislikes lower it. Over time this can narrow your feed to like-minded content (a \"filter bubble\"). "
+        "Posts on topics you do not care about appear after the scored ones, newest first."
+    ),
 }
 _RECSYS_FALLBACK = "This is the algorithm that decides which posts appear in your feed and in what order."
 

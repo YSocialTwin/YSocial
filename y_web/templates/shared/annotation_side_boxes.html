@@ -10,60 +10,121 @@
 {% endif %}
 {% set _show_stats = ui is defined and ui and ui.show_annotation_stats and _pa %}
 {% set _photo = side_variant is defined and side_variant == 'photo' %}
+{% set _cls = 'photo-right-rail__card' if _photo else 'card ys-card-mb' %}
 {% if recsys_info or _show_stats %}
 <style>
-  .ys-side-box { padding: 14px 16px; margin-bottom: 16px; }
-  .ys-side-box h4, .ys-side-box h2 { margin: 0 0 6px; font-size: 1rem; font-weight: 600; }
-  .ys-side-box .ys-side-sub { color: #6b7280; font-size: .82rem; margin: 0 0 10px; }
-  .ys-side-box .ys-side-name { font-weight: 600; font-size: .95rem; }
-  .ys-side-box .ys-side-text { font-size: .85rem; line-height: 1.45; color: #4b5563; margin: 4px 0 0; }
-  .ys-stat-group { margin-top: 12px; }
-  .ys-stat-group h5 { margin: 0 0 6px; font-size: .78rem; letter-spacing: .04em; text-transform: uppercase; color: #6b7280; }
-  .ys-stat-row { display: grid; grid-template-columns: minmax(70px, 38%) 1fr 28px; gap: 8px; align-items: center; font-size: .8rem; margin-bottom: 4px; }
-  .ys-stat-row span.l { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .ys-stat-bar { height: 8px; border-radius: 4px; background: #eef0f4; overflow: hidden; }
-  .ys-stat-bar > i { display: block; height: 100%; border-radius: 4px; background: #3d70b2; transition: width .35s ease; }
-  .ys-stat-row span.n { text-align: right; color: #374151; font-variant-numeric: tabular-nums; }
-  .ys-stat-empty { color: #6b7280; font-size: .85rem; }
+  .ys-sidebox.ys-sidebox {   /* doubled selector: wins over the host theme's own .card / rail-card rules, background excepted */
+    --ys-accent: #6d28d9;
+    --ys-accent-soft: rgba(109, 40, 217, .10);
+    --ys-line: rgba(128, 128, 128, .22);
+    --ys-track: rgba(128, 128, 128, .16);
+    position: relative; overflow: hidden;
+    margin: 0 0 16px; padding: 16px 16px 14px;
+    border: 1px solid var(--ys-line); border-radius: 14px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .05), 0 6px 18px rgba(15, 23, 42, .04);
+  }
+  .ys-sidebox::before {   /* thin accent line along the top edge */
+    content: ""; position: absolute; inset: 0 0 auto 0; height: 3px;
+    background: linear-gradient(90deg, var(--ys-accent), #3d70b2);
+  }
+  .ys-sidebox__head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .ys-sidebox__icon {
+    flex: 0 0 auto; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center;
+    background: var(--ys-accent-soft); color: var(--ys-accent);
+  }
+  .ys-sidebox__icon svg { width: 18px; height: 18px; }
+  .ys-sidebox h4 { margin: 0; font-size: .95rem; font-weight: 700; line-height: 1.25; }
+  .ys-sidebox__sub { margin: 1px 0 0; font-size: .76rem; opacity: .62; line-height: 1.3; }
+  .ys-recsys-pill {
+    display: inline-block; padding: 4px 12px; border-radius: 999px; font-weight: 700; font-size: .85rem;
+    color: var(--ys-accent); background: var(--ys-accent-soft); border: 1px solid rgba(109, 40, 217, .25);
+  }
+  .ys-recsys-how { margin: 12px 0 0; padding-top: 10px; border-top: 1px dashed var(--ys-line); }
+  .ys-recsys-how small { display: block; font-size: .68rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; opacity: .55; margin-bottom: 4px; }
+  .ys-recsys-how p { margin: 0; font-size: .84rem; line-height: 1.5; opacity: .88; }
+  .ys-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 4px; }
+  .ys-kpi { padding: 8px 6px; border-radius: 10px; text-align: center; background: var(--ys-accent-soft); }
+  .ys-kpi strong { display: block; font-size: 1.25rem; line-height: 1.1; color: var(--ys-accent); font-variant-numeric: tabular-nums; }
+  .ys-kpi span { font-size: .68rem; text-transform: uppercase; letter-spacing: .05em; opacity: .65; }
+  .ys-stat-group { margin-top: 14px; }
+  .ys-stat-group h5 { margin: 0 0 7px; font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; opacity: .55; }
+  .ys-stat-row { display: grid; grid-template-columns: minmax(64px, 36%) 1fr 26px; gap: 8px; align-items: center; font-size: .8rem; margin-bottom: 5px; }
+  .ys-stat-row .l { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ys-stat-bar { height: 9px; border-radius: 999px; background: var(--ys-track); overflow: hidden; }
+  .ys-stat-bar > i { display: block; height: 100%; min-width: 4px; border-radius: 999px; background: var(--ys-accent); transition: width .45s cubic-bezier(.2, .8, .2, 1); }
+  .ys-stat-row .n { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .ys-stat-empty { padding: 14px 8px 6px; text-align: center; font-size: .84rem; opacity: .7; line-height: 1.45; }
+  .ys-stat-empty svg { display: block; margin: 0 auto 6px; width: 30px; height: 30px; color: var(--ys-accent); opacity: .8; }
 </style>
 {% endif %}
-{% set _cls = 'photo-right-rail__card' if _photo else 'card ys-card-mb' %}
 {% if recsys_info %}
-<div class="{{ _cls }} ys-side-box" id="ys-recsys-box" data-recsys="{{ recsys_info.name }}">
-  <h4>Your recommender system</h4>
-  <p class="ys-side-sub">How the posts in your feed are chosen</p>
-  <div class="ys-side-name">{{ recsys_info.label }}</div>
-  <p class="ys-side-text">{{ recsys_info.description }}</p>
+<div class="ys-sidebox {{ _cls }}" id="ys-recsys-box" data-recsys="{{ recsys_info.name }}">
+  <div class="ys-sidebox__head">
+    <span class="ys-sidebox__icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h6"/><circle cx="18" cy="17" r="3"/><path d="m20.2 19.2 1.8 1.8"/></svg>
+    </span>
+    <div>
+      <h4>Your recommender system</h4>
+      <p class="ys-sidebox__sub">The algorithm that picks the posts in your feed</p>
+    </div>
+  </div>
+  <span class="ys-recsys-pill">{{ recsys_info.label }}</span>
+  <div class="ys-recsys-how">
+    <small>How it works</small>
+    <p>{{ recsys_info.description }}</p>
+  </div>
 </div>
 {% endif %}
 {% if _show_stats %}
-<div class="{{ _cls }} ys-side-box" id="ys-annostats-box" data-api="{{ _pa[0].api_base }}/my_stats">
-  <h4>Your annotations</h4>
-  <p class="ys-side-sub" id="ys-annostats-summary">Loading…</p>
-  <div id="ys-annostats-body"></div>
+<div class="ys-sidebox {{ _cls }}" id="ys-annostats-box" data-api="{{ _pa[0].api_base }}/my_stats">
+  <div class="ys-sidebox__head">
+    <span class="ys-sidebox__icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+    </span>
+    <div>
+      <h4>Your annotations</h4>
+      <p class="ys-sidebox__sub">What you assigned to posts and comments</p>
+    </div>
+  </div>
+  <div id="ys-annostats-body"><div class="ys-stat-empty">Loading…</div></div>
 </div>
 <script>
 (function () {
   var box = document.getElementById('ys-annostats-box');
   if (!box) return;
   var api = box.getAttribute('data-api');
-  var summary = document.getElementById('ys-annostats-summary');
   var body = document.getElementById('ys-annostats-body');
   var busy = false, again = false;
 
-  function group(title, items, labelOf) {
+  var GREEN = '#16a34a', GREY = '#9ca3af', RED = '#dc2626', ORANGE = '#ea580c', AMBER = '#ca8a04', BLUE = '#2563eb';
+  var SENTIMENT_LABELS = {
+    binary: { '-1': 'Negative', '1': 'Positive' },
+    '3point': { '-1': 'Negative', '0': 'Neutral', '1': 'Positive' },
+    '5point': { '-2': 'Very negative', '-1': 'Negative', '0': 'Neutral', '1': 'Positive', '2': 'Very positive' }
+  };
+  var TOX_ORDER = ['none', 'low', 'medium', 'high'];
+  var TOX_COLOR = { none: GREEN, low: AMBER, medium: ORANGE, high: RED };
+
+  function cap(s) { s = String(s); return s.charAt(0).toUpperCase() + s.slice(1); }
+  function sentimentColor(v) { return v > 0 ? GREEN : (v < 0 ? RED : GREY); }
+  function sentimentLabel(scale, v) {
+    var set = SENTIMENT_LABELS[scale];
+    if (set && set[String(Math.round(v))] && Math.round(v) === v) return set[String(v)];
+    var n = Math.round(v * 100) / 100;
+    return (n > 0 ? '+' : '') + n;
+  }
+
+  function group(title, items) {   // items: [{label, count, color?}]
     if (!items || !items.length) return null;
     var max = Math.max.apply(null, items.map(function (i) { return i.count; })) || 1;
-    var g = document.createElement('div');
-    g.className = 'ys-stat-group';
-    var h = document.createElement('h5');
-    h.textContent = title;
-    g.appendChild(h);
+    var g = document.createElement('div'); g.className = 'ys-stat-group';
+    var h = document.createElement('h5'); h.textContent = title; g.appendChild(h);
     items.forEach(function (it) {
       var row = document.createElement('div'); row.className = 'ys-stat-row';
-      var l = document.createElement('span'); l.className = 'l'; l.textContent = labelOf(it); l.title = l.textContent;
+      var l = document.createElement('span'); l.className = 'l'; l.textContent = it.label; l.title = it.label;
       var bar = document.createElement('div'); bar.className = 'ys-stat-bar';
-      var fill = document.createElement('i'); fill.style.width = Math.round(100 * it.count / max) + '%';
+      var fill = document.createElement('i'); fill.style.width = Math.max(4, Math.round(100 * it.count / max)) + '%';
+      if (it.color) fill.style.background = it.color;
       bar.appendChild(fill);
       var n = document.createElement('span'); n.className = 'n'; n.textContent = it.count;
       row.appendChild(l); row.appendChild(bar); row.appendChild(n);
@@ -72,18 +133,40 @@
     return g;
   }
 
-  function render(d) {
+  function kpi(value, label) {
+    var k = document.createElement('div'); k.className = 'ys-kpi';
+    var s = document.createElement('strong'); s.textContent = value;
+    var t = document.createElement('span'); t.textContent = label;
+    k.appendChild(s); k.appendChild(t);
+    return k;
+  }
+
+  function empty(text) {
     body.textContent = '';
-    if (!d || !d.ok) { summary.textContent = 'Statistics are not available right now.'; return; }
-    if (!d.total) { summary.textContent = 'You have not annotated anything yet.'; return; }
-    summary.textContent = d.total + ' annotated item' + (d.total === 1 ? '' : 's') +
-      ' (' + d.posts + ' post' + (d.posts === 1 ? '' : 's') + ', ' + d.comments + ' comment' + (d.comments === 1 ? '' : 's') + ')';
-    [
-      group('Sentiment', d.sentiment, function (i) { return String(i.value); }),
-      group('Toxicity', d.toxicity, function (i) { return i.level; }),
-      group('Emotions', d.emotions, function (i) { return i.label; }),
-      group('Topics', d.topics, function (i) { return i.label; }),
-    ].forEach(function (g) { if (g) body.appendChild(g); });
+    var e = document.createElement('div'); e.className = 'ys-stat-empty';
+    e.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+    e.appendChild(document.createTextNode(text));
+    body.appendChild(e);
+  }
+
+  function render(d) {
+    if (!d || !d.ok) { empty('Statistics are not available right now.'); return; }
+    if (!d.total) { empty('You have not annotated anything yet. Use the "Annotate" button under a post or comment.'); return; }
+    body.textContent = '';
+    var kp = document.createElement('div'); kp.className = 'ys-kpis';
+    kp.appendChild(kpi(d.total, 'Annotated')); kp.appendChild(kpi(d.posts, 'Posts')); kp.appendChild(kpi(d.comments, 'Comments'));
+    body.appendChild(kp);
+    var sentiment = (d.sentiment || []).map(function (i) {
+      return { label: sentimentLabel(d.sentiment_scale, i.value), count: i.count, color: sentimentColor(i.value) };
+    });
+    var tox = (d.toxicity || []).slice().sort(function (a, b) {
+      var ia = TOX_ORDER.indexOf(a.level), ib = TOX_ORDER.indexOf(b.level);
+      return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+    }).map(function (i) { return { label: cap(i.level), count: i.count, color: TOX_COLOR[i.level] || GREY }; });
+    var emotions = (d.emotions || []).map(function (i) { return { label: cap(i.label), count: i.count, color: BLUE }; });
+    var topics = (d.topics || []).map(function (i) { return { label: i.label, count: i.count }; });
+    [group('Sentiment', sentiment), group('Toxicity', tox), group('Emotions', emotions), group('Topics', topics)]
+      .forEach(function (g) { if (g) body.appendChild(g); });
   }
 
   function refresh() {

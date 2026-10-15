@@ -220,7 +220,7 @@ def test_side_boxes_render_recsys_and_stats_only_when_asked(suites_app):
     with suites_app.app_context():
         assert _content_recsys_info("ReverseChrono", {"show_recsys_info": False}) is None
         got = _content_recsys_info("rcp", {"show_recsys_info": True})
-        assert got["name"] == "ReverseChronoPopularity" and "popular" in got["description"].lower()
+        assert got["name"] == "ReverseChronoPopularity" and "reactions" in got["description"].lower()
         unknown = _content_recsys_info("Whatever", {"show_recsys_info": True})
         assert unknown["description"] and unknown["name"] == "Whatever"
 
