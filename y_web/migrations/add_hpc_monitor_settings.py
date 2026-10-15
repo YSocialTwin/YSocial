@@ -272,6 +272,10 @@ def ensure_hpc_monitor_settings_schema():
 
     engine = db.get_engine(bind="db_admin")
     dialect_name = engine.dialect.name
+    # A database created from an older template may not have the table at all: create it first.
+    from y_web.src.models import HpcMonitorSettings
+
+    HpcMonitorSettings.__table__.create(bind=engine, checkfirst=True)
     with engine.begin() as conn:
         if dialect_name == "sqlite":
             rows = conn.exec_driver_sql(
