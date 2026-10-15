@@ -660,7 +660,7 @@
                     <!-- Stories widget -->
                     <!-- /partials/widgets/stories-widget.html -->
 
-                {% if username != "" %}
+                {% if username != "" and ui.show_suggested_friends is not false %}
                   {% include "microblogging/components/suggested_friends.html" %}
                     {% endif %}
 

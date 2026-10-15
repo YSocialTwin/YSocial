@@ -296,7 +296,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
 
       <div class="misc-section-description">
         <strong>Frontend Settings:</strong> Configure the UI shown to participants for each experiment.
-        Select the experiment type, group and name to adjust interactions, post annotations, and the notification menu.
+        Select the experiment type, group and name to adjust interactions, annotations, and the notification menu.
       </div>
 
       <!-- ── Two-step selector ───────────────────────────────── -->
@@ -400,8 +400,8 @@ input:checked + .slider-small:before { transform: translateX(16px); }
           </div>
 
           <!-- ══ BOX 2 — Annotations ═══════════════════════════ -->
-          <div class="misc-compact-box" id="box-annotations" data-cap-any="annotations_enabled annotation_agent_type show_post_time">
-            <h3>Post Annotations</h3>
+          <div class="misc-compact-box" id="box-annotations" data-cap-any="annotations_enabled annotation_agent_type show_post_time show_suggested_friends">
+            <h3>Annotations</h3>
             <div class="box-content">
               <p style="color:#6b7280;font-size:.85rem;margin-bottom:14px;">
                 Choose which metadata chips are displayed below each post.
@@ -446,6 +446,10 @@ input:checked + .slider-small:before { transform: translateX(16px); }
               <div class="ys-toggle-row" data-cap="show_post_time">
                 <span class="ys-toggle-label">Post date &amp; time <small>Show the "Day X - HH:00" timestamp below each post and comment</small></span>
                 <label class="switch-small"><input type="checkbox" id="show_post_time"><span class="slider-small round"></span></label>
+              </div>
+              <div class="ys-toggle-row" data-cap="show_suggested_friends">
+                <span class="ys-toggle-label">Suggested Friends <small>Show the "Suggested Friends" box next to the feed</small></span>
+                <label class="switch-small"><input type="checkbox" id="show_suggested_friends"><span class="slider-small round"></span></label>
               </div>
               <div class="ys-fs-save-row">
                 <button class="button is-solid primary-button" onclick="saveSection(event,'annotations')">Save annotations</button>
@@ -712,6 +716,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       interaction_comment: ['Comment',   'Comment on photos and reply to comments'],
       interaction_share:   ['Send / share', 'Send a photo to others'],
       annotation_agent_type: ['Agent type', 'Badge identifying ad-hoc agents next to the author name'],
+      show_suggested_friends: ['Suggestions', 'Show the "Suggestions for you" box beside the feed'],
     },
   };
   const BOX_DESCRIPTIONS = {
@@ -913,7 +918,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       'interaction_like','interaction_dislike','interaction_share',
       'annotations_enabled','annotation_emotions','annotation_topics',
       'annotation_sentiment','annotation_toxicity','annotation_agent_type','annotation_author_type',
-      'show_post_time',
+      'show_post_time','show_suggested_friends',
       'notifications_menu','profile_topics_box','onboarding_enabled',
       'infinite_scroll_enabled',
     ];
@@ -1021,7 +1026,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       'interaction_like','interaction_dislike','interaction_share',
       'annotations_enabled','annotation_emotions','annotation_topics',
       'annotation_sentiment','annotation_toxicity','annotation_agent_type','annotation_author_type',
-      'show_post_time',
+      'show_post_time','show_suggested_friends',
       'notifications_menu',
       'profile_topics_box','onboarding_enabled',
       'infinite_scroll_enabled',

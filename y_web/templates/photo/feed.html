@@ -14,6 +14,11 @@
             padding: 32px 32px 48px;
         }
 
+        .photo-feed-layout.photo-feed-layout--no-rail {
+            grid-template-columns: minmax(0, 1fr);
+            max-width: 760px;
+        }
+
         .photo-feed-layout > .photo-feed-content {
             grid-column: 1;
         }
@@ -441,7 +446,7 @@
 {% endblock %}
 
 {% block photo_content %}
-<div class="photo-feed-layout">
+<div class="photo-feed-layout{% if ui is defined and ui and ui.show_suggested_friends is false %} photo-feed-layout--no-rail{% endif %}">
     <div class="photo-feed-content">
         <div class="photo-feed-main">
             <div class="photo-feed-top">
@@ -511,6 +516,7 @@
         </div>
     </div>
 
+    {% if not (ui is defined and ui and ui.show_suggested_friends is false) %}
     <aside class="photo-right-rail">
         <div class="photo-right-rail__card">
             <div class="photo-right-rail__card-header">
@@ -562,6 +568,7 @@
             </div>
         </div>
     </aside>
+    {% endif %}
 {% endblock %}
 
 {% block photo_extra_scripts %}

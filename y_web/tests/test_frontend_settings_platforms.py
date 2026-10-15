@@ -148,3 +148,28 @@ def test_dispatch_platform_event_is_inert_without_suites(monkeypatch):
 
     monkeypatch.setattr(plugin_loader, "_REGISTERED_SUITES", {})
     assert plugin_loader.dispatch_platform_event(object(), 1, "photo_created", {}) == 0
+
+
+def test_show_suggested_friends_setting(suites_app, logged):
+    forum = _exp(suites_app, "forum", "f9")
+    photo = _exp(suites_app, "photo_sharing", "p9")
+    micro = _exp(suites_app, "microblogging", "m9")
+    g = lambda e: logged.get(f"/admin/frontend_settings/get_settings?exp_id={e}").get_json()
+    assert "show_suggested_friends" not in g(forum)["capabilities"]  # forum has no such box
+    assert "show_suggested_friends" in g(photo)["capabilities"]
+    assert g(micro)["capabilities"] is None
+    assert g(photo)["settings"]["show_suggested_friends"] is True  # default on
+    r = logged.post("/admin/frontend_settings/save", json={
+        "exp_id": photo, "settings": {"show_suggested_friends": False}})
+    assert r.get_json()["ok"] is True
+    assert g(photo)["settings"]["show_suggested_friends"] is False
+
+
+def test_suggested_friends_templates_are_gated():
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1] / "templates"
+    assert "ui.show_suggested_friends" in (root / "microblogging/feed.html").read_text(encoding="utf-8")
+    photo = (root / "photo/feed.html").read_text(encoding="utf-8")
+    assert "photo-feed-layout--no-rail" in photo and "ui.show_suggested_friends" in photo
+    admin = (root / "admin/frontend_settings.html").read_text(encoding="utf-8")
+    assert "<h3>Annotations</h3>" in admin and "<h3>Post Annotations</h3>" not in admin

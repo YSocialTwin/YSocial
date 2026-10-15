@@ -695,6 +695,7 @@ _UI_DEFAULTS = {
     "annotation_agent_type": True,
     "annotation_author_type": True,
     "show_post_time": True,
+    "show_suggested_friends": True,
     "notifications_menu": True,
     "default_content_recsys": "",
     "default_follow_recsys": "",

@@ -60,6 +60,7 @@ PLATFORM_CAPABILITIES = {
     },
     "photo_sharing": _COMMON_CAPABILITIES
     | {
+        "show_suggested_friends",  # "Suggestions for you" rail
         "interaction_share",
         "annotation_agent_type",
         "default_photo_feed_tab",
@@ -106,6 +107,7 @@ DEFAULT_SETTINGS = {
     "annotation_agent_type": True,
     "annotation_author_type": True,
     "show_post_time": True,  # show "Day X - HH:00" below each post/comment
+    "show_suggested_friends": True,  # show the "Suggested Friends" box (microblogging / photo)
     # Feed & Profile
     "default_content_recsys": "",  # empty = system default
     "default_follow_recsys": "",  # empty = system default
