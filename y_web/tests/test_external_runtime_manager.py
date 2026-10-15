@@ -1104,3 +1104,20 @@ def test_git_auth_failure_gets_an_actionable_hint(tmp_path, monkeypatch):
     with pytest.raises(manager.ExternalRuntimeError) as exc:
         manager._git_remote(["git", "clone", "x"], cwd=tmp_path)
     assert "private" in str(exc.value) and "GH_TOKEN" in str(exc.value)
+
+
+def test_install_dependencies_is_a_noop_without_a_manifest(
+    runtime_repo_spec, monkeypatch
+):
+    import dataclasses
+
+    manager.clone_runtime_repo(runtime_repo_spec.key, "main", actor="tester")
+    for name in ("requirements.txt", "pyproject.toml", "setup.py"):
+        (runtime_repo_spec.path / name).unlink(missing_ok=True)
+    # a pure-Python plugin (like Reactive Agents) declares no install commands and
+    # ships no manifest: the install flow must not fail
+    bare = dataclasses.replace(runtime_repo_spec, install_commands=())
+    monkeypatch.setitem(registry.SUPPORTED_EXTERNAL_REPOS, bare.key, bare)
+    assert manager._effective_install_commands(bare) == ()
+    manager.install_runtime_dependencies(bare.key, actor="tester")
+    assert manager.get_runtime_status(bare.key).dependency_files_ready is True

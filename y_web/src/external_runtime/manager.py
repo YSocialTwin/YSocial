@@ -362,7 +362,9 @@ def _dependency_files_ready(spec) -> bool:
         return False
     install_commands = _effective_install_commands(spec)
     if not install_commands:
-        return False
+        # no manifest: a pure-Python plugin that runs inside the core has no
+        # dependencies of its own, so there is nothing missing
+        return True
     for command in install_commands:
         if "-r" in command:
             req_path = spec.path / command[command.index("-r") + 1]
@@ -849,9 +851,14 @@ def install_runtime_dependencies(repo_key: str, actor: str) -> None:
 
     install_commands = _effective_install_commands(spec)
     if not install_commands:
-        raise ExternalRuntimeError(
-            f"{spec.label} does not expose a recognized dependency manifest. Expected requirements.txt, pyproject.toml, or setup.py."
+        # Plugins that run inside the core (e.g. Reactive Agents) ship no
+        # requirements.txt / pyproject.toml / setup.py: nothing to install.
+        output = (
+            f"{spec.label} declares no dependency manifest "
+            "(requirements.txt, pyproject.toml or setup.py): nothing to install."
         )
+        log_external_runtime_action(repo_key, "install", actor, None, True, output)
+        return
 
     output_parts: list[str] = []
     env = os.environ.copy()
