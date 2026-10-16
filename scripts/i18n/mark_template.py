@@ -16,10 +16,26 @@ sys.path.insert(0, str(Path(__file__).parent))
 from audit_strings import JINJA, TextCollector, read  # noqa: E402
 from scan_unmarked import load_exceptions  # noqa: E402
 
-INLINE = r"(?:a|b|strong|em|code|u|small|kbd)"
+INLINE = r"(?:a|b|strong|em|code|u|kbd)"
 INLINE_CLOSE = re.compile(r"^</%s\s*>$" % INLINE, re.I)
 INLINE_OPEN = re.compile(r"<%s[\s>]" % INLINE, re.I)
 ATTRS = ("title", "placeholder", "aria-label", "alt", "label", "data-tooltip", "data-title")
+
+
+def word_pattern(word):
+    """Regex for a word that may be written with HTML entities in the template."""
+    from html.entities import codepoint2name
+
+    parts = []
+    for ch in word:
+        names = []
+        if ord(ch) in codepoint2name:
+            names.append("&%s;" % codepoint2name[ord(ch)])
+        if ord(ch) > 127 or ch in "&<>":
+            names.append("&#%d;" % ord(ch))
+        alts = [re.escape(ch)] + [re.escape(n) for n in names]
+        parts.append("(?:%s)" % "|".join(alts) if len(alts) > 1 else alts[0])
+    return "".join(parts)
 
 
 def quote(text):
@@ -38,7 +54,7 @@ def mark(path, exceptions):
     for text in sorted(found, key=len, reverse=True):
         if "\n" in text or "data-cascade" in text:
             continue
-        esc = r"\s+".join(re.escape(w) for w in text.split(" "))
+        esc = r"\s+".join(word_pattern(w) for w in text.split(" "))
         pat_text = re.compile(r"(<[^<>]*>)(\s*)" + esc + r"(\s*)(?=<)")
 
         def repl(m, text=text, snapshot=out):

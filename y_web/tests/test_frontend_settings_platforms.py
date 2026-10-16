@@ -233,7 +233,7 @@ def test_suggested_friends_templates_are_gated():
         "photo-feed-layout--no-rail" in photo and "ui.show_suggested_friends" in photo
     )
     admin = (root / "admin/frontend_settings.html").read_text(encoding="utf-8")
-    assert "<h3>Annotations</h3>" in admin and "<h3>Post Annotations</h3>" not in admin
+    assert "<h3>{{ _('Annotations') }}</h3>" in admin and "Post Annotations</h3>" not in admin
 
 
 def test_recsys_info_and_annotation_stats_settings(suites_app, logged):

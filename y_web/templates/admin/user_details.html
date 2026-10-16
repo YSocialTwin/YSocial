@@ -14,10 +14,10 @@
                 <div class="column is-12">
                     <div class="dashboard-box">
                         {% if current_user_role == "admin" %}
-                        <a href="/admin/users">Users</a> > Details: {{ user.username }}
+                        <a href="/admin/users">{{ _('Users') }}</a> &gt; {{ _('Details:') }} {{ user.username }}
                         {% else %}
                         <!-- Researcher view: no breadcrumb link back to users -->
-                        Details: {{ user.username }}
+                        {{ _('Details:') }} {{ user.username }}
                         {% endif %}
                     </div>
                 </div>
@@ -55,47 +55,47 @@
                 <!--Dashboard column-->
  <div class="column is-12-mobile is-4-tablet d-flex">
  <div class="dashboard-box ys-flex-col-1" id="box-user-profile">
-                        <h3 class="title is-5 is-thin">User Profile</h3>
+                        <h3 class="title is-5 is-thin">{{ _('User Profile') }}</h3>
  <p class="ys-text-small">
-                            Account information and API configurations for this user.
+                            {{ _('Account information and API configurations for this user.') }}
                         </p>
 
                         <div class="box-content">
                             {% if user.profile_pic != "" %}
  <div class="box-lines ys-flex-center">
-                                <img src="{{ user.profile_pic }}" alt="Profile Picture" style="width: 40%; height: auto; border-radius: 8px;">
+                                <img src="{{ user.profile_pic }}" alt="{{ _('Profile Picture') }}" style="width: 40%; height: auto; border-radius: 8px;">
                             </div>
                             {% endif %}
                             <div class="box-lines">
-                                <b>Account Details</b>
- <p class="ys-label-hint">Basic user information and role.</p>
+                                <b>{{ _('Account Details') }}</b>
+ <p class="ys-label-hint">{{ _('Basic user information and role.') }}</p>
                                 <div class="box-line">
-                                    <span class="left">Username</span>
+                                    <span class="left">{{ _('Username') }}</span>
                                     <span class="right">{{ user.username }}</span>
                                 </div>
                                 <div class="box-line">
-                                    <span class="left">Email</span>
+                                    <span class="left">{{ _('Email') }}</span>
                                     <span class="right">{{ user.email }}</span>
                                 </div>
                                 <div class="box-line">
-                                    <span class="left">Role</span>
+                                    <span class="left">{{ _('Role') }}</span>
                                     <span class="right">{{ user.role }}</span>
                                 </div>
                                 <hr>
-                                <b>API Configuration</b>
- <p class="ys-label-hint">LLM and toxicity analysis settings.</p>
+                                <b>{{ _('API Configuration') }}</b>
+ <p class="ys-label-hint">{{ _('LLM and toxicity analysis settings.') }}</p>
                                 <div class="box-line">
-                                    <span class="left">LLM Model</span>
+                                    <span class="left">{{ _('LLM Model') }}</span>
                                     <span class="right">{{ user.llm }}</span>
                                 </div>
                                 <div class="box-line">
-                                    <span class="left">LLM Server URL</span>
+                                    <span class="left">{{ _('LLM Server URL') }}</span>
  <span class="right ys-word-break">{{ user.llm_url if user.llm_url else (llm_backend['url'] if llm_backend else 'Not configured') }}</span>
                                 </div>
                             </div>
 
  <div class="buttons ys-flex-right">
-                                <a class="link-tooltip" href="/admin/delete_user/{{ user.id }}" title="Delete"><i
+                                <a class="link-tooltip" href="/admin/delete_user/{{ user.id }}" title="{{ _('Delete') }}"><i
  class="mdi mdi-delete ys-icon-lg"></i></a>
                             </div>
 
@@ -106,32 +106,32 @@
  <div class="column is-12-mobile is-8-tablet d-flex">
 
  <div class="dashboard-box ys-flex-col-1" id="box-update-llm">
-                        <h3 class="title is-5 is-thin">Update LLM Configuration</h3>
+                        <h3 class="title is-5 is-thin">{{ _('Update LLM Configuration') }}</h3>
  <p class="ys-text-small">
-                            Configure the LLM server URL and select a model for text generation tasks.
+                            {{ _('Configure the LLM server URL and select a model for text generation tasks.') }}
                         </p>
                         <div class="box-content">
                             <form action="/admin/update_user_llm" enctype="multipart/form-data" method="POST">
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <span class="left">
- <small class="ys-text-gray">ℹ️ Update the LLM server and model for this user.</small>
+ <small class="ys-text-gray">{{ _('ℹ️ Update the LLM server and model for this user.') }}</small>
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <input type="hidden" name="user_id" value="{{ user.id }}">
-                                        <label class="label">Custom LLM URL (optional)</label>
+                                        <label class="label">{{ _('Custom LLM URL (optional)') }}</label>
                                         <input type="text" id="custom_llm_url" name="custom_llm_url" class="input"
                                                value="{{ user.llm_url if user.llm_url else (llm_backend['url'] if llm_backend else '') }}"
-                                               placeholder="e.g., http://localhost:8000/v1">
+                                               placeholder="{{ _('e.g., http://localhost:8000/v1') }}">
                                         <button type="button" class="button is-solid primary-button is-1-desktop" onclick="fetchModelsForUser()" style="margin-top: 0px; margin-left: 10px;">
-                                            Fetch Models
+                                            {{ _('Fetch Models') }}
                                         </button>
                                     </div>
                                     <div id="fetch-status-user" style="min-height: 20px; margin-top: 5px; font-size: 0.9rem;"></div>
 
                                     <div class="box-line">
-                                        <label class="label">LLM Model</label>
+                                        <label class="label">{{ _('LLM Model') }}</label>
                                         <div class="select">
                                             <select name="llm" id="llm_model_select">
                                                 {% for model in models %}
@@ -143,7 +143,7 @@
                                 </div>
                                 <div class="button-wrap">
                                     <button class="button is-solid primary-button is-fullwidth">
-                                        Update LLM Configuration
+                                        {{ _('Update LLM Configuration') }}
                                     </button>
                                 </div>
                             </form>
@@ -156,9 +156,9 @@
  <div class="columns is-multiline ys-align-stretch">
  <div class="column is-12-mobile is-4-tablet d-flex">
  <div class="dashboard-box ys-flex-col-1" id="box-update-password">
-                        <h3 class="title is-5 is-thin">Update Password</h3>
+                        <h3 class="title is-5 is-thin">{{ _('Update Password') }}</h3>
  <p class="ys-text-small">
-                            Change the user's password with secure validation.
+                            {{ _("Change the user's password with secure validation.") }}
                         </p>
                         <div class="box-content">
                             <form action="/admin/update_user_password" method="POST">
@@ -166,30 +166,30 @@
                                     <div class="box-line">
                                         <span class="left">
  <small class="ys-text-gray">
-                                            ℹ️ Password must be at least 8 characters long and include:
+                                            {{ _('ℹ️ Password must be at least 8 characters long and include:') }}
                                             <ul style="margin-top: 0.5em; margin-left: 1em;">
-                                                <li>At least one uppercase letter</li>
-                                                <li>At least one number</li>
-                                                <li>At least one special symbol</li>
+                                                <li>{{ _('At least one uppercase letter') }}</li>
+                                                <li>{{ _('At least one number') }}</li>
+                                                <li>{{ _('At least one special symbol') }}</li>
                                             </ul>
                                             </small>
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <input type="hidden" name="user_id" value="{{ user.id }}">
-                                        <label class="label">New Password</label>
+                                        <label class="label">{{ _('New Password') }}</label>
                                         <input type="password" name="new_password" class="input" required 
                                                pattern="^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?&quot;:{}|&lt;&gt;_\-+=\[\]\\\/;'`~]).{8,}$"
-                                               title="Password must be at least 8 characters with one uppercase, one number, and one special symbol">
+                                               title="{{ _('Password must be at least 8 characters with one uppercase, one number, and one special symbol') }}">
                                     </div>
                                     <div class="box-line">
-                                        <label class="label">Confirm Password</label>
+                                        <label class="label">{{ _('Confirm Password') }}</label>
                                         <input type="password" name="confirm_password" class="input" required>
                                     </div>
                                 </div>
                                 <div class="button-wrap">
                                     <button class="button is-solid primary-button is-fullwidth">
-                                        Update Password
+                                        {{ _('Update Password') }}
                                     </button>
                                 </div>
                             </form>
@@ -199,9 +199,9 @@
 
  <div class="column is-12-mobile is-4-tablet d-flex">
  <div class="dashboard-box ys-flex-col-1" id="box-update-email">
-                        <h3 class="title is-5 is-thin">Update Email</h3>
+                        <h3 class="title is-5 is-thin">{{ _('Update Email') }}</h3>
  <p class="ys-text-small">
-                            Change the user's email address.
+                            {{ _("Change the user's email address.") }}
                         </p>
                         <div class="box-content">
                             <form action="/admin/update_user_email" method="POST">
@@ -209,25 +209,25 @@
                                     <div class="box-line">
                                         <span class="left">
  <small class="ys-text-gray">
-                                            ℹ️ Enter a valid email address. Email must be unique across all users.
+                                            {{ _('ℹ️ Enter a valid email address. Email must be unique across all users.') }}
                                             </small>
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <input type="hidden" name="user_id" value="{{ user.id }}">
-                                        <label class="label">Current Email</label>
+                                        <label class="label">{{ _('Current Email') }}</label>
                                         <input type="email" value="{{ user.email }}" class="input" disabled>
                                     </div>
                                     <div class="box-line">
-                                        <label class="label">New Email</label>
+                                        <label class="label">{{ _('New Email') }}</label>
                                         <input type="email" name="new_email" class="input" required 
                                                pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$"
-                                               title="Please enter a valid email address">
+                                               title="{{ _('Please enter a valid email address') }}">
                                     </div>
                                 </div>
                                 <div class="button-wrap">
                                     <button class="button is-solid primary-button is-fullwidth">
-                                        Update Email
+                                        {{ _('Update Email') }}
                                     </button>
                                 </div>
                             </form>
@@ -273,14 +273,14 @@
  <div class="column is-12-mobile is-6-tablet d-flex">
                     <!--Box-->
  <div class="dashboard-box ys-flex-col-1" id="box-experiment-participation">
-                        <h3 class="title is-5 is-thin">Experiment Participation</h3>
+                        <h3 class="title is-5 is-thin">{{ _('Experiment Participation') }}</h3>
  <p class="ys-text-small">
-                            Experiments this user owns or participates in.
+                            {{ _('Experiments this user owns or participates in.') }}
                         </p>
  <div class="box-content ys-flex-1">
                             <div class="box-lines">
  <div class="ys-mb-15">
- <b class="ys-block-mb8">Owned Experiments</b>
+ <b class="ys-block-mb8">{{ _('Owned Experiments') }}</b>
  <div class="ys-flex-wrap-gap-8">
                                         {% if user_experiments %}
                                         {% for exp in user_experiments %}
@@ -290,13 +290,13 @@
                                             </a>
                                         {% endfor %}
                                         {% else %}
- <span class="ys-text-italic-sm">Not owning any experiments</span>
+ <span class="ys-text-italic-sm">{{ _('Not owning any experiments') }}</span>
                                         {% endif %}
                                     </div>
                                 </div>
                                 <hr style="margin: 15px 0;">
                                 <div>
- <b class="ys-block-mb8">Joined Experiments</b>
+ <b class="ys-block-mb8">{{ _('Joined Experiments') }}</b>
  <div class="ys-flex-wrap-gap-8">
                                         {% if user_experiments_joined %}
                                         {% for exp in user_experiments_joined %}
@@ -306,7 +306,7 @@
                                             </a>
                                         {% endfor %}
                                         {% else %}
- <span class="ys-text-italic-sm">Not participating in any experiments</span>
+ <span class="ys-text-italic-sm">{{ _('Not participating in any experiments') }}</span>
                                         {% endif %}
                                     </div>
                                 </div>
@@ -320,16 +320,16 @@
                 <!-- Add to Experiment section (admin only) -->
  <div class="column is-12-mobile is-6-tablet d-flex">
  <div class="dashboard-box ys-flex-col-1" id="box-add-to-experiment">
-                        <h3 class="title is-5 is-thin">Add to Experiment</h3>
+                        <h3 class="title is-5 is-thin">{{ _('Add to Experiment') }}</h3>
  <p class="ys-text-small">
-                            Grant this user access to participate in an experiment.
+                            {{ _('Grant this user access to participate in an experiment.') }}
                         </p>
  <div class="box-content ys-flex-1">
                             <form action="/admin/add_user_to_experiment" enctype="multipart/form-data" method="POST">
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <input type="hidden" name="user_id" value="{{ user.id }}">
-                                        <span class="left">Select Experiment</span>
+                                        <span class="left">{{ _('Select Experiment') }}</span>
                                         <div class="select">
                                             <select name="experiment_id">
                                                 {% for exp in all_experiments %}
@@ -341,7 +341,7 @@
                                 </div>
                                 <div class="button-wrap">
                                     <button class="button is-solid primary-button is-fullwidth">
-                                        Update
+                                        {{ _('Update') }}
                                     </button>
                                 </div>
                             </form>

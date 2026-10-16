@@ -295,8 +295,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
     <div class="dashboard-body">
 
       <div class="misc-section-description">
-        <strong>Frontend Settings:</strong> Configure the UI shown to participants for each experiment.
-        Select the experiment type, group and name to adjust interactions, annotations, and the notification menu.
+        <strong>{{ _('Frontend Settings:') }}</strong> {{ _('Configure the UI shown to participants for each experiment. Select the experiment type, group and name to adjust interactions, annotations, and the notification menu.') }}
       </div>
 
       <!-- ── Two-step selector ───────────────────────────────── -->
@@ -304,25 +303,25 @@ input:checked + .slider-small:before { transform: translateX(16px); }
 
         <!-- Step 1: type -->
         <div class="ys-fs-step">
-          <label for="type-select">Experiment type</label>
+          <label for="type-select">{{ _('Experiment type') }}</label>
           <select id="type-select" class="input">
-            <option value="">— select type —</option>
+            <option value="">{{ _('— select type —') }}</option>
           </select>
         </div>
 
         <!-- Step 2: group (disabled until type chosen) -->
         <div class="ys-fs-step">
-          <label for="group-select">Group</label>
+          <label for="group-select">{{ _('Group') }}</label>
           <select id="group-select" class="input" disabled>
-            <option value="">— select group —</option>
+            <option value="">{{ _('— select group —') }}</option>
           </select>
         </div>
 
         <!-- Step 3: name (disabled until group chosen) -->
         <div class="ys-fs-step">
-          <label for="exp-select">Experiment name</label>
+          <label for="exp-select">{{ _('Experiment name') }}</label>
           <select id="exp-select" class="input" disabled>
-            <option value="">— select experiment —</option>
+            <option value="">{{ _('— select experiment —') }}</option>
           </select>
         </div>
 
@@ -342,15 +341,15 @@ input:checked + .slider-small:before { transform: translateX(16px); }
 
           <!-- ══ BOX 1 — Interactions ══════════════════════════ -->
           <div class="misc-compact-box" id="box-interactions">
-            <h3>User Interactions <span class="ys-fs-exp-badge" id="badge-exp-name"></span></h3>
+            <h3>{{ _('User Interactions') }} <span class="ys-fs-exp-badge" id="badge-exp-name"></span></h3>
             <div class="box-content">
               <p style="color:#6b7280;font-size:.85rem;margin-bottom:14px;">
-                Control which actions participants can perform on posts, and whether the notification menu is shown.
+                {{ _('Control which actions participants can perform on posts, and whether the notification menu is shown.') }}
               </p>
               <div class="ys-toggle-row is-master">
                 <span class="ys-toggle-label">
-                  All interactions
-                  <small>Enable or disable every interaction at once</small>
+                  {{ _('All interactions') }}
+                  <small>{{ _('Enable or disable every interaction at once') }}</small>
                 </span>
                 <label class="switch-small">
                   <input type="checkbox" id="interactions_enabled"
@@ -360,31 +359,31 @@ input:checked + .slider-small:before { transform: translateX(16px); }
               </div>
               <div class="ys-toggle-children" id="interactions-children">
                 <div class="ys-toggle-row" data-cap="interaction_post">
-                  <span class="ys-toggle-label">New post <small>Compose and publish new posts</small></span>
+                  <span class="ys-toggle-label">{{ _('New post') }} <small>{{ _('Compose and publish new posts') }}</small></span>
                   <label class="switch-small"><input type="checkbox" id="interaction_post"><span class="slider-small round"></span></label>
                 </div>
                 <div class="ys-toggle-row" data-cap="interaction_comment">
-                  <span class="ys-toggle-label">Comment / reply <small>Reply to posts and threads</small></span>
+                  <span class="ys-toggle-label">{{ _('Comment / reply') }} <small>{{ _('Reply to posts and threads') }}</small></span>
                   <label class="switch-small"><input type="checkbox" id="interaction_comment"><span class="slider-small round"></span></label>
                 </div>
                 <div class="ys-toggle-row" data-cap="interaction_like">
-                  <span class="ys-toggle-label">Like <small>Thumbs-up reaction</small></span>
+                  <span class="ys-toggle-label">{{ _('Like') }} <small>{{ _('Thumbs-up reaction') }}</small></span>
                   <label class="switch-small"><input type="checkbox" id="interaction_like"><span class="slider-small round"></span></label>
                 </div>
                 <div class="ys-toggle-row" data-cap="interaction_dislike">
-                  <span class="ys-toggle-label">Dislike <small>Thumbs-down reaction</small></span>
+                  <span class="ys-toggle-label">{{ _('Dislike') }} <small>{{ _('Thumbs-down reaction') }}</small></span>
                   <label class="switch-small"><input type="checkbox" id="interaction_dislike"><span class="slider-small round"></span></label>
                 </div>
                 <div class="ys-toggle-row" data-cap="interaction_share">
-                  <span class="ys-toggle-label">Share / repost <small>Repost another user's content</small></span>
+                  <span class="ys-toggle-label">{{ _('Share / repost') }} <small>{{ _("Repost another user's content") }}</small></span>
                   <label class="switch-small"><input type="checkbox" id="interaction_share"><span class="slider-small round"></span></label>
                 </div>
               </div>
               <div style="margin-top:12px;border-top:1px solid #f1f3f5;padding-top:10px;">
                 <div class="ys-toggle-row" data-cap="notifications_menu">
                   <span class="ys-toggle-label">
-                    Notification menu
-                    <small>Bell / mentions icon in the top bar</small>
+                    {{ _('Notification menu') }}
+                    <small>{{ _('Bell / mentions icon in the top bar') }}</small>
                   </span>
                   <label class="switch-small">
                     <input type="checkbox" id="notifications_menu">
@@ -393,7 +392,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
                 </div>
               </div>
               <div class="ys-fs-save-row">
-                <button class="button is-solid primary-button" onclick="saveSection(event,'interactions')">Save interactions</button>
+                <button class="button is-solid primary-button" onclick="saveSection(event,'interactions')">{{ _('Save interactions') }}</button>
                 <span class="ys-fs-save-status" id="status-interactions"></span>
               </div>
             </div>
@@ -401,15 +400,15 @@ input:checked + .slider-small:before { transform: translateX(16px); }
 
           <!-- ══ BOX 2 — Annotations ═══════════════════════════ -->
           <div class="misc-compact-box" id="box-annotations" data-cap-any="annotations_enabled annotation_agent_type show_post_time show_suggested_friends show_trending_hashtags show_recsys_info show_annotation_stats">
-            <h3>Annotations</h3>
+            <h3>{{ _('Annotations') }}</h3>
             <div class="box-content">
               <p style="color:#6b7280;font-size:.85rem;margin-bottom:14px;">
-                Choose which metadata chips are displayed below each post.
+                {{ _('Choose which metadata chips are displayed below each post.') }}
               </p>
               <div class="ys-toggle-row is-master" data-cap="annotations_enabled">
                 <span class="ys-toggle-label">
-                  All annotations
-                  <small>Show or hide every annotation type at once</small>
+                  {{ _('All annotations') }}
+                  <small>{{ _('Show or hide every annotation type at once') }}</small>
                 </span>
                 <label class="switch-small">
                   <input type="checkbox" id="annotations_enabled"
@@ -419,53 +418,53 @@ input:checked + .slider-small:before { transform: translateX(16px); }
               </div>
               <div class="ys-toggle-children" id="annotations-children" data-cap-any="annotation_emotions annotation_topics annotation_agent_type">
                 <div class="ys-toggle-row" data-cap="annotation_emotions">
-                  <span class="ys-toggle-label">Emotions <small>Emotional tone chips (joy, anger…)</small></span>
+                  <span class="ys-toggle-label">{{ _('Emotions') }} <small>{{ _('Emotional tone chips (joy, anger…)') }}</small></span>
                   <label class="switch-small"><input type="checkbox" id="annotation_emotions"><span class="slider-small round"></span></label>
                 </div>
                 <div class="ys-toggle-row" data-cap="annotation_topics">
-                  <span class="ys-toggle-label">Topics <small>Topic classification chips</small></span>
+                  <span class="ys-toggle-label">{{ _('Topics') }} <small>{{ _('Topic classification chips') }}</small></span>
                   <label class="switch-small"><input type="checkbox" id="annotation_topics"><span class="slider-small round"></span></label>
                 </div>
                 <div class="ys-toggle-row" data-cap="annotation_sentiment">
-                  <span class="ys-toggle-label">Sentiment <small>Positive / neutral / negative score</small></span>
+                  <span class="ys-toggle-label">{{ _('Sentiment') }} <small>{{ _('Positive / neutral / negative score') }}</small></span>
                   <label class="switch-small"><input type="checkbox" id="annotation_sentiment"><span class="slider-small round"></span></label>
                 </div>
                 <div class="ys-toggle-row" data-cap="annotation_toxicity">
-                  <span class="ys-toggle-label">Toxicity <small>Toxic content warning chip</small></span>
+                  <span class="ys-toggle-label">{{ _('Toxicity') }} <small>{{ _('Toxic content warning chip') }}</small></span>
                   <label class="switch-small"><input type="checkbox" id="annotation_toxicity"><span class="slider-small round"></span></label>
                 </div>
                 <div class="ys-toggle-row" data-cap="annotation_agent_type">
-                  <span class="ys-toggle-label">Agent type <small>Badge identifying ad-hoc agents (moderator, propaganda…)</small></span>
+                  <span class="ys-toggle-label">{{ _('Agent type') }} <small>{{ _('Badge identifying ad-hoc agents (moderator, propaganda…)') }}</small></span>
                   <label class="switch-small"><input type="checkbox" id="annotation_agent_type"><span class="slider-small round"></span></label>
                 </div>
                 <div class="ys-toggle-row" data-cap="annotation_author_type">
-                  <span class="ys-toggle-label">Author type <small>Badge showing whether content was produced by an AI agent or a Human</small></span>
+                  <span class="ys-toggle-label">{{ _('Author type') }} <small>{{ _('Badge showing whether content was produced by an AI agent or a Human') }}</small></span>
                   <label class="switch-small"><input type="checkbox" id="annotation_author_type"><span class="slider-small round"></span></label>
                 </div>
               </div>
               <div class="ys-toggle-row" data-cap="show_post_time">
-                <span class="ys-toggle-label">Post date &amp; time <small>Show the "Day X - HH:00" timestamp below each post and comment</small></span>
+                <span class="ys-toggle-label">{{ _('Post date & time') }} <small>{{ _('Show the "Day X - HH:00" timestamp below each post and comment') }}</small></span>
                 <label class="switch-small"><input type="checkbox" id="show_post_time"><span class="slider-small round"></span></label>
               </div>
               <div class="ys-toggle-row" data-cap="show_suggested_friends">
-                <span class="ys-toggle-label">Suggested Friends <small>Show the "Suggested Friends" box next to the feed</small></span>
+                <span class="ys-toggle-label">{{ _('Suggested Friends') }} <small>{{ _('Show the "Suggested Friends" box next to the feed') }}</small></span>
                 <label class="switch-small"><input type="checkbox" id="show_suggested_friends"><span class="slider-small round"></span></label>
               </div>
               <div class="ys-toggle-row" data-cap="show_trending_hashtags">
-                <span class="ys-toggle-label">Trending Hashtags <small>Show the "Trending Hashtags" box in the side column</small></span>
+                <span class="ys-toggle-label">{{ _('Trending Hashtags') }} <small>{{ _('Show the "Trending Hashtags" box in the side column') }}</small></span>
                 <label class="switch-small"><input type="checkbox" id="show_trending_hashtags"><span class="slider-small round"></span></label>
               </div>
               <div class="ys-toggle-row" data-cap="show_recsys_info">
-                <span class="ys-toggle-label">Recommender info <small>Show a box next to the feed with the participant's content recommender system and a plain-language explanation of how it works</small></span>
+                <span class="ys-toggle-label">{{ _('Recommender info') }} <small>{{ _("Show a box next to the feed with the participant's content recommender system and a plain-language explanation of how it works") }}</small></span>
                 <label class="switch-small"><input type="checkbox" id="show_recsys_info"><span class="slider-small round"></span></label>
               </div>
               <div class="ys-toggle-row" data-cap="show_annotation_stats" id="row-show_annotation_stats">
-                <span class="ys-toggle-label">Annotation statistics <small>Show a box next to the feed with live charts of the participant's own annotations (sentiment, toxicity, emotions, topics)</small>
-                  <small id="annotation-stats-hint" style="display:none;color:#b45309;">Available only when the "Post &amp; Comment Annotation" module is enabled for this experiment (Frontend Add-ons).</small></span>
+                <span class="ys-toggle-label">{{ _('Annotation statistics') }} <small>{{ _("Show a box next to the feed with live charts of the participant's own annotations (sentiment, toxicity, emotions, topics)") }}</small>
+                  <small id="annotation-stats-hint" style="display:none;color:#b45309;">{{ _('Available only when the "Post & Comment Annotation" module is enabled for this experiment (Frontend Add-ons).') }}</small></span>
                 <label class="switch-small"><input type="checkbox" id="show_annotation_stats"><span class="slider-small round"></span></label>
               </div>
               <div class="ys-fs-save-row">
-                <button class="button is-solid primary-button" onclick="saveSection(event,'annotations')">Save annotations</button>
+                <button class="button is-solid primary-button" onclick="saveSection(event,'annotations')">{{ _('Save annotations') }}</button>
                 <span class="ys-fs-save-status" id="status-annotations"></span>
               </div>
             </div>
@@ -473,17 +472,17 @@ input:checked + .slider-small:before { transform: translateX(16px); }
 
           <!-- ══ BOX 4 — Feed & Profile ══════════════════════════ -->
           <div class="misc-compact-box" id="box-feed-profile">
-            <h3>Feed &amp; Profile</h3>
+            <h3>{{ _('Feed & Profile') }}</h3>
             <div class="box-content">
               <p style="color:#6b7280;font-size:.85rem;margin-bottom:14px;">
-                Configure default recommendation algorithms and profile/onboarding options for standard users.
+                {{ _('Configure default recommendation algorithms and profile/onboarding options for standard users.') }}
               </p>
 
               <!-- Content recsys -->
               <div class="ys-toggle-row" data-cap="content_recsys" style="flex-direction:column;align-items:flex-start;gap:6px;padding-bottom:14px;">
                 <span class="ys-toggle-label" style="font-weight:700;color:#1f2937;">
-                  Default content recommender
-                  <small>Feed algorithm shown to standard users by default</small>
+                  {{ _('Default content recommender') }}
+                  <small>{{ _('Feed algorithm shown to standard users by default') }}</small>
                 </span>
                 <select id="default_content_recsys" class="input" style="width:100%;max-width:380px;"></select>
               </div>
@@ -493,83 +492,83 @@ input:checked + .slider-small:before { transform: translateX(16px); }
               <div id="fb-config-section" data-cap="content_recsys">
                 <div class="fb-section-title">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-                  Personalized Feed parameters
+                  {{ _('Personalized Feed parameters') }}
                 </div>
                 <div class="fb-inner-grid">
 
                   <!-- Core parameters column -->
                   <div>
-                    <div class="fb-col-title">Core parameters</div>
+                    <div class="fb-col-title">{{ _('Core parameters') }}</div>
 
                     <div class="ys-toggle-row">
-                      <span class="ys-toggle-label">Opinion width (&alpha;)
-                        <small>Gaussian bandwidth for opinion alignment. Higher&nbsp;= narrower bubble.</small>
+                      <span class="ys-toggle-label">{{ _('Opinion width (α)') }}
+                        <small>{{ _('Gaussian bandwidth for opinion alignment. Higher = narrower bubble.') }}</small>
                       </span>
                       <input type="number" id="filter_bubble_alpha" min="0" max="20" step="0.1" value="2.0"
                              style="width:72px;padding:0.25rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;font-size:.9rem;">
                     </div>
 
                     <div class="ys-toggle-row">
-                      <span class="ys-toggle-label">Recency decay (&beta;)
-                        <small>Exponential decay over simulation rounds. 0&nbsp;= disabled.</small>
+                      <span class="ys-toggle-label">{{ _('Recency decay (β)') }}
+                        <small>{{ _('Exponential decay over simulation rounds. 0 = disabled.') }}</small>
                       </span>
                       <input type="number" id="filter_bubble_beta" min="0" max="1" step="0.01" value="0.0"
                              style="width:72px;padding:0.25rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;font-size:.9rem;">
                     </div>
 
                     <div class="ys-toggle-row">
-                      <span class="ys-toggle-label">Engagement boost (&gamma;)
-                        <small>Amplification of popular posts. 0&nbsp;= disabled.</small>
+                      <span class="ys-toggle-label">{{ _('Engagement boost (γ)') }}
+                        <small>{{ _('Amplification of popular posts. 0 = disabled.') }}</small>
                       </span>
                       <input type="number" id="filter_bubble_gamma" min="0" max="5" step="0.1" value="0.0"
                              style="width:72px;padding:0.25rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;font-size:.9rem;">
                     </div>
 
                     <div class="ys-toggle-row">
-                      <span class="ys-toggle-label">Interest learning rate (&lambda;)
-                        <small>EMA rate for real-time interest updates after reactions.</small>
+                      <span class="ys-toggle-label">{{ _('Interest learning rate (λ)') }}
+                        <small>{{ _('EMA rate for real-time interest updates after reactions.') }}</small>
                       </span>
                       <input type="number" id="filter_bubble_lr" min="0" max="1" step="0.01" value="0.05"
                              style="width:72px;padding:0.25rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;font-size:.9rem;">
                     </div>
 
                     <div class="ys-toggle-row" style="flex-direction:column;align-items:flex-start;gap:6px;padding-bottom:8px;">
-                      <span class="ys-toggle-label" style="font-weight:700;color:#1f2937;">Ranking mode
-                        <small>How to order posts when scores are equal</small>
+                      <span class="ys-toggle-label" style="font-weight:700;color:#1f2937;">{{ _('Ranking mode') }}
+                        <small>{{ _('How to order posts when scores are equal') }}</small>
                       </span>
                       <select id="filter_bubble_sort" class="input" style="width:100%;max-width:220px;">
-                        <option value="score">Score only</option>
-                        <option value="recency">Recency first</option>
-                        <option value="engagement">Engagement first</option>
-                        <option value="hybrid">Hybrid (score &times; recency)</option>
+                        <option value="score">{{ _('Score only') }}</option>
+                        <option value="recency">{{ _('Recency first') }}</option>
+                        <option value="engagement">{{ _('Engagement first') }}</option>
+                        <option value="hybrid">{{ _('Hybrid (score × recency)') }}</option>
                       </select>
                     </div>
                   </div>
 
                   <!-- Engagement weights column -->
                   <div>
-                    <div class="fb-col-title">Engagement weights</div>
-                    <p style="color:#9ca3af;font-size:.8rem;margin-bottom:8px;">Applied when engagement boost (&gamma;)&nbsp;&gt;&nbsp;0.</p>
+                    <div class="fb-col-title">{{ _('Engagement weights') }}</div>
+                    <p style="color:#9ca3af;font-size:.8rem;margin-bottom:8px;">{{ _('Applied when engagement boost (γ) > 0.') }}</p>
 
                     <div class="ys-toggle-row">
-                      <span class="ys-toggle-label">Reaction weight (w<sub>r</sub>)
-                        <small>Weight for likes / reactions</small>
+                      <span class="ys-toggle-label">{{ _('Reaction weight') }} (w<sub>r</sub>)
+                        <small>{{ _('Weight for likes / reactions') }}</small>
                       </span>
                       <input type="number" id="filter_bubble_wr" min="0" max="10" step="0.1" value="1.0"
                              style="width:72px;padding:0.25rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;font-size:.9rem;">
                     </div>
 
                     <div class="ys-toggle-row">
-                      <span class="ys-toggle-label">Comment weight (w<sub>c</sub>)
-                        <small>Weight for comments / replies</small>
+                      <span class="ys-toggle-label">{{ _('Comment weight') }} (w<sub>c</sub>)
+                        <small>{{ _('Weight for comments / replies') }}</small>
                       </span>
                       <input type="number" id="filter_bubble_wc" min="0" max="10" step="0.1" value="1.5"
                              style="width:72px;padding:0.25rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;font-size:.9rem;">
                     </div>
 
                     <div class="ys-toggle-row">
-                      <span class="ys-toggle-label">Share weight (w<sub>s</sub>)
-                        <small>Weight for shares / reposts</small>
+                      <span class="ys-toggle-label">{{ _('Share weight') }} (w<sub>s</sub>)
+                        <small>{{ _('Weight for shares / reposts') }}</small>
                       </span>
                       <input type="number" id="filter_bubble_ws" min="0" max="10" step="0.1" value="2.0"
                              style="width:72px;padding:0.25rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;font-size:.9rem;">
@@ -581,15 +580,15 @@ input:checked + .slider-small:before { transform: translateX(16px); }
               <!-- Platform-specific feed defaults: they replace the microblogging recommenders -->
               <div class="ys-toggle-row" data-cap="default_forum_feed_type" style="flex-direction:column;align-items:flex-start;gap:6px;padding-bottom:14px;">
                 <span class="ys-toggle-label" style="font-weight:700;color:#1f2937;">
-                  Default feed ordering
-                  <small>Ordering of the forum feed when a participant opens it (they can still change it)</small>
+                  {{ _('Default feed ordering') }}
+                  <small>{{ _('Ordering of the forum feed when a participant opens it (they can still change it)') }}</small>
                 </span>
                 <select id="default_forum_feed_type" class="input" style="width:100%;max-width:380px;"></select>
               </div>
               <div class="ys-toggle-row" data-cap="default_photo_feed_tab" style="flex-direction:column;align-items:flex-start;gap:6px;padding-bottom:14px;">
                 <span class="ys-toggle-label" style="font-weight:700;color:#1f2937;">
-                  Default home tab
-                  <small>Tab of the photo feed shown when a participant opens it</small>
+                  {{ _('Default home tab') }}
+                  <small>{{ _('Tab of the photo feed shown when a participant opens it') }}</small>
                 </span>
                 <select id="default_photo_feed_tab" class="input" style="width:100%;max-width:380px;"></select>
               </div>
@@ -597,8 +596,8 @@ input:checked + .slider-small:before { transform: translateX(16px); }
               <!-- Follow recsys -->
               <div class="ys-toggle-row" data-cap="follow_recsys" style="flex-direction:column;align-items:flex-start;gap:6px;padding-bottom:14px;border-bottom:1px solid #f1f3f5;">
                 <span class="ys-toggle-label" style="font-weight:700;color:#1f2937;">
-                  Default follow recommender
-                  <small>"Who to follow" algorithm shown to standard users by default</small>
+                  {{ _('Default follow recommender') }}
+                  <small>{{ _('"Who to follow" algorithm shown to standard users by default') }}</small>
                 </span>
                 <select id="default_follow_recsys" class="input" style="width:100%;max-width:380px;"></select>
               </div>
@@ -606,8 +605,8 @@ input:checked + .slider-small:before { transform: translateX(16px); }
               <!-- Topics box in profile -->
               <div class="ys-toggle-row is-master" data-cap="profile_topics_box" style="margin-top:10px;">
                 <span class="ys-toggle-label">
-                  Topics &amp; Opinions box in profile
-                  <small>Show the interest / opinion sliders in the Edit Profile page</small>
+                  {{ _('Topics & Opinions box in profile') }}
+                  <small>{{ _('Show the interest / opinion sliders in the Edit Profile page') }}</small>
                 </span>
                 <label class="switch-small">
                   <input type="checkbox" id="profile_topics_box" checked>
@@ -618,8 +617,8 @@ input:checked + .slider-small:before { transform: translateX(16px); }
               <!-- Onboarding screen -->
               <div class="ys-toggle-row is-master" data-cap="onboarding_enabled">
                 <span class="ys-toggle-label">
-                  Onboarding screen
-                  <small>Show the profile-setup wizard to users on their first login</small>
+                  {{ _('Onboarding screen') }}
+                  <small>{{ _('Show the profile-setup wizard to users on their first login') }}</small>
                 </span>
                 <label class="switch-small">
                   <input type="checkbox" id="onboarding_enabled" checked>
@@ -630,8 +629,8 @@ input:checked + .slider-small:before { transform: translateX(16px); }
               <!-- Infinite scroll -->
               <div class="ys-toggle-row is-master" data-cap="infinite_scroll_enabled">
                 <span class="ys-toggle-label">
-                  Infinite scrolling
-                  <small>Automatically load more posts as the user scrolls down the feed</small>
+                  {{ _('Infinite scrolling') }}
+                  <small>{{ _('Automatically load more posts as the user scrolls down the feed') }}</small>
                 </span>
                 <label class="switch-small">
                   <input type="checkbox" id="infinite_scroll_enabled" checked
@@ -641,15 +640,15 @@ input:checked + .slider-small:before { transform: translateX(16px); }
               </div>
               <div id="posts-per-page-row" class="ys-toggle-row" data-cap="posts_per_page" style="margin-left:1.5rem;">
                 <span class="ys-toggle-label">
-                  Posts per page
-                  <small id="posts-per-page-hint">Number of posts shown per page when infinite scrolling is disabled</small>
+                  {{ _('Posts per page') }}
+                  <small id="posts-per-page-hint">{{ _('Number of posts shown per page when infinite scrolling is disabled') }}</small>
                 </span>
                 <input type="number" id="posts_per_page" min="1" max="100" value="10"
                        style="width:70px;padding:0.25rem 0.4rem;border:1px solid #ccc;border-radius:4px;font-size:0.9rem;">
               </div>
 
               <div class="ys-fs-save-row">
-                <button class="button is-solid primary-button" onclick="saveSection(event,'feed-profile')">Save feed &amp; profile</button>
+                <button class="button is-solid primary-button" onclick="saveSection(event,'feed-profile')">{{ _('Save feed & profile') }}</button>
                 <span class="ys-fs-save-status" id="status-feed-profile"></span>
               </div>
             </div>
@@ -662,9 +661,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
             <div class="box-content">
               {% if suite.repo_key != "reactive_agents" %}
               <p style="color:#6b7280;font-size:.85rem;margin-bottom:14px;">
-                Enable and configure {{ suite.label }} frontend plugin modules for this experiment.
-                Install or update the suite itself from
-                <a href="{{ url_for('experiments.external_runtimes') }}">External Runtimes</a>.
+                {{ _('Enable and configure %(suite)s frontend plugin modules for this experiment. Install or update the suite itself from %(link)s.', suite=suite.label, link=wrap('a', _('External Runtimes'), href=url_for('experiments.external_runtimes'))) }}
               </p>
               {% endif %}
               <div id="suite-{{ suite.repo_key }}-errors" style="display:none;color:#b91c1c;font-size:.78rem;margin-bottom:10px;"></div>
@@ -681,7 +678,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       <div id="ys-fs-empty" class="misc-compact-box" style="margin-top:0;">
         <div class="ys-fs-placeholder">
           <i data-feather="sliders" style="width:56px;height:56px;"></i>
-          <p>Select an experiment type, group and name to view and edit its frontend settings.</p>
+          <p>{{ _('Select an experiment type, group and name to view and edit its frontend settings.') }}</p>
         </div>
       </div>
 

@@ -1,0 +1,10 @@
+# Strings the scanner must not report (text # reason). One per line.
+Rossetti, Giulio, et al. # bibliographic reference, kept in English
+arXiv preprint # bibliographic reference, kept in English
+connect # value of a form field, never shown
+disconnect # value of a form field, never shown
+—git · · # technical token (git, branch, commit)
+"Y social: an LLM-powered social media Digital Twin." # title of a paper
+arXiv:2408.00818 # identifier
+john_doe,john@example.com,researcher,SecurePass1!\njane_smith,jane@example.com,user\nadmin_user,admin@example.com,admin,AdminPass1! # CSV example
+john_doe,john@example.com,user,SecurePass1!\njane_smith,jane@example.com,user\nbob_wilson,bob@example.com,user,BobPass1! # CSV example

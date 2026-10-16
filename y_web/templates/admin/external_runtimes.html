@@ -21,40 +21,40 @@
             <div class="columns">
                 <div class="column is-12">
                     <div class="dashboard-box" id="external-runtimes-main">
-                        <h3 class="title is-5 is-thin">Plugins</h3>
+                        <h3 class="title is-5 is-thin">{{ _('Plugins') }}</h3>
                         <div class="box-content">
-                            <p class="ext-intro">Available and installed plugins. Open a plugin to install or update it and to follow the output of the operation. Microblogging and Forum each include a server and a client, which you install and update independently from the plugin page.</p>
+                            <p class="ext-intro">{{ _('Available and installed plugins. Open a plugin to install or update it and to follow the output of the operation. Microblogging and Forum each include a server and a client, which you install and update independently from the plugin page.') }}</p>
                             <div class="table-responsive">
                             <table class="ext-plugin-table" id="external-runtimes-list">
-                                <thead><tr><th>Plugin</th><th>Description</th><th>Status</th><th></th></tr></thead>
+                                <thead><tr><th>{{ _('Plugin') }}</th><th>{{ _('Description') }}</th><th>{{ _('Status') }}</th><th></th></tr></thead>
                                 <tbody>
                                 {% for entry in plugin_entries %}
                                 <tr data-runtime-repo data-entry-key="{{ entry.key }}">
                                     <td>
                                         <div class="ext-plugin-name">{{ entry.label }}</div>
-                                        <div class="ext-plugin-sub">{{ entry.category }}{% if entry.paired %} &middot; server + client{% endif %}</div>
+                                        <div class="ext-plugin-sub">{{ entry.category }}{% if entry.paired %} &middot; {{ _('server + client') }}{% endif %}</div>
                                     </td>
                                     <td class="ext-plugin-desc">{{ entry.description or 'No description available.' }}</td>
                                     <td>
-                                        {% if entry.state == 'installed' %}<span class="badge badge-success">Installed</span>
-                                        {% elif entry.state == 'partial' %}<span class="badge badge-warning">Partially installed</span>
-                                        {% else %}<span class="badge badge-secondary">Not installed</span>{% endif %}
+                                        {% if entry.state == 'installed' %}<span class="badge badge-success">{{ _('Installed') }}</span>
+                                        {% elif entry.state == 'partial' %}<span class="badge badge-warning">{{ _('Partially installed') }}</span>
+                                        {% else %}<span class="badge badge-secondary">{{ _('Not installed') }}</span>{% endif %}
                                         {% if entry.togglable and entry.state != 'missing' %}
-                                            {% if entry.enabled %}<span class="badge badge-info">Enabled</span>{% else %}<span class="badge badge-warning">Disabled</span>{% endif %}
+                                            {% if entry.enabled %}<span class="badge badge-info">{{ _('Enabled') }}</span>{% else %}<span class="badge badge-warning">{{ _('Disabled') }}</span>{% endif %}
                                         {% endif %}
-                                        {% if entry.restart_required %}<span class="badge badge-warning">Restart required</span>{% endif %}
+                                        {% if entry.restart_required %}<span class="badge badge-warning">{{ _('Restart required') }}</span>{% endif %}
                                     </td>
                                     <td>
                                         <div class="ext-row-actions">
                                             <a class="button is-solid primary-button" href="{{ url_for('experiments.external_runtime_detail', entry_key=entry.key) }}">{{ 'Install' if entry.state == 'missing' else 'Update' }}</a>
                                             {% if entry.any_exists %}
-                                            <button type="button" class="button is-light ext-danger-text" data-external-runtime-remove data-remove-url="{{ url_for('experiments.external_runtime_action', repo_key=entry.key, action='delete') }}" data-label="{{ entry.label }}">Remove</button>
+                                            <button type="button" class="button is-light ext-danger-text" data-external-runtime-remove data-remove-url="{{ url_for('experiments.external_runtime_action', repo_key=entry.key, action='delete') }}" data-label="{{ entry.label }}">{{ _('Remove') }}</button>
                                             {% endif %}
                                         </div>
                                     </td>
                                 </tr>
                                 {% else %}
-                                <tr><td colspan="4" class="ext-plugin-sub">No plugin is available.</td></tr>
+                                <tr><td colspan="4" class="ext-plugin-sub">{{ _('No plugin is available.') }}</td></tr>
                                 {% endfor %}
                                 </tbody>
                             </table>

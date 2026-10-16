@@ -34,36 +34,36 @@
             <div class="columns">
                 <div class="column is-8">
                     <div class="dashboard-box" id="external-runtime-detail">
-                        <a class="ext-back" href="{{ url_for('experiments.external_runtimes') }}">&larr; All plugins</a>
+                        <a class="ext-back" href="{{ url_for('experiments.external_runtimes') }}">{{ _('← All plugins') }}</a>
                         <div class="ext-head">
                             <h3 class="title is-5 is-thin">{{ entry.label }}</h3>
-                            {% if entry.state == 'installed' %}<span class="badge badge-success">Installed</span>
-                            {% elif entry.state == 'partial' %}<span class="badge badge-warning">Partially installed</span>
-                            {% else %}<span class="badge badge-secondary">Not installed</span>{% endif %}
+                            {% if entry.state == 'installed' %}<span class="badge badge-success">{{ _('Installed') }}</span>
+                            {% elif entry.state == 'partial' %}<span class="badge badge-warning">{{ _('Partially installed') }}</span>
+                            {% else %}<span class="badge badge-secondary">{{ _('Not installed') }}</span>{% endif %}
                             {% if entry.togglable and entry.state != 'missing' %}
-                                {% if entry.enabled %}<span class="badge badge-info">Enabled</span>{% else %}<span class="badge badge-warning">Disabled</span>{% endif %}
+                                {% if entry.enabled %}<span class="badge badge-info">{{ _('Enabled') }}</span>{% else %}<span class="badge badge-warning">{{ _('Disabled') }}</span>{% endif %}
                             {% endif %}
-                            {% if entry.restart_required %}<span class="badge badge-warning">Restart required</span>{% endif %}
+                            {% if entry.restart_required %}<span class="badge badge-warning">{{ _('Restart required') }}</span>{% endif %}
                         </div>
                         <div class="box-content">
                             <p class="ext-hint" style="margin-bottom:14px;">{{ entry.description }}</p>
 
                             {% if active_experiments %}
-                            <div class="ext-warn">Stop the active experiments that use this plugin before changing it: {{ active_experiments|map(attribute='exp_name')|join(', ') }}.</div>
+                            <div class="ext-warn">{{ _('Stop the active experiments that use this plugin before changing it: %(names)s.', names=active_experiments|map(attribute='exp_name')|join(', ')) }}</div>
                             {% endif %}
 
                             <div class="ext-section">
                                 <div class="ext-section-title">{{ 'Components (independent)' if entry.paired else 'Source' }}</div>
                                 <table class="ext-members">
-                                    <thead><tr><th>Repository</th><th>State</th><th>Version</th><th>Latest release</th><th>Checks</th></tr></thead>
+                                    <thead><tr><th>{{ _('Repository') }}</th><th>{{ _('State') }}</th><th>{{ _('Version') }}</th><th>{{ _('Latest release') }}</th><th>{{ _('Checks') }}</th></tr></thead>
                                     <tbody>
                                     {% for repo in entry.members %}
                                     <tr data-repo-key="{{ repo.key }}">
                                         <td><strong>{{ repo.label }}</strong><div class="ext-hint">{{ repo.github_repo }}</div></td>
-                                        <td>{{ 'Installed' if repo.installed else 'Not installed' }}{% if repo.is_symlink %} &middot; symlink{% endif %}{% if repo.dirty %} &middot; local changes{% endif %}</td>
-                                        <td>{% if not repo.installed %}&mdash;{% elif repo.git_managed %}git &middot; {{ repo.current_branch or '?' }}{% if repo.current_commit %} &middot; {{ repo.current_commit }}{% endif %}{% if repo.ahead is not none and repo.behind is not none %}<div class="ext-hint">ahead {{ repo.ahead }} / behind {{ repo.behind }}</div>{% endif %}{% else %}release archive{% endif %}</td>
-                                        <td>{% if repo.latest_release_tag %}{{ repo.latest_release_tag }}{% elif repo.release_error %}<span class="ext-hint" style="color:#b45309;">{{ repo.release_error }}</span>{% else %}none published{% endif %}</td>
-                                        <td>{% if repo.installed %}dependencies {{ 'ok' if repo.dependency_files_ready else 'missing' }}, validation {{ 'ok' if repo.validation_ready else 'missing' }}{% else %}&mdash;{% endif %}</td>
+                                        <td>{{ _('Installed') if repo.installed else _('Not installed') }}{% if repo.is_symlink %} &middot; {{ _('symlink') }}{% endif %}{% if repo.dirty %} &middot; {{ _('local changes') }}{% endif %}</td>
+                                        <td>{% if not repo.installed %}&mdash;{% elif repo.git_managed %}git &middot; {{ repo.current_branch or '?' }}{% if repo.current_commit %} &middot; {{ repo.current_commit }}{% endif %}{% if repo.ahead is not none and repo.behind is not none %}<div class="ext-hint">{{ _('ahead %(ahead)s / behind %(behind)s', ahead=repo.ahead, behind=repo.behind) }}</div>{% endif %}{% else %}{{ _('release archive') }}{% endif %}</td>
+                                        <td>{% if repo.latest_release_tag %}{{ repo.latest_release_tag }}{% elif repo.release_error %}<span class="ext-hint" style="color:#b45309;">{{ repo.release_error }}</span>{% else %}{{ _('none published') }}{% endif %}</td>
+                                        <td>{% if repo.installed %}{{ _('dependencies %(deps)s, validation %(validation)s', deps=_('ok') if repo.dependency_files_ready else _('missing'), validation=_('ok') if repo.validation_ready else _('missing')) }}{% else %}&mdash;{% endif %}</td>
                                     </tr>
                                     {% endfor %}
                                     </tbody>
@@ -72,69 +72,69 @@
 
                             {% for repo in entry.members %}
                             <div class="ext-component" data-repo-key="{{ repo.key }}">
-                            {% if entry.paired %}<div class="ext-component-title">{{ repo.label }} <span class="ext-hint">&mdash; installed and updated independently</span></div>{% endif %}
+                            {% if entry.paired %}<div class="ext-component-title">{{ repo.label }} <span class="ext-hint">{{ _('— installed and updated independently') }}</span></div>{% endif %}
                             <form class="ext-section ext-sync-form" method="POST" action="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='sync') }}">
                                 <div class="ext-section-title">{{ 'Install' if not repo.installed else 'Update' }}{% if entry.paired %} {{ repo.label }}{% endif %}</div>
                                 {% set has_releases = repo.available_releases|length > 0 %}
                                 <div class="ext-options">
                                     <label class="ext-option">
-                                        <span class="ext-radio-row"><input type="radio" name="install_source" value="release" {% if has_releases %}checked{% endif %}><strong>GitHub release</strong></span>
-                                        <span class="ext-hint">Standard option; works without git.</span>
+                                        <span class="ext-radio-row"><input type="radio" name="install_source" value="release" {% if has_releases %}checked{% endif %}><strong>{{ _('GitHub release') }}</strong></span>
+                                        <span class="ext-hint">{{ _('Standard option; works without git.') }}</span>
                                         <select name="release_tag" class="input w-100" {% if not has_releases %}disabled{% endif %}>
                                             {% if has_releases %}{% for release in repo.available_releases %}
-                                            <option value="{{ release.tag }}">{{ release.tag }}{% if release.prerelease %} &middot; prerelease{% endif %}{% if release.name and release.name != release.tag %} &middot; {{ release.name }}{% endif %}</option>
+                                            <option value="{{ release.tag }}">{{ release.tag }}{% if release.prerelease %} &middot; {{ _('prerelease') }}{% endif %}{% if release.name and release.name != release.tag %} &middot; {{ release.name }}{% endif %}</option>
                                             {% endfor %}{% else %}<option value="">{{ repo.release_error or 'No releases available' }}</option>{% endif %}
                                         </select>
                                     </label>
                                     {% if host_git_available %}
                                     <label class="ext-option">
-                                        <span class="ext-radio-row"><input type="radio" name="install_source" value="git" {% if not has_releases %}checked{% endif %}><strong>Git checkout</strong></span>
-                                        <span class="ext-hint">Advanced: follow a branch (an installed git checkout is updated in place).</span>
+                                        <span class="ext-radio-row"><input type="radio" name="install_source" value="git" {% if not has_releases %}checked{% endif %}><strong>{{ _('Git checkout') }}</strong></span>
+                                        <span class="ext-hint">{{ _('Advanced: follow a branch (an installed git checkout is updated in place).') }}</span>
                                         <select name="branch" class="input w-100">
                                             {% for b in repo.available_branches %}<option value="{{ b }}" {% if b == (repo.current_branch or repo.default_branch) %}selected{% endif %}>{{ b }}</option>{% endfor %}
                                         </select>
                                     </label>
                                     {% else %}
-                                    <div class="ext-option is-muted"><strong>Git checkout unavailable</strong><span class="ext-hint">This host has no <code>git</code> command: only release installation is offered.</span></div>
+                                    <div class="ext-option is-muted"><strong>{{ _('Git checkout unavailable') }}</strong><span class="ext-hint">{{ _('This host has no %(cmd)s command: only release installation is offered.', cmd=wrap('code', 'git')) }}</span></div>
                                     {% endif %}
                                 </div>
                                 <div class="ext-actions">
                                     <button type="submit" class="button is-solid primary-button" {% if active_experiments %}disabled{% endif %}>{{ 'Install' if not repo.installed else 'Update' }}</button>
                                     {% if repo.installed %}
-                                    <button type="button" class="button is-light" data-run-action="install" data-repo-key="{{ repo.key }}">Dependencies</button>
-                                    <button type="button" class="button is-light" data-run-action="validate" data-repo-key="{{ repo.key }}">Validate</button>
+                                    <button type="button" class="button is-light" data-run-action="install" data-repo-key="{{ repo.key }}">{{ _('Dependencies') }}</button>
+                                    <button type="button" class="button is-light" data-run-action="validate" data-repo-key="{{ repo.key }}">{{ _('Validate') }}</button>
                                     {% if repo.plugin_togglable %}
                                     <button type="button" class="button is-light" data-run-action="{{ 'disable' if repo.plugin_enabled else 'enable' }}" data-repo-key="{{ repo.key }}">{{ 'Disable' if repo.plugin_enabled else 'Enable' }}</button>
                                     {% endif %}
                                     {% endif %}
                                     {% if repo.exists %}
-                                    <button type="button" class="button is-light ext-danger-text" data-remove-repo="{{ repo.key }}" data-label="{{ repo.label }}">Remove</button>
+                                    <button type="button" class="button is-light ext-danger-text" data-remove-repo="{{ repo.key }}" data-label="{{ repo.label }}">{{ _('Remove') }}</button>
                                     {% endif %}
                                 </div>
-                                <div class="ext-hint" style="margin-top:8px;">Dependencies are installed and the plugin validated afterwards, using <code>{{ current_python_executable }}</code>. The output appears on the right.</div>
+                                <div class="ext-hint" style="margin-top:8px;">{{ _('Dependencies are installed and the plugin validated afterwards, using %(python)s. The output appears on the right.', python=wrap('code', current_python_executable)) }}</div>
                             </form>
                             </div>
                             {% endfor %}
 
                             {% for repo in entry.members if repo.frontend_modules_report %}
                             <div class="ext-section">
-                                <div class="ext-section-title">Suite modules {% if repo.frontend_modules_report.valid %}<span class="badge badge-success">manifest valid</span>{% else %}<span class="badge badge-danger">manifest invalid</span>{% endif %}</div>
+                                <div class="ext-section-title">{{ _('Suite modules') }} {% if repo.frontend_modules_report.valid %}<span class="badge badge-success">{{ _('manifest valid') }}</span>{% else %}<span class="badge badge-danger">{{ _('manifest invalid') }}</span>{% endif %}</div>
                                 {% for err in repo.frontend_modules_report.errors %}<div class="ext-hint" style="color:#b91c1c;">{{ err }}</div>{% endfor %}
                                 {% for mod in repo.frontend_modules_report.modules %}
                                 <div class="ext-hint"><strong>{{ mod.display_name or mod.module_id }}</strong> v{{ mod.version }} {{ 'ok' if mod.valid else 'error' }}</div>
                                 {% endfor %}
-                                <div class="ext-hint" style="margin-top:6px;">Enable and configure these modules per experiment from <a href="{{ url_for('experiments.frontend_settings') }}">Frontend Settings</a>.</div>
+                                <div class="ext-hint" style="margin-top:6px;">{{ _('Enable and configure these modules per experiment from %(link)s.', link=wrap('a', _('Frontend Settings'), href=url_for('experiments.frontend_settings'))) }}</div>
                             </div>
                             {% endfor %}
 
                             <details class="ext-section">
-                                <summary class="ext-section-title" style="cursor:pointer;">GitHub session {% if github_session_authenticated %}<span class="badge badge-success">authenticated</span>{% else %}<span class="badge badge-secondary">anonymous</span>{% endif %}</summary>
-                                <p class="ext-hint" style="margin:8px 0;">Optionally connect a GitHub token for this admin session, to avoid anonymous rate limits and reach private release assets.</p>
+                                <summary class="ext-section-title" style="cursor:pointer;">{{ _('GitHub session') }} {% if github_session_authenticated %}<span class="badge badge-success">{{ _('authenticated') }}</span>{% else %}<span class="badge badge-secondary">{{ _('anonymous') }}</span>{% endif %}</summary>
+                                <p class="ext-hint" style="margin:8px 0;">{{ _('Optionally connect a GitHub token for this admin session, to avoid anonymous rate limits and reach private release assets.') }}</p>
                                 <form method="POST" action="{{ url_for('experiments.external_runtime_github_session') }}" class="ext-session-form">
                                     <input type="hidden" name="next" value="{{ url_for('experiments.external_runtime_detail', entry_key=entry.key) }}">
-                                    <input type="password" name="github_token" class="input" placeholder="{% if github_session_authenticated %}Token stored for this session{% else %}GitHub personal access token{% endif %}">
-                                    <button type="submit" name="github_session_action" value="connect" class="button is-solid primary-button">Connect</button>
-                                    {% if github_session_authenticated %}<button type="submit" name="github_session_action" value="disconnect" class="button is-light">Disconnect</button>{% endif %}
+                                    <input type="password" name="github_token" class="input" placeholder="{% if github_session_authenticated %}{{ _('Token stored for this session') }}{% else %}{{ _('GitHub personal access token') }}{% endif %}">
+                                    <button type="submit" name="github_session_action" value="connect" class="button is-solid primary-button">{{ _('Connect') }}</button>
+                                    {% if github_session_authenticated %}<button type="submit" name="github_session_action" value="disconnect" class="button is-light">{{ _('Disconnect') }}</button>{% endif %}
                                 </form>
                             </details>
                         </div>
@@ -143,9 +143,9 @@
 
                 <div class="column is-4">
                     <div class="dashboard-box" id="external-runtime-output">
-                        <h3 class="title is-6 is-thin">Operation output</h3>
+                        <h3 class="title is-6 is-thin">{{ _('Operation output') }}</h3>
                         <div class="box-content">
-                            <p class="ext-hint" style="margin-bottom:10px;">Terminal output of the latest operations on this plugin, newest first.</p>
+                            <p class="ext-hint" style="margin-bottom:10px;">{{ _('Terminal output of the latest operations on this plugin, newest first.') }}</p>
                             {% if runtime_logs %}
                                 {% for log in runtime_logs %}
                                 <details class="ext-log-entry" {% if loop.index <= 3 %}open{% endif %}>
@@ -159,7 +159,7 @@
                                 </details>
                                 {% endfor %}
                             {% else %}
-                            <p class="ext-hint">No operation has been run on this plugin yet.</p>
+                            <p class="ext-hint">{{ _('No operation has been run on this plugin yet.') }}</p>
                             {% endif %}
                         </div>
                     </div>

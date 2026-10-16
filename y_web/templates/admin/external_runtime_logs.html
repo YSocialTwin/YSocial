@@ -8,13 +8,13 @@
             <div class="columns">
                 <div class="column is-12">
                     <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">{{ runtime_repo.label }} Operation Log</h3>
+                        <h3 class="title is-5 is-thin">{{ _('%(label)s Operation Log', label=runtime_repo.label) }}</h3>
                         <div class="box-content">
                             <p class="ys-text-sm-muted" style="margin-bottom: 16px;">
-                                <strong>Path:</strong> {{ runtime_repo.path }}
+                                <strong>{{ _('Path:') }}</strong> {{ runtime_repo.path }}
                             </p>
                             <div style="margin-bottom: 16px;">
-                                <a href="{{ url_for('experiments.external_runtimes') }}" class="button is-light">Back to Plugins</a>
+                                <a href="{{ url_for('experiments.external_runtimes') }}" class="button is-light">{{ _('Back to Plugins') }}</a>
                             </div>
                             {% if runtime_logs %}
                             <div style="display: grid; gap: 10px;">
@@ -26,7 +26,7 @@
                                         <span class="ys-text-xs-hint">{{ entry.timestamp }}</span>
                                         <span class="ys-text-xs-hint">{{ entry.actor }}</span>
                                         {% if entry.branch %}
-                                        <span class="ys-text-xs-hint">branch {{ entry.branch }}</span>
+                                        <span class="ys-text-xs-hint">{{ _('branch %(name)s', name=entry.branch) }}</span>
                                         {% endif %}
                                     </div>
                                     <pre style="margin: 0; white-space: pre-wrap; font-size: 12px; color: #374151; background: #f8fafc; border-radius: 8px; padding: 10px;">{{ entry.output }}</pre>
@@ -34,7 +34,7 @@
                                 {% endfor %}
                             </div>
                             {% else %}
-                            <p class="ys-text-sm-muted">No logs available for this repository.</p>
+                            <p class="ys-text-sm-muted">{{ _('No logs available for this repository.') }}</p>
                             {% endif %}
                         </div>
                     </div>

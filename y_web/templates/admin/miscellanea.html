@@ -10,24 +10,24 @@
         <div class="dashboard-body">
 
             <div class="misc-tabs">
-                <button class="misc-tab active" onclick="switchMiscTab('system-settings')">System Settings</button>
+                <button class="misc-tab active" onclick="switchMiscTab('system-settings')">{{ _('System Settings') }}</button>
                 {% if llm_backend['backend'] is not none %}
-                <button class="misc-tab" onclick="switchMiscTab('llm-management')">LLM Management</button>
+                <button class="misc-tab" onclick="switchMiscTab('llm-management')">{{ _('LLM Management') }}</button>
                 {% endif %}
-                <button class="misc-tab" onclick="switchMiscTab('demographics')">Demographics & Attributes</button>
-                <button class="misc-tab" onclick="switchMiscTab('content-behavior')">Content & Behavior</button>
-                <button class="misc-tab" onclick="switchMiscTab('opinion-dynamics')">Opinion Dynamics</button>
+                <button class="misc-tab" onclick="switchMiscTab('demographics')">{{ _('Demographics & Attributes') }}</button>
+                <button class="misc-tab" onclick="switchMiscTab('content-behavior')">{{ _('Content & Behavior') }}</button>
+                <button class="misc-tab" onclick="switchMiscTab('opinion-dynamics')">{{ _('Opinion Dynamics') }}</button>
             </div>
 
             <!-- Demographics & Attributes Tab (merged Agent Attributes + Demographics) -->
             <div id="tab-demographics" class="misc-tab-content">
                 <div class="misc-section-description">
-                    <strong>Demographics & Attributes:</strong> Configure demographic characteristics (languages, nationalities) and social attributes (political leanings, education levels, professions) that define the agents in your simulations.
+                    <strong>{{ _('Demographics & Attributes:') }}</strong> {{ _('Configure demographic characteristics (languages, nationalities) and social attributes (political leanings, education levels, professions) that define the agents in your simulations.') }}
                 </div>
 
                 <div class="misc-grid">
                     <div class="misc-compact-box" id="box-political-leanings">
-                        <h3>Political Leanings</h3>
+                        <h3>{{ _('Political Leanings') }}</h3>
 
                         <div class="box-content">
 
@@ -39,18 +39,18 @@
                         </div>
 
  <div class="box-content ys-mt-30">
- <h4 class="ys-section-label">New Political Leaning</h4>
+ <h4 class="ys-section-label">{{ _('New Political Leaning') }}</h4>
                             <form action="/admin/create_leaning" method="POST">
                                 <div class="box-lines">
                                     <div class="box-line">
-                                        <span class="left">Name</span>
+                                        <span class="left">{{ _('Name') }}</span>
                                         <span class="right" ><input type="text" name="leaning"
                                                                                        class="input"></span>
                                     </div>
                                 </div>
                                 <div class="button-wrap">
                                     <button class="button is-solid primary-button is-fullwidth">
-                                        Create
+                                        {{ _('Create') }}
                                     </button>
                                 </div>
                             </form>
@@ -58,7 +58,7 @@
                     </div>
 
                     <div class="misc-compact-box" id="box-education-levels">
-                        <h3>Education Levels</h3>
+                        <h3>{{ _('Education Levels') }}</h3>
 
                         <div class="box-content">
 
@@ -70,18 +70,18 @@
                         </div>
 
  <div class="box-content ys-mt-30">
- <h4 class="ys-section-label">New Education Level</h4>
+ <h4 class="ys-section-label">{{ _('New Education Level') }}</h4>
                             <form action="/admin/create_education" method="POST">
                                 <div class="box-lines">
                                     <div class="box-line">
-                                        <span class="left">Name</span>
+                                        <span class="left">{{ _('Name') }}</span>
                                         <span class="right" ><input type="text" name="education_level"
                                                                                        class="input"></span>
                                     </div>
                                 </div>
                                 <div class="button-wrap">
                                     <button class="button is-solid primary-button is-fullwidth">
-                                        Create
+                                        {{ _('Create') }}
                                     </button>
                                 </div>
                             </form>
@@ -89,7 +89,7 @@
                     </div>
 
                     <div class="misc-compact-box" id="box-professions">
-                        <h3>Professions</h3>
+                        <h3>{{ _('Professions') }}</h3>
 
                         <div class="box-content">
                             <div id="profession_table"></div>
@@ -100,23 +100,23 @@
                         </div>
 
  <div class="box-content ys-mt-30">
- <h4 class="ys-section-label">New Profession</h4>
+ <h4 class="ys-section-label">{{ _('New Profession') }}</h4>
                             <form action="/admin/create_profession" method="POST">
                                 <div class="box-lines">
                                     <div class="box-line">
-                                        <span class="left">Name</span>
+                                        <span class="left">{{ _('Name') }}</span>
                                         <span class="right" ><input type="text" name="profession"
                                                                                        class="input"></span>
                                     </div>
                                     <div class="box-line">
-                                        <span class="left">Category</span>
+                                        <span class="left">{{ _('Category') }}</span>
                                         <span class="right" ><input type="text" name="background"
                                                                                        class="input"></span>
                                     </div>
                                 </div>
                                 <div class="button-wrap">
                                     <button class="button is-solid primary-button is-fullwidth">
-                                        Create
+                                        {{ _('Create') }}
                                     </button>
                                 </div>
                             </form>
@@ -124,7 +124,7 @@
                     </div>
 
                     <div class="misc-compact-box" id="box-languages">
-                        <h3>Languages</h3>
+                        <h3>{{ _('Languages') }}</h3>
 
                         <div class="box-content">
                             <div id="language_table"></div>
@@ -132,17 +132,17 @@
                         </div>
 
  <div class="box-content ys-mt-30">
- <h4 class="ys-section-label">New Language</h4>
+ <h4 class="ys-section-label">{{ _('New Language') }}</h4>
                             <form action="/admin/create_language" method="POST">
                                 <div class="box-lines">
                                     <div class="box-line">
-                                        <span class="left">Name</span>
+                                        <span class="left">{{ _('Name') }}</span>
                                         <span class="right"><input type="text" name="language" class="input"></span>
                                     </div>
                                 </div>
                                 <div class="button-wrap">
                                     <button class="button is-solid primary-button is-fullwidth">
-                                        Create
+                                        {{ _('Create') }}
                                     </button>
                                 </div>
                             </form>
@@ -150,7 +150,7 @@
                     </div>
 
                     <div class="misc-compact-box" id="box-nationalities">
-                        <h3>Nationalities</h3>
+                        <h3>{{ _('Nationalities') }}</h3>
 
                         <div class="box-content">
                             <div id="nationality_table"></div>
@@ -158,17 +158,17 @@
                         </div>
 
  <div class="box-content ys-mt-30">
- <h4 class="ys-section-label">New Nationality</h4>
+ <h4 class="ys-section-label">{{ _('New Nationality') }}</h4>
                             <form action="/admin/create_nationality" method="POST">
                                 <div class="box-lines">
                                     <div class="box-line">
-                                        <span class="left">Name</span>
+                                        <span class="left">{{ _('Name') }}</span>
                                         <span class="right"><input type="text" name="nationality" class="input"></span>
                                     </div>
                                 </div>
                                 <div class="button-wrap">
                                     <button class="button is-solid primary-button is-fullwidth">
-                                        Create
+                                        {{ _('Create') }}
                                     </button>
                                 </div>
                             </form>
@@ -176,7 +176,7 @@
                     </div>
 
                     <div class="misc-compact-box" id="box-age-classes">
-                        <h3>Age Classes</h3>
+                        <h3>{{ _('Age Classes') }}</h3>
 
                         <div class="box-content">
                             <div id="age_classes_table"></div>
@@ -186,25 +186,25 @@
                         </div>
 
  <div class="box-content ys-mt-30">
- <h4 class="ys-section-label">New Age Class</h4>
+ <h4 class="ys-section-label">{{ _('New Age Class') }}</h4>
                             <form action="/admin/create_age_class" method="POST">
                                 <div class="box-lines">
                                     <div class="box-line">
-                                        <span class="left">Name</span>
+                                        <span class="left">{{ _('Name') }}</span>
                                         <span class="right"><input type="text" name="name" class="input" required></span>
                                     </div>
                                     <div class="box-line">
-                                        <span class="left">Age Start</span>
+                                        <span class="left">{{ _('Age Start') }}</span>
                                         <span class="right"><input type="number" name="age_start" class="input" min="0" max="150" value="0" required></span>
                                     </div>
                                     <div class="box-line">
-                                        <span class="left">Age End</span>
+                                        <span class="left">{{ _('Age End') }}</span>
                                         <span class="right"><input type="number" name="age_end" class="input" min="0" max="150" value="100" required></span>
                                     </div>
                                 </div>
                                 <div class="button-wrap">
                                     <button class="button is-solid primary-button is-fullwidth">
-                                        Create
+                                        {{ _('Create') }}
                                     </button>
                                 </div>
                             </form>
@@ -217,12 +217,12 @@
             <!-- Content & Behavior Tab -->
             <div id="tab-content-behavior" class="misc-tab-content">
                 <div class="misc-section-description">
-                    <strong>Content & Behavior:</strong> Define content topics, toxicity levels, and activity patterns to create realistic agent behaviors and content interactions within your simulations.
+                    <strong>{{ _('Content & Behavior:') }}</strong> {{ _('Define content topics, toxicity levels, and activity patterns to create realistic agent behaviors and content interactions within your simulations.') }}
                 </div>
 
                 <div class="misc-grid">
                     <div class="misc-compact-box" id="box-topics">
-                        <h3>Topics</h3>
+                        <h3>{{ _('Topics') }}</h3>
 
                         <div class="box-content">
                             <div id="topics_table"></div>
@@ -232,17 +232,17 @@
                         </div>
 
  <div class="box-content ys-mt-30">
- <h4 class="ys-section-label">New Topic</h4>
+ <h4 class="ys-section-label">{{ _('New Topic') }}</h4>
                             <form action="/admin/create_topic" method="POST">
                                 <div class="box-lines">
                                     <div class="box-line">
-                                        <span class="left">Name</span>
+                                        <span class="left">{{ _('Name') }}</span>
                                         <span class="right"><input type="text" name="topic" class="input"></span>
                                     </div>
                                 </div>
                                 <div class="button-wrap">
                                     <button class="button is-solid primary-button is-fullwidth">
-                                        Create
+                                        {{ _('Create') }}
                                     </button>
                                 </div>
                             </form>
@@ -250,7 +250,7 @@
                     </div>
 
                     <div class="misc-compact-box" id="box-toxicity-levels">
-                        <h3>Toxicity Levels</h3>
+                        <h3>{{ _('Toxicity Levels') }}</h3>
 
                         <div class="box-content">
                             <div id="toxicity_table"></div>
@@ -259,18 +259,18 @@
                         </div>
 
  <div class="box-content ys-mt-30">
- <h4 class="ys-section-label">New Toxicity Level</h4>
+ <h4 class="ys-section-label">{{ _('New Toxicity Level') }}</h4>
                             <form action="/admin/create_toxicity_level" method="POST">
                                 <div class="box-lines">
                                     <div class="box-line">
-                                        <span class="left">Name</span>
+                                        <span class="left">{{ _('Name') }}</span>
                                         <span class="right" ><input type="text" name="toxicity_level"
                                                                                        class="input"></span>
                                     </div>
                                 </div>
                                 <div class="button-wrap">
                                     <button class="button is-solid primary-button is-fullwidth">
-                                        Create
+                                        {{ _('Create') }}
                                     </button>
                                 </div>
                             </form>
@@ -281,7 +281,7 @@
                 <!-- Activity Profiles in its own row spanning 2 columns -->
                 <div class="misc-grid misc-grid-2col">
                     <div class="misc-compact-box misc-box-full" id="box-activity-profiles">
-                        <h3>Activity Profiles</h3>
+                        <h3>{{ _('Activity Profiles') }}</h3>
 
                         <div class="box-content">
                             <div id="activity_profiles_table"></div>
@@ -290,16 +290,16 @@
                         </div>
 
  <div class="box-content ys-mt-30">
- <h4 class="ys-section-label">New Activity Profile</h4>
+ <h4 class="ys-section-label">{{ _('New Activity Profile') }}</h4>
                             <form action="/admin/create_activity_profile" method="POST">
                                 <div class="box-lines">
                                     <div class="box-line">
-                                        <span class="left">Profile Name</span>
+                                        <span class="left">{{ _('Profile Name') }}</span>
                                         <span class="right" ><input type="text" name="name" required
-                                                                                       class="input" placeholder="e.g., Morning Active"></span>
+                                                                                       class="input" placeholder="{{ _('e.g., Morning Active') }}"></span>
                                     </div>
                                     <div class="box-line" style="display: block; padding: 15px 0;">
-                                        <label style="display: block; margin-bottom: 12px; font-weight: 500;">Select Active Hours (0-23):</label>
+                                        <label style="display: block; margin-bottom: 12px; font-weight: 500;">{{ _('Select Active Hours (0-23):') }}</label>
                                         <div class="hour-selector">
                                             <div class="hour-toggle"><input type="checkbox" name="hour" value="0" id="hour_0"><label for="hour_0">0</label></div>
                                             <div class="hour-toggle"><input type="checkbox" name="hour" value="1" id="hour_1"><label for="hour_1">1</label></div>
@@ -327,16 +327,16 @@
                                             <div class="hour-toggle"><input type="checkbox" name="hour" value="23" id="hour_23"><label for="hour_23">23</label></div>
                                         </div>
                                         <div class="hour-selector-controls">
-                                            <button type="button" onclick="document.querySelectorAll('.hour-toggle input[type=checkbox]').forEach(cb => cb.checked = true)">Select All</button>
-                                            <button type="button" onclick="document.querySelectorAll('.hour-toggle input[type=checkbox]').forEach(cb => cb.checked = false)">Clear All</button>
-                                            <button type="button" onclick="document.querySelectorAll('.hour-toggle input[type=checkbox]').forEach((cb, i) => cb.checked = i >= 9 && i <= 17)">Business Hours (9-17)</button>
+                                            <button type="button" onclick="document.querySelectorAll('.hour-toggle input[type=checkbox]').forEach(cb => cb.checked = true)">{{ _('Select All') }}</button>
+                                            <button type="button" onclick="document.querySelectorAll('.hour-toggle input[type=checkbox]').forEach(cb => cb.checked = false)">{{ _('Clear All') }}</button>
+                                            <button type="button" onclick="document.querySelectorAll('.hour-toggle input[type=checkbox]').forEach((cb, i) => cb.checked = i >= 9 && i <= 17)">{{ _('Business Hours (9-17)') }}</button>
                                         </div>
                                         <input type="hidden" name="hours" id="hours_input" value="">
                                     </div>
                                 </div>
                                 <div class="button-wrap">
                                     <button type="submit" class="button is-solid primary-button is-fullwidth">
-                                        Create Profile
+                                        {{ _('Create Profile') }}
                                     </button>
                                 </div>
                             </form>
@@ -350,37 +350,37 @@
             <!-- System Settings Tab -->
             <div id="tab-system-settings" class="misc-tab-content active">
                 <div class="misc-section-description">
-                    <strong>System Settings:</strong> Configure system-level settings for the YSocial platform, including telemetry, HPC client monitoring, process monitoring, and system updates.
+                    <strong>{{ _('System Settings:') }}</strong> {{ _('Configure system-level settings for the YSocial platform, including telemetry, HPC client monitoring, process monitoring, and system updates.') }}
                 </div>
 
                 <!-- Row 1: System Updates & Telemetry Settings -->
                 <div class="misc-grid misc-grid-2col">
                     <!-- System Updates -->
                     <div class="misc-compact-box" id="box-system-updates">
-                        <h3>System Updates</h3>
+                        <h3>{{ _('System Updates') }}</h3>
  <div class="help-block ys-mb-15">
-                            <p>Check for new YSocial releases and stay up to date.</p>
+                            <p>{{ _('Check for new YSocial releases and stay up to date.') }}</p>
                         </div>
                         <div style="margin-top: 15px;">
  <button id="check-updates-btn" class="button is-solid primary-button w-100">
-                                <i class="mdi mdi-update"></i> Check for Updates
+                                <i class="mdi mdi-update"></i> {{ _('Check for Updates') }}
                             </button>
                         </div>
  <div id="update-status" class="ys-text-xs-mt">
-                            Click to check if a newer version of YSocial is available.
+                            {{ _('Click to check if a newer version of YSocial is available.') }}
                         </div>
 
                     </div>
 
                     <!-- Telemetry Settings -->
                     <div class="misc-compact-box" id="box-telemetry-settings">
-                        <h3>Telemetry Settings</h3>
+                        <h3>{{ _('Telemetry Settings') }}</h3>
  <div class="help-block ys-mb-15">
-                            <p>Control anonymous usage data collection to help improve YSocial.</p>
+                            <p>{{ _('Control anonymous usage data collection to help improve YSocial.') }}</p>
                         </div>
                         <div class="box-lines">
  <div class="box-line ys-flex-row-pad">
-                                <span class="left" style="flex: 0 0 140px; font-weight: 500;">Telemetry Data</span>
+                                <span class="left" style="flex: 0 0 140px; font-weight: 500;">{{ _('Telemetry Data') }}</span>
  <span class="right ys-flex-row-1">
                                     <label class="switch-small">
                                         <input type="checkbox" id="telemetry_enabled" {% if telemetry_enabled %}checked{% endif %}>
@@ -392,7 +392,7 @@
                         </div>
  <div id="telemetry-message" class="ys-hidden-chip"></div>
  <p class="ys-text-xs-mt">
-                            Enable/disable anonymous usage data collection for improving YSocial.
+                            {{ _('Enable/disable anonymous usage data collection for improving YSocial.') }}
                         </p>
 
                     </div>
@@ -403,15 +403,15 @@
                     <!-- HPC Monitor -->
                     <!-- HPC Monitor -->
                     <div class="misc-compact-box" id="box-hpc-monitor">
-                        <h3>HPC Monitor</h3>
+                        <h3>{{ _('HPC Monitor') }}</h3>
  <div class="help-block ys-mb-15">
-                            <p>Automatic monitoring of HPC client execution status and completion detection.</p>
+                            <p>{{ _('Automatic monitoring of HPC client execution status and completion detection.') }}</p>
                         </div>
 
                         <div id="hpc-monitor-settings-container">
                             <div class="box-lines">
  <div class="box-line ys-flex-row-border">
- <span class="left ys-col-100">Enable</span>
+ <span class="left ys-col-100">{{ _('Enable') }}</span>
  <span class="right ys-flex-row-1">
                                         <label class="switch-small">
                                             <input type="checkbox" id="hpc_monitor_enabled" checked>
@@ -421,34 +421,34 @@
                                     </span>
                                 </div>
  <div class="box-line ys-flex-row-border">
- <span class="left ys-col-100">Interval</span>
+ <span class="left ys-col-100">{{ _('Interval') }}</span>
  <span class="right ys-flex-1-row">
  <input type="number" id="hpc_check_interval_seconds" class="input ys-w-60px" min="1" max="300" value="5">
- <span class="ys-text-sm-gray">sec</span>
+ <span class="ys-text-sm-gray">{{ _('sec') }}</span>
                                     </span>
                                 </div>
  <div class="box-line ys-flex-row-border">
- <span class="left ys-col-100">Max/group</span>
+ <span class="left ys-col-100">{{ _('Max/group') }}</span>
  <span class="right ys-flex-1-row ys-flex-gap-10-ai">
-                                        <label class="switch-small" title="Unlimited when off">
+                                        <label class="switch-small" title="{{ _('Unlimited when off') }}">
                                             <input type="checkbox" id="hpc_group_limit_enabled" checked>
                                             <span class="slider-small round"></span>
                                         </label>
  <input type="number" id="hpc_max_hpc_per_group" class="input ys-w-60px" min="1" value="4">
- <span class="ys-text-sm-gray">or unlimited</span>
+ <span class="ys-text-sm-gray">{{ _('or unlimited') }}</span>
                                     </span>
                                 </div>
  <div class="box-line ys-flex-row-pad">
- <span class="left ys-col-100">Last Check</span>
+ <span class="left ys-col-100">{{ _('Last Check') }}</span>
  <span class="right ys-flex-1">
- <span id="last-hpc-check-time" class="ys-text-sm-gray">Never</span>
+ <span id="last-hpc-check-time" class="ys-text-sm-gray">{{ _('Never') }}</span>
                                     </span>
                                 </div>
                             </div>
 
  <div class="ys-flex-gap-mt">
  <button id="save-hpc-monitor-settings" class="button is-solid primary-button ys-flex-input-sm">
-                                    Save
+                                    {{ _('Save') }}
                                 </button>
                             </div>
 
@@ -459,13 +459,13 @@
                     </div>
 
                     <div class="misc-compact-box" id="box-watchdog">
-                        <h3>Process Watchdog</h3>
+                        <h3>{{ _('Process Watchdog') }}</h3>
  <div class="help-block ys-mb-15">
-                            <p>Monitor and auto-restart hung server/client processes.</p>
+                            <p>{{ _('Monitor and auto-restart hung server/client processes.') }}</p>
                         </div>
                         <div class="box-lines">
  <div class="box-line ys-flex-row-border">
- <span class="left ys-col-100">Enable</span>
+ <span class="left ys-col-100">{{ _('Enable') }}</span>
  <span class="right ys-flex-row-1">
                                     <label class="switch-small">
                                         <input type="checkbox" id="watchdog_enabled" checked>
@@ -475,48 +475,48 @@
                                 </span>
                             </div>
  <div class="box-line ys-flex-row-border">
- <span class="left ys-col-100">Interval</span>
+ <span class="left ys-col-100">{{ _('Interval') }}</span>
  <span class="right ys-flex-1-row">
  <input type="number" id="watchdog_interval" class="input ys-w-60px" 
                                            value="{{ watchdog_interval | default(15) }}" min="1" max="1440">
- <span class="ys-text-sm-gray">min</span>
+ <span class="ys-text-sm-gray">{{ _('min') }}</span>
                                 </span>
                             </div>
  <div class="box-line ys-flex-row-pad">
- <span class="left ys-col-100">Last Run</span>
+ <span class="left ys-col-100">{{ _('Last Run') }}</span>
  <span class="right ys-flex-1">
- <span id="watchdog-last-run" class="ys-text-sm-gray">Never</span>
+ <span id="watchdog-last-run" class="ys-text-sm-gray">{{ _('Never') }}</span>
                                 </span>
                             </div>
                         </div>
  <div class="ys-flex-gap-mt">
  <button id="save-watchdog-interval" class="button is-solid primary-button ys-flex-input-sm">
-                                Save
+                                {{ _('Save') }}
                             </button>
                             <button id="run-watchdog-now" class="button is-solid" style="flex: 1; background-color: #6b7280; color: white; font-size: 0.85em; padding: 6px 10px;">
-                                Run Now
+                                {{ _('Run Now') }}
                             </button>
                         </div>
  <div id="watchdog-status" class="ys-text-xs-mt">
-                            Monitors server/client processes for hangs and auto-restarts them.
+                            {{ _('Monitors server/client processes for hangs and auto-restarts them.') }}
                         </div>
 
                     </div>
 
                     <div class="misc-compact-box" id="box-detoxify-model">
-                        <h3>Local Toxicity Model</h3>
+                        <h3>{{ _('Local Toxicity Model') }}</h3>
                         <div class="help-block ys-mb-15">
-                            <p>Download the Detoxify model once and keep it available offline for future simulations.</p>
+                            <p>{{ _('Download the Detoxify model once and keep it available offline for future simulations.') }}</p>
                         </div>
                         <div class="box-content">
                             <form id="detoxify-download-form">
                                 <div class="box-lines">
                                     <div class="box-line ys-flex-row-border">
-                                        <span class="left ys-col-100">Model</span>
-                                        <span class="right ys-flex-1"><strong>Detoxify</strong> <small class="ys-text-sm-gray">(toxicity annotations)</small></span>
+                                        <span class="left ys-col-100">{{ _('Model') }}</span>
+                                        <span class="right ys-flex-1"><strong>{{ _('Detoxify') }}</strong> <small class="ys-text-sm-gray">{{ _('(toxicity annotations)') }}</small></span>
                                     </div>
                                     <div class="box-line ys-flex-row-border">
-                                        <span class="left ys-col-100">Status</span>
+                                        <span class="left ys-col-100">{{ _('Status') }}</span>
                                         <span class="right ys-flex-1">
                                             <span id="detoxify-status-pill" class="tag {% if detoxify_download_state['status'] == 'ready' %}is-success{% elif detoxify_download_state['status'] == 'running' %}is-info{% elif detoxify_download_state['status'] == 'error' %}is-danger{% else %}is-light{% endif %}">
                                                 {{ detoxify_download_state['status'] | capitalize }}
@@ -524,7 +524,7 @@
                                         </span>
                                     </div>
                                     <div class="box-line ys-flex-row-border">
-                                        <span class="left ys-col-100">Download Path</span>
+                                        <span class="left ys-col-100">{{ _('Download Path') }}</span>
                                         <span class="right ys-flex-1">
                                             <input
                                                 id="detoxify-download-path"
@@ -532,19 +532,19 @@
                                                 name="download_path"
                                                 class="input"
                                                 value="{{ detoxify_model_path }}"
-                                                placeholder="/absolute/path/for/ysocial_models"
+                                                placeholder="{{ _('/absolute/path/for/ysocial_models') }}"
                                                 required
                                             >
                                         </span>
                                     </div>
                                     <div class="box-line ys-flex-row-border">
-                                        <span class="left ys-col-100">Current Model Path</span>
+                                        <span class="left ys-col-100">{{ _('Current Model Path') }}</span>
                                         <span class="right ys-flex-1">
                                             <small><code id="detoxify-current-path">{{ detoxify_download_state['path'] }}</code></small>
                                         </span>
                                     </div>
                                     <div class="box-line ys-flex-row-pad">
-                                        <span class="left ys-col-100">Progress</span>
+                                        <span class="left ys-col-100">{{ _('Progress') }}</span>
                                         <span class="right ys-flex-1">
                                             <div class="progress" style="height: 22px; width: 100%;">
                                                 <div
@@ -566,14 +566,14 @@
                                     {{ detoxify_download_state['message'] or 'The selected path will be reused automatically by new YSocial simulation processes.' }}
                                 </div>
                                 <div id="detoxify-ready-notice" class="notification is-success is-light ys-mt-15 {% if detoxify_download_state['status'] != 'ready' %}is-hidden{% endif %}">
-                                    Detoxify model ready. New simulations will reuse this local cache automatically.
+                                    {{ _('Detoxify model ready. New simulations will reuse this local cache automatically.') }}
                                 </div>
                                 <div id="detoxify-error-notice" class="notification is-danger is-light ys-mt-15 {% if detoxify_download_state['status'] != 'error' %}is-hidden{% endif %}">
                                     {{ detoxify_download_state['message'] if detoxify_download_state['status'] == 'error' else '' }}
                                 </div>
                                 <div class="ys-flex-gap-mt">
                                     <button id="detoxify-download-button" type="submit" class="button is-solid primary-button ys-flex-input-sm">
-                                        Download Model
+                                        {{ _('Download Model') }}
                                     </button>
                                 </div>
                             </form>
@@ -582,15 +582,15 @@
 
                     <!-- About System Settings -->
                     <div class="misc-compact-box" id="box-about-system">
-                        <h3>About System Settings</h3>
+                        <h3>{{ _('About System Settings') }}</h3>
                         <div class="help-block">
-                            <p><strong>Telemetry:</strong> Anonymous usage data helps improve YSocial. No personal data is collected.</p>
+                            <p><strong>{{ _('Telemetry:') }}</strong> {{ _('Anonymous usage data helps improve YSocial. No personal data is collected.') }}</p>
                             <br>
-                            <p><strong>Process Watchdog:</strong> Monitors running experiments and automatically restarts hung processes to ensure continuous operation.</p>
+                            <p><strong>{{ _('Process Watchdog:') }}</strong> {{ _('Monitors running experiments and automatically restarts hung processes to ensure continuous operation.') }}</p>
                             <br>
-                            <p><strong>Log Synchronization:</strong> Prevents data loss during log rotation by periodically reading logs from active experiments.</p>
+                            <p><strong>{{ _('Log Synchronization:') }}</strong> {{ _('Prevents data loss during log rotation by periodically reading logs from active experiments.') }}</p>
                             <br>
-                            <p><strong>System Updates:</strong> Check for new YSocial releases to access the latest features and improvements.</p>
+                            <p><strong>{{ _('System Updates:') }}</strong> {{ _('Check for new YSocial releases to access the latest features and improvements.') }}</p>
                         </div>
                     </div>
                 </div>
@@ -601,34 +601,34 @@
             <!-- LLM Management Tab -->
             <div id="tab-llm-management" class="misc-tab-content">
                 <div class="misc-section-description">
-                    <strong>LLM Management:</strong> Manage your self-hosted Large Language Model server, view available models, and pull new models from the repository.
+                    <strong>{{ _('LLM Management:') }}</strong> {{ _('Manage your self-hosted Large Language Model server, view available models, and pull new models from the repository.') }}
                 </div>
 
                 <div class="misc-grid misc-grid-2col">
                     <!-- LLM Server Status -->
                     <div class="misc-compact-box" id="box-llm-server">
-                        <h3>Self-hosted LLM Server ({{ llm_backend['backend']|upper }})</h3>
+                        <h3>{{ _('Self-hosted LLM Server (%(backend)s)', backend=llm_backend['backend']|upper) }}</h3>
                         <div class="box-content">
                             <div class="box-lines">
                                 {% if llm_backend.get('url') %}
                                 <div class="box-line">
-                                    <span class="left">URL</span>
+                                    <span class="left">{{ _('URL') }}</span>
                                     <span class="right"><small><code>{{ llm_backend['url'] }}</code></small></span>
                                 </div>
                                 {% endif %}
                                 <div class="box-line">
-                                    <span class="left">Installed</span>
+                                    <span class="left">{{ _('Installed') }}</span>
  <span class="right ys-icon-xl"> <i class="mdi mdi-checkbox-blank-circle {% if llm_backend['installed'] %} active {% endif %}"></i> </span>
                                 </div>
                                 <div class="box-line">
-                                    <span class="left">Running</span>
+                                    <span class="left">{{ _('Running') }}</span>
  <span class="right ys-icon-xl"> <i class="mdi mdi-checkbox-blank-circle {% if llm_backend['status'] %} active {% endif %}"></i></span>
                                 </div>
                                 {% if llm_backend['backend'] == 'ollama' and not llm_backend['status'] %}
                                 <div class="box-line">
-                                    <span class="left">Start Ollama</span>
+                                    <span class="left">{{ _('Start Ollama') }}</span>
                                     <span class="right">
-                                        <a class="link-tooltip" {% if not llm_backend['status'] %} href="/admin/start_ollama/" {% endif %} title="Run">
+                                        <a class="link-tooltip" {% if not llm_backend['status'] %} href="/admin/start_ollama/" {% endif %} title="{{ _('Run') }}">
  <i class="mdi mdi-play-box-outline {% if not llm_backend['status'] %} active {% endif %} ys-icon-lg"></i>
                                         </a>
                                     </span>
@@ -636,8 +636,8 @@
                                 {% endif %}
                                 {% if llm_backend['backend'] == 'vllm' and not llm_backend['status'] %}
                                 <div class="box-line">
- <span class="left ys-text-090">vLLM server not running. Start manually:<br>
-                                    <small><code>vllm serve &lt;model&gt; --host 0.0.0.0 --port 8000</code></small>
+ <span class="left ys-text-090">{{ _('vLLM server not running. Start manually:') }}<br>
+                                    <small><code>{{ _('vllm serve <model> --host 0.0.0.0 --port 8000') }}</code></small>
                                     </span>
                                 </div>
                                 {% endif %}
@@ -648,13 +648,12 @@
                     {% if llm_backend['backend'] == 'ollama' %}
                     <!-- Add LLM Model (Ollama only) -->
                     <div class="misc-compact-box" id="box-add-llm-model">
-                        <h3>Add LLM Model</h3>
+                        <h3>{{ _('Add LLM Model') }}</h3>
                          <div class="box-content">
                             <div class="box-lines">
                                  <div class="box-line">
                                     <span class="left">
-                                        If the model you want to use is not available, you can pull it from the Ollama server.
-                                        For a list of available models refer to the <a href="https://ollama.com/search">Ollama directory</a>.
+                                        {{ _('If the model you want to use is not available, you can pull it from the Ollama server. For a list of available models refer to the %(link)s.', link=wrap('a', _('Ollama directory'), href='https://ollama.com/search')) }}
                                     </span>
                                  </div>
                             </div>
@@ -666,7 +665,7 @@
                             <form action="/admin/ollama_pull" enctype="multipart/form-data" method="POST">
                             <div class="box-lines">
                                 <div class="box-line">
-                                    <span class="left">Model Name</span>
+                                    <span class="left">{{ _('Model Name') }}</span>
                                     <span class="right">
                                         <input type="text" name="model_name" class="input" value="">
                                     </span>
@@ -677,7 +676,7 @@
 
                                     <div class="button-wrap">
                                     <button class="button is-solid primary-button is-fullwidth">
-                                        Download Model
+                                        {{ _('Download Model') }}
                                     </button>
                                 </div>
                                     </span>
@@ -700,7 +699,7 @@
                                 </div>
                                  </span>
                                     <span class="right" style="height: 22px; width: 10%;">
-                                        <a href="/admin/ollama_cancel_pull/{{ pull[0] }}" title="Delete">
+                                        <a href="/admin/ollama_cancel_pull/{{ pull[0] }}" title="{{ _('Delete') }}">
  <i class="mdi mdi-delete ys-icon-xl"></i>
                                     </a>
                                     </span>
@@ -721,7 +720,7 @@
                 <!-- Available LLMs Table (full width) -->
  <div class="misc-grid misc-grid-1col ys-mt-20">
                     <div class="misc-compact-box" id="box-available-llms">
-                        <h3>Available LLMs</h3>
+                        <h3>{{ _('Available LLMs') }}</h3>
 
                         <div class="box-content">
                             <div id="llm-models-table"></div>
@@ -741,13 +740,13 @@
             <!-- Opinion Dynamics Tab -->
             <div id="tab-opinion-dynamics" class="misc-tab-content">
                 <div class="misc-section-description">
-                    <strong>Opinion Dynamics:</strong> Configure opinion groups and distributions for opinion dynamics simulations. Define opinion ranges and statistical distributions to model agent opinions.
+                    <strong>{{ _('Opinion Dynamics:') }}</strong> {{ _('Configure opinion groups and distributions for opinion dynamics simulations. Define opinion ranges and statistical distributions to model agent opinions.') }}
                 </div>
 
                 <div class="misc-grid misc-grid-2col">
                     <!-- Opinion Groups Box -->
                     <div class="misc-compact-box" id="box-opinion-groups">
-                        <h3>Opinion Groups</h3>
+                        <h3>{{ _('Opinion Groups') }}</h3>
 
                         <div class="box-content">
                             <div id="opinion_groups_table"></div>
@@ -757,25 +756,25 @@
                         </div>
 
  <div class="box-content ys-mt-30">
- <h4 class="ys-section-label">New Opinion Group</h4>
+ <h4 class="ys-section-label">{{ _('New Opinion Group') }}</h4>
                             <form action="/admin/create_opinion_group" method="POST">
                                 <div class="box-lines">
                                     <div class="box-line">
-                                        <span class="left">Name</span>
+                                        <span class="left">{{ _('Name') }}</span>
                                         <span class="right"><input type="text" name="name" class="input" required></span>
                                     </div>
                                     <div class="box-line">
-                                        <span class="left">Lower Bound</span>
+                                        <span class="left">{{ _('Lower Bound') }}</span>
                                         <span class="right"><input type="number" name="lower_bound" class="input" min="0" max="1" step="0.01" value="0" required></span>
                                     </div>
                                     <div class="box-line">
-                                        <span class="left">Upper Bound</span>
+                                        <span class="left">{{ _('Upper Bound') }}</span>
                                         <span class="right"><input type="number" name="upper_bound" class="input" min="0" max="1" step="0.01" value="1" required></span>
                                     </div>
                                 </div>
                                 <div class="button-wrap">
                                     <button class="button is-solid primary-button is-fullwidth">
-                                        Create
+                                        {{ _('Create') }}
                                     </button>
                                 </div>
                             </form>
@@ -784,7 +783,7 @@
 
                     <!-- Opinion Distributions Box -->
                     <div class="misc-compact-box" id="box-opinion-distributions">
-                        <h3>Opinion Distributions</h3>
+                        <h3>{{ _('Opinion Distributions') }}</h3>
 
                         <div class="box-content">
                             <div id="opinion_distributions_table"></div>
@@ -794,26 +793,26 @@
                         </div>
 
  <div class="box-content ys-mt-30">
- <h4 class="ys-section-label">New Opinion Distribution</h4>
+ <h4 class="ys-section-label">{{ _('New Opinion Distribution') }}</h4>
                             <form action="/admin/create_opinion_distribution" method="POST" id="opinion-dist-form">
                                 <div class="box-lines">
                                     <div class="box-line">
-                                        <span class="left">Name</span>
+                                        <span class="left">{{ _('Name') }}</span>
                                         <span class="right"><input type="text" name="name" id="dist-name" class="input" required></span>
                                     </div>
                                     <div class="box-line">
-                                        <span class="left">Distribution Type</span>
+                                        <span class="left">{{ _('Distribution Type') }}</span>
                                         <span class="right">
                                             <select name="distribution_type" id="dist-type" class="input" onchange="updateDistributionParams()" required>
-                                                <option value="">Select...</option>
-                                                <option value="uniform">Uniform</option>
-                                                <option value="beta">Beta</option>
-                                                <option value="normal">Normal</option>
-                                                <option value="exponential">Exponential</option>
-                                                <option value="gamma">Gamma</option>
-                                                <option value="binomial">Binomial</option>
-                                                <option value="poisson">Poisson</option>
-                                                <option value="lognormal">Log-Normal</option>
+                                                <option value="">{{ _('Select...') }}</option>
+                                                <option value="uniform">{{ _('Uniform') }}</option>
+                                                <option value="beta">{{ _('Beta') }}</option>
+                                                <option value="normal">{{ _('Normal') }}</option>
+                                                <option value="exponential">{{ _('Exponential') }}</option>
+                                                <option value="gamma">{{ _('Gamma') }}</option>
+                                                <option value="binomial">{{ _('Binomial') }}</option>
+                                                <option value="poisson">{{ _('Poisson') }}</option>
+                                                <option value="lognormal">{{ _('Log-Normal') }}</option>
                                             </select>
                                         </span>
                                     </div>
@@ -824,7 +823,7 @@
                                 <input type="hidden" name="parameters" id="dist-params-json">
                                 <div class="button-wrap">
                                     <button type="submit" class="button is-solid primary-button is-fullwidth">
-                                        Create
+                                        {{ _('Create') }}
                                     </button>
                                 </div>
                             </form>
