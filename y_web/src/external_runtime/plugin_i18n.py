@@ -151,3 +151,58 @@ def init_plugin_i18n(app) -> None:
     app.jinja_env.filters["plugin_text"] = lambda text, domain: plugin_gettext(
         domain, text
     )
+
+
+# Manifest keys whose string values are shown to users (same list the extractor uses).
+_MANIFEST_TEXT_KEYS = frozenset(
+    {
+        "name", "display_name", "description", "label", "title", "help",
+        "placeholder", "tooltip", "category", "group", "summary",
+    }
+)
+
+
+def domain_for_repo(repo_key: str) -> str | None:
+    """Return the i18n domain registered by plugin *repo_key*, if any."""
+    for domain, config in _DOMAINS.items():
+        if config["repo_key"] == repo_key:
+            return domain
+    return None
+
+
+def localize_text(repo_key: str, text):
+    """Translate one manifest string of plugin *repo_key* (unchanged without a catalog)."""
+    domain = domain_for_repo(repo_key)
+    if not domain or not isinstance(text, str) or not text.strip():
+        return text
+    return plugin_gettext(domain, text.strip())
+
+
+def localize_manifest(repo_key: str, data):
+    """Return a copy of manifest-shaped *data* with its user-visible strings translated.
+
+    Mirrors ``scripts/i18n/manifest_extractor.py``: only the keys in ``_MANIFEST_TEXT_KEYS``
+    are translated, and a parameter's ``name`` (an identifier) never is.
+    """
+    domain = domain_for_repo(repo_key)
+    if not domain:
+        return data
+
+    def walk(obj):
+        if isinstance(obj, dict):
+            is_parameter = "name" in obj and ("type" in obj or "section" in obj)
+            out = {}
+            for key, value in obj.items():
+                if isinstance(value, str):
+                    if key in _MANIFEST_TEXT_KEYS and not (key == "name" and is_parameter) and any(c.isalpha() for c in value):
+                        out[key] = plugin_gettext(domain, value.strip())
+                    else:
+                        out[key] = value
+                else:
+                    out[key] = walk(value)
+            return out
+        if isinstance(obj, list):
+            return [walk(v) for v in obj]
+        return obj
+
+    return walk(data)

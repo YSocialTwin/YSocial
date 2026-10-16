@@ -188,3 +188,23 @@ def test_backend_validation_reports_bad_i18n_key(tmp_path):
     spec = types.SimpleNamespace(key="p", path=tmp_path)
     _validate_optional_extension_keys(spec, {"i18n": {"domain": "Bad"}}, report)
     assert report["errors"] and "i18n" not in report
+
+
+def test_localize_manifest_translates_visible_text_only(plugin_app):
+    manifest = {
+        "display_name": "Modules",
+        "description": "Hello %(name)s",
+        "parameters": [{"name": "Modules", "type": "str", "label": "Modules", "default": "Modules"}],
+        "module_id": "Modules",
+    }
+    with plugin_app.test_request_context("/", headers={"Accept-Language": "it"}):
+        out = plugin_i18n.localize_manifest("demo_plugin", manifest)
+        assert plugin_i18n.localize_text("demo_plugin", "Modules") == "Moduli"
+    assert out["display_name"] == "Moduli"
+    assert out["parameters"][0]["label"] == "Moduli"
+    # identifiers and defaults are data, not text
+    assert out["parameters"][0]["name"] == "Modules"
+    assert out["parameters"][0]["default"] == "Modules"
+    assert out["module_id"] == "Modules"
+    assert manifest["display_name"] == "Modules"  # the input is not modified
+    assert plugin_i18n.localize_manifest("unknown_plugin", manifest) is manifest

@@ -207,7 +207,12 @@ def _decorate_repo(repo: dict, spec, plugins_index) -> dict:
         repo["plugin_repository_url"] = repo["repo_url"]
     if repo.get("group") == "frontend_plugins" and repo.get("installed"):
         try:
-            repo["frontend_modules_report"] = validate_frontend_suite(repo["key"])
+            report = validate_frontend_suite(repo["key"])
+            if report and report.get("modules"):
+                from y_web.src.external_runtime.plugin_i18n import localize_manifest
+
+                report = {**report, "modules": localize_manifest(repo["key"], report["modules"])}
+            repo["frontend_modules_report"] = report
         except Exception:
             repo["frontend_modules_report"] = None
     if repo.get("group") == "backend_settings":
@@ -259,12 +264,17 @@ def _make_entry(key: str, repos: list[dict]) -> dict:
         state, state_label = "missing", "Not installed"
     first = repos[0]
     togglable = [r for r in repos if r.get("plugin_togglable")]
+    from y_web.src.external_runtime.plugin_i18n import localize_text
+
+    description = (
+        paired["description"] if paired else (first.get("plugin_description") or "")
+    )
+    if not paired:
+        description = localize_text(first["key"], description)
     return {
         "key": key,
-        "label": paired["label"] if paired else first["label"],
-        "description": (
-            paired["description"] if paired else (first.get("plugin_description") or "")
-        ),
+        "label": paired["label"] if paired else localize_text(first["key"], first["label"]),
+        "description": description,
         "category": first.get("plugin_category_label")
         or first.get("category_label")
         or "",

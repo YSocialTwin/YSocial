@@ -1126,14 +1126,15 @@ input:checked + .slider-small:before { transform: translateX(16px); }
   /* ══════════════════════════════════════════════════════════════════
    * Frontend Adds-on frontend plugin suite — module list, per-module config
    * ══════════════════════════════════════════════════════════════════ */
-  const STATUS_LABELS = {
-    active: ['Active', 'is-ok'],
-    disabled: ['Disabled', ''],
-    available: ['Available', ''],
-    not_configured: ['Needs configuration', 'is-err'],
-    incompatible: ['Incompatible', 'is-err'],
-    error: ['Error', 'is-err'],
-  };
+  // Built on demand: the browser catalog is fetched asynchronously, after this script runs.
+  const statusLabels = () => ({
+    active: [YI18n.t('Active'), 'is-ok'],
+    disabled: [YI18n.t('Disabled'), ''],
+    available: [YI18n.t('Available'), ''],
+    not_configured: [YI18n.t('Needs configuration'), 'is-err'],
+    incompatible: [YI18n.t('Incompatible'), 'is-err'],
+    error: [YI18n.t('Error'), 'is-err'],
+  });
 
   async function loadFrontendAddsOnSettings(expId, repoKey) {
     const box = document.getElementById('box-suite-' + repoKey);
@@ -1314,7 +1315,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
     }
 
     list.innerHTML = modules.map(function (m, idx) {
-      const statusInfo = STATUS_LABELS[m.status] || [m.status, ''];
+      const statusInfo = statusLabels()[m.status] || [m.status, ''];
       const sections = m.parameter_sections && m.parameter_sections.length
         ? m.parameter_sections
         : [{ key: 'general', label: YI18n.t('Parameters') }];

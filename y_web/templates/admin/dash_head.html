@@ -132,6 +132,29 @@
                     </div>
                 </div>
             </div>
+            {% if available_languages()|length > 1 %}
+            <div class="dropdown is-hoverable is-right toolbar-menu language-dropdown-wrap">
+                <div class="dropdown-trigger">
+                    <button class="button is-solid live-button has-icon language-menu-button" aria-haspopup="true" aria-controls="language-menu" title="{{ _('Language') }}" aria-label="{{ _('Language') }}">
+                        <i data-feather="globe"></i>
+                        <span class="btn-text">{{ get_locale()|string|upper }}</span>
+                        <i data-feather="chevron-down" style="margin-left: 0.35rem; width: 14px; height: 14px;"></i>
+                    </button>
+                </div>
+                <div class="dropdown-menu" id="language-menu" role="menu">
+                    <div class="dropdown-content">
+                        <form method="POST" action="/set-language" class="language-switcher">
+                            <input type="hidden" name="next" value="{{ request.full_path.rstrip('?') }}">
+                            {% for code, name in available_languages() %}
+                            <button type="submit" name="lang" value="{{ code }}" class="dropdown-item{% if get_locale()|string == code %} is-active{% endif %}">
+                                {{ name }}
+                            </button>
+                            {% endfor %}
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
             <div class="dropdown is-hoverable is-right toolbar-menu account-dropdown-wrap">
                 <div class="dropdown-trigger">
                     <button class="button is-solid live-button has-icon account-menu-button" aria-haspopup="true" aria-controls="account-menu" title="{{ _('Account') }}">
@@ -150,14 +173,6 @@
                         <a class="dropdown-item" href="/admin/visibility_settings">
                             {{ _('Share Experiments') }}
                         </a>
-                        <form method="POST" action="/set-language" class="language-switcher">
-                            <input type="hidden" name="next" value="{{ request.full_path.rstrip('?') }}">
-                            {% for code, name in available_languages() %}
-                            <button type="submit" name="lang" value="{{ code }}" class="dropdown-item{% if get_locale()|string == code %} is-active{% endif %}">
-                                {{ name }}
-                            </button>
-                            {% endfor %}
-                        </form>
                         <a class="dropdown-item" href="/logout">
                             {{ _('Log Out') }}
                         </a>

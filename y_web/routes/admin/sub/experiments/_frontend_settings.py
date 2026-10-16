@@ -500,8 +500,14 @@ def frontend_plugin_suite_settings_get(repo_key):
         .all()
     }
 
+    from y_web.src.external_runtime.plugin_i18n import (
+        localize_manifest,
+        localize_text,
+    )
+
     modules = []
     for manifest in report["modules"]:
+        manifest = localize_manifest(repo_key, manifest)
         module_id = manifest.get("module_id")
         row = rows.get(module_id)
         shown_sections, shown_params = _manifest_for_platform(
@@ -533,7 +539,7 @@ def frontend_plugin_suite_settings_get(repo_key):
             "installed": True,
             "valid": report["valid"],
             "platform_type": exp.platform_type,
-            "suite": report.get("suite"),
+            "suite": localize_manifest(repo_key, report.get("suite")),
             "suite_errors": report.get("errors") or [],
             "modules": modules,
         }
