@@ -30,11 +30,6 @@ from manifest_extractor import extract_plugin_manifests  # noqa: E402
 
 SKIP_DIRS = ["tests", "test", "node_modules", "_to_delete", "__pycache__", "docs", "venv", ".venv"]
 JS_CALL = re.compile(r"""YI18n\.(?:t|tn)\(\s*(?:'((?:\\.|[^'\\])*)'|"((?:\\.|[^"\\])*)")""")
-KEYWORDS = {
-    "_": None, "gettext": None, "ngettext": (1, 2),
-    "N_": None,  # mark-only: translated later with _(value)
-    "T": None, "TH": None, "TN": (1, 2), "TW": (2,),
-}
 PH = re.compile(r"\{(\w+)\}")
 # Python messages are wrapped in ``_()``; templates call ``plugin_gettext('<domain>', 'text')`` or a local macro named ``T``.
 KEYWORDS = {
@@ -42,7 +37,11 @@ KEYWORDS = {
     "gettext": None,
     "ngettext": (1, 2),
     "plugin_gettext": (2,),
+    "N_": None,  # mark only: the value is translated later with _(value)
     "T": (1,),
+    "TH": (1,),
+    "TN": (1, 2),
+    "TW": (2,),
 }
 METHODS = [("**.py", "python"), ("**/templates/**.html", "jinja2")]
 OPTIONS = {"**/templates/**.html": {"extensions": "jinja2.ext.i18n"}}
