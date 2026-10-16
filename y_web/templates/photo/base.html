@@ -1616,6 +1616,7 @@
         {% block photo_extra_head %}{% endblock %}
         {% include 'shared/platform_ui_gating.html' %}
     </style>
+    <script src="{{ url_for('static', filename='assets/js/i18n.js') }}" defer></script>
 </head>
 <body class="photo-base-body {% block photo_body_class %}{% endblock %}">
 {% include 'shared/browser_sync.html' %}
