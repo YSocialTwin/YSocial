@@ -78,8 +78,8 @@ class TextCollector(HTMLParser):
         self._script = None
 
     def handle_starttag(self, tag, attrs):
-        if tag in ("style",):
-            self.skip += 1
+        if tag in ("style", "code", "pre", "kbd"):
+            self.skip += 1  # literal code and styles are not translatable text
         if tag == "script":
             d = dict(attrs)
             if "src" not in d:
@@ -93,7 +93,7 @@ class TextCollector(HTMLParser):
                     self.attrs.append(v.strip())
 
     def handle_endtag(self, tag):
-        if tag in ("style", "script"):
+        if tag in ("style", "script", "code", "pre", "kbd"):
             self.skip = max(0, self.skip - 1)
         if tag == "script" and self._script is not None:
             self.inline_scripts.append("".join(self._script))

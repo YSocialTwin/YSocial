@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-16 15:19+0000\n"
+"POT-Creation-Date: 2026-10-16 15:22+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -75,6 +75,26 @@ msgstr ""
 "utenti. Ogni pagina ha un nome, una descrizione, un tipo e delle parole chiave."
 
 #, python-format
+msgid "%(platform)s Memory Embeddings"
+msgstr "Embedding della memoria di %(platform)s"
+
+#, python-format
+msgid "%(user)s (%(n)s interactions)"
+msgstr "%(user)s (%(n)s interazioni)"
+
+#, python-format
+msgid "%(user)s (%(n)s interventions)"
+msgstr "%(user)s (%(n)s interventi)"
+
+#, python-format
+msgid "%(user)s (%(n)s recs)"
+msgstr "%(user)s (%(n)s raccomandazioni)"
+
+#, python-format
+msgid "%(user)s (deg %(n)s)"
+msgstr "%(user)s (grado %(n)s)"
+
+#, python-format
 msgid "(%(count)s total)"
 msgstr "(%(count)s in totale)"
 
@@ -120,11 +140,20 @@ msgstr "/absolute/path/for/ysocial_models"
 msgid "1. Create one or more Agent Populations"
 msgstr "1. Crea una o più popolazioni di agenti"
 
+msgid "1. Select Population Segmentation Dimensions (Optional)"
+msgstr "1. Seleziona le dimensioni di segmentazione della popolazione (facoltativo)"
+
+msgid "2. Configure Opinion Distributions for Each Topic"
+msgstr "2. Configura le distribuzioni di opinione per ogni argomento"
+
 msgid "2. Create an Experiment"
 msgstr "2. Crea un esperimento"
 
 msgid "3. Configure one or more Clients"
 msgstr "3. Configura uno o più client"
+
+msgid "3. Select Opinion Update Rule"
+msgstr "3. Seleziona la regola di aggiornamento delle opinioni"
 
 msgid "4. Run the Simulation"
 msgstr "4. Avvia la simulazione"
@@ -166,8 +195,14 @@ msgstr ""
 "Un client gestisce una popolazione di agenti che interagiscono nella simulazione. Ogni client "
 "funziona in modo indipendente, con la propria configurazione e le proprie impostazioni LLM."
 
+msgid "A discussion thread."
+msgstr "Una discussione."
+
 msgid "A population is a group of agents/pages that are used in a simulation."
 msgstr "Una popolazione è un gruppo di agenti/pagine usati in una simulazione."
+
+msgid "A subset of agent's interests."
+msgstr "Un sottoinsieme degli interessi dell'agente."
 
 msgid "API Configuration"
 msgstr "Configurazione API"
@@ -196,6 +231,12 @@ msgstr "Dettagli dell'account"
 msgid "Account information and API configurations for this user."
 msgstr "Informazioni dell'account e configurazioni API di questo utente."
 
+msgid "Accounts"
+msgstr "Account"
+
+msgid "Action Selection"
+msgstr "Scelta dell'azione"
+
 msgid "Actions"
 msgstr "Azioni"
 
@@ -209,6 +250,9 @@ msgstr ""
 
 msgid "Activate run-scoped memory"
 msgstr "Attiva la memoria limitata all'esecuzione"
+
+msgid "Active Alter"
+msgstr "Alter attivo"
 
 msgid "Active Audience (~70% validation activity)"
 msgstr "Pubblico attivo (~70% di attività di convalida)"
@@ -227,6 +271,9 @@ msgid "Active experiments grouped by their project group. Click on a group heade
 msgstr ""
 "Esperimenti attivi raggruppati per gruppo di progetto. Clicca sull'intestazione di un gruppo per "
 "espanderlo o comprimerlo."
+
+msgid "Active propaganda topics in this experiment:"
+msgstr "Argomenti di propaganda attivi in questo esperimento:"
 
 msgid "Activity & Engagement Configuration"
 msgstr "Configurazione di attività e coinvolgimento"
@@ -363,11 +410,17 @@ msgstr "Archetipi degli agenti e transizioni"
 msgid "Agent Archetypes and Transitions (Optional)"
 msgstr "Archetipi degli agenti e transizioni (facoltativo)"
 
+msgid "Agent Features"
+msgstr "Caratteristiche degli agenti"
+
 msgid "Agent Memory (Run-Scoped)"
 msgstr "Memoria degli agenti (limitata all'esecuzione)"
 
 msgid "Agent Name"
 msgstr "Nome dell'agente"
+
+msgid "Agent Opinion Evolution"
+msgstr "Evoluzione delle opinioni degli agenti"
 
 msgid "Agent Populations"
 msgstr "Popolazioni di agenti"
@@ -393,17 +446,50 @@ msgstr "Tipo di agente:"
 msgid "Agent Workspace"
 msgstr "Area di lavoro degli agenti"
 
+msgid "Agent age"
+msgstr "Età dell'agente"
+
+msgid "Agent archetype persona"
+msgstr "Persona dell'archetipo dell'agente"
+
+msgid "Agent gender"
+msgstr "Genere dell'agente"
+
 msgid "Agent interaction and engagement parameters."
 msgstr "Parametri di interazione e coinvolgimento degli agenti."
 
+msgid "Agent name"
+msgstr "Nome dell'agente"
+
+msgid "Agent nationality"
+msgstr "Nazionalità dell'agente"
+
+msgid "Agent profession"
+msgstr "Professione dell'agente"
+
 msgid "Agent type"
 msgstr "Tipo di agente"
+
+msgid "Agent's political leaning"
+msgstr "Orientamento politico dell'agente"
+
+msgid "Agent-Handler Dialogue"
+msgstr "Dialogo agente-gestore"
 
 msgid "Agent-Specific Configuration"
 msgstr "Configurazione specifica degli agenti"
 
 msgid "Agents"
 msgstr "Agenti"
+
+msgid "Agents Pre-prompts"
+msgstr "Pre-prompt degli agenti"
+
+msgid "Agents update opinions based on similarity with others"
+msgstr "Gli agenti aggiornano le opinioni in base alla somiglianza con gli altri"
+
+msgid "Agents use LLM to evaluate and update opinions"
+msgstr "Gli agenti usano l'LLM per valutare e aggiornare le opinioni"
 
 msgid "Agents' Actions Relevance"
 msgstr "Rilevanza delle azioni degli agenti"
@@ -422,6 +508,9 @@ msgstr "Aggregazione:"
 
 msgid "Agreeableness"
 msgstr "Gradevolezza"
+
+msgid "Agreeableness."
+msgstr "Gradevolezza."
 
 msgid "All Groups"
 msgstr "Tutti i gruppi"
@@ -503,6 +592,9 @@ msgstr "Configurazione degli archetipi"
 msgid "Archetype Distribution (%)"
 msgstr "Distribuzione degli archetipi (%)"
 
+msgid "Archetype Personas"
+msgstr "Persone degli archetipi"
+
 msgid "Are you using YSocial for your research? Please cite us!"
 msgstr "Usi YSocial per la tua ricerca? Citaci!"
 
@@ -524,6 +616,9 @@ msgstr "Profili e percentuali assegnati"
 msgid "Assigned Resources"
 msgstr "Risorse assegnate"
 
+msgid "Assignment Notes"
+msgstr "Note sull'assegnazione"
+
 msgid "Associate Prof."
 msgstr "Professore associato"
 
@@ -542,8 +637,20 @@ msgstr "Almeno un simbolo speciale"
 msgid "At least one uppercase letter"
 msgstr "Almeno una lettera maiuscola"
 
+msgid "Attacker Agents"
+msgstr "Agenti attaccanti"
+
+msgid "Attackers"
+msgstr "Attaccanti"
+
 msgid "Attention Budget"
 msgstr "Budget di attenzione"
+
+msgid "Author Drill-down"
+msgstr "Approfondimento sull'autore"
+
+msgid "Author Recommendation Drill-down"
+msgstr "Approfondimento sulle raccomandazioni dell'autore"
 
 msgid "Author type"
 msgstr "Tipo di autore"
@@ -577,6 +684,9 @@ msgstr "%(name)s disponibili"
 msgid "Available Categories"
 msgstr "Categorie disponibili"
 
+msgid "Available Distributions:"
+msgstr "Distribuzioni disponibili:"
+
 msgid "Available Header Images"
 msgstr "Immagini di copertina disponibili"
 
@@ -604,6 +714,9 @@ msgstr "Immagini del profilo disponibili"
 msgid "Available Profiles (Drag to assign)"
 msgstr "Profili disponibili (trascina per assegnare)"
 
+msgid "Available Variables"
+msgstr "Variabili disponibili"
+
 msgid ""
 "Available and installed plugins. Open a plugin to install or update it and to follow the output "
 "of the operation. Microblogging and Forum each include a server and a client, which you install "
@@ -613,12 +726,24 @@ msgstr ""
 "l'output dell'operazione. Microblogging e Forum comprendono ciascuno un server e un client, che "
 "si installano e si aggiornano separatamente dalla pagina del plugin."
 
+msgid "Available emotions"
+msgstr "Emozioni disponibili"
+
 msgid ""
 "Available only when the \"Post & Comment Annotation\" module is enabled for this experiment "
 "(Frontend Add-ons)."
 msgstr ""
 "Disponibile solo quando il modulo «Annotazione di post e commenti» è attivo per questo "
 "esperimento (componenti aggiuntivi del frontend)."
+
+msgid "Average Aggregate Trends"
+msgstr "Tendenze aggregate medie"
+
+msgid "Average Reward"
+msgstr "Ricompensa media"
+
+msgid "Average Stress"
+msgstr "Stress medio"
 
 msgid "Average degree"
 msgstr "Grado medio"
@@ -696,11 +821,23 @@ msgstr "Profilo di personalità Big Five"
 msgid "Big Five Personality profile"
 msgstr "Profilo di personalità Big Five"
 
+msgid "Big-5 Personality Traits"
+msgstr "Tratti di personalità Big Five"
+
+msgid "Big-5 personality traits"
+msgstr "Tratti di personalità Big Five"
+
 msgid "Binomial"
 msgstr "Binomial"
 
 msgid "Bluesky Data"
 msgstr "dati di Bluesky"
+
+msgid "Bounded Confidence"
+msgstr "Fiducia limitata"
+
+msgid "Bounded Confidence Parameters"
+msgstr "Parametri della fiducia limitata"
 
 msgid "Brief explanation of the client's purpose"
 msgstr "Breve spiegazione dello scopo del client"
@@ -710,6 +847,12 @@ msgstr "Broadcaster"
 
 msgid "Broadcaster %"
 msgstr "Broadcaster %"
+
+msgid "Broadcaster Persona"
+msgstr "Persona Broadcaster"
+
+msgid "Broadcaster:"
+msgstr "Broadcaster:"
 
 msgid "Bulk Assign Users to Experiment"
 msgstr "Assegna in blocco gli utenti all'esperimento"
@@ -737,6 +880,12 @@ msgstr "Esprimi un voto"
 
 msgid "Category"
 msgstr "Categoria"
+
+msgid "Category Threshold"
+msgstr "Soglia della categoria"
+
+msgid "Central catalog"
+msgstr "Catalogo centrale"
 
 msgid "Change the user's email address."
 msgstr "Modifica l'indirizzo email dell'utente."
@@ -775,6 +924,12 @@ msgstr "Scegli il file ZIP..."
 msgid "Choose a source experiment from the selected group."
 msgstr "Scegli un esperimento di origine dal gruppo selezionato."
 
+msgid "Choose an account…"
+msgstr "Scegli un account…"
+
+msgid "Choose an author…"
+msgstr "Scegli un autore…"
+
 msgid "Choose an existing group or type a new one"
 msgstr "Scegli un gruppo esistente o scrivine uno nuovo"
 
@@ -786,6 +941,9 @@ msgstr "Scegli il file con l'elenco degli archi..."
 
 msgid "Choose from various network topologies with configurable parameters."
 msgstr "Scegli tra varie topologie di rete con parametri configurabili."
+
+msgid "Choose how agent opinions are updated during the simulation."
+msgstr "Scegli come vengono aggiornate le opinioni degli agenti durante la simulazione."
 
 msgid "Choose one of the active experiments below to enter the simulation."
 msgstr "Scegli uno degli esperimenti attivi qui sotto per entrare nella simulazione."
@@ -800,8 +958,14 @@ msgstr ""
 msgid "Choose the language of the dashboard for this user."
 msgstr "Scegli la lingua della dashboard per questo utente."
 
+msgid "Choose whether to consider only the interlocutor's opinion or also first-order friends' opinions"
+msgstr "Scegli se considerare solo l'opinione dell'interlocutore o anche quelle degli amici di primo grado"
+
 msgid "Choose which metadata chips are displayed below each post."
 msgstr "Scegli quali etichette di metadati mostrare sotto ogni post."
+
+msgid "Churn"
+msgstr "Ricambio"
 
 msgid "Clear"
 msgstr "Cancella"
@@ -828,6 +992,13 @@ msgid ""
 msgstr ""
 "Clicca su «Convalida il modello» per verificare che minicpm-v:latest sia disponibile. Questo "
 "attiva le azioni sulle immagini."
+
+msgid ""
+"Click on dimensions to add or remove them from segmentation. Active dimensions are shown in blue."
+" Without selection, a global \"All Population\" segment is used."
+msgstr ""
+"Clicca sulle dimensioni per aggiungerle o rimuoverle dalla segmentazione. Le dimensioni attive "
+"sono in blu. Senza selezione si usa un segmento globale «Tutta la popolazione»."
 
 msgid "Click tags to toggle them. Selected tags are used as the available favorite filter pool."
 msgstr ""
@@ -901,6 +1072,9 @@ msgstr "Chiudi"
 msgid "Cognitive NetSci"
 msgstr "Cognitive NetSci"
 
+msgid "Cold Start Strategy"
+msgstr "Strategia di avvio a freddo"
+
 msgid "Cold Start Window"
 msgstr "Finestra di avvio a freddo"
 
@@ -913,8 +1087,14 @@ msgstr "Combina tutte le funzioni attive"
 msgid "Comma-separated values"
 msgstr "Valori separati da virgole"
 
+msgid "Comment"
+msgstr "Commento"
+
 msgid "Comment / reply"
 msgstr "Commento / risposta"
+
+msgid "Comment Image"
+msgstr "Immagine del commento"
 
 msgid "Comment a Post"
 msgstr "Commenta un post"
@@ -1037,6 +1217,20 @@ msgstr ""
 " cicli eccessivi di risposte nelle conversazioni."
 
 msgid ""
+"Configure how many entries are retrieved from RSS feeds, Reddit endpoints, and database fallbacks"
+" during forum simulations."
+msgstr ""
+"Configura quante voci vengono recuperate da feed RSS, endpoint Reddit e fallback del database "
+"durante le simulazioni del forum."
+
+msgid ""
+"Configure how opinions are distributed across different population segments for each simulation "
+"topic."
+msgstr ""
+"Configura come le opinioni sono distribuite tra i diversi segmenti della popolazione per ogni "
+"argomento della simulazione."
+
+msgid ""
 "Configure lightweight, run-scoped memory. Agents remember who they interacted with, how it went "
 "(agreement/conflict/trust/humor), and a gist of threads/community. Memory resets between separate"
 " runs."
@@ -1074,6 +1268,20 @@ msgstr ""
 "Configura i campi specifici della condivisione di foto. Le percentuali sono applicate a ogni "
 "agente generato e i filtri preferiti definiscono il gruppo usato per l'assegnazione casuale dei "
 "tag agli agenti."
+
+msgid ""
+"Configure system and user prompt templates for the HPC simulator. These templates use structured "
+"system/user patterns for LLM interactions."
+msgstr ""
+"Configura i modelli di prompt di sistema e utente per il simulatore HPC. Questi modelli usano "
+"schemi strutturati sistema/utente per le interazioni con gli LLM."
+
+msgid ""
+"Configure system prompts that guide agent and page behavior during simulation. These instructions"
+" are sent to the LLM before each action."
+msgstr ""
+"Configura i prompt di sistema che guidano il comportamento di agenti e pagine durante la "
+"simulazione. Queste istruzioni vengono inviate all'LLM prima di ogni azione."
 
 msgid ""
 "Configure system-level settings for the YSocial platform, including telemetry, HPC client "
@@ -1122,11 +1330,26 @@ msgstr "Configura la durata e le impostazioni comportamentali del runtime degli 
 msgid "Configure the duration and behavioral settings for the simulation run."
 msgstr "Configura la durata e le impostazioni comportamentali dell'esecuzione della simulazione."
 
+#, python-format
+msgid ""
+"Configure the embedding backend used by %(server)s for semantic memory indexing and retrieval. If"
+" left unconfigured, memory falls back to lexical retrieval only."
+msgstr ""
+"Configura il backend di embedding usato da %(server)s per indicizzare e recuperare la memoria "
+"semantica. Se non configurato, la memoria ripiega solo sul recupero lessicale."
+
 msgid "Configure the local diffusion model to dynamically generate images during the simulation."
 msgstr "Configura il modello di diffusione locale per generare immagini durante la simulazione."
 
 msgid "Configure the primary LLM only when it is required by the selected ad hoc agent type."
 msgstr "Configura l'LLM principale solo se richiesto dal tipo di agente ad hoc selezionato."
+
+msgid ""
+"Configure the stress/reward event weights, coupling values, and optional churn logic used by the "
+"experiment client runtime."
+msgstr ""
+"Configura i pesi degli eventi di stress/ricompensa, i valori di accoppiamento e la logica "
+"facoltativa di ricambio usati dal runtime del client dell'esperimento."
 
 msgid "Configure the vision LLM for image content analysis and transcription."
 msgstr "Configura l'LLM di visione per l'analisi e la trascrizione dei contenuti delle immagini."
@@ -1149,6 +1372,9 @@ msgstr "Connetti"
 msgid "Conscientiousness"
 msgstr "Coscienziosità"
 
+msgid "Conscientiousness."
+msgstr "Coscienziosità."
+
 msgid "Consistent/Cautious"
 msgstr "Coerente/Cauto"
 
@@ -1160,6 +1386,9 @@ msgstr "Contenuti e comportamento:"
 
 msgid "Content & Deployment"
 msgstr "Contenuti e distribuzione"
+
+msgid "Content Analysis"
+msgstr "Analisi dei contenuti"
 
 msgid "Content Creator (~75% posts/comments)"
 msgstr "Creatore di contenuti (~75% di post/commenti)"
@@ -1180,8 +1409,14 @@ msgstr "Sistema di raccomandazione dei contenuti"
 msgid "Content Visibility (hours)"
 msgstr "Visibilità dei contenuti (ore)"
 
+msgid "Content of a post"
+msgstr "Contenuto di un post"
+
 msgid "Content:"
 msgstr "Contenuti:"
+
+msgid "Contents"
+msgstr "Contenuti"
 
 msgid "Context Preset"
 msgstr "Profilo del contesto"
@@ -1214,6 +1449,26 @@ msgstr ""
 
 msgid "Core parameters"
 msgstr "Parametri di base"
+
+msgid "Core simulation handler instructions for processing agent actions."
+msgstr "Istruzioni di base del gestore della simulazione per elaborare le azioni degli agenti."
+
+msgid "Count"
+msgstr "Conteggio"
+
+msgid "Coupling"
+msgstr "Accoppiamento"
+
+msgid "Coupling values control how reward buffers stress and how stress dampens reward accumulation."
+msgstr ""
+"I valori di accoppiamento controllano come la ricompensa attenua lo stress e come lo stress "
+"riduce l'accumulo di ricompensa."
+
+msgid "Coupling: reward buffers stress"
+msgstr "Accoppiamento: la ricompensa attenua lo stress"
+
+msgid "Coupling: stress reduces reward"
+msgstr "Accoppiamento: lo stress riduce la ricompensa"
 
 msgid "Create"
 msgstr "Crea"
@@ -1306,11 +1561,20 @@ msgstr "Livello creatore %"
 msgid "Critical/Judgmental"
 msgstr "Critico/Giudicante"
 
+msgid "Curious, asks questions, seeks new perspectives"
+msgstr "Curioso, fa domande, cerca nuove prospettive"
+
 msgid "Current"
 msgstr "Attuale"
 
+msgid "Current Day"
+msgstr "Giorno corrente"
+
 msgid "Current Email"
 msgstr "Email attuale"
+
+msgid "Current Hour"
+msgstr "Ora corrente"
 
 msgid "Current LLM"
 msgstr "LLM attuale"
@@ -1320,6 +1584,9 @@ msgstr "Percorso attuale del modello"
 
 msgid "Current Recommender"
 msgstr "Sistema di raccomandazione attuale"
+
+msgid "Current Researcher Visibility"
+msgstr "Visibilità attuale dei ricercatori"
 
 msgid "Current execution progress"
 msgstr "Avanzamento dell'esecuzione in corso"
@@ -1357,6 +1624,9 @@ msgstr "Personalizza i tassi orari"
 msgid "Customize agent activity patterns by hour."
 msgstr "Personalizza gli schemi di attività degli agenti per ora."
 
+msgid "DB Fallback Limit"
+msgstr "Limite del fallback del database"
+
 msgid "Daily"
 msgstr "Giornaliero"
 
@@ -1366,8 +1636,23 @@ msgstr "Budget giornaliero"
 msgid "Daily agent creation and removal rates"
 msgstr "Tassi giornalieri di creazione e rimozione degli agenti"
 
+msgid "Daily target toxicity, with moderator intervention volume shown on the secondary axis."
+msgstr ""
+"Tossicità giornaliera del bersaglio, con il volume degli interventi dei moderatori sull'asse "
+"secondario."
+
 msgid "Dashboard language"
 msgstr "Lingua della dashboard"
+
+msgid "Database Fallback"
+msgstr "Fallback del database"
+
+msgid "Day"
+msgstr "Giorno"
+
+#, python-format
+msgid "Day %(day)s, Hour %(hour)s"
+msgstr "Giorno %(day)s, ora %(hour)s"
 
 msgid "Days"
 msgstr "Giorni"
@@ -1380,6 +1665,24 @@ msgstr "Funzione di decadimento"
 
 msgid "Decay Rate"
 msgstr "Tasso di decadimento"
+
+msgid "Decide Follow (System)"
+msgstr "Decidere il follow (sistema)"
+
+msgid "Decide Follow (User)"
+msgstr "Decidere il follow (utente)"
+
+msgid "Decide Reaction"
+msgstr "Decidere la reazione"
+
+msgid "Decide Search Action"
+msgstr "Decidere l'azione di ricerca"
+
+msgid "Decide Secondary Follow (System)"
+msgstr "Decidere il follow secondario (sistema)"
+
+msgid "Decide Secondary Follow (User)"
+msgstr "Decidere il follow secondario (utente)"
 
 msgid "Dedicated creation interface"
 msgstr "Interfaccia di creazione dedicata"
@@ -1414,6 +1717,9 @@ msgstr ""
 "Definisci dati chiave-valore aggiuntivi, come %(example)s. Questi campi vengono esportati come "
 "%(field)s."
 
+msgid "Define agent persona templates and archetype-specific behaviors."
+msgstr "Definisci i modelli di persona degli agenti e i comportamenti specifici degli archetipi."
+
 msgid ""
 "Define content topics, toxicity levels, and activity patterns to create realistic agent behaviors"
 " and content interactions within your simulations."
@@ -1438,8 +1744,14 @@ msgstr ""
 "Definisci nome, descrizione e dimensione della popolazione. Queste impostazioni identificano la "
 "popolazione e stabiliscono il numero di agenti sintetici da generare."
 
+msgid "Defines agent persona and context"
+msgstr "Definisce la persona e il contesto dell'agente"
+
 msgid "Degree exponent (tau1)"
 msgstr "Esponente del grado (tau1)"
+
+msgid "Delay between Reddit requests to reduce throttling risk."
+msgstr "Pausa tra le richieste a Reddit per ridurre il rischio di limitazioni."
 
 msgid "Delete"
 msgstr "Elimina"
@@ -1490,6 +1802,24 @@ msgstr ""
 "Distribuisci questa pagina alle popolazioni di agenti, così che possano interagire con i suoi "
 "contenuti."
 
+msgid "Deployed MoP Agents"
+msgstr "Agenti MoP distribuiti"
+
+msgid "Deployed Moderators"
+msgstr "Moderatori distribuiti"
+
+msgid "Deployed Propaganda Agents"
+msgstr "Agenti di propaganda distribuiti"
+
+msgid "Deployed SA Agents"
+msgstr "Agenti SA distribuiti"
+
+msgid "Describe Image (System)"
+msgstr "Descrivere l'immagine (sistema)"
+
+msgid "Describe Image (User)"
+msgstr "Descrivere l'immagine (utente)"
+
 msgid "Describe the problem (optional):"
 msgstr "Descrivi il problema (facoltativo):"
 
@@ -1527,8 +1857,30 @@ msgstr "Limite di eventi del riepilogo"
 msgid "Digest Update Cadence (rounds)"
 msgstr "Cadenza di aggiornamento del riepilogo (turni)"
 
+msgid "Direct Article URLs"
+msgstr "URL diretti degli articoli"
+
+msgid "Direct URLs"
+msgstr "URL diretti"
+
+#, python-format
+msgid "Direct article URLs remain experiment-specific and are still managed from %(page)s."
+msgstr ""
+"Gli URL diretti degli articoli restano specifici dell'esperimento e si gestiscono ancora da "
+"%(page)s."
+
+msgid ""
+"Direct article URLs remain local to the current experiment because they are typically campaign- "
+"or run-specific."
+msgstr ""
+"Gli URL diretti degli articoli restano locali all'esperimento corrente perché di solito sono "
+"specifici di una campagna o di un'esecuzione."
+
 msgid "Disabled"
 msgstr "Disattivato"
+
+msgid "Disabled by default"
+msgstr "Disattivato per impostazione predefinita"
 
 msgid "Disconnect"
 msgstr "Disconnetti"
@@ -1541,6 +1893,9 @@ msgstr "Non mi piace"
 
 msgid "Distribution Type"
 msgstr "Tipo di distribuzione"
+
+msgid "Distribution of agent opinions across different opinion groups."
+msgstr "Distribuzione delle opinioni degli agenti tra i diversi gruppi di opinione."
 
 msgid "Distribution:"
 msgstr "Distribuzione:"
@@ -1644,6 +1999,9 @@ msgstr "Email"
 
 msgid "Embedding Model"
 msgstr "Modello di embedding"
+
+msgid "Embedding Service"
+msgstr "Servizio di embedding"
 
 msgid "Emotion"
 msgstr "Emozione"
@@ -1793,6 +2151,18 @@ msgstr "Inserisci o seleziona un gruppo..."
 msgid "Enter topic name"
 msgstr "Inserisci il nome dell'argomento"
 
+msgid "Entries per Image Feed"
+msgstr "Voci per feed di immagini"
+
+msgid "Entries per RSS Feed"
+msgstr "Voci per feed RSS"
+
+msgid "Entries per Reddit Feed"
+msgstr "Voci per feed Reddit"
+
+msgid "Epsilon (Confidence Bound)"
+msgstr "Epsilon (soglia di fiducia)"
+
 #, python-format
 msgid "Error %(code)s"
 msgstr "Errore %(code)s"
@@ -1803,11 +2173,32 @@ msgstr "Tempo rimanente stimato:"
 msgid "Europe/Rome"
 msgstr "Europe/Rome"
 
+msgid "Evaluate Opinion (System)"
+msgstr "Valutare l'opinione (sistema)"
+
+msgid "Evaluation Scope"
+msgstr "Ambito di valutazione"
+
+msgid "Event"
+msgstr "Evento"
+
+msgid "Event weights"
+msgstr "Pesi degli eventi"
+
 msgid "Evidence Tail Max"
 msgstr "Massimo della coda di evidenze"
 
+msgid "Evolution of average aggregate stress and reward over time."
+msgstr "Evoluzione nel tempo dello stress e della ricompensa aggregati medi."
+
+msgid "Evolution of opinion group volumes (percentage of agents in each group over time)."
+msgstr "Evoluzione dei volumi dei gruppi di opinione (percentuale di agenti in ciascun gruppo nel tempo)."
+
 msgid "Exception:"
 msgstr "Eccezione:"
+
+msgid "Excerpt"
+msgstr "Estratto"
 
 #, python-format
 msgid "Execution: %(progress)s"
@@ -1815,6 +2206,9 @@ msgstr "Esecuzione: %(progress)s"
 
 msgid "Existing unassigned populations are incompatible with this platform type."
 msgstr "Le popolazioni non assegnate esistenti sono incompatibili con questo tipo di piattaforma."
+
+msgid "Expand plot"
+msgstr "Espandi il grafico"
 
 msgid "Expanded"
 msgstr "Espanso"
@@ -1858,6 +2252,9 @@ msgstr "Partecipazione agli esperimenti"
 msgid "Experiment Schedule"
 msgstr "Pianificazione dell'esperimento"
 
+msgid "Experiment compatibility"
+msgstr "Compatibilità con gli esperimenti"
+
 msgid "Experiment identification and settings."
 msgstr "Identificazione e impostazioni dell'esperimento."
 
@@ -1878,6 +2275,13 @@ msgstr "Esperimento:"
 
 msgid "Experiments"
 msgstr "Esperimenti"
+
+msgid ""
+"Experiments do not assume any embedding backend. Without this configuration, semantic memory "
+"features degrade gracefully to lexical retrieval."
+msgstr ""
+"Gli esperimenti non presuppongono alcun backend di embedding. Senza questa configurazione le "
+"funzioni di memoria semantica ripiegano con gradualità sul recupero lessicale."
 
 msgid "Experiments grouped by project. Click to expand/collapse."
 msgstr "Esperimenti raggruppati per progetto. Clicca per espandere o comprimere."
@@ -1905,6 +2309,12 @@ msgstr "Esploratore"
 msgid "Explorer %"
 msgstr "Esploratore %"
 
+msgid "Explorer Persona"
+msgstr "Persona Esploratore"
+
+msgid "Explorer:"
+msgstr "Esploratore:"
+
 msgid "Exponent parameter"
 msgstr "Parametro esponente"
 
@@ -1923,11 +2333,26 @@ msgstr "Estensioni"
 msgid "External Runtimes"
 msgstr "Runtime esterni"
 
+msgid "Extract Emotions (System)"
+msgstr "Estrarre le emozioni (sistema)"
+
+msgid "Extract Emotions (User)"
+msgstr "Estrarre le emozioni (utente)"
+
+msgid "Extract Topics (System)"
+msgstr "Estrarre gli argomenti (sistema)"
+
+msgid "Extract Topics (User)"
+msgstr "Estrarre gli argomenti (utente)"
+
 msgid "Extravagant/Careless"
 msgstr "Stravagante/Sbadato"
 
 msgid "Extraversion"
 msgstr "Estroversione"
+
+msgid "Extraversion."
+msgstr "Estroversione."
 
 msgid "Extreme"
 msgstr "Estremo"
@@ -1937,6 +2362,9 @@ msgstr "Interesse estremo"
 
 msgid "False"
 msgstr "Falso"
+
+msgid "Faster"
+msgstr "Più veloce"
 
 msgid "Favorite Filters"
 msgstr "Filtri preferiti"
@@ -1949,6 +2377,9 @@ msgstr "Feed e profilo"
 
 msgid "Feed Health"
 msgstr "Stato dei feed"
+
+msgid "Feed Limits"
+msgstr "Limiti dei feed"
 
 msgid "Feed Retrieval Limits"
 msgstr "Limiti di recupero dei feed"
@@ -1964,6 +2395,9 @@ msgstr "Donna"
 
 msgid "Female:"
 msgstr "Donne:"
+
+msgid "Fetch Embedding Models"
+msgstr "Recupera i modelli di embedding"
 
 msgid "Fetch Models"
 msgstr "Recupera i modelli"
@@ -1995,6 +2429,9 @@ msgstr "Azione di follow"
 msgid "Follow Action Decay"
 msgstr "Decadimento dell'azione di follow"
 
+msgid "Follow Decisions"
+msgstr "Decisioni di follow"
+
 msgid "Follow Recommender"
 msgstr "Sistema di raccomandazione dei follow"
 
@@ -2007,11 +2444,28 @@ msgstr "Follow:"
 msgid "Followers:"
 msgstr "Follower:"
 
+msgid "For each topic, select the opinion distribution for every population segment."
+msgstr "Per ogni argomento, seleziona la distribuzione di opinione per ogni segmento della popolazione."
+
 msgid "For how long a content can be proposed by recommender systems"
 msgstr "Per quanto tempo un contenuto può essere proposto dai sistemi di raccomandazione"
 
 msgid "For how long an agent maintain his interest in a topic"
 msgstr "Per quanto tempo un agente mantiene il suo interesse per un argomento"
+
+msgid ""
+"For the currently selected topic, inspect agents targeted by MoP campaigns and compare their "
+"opinion trajectory with the timing of MoP interactions."
+msgstr ""
+"Per l'argomento selezionato, esamina gli agenti presi di mira dalle campagne MoP e confronta la "
+"loro traiettoria di opinione con i tempi delle interazioni MoP."
+
+msgid ""
+"For the currently selected topic, inspect targeted agents and compare their opinion trajectory "
+"with the timing of propaganda interactions."
+msgstr ""
+"Per l'argomento selezionato, esamina gli agenti presi di mira e confronta la loro traiettoria di "
+"opinione con i tempi delle interazioni di propaganda."
 
 msgid "Format: username,email,role,password (one per line)"
 msgstr "Formato: nome utente,email,ruolo,password (uno per riga)"
@@ -2021,6 +2475,18 @@ msgstr "Forum"
 
 msgid "Forum (i.e., Reddit)"
 msgstr "Forum (cioè Reddit)"
+
+msgid "Forum Image Feed Assignment"
+msgstr "Assegnazione dei feed di immagini del forum"
+
+msgid "Forum Image Resources"
+msgstr "Risorse di immagini del forum"
+
+msgid "Forum RSS Feed Assignment"
+msgstr "Assegnazione dei feed RSS del forum"
+
+msgid "Forum RSS Resources"
+msgstr "Risorse RSS del forum"
 
 msgid "Forum uses link-sharing to publish content imported from RSS and feed sources."
 msgstr "Il forum usa la condivisione di link per pubblicare i contenuti importati da RSS e da altre fonti."
@@ -2076,8 +2542,23 @@ msgstr "Distribuzione di genere"
 msgid "Generate"
 msgstr "Genera"
 
+msgid "Generate Comment"
+msgstr "Generare un commento"
+
 msgid "Generate Experiments"
 msgstr "Genera esperimenti"
+
+msgid "Generate News Commentary"
+msgstr "Generare il commento a una notizia"
+
+msgid "Generate Post"
+msgstr "Generare un post"
+
+msgid "Generate Read Reaction"
+msgstr "Generare la reazione alla lettura"
+
+msgid "Generate Share Commentary"
+msgstr "Generare il commento a una condivisione"
 
 msgid "Generate Synthetic Network"
 msgstr "Genera una rete sintetica"
@@ -2096,6 +2577,9 @@ msgstr "Configurazioni generate"
 
 msgid "Generated Slug"
 msgstr "Slug generato"
+
+msgid "Generates text or makes decisions leveraging its profile"
+msgstr "Genera testo o prende decisioni sfruttando il proprio profilo"
 
 msgid "Geometric"
 msgstr "Geometrica"
@@ -2136,6 +2620,20 @@ msgstr "Vai alla home page"
 msgid "Got it"
 msgstr "Ho capito"
 
+msgid "Grant Group Visibility"
+msgstr "Concedi la visibilità al gruppo"
+
+msgid "Grant Visibility"
+msgstr "Concedi la visibilità"
+
+msgid ""
+"Grant or revoke experiment visibility for selected researcher users. Shared researchers can view "
+"and manage stop/delete actions for those experiments."
+msgstr ""
+"Concedi o revoca la visibilità degli esperimenti ai ricercatori selezionati. I ricercatori con "
+"accesso condiviso possono vedere e gestire le azioni di arresto/eliminazione di quegli "
+"esperimenti."
+
 msgid "Grant this user access to participate in an experiment."
 msgstr "Consenti a questo utente di partecipare a un esperimento."
 
@@ -2151,8 +2649,17 @@ msgstr "Guida"
 msgid "HPC"
 msgstr "HPC"
 
+msgid "HPC LLM Prompts Configuration"
+msgstr "Configurazione dei prompt LLM HPC"
+
 msgid "HPC Monitor"
 msgstr "Monitor HPC"
+
+msgid "HPC Prompts Guide"
+msgstr "Guida ai prompt HPC"
+
+msgid "HPC Prompts Structure"
+msgstr "Struttura dei prompt HPC"
 
 msgid "HPC Reset"
 msgstr "Reimpostazione HPC"
@@ -2160,8 +2667,17 @@ msgstr "Reimpostazione HPC"
 msgid "HPC Simulator"
 msgstr "Simulatore HPC"
 
+msgid "HPC prompts use a system/user template pattern:"
+msgstr "I prompt HPC usano uno schema di modelli sistema/utente:"
+
 msgid "Half-life Rounds"
 msgstr "Turni di dimezzamento"
+
+msgid "Handler Actions Provided Instructions"
+msgstr "Istruzioni fornite sulle azioni del gestore"
+
+msgid "Handler Pre-prompts"
+msgstr "Pre-prompt del gestore"
 
 msgid "Hashtag Evolution"
 msgstr "Evoluzione degli hashtag"
@@ -2174,6 +2690,9 @@ msgstr "Impostazioni Hello World"
 
 msgid "Help us improve YSocial: submit the experiment log!"
 msgstr "Aiutaci a migliorare YSocial: invia il log dell'esperimento!"
+
+msgid "Here is the list of available variables:"
+msgstr "Ecco l'elenco delle variabili disponibili:"
 
 msgid ""
 "Here, you can bulk update the recommender systems/LLM used by all agents in the population. Any "
@@ -2196,6 +2715,9 @@ msgstr "Interesse alto"
 msgid "High School"
 msgstr "Diploma superiore"
 
+msgid "High energy, viral-focused, controversial"
+msgstr "Molta energia, orientato alla viralità, controverso"
+
 msgid "Higher-order Modeling"
 msgstr "Modellazione di ordine superiore"
 
@@ -2204,6 +2726,12 @@ msgstr "Tieni premuto Cmd/Ctrl per selezionare più valori."
 
 msgid "Hold Ctrl (Cmd on Mac) to select multiple users"
 msgstr "Tieni premuto Ctrl (Cmd su Mac) per selezionare più utenti"
+
+msgid "Hold Ctrl (Windows/Linux) or Cmd (Mac) to select multiple users."
+msgstr "Tieni premuto Ctrl (Windows/Linux) o Cmd (Mac) per selezionare più utenti."
+
+msgid "Hold Ctrl/Cmd to select multiple interests."
+msgstr "Tieni premuto Ctrl/Cmd per selezionare più interessi."
 
 msgid "Home"
 msgstr "Home"
@@ -2214,8 +2742,14 @@ msgstr "Host"
 msgid "Host Address"
 msgstr "Indirizzo dell'host"
 
+msgid "Host format"
+msgstr "Formato dell'host"
+
 msgid "Host:"
 msgstr "Host:"
+
+msgid "Hour"
+msgstr "Ora"
 
 #, python-format
 msgid "Hour %(hour)s"
@@ -2264,14 +2798,32 @@ msgstr ""
 "Se il modello che vuoi usare non è disponibile, puoi scaricarlo dal server Ollama. Per l'elenco "
 "dei modelli disponibili consulta la %(link)s."
 
+msgid "Image Commentary (System)"
+msgstr "Commento all'immagine (sistema)"
+
+msgid "Image Commentary (User)"
+msgstr "Commento all'immagine (utente)"
+
+msgid "Image Feed Limits"
+msgstr "Limiti dei feed di immagini"
+
+msgid "Image Feeds"
+msgstr "Feed di immagini"
+
 msgid "Image Generation Model"
 msgstr "Modello di generazione di immagini"
 
 msgid "Image Generation Model (Transformer-based)"
 msgstr "Modello di generazione di immagini (basato su transformer)"
 
+msgid "Image Processing"
+msgstr "Elaborazione delle immagini"
+
 msgid "Image Transcription (Optional)"
 msgstr "Trascrizione delle immagini (facoltativo)"
+
+msgid "Image description"
+msgstr "Descrizione dell'immagine"
 
 msgid ""
 "Image sharing/commenting is currently disabled. Fetch the available vision models and select one "
@@ -2285,6 +2837,18 @@ msgstr "Post con immagini pubblicati"
 
 msgid "Importance Mode"
 msgstr "Modalità di importanza"
+
+msgid "Inactive Alter"
+msgstr "Alter inattivo"
+
+msgid "Individual agent opinion trajectories over time (colored by initial opinion group)."
+msgstr "Traiettorie di opinione dei singoli agenti nel tempo (colorate per gruppo di opinione iniziale)."
+
+msgid "Infer Opinion (System)"
+msgstr "Dedurre l'opinione (sistema)"
+
+msgid "Infer Opinion (User)"
+msgstr "Dedurre l'opinione (utente)"
 
 msgid "Inference Backend"
 msgstr "Backend di inferenza"
@@ -2308,11 +2872,17 @@ msgstr ""
 "Informazioni su questo client di simulazione, compresi popolazione assegnata e fonti dei "
 "contenuti."
 
+msgid "Inherited"
+msgstr "Ereditato"
+
 msgid "Initial Number of Agents"
 msgstr "Numero iniziale di agenti"
 
 msgid "Initial Size"
 msgstr "Dimensione iniziale"
+
+msgid "Inspect how recommendations of one author’s posts spread across the population over time."
+msgstr "Esamina come si diffondono nel tempo, nella popolazione, le raccomandazioni dei post di un autore."
 
 msgid ""
 "Inspect nested config values, unlock the ones you want to vary, and generate the full combination"
@@ -2321,6 +2891,20 @@ msgstr ""
 "Esamina i valori annidati della configurazione, sblocca quelli che vuoi variare e genera "
 "l'insieme completo delle combinazioni."
 
+msgid ""
+"Inspect one SA target at a time using aggregate stress/reward trends and the timing of SA "
+"interactions."
+msgstr ""
+"Esamina un bersaglio SA alla volta usando le tendenze aggregate di stress/ricompensa e i tempi "
+"delle interazioni SA."
+
+msgid ""
+"Inspect one moderated target at a time using their toxicity trend and the timing of moderator "
+"interventions."
+msgstr ""
+"Esamina un bersaglio moderato alla volta usando l'andamento della sua tossicità e i tempi degli "
+"interventi dei moderatori."
+
 #, python-format
 msgid "Install Detoxify first from %(link)s to enable toxicity annotation."
 msgstr "Installa prima Detoxify da %(link)s per attivare l'annotazione della tossicità."
@@ -2328,11 +2912,29 @@ msgstr "Installa prima Detoxify da %(link)s per attivare l'annotazione della tos
 msgid "Installed"
 msgstr "Installato"
 
+msgid "Instructions"
+msgstr "Istruzioni"
+
+msgid "Instructions (Topics)"
+msgstr "Istruzioni (argomenti)"
+
+msgid "Instructions (simple)"
+msgstr "Istruzioni (semplici)"
+
+msgid "Instructions for content pages to generate posts and responses."
+msgstr "Istruzioni per le pagine di contenuti per generare post e risposte."
+
+msgid "Instructions that define agent behavior and roleplay characteristics."
+msgstr "Istruzioni che definiscono il comportamento degli agenti e le caratteristiche del gioco di ruolo."
+
 msgid "Inter-block edge probability"
 msgstr "Probabilità di arco tra blocchi"
 
 msgid "Inter-block probability"
 msgstr "Probabilità tra blocchi"
+
+msgid "Interactions"
+msgstr "Interazioni"
 
 msgid "Interest"
 msgstr "Interesse"
@@ -2346,16 +2948,35 @@ msgstr "Livello di interesse"
 msgid "Interest percentage"
 msgstr "Percentuale di interesse"
 
+msgid "Interest tagging"
+msgstr "Etichettatura degli interessi"
+
 msgid "Interested"
 msgstr "Interessato"
 
+msgid "Interests"
+msgstr "Interessi"
+
 msgid "Interests & Opinions"
 msgstr "Interessi e opinioni"
+
+msgid ""
+"Interests remain part of the reusable resource so the same subreddit behaves consistently when "
+"reused across forum simulations."
+msgstr ""
+"Gli interessi restano parte della risorsa riutilizzabile, così lo stesso subreddit si comporta in"
+" modo coerente quando è riusato in più simulazioni del forum."
 
 msgid "Interests, opinion hints, and custom key-value data stored in the dashboard database."
 msgstr ""
 "Interessi, indicazioni di opinione e dati chiave-valore personalizzati salvati nel database della"
 " dashboard."
+
+msgid "Interlocutor + First-Order Friends"
+msgstr "Interlocutore e amici di primo grado"
+
+msgid "Interlocutor Only"
+msgstr "Solo interlocutore"
 
 msgid "Internal Server Error"
 msgstr "Errore interno del server"
@@ -2400,6 +3021,13 @@ msgstr "Esperimenti a cui partecipa"
 msgid "Jupyter Lab"
 msgstr "Jupyter Lab"
 
+msgid ""
+"Keep defaults for small and medium experiments. Increase limits only when you need broader "
+"topical variety or longer-running content pools."
+msgstr ""
+"Mantieni i valori predefiniti per gli esperimenti piccoli e medi. Aumenta i limiti solo se ti "
+"serve una maggiore varietà di temi o insiemi di contenuti più duraturi."
+
 msgid "LFR Benchmark"
 msgstr "Benchmark LFR"
 
@@ -2418,6 +3046,12 @@ msgstr "LLM (trascrizione delle immagini)"
 msgid "LLM Backend"
 msgstr "Backend LLM"
 
+msgid "LLM Evaluation"
+msgstr "Valutazione LLM"
+
+msgid "LLM Evaluation Parameters"
+msgstr "Parametri di valutazione LLM"
+
 msgid "LLM Management"
 msgstr "Gestione LLM"
 
@@ -2426,6 +3060,9 @@ msgstr "Gestione LLM:"
 
 msgid "LLM Model"
 msgstr "Modello LLM"
+
+msgid "LLM Prompts Configuration"
+msgstr "Configurazione dei prompt LLM"
 
 msgid "LLM Server"
 msgstr "Server LLM"
@@ -2491,6 +3128,12 @@ msgstr "Ultimo controllo"
 
 msgid "Last Run"
 msgstr "Ultima esecuzione"
+
+msgid "Latest aggregate reward state binned across tracked agents."
+msgstr "Ultimo stato aggregato di ricompensa, suddiviso in fasce tra gli agenti monitorati."
+
+msgid "Latest aggregate stress state binned across tracked agents."
+msgstr "Ultimo stato aggregato di stress, suddiviso in fasce tra gli agenti monitorati."
 
 msgid "Latest articles from this page's RSS feed."
 msgstr "Ultimi articoli del feed RSS di questa pagina."
@@ -2600,6 +3243,12 @@ msgstr "Uomo"
 msgid "Male:"
 msgstr "Uomini:"
 
+msgid "Manage Shared Image Resources"
+msgstr "Gestisci le risorse di immagini condivise"
+
+msgid "Manage Shared RSS Resources"
+msgstr "Gestisci le risorse RSS condivise"
+
 msgid ""
 "Manage agent-plugin runtimes that can extend this experiment with dedicated ad hoc agent "
 "execution flows."
@@ -2632,6 +3281,16 @@ msgstr "Segna come letto"
 msgid "Master"
 msgstr "Laurea magistrale"
 
+msgid "Master of Puppets Target Drill-down"
+msgstr "Approfondimento sui bersagli di Master of Puppets"
+
+msgid ""
+"Master of Puppets agents are deployed, but no topic-matched target interactions have been "
+"recorded up to the selected time."
+msgstr ""
+"Gli agenti Master of Puppets sono distribuiti, ma fino al momento selezionato non sono state "
+"registrate interazioni con bersagli corrispondenti all'argomento."
+
 msgid "Matrix"
 msgstr "Matrix"
 
@@ -2659,8 +3318,20 @@ msgstr "Max:"
 msgid "Maximum actions"
 msgstr "Azioni massime"
 
+msgid "Maximum articles to process from each standard RSS feed."
+msgstr "Numero massimo di articoli da elaborare per ogni feed RSS standard."
+
+msgid "Maximum entries to load from the database when live feeds are unavailable."
+msgstr "Numero massimo di voci da caricare dal database quando i feed in tempo reale non sono disponibili."
+
+msgid "Maximum images to retrieve from each subreddit-based image feed."
+msgstr "Numero massimo di immagini da recuperare per ogni feed di immagini basato su subreddit."
+
 msgid "Maximum number of replies an agent can make per simulation round"
 msgstr "Numero massimo di risposte che un agente può dare per turno di simulazione"
+
+msgid "Maximum posts to retrieve from Reddit subreddit feeds."
+msgstr "Numero massimo di post da recuperare dai feed dei subreddit di Reddit."
 
 msgid "Mean Duration by Path (seconds)"
 msgstr "Durata media per percorso (secondi)"
@@ -2716,11 +3387,42 @@ msgstr "Varie"
 msgid "Mixing parameter (mu)"
 msgstr "Parametro di mescolamento (mu)"
 
+msgid "MoP Accounts"
+msgstr "Account MoP"
+
 msgid "Model"
 msgstr "Modello"
 
 msgid "Model Name"
 msgstr "Nome del modello"
+
+msgid "Model discovery is enabled only after an Ollama host is provided."
+msgstr "La ricerca dei modelli si attiva solo dopo aver indicato un host Ollama."
+
+msgid "Model selection"
+msgstr "Selezione del modello"
+
+msgid "Moderated Target"
+msgstr "Bersaglio moderato"
+
+msgid "Moderator Actions"
+msgstr "Azioni dei moderatori"
+
+msgid "Moderator Agents"
+msgstr "Agenti moderatori"
+
+msgid "Moderator Target Drill-down"
+msgstr "Approfondimento sui bersagli dei moderatori"
+
+msgid ""
+"Moderator agents are deployed, but no moderated targets have been recorded up to the selected "
+"time."
+msgstr ""
+"Gli agenti moderatori sono distribuiti, ma fino al momento selezionato non sono stati registrati "
+"bersagli moderati."
+
+msgid "Moderators"
+msgstr "Moderatori"
 
 msgid "Monitor and auto-restart hung server/client processes."
 msgstr "Monitora e riavvia automaticamente i processi server/client bloccati."
@@ -2734,6 +3436,9 @@ msgstr ""
 
 msgid "Monitors server/client processes for hangs and auto-restarts them."
 msgstr "Controlla se i processi server/client si bloccano e li riavvia automaticamente."
+
+msgid "Mu (Averaging Weight)"
+msgstr "Mu (peso della media)"
 
 msgid "My Profile"
 msgstr "Il mio profilo"
@@ -2776,8 +3481,17 @@ msgstr "Modello di rete"
 msgid "Network Science"
 msgstr "Scienza delle reti"
 
+msgid "Network Type"
+msgstr "Tipo di rete"
+
 msgid "Neuroticism"
 msgstr "Nevroticismo"
+
+msgid "Neuroticism."
+msgstr "Nevroticismo."
+
+msgid "Neutral (0.5)"
+msgstr "Neutro (0,5)"
 
 msgid "Never"
 msgstr "Mai"
@@ -2857,8 +3571,17 @@ msgstr "Nuovo livello di tossicità"
 msgid "New post"
 msgstr "Nuovo post"
 
+msgid "News"
+msgstr "Notizie"
+
 msgid "News Pages"
 msgstr "Pagine di notizie"
+
+msgid "News article content"
+msgstr "Contenuto di un articolo di notizie"
+
+msgid "News source name"
+msgstr "Nome della fonte di notizie"
 
 msgid "News."
 msgstr "Notizie."
@@ -2902,8 +3625,14 @@ msgstr "Non sono stati trovati file di configurazione per questo esperimento."
 msgid "No experiments yet"
 msgstr "Ancora nessun esperimento"
 
+msgid "No feed description available."
+msgstr "Nessuna descrizione del feed disponibile."
+
 msgid "No groups created yet"
 msgstr "Ancora nessun gruppo creato"
+
+msgid "No interests assigned"
+msgstr "Nessun interesse assegnato"
 
 msgid "No logs available for this repository."
 msgstr "Nessun log disponibile per questo repository."
@@ -2927,11 +3656,28 @@ msgstr "Nessun plugin disponibile."
 msgid "No populations are available for this %(platform)s experiment."
 msgstr "Non ci sono popolazioni disponibili per questo esperimento %(platform)s."
 
+#, python-format
+msgid "No reusable RSS resources are available yet. Create them first in %(link)s."
+msgstr "Non ci sono ancora risorse RSS riutilizzabili. Creale prima in %(link)s."
+
+msgid "No reusable RSS resources stored yet."
+msgstr "Ancora nessuna risorsa RSS riutilizzabile salvata."
+
+#, python-format
+msgid "No reusable image resources are available yet. Create them first in %(link)s."
+msgstr "Non ci sono ancora risorse di immagini riutilizzabili. Creale prima in %(link)s."
+
+msgid "No reusable image resources stored yet."
+msgstr "Ancora nessuna risorsa di immagini riutilizzabile salvata."
+
 msgid "No server configuration file was found for this experiment."
 msgstr "Non è stato trovato il file di configurazione del server per questo esperimento."
 
 msgid "No topics assigned"
 msgstr "Nessun argomento assegnato"
+
+msgid "No visibility grants configured yet."
+msgstr "Ancora nessuna concessione di visibilità configurata."
 
 msgid "Normal"
 msgstr "Normale"
@@ -2996,6 +3742,9 @@ msgstr ""
 "Numero di interazioni iniziali trattate come impronta di memoria piena prima che inizi il "
 "decadimento progressivo."
 
+msgid "Number of pages to fetch at 100 entries per page."
+msgstr "Numero di pagine da recuperare, con 100 voci per pagina."
+
 msgid "Number of posts shown per page when infinite scrolling is disabled"
 msgstr "Numero di post mostrati per pagina quando lo scorrimento infinito è disattivato"
 
@@ -3008,14 +3757,33 @@ msgstr "Numero di argomenti:"
 msgid "OR"
 msgstr "OPPURE"
 
+msgid "Ollama"
+msgstr "Ollama"
+
 msgid "Ollama / OpenAI-compatible"
 msgstr "Ollama / compatibile con OpenAI"
+
+msgid "Ollama Host"
+msgstr "Host Ollama"
 
 msgid "Ollama directory"
 msgstr "raccolta dei modelli Ollama"
 
 msgid "Onboarding screen"
 msgstr "Schermata di onboarding"
+
+msgid "Only Ollama is currently supported for memory embeddings."
+msgstr "Per gli embedding della memoria è attualmente supportato solo Ollama."
+
+msgid ""
+"Only embedding models are listed. Choose one that is actually installed on the target Ollama "
+"instance before saving."
+msgstr ""
+"Sono elencati solo i modelli di embedding. Prima di salvare, scegline uno effettivamente "
+"installato sull'istanza Ollama di destinazione."
+
+msgid "Only embedding-capable models are shown in this selector."
+msgstr "In questo selettore sono mostrati solo i modelli capaci di embedding."
 
 msgid "Only owner/admin/shared researchers can clear logs"
 msgstr ""
@@ -3077,11 +3845,23 @@ msgstr "Apri le dashboard degli esperimenti attivi da un unico pannello compatto
 msgid "Openness to Experience"
 msgstr "Apertura mentale"
 
+msgid "Openness to Experience."
+msgstr "Apertura mentale."
+
 msgid "Operation output"
 msgstr "Output dell'operazione"
 
 msgid "Opinion"
 msgstr "Opinione"
+
+msgid "Opinion Configuration"
+msgstr "Configurazione delle opinioni"
+
+msgid "Opinion Distribution"
+msgstr "Distribuzione di opinione"
+
+msgid "Opinion Distribution Configuration"
+msgstr "Configurazione della distribuzione di opinione"
 
 msgid "Opinion Distributions"
 msgstr "Distribuzioni di opinione"
@@ -3095,11 +3875,17 @@ msgstr "Dinamiche di opinione:"
 msgid "Opinion Evolution"
 msgstr "Evoluzione delle opinioni"
 
+msgid "Opinion Group Trends"
+msgstr "Tendenze dei gruppi di opinione"
+
 msgid "Opinion Groups"
 msgstr "Gruppi di opinione"
 
 msgid "Opinion Modeling"
 msgstr "Modellazione delle opinioni"
+
+msgid "Opinion categories"
+msgstr "Categorie di opinione"
 
 msgid ""
 "Opinion dynamics is enabled for this experiment. After client creation, you will be redirected to"
@@ -3165,6 +3951,9 @@ msgstr "Pagina non trovata"
 msgid "Page Overview"
 msgstr "Panoramica della pagina"
 
+msgid "Page Pre-prompts"
+msgstr "Pre-prompt delle pagine"
+
 msgid "Page identification and RSS feed configuration."
 msgstr "Identificazione della pagina e configurazione del feed RSS."
 
@@ -3173,6 +3962,9 @@ msgstr "Pagine"
 
 msgid "Pair Limit"
 msgstr "Limite per coppia"
+
+msgid "Parse"
+msgstr "Analizza"
 
 msgid "Partially installed"
 msgstr "Installato parzialmente"
@@ -3194,6 +3986,12 @@ msgstr "Metti in pausa il client"
 
 msgid "Persist memory events"
 msgstr "Conserva gli eventi della memoria"
+
+msgid "Persona Configuration"
+msgstr "Configurazione della persona"
+
+msgid "Persona Template"
+msgstr "Modello di persona"
 
 msgid "Personalise your account details."
 msgstr "Personalizza i dati del tuo account."
@@ -3228,6 +4026,9 @@ msgstr "Tipo di piattaforma"
 #, python-format
 msgid "Platform: %(platform)s"
 msgstr "Piattaforma: %(platform)s"
+
+msgid "Play"
+msgstr "Riproduci"
 
 msgid "Please check the URL or go back to the homepage."
 msgstr "Controlla l'URL oppure torna alla home page."
@@ -3333,6 +4134,15 @@ msgstr "Porta: %(port)s"
 msgid "Positive / neutral / negative score"
 msgstr "Punteggio positivo / neutro / negativo"
 
+msgid "Post"
+msgstr "Post"
+
+msgid "Post ID"
+msgstr "ID del post"
+
+msgid "Post author name"
+msgstr "Nome dell'autore del post"
+
 msgid "Post date & time"
 msgstr "Data e ora del post"
 
@@ -3436,6 +4246,73 @@ msgstr "Avanzamento"
 msgid "Prompt Max Chars"
 msgstr "Caratteri massimi del prompt"
 
+msgid "Prompts"
+msgstr "Prompt"
+
+msgid "Prompts (HPC)"
+msgstr "Prompt (HPC)"
+
+msgid "Prompts Customization"
+msgstr "Personalizzazione dei prompt"
+
+#, python-format
+msgid "Prompts can access agent profile variables and can be customized using the syntax %(syntax)s."
+msgstr ""
+"I prompt possono accedere alle variabili del profilo degli agenti e si personalizzano con la "
+"sintassi %(syntax)s."
+
+msgid "Prompts for deciding how to react to posts (like, comment, or ignore)."
+msgstr "Prompt per decidere come reagire ai post (mi piace, commento o ignorare)."
+
+msgid "Prompts for deciding whether to follow users."
+msgstr "Prompt per decidere se seguire gli utenti."
+
+msgid "Prompts for describing and commenting on images."
+msgstr "Prompt per descrivere e commentare le immagini."
+
+msgid "Prompts for emotional reactions to discovered content."
+msgstr "Prompt per le reazioni emotive ai contenuti trovati."
+
+msgid "Prompts for engagement decisions after searching for content."
+msgstr "Prompt per le decisioni di coinvolgimento dopo la ricerca di contenuti."
+
+msgid "Prompts for extracting topics, emotions, and opinions from content."
+msgstr "Prompt per estrarre argomenti, emozioni e opinioni dai contenuti."
+
+msgid "Prompts for generating comments on posts."
+msgstr "Prompt per generare commenti ai post."
+
+msgid "Prompts for generating original social media posts."
+msgstr "Prompt per generare post originali per i social media."
+
+msgid "Prompts for news pages to share articles."
+msgstr "Prompt per le pagine di notizie che condividono articoli."
+
+msgid "Prompts for resharing posts with commentary."
+msgstr "Prompt per ricondividere i post con un commento."
+
+msgid "Prompts support template variables using curly braces:"
+msgstr "I prompt supportano variabili di modello tra parentesi graffe:"
+
+msgid "Propaganda Agents"
+msgstr "Agenti di propaganda"
+
+msgid "Propaganda Target Drill-down"
+msgstr "Approfondimento sui bersagli della propaganda"
+
+msgid ""
+"Propaganda agents are deployed, but no target interactions have been recorded for the selected "
+"topic up to the selected time."
+msgstr ""
+"Gli agenti di propaganda sono distribuiti, ma fino al momento selezionato non sono state "
+"registrate interazioni con i bersagli per l'argomento selezionato."
+
+msgid "Provides instructions and evaluates results (e.g., identifying topics, emotions)"
+msgstr "Fornisce istruzioni e valuta i risultati (ad es. individuando argomenti ed emozioni)"
+
+msgid "Provides specific instructions and input"
+msgstr "Fornisce istruzioni e input specifici"
+
 msgid "Public:"
 msgstr "Pubblico:"
 
@@ -3445,14 +4322,42 @@ msgstr "Guida rapida"
 msgid "RSS Feed"
 msgstr "Feed RSS"
 
+msgid "RSS Feed Limits"
+msgstr "Limiti dei feed RSS"
+
+msgid "RSS Feeds"
+msgstr "Feed RSS"
+
+msgid ""
+"RSS and Reddit JSON feed sources are now stored in the dashboard database and can be reused "
+"across multiple forum experiments."
+msgstr ""
+"Le fonti di feed RSS e JSON di Reddit sono ora salvate nel database della dashboard e possono "
+"essere riusate in più esperimenti del forum."
+
 msgid "RSS-derived posts emitted"
 msgstr "Post derivati da RSS pubblicati"
 
 msgid "Random Network (Erdős-Rényi)"
 msgstr "Rete casuale (Erdős-Rényi)"
 
+msgid "Range: 0-1, Default: 0"
+msgstr "Intervallo: 0-1, predefinito: 0"
+
+msgid "Range: 0-1, Default: 0.25"
+msgstr "Intervallo: 0-1, predefinito: 0,25"
+
+msgid "Range: 0-1, Default: 0.5"
+msgstr "Intervallo: 0-1, predefinito: 0,5"
+
 msgid "Ranking mode"
 msgstr "Modalità di ordinamento"
+
+msgid "Rate Limit (seconds)"
+msgstr "Limite di frequenza (secondi)"
+
+msgid "Rate Limiting"
+msgstr "Limitazione della frequenza"
 
 msgid "Rate interest and opinion for each topic."
 msgstr "Indica interesse e opinione per ogni argomento."
@@ -3465,6 +4370,9 @@ msgstr "Dimensione del lotto di agenti Ray"
 
 msgid "Reaction weight"
 msgstr "Peso delle reazioni"
+
+msgid "Reactions"
+msgstr "Reazioni"
 
 msgid "Read"
 msgstr "Letto"
@@ -3493,8 +4401,23 @@ msgstr "Prima la recenza"
 msgid "Recency horizon for semantic search candidates."
 msgstr "Orizzonte di recenza per i candidati della ricerca semantica."
 
+msgid "Recent MoP Interactions"
+msgstr "Interazioni MoP recenti"
+
+msgid "Recent Moderator Interventions"
+msgstr "Interventi recenti dei moderatori"
+
 msgid "Recent News"
 msgstr "Notizie recenti"
+
+msgid "Recent Propaganda Interactions"
+msgstr "Interazioni di propaganda recenti"
+
+msgid "Recent SA Interactions"
+msgstr "Interazioni SA recenti"
+
+msgid "Recognition"
+msgstr "Riconoscimento"
 
 msgid "Recommendation Limit"
 msgstr "Limite di raccomandazioni"
@@ -3508,11 +4431,23 @@ msgstr "Esposizione e copertura delle raccomandazioni"
 msgid "Recommendations"
 msgstr "Raccomandazioni"
 
+msgid "Recommended Posts"
+msgstr "Post raccomandati"
+
+msgid "Recommended Use"
+msgstr "Uso consigliato"
+
 msgid "Recommender info"
 msgstr "Informazioni sul sistema di raccomandazione"
 
 msgid "Recsys Evolution"
 msgstr "Evoluzione del sistema di raccomandazione"
+
+msgid "Reddit Pages to Fetch"
+msgstr "Pagine Reddit da recuperare"
+
+msgid "Reddit Retrieval"
+msgstr "Recupero da Reddit"
 
 msgid "Reddit-like placeholders are enabled across the forum interface."
 msgstr "I segnaposto in stile Reddit sono attivi in tutta l'interfaccia del forum."
@@ -3609,6 +4544,9 @@ msgstr "Assegnista di ricerca"
 msgid "Researcher"
 msgstr "Ricercatore"
 
+msgid "Researcher Users"
+msgstr "Utenti ricercatori"
+
 msgid "Reset HPC Experiment"
 msgstr "Reimposta l'esperimento HPC"
 
@@ -3631,6 +4569,27 @@ msgstr "Riavvio necessario"
 msgid "Resume Client"
 msgstr "Riprendi il client"
 
+msgid "Reusable Forum Image Resources"
+msgstr "Risorse di immagini del forum riutilizzabili"
+
+msgid "Reusable Forum RSS Resources"
+msgstr "Risorse RSS del forum riutilizzabili"
+
+msgid "Reusable Image Resources"
+msgstr "Risorse di immagini riutilizzabili"
+
+msgid "Reusable RSS Resources"
+msgstr "Risorse RSS riutilizzabili"
+
+msgid "Reusable RSS feeds"
+msgstr "Feed RSS riutilizzabili"
+
+msgid "Reusable image source"
+msgstr "Fonte di immagini riutilizzabile"
+
+msgid "Reusable subreddit resources"
+msgstr "Risorse subreddit riutilizzabili"
+
 msgid "Reuse Actors"
 msgstr "Riusa gli attori"
 
@@ -3640,6 +4599,15 @@ msgid ""
 msgstr ""
 "Riusa i controlli standard di pianificazione ed esecuzione, senza la configurazione di memoria, "
 "raccomandazioni, rete o archetipi specifica del forum."
+
+msgid "Revoke Group Visibility"
+msgstr "Revoca la visibilità al gruppo"
+
+msgid "Revoke Visibility"
+msgstr "Revoca la visibilità"
+
+msgid "Reward Distribution"
+msgstr "Distribuzione della ricompensa"
 
 msgid "Rewiring probability (p)"
 msgstr "Probabilità di ricablaggio (p)"
@@ -3652,6 +4620,18 @@ msgstr "Il ruolo può essere: admin, researcher, teacher, user o student"
 
 msgid "Role must be: user or student (you can only create participants)"
 msgstr "Il ruolo deve essere: user o student (puoi creare solo partecipanti)"
+
+msgid "Roleplay"
+msgstr "Gioco di ruolo"
+
+msgid "Roleplay (Comment & Share)"
+msgstr "Gioco di ruolo (commento e condivisione)"
+
+msgid "Roleplay (base)"
+msgstr "Gioco di ruolo (base)"
+
+msgid "Roleplay (simple)"
+msgstr "Gioco di ruolo (semplice)"
 
 msgid "Rounds to wait before replying to the same user again"
 msgstr "Turni da attendere prima di rispondere di nuovo allo stesso utente"
@@ -3680,8 +4660,20 @@ msgstr "In esecuzione"
 msgid "Running a YSocial Experiment"
 msgstr "Eseguire un esperimento YSocial"
 
+msgid "Runtime compatibility"
+msgstr "Compatibilità del runtime"
+
+msgid "SA Interactions"
+msgstr "Interazioni SA"
+
 msgid "SHOW"
 msgstr "MOSTRA"
+
+msgid "Sample Images"
+msgstr "Immagini di esempio"
+
+msgid "Sample Size:"
+msgstr "Dimensione del campione:"
 
 msgid "Save"
 msgstr "Salva"
@@ -3695,11 +4687,29 @@ msgstr "Salva le probabilità delle azioni"
 msgid "Save Archetypes"
 msgstr "Salva gli archetipi"
 
+msgid "Save Configuration"
+msgstr "Salva la configurazione"
+
+msgid "Save Embedding Settings"
+msgstr "Salva le impostazioni di embedding"
+
+msgid "Save Feed Limits"
+msgstr "Salva i limiti dei feed"
+
+msgid "Save Forum Feed Assignment"
+msgstr "Salva l'assegnazione dei feed del forum"
+
+msgid "Save Image Feed Assignment"
+msgstr "Salva l'assegnazione dei feed di immagini"
+
 msgid "Save Memory"
 msgstr "Salva la memoria"
 
 msgid "Save Simulation Parameters"
 msgstr "Salva i parametri della simulazione"
+
+msgid "Save Stress / Reward Settings"
+msgstr "Salva le impostazioni di stress / ricompensa"
 
 msgid "Save Topics"
 msgstr "Salva gli argomenti"
@@ -3715,6 +4725,42 @@ msgstr "Salva le interazioni"
 
 msgid "Save language"
 msgstr "Salva la lingua"
+
+#, python-format
+msgid "Saved Image Resources (%(n)s)"
+msgstr "Risorse di immagini salvate (%(n)s)"
+
+#, python-format
+msgid "Saved RSS Resources (%(n)s)"
+msgstr "Risorse RSS salvate (%(n)s)"
+
+msgid ""
+"Saving here validates the feed URL immediately and stores the canonical metadata returned by the "
+"feed source."
+msgstr ""
+"Il salvataggio qui convalida subito l'URL del feed e memorizza i metadati canonici restituiti "
+"dalla fonte."
+
+msgid "Saving here verifies the subreddit feed can be parsed before it becomes available to experiments."
+msgstr ""
+"Il salvataggio qui verifica che il feed del subreddit possa essere analizzato prima che diventi "
+"disponibile agli esperimenti."
+
+#, python-format
+msgid ""
+"Saving this page still writes the standard %(file)s experiment file, so forum execution keeps the"
+" same contract."
+msgstr ""
+"Salvare questa pagina scrive comunque il file standard %(file)s dell'esperimento, quindi "
+"l'esecuzione del forum mantiene lo stesso contratto."
+
+#, python-format
+msgid ""
+"Saving this page still writes the standard %(file)s experiment file, so the existing forum "
+"runtime remains unchanged."
+msgstr ""
+"Salvare questa pagina scrive comunque il file standard %(file)s dell'esperimento, quindi il "
+"runtime del forum esistente non cambia."
 
 msgid "Scale Free (Barabási-Albert)"
 msgstr "Scale-free (Barabási-Albert)"
@@ -3794,6 +4840,14 @@ msgstr "Seleziona un esperimento a cui partecipare"
 msgid "Select an agent type to load compatible populations."
 msgstr "Seleziona un tipo di agente per caricare le popolazioni compatibili."
 
+msgid "Select an author to inspect the reach and recommendation distribution of their posts."
+msgstr ""
+"Seleziona un autore per esaminare la copertura e la distribuzione delle raccomandazioni dei suoi "
+"post."
+
+msgid "Select an embedding model"
+msgstr "Seleziona un modello di embedding"
+
 msgid "Select an experiment above to inspect its configuration matrix."
 msgstr "Seleziona un esperimento qui sopra per esaminarne la matrice di configurazione."
 
@@ -3855,14 +4909,50 @@ msgstr ""
 "Seleziona quando questa pagina sarà attiva per pubblicare contenuti. Il profilo predefinito "
 "«Sempre attivo» mantiene la pagina attiva 24 ore su 24."
 
+msgid ""
+"Select which reusable RSS resources should be assigned to this forum experiment. Feed validation "
+"and creation now live in the shared forum resource workspace."
+msgstr ""
+"Seleziona quali risorse RSS riutilizzabili assegnare a questo esperimento del forum. La convalida"
+" e la creazione dei feed si fanno ora nell'area di lavoro condivisa delle risorse del forum."
+
+msgid ""
+"Select which reusable subreddit image feeds should be assigned to this forum experiment. "
+"Validation and creation now live in the shared forum image resource workspace."
+msgstr ""
+"Seleziona quali feed di immagini di subreddit riutilizzabili assegnare a questo esperimento del "
+"forum. La convalida e la creazione si fanno ora nell'area di lavoro condivisa delle risorse di "
+"immagini del forum."
+
 msgid "Select..."
 msgstr "Seleziona..."
+
+msgid "Selected Agent"
+msgstr "Agente selezionato"
+
+msgid "Selected Author"
+msgstr "Autore selezionato"
+
+msgid "Selected Author Recommended Posts"
+msgstr "Post raccomandati dell'autore selezionato"
 
 msgid "Selected Experiment"
 msgstr "Esperimento selezionato"
 
 msgid "Selected Populations to Merge"
 msgstr "Popolazioni selezionate da unire"
+
+msgid "Selected Target"
+msgstr "Bersaglio selezionato"
+
+msgid "Selected Target Opinion Trend"
+msgstr "Andamento dell'opinione del bersaglio selezionato"
+
+msgid "Selected Target Toxicity Trend"
+msgstr "Andamento della tossicità del bersaglio selezionato"
+
+msgid "Selected Target Trend"
+msgstr "Andamento del bersaglio selezionato"
 
 #, python-format
 msgid "Self-hosted LLM Server (%(backend)s)"
@@ -3923,8 +5013,14 @@ msgstr ""
 "Imposta le probabilità relative (0-10) per ogni tipo di azione. Valori più alti significano "
 "azioni più frequenti. Usa 0 per disattivare un'azione."
 
+msgid "Share"
+msgstr "Condividi"
+
 msgid "Share / repost"
 msgstr "Condividi / ripubblica"
+
+msgid "Share Entire Group"
+msgstr "Condividi l'intero gruppo"
 
 msgid "Share Experiments"
 msgstr "Condividi gli esperimenti"
@@ -3941,11 +5037,22 @@ msgstr "Condividi una notizia da una pagina"
 msgid "Share RSS / Feed Link"
 msgstr "Condividi un link RSS / feed"
 
+msgid "Share Single Experiment"
+msgstr "Condividi un singolo esperimento"
+
 msgid "Share and comment an Image"
 msgstr "Condividi e commenta un'immagine"
 
 msgid "Share weight"
 msgstr "Peso delle condivisioni"
+
+#, python-format
+msgid ""
+"Shared image resources can still be created from a subreddit name, %(name)s, or a Reddit "
+"subreddit URL such as %(url)s."
+msgstr ""
+"Le risorse di immagini condivise si possono ancora creare da un nome di subreddit, %(name)s, o da"
+" un URL di subreddit di Reddit come %(url)s."
 
 msgid "Show Advanced Parameters"
 msgstr "Mostra i parametri avanzati"
@@ -4031,6 +5138,9 @@ msgstr "Argomenti della simulazione"
 msgid "Simulation length and population dynamics."
 msgstr "Durata della simulazione e dinamiche della popolazione."
 
+msgid "Simulation time context"
+msgstr "Contesto temporale della simulazione"
+
 msgid "Simulation:"
 msgstr "Simulazione:"
 
@@ -4038,8 +5148,17 @@ msgstr "Simulazione:"
 msgid "Simulation: %(name)s"
 msgstr "Simulazione: %(name)s"
 
+msgid "Site"
+msgstr "Site"
+
+msgid "Skeptical, fact-checks, brief responses"
+msgstr "Scettico, verifica i fatti, risposte brevi"
+
 msgid "Sliding Window Days"
 msgstr "Giorni della finestra scorrevole"
+
+msgid "Slower"
+msgstr "Più lento"
 
 msgid "Small World (Watts-Strogatz)"
 msgstr "Small world (Watts-Strogatz)"
@@ -4052,6 +5171,9 @@ msgstr "Tasso di corruzione sociale"
 
 msgid "Social Decay (lambda)"
 msgstr "Decadimento sociale (lambda)"
+
+msgid "Social Interactions"
+msgstr "Interazioni sociali"
 
 msgid "Social Network Structure"
 msgstr "Struttura della rete sociale"
@@ -4073,6 +5195,9 @@ msgstr "Esperimento di origine"
 
 msgid "Source Group"
 msgstr "Gruppo di origine"
+
+msgid "Specific prompts for different agent action types (post, comment, share, etc.)."
+msgstr "Prompt specifici per i diversi tipi di azione degli agenti (post, commento, condivisione, ecc.)."
 
 #, python-format
 msgid "Specify the percentage of agents interested in each topic. Default is 100% for all topics."
@@ -4145,14 +5270,33 @@ msgstr "Fermati / Pianificati"
 msgid "Story Visibility %"
 msgstr "Visibilità delle storie %"
 
+msgid "Stress"
+msgstr "Stress"
+
 msgid "Stress / Reward Evolution"
 msgstr "Evoluzione di stress / ricompensa"
 
 msgid "Stress / Reward Settings"
 msgstr "Impostazioni di stress / ricompensa"
 
+msgid "Stress Attacker Target Drill-down"
+msgstr "Approfondimento sui bersagli degli attaccanti di stress"
+
+msgid ""
+"Stress Attacker agents are deployed, but no target interactions have been recorded up to the "
+"selected time."
+msgstr ""
+"Gli agenti attaccanti di stress sono distribuiti, ma fino al momento selezionato non sono state "
+"registrate interazioni con i bersagli."
+
+msgid "Stress Distribution"
+msgstr "Distribuzione dello stress"
+
 msgid "Stress/Reward"
 msgstr "Stress/ricompensa"
+
+msgid "Stress/Reward Churn"
+msgstr "Ricambio di stress/ricompensa"
 
 msgid "Structure, density, components"
 msgstr "Struttura, densità, componenti"
@@ -4172,6 +5316,9 @@ msgstr "Studente"
 msgid "Submit Logs"
 msgstr "Invia i log"
 
+msgid "Subreddit"
+msgstr "Subreddit"
+
 msgid "Subset of population to activate initially. Leave empty to use all agents."
 msgstr "Sottoinsieme della popolazione da attivare all'inizio. Lascia vuoto per usare tutti gli agenti."
 
@@ -4183,6 +5330,14 @@ msgstr "Amici suggeriti"
 
 msgid "Suite modules"
 msgstr "Moduli della suite"
+
+#, python-format
+msgid ""
+"Supported sources include standard RSS or Atom feeds and Reddit JSON listing feeds such as "
+"%(url)s."
+msgstr ""
+"Le fonti supportate includono feed RSS o Atom standard e feed JSON di elenchi di Reddit come "
+"%(url)s."
 
 msgid "Supporting Institutions"
 msgstr "Istituzioni di supporto"
@@ -4202,6 +5357,12 @@ msgstr "Impostazioni di sistema"
 msgid "System Settings:"
 msgstr "Impostazioni di sistema:"
 
+msgid "System Template"
+msgstr "Modello di sistema"
+
+msgid "System Template:"
+msgstr "Modello di sistema:"
+
 msgid "System Updates"
 msgstr "Aggiornamenti di sistema"
 
@@ -4211,11 +5372,19 @@ msgstr "Aggiornamenti di sistema:"
 msgid "Tab of the photo feed shown when a participant opens it"
 msgstr "Scheda del feed di foto mostrata quando un partecipante lo apre"
 
+msgid "Target"
+msgstr "Bersaglio"
+
 msgid "Target Group"
 msgstr "Gruppo di destinazione"
 
 msgid "Target Population"
 msgstr "Popolazione di destinazione"
+
+msgid "Target aggregate stress/reward by day, with SA interaction volume shown on the secondary axis."
+msgstr ""
+"Stress/ricompensa aggregati del bersaglio per giorno, con il volume delle interazioni SA "
+"sull'asse secondario."
 
 msgid "Teacher (training modules only)"
 msgstr "Insegnante (solo moduli di formazione)"
@@ -4235,6 +5404,12 @@ msgstr "Telemetria:"
 msgid "Temperature"
 msgstr "Temperatura"
 
+msgid "Temporal Controls"
+msgstr "Controlli temporali"
+
+msgid "Temporal Granularity"
+msgstr "Granularità temporale"
+
 msgid "Tensor Parallel Size"
 msgstr "Dimensione del parallelismo tensoriale"
 
@@ -4243,6 +5418,15 @@ msgstr "Output del terminale delle ultime operazioni su questo plugin, dalla pi�
 
 msgid "Test Connection"
 msgstr "Prova la connessione"
+
+msgid "The Agent:"
+msgstr "L'agente:"
+
+msgid "The Article summary."
+msgstr "Il riassunto dell'articolo."
+
+msgid "The Article title."
+msgstr "Il titolo dell'articolo."
 
 msgid "The Broadcaster"
 msgstr "Il Broadcaster"
@@ -4256,6 +5440,9 @@ msgstr "L'Esploratore"
 msgid "The Explorer:"
 msgstr "L'Esploratore:"
 
+msgid "The Handler:"
+msgstr "Il gestore:"
+
 msgid ""
 "The LLM section appears only for agent types that declare LLM requirements in their plugin "
 "registry."
@@ -4263,11 +5450,51 @@ msgstr ""
 "La sezione LLM compare solo per i tipi di agente che dichiarano requisiti LLM nel registro del "
 "loro plugin."
 
+msgid ""
+"The Reddit delay should stay conservative enough to avoid throttling when multiple feeds are "
+"refreshed in sequence."
+msgstr ""
+"La pausa tra le richieste a Reddit dovrebbe restare abbastanza prudente da evitare limitazioni "
+"quando più feed vengono aggiornati in sequenza."
+
 msgid "The Validator"
 msgstr "Il Validatore"
 
 msgid "The Validator:"
 msgstr "Il Validatore:"
+
+msgid "The Website name."
+msgstr "Il nome del sito web."
+
+msgid "The Website political leaning (if available)."
+msgstr "L'orientamento politico del sito web (se disponibile)."
+
+msgid "The agent age."
+msgstr "L'età dell'agente."
+
+msgid "The agent education level."
+msgstr "Il livello di istruzione dell'agente."
+
+msgid "The agent expected toxicity."
+msgstr "La tossicità attesa dell'agente."
+
+msgid "The agent gender."
+msgstr "Il genere dell'agente."
+
+msgid "The agent name."
+msgstr "Il nome dell'agente."
+
+msgid "The agent nationality."
+msgstr "La nazionalità dell'agente."
+
+msgid "The agent political leaning."
+msgstr "L'orientamento politico dell'agente."
+
+msgid "The agent profession."
+msgstr "La professione dell'agente."
+
+msgid "The agent spoken language."
+msgstr "La lingua parlata dall'agente."
 
 msgid ""
 "The center column controls execution and the lower sections expose logs and diagnostics for both "
@@ -4275,6 +5502,16 @@ msgid ""
 msgstr ""
 "La colonna centrale controlla l'esecuzione e le sezioni in basso mostrano log e diagnostica del "
 "server e dei client attivi."
+
+msgid ""
+"The dashboard database stores the canonical subreddit definitions, including their mapped "
+"interests."
+msgstr ""
+"Il database della dashboard memorizza le definizioni canoniche dei subreddit, compresi gli "
+"interessi associati."
+
+msgid "The image textual description."
+msgstr "La descrizione testuale dell'immagine."
 
 msgid ""
 "The matrix loader searched the experiment folder and its subfolders but did not find a readable "
@@ -4290,16 +5527,58 @@ msgstr ""
 "La rete può essere generata in modo sintetico oppure creata e caricata dall'utente. Per creare un"
 " file di rete personalizzato, scarica l'elenco dei nomi degli agenti con"
 
+msgid "The post text."
+msgstr "Il testo del post."
+
 msgid "The selected distribution controls how attention budgets are sampled between min and max."
 msgstr ""
 "La distribuzione selezionata controlla come vengono campionati i budget di attenzione tra minimo "
 "e massimo."
 
+msgid "The three agent archetypes have distinct characteristics:"
+msgstr "I tre archetipi di agente hanno caratteristiche distinte:"
+
 msgid "Thematic Characterization"
 msgstr "Caratterizzazione tematica"
 
+#, python-format
+msgid "These feeds live in the dashboard DB and can be assigned to any forum experiment from %(page)s."
+msgstr ""
+"Questi feed risiedono nel database della dashboard e si possono assegnare a qualsiasi esperimento"
+" del forum da %(page)s."
+
 msgid "These options are mutually exclusive."
 msgstr "Queste opzioni si escludono a vicenda."
+
+msgid ""
+"These remain experiment-specific. Provide one URL per line for sources that should be pinned "
+"directly into this forum simulation."
+msgstr ""
+"Restano specifici dell'esperimento. Indica un URL per riga per le fonti da fissare direttamente "
+"in questa simulazione del forum."
+
+msgid ""
+"These settings control how much external content is ingested during a forum simulation. Higher "
+"values increase variety but also startup and refresh costs."
+msgstr ""
+"Queste impostazioni controllano quanto contenuto esterno viene acquisito durante una simulazione "
+"del forum. Valori più alti aumentano la varietà ma anche i costi di avvio e aggiornamento."
+
+#, python-format
+msgid "These subreddit definitions are stored in the dashboard DB and can be assigned from %(page)s."
+msgstr ""
+"Queste definizioni di subreddit sono salvate nel database della dashboard e si possono assegnare "
+"da %(page)s."
+
+msgid ""
+"These values define how much each reaction, comment, share, or moderation event shifts stress and"
+" recognition."
+msgstr ""
+"Questi valori definiscono di quanto ogni reazione, commento, condivisione o evento di moderazione"
+" sposta stress e riconoscimento."
+
+msgid "Theta (Backfire Strength)"
+msgstr "Theta (intensità dell'effetto boomerang)"
 
 msgid "This experiment has at least one client set to run until manually stopped"
 msgstr ""
@@ -4367,6 +5646,9 @@ msgstr "Caratteri massimi livello C"
 msgid "Tier C Uncertainty"
 msgstr "Incertezza livello C"
 
+msgid "Time Period"
+msgstr "Periodo di tempo"
+
 msgid "Timeline Follower Ratio"
 msgstr "Rapporto follower nella timeline"
 
@@ -4410,6 +5692,21 @@ msgstr "Distribuzione dell'interesse per gli argomenti"
 msgid "Topic classification chips"
 msgstr "Etichette di classificazione degli argomenti"
 
+msgid "Topic guidance"
+msgstr "Indicazioni sull'argomento"
+
+msgid "Topic-specific target opinion over time, with MoP interaction volume shown on the secondary axis."
+msgstr ""
+"Opinione del bersaglio sull'argomento nel tempo, con il volume delle interazioni MoP sull'asse "
+"secondario."
+
+msgid ""
+"Topic-specific target opinion over time, with propaganda interaction volume shown on the "
+"secondary axis."
+msgstr ""
+"Opinione del bersaglio sull'argomento nel tempo, con il volume delle interazioni di propaganda "
+"sull'asse secondario."
+
 msgid "Topics"
 msgstr "Argomenti"
 
@@ -4419,6 +5716,9 @@ msgstr "Argomenti e opinioni"
 msgid "Topics & Opinions box in profile"
 msgstr "Riquadro Argomenti e opinioni nel profilo"
 
+msgid "Topics (select to visualize)"
+msgstr "Argomenti (seleziona per visualizzare)"
+
 msgid "Topics covered and population assignments."
 msgstr "Argomenti trattati e assegnazioni alle popolazioni."
 
@@ -4427,6 +5727,15 @@ msgstr "Caratteri massimi totali"
 
 msgid "Total Memory Chars"
 msgstr "Caratteri totali della memoria"
+
+msgid "Total Opinions"
+msgstr "Opinioni totali"
+
+msgid "Total Recommendations"
+msgstr "Raccomandazioni totali"
+
+msgid "Total Recs"
+msgstr "Raccomandazioni totali"
 
 msgid "Total configurations:"
 msgstr "Configurazioni totali:"
@@ -4458,8 +5767,17 @@ msgstr "Livello di tossicità"
 msgid "Toxicity Levels"
 msgstr "Livelli di tossicità"
 
+msgid "Toxicity level instruction"
+msgstr "Istruzione sul livello di tossicità"
+
 msgid "Trace excerpt:"
 msgstr "Estratto della traccia:"
+
+msgid "Tracked Agents"
+msgstr "Agenti monitorati"
+
+msgid "Tracked Aggregates"
+msgstr "Aggregati monitorati"
 
 msgid "Transition Probabilities (%)"
 msgstr "Probabilità di transizione (%)"
@@ -4498,6 +5816,12 @@ msgstr "Non disponibile"
 
 msgid "Uniform"
 msgstr "Uniforme"
+
+msgid "Unique Agents"
+msgstr "Agenti unici"
+
+msgid "Unique Recipients"
+msgstr "Destinatari unici"
 
 msgid "Unique identifier for this client"
 msgstr "Identificativo univoco di questo client"
@@ -4546,6 +5870,9 @@ msgstr "Aggiorna la configurazione"
 msgid "Update Email"
 msgstr "Aggiorna l'email"
 
+msgid "Update HPC Prompts"
+msgstr "Aggiorna i prompt HPC"
+
 msgid "Update LLM Configuration"
 msgstr "Aggiorna la configurazione LLM"
 
@@ -4583,6 +5910,9 @@ msgstr "Carica un file CSV con gli archi (uno per riga: origine,destinazione)."
 msgid "Upper Bound"
 msgstr "Limite superiore"
 
+msgid "Usage"
+msgstr "Utilizzo"
+
 #, python-format
 msgid "Use %(b)s to download or remove the experiment"
 msgstr "Usa %(b)s per scaricare o rimuovere l'esperimento"
@@ -4593,6 +5923,22 @@ msgstr "Usa %(requests)s e %(clients)s per ispezionare il comportamento durante 
 
 msgid "Use Local Diffusion"
 msgstr "Usa la diffusione locale"
+
+#, python-format
+msgid ""
+"Use a subreddit name, %(name)s, or a Reddit subreddit URL such as %(url)s. The parse step "
+"previews sample images before saving."
+msgstr ""
+"Usa il nome di un subreddit, %(name)s, o l'URL di un subreddit di Reddit come %(url)s. Il "
+"passaggio di analisi mostra un'anteprima di immagini di esempio prima del salvataggio."
+
+#, python-format
+msgid ""
+"Use the Ollama base address, for example %(url)s. The admin page will query the compatible models"
+" endpoint automatically."
+msgstr ""
+"Usa l'indirizzo di base di Ollama, ad esempio %(url)s. La pagina di amministrazione interrogherà "
+"automaticamente l'endpoint dei modelli compatibili."
 
 msgid ""
 "Use the left column to inspect metadata, update topics, toggle annotations, and open advanced "
@@ -4632,6 +5978,12 @@ msgstr "Interazioni degli utenti"
 msgid "User Profile"
 msgstr "Profilo dell'utente"
 
+msgid "User Template"
+msgstr "Modello utente"
+
+msgid "User Template:"
+msgstr "Modello utente:"
+
 msgid "User Types"
 msgstr "Tipi di utente"
 
@@ -4656,11 +6008,40 @@ msgstr "Modello VLM"
 msgid "Validate"
 msgstr "Convalida"
 
+msgid "Validate And Save Image Resource"
+msgstr "Convalida e salva la risorsa di immagini"
+
+msgid "Validate And Save RSS Resource"
+msgstr "Convalida e salva la risorsa RSS"
+
+msgid ""
+"Validate a source once, save it to the dashboard database, and reuse it across multiple forum "
+"experiments."
+msgstr ""
+"Convalida una fonte una volta, salvala nel database della dashboard e riusala in più esperimenti "
+"del forum."
+
+msgid ""
+"Validate subreddit-based image feeds once, store them centrally, and assign them to any forum "
+"experiment as needed."
+msgstr ""
+"Convalida i feed di immagini basati su subreddit una volta, memorizzali in modo centralizzato e "
+"assegnali a qualsiasi esperimento del forum quando serve."
+
+msgid "Validation"
+msgstr "Convalida"
+
 msgid "Validator"
 msgstr "Validatore"
 
 msgid "Validator %"
 msgstr "Validatore %"
+
+msgid "Validator Persona"
+msgstr "Persona Validatore"
+
+msgid "Validator:"
+msgstr "Validatore:"
 
 msgid "Version"
 msgstr "Versione"
@@ -4676,6 +6057,9 @@ msgstr "Vedi la versione"
 
 msgid "Visible Rows"
 msgstr "Righe visibili"
+
+msgid "Visible Tie"
+msgstr "Pareggio visibile"
 
 msgid "Vision GPU Memory Utilization"
 msgstr "Utilizzo della memoria GPU per la visione"
@@ -4697,6 +6081,9 @@ msgstr ""
 "Analisi visiva della distribuzione degli agenti per dati demografici, attributi e schemi di "
 "comportamento."
 
+msgid "Visualization Mode"
+msgstr "Modalità di visualizzazione"
+
 msgid ""
 "We are a team of multidisciplinary researchers that share a common interest in the study of "
 "social networks and human behavior."
@@ -4716,6 +6103,9 @@ msgstr "Stiamo lavorando per risolvere il problema. Riprova più tardi."
 
 msgid "Website:"
 msgstr "Sito web:"
+
+msgid "Weekly"
+msgstr "Settimanale"
 
 msgid "Weight for comments / replies"
 msgstr "Peso di commenti / risposte"
@@ -4742,6 +6132,9 @@ msgstr "Che cos'è una popolazione?"
 msgid "What issue did you encounter? What were you trying to do when the error occurred?"
 msgstr "Quale problema hai incontrato? Cosa stavi cercando di fare quando si è verificato l'errore?"
 
+msgid "When"
+msgstr "Quando"
+
 #, python-format
 msgid "When %(b)s is enabled, Detoxify is used automatically."
 msgstr "Quando %(b)s è attivo, Detoxify viene usato automaticamente."
@@ -4761,6 +6154,14 @@ msgstr ""
 
 msgid "When enabled, memory can influence posting, commenting, and voting."
 msgstr "Se attiva, la memoria può influenzare pubblicazioni, commenti e voti."
+
+msgid ""
+"When enabled, the client computes a churn probability from the latest aggregate stress and reward"
+" at activation time and may ask the server to mark the agent as left."
+msgstr ""
+"Se attivo, il client calcola una probabilità di abbandono a partire dagli ultimi valori aggregati"
+" di stress e ricompensa al momento dell'attivazione e può chiedere al server di segnare l'agente "
+"come uscito."
 
 msgid "Where the Digital World comes to life."
 msgstr "Dove il mondo digitale prende vita."
@@ -4806,6 +6207,9 @@ msgstr "YSocial è stato sviluppato grazie al sostegno dei seguenti progetti naz
 #, python-format
 msgid "YSocial is the result of a joint effort of %(institutions)s."
 msgstr "YSocial è il risultato di uno sforzo congiunto di %(institutions)s."
+
+msgid "YSocial simulates agent actions through a chat between two entities:"
+msgstr "YSocial simula le azioni degli agenti tramite una chat tra due entità:"
 
 msgid "YSocial supports three types of users with different access levels:"
 msgstr "YSocial supporta tre tipi di utenti con diversi livelli di accesso:"
@@ -4877,8 +6281,14 @@ msgstr "es. http://localhost:8000/v1"
 msgid "e.g., localhost:8000"
 msgstr "es. localhost:8000"
 
+msgid "http://127.0.0.1:11434"
+msgstr "http://127.0.0.1:11434"
+
 msgid "http://127.0.0.1:11434/v1"
 msgstr "http://127.0.0.1:11434/v1"
+
+msgid "https://example.com/feed.xml or https://www.reddit.com/r/politics/new.json?limit=100"
+msgstr "https://example.com/feed.xml or https://www.reddit.com/r/politics/new.json?limit=100"
 
 msgid "local changes"
 msgstr "modifiche locali"
@@ -4891,6 +6301,9 @@ msgstr "manifest non valido"
 
 msgid "manifest valid"
 msgstr "manifest valido"
+
+msgid "memes or https://www.reddit.com/r/memes/"
+msgstr "memes oppure https://www.reddit.com/r/memes/"
 
 msgid "min"
 msgstr "min"
@@ -4934,9 +6347,6 @@ msgstr "vLLM"
 msgid "vLLM server not running. Start manually:"
 msgstr "Il server vLLM non è in esecuzione. Avvialo manualmente:"
 
-msgid "vllm serve <model> --host 0.0.0.0 --port 8000"
-msgstr "vllm serve <model> --host 0.0.0.0 --port 8000"
-
 msgid "y-not.social"
 msgstr "y-not.social"
 
@@ -4979,6 +6389,9 @@ msgstr "← Tutti i plugin"
 msgid "∞ Infinite"
 msgstr "∞ Infinito"
 
+msgid "⚠ Requires LLM agents enabled"
+msgstr "⚠ Richiede gli agenti LLM attivi"
+
 #~ msgid "All telemetry data is GDPR compliant. You can disable it anytime from the application"
 #~ msgstr ""
 
@@ -5011,4 +6424,7 @@ msgstr "∞ Infinito"
 
 #~ msgid "Share weight (w"
 #~ msgstr ""
+
+#~ msgid "vllm serve <model> --host 0.0.0.0 --port 8000"
+#~ msgstr "vllm serve <model> --host 0.0.0.0 --port 8000"
 

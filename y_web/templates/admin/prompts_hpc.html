@@ -12,7 +12,7 @@
             <div class="columns">
                 <div class="column is-12">
                     <div class="dashboard-box">
-                        <a href="/admin/experiments">Experiments</a> > Simulation: <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }}</a> > Prompts (HPC)
+                        <a href="/admin/experiments">{{ _('Experiments') }}</a> &gt; {{ _('Simulation:') }} <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }}</a> &gt; {{ _('Prompts (HPC)') }}
                     </div>
                 </div>
             </div>
@@ -23,41 +23,41 @@
 
                     <!--Dashboard box-->
                     <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">HPC LLM Prompts Configuration</h3>
+                        <h3 class="title is-5 is-thin">{{ _('HPC LLM Prompts Configuration') }}</h3>
  <p class="ys-text-small">
-                            Configure system and user prompt templates for the HPC simulator. These templates use structured system/user patterns for LLM interactions.
+                            {{ _('Configure system and user prompt templates for the HPC simulator. These templates use structured system/user patterns for LLM interactions.') }}
                         </p>
                         <div class="box-content">
                             <form action="/admin/update_prompts_hpc/{{ experiment.idexp }}" enctype="multipart/form-data" method="POST">
                                 <div class="box-lines">
                                     
                                     <!-- Persona Configuration -->
-                                    <h4 class="title is-6 is-thin">Persona Configuration</h4>
- <p class="ys-label-hint">Define agent persona templates and archetype-specific behaviors.</p>
+                                    <h4 class="title is-6 is-thin">{{ _('Persona Configuration') }}</h4>
+ <p class="ys-label-hint">{{ _('Define agent persona templates and archetype-specific behaviors.') }}</p>
                                     
                                     <div class="box-line">
-                                        <span class="left">Persona Template</span>
+                                        <span class="left">{{ _('Persona Template') }}</span>
  <span class="right ys-w-70">
                                             <textarea rows="3" name="persona_template" class="textarea">{{ prompts.persona_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
-                                        <span class="left">Validator Persona</span>
+                                        <span class="left">{{ _('Validator Persona') }}</span>
  <span class="right ys-w-70">
                                             <textarea rows="2" name="personas_0" class="textarea">{{ (prompts.personas|default({}))['0']|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
-                                        <span class="left">Broadcaster Persona</span>
+                                        <span class="left">{{ _('Broadcaster Persona') }}</span>
  <span class="right ys-w-70">
                                             <textarea rows="2" name="personas_1" class="textarea">{{ (prompts.personas|default({}))['1']|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
-                                        <span class="left">Explorer Persona</span>
+                                        <span class="left">{{ _('Explorer Persona') }}</span>
  <span class="right ys-w-70">
                                             <textarea rows="2" name="personas_2" class="textarea">{{ (prompts.personas|default({}))['2']|default('') }}</textarea>
                                         </span>
@@ -66,18 +66,18 @@
                                     <hr>
 
                                     <!-- Generate Post -->
-                                    <h4 class="title is-6 is-thin">Generate Post</h4>
- <p class="ys-label-hint">Prompts for generating original social media posts.</p>
+                                    <h4 class="title is-6 is-thin">{{ _('Generate Post') }}</h4>
+ <p class="ys-label-hint">{{ _('Prompts for generating original social media posts.') }}</p>
                                     
                                     <div class="box-line">
-                                        <span class="left">System Template</span>
+                                        <span class="left">{{ _('System Template') }}</span>
  <span class="right ys-w-70">
                                             <textarea rows="3" name="generate_post_system_template" class="textarea">{{ (prompts.generate_post|default({})).system_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
-                                        <span class="left">User Template</span>
+                                        <span class="left">{{ _('User Template') }}</span>
  <span class="right ys-w-70">
                                             <textarea rows="4" name="generate_post_user_template" class="textarea">{{ (prompts.generate_post|default({})).user_template|default('') }}</textarea>
                                         </span>
@@ -86,18 +86,18 @@
                                     <hr>
 
                                     <!-- Decide Reaction -->
-                                    <h4 class="title is-6 is-thin">Decide Reaction</h4>
- <p class="ys-label-hint">Prompts for deciding how to react to posts (like, comment, or ignore).</p>
+                                    <h4 class="title is-6 is-thin">{{ _('Decide Reaction') }}</h4>
+ <p class="ys-label-hint">{{ _('Prompts for deciding how to react to posts (like, comment, or ignore).') }}</p>
                                     
                                     <div class="box-line">
-                                        <span class="left">System Template</span>
+                                        <span class="left">{{ _('System Template') }}</span>
  <span class="right ys-w-70">
                                             <textarea rows="3" name="decide_reaction_system_template" class="textarea">{{ (prompts.decide_reaction|default({})).system_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
-                                        <span class="left">User Template</span>
+                                        <span class="left">{{ _('User Template') }}</span>
  <span class="right ys-w-70">
                                             <textarea rows="2" name="decide_reaction_user_template" class="textarea">{{ (prompts.decide_reaction|default({})).user_template|default('') }}</textarea>
                                         </span>
@@ -106,18 +106,18 @@
                                     <hr>
 
                                     <!-- Generate Comment -->
-                                    <h4 class="title is-6 is-thin">Generate Comment</h4>
- <p class="ys-label-hint">Prompts for generating comments on posts.</p>
+                                    <h4 class="title is-6 is-thin">{{ _('Generate Comment') }}</h4>
+ <p class="ys-label-hint">{{ _('Prompts for generating comments on posts.') }}</p>
                                     
                                     <div class="box-line">
-                                        <span class="left">System Template</span>
+                                        <span class="left">{{ _('System Template') }}</span>
  <span class="right ys-w-70">
                                             <textarea rows="3" name="generate_comment_system_template" class="textarea">{{ (prompts.generate_comment|default({})).system_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
-                                        <span class="left">User Template</span>
+                                        <span class="left">{{ _('User Template') }}</span>
  <span class="right ys-w-70">
                                             <textarea rows="5" name="generate_comment_user_template" class="textarea">{{ (prompts.generate_comment|default({})).user_template|default('') }}</textarea>
                                         </span>
@@ -126,18 +126,18 @@
                                     <hr>
 
                                     <!-- Generate Read Reaction -->
-                                    <h4 class="title is-6 is-thin">Generate Read Reaction</h4>
- <p class="ys-label-hint">Prompts for emotional reactions to discovered content.</p>
+                                    <h4 class="title is-6 is-thin">{{ _('Generate Read Reaction') }}</h4>
+ <p class="ys-label-hint">{{ _('Prompts for emotional reactions to discovered content.') }}</p>
                                     
                                     <div class="box-line">
-                                        <span class="left">System Template</span>
+                                        <span class="left">{{ _('System Template') }}</span>
  <span class="right ys-w-70">
                                             <textarea rows="2" name="generate_read_reaction_system_template" class="textarea">{{ (prompts.generate_read_reaction|default({})).system_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
-                                        <span class="left">User Template</span>
+                                        <span class="left">{{ _('User Template') }}</span>
  <span class="right ys-w-70">
                                             <textarea rows="7" name="generate_read_reaction_user_template" class="textarea">{{ (prompts.generate_read_reaction|default({})).user_template|default('') }}</textarea>
                                         </span>
@@ -146,18 +146,18 @@
                                     <hr>
 
                                     <!-- Decide Search Action -->
-                                    <h4 class="title is-6 is-thin">Decide Search Action</h4>
- <p class="ys-label-hint">Prompts for engagement decisions after searching for content.</p>
+                                    <h4 class="title is-6 is-thin">{{ _('Decide Search Action') }}</h4>
+ <p class="ys-label-hint">{{ _('Prompts for engagement decisions after searching for content.') }}</p>
                                     
                                     <div class="box-line">
-                                        <span class="left">System Template</span>
+                                        <span class="left">{{ _('System Template') }}</span>
  <span class="right ys-w-70">
                                             <textarea rows="2" name="decide_search_action_system_template" class="textarea">{{ (prompts.decide_search_action|default({})).system_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
-                                        <span class="left">User Template</span>
+                                        <span class="left">{{ _('User Template') }}</span>
  <span class="right ys-w-70">
                                             <textarea rows="8" name="decide_search_action_user_template" class="textarea">{{ (prompts.decide_search_action|default({})).user_template|default('') }}</textarea>
                                         </span>
@@ -166,18 +166,18 @@
                                     <hr>
 
                                     <!-- Generate News Commentary -->
-                                    <h4 class="title is-6 is-thin">Generate News Commentary</h4>
- <p class="ys-label-hint">Prompts for news pages to share articles.</p>
+                                    <h4 class="title is-6 is-thin">{{ _('Generate News Commentary') }}</h4>
+ <p class="ys-label-hint">{{ _('Prompts for news pages to share articles.') }}</p>
                                     
                                     <div class="box-line">
-                                        <span class="left">System Template</span>
+                                        <span class="left">{{ _('System Template') }}</span>
  <span class="right ys-w-70">
                                             <textarea rows="3" name="generate_news_commentary_system_template" class="textarea">{{ (prompts.generate_news_commentary|default({})).system_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
-                                        <span class="left">User Template</span>
+                                        <span class="left">{{ _('User Template') }}</span>
  <span class="right ys-w-70">
                                             <textarea rows="5" name="generate_news_commentary_user_template" class="textarea">{{ (prompts.generate_news_commentary|default({})).user_template|default('') }}</textarea>
                                         </span>
@@ -186,32 +186,32 @@
                                     <hr>
 
                                     <!-- Follow Decisions -->
-                                    <h4 class="title is-6 is-thin">Follow Decisions</h4>
- <p class="ys-label-hint">Prompts for deciding whether to follow users.</p>
+                                    <h4 class="title is-6 is-thin">{{ _('Follow Decisions') }}</h4>
+ <p class="ys-label-hint">{{ _('Prompts for deciding whether to follow users.') }}</p>
                                     
                                     <div class="box-line">
-                                        <span class="left">Decide Follow (System)</span>
+                                        <span class="left">{{ _('Decide Follow (System)') }}</span>
  <span class="right ys-w-70">
                                             <textarea rows="1" name="decide_follow_system_template" class="textarea">{{ (prompts.decide_follow|default({})).system_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
-                                        <span class="left">Decide Follow (User)</span>
+                                        <span class="left">{{ _('Decide Follow (User)') }}</span>
  <span class="right ys-w-70">
                                             <textarea rows="2" name="decide_follow_user_template" class="textarea">{{ (prompts.decide_follow|default({})).user_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
-                                        <span class="left">Decide Secondary Follow (System)</span>
+                                        <span class="left">{{ _('Decide Secondary Follow (System)') }}</span>
  <span class="right ys-w-70">
                                             <textarea rows="1" name="decide_secondary_follow_system_template" class="textarea">{{ (prompts.decide_secondary_follow|default({})).system_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
-                                        <span class="left">Decide Secondary Follow (User)</span>
+                                        <span class="left">{{ _('Decide Secondary Follow (User)') }}</span>
  <span class="right ys-w-70">
                                             <textarea rows="3" name="decide_secondary_follow_user_template" class="textarea">{{ (prompts.decide_secondary_follow|default({})).user_template|default('') }}</textarea>
                                         </span>
@@ -220,53 +220,53 @@
                                     <hr>
 
                                     <!-- Opinion & Emotion Extraction -->
-                                    <h4 class="title is-6 is-thin">Content Analysis</h4>
- <p class="ys-label-hint">Prompts for extracting topics, emotions, and opinions from content.</p>
+                                    <h4 class="title is-6 is-thin">{{ _('Content Analysis') }}</h4>
+ <p class="ys-label-hint">{{ _('Prompts for extracting topics, emotions, and opinions from content.') }}</p>
                                     
                                     <div class="box-line">
-                                        <span class="left">Extract Topics (System)</span>
+                                        <span class="left">{{ _('Extract Topics (System)') }}</span>
  <span class="right ys-w-70">
                                             <textarea rows="2" name="extract_article_topics_system_template" class="textarea">{{ (prompts.extract_article_topics|default({})).system_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
-                                        <span class="left">Extract Topics (User)</span>
+                                        <span class="left">{{ _('Extract Topics (User)') }}</span>
  <span class="right ys-w-70">
                                             <textarea rows="3" name="extract_article_topics_user_template" class="textarea">{{ (prompts.extract_article_topics|default({})).user_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
-                                        <span class="left">Extract Emotions (System)</span>
+                                        <span class="left">{{ _('Extract Emotions (System)') }}</span>
  <span class="right ys-w-70">
                                             <textarea rows="3" name="extract_emotions_system_template" class="textarea">{{ (prompts.extract_emotions|default({})).system_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
-                                        <span class="left">Extract Emotions (User)</span>
+                                        <span class="left">{{ _('Extract Emotions (User)') }}</span>
  <span class="right ys-w-70">
                                             <textarea rows="3" name="extract_emotions_user_template" class="textarea">{{ (prompts.extract_emotions|default({})).user_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
-                                        <span class="left">Infer Opinion (System)</span>
+                                        <span class="left">{{ _('Infer Opinion (System)') }}</span>
  <span class="right ys-w-70">
                                             <textarea rows="2" name="infer_article_opinion_system_template" class="textarea">{{ (prompts.infer_article_opinion|default({})).system_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
-                                        <span class="left">Infer Opinion (User)</span>
+                                        <span class="left">{{ _('Infer Opinion (User)') }}</span>
  <span class="right ys-w-70">
                                             <textarea rows="6" name="infer_article_opinion_user_template" class="textarea">{{ (prompts.infer_article_opinion|default({})).user_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
-                                        <span class="left">Evaluate Opinion (System)</span>
+                                        <span class="left">{{ _('Evaluate Opinion (System)') }}</span>
  <span class="right ys-w-70">
                                             <textarea rows="2" name="evaluate_opinion_system_template" class="textarea">{{ (prompts.evaluate_opinion|default({})).system_template|default('') }}</textarea>
                                         </span>
@@ -275,32 +275,32 @@
                                     <hr>
 
                                     <!-- Image Processing -->
-                                    <h4 class="title is-6 is-thin">Image Processing</h4>
- <p class="ys-label-hint">Prompts for describing and commenting on images.</p>
+                                    <h4 class="title is-6 is-thin">{{ _('Image Processing') }}</h4>
+ <p class="ys-label-hint">{{ _('Prompts for describing and commenting on images.') }}</p>
                                     
                                     <div class="box-line">
-                                        <span class="left">Describe Image (System)</span>
+                                        <span class="left">{{ _('Describe Image (System)') }}</span>
  <span class="right ys-w-70">
                                             <textarea rows="2" name="describe_image_system_template" class="textarea">{{ (prompts.describe_image|default({})).system_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
-                                        <span class="left">Describe Image (User)</span>
+                                        <span class="left">{{ _('Describe Image (User)') }}</span>
  <span class="right ys-w-70">
                                             <textarea rows="2" name="describe_image_user_template" class="textarea">{{ (prompts.describe_image|default({})).user_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
-                                        <span class="left">Image Commentary (System)</span>
+                                        <span class="left">{{ _('Image Commentary (System)') }}</span>
  <span class="right ys-w-70">
                                             <textarea rows="3" name="generate_image_commentary_system_template" class="textarea">{{ (prompts.generate_image_commentary|default({})).system_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
-                                        <span class="left">Image Commentary (User)</span>
+                                        <span class="left">{{ _('Image Commentary (User)') }}</span>
  <span class="right ys-w-70">
                                             <textarea rows="5" name="generate_image_commentary_user_template" class="textarea">{{ (prompts.generate_image_commentary|default({})).user_template|default('') }}</textarea>
                                         </span>
@@ -309,18 +309,18 @@
                                     <hr>
 
                                     <!-- Share Commentary -->
-                                    <h4 class="title is-6 is-thin">Generate Share Commentary</h4>
- <p class="ys-label-hint">Prompts for resharing posts with commentary.</p>
+                                    <h4 class="title is-6 is-thin">{{ _('Generate Share Commentary') }}</h4>
+ <p class="ys-label-hint">{{ _('Prompts for resharing posts with commentary.') }}</p>
                                     
                                     <div class="box-line">
-                                        <span class="left">System Template</span>
+                                        <span class="left">{{ _('System Template') }}</span>
  <span class="right ys-w-70">
                                             <textarea rows="3" name="generate_share_commentary_system_template" class="textarea">{{ (prompts.generate_share_commentary|default({})).system_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
-                                        <span class="left">User Template</span>
+                                        <span class="left">{{ _('User Template') }}</span>
  <span class="right ys-w-70">
                                             <textarea rows="5" name="generate_share_commentary_user_template" class="textarea">{{ (prompts.generate_share_commentary|default({})).user_template|default('') }}</textarea>
                                         </span>
@@ -329,7 +329,7 @@
                                 </div>
                                 <div class="button-wrap">
                                     <button class="button is-solid primary-button is-fullwidth">
-                                        Update HPC Prompts
+                                        {{ _('Update HPC Prompts') }}
                                     </button>
                                 </div>
                             </form>
@@ -344,44 +344,44 @@
                 <div class="column is-4">
                     <!--Box-->
                     <div class="dashboard-box is-compact">
-                        <h3 class="title is-5 is-thin">HPC Prompts Guide</h3>
+                        <h3 class="title is-5 is-thin">{{ _('HPC Prompts Guide') }}</h3>
                         <div class="help-block">
                             <p>
-                                <b>HPC Prompts Structure</b><br>
-                                HPC prompts use a system/user template pattern:<br><br>
-                                <em>System Template:</em> Defines agent persona and context<br>
-                                <em>User Template:</em> Provides specific instructions and input
+                                <b>{{ _('HPC Prompts Structure') }}</b><br>
+                                {{ _('HPC prompts use a system/user template pattern:') }}<br><br>
+                                <em>{{ _('System Template:') }}</em> {{ _('Defines agent persona and context') }}<br>
+                                <em>{{ _('User Template:') }}</em> {{ _('Provides specific instructions and input') }}
                             </p>
                             <hr>
                             <p>
-                                <b>Available Variables</b><br>
-                                Prompts support template variables using curly braces:<br><br>
-                                <code>{persona}</code> - Agent archetype persona<br>
-                                <code>{name}</code> - Agent name<br>
-                                <code>{age}</code> - Agent age<br>
-                                <code>{gender}</code> - Agent gender<br>
-                                <code>{nationality}</code> - Agent nationality<br>
-                                <code>{profession}</code> - Agent profession<br>
-                                <code>{political_leaning}</code> - Agent's political leaning<br>
-                                <code>{toxicity}</code> - Toxicity level instruction<br>
-                                <code>{oe}, {co}, {ex}, {ag}, {ne}</code> - Big-5 personality traits<br>
-                                <code>{post_content}</code> - Content of a post<br>
-                                <code>{author_name}</code> - Post author name<br>
-                                <code>{day}, {slot}</code> - Simulation time context<br>
-                                <code>{topic_instruction}</code> - Topic guidance<br>
-                                <code>{article_title}, {article_text}</code> - News article content<br>
-                                <code>{website_name}</code> - News source name<br>
-                                <code>{image_description}</code> - Image description<br>
-                                <code>{emotion_list}</code> - Available emotions<br>
-                                <code>{opinion_options}</code> - Opinion categories<br>
+                                <b>{{ _('Available Variables') }}</b><br>
+                                {{ _('Prompts support template variables using curly braces:') }}<br><br>
+                                <code>{persona}</code> - {{ _('Agent archetype persona') }}<br>
+                                <code>{name}</code> - {{ _('Agent name') }}<br>
+                                <code>{age}</code> - {{ _('Agent age') }}<br>
+                                <code>{gender}</code> - {{ _('Agent gender') }}<br>
+                                <code>{nationality}</code> - {{ _('Agent nationality') }}<br>
+                                <code>{profession}</code> - {{ _('Agent profession') }}<br>
+                                <code>{political_leaning}</code> - {{ _("Agent's political leaning") }}<br>
+                                <code>{toxicity}</code> - {{ _('Toxicity level instruction') }}<br>
+                                <code>{oe}, {co}, {ex}, {ag}, {ne}</code> - {{ _('Big-5 personality traits') }}<br>
+                                <code>{post_content}</code> - {{ _('Content of a post') }}<br>
+                                <code>{author_name}</code> - {{ _('Post author name') }}<br>
+                                <code>{day}, {slot}</code> - {{ _('Simulation time context') }}<br>
+                                <code>{topic_instruction}</code> - {{ _('Topic guidance') }}<br>
+                                <code>{article_title}, {article_text}</code> - {{ _('News article content') }}<br>
+                                <code>{website_name}</code> - {{ _('News source name') }}<br>
+                                <code>{image_description}</code> - {{ _('Image description') }}<br>
+                                <code>{emotion_list}</code> - {{ _('Available emotions') }}<br>
+                                <code>{opinion_options}</code> - {{ _('Opinion categories') }}<br>
                             </p>
                             <hr>
                             <p>
-                                <b>Archetype Personas</b><br>
-                                The three agent archetypes have distinct characteristics:<br><br>
-                                <em>Validator:</em> Skeptical, fact-checks, brief responses<br>
-                                <em>Broadcaster:</em> High energy, viral-focused, controversial<br>
-                                <em>Explorer:</em> Curious, asks questions, seeks new perspectives
+                                <b>{{ _('Archetype Personas') }}</b><br>
+                                {{ _('The three agent archetypes have distinct characteristics:') }}<br><br>
+                                <em>{{ _('Validator:') }}</em> {{ _('Skeptical, fact-checks, brief responses') }}<br>
+                                <em>{{ _('Broadcaster:') }}</em> {{ _('High energy, viral-focused, controversial') }}<br>
+                                <em>{{ _('Explorer:') }}</em> {{ _('Curious, asks questions, seeks new perspectives') }}
                             </p>
                         </div>
                     </div>

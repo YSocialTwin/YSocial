@@ -637,7 +637,7 @@
                                 {% if llm_backend['backend'] == 'vllm' and not llm_backend['status'] %}
                                 <div class="box-line">
  <span class="left ys-text-090">{{ _('vLLM server not running. Start manually:') }}<br>
-                                    <small><code>{{ _('vllm serve <model> --host 0.0.0.0 --port 8000') }}</code></small>
+                                    <small><code>vllm serve <model> --host 0.0.0.0 --port 8000</code></small>
                                     </span>
                                 </div>
                                 {% endif %}

@@ -8,7 +8,7 @@
             <div class="columns">
                 <div class="column is-12">
                     <div class="dashboard-box">
-                        <a href="/admin/experiments">Experiments</a> > Simulation: <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }}</a> > Memory Embeddings
+                        <a href="/admin/experiments">{{ _('Experiments') }}</a> &gt; {{ _('Simulation:') }} <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }}</a> &gt; {{ _('Memory Embeddings') }}
                     </div>
                 </div>
             </div>
@@ -17,47 +17,47 @@
                 <div class="column is-8">
 
                     <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">{{ platform_label }} Memory Embeddings</h3>
+                        <h3 class="title is-5 is-thin">{{ _('%(platform)s Memory Embeddings', platform=platform_label) }}</h3>
  <p class="ys-text-small">
-                            Configure the embedding backend used by {{ server_label }} for semantic memory indexing and retrieval. If left unconfigured, memory falls back to lexical retrieval only.
+                            {{ _('Configure the embedding backend used by %(server)s for semantic memory indexing and retrieval. If left unconfigured, memory falls back to lexical retrieval only.', server=server_label) }}
                         </p>
 
                         <form action="/admin/update_embedding_settings/{{ experiment.idexp }}" method="POST">
                             <div class="box-content">
                                 <div class="box-line">
-                                    <span class="left">Embedding Service</span>
+                                    <span class="left">{{ _('Embedding Service') }}</span>
  <span class="right ys-w-50">
                                         <div class="select is-fullwidth">
                                             <select name="embedding_service" id="embedding_service" class="input" onchange="window.syncEmbeddingSettingsControls && window.syncEmbeddingSettingsControls()">
-                                                <option value="" {% if not embedding_settings.service %}selected{% endif %}>Disabled</option>
-                                                <option value="ollama" {% if embedding_settings.service == 'ollama' %}selected{% endif %}>Ollama</option>
+                                                <option value="" {% if not embedding_settings.service %}selected{% endif %}>{{ _('Disabled') }}</option>
+                                                <option value="ollama" {% if embedding_settings.service == 'ollama' %}selected{% endif %}>{{ _('Ollama') }}</option>
                                             </select>
                                         </div>
                                     </span>
                                 </div>
- <p class="ys-text-xs-hint2">Only Ollama is currently supported for memory embeddings.</p>
+ <p class="ys-text-xs-hint2">{{ _('Only Ollama is currently supported for memory embeddings.') }}</p>
 
                                 <div class="box-line">
-                                    <span class="left">Ollama Host</span>
+                                    <span class="left">{{ _('Ollama Host') }}</span>
  <span class="right ys-w-50">
-                                        <input type="text" name="embedding_host" id="embedding_host" class="input" value="{{ embedding_settings.host }}" placeholder="http://127.0.0.1:11434" oninput="window.syncEmbeddingSettingsControls && window.syncEmbeddingSettingsControls()" onchange="window.syncEmbeddingSettingsControls && window.syncEmbeddingSettingsControls()">
+                                        <input type="text" name="embedding_host" id="embedding_host" class="input" value="{{ embedding_settings.host }}" placeholder="{{ _('http://127.0.0.1:11434') }}" oninput="window.syncEmbeddingSettingsControls && window.syncEmbeddingSettingsControls()" onchange="window.syncEmbeddingSettingsControls && window.syncEmbeddingSettingsControls()">
                                     </span>
                                 </div>
                                 <div style="display: flex; align-items: center; gap: 0.75em; margin-bottom: 0.5em;">
                                     <button type="button" id="fetch_embedding_models" class="button is-light is-small" onclick="return window.fetchEmbeddingModels ? window.fetchEmbeddingModels() : false;">
                                         <i class="mdi mdi-download"></i>
-                                        <span>Fetch Embedding Models</span>
+                                        <span>{{ _('Fetch Embedding Models') }}</span>
                                     </button>
                                     <span id="embedding_fetch_status" style="font-size: 0.85em; color: #666;"></span>
                                 </div>
- <p class="ys-text-xs-hint2">Model discovery is enabled only after an Ollama host is provided.</p>
+ <p class="ys-text-xs-hint2">{{ _('Model discovery is enabled only after an Ollama host is provided.') }}</p>
 
                                 <div class="box-line">
-                                    <span class="left">Embedding Model</span>
+                                    <span class="left">{{ _('Embedding Model') }}</span>
  <span class="right ys-w-50">
                                         <div class="select is-fullwidth">
                                             <select name="embedding_model" id="embedding_model" class="input">
-                                                <option value="">Select an embedding model</option>
+                                                <option value="">{{ _('Select an embedding model') }}</option>
                                                 {% if embedding_settings.model %}
                                                 <option value="{{ embedding_settings.model }}" selected>{{ embedding_settings.model }}</option>
                                                 {% endif %}
@@ -65,10 +65,10 @@
                                         </div>
                                     </span>
                                 </div>
- <p class="ys-text-xs-hint2">Only embedding-capable models are shown in this selector.</p>
+ <p class="ys-text-xs-hint2">{{ _('Only embedding-capable models are shown in this selector.') }}</p>
 
  <div class="button-wrap ys-mt-15em">
-                                    <button type="submit" class="button is-solid primary-button is-fullwidth">Save Embedding Settings</button>
+                                    <button type="submit" class="button is-solid primary-button is-fullwidth">{{ _('Save Embedding Settings') }}</button>
                                 </div>
                             </div>
                         </form>
@@ -77,21 +77,21 @@
 
                 <div class="column is-4">
                     <div class="dashboard-box is-compact">
-                        <h3 class="title is-5 is-thin">Quick Reference Guide</h3>
+                        <h3 class="title is-5 is-thin">{{ _('Quick Reference Guide') }}</h3>
                         <div class="help-block">
                             <p>
-                                <b>Disabled by default</b><br>
-                                Experiments do not assume any embedding backend. Without this configuration, semantic memory features degrade gracefully to lexical retrieval.
+                                <b>{{ _('Disabled by default') }}</b><br>
+                                {{ _('Experiments do not assume any embedding backend. Without this configuration, semantic memory features degrade gracefully to lexical retrieval.') }}
                             </p>
                             <hr>
                             <p>
-                                <b>Host format</b><br>
-                                Use the Ollama base address, for example <code>http://127.0.0.1:11434</code>. The admin page will query the compatible models endpoint automatically.
+                                <b>{{ _('Host format') }}</b><br>
+                                {{ _('Use the Ollama base address, for example %(url)s. The admin page will query the compatible models endpoint automatically.', url=wrap('code', 'http://127.0.0.1:11434')) }}
                             </p>
                             <hr>
                             <p>
-                                <b>Model selection</b><br>
-                                Only embedding models are listed. Choose one that is actually installed on the target Ollama instance before saving.
+                                <b>{{ _('Model selection') }}</b><br>
+                                {{ _('Only embedding models are listed. Choose one that is actually installed on the target Ollama instance before saving.') }}
                             </p>
                         </div>
                     </div>

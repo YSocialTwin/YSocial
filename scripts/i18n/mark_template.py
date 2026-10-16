@@ -60,6 +60,8 @@ def mark(path, exceptions):
         def repl(m, text=text, snapshot=out):
             before = m.group(1)
             after = snapshot[m.end():m.end() + 40]
+            if re.match(r"<(?:code|pre|kbd|script|style)[\s>]", before, re.I):
+                return m.group(0)  # literal code, never translated
             continues = not text[0].isupper()  # sentence goes on after the tag
             if (INLINE_CLOSE.search(before) and continues) or INLINE_OPEN.match(after):
                 return m.group(0)  # sentence fragment next to inline markup

@@ -9,7 +9,7 @@
             <div class="columns">
                 <div class="column is-12">
                     <div class="dashboard-box">
-                        <a href="/admin/experiments">Experiments</a> >
+                        <a href="/admin/experiments">{{ _('Experiments') }}</a> >
                         <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }}</a> >
                         {{ page_title }}
                     </div>
@@ -19,12 +19,12 @@
             <div class="columns">
                 <div class="column is-12">
                     <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin ys-mb-15">Temporal Controls</h3>
+                        <h3 class="title is-5 is-thin ys-mb-15">{{ _('Temporal Controls') }}</h3>
                         <div class="filter-section">
                             {% if page_key == "network" %}
                             <div class="annotation-control-row ys-mb-15">
                                 <div class="annotation-control-group">
-                                    <label class="annotation-control-label" for="annotation-network-type-select">Network Type</label>
+                                    <label class="annotation-control-label" for="annotation-network-type-select">{{ _('Network Type') }}</label>
                                     <div class="select is-fullwidth">
                                         <select id="annotation-network-type-select">
                                             {% for option in analytics.network_type_options %}
@@ -36,7 +36,7 @@
                                     </div>
                                 </div>
                                 <div class="annotation-control-group">
-                                    <label class="annotation-control-label" for="annotation-network-granularity-select">Temporal Granularity</label>
+                                    <label class="annotation-control-label" for="annotation-network-granularity-select">{{ _('Temporal Granularity') }}</label>
                                     <div class="select is-fullwidth">
                                         <select id="annotation-network-granularity-select">
                                             {% for option in analytics.granularity_options %}
@@ -70,7 +70,7 @@
                                 <div class="annotation-control-group ys-topic-trend-mode-group">
                                     <div class="annotation-compact-control">
                                         <div class="annotation-compact-control-head">
-                                            <label class="annotation-control-label" for="annotation-topic-trend-mode-select">Visualization Mode</label>
+                                            <label class="annotation-control-label" for="annotation-topic-trend-mode-select">{{ _('Visualization Mode') }}</label>
                                         </div>
                                         <div class="select is-fullwidth">
                                             <select id="annotation-topic-trend-mode-select">
@@ -87,21 +87,21 @@
                             {% endif %}
                             <div class="slider-container">
                                 <div class="slider-label">
-                                    <label>Time Period</label>
+                                    <label>{{ _('Time Period') }}</label>
                                     <div class="annotation-granularity-controls">
                                         <button class="annotation-granularity-button active" data-granularity="hourly" type="button">
-                                            Hourly
+                                            {{ _('Hourly') }}
                                         </button>
                                         <button class="annotation-granularity-button" data-granularity="daily" type="button">
-                                            Daily
+                                            {{ _('Daily') }}
                                         </button>
                                         <button class="annotation-granularity-button" data-granularity="weekly" type="button">
-                                            Weekly
+                                            {{ _('Weekly') }}
                                         </button>
                                     </div>
                                 </div>
                                 <div class="slider-controls">
-                                    <button id="annotation-play-button" class="play-button" title="Play">
+                                    <button id="annotation-play-button" class="play-button" title="{{ _('Play') }}">
                                         <i class="mdi mdi-play"></i>
                                     </button>
                                     <input type="range" id="annotation-time-slider" class="time-slider"
@@ -109,11 +109,11 @@
                                            step="1"
                                            value="{{ filter_day * 24 + filter_hour }}">
                                     <div class="speed-controls">
-                                        <button id="annotation-speed-down" class="speed-button" title="Slower">
+                                        <button id="annotation-speed-down" class="speed-button" title="{{ _('Slower') }}">
                                             <i class="mdi mdi-minus"></i>
                                         </button>
                                         <span class="speed-display" id="annotation-speed-display">1x</span>
-                                        <button id="annotation-speed-up" class="speed-button" title="Faster">
+                                        <button id="annotation-speed-up" class="speed-button" title="{{ _('Faster') }}">
                                             <i class="mdi mdi-plus"></i>
                                         </button>
                                     </div>
@@ -138,7 +138,7 @@
                     <div class="dashboard-box chart-box-container">
                         <div class="annotation-chart-head ys-mb-15">
                             <h3 class="title is-6 is-thin" id="annotation-distribution-title">{{ analytics.distribution.title }}</h3>
-                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="annotationDistributionChartContainer" title="Expand plot">
+                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="annotationDistributionChartContainer" title="{{ _('Expand plot') }}">
                                 <i class="mdi mdi-fullscreen"></i>
                             </button>
                         </div>
@@ -154,7 +154,7 @@
                     <div class="dashboard-box chart-box-container">
                         <div class="annotation-chart-head ys-mb-15">
                             <h3 class="title is-6 is-thin" id="annotation-trend-title">{{ analytics.trend.title }}</h3>
-                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="annotationTrendChartContainer" title="Expand plot">
+                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="annotationTrendChartContainer" title="{{ _('Expand plot') }}">
                                 <i class="mdi mdi-fullscreen"></i>
                             </button>
                         </div>
@@ -173,7 +173,7 @@
                     <div class="dashboard-box chart-box-container">
                         <div class="annotation-chart-head ys-mb-15">
                             <h3 class="title is-6 is-thin" id="annotation-secondary-title">{{ analytics.secondary.title }}</h3>
-                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="annotationSecondaryChartContainer" title="Expand plot">
+                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="annotationSecondaryChartContainer" title="{{ _('Expand plot') }}">
                                 <i class="mdi mdi-fullscreen"></i>
                             </button>
                         </div>
@@ -189,7 +189,7 @@
                     <div class="dashboard-box chart-box-container">
                         <div class="annotation-chart-head ys-mb-15">
                             <h3 class="title is-6 is-thin" id="annotation-component-title">{{ analytics.component_share.title }}</h3>
-                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="annotationComponentShareChartContainer" title="Expand plot">
+                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="annotationComponentShareChartContainer" title="{{ _('Expand plot') }}">
                                 <i class="mdi mdi-fullscreen"></i>
                             </button>
                         </div>
@@ -205,7 +205,7 @@
                     <div class="dashboard-box chart-box-container">
                         <div class="annotation-chart-head ys-mb-15">
                             <h3 class="title is-6 is-thin" id="annotation-network-structure-title">{{ analytics.network_structure.title }}</h3>
-                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="annotationNetworkStructureChartContainer" title="Expand plot">
+                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="annotationNetworkStructureChartContainer" title="{{ _('Expand plot') }}">
                                 <i class="mdi mdi-fullscreen"></i>
                             </button>
                         </div>
@@ -225,7 +225,7 @@
                     <div class="dashboard-box chart-box-container">
                         <div class="annotation-chart-head ys-mb-15">
                             <h3 class="title is-6 is-thin" id="annotation-distribution-title">{{ analytics.distribution.title }}</h3>
-                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="annotationDistributionChartContainer" title="Expand plot">
+                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="annotationDistributionChartContainer" title="{{ _('Expand plot') }}">
                                 <i class="mdi mdi-fullscreen"></i>
                             </button>
                         </div>
@@ -244,7 +244,7 @@
                             <button class="annotation-chart-expand-button"
                                     type="button"
                                     data-fullscreen-target="annotationTrendChartContainer"
-                                    title="Expand plot">
+                                    title="{{ _('Expand plot') }}">
                                 <i class="mdi mdi-fullscreen"></i>
                             </button>
                         </div>
@@ -263,13 +263,13 @@
                             <button class="annotation-chart-expand-button"
                                     type="button"
                                     data-fullscreen-target="annotationSecondaryChartContainer"
-                                    title="Expand plot">
+                                    title="{{ _('Expand plot') }}">
                                 <i class="mdi mdi-fullscreen"></i>
                             </button>
                         </div>
                         {% if page_key == "toxicity" %}
                         <div class="annotation-threshold-control ys-mb-15">
-                            <label for="annotation-toxicity-threshold" class="annotation-threshold-label">Category Threshold</label>
+                            <label for="annotation-toxicity-threshold" class="annotation-threshold-label">{{ _('Category Threshold') }}</label>
                             <input type="number"
                                    id="annotation-toxicity-threshold"
                                    class="input ys-input-sm annotation-threshold-input"
@@ -294,7 +294,7 @@
                     <div class="dashboard-box chart-box-container">
                         <div class="annotation-chart-head ys-mb-15">
                             <h3 class="title is-6 is-thin" id="annotation-topic-lifecycle-title">{{ analytics.topic_lifecycle.title }}</h3>
-                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="annotationTopicLifecycleChartContainer" title="Expand plot">
+                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="annotationTopicLifecycleChartContainer" title="{{ _('Expand plot') }}">
                                 <i class="mdi mdi-fullscreen"></i>
                             </button>
                         </div>
@@ -316,26 +316,26 @@
                     <div class="dashboard-box">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
                             <div>
-                                <h3 class="title is-5 is-thin ys-mb-10">Moderator Target Drill-down</h3>
+                                <h3 class="title is-5 is-thin ys-mb-10">{{ _('Moderator Target Drill-down') }}</h3>
                                 <p style="margin: 0; color: #6b7280;">
-                                    Inspect one moderated target at a time using their toxicity trend and the timing of moderator interventions.
+                                    {{ _('Inspect one moderated target at a time using their toxicity trend and the timing of moderator interventions.') }}
                                 </p>
                             </div>
                             <div class="stat-box" style="min-width: 180px; background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);">
                                 <div class="stat-value"><span id="tox-moderator-deployed">{{ analytics.moderator_targets.deployed_agents }}</span></div>
-                                <div class="stat-label">Deployed Moderators</div>
+                                <div class="stat-label">{{ _('Deployed Moderators') }}</div>
                             </div>
                         </div>
 
                         <div id="tox-moderator-target-panel" style="margin-top: 20px;">
                             <div class="columns">
                                 <div class="column is-4">
-                                    <label class="label" for="tox-moderator-target-select">Moderated Target</label>
+                                    <label class="label" for="tox-moderator-target-select">{{ _('Moderated Target') }}</label>
                                     <div class="select is-fullwidth">
                                         <select id="tox-moderator-target-select">
                                             {% for option in analytics.moderator_targets.options %}
                                             <option value="{{ option.uid }}" {% if option.uid == analytics.moderator_targets.selected_uid %}selected{% endif %}>
-                                                {{ option.username }} ({{ option.moderation_count }} interventions)
+                                                {{ _('%(user)s (%(n)s interventions)', user=option.username, n=option.moderation_count) }}
                                             </option>
                                             {% endfor %}
                                         </select>
@@ -345,15 +345,15 @@
                                     <div class="stats-row" style="margin-top: 0;">
                                         <div class="stat-box" style="background: linear-gradient(135deg, #334155 0%, #1e293b 100%);">
                                             <div class="stat-value" id="tox-moderator-target-name">{{ analytics.moderator_targets.selected_username }}</div>
-                                            <div class="stat-label">Selected Target</div>
+                                            <div class="stat-label">{{ _('Selected Target') }}</div>
                                         </div>
                                         <div class="stat-box" style="background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);">
                                             <div class="stat-value" id="tox-moderator-interaction-count">{{ analytics.moderator_targets.moderation_count }}</div>
-                                            <div class="stat-label">Moderator Actions</div>
+                                            <div class="stat-label">{{ _('Moderator Actions') }}</div>
                                         </div>
                                         <div class="stat-box" style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);">
                                             <div class="stat-value" id="tox-moderator-agent-names">{{ analytics.moderator_targets.moderator_usernames|join(', ') if analytics.moderator_targets.moderator_usernames else '—' }}</div>
-                                            <div class="stat-label">Moderator Agents</div>
+                                            <div class="stat-label">{{ _('Moderator Agents') }}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -361,7 +361,7 @@
 
                             <article id="tox-moderator-empty-state" class="message is-info" style="margin-top: 16px; {% if analytics.moderator_targets.options %}display:none;{% endif %}">
                                 <div class="message-body">
-                                    Moderator agents are deployed, but no moderated targets have been recorded up to the selected time.
+                                    {{ _('Moderator agents are deployed, but no moderated targets have been recorded up to the selected time.') }}
                                 </div>
                             </article>
 
@@ -369,8 +369,8 @@
                                 <div class="column is-7" id="tox-moderator-chart-column" {% if not analytics.moderator_targets.options %}style="display:none;"{% endif %}>
                                     <div class="dashboard-box chart-box-container" style="margin-bottom: 0;">
                                         <div class="annotation-chart-head ys-mb-15">
-                                            <h3 class="title is-6 is-thin">Selected Target Toxicity Trend</h3>
-                                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="toxModeratorTargetTrendChartContainer" title="Expand plot">
+                                            <h3 class="title is-6 is-thin">{{ _('Selected Target Toxicity Trend') }}</h3>
+                                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="toxModeratorTargetTrendChartContainer" title="{{ _('Expand plot') }}">
                                                 <i class="mdi mdi-fullscreen"></i>
                                             </button>
                                         </div>
@@ -378,27 +378,27 @@
                                             <canvas id="toxModeratorTargetTrendChart" height="280"></canvas>
                                         </div>
                                         <p class="ys-text-xs-center-mt">
-                                            Daily target toxicity, with moderator intervention volume shown on the secondary axis.
+                                            {{ _('Daily target toxicity, with moderator intervention volume shown on the secondary axis.') }}
                                         </p>
                                     </div>
                                 </div>
                                 <div class="column is-5" id="tox-moderator-events-column" {% if not analytics.moderator_targets.options %}style="display:none;"{% endif %}>
                                     <div class="dashboard-box" style="margin-bottom: 0;">
-                                        <h3 class="title is-6 is-thin ys-mb-15">Recent Moderator Interventions</h3>
+                                        <h3 class="title is-6 is-thin ys-mb-15">{{ _('Recent Moderator Interventions') }}</h3>
                                         <div style="max-height: 360px; overflow-y: auto;">
                                             <table class="table is-fullwidth is-striped is-hoverable is-size-7">
                                                 <thead>
                                                 <tr>
-                                                    <th>When</th>
-                                                    <th>Type</th>
-                                                    <th>Count</th>
-                                                    <th>Moderators</th>
+                                                    <th>{{ _('When') }}</th>
+                                                    <th>{{ _('Type') }}</th>
+                                                    <th>{{ _('Count') }}</th>
+                                                    <th>{{ _('Moderators') }}</th>
                                                 </tr>
                                                 </thead>
                                                 <tbody id="tox-moderator-events-body">
                                                 {% for event in analytics.moderator_targets.interaction_events %}
                                                 <tr>
-                                                    <td>Day {{ event.day }}, Hour {{ event.hour }}</td>
+                                                    <td>{{ _('Day %(day)s, Hour %(hour)s', day=event.day, hour=event.hour) }}</td>
                                                     <td>{{ event.moderation_type|replace('_', ' ')|title }}</td>
                                                     <td>{{ event.moderation_count }}</td>
                                                     <td>{{ event.moderator_usernames|join(', ') if event.moderator_usernames else '—' }}</td>
@@ -422,9 +422,9 @@
                     <div class="dashboard-box">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
                             <div>
-                                <h3 class="title is-5 is-thin ys-mb-10">Author Recommendation Drill-down</h3>
+                                <h3 class="title is-5 is-thin ys-mb-10">{{ _('Author Recommendation Drill-down') }}</h3>
                                 <p style="margin: 0; color: #6b7280;">
-                                    Inspect how recommendations of one author’s posts spread across the population over time.
+                                    {{ _('Inspect how recommendations of one author’s posts spread across the population over time.') }}
                                 </p>
                             </div>
                         </div>
@@ -432,13 +432,13 @@
                         <div id="recsys-author-panel" style="margin-top: 20px;">
                             <div class="columns">
                                 <div class="column is-4">
-                                    <label class="label" for="annotation-recsys-author-select">Author Drill-down</label>
+                                    <label class="label" for="annotation-recsys-author-select">{{ _('Author Drill-down') }}</label>
                                     <div class="select is-fullwidth">
                                         <select id="annotation-recsys-author-select">
-                                            <option value="" {% if not analytics.recsys_author.selected_uid %}selected{% endif %}>Choose an author…</option>
+                                            <option value="" {% if not analytics.recsys_author.selected_uid %}selected{% endif %}>{{ _('Choose an author…') }}</option>
                                             {% for option in analytics.recsys_author.options %}
                                             <option value="{{ option.uid }}" {% if option.uid == analytics.recsys_author.selected_uid %}selected{% endif %}>
-                                                {{ option.username }} ({{ option.recommendation_count }} recs)
+                                                {{ _('%(user)s (%(n)s recs)', user=option.username, n=option.recommendation_count) }}
                                             </option>
                                             {% endfor %}
                                         </select>
@@ -448,26 +448,26 @@
 
                             <article id="recsys-author-empty-state" class="message is-info" {% if analytics.recsys_author.selected_uid %}style="display:none;"{% endif %}>
                                 <div class="message-body">
-                                    Select an author to inspect the reach and recommendation distribution of their posts.
+                                    {{ _('Select an author to inspect the reach and recommendation distribution of their posts.') }}
                                 </div>
                             </article>
 
                             <div class="stats-row" id="recsys-author-stats-row" {% if not analytics.recsys_author.selected_uid %}style="display:none;"{% endif %}>
                                 <div class="stat-box" style="background: linear-gradient(135deg, #334155 0%, #1e293b 100%);">
                                     <div class="stat-value" id="recsys-author-name">{{ analytics.recsys_author.selected_username }}</div>
-                                    <div class="stat-label">Selected Author</div>
+                                    <div class="stat-label">{{ _('Selected Author') }}</div>
                                 </div>
                                 <div class="stat-box" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);">
                                     <div class="stat-value" id="recsys-author-unique-recipients">{{ analytics.recsys_author.unique_recipients }}</div>
-                                    <div class="stat-label">Unique Recipients</div>
+                                    <div class="stat-label">{{ _('Unique Recipients') }}</div>
                                 </div>
                                 <div class="stat-box" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
                                     <div class="stat-value" id="recsys-author-total-recommendations">{{ analytics.recsys_author.total_recommendations }}</div>
-                                    <div class="stat-label">Total Recommendations</div>
+                                    <div class="stat-label">{{ _('Total Recommendations') }}</div>
                                 </div>
                                 <div class="stat-box" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
                                     <div class="stat-value" id="recsys-author-recommended-posts">{{ analytics.recsys_author.recommended_posts }}</div>
-                                    <div class="stat-label">Recommended Posts</div>
+                                    <div class="stat-label">{{ _('Recommended Posts') }}</div>
                                 </div>
                             </div>
 
@@ -476,7 +476,7 @@
                                     <div class="dashboard-box chart-box-container" style="margin-bottom: 0;">
                                         <div class="annotation-chart-head ys-mb-15">
                                             <h3 class="title is-6 is-thin" id="recsys-author-reach-title">{{ analytics.recsys_author.reach_trend.title }}</h3>
-                                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="recsysAuthorReachChartContainer" title="Expand plot">
+                                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="recsysAuthorReachChartContainer" title="{{ _('Expand plot') }}">
                                                 <i class="mdi mdi-fullscreen"></i>
                                             </button>
                                         </div>
@@ -490,7 +490,7 @@
                                     <div class="dashboard-box chart-box-container" style="margin-bottom: 0;">
                                         <div class="annotation-chart-head ys-mb-15">
                                             <h3 class="title is-6 is-thin" id="recsys-author-receiver-diversity-title">{{ analytics.recsys_author.receiver_diversity_trend.title }}</h3>
-                                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="recsysAuthorReceiverDiversityChartContainer" title="Expand plot">
+                                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="recsysAuthorReceiverDiversityChartContainer" title="{{ _('Expand plot') }}">
                                                 <i class="mdi mdi-fullscreen"></i>
                                             </button>
                                         </div>
@@ -504,7 +504,7 @@
                                     <div class="dashboard-box chart-box-container" style="margin-bottom: 0;">
                                         <div class="annotation-chart-head ys-mb-15">
                                             <h3 class="title is-6 is-thin" id="recsys-author-distribution-title">{{ analytics.recsys_author.post_distribution.title }}</h3>
-                                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="recsysAuthorDistributionChartContainer" title="Expand plot">
+                                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="recsysAuthorDistributionChartContainer" title="{{ _('Expand plot') }}">
                                                 <i class="mdi mdi-fullscreen"></i>
                                             </button>
                                         </div>
@@ -519,15 +519,15 @@
                             <div class="columns" id="recsys-author-table-row" {% if not analytics.recsys_author.selected_uid %}style="display:none;"{% endif %}>
                                 <div class="column is-12">
                                     <div class="dashboard-box" style="margin-bottom: 0;">
-                                        <h3 class="title is-6 is-thin ys-mb-15">Selected Author Recommended Posts</h3>
+                                        <h3 class="title is-6 is-thin ys-mb-15">{{ _('Selected Author Recommended Posts') }}</h3>
                                         <div style="max-height: 320px; overflow-y: auto;">
                                             <table class="table is-fullwidth is-striped is-hoverable is-size-7">
                                                 <thead>
                                                 <tr>
-                                                    <th>Post ID</th>
-                                                    <th>Excerpt</th>
-                                                    <th>Total Recs</th>
-                                                    <th>Unique Recipients</th>
+                                                    <th>{{ _('Post ID') }}</th>
+                                                    <th>{{ _('Excerpt') }}</th>
+                                                    <th>{{ _('Total Recs') }}</th>
+                                                    <th>{{ _('Unique Recipients') }}</th>
                                                 </tr>
                                                 </thead>
                                                 <tbody id="recsys-author-summary-body">
@@ -594,24 +594,24 @@
                                     {{ analytics.ego_network.description }}
                                 </p>
                                 <div class="annotation-ego-legend" aria-hidden="true">
-                                    <span class="annotation-ego-legend-chip is-ego">Selected Agent</span>
-                                    <span class="annotation-ego-legend-chip is-active">Active Alter</span>
-                                    <span class="annotation-ego-legend-chip is-inactive">Inactive Alter</span>
-                                    <span class="annotation-ego-legend-chip is-edge">Visible Tie</span>
+                                    <span class="annotation-ego-legend-chip is-ego">{{ _('Selected Agent') }}</span>
+                                    <span class="annotation-ego-legend-chip is-active">{{ _('Active Alter') }}</span>
+                                    <span class="annotation-ego-legend-chip is-inactive">{{ _('Inactive Alter') }}</span>
+                                    <span class="annotation-ego-legend-chip is-edge">{{ _('Visible Tie') }}</span>
                                 </div>
                             </div>
                             <div class="annotation-ego-actions">
                                 <div class="select annotation-ego-select-wrap">
                                     <select id="annotation-network-ego-select">
-                                        <option value="" {% if not analytics.ego_network.selected_uid %}selected{% endif %}>Choose an account…</option>
+                                        <option value="" {% if not analytics.ego_network.selected_uid %}selected{% endif %}>{{ _('Choose an account…') }}</option>
                                         {% for option in analytics.ego_network.options %}
                                         <option value="{{ option.uid }}" {% if option.uid == analytics.ego_network.selected_uid %}selected{% endif %}>
-                                            {{ option.username }} (deg {{ option.degree }})
+                                            {{ _('%(user)s (deg %(n)s)', user=option.username, n=option.degree) }}
                                         </option>
                                         {% endfor %}
                                     </select>
                                 </div>
-                                <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="annotationEgoNetworkChartContainer" title="Expand plot">
+                                <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="annotationEgoNetworkChartContainer" title="{{ _('Expand plot') }}">
                                     <i class="mdi mdi-fullscreen"></i>
                                 </button>
                             </div>

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-16 15:19+0000\n"
+"POT-Creation-Date: 2026-10-16 15:22+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -71,6 +71,26 @@ msgid ""
 msgstr ""
 
 #, python-format
+msgid "%(platform)s Memory Embeddings"
+msgstr ""
+
+#, python-format
+msgid "%(user)s (%(n)s interactions)"
+msgstr ""
+
+#, python-format
+msgid "%(user)s (%(n)s interventions)"
+msgstr ""
+
+#, python-format
+msgid "%(user)s (%(n)s recs)"
+msgstr ""
+
+#, python-format
+msgid "%(user)s (deg %(n)s)"
+msgstr ""
+
+#, python-format
 msgid "(%(count)s total)"
 msgstr ""
 
@@ -116,10 +136,19 @@ msgstr ""
 msgid "1. Create one or more Agent Populations"
 msgstr ""
 
+msgid "1. Select Population Segmentation Dimensions (Optional)"
+msgstr ""
+
+msgid "2. Configure Opinion Distributions for Each Topic"
+msgstr ""
+
 msgid "2. Create an Experiment"
 msgstr ""
 
 msgid "3. Configure one or more Clients"
+msgstr ""
+
+msgid "3. Select Opinion Update Rule"
 msgstr ""
 
 msgid "4. Run the Simulation"
@@ -161,7 +190,13 @@ msgid ""
 " LLM settings."
 msgstr ""
 
+msgid "A discussion thread."
+msgstr ""
+
 msgid "A population is a group of agents/pages that are used in a simulation."
+msgstr ""
+
+msgid "A subset of agent's interests."
 msgstr ""
 
 msgid "API Configuration"
@@ -191,6 +226,12 @@ msgstr ""
 msgid "Account information and API configurations for this user."
 msgstr ""
 
+msgid "Accounts"
+msgstr ""
+
+msgid "Action Selection"
+msgstr ""
+
 msgid "Actions"
 msgstr ""
 
@@ -203,6 +244,9 @@ msgid ""
 msgstr ""
 
 msgid "Activate run-scoped memory"
+msgstr ""
+
+msgid "Active Alter"
 msgstr ""
 
 msgid "Active Audience (~70% validation activity)"
@@ -221,6 +265,9 @@ msgstr ""
 msgid ""
 "Active experiments grouped by their project group. Click on a group "
 "header to expand/collapse."
+msgstr ""
+
+msgid "Active propaganda topics in this experiment:"
 msgstr ""
 
 msgid "Activity & Engagement Configuration"
@@ -356,10 +403,16 @@ msgstr ""
 msgid "Agent Archetypes and Transitions (Optional)"
 msgstr ""
 
+msgid "Agent Features"
+msgstr ""
+
 msgid "Agent Memory (Run-Scoped)"
 msgstr ""
 
 msgid "Agent Name"
+msgstr ""
+
+msgid "Agent Opinion Evolution"
 msgstr ""
 
 msgid "Agent Populations"
@@ -386,16 +439,49 @@ msgstr ""
 msgid "Agent Workspace"
 msgstr ""
 
+msgid "Agent age"
+msgstr ""
+
+msgid "Agent archetype persona"
+msgstr ""
+
+msgid "Agent gender"
+msgstr ""
+
 msgid "Agent interaction and engagement parameters."
 msgstr ""
 
+msgid "Agent name"
+msgstr ""
+
+msgid "Agent nationality"
+msgstr ""
+
+msgid "Agent profession"
+msgstr ""
+
 msgid "Agent type"
+msgstr ""
+
+msgid "Agent's political leaning"
+msgstr ""
+
+msgid "Agent-Handler Dialogue"
 msgstr ""
 
 msgid "Agent-Specific Configuration"
 msgstr ""
 
 msgid "Agents"
+msgstr ""
+
+msgid "Agents Pre-prompts"
+msgstr ""
+
+msgid "Agents update opinions based on similarity with others"
+msgstr ""
+
+msgid "Agents use LLM to evaluate and update opinions"
 msgstr ""
 
 msgid "Agents' Actions Relevance"
@@ -414,6 +500,9 @@ msgid "Aggregation:"
 msgstr ""
 
 msgid "Agreeableness"
+msgstr ""
+
+msgid "Agreeableness."
 msgstr ""
 
 msgid "All Groups"
@@ -491,6 +580,9 @@ msgstr ""
 msgid "Archetype Distribution (%)"
 msgstr ""
 
+msgid "Archetype Personas"
+msgstr ""
+
 msgid "Are you using YSocial for your research? Please cite us!"
 msgstr ""
 
@@ -512,6 +604,9 @@ msgstr ""
 msgid "Assigned Resources"
 msgstr ""
 
+msgid "Assignment Notes"
+msgstr ""
+
 msgid "Associate Prof."
 msgstr ""
 
@@ -530,7 +625,19 @@ msgstr ""
 msgid "At least one uppercase letter"
 msgstr ""
 
+msgid "Attacker Agents"
+msgstr ""
+
+msgid "Attackers"
+msgstr ""
+
 msgid "Attention Budget"
+msgstr ""
+
+msgid "Author Drill-down"
+msgstr ""
+
+msgid "Author Recommendation Drill-down"
 msgstr ""
 
 msgid "Author type"
@@ -567,6 +674,9 @@ msgstr ""
 msgid "Available Categories"
 msgstr ""
 
+msgid "Available Distributions:"
+msgstr ""
+
 msgid "Available Header Images"
 msgstr ""
 
@@ -594,6 +704,9 @@ msgstr ""
 msgid "Available Profiles (Drag to assign)"
 msgstr ""
 
+msgid "Available Variables"
+msgstr ""
+
 msgid ""
 "Available and installed plugins. Open a plugin to install or update it "
 "and to follow the output of the operation. Microblogging and Forum each "
@@ -601,9 +714,21 @@ msgid ""
 " from the plugin page."
 msgstr ""
 
+msgid "Available emotions"
+msgstr ""
+
 msgid ""
 "Available only when the \"Post & Comment Annotation\" module is enabled "
 "for this experiment (Frontend Add-ons)."
+msgstr ""
+
+msgid "Average Aggregate Trends"
+msgstr ""
+
+msgid "Average Reward"
+msgstr ""
+
+msgid "Average Stress"
 msgstr ""
 
 msgid "Average degree"
@@ -680,10 +805,22 @@ msgstr ""
 msgid "Big Five Personality profile"
 msgstr ""
 
+msgid "Big-5 Personality Traits"
+msgstr ""
+
+msgid "Big-5 personality traits"
+msgstr ""
+
 msgid "Binomial"
 msgstr ""
 
 msgid "Bluesky Data"
+msgstr ""
+
+msgid "Bounded Confidence"
+msgstr ""
+
+msgid "Bounded Confidence Parameters"
 msgstr ""
 
 msgid "Brief explanation of the client's purpose"
@@ -693,6 +830,12 @@ msgid "Broadcaster"
 msgstr ""
 
 msgid "Broadcaster %"
+msgstr ""
+
+msgid "Broadcaster Persona"
+msgstr ""
+
+msgid "Broadcaster:"
 msgstr ""
 
 msgid "Bulk Assign Users to Experiment"
@@ -720,6 +863,12 @@ msgid "Cast Vote"
 msgstr ""
 
 msgid "Category"
+msgstr ""
+
+msgid "Category Threshold"
+msgstr ""
+
+msgid "Central catalog"
 msgstr ""
 
 msgid "Change the user's email address."
@@ -757,6 +906,12 @@ msgstr ""
 msgid "Choose a source experiment from the selected group."
 msgstr ""
 
+msgid "Choose an account…"
+msgstr ""
+
+msgid "Choose an author…"
+msgstr ""
+
 msgid "Choose an existing group or type a new one"
 msgstr ""
 
@@ -767,6 +922,9 @@ msgid "Choose edge list file..."
 msgstr ""
 
 msgid "Choose from various network topologies with configurable parameters."
+msgstr ""
+
+msgid "Choose how agent opinions are updated during the simulation."
 msgstr ""
 
 msgid "Choose one of the active experiments below to enter the simulation."
@@ -780,7 +938,15 @@ msgstr ""
 msgid "Choose the language of the dashboard for this user."
 msgstr ""
 
+msgid ""
+"Choose whether to consider only the interlocutor's opinion or also first-"
+"order friends' opinions"
+msgstr ""
+
 msgid "Choose which metadata chips are displayed below each post."
+msgstr ""
+
+msgid "Churn"
 msgstr ""
 
 msgid "Clear"
@@ -803,6 +969,12 @@ msgstr ""
 msgid ""
 "Click \"Validate Model\" to verify minicpm-v:latest is available. This "
 "enables image-related actions."
+msgstr ""
+
+msgid ""
+"Click on dimensions to add or remove them from segmentation. Active "
+"dimensions are shown in blue. Without selection, a global \"All "
+"Population\" segment is used."
 msgstr ""
 
 msgid ""
@@ -879,6 +1051,9 @@ msgstr ""
 msgid "Cognitive NetSci"
 msgstr ""
 
+msgid "Cold Start Strategy"
+msgstr ""
+
 msgid "Cold Start Window"
 msgstr ""
 
@@ -891,7 +1066,13 @@ msgstr ""
 msgid "Comma-separated values"
 msgstr ""
 
+msgid "Comment"
+msgstr ""
+
 msgid "Comment / reply"
+msgstr ""
+
+msgid "Comment Image"
 msgstr ""
 
 msgid "Comment a Post"
@@ -1000,6 +1181,16 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Configure how many entries are retrieved from RSS feeds, Reddit "
+"endpoints, and database fallbacks during forum simulations."
+msgstr ""
+
+msgid ""
+"Configure how opinions are distributed across different population "
+"segments for each simulation topic."
+msgstr ""
+
+msgid ""
 "Configure lightweight, run-scoped memory. Agents remember who they "
 "interacted with, how it went (agreement/conflict/trust/humor), and a gist"
 " of threads/community. Memory resets between separate runs."
@@ -1025,6 +1216,16 @@ msgid ""
 "Configure photo-sharing specific fields. Percentages are applied per "
 "generated agent and the favorite filters define the pool used for random "
 "agent tag assignment."
+msgstr ""
+
+msgid ""
+"Configure system and user prompt templates for the HPC simulator. These "
+"templates use structured system/user patterns for LLM interactions."
+msgstr ""
+
+msgid ""
+"Configure system prompts that guide agent and page behavior during "
+"simulation. These instructions are sent to the LLM before each action."
 msgstr ""
 
 msgid ""
@@ -1071,6 +1272,13 @@ msgstr ""
 msgid "Configure the duration and behavioral settings for the simulation run."
 msgstr ""
 
+#, python-format
+msgid ""
+"Configure the embedding backend used by %(server)s for semantic memory "
+"indexing and retrieval. If left unconfigured, memory falls back to "
+"lexical retrieval only."
+msgstr ""
+
 msgid ""
 "Configure the local diffusion model to dynamically generate images during"
 " the simulation."
@@ -1079,6 +1287,11 @@ msgstr ""
 msgid ""
 "Configure the primary LLM only when it is required by the selected ad hoc"
 " agent type."
+msgstr ""
+
+msgid ""
+"Configure the stress/reward event weights, coupling values, and optional "
+"churn logic used by the experiment client runtime."
 msgstr ""
 
 msgid "Configure the vision LLM for image content analysis and transcription."
@@ -1102,6 +1315,9 @@ msgstr ""
 msgid "Conscientiousness"
 msgstr ""
 
+msgid "Conscientiousness."
+msgstr ""
+
 msgid "Consistent/Cautious"
 msgstr ""
 
@@ -1112,6 +1328,9 @@ msgid "Content & Behavior:"
 msgstr ""
 
 msgid "Content & Deployment"
+msgstr ""
+
+msgid "Content Analysis"
 msgstr ""
 
 msgid "Content Creator (~75% posts/comments)"
@@ -1133,7 +1352,13 @@ msgstr ""
 msgid "Content Visibility (hours)"
 msgstr ""
 
+msgid "Content of a post"
+msgstr ""
+
 msgid "Content:"
+msgstr ""
+
+msgid "Contents"
 msgstr ""
 
 msgid "Context Preset"
@@ -1164,6 +1389,26 @@ msgid ""
 msgstr ""
 
 msgid "Core parameters"
+msgstr ""
+
+msgid "Core simulation handler instructions for processing agent actions."
+msgstr ""
+
+msgid "Count"
+msgstr ""
+
+msgid "Coupling"
+msgstr ""
+
+msgid ""
+"Coupling values control how reward buffers stress and how stress dampens "
+"reward accumulation."
+msgstr ""
+
+msgid "Coupling: reward buffers stress"
+msgstr ""
+
+msgid "Coupling: stress reduces reward"
 msgstr ""
 
 msgid "Create"
@@ -1255,10 +1500,19 @@ msgstr ""
 msgid "Critical/Judgmental"
 msgstr ""
 
+msgid "Curious, asks questions, seeks new perspectives"
+msgstr ""
+
 msgid "Current"
 msgstr ""
 
+msgid "Current Day"
+msgstr ""
+
 msgid "Current Email"
+msgstr ""
+
+msgid "Current Hour"
 msgstr ""
 
 msgid "Current LLM"
@@ -1268,6 +1522,9 @@ msgid "Current Model Path"
 msgstr ""
 
 msgid "Current Recommender"
+msgstr ""
+
+msgid "Current Researcher Visibility"
 msgstr ""
 
 msgid "Current execution progress"
@@ -1306,6 +1563,9 @@ msgstr ""
 msgid "Customize agent activity patterns by hour."
 msgstr ""
 
+msgid "DB Fallback Limit"
+msgstr ""
+
 msgid "Daily"
 msgstr ""
 
@@ -1315,7 +1575,22 @@ msgstr ""
 msgid "Daily agent creation and removal rates"
 msgstr ""
 
+msgid ""
+"Daily target toxicity, with moderator intervention volume shown on the "
+"secondary axis."
+msgstr ""
+
 msgid "Dashboard language"
+msgstr ""
+
+msgid "Database Fallback"
+msgstr ""
+
+msgid "Day"
+msgstr ""
+
+#, python-format
+msgid "Day %(day)s, Hour %(hour)s"
 msgstr ""
 
 msgid "Days"
@@ -1328,6 +1603,24 @@ msgid "Decay Function"
 msgstr ""
 
 msgid "Decay Rate"
+msgstr ""
+
+msgid "Decide Follow (System)"
+msgstr ""
+
+msgid "Decide Follow (User)"
+msgstr ""
+
+msgid "Decide Reaction"
+msgstr ""
+
+msgid "Decide Search Action"
+msgstr ""
+
+msgid "Decide Secondary Follow (System)"
+msgstr ""
+
+msgid "Decide Secondary Follow (User)"
 msgstr ""
 
 msgid "Dedicated creation interface"
@@ -1363,6 +1656,9 @@ msgid ""
 "exported as %(field)s."
 msgstr ""
 
+msgid "Define agent persona templates and archetype-specific behaviors."
+msgstr ""
+
 msgid ""
 "Define content topics, toxicity levels, and activity patterns to create "
 "realistic agent behaviors and content interactions within your "
@@ -1387,7 +1683,13 @@ msgid ""
 "generate."
 msgstr ""
 
+msgid "Defines agent persona and context"
+msgstr ""
+
 msgid "Degree exponent (tau1)"
+msgstr ""
+
+msgid "Delay between Reddit requests to reduce throttling risk."
 msgstr ""
 
 msgid "Delete"
@@ -1437,6 +1739,24 @@ msgid ""
 "content."
 msgstr ""
 
+msgid "Deployed MoP Agents"
+msgstr ""
+
+msgid "Deployed Moderators"
+msgstr ""
+
+msgid "Deployed Propaganda Agents"
+msgstr ""
+
+msgid "Deployed SA Agents"
+msgstr ""
+
+msgid "Describe Image (System)"
+msgstr ""
+
+msgid "Describe Image (User)"
+msgstr ""
+
 msgid "Describe the problem (optional):"
 msgstr ""
 
@@ -1476,7 +1796,27 @@ msgstr ""
 msgid "Digest Update Cadence (rounds)"
 msgstr ""
 
+msgid "Direct Article URLs"
+msgstr ""
+
+msgid "Direct URLs"
+msgstr ""
+
+#, python-format
+msgid ""
+"Direct article URLs remain experiment-specific and are still managed from"
+" %(page)s."
+msgstr ""
+
+msgid ""
+"Direct article URLs remain local to the current experiment because they "
+"are typically campaign- or run-specific."
+msgstr ""
+
 msgid "Disabled"
+msgstr ""
+
+msgid "Disabled by default"
 msgstr ""
 
 msgid "Disconnect"
@@ -1489,6 +1829,9 @@ msgid "Dislike"
 msgstr ""
 
 msgid "Distribution Type"
+msgstr ""
+
+msgid "Distribution of agent opinions across different opinion groups."
 msgstr ""
 
 msgid "Distribution:"
@@ -1588,6 +1931,9 @@ msgid "Email"
 msgstr ""
 
 msgid "Embedding Model"
+msgstr ""
+
+msgid "Embedding Service"
 msgstr ""
 
 msgid "Emotion"
@@ -1732,6 +2078,18 @@ msgstr ""
 msgid "Enter topic name"
 msgstr ""
 
+msgid "Entries per Image Feed"
+msgstr ""
+
+msgid "Entries per RSS Feed"
+msgstr ""
+
+msgid "Entries per Reddit Feed"
+msgstr ""
+
+msgid "Epsilon (Confidence Bound)"
+msgstr ""
+
 #, python-format
 msgid "Error %(code)s"
 msgstr ""
@@ -1742,10 +2100,33 @@ msgstr ""
 msgid "Europe/Rome"
 msgstr ""
 
+msgid "Evaluate Opinion (System)"
+msgstr ""
+
+msgid "Evaluation Scope"
+msgstr ""
+
+msgid "Event"
+msgstr ""
+
+msgid "Event weights"
+msgstr ""
+
 msgid "Evidence Tail Max"
 msgstr ""
 
+msgid "Evolution of average aggregate stress and reward over time."
+msgstr ""
+
+msgid ""
+"Evolution of opinion group volumes (percentage of agents in each group "
+"over time)."
+msgstr ""
+
 msgid "Exception:"
+msgstr ""
+
+msgid "Excerpt"
 msgstr ""
 
 #, python-format
@@ -1753,6 +2134,9 @@ msgid "Execution: %(progress)s"
 msgstr ""
 
 msgid "Existing unassigned populations are incompatible with this platform type."
+msgstr ""
+
+msgid "Expand plot"
 msgstr ""
 
 msgid "Expanded"
@@ -1797,6 +2181,9 @@ msgstr ""
 msgid "Experiment Schedule"
 msgstr ""
 
+msgid "Experiment compatibility"
+msgstr ""
+
 msgid "Experiment identification and settings."
 msgstr ""
 
@@ -1816,6 +2203,12 @@ msgid "Experiment:"
 msgstr ""
 
 msgid "Experiments"
+msgstr ""
+
+msgid ""
+"Experiments do not assume any embedding backend. Without this "
+"configuration, semantic memory features degrade gracefully to lexical "
+"retrieval."
 msgstr ""
 
 msgid "Experiments grouped by project. Click to expand/collapse."
@@ -1844,6 +2237,12 @@ msgstr ""
 msgid "Explorer %"
 msgstr ""
 
+msgid "Explorer Persona"
+msgstr ""
+
+msgid "Explorer:"
+msgstr ""
+
 msgid "Exponent parameter"
 msgstr ""
 
@@ -1862,10 +2261,25 @@ msgstr ""
 msgid "External Runtimes"
 msgstr ""
 
+msgid "Extract Emotions (System)"
+msgstr ""
+
+msgid "Extract Emotions (User)"
+msgstr ""
+
+msgid "Extract Topics (System)"
+msgstr ""
+
+msgid "Extract Topics (User)"
+msgstr ""
+
 msgid "Extravagant/Careless"
 msgstr ""
 
 msgid "Extraversion"
+msgstr ""
+
+msgid "Extraversion."
 msgstr ""
 
 msgid "Extreme"
@@ -1875,6 +2289,9 @@ msgid "Extreme Interest"
 msgstr ""
 
 msgid "False"
+msgstr ""
+
+msgid "Faster"
 msgstr ""
 
 msgid "Favorite Filters"
@@ -1887,6 +2304,9 @@ msgid "Feed & Profile"
 msgstr ""
 
 msgid "Feed Health"
+msgstr ""
+
+msgid "Feed Limits"
 msgstr ""
 
 msgid "Feed Retrieval Limits"
@@ -1902,6 +2322,9 @@ msgid "Female"
 msgstr ""
 
 msgid "Female:"
+msgstr ""
+
+msgid "Fetch Embedding Models"
 msgstr ""
 
 msgid "Fetch Models"
@@ -1934,6 +2357,9 @@ msgstr ""
 msgid "Follow Action Decay"
 msgstr ""
 
+msgid "Follow Decisions"
+msgstr ""
+
 msgid "Follow Recommender"
 msgstr ""
 
@@ -1946,10 +2372,26 @@ msgstr ""
 msgid "Followers:"
 msgstr ""
 
+msgid ""
+"For each topic, select the opinion distribution for every population "
+"segment."
+msgstr ""
+
 msgid "For how long a content can be proposed by recommender systems"
 msgstr ""
 
 msgid "For how long an agent maintain his interest in a topic"
+msgstr ""
+
+msgid ""
+"For the currently selected topic, inspect agents targeted by MoP "
+"campaigns and compare their opinion trajectory with the timing of MoP "
+"interactions."
+msgstr ""
+
+msgid ""
+"For the currently selected topic, inspect targeted agents and compare "
+"their opinion trajectory with the timing of propaganda interactions."
 msgstr ""
 
 msgid "Format: username,email,role,password (one per line)"
@@ -1959,6 +2401,18 @@ msgid "Forum"
 msgstr ""
 
 msgid "Forum (i.e., Reddit)"
+msgstr ""
+
+msgid "Forum Image Feed Assignment"
+msgstr ""
+
+msgid "Forum Image Resources"
+msgstr ""
+
+msgid "Forum RSS Feed Assignment"
+msgstr ""
+
+msgid "Forum RSS Resources"
 msgstr ""
 
 msgid ""
@@ -2013,7 +2467,22 @@ msgstr ""
 msgid "Generate"
 msgstr ""
 
+msgid "Generate Comment"
+msgstr ""
+
 msgid "Generate Experiments"
+msgstr ""
+
+msgid "Generate News Commentary"
+msgstr ""
+
+msgid "Generate Post"
+msgstr ""
+
+msgid "Generate Read Reaction"
+msgstr ""
+
+msgid "Generate Share Commentary"
 msgstr ""
 
 msgid "Generate Synthetic Network"
@@ -2032,6 +2501,9 @@ msgid "Generated Configs"
 msgstr ""
 
 msgid "Generated Slug"
+msgstr ""
+
+msgid "Generates text or makes decisions leveraging its profile"
 msgstr ""
 
 msgid "Geometric"
@@ -2073,6 +2545,18 @@ msgstr ""
 msgid "Got it"
 msgstr ""
 
+msgid "Grant Group Visibility"
+msgstr ""
+
+msgid "Grant Visibility"
+msgstr ""
+
+msgid ""
+"Grant or revoke experiment visibility for selected researcher users. "
+"Shared researchers can view and manage stop/delete actions for those "
+"experiments."
+msgstr ""
+
 msgid "Grant this user access to participate in an experiment."
 msgstr ""
 
@@ -2088,7 +2572,16 @@ msgstr ""
 msgid "HPC"
 msgstr ""
 
+msgid "HPC LLM Prompts Configuration"
+msgstr ""
+
 msgid "HPC Monitor"
+msgstr ""
+
+msgid "HPC Prompts Guide"
+msgstr ""
+
+msgid "HPC Prompts Structure"
 msgstr ""
 
 msgid "HPC Reset"
@@ -2097,7 +2590,16 @@ msgstr ""
 msgid "HPC Simulator"
 msgstr ""
 
+msgid "HPC prompts use a system/user template pattern:"
+msgstr ""
+
 msgid "Half-life Rounds"
+msgstr ""
+
+msgid "Handler Actions Provided Instructions"
+msgstr ""
+
+msgid "Handler Pre-prompts"
 msgstr ""
 
 msgid "Hashtag Evolution"
@@ -2110,6 +2612,9 @@ msgid "Hello World Settings"
 msgstr ""
 
 msgid "Help us improve YSocial: submit the experiment log!"
+msgstr ""
+
+msgid "Here is the list of available variables:"
 msgstr ""
 
 msgid ""
@@ -2130,6 +2635,9 @@ msgstr ""
 msgid "High School"
 msgstr ""
 
+msgid "High energy, viral-focused, controversial"
+msgstr ""
+
 msgid "Higher-order Modeling"
 msgstr ""
 
@@ -2137,6 +2645,12 @@ msgid "Hold Cmd/Ctrl to select multiple values."
 msgstr ""
 
 msgid "Hold Ctrl (Cmd on Mac) to select multiple users"
+msgstr ""
+
+msgid "Hold Ctrl (Windows/Linux) or Cmd (Mac) to select multiple users."
+msgstr ""
+
+msgid "Hold Ctrl/Cmd to select multiple interests."
 msgstr ""
 
 msgid "Home"
@@ -2148,7 +2662,13 @@ msgstr ""
 msgid "Host Address"
 msgstr ""
 
+msgid "Host format"
+msgstr ""
+
 msgid "Host:"
+msgstr ""
+
+msgid "Hour"
 msgstr ""
 
 #, python-format
@@ -2196,13 +2716,31 @@ msgid ""
 "Ollama server. For a list of available models refer to the %(link)s."
 msgstr ""
 
+msgid "Image Commentary (System)"
+msgstr ""
+
+msgid "Image Commentary (User)"
+msgstr ""
+
+msgid "Image Feed Limits"
+msgstr ""
+
+msgid "Image Feeds"
+msgstr ""
+
 msgid "Image Generation Model"
 msgstr ""
 
 msgid "Image Generation Model (Transformer-based)"
 msgstr ""
 
+msgid "Image Processing"
+msgstr ""
+
 msgid "Image Transcription (Optional)"
+msgstr ""
+
+msgid "Image description"
 msgstr ""
 
 msgid ""
@@ -2214,6 +2752,20 @@ msgid "Image-share posts emitted"
 msgstr ""
 
 msgid "Importance Mode"
+msgstr ""
+
+msgid "Inactive Alter"
+msgstr ""
+
+msgid ""
+"Individual agent opinion trajectories over time (colored by initial "
+"opinion group)."
+msgstr ""
+
+msgid "Infer Opinion (System)"
+msgstr ""
+
+msgid "Infer Opinion (User)"
 msgstr ""
 
 msgid "Inference Backend"
@@ -2238,6 +2790,9 @@ msgid ""
 "and content sources."
 msgstr ""
 
+msgid "Inherited"
+msgstr ""
+
 msgid "Initial Number of Agents"
 msgstr ""
 
@@ -2245,8 +2800,23 @@ msgid "Initial Size"
 msgstr ""
 
 msgid ""
+"Inspect how recommendations of one author’s posts spread across the "
+"population over time."
+msgstr ""
+
+msgid ""
 "Inspect nested config values, unlock the ones you want to vary, and "
 "generate the full combination set."
+msgstr ""
+
+msgid ""
+"Inspect one SA target at a time using aggregate stress/reward trends and "
+"the timing of SA interactions."
+msgstr ""
+
+msgid ""
+"Inspect one moderated target at a time using their toxicity trend and the"
+" timing of moderator interventions."
 msgstr ""
 
 #, python-format
@@ -2256,10 +2826,28 @@ msgstr ""
 msgid "Installed"
 msgstr ""
 
+msgid "Instructions"
+msgstr ""
+
+msgid "Instructions (Topics)"
+msgstr ""
+
+msgid "Instructions (simple)"
+msgstr ""
+
+msgid "Instructions for content pages to generate posts and responses."
+msgstr ""
+
+msgid "Instructions that define agent behavior and roleplay characteristics."
+msgstr ""
+
 msgid "Inter-block edge probability"
 msgstr ""
 
 msgid "Inter-block probability"
+msgstr ""
+
+msgid "Interactions"
 msgstr ""
 
 msgid "Interest"
@@ -2274,15 +2862,32 @@ msgstr ""
 msgid "Interest percentage"
 msgstr ""
 
+msgid "Interest tagging"
+msgstr ""
+
 msgid "Interested"
+msgstr ""
+
+msgid "Interests"
 msgstr ""
 
 msgid "Interests & Opinions"
 msgstr ""
 
 msgid ""
+"Interests remain part of the reusable resource so the same subreddit "
+"behaves consistently when reused across forum simulations."
+msgstr ""
+
+msgid ""
 "Interests, opinion hints, and custom key-value data stored in the "
 "dashboard database."
+msgstr ""
+
+msgid "Interlocutor + First-Order Friends"
+msgstr ""
+
+msgid "Interlocutor Only"
 msgstr ""
 
 msgid "Internal Server Error"
@@ -2328,6 +2933,11 @@ msgstr ""
 msgid "Jupyter Lab"
 msgstr ""
 
+msgid ""
+"Keep defaults for small and medium experiments. Increase limits only when"
+" you need broader topical variety or longer-running content pools."
+msgstr ""
+
 msgid "LFR Benchmark"
 msgstr ""
 
@@ -2346,6 +2956,12 @@ msgstr ""
 msgid "LLM Backend"
 msgstr ""
 
+msgid "LLM Evaluation"
+msgstr ""
+
+msgid "LLM Evaluation Parameters"
+msgstr ""
+
 msgid "LLM Management"
 msgstr ""
 
@@ -2353,6 +2969,9 @@ msgid "LLM Management:"
 msgstr ""
 
 msgid "LLM Model"
+msgstr ""
+
+msgid "LLM Prompts Configuration"
 msgstr ""
 
 msgid "LLM Server"
@@ -2416,6 +3035,12 @@ msgid "Last Check"
 msgstr ""
 
 msgid "Last Run"
+msgstr ""
+
+msgid "Latest aggregate reward state binned across tracked agents."
+msgstr ""
+
+msgid "Latest aggregate stress state binned across tracked agents."
 msgstr ""
 
 msgid "Latest articles from this page's RSS feed."
@@ -2526,6 +3151,12 @@ msgstr ""
 msgid "Male:"
 msgstr ""
 
+msgid "Manage Shared Image Resources"
+msgstr ""
+
+msgid "Manage Shared RSS Resources"
+msgstr ""
+
 msgid ""
 "Manage agent-plugin runtimes that can extend this experiment with "
 "dedicated ad hoc agent execution flows."
@@ -2552,6 +3183,14 @@ msgid "Mark read"
 msgstr ""
 
 msgid "Master"
+msgstr ""
+
+msgid "Master of Puppets Target Drill-down"
+msgstr ""
+
+msgid ""
+"Master of Puppets agents are deployed, but no topic-matched target "
+"interactions have been recorded up to the selected time."
 msgstr ""
 
 msgid "Matrix"
@@ -2581,7 +3220,19 @@ msgstr ""
 msgid "Maximum actions"
 msgstr ""
 
+msgid "Maximum articles to process from each standard RSS feed."
+msgstr ""
+
+msgid "Maximum entries to load from the database when live feeds are unavailable."
+msgstr ""
+
+msgid "Maximum images to retrieve from each subreddit-based image feed."
+msgstr ""
+
 msgid "Maximum number of replies an agent can make per simulation round"
+msgstr ""
+
+msgid "Maximum posts to retrieve from Reddit subreddit feeds."
 msgstr ""
 
 msgid "Mean Duration by Path (seconds)"
@@ -2638,10 +3289,39 @@ msgstr ""
 msgid "Mixing parameter (mu)"
 msgstr ""
 
+msgid "MoP Accounts"
+msgstr ""
+
 msgid "Model"
 msgstr ""
 
 msgid "Model Name"
+msgstr ""
+
+msgid "Model discovery is enabled only after an Ollama host is provided."
+msgstr ""
+
+msgid "Model selection"
+msgstr ""
+
+msgid "Moderated Target"
+msgstr ""
+
+msgid "Moderator Actions"
+msgstr ""
+
+msgid "Moderator Agents"
+msgstr ""
+
+msgid "Moderator Target Drill-down"
+msgstr ""
+
+msgid ""
+"Moderator agents are deployed, but no moderated targets have been "
+"recorded up to the selected time."
+msgstr ""
+
+msgid "Moderators"
 msgstr ""
 
 msgid "Monitor and auto-restart hung server/client processes."
@@ -2653,6 +3333,9 @@ msgid ""
 msgstr ""
 
 msgid "Monitors server/client processes for hangs and auto-restarts them."
+msgstr ""
+
+msgid "Mu (Averaging Weight)"
 msgstr ""
 
 msgid "My Profile"
@@ -2696,7 +3379,16 @@ msgstr ""
 msgid "Network Science"
 msgstr ""
 
+msgid "Network Type"
+msgstr ""
+
 msgid "Neuroticism"
+msgstr ""
+
+msgid "Neuroticism."
+msgstr ""
+
+msgid "Neutral (0.5)"
 msgstr ""
 
 msgid "Never"
@@ -2777,7 +3469,16 @@ msgstr ""
 msgid "New post"
 msgstr ""
 
+msgid "News"
+msgstr ""
+
 msgid "News Pages"
+msgstr ""
+
+msgid "News article content"
+msgstr ""
+
+msgid "News source name"
 msgstr ""
 
 msgid "News."
@@ -2822,7 +3523,13 @@ msgstr ""
 msgid "No experiments yet"
 msgstr ""
 
+msgid "No feed description available."
+msgstr ""
+
 msgid "No groups created yet"
+msgstr ""
+
+msgid "No interests assigned"
 msgstr ""
 
 msgid "No logs available for this repository."
@@ -2847,10 +3554,31 @@ msgstr ""
 msgid "No populations are available for this %(platform)s experiment."
 msgstr ""
 
+#, python-format
+msgid ""
+"No reusable RSS resources are available yet. Create them first in "
+"%(link)s."
+msgstr ""
+
+msgid "No reusable RSS resources stored yet."
+msgstr ""
+
+#, python-format
+msgid ""
+"No reusable image resources are available yet. Create them first in "
+"%(link)s."
+msgstr ""
+
+msgid "No reusable image resources stored yet."
+msgstr ""
+
 msgid "No server configuration file was found for this experiment."
 msgstr ""
 
 msgid "No topics assigned"
+msgstr ""
+
+msgid "No visibility grants configured yet."
 msgstr ""
 
 msgid "Normal"
@@ -2914,6 +3642,9 @@ msgid ""
 "progressive decay starts."
 msgstr ""
 
+msgid "Number of pages to fetch at 100 entries per page."
+msgstr ""
+
 msgid "Number of posts shown per page when infinite scrolling is disabled"
 msgstr ""
 
@@ -2926,13 +3657,30 @@ msgstr ""
 msgid "OR"
 msgstr ""
 
+msgid "Ollama"
+msgstr ""
+
 msgid "Ollama / OpenAI-compatible"
+msgstr ""
+
+msgid "Ollama Host"
 msgstr ""
 
 msgid "Ollama directory"
 msgstr ""
 
 msgid "Onboarding screen"
+msgstr ""
+
+msgid "Only Ollama is currently supported for memory embeddings."
+msgstr ""
+
+msgid ""
+"Only embedding models are listed. Choose one that is actually installed "
+"on the target Ollama instance before saving."
+msgstr ""
+
+msgid "Only embedding-capable models are shown in this selector."
 msgstr ""
 
 msgid "Only owner/admin/shared researchers can clear logs"
@@ -2981,10 +3729,22 @@ msgstr ""
 msgid "Openness to Experience"
 msgstr ""
 
+msgid "Openness to Experience."
+msgstr ""
+
 msgid "Operation output"
 msgstr ""
 
 msgid "Opinion"
+msgstr ""
+
+msgid "Opinion Configuration"
+msgstr ""
+
+msgid "Opinion Distribution"
+msgstr ""
+
+msgid "Opinion Distribution Configuration"
 msgstr ""
 
 msgid "Opinion Distributions"
@@ -2999,10 +3759,16 @@ msgstr ""
 msgid "Opinion Evolution"
 msgstr ""
 
+msgid "Opinion Group Trends"
+msgstr ""
+
 msgid "Opinion Groups"
 msgstr ""
 
 msgid "Opinion Modeling"
+msgstr ""
+
+msgid "Opinion categories"
 msgstr ""
 
 msgid ""
@@ -3067,6 +3833,9 @@ msgstr ""
 msgid "Page Overview"
 msgstr ""
 
+msgid "Page Pre-prompts"
+msgstr ""
+
 msgid "Page identification and RSS feed configuration."
 msgstr ""
 
@@ -3074,6 +3843,9 @@ msgid "Pages"
 msgstr ""
 
 msgid "Pair Limit"
+msgstr ""
+
+msgid "Parse"
 msgstr ""
 
 msgid "Partially installed"
@@ -3097,6 +3869,12 @@ msgid "Pause Client"
 msgstr ""
 
 msgid "Persist memory events"
+msgstr ""
+
+msgid "Persona Configuration"
+msgstr ""
+
+msgid "Persona Template"
 msgstr ""
 
 msgid "Personalise your account details."
@@ -3131,6 +3909,9 @@ msgstr ""
 
 #, python-format
 msgid "Platform: %(platform)s"
+msgstr ""
+
+msgid "Play"
 msgstr ""
 
 msgid "Please check the URL or go back to the homepage."
@@ -3235,6 +4016,15 @@ msgstr ""
 msgid "Positive / neutral / negative score"
 msgstr ""
 
+msgid "Post"
+msgstr ""
+
+msgid "Post ID"
+msgstr ""
+
+msgid "Post author name"
+msgstr ""
+
 msgid "Post date & time"
 msgstr ""
 
@@ -3336,6 +4126,73 @@ msgstr ""
 msgid "Prompt Max Chars"
 msgstr ""
 
+msgid "Prompts"
+msgstr ""
+
+msgid "Prompts (HPC)"
+msgstr ""
+
+msgid "Prompts Customization"
+msgstr ""
+
+#, python-format
+msgid ""
+"Prompts can access agent profile variables and can be customized using "
+"the syntax %(syntax)s."
+msgstr ""
+
+msgid "Prompts for deciding how to react to posts (like, comment, or ignore)."
+msgstr ""
+
+msgid "Prompts for deciding whether to follow users."
+msgstr ""
+
+msgid "Prompts for describing and commenting on images."
+msgstr ""
+
+msgid "Prompts for emotional reactions to discovered content."
+msgstr ""
+
+msgid "Prompts for engagement decisions after searching for content."
+msgstr ""
+
+msgid "Prompts for extracting topics, emotions, and opinions from content."
+msgstr ""
+
+msgid "Prompts for generating comments on posts."
+msgstr ""
+
+msgid "Prompts for generating original social media posts."
+msgstr ""
+
+msgid "Prompts for news pages to share articles."
+msgstr ""
+
+msgid "Prompts for resharing posts with commentary."
+msgstr ""
+
+msgid "Prompts support template variables using curly braces:"
+msgstr ""
+
+msgid "Propaganda Agents"
+msgstr ""
+
+msgid "Propaganda Target Drill-down"
+msgstr ""
+
+msgid ""
+"Propaganda agents are deployed, but no target interactions have been "
+"recorded for the selected topic up to the selected time."
+msgstr ""
+
+msgid ""
+"Provides instructions and evaluates results (e.g., identifying topics, "
+"emotions)"
+msgstr ""
+
+msgid "Provides specific instructions and input"
+msgstr ""
+
 msgid "Public:"
 msgstr ""
 
@@ -3345,13 +4202,39 @@ msgstr ""
 msgid "RSS Feed"
 msgstr ""
 
+msgid "RSS Feed Limits"
+msgstr ""
+
+msgid "RSS Feeds"
+msgstr ""
+
+msgid ""
+"RSS and Reddit JSON feed sources are now stored in the dashboard database"
+" and can be reused across multiple forum experiments."
+msgstr ""
+
 msgid "RSS-derived posts emitted"
 msgstr ""
 
 msgid "Random Network (Erdős-Rényi)"
 msgstr ""
 
+msgid "Range: 0-1, Default: 0"
+msgstr ""
+
+msgid "Range: 0-1, Default: 0.25"
+msgstr ""
+
+msgid "Range: 0-1, Default: 0.5"
+msgstr ""
+
 msgid "Ranking mode"
+msgstr ""
+
+msgid "Rate Limit (seconds)"
+msgstr ""
+
+msgid "Rate Limiting"
 msgstr ""
 
 msgid "Rate interest and opinion for each topic."
@@ -3364,6 +4247,9 @@ msgid "Ray Agents Batch Size"
 msgstr ""
 
 msgid "Reaction weight"
+msgstr ""
+
+msgid "Reactions"
 msgstr ""
 
 msgid "Read"
@@ -3393,7 +4279,22 @@ msgstr ""
 msgid "Recency horizon for semantic search candidates."
 msgstr ""
 
+msgid "Recent MoP Interactions"
+msgstr ""
+
+msgid "Recent Moderator Interventions"
+msgstr ""
+
 msgid "Recent News"
+msgstr ""
+
+msgid "Recent Propaganda Interactions"
+msgstr ""
+
+msgid "Recent SA Interactions"
+msgstr ""
+
+msgid "Recognition"
 msgstr ""
 
 msgid "Recommendation Limit"
@@ -3408,10 +4309,22 @@ msgstr ""
 msgid "Recommendations"
 msgstr ""
 
+msgid "Recommended Posts"
+msgstr ""
+
+msgid "Recommended Use"
+msgstr ""
+
 msgid "Recommender info"
 msgstr ""
 
 msgid "Recsys Evolution"
+msgstr ""
+
+msgid "Reddit Pages to Fetch"
+msgstr ""
+
+msgid "Reddit Retrieval"
 msgstr ""
 
 msgid "Reddit-like placeholders are enabled across the forum interface."
@@ -3509,6 +4422,9 @@ msgstr ""
 msgid "Researcher"
 msgstr ""
 
+msgid "Researcher Users"
+msgstr ""
+
 msgid "Reset HPC Experiment"
 msgstr ""
 
@@ -3529,12 +4445,42 @@ msgstr ""
 msgid "Resume Client"
 msgstr ""
 
+msgid "Reusable Forum Image Resources"
+msgstr ""
+
+msgid "Reusable Forum RSS Resources"
+msgstr ""
+
+msgid "Reusable Image Resources"
+msgstr ""
+
+msgid "Reusable RSS Resources"
+msgstr ""
+
+msgid "Reusable RSS feeds"
+msgstr ""
+
+msgid "Reusable image source"
+msgstr ""
+
+msgid "Reusable subreddit resources"
+msgstr ""
+
 msgid "Reuse Actors"
 msgstr ""
 
 msgid ""
 "Reuse the standard scheduling and runtime controls, without forum-"
 "specific memory, recsys, network, or archetype configuration."
+msgstr ""
+
+msgid "Revoke Group Visibility"
+msgstr ""
+
+msgid "Revoke Visibility"
+msgstr ""
+
+msgid "Reward Distribution"
 msgstr ""
 
 msgid "Rewiring probability (p)"
@@ -3547,6 +4493,18 @@ msgid "Role can be: admin, researcher, teacher, user, or student"
 msgstr ""
 
 msgid "Role must be: user or student (you can only create participants)"
+msgstr ""
+
+msgid "Roleplay"
+msgstr ""
+
+msgid "Roleplay (Comment & Share)"
+msgstr ""
+
+msgid "Roleplay (base)"
+msgstr ""
+
+msgid "Roleplay (simple)"
 msgstr ""
 
 msgid "Rounds to wait before replying to the same user again"
@@ -3576,7 +4534,19 @@ msgstr ""
 msgid "Running a YSocial Experiment"
 msgstr ""
 
+msgid "Runtime compatibility"
+msgstr ""
+
+msgid "SA Interactions"
+msgstr ""
+
 msgid "SHOW"
+msgstr ""
+
+msgid "Sample Images"
+msgstr ""
+
+msgid "Sample Size:"
 msgstr ""
 
 msgid "Save"
@@ -3591,10 +4561,28 @@ msgstr ""
 msgid "Save Archetypes"
 msgstr ""
 
+msgid "Save Configuration"
+msgstr ""
+
+msgid "Save Embedding Settings"
+msgstr ""
+
+msgid "Save Feed Limits"
+msgstr ""
+
+msgid "Save Forum Feed Assignment"
+msgstr ""
+
+msgid "Save Image Feed Assignment"
+msgstr ""
+
 msgid "Save Memory"
 msgstr ""
 
 msgid "Save Simulation Parameters"
+msgstr ""
+
+msgid "Save Stress / Reward Settings"
 msgstr ""
 
 msgid "Save Topics"
@@ -3610,6 +4598,36 @@ msgid "Save interactions"
 msgstr ""
 
 msgid "Save language"
+msgstr ""
+
+#, python-format
+msgid "Saved Image Resources (%(n)s)"
+msgstr ""
+
+#, python-format
+msgid "Saved RSS Resources (%(n)s)"
+msgstr ""
+
+msgid ""
+"Saving here validates the feed URL immediately and stores the canonical "
+"metadata returned by the feed source."
+msgstr ""
+
+msgid ""
+"Saving here verifies the subreddit feed can be parsed before it becomes "
+"available to experiments."
+msgstr ""
+
+#, python-format
+msgid ""
+"Saving this page still writes the standard %(file)s experiment file, so "
+"forum execution keeps the same contract."
+msgstr ""
+
+#, python-format
+msgid ""
+"Saving this page still writes the standard %(file)s experiment file, so "
+"the existing forum runtime remains unchanged."
 msgstr ""
 
 msgid "Scale Free (Barabási-Albert)"
@@ -3690,6 +4708,14 @@ msgstr ""
 msgid "Select an agent type to load compatible populations."
 msgstr ""
 
+msgid ""
+"Select an author to inspect the reach and recommendation distribution of "
+"their posts."
+msgstr ""
+
+msgid "Select an embedding model"
+msgstr ""
+
 msgid "Select an experiment above to inspect its configuration matrix."
 msgstr ""
 
@@ -3742,13 +4768,46 @@ msgid ""
 "\"Always On\" profile keeps the page active 24/7."
 msgstr ""
 
+msgid ""
+"Select which reusable RSS resources should be assigned to this forum "
+"experiment. Feed validation and creation now live in the shared forum "
+"resource workspace."
+msgstr ""
+
+msgid ""
+"Select which reusable subreddit image feeds should be assigned to this "
+"forum experiment. Validation and creation now live in the shared forum "
+"image resource workspace."
+msgstr ""
+
 msgid "Select..."
+msgstr ""
+
+msgid "Selected Agent"
+msgstr ""
+
+msgid "Selected Author"
+msgstr ""
+
+msgid "Selected Author Recommended Posts"
 msgstr ""
 
 msgid "Selected Experiment"
 msgstr ""
 
 msgid "Selected Populations to Merge"
+msgstr ""
+
+msgid "Selected Target"
+msgstr ""
+
+msgid "Selected Target Opinion Trend"
+msgstr ""
+
+msgid "Selected Target Toxicity Trend"
+msgstr ""
+
+msgid "Selected Target Trend"
 msgstr ""
 
 #, python-format
@@ -3808,7 +4867,13 @@ msgid ""
 "mean more frequent actions. Use 0 to disable an action."
 msgstr ""
 
+msgid "Share"
+msgstr ""
+
 msgid "Share / repost"
+msgstr ""
+
+msgid "Share Entire Group"
 msgstr ""
 
 msgid "Share Experiments"
@@ -3826,10 +4891,19 @@ msgstr ""
 msgid "Share RSS / Feed Link"
 msgstr ""
 
+msgid "Share Single Experiment"
+msgstr ""
+
 msgid "Share and comment an Image"
 msgstr ""
 
 msgid "Share weight"
+msgstr ""
+
+#, python-format
+msgid ""
+"Shared image resources can still be created from a subreddit name, "
+"%(name)s, or a Reddit subreddit URL such as %(url)s."
 msgstr ""
 
 msgid "Show Advanced Parameters"
@@ -3910,6 +4984,9 @@ msgstr ""
 msgid "Simulation length and population dynamics."
 msgstr ""
 
+msgid "Simulation time context"
+msgstr ""
+
 msgid "Simulation:"
 msgstr ""
 
@@ -3917,7 +4994,16 @@ msgstr ""
 msgid "Simulation: %(name)s"
 msgstr ""
 
+msgid "Site"
+msgstr ""
+
+msgid "Skeptical, fact-checks, brief responses"
+msgstr ""
+
 msgid "Sliding Window Days"
+msgstr ""
+
+msgid "Slower"
 msgstr ""
 
 msgid "Small World (Watts-Strogatz)"
@@ -3930,6 +5016,9 @@ msgid "Social Corruption Rate"
 msgstr ""
 
 msgid "Social Decay (lambda)"
+msgstr ""
+
+msgid "Social Interactions"
 msgstr ""
 
 msgid "Social Network Structure"
@@ -3951,6 +5040,11 @@ msgid "Source Experiment"
 msgstr ""
 
 msgid "Source Group"
+msgstr ""
+
+msgid ""
+"Specific prompts for different agent action types (post, comment, share, "
+"etc.)."
 msgstr ""
 
 #, python-format
@@ -4028,13 +5122,30 @@ msgstr ""
 msgid "Story Visibility %"
 msgstr ""
 
+msgid "Stress"
+msgstr ""
+
 msgid "Stress / Reward Evolution"
 msgstr ""
 
 msgid "Stress / Reward Settings"
 msgstr ""
 
+msgid "Stress Attacker Target Drill-down"
+msgstr ""
+
+msgid ""
+"Stress Attacker agents are deployed, but no target interactions have been"
+" recorded up to the selected time."
+msgstr ""
+
+msgid "Stress Distribution"
+msgstr ""
+
 msgid "Stress/Reward"
+msgstr ""
+
+msgid "Stress/Reward Churn"
 msgstr ""
 
 msgid "Structure, density, components"
@@ -4055,6 +5166,9 @@ msgstr ""
 msgid "Submit Logs"
 msgstr ""
 
+msgid "Subreddit"
+msgstr ""
+
 msgid "Subset of population to activate initially. Leave empty to use all agents."
 msgstr ""
 
@@ -4065,6 +5179,12 @@ msgid "Suggested Friends"
 msgstr ""
 
 msgid "Suite modules"
+msgstr ""
+
+#, python-format
+msgid ""
+"Supported sources include standard RSS or Atom feeds and Reddit JSON "
+"listing feeds such as %(url)s."
 msgstr ""
 
 msgid "Supporting Institutions"
@@ -4085,6 +5205,12 @@ msgstr ""
 msgid "System Settings:"
 msgstr ""
 
+msgid "System Template"
+msgstr ""
+
+msgid "System Template:"
+msgstr ""
+
 msgid "System Updates"
 msgstr ""
 
@@ -4094,10 +5220,18 @@ msgstr ""
 msgid "Tab of the photo feed shown when a participant opens it"
 msgstr ""
 
+msgid "Target"
+msgstr ""
+
 msgid "Target Group"
 msgstr ""
 
 msgid "Target Population"
+msgstr ""
+
+msgid ""
+"Target aggregate stress/reward by day, with SA interaction volume shown "
+"on the secondary axis."
 msgstr ""
 
 msgid "Teacher (training modules only)"
@@ -4118,6 +5252,12 @@ msgstr ""
 msgid "Temperature"
 msgstr ""
 
+msgid "Temporal Controls"
+msgstr ""
+
+msgid "Temporal Granularity"
+msgstr ""
+
 msgid "Tensor Parallel Size"
 msgstr ""
 
@@ -4125,6 +5265,15 @@ msgid "Terminal output of the latest operations on this plugin, newest first."
 msgstr ""
 
 msgid "Test Connection"
+msgstr ""
+
+msgid "The Agent:"
+msgstr ""
+
+msgid "The Article summary."
+msgstr ""
+
+msgid "The Article title."
 msgstr ""
 
 msgid "The Broadcaster"
@@ -4139,9 +5288,17 @@ msgstr ""
 msgid "The Explorer:"
 msgstr ""
 
+msgid "The Handler:"
+msgstr ""
+
 msgid ""
 "The LLM section appears only for agent types that declare LLM "
 "requirements in their plugin registry."
+msgstr ""
+
+msgid ""
+"The Reddit delay should stay conservative enough to avoid throttling when"
+" multiple feeds are refreshed in sequence."
 msgstr ""
 
 msgid "The Validator"
@@ -4150,9 +5307,50 @@ msgstr ""
 msgid "The Validator:"
 msgstr ""
 
+msgid "The Website name."
+msgstr ""
+
+msgid "The Website political leaning (if available)."
+msgstr ""
+
+msgid "The agent age."
+msgstr ""
+
+msgid "The agent education level."
+msgstr ""
+
+msgid "The agent expected toxicity."
+msgstr ""
+
+msgid "The agent gender."
+msgstr ""
+
+msgid "The agent name."
+msgstr ""
+
+msgid "The agent nationality."
+msgstr ""
+
+msgid "The agent political leaning."
+msgstr ""
+
+msgid "The agent profession."
+msgstr ""
+
+msgid "The agent spoken language."
+msgstr ""
+
 msgid ""
 "The center column controls execution and the lower sections expose logs "
 "and diagnostics for both the server and active clients."
+msgstr ""
+
+msgid ""
+"The dashboard database stores the canonical subreddit definitions, "
+"including their mapped interests."
+msgstr ""
+
+msgid "The image textual description."
 msgstr ""
 
 msgid ""
@@ -4166,15 +5364,52 @@ msgid ""
 "using"
 msgstr ""
 
+msgid "The post text."
+msgstr ""
+
 msgid ""
 "The selected distribution controls how attention budgets are sampled "
 "between min and max."
 msgstr ""
 
+msgid "The three agent archetypes have distinct characteristics:"
+msgstr ""
+
 msgid "Thematic Characterization"
 msgstr ""
 
+#, python-format
+msgid ""
+"These feeds live in the dashboard DB and can be assigned to any forum "
+"experiment from %(page)s."
+msgstr ""
+
 msgid "These options are mutually exclusive."
+msgstr ""
+
+msgid ""
+"These remain experiment-specific. Provide one URL per line for sources "
+"that should be pinned directly into this forum simulation."
+msgstr ""
+
+msgid ""
+"These settings control how much external content is ingested during a "
+"forum simulation. Higher values increase variety but also startup and "
+"refresh costs."
+msgstr ""
+
+#, python-format
+msgid ""
+"These subreddit definitions are stored in the dashboard DB and can be "
+"assigned from %(page)s."
+msgstr ""
+
+msgid ""
+"These values define how much each reaction, comment, share, or moderation"
+" event shifts stress and recognition."
+msgstr ""
+
+msgid "Theta (Backfire Strength)"
 msgstr ""
 
 msgid "This experiment has at least one client set to run until manually stopped"
@@ -4236,6 +5471,9 @@ msgstr ""
 msgid "Tier C Uncertainty"
 msgstr ""
 
+msgid "Time Period"
+msgstr ""
+
 msgid "Timeline Follower Ratio"
 msgstr ""
 
@@ -4275,6 +5513,19 @@ msgstr ""
 msgid "Topic classification chips"
 msgstr ""
 
+msgid "Topic guidance"
+msgstr ""
+
+msgid ""
+"Topic-specific target opinion over time, with MoP interaction volume "
+"shown on the secondary axis."
+msgstr ""
+
+msgid ""
+"Topic-specific target opinion over time, with propaganda interaction "
+"volume shown on the secondary axis."
+msgstr ""
+
 msgid "Topics"
 msgstr ""
 
@@ -4284,6 +5535,9 @@ msgstr ""
 msgid "Topics & Opinions box in profile"
 msgstr ""
 
+msgid "Topics (select to visualize)"
+msgstr ""
+
 msgid "Topics covered and population assignments."
 msgstr ""
 
@@ -4291,6 +5545,15 @@ msgid "Total Max Chars"
 msgstr ""
 
 msgid "Total Memory Chars"
+msgstr ""
+
+msgid "Total Opinions"
+msgstr ""
+
+msgid "Total Recommendations"
+msgstr ""
+
+msgid "Total Recs"
 msgstr ""
 
 msgid "Total configurations:"
@@ -4323,7 +5586,16 @@ msgstr ""
 msgid "Toxicity Levels"
 msgstr ""
 
+msgid "Toxicity level instruction"
+msgstr ""
+
 msgid "Trace excerpt:"
+msgstr ""
+
+msgid "Tracked Agents"
+msgstr ""
+
+msgid "Tracked Aggregates"
 msgstr ""
 
 msgid "Transition Probabilities (%)"
@@ -4360,6 +5632,12 @@ msgid "Unavailable"
 msgstr ""
 
 msgid "Uniform"
+msgstr ""
+
+msgid "Unique Agents"
+msgstr ""
+
+msgid "Unique Recipients"
 msgstr ""
 
 msgid "Unique identifier for this client"
@@ -4407,6 +5685,9 @@ msgstr ""
 msgid "Update Email"
 msgstr ""
 
+msgid "Update HPC Prompts"
+msgstr ""
+
 msgid "Update LLM Configuration"
 msgstr ""
 
@@ -4444,6 +5725,9 @@ msgstr ""
 msgid "Upper Bound"
 msgstr ""
 
+msgid "Usage"
+msgstr ""
+
 #, python-format
 msgid "Use %(b)s to download or remove the experiment"
 msgstr ""
@@ -4453,6 +5737,18 @@ msgid "Use %(requests)s and %(clients)s to inspect runtime behavior"
 msgstr ""
 
 msgid "Use Local Diffusion"
+msgstr ""
+
+#, python-format
+msgid ""
+"Use a subreddit name, %(name)s, or a Reddit subreddit URL such as "
+"%(url)s. The parse step previews sample images before saving."
+msgstr ""
+
+#, python-format
+msgid ""
+"Use the Ollama base address, for example %(url)s. The admin page will "
+"query the compatible models endpoint automatically."
 msgstr ""
 
 msgid ""
@@ -4487,6 +5783,12 @@ msgstr ""
 msgid "User Profile"
 msgstr ""
 
+msgid "User Template"
+msgstr ""
+
+msgid "User Template:"
+msgstr ""
+
 msgid "User Types"
 msgstr ""
 
@@ -4511,10 +5813,35 @@ msgstr ""
 msgid "Validate"
 msgstr ""
 
+msgid "Validate And Save Image Resource"
+msgstr ""
+
+msgid "Validate And Save RSS Resource"
+msgstr ""
+
+msgid ""
+"Validate a source once, save it to the dashboard database, and reuse it "
+"across multiple forum experiments."
+msgstr ""
+
+msgid ""
+"Validate subreddit-based image feeds once, store them centrally, and "
+"assign them to any forum experiment as needed."
+msgstr ""
+
+msgid "Validation"
+msgstr ""
+
 msgid "Validator"
 msgstr ""
 
 msgid "Validator %"
+msgstr ""
+
+msgid "Validator Persona"
+msgstr ""
+
+msgid "Validator:"
 msgstr ""
 
 msgid "Version"
@@ -4530,6 +5857,9 @@ msgid "View Release"
 msgstr ""
 
 msgid "Visible Rows"
+msgstr ""
+
+msgid "Visible Tie"
 msgstr ""
 
 msgid "Vision GPU Memory Utilization"
@@ -4552,6 +5882,9 @@ msgid ""
 "and behavior patterns."
 msgstr ""
 
+msgid "Visualization Mode"
+msgstr ""
+
 msgid ""
 "We are a team of multidisciplinary researchers that share a common "
 "interest in the study of social networks and human behavior."
@@ -4566,6 +5899,9 @@ msgid "We're working to fix the issue. Please try again later."
 msgstr ""
 
 msgid "Website:"
+msgstr ""
+
+msgid "Weekly"
 msgstr ""
 
 msgid "Weight for comments / replies"
@@ -4595,6 +5931,9 @@ msgid ""
 "occurred?"
 msgstr ""
 
+msgid "When"
+msgstr ""
+
 #, python-format
 msgid "When %(b)s is enabled, Detoxify is used automatically."
 msgstr ""
@@ -4616,6 +5955,12 @@ msgid ""
 msgstr ""
 
 msgid "When enabled, memory can influence posting, commenting, and voting."
+msgstr ""
+
+msgid ""
+"When enabled, the client computes a churn probability from the latest "
+"aggregate stress and reward at activation time and may ask the server to "
+"mark the agent as left."
 msgstr ""
 
 msgid "Where the Digital World comes to life."
@@ -4660,6 +6005,9 @@ msgstr ""
 
 #, python-format
 msgid "YSocial is the result of a joint effort of %(institutions)s."
+msgstr ""
+
+msgid "YSocial simulates agent actions through a chat between two entities:"
 msgstr ""
 
 msgid "YSocial supports three types of users with different access levels:"
@@ -4736,7 +6084,15 @@ msgstr ""
 msgid "e.g., localhost:8000"
 msgstr ""
 
+msgid "http://127.0.0.1:11434"
+msgstr ""
+
 msgid "http://127.0.0.1:11434/v1"
+msgstr ""
+
+msgid ""
+"https://example.com/feed.xml or "
+"https://www.reddit.com/r/politics/new.json?limit=100"
 msgstr ""
 
 msgid "local changes"
@@ -4749,6 +6105,9 @@ msgid "manifest invalid"
 msgstr ""
 
 msgid "manifest valid"
+msgstr ""
+
+msgid "memes or https://www.reddit.com/r/memes/"
 msgstr ""
 
 msgid "min"
@@ -4793,9 +6152,6 @@ msgstr ""
 msgid "vLLM server not running. Start manually:"
 msgstr ""
 
-msgid "vllm serve <model> --host 0.0.0.0 --port 8000"
-msgstr ""
-
 msgid "y-not.social"
 msgstr ""
 
@@ -4838,5 +6194,8 @@ msgid "← All plugins"
 msgstr ""
 
 msgid "∞ Infinite"
+msgstr ""
+
+msgid "⚠ Requires LLM agents enabled"
 msgstr ""
 
