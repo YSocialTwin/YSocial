@@ -235,6 +235,36 @@
                     </div>
                 </div>
 
+ <div class="column is-12-mobile is-4-tablet d-flex">
+ <div class="dashboard-box ys-flex-col-1" id="box-update-language">
+                        <h3 class="title is-5 is-thin">{{ _('Language') }}</h3>
+ <p class="ys-text-small">
+                            {{ _('Choose the language of the dashboard for this user.') }}
+                        </p>
+                        <div class="box-content">
+                            <form action="/admin/update_user_language" method="POST">
+                                <div class="box-lines">
+                                    <div class="box-line">
+                                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                                        <label class="label" for="user_lang_select">{{ _('Dashboard language') }}</label>
+                                        <select name="lang" id="user_lang_select" class="input">
+                                            <option value="" {% if not user.lang %}selected{% endif %}>{{ _('Automatic (browser language)') }}</option>
+                                            {% for code, name in available_languages() %}
+                                            <option value="{{ code }}" {% if user.lang == code %}selected{% endif %}>{{ name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth">
+                                        {{ _('Save language') }}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
             <!-- Row 3: Experiment Participation and Add to Experiment -->

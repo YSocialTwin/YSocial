@@ -26,6 +26,15 @@ SIMULATION_BLUEPRINTS = frozenset(
     {"main", "user_actions", "api_reddit", "api_social", "api_interview"}
 )
 
+# Native names shown in language selectors; unknown codes fall back to the code.
+LANGUAGE_NAMES = {
+    "en": "English",
+    "it": "Italiano",
+    "es": "Español",
+    "fr": "Français",
+    "de": "Deutsch",
+}
+
 babel = Babel()
 
 # Optional hook set by the experiment code: returns ``(language, allow_override)``
@@ -37,6 +46,11 @@ def supported_languages():
     """Return the tuple of language codes enabled in the configuration."""
     langs = current_app.config.get("SUPPORTED_LANGUAGES") or (DEFAULT_LOCALE,)
     return tuple(langs)
+
+
+def available_languages():
+    """Return ``[(code, native name), ...]`` for the supported languages."""
+    return [(code, LANGUAGE_NAMES.get(code, code)) for code in supported_languages()]
 
 
 def normalize_language(code):
@@ -105,3 +119,4 @@ def init_i18n(app):
     app.config.setdefault("SUPPORTED_LANGUAGES", (DEFAULT_LOCALE,))
     babel.init_app(app, locale_selector=select_locale)
     app.jinja_env.globals["get_locale"] = get_locale
+    app.jinja_env.globals["available_languages"] = available_languages

@@ -20,11 +20,13 @@ from flask import (
     request,
     url_for,
 )
+from flask_babel import gettext as _
 from flask_login import current_user, login_required
 from sqlalchemy import delete, select
 from werkzeug.security import generate_password_hash
 
 from y_web import db  # , app
+from y_web.i18n import ADMIN_COOKIE, normalize_language
 from y_web.src.content.cover_images import random_cover_image_url
 from y_web.src.experiment.helpers import ensure_experiment_user
 from y_web.src.llm.vllm_manager import get_llm_models
@@ -681,6 +683,54 @@ def update_user_email():
 
     flash("Email updated successfully", "success")
     return user_details(user_id_int)
+
+
+@users.route("/admin/update_user_language", methods=["POST"])
+@login_required
+def update_user_language():
+    """
+    Save the dashboard language of an admin user (empty value = automatic).
+
+    Returns:
+        Redirect to the user details page
+    """
+    try:
+        user_id_int = int(request.form.get("user_id"))
+    except (ValueError, TypeError):
+        flash(_("Invalid user ID."), "error")
+        return redirect(url_for("admin.dashboard"))
+
+    current_admin_user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
+    if (
+        current_admin_user.role not in ["admin", "researcher"]
+        and current_admin_user.id != user_id_int
+    ):
+        flash(_("You do not have permission to perform this action."), "error")
+        return redirect(url_for("admin.dashboard"))
+
+    raw = (request.form.get("lang") or "").strip()
+    lang = normalize_language(raw) if raw else None
+    if raw and lang != raw:
+        flash(_("Unsupported language."), "error")
+        return redirect(url_for("users.user_details", uid=user_id_int))
+
+    user = db.session.scalars(select(Admin_users).filter_by(id=user_id_int)).first()
+    if not user:
+        flash(_("User not found"), "error")
+        return redirect(url_for("users.user_data"))
+
+    user.lang = lang
+    db.session.commit()
+
+    response = redirect(url_for("users.user_details", uid=user_id_int))
+    if user_id_int == current_admin_user.id:
+        if lang:
+            response.set_cookie(ADMIN_COOKIE, lang, max_age=60 * 60 * 24 * 365)
+        else:
+            response.delete_cookie(ADMIN_COOKIE)
+    return response
 
 
 @users.route("/admin/bulk_create_users", methods=["POST"])

@@ -250,6 +250,29 @@ def _run_all_migrations(app, db_type, db):
         print(f"Failed to run tutorial_shown column migration: {e}")
 
     # ------------------------------------------------------------------
+    # admin_users.lang column (dashboard language)
+    # ------------------------------------------------------------------
+    try:
+        if db_type == "sqlite":
+            from y_web.migrations.add_admin_language_column import (
+                migrate_sqlite as migrate_admin_lang_sqlite,
+            )
+
+            if dashboard_db_path:
+                migrate_admin_lang_sqlite(dashboard_db_path)
+        elif db_type == "postgresql":
+            from y_web.migrations.add_admin_language_column import (
+                migrate_postgresql as migrate_admin_lang_postgresql,
+            )
+
+            if pg["password"]:
+                migrate_admin_lang_postgresql(
+                    pg["host"], pg["port"], pg["database"], pg["user"], pg["password"]
+                )
+    except Exception as e:
+        print(f"Failed to run admin language column migration: {e}")
+
+    # ------------------------------------------------------------------
     # exp_details_tutorial_shown column
     # ------------------------------------------------------------------
     try:
