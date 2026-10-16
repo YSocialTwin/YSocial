@@ -47,6 +47,7 @@
   /* ---------- scena ---------- */
   var cv = $('yl-net');
   if (!cv || !cv.getContext) return;
+  var calm = document.body.getAttribute('data-cascade') === 'off';
   var cx = cv.getContext('2d'), layer = $('yl-layer'), card = $('yl-card'), cascEl = $('yl-casc'), halo = $('yl-halo');
   var PAL = ['109,195,208', '137,132,205', '255,100,42', '182,224,232', '197,194,230'];
   var POSTS = [
@@ -61,7 +62,7 @@
   ];
   var W, H, D = Math.min(window.devicePixelRatio || 1, 2);
   var nodes = [], scr = [], pulses = [], rings = [], posts = [], casc = null;
-  var now = 0, nextCasc = 600, pi = Math.floor(Math.random() * POSTS.length), conv = 0;
+  var now = 0, nextCasc = 600, nextAmb = 600, pi = Math.floor(Math.random() * POSTS.length), conv = 0;
   var mouse = { x: -999, y: -999 };
 
   function rnd(n) { return Math.floor(Math.random() * n); }
@@ -226,8 +227,16 @@
       if (pl.t >= 1) { nodes[pl.b].glow = 1; pulses.splice(i, 1); }
     }
     if (!reduce) {
-      if (!casc && now > nextCasc) startCascade();
-      if (casc) stepCascade();
+      if (calm) {
+        if (now > nextAmb) {                                 /* calm mode: occasional pulses only */
+          nextAmb = now + 900;
+          var from = rnd(nodes.length), nbs = nb(from);
+          if (nbs.length) pulses.push({ a: from, b: nbs[rnd(nbs.length)], t: 0, c: nodes[from].c });
+        }
+      } else {
+        if (!casc && now > nextCasc) startCascade();
+        if (casc) stepCascade();
+      }
     }
     for (i = posts.length - 1; i >= 0; i--) {
       var o = posts[i], ag = now - o.born;

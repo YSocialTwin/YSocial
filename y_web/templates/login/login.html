@@ -1,43 +1,8 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
-    <meta http-equiv="x-ua-compatible" content="ie=edge"/>
+{% extends 'login/scene_base.html' %}
+{% block title %}Y Social | Login{% endblock %}
+{% block sync %}{% include 'shared/browser_sync.html' %}{% endblock %}
 
-    <title>Y Social | Login</title>
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='assets/img/favicon.png') }}"/>
-
-    <!-- Google Tag Manager -->
-    <script src="{{ url_for('static', filename='assets/js/gtm-snippet.js') }}"></script>
-    <!-- End Google Tag Manager -->
-
-    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/login-scene.css') }}"/>
-</head>
-
-<body class="yl">
-{% include 'shared/browser_sync.html' %}
-
-<!-- Google Tag Manager (noscript) -->
-<noscript>
-    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KQHJPZP" height="0" width="0" style="display:none;visibility:hidden"></iframe>
-</noscript>
-<!-- End Google Tag Manager (noscript) -->
-
-<!-- Animated background: information cascade over a network (decorative) -->
-<div id="yl-aurora" aria-hidden="true"><i></i><i></i><i></i></div>
-<canvas id="yl-net" aria-hidden="true"></canvas>
-<div id="yl-layer" aria-hidden="true"></div>
-<div id="yl-halo" aria-hidden="true"></div>
-<div id="yl-casc" aria-hidden="true"></div>
-
-<main class="yl-stage">
-    <section class="yl-card" id="yl-card">
-        <div class="yl-brand">
-            <img src="{{ url_for('static', filename='assets/img/vector/logo/Ysocial.png') }}" alt="YSocial"/>
-            <p>Where the Digital World comes to life.</p>
-        </div>
-
+{% block card %}
         {% with messages = get_flashed_messages() %}
         {% if messages %}
         <div class="yl-error" role="alert">{{ messages[0] }}</div>
@@ -57,7 +22,7 @@
 
             <div class="yl-cards" id="yl-cards" role="radiogroup" aria-label="Active experiments">
                 {% for exp in experiments %}
-                <label class="yl-xp" style="--i: {{ loop.index0 if loop.index0 < 8 else 8 }}">
+                <label class="yl-xp" style="--i: {{ loop.index0 if loop.index0 < 8 else 8 }}" {# dynamic #}>
                     <input type="radio" name="experiment_id" value="{{ exp.idexp }}" data-name="{{ exp.exp_name }}" required>
                     <span class="yl-ic" aria-hidden="true">{{ (exp.exp_name or '?')[:1]|upper }}</span>
                     <span>
@@ -94,9 +59,4 @@
             <button class="yl-btn" type="submit"><span class="yl-spin"></span><span>Login</span></button>
         </form>
         {% endif %}
-    </section>
-</main>
-
-<script src="{{ url_for('static', filename='assets/js/login-scene.js') }}" defer></script>
-</body>
-</html>
+{% endblock %}

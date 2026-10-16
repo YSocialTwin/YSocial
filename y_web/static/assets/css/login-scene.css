@@ -133,3 +133,19 @@ body.yl *, body.yl *::before, body.yl *::after { box-sizing: border-box; }
 }
 .yl-cards.ready .yl-xp { animation: none; }
 #yl-casc:empty { display: none; }
+
+/* ---- error pages / register ---- */
+.yl-center { text-align: center; }
+.yl-errcode { font-size: 4.6rem; font-weight: 800; line-height: 1; letter-spacing: -.02em; margin: 0 0 6px;
+  background: linear-gradient(135deg, var(--teal), var(--violet) 60%, var(--orange)); -webkit-background-clip: text;
+  background-clip: text; color: transparent; -webkit-text-fill-color: transparent; }
+.yl-lead { margin: 0 0 20px; color: var(--text); font-size: .95rem; line-height: 1.55; }
+.yl-debug { margin: 0 0 20px; padding: 12px 14px; text-align: left; border-radius: 12px; background: rgba(0, 0, 0, .28);
+  border: 1px solid var(--line); font: .74rem/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--muted);
+  word-break: break-word; max-height: 220px; overflow: auto; }
+.yl-debug p { margin: 3px 0; }
+.yl-debug strong { color: var(--text); }
+.yl-pre { white-space: pre-wrap; }
+a.yl-btn, a.yl-btn:hover { text-decoration: none; color: var(--ink); }
+.yl-error a { color: inherit; text-decoration: underline; }
+.yl-foot a { color: var(--teal); }
