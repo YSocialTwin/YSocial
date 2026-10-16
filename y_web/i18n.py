@@ -13,7 +13,7 @@ Two language contexts are kept apart (plan decisions D3 and D4):
   uncontrolled variable inside an experiment.
 """
 
-from flask import current_app, request
+from flask import current_app, g, request
 from flask_babel import (
     Babel,
     format_date,
@@ -22,8 +22,11 @@ from flask_babel import (
     format_number,
     format_time,
     get_locale,
+    get_translations,
 )
 from flask_login import current_user
+from jinja2 import pass_eval_context
+from markupsafe import Markup
 
 from y_web.i18n_pseudo import PSEUDO_CARRIER, PSEUDO_LANGUAGE
 
@@ -151,6 +154,41 @@ def _chosen_language():
     )
 
 
+def _request_translations():
+    """Translations of the active language, resolved once per request.
+
+    Flask-Babel looks the translations up on every call, which costs several
+    microseconds; a page with hundreds of marked strings would pay that hundreds
+    of times, so the template ``_()`` uses this per-request cache instead.
+    """
+    cached = getattr(g, "_ys_translations", None)
+    if cached is None:
+        cached = get_translations()
+        g._ys_translations = cached
+    return cached
+
+
+def _template_gettext(message):
+    return _request_translations().ugettext(message)
+
+
+@pass_eval_context
+def _fast_template_gettext(eval_ctx, message, **variables):
+    """Template ``_()``: same result as Jinja's new-style gettext, with less overhead.
+
+    Like Jinja's version, ``%`` in a message must be written ``%%`` and variables
+    are HTML-escaped when autoescape is on.
+    """
+    rv = _request_translations().ugettext(message)
+    if eval_ctx.autoescape:
+        rv = Markup(rv)
+    return rv % variables
+
+
+def _template_ngettext(singular, plural, n):
+    return _request_translations().ungettext(singular, plural, n)
+
+
 def init_i18n(app):
     """Register Flask-Babel on the application."""
     app.config.setdefault("BABEL_DEFAULT_LOCALE", DEFAULT_LOCALE)
@@ -159,6 +197,12 @@ def init_i18n(app):
     app.config.setdefault("PSEUDO_LOCALE_ENABLED", False)
     babel.init_app(app, locale_selector=select_locale)
     app.jinja_env.globals["get_locale"] = get_locale
+    # Faster ``_()``/``ngettext()`` for templates (same behaviour, cached per request).
+    app.jinja_env.install_gettext_callables(
+        _template_gettext, _template_ngettext, newstyle=True
+    )
+    app.jinja_env.globals["_"] = _fast_template_gettext
+    app.jinja_env.globals["gettext"] = _fast_template_gettext
     app.jinja_env.globals["available_languages"] = available_languages
     app.jinja_env.globals["text_direction"] = text_direction
     app.jinja_env.globals["html_lang"] = html_lang

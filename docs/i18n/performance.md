@@ -12,8 +12,12 @@ Method: `create_app("sqlite")` on a clean copy of the repository at the commit b
 
 Run-to-run noise is about 5%, so the figures above are at the limit of the criterion for the heavier pages and above it for the trivial login page (+0.14 ms absolute).
 
-Unit costs (Python 3.10, one request context): language selection 9 us once per request, `gettext()` 5 us per call.
+Unit costs (Python 3.10, one request context): language selection 9 us once per request; template `_()` 8.4 us per call with Flask-Babel's default, 2.7 us per call after the optimisation described below (500 calls: 4.2 ms before, 1.4 ms after).
 
-## Risk for Phase 2
+## Optimisation done in Phase 1
 
-Today only a few dozen strings go through `gettext`. The admin templates hold about 1,900 unique strings and a page renders hundreds of them: at 5 us each that is 1 to 3 ms on pages that currently render in 3 to 5 ms, well beyond 5%. Before F2-1 starts, the cost per call should be reduced (for example by resolving the translations object once per request and calling it directly instead of going through Flask-Babel's per-call lookup) and the measurement repeated on a converted page. Tracked as an open point of gate G1.
+Flask-Babel resolves the translations on every `gettext()` call and Jinja's new-style `gettext` wrapper adds its own overhead. `y_web/i18n.py` now resolves the translations once per request (cached on `flask.g`) and installs a lighter `_()`/`gettext()` for templates with identical behaviour (variables escaped under autoescape, `%%` for a literal percent sign, `{% trans %}` and `ngettext` unchanged). Tests: `test_i18n_template_gettext.py`.
+
+## Remaining risk for Phase 2
+
+The admin templates hold about 1,900 unique strings and a heavy page renders a few hundred of them: at 2.7 us each that is roughly 1 ms on pages that render in 3 to 5 ms, still around the limit of the 5% criterion. The measurement must be repeated on the first converted area (F2-1) and, if needed, strings that never change can be resolved once per process instead of per request. Tracked as an open point of gate G1.
