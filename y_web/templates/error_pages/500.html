@@ -9,7 +9,7 @@
             <h2>{{ _('Internal Server Error') }}</h2>
             <p class="yl-sub">{{ _('Error %(code)s', code=(error.status_code if error else '500')) }}</p>
             <p class="yl-lead">
-                {{ error.error_description if error else 'Something went wrong on our end.' }}<br>
+                {{ error.error_description if error else _('Something went wrong on our end.') }}<br>
                 {{ _("We're working to fix the issue. Please try again later.") }}
             </p>
 

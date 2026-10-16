@@ -4,8 +4,8 @@
 <div class="card ys-card-mb ys-suggestion-card">
  <div class="card-heading is-bordered ys-p-1rem ys-suggestion-card__header">
  <div>
- <h4 class="ys-heading-tight">Suggested Pages</h4>
- <p class="ys-suggestion-card__subtitle">Pages aligned with your feed</p>
+ <h4 class="ys-heading-tight">{{ _('Suggested Pages') }}</h4>
+ <p class="ys-suggestion-card__subtitle">{{ _('Pages aligned with your feed') }}</p>
  </div>
     </div>
     <div class="card-body no-padding">
@@ -26,7 +26,7 @@
             />
  <div class="page-meta ys-flex-1-mr ys-suggestion-copy">
  <span><a href="/{{exp_id}}/profile/{{ page['id'] }}/recent/1" class="ys-link-dark ys-suggestion-name">{{ page['username']|safe }}</a></span>
- <span class="ys-suggestion-meta">Suggested page</span>
+ <span class="ys-suggestion-meta">{{ _('Suggested page') }}</span>
             </div>
             <div class="add-friend add-transition">
  <a href="/{{exp_id}}/follow/{{ page['id'] }}/{{ user_id }}" class="ys-icon-circle-blue"><i data-feather="user-plus"></i></a>

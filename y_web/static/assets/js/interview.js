@@ -102,7 +102,7 @@
     if (personaNameEl) personaNameEl.textContent = username
     if (personaSubtitleEl) {
       const bits = [userType, profession, leaning].filter(Boolean)
-      personaSubtitleEl.textContent = bits.length ? bits.join(' · ') : 'Interview persona'
+      personaSubtitleEl.textContent = bits.length ? bits.join(' · ') : YI18n.t('Interview persona')
     }
     if (avatarEl) {
       avatarEl.innerHTML = ''
@@ -128,7 +128,7 @@
 
     return lines.map((line) => {
       const idx = line.indexOf(':')
-      if (idx === -1) return { label: 'Detail', value: line }
+      if (idx === -1) return { label: YI18n.t('Detail'), value: line }
       const label = line.slice(0, idx).trim()
       return {
         label,
@@ -147,7 +147,7 @@
     if (!rows.length) {
       const empty = document.createElement('div')
       empty.className = 'interview-interest-empty'
-      empty.textContent = 'No persona details loaded yet.'
+      empty.textContent = YI18n.t('No persona details loaded yet.')
       personaEl.appendChild(empty)
       return
     }
@@ -198,7 +198,7 @@
     if (!ints.length) {
       const empty = document.createElement('div')
       empty.className = 'interview-interest-empty'
-      empty.textContent = 'No elicited interests available.'
+      empty.textContent = YI18n.t('No elicited interests available.')
       interestsEl.appendChild(empty)
       return
     }
@@ -274,7 +274,7 @@
 
     const meta = document.createElement('span')
     meta.className = 'interview-json-meta'
-    meta.textContent = isArray ? `Array(${entries.length})` : `Object(${entries.length})`
+    meta.textContent = isArray ? YI18n.t('Array({length})', {length: entries.length}) : YI18n.t('Object({length})', {length: entries.length})
     summary.appendChild(meta)
     details.appendChild(summary)
 
@@ -314,15 +314,15 @@
       return 'Live runtime retrieval is unavailable for this experiment state. Using database-backed fallback memory.'
     }
     if (raw.includes('http_failed') || raw.includes('connection refused') || raw.includes('max retries exceeded')) {
-      return 'Live memory service is temporarily unreachable. Using fallback memory.'
+      return YI18n.t('Live memory service is temporarily unreachable. Using fallback memory.')
     }
     if (raw.includes('run_id_missing')) {
-      return 'No compatible run identifier was found yet. Using available database context.'
+      return YI18n.t('No compatible run identifier was found yet. Using available database context.')
     }
     if (raw.includes('context_fetch_failed') || raw.includes('events_fetch_failed')) {
-      return 'Live memory context could not be refreshed right now. Using fallback memory.'
+      return YI18n.t('Live memory context could not be refreshed right now. Using fallback memory.')
     }
-    return 'Memory retrieval used fallback mode.'
+    return YI18n.t('Memory retrieval used fallback mode.')
   }
 
   function setMemorySnapshot (snap) {
@@ -337,19 +337,14 @@
       const modeUsed = snapshot.memory_mode_used || 'n/a'
       const runId = snapshot.run_id || 'none'
       const extra = summarizeMemoryIssue(snapshot)
-      memoryStatusEl.innerHTML = `
-        <strong>Run:</strong> ${escapeHtml(String(runId))}<br>
-        <strong>Requested:</strong> ${escapeHtml(String(modeRequested))}<br>
-        <strong>Used:</strong> ${escapeHtml(String(modeUsed))}
-        ${extra ? `<div style="margin-top:0.45rem;">${escapeHtml(String(extra))}</div>` : ''}
-      `
+      memoryStatusEl.innerHTML = '\n        <strong>' + YI18n.t('Run:') + '</strong> ' + escapeHtml(String(runId)) + '<br>\n        <strong>' + YI18n.t('Requested:') + '</strong> ' + escapeHtml(String(modeRequested)) + '<br>\n        <strong>' + YI18n.t('Used:') + '</strong> ' + escapeHtml(String(modeUsed)) + '\n        ' + extra ? `<div style="margin-top:0.45rem;">${escapeHtml(String(extra))}</div>` : '' + '\n      '
     }
 
     if (loadState === 'unavailable' || memoryModeUsed === 'unavailable') {
       const unavailable = document.createElement('div')
       unavailable.className = 'interview-memory-note'
       unavailable.style.marginBottom = '0'
-      unavailable.textContent = `No live memory payload is available from the ${interviewPlatform === 'forum' ? 'forum' : 'experiment'} server for this session.`
+      unavailable.textContent = YI18n.t('No live memory payload is available from the {value} server for this session.', {value: interviewPlatform === 'forum' ? 'forum' : 'experiment'})
       memoryEl.appendChild(unavailable)
       return
     }
@@ -358,19 +353,19 @@
       const deferred = document.createElement('div')
       deferred.className = 'interview-memory-note'
       deferred.style.marginBottom = '0'
-      deferred.textContent = 'Memory retrieval for this session has not been loaded yet.'
+      deferred.textContent = YI18n.t('Memory retrieval for this session has not been loaded yet.')
       memoryEl.appendChild(deferred)
       return
     }
 
     const sections = [
-      { key: 'retrieval_meta', title: 'Retrieval Meta', note: 'Search metadata and degraded-mode indicators.', primary: true },
-      { key: 'semantic_items', title: 'Semantic Items', note: 'Retrieved memory items used to ground the current answer.', primary: true },
-      { key: 'community_digest', title: 'Community Digest', note: 'High-level summary of the current community situation.', primary: true },
-      { key: 'relationships', title: 'Relationships', note: 'Relationship summaries and pairwise interaction context.' },
-      { key: 'threads', title: 'Threads', note: 'Thread-level context linked to the agent activity.' },
-      { key: 'agent_events_tail', title: 'Agent Events', note: 'Recent events directly involving the interviewed agent.' },
-      { key: 'recent_events_tail', title: 'Recent Event Tail', note: 'Recent raw event tail returned for context building.' }
+      { key: 'retrieval_meta', title: YI18n.t('Retrieval Meta'), note: 'Search metadata and degraded-mode indicators.', primary: true },
+      { key: 'semantic_items', title: YI18n.t('Semantic Items'), note: 'Retrieved memory items used to ground the current answer.', primary: true },
+      { key: 'community_digest', title: YI18n.t('Community Digest'), note: 'High-level summary of the current community situation.', primary: true },
+      { key: 'relationships', title: YI18n.t('Relationships'), note: 'Relationship summaries and pairwise interaction context.' },
+      { key: 'threads', title: YI18n.t('Threads'), note: 'Thread-level context linked to the agent activity.' },
+      { key: 'agent_events_tail', title: YI18n.t('Agent Events'), note: 'Recent events directly involving the interviewed agent.' },
+      { key: 'recent_events_tail', title: YI18n.t('Recent Event Tail'), note: 'Recent raw event tail returned for context building.' }
     ]
 
     const primaryGrid = document.createElement('div')
@@ -418,7 +413,7 @@
     if (!renderedAny) {
       const empty = document.createElement('div')
       empty.className = 'interview-memory-empty'
-      empty.textContent = 'No structured memory sections were returned for this session.'
+      empty.textContent = YI18n.t('No structured memory sections were returned for this session.')
       memoryEl.appendChild(empty)
       return
     }
@@ -445,7 +440,7 @@
     } catch (e) {
       const ct = resp.headers.get('content-type') || ''
       const snippet = (text || '').slice(0, 120).replace(/\s+/g, ' ').trim()
-      throw new Error(`HTTP ${resp.status} non-JSON response (${ct || 'unknown content-type'}): ${snippet || 'empty body'}`)
+      throw new Error(YI18n.t('HTTP {status} non-JSON response ({ct}): {snippet}', {status: resp.status, ct: ct || 'unknown content-type', snippet: snippet || 'empty body'}))
     }
     return data
   }
@@ -464,7 +459,7 @@
     } catch (e) {
       const ct = resp.headers.get('content-type') || ''
       const snippet = (text || '').slice(0, 120).replace(/\s+/g, ' ').trim()
-      throw new Error(`HTTP ${resp.status} non-JSON response (${ct || 'unknown content-type'}): ${snippet || 'empty body'}`)
+      throw new Error(YI18n.t('HTTP {status} non-JSON response ({ct}): {snippet}', {status: resp.status, ct: ct || 'unknown content-type', snippet: snippet || 'empty body'}))
     }
     return data
   }
@@ -483,7 +478,7 @@
         return `<option value="${a.user_id}">${escapeHtml(label)}</option>`
       }).join('')
       if (!availableAgents.length) {
-        agentSelect.innerHTML = '<option value="">(no LLM agents found)</option>'
+        agentSelect.innerHTML = '<option value="">' + YI18n.t('(no LLM agents found)') + '</option>'
         currentAgentRecord = null
       } else {
         currentAgentRecord = availableAgents[0]
@@ -594,7 +589,7 @@
   if (memoryCollapseBtn && memoryCardEl) {
     memoryCollapseBtn.addEventListener('click', function () {
       memoryCardEl.classList.toggle('is-collapsed')
-      memoryCollapseBtn.textContent = memoryCardEl.classList.contains('is-collapsed') ? 'Expand' : 'Collapse'
+      memoryCollapseBtn.textContent = memoryCardEl.classList.contains('is-collapsed') ? YI18n.t('Expand') : YI18n.t('Collapse')
     })
   }
   if (agentSelect) {

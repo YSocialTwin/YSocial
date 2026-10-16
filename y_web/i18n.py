@@ -78,6 +78,11 @@ def available_languages():
 
 
 
+def N_(message):
+    """Mark *message* for extraction without translating it (translate later with ``_(value)``)."""
+    return message
+
+
 def gettext(message, **variables):
     """Request-time gettext for Python code (flash messages, JSON errors).
 

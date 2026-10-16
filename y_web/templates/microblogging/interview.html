@@ -7,40 +7,40 @@
             <div class="column is-3">
                 <div class="card interview-card">
                     <header class="card-header">
-                        <p class="card-header-title">Interview</p>
+                        <p class="card-header-title">{{ _('Interview') }}</p>
                     </header>
                     <div class="card-content">
                         <div class="field">
-                            <label class="label">Agent</label>
+                            <label class="label">{{ _('Agent') }}</label>
                             <div class="control">
                                 <div class="select is-fullwidth">
                                     <select id="interview-agent-select"></select>
                                 </div>
                             </div>
-                            <p class="help">Only LLM agents are listed.</p>
+                            <p class="help">{{ _('Only LLM agents are listed.') }}</p>
                         </div>
                         <div class="field">
-                            <label class="label">Run ID (optional)</label>
+                            <label class="label">{{ _('Run ID (optional)') }}</label>
                             <div class="control">
-                                <input id="interview-run-id" class="input" placeholder="auto-detect from logs"/>
+                                <input id="interview-run-id" class="input" placeholder="{{ _('auto-detect from logs') }}"/>
                             </div>
                         </div>
                         <div class="field">
-                            <label class="label">Backend</label>
+                            <label class="label">{{ _('Backend') }}</label>
                             <div class="control">
                                 <label class="radio">
                                     <input type="radio" name="backend_mode" value="agent_runtime" checked>
-                                    Agent runtime
+                                    {{ _('Agent runtime') }}
                                 </label>
  <label class="radio ys-ml-10">
                                     <input type="radio" name="backend_mode" value="admin">
-                                    Admin
+                                    {{ _('Admin') }}
                                 </label>
                             </div>
                         </div>
  <div class="buttons w-100">
-                            <button id="interview-start-session" class="button is-primary is-fullwidth">Start Session</button>
-                            <button id="interview-refresh-memory" class="button is-light is-fullwidth" disabled>Refresh Memory</button>
+                            <button id="interview-start-session" class="button is-primary is-fullwidth">{{ _('Start Session') }}</button>
+                            <button id="interview-refresh-memory" class="button is-light is-fullwidth" disabled>{{ _('Refresh Memory') }}</button>
                         </div>
                         <p id="interview-status" class="help"></p>
                     </div>
@@ -49,21 +49,21 @@
             <div class="column is-6">
                 <div class="card interview-card">
                     <header class="card-header">
-                        <p class="card-header-title">Conversation</p>
+                        <p class="card-header-title">{{ _('Conversation') }}</p>
                     </header>
  <div class="card-content ys-scroll-lg">
                         <div id="interview-messages"></div>
                     </div>
                     <div class="card-content" style="border-top: 1px solid #edf1f7;">
                         <div class="field">
-                            <label class="label">Message</label>
+                            <label class="label">{{ _('Message') }}</label>
                             <div class="control">
-                                <textarea id="interview-input" class="textarea" rows="3" placeholder="Ask the agent about their experiences, decisions, or relationships..." disabled></textarea>
+                                <textarea id="interview-input" class="textarea" rows="3" placeholder="{{ _('Ask the agent about their experiences, decisions, or relationships...') }}" disabled></textarea>
                             </div>
                         </div>
                         <div class="field is-grouped is-grouped-right">
                             <div class="control">
-                                <button id="interview-send" class="button is-link" disabled>Send</button>
+                                <button id="interview-send" class="button is-link" disabled>{{ _('Send') }}</button>
                             </div>
                         </div>
                     </div>
@@ -73,14 +73,14 @@
                 <div class="interview-side-stack">
                     <div class="card interview-card">
                         <header class="card-header">
-                            <p class="card-header-title">Persona</p>
+                            <p class="card-header-title">{{ _('Persona') }}</p>
                         </header>
                         <div class="card-content">
                             <div class="interview-persona-head">
                                 <div id="interview-avatar" class="interview-avatar"></div>
                                 <div class="interview-persona-meta">
-                                    <div id="interview-persona-name" class="interview-persona-name">No agent selected</div>
-                                    <div id="interview-persona-subtitle" class="interview-persona-subtitle">Start an interview session to load persona details.</div>
+                                    <div id="interview-persona-name" class="interview-persona-name">{{ _('No agent selected') }}</div>
+                                    <div id="interview-persona-subtitle" class="interview-persona-subtitle">{{ _('Start an interview session to load persona details.') }}</div>
                                 </div>
                             </div>
                             <div id="interview-persona" class="interview-persona-body"></div>
@@ -88,7 +88,7 @@
                     </div>
                     <div class="card interview-card">
                         <header class="card-header">
-                            <p class="card-header-title">Interests</p>
+                            <p class="card-header-title">{{ _('Interests') }}</p>
                         </header>
                         <div class="card-content">
                             <div id="interview-interests" class="interview-interest-list"></div>
@@ -101,8 +101,8 @@
         <div id="interview-memory-card" class="card interview-card interview-memory-card interview-memory-layout">
             <header class="card-header">
                 <div class="card-header-title interview-panel-header">
-                    <span>Memory</span>
-                    <button id="interview-memory-collapse" type="button" class="interview-memory-toggle">Collapse</button>
+                    <span>{{ _('Memory') }}</span>
+                    <button id="interview-memory-collapse" type="button" class="interview-memory-toggle">{{ _('Collapse') }}</button>
                 </div>
             </header>
             <div class="card-content">

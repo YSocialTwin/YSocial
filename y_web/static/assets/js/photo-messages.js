@@ -32,7 +32,7 @@
     return fetch(url, { credentials: 'same-origin' }).then(async (res) => {
       const payload = await res.json().catch(() => ({}))
       if (!res.ok || payload.success === false) {
-        throw new Error(payload.error || 'Request failed')
+        throw new Error(payload.error || YI18n.t('Request failed'))
       }
       return payload.data
     })
@@ -47,7 +47,7 @@
     }).then(async (res) => {
       const payload = await res.json().catch(() => ({}))
       if (!res.ok || payload.success === false) {
-        throw new Error(payload.error || 'Request failed')
+        throw new Error(payload.error || YI18n.t('Request failed'))
       }
       return payload.data
     })
@@ -134,7 +134,7 @@
       })
 
     if (!items.length) {
-      listEl.innerHTML = '<div class="photo-messages-empty">No conversations match your search.</div>'
+      listEl.innerHTML = '<div class="photo-messages-empty">' + YI18n.t('No conversations match your search.') + '</div>'
       return
     }
 
@@ -166,12 +166,12 @@
     const session = state.currentSession
     const messages = session?.messages || []
     if (!session) {
-      messagesEl.innerHTML = '<div class="photo-messages-empty">Select a conversation to start chatting.</div>'
+      messagesEl.innerHTML = '<div class="photo-messages-empty">' + YI18n.t('Select a conversation to start chatting.') + '</div>'
       return
     }
 
     if (!messages.length) {
-      messagesEl.innerHTML = '<div class="photo-messages-empty">No messages yet. Start the conversation.</div>'
+      messagesEl.innerHTML = '<div class="photo-messages-empty">' + YI18n.t('No messages yet. Start the conversation.') + '</div>'
       return
     }
 
@@ -214,7 +214,7 @@
     state.currentSession = session
     if (!session) {
       targetAvatarEl.innerHTML = ''
-      targetNameEl.textContent = 'Select a conversation'
+      targetNameEl.textContent = YI18n.t('Select a conversation')
       targetSubtitleEl.textContent = ''
       renderMessages()
       renderList()
@@ -222,7 +222,7 @@
     }
 
     targetAvatarEl.innerHTML = avatarMarkup(session.target_username, getSessionProfilePic(session))
-    targetNameEl.textContent = session.target_username || 'Agent'
+    targetNameEl.textContent = session.target_username || YI18n.t('Agent')
     targetSubtitleEl.textContent = session.target_username || ''
     renderMessages()
     renderList()
@@ -281,7 +281,7 @@
       setCurrentSession(session)
       renderList()
     } catch (err) {
-      window.alert(err.message || 'Unable to open conversation.')
+      window.alert(err.message || YI18n.t('Unable to open conversation.'))
     }
   }
 
@@ -305,7 +305,7 @@
       renderMessages()
       renderList()
     } catch (err) {
-      window.alert(err.message || 'Unable to send message.')
+      window.alert(err.message || YI18n.t('Unable to send message.'))
     } finally {
       sendBtn.disabled = false
       inputEl.disabled = false

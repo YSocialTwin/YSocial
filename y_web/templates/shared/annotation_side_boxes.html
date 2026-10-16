@@ -64,13 +64,13 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h6"/><circle cx="18" cy="17" r="3"/><path d="m20.2 19.2 1.8 1.8"/></svg>
     </span>
     <div>
-      <h4>Your recommender system</h4>
-      <p class="ys-sidebox__sub">The algorithm that picks the posts in your feed</p>
+      <h4>{{ _('Your recommender system') }}</h4>
+      <p class="ys-sidebox__sub">{{ _('The algorithm that picks the posts in your feed') }}</p>
     </div>
   </div>
   <span class="ys-recsys-pill">{{ recsys_info.label }}</span>
   <div class="ys-recsys-how">
-    <small>How it works</small>
+    <small>{{ _('How it works') }}</small>
     <p>{{ recsys_info.description }}</p>
   </div>
 </div>
@@ -82,11 +82,11 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
     </span>
     <div>
-      <h4>Your annotations</h4>
-      <p class="ys-sidebox__sub">What you assigned to posts and comments</p>
+      <h4>{{ _('Your annotations') }}</h4>
+      <p class="ys-sidebox__sub">{{ _('What you assigned to posts and comments') }}</p>
     </div>
   </div>
-  <div id="ys-annostats-body"><div class="ys-stat-empty">Loading…</div></div>
+  <div id="ys-annostats-body"><div class="ys-stat-empty">{{ _('Loading…') }}</div></div>
 </div>
 <script src="{{ url_for('static', filename='assets/js/ys-annotation-stats.js') }}" defer></script>
 {% endif %}

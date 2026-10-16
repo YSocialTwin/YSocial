@@ -9,7 +9,7 @@
             <h2>{{ _('Page Not Found') }}</h2>
             <p class="yl-sub">{{ _('Error %(code)s', code=(error.status_code if error else '404')) }}</p>
             <p class="yl-lead">
-                {{ error.error_description if error else 'The page you are looking for does not exist.' }}<br>
+                {{ error.error_description if error else _('The page you are looking for does not exist.') }}<br>
                 {{ _('Please check the URL or go back to the homepage.') }}
             </p>
 

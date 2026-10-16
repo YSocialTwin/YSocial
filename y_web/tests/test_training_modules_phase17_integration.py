@@ -125,7 +125,7 @@ def test_wait_closing_and_panel_through_the_real_core(core_app):  # noqa: F811
     assert me.post(two + "/start", data={"csrf_token": token}).status_code == 303
     assert me.get(two + "/certificate").status_code == 409
     assert me.post(two + "/submit", data={"csrf_token": token}).status_code == 303
-    cert = me.get(two + "/certificate")
+    cert = me.get(two + "/certificate?format=html")
     body = cert.get_data(as_text=True)
     assert (
         cert.status_code == 200

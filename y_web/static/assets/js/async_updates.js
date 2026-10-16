@@ -58,12 +58,12 @@ $(document).on('click','.child_sub',function(e) {
           return;
       }
       if (toggle.textContent.trim() === "Less") {
-          toggle.textContent = "More"
+          toggle.textContent = YI18n.t('More')
           elem.style.visibility = 'hidden';
           elem.style.display = 'none'
       }
       else {
-          toggle.textContent = "Less"
+          toggle.textContent = YI18n.t('Less')
           elem.style.visibility = 'visible';
           elem.style.display = 'block'
       }
@@ -300,8 +300,8 @@ $(document).on('click', '.meta-chip-toggle', function (e) {
     var isHidden = target.classList.contains('is-hidden');
     target.classList.toggle('is-hidden', !isHidden);
     button.textContent = isHidden
-        ? (button.getAttribute('data-label-less') || 'Less')
-        : (button.getAttribute('data-label-more') || 'More');
+        ? (button.getAttribute('data-label-less') || YI18n.t('Less'))
+        : (button.getAttribute('data-label-more') || YI18n.t('More'));
     button.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
 });
 

@@ -50,16 +50,17 @@ def _root_post_filter(column):
     return or_(column.is_(None), column == -1)
 
 
+from y_web.i18n import N_
 from y_web.src.system.path_utils import get_writable_path
 
 _ADHOC_AGENT_BADGE_LABELS = {
-    "hello_world": "Hello World",
-    "moderator": "Moderator Agent",
-    "propaganda": "Propaganda Agent",
-    "master_of_puppets": "Master of Puppets",
-    "mop_puppet": "MoP Puppet",
-    "stress_attacker": "Stress Attacker",
-    "comic_relief": "Comic Relief Agent",
+    "hello_world": N_("Hello World"),
+    "moderator": N_("Moderator Agent"),
+    "propaganda": N_("Propaganda Agent"),
+    "master_of_puppets": N_("Master of Puppets"),
+    "mop_puppet": N_("MoP Puppet"),
+    "stress_attacker": N_("Stress Attacker"),
+    "comic_relief": N_("Comic Relief Agent"),
 }
 
 
@@ -72,8 +73,8 @@ def get_author_type_badge(user) -> str:
     """Return a badge label identifying whether the author is an AI agent or a human."""
     user_type = str(getattr(user, "user_type", "") or "").strip().lower()
     if user_type == "agent" or user_type in _ADHOC_AGENT_BADGE_LABELS:
-        return "AI Agent"
-    return "Human"
+        return N_("AI Agent")  # shown through _(); templates compare the English token
+    return N_("Human")
 
 
 def get_safe_profile_pic(username, is_page=0):

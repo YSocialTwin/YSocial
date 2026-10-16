@@ -13,12 +13,7 @@
     const config = {
         threshold: 0.9, // Load more when 90% of content is visible
         debounceDelay: 100, // Delay between scroll events in ms
-        loaderHtml: `
-            <div class="infinite-scroll-loader" style="text-align: center; padding: 2rem;">
-                <div class="loader is-loading" style="margin: 0 auto;"></div>
-                <p style="margin-top: 1rem; color: #7a7a7a;">Loading more posts...</p>
-            </div>
-        `
+        loaderHtml: '\n            <div class="infinite-scroll-loader" style="text-align: center; padding: 2rem;">\n                <div class="loader is-loading" style="margin: 0 auto;"></div>\n                <p style="margin-top: 1rem; color: #7a7a7a;">' + YI18n.t('Loading more posts...') + '</p>\n            </div>\n        '
     };
 
     // State management
@@ -147,7 +142,7 @@
             const response = await fetch(buildPageUrl(state.apiEndpoint, nextPage));
             
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                throw new Error(YI18n.t('HTTP error! status: {status}', {status: response.status}));
             }
 
             const data = await response.json();
@@ -392,7 +387,7 @@
         const message = document.createElement('div');
         message.className = 'infinite-scroll-end';
         message.style.cssText = 'text-align: center; padding: 2rem; color: #7a7a7a;';
-        message.innerHTML = '<p>No more posts available.</p>';
+        message.innerHTML = '<p>' + YI18n.t('No more posts available.') + '</p>';
         state.sentinel.parentElement.insertBefore(message, state.sentinel);
     }
 
@@ -403,7 +398,7 @@
         const message = document.createElement('div');
         message.className = 'infinite-scroll-error';
         message.style.cssText = 'text-align: center; padding: 2rem; color: #f14668;';
-        message.innerHTML = '<p>Error loading posts. Please try again later.</p>';
+        message.innerHTML = '<p>' + YI18n.t('Error loading posts. Please try again later.') + '</p>';
         state.sentinel.parentElement.insertBefore(message, state.sentinel);
         
         // Remove error message after 5 seconds

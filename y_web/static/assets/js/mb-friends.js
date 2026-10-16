@@ -66,7 +66,7 @@
       })
         .then(function(response) {
           if (!response.ok) {
-            throw new Error('Unable to load friends page.');
+            throw new Error(YI18n.t('Unable to load friends page.'));
           }
           return response.json();
         })

@@ -9,7 +9,7 @@
             <h2>{{ _('Bad Request') }}</h2>
             <p class="yl-sub">{{ _('Error %(code)s', code=(error.status_code if error else '400')) }}</p>
             <p class="yl-lead">
-                {{ error.error_description if error else 'The request could not be understood by the server.' }}<br>
+                {{ error.error_description if error else _('The request could not be understood by the server.') }}<br>
                 {{ _('Please check your input and try again.') }}
             </p>
 

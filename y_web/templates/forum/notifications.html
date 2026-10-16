@@ -8,19 +8,19 @@
                 <div class="column is-10-tablet is-7-desktop">
                     <div class="box" style="padding: 18px 18px 10px;">
                         <div style="display:flex; align-items: baseline; justify-content: space-between; gap: 12px;">
- <h1 class="title is-4 mb-0">Notifications</h1>
+ <h1 class="title is-4 mb-0">{{ _('Notifications') }}</h1>
                             {% if unread_before_open|default(0)|int > 0 %}
-                            <span class="tag is-danger is-light">{{ unread_before_open }} new</span>
+                            <span class="tag is-danger is-light">{{ _('%(count)s new', count=unread_before_open) }}</span>
                             {% endif %}
                         </div>
                         <p class="has-text-grey" style="margin-top: 6px;">
-                            Replies to your posts and comments.
+                            {{ _('Replies to your posts and comments.') }}
                         </p>
                     </div>
 
                     {% if items|length == 0 %}
                     <div class="box">
-                        <p class="has-text-grey">No notifications yet.</p>
+                        <p class="has-text-grey">{{ _('No notifications yet.') }}</p>
                     </div>
                     {% else %}
                     {% for item in items %}
@@ -41,18 +41,18 @@
                                         <div>
                                             <strong>{{ item.author_username }}</strong>
                                             <span class="has-text-grey">
-                                                replied to your {% if item.parent_is_root %}post{% else %}comment{% endif %}
+                                                {% if item.parent_is_root %}{{ _('replied to your post') }}{% else %}{{ _('replied to your comment') }}{% endif %}
                                             </span>
                                         </div>
                                         {% if item.was_unread %}
-                                        <span class="tag is-danger is-light">unread</span>
+                                        <span class="tag is-danger is-light">{{ _('unread') }}</span>
                                         {% endif %}
                                     </div>
                                     <div class="reply-notif-excerpt">
                                         {{ item.reply_excerpt }}
                                     </div>
                                     <div class="reply-notif-context">
-                                        Context: {{ item.parent_excerpt }}
+                                        {{ _('Context: %(excerpt)s', excerpt=item.parent_excerpt) }}
                                     </div>
                                 </div>
                             </article>
@@ -63,12 +63,12 @@
                     <nav class="level" style="margin-top: 18px;">
                         <div class="level-left">
                             {% if page|default(1)|int > 1 %}
-                            <a class="button is-light" href="/{{ exp_id }}/rnotifications?page={{ page|int - 1 }}">Newer</a>
+                            <a class="button is-light" href="/{{ exp_id }}/rnotifications?page={{ page|int - 1 }}">{{ _('Newer') }}</a>
                             {% endif %}
                         </div>
                         <div class="level-right">
                             {% if has_more %}
-                            <a class="button is-light" href="/{{ exp_id }}/rnotifications?page={{ page|int + 1 }}">Older</a>
+                            <a class="button is-light" href="/{{ exp_id }}/rnotifications?page={{ page|int + 1 }}">{{ _('Older') }}</a>
                             {% endif %}
                         </div>
                     </nav>

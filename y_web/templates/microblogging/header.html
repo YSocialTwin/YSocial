@@ -10,7 +10,7 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge"/>
 
 
-    <title>Y Social</title>
+    <title>{{ _('Y Social') }}</title>
     <link rel="icon" type="image/png') }}" href="{{ url_for('static', filename='assets/img/favicon.png') }}"/>
 
     <link
@@ -29,7 +29,7 @@
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='assets/css/app.css') }}"/>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='assets/css/core.css') }}"/>
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/social-components.css') }}"/>
-    <script src="{{ url_for('static', filename='assets/js/i18n.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='assets/js/i18n.js') }}" data-domains="simulation" defer></script>
 </head>
 <body>
 {% include 'shared/browser_sync.html' %}
@@ -63,7 +63,7 @@
  <i class="mdi mdi-arrow-up-bold ys-icon-white"></i>
             </div>
  <div class="ys-flex-1">
- <div class="ys-text-xs-hint">Update Available</div>
+ <div class="ys-text-xs-hint">{{ _('Update Available') }}</div>
  <div class="ys-text-sm-dark">
  {{ release_info.release_name }} <span class="ys-text-brand-bold">v{{ release_info.latest_version_tag }}</span>
  <span class="ys-badge-count">{{ release_info.published_at[:10] if release_info.published_at else '' }}</span>
@@ -76,10 +76,10 @@
  <a href="#" onclick="openExternalUrl(event, '{{ release_info.download_url }}')" class="ys-btn-brand">
                 {% if is_github_page %}
  <i class="mdi mdi-open-in-new ys-icon-md"></i>
-                <span>View Release</span>
+                <span>{{ _('View Release') }}</span>
                 {% else %}
  <i class="mdi mdi-download ys-icon-md"></i>
-                <span>Download</span>
+                <span>{{ _('Download') }}</span>
                 {% endif %}
             </a>
             {% endif %}
@@ -132,8 +132,8 @@
                                 type="search"
                                 name="q"
                                 class="ys-mb-header-search__input"
-                                placeholder="Search profiles, hashtags, topics"
-                                aria-label="Search profiles, hashtags, and topics"
+                                placeholder="{{ _('Search profiles, hashtags, topics') }}"
+                                aria-label="{{ _('Search profiles, hashtags, and topics') }}"
                         />
                     </div>
                     <div class="ys-mb-header-search__results" data-search-results hidden></div>
@@ -149,7 +149,7 @@
                     <div class="nav-drop is-account-dropdown">
                         <div class="inner">
                             <div class="nav-drop-header">
-                                <span class="username">Mentioning Posts</span>
+                                <span class="username">{{ _('Mentioning Posts') }}</span>
 
                             </div>
                             <div class="nav-drop-body account-items">
@@ -253,8 +253,8 @@
                                             <i data-feather="edit"></i>
                                         </div>
                                         <div class="media-content">
-                                            <h3>Edit Profile</h3>
-                                            <small>Let's make some updates!</small>
+                                            <h3>{{ _('Edit Profile') }}</h3>
+                                            <small>{{ _("Let's make some updates!") }}</small>
                                         </div>
                                     </div>
                                 </a>
@@ -265,8 +265,8 @@
                                             <i data-feather="message-square"></i>
                                         </div>
                                         <div class="media-content">
-                                            <h3>Interview</h3>
-                                            <small>Interview an LLM agent with memory context.</small>
+                                            <h3>{{ _('Interview') }}</h3>
+                                            <small>{{ _('Interview an LLM agent with memory context.') }}</small>
                                         </div>
                                     </div>
                                 </a>
@@ -280,8 +280,8 @@
                                             <i data-feather="settings"></i>
                                         </div>
                                         <div class="media-content">
-                                            <h3>Admin Dashboard</h3>
-                                            <small>You got the power!</small>
+                                            <h3>{{ _('Admin Dashboard') }}</h3>
+                                            <small>{{ _('You got the power!') }}</small>
                                         </div>
                                     </div>
                                 </a>
@@ -303,8 +303,8 @@
                                             <i data-feather="power"></i>
                                         </div>
                                         <div class="media-content">
-                                            <h3>Log out</h3>
-                                            <small>Log out from your account.</small>
+                                            <h3>{{ _('Log out') }}</h3>
+                                            <small>{{ _('Log out from your account.') }}</small>
                                         </div>
                                     </div>
                                 </a>
@@ -317,7 +317,7 @@
         </div>
     </div>
 </div>
-<nav class="navbar mobile-navbar is-hidden-desktop" aria-label="main navigation">
+<nav class="navbar mobile-navbar is-hidden-desktop" aria-label="{{ _('main navigation') }}">
     <!-- Brand -->
     <div class="navbar-brand">
         <a class="navbar-item" href="/{{exp_id}}/feed/{{ logged_id }}/feed/rf/1">
@@ -357,8 +357,8 @@
                             type="search"
                             name="q"
                             class="ys-mb-header-search__input"
-                            placeholder="Search profiles, hashtags, topics"
-                            aria-label="Search profiles, hashtags, and topics"
+                            placeholder="{{ _('Search profiles, hashtags, topics') }}"
+                            aria-label="{{ _('Search profiles, hashtags, and topics') }}"
                     />
                 </div>
                 <div class="ys-mb-header-search__results" data-search-results hidden></div>
@@ -385,28 +385,28 @@
                         href="{{ url_for('main.feeed_logged') }}"
                         class="navbar-item is-flex is-mobile-icon"
                 >
-                    <span><i data-feather="activity"></i>Feed</span>
+                    <span><i data-feather="activity"></i>{{ _('Feed') }}</span>
                 </a>
                 {% if is_admin == True %}
                 <a
                         href="/admin/dashboard"
                         class="navbar-item is-flex is-mobile-icon"
                 >
-                    <span><i data-feather="settings"></i>Admin Dashboard</span>
+                    <span><i data-feather="settings"></i>{{ _('Admin Dashboard') }}</span>
                 </a>
                 {% endif %}
                 <a
                         href="/{{exp_id}}/profile/{{ logged_id }}/recent/1"
                         class="navbar-item is-flex is-mobile-icon"
                 >
-                    <span><i data-feather="user"></i>Profile</span>
+                    <span><i data-feather="user"></i>{{ _('Profile') }}</span>
                 </a>
                 {% if experiment_memory_enabled and current_user_role in ['admin', 'researcher'] %}
                 <a
                         href="/{{ exp_id }}/interview"
                         class="navbar-item is-flex is-mobile-icon"
                 >
-                    <span><i data-feather="message-square"></i>Interview</span>
+                    <span><i data-feather="message-square"></i>{{ _('Interview') }}</span>
                 </a>
                 {% endif %}
 
@@ -417,7 +417,7 @@
         <div class="navbar-item has-dropdown">
             <a href="/navbar-v1-settings.html" class="navbar-link">
                 <i data-feather="user"></i>
-                <span class="is-heading">Account</span>
+                <span class="is-heading">{{ _('Account') }}</span>
             </a>
 
             <!-- Mobile Dropdown -->
@@ -432,7 +432,7 @@
                   <span><i data-feather="settings"></i>Settings</span>
                 </a> -->
                 <a href="{{ url_for('auth.logout') }}" class="navbar-item is-flex is-mobile-icon">
-                    <span><i data-feather="log-out"></i>Logout</span>
+                    <span><i data-feather="log-out"></i>{{ _('Logout') }}</span>
                 </a>
             </div>
         </div>
@@ -443,7 +443,7 @@
             <input
                     id="tipue_drop_input_mobile"
                     class="input"
-                    placeholder="Search..."
+                    placeholder="{{ _('Search...') }}"
             />
             <div class="form-icon">
                 <i data-feather="search"></i>

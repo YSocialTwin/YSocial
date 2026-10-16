@@ -1,9 +1,9 @@
 <aside class="forum-community-rail">
     <div class="forum-community-card">
         <div class="forum-community-card-header">
-            <span class="forum-community-eyebrow">Now</span>
-            <h3>Communities</h3>
-            <p>Most recently active communities across posts and discussions.</p>
+            <span class="forum-community-eyebrow">{{ _('Now') }}</span>
+            <h3>{{ _('Communities') }}</h3>
+            <p>{{ _('Most recently active communities across posts and discussions.') }}</p>
         </div>
         <div class="forum-community-list">
             {% for community in recent_communities %}
@@ -16,9 +16,9 @@
                     <strong>{{ community.label }}</strong>
                     <small>
                         {% if community.kind == 'subreddit' %}
-                        Active feed thread
+                        {{ _('Active feed thread') }}
                         {% else %}
-                        Active generated topic
+                        {{ _('Active generated topic') }}
                         {% endif %}
                     </small>
                 </span>
@@ -26,7 +26,7 @@
             {% endfor %}
             {% if not recent_communities %}
             <div class="forum-community-empty">
-                No active communities detected yet.
+                {{ _('No active communities detected yet.') }}
             </div>
             {% endif %}
         </div>
@@ -34,9 +34,9 @@
 
     <div class="forum-community-card forum-community-card-secondary">
         <div class="forum-community-card-header">
-            <span class="forum-community-eyebrow">Mine</span>
-            <h3>My Communities</h3>
-            <p>Communities where you have recently posted or commented.</p>
+            <span class="forum-community-eyebrow">{{ _('Mine') }}</span>
+            <h3>{{ _('My Communities') }}</h3>
+            <p>{{ _('Communities where you have recently posted or commented.') }}</p>
         </div>
         <div class="forum-community-list">
             {% for community in my_communities %}
@@ -49,9 +49,9 @@
                     <strong>{{ community.label }}</strong>
                     <small>
                         {% if community.kind == 'subreddit' %}
-                        You joined the discussion
+                        {{ _('You joined the discussion') }}
                         {% else %}
-                        You posted on this topic
+                        {{ _('You posted on this topic') }}
                         {% endif %}
                     </small>
                 </span>
@@ -59,7 +59,7 @@
             {% endfor %}
             {% if not my_communities %}
             <div class="forum-community-empty">
-                You have not posted in any community yet.
+                {{ _('You have not posted in any community yet.') }}
             </div>
             {% endif %}
         </div>

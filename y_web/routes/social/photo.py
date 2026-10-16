@@ -552,9 +552,9 @@ def _photo_sidebar_context(
         is_page=active_is_page,
     )
     sidebar_role_label = (
-        "Viewing as"
+        _("Viewing as")
         if is_admin(current_user.username) and active_username != current_user.username
-        else ("Admin" if is_admin(current_user.username) else "Participant")
+        else (_("Admin") if is_admin(current_user.username) else _("Participant"))
     )
     return {
         "logged_id": logged_id,

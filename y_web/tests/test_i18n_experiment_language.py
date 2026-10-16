@@ -66,3 +66,72 @@ def test_experiment_language_selects_the_locale_and_cookie_override_follows_the_
         ctx.request.view_args = {"exp_id": exp}
         ctx.request.blueprint  # noqa: B018
         assert i18n._experiment_language() == ("it", False)
+
+
+# ---- F4-3..F4-9: simulation templates and scripts ----------------------------------------------
+import json
+import re
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+SIM_DIRS = ("microblogging", "forum", "photo", "login", "shared", "error_pages")
+# Interface labels derived from a field: the only dynamic values that may go through _().
+LABEL_FIELDS = {"author_type_badge", "adhoc_agent_badge"}
+
+
+def test_user_generated_text_never_goes_through_the_catalogs():
+    """Posts, comments, agent replies and profile bios are data: ``_(item['content'])`` would be a leak."""
+    pattern = re.compile(r"_\(\s*(?:item|cm|thread|post|comment|message|user|agent)\s*(?:\[|\.get\()\s*['\"](\w+)")
+    offenders = []
+    for folder in SIM_DIRS:
+        for path in (ROOT / "y_web" / "templates" / folder).rglob("*.html"):
+            for field in pattern.findall(path.read_text(encoding="utf-8")):
+                if field not in LABEL_FIELDS:
+                    offenders.append((path.name, field))
+    assert not offenders
+
+
+def test_simulation_javascript_catalog_is_complete_and_consistent():
+    base = ROOT / "y_web" / "translations" / "js" / "simulation"
+    en = json.loads((base / "en.json").read_text(encoding="utf-8"))
+    it = json.loads((base / "it.json").read_text(encoding="utf-8"))
+    assert en.keys() == it.keys() and len(en) > 100
+    placeholder = re.compile(r"\{(\w+)\}")
+    for key, text in it.items():
+        assert text and sorted(placeholder.findall(key)) == sorted(placeholder.findall(text)), key
+    call = re.compile(r"YI18n\.tn?\(\s*'((?:\\.|[^'\\])*)'")
+    used = set()
+    for path in (ROOT / "y_web" / "static" / "assets" / "js").rglob("*.js"):
+        if path.name.startswith("admin") or path.name in {"i18n.js", "app.js"}:
+            continue
+        used |= {k.replace("\\'", "'") for k in call.findall(path.read_text(encoding="utf-8", errors="ignore"))}
+    admin_or_core = json.loads((ROOT / "y_web" / "translations" / "js" / "core" / "en.json").read_text(encoding="utf-8")).keys()
+    missing = {k for k in used if k not in en and k not in admin_or_core}
+    # keys of other domains (admin, tutorials) live in their own catalogs
+    other = set()
+    for domain in ("admin", "tutorials"):
+        for f in (ROOT / "y_web" / "translations" / "js" / domain).glob("en.json"):
+            other |= set(json.loads(f.read_text(encoding="utf-8")))
+    assert not (missing - other), sorted(missing - other)[:10]
+
+
+def test_simulation_pages_load_the_simulation_catalog():
+    for page in ("microblogging/header.html", "forum/header.html", "photo/base.html", "login/scene_base.html"):
+        assert 'data-domains="simulation"' in (ROOT / "y_web" / "templates" / page).read_text(encoding="utf-8")
+
+
+def test_italian_catalog_translates_the_participant_labels():
+    from flask import Flask
+
+    app = Flask("y_web")
+    app.config.update(SECRET_KEY="t", SUPPORTED_LANGUAGES=("en", "it"), TESTING=True)
+    i18n.init_i18n(app)
+
+    def render(source):
+        with app.test_request_context("/", headers={"Accept-Language": "it"}):
+            return app.jinja_env.from_string(source).render()
+
+    assert render("{{ _('Unfollow') }}") == "Non seguire pi\u00f9"
+    assert render("{{ _('Day %(day)s - %(hour)s:00', day=3, hour=7) }}") == "Giorno 3 - 7:00"
+    assert render("{{ ngettext('%(num)s photo', '%(num)s photos', 2) }}") == "2 foto"
+    assert render("{{ _('AI Agent') }}") == "Agente IA"

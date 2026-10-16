@@ -270,14 +270,14 @@
 
 
                     {% if ui is not defined or ui.show_trending_hashtags is not false %}
-                    {% set ranked_card_title = "Trending Hashtags" %}
-                    {% set ranked_card_subtitle = "Live signals from the current conversation" %}
+                    {% set ranked_card_title = _('Trending Hashtags') %}
+                    {% set ranked_card_subtitle = _('Live signals from the current conversation') %}
                     {% set ranked_card_items = trending_ht %}
                     {% set ranked_card_href_prefix = "hashtag_posts" %}
                     {% set ranked_card_label_key = "hashtag" %}
-                    {% set ranked_card_meta_label = "mentions" %}
+                    {% set ranked_card_meta_label = _('mentions') %}
                     {% set ranked_card_prefix = "#" %}
-                    {% set ranked_card_empty = "No hashtags are trending yet." %}
+                    {% set ranked_card_empty = _('No hashtags are trending yet.') %}
                     {% include "microblogging/components/sidebar_ranked_list_card.html" %}
                     {% endif %}
 
@@ -286,10 +286,10 @@
 
                 <!-- Middle column -->
  <div class="column is-8 ys-px-half">
-                    {% set hero_eyebrow = "Thread Focus" %}
-                    {% set hero_prefix = "Following the" %}
-                    {% set hero_focus = "full discussion thread" %}
-                    {% set hero_suffix = "in context." %}
+                    {% set hero_eyebrow = _('Thread Focus') %}
+                    {% set hero_prefix = _('Following the') %}
+                    {% set hero_focus = _('full discussion thread') %}
+                    {% set hero_suffix = _('in context.') %}
                     {% include "microblogging/components/context_hero_card.html" %}
 
                     <div class="profile-timeline">

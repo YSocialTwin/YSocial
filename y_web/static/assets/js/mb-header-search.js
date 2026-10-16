@@ -29,7 +29,7 @@
 
     const renderResults = () => {
       if (!suggestions.length) {
-        resultsRoot.innerHTML = '<div class="ys-mb-header-search__empty">No matching profiles, hashtags, or topics.</div>'
+        resultsRoot.innerHTML = '<div class="ys-mb-header-search__empty">' + YI18n.t('No matching profiles, hashtags, or topics.') + '</div>'
         resultsRoot.hidden = false
         return
       }
@@ -75,7 +75,7 @@
           credentials: 'same-origin'
         })
         if (!response.ok) {
-          throw new Error(`Search request failed with ${response.status}`)
+          throw new Error(YI18n.t('Search request failed with {status}', {status: response.status}))
         }
         const payload = await response.json()
         suggestions = Array.isArray(payload.results) ? payload.results : []

@@ -56,7 +56,7 @@
             return;
         }
         if (!items || !items.length) {
-            state.grid.innerHTML = '<div class="photo-search-page__empty">No photos matched your search yet.</div>';
+            state.grid.innerHTML = '<div class="photo-search-page__empty">' + YI18n.t('No photos matched your search yet.') + '</div>';
             return;
         }
 
@@ -79,7 +79,7 @@
             return;
         }
         if (!items || !items.length) {
-            state.users.innerHTML = '<div class="photo-overlay__empty">No people matched yet.</div>';
+            state.users.innerHTML = '<div class="photo-overlay__empty">' + YI18n.t('No people matched yet.') + '</div>';
             return;
         }
 
@@ -90,7 +90,7 @@
                 '    <img src="' + escapeHtml(item.profile_pic || '') + '" data-demo-src="' + escapeHtml(item.profile_pic || '') + '" alt=""/>',
                 '    <div class="photo-search-page__user-copy">',
                 '      <strong>' + escapeHtml(item.username || '') + '</strong>',
-                '      <small>' + escapeHtml(item.photo_count || 0) + ' photos</small>',
+                '      <small>' + YI18n.t('{count} photos', {count: escapeHtml(item.photo_count || 0)}) + '</small>',
                 '    </div>',
                 '  </a>',
                 '  <span class="photo-search-page__badge">' + escapeHtml(item.kind === 'page' ? 'Page' : 'User') + '</span>',
@@ -104,7 +104,7 @@
             return;
         }
         if (!items || !items.length) {
-            state.hashtags.innerHTML = '<div class="photo-overlay__empty">No hashtags matched yet.</div>';
+            state.hashtags.innerHTML = '<div class="photo-overlay__empty">' + YI18n.t('No hashtags matched yet.') + '</div>';
             return;
         }
 
@@ -124,9 +124,9 @@
         }
         var query = payload.query || '';
         if (query) {
-            state.summary.textContent = 'Showing ' + payload.counts.photos + ' photos, ' + payload.counts.users + ' people and ' + payload.counts.hashtags + ' hashtags for "' + query + '".';
+            state.summary.textContent = YI18n.t('Showing {photos} photos, {users} people and {hashtags} hashtags for "{query}".', {photos: payload.counts.photos, users: payload.counts.users, hashtags: payload.counts.hashtags, query});
         } else {
-            state.summary.textContent = 'Browse recent photos, people and hashtags in this experiment.';
+            state.summary.textContent = YI18n.t('Browse recent photos, people and hashtags in this experiment.');
         }
     }
 
@@ -162,7 +162,7 @@
             }
         }).then(function (response) {
             if (!response.ok) {
-                throw new Error('Search request failed');
+                throw new Error(YI18n.t('Search request failed'));
             }
             return response.json();
         }).then(applyPayload).catch(function () {

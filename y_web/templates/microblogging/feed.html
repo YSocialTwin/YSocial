@@ -267,14 +267,14 @@
                     {% include "microblogging/components/sidebar_user_card.html" %}
 
                     {% if ui is not defined or ui.show_trending_hashtags is not false %}
-                    {% set ranked_card_title = "Trending Hashtags" %}
-                    {% set ranked_card_subtitle = "Live signals from the current conversation" %}
+                    {% set ranked_card_title = _('Trending Hashtags') %}
+                    {% set ranked_card_subtitle = _('Live signals from the current conversation') %}
                     {% set ranked_card_items = trending_ht %}
                     {% set ranked_card_href_prefix = "hashtag_posts" %}
                     {% set ranked_card_label_key = "hashtag" %}
-                    {% set ranked_card_meta_label = "mentions" %}
+                    {% set ranked_card_meta_label = _('mentions') %}
                     {% set ranked_card_prefix = "#" %}
-                    {% set ranked_card_empty = "No hashtags are trending yet." %}
+                    {% set ranked_card_empty = _('No hashtags are trending yet.') %}
                     {% include "microblogging/components/sidebar_ranked_list_card.html" %}
                     {% endif %}
 
@@ -294,7 +294,7 @@
                                     <li class="is-active">
                                         <a>
                                             <span class="icon is-small"><i data-feather="edit-3"></i></span>
-                                            <span>Publish</span>
+                                            <span>{{ _('Publish') }}</span>
                                         </a>
                                     </li>
                                     <!-- <li>
@@ -337,7 +337,7 @@
                             id="publish"
                             class="textarea"
                             rows="3"
-                            placeholder="Write something about you..."
+                            placeholder="{{ _('Write something about you...') }}"
                     ></textarea>
                                         </div>
                                     </div>
@@ -354,7 +354,7 @@
                                                     id="users-autocpl"
                                                     type="text"
                                                     class="input"
-                                                    placeholder="Who are you with?"
+                                                    placeholder="{{ _('Who are you with?') }}"
                                             />
                                             <div class="icon">
                                                 <i data-feather="search"></i>
@@ -376,7 +376,7 @@
                             id="activities"
                             rows="1"
                             class="textarea"
-                            placeholder="Enter the link to the website you want to share..."
+                            placeholder="{{ _('Enter the link to the website you want to share...') }}"
                     ></textarea>
                                             <!-- <div class="icon">
                                                <i data-feather="search"></i>
@@ -396,9 +396,9 @@
                                                         id="mood-autocpl"
                                                         type="text"
                                                         class="input is-subactivity"
-                                                        placeholder="How do you feel?"
+                                                        placeholder="{{ _('How do you feel?') }}"
                                                 />
-                                                <div class="input-block">Feels</div>
+                                                <div class="input-block">{{ _('Feels') }}</div>
                                                 <div class="close-icon is-subactivity">
                                                     <i data-feather="x"></i>
                                                 </div>
@@ -415,9 +415,9 @@
                                                         id="drinking-autocpl"
                                                         type="text"
                                                         class="input is-subactivity"
-                                                        placeholder="What are you drinking?"
+                                                        placeholder="{{ _('What are you drinking?') }}"
                                                 />
-                                                <div class="input-block">Drinks</div>
+                                                <div class="input-block">{{ _('Drinks') }}</div>
                                                 <div class="close-icon is-subactivity">
                                                     <i data-feather="x"></i>
                                                 </div>
@@ -434,9 +434,9 @@
                                                         id="eating-autocpl"
                                                         type="text"
                                                         class="input is-subactivity"
-                                                        placeholder="What are you eating?"
+                                                        placeholder="{{ _('What are you eating?') }}"
                                                 />
-                                                <div class="input-block">Eats</div>
+                                                <div class="input-block">{{ _('Eats') }}</div>
                                                 <div class="close-icon is-subactivity">
                                                     <i data-feather="x"></i>
                                                 </div>
@@ -453,9 +453,9 @@
                                                         id="reading-autocpl"
                                                         type="text"
                                                         class="input is-subactivity"
-                                                        placeholder="What are you reading?"
+                                                        placeholder="{{ _('What are you reading?') }}"
                                                 />
-                                                <div class="input-block">Reads</div>
+                                                <div class="input-block">{{ _('Reads') }}</div>
                                                 <div class="close-icon is-subactivity">
                                                     <i data-feather="x"></i>
                                                 </div>
@@ -472,9 +472,9 @@
                                                         id="watching-autocpl"
                                                         type="text"
                                                         class="input is-subactivity"
-                                                        placeholder="What are you watching?"
+                                                        placeholder="{{ _('What are you watching?') }}"
                                                 />
-                                                <div class="input-block">Watches</div>
+                                                <div class="input-block">{{ _('Watches') }}</div>
                                                 <div class="close-icon is-subactivity">
                                                     <i data-feather="x"></i>
                                                 </div>
@@ -491,9 +491,9 @@
                                                         id="travel-autocpl"
                                                         type="text"
                                                         class="input is-subactivity"
-                                                        placeholder="Where are you going?"
+                                                        placeholder="{{ _('Where are you going?') }}"
                                                 />
-                                                <div class="input-block">Travels</div>
+                                                <div class="input-block">{{ _('Travels') }}</div>
                                                 <div class="close-icon is-subactivity">
                                                     <i data-feather="x"></i>
                                                 </div>
@@ -539,7 +539,7 @@
                             id="link_post"
                             rows="1"
                             class="textarea"
-                            placeholder="Enter the link to the immage you are commenting on..."
+                            placeholder="{{ _('Enter the link to the immage you are commenting on...') }}"
                     ></textarea>
                                             <!--<div class="icon">
                                               <i data-feather="link-2"></i>
@@ -574,7 +574,7 @@
                                         <div class="column is-6 is-narrower">
                                             <div id="open-link-suboption" class="compose-option is-centered">
                                                 <i data-feather="link-2"></i>
-                                                <span>Share Image</span>
+                                                <span>{{ _('Share Image') }}</span>
                                             </div>
                                         </div>
 
@@ -611,7 +611,7 @@
                                             type="button"
                                             class="button is-solid accent-button is-fullwidth is-disabled"
                                     >
-                                        Publish
+                                        {{ _('Publish') }}
                                     </button>
                                 </div>
                             </div>
@@ -637,19 +637,19 @@
                     </div>
                     {% else %}
                     <!-- Classic pagination (infinite scroll disabled) -->
-                    <nav class="ys-pagination" aria-label="Feed pagination">
+                    <nav class="ys-pagination" aria-label="{{ _('Feed pagination') }}">
                         {% if page > 1 %}
                         <a class="ys-page-btn" href="/{{exp_id}}/feed/{{user_id}}/{{timeline}}/{{mode}}/{{ page-1 }}">
-                            <i data-feather="chevron-left"></i> Previous
+                            <i data-feather="chevron-left"></i> {{ _('Previous') }}
                         </a>
                         {% else %}
                         <span class="ys-page-btn is-disabled">
-                            <i data-feather="chevron-left"></i> Previous
+                            <i data-feather="chevron-left"></i> {{ _('Previous') }}
                         </span>
                         {% endif %}
-                        <span class="ys-page-info">Page {{ page }}</span>
+                        <span class="ys-page-info">{{ _('Page %(page)s', page=page) }}</span>
                         <a class="ys-page-btn" href="/{{exp_id}}/feed/{{user_id}}/{{timeline}}/{{mode}}/{{ page+1 }}">
-                            Next <i data-feather="chevron-right"></i>
+                            {{ _('Next') }} <i data-feather="chevron-right"></i>
                         </a>
                     </nav>
                     {% endif %}

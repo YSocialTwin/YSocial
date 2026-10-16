@@ -1,11 +1,11 @@
 <div class="ys-friends-list-head">
-    <div class="ys-friends-tabs" role="tablist" aria-label="Friends filters">
+    <div class="ys-friends-tabs" role="tablist" aria-label="{{ _('Friends filters') }}">
         <a
             class="ys-friends-tab{% if active_tab == 'followers' %} is-active{% endif %}"
             href="/{{exp_id}}/friends/{{ user_id }}/1?tab=followers"
             data-friends-url="/{{exp_id}}/friends/{{ user_id }}/1?tab=followers"
         >
-            People Following Me
+            {{ _('People Following Me') }}
             <span class="ys-friends-tab__count">{{ number_followers }}</span>
         </a>
         <a
@@ -13,15 +13,15 @@
             href="/{{exp_id}}/friends/{{ user_id }}/1?tab=followees"
             data-friends-url="/{{exp_id}}/friends/{{ user_id }}/1?tab=followees"
         >
-            People I Follow
+            {{ _('People I Follow') }}
             <span class="ys-friends-tab__count">{{ number_followees }}</span>
         </a>
     </div>
     <div class="ys-friends-list-meta">
         {% if active_total %}
-            Showing {{ page_start }}-{{ page_end }} of {{ active_total }}
+            {{ _('Showing %(start)s-%(end)s of %(total)s', start=page_start, end=page_end, total=active_total) }}
         {% else %}
-            No profiles to show
+            {{ _('No profiles to show') }}
         {% endif %}
     </div>
 </div>
@@ -47,9 +47,9 @@
                 {{ card['username'] }}
             </a>
             <div class="ys-friends-profile-card__stats">
-                <span><strong>{{ card['number_followers'] }}</strong> followers</span>
-                <span><strong>{{ card['number_followees'] }}</strong> following</span>
-                <span><strong>{{ card['number_reactions'] }}</strong> reactions</span>
+                <span>{{ ngettext('<strong>%(num)s</strong> follower', '<strong>%(num)s</strong> followers', card['number_followers']|int) }}</span>
+                <span>{{ _('<strong>%(num)s</strong> following', num=card['number_followees']) }}</span>
+                <span>{{ ngettext('<strong>%(num)s</strong> reaction', '<strong>%(num)s</strong> reactions', card['number_reactions']|int) }}</span>
             </div>
         </div>
     </article>
@@ -58,8 +58,8 @@
 {% else %}
 <div class="ys-friends-empty">
     <img src="{{ url_for('static', filename='assets/img/robots/alone.png') }}" alt="" />
-    <h3>No {{ "people following this profile" if active_tab == "followers" else "followed profiles" }} yet</h3>
-    <p>This profile does not have visible {{ "incoming follow ties" if active_tab == "followers" else "outgoing follow ties" }} in the current simulation state.</p>
+    <h3>{% if active_tab == "followers" %}{{ _('No people following this profile yet') }}{% else %}{{ _('No followed profiles yet') }}{% endif %}</h3>
+    <p>{% if active_tab == "followers" %}{{ _('This profile does not have visible incoming follow ties in the current simulation state.') }}{% else %}{{ _('This profile does not have visible outgoing follow ties in the current simulation state.') }}{% endif %}</p>
 </div>
 {% endif %}
 
@@ -75,9 +75,9 @@
         {% endif %}
     >
         <i class="mdi mdi-chevron-left"></i>
-        <span>Previous</span>
+        <span>{{ _('Previous') }}</span>
     </a>
-    <span class="ys-friends-pagination__status">Page {{ page }} of {{ total_pages }}</span>
+    <span class="ys-friends-pagination__status">{{ _('Page %(page)s of %(total)s', page=page, total=total_pages) }}</span>
     <a
         class="ys-friends-pagination__btn{% if not has_next_page %} is-disabled{% endif %}"
         {% if has_next_page %}
@@ -88,7 +88,7 @@
             aria-disabled="true"
         {% endif %}
     >
-        <span>Next</span>
+        <span>{{ _('Next') }}</span>
         <i class="mdi mdi-chevron-right"></i>
     </a>
 </div>

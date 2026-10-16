@@ -1,6 +1,6 @@
 {% extends "photo/base.html" %}
 
-{% block photo_title %}Y Social | Messages{% endblock %}
+{% block photo_title %}Y Social | {{ _('Messages') }}{% endblock %}
 
 {% block photo_extra_head %}
         .photo-messages-page {
@@ -405,7 +405,7 @@
         <div class="photo-messages-sidebar-head">
             <div class="photo-messages-sidebar-user">
                 <strong>{{ logged_username }}</strong>
-                <button type="button" class="photo-messages-compose" title="New message" data-photo-messages-new>
+                <button type="button" class="photo-messages-compose" title="{{ _('New message') }}" data-photo-messages-new>
                     <i class="mdi mdi-square-edit-outline"></i>
                 </button>
             </div>
@@ -415,15 +415,15 @@
                     id="photo-messages-search"
                     class="photo-messages-search"
                     type="search"
-                    placeholder="Search"
+                    placeholder="{{ _('Search') }}"
                     autocomplete="off"
                 />
             </div>
         </div>
 
         <div class="photo-messages-list-head">
-            <h2>Messages</h2>
-            <span>Requests</span>
+            <h2>{{ _('Messages') }}</h2>
+            <span>{{ _('Requests') }}</span>
         </div>
 
         <div id="photo-messages-list" class="photo-messages-list"></div>
@@ -434,18 +434,18 @@
             <div class="photo-messages-thread-target">
                 <div id="photo-messages-target-avatar" class="photo-messages-thread-avatar"></div>
                 <div class="photo-messages-thread-copy">
-                    <div id="photo-messages-target-name" class="photo-messages-thread-name">Select a conversation</div>
+                    <div id="photo-messages-target-name" class="photo-messages-thread-name">{{ _('Select a conversation') }}</div>
                     <div id="photo-messages-target-subtitle" class="photo-messages-thread-subtitle"></div>
                 </div>
             </div>
             <div class="photo-messages-thread-actions">
-                <button type="button" class="photo-messages-icon-btn" title="Audio call">
+                <button type="button" class="photo-messages-icon-btn" title="{{ _('Audio call') }}">
                     <i class="mdi mdi-phone-outline"></i>
                 </button>
-                <button type="button" class="photo-messages-icon-btn" title="Video call">
+                <button type="button" class="photo-messages-icon-btn" title="{{ _('Video call') }}">
                     <i class="mdi mdi-video-outline"></i>
                 </button>
-                <button type="button" class="photo-messages-icon-btn" title="Conversation info">
+                <button type="button" class="photo-messages-icon-btn" title="{{ _('Conversation info') }}">
                     <i class="mdi mdi-information-outline"></i>
                 </button>
             </div>
@@ -453,7 +453,7 @@
 
         <div id="photo-messages-messages" class="photo-messages-messages">
             <div class="photo-messages-empty">
-                Select a conversation from the left panel to view and continue the chat.
+                {{ _('Select a conversation from the left panel to view and continue the chat.') }}
             </div>
         </div>
 
@@ -463,7 +463,7 @@
                     id="photo-messages-input"
                     class="photo-messages-input"
                     rows="2"
-                    placeholder="Message..."
+                    placeholder="{{ _('Message...') }}"
                 ></textarea>
                 <button id="photo-messages-send" type="submit" class="photo-messages-send">
                     <i class="mdi mdi-send"></i>

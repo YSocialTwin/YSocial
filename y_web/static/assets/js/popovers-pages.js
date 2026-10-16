@@ -37,51 +37,7 @@ function getPagesPopovers() {
               $('.loader-overlay').removeClass('is-active')
             }, 1000)
 
-            var html = `
-                            <div class="profile-popover-block">
-
-                                <div class="loader-overlay is-active">
-                                    <div class="loader is-loading"></div>
-                                </div>
-
-                                <div class="profile-popover-wrapper">
-                                    <div class="popover-cover">
-                                        <img src="${data[pageRef].cover_image}">
-                                        <div class="popover-avatar">
-                                            <img class="avatar" src="${data[pageRef].profile_picture}">
-                                        </div>
-                                    </div>
-                                    <div class="popover-meta">
-                                        <span class="page-meta">
-                                            <span class="pagename">${data[pageRef].name}</span>
-                                        </span>
-                                        <div class="page-activity">
-                                            ${tagIcon}
-                                            <div class="text">
-                                                ${data[pageRef].activity}
-                                            </div>
-                                        </div>
-                                        <div class="page-followers">
-                                            ${usersIcon}
-                                            <div class="text">
-                                                <a href="#">${data[pageRef].followers}</a> Followers
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="popover-actions">
-                                    <a href="#" class="popover-icon">
-                                        ${profileIcon}
-                                    </a>
-                                    <a href="#" class="popover-icon">
-                                        ${bookmarkIcon}
-                                    </a>
-                                    <a href="#" class="popover-icon">
-                                        ${messageIcon}
-                                    </a>
-                                </div>
-                            </div>
-                        `
+            var html = '\n                            <div class="profile-popover-block">\n\n                                <div class="loader-overlay is-active">\n                                    <div class="loader is-loading"></div>\n                                </div>\n\n                                <div class="profile-popover-wrapper">\n                                    <div class="popover-cover">\n                                        <img src="' + data[pageRef].cover_image + '">\n                                        <div class="popover-avatar">\n                                            <img class="avatar" src="' + data[pageRef].profile_picture + '">\n                                        </div>\n                                    </div>\n                                    <div class="popover-meta">\n                                        <span class="page-meta">\n                                            <span class="pagename">' + data[pageRef].name + '</span>\n                                        </span>\n                                        <div class="page-activity">\n                                            ' + tagIcon + '\n                                            <div class="text">\n                                                ' + data[pageRef].activity + '\n                                            </div>\n                                        </div>\n                                        <div class="page-followers">\n                                            ' + usersIcon + '\n                                            <div class="text">\n                                                <a href="#">' + data[pageRef].followers + '</a> ' + YI18n.t('Followers') + '\n                                            </div>\n                                        </div>\n                                    </div>\n                                </div>\n                                <div class="popover-actions">\n                                    <a href="#" class="popover-icon">\n                                        ' + profileIcon + '\n                                    </a>\n                                    <a href="#" class="popover-icon">\n                                        ' + bookmarkIcon + '\n                                    </a>\n                                    <a href="#" class="popover-icon">\n                                        ' + messageIcon + '\n                                    </a>\n                                </div>\n                            </div>\n                        '
 
             return html
             return destroyLoader

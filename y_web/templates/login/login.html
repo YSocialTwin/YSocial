@@ -13,30 +13,30 @@
         <!-- Experiment selection (shown after the credentials are validated) -->
         <form method="POST" action="/select_experiment" class="yl-form">
             <input type="hidden" name="auth_token" value="{{ auth_token }}">
-            <h2>Choose your experiment</h2>
-            <p class="yl-sub">Select an active experiment to continue.</p>
+            <h2>{{ _('Choose your experiment') }}</h2>
+            <p class="yl-sub">{{ _('Select an active experiment to continue.') }}</p>
 
             {% if experiments|length > 5 %}
-            <input class="yl-search" id="yl-q" type="search" placeholder="Search experiments…" aria-label="Search experiments">
+            <input class="yl-search" id="yl-q" type="search" placeholder="{{ _('Search experiments…') }}" aria-label="{{ _('Search experiments') }}">
             {% endif %}
 
-            <div class="yl-cards" id="yl-cards" role="radiogroup" aria-label="Active experiments">
+            <div class="yl-cards" id="yl-cards" role="radiogroup" aria-label="{{ _('Active experiments') }}">
                 {% for exp in experiments %}
                 <label class="yl-xp" style="--i: {{ loop.index0 if loop.index0 < 8 else 8 }}" {# dynamic #}>
                     <input type="radio" name="experiment_id" value="{{ exp.idexp }}" data-name="{{ exp.exp_name }}" required>
                     <span class="yl-ic" aria-hidden="true">{{ (exp.exp_name or '?')[:1]|upper }}</span>
                     <span>
                         <b>{{ exp.exp_name }}</b>
-                        <span class="yl-meta">{{ exp.platform_type|default('', true)|capitalize }}{% if exp.platform_type %} · {% endif %}Experiment #{{ exp.idexp }}</span>
+                        <span class="yl-meta">{{ exp.platform_type|default('', true)|capitalize }}{% if exp.platform_type %} · {% endif %}{{ _('Experiment #%(id)s', id=exp.idexp) }}</span>
                     </span>
                 </label>
                 {% endfor %}
             </div>
 
             <button class="yl-btn" id="yl-go" type="submit" disabled>
-                <span class="yl-spin"></span><span id="yl-go-t">Continue to Experiment</span>
+                <span class="yl-spin"></span><span id="yl-go-t">{{ _('Continue to Experiment') }}</span>
             </button>
-            <div class="yl-foot">You have access to {{ experiments|length }} active experiment{{ 's' if experiments|length > 1 else '' }}</div>
+            <div class="yl-foot">{{ ngettext('You have access to %(num)s active experiment', 'You have access to %(num)s active experiments', experiments|length) }}</div>
         </form>
         {% else %}
         <!-- Normal login form -->

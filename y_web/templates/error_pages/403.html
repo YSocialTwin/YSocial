@@ -9,7 +9,7 @@
             <h2>{{ _('Access Denied') }}</h2>
             <p class="yl-sub">{{ _('Error %(code)s', code=(error.status_code if error else '403')) }}</p>
             <p class="yl-lead">
-                {{ error.error_description if error else 'You don\'t have permission to access this resource.' }}<br>
+                {{ error.error_description if error else _('You don\'t have permission to access this resource.') }}<br>
                 {{ _('Please contact an administrator if you believe this is an error.') }}
             </p>
 

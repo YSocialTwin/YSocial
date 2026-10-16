@@ -10,6 +10,7 @@ import traceback
 from flask import render_template, request
 from flask_login import current_user
 
+from y_web.i18n import gettext as _
 from y_web.routes.errors._blueprint import errors
 
 
@@ -17,12 +18,12 @@ def _build_error_details(status_code: int, error_name: str, e):
     root_error = getattr(e, "original_exception", None) or e
     raw_description = str(e) if e is not None else ""
     default_messages = {
-        400: "The server could not understand the request due to invalid syntax.",
-        403: "You don't have permission to access this resource.",
-        404: "The requested page could not be found.",
-        500: "The server encountered an unexpected condition.",
+        400: _("The server could not understand the request due to invalid syntax."),
+        403: _("You don't have permission to access this resource."),
+        404: _("The requested page could not be found."),
+        500: _("The server encountered an unexpected condition."),
     }
-    generic_message = default_messages.get(status_code, "Unexpected error.")
+    generic_message = default_messages.get(status_code) or _("Unexpected error.")
     if raw_description and raw_description not in {
         "400 Bad Request: The browser (or proxy) sent a request that this server could not understand.",
         "403 Forbidden: You don't have the permission to access the requested resource. It is either read-protected or not readable by the server.",

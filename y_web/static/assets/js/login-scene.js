@@ -141,7 +141,7 @@
 
   /* cascata */
   function counter() {
-    cascEl.innerHTML = '<b>' + casc.count + '</b> reshares · <b>' + Math.round(casc.reached / nodes.length * 100) + '%</b> of the network reached';
+    cascEl.innerHTML = '<b>' + casc.count + '</b> ' + YI18n.t('reshares ·') + ' <b>' + Math.round(casc.reached / nodes.length * 100) + '%</b> ' + YI18n.t('of the network reached');
   }
   function startCascade() {
     var src = pickNode(), dist = nodes.map(function () { return -1; }), par = [], levels = [[src]], cur = [src];

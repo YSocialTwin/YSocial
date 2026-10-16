@@ -1,6 +1,6 @@
 {% extends "photo/base.html" %}
 
-{% block photo_title %}Y Social | Suggested Contacts{% endblock %}
+{% block photo_title %}Y Social | {{ _('Suggested Contacts') }}{% endblock %}
 {% block photo_body_class %}photo-suggestions-body{% endblock %}
 
 {% block photo_extra_head %}
@@ -192,17 +192,17 @@
     <div class="photo-suggestions-page__inner">
         <div class="photo-suggestions-page__top">
             <div>
-                <h1>Suggested Contacts</h1>
-                <p>People and pages you can follow in this experiment.</p>
+                <h1>{{ _('Suggested Contacts') }}</h1>
+                <p>{{ _('People and pages you can follow in this experiment.') }}</p>
             </div>
-            <a class="button is-light is-rounded photo-suggestions-page__back" href="/{{ exp_id }}/photo/feed/all/feed/rf/1">Back to feed</a>
+            <a class="button is-light is-rounded photo-suggestions-page__back" href="/{{ exp_id }}/photo/feed/all/feed/rf/1">{{ _('Back to feed') }}</a>
         </div>
 
         <div class="photo-suggestions-card">
             <div class="photo-suggestions-card__header">
                 <div>
-                    <h2>Suggestions for you</h2>
-                    <p>Follow accounts to update your feed and social graph.</p>
+                    <h2>{{ _('Suggestions for you') }}</h2>
+                    <p>{{ _('Follow accounts to update your feed and social graph.') }}</p>
                 </div>
             </div>
 
@@ -217,31 +217,31 @@
                                 <strong>{{ user['username'] }}</strong>
                                 <small>
                                     {% if user.get('kind') == 'page' %}
-                                        Suggested page
+                                        {{ _('Suggested page') }}
                                     {% else %}
-                                        Suggested contact
+                                        {{ _('Suggested contact') }}
                                     {% endif %}
                                 </small>
                             </div>
                         </a>
                         {% if followed_contact_ids and user['id'] in followed_contact_ids %}
-                        <span class="button is-small is-static is-light">Followed</span>
+                        <span class="button is-small is-static is-light">{{ _('Followed') }}</span>
                         {% else %}
                         <a class="button is-small is-link is-light" href="/{{ exp_id }}/follow/{{ user['id'] }}/{{ logged_id }}">
-                            Follow
+                            {{ _('Follow') }}
                         </a>
                         {% endif %}
                     </div>
                     {% endfor %}
                 {% else %}
                     <div class="notification is-light">
-                        Suggested contacts are loading.
+                        {{ _('Suggested contacts are loading.') }}
                     </div>
                 {% endif %}
             </div>
 
             <div class="photo-suggestions-card__footer">
-                <a href="/{{ exp_id }}/photo/feed/all/feed/rf/1">See all</a>
+                <a href="/{{ exp_id }}/photo/feed/all/feed/rf/1">{{ _('See all') }}</a>
             </div>
         </div>
     </div>

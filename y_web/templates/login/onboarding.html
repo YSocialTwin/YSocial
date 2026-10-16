@@ -360,8 +360,8 @@
         var gender = document.getElementById('field-gender');
         var edu = document.getElementById('field-education');
         if (!age || !age.value || isNaN(parseInt(age.value))) missing.push('Age');
-        if (!gender || !gender.value) missing.push('Gender');
-        if (!edu || !edu.value) missing.push('Education Level');
+        if (!gender || !gender.value) missing.push({{ _('Gender')|tojson }});
+        if (!edu || !edu.value) missing.push({{ _('Education Level')|tojson }});
         if (missing.length) {
             e.preventDefault();
             var banner = document.getElementById('ob-error-banner');

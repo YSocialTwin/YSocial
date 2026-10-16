@@ -847,11 +847,7 @@
         var sharedSection = "";
         if (post.shared_from && post.shared_from !== -1) {
             sharedSection =
-                '<div style="text-align: right; border-bottom: 1px solid #f0f0f0; margin-bottom: 12px;"><p><small>Shared from: <a href="' +
-                buildThreadUrl(post.shared_from[0]) +
-                '">' +
-                escapeHtml(post.shared_from[1] || "") +
-                "</a></small></p></div>";
+                '<div style="text-align: right; border-bottom: 1px solid #f0f0f0; margin-bottom: 12px;"><p><small>' + YI18n.t('Shared from:') + ' <a href="' + buildThreadUrl(post.shared_from[0]) + '">' + escapeHtml(post.shared_from[1] || "") + '</a></small></p></div>';
         }
 
         var deleteAction = "";
@@ -863,8 +859,8 @@
                 '  <div class="media">',
                 '    <i data-feather="trash-2"></i>',
                 '    <div class="media-content">',
-                "      <h3>Delete</h3>",
-                "      <small>Remove this post</small>",
+                '      <h3>' + YI18n.t('Delete') + '</h3>',
+                '      <small>' + YI18n.t('Remove this post') + '</small>',
                 "    </div>",
                 "  </div>",
                 "</a>",
@@ -923,8 +919,8 @@
             '              <div class="media">',
             '                <i data-feather="bookmark"></i>',
             '                <div class="media-content">',
-            "                  <h3>Discussion</h3>",
-            "                  <small>See full discussion thread</small>",
+            '                  <h3>' + YI18n.t('Discussion') + '</h3>',
+            '                  <small>' + YI18n.t('See full discussion thread') + '</small>',
             "                </div>",
             "              </div>",
             "            </a>",
@@ -953,19 +949,17 @@
             "  </div>",
             '  <div class="post-footer" style="display: flex; align-items: center; gap: 12px; padding: 0 16px 12px 16px; border-top: 1px solid #e1e8ed;">',
             '    <div class="vote-stack" style="background: #f8f9fa; border-radius: 4px; display: flex; flex-direction: column; align-items: center; padding: 4px; min-width: 40px;">',
-            '      <button class="vote-button" type="button" data-action="like" aria-label="Upvote" style="background: none; border: none; cursor: pointer; padding: 2px;"><i data-feather="arrow-up" style="width: 16px; height: 16px;"></i></button>',
+            '      <button class="vote-button" type="button" data-action="like" aria-label="' + YI18n.t('Upvote') + '" style="background: none; border: none; cursor: pointer; padding: 2px;"><i data-feather="arrow-up" style="width: 16px; height: 16px;"></i></button>',
             '      <span class="vote-score" data-role="score" style="font-size: 12px; font-weight: bold; color: #1c1c1c; margin: 2px 0;">' +
                 score +
                 "</span>",
-            '      <button class="vote-button" type="button" data-action="dislike" aria-label="Downvote" style="background: none; border: none; cursor: pointer; padding: 2px;"><i data-feather="arrow-down" style="width: 16px; height: 16px;"></i></button>',
+            '      <button class="vote-button" type="button" data-action="dislike" aria-label="' + YI18n.t('Downvote') + '" style="background: none; border: none; cursor: pointer; padding: 2px;"><i data-feather="arrow-down" style="width: 16px; height: 16px;"></i></button>',
             "    </div>",
             '    <a class="open-thread-button" data-role="open-thread" href="' +
                 buildThreadUrl(post.post_id) +
                 '" style="background: none; border: none; cursor: pointer; padding: 6px 8px; border-radius: 4px; color: #878a8c; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 4px; text-decoration: none;">',
             '      <i data-feather="message-square" style="width: 16px; height: 16px;"></i>',
-            '      <span><span data-role="comment-count">' +
-                (post.t_comments || 0) +
-                "</span> Comments</span>",
+            '      <span><span data-role="comment-count">' + post.t_comments || 0 + '</span> ' + YI18n.t('Comments') + '</span>',
             "    </a>",
             "  </div>",
             "</div>",
@@ -1378,7 +1372,7 @@
         if (!postId) {
             return false;
         }
-        if (!window.confirm("Delete this post? This action cannot be undone.")) {
+        if (!window.confirm(YI18n.t('Delete this post? This action cannot be undone.'))) {
             return false;
         }
         var $post = getPostElement($btn);
@@ -1403,7 +1397,7 @@
             return;
         }
         if (
-            !window.confirm("Delete this post? This action cannot be undone.")
+            !window.confirm(YI18n.t('Delete this post? This action cannot be undone.'))
         ) {
             return;
         }
@@ -1659,8 +1653,8 @@
                 '        <div class="media">',
                 '          <i data-feather="trash-2"></i>',
                 '          <div class="media-content">',
-                '            <h3>Delete</h3>',
-                '            <small>Remove this comment</small>',
+                '            <h3>' + YI18n.t('Delete') + '</h3>',
+                '            <small>' + YI18n.t('Remove this comment') + '</small>',
                 "          </div>",
                 "        </div>",
                 "      </a>",
@@ -1676,15 +1670,7 @@
             : "2px solid transparent";
         var reportLinkHtml =
             comment.author_id !== loggedUserId
-                ? '<a class="forum-report-button' +
-                  (comment.is_reported ? ' is-active' : '') +
-                  '" href="' +
-                  (window.EXP_PREFIX || "") +
-                  '/report_content?post_id=' +
-                  comment.post_id +
-                  '&type=offensive" style="color: #7c7c7c; text-decoration: none; padding: 2px 4px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;"><i data-feather="flag" class="ys-icon-xxs"></i><span>Report</span><span>' +
-                  (comment.report_count || 0) +
-                  '</span></a>'
+                ? '<a class="forum-report-button' + comment.is_reported ? ' is-active' : '' + '" href="' + window.EXP_PREFIX || "" + '/report_content?post_id=' + comment.post_id + '&type=offensive" style="color: #7c7c7c; text-decoration: none; padding: 2px 4px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;"><i data-feather="flag" class="ys-icon-xxs"></i><span>' + YI18n.t('Report') + '</span><span>' + comment.report_count || 0 + '</span></a>'
                 : "";
 
         var html = [
@@ -1724,17 +1710,15 @@
             "  </div>",
             '  <div style="display: flex; align-items: center; gap: 8px; color: #7c7c7c; font-size: 11px; font-weight: 700; margin-bottom: 8px;">',
             '    <div class="vote-stack" style="display: flex; flex-direction: column; align-items: center; background: #f8f9fa; border-radius: 4px; padding: 4px;">',
-            '      <button class="vote-button" type="button" data-action="like" aria-label="Upvote" style="background: none; border: none; cursor: pointer; padding: 2px;">',
+            '      <button class="vote-button" type="button" data-action="like" aria-label="' + YI18n.t('Upvote') + '" style="background: none; border: none; cursor: pointer; padding: 2px;">',
             '        <i data-feather="arrow-up" style="width: 12px; height: 12px;"></i>',
             "      </button>",
             '      <span class="vote-score" data-role="score" style="font-size: 11px; font-weight: bold; color: #1c1c1c; margin: 2px 0;">0</span>',
-            '      <button class="vote-button" type="button" data-action="dislike" aria-label="Downvote" style="background: none; border: none; cursor: pointer; padding: 2px;">',
+            '      <button class="vote-button" type="button" data-action="dislike" aria-label="' + YI18n.t('Downvote') + '" style="background: none; border: none; cursor: pointer; padding: 2px;">',
             '        <i data-feather="arrow-down" style="width: 12px; height: 12px;"></i>',
             "      </button>",
             "    </div>",
-            '    <button style="background: none; border: none; color: #7c7c7c; cursor: pointer; padding: 2px 6px; border-radius: 2px; font-size: 11px; font-weight: 700;" data-reply-target="' +
-                comment.post_id +
-                '" class="toggle-reply-button">Reply</button>',
+            '    <button style="background: none; border: none; color: #7c7c7c; cursor: pointer; padding: 2px 6px; border-radius: 2px; font-size: 11px; font-weight: 700;" data-reply-target="' + comment.post_id + '" class="toggle-reply-button">' + YI18n.t('Reply') + '</button>',
             reportLinkHtml,
             "  </div>",
             '  <div style="margin-bottom: 8px;">',
@@ -1747,9 +1731,7 @@
                 '" style="width: 100%; padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-family: inherit; resize: vertical; margin-bottom: 6px; font-size: 12px;">@' +
                 escapeHtml(comment.author) +
                 " </textarea>",
-            '      <button type="button" class="add-comment-button" style="background: #0079d3; color: white; border: none; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 11px;" data-parent-id="' +
-                comment.post_id +
-                '">Reply</button>',
+            '      <button type="button" class="add-comment-button" style="background: #0079d3; color: white; border: none; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 11px;" data-parent-id="' + comment.post_id + '">' + YI18n.t('Reply') + '</button>',
             "    </form>",
             "  </div>",
             "</div>",
@@ -1798,7 +1780,7 @@
             var style = document.createElement("style");
             style.id = "spinner-style";
             style.textContent =
-                "@keyframes spin { to { transform: rotate(360deg); } }";
+                '@keyframes spin { to { transform: rotate(360deg); } }';
             document.head.appendChild(style);
         }
 
@@ -2070,7 +2052,7 @@
             return;
         }
         var overlay = $(
-            '<div data-reddit-media-overlay="1" style="position: absolute; left: 0; right: 0; bottom: 0; padding: 10px 12px; background: linear-gradient(to top, rgba(0,0,0,0.6), rgba(0,0,0,0)); color: white; font-size: 12px; font-weight: 700; letter-spacing: 0.2px;">View full image</div>',
+            '<div data-reddit-media-overlay="1" style="position: absolute; left: 0; right: 0; bottom: 0; padding: 10px 12px; background: linear-gradient(to top, rgba(0,0,0,0.6), rgba(0,0,0,0)); color: white; font-size: 12px; font-weight: 700; letter-spacing: 0.2px;">' + YI18n.t('View full image') + '</div>',
         );
         $container.append(overlay);
     }

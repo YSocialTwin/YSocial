@@ -126,10 +126,10 @@
                         <div class="forum-feed-toolbar-left">
                             <div class="select forum-feed-sort-select">
                                 <select id="feed-type-select">
-                                    <option value="new" {% if feed_type == 'new' %}selected{% endif %}>New</option>
-                                    <option value="hot" {% if feed_type == 'hot' %}selected{% endif %}>Hot</option>
-                                    <option value="top" {% if feed_type == 'top' %}selected{% endif %}>Top</option>
-                                    <option value="most_commented" {% if feed_type == 'most_commented' %}selected{% endif %}>Most Commented</option>
+                                    <option value="new" {% if feed_type == 'new' %}selected{% endif %}>{{ _('New') }}</option>
+                                    <option value="hot" {% if feed_type == 'hot' %}selected{% endif %}>{{ _('Hot') }}</option>
+                                    <option value="top" {% if feed_type == 'top' %}selected{% endif %}>{{ _('Top') }}</option>
+                                    <option value="most_commented" {% if feed_type == 'most_commented' %}selected{% endif %}>{{ _('Most Commented') }}</option>
                                 </select>
                             </div>
                         </div>
@@ -155,14 +155,14 @@
                                     value="{{ feed_type }}"
                                 />
                                 <button id="feed-search-button" class="button forum-feed-search-button" type="submit">
-                                    Search
+                                    {{ _('Search') }}
                                 </button>
                             </form>
                         </div>
                         {% if view_mode == 'search' %}
                         <div class="forum-feed-toolbar-right">
                             <a class="button forum-feed-secondary-button" href="/{{ exp_id }}/rfeed/all/feed/rf/1?feed_type={{ feed_type }}">
-                                Back to Feed
+                                {{ _('Back to Feed') }}
                             </a>
                         </div>
                         {% else %}
@@ -170,7 +170,7 @@
                             <button id="create-post-trigger" class="forum-feed-create-trigger" type="button">
                                 <div class="create-post-prompt">
                                     <i data-feather="plus" class="ys-mr-8"></i>
-                                    <span>Create Post</span>
+                                    <span>{{ _('Create Post') }}</span>
                                 </div>
                             </button>
                         </div>
@@ -179,10 +179,10 @@
                     {% if view_mode == 'search' %}
  <div id="search-summary" class="notification is-light ys-mb-16">
  <span id="search-summary-results" {% if not search_query %}class="d-none"{% endif %}>
-                            Search results for <strong>"<span id="search-summary-query">{{ search_query }}</span>"</strong><span id="search-summary-total">{% if search_total is not none %} ({{ search_total }}){% endif %}</span>
+                            {{ _('Search results for') }} <strong>"<span id="search-summary-query">{{ search_query }}</span>"</strong><span id="search-summary-total">{% if search_total is not none %} ({{ search_total }}){% endif %}</span>
                         </span>
  <span id="search-summary-empty" {% if search_query %}class="d-none"{% endif %}>
-                            Enter a query to search posts, users, and shared links.
+                            {{ _('Enter a query to search posts, users, and shared links.') }}
                         </span>
                     </div>
                     {% endif %}
@@ -190,12 +190,12 @@
                     {% if view_mode == 'subforum' and current_subforum_label %}
                     <div class="forum-subforum-banner ys-mb-16">
                         <div>
-                            <span class="forum-subforum-kicker">Subforum</span>
+                            <span class="forum-subforum-kicker">{{ _('Subforum') }}</span>
                             <h2>{{ current_subforum_label }}</h2>
-                            <p>Posts associated with this community, sorted with the same feed modes as /rfeed.</p>
+                            <p>{{ _('Posts associated with this community, sorted with the same feed modes as /rfeed.') }}</p>
                         </div>
                         <a class="button is-light" href="/{{ exp_id }}/rfeed/all/feed/rf/1?feed_type={{ feed_type }}">
-                            Back to Feed
+                            {{ _('Back to Feed') }}
                         </a>
                     </div>
                     {% endif %}
@@ -203,9 +203,9 @@
                     {% if view_mode != 'search' %}
                     <div id="new-posts-indicator" class="notification is-link is-light" style="display: none; margin-bottom: 16px;">
                         <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
-                            <span>New posts available</span>
+                            <span>{{ _('New posts available') }}</span>
                             <button id="new-posts-refresh-button" class="button is-small is-link" type="button">
-                                Refresh
+                                {{ _('Refresh') }}
                             </button>
                         </div>
                     </div>
@@ -219,19 +219,19 @@
                                     <li class="is-active" data-post-type-tab="text">
                                         <a href="#" role="button">
                                             <span class="icon is-small"><i data-feather="edit-3"></i></span>
-                                            <span>Text</span>
+                                            <span>{{ _('Text') }}</span>
                                         </a>
                                     </li>
                                     <li data-post-type-tab="link">
                                         <a href="#" role="button">
                                             <span class="icon is-small"><i data-feather="link-2"></i></span>
-                                            <span>Link</span>
+                                            <span>{{ _('Link') }}</span>
                                         </a>
                                     </li>
                                     <li data-post-type-tab="image">
                                         <a href="#" role="button">
                                             <span class="icon is-small"><i data-feather="image"></i></span>
-                                            <span>Media</span>
+                                            <span>{{ _('Media') }}</span>
                                         </a>
                                     </li>
                                     <!-- Close X button always visible -->
@@ -261,7 +261,7 @@
                                                     id="post-title"
                                                     type="text"
                                                     class="reddit-input title-input"
-                                                    placeholder="Title*"
+                                                    placeholder="{{ _('Title*') }}"
                                                     maxlength="300"
                                                     required
                                                 />
@@ -272,19 +272,19 @@
                                                 <textarea
                                                     id="publish"
                                                     class="reddit-textarea body-textarea"
-                                                    placeholder="Text (optional)"
+                                                    placeholder="{{ _('Text (optional)') }}"
                                                     rows="4"
                                                 ></textarea>
                                             </div>
 
                                             <div class="reddit-field forum-compose-community-field">
                                                 <label class="forum-compose-community-label" for="post-community">
-                                                    Community
+                                                    {{ _('Community') }}
                                                 </label>
                                                 <div class="select forum-compose-community-select">
                                                     <select id="post-community" name="community_slug">
                                                         <option value="" {% if not current_subforum_slug %}selected{% endif %} disabled>
-                                                            Select community
+                                                            {{ _('Select community') }}
                                                         </option>
                                                         {% for community in available_communities %}
                                                         <option value="{{ community.slug }}" {% if current_subforum_slug == community.slug %}selected{% endif %}>
@@ -301,7 +301,7 @@
                                                     id="link-url"
                                                     type="url"
                                                     class="reddit-input url-input"
-                                                    placeholder="Link URL*"
+                                                    placeholder="{{ _('Link URL*') }}"
                                                 />
                                             </div>
 
@@ -309,11 +309,11 @@
                                             <div id="image-source-toggle" class="reddit-field is-hidden" style="display: flex; gap: 10px; flex-wrap: wrap;">
  <label class="ys-inline-flex-bold">
                                                     <input type="radio" name="image-source" value="url" />
-                                                    <span>Media URL</span>
+                                                    <span>{{ _('Media URL') }}</span>
                                                 </label>
  <label class="ys-inline-flex-bold">
                                                     <input type="radio" name="image-source" value="upload" checked />
-                                                    <span>Upload</span>
+                                                    <span>{{ _('Upload') }}</span>
                                                 </label>
                                             </div>
 
@@ -322,7 +322,7 @@
                                                     id="image-url"
                                                     type="url"
                                                     class="reddit-input image-input"
-                                                    placeholder="Media URL*"
+                                                    placeholder="{{ _('Media URL*') }}"
                                                 />
                                             </div>
 
@@ -349,7 +349,7 @@
                                                     id="users-autocpl"
                                                     type="text"
                                                     class="input"
-                                                    placeholder="Who are you with?"
+                                                    placeholder="{{ _('Who are you with?') }}"
                                             />
                                             <div class="icon">
                                                 <i data-feather="search"></i>
@@ -371,7 +371,7 @@
                             id="activities"
                             rows="1"
                             class="textarea"
-                            placeholder="Enter the link to the website you want to share..."
+                            placeholder="{{ _('Enter the link to the website you want to share...') }}"
                     ></textarea>
                                             <!-- <div class="icon">
                                                <i data-feather="search"></i>
@@ -391,9 +391,9 @@
                                                         id="mood-autocpl"
                                                         type="text"
                                                         class="input is-subactivity"
-                                                        placeholder="How do you feel?"
+                                                        placeholder="{{ _('How do you feel?') }}"
                                                 />
-                                                <div class="input-block">Feels</div>
+                                                <div class="input-block">{{ _('Feels') }}</div>
                                                 <div class="close-icon is-subactivity">
                                                     <i data-feather="x"></i>
                                                 </div>
@@ -410,9 +410,9 @@
                                                         id="drinking-autocpl"
                                                         type="text"
                                                         class="input is-subactivity"
-                                                        placeholder="What are you drinking?"
+                                                        placeholder="{{ _('What are you drinking?') }}"
                                                 />
-                                                <div class="input-block">Drinks</div>
+                                                <div class="input-block">{{ _('Drinks') }}</div>
                                                 <div class="close-icon is-subactivity">
                                                     <i data-feather="x"></i>
                                                 </div>
@@ -429,9 +429,9 @@
                                                         id="eating-autocpl"
                                                         type="text"
                                                         class="input is-subactivity"
-                                                        placeholder="What are you eating?"
+                                                        placeholder="{{ _('What are you eating?') }}"
                                                 />
-                                                <div class="input-block">Eats</div>
+                                                <div class="input-block">{{ _('Eats') }}</div>
                                                 <div class="close-icon is-subactivity">
                                                     <i data-feather="x"></i>
                                                 </div>
@@ -448,9 +448,9 @@
                                                         id="reading-autocpl"
                                                         type="text"
                                                         class="input is-subactivity"
-                                                        placeholder="What are you reading?"
+                                                        placeholder="{{ _('What are you reading?') }}"
                                                 />
-                                                <div class="input-block">Reads</div>
+                                                <div class="input-block">{{ _('Reads') }}</div>
                                                 <div class="close-icon is-subactivity">
                                                     <i data-feather="x"></i>
                                                 </div>
@@ -467,9 +467,9 @@
                                                         id="watching-autocpl"
                                                         type="text"
                                                         class="input is-subactivity"
-                                                        placeholder="What are you watching?"
+                                                        placeholder="{{ _('What are you watching?') }}"
                                                 />
-                                                <div class="input-block">Watches</div>
+                                                <div class="input-block">{{ _('Watches') }}</div>
                                                 <div class="close-icon is-subactivity">
                                                     <i data-feather="x"></i>
                                                 </div>
@@ -486,9 +486,9 @@
                                                         id="travel-autocpl"
                                                         type="text"
                                                         class="input is-subactivity"
-                                                        placeholder="Where are you going?"
+                                                        placeholder="{{ _('Where are you going?') }}"
                                                 />
-                                                <div class="input-block">Travels</div>
+                                                <div class="input-block">{{ _('Travels') }}</div>
                                                 <div class="close-icon is-subactivity">
                                                     <i data-feather="x"></i>
                                                 </div>
@@ -534,7 +534,7 @@
                             id="link_post"
                             rows="1"
                             class="textarea"
-                            placeholder="Enter the link to the immage you are commenting on..."
+                            placeholder="{{ _('Enter the link to the immage you are commenting on...') }}"
                     ></textarea>
                                             <!--<div class="icon">
                                               <i data-feather="link-2"></i>
@@ -549,7 +549,7 @@
 
                                 <!-- Add Post button immediately below fields -->
                                 <div class="reddit-field" style="text-align: right; margin-top: 1rem;">
-                                    <button id="publish-button" type="button" class="button is-solid accent-button" disabled>Post</button>
+                                    <button id="publish-button" type="button" class="button is-solid accent-button" disabled>{{ _('Post') }}</button>
                                 </div>
                             </div>
                         </div>
@@ -568,10 +568,10 @@
                         {% include "forum/components/posts.html" %}
                     </div>
  <div id="loading-indicator" class="feed-loading-indicator has-text-centered d-none">
-                        <p>Loading more posts...</p>
+                        <p>{{ _('Loading more posts...') }}</p>
                     </div>
  <div id="end-of-feed" class="feed-end-indicator has-text-centered d-none">
-                        <p>You've reached the end!</p>
+                        <p>{{ _("You've reached the end!") }}</p>
                     </div>
                 </div>
                 <!-- /Middle column -->

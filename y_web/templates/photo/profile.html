@@ -1,6 +1,6 @@
 {% extends "photo/base.html" %}
 
-{% block photo_title %}Y Social | {{ user.get('username', 'Profile') }}{% endblock %}
+{% block photo_title %}Y Social | {{ user.get('username', _('Profile')) }}{% endblock %}
 {% block photo_body_class %}photo-profile-body{% endblock %}
 
 {% block photo_extra_head %}
@@ -356,7 +356,7 @@
             <div class="photo-profile-note">{{ profile_bio }}</div>
             {% endif %}
             <div class="photo-profile-avatar">
-                <img src="{{ profile_pic }}" data-demo-src="{{ profile_pic }}" alt="{{ user.get('username', 'Profile') }} avatar"/>
+                <img src="{{ profile_pic }}" data-demo-src="{{ profile_pic }}" alt="{{ _('%(username)s avatar', username=user.get('username', _('Profile'))) }}"/>
             </div>
         </div>
 
@@ -368,12 +368,12 @@
             <div class="photo-profile-subtitle">{{ user.get('username', '') }}</div>
 
             <div class="photo-profile-stats">
-                <div class="photo-profile-stat"><strong>{{ total_posts }}</strong> posts</div>
+                <div class="photo-profile-stat">{{ ngettext('<strong>%(num)s</strong> post', '<strong>%(num)s</strong> posts', total_posts|int) }}</div>
                 <div class="photo-profile-stat">
-                    <button type="button" data-photo-people-open="followers"><strong>{{ total_followers }}</strong> followers</button>
+                    <button type="button" data-photo-people-open="followers">{{ ngettext('<strong>%(num)s</strong> follower', '<strong>%(num)s</strong> followers', total_followers|int) }}</button>
                 </div>
                 <div class="photo-profile-stat">
-                    <button type="button" data-photo-people-open="following"><strong>{{ total_followees }}</strong> following</button>
+                    <button type="button" data-photo-people-open="following">{{ _('<strong>%(num)s</strong> following', num=total_followees) }}</button>
                 </div>
             </div>
 
@@ -385,24 +385,24 @@
             <div class="photo-profile-actions">
                 {% if can_follow_profile %}
                     <a class="photo-profile-action is-follow" href="/{{ exp_id }}/follow/{{ user.get('id') }}/{{ logged_id }}">
-                        {% if is_following %}Unfollow{% else %}Follow{% endif %}
+                        {% if is_following %}{{ _('Unfollow') }}{% else %}{{ _('Follow') }}{% endif %}
                     </a>
                 {% else %}
-                    <button type="button" class="photo-profile-action" data-photo-open-profile-edit>Edit profile</button>
+                    <button type="button" class="photo-profile-action" data-photo-open-profile-edit>{{ _('Edit profile') }}</button>
                 {% endif %}
             </div>
         </div>
     </section>
 
-    <section class="photo-profile-stories" aria-label="Stories">
+    <section class="photo-profile-stories" aria-label="{{ _('Stories') }}">
         {% if is_self_profile %}
-        <a class="photo-profile-story photo-profile-story--new" href="#" aria-label="Create new story" data-photo-open-story-create>
+        <a class="photo-profile-story photo-profile-story--new" href="#" aria-label="{{ _('Create new story') }}" data-photo-open-story-create>
             <div class="photo-profile-story__ring">
                 <div class="photo-profile-story__ring-inner">
                     <i data-feather="plus"></i>
                 </div>
             </div>
-            <div class="photo-profile-story__label">New</div>
+            <div class="photo-profile-story__label">{{ _('New') }}</div>
         </a>
         {% endif %}
 
@@ -430,11 +430,11 @@
     <div class="photo-profile-tabs">
         <a class="photo-profile-tab{% if mode == 'recent' %} is-active{% endif %}" href="/{{ exp_id }}/photo/profile/{{ user.get('id') }}/recent/1">
             <i data-feather="grid"></i>
-            Posts
+            {{ _('Posts') }}
         </a>
         <a class="photo-profile-tab{% if mode == 'saved' %} is-active{% endif %}" href="/{{ exp_id }}/photo/profile/{{ user.get('id') }}/saved/1">
             <i data-feather="bookmark"></i>
-            Saved
+            {{ _('Saved') }}
         </a>
         {#
         <a class="photo-profile-tab{% if mode == 'tagged' %} is-active{% endif %}" href="/{{ exp_id }}/photo/profile/{{ user.get('id') }}/tagged/1">
@@ -459,11 +459,11 @@
     {% else %}
     <div class="photo-profile-empty">
         {% if mode == 'saved' %}
-        No saved photos available yet.
+        {{ _('No saved photos available yet.') }}
         {% elif mode == 'tagged' %}
-        No tagged photos available yet.
+        {{ _('No tagged photos available yet.') }}
         {% else %}
-        No photos available yet.
+        {{ _('No photos available yet.') }}
         {% endif %}
     </div>
     {% endif %}

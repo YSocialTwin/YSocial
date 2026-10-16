@@ -52,8 +52,8 @@
                                         <div class="media">
                                             <i data-feather="activity"></i>
                                             <div class="media-content">
-                                                <h3>Timeline</h3>
-                                                <small>Open Timeline.</small>
+                                                <h3>{{ _('Timeline') }}</h3>
+                                                <small>{{ _('Open Timeline.') }}</small>
                                             </div>
                                         </div>
                                     </a>
@@ -70,8 +70,8 @@
                                         <div class="media">
                                             <i data-feather="image"></i>
                                             <div class="media-content">
-                                                <h3>Photos</h3>
-                                                <small>See all photos.</small>
+                                                <h3>{{ _('Photos') }}</h3>
+                                                <small>{{ _('See all photos.') }}</small>
                                             </div>
                                         </div>
                                     </a>
@@ -85,7 +85,7 @@
                             <div class="subheader-start is-hidden-mobile">
                                 <div class="ys-profile-hero-stat">
                                     <span class="ys-profile-hero-stat__value">{{ user['total_followers']}}</span>
-                                    <span class="ys-profile-hero-stat__label">People Following Me</span>
+                                    <span class="ys-profile-hero-stat__label">{{ _('People Following Me') }}</span>
                                 </div>
                             </div>
 
@@ -100,7 +100,7 @@
                                 <div class="ys-profile-hero-stat ys-profile-hero-stat--right">
                                     {% if is_page != 1 %}
                                     <span class="ys-profile-hero-stat__value">{{ user['total_followee']}}</span>
-                                    <span class="ys-profile-hero-stat__label">People I Follow</span>
+                                    <span class="ys-profile-hero-stat__label">{{ _('People I Follow') }}</span>
                                     {% endif %}
                                 </div>
                             </div>
@@ -109,7 +109,7 @@
                         <div class="profile-menu is-hidden-mobile ys-profile-hero-actions-row">
                             <div class="menu-start ys-profile-hero-actions-left">
                                 <a href="/{{exp_id}}/{{ url_for('main.feeed_logged')}}/{{ user['user_data']['id'] }}/feeds/rf/1"
-                                   class="button has-min-width ys-profile-hero-action-btn">Feeds</a>
+                                   class="button has-min-width ys-profile-hero-action-btn">{{ _('Feeds') }}</a>
                             </div>
                             <div class="menu-end ys-profile-hero-actions-right">
                                 {% if logged_id != user_id %}
@@ -121,14 +121,14 @@
                                     <button
                                             type="submit"
                                             class="button has-min-width ys-profile-follow-menu-btn ys-profile-hero-action-btn {% if is_following %}is-following{% endif %}"
-                                    >{% if is_following %}Unfollow{% else %}Follow{% endif %}</button>
+                                    >{% if is_following %}{{ _('Unfollow') }}{% else %}{{ _('Follow') }}{% endif %}</button>
                                 </form>
                                 {% endif %}
                                 <a
                                         id="profile-friends-link"
                                         href="/{{exp_id}}/friends/{{ user_id }}/1"
                                         class="button has-min-width ys-profile-hero-action-btn"
-                                >Contacts</a
+                                >{{ _('Contacts') }}</a
                                 >
                             </div>
                         </div>
@@ -144,14 +144,14 @@
                         <div class="card is-profile-info ys-profile-panel-card ys-profile-info-card">
                             <div class="card-heading is-bordered ys-profile-panel-head">
                                 <div>
-                                    <h4 class="ys-heading-tight">Stress / Reward</h4>
-                                    <p class="ys-profile-section-heading__subtitle">Latest aggregate social state.</p>
+                                    <h4 class="ys-heading-tight">{{ _('Stress / Reward') }}</h4>
+                                    <p class="ys-profile-section-heading__subtitle">{{ _('Latest aggregate social state.') }}</p>
                                 </div>
                             </div>
                             <div class="info-row">
                                 <div>
-                                    <span>Recognition</span>
-                                    <div class="is-inverted" aria-label="Current reward level">
+                                    <span>{{ _('Recognition') }}</span>
+                                    <div class="is-inverted" aria-label="{{ _('Current reward level') }}">
                                         {% for idx in range(5) %}
                                         <i class="mdi {% if idx < stress_reward_indicator['reward']['level'] %}mdi-star{% else %}mdi-star-outline{% endif %}" {% if idx < stress_reward_indicator['reward']['level'] %}style="color: #d4a017;"{% endif %}></i>
                                         {% endfor %}
@@ -161,8 +161,8 @@
                             </div>
                             <div class="info-row">
                                 <div>
-                                    <span>Stress</span>
-                                    <div class="is-inverted" aria-label="Current stress level">
+                                    <span>{{ _('Stress') }}</span>
+                                    <div class="is-inverted" aria-label="{{ _('Current stress level') }}">
                                         {% for idx in range(5) %}
                                         <i class="mdi {% if idx < stress_reward_indicator['stress']['level'] %}mdi-alert-circle{% else %}mdi-alert-circle-outline{% endif %}" {% if idx < stress_reward_indicator['stress']['level'] %}style="color: #d64545;"{% endif %}></i>
                                         {% endfor %}
@@ -181,62 +181,62 @@
                         <div class="card is-profile-info ys-profile-panel-card ys-profile-info-card">
                             <div class="card-heading is-bordered ys-profile-panel-head">
                                 <div>
-                                    <h4 class="ys-heading-tight">About Me</h4>
-                                    <p class="ys-profile-section-heading__subtitle">Background and profile attributes shaping this account.</p>
+                                    <h4 class="ys-heading-tight">{{ _('About Me') }}</h4>
+                                    <p class="ys-profile-section-heading__subtitle">{{ _('Background and profile attributes shaping this account.') }}</p>
                                 </div>
                             </div>
                             <div class="info-row">
                                 <div>
-                                    <span>Age</span>
+                                    <span>{{ _('Age') }}</span>
                                     <a class="is-inverted">{{user["user_data"]["age"]}}</a>
                                 </div>
                                 <i class="mdi mdi-clock"></i>
                             </div>
                             <div class="info-row">
                                 <div>
-                                    <span>Gender</span>
+                                    <span>{{ _('Gender') }}</span>
                                     <a class="is-inverted">{{user["user_data"]["gender"]}}</a>
                                 </div>
                                 <i class="mdi mdi-gender-transgender"></i>
                             </div>
                             <div class="info-row">
                                 <div>
-                                    <span>Nationality</span>
+                                    <span>{{ _('Nationality') }}</span>
                                     <a class="is-inverted">{{user["user_data"]["nationality"]}}</a>
                                 </div>
                                 <i class="mdi mdi-earth"></i>
                             </div>
                             <div class="info-row">
                                 <div>
-                                    <span>Spoken Languages</span>
+                                    <span>{{ _('Spoken Languages') }}</span>
                                     <a class="is-inverted">{{user["user_data"]["language"].replace("|", ", ")}}</a>
                                 </div>
                                 <i class="mdi mdi-spellcheck"></i>
                             </div>
                             <div class="info-row">
                                 <div>
-                                    <span>Education</span>
+                                    <span>{{ _('Education') }}</span>
                                     <a class="is-inverted">{{user["user_data"]["education_level"]}}</a>
                                 </div>
                                 <i class="mdi mdi-school"></i>
                             </div>
                             <div class="info-row">
                                 <div>
-                                    <span>Profession</span>
+                                    <span>{{ _('Profession') }}</span>
                                     <a class="is-muted">{{user["user_data"].profession}}</a>
                                 </div>
                                 <i class="mdi mdi mdi-chart-pie"></i>
                             </div>
                             <div class="info-row">
                                 <div>
-                                    <span>Political Leaning</span>
+                                    <span>{{ _('Political Leaning') }}</span>
                                     <a class="is-muted">{{user["user_data"]["leaning"]}}</a>
                                 </div>
                                 <i class="mdi mdi-lightbulb-outline"></i>
                             </div>
                             <div class="info-row">
                                 <div>
-                                    <span>Interested in</span>
+                                    <span>{{ _('Interested in') }}</span>
                                     {% for interest in interests %}
                                     <a href="/{{exp_id}}/interest/{{ interest[1] }}/1" class="is-muted"> {{ interest[0] }} ({{
                                         interest[2] }}) </a>
@@ -264,8 +264,8 @@
                         <div class="card is-friend-card ys-suggestion-card ys-profile-panel-card">
                             <div class="card-heading is-bordered ys-profile-panel-head">
                                 <div>
-                                    <h4 class="ys-heading-tight">Mutual Friends</h4>
-                                    <p class="ys-profile-section-heading__subtitle">Shared contacts between you and this profile.</p>
+                                    <h4 class="ys-heading-tight">{{ _('Mutual Friends') }}</h4>
+                                    <p class="ys-profile-section-heading__subtitle">{{ _('Shared contacts between you and this profile.') }}</p>
                                 </div>
                                 <div class="dropdown is-neutral is-spaced is-right dropdown-trigger">
                                     <div>
@@ -279,8 +279,8 @@
                                                 <div class="media">
                                                     <i data-feather="users"></i>
                                                     <div class="media-content">
-                                                        <h3>All Friends</h3>
-                                                        <small>View all friends.</small>
+                                                        <h3>{{ _('All Friends') }}</h3>
+                                                        <small>{{ _('View all friends.') }}</small>
                                                     </div>
                                                 </div>
                                             </a>
@@ -303,7 +303,7 @@
                                 />
                                 <div class="text-content ys-suggestion-copy">
                                     <a class="ys-suggestion-name" href="/{{exp_id}}/profile/{{ suser['id'] }}/recent/1">{{ suser['username'] }}</a>
-                                    <span class="ys-suggestion-meta">Mutual contact</span>
+                                    <span class="ys-suggestion-meta">{{ _('Mutual contact') }}</span>
                                 </div>
                             </div>
                             {% endfor %}
@@ -315,28 +315,28 @@
                     <!-- Star Hashtags widget -->
                     <!-- html/partials/pages/profile/timeline/widgets/star-friends-widget.html -->
                     {% if len(hashtags) > 0 %}
-                    {% set ranked_card_title = "Frequently Used Hashtags" %}
-                    {% set ranked_card_subtitle = "Recurring tags in this profile's activity." %}
+                    {% set ranked_card_title = _('Frequently Used Hashtags') %}
+                    {% set ranked_card_subtitle = _("Recurring tags in this profile's activity.") %}
                     {% set ranked_card_items = hashtags %}
                     {% set ranked_card_href_prefix = "hashtag_posts" %}
                     {% set ranked_card_label_key = "hashtag" %}
-                    {% set ranked_card_meta_label = "uses" %}
+                    {% set ranked_card_meta_label = _('uses') %}
                     {% set ranked_card_prefix = "#" %}
-                    {% set ranked_card_empty = "No hashtags yet." %}
+                    {% set ranked_card_empty = _('No hashtags yet.') %}
                     {% include "microblogging/components/sidebar_ranked_list_card.html" %}
                     {% endif %}
                 </div>
 
                 <div class="column is-8">
                     <div id="profile-timeline-posts" class="ys-profile-section-heading ys-profile-section-heading--activity">
-                        <div class="button-wrap ys-profile-activity-tabs" role="tablist" aria-label="Profile activity filters">
+                        <div class="button-wrap ys-profile-activity-tabs" role="tablist" aria-label="{{ _('Profile activity filters') }}">
                             <button
                                     type="button"
                                     class="button ys-profile-activity-tab {% if mode == 'recent' %}is-active{% endif %}"
                                     data-profile-mode="recent"
                                     data-profile-url="/{{exp_id}}/profile/{{ user['user_data']['id'] }}/recent/1"
                                     aria-pressed="{% if mode == 'recent' %}true{% else %}false{% endif %}">
-                                Posts
+                                {{ _('Posts') }}
                             </button>
                             {% if is_page != 1 %}
                             <button
@@ -345,7 +345,7 @@
                                     data-profile-mode="comments"
                                     data-profile-url="/{{exp_id}}/profile/{{ user['user_data']['id'] }}/comments/1"
                                     aria-pressed="{% if mode == 'comments' %}true{% else %}false{% endif %}">
-                                Comments
+                                {{ _('Comments') }}
                             </button>
                             <button
                                     type="button"
@@ -353,7 +353,7 @@
                                     data-profile-mode="shares"
                                     data-profile-url="/{{exp_id}}/profile/{{ user['user_data']['id'] }}/shares/1"
                                     aria-pressed="{% if mode == 'shares' %}true{% else %}false{% endif %}">
-                                Shares
+                                {{ _('Shares') }}
                             </button>
                             <button
                                     type="button"
@@ -361,7 +361,7 @@
                                     data-profile-mode="liked"
                                     data-profile-url="/{{ exp_id }}/profile/{{ user['user_data']['id'] }}/liked/1"
                                     aria-pressed="{% if mode == 'liked' %}true{% else %}false{% endif %}">
-                                Likes
+                                {{ _('Likes') }}
                             </button>
                             <button
                                     type="button"
@@ -369,7 +369,7 @@
                                     data-profile-mode="disliked"
                                     data-profile-url="/{{exp_id}}/profile/{{ user['user_data']['id'] }}/disliked/1"
                                     aria-pressed="{% if mode == 'disliked' %}true{% else %}false{% endif %}">
-                                Dilikes
+                                {{ _('Dilikes') }}
                             </button>
                             {% endif %}
 

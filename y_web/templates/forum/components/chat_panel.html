@@ -10,7 +10,7 @@
         class="forum-chat-collapse-handle"
         aria-expanded="false"
         aria-controls="forum-chat-card"
-        title="Toggle chat panel"
+        title="{{ _('Toggle chat panel') }}"
     >
         <i data-feather="message-circle"></i>
         <span
@@ -23,14 +23,14 @@
     <div id="forum-chat-card" class="forum-chat-card">
         <div class="forum-chat-card-header">
             <div>
-                <div class="forum-chat-title">Chat</div>
-                <div class="forum-chat-subtitle">Private chats with simulation agents</div>
+                <div class="forum-chat-title">{{ _('Chat') }}</div>
+                <div class="forum-chat-subtitle">{{ _('Private chats with simulation agents') }}</div>
             </div>
             <div class="forum-chat-header-actions">
-                <button id="forum-chat-refresh" type="button" class="forum-chat-icon-btn" title="Refresh">
+                <button id="forum-chat-refresh" type="button" class="forum-chat-icon-btn" title="{{ _('Refresh') }}">
                     <i data-feather="refresh-cw"></i>
                 </button>
-                <button id="forum-chat-collapse" type="button" class="forum-chat-icon-btn" title="Collapse">
+                <button id="forum-chat-collapse" type="button" class="forum-chat-icon-btn" title="{{ _('Collapse') }}">
                     <i data-feather="chevron-right"></i>
                 </button>
             </div>
@@ -42,7 +42,7 @@
                     id="forum-chat-search"
                     type="search"
                     class="input forum-chat-search-input"
-                    placeholder="Search agents"
+                    placeholder="{{ _('Search agents') }}"
                 />
             </div>
             <div id="forum-chat-list" class="forum-chat-list"></div>
@@ -50,14 +50,14 @@
 
         <div id="forum-chat-thread" class="forum-chat-thread is-hidden">
             <div class="forum-chat-thread-head">
-                <button id="forum-chat-back" type="button" class="forum-chat-icon-btn" title="Back">
+                <button id="forum-chat-back" type="button" class="forum-chat-icon-btn" title="{{ _('Back') }}">
                     <i data-feather="arrow-left"></i>
                 </button>
                 <div class="forum-chat-thread-target">
                     <div id="forum-chat-target-avatar" class="forum-chat-thread-avatar"></div>
                     <div class="forum-chat-thread-meta">
-                        <div id="forum-chat-target-name" class="forum-chat-thread-name">Agent</div>
-                        <div id="forum-chat-target-subtitle" class="forum-chat-thread-subtitle">Private chat</div>
+                        <div id="forum-chat-target-name" class="forum-chat-thread-name">{{ _('Agent') }}</div>
+                        <div id="forum-chat-target-subtitle" class="forum-chat-thread-subtitle">{{ _('Private chat') }}</div>
                     </div>
                 </div>
             </div>
@@ -69,11 +69,11 @@
                     id="forum-chat-input"
                     class="textarea forum-chat-input"
                     rows="2"
-                    placeholder="Write a message..."
+                    placeholder="{{ _('Write a message...') }}"
                 ></textarea>
                 <button id="forum-chat-send" type="submit" class="forum-chat-send-btn">
                     <i data-feather="send"></i>
-                    <span>Send</span>
+                    <span>{{ _('Send') }}</span>
                 </button>
             </form>
         </div>

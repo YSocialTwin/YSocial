@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-16 16:04+0000\n"
+"POT-Creation-Date: 2026-10-16 17:23+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -33,6 +33,10 @@ msgid ""
 "%(articles)s topics are annotated by the LLM: such tagging allows to "
 "dynamically introduce novel topics among the interests of the agents that"
 " interact with the news source."
+msgstr ""
+
+#, python-format
+msgid "%(count)s new"
 msgstr ""
 
 #, python-format
@@ -100,6 +104,12 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-format
+msgid "%(num)s photo"
+msgid_plural "%(num)s photos"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-format
 msgid ""
 "%(pages)s are a particular type of synthetic agent that can be used to "
 "display information to users. Each page has a name, description, type, "
@@ -132,6 +142,10 @@ msgstr ""
 
 #, python-format
 msgid "%(user)s (deg %(n)s)"
+msgstr ""
+
+#, python-format
+msgid "%(username)s avatar"
 msgstr ""
 
 #, python-format
@@ -174,7 +188,14 @@ msgstr ""
 msgid "(toxicity annotations)"
 msgstr ""
 
+msgid "(url)"
+msgstr ""
+
 msgid "(url, optional)"
+msgstr ""
+
+#, python-format
+msgid "+%(n)s more"
 msgstr ""
 
 msgid "-- Select Experiment --"
@@ -184,6 +205,9 @@ msgid "-- Select a client --"
 msgstr ""
 
 msgid "/absolute/path/for/ysocial_models"
+msgstr ""
+
+msgid "0 / 5 photos selected"
 msgstr ""
 
 msgid "1. Create one or more Agent Populations"
@@ -206,6 +230,28 @@ msgstr ""
 
 msgid "4. Run the Simulation"
 msgstr ""
+
+#, python-format
+msgid "<strong>%(num)s</strong> follower"
+msgid_plural "<strong>%(num)s</strong> followers"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-format
+msgid "<strong>%(num)s</strong> following"
+msgstr ""
+
+#, python-format
+msgid "<strong>%(num)s</strong> post"
+msgid_plural "<strong>%(num)s</strong> posts"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-format
+msgid "<strong>%(num)s</strong> reaction"
+msgid_plural "<strong>%(num)s</strong> reactions"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "@AndreaFailla4"
 msgstr ""
@@ -267,6 +313,9 @@ msgstr ""
 msgid "A subset of agent's interests."
 msgstr ""
 
+msgid "AI Agent"
+msgstr ""
+
 msgid "API Configuration"
 msgstr ""
 
@@ -274,6 +323,9 @@ msgid "API Key"
 msgstr ""
 
 msgid "About"
+msgstr ""
+
+msgid "About Me"
 msgstr ""
 
 msgid "About System Settings"
@@ -357,9 +409,18 @@ msgstr ""
 msgid "Active Populations"
 msgstr ""
 
+msgid "Active experiments"
+msgstr ""
+
 msgid ""
 "Active experiments grouped by their project group. Click on a group "
 "header to expand/collapse."
+msgstr ""
+
+msgid "Active feed thread"
+msgstr ""
+
+msgid "Active generated topic"
 msgstr ""
 
 msgid "Active propaganda topics in this experiment:"
@@ -459,6 +520,9 @@ msgstr ""
 msgid "Add User"
 msgstr ""
 
+msgid "Add a comment..."
+msgstr ""
+
 msgid "Add a new filter tag"
 msgstr ""
 
@@ -492,6 +556,9 @@ msgstr ""
 msgid "Admin"
 msgstr ""
 
+msgid "Admin Dashboard"
+msgstr ""
+
 msgid "Advanced Role-Playing"
 msgstr ""
 
@@ -521,6 +588,9 @@ msgid "Age Start"
 msgstr ""
 
 msgid "Age class not found."
+msgstr ""
+
+msgid "Agent"
 msgstr ""
 
 #, python-format
@@ -613,6 +683,9 @@ msgstr ""
 msgid "Agent profession"
 msgstr ""
 
+msgid "Agent runtime"
+msgstr ""
+
 msgid "Agent type"
 msgstr ""
 
@@ -658,6 +731,12 @@ msgstr ""
 msgid "Agreeableness."
 msgstr ""
 
+msgid "All"
+msgstr ""
+
+msgid "All Friends"
+msgstr ""
+
 msgid "All Groups"
 msgstr ""
 
@@ -698,6 +777,9 @@ msgid "Alternative profile"
 msgstr ""
 
 msgid "Alternative values"
+msgstr ""
+
+msgid "American"
 msgstr ""
 
 msgid "Amplification of popular posts. 0 = disabled."
@@ -775,7 +857,19 @@ msgstr ""
 msgid "Are you using YSocial for your research? Please cite us!"
 msgstr ""
 
+msgid "Argentine"
+msgstr ""
+
+msgid "Armenian"
+msgstr ""
+
 msgid "Articles'"
+msgstr ""
+
+msgid "Ask the agent about their experiences, decisions, or relationships..."
+msgstr ""
+
+msgid "Ask the agent about their experiences, relationships, or the community..."
 msgstr ""
 
 msgid "Assign Users to Experiment"
@@ -821,6 +915,12 @@ msgid "Attackers"
 msgstr ""
 
 msgid "Attention Budget"
+msgstr ""
+
+msgid "Audio call"
+msgstr ""
+
+msgid "Austrian"
 msgstr ""
 
 msgid "Author Drill-down"
@@ -926,6 +1026,9 @@ msgstr ""
 msgid "Average time per slot:"
 msgstr ""
 
+msgid "Azerbaijani"
+msgstr ""
+
 msgid "Bachelor"
 msgstr ""
 
@@ -935,7 +1038,22 @@ msgstr ""
 msgid "Back to Experiments"
 msgstr ""
 
+msgid "Back to Feed"
+msgstr ""
+
 msgid "Back to Plugins"
+msgstr ""
+
+msgid "Back to feed"
+msgstr ""
+
+msgid "Back to profile"
+msgstr ""
+
+msgid "Backend"
+msgstr ""
+
+msgid "Background and profile attributes shaping this account."
 msgstr ""
 
 msgid "Background indexing"
@@ -957,6 +1075,9 @@ msgid "Balance between follower and general content"
 msgstr ""
 
 msgid "Balanced (Recommended)"
+msgstr ""
+
+msgid "Bangladeshi"
 msgstr ""
 
 msgid "Basic Fields"
@@ -985,6 +1106,9 @@ msgstr ""
 msgid "Behavioral patterns and activity characteristics."
 msgstr ""
 
+msgid "Belgian"
+msgstr ""
+
 msgid "Bell / mentions icon in the top bar"
 msgstr ""
 
@@ -1006,6 +1130,9 @@ msgstr ""
 msgid "Binomial"
 msgstr ""
 
+msgid "Bio"
+msgstr ""
+
 msgid "Blog post not found"
 msgstr ""
 
@@ -1024,7 +1151,13 @@ msgstr ""
 msgid "Bounds must be in the range [0, 1]."
 msgstr ""
 
+msgid "Brazilian"
+msgstr ""
+
 msgid "Brief explanation of the client's purpose"
+msgstr ""
+
+msgid "British"
 msgstr ""
 
 msgid "Broadcaster"
@@ -1044,6 +1177,18 @@ msgid ""
 msgstr ""
 
 msgid "Broadcaster:"
+msgstr ""
+
+msgid "Browse banner previews in small batches."
+msgstr ""
+
+msgid "Browse previews in small batches."
+msgstr ""
+
+msgid "Browse recent photos, people and hashtags in this experiment."
+msgstr ""
+
+msgid "Bulgarian"
 msgstr ""
 
 msgid "Bulk Assign Users to Experiment"
@@ -1105,6 +1250,9 @@ msgstr ""
 msgid "Central catalog"
 msgstr ""
 
+msgid "Centrist"
+msgstr ""
+
 msgid "Change the user's email address."
 msgstr ""
 
@@ -1115,6 +1263,9 @@ msgid "Character cap for injected memory context (24B/Ollama-safe default)."
 msgstr ""
 
 msgid "Character cap on thread text sent to the LLM (24B/Ollama-safe default)."
+msgstr ""
+
+msgid "Chat"
 msgstr ""
 
 msgid "Check for Updates"
@@ -1132,6 +1283,12 @@ msgid "Check interval must be between 1 and 300 seconds"
 msgstr ""
 
 msgid "Checks"
+msgstr ""
+
+msgid "Chilean"
+msgstr ""
+
+msgid "Chinese"
 msgstr ""
 
 msgid "Choose JSON file..."
@@ -1152,6 +1309,9 @@ msgstr ""
 msgid "Choose an existing group or type a new one"
 msgstr ""
 
+msgid "Choose an image from your gallery or upload a new one."
+msgstr ""
+
 msgid "Choose edge list file (CSV)..."
 msgstr ""
 
@@ -1162,6 +1322,11 @@ msgid "Choose from various network topologies with configurable parameters."
 msgstr ""
 
 msgid "Choose how agent opinions are updated during the simulation."
+msgstr ""
+
+msgid ""
+"Choose how follow suggestions and content ranking are personalized for "
+"this account."
 msgstr ""
 
 msgid "Choose one of the active experiments below to enter the simulation."
@@ -1176,11 +1341,19 @@ msgid "Choose the language of the dashboard for this user."
 msgstr ""
 
 msgid ""
+"Choose up to 5 photos from your gallery. The selected images will be "
+"stored in the story record as a carousel."
+msgstr ""
+
+msgid ""
 "Choose whether to consider only the interlocutor's opinion or also first-"
 "order friends' opinions"
 msgstr ""
 
 msgid "Choose which metadata chips are displayed below each post."
+msgstr ""
+
+msgid "Choose your experiment"
 msgstr ""
 
 msgid "Churn"
@@ -1366,7 +1539,16 @@ msgstr ""
 msgid "Cold-Start Window"
 msgstr ""
 
+msgid "Collapse"
+msgstr ""
+
+msgid "Colombian"
+msgstr ""
+
 msgid "Combine all enabled features"
+msgstr ""
+
+msgid "Comic Relief Agent"
 msgstr ""
 
 msgid "Comma-separated values"
@@ -1390,7 +1572,22 @@ msgstr ""
 msgid "Comment weight"
 msgstr ""
 
+msgid "Comments"
+msgstr ""
+
+msgid "Communities"
+msgstr ""
+
+msgid "Communities where you have recently posted or commented."
+msgstr ""
+
+msgid "Community"
+msgstr ""
+
 msgid "Community Models"
+msgstr ""
+
+msgid "Community Page"
 msgstr ""
 
 msgid "Community size exponent (tau2)"
@@ -1639,6 +1836,9 @@ msgstr ""
 msgid "Connection timeout to %(host)s:%(port)s"
 msgstr ""
 
+msgid "Connections"
+msgstr ""
+
 msgid "Conscientiousness"
 msgstr ""
 
@@ -1646,6 +1846,9 @@ msgid "Conscientiousness."
 msgstr ""
 
 msgid "Consistent/Cautious"
+msgstr ""
+
+msgid "Contacts"
 msgstr ""
 
 msgid "Content & Behavior"
@@ -1704,6 +1907,13 @@ msgstr ""
 msgid "Context Preset"
 msgstr ""
 
+#, python-format
+msgid "Context: %(excerpt)s"
+msgstr ""
+
+msgid "Continue to Experiment"
+msgstr ""
+
 msgid "Control anonymous usage data collection to help improve YSocial."
 msgstr ""
 
@@ -1715,6 +1925,12 @@ msgstr ""
 msgid ""
 "Control which actions participants can perform on posts, and whether the "
 "notification menu is shown."
+msgstr ""
+
+msgid "Conversation"
+msgstr ""
+
+msgid "Conversation info"
 msgstr ""
 
 msgid "Copy Experiment"
@@ -1797,6 +2013,9 @@ msgstr ""
 msgid "Create Page"
 msgstr ""
 
+msgid "Create Post"
+msgstr ""
+
 msgid "Create Profile"
 msgstr ""
 
@@ -1812,6 +2031,9 @@ msgstr ""
 msgid ""
 "Create a new population by merging multiple existing populations. Agents "
 "and pages will be combined without duplicates."
+msgstr ""
+
+msgid "Create a story from your gallery"
 msgstr ""
 
 msgid ""
@@ -1834,6 +2056,12 @@ msgstr ""
 msgid "Create new Hello World population..."
 msgstr ""
 
+msgid "Create new post"
+msgstr ""
+
+msgid "Create new story"
+msgstr ""
+
 #, python-format
 msgid ""
 "Create or upload a population with username type %(type)s in the "
@@ -1841,6 +2069,9 @@ msgid ""
 msgstr ""
 
 msgid "Create populations from scratch. Once created, you can add agents to them."
+msgstr ""
+
+msgid "Create story"
 msgstr ""
 
 msgid "Create your account"
@@ -1870,6 +2101,9 @@ msgstr ""
 msgid "Critical/Judgmental"
 msgstr ""
 
+msgid "Croatian"
+msgstr ""
+
 msgid "Curious, asks questions, seeks new perspectives"
 msgstr ""
 
@@ -1891,6 +2125,9 @@ msgstr ""
 msgid "Current Model Path"
 msgstr ""
 
+msgid "Current Password"
+msgstr ""
+
 msgid "Current Recommender"
 msgstr ""
 
@@ -1898,6 +2135,15 @@ msgid "Current Researcher Visibility"
 msgstr ""
 
 msgid "Current execution progress"
+msgstr ""
+
+msgid "Current local time"
+msgstr ""
+
+msgid "Current reward level"
+msgstr ""
+
+msgid "Current stress level"
 msgstr ""
 
 msgid "Current value"
@@ -1936,6 +2182,9 @@ msgstr ""
 msgid "Customize agent activity patterns by hour."
 msgstr ""
 
+msgid "Czech"
+msgstr ""
+
 msgid "DB Fallback Limit"
 msgstr ""
 
@@ -1953,6 +2202,9 @@ msgid ""
 "secondary axis."
 msgstr ""
 
+msgid "Danish"
+msgstr ""
+
 msgid "Dashboard language"
 msgstr ""
 
@@ -1964,6 +2216,14 @@ msgid "Database error: %(error)s"
 msgstr ""
 
 msgid "Day"
+msgstr ""
+
+#, python-format
+msgid "Day %(day)s - %(hour)s:00"
+msgstr ""
+
+#, python-format
+msgid "Day %(day)s · Hour %(hour)s"
 msgstr ""
 
 #, python-format
@@ -2001,6 +2261,9 @@ msgid "Decide Secondary Follow (User)"
 msgstr ""
 
 msgid "Dedicated creation interface"
+msgstr ""
+
+msgid "Default (English)"
 msgstr ""
 
 msgid "Default content recommender"
@@ -2091,12 +2354,18 @@ msgstr ""
 msgid "Delete all stopped/scheduled experiments"
 msgstr ""
 
+msgid "Delete photo"
+msgstr ""
+
 #, python-format
 msgid "Deleted %(deleted_count)s experiment(s)."
 msgstr ""
 
 #, python-format
 msgid "Deleted %(label)s."
+msgstr ""
+
+msgid "Democrat"
 msgstr ""
 
 msgid "Demographic Information"
@@ -2146,6 +2415,9 @@ msgstr ""
 msgid "Describe the problem (optional):"
 msgstr ""
 
+msgid "Describe the story..."
+msgstr ""
+
 #, python-format
 msgid "Describe your simulation with an %(link)s."
 msgstr ""
@@ -2182,6 +2454,9 @@ msgstr ""
 msgid "Digest Update Cadence (rounds)"
 msgstr ""
 
+msgid "Dilikes"
+msgstr ""
+
 msgid "Direct Article URLs"
 msgstr ""
 
@@ -2208,10 +2483,16 @@ msgstr ""
 msgid "Disconnect"
 msgstr ""
 
+msgid "Discussion"
+msgstr ""
+
 msgid "Discussion Board"
 msgstr ""
 
 msgid "Dislike"
+msgstr ""
+
+msgid "Dislikes"
 msgstr ""
 
 msgid "Distribution Type"
@@ -2272,13 +2553,22 @@ msgid ""
 "profile are active."
 msgstr ""
 
+msgid "Drag photos here"
+msgstr ""
+
 msgid "Drag populations here"
 msgstr ""
 
 msgid "Drag profiles here to assign them"
 msgstr ""
 
+msgid "Drinks"
+msgstr ""
+
 msgid "Duration & Growth"
+msgstr ""
+
+msgid "Dutch"
 msgstr ""
 
 msgid "Dynamic fill"
@@ -2297,6 +2587,9 @@ msgid ""
 "the agents of its populations."
 msgstr ""
 
+msgid "Eats"
+msgstr ""
+
 msgid "Edge probability (p)"
 msgstr ""
 
@@ -2306,13 +2599,29 @@ msgstr ""
 msgid "Edit"
 msgstr ""
 
+#, python-format
+msgid "Edit %(username)s"
+msgstr ""
+
 msgid "Edit Client Settings"
 msgstr ""
 
 msgid "Edit LLM Prompts"
 msgstr ""
 
+msgid "Edit Profile"
+msgstr ""
+
+msgid "Edit profile"
+msgstr ""
+
 msgid "Edit server settings"
+msgstr ""
+
+msgid "Edit your profile details"
+msgstr ""
+
+msgid "Education"
 msgstr ""
 
 #, python-format
@@ -2323,6 +2632,9 @@ msgid "Education Level"
 msgstr ""
 
 msgid "Education Levels"
+msgstr ""
+
+msgid "Education level"
 msgstr ""
 
 msgid "Education level not found."
@@ -2350,6 +2662,9 @@ msgid "Embedding settings updated successfully."
 msgstr ""
 
 msgid "Emotion"
+msgstr ""
+
+msgid "Emotion Focus"
 msgstr ""
 
 msgid "Emotion Statistics"
@@ -2472,6 +2787,9 @@ msgstr ""
 msgid "Engagement weights"
 msgstr ""
 
+msgid "English"
+msgstr ""
+
 msgid ""
 "Ensure that the experiment is loaded before applying changes to avoid "
 "overwriting configurations from other simulations, especially if the same"
@@ -2479,6 +2797,9 @@ msgid ""
 msgstr ""
 
 msgid "Enter a fresh group name..."
+msgstr ""
+
+msgid "Enter a query to search posts, users, and shared links."
 msgstr ""
 
 msgid ""
@@ -2496,6 +2817,12 @@ msgid "Enter new name..."
 msgstr ""
 
 msgid "Enter or select a group..."
+msgstr ""
+
+msgid "Enter the link to the immage you are commenting on..."
+msgstr ""
+
+msgid "Enter the link to the website you want to share..."
 msgstr ""
 
 msgid "Enter topic name"
@@ -2595,6 +2922,9 @@ msgstr ""
 msgid "Estimated remaining time:"
 msgstr ""
 
+msgid "Estonian"
+msgstr ""
+
 msgid "Europe/Rome"
 msgstr ""
 
@@ -2650,6 +2980,10 @@ msgid "Expected Social Behavior"
 msgstr ""
 
 msgid "Experiment"
+msgstr ""
+
+#, python-format
+msgid "Experiment #%(id)s"
 msgstr ""
 
 #, python-format
@@ -2804,6 +3138,9 @@ msgid ""
 "experiment groups."
 msgstr ""
 
+msgid "Explore the active social graph around this profile."
+msgstr ""
+
 msgid "Explorer"
 msgstr ""
 
@@ -2916,6 +3253,9 @@ msgstr ""
 msgid "Feature-rich Modeling"
 msgstr ""
 
+msgid "Feed"
+msgstr ""
+
 msgid "Feed & Profile"
 msgstr ""
 
@@ -2937,11 +3277,20 @@ msgstr ""
 msgid "Feed limits updated successfully."
 msgstr ""
 
+msgid "Feed pagination"
+msgstr ""
+
 msgid "Feed source could not be reached."
 msgstr ""
 
 #, python-format
 msgid "Feed source returned HTTP %(code)s."
+msgstr ""
+
+msgid "Feeds"
+msgstr ""
+
+msgid "Feels"
 msgstr ""
 
 msgid "Female"
@@ -2987,6 +3336,9 @@ msgstr ""
 msgid "Filter experiments by group"
 msgstr ""
 
+msgid "Finnish"
+msgstr ""
+
 msgid "First group has no experiments"
 msgstr ""
 
@@ -3008,13 +3360,28 @@ msgstr ""
 msgid "Follow Recommender"
 msgstr ""
 
+msgid "Follow accounts to update your feed and social graph."
+msgstr ""
+
 msgid "Follow these steps to set up and run a simulation:"
 msgstr ""
 
 msgid "Follow:"
 msgstr ""
 
+msgid "Followed"
+msgstr ""
+
+msgid "Follower"
+msgstr ""
+
+msgid "Followers"
+msgstr ""
+
 msgid "Followers:"
+msgstr ""
+
+msgid "Following the"
 msgstr ""
 
 msgid ""
@@ -3037,6 +3404,9 @@ msgstr ""
 msgid ""
 "For the currently selected topic, inspect targeted agents and compare "
 "their opinion trajectory with the timing of propaganda interactions."
+msgstr ""
+
+msgid "For you"
 msgstr ""
 
 msgid "Forbidden"
@@ -3074,12 +3444,24 @@ msgstr ""
 msgid "Forum feed assignments updated successfully."
 msgstr ""
 
+msgid "Forum participant"
+msgstr ""
+
 msgid ""
 "Forum uses link-sharing to publish content imported from RSS and feed "
 "sources."
 msgstr ""
 
+msgid "French"
+msgstr ""
+
+msgid "Frequently Used Hashtags"
+msgstr ""
+
 msgid "Friendly/Compassionate"
+msgstr ""
+
+msgid "Friends filters"
 msgstr ""
 
 msgid "Friendship RecSys"
@@ -3126,6 +3508,9 @@ msgstr ""
 msgid "Gender distribution must total 100%."
 msgstr ""
 
+msgid "General Settings"
+msgstr ""
+
 msgid "Generate"
 msgstr ""
 
@@ -3169,6 +3554,15 @@ msgid "Generates text or makes decisions leveraging its profile"
 msgstr ""
 
 msgid "Geometric"
+msgstr ""
+
+msgid "Georgian"
+msgstr ""
+
+msgid "German"
+msgstr ""
+
+msgid "Get Started"
 msgstr ""
 
 msgid "Get in Touch!"
@@ -3226,6 +3620,9 @@ msgstr ""
 msgid "Go to Homepage"
 msgstr ""
 
+msgid "Go to home feed"
+msgstr ""
+
 msgid "Got it"
 msgstr ""
 
@@ -3245,6 +3642,9 @@ msgid ""
 msgstr ""
 
 msgid "Grant this user access to participate in an experiment."
+msgstr ""
+
+msgid "Greek"
 msgstr ""
 
 msgid "Group"
@@ -3324,13 +3724,22 @@ msgstr ""
 msgid "Hashtag Evolution"
 msgstr ""
 
+msgid "Hashtag Focus"
+msgstr ""
+
 msgid "Hashtag evolution not available"
 msgstr ""
 
 msgid "Hashtag-evolution tables not available"
 msgstr ""
 
+msgid "Hashtags"
+msgstr ""
+
 msgid "Header Image URL"
+msgstr ""
+
+msgid "Hello World"
 msgstr ""
 
 msgid "Hello World Settings"
@@ -3402,6 +3811,9 @@ msgstr ""
 msgid "Host:"
 msgstr ""
 
+msgid "Hot"
+msgstr ""
+
 msgid "Hour"
 msgstr ""
 
@@ -3421,6 +3833,12 @@ msgstr ""
 msgid "Hourly Activity Rates (Optional)"
 msgstr ""
 
+msgid "How do you feel?"
+msgstr ""
+
+msgid "How it works"
+msgstr ""
+
 msgid ""
 "How many recent interaction events to include in LLM context per "
 "user/thread pair."
@@ -3433,6 +3851,12 @@ msgid "How often memory reflections are generated."
 msgstr ""
 
 msgid "How to order posts when scores are equal"
+msgstr ""
+
+msgid "Human"
+msgstr ""
+
+msgid "Hungarian"
 msgstr ""
 
 msgid "Hybrid (score × recency)"
@@ -3494,15 +3918,24 @@ msgstr ""
 msgid "Image-share posts emitted"
 msgstr ""
 
+msgid "Images are cropped to a square preview when needed."
+msgstr ""
+
 msgid "Importance Mode"
 msgstr ""
 
 msgid "Inactive Alter"
 msgstr ""
 
+msgid "Indian"
+msgstr ""
+
 msgid ""
 "Individual agent opinion trajectories over time (colored by initial "
 "opinion group)."
+msgstr ""
+
+msgid "Indonesian"
 msgstr ""
 
 msgid "Infer Opinion (System)"
@@ -3622,6 +4055,9 @@ msgstr ""
 msgid "Interested"
 msgstr ""
 
+msgid "Interested in"
+msgstr ""
+
 msgid "Interests"
 msgstr ""
 
@@ -3638,6 +4074,9 @@ msgid ""
 "dashboard database."
 msgstr ""
 
+msgid "Interface language"
+msgstr ""
+
 msgid "Interlocutor + First-Order Friends"
 msgstr ""
 
@@ -3652,6 +4091,12 @@ msgid "Internal server error: %(error)s"
 msgstr ""
 
 msgid "Interval"
+msgstr ""
+
+msgid "Interview"
+msgstr ""
+
+msgid "Interview an LLM agent with memory context."
 msgstr ""
 
 msgid "Interview is unavailable because memory is disabled for this experiment."
@@ -3783,6 +4228,12 @@ msgstr ""
 msgid "Inventive/Curious"
 msgstr ""
 
+msgid "Iranian"
+msgstr ""
+
+msgid "Irish"
+msgstr ""
+
 #, python-format
 msgid "Is Private %%"
 msgstr ""
@@ -3791,7 +4242,16 @@ msgstr ""
 msgid "Is Verified %%"
 msgstr ""
 
+msgid "Israeli"
+msgstr ""
+
+msgid "Italian"
+msgstr ""
+
 msgid "Item not found"
+msgstr ""
+
+msgid "Japanese"
 msgstr ""
 
 #, python-format
@@ -3911,6 +4371,11 @@ msgstr ""
 msgid "Language not found."
 msgstr ""
 
+msgid ""
+"Language of the participant pages in this experiment. Post, comment and "
+"agent texts are never translated."
+msgstr ""
+
 msgid "Languages"
 msgstr ""
 
@@ -3929,6 +4394,9 @@ msgstr ""
 msgid "Latest aggregate reward state binned across tracked agents."
 msgstr ""
 
+msgid "Latest aggregate social state."
+msgstr ""
+
 msgid "Latest aggregate stress state binned across tracked agents."
 msgstr ""
 
@@ -3936,6 +4404,9 @@ msgid "Latest articles from this page's RSS feed."
 msgstr ""
 
 msgid "Latest release"
+msgstr ""
+
+msgid "Latvian"
 msgstr ""
 
 msgid "Launch clients and open the forum interface from the same control panel"
@@ -3959,10 +4430,28 @@ msgstr ""
 msgid "Leave fields empty to use the default activity profile."
 msgstr ""
 
+msgid "Less"
+msgstr ""
+
+msgid "Let participants change the language"
+msgstr ""
+
 msgid "Let's create your first simulation in just 4 easy steps."
 msgstr ""
 
+msgid "Let's make some updates!"
+msgstr ""
+
+msgid "Let's see what makes us feel"
+msgstr ""
+
+msgid "Let's see what we are saying about"
+msgstr ""
+
 msgid "Like"
+msgstr ""
+
+msgid "Likes"
 msgstr ""
 
 msgid "Limited access to assigned experiments only. Cannot access admin panel."
@@ -3971,7 +4460,19 @@ msgstr ""
 msgid "Linear"
 msgstr ""
 
+msgid "Link"
+msgstr ""
+
+msgid "Link URL*"
+msgstr ""
+
 msgid "Linkedin"
+msgstr ""
+
+msgid "Lithuanian"
+msgstr ""
+
+msgid "Live signals from the current conversation"
 msgstr ""
 
 msgid "Load"
@@ -3995,10 +4496,16 @@ msgstr ""
 msgid "Loaded image posts"
 msgstr ""
 
+msgid "Loading more posts..."
+msgstr ""
+
 msgid "Loading populations..."
 msgstr ""
 
 msgid "Loading..."
+msgstr ""
+
+msgid "Loading…"
 msgstr ""
 
 msgid "Local Diffusion Model"
@@ -4027,6 +4534,12 @@ msgstr ""
 msgid "Log metrics reset. Plots will update with extended data on next refresh."
 msgstr ""
 
+msgid "Log out"
+msgstr ""
+
+msgid "Log out from your account."
+msgstr ""
+
 msgid "Log-Normal"
 msgstr ""
 
@@ -4037,6 +4550,9 @@ msgid "Logo"
 msgstr ""
 
 msgid "Logo Image"
+msgstr ""
+
+msgid "Logout"
 msgstr ""
 
 msgid "Low"
@@ -4098,6 +4614,9 @@ msgid "Mark read"
 msgstr ""
 
 msgid "Master"
+msgstr ""
+
+msgid "Master of Puppets"
 msgstr ""
 
 msgid "Master of Puppets Target Drill-down"
@@ -4168,7 +4687,16 @@ msgstr ""
 msgid "Mean Execution Time by Method (seconds)"
 msgstr ""
 
+msgid "Media"
+msgstr ""
+
 msgid "Media Page"
+msgstr ""
+
+msgid "Media URL"
+msgstr ""
+
+msgid "Media URL*"
 msgstr ""
 
 msgid "Medium"
@@ -4186,16 +4714,31 @@ msgstr ""
 msgid "Memory Embeddings"
 msgstr ""
 
+msgid "Mentioning Posts"
+msgstr ""
+
 msgid "Merge Populations"
 msgstr ""
 
 msgid "Merged population type must match the selected population platform type."
 msgstr ""
 
+msgid "Message"
+msgstr ""
+
+msgid "Message..."
+msgstr ""
+
 msgid "Message:"
 msgstr ""
 
+msgid "Messages"
+msgstr ""
+
 msgid "Method:"
+msgstr ""
+
+msgid "Mexican"
 msgstr ""
 
 msgid "Microblogging"
@@ -4213,6 +4756,9 @@ msgid "Min Probability Ratio"
 msgstr ""
 
 msgid "Min:"
+msgstr ""
+
+msgid "Mine"
 msgstr ""
 
 msgid "Minimum actions"
@@ -4236,6 +4782,9 @@ msgstr ""
 msgid "MoP Accounts"
 msgstr ""
 
+msgid "MoP Puppet"
+msgstr ""
+
 msgid "Model"
 msgstr ""
 
@@ -4252,6 +4801,9 @@ msgid "Moderated Target"
 msgstr ""
 
 msgid "Moderator Actions"
+msgstr ""
+
+msgid "Moderator Agent"
 msgstr ""
 
 msgid "Moderator Agents"
@@ -4279,7 +4831,22 @@ msgstr ""
 msgid "Monitors server/client processes for hangs and auto-restarts them."
 msgstr ""
 
+msgid "Most Commented"
+msgstr ""
+
+msgid "Most recently active communities across posts and discussions."
+msgstr ""
+
 msgid "Mu (Averaging Weight)"
+msgstr ""
+
+msgid "Mutual Friends"
+msgstr ""
+
+msgid "Mutual contact"
+msgstr ""
+
+msgid "My Communities"
 msgstr ""
 
 msgid "My Profile"
@@ -4307,6 +4874,9 @@ msgid "Nationality not found."
 msgstr ""
 
 msgid "Nearest neighbors (k)"
+msgstr ""
+
+msgid "Nepalese"
 msgstr ""
 
 msgid "Network Analysis"
@@ -4356,6 +4926,9 @@ msgid "Neutral (0.5)"
 msgstr ""
 
 msgid "Never"
+msgstr ""
+
+msgid "New"
 msgstr ""
 
 msgid "New Activity Profile"
@@ -4430,11 +5003,23 @@ msgstr ""
 msgid "New Toxicity Level"
 msgstr ""
 
+msgid "New Zealander"
+msgstr ""
+
+msgid "New message"
+msgstr ""
+
 msgid "New post"
+msgstr ""
+
+msgid "New posts available"
 msgstr ""
 
 #, python-format
 msgid "New version available: %(get)s (v%(get2)s)"
+msgstr ""
+
+msgid "Newer"
 msgstr ""
 
 msgid "News"
@@ -4455,6 +5040,12 @@ msgstr ""
 msgid "Next"
 msgstr ""
 
+msgid "Next Page"
+msgstr ""
+
+msgid "Next image"
+msgstr ""
+
 msgid "Next →"
 msgstr ""
 
@@ -4465,6 +5056,9 @@ msgid "No Active Experiments"
 msgstr ""
 
 msgid "No URL provided"
+msgstr ""
+
+msgid "No active communities detected yet."
 msgstr ""
 
 msgid "No active discussion topics for this experiment."
@@ -4482,6 +5076,9 @@ msgstr ""
 msgid "No active photo-sharing experiment. Please activate one first."
 msgstr ""
 
+msgid "No active topics for this experiment."
+msgstr ""
+
 msgid "No activity profiles available. Create some in the Miscellanea page first."
 msgstr ""
 
@@ -4489,6 +5086,9 @@ msgid "No ad hoc agent plugins are currently installed."
 msgstr ""
 
 msgid "No ad hoc agents' clients registered yet"
+msgstr ""
+
+msgid "No agent selected"
 msgstr ""
 
 msgid "No available experiments to assign"
@@ -4521,6 +5121,9 @@ msgstr ""
 msgid "No data provided"
 msgstr ""
 
+msgid "No emotions are trending yet."
+msgstr ""
+
 msgid "No experiment matrix combinations were created."
 msgstr ""
 
@@ -4545,10 +5148,22 @@ msgstr ""
 msgid "No file selected"
 msgstr ""
 
+msgid "No followed profiles yet"
+msgstr ""
+
 msgid "No groups created yet"
 msgstr ""
 
 msgid "No groups defined or all groups completed"
+msgstr ""
+
+msgid "No hashtags are trending yet."
+msgstr ""
+
+msgid "No hashtags matched yet."
+msgstr ""
+
+msgid "No hashtags yet."
 msgstr ""
 
 msgid "No interests assigned"
@@ -4579,11 +5194,38 @@ msgstr ""
 msgid "No pages assigned"
 msgstr ""
 
+msgid "No people following this profile yet"
+msgstr ""
+
+msgid "No people matched yet."
+msgstr ""
+
+msgid "No photo selected yet"
+msgstr ""
+
+msgid "No photos available yet."
+msgstr ""
+
+msgid "No photos from your social contacts are available yet."
+msgstr ""
+
+msgid "No photos matched your search yet."
+msgstr ""
+
 msgid "No plugin is available."
 msgstr ""
 
 #, python-format
 msgid "No populations are available for this %(platform)s experiment."
+msgstr ""
+
+msgid "No profiles to show"
+msgstr ""
+
+msgid "No recent interests available."
+msgstr ""
+
+msgid "No recommended photos are available yet."
 msgstr ""
 
 #, python-format
@@ -4604,7 +5246,19 @@ msgstr ""
 msgid "No reusable image resources stored yet."
 msgstr ""
 
+msgid "No saved photos available yet."
+msgstr ""
+
 msgid "No server configuration file was found for this experiment."
+msgstr ""
+
+msgid "No story previews are available yet."
+msgstr ""
+
+msgid "No tagged photos available yet."
+msgstr ""
+
+msgid "No topics are trending yet."
 msgstr ""
 
 msgid "No topics assigned"
@@ -4619,7 +5273,13 @@ msgstr ""
 msgid "No visibility grants configured yet."
 msgstr ""
 
+msgid "None"
+msgstr ""
+
 msgid "Normal"
+msgstr ""
+
+msgid "Norwegian"
 msgstr ""
 
 msgid "Not"
@@ -4671,6 +5331,9 @@ msgstr ""
 msgid "Notifications"
 msgstr ""
 
+msgid "Now"
+msgstr ""
+
 msgid "Number of Actors"
 msgstr ""
 
@@ -4705,6 +5368,14 @@ msgstr ""
 msgid "OR"
 msgstr ""
 
+msgid ""
+"Off keeps the language fixed for everybody, so it does not become a "
+"variable of the experiment."
+msgstr ""
+
+msgid "Older"
+msgstr ""
+
 msgid "Ollama"
 msgstr ""
 
@@ -4718,6 +5389,9 @@ msgid "Ollama directory"
 msgstr ""
 
 msgid "Onboarding screen"
+msgstr ""
+
+msgid "Only LLM agents are listed."
 msgstr ""
 
 msgid "Only Ollama is currently supported for memory embeddings."
@@ -4768,6 +5442,12 @@ msgid "Open JupyterLab"
 msgstr ""
 
 msgid "Open JupyterLab for ad hoc inspection and notebook-based analysis"
+msgstr ""
+
+msgid "Open Timeline."
+msgstr ""
+
+msgid "Open profile"
 msgstr ""
 
 #, python-format
@@ -4909,6 +5589,17 @@ msgstr ""
 msgid "Owner: %(owner)s"
 msgstr ""
 
+msgid "Page"
+msgstr ""
+
+#, python-format
+msgid "Page %(page)s"
+msgstr ""
+
+#, python-format
+msgid "Page %(page)s of %(total)s"
+msgstr ""
+
 msgid "Page Name"
 msgstr ""
 
@@ -4934,7 +5625,13 @@ msgstr ""
 msgid "Pages"
 msgstr ""
 
+msgid "Pages aligned with your feed"
+msgstr ""
+
 msgid "Pair Limit"
+msgstr ""
+
+msgid "Palestinian"
 msgstr ""
 
 msgid "Parent post not found"
@@ -4944,6 +5641,9 @@ msgid "Parse"
 msgstr ""
 
 msgid "Partially installed"
+msgstr ""
+
+msgid "Participant"
 msgstr ""
 
 msgid "Password"
@@ -4969,7 +5669,25 @@ msgstr ""
 msgid "Pause Client"
 msgstr ""
 
+msgid "People"
+msgstr ""
+
+msgid "People Following Me"
+msgstr ""
+
+msgid "People I Follow"
+msgstr ""
+
+msgid "People and pages you can follow in this experiment."
+msgstr ""
+
+msgid "People worth following right now"
+msgstr ""
+
 msgid "Persist memory events"
+msgstr ""
+
+msgid "Persona"
 msgstr ""
 
 msgid "Persona Configuration"
@@ -5013,7 +5731,13 @@ msgstr ""
 msgid "Photo creator tier percentages must sum to 100%."
 msgstr ""
 
+msgid "Photo details"
+msgstr ""
+
 msgid "Photo story visibility percentages must sum to 100%."
+msgstr ""
+
+msgid "Photos"
 msgstr ""
 
 msgid "Pick a source group first, then choose one experiment from that group."
@@ -5090,6 +5814,9 @@ msgstr ""
 msgid "Polarity mix and compound trends"
 msgstr ""
 
+msgid "Polish"
+msgstr ""
+
 #, python-format
 msgid "Political %%"
 msgstr ""
@@ -5098,6 +5825,9 @@ msgid "Political Leaning"
 msgstr ""
 
 msgid "Political Leanings"
+msgstr ""
+
+msgid "Political leaning"
 msgstr ""
 
 msgid "Population"
@@ -5217,6 +5947,9 @@ msgstr ""
 msgid "Port: %(port)s"
 msgstr ""
 
+msgid "Portuguese"
+msgstr ""
+
 msgid "Positive / neutral / negative score"
 msgstr ""
 
@@ -5232,6 +5965,9 @@ msgstr ""
 msgid "Post date & time"
 msgstr ""
 
+msgid "Post media placeholder"
+msgstr ""
+
 msgid "Post new content"
 msgstr ""
 
@@ -5239,6 +5975,14 @@ msgid "Post not found"
 msgstr ""
 
 msgid "PostDoc Researcher"
+msgstr ""
+
+msgid "Posts"
+msgstr ""
+
+msgid ""
+"Posts associated with this community, sorted with the same feed modes as "
+"/rfeed."
 msgstr ""
 
 msgid "Posts per page"
@@ -5255,7 +5999,25 @@ msgstr ""
 msgid "Previous"
 msgstr ""
 
+msgid "Previous Page"
+msgstr ""
+
+msgid "Previous image"
+msgstr ""
+
+msgid "Primary"
+msgstr ""
+
 msgid "Principal Investigator"
+msgstr ""
+
+msgid "Private chat"
+msgstr ""
+
+msgid "Private chats with followed agents"
+msgstr ""
+
+msgid "Private chats with simulation agents"
 msgstr ""
 
 msgid "Private:"
@@ -5319,6 +6081,9 @@ msgstr ""
 msgid "Professions"
 msgstr ""
 
+msgid "Profile"
+msgstr ""
+
 msgid "Profile Header"
 msgstr ""
 
@@ -5329,6 +6094,18 @@ msgid "Profile Picture"
 msgstr ""
 
 msgid "Profile Picture URL"
+msgstr ""
+
+msgid "Profile Settings"
+msgstr ""
+
+msgid "Profile activity filters"
+msgstr ""
+
+msgid "Profile picture"
+msgstr ""
+
+msgid "Profiles and pages matching your search."
 msgstr ""
 
 msgid "Progress"
@@ -5385,6 +6162,9 @@ msgstr ""
 msgid "Prompts support template variables using curly braces:"
 msgstr ""
 
+msgid "Propaganda Agent"
+msgstr ""
+
 msgid "Propaganda Agents"
 msgstr ""
 
@@ -5407,7 +6187,13 @@ msgstr ""
 msgid "Provides specific instructions and input"
 msgstr ""
 
+msgid "Public profile attributes and recommendation preferences."
+msgstr ""
+
 msgid "Public:"
+msgstr ""
+
+msgid "Publish"
 msgstr ""
 
 msgid "Quick Reference Guide"
@@ -5481,6 +6267,9 @@ msgstr ""
 msgid "Read a content"
 msgstr ""
 
+msgid "Reads"
+msgstr ""
+
 msgid "Real-time (one wall-clock hour per round)"
 msgstr ""
 
@@ -5520,6 +6309,9 @@ msgstr ""
 msgid "Recommendation Limit"
 msgstr ""
 
+msgid "Recommendation Preferences"
+msgstr ""
+
 msgid "Recommendation Systems"
 msgstr ""
 
@@ -5541,10 +6333,17 @@ msgstr ""
 msgid "Recommended Use"
 msgstr ""
 
+#, python-format
+msgid "Recommended photos for %(username)s."
+msgstr ""
+
 msgid "Recommender info"
 msgstr ""
 
 msgid "Recsys Evolution"
+msgstr ""
+
+msgid "Recurring tags in this profile's activity."
 msgstr ""
 
 msgid "Reddit Pages to Fetch"
@@ -5585,7 +6384,13 @@ msgstr ""
 msgid "Reflection Trigger Sum"
 msgstr ""
 
+msgid "Refresh"
+msgstr ""
+
 msgid "Refresh Data"
+msgstr ""
+
+msgid "Refresh Memory"
 msgstr ""
 
 msgid "Refresh interval in seconds (5-300)"
@@ -5630,10 +6435,28 @@ msgstr ""
 msgid "Remove alternative value"
 msgstr ""
 
+msgid "Remove this comment"
+msgstr ""
+
+msgid "Remove this photo from the feed"
+msgstr ""
+
+msgid "Remove this post"
+msgstr ""
+
 msgid "Rename"
 msgstr ""
 
+msgid "Repeat Password"
+msgstr ""
+
 msgid "Replay Tutorial"
+msgstr ""
+
+msgid "Replies to your posts and comments."
+msgstr ""
+
+msgid "Reply"
 msgstr ""
 
 msgid "Reply Behavior Controls"
@@ -5645,16 +6468,31 @@ msgstr ""
 msgid "Reply to posts and threads"
 msgstr ""
 
+msgid "Report"
+msgstr ""
+
+msgid "Report this comment"
+msgstr ""
+
+msgid "Report this post"
+msgstr ""
+
 msgid "Repository"
 msgstr ""
 
 msgid "Repost another user's content"
 msgstr ""
 
+msgid "Republican"
+msgstr ""
+
 msgid "Request Logs Analysis"
 msgstr ""
 
 msgid "Requested file is not ready for download."
+msgstr ""
+
+msgid "Requests"
 msgstr ""
 
 msgid ""
@@ -5739,6 +6577,9 @@ msgid ""
 "specific memory, recsys, network, or archetype configuration."
 msgstr ""
 
+msgid "Reverse chronological photos from your social contacts."
+msgstr ""
+
 msgid "Revoke Group Visibility"
 msgstr ""
 
@@ -5772,6 +6613,9 @@ msgstr ""
 msgid "Roleplay (simple)"
 msgstr ""
 
+msgid "Romanian"
+msgstr ""
+
 msgid "Rounds to wait before replying to the same user again"
 msgstr ""
 
@@ -5785,6 +6629,9 @@ msgid "Run Client"
 msgstr ""
 
 msgid "Run Experiment"
+msgstr ""
+
+msgid "Run ID (optional)"
 msgstr ""
 
 msgid "Run Now"
@@ -5802,6 +6649,9 @@ msgstr ""
 msgid "Runtime compatibility"
 msgstr ""
 
+msgid "Russian"
+msgstr ""
+
 msgid "SA Interactions"
 msgstr ""
 
@@ -5814,6 +6664,9 @@ msgstr ""
 msgid "Sample Size:"
 msgstr ""
 
+msgid "Saudi"
+msgstr ""
+
 msgid "Save"
 msgstr ""
 
@@ -5824,6 +6677,9 @@ msgid "Save Actions Likelihood"
 msgstr ""
 
 msgid "Save Archetypes"
+msgstr ""
+
+msgid "Save Changes"
 msgstr ""
 
 msgid "Save Configuration"
@@ -5850,6 +6706,9 @@ msgstr ""
 msgid "Save Stress / Reward Settings"
 msgstr ""
 
+msgid "Save Topic Preferences"
+msgstr ""
+
 msgid "Save Topics"
 msgstr ""
 
@@ -5863,6 +6722,9 @@ msgid "Save interactions"
 msgstr ""
 
 msgid "Save language"
+msgstr ""
+
+msgid "Saved"
 msgstr ""
 
 #, python-format
@@ -5923,6 +6785,9 @@ msgstr ""
 msgid "Scores, trends, high-toxicity content"
 msgstr ""
 
+msgid "Search"
+msgstr ""
+
 msgid "Search K"
 msgstr ""
 
@@ -5941,7 +6806,58 @@ msgstr ""
 msgid "Search a Hashtag"
 msgstr ""
 
+msgid "Search agents"
+msgstr ""
+
+msgid "Search by username"
+msgstr ""
+
+msgid "Search experiments"
+msgstr ""
+
+msgid "Search experiments…"
+msgstr ""
+
+msgid "Search filters"
+msgstr ""
+
+msgid "Search followed agents"
+msgstr ""
+
+msgid "Search photos, people, hashtags"
+msgstr ""
+
 msgid "Search posts, users, links..."
+msgstr ""
+
+msgid "Search profiles, hashtags, and topics"
+msgstr ""
+
+msgid "Search profiles, hashtags, topics"
+msgstr ""
+
+msgid "Search results"
+msgstr ""
+
+msgid "Search results for"
+msgstr ""
+
+msgid "Search topics and photo tags."
+msgstr ""
+
+msgid "Search..."
+msgstr ""
+
+msgid "Security"
+msgstr ""
+
+msgid "See all"
+msgstr ""
+
+msgid "See all photos."
+msgstr ""
+
+msgid "See full discussion thread"
 msgstr ""
 
 msgid "Select Active Hours (0-23):"
@@ -5965,6 +6881,12 @@ msgstr ""
 msgid "Select Users"
 msgstr ""
 
+msgid "Select a conversation"
+msgstr ""
+
+msgid "Select a conversation from the left panel to view and continue the chat."
+msgstr ""
+
 msgid "Select a group first..."
 msgstr ""
 
@@ -5980,6 +6902,11 @@ msgstr ""
 msgid "Select a network model..."
 msgstr ""
 
+msgid ""
+"Select a photo from your computer, preview it instantly, then add a "
+"description and text before sharing it to the experiment feed."
+msgstr ""
+
 msgid "Select a population compatible with the chosen ad hoc agent type."
 msgstr ""
 
@@ -5993,6 +6920,9 @@ msgid "Select a valid population."
 msgstr ""
 
 msgid "Select an Experiment to Join"
+msgstr ""
+
+msgid "Select an active experiment to continue."
 msgstr ""
 
 msgid "Select an agent type to load compatible populations."
@@ -6027,6 +6957,9 @@ msgstr ""
 msgid "Select at least one researcher user."
 msgstr ""
 
+msgid "Select community"
+msgstr ""
+
 msgid ""
 "Select diverse values for education, political leanings, and toxicity "
 "levels to create a varied and realistic population. Click to select "
@@ -6036,10 +6969,16 @@ msgstr ""
 msgid "Select experiment..."
 msgstr ""
 
+msgid "Select from computer"
+msgstr ""
+
 msgid "Select group..."
 msgstr ""
 
 msgid "Select one of the installed ad hoc agent families."
+msgstr ""
+
+msgid "Select photos"
 msgstr ""
 
 msgid ""
@@ -6116,9 +7055,18 @@ msgstr ""
 msgid "Selected Target Trend"
 msgstr ""
 
+msgid "Selected image preview"
+msgstr ""
+
 msgid ""
 "Selected populations have incompatible platform types and cannot be "
 "merged."
+msgstr ""
+
+msgid "Selected profile picture"
+msgstr ""
+
+msgid "Selected story preview"
 msgstr ""
 
 #, python-format
@@ -6126,6 +7074,9 @@ msgid "Self-hosted LLM Server (%(backend)s)"
 msgstr ""
 
 msgid "Semantic Retrieval"
+msgstr ""
+
+msgid "Send"
 msgstr ""
 
 msgid "Senior Researcher"
@@ -6232,10 +7183,25 @@ msgstr ""
 msgid "Share weight"
 msgstr ""
 
+msgid "Shared contacts between you and this profile."
+msgstr ""
+
+msgid "Shared from"
+msgstr ""
+
+msgid "Shared from:"
+msgstr ""
+
 #, python-format
 msgid ""
 "Shared image resources can still be created from a subreddit name, "
 "%(name)s, or a Reddit subreddit URL such as %(url)s."
+msgstr ""
+
+msgid "Shared post"
+msgstr ""
+
+msgid "Shares"
 msgstr ""
 
 msgid "Show Advanced Parameters"
@@ -6252,6 +7218,9 @@ msgstr ""
 msgid ""
 "Show a box next to the feed with the participant's content recommender "
 "system and a plain-language explanation of how it works"
+msgstr ""
+
+msgid "Show less"
 msgstr ""
 
 msgid "Show or hide every annotation type at once"
@@ -6273,6 +7242,16 @@ msgid "Show the interest / opinion sliders in the Edit Profile page"
 msgstr ""
 
 msgid "Show the profile-setup wizard to users on their first login"
+msgstr ""
+
+#, python-format
+msgid ""
+"Showing %(photos)s photos, %(users)s people and %(hashtags)s hashtags for"
+" \"%(query)s\"."
+msgstr ""
+
+#, python-format
+msgid "Showing %(start)s-%(end)s of %(total)s"
 msgstr ""
 
 msgid "Sign Up"
@@ -6353,6 +7332,12 @@ msgstr ""
 msgid "Sliding Window Days"
 msgstr ""
 
+msgid "Slovak"
+msgstr ""
+
+msgid "Slovenian"
+msgstr ""
+
 msgid "Slower"
 msgstr ""
 
@@ -6383,6 +7368,9 @@ msgstr ""
 msgid "Solitary/Reserved"
 msgstr ""
 
+msgid "Something went wrong on our end."
+msgstr ""
+
 msgid "Something went wrong?"
 msgstr ""
 
@@ -6393,6 +7381,15 @@ msgid "Source Group"
 msgstr ""
 
 msgid "Source experiment not found."
+msgstr ""
+
+msgid "South African"
+msgstr ""
+
+msgid "South Korean"
+msgstr ""
+
+msgid "Spanish"
 msgstr ""
 
 msgid ""
@@ -6414,6 +7411,9 @@ msgstr ""
 msgid "Spoken Language"
 msgstr ""
 
+msgid "Spoken Languages"
+msgstr ""
+
 msgid "Standard agents can only be assigned to standard populations."
 msgstr ""
 
@@ -6433,6 +7433,12 @@ msgid "Start JupyterLab"
 msgstr ""
 
 msgid "Start Ollama"
+msgstr ""
+
+msgid "Start Session"
+msgstr ""
+
+msgid "Start an interview session to load persona details."
 msgstr ""
 
 #, python-format
@@ -6503,17 +7509,29 @@ msgstr ""
 msgid "Stopped / Scheduled"
 msgstr ""
 
+msgid "Stories"
+msgstr ""
+
 #, python-format
 msgid "Story Visibility %%"
 msgstr ""
 
+msgid "Story details"
+msgstr ""
+
 msgid "Stress"
+msgstr ""
+
+msgid "Stress / Reward"
 msgstr ""
 
 msgid "Stress / Reward Evolution"
 msgstr ""
 
 msgid "Stress / Reward Settings"
+msgstr ""
+
+msgid "Stress Attacker"
 msgstr ""
 
 msgid "Stress Attacker Target Drill-down"
@@ -6567,6 +7585,9 @@ msgstr ""
 msgid "Student"
 msgstr ""
 
+msgid "Subforum"
+msgstr ""
+
 msgid "Submit Logs"
 msgstr ""
 
@@ -6605,7 +7626,28 @@ msgstr ""
 msgid "Successfully updated opinions for %(updated_count)s agent-topic pairs."
 msgstr ""
 
+msgid "Suggested Contacts"
+msgstr ""
+
 msgid "Suggested Friends"
+msgstr ""
+
+msgid "Suggested Pages"
+msgstr ""
+
+msgid "Suggested connection"
+msgstr ""
+
+msgid "Suggested contact"
+msgstr ""
+
+msgid "Suggested contacts are loading."
+msgstr ""
+
+msgid "Suggested page"
+msgstr ""
+
+msgid "Suggestions for you"
 msgstr ""
 
 msgid "Suite modules"
@@ -6621,6 +7663,18 @@ msgid "Supporting Institutions"
 msgstr ""
 
 msgid "Supporting Projects"
+msgstr ""
+
+msgid "Swedish"
+msgstr ""
+
+msgid "Swiss"
+msgstr ""
+
+msgid "Switch photo user"
+msgstr ""
+
+msgid "Switch user"
 msgstr ""
 
 msgid "Synthetic Network:"
@@ -6648,6 +7702,9 @@ msgid "System Updates:"
 msgstr ""
 
 msgid "Tab of the photo feed shown when a participant opens it"
+msgstr ""
+
+msgid "Taiwanese"
 msgstr ""
 
 msgid "Target"
@@ -6704,6 +7761,15 @@ msgid "Terminal output of the latest operations on this plugin, newest first."
 msgstr ""
 
 msgid "Test Connection"
+msgstr ""
+
+msgid "Text"
+msgstr ""
+
+msgid "Text (optional)"
+msgstr ""
+
+msgid "Thai"
 msgstr ""
 
 #, python-format
@@ -6786,9 +7852,17 @@ msgstr ""
 msgid "The agent spoken language."
 msgstr ""
 
+msgid "The algorithm that picks the posts in your feed"
+msgstr ""
+
 msgid ""
 "The center column controls execution and the lower sections expose logs "
 "and diagnostics for both the server and active clients."
+msgstr ""
+
+msgid ""
+"The changes are saved directly to your experiment profile without leaving"
+" this page."
 msgstr ""
 
 #, python-format
@@ -6832,6 +7906,9 @@ msgstr ""
 msgid "The experiment needs to be activated first."
 msgstr ""
 
+msgid "The feelings surfacing most in the feed"
+msgstr ""
+
 msgid "The image textual description."
 msgstr ""
 
@@ -6846,6 +7923,9 @@ msgid ""
 "using"
 msgstr ""
 
+msgid "The page you are looking for does not exist."
+msgstr ""
+
 msgid "The post text."
 msgstr ""
 
@@ -6853,6 +7933,12 @@ msgid "The provided passwords do not match."
 msgstr ""
 
 msgid "The referenced ad hoc agent type is no longer available."
+msgstr ""
+
+msgid "The request could not be understood by the server."
+msgstr ""
+
+msgid "The requested page could not be found."
 msgstr ""
 
 msgid ""
@@ -6870,12 +7956,23 @@ msgid ""
 "between min and max."
 msgstr ""
 
+msgid ""
+"The selected image will be copied into the experiment media folder before"
+" publishing."
+msgstr ""
+
 msgid "The selected population does not contain any agents."
 msgstr ""
 
 msgid ""
 "The selected population has no usable agents or is missing age data. "
 "Rebuild or re-upload the population before creating a client."
+msgstr ""
+
+msgid "The server could not understand the request due to invalid syntax."
+msgstr ""
+
+msgid "The server encountered an unexpected condition."
 msgstr ""
 
 msgid "The three agent archetypes have distinct characteristics:"
@@ -6898,6 +7995,9 @@ msgid ""
 msgstr ""
 
 msgid "Thematic Characterization"
+msgstr ""
+
+msgid "Themes gaining momentum right now"
 msgstr ""
 
 msgid ""
@@ -6980,6 +8080,19 @@ msgid ""
 "page."
 msgstr ""
 
+msgid "This page represents a forum community page."
+msgstr ""
+
+msgid ""
+"This profile does not have visible incoming follow ties in the current "
+"simulation state."
+msgstr ""
+
+msgid ""
+"This profile does not have visible outgoing follow ties in the current "
+"simulation state."
+msgstr ""
+
 msgid "This update is only for HPC experiments."
 msgstr ""
 
@@ -7001,6 +8114,9 @@ msgid "Thread Corruption Rate"
 msgstr ""
 
 msgid "Thread Decay (lambda)"
+msgstr ""
+
+msgid "Thread Focus"
 msgstr ""
 
 msgid "Thread Resummarize Every (events)"
@@ -7030,6 +8146,9 @@ msgstr ""
 msgid "Time Period"
 msgstr ""
 
+msgid "Timeline"
+msgstr ""
+
 msgid "Timeline Follower Ratio"
 msgstr ""
 
@@ -7042,13 +8161,22 @@ msgstr ""
 msgid "Title"
 msgstr ""
 
+msgid "Title*"
+msgstr ""
+
 #, python-format
 msgid ""
 "To analyze your simulation data use %(link)s, A Python library to "
 "streamline the analysis of YSocial generated data"
 msgstr ""
 
+msgid "Toggle chat panel"
+msgstr ""
+
 msgid "Toggle menu"
+msgstr ""
+
+msgid "Toggle sidebar"
 msgstr ""
 
 msgid "Toggle the generated value between false and true"
@@ -7057,10 +8185,16 @@ msgstr ""
 msgid "Token stored for this session"
 msgstr ""
 
+msgid "Top"
+msgstr ""
+
 msgid "Topic"
 msgstr ""
 
 msgid "Topic Evolution"
+msgstr ""
+
+msgid "Topic Focus"
 msgstr ""
 
 msgid "Topic Interest Distribution"
@@ -7173,16 +8307,28 @@ msgstr ""
 msgid "Transition Probabilities (%%)"
 msgstr ""
 
+msgid "Travels"
+msgstr ""
+
 msgid "Trend analysis of server compute time and simulation time progression."
 msgstr ""
 
+msgid "Trending Emotions"
+msgstr ""
+
 msgid "Trending Hashtags"
+msgstr ""
+
+msgid "Trending Topics"
 msgstr ""
 
 msgid "Triangle probability (p)"
 msgstr ""
 
 msgid "True"
+msgstr ""
+
+msgid "Turkish"
 msgstr ""
 
 msgid "Type"
@@ -7204,6 +8350,9 @@ msgid "URL is required"
 msgstr ""
 
 msgid "URL:"
+msgstr ""
+
+msgid "Ukrainian"
 msgstr ""
 
 #, python-format
@@ -7244,6 +8393,12 @@ msgstr ""
 
 #, python-format
 msgid "Unexpected error starting client: %(error)s"
+msgstr ""
+
+msgid "Unexpected error."
+msgstr ""
+
+msgid "Unfollow"
 msgstr ""
 
 msgid "Uniform"
@@ -7315,6 +8470,9 @@ msgstr ""
 msgid "Update Activity Rates"
 msgstr ""
 
+msgid "Update Available"
+msgstr ""
+
 msgid "Update Configuration"
 msgstr ""
 
@@ -7371,11 +8529,22 @@ msgstr ""
 msgid "Update configuration first"
 msgstr ""
 
+msgid ""
+"Update profile details, recommendations, and account security from one "
+"place."
+msgstr ""
+
 msgid "Update route does not match the experiment modality."
 msgstr ""
 
 #, python-format
 msgid "Update runtime annotations and memory in %(b)s"
+msgstr ""
+
+msgid "Update your interest and opinion for each topic."
+msgstr ""
+
+msgid "Update your password while keeping the rest of the profile unchanged."
 msgstr ""
 
 #, python-format
@@ -7413,6 +8582,9 @@ msgstr ""
 msgid "Upload a CSV file with edges (one per line: source,target)."
 msgstr ""
 
+msgid "Upload photo"
+msgstr ""
+
 msgid "Upper Bound"
 msgstr ""
 
@@ -7437,6 +8609,12 @@ msgstr ""
 msgid ""
 "Use a subreddit name, %(name)s, or a Reddit subreddit URL such as "
 "%(url)s. The parse step previews sample images before saving."
+msgstr ""
+
+msgid "Use selected header image"
+msgstr ""
+
+msgid "Use selected profile picture"
 msgstr ""
 
 #, python-format
@@ -7592,6 +8770,9 @@ msgstr ""
 msgid "Version"
 msgstr ""
 
+msgid "Video call"
+msgstr ""
+
 msgid "View Client Details"
 msgstr ""
 
@@ -7599,6 +8780,12 @@ msgid "View Experiment Details"
 msgstr ""
 
 msgid "View Release"
+msgstr ""
+
+msgid "View all friends."
+msgstr ""
+
+msgid "Viewing as"
 msgstr ""
 
 msgid "Visibility assignment revoked."
@@ -7703,6 +8890,9 @@ msgstr ""
 msgid "Watchdog interval set to %(interval_minutes)s minutes."
 msgstr ""
 
+msgid "Watches"
+msgstr ""
+
 msgid ""
 "We are a team of multidisciplinary researchers that share a common "
 "interest in the study of social networks and human behavior."
@@ -7741,6 +8931,18 @@ msgstr ""
 msgid "Welcome to YSocial! 🎉"
 msgstr ""
 
+msgid "What are you drinking?"
+msgstr ""
+
+msgid "What are you eating?"
+msgstr ""
+
+msgid "What are you reading?"
+msgstr ""
+
+msgid "What are you watching?"
+msgstr ""
+
 msgid "What is a Client?"
 msgstr ""
 
@@ -7750,6 +8952,9 @@ msgstr ""
 msgid ""
 "What issue did you encounter? What were you trying to do when the error "
 "occurred?"
+msgstr ""
+
+msgid "What you assigned to posts and comments"
 msgstr ""
 
 msgid "What's Next?"
@@ -7787,10 +8992,40 @@ msgid ""
 "mark the agent as left."
 msgstr ""
 
+msgid "Where are you going?"
+msgstr ""
+
 msgid "Where the Digital World comes to life."
 msgstr ""
 
+msgid "Where the digital world comes to life."
+msgstr ""
+
+msgid "Who are you with?"
+msgstr ""
+
 msgid "Wrapped exception:"
+msgstr ""
+
+msgid "Write a message..."
+msgstr ""
+
+msgid "Write a short bio about yourself..."
+msgstr ""
+
+msgid "Write a short description for the image..."
+msgstr ""
+
+msgid "Write a short title..."
+msgstr ""
+
+msgid "Write something about you..."
+msgstr ""
+
+msgid "Write the post text..."
+msgstr ""
+
+msgid "Y Social"
 msgstr ""
 
 msgid "Y Social | Dashboard"
@@ -7813,6 +9048,9 @@ msgid "YServer running on external machine"
 msgstr ""
 
 msgid "YSocial"
+msgstr ""
+
+msgid "YSocial Logo"
 msgstr ""
 
 #, python-format
@@ -7920,6 +9158,30 @@ msgstr ""
 msgid "You do not have visibility on this plugin repository."
 msgstr ""
 
+msgid "You don't have permission to access this resource."
+msgstr ""
+
+msgid "You got the power!"
+msgstr ""
+
+#, python-format
+msgid "You have access to %(num)s active experiment"
+msgid_plural "You have access to %(num)s active experiments"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "You have not posted in any community yet."
+msgstr ""
+
+msgid "You joined the discussion"
+msgstr ""
+
+msgid "You posted on this topic"
+msgstr ""
+
+msgid "You've reached the end!"
+msgstr ""
+
 msgid "You've successfully created your first YSocial experiment!"
 msgstr ""
 
@@ -7927,6 +9189,12 @@ msgid "Your Profile"
 msgstr ""
 
 msgid "Your YSocial installation is up to date."
+msgstr ""
+
+msgid "Your annotations"
+msgstr ""
+
+msgid "Your recommender system"
 msgstr ""
 
 msgid "ZIP File"
@@ -7965,6 +9233,9 @@ msgstr ""
 msgid "authenticated"
 msgstr ""
 
+msgid "auto-detect from logs"
+msgstr ""
+
 #, python-format
 msgid "branch %(name)s"
 msgstr ""
@@ -8000,6 +9271,9 @@ msgstr ""
 msgid "experiments_per_group is required"
 msgstr ""
 
+msgid "full discussion thread"
+msgstr ""
+
 msgid "group_ids is required"
 msgstr ""
 
@@ -8014,6 +9288,9 @@ msgid ""
 "https://www.reddit.com/r/politics/new.json?limit=100"
 msgstr ""
 
+msgid "in context."
+msgstr ""
+
 msgid "llm_url parameter is required"
 msgstr ""
 
@@ -8023,6 +9300,9 @@ msgstr ""
 msgid "login page"
 msgstr ""
 
+msgid "main navigation"
+msgstr ""
+
 msgid "manifest invalid"
 msgstr ""
 
@@ -8030,6 +9310,9 @@ msgid "manifest valid"
 msgstr ""
 
 msgid "memes or https://www.reddit.com/r/memes/"
+msgstr ""
+
+msgid "mentions"
 msgstr ""
 
 msgid "min"
@@ -8070,6 +9353,12 @@ msgstr ""
 msgid "release archive"
 msgstr ""
 
+msgid "replied to your comment"
+msgstr ""
+
+msgid "replied to your post"
+msgstr ""
+
 msgid "sec"
 msgstr ""
 
@@ -8079,6 +9368,9 @@ msgstr ""
 msgid "settings"
 msgstr ""
 
+msgid "signals"
+msgstr ""
+
 msgid "symlink"
 msgstr ""
 
@@ -8086,6 +9378,15 @@ msgid "to analyze simulation results"
 msgstr ""
 
 msgid "to compare simulation scenarios"
+msgstr ""
+
+msgid "today."
+msgstr ""
+
+msgid "unread"
+msgstr ""
+
+msgid "uses"
 msgstr ""
 
 msgid "vLLM"
@@ -8136,6 +9437,9 @@ msgid "ℹ️ Update the LLM server and model for this user."
 msgstr ""
 
 msgid "← All plugins"
+msgstr ""
+
+msgid "← Back to feed"
 msgstr ""
 
 msgid "∞ Infinite"
