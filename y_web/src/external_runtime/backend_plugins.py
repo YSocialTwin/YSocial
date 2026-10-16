@@ -133,6 +133,17 @@ def _validate_optional_extension_keys(spec, registry_payload: dict, report: dict
         else:
             report[key] = value
 
+    if "i18n" in registry_payload:
+        from y_web.src.external_runtime.plugin_i18n import normalize_i18n_manifest
+
+        i18n_config, i18n_problems = normalize_i18n_manifest(
+            spec.key, spec.path, registry_payload["i18n"]
+        )
+        for problem in i18n_problems:
+            report["errors"].append(f"meta/registry.json: {problem}")
+        if i18n_config:
+            report["i18n"] = i18n_config
+
     if "hooks" in registry_payload:
         hooks = registry_payload["hooks"]
         if not isinstance(hooks, dict):
@@ -635,6 +646,14 @@ def register_backend_plugin_suites(app) -> dict:
                 )
 
         _REGISTERED_SUITES[repo_key] = {"modules": modules_by_id}
+
+        if validation.get("i18n"):
+            from y_web.src.external_runtime.plugin_i18n import register_plugin_i18n
+
+            if not register_plugin_i18n(repo_key, validation["i18n"]):
+                suite_report["errors"].append(
+                    f"i18n domain '{validation['i18n']['domain']}' is already used by another plugin"
+                )
 
         try:
             _register_static_blueprint(app, repo_key)

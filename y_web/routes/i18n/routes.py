@@ -21,6 +21,7 @@ from y_web.i18n import (
 )
 from y_web.i18n_pseudo import PSEUDO_LANGUAGE, pseudolocalize_catalog
 from y_web.src.external_runtime.plugin_hooks import is_local_redirect
+from y_web.src.external_runtime.plugin_i18n import plugin_js_catalog_dir
 
 i18n_bp = Blueprint("i18n", __name__)
 
@@ -28,13 +29,30 @@ JS_CATALOG_DIR = Path(__file__).resolve().parents[2] / "translations" / "js"
 _DOMAIN_RE = re.compile(r"^[a-z0-9_]{1,64}$")
 
 
+def _catalog_dir(domain):
+    """Directory of a domain: the core one, else a registered plugin's."""
+    core = JS_CATALOG_DIR / domain
+    if (core / f"{DEFAULT_LOCALE}.json").is_file():
+        return core
+    plugin = plugin_js_catalog_dir(domain)
+    if plugin is not None and (plugin / f"{DEFAULT_LOCALE}.json").is_file():
+        return plugin
+    return None
+
+
 def load_js_catalog(domain, lang):
     """Return the merged catalog for *domain*/*lang* (English as fallback)."""
     merged = {}
+    base = _catalog_dir(domain)
+    if base is None:
+        return merged
     for code in (DEFAULT_LOCALE, lang):
-        path = JS_CATALOG_DIR / domain / f"{code}.json"
+        path = base / f"{code}.json"
         if path.is_file():
-            merged.update(json.loads(path.read_text(encoding="utf-8")))
+            try:
+                merged.update(json.loads(path.read_text(encoding="utf-8")))
+            except ValueError:  # a broken catalog falls back to what loaded so far
+                continue
     return merged
 
 
@@ -43,7 +61,7 @@ def js_catalog(domain, lang):
     """Return the JSON catalog; 404 for unknown domain or language."""
     if not _DOMAIN_RE.match(domain) or normalize_language(lang) != lang:
         abort(404)
-    if not (JS_CATALOG_DIR / domain / f"{DEFAULT_LOCALE}.json").is_file():
+    if _catalog_dir(domain) is None:
         abort(404)
     if lang == PSEUDO_LANGUAGE:
         catalog = pseudolocalize_catalog(load_js_catalog(domain, DEFAULT_LOCALE))

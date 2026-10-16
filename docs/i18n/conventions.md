@@ -35,9 +35,17 @@ Rules for writing translatable code in YSocial and its plugins. They follow the 
 
 ## 4. Plugins
 
-- A plugin owns a gettext domain and a JS domain named after the plugin, declared by an `i18n` key in its manifest (*provisional*, to be validated in phase 3).
-- Manifest strings (names, descriptions, labels) are symbolic keys resolved in the plugin domain, with the English text as fallback.
-- Plugins ship their own catalogs; the core never edits plugin catalogs.
+A plugin opts in with an `i18n` object in `meta/registry.json` (validated with the other optional keys of `backend_plugins.py`):
+
+```json
+"i18n": {"domain": "training_modules", "translations": "translations"}
+```
+
+- `domain` (default: the repo key) names the plugin's gettext and JS domain; two plugins cannot share one.
+- Catalogs live inside the plugin: `translations/<lang>/LC_MESSAGES/<domain>.mo` for Python and templates, `translations/js/<domain>/<lang>.json` for browser code (served by `/i18n/<domain>/<lang>.json`, English fallback, no change to the core).
+- Python and templates: `plugin_gettext('<domain>', 'English text', **vars)`, `plugin_ngettext(...)`; manifest strings (names, labels): `{{ 'Modules'|plugin_text('<domain>') }}`. The core `_()` never sees plugin catalogs and vice versa.
+- Extract manifest strings with `python scripts/i18n/catalogs.py manifests <plugin_dir> --domain <domain>`.
+- Without the key, with a missing language or a broken catalog the plugin shows English; with the plugin absent or disabled the core behaves as before. The core never edits plugin catalogs.
 
 ## 5. Review checklist
 

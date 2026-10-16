@@ -163,6 +163,9 @@ def init_i18n(app):
     app.jinja_env.globals["text_direction"] = text_direction
     app.jinja_env.globals["html_lang"] = html_lang
     # Locale-aware formatting for dates and numbers: {{ value|localdate }}.
+    from y_web.src.external_runtime.plugin_i18n import init_plugin_i18n
+
+    init_plugin_i18n(app)
     app.jinja_env.filters["localdate"] = format_date
     app.jinja_env.filters["localtime"] = format_time
     app.jinja_env.filters["localdatetime"] = format_datetime
