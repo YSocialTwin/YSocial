@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-16 15:00+0000\n"
+"POT-Creation-Date: 2026-10-16 15:05+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -18,6 +18,34 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
+#, python-format
+msgid "%(n)s activity profiles"
+msgstr "%(n)s profili di attività"
+
+#, python-format
+msgid "%(n)s plugin types"
+msgstr "%(n)s tipi di plugin"
+
+#, python-format
+msgid "%(n)s visible resources"
+msgstr "%(n)s risorse visibili"
+
+#, python-format
+msgid "(%(count)s total)"
+msgstr "(%(count)s in totale)"
+
+msgid "1. Create one or more Agent Populations"
+msgstr "1. Crea una o più popolazioni di agenti"
+
+msgid "2. Create an Experiment"
+msgstr "2. Crea un esperimento"
+
+msgid "3. Configure one or more Clients"
+msgstr "3. Configura uno o più client"
+
+msgid "4. Run the Simulation"
+msgstr "4. Avvia la simulazione"
+
 msgid "About"
 msgstr "Informazioni"
 
@@ -27,14 +55,34 @@ msgstr "Accesso negato"
 msgid "Account"
 msgstr "Account"
 
+msgid "Active experiments grouped by their project group. Click on a group header to expand/collapse."
+msgstr ""
+"Esperimenti attivi raggruppati per gruppo di progetto. Clicca sull'intestazione di un gruppo per "
+"espanderlo o comprimerlo."
+
 msgid "Admin"
 msgstr "Amministrazione"
 
 msgid "Age"
 msgstr "Età"
 
+msgid "Agent Populations"
+msgstr "Popolazioni di agenti"
+
 msgid "Agent Resources"
 msgstr "Risorse degli agenti"
+
+msgid "Agent Resources Dashboard"
+msgstr "Dashboard delle risorse degli agenti"
+
+msgid "Agent Workspace"
+msgstr "Area di lavoro degli agenti"
+
+#, python-format
+msgid "All telemetry data is GDPR compliant. You can disable it anytime from the application %(link)s."
+msgstr ""
+"Tutti i dati di telemetria sono conformi al GDPR. Puoi disattivarla in qualsiasi momento dalle "
+"%(link)s dell'applicazione."
 
 msgid "Already registered?"
 msgstr "Già registrato?"
@@ -55,20 +103,77 @@ msgstr ""
 "Prima di entrare nel tuo feed, personalizza il profilo e indica il tuo livello di interesse e la "
 "tua opinione per ogni argomento di discussione attivo."
 
+msgid ""
+"Choose the construction flow below based on whether you are creating actors or information "
+"sources."
+msgstr ""
+"Scegli il percorso di creazione qui sotto a seconda che tu stia creando attori o fonti di "
+"informazione."
+
 msgid "Choose the language of the dashboard for this user."
 msgstr "Scegli la lingua della dashboard per questo utente."
+
+msgid "Click to expand"
+msgstr "Clicca per espandere"
+
+msgid "Click to expand/collapse"
+msgstr "Clicca per espandere o comprimere"
+
+msgid "Client:"
+msgstr "Client:"
+
+msgid "Clients"
+msgstr "Client"
 
 msgid "Close"
 msgstr "Chiudi"
 
+msgid "Completed"
+msgstr "Completati"
+
+msgid "Create and configure one or more clients for the experiment. Each client manages a population."
+msgstr "Crea e configura uno o più client per l'esperimento. Ogni client gestisce una popolazione."
+
 msgid "Create your account"
 msgstr "Crea il tuo account"
+
+msgid "Current execution progress"
+msgstr "Avanzamento dell'esecuzione in corso"
+
+msgid "Currently Running Experiments"
+msgstr "Esperimenti in esecuzione"
+
+msgid "Custom agents"
+msgstr "Agenti personalizzati"
 
 msgid "Dashboard language"
 msgstr "Lingua della dashboard"
 
 msgid "Debug Information:"
 msgstr "Informazioni di debug:"
+
+msgid "Dedicated creation interface"
+msgstr "Interfaccia di creazione dedicata"
+
+#, python-format
+msgid "Define one or more %(link)s."
+msgstr "Definisci una o più %(link)s."
+
+msgid "Delete"
+msgstr "Elimina"
+
+msgid "Delete Client"
+msgstr "Elimina il client"
+
+msgid "Delete Experiment"
+msgstr "Elimina l'esperimento"
+
+#, python-format
+msgid "Describe your simulation with an %(link)s."
+msgstr "Descrivi la tua simulazione con un %(link)s."
+
+msgid "Details"
+msgstr "Dettagli"
 
 msgid "Download"
 msgstr "Scarica"
@@ -89,8 +194,27 @@ msgstr "Errore %(code)s"
 msgid "Exception:"
 msgstr "Eccezione:"
 
+#, python-format
+msgid "Execution: %(progress)s"
+msgstr "Esecuzione: %(progress)s"
+
+msgid "Expanded"
+msgstr "Espanso"
+
+msgid "Experiment"
+msgstr "Esperimento"
+
+msgid "Experiment owner"
+msgstr "Proprietario dell'esperimento"
+
+msgid "Experiment:"
+msgstr "Esperimento:"
+
 msgid "Experiments"
 msgstr "Esperimenti"
+
+msgid "Experiments grouped by project. Click to expand/collapse."
+msgstr "Esperimenti raggruppati per progetto. Clicca per espandere o comprimere."
 
 msgid "Extensions"
 msgstr "Estensioni"
@@ -104,6 +228,12 @@ msgstr "Interesse estremo"
 msgid "Female"
 msgstr "Donna"
 
+msgid "Follow these steps to set up and run a simulation:"
+msgstr "Segui questi passaggi per configurare ed eseguire una simulazione:"
+
+msgid "Forum"
+msgstr "Forum"
+
 msgid "Frontend Settings"
 msgstr "Impostazioni del frontend"
 
@@ -116,6 +246,15 @@ msgstr "Vai alla"
 msgid "Go to Homepage"
 msgstr "Vai alla home page"
 
+msgid "Got it"
+msgstr "Ho capito"
+
+msgid "HPC"
+msgstr "HPC"
+
+msgid "HPC Simulator"
+msgstr "Simulatore HPC"
+
 msgid "High"
 msgstr "Alto"
 
@@ -127,6 +266,9 @@ msgstr "Diploma superiore"
 
 msgid "Home"
 msgstr "Home"
+
+msgid "Infinite"
+msgstr "Infinito"
 
 msgid "Interest"
 msgstr "Interesse"
@@ -150,11 +292,24 @@ msgstr "Partecipa a %(name)s"
 msgid "Join Simulation"
 msgstr "Partecipa alla simulazione"
 
+msgid "Join This Experiment"
+msgstr "Partecipa a questo esperimento"
+
 msgid "Join Y Social and start exploring."
 msgstr "Unisciti a Y Social e inizia a esplorare."
 
+#, python-format
+msgid "LLM Server: %(backend)s"
+msgstr "Server LLM: %(backend)s"
+
 msgid "Language"
 msgstr "Lingua"
+
+msgid "Load"
+msgstr "Carica"
+
+msgid "Load Experiment"
+msgstr "Carica l'esperimento"
 
 msgid "Log Out"
 msgstr "Esci"
@@ -180,6 +335,9 @@ msgstr "Messaggio:"
 msgid "Method:"
 msgstr "Metodo:"
 
+msgid "Microblogging"
+msgstr "Microblogging"
+
 msgid "Miscellanea"
 msgstr "Varie"
 
@@ -191,6 +349,12 @@ msgstr "Nuovo articolo del blog!"
 
 msgid "New Release Available!"
 msgstr "Nuova versione disponibile!"
+
+msgid "News Pages"
+msgstr "Pagine di notizie"
+
+msgid "Next"
+msgstr "Avanti"
 
 msgid "No Active Experiments"
 msgstr "Nessun esperimento attivo"
@@ -213,11 +377,17 @@ msgstr "Non interessato"
 msgid "Notifications"
 msgstr "Notifiche"
 
+msgid "Open JupyterLab"
+msgstr "Apri JupyterLab"
+
 msgid "Opinion"
 msgstr "Opinione"
 
 msgid "Opinion scale not yet configured."
 msgstr "Scala delle opinioni non ancora configurata."
+
+msgid "Owner"
+msgstr "Proprietario"
 
 msgid "Page Not Found"
 msgstr "Pagina non trovata"
@@ -228,11 +398,20 @@ msgstr "Password"
 msgid "Path:"
 msgstr "Percorso:"
 
+msgid "Pause Client"
+msgstr "Metti in pausa il client"
+
 msgid "Personalise your account details."
 msgstr "Personalizza i dati del tuo account."
 
 msgid "PhD"
 msgstr "Dottorato"
+
+msgid "Photo Sharing"
+msgstr "Condivisione di foto"
+
+msgid "Platform"
+msgstr "Piattaforma"
 
 msgid "Please check the URL or go back to the homepage."
 msgstr "Controlla l'URL oppure torna alla home page."
@@ -246,14 +425,23 @@ msgstr "Contatta un amministratore se pensi che si tratti di un errore."
 msgid "Plugin Manager"
 msgstr "Gestione plugin"
 
+msgid "Plugin-backed resource"
+msgstr "Risorsa fornita da un plugin"
+
 msgid "Populations"
 msgstr "Popolazioni"
+
+msgid "Previous"
+msgstr "Indietro"
 
 msgid "Profile Header"
 msgstr "Immagine di copertina"
 
 msgid "Profile Picture"
 msgstr "Immagine del profilo"
+
+msgid "Quick Reference Guide"
+msgstr "Guida rapida"
 
 msgid "Rate interest and opinion for each topic."
 msgstr "Indica interesse e opinione per ogni argomento."
@@ -264,11 +452,35 @@ msgstr "Leggi l'articolo"
 msgid "Remember me"
 msgstr "Ricordami"
 
+msgid "Remember:"
+msgstr "Ricorda:"
+
+msgid "Remote"
+msgstr "Remoto"
+
+msgid "Remote Experiment"
+msgstr "Esperimento remoto"
+
 msgid "Replay Tutorial"
 msgstr "Rivedi il tutorial"
 
+msgid "Resume Client"
+msgstr "Riprendi il client"
+
 msgid "Route args:"
 msgstr "Argomenti della route:"
+
+msgid "Run"
+msgstr "Avvia"
+
+msgid "Run Client"
+msgstr "Avvia il client"
+
+msgid "Run Experiment"
+msgstr "Avvia l'esperimento"
+
+msgid "Running a YSocial Experiment"
+msgstr "Eseguire un esperimento YSocial"
 
 msgid "SHOW"
 msgstr "MOSTRA"
@@ -285,6 +497,9 @@ msgstr "Cerca post, utenti, link..."
 msgid "Share Experiments"
 msgstr "Condividi gli esperimenti"
 
+msgid "Show Tutorial"
+msgstr "Mostra il tutorial"
+
 msgid "Show password"
 msgstr "Mostra password"
 
@@ -293,6 +508,35 @@ msgstr "Registrati"
 
 msgid "Sign in to continue to your experiments."
 msgstr "Accedi per continuare con i tuoi esperimenti."
+
+msgid "Start JupyterLab"
+msgstr "Avvia JupyterLab"
+
+msgid "Start Ollama"
+msgstr "Avvia Ollama"
+
+msgid "Start the experiment and run the clients to begin your simulation."
+msgstr "Avvia l'esperimento e i client per iniziare la simulazione."
+
+msgid "Stop"
+msgstr "Ferma"
+
+msgid "Stop Experiment"
+msgstr "Ferma l'esperimento"
+
+msgid "Stop JupyterLab"
+msgstr "Ferma JupyterLab"
+
+msgid "Stopped / Scheduled"
+msgstr "Fermati / Pianificati"
+
+msgid "Telemetry Information"
+msgstr "Informazioni sulla telemetria"
+
+msgid "This experiment has at least one client set to run until manually stopped"
+msgstr ""
+"Questo esperimento ha almeno un client configurato per funzionare finché non viene fermato "
+"manualmente"
 
 msgid "Toggle menu"
 msgstr "Mostra/nascondi il menu"
@@ -309,6 +553,13 @@ msgstr "URL:"
 msgid "Unsupported language."
 msgstr "Lingua non supportata."
 
+msgid ""
+"Use this page as the single entry point for building the entities that populate and influence "
+"your simulations."
+msgstr ""
+"Usa questa pagina come unico punto di accesso per creare le entità che popolano e influenzano le "
+"tue simulazioni."
+
 msgid "User not found"
 msgstr "Utente non trovato"
 
@@ -317,6 +568,12 @@ msgstr "Nome utente"
 
 msgid "Users"
 msgstr "Utenti"
+
+msgid "View Client Details"
+msgstr "Vedi i dettagli del client"
+
+msgid "View Experiment Details"
+msgstr "Vedi i dettagli dell'esperimento"
 
 msgid "View Release"
 msgstr "Vedi la versione"
@@ -356,6 +613,20 @@ msgstr "Y Social | Registrazione"
 msgid "YSocial"
 msgstr "YSocial"
 
+#, python-format
+msgid ""
+"YSocial collects anonymous usage data to improve the platform. This includes feature usage "
+"patterns and error reports, but %(never)s your experiment data, personal information, or "
+"sensitive content."
+msgstr ""
+"YSocial raccoglie dati d'uso anonimi per migliorare la piattaforma. Includono i modelli di "
+"utilizzo delle funzioni e le segnalazioni di errore, ma %(never)s i dati dei tuoi esperimenti, le"
+" informazioni personali o i contenuti sensibili."
+
+#, python-format
+msgid "You can add to your population %(pages)s and %(agents)s."
+msgstr "Puoi aggiungere alla tua popolazione %(pages)s e %(agents)s."
+
 msgid "You can edit your profile later from the Settings menu."
 msgstr "Potrai modificare il profilo più tardi dal menu Impostazioni."
 
@@ -367,4 +638,37 @@ msgstr "Il tuo profilo"
 
 msgid "login page"
 msgstr "pagina di accesso"
+
+msgid "never"
+msgstr "mai"
+
+msgid "settings"
+msgstr "impostazioni"
+
+msgid "∞ Infinite"
+msgstr "∞ Infinito"
+
+#~ msgid "All telemetry data is GDPR compliant. You can disable it anytime from the application"
+#~ msgstr ""
+
+#~ msgid "Define one or more"
+#~ msgstr ""
+
+#~ msgid "Describe your simulation with an"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "YSocial collects anonymous usage data to improve the"
+#~ " platform. This includes feature usage patterns and "
+#~ "error reports, but"
+#~ msgstr ""
+
+#~ msgid "You can add to your population"
+#~ msgstr ""
+
+#~ msgid "and"
+#~ msgstr ""
+
+#~ msgid "your experiment data, personal information, or sensitive content."
+#~ msgstr ""
 

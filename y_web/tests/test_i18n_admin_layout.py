@@ -49,3 +49,15 @@ def test_onboarding_labels_are_json_encoded():
     text = (ROOT / "templates" / "login" / "onboarding.html").read_text(encoding="utf-8")
     assert "'Not Interested', 'Low Interest'" not in text
     assert "|tojson" in text
+
+
+def test_sentence_with_link_placeholder_keeps_markup(i18n_app):
+    from flask import render_template_string
+
+    tpl = (
+        "{% set l %}<a href=\"/admin/populations\">{{ _('Agent Populations') }}</a>{% endset %}"
+        "{{ _('Define one or more %(link)s.', link=l) }}"
+    )
+    with i18n_app.test_request_context("/", headers={"Accept-Language": "it"}):
+        html = render_template_string(tpl)
+    assert html == 'Definisci una o più <a href="/admin/populations">Popolazioni di agenti</a>.'

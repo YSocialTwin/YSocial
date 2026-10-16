@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-16 15:00+0000\n"
+"POT-Creation-Date: 2026-10-16 15:05+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,6 +16,34 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
+
+#, python-format
+msgid "%(n)s activity profiles"
+msgstr ""
+
+#, python-format
+msgid "%(n)s plugin types"
+msgstr ""
+
+#, python-format
+msgid "%(n)s visible resources"
+msgstr ""
+
+#, python-format
+msgid "(%(count)s total)"
+msgstr ""
+
+msgid "1. Create one or more Agent Populations"
+msgstr ""
+
+msgid "2. Create an Experiment"
+msgstr ""
+
+msgid "3. Configure one or more Clients"
+msgstr ""
+
+msgid "4. Run the Simulation"
+msgstr ""
 
 msgid "About"
 msgstr ""
@@ -26,13 +54,33 @@ msgstr ""
 msgid "Account"
 msgstr ""
 
+msgid ""
+"Active experiments grouped by their project group. Click on a group "
+"header to expand/collapse."
+msgstr ""
+
 msgid "Admin"
 msgstr ""
 
 msgid "Age"
 msgstr ""
 
+msgid "Agent Populations"
+msgstr ""
+
 msgid "Agent Resources"
+msgstr ""
+
+msgid "Agent Resources Dashboard"
+msgstr ""
+
+msgid "Agent Workspace"
+msgstr ""
+
+#, python-format
+msgid ""
+"All telemetry data is GDPR compliant. You can disable it anytime from the"
+" application %(link)s."
 msgstr ""
 
 msgid "Already registered?"
@@ -52,19 +100,76 @@ msgid ""
 "interest level and opinion for each active discussion topic."
 msgstr ""
 
+msgid ""
+"Choose the construction flow below based on whether you are creating "
+"actors or information sources."
+msgstr ""
+
 msgid "Choose the language of the dashboard for this user."
+msgstr ""
+
+msgid "Click to expand"
+msgstr ""
+
+msgid "Click to expand/collapse"
+msgstr ""
+
+msgid "Client:"
+msgstr ""
+
+msgid "Clients"
 msgstr ""
 
 msgid "Close"
 msgstr ""
 
+msgid "Completed"
+msgstr ""
+
+msgid ""
+"Create and configure one or more clients for the experiment. Each client "
+"manages a population."
+msgstr ""
+
 msgid "Create your account"
+msgstr ""
+
+msgid "Current execution progress"
+msgstr ""
+
+msgid "Currently Running Experiments"
+msgstr ""
+
+msgid "Custom agents"
 msgstr ""
 
 msgid "Dashboard language"
 msgstr ""
 
 msgid "Debug Information:"
+msgstr ""
+
+msgid "Dedicated creation interface"
+msgstr ""
+
+#, python-format
+msgid "Define one or more %(link)s."
+msgstr ""
+
+msgid "Delete"
+msgstr ""
+
+msgid "Delete Client"
+msgstr ""
+
+msgid "Delete Experiment"
+msgstr ""
+
+#, python-format
+msgid "Describe your simulation with an %(link)s."
+msgstr ""
+
+msgid "Details"
 msgstr ""
 
 msgid "Download"
@@ -86,7 +191,26 @@ msgstr ""
 msgid "Exception:"
 msgstr ""
 
+#, python-format
+msgid "Execution: %(progress)s"
+msgstr ""
+
+msgid "Expanded"
+msgstr ""
+
+msgid "Experiment"
+msgstr ""
+
+msgid "Experiment owner"
+msgstr ""
+
+msgid "Experiment:"
+msgstr ""
+
 msgid "Experiments"
+msgstr ""
+
+msgid "Experiments grouped by project. Click to expand/collapse."
 msgstr ""
 
 msgid "Extensions"
@@ -101,6 +225,12 @@ msgstr ""
 msgid "Female"
 msgstr ""
 
+msgid "Follow these steps to set up and run a simulation:"
+msgstr ""
+
+msgid "Forum"
+msgstr ""
+
 msgid "Frontend Settings"
 msgstr ""
 
@@ -113,6 +243,15 @@ msgstr ""
 msgid "Go to Homepage"
 msgstr ""
 
+msgid "Got it"
+msgstr ""
+
+msgid "HPC"
+msgstr ""
+
+msgid "HPC Simulator"
+msgstr ""
+
 msgid "High"
 msgstr ""
 
@@ -123,6 +262,9 @@ msgid "High School"
 msgstr ""
 
 msgid "Home"
+msgstr ""
+
+msgid "Infinite"
 msgstr ""
 
 msgid "Interest"
@@ -147,10 +289,23 @@ msgstr ""
 msgid "Join Simulation"
 msgstr ""
 
+msgid "Join This Experiment"
+msgstr ""
+
 msgid "Join Y Social and start exploring."
 msgstr ""
 
+#, python-format
+msgid "LLM Server: %(backend)s"
+msgstr ""
+
 msgid "Language"
+msgstr ""
+
+msgid "Load"
+msgstr ""
+
+msgid "Load Experiment"
 msgstr ""
 
 msgid "Log Out"
@@ -177,6 +332,9 @@ msgstr ""
 msgid "Method:"
 msgstr ""
 
+msgid "Microblogging"
+msgstr ""
+
 msgid "Miscellanea"
 msgstr ""
 
@@ -187,6 +345,12 @@ msgid "New Blog Post!"
 msgstr ""
 
 msgid "New Release Available!"
+msgstr ""
+
+msgid "News Pages"
+msgstr ""
+
+msgid "Next"
 msgstr ""
 
 msgid "No Active Experiments"
@@ -210,10 +374,16 @@ msgstr ""
 msgid "Notifications"
 msgstr ""
 
+msgid "Open JupyterLab"
+msgstr ""
+
 msgid "Opinion"
 msgstr ""
 
 msgid "Opinion scale not yet configured."
+msgstr ""
+
+msgid "Owner"
 msgstr ""
 
 msgid "Page Not Found"
@@ -225,10 +395,19 @@ msgstr ""
 msgid "Path:"
 msgstr ""
 
+msgid "Pause Client"
+msgstr ""
+
 msgid "Personalise your account details."
 msgstr ""
 
 msgid "PhD"
+msgstr ""
+
+msgid "Photo Sharing"
+msgstr ""
+
+msgid "Platform"
 msgstr ""
 
 msgid "Please check the URL or go back to the homepage."
@@ -243,13 +422,22 @@ msgstr ""
 msgid "Plugin Manager"
 msgstr ""
 
+msgid "Plugin-backed resource"
+msgstr ""
+
 msgid "Populations"
+msgstr ""
+
+msgid "Previous"
 msgstr ""
 
 msgid "Profile Header"
 msgstr ""
 
 msgid "Profile Picture"
+msgstr ""
+
+msgid "Quick Reference Guide"
 msgstr ""
 
 msgid "Rate interest and opinion for each topic."
@@ -261,10 +449,34 @@ msgstr ""
 msgid "Remember me"
 msgstr ""
 
+msgid "Remember:"
+msgstr ""
+
+msgid "Remote"
+msgstr ""
+
+msgid "Remote Experiment"
+msgstr ""
+
 msgid "Replay Tutorial"
 msgstr ""
 
+msgid "Resume Client"
+msgstr ""
+
 msgid "Route args:"
+msgstr ""
+
+msgid "Run"
+msgstr ""
+
+msgid "Run Client"
+msgstr ""
+
+msgid "Run Experiment"
+msgstr ""
+
+msgid "Running a YSocial Experiment"
 msgstr ""
 
 msgid "SHOW"
@@ -282,6 +494,9 @@ msgstr ""
 msgid "Share Experiments"
 msgstr ""
 
+msgid "Show Tutorial"
+msgstr ""
+
 msgid "Show password"
 msgstr ""
 
@@ -289,6 +504,33 @@ msgid "Sign Up"
 msgstr ""
 
 msgid "Sign in to continue to your experiments."
+msgstr ""
+
+msgid "Start JupyterLab"
+msgstr ""
+
+msgid "Start Ollama"
+msgstr ""
+
+msgid "Start the experiment and run the clients to begin your simulation."
+msgstr ""
+
+msgid "Stop"
+msgstr ""
+
+msgid "Stop Experiment"
+msgstr ""
+
+msgid "Stop JupyterLab"
+msgstr ""
+
+msgid "Stopped / Scheduled"
+msgstr ""
+
+msgid "Telemetry Information"
+msgstr ""
+
+msgid "This experiment has at least one client set to run until manually stopped"
 msgstr ""
 
 msgid "Toggle menu"
@@ -306,6 +548,11 @@ msgstr ""
 msgid "Unsupported language."
 msgstr ""
 
+msgid ""
+"Use this page as the single entry point for building the entities that "
+"populate and influence your simulations."
+msgstr ""
+
 msgid "User not found"
 msgstr ""
 
@@ -313,6 +560,12 @@ msgid "Username"
 msgstr ""
 
 msgid "Users"
+msgstr ""
+
+msgid "View Client Details"
+msgstr ""
+
+msgid "View Experiment Details"
 msgstr ""
 
 msgid "View Release"
@@ -353,6 +606,17 @@ msgstr ""
 msgid "YSocial"
 msgstr ""
 
+#, python-format
+msgid ""
+"YSocial collects anonymous usage data to improve the platform. This "
+"includes feature usage patterns and error reports, but %(never)s your "
+"experiment data, personal information, or sensitive content."
+msgstr ""
+
+#, python-format
+msgid "You can add to your population %(pages)s and %(agents)s."
+msgstr ""
+
 msgid "You can edit your profile later from the Settings menu."
 msgstr ""
 
@@ -363,5 +627,14 @@ msgid "Your Profile"
 msgstr ""
 
 msgid "login page"
+msgstr ""
+
+msgid "never"
+msgstr ""
+
+msgid "settings"
+msgstr ""
+
+msgid "∞ Infinite"
 msgstr ""
 

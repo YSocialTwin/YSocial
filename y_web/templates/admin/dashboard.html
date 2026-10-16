@@ -14,47 +14,47 @@
         <div class="box-lines">
  <div class="box-line ys-pb-mb-5">
  <span class="left ys-flex-gap-10-ai">
- Experiment: <strong class="ys-text-info">{{ experiments[exp]['experiment'].exp_name }}</strong>
-                    <span style="background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="Experiment owner">{{ experiments[exp]['experiment'].owner }}</span>
-                    <span style="background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="Platform">{{ 'Forum' if experiments[exp]['experiment'].platform_type == 'forum' else 'Photo Sharing' if experiments[exp]['experiment'].platform_type == 'photo_sharing' else 'Microblogging' }}</span>
+ {{ _('Experiment:') }} <strong class="ys-text-info">{{ experiments[exp]['experiment'].exp_name }}</strong>
+                    <span style="background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="{{ _('Experiment owner') }}">{{ experiments[exp]['experiment'].owner }}</span>
+                    <span style="background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="{{ _('Platform') }}">{{ _('Forum') if experiments[exp]['experiment'].platform_type == 'forum' else _('Photo Sharing') if experiments[exp]['experiment'].platform_type == 'photo_sharing' else _('Microblogging') }}</span>
 
                     {% if experiments[exp]['experiment'].simulator_type == 'HPC' %}
-                    <span style="background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="HPC Simulator">HPC</span>
+                    <span style="background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="{{ _('HPC Simulator') }}">{{ _('HPC') }}</span>
                     {% endif %}
                     {% if experiments[exp]['experiment'].is_remote == 1 %}
-                    <span style="background: linear-gradient(90deg, #2196F3 0%, #03A9F4 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="Remote Experiment">Remote</span>
+                    <span style="background: linear-gradient(90deg, #2196F3 0%, #03A9F4 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="{{ _('Remote Experiment') }}">{{ _('Remote') }}</span>
                     {% endif %}
                     {% if ns.has_infinite_client %}
-                    <span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="This experiment has at least one client set to run until manually stopped">∞ Infinite</span>
+                    <span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="{{ _('This experiment has at least one client set to run until manually stopped') }}">{{ _('∞ Infinite') }}</span>
                     {% endif %}
-                    <a href="/admin/experiment_details/{{ experiments[exp]['experiment'].idexp }}" class="link-tooltip" title="View Experiment Details">
+                    <a href="/admin/experiment_details/{{ experiments[exp]['experiment'].idexp }}" class="link-tooltip" title="{{ _('View Experiment Details') }}">
  <i class="mdi mdi-open-in-new ys-icon-md-brand"></i>
                     </a>
                 </span>
  <span class="right ys-flex-gap-8">
                     <div style="display: flex; gap: 3px; padding-right: 8px; border-right: 1px solid #ddd;">
                         {% if experiments[exp]['experiment'].running == 0 %}
-                        <a class="link-tooltip" href="#" onclick="startExperimentServer('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="Run Experiment">
+                        <a class="link-tooltip" href="#" onclick="startExperimentServer('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="{{ _('Run Experiment') }}">
  <i class="mdi mdi-play-box-outline ys-icon-lg"></i>
                         </a>
                         {% endif %}
                         {% if experiments[exp]['experiment'].running == 1 and can_manage_experiment(experiments[exp]['experiment']) %}
-                        <a class="link-tooltip" href="#" onclick="stopExperimentServer('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="Stop Experiment">
+                        <a class="link-tooltip" href="#" onclick="stopExperimentServer('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="{{ _('Stop Experiment') }}">
  <i class="mdi mdi-stop active ys-icon-lg"></i>
                         </a>
                         {% endif %}
-                        <a class="link-tooltip" href="#" onclick="selectExperiment('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="Load Experiment">
+                        <a class="link-tooltip" href="#" onclick="selectExperiment('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="{{ _('Load Experiment') }}">
  <i class="mdi mdi-select-all {% if experiments[exp]['experiment'].status == 1 %}active{%endif%} ys-icon-lg"></i>
                         </a>
                         {% if experiments[exp]['experiment'].status == 1 %}
-                        <a class="link-tooltip" href="#" onclick="joinExperiment('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="Join This Experiment">
+                        <a class="link-tooltip" href="#" onclick="joinExperiment('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="{{ _('Join This Experiment') }}">
  <i class="mdi mdi-login ys-icon-lg"></i>
                         </a>
                         {% endif %}
                         {% if experiments[exp]['experiment'].status == 0 and can_manage_experiment(experiments[exp]['experiment']) %}
                         <a class="link-tooltip" href="javascript:void(0);" 
                            onclick="if(confirm('Are you sure you want to delete this experiment? This action cannot be undone.')) { window.location.href='/admin/delete_simulation/{{ experiments[exp]['experiment'].idexp }}'; }" 
-                           title="Delete Experiment">
+                           title="{{ _('Delete Experiment') }}">
  <i class="mdi mdi-delete ys-icon-lg"></i>
                         </a>
                         {% endif %}
@@ -63,14 +63,14 @@
                         {% if notebook %}
  <div class="ys-flex-gap-3">
                             {% if jupyter_by_exp[experiments[exp]['experiment'].idexp]['running'] %}
-                            <a class="link-tooltip" href="#" onclick="stopJupyterSession('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="Stop JupyterLab">
+                            <a class="link-tooltip" href="#" onclick="stopJupyterSession('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="{{ _('Stop JupyterLab') }}">
  <i class="mdi mdi-flask-empty-outline ys-icon-danger"></i>
                             </a>
-                            <a class="link-tooltip" href="/admin/lab/{{ experiments[exp]['experiment'].idexp }}" {% if not is_pyinstaller %}target="_blank"{% endif %} title="Open JupyterLab">
+                            <a class="link-tooltip" href="/admin/lab/{{ experiments[exp]['experiment'].idexp }}" {% if not is_pyinstaller %}target="_blank"{% endif %} title="{{ _('Open JupyterLab') }}">
  <i class="mdi mdi-open-in-new ys-icon-brand"></i>
                             </a>
                             {% else %}
-                            <a class="link-tooltip" href="#" onclick="startJupyterSession('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="Start JupyterLab">
+                            <a class="link-tooltip" href="#" onclick="startJupyterSession('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="{{ _('Start JupyterLab') }}">
  <i class="mdi mdi-flask-outline ys-icon-brand"></i>
                             </a>
                             {% endif %}
@@ -84,11 +84,11 @@
             <hr style="border-top: 2px solid #e6e6e6; margin-top: 0px; padding-top: 0px; margin-bottom: 0px;">
             {% for client in experiments[exp]["clients"] %}
             <div class="box-line" style="padding-left: 20px; padding-top: 8px; padding-bottom: 8px;  ">
- <span class="left ys-text-flex-sm">Client:
+ <span class="left ys-text-flex-sm">{{ _('Client:') }}
  <i class="mdi mdi-account-cog ys-icon-md-muted"></i>
  <em class="ys-text-info">{{ client[0].name }}</em>
                     {% if client[1] != -1 and client[1].elapsed_time > 0 %}
-                    <a href="/admin/client_details/{{client[0].id}}" class="link-tooltip" title="View Client Details">
+                    <a href="/admin/client_details/{{client[0].id}}" class="link-tooltip" title="{{ _('View Client Details') }}">
  <i class="mdi mdi-open-in-new ys-icon-md-brand"></i>
                     </a>
                     {% endif %}
@@ -103,34 +103,34 @@
                         {% if client[0].status == 0 and experiments[exp]['experiment'].running == 1 %}
                             {% if client[1] != -1 %}
                                 {% if client[1].elapsed_time == 0 %}
-                                <a class="link-tooltip" href="/admin/run_client/{{ client[0].id }}/{{ client[0].id_exp }}" title="Run Client">
+                                <a class="link-tooltip" href="/admin/run_client/{{ client[0].id }}/{{ client[0].id_exp }}" title="{{ _('Run Client') }}">
  <i class="mdi mdi-play-box-outline ys-icon-xl"></i>
                                 </a>
                                 {% elif client[1].expected_duration_rounds == -1 %}
                                 {# Infinite client - always show resume button if started #}
-                                <a class="link-tooltip" href="/admin/resume_client/{{ client[0].id }}/{{ client[0].id_exp }}" title="Resume Client">
+                                <a class="link-tooltip" href="/admin/resume_client/{{ client[0].id }}/{{ client[0].id_exp }}" title="{{ _('Resume Client') }}">
  <i class="mdi mdi-play-box-outline ys-icon-xl"></i>
                                 </a>
                                 {% elif client[1].elapsed_time > 0 and client[1].elapsed_time < client[1].expected_duration_rounds %}
-                                <a class="link-tooltip" href="/admin/resume_client/{{ client[0].id }}/{{ client[0].id_exp }}" title="Resume Client">
+                                <a class="link-tooltip" href="/admin/resume_client/{{ client[0].id }}/{{ client[0].id_exp }}" title="{{ _('Resume Client') }}">
  <i class="mdi mdi-play-box-outline ys-icon-xl"></i>
                                 </a>
                                 {% endif %}
                             {% else %}
-                            <a class="link-tooltip" href="/admin/run_client/{{ client[0].id }}/{{ client[0].id_exp }}" title="Run Client">
+                            <a class="link-tooltip" href="/admin/run_client/{{ client[0].id }}/{{ client[0].id_exp }}" title="{{ _('Run Client') }}">
  <i class="mdi mdi-play-box-outline ys-icon-xl"></i>
                             </a>
                             {% endif %}
                         {% endif %}
                         {% if client[0].status == 1 %}
-                        <a class="link-tooltip" href="/admin/pause_client/{{ client[0].id }}/{{ client[0].id_exp }}" title="Pause Client">
+                        <a class="link-tooltip" href="/admin/pause_client/{{ client[0].id }}/{{ client[0].id_exp }}" title="{{ _('Pause Client') }}">
  <i class="mdi mdi-pause active ys-icon-xl"></i>
                         </a>
                         {% endif %}
                         {% if client[0].status == 0 %}
                         <a class="link-tooltip" href="javascript:void(0);" 
                            onclick="if(confirm('Are you sure you want to delete this client? This action cannot be undone.')) { window.location.href='/admin/delete_client/{{ client[0].id }}'; }" 
-                           title="Delete Client">
+                           title="{{ _('Delete Client') }}">
  <i class="mdi mdi-delete ys-icon-xl"></i>
                         </a>
                         {% endif %}
@@ -172,47 +172,47 @@
                 <span class="left" style="display: flex; align-items: center; gap: 4px; flex: 1; min-width: 0; overflow: hidden;">
                     <strong style="color: #0d95e8; font-size: 0.85em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;" title="{{ experiments[exp]['experiment'].exp_name }}">{{ experiments[exp]['experiment'].exp_name }}</strong>
                     {% if experiments[exp]['experiment'].owner %}
-                    <span style="background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="Owner">{{ experiments[exp]['experiment'].owner }}</span>
+                    <span style="background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="{{ _('Owner') }}">{{ experiments[exp]['experiment'].owner }}</span>
                     {% endif %}
-                    <span style="background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="Platform">{{ 'Forum' if experiments[exp]['experiment'].platform_type == 'forum' else 'Photo Sharing' if experiments[exp]['experiment'].platform_type == 'photo_sharing' else 'Microblogging' }}</span>
+                    <span style="background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="{{ _('Platform') }}">{{ _('Forum') if experiments[exp]['experiment'].platform_type == 'forum' else _('Photo Sharing') if experiments[exp]['experiment'].platform_type == 'photo_sharing' else _('Microblogging') }}</span>
 
                     {% if experiments[exp]['experiment'].simulator_type == 'HPC' %}
-                    <span style="background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="HPC">HPC</span>
+                    <span style="background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="{{ _('HPC') }}">{{ _('HPC') }}</span>
                     {% endif %}
                     {% if experiments[exp]['experiment'].is_remote == 1 %}
-                    <span style="background: linear-gradient(90deg, #2196F3 0%, #03A9F4 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="Remote">Remote</span>
+                    <span style="background: linear-gradient(90deg, #2196F3 0%, #03A9F4 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="{{ _('Remote') }}">{{ _('Remote') }}</span>
                     {% endif %}
                     {% if ns.client_count > 0 %}
-                    <span style="background: #e0e0e0; color: #666; font-size: 0.6em; padding: 0 4px; border-radius: 6px; line-height: 1.4;" title="Clients">{{ ns.client_count }}</span>
+                    <span style="background: #e0e0e0; color: #666; font-size: 0.6em; padding: 0 4px; border-radius: 6px; line-height: 1.4;" title="{{ _('Clients') }}">{{ ns.client_count }}</span>
                     {% endif %}
                     {% if ns.has_infinite_client %}
-                    <span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="Infinite">∞</span>
+                    <span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="{{ _('Infinite') }}">∞</span>
                     {% endif %}
                 </span>
                 <span class="right" style="display: flex; gap: 2px; align-items: center; flex-shrink: 0;">
-                    <span style="background: linear-gradient(90deg, #039be5 0%, #00b4d8 100%); color: white; font-size: 0.65em; padding: 1px 6px; border-radius: 8px; font-weight: 600; line-height: 1.4; white-space: nowrap;" title="Current execution progress">
-                        Execution: {{ progress_label }}
+                    <span style="background: linear-gradient(90deg, #039be5 0%, #00b4d8 100%); color: white; font-size: 0.65em; padding: 1px 6px; border-radius: 8px; font-weight: 600; line-height: 1.4; white-space: nowrap;" title="{{ _('Current execution progress') }}">
+                        {{ _('Execution: %(progress)s', progress=progress_label) }}
                     </span>
                     {% if experiments[exp]['experiment'].running == 0 %}
-                    <a class="link-tooltip" href="#" onclick="startExperimentServer('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="Run">
+                    <a class="link-tooltip" href="#" onclick="startExperimentServer('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="{{ _('Run') }}">
  <i class="mdi mdi-play-box-outline ys-icon-md"></i>
                     </a>
                     {% endif %}
                     {% if experiments[exp]['experiment'].running == 1 and can_manage_experiment(experiments[exp]['experiment']) %}
-                    <a class="link-tooltip" href="#" onclick="stopExperimentServer('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="Stop">
+                    <a class="link-tooltip" href="#" onclick="stopExperimentServer('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="{{ _('Stop') }}">
  <i class="mdi mdi-stop active ys-icon-md"></i>
                     </a>
                     {% endif %}
-                    <a class="link-tooltip" href="#" onclick="selectExperiment('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="Load">
+                    <a class="link-tooltip" href="#" onclick="selectExperiment('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="{{ _('Load') }}">
  <i class="mdi mdi-select-all {% if experiments[exp]['experiment'].status == 1 %}active{%endif%} ys-icon-md"></i>
                     </a>
-                    <a href="/admin/experiment_details/{{ experiments[exp]['experiment'].idexp }}" class="link-tooltip" title="Details">
+                    <a href="/admin/experiment_details/{{ experiments[exp]['experiment'].idexp }}" class="link-tooltip" title="{{ _('Details') }}">
                         <i class="mdi mdi-open-in-new" style="font-size: 14px; color: #039be5;"></i>
                     </a>
                     {% if experiments[exp]['experiment'].status == 0 and can_manage_experiment(experiments[exp]['experiment']) %}
                     <a class="link-tooltip" href="javascript:void(0);" 
                        onclick="if(confirm('Are you sure you want to delete this experiment? This action cannot be undone.')) { window.location.href='/admin/delete_simulation/{{ experiments[exp]['experiment'].idexp }}'; }" 
-                       title="Delete">
+                       title="{{ _('Delete') }}">
  <i class="mdi mdi-delete ys-icon-md"></i>
                     </a>
                     {% endif %}
@@ -236,7 +236,7 @@
                 <span class="group-header-title">{{ group_name }}</span>
                 <span style="background: {{ section_color }}; color: white; font-size: 0.7em; padding: 2px 8px; border-radius: 12px; font-weight: 600;" {# dynamic #}>{{ exp_count }}</span>
             </div>
-            <span class="group-header-hint">Click to expand/collapse</span>
+            <span class="group-header-hint">{{ _('Click to expand/collapse') }}</span>
         </div>
         <div id="{{ group_id }}" class="group-content" style="margin-top: 8px; display: {% if collapsed %}none{% else %}block{% endif %};" {# dynamic #}>
             {% if is_compact %}
@@ -271,11 +271,11 @@
                     <div class="dashboard-box" id="box-running-experiments">
  <h3 class="title is-5 is-thin ys-flex-gap-10-ai">
                             <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background-color: #28a745;"></span>
-                            Currently Running Experiments
- <span class="ys-text-tiny-normal">({{ total_running }} total)</span>
+                            {{ _('Currently Running Experiments') }}
+ <span class="ys-text-tiny-normal">{{ _('(%(count)s total)', count=total_running) }}</span>
                          </h3>
  <p class="ys-text-small">
-                            Active experiments grouped by their project group. Click on a group header to expand/collapse.
+                            {{ _('Active experiments grouped by their project group. Click on a group header to expand/collapse.') }}
                         </p>
                         <div id="running-experiments-container">
                             {{ render_grouped_experiments(running_experiments_by_group, '#28a745', 'running', false, false) }}
@@ -291,11 +291,11 @@
  <div class="dashboard-box ys-flex-col-0mb" id="box-completed-experiments">
  <h3 class="title is-6 is-thin ys-flex-gap-8-mb">
  <span class="ys-dot-info"></span>
-                                    Completed
- <span class="ys-text-tiny-normal">({{ total_completed }} total)</span>
+                                    {{ _('Completed') }}
+ <span class="ys-text-tiny-normal">{{ _('(%(count)s total)', count=total_completed) }}</span>
                                  </h3>
  <p class="group-helper-text ys-text-xs-gray-mb">
-                                    Experiments grouped by project. Click to expand/collapse.
+                                    {{ _('Experiments grouped by project. Click to expand/collapse.') }}
                                 </p>
  <div id="completed-experiments-container" class="ys-flex-1">
                                     {{ render_grouped_experiments(completed_experiments_by_group, '#17a2b8', 'completed', true, true) }}
@@ -303,11 +303,11 @@
                                 {% if total_completed > 5 %}
                                 <div class="ys-flex-gap-8 ys-mt-10 ys-flex-ai-center ys-flex-jc-between" id="completed-pagination">
                                     <button type="button" class="button is-small is-light" id="completed-prev" onclick="paginateCompleted(-1); return false;" {% if total_completed <= 5 %}disabled{% endif %}>
-                                        Previous
+                                        {{ _('Previous') }}
                                     </button>
                                     <span class="ys-text-xs-dark" id="completed-page-info">1/{{ ((total_completed - 1) // 5) + 1 }}</span>
                                     <button type="button" class="button is-small is-light" id="completed-next" onclick="paginateCompleted(1); return false;" {% if total_completed <= 5 %}disabled{% endif %}>
-                                        Next
+                                        {{ _('Next') }}
                                     </button>
                                 </div>
                                 {% endif %}
@@ -321,11 +321,11 @@
  <div class="dashboard-box ys-flex-col-0mb" id="box-stopped-experiments">
  <h3 class="title is-6 is-thin ys-flex-gap-8-mb">
  <span class="ys-dot-secondary"></span>
-                                    Stopped / Scheduled
- <span class="ys-text-tiny-normal">({{ total_stopped }} total)</span>
+                                    {{ _('Stopped / Scheduled') }}
+ <span class="ys-text-tiny-normal">{{ _('(%(count)s total)', count=total_stopped) }}</span>
                                  </h3>
  <p class="group-helper-text ys-text-xs-gray-mb">
-                                    Experiments grouped by project. Click to expand/collapse.
+                                    {{ _('Experiments grouped by project. Click to expand/collapse.') }}
                                 </p>
  <div id="stopped-experiments-container" class="ys-flex-1">
                                     {{ render_grouped_experiments(stopped_experiments_by_group, '#6c757d', 'stopped', true, true) }}
@@ -333,11 +333,11 @@
                                 {% if total_stopped > 5 %}
                                 <div class="ys-flex-gap-8 ys-mt-10 ys-flex-ai-center ys-flex-jc-between" id="stopped-pagination">
                                     <button type="button" class="button is-small is-light" id="stopped-prev" onclick="paginateStopped(-1); return false;" {% if total_stopped <= 5 %}disabled{% endif %}>
-                                        Previous
+                                        {{ _('Previous') }}
                                     </button>
                                     <span class="ys-text-xs-dark" id="stopped-page-info">1/{{ ((total_stopped - 1) // 5) + 1 }}</span>
                                     <button type="button" class="button is-small is-light" id="stopped-next" onclick="paginateStopped(1); return false;" {% if total_stopped <= 5 %}disabled{% endif %}>
-                                        Next
+                                        {{ _('Next') }}
                                     </button>
                                 </div>
                                 {% endif %}
@@ -367,33 +367,33 @@
                     <!--Dashboard box-->
 
                     <div class="dashboard-box is-compact" id="box-quick-reference">
-                        <h3 class="title is-5 is-thin">Quick Reference Guide</h3>
+                        <h3 class="title is-5 is-thin">{{ _('Quick Reference Guide') }}</h3>
                         <div class="help-block">
                             <p>
-                                <b>Running a YSocial Experiment</b><br>
-                                Follow these steps to set up and run a simulation:
+                                <b>{{ _('Running a YSocial Experiment') }}</b><br>
+                                {{ _('Follow these steps to set up and run a simulation:') }}
                             </p>
                             <hr>
                             <p>
-                                <b>1. Create one or more Agent Populations</b><br>
-                                Define one or more <a href="/admin/populations">Agent Populations</a>.
+                                <b>{{ _('1. Create one or more Agent Populations') }}</b><br>
+                                {% set l_pop %}<a href="/admin/populations">{{ _('Agent Populations') }}</a>{% endset %}{{ _('Define one or more %(link)s.', link=l_pop) }}
                                 <br><br>
-                                Remember:<br> You can add to your population <a href="/admin/pages">News Pages</a> and <a href="/admin/agents">Custom agents</a>.
+                                {{ _('Remember:') }}<br> {% set l_pages %}<a href="/admin/pages">{{ _('News Pages') }}</a>{% endset %}{% set l_agents %}<a href="/admin/agents">{{ _('Custom agents') }}</a>{% endset %}{{ _('You can add to your population %(pages)s and %(agents)s.', pages=l_pages, agents=l_agents) }}
                             </p>
                             <hr>
                             <p>
-                                <b>2. Create an Experiment</b><br>
-                                Describe your simulation with an <a href="/admin/experiments">Experiment</a>.
+                                <b>{{ _('2. Create an Experiment') }}</b><br>
+                                {% set l_exp %}<a href="/admin/experiments">{{ _('Experiment') }}</a>{% endset %}{{ _('Describe your simulation with an %(link)s.', link=l_exp) }}
                             </p>
                             <hr>
                             <p>
-                                <b>3. Configure one or more Clients</b><br>
-                                Create and configure one or more clients for the experiment. Each client manages a population.
+                                <b>{{ _('3. Configure one or more Clients') }}</b><br>
+                                {{ _('Create and configure one or more clients for the experiment. Each client manages a population.') }}
                             </p>
                             <hr>
                             <p>
-                                <b>4. Run the Simulation</b><br>
-                                Start the experiment and run the clients to begin your simulation.
+                                <b>{{ _('4. Run the Simulation') }}</b><br>
+                                {{ _('Start the experiment and run the clients to begin your simulation.') }}
                             </p>
                             <hr>
                             <div style="text-align: center; padding-top: 5px;">
@@ -410,7 +410,7 @@
                                     box-shadow: 0 4px 12px rgba(3, 155, 229, 0.3);
                                 " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(3, 155, 229, 0.4)';"
                                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(3, 155, 229, 0.3)';">
-                                    <i class="mdi mdi-school"></i> Show Tutorial
+                                    <i class="mdi mdi-school"></i> {{ _('Show Tutorial') }}
                                 </button>
                             </div>
                         </div>
@@ -438,12 +438,12 @@
         <!-- Separator -->
         <div style="width: 1px; height: 16px; background: rgba(0,0,0,0.15);"></div>
         <!-- LLM Server Status -->
- <div class="ys-flex-gap-6" title="LLM Server: {{ llm_backend['backend']|upper }}">
+ <div class="ys-flex-gap-6" title="{{ _('LLM Server: %(backend)s', backend=llm_backend['backend']|upper) }}">
  <i class="mdi mdi-brain ys-icon-md-body"></i>
  <span class="ys-text-xs-dark">{{ llm_backend['backend']|upper }}</span>
             <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: {% if llm_backend['status'] %}#22c55e{% else %}#ef4444{% endif %};" {# dynamic #}></span>
             {% if llm_backend['backend'] == 'ollama' and not llm_backend['status'] %}
-            <a href="/admin/start_ollama/" title="Start Ollama" style="margin-left: 2px;">
+            <a href="/admin/start_ollama/" title="{{ _('Start Ollama') }}" style="margin-left: 2px;">
                 <i class="mdi mdi-play-circle-outline" style="font-size: 16px; color: #22c55e;"></i>
             </a>
             {% endif %}
@@ -473,7 +473,7 @@
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
         <h4 style="margin: 0; font-size: 0.85em; color: #666; font-weight: 600;">
             <i class="mdi mdi-information" style="color: #039be5; font-size: 1em;"></i> 
-            Telemetry Information
+            {{ _('Telemetry Information') }}
         </h4>
         <button onclick="dismissTelemetryNotice()" style="
             background: none;
@@ -489,12 +489,11 @@
     
     <div style="color: #777; font-size: 0.8em; line-height: 1.4;">
  <p class="ys-m-mb-6">
-            YSocial collects anonymous usage data to improve the platform. This includes feature usage patterns and error reports, but <strong>never</strong> your experiment data, personal information, or sensitive content.
+            {% set s_never %}<strong>{{ _('never') }}</strong>{% endset %}{{ _('YSocial collects anonymous usage data to improve the platform. This includes feature usage patterns and error reports, but %(never)s your experiment data, personal information, or sensitive content.', never=s_never) }}
         </p>
         
  <p class="ys-m-mb-6">
-            All telemetry data is GDPR compliant. You can disable it anytime from the application
-            <a href="/admin/miscellanea" style="color: #039be5; text-decoration: none; border-bottom: 1px solid #039be5;">settings</a>.
+            {% set l_set %}<a href="/admin/miscellanea" style="color: #039be5; text-decoration: none; border-bottom: 1px solid #039be5;">{{ _('settings') }}</a>{% endset %}{{ _('All telemetry data is GDPR compliant. You can disable it anytime from the application %(link)s.', link=l_set) }}
         </p>
         
         <div style="margin-top: 8px; text-align: right;">
@@ -507,7 +506,7 @@
                 cursor: pointer;
                 font-size: 0.8em;
                 font-weight: 500;
-            ">Got it</button>
+            ">{{ _('Got it') }}</button>
         </div>
     </div>
 </div>

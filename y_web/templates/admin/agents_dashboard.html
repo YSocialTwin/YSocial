@@ -12,22 +12,22 @@
                         <div class="box-content" style="padding: 14px 16px;">
                             <div style="display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; flex-wrap: wrap;">
                                 <div style="max-width: 760px;">
-                                    <div class="ys-text-xs-hint" style="letter-spacing: 0.08em; text-transform: uppercase; color: #2563eb; font-weight: 700;">Agent Workspace</div>
-                                    <h2 class="title is-4" style="margin: 4px 0 6px 0; color: #0f172a;">Agent Resources Dashboard</h2>
+                                    <div class="ys-text-xs-hint" style="letter-spacing: 0.08em; text-transform: uppercase; color: #2563eb; font-weight: 700;">{{ _('Agent Workspace') }}</div>
+                                    <h2 class="title is-4" style="margin: 4px 0 6px 0; color: #0f172a;">{{ _('Agent Resources Dashboard') }}</h2>
                                     <p class="ys-text-sm-muted" style="max-width: 720px; line-height: 1.5; margin-bottom: 0;">
-                                        Use this page as the single entry point for building the entities that populate and influence your simulations.
+                                        {{ _('Use this page as the single entry point for building the entities that populate and influence your simulations.') }}
                                         Synthetic agents define user behavior, while content pages define the information sources and institutional actors that shape exposure.
                                     </p>
                                 </div>
                                 <div style="display: grid; gap: 6px; min-width: 220px;">
                                     <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
                                         <span class="badge badge-info">{{ agent_resources_summary.total_populations }} populations</span>
-                                        <span class="badge badge-success">{{ agent_resources_summary.activity_profiles }} activity profiles</span>
-                                        <span class="badge badge-warning">{{ agent_resources_summary.plugin_agent_types }} plugin types</span>
-                                        <span class="badge badge-secondary">{{ agent_resources_summary.resource_cards }} visible resources</span>
+                                        <span class="badge badge-success">{{ _('%(n)s activity profiles', n=agent_resources_summary.activity_profiles) }}</span>
+                                        <span class="badge badge-warning">{{ _('%(n)s plugin types', n=agent_resources_summary.plugin_agent_types) }}</span>
+                                        <span class="badge badge-secondary">{{ _('%(n)s visible resources', n=agent_resources_summary.resource_cards) }}</span>
                                     </div>
                                     <div class="ys-text-xs-hint" style="text-align: right;">
-                                        Choose the construction flow below based on whether you are creating actors or information sources.
+                                        {{ _('Choose the construction flow below based on whether you are creating actors or information sources.') }}
                                     </div>
                                 </div>
                             </div>
@@ -47,7 +47,7 @@
                             </div>
                             <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                                 <span class="badge badge-info">{{ group.cards|length }} resources</span>
-                                <span class="ys-text-xs-hint">{% if group.key == 'all' %}Expanded{% else %}Click to expand{% endif %}</span>
+                                <span class="ys-text-xs-hint">{% if group.key == 'all' %}{{ _('Expanded') }}{% else %}{{ _('Click to expand') }}{% endif %}</span>
                             </div>
                         </summary>
                         <div class="box-content" style="padding: 10px 12px 8px 12px;">
@@ -71,7 +71,7 @@
                                                 <a href="{{ card.cta_href }}" class="button is-solid primary-button" style="min-width: 142px; padding-top: 0.5rem; padding-bottom: 0.5rem;">
                                                     {{ card.cta_label }}
                                                 </a>
-                                                <span class="ys-text-xs-hint">{% if card.is_plugin %}Plugin-backed resource{% else %}Dedicated creation interface{% endif %}</span>
+                                                <span class="ys-text-xs-hint">{% if card.is_plugin %}{{ _('Plugin-backed resource') }}{% else %}{{ _('Dedicated creation interface') }}{% endif %}</span>
                                             </div>
                                         </div>
                                     </div>
