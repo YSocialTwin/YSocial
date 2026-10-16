@@ -1,0 +1,13 @@
+{#- Participant language selector: shown only when the experiment lets participants change the language. -#}
+{% set _ys_langs = simulation_language_options() %}
+{% if _ys_langs %}
+<form method="POST" action="/set-language" class="ys-sim-language" style="position:fixed;right:12px;bottom:12px;z-index:2000;margin:0;">
+  <input type="hidden" name="scope" value="sim">
+  <input type="hidden" name="next" value="{{ request.full_path.rstrip('?') }}">
+  <label class="is-sr-only" for="ys-sim-language-select" style="position:absolute;left:-9999px;">{{ _('Interface language') }}</label>
+  <select id="ys-sim-language-select" name="lang" onchange="this.form.submit()" aria-label="{{ _('Interface language') }}"
+          style="padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;background:#fff;font-size:.85rem;">
+    {% for code, name in _ys_langs %}<option value="{{ code }}"{% if get_locale()|string == code %} selected{% endif %}>{{ name }}</option>{% endfor %}
+  </select>
+</form>
+{% endif %}

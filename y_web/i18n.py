@@ -198,6 +198,17 @@ def resolve_experiment_language():
     return ui.get("language") or None, bool(ui.get("language_switch_allowed", False))
 
 
+def simulation_language_options():
+    """``[(code, name), ...]`` for the participant language selector; empty when the experiment fixes the language."""
+    try:
+        if not is_simulation_request() or len(supported_languages()) < 2:
+            return []
+        _lang, allow = _experiment_language()
+        return available_languages() if allow else []
+    except Exception:  # pragma: no cover - the selector must never break a page
+        return []
+
+
 def _experiment_language():
     """Return ``(language, allow_override)`` for the active experiment."""
     resolver = experiment_language_resolver or resolve_experiment_language
@@ -301,6 +312,7 @@ def init_i18n(app):
     app.jinja_env.globals["_"] = _fast_template_gettext
     app.jinja_env.globals["gettext"] = _fast_template_gettext
     app.jinja_env.globals["available_languages"] = available_languages
+    app.jinja_env.globals["simulation_language_options"] = simulation_language_options
     app.jinja_env.globals["text_direction"] = text_direction
     app.jinja_env.globals["html_lang"] = html_lang
     app.jinja_env.globals["wrap"] = wrap

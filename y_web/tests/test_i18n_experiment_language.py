@@ -135,3 +135,27 @@ def test_italian_catalog_translates_the_participant_labels():
     assert render("{{ _('Day %(day)s - %(hour)s:00', day=3, hour=7) }}") == "Giorno 3 - 7:00"
     assert render("{{ ngettext('%(num)s photo', '%(num)s photos', 2) }}") == "2 foto"
     assert render("{{ _('AI Agent') }}") == "Agente IA"
+
+
+def test_participant_language_selector_follows_the_experiment_switch():
+    from flask import Blueprint, Flask, render_template
+
+    app = Flask("y_web")
+    app.config.update(SECRET_KEY="t", SUPPORTED_LANGUAGES=("en", "it"), TESTING=True)
+    sim = Blueprint("main", __name__)
+
+    @sim.route("/<int:exp_id>/x")
+    def x(exp_id):
+        return render_template("shared/language_switcher.html")
+
+    app.register_blueprint(sim)
+    app.template_folder = str(ROOT / "y_web" / "templates")
+    i18n.init_i18n(app)
+    try:
+        i18n.experiment_language_resolver = lambda: ("it", False)
+        assert 'name="lang"' not in app.test_client().get("/1/x").get_data(as_text=True)
+        i18n.experiment_language_resolver = lambda: ("it", True)
+        html = app.test_client().get("/1/x").get_data(as_text=True)
+        assert 'name="scope" value="sim"' in html and '<option value="it" selected>Italiano</option>' in html
+    finally:
+        i18n.experiment_language_resolver = None
