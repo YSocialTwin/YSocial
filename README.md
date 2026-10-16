@@ -325,7 +325,7 @@ docker compose -f deployment/docker/compose/docker-compose.yml -f deployment/doc
 
 ## 📄 Further Information
 - **Project Website:** [y-not.social](https://ysocialtwin.github.io/)
-- **Research Paper:** [Y Social: A Digital Twin for Social Simulations](https://arxiv.org/abs/2408.00818)
+- **Research Paper:** [Y Social: A Digital Twin for Social Simulations](https://journals.sagepub.com/doi/full/10.1177/20539517261431576)
 
 ---
 
@@ -335,14 +335,15 @@ The Template license is the one of the creators ([Friendkit](https://cssninja.io
 
 📌 **If you use Y Social for research, please cite:**
 ```bibtex
-@article{rossetti2024ysocial,
-  title={Y Social: an LLM-powered Social Media Digital Twin},
-  author={Rossetti, Giulio and Stella, Massimo and Cazabet, Rémy and
-  Abramski, Katherine and Cau, Erica and Citraro, Salvatore and
-  Failla, Andrea and Morini, Virginia and
-  Pansanella, Virginia},
-  journal={arXiv preprint arXiv:2408.00818},
-  year={2024}
+@article{rossetti2026ysocial,
+  title={YSocial: An artificial intelligence powered social media virtual twin},
+  author={Rossetti, Giulio and Stella, Massimo and Cazabet, R{\'e}my and Abramski, Katherine and Citraro, Salvatore and Cau, Erica and Failla, Andrea and Morini, Virginia and Pansanella, Valentina},
+  journal={Big Data \& Society},
+  volume={13},
+  number={3},
+  pages={20539517261431576},
+  year={2026},
+  publisher={SAGE Publications Sage UK: London, England}
 }
 ```
 
