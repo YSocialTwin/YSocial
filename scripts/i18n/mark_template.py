@@ -1,6 +1,9 @@
 """Mark plain user-visible strings in Jinja templates with ``_()``.
 
-    python scripts/i18n/mark_template.py y_web/templates/admin/head.html [more files]
+    python scripts/i18n/mark_template.py [--func T] y_web/templates/admin/head.html [more files]
+
+``--func`` names the translation function (default ``_``); plugins use their own, e.g.
+``T`` injected by the plugin blueprint, so the core's ``_()`` stays on the core catalog.
 
 Only the unambiguous cases are rewritten: an element whose whole text is a literal
 string (``<span>Home</span>``) and the attributes title/placeholder/aria-label/alt/
@@ -47,11 +50,14 @@ def escape_percent(text):
     )
 
 
+FUNC = "_"
+
+
 def quote(text):
     text = escape_percent(text)
     if "'" not in text:
-        return "_('%s')" % text
-    return '_("%s")' % text.replace('"', '\\"')
+        return "%s('%s')" % (FUNC, text)
+    return '%s("%s")' % (FUNC, text.replace('"', '\\"'))
 
 
 def mark(path, exceptions):
@@ -90,6 +96,9 @@ def mark(path, exceptions):
 
 
 def main(argv):
+    global FUNC
+    if argv[:1] == ["--func"]:
+        FUNC, argv = argv[1], argv[2:]
     ex = load_exceptions()
     for p in argv:
         done, left = mark(p, ex)

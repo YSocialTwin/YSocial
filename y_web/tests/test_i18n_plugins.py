@@ -93,6 +93,17 @@ def test_plugin_plurals(plugin_app):
         assert render_template_string(tpl, n=3) == "3 passi"
 
 
+def test_a_variable_may_be_named_message_or_domain(plugin_app):
+    with plugin_app.test_request_context("/", headers={"Accept-Language": "it"}):
+        assert plugin_i18n.plugin_gettext("demo", "Hello %(name)s", name="Ann") == "Ciao Ann"
+        assert plugin_i18n.plugin_gettext("demo", "Say %(message)s", message="hi") == "Say hi"
+        assert plugin_i18n.plugin_gettext("demo", "In %(domain)s", domain="d") == "In d"
+        assert (
+            plugin_i18n.plugin_ngettext("demo", "%(num)d step", "%(num)d steps", 3)
+            == "3 passi"
+        )
+
+
 def test_core_gettext_is_not_affected_by_plugin_catalogs(plugin_app):
     # "Modules" exists only in the plugin catalog: the core domain must not see it.
     assert _render(plugin_app, "{{ _('Modules') }}", "it") == "Modules"

@@ -110,7 +110,7 @@ def _interpolate(text: str, variables: dict) -> str:
         return text
 
 
-def plugin_gettext(domain: str, message: str, **variables) -> str:
+def plugin_gettext(domain: str, message: str, /, **variables) -> str:
     """Translate *message* with the catalog of plugin *domain* (English fallback)."""
     babel_domain = _babel_domain(domain)
     if babel_domain is None:
@@ -122,7 +122,7 @@ def plugin_gettext(domain: str, message: str, **variables) -> str:
 
 
 def plugin_ngettext(
-    domain: str, singular: str, plural: str, n: int, **variables
+    domain: str, singular: str, plural: str, n: int, /, **variables
 ) -> str:
     """Plural-aware variant of :func:`plugin_gettext`."""
     fallback_vars = {"num": n, **variables}
