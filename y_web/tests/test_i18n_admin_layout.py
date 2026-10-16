@@ -61,3 +61,24 @@ def test_sentence_with_link_placeholder_keeps_markup(i18n_app):
     with i18n_app.test_request_context("/", headers={"Accept-Language": "it"}):
         html = render_template_string(tpl)
     assert html == 'Definisci una o più <a href="/admin/populations">Popolazioni di agenti</a>.'
+
+
+def test_wrap_helper_escapes_and_keeps_markup(i18n_app):
+    from flask import render_template_string
+
+    tpl = "{{ _('Use %(b)s to download or remove the experiment', b=wrap('b', _('Management'))) }}"
+    with i18n_app.test_request_context("/", headers={"Accept-Language": "it"}):
+        html = render_template_string(tpl)
+    assert html == "Usa <b>Gestione</b> per scaricare o rimuovere l'esperimento"
+    with i18n_app.test_request_context("/"):
+        out = render_template_string("{{ wrap('a', 'x<y', href='/a?b=1&c=2') }}")
+    assert out == '<a href="/a?b=1&amp;c=2">x&lt;y</a>'
+
+
+def test_ngettext_file_count_in_matrix(i18n_app):
+    from flask import render_template_string
+
+    tpl = "{{ ngettext('%(num)d file', '%(num)d files', n) }}"
+    with i18n_app.test_request_context("/"):
+        assert render_template_string(tpl, n=1) == "1 file"
+        assert render_template_string(tpl, n=3) == "3 files"

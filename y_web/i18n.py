@@ -26,7 +26,7 @@ from flask_babel import (
 )
 from flask_login import current_user
 from jinja2 import pass_eval_context
-from markupsafe import Markup
+from markupsafe import Markup, escape
 
 from y_web.i18n_pseudo import PSEUDO_CARRIER, PSEUDO_LANGUAGE
 
@@ -69,6 +69,20 @@ def pseudo_enabled():
 def available_languages():
     """Return ``[(code, native name), ...]`` for the supported languages."""
     return [(code, LANGUAGE_NAMES.get(code, code)) for code in supported_languages()]
+
+
+def wrap(tag, text, **attrs):
+    """Markup for ``<tag attrs>text</tag>``, used as a placeholder value in sentences.
+
+    ``{{ _('Open %(link)s first.', link=wrap('a', _('Settings'), href=url_for('x'))) }}``
+    keeps the markup out of the translated string, so translators only see words.
+    Attribute names use ``_`` for ``-`` (``data_x`` becomes ``data-x``).
+    """
+    rendered = "".join(
+        ' %s="%s"' % (name.replace("_", "-"), escape(value))
+        for name, value in attrs.items()
+    )
+    return Markup("<%s%s>%s</%s>") % (Markup(tag), Markup(rendered), text, Markup(tag))
 
 
 def html_lang():
@@ -206,6 +220,7 @@ def init_i18n(app):
     app.jinja_env.globals["available_languages"] = available_languages
     app.jinja_env.globals["text_direction"] = text_direction
     app.jinja_env.globals["html_lang"] = html_lang
+    app.jinja_env.globals["wrap"] = wrap
     # Locale-aware formatting for dates and numbers: {{ value|localdate }}.
     from y_web.src.external_runtime.plugin_i18n import init_plugin_i18n
 

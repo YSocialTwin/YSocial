@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-16 15:05+0000\n"
+"POT-Creation-Date: 2026-10-16 15:07+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -23,6 +23,10 @@ msgid "%(n)s activity profiles"
 msgstr "%(n)s profili di attività"
 
 #, python-format
+msgid "%(n)s configurable values"
+msgstr "%(n)s valori configurabili"
+
+#, python-format
 msgid "%(n)s plugin types"
 msgstr "%(n)s tipi di plugin"
 
@@ -31,8 +35,17 @@ msgid "%(n)s visible resources"
 msgstr "%(n)s risorse visibili"
 
 #, python-format
+msgid "%(num)d file"
+msgid_plural "%(num)d files"
+msgstr[0] "%(num)d file"
+msgstr[1] "%(num)d file"
+
+#, python-format
 msgid "(%(count)s total)"
 msgstr "(%(count)s in totale)"
+
+msgid "-- Select a client --"
+msgstr "-- Seleziona un client --"
 
 msgid "1. Create one or more Agent Populations"
 msgstr "1. Crea una o più popolazioni di agenti"
@@ -60,6 +73,34 @@ msgstr ""
 "Esperimenti attivi raggruppati per gruppo di progetto. Clicca sull'intestazione di un gruppo per "
 "espanderlo o comprimerlo."
 
+msgid "Actual Profile Pics"
+msgstr "Immagini del profilo reali"
+
+msgid "Actual profile pictures are enabled across the forum interface."
+msgstr "Le immagini del profilo reali sono attive in tutta l'interfaccia del forum."
+
+#, python-format
+msgid "Ad hoc agent client workflows stay disabled until %(b)s is executed."
+msgstr "I flussi dei client di agenti ad hoc restano disabilitati finché non viene eseguito %(b)s."
+
+msgid "AdHoc Agents' Clients"
+msgstr "Client degli agenti ad hoc"
+
+msgid "Add"
+msgstr "Aggiungi"
+
+msgid "Add Client"
+msgstr "Aggiungi un client"
+
+msgid "Additional Configuration"
+msgstr "Configurazione aggiuntiva"
+
+msgid "Adjust experiment prompts and supporting configuration."
+msgstr "Modifica i prompt dell'esperimento e la configurazione di supporto."
+
+msgid "Adjust forum prompts, feeds, limits, embeddings, and avatar behavior."
+msgstr "Modifica prompt, feed, limiti, embedding e comportamento degli avatar del forum."
+
 msgid "Admin"
 msgstr "Amministrazione"
 
@@ -78,6 +119,12 @@ msgstr "Dashboard delle risorse degli agenti"
 msgid "Agent Workspace"
 msgstr "Area di lavoro degli agenti"
 
+msgid "Aggregate state and attacker effects"
+msgstr "Stato aggregato ed effetti degli attaccanti"
+
+msgid "Aggregation:"
+msgstr "Aggregazione:"
+
 #, python-format
 msgid "All telemetry data is GDPR compliant. You can disable it anytime from the application %(link)s."
 msgstr ""
@@ -87,14 +134,35 @@ msgstr ""
 msgid "Already registered?"
 msgstr "Già registrato?"
 
+msgid "Alternative values"
+msgstr "Valori alternativi"
+
+msgid "Analysis of client(s) execution."
+msgstr "Analisi dell'esecuzione dei client."
+
+msgid "Analytics Pages"
+msgstr "Pagine di analisi"
+
+msgid "Auto-refresh"
+msgstr "Aggiornamento automatico"
+
 msgid "Automatic (browser language)"
 msgstr "Automatica (lingua del browser)"
+
+msgid "Average time per slot:"
+msgstr "Tempo medio per slot:"
 
 msgid "Bachelor"
 msgstr "Laurea triennale"
 
+msgid "Back to Experiments"
+msgstr "Torna agli esperimenti"
+
 msgid "Bad Request"
 msgstr "Richiesta non valida"
+
+msgid "Basic Information"
+msgstr "Informazioni di base"
 
 msgid ""
 "Before entering your feed, personalise your profile and share your interest level and opinion for"
@@ -102,6 +170,24 @@ msgid ""
 msgstr ""
 "Prima di entrare nel tuo feed, personalizza il profilo e indica il tuo livello di interesse e la "
 "tua opinione per ogni argomento di discussione attivo."
+
+msgid "Call Volume by Method"
+msgstr "Volume di chiamate per metodo"
+
+msgid "Call Volume by Path"
+msgstr "Volume di chiamate per percorso"
+
+msgid "Cancel"
+msgstr "Annulla"
+
+msgid "Cartesian product"
+msgstr "Prodotto cartesiano"
+
+msgid "Choose an existing group or type a new one"
+msgstr "Scegli un gruppo esistente o scrivine uno nuovo"
+
+msgid "Choose one of the active experiments below to enter the simulation."
+msgstr "Scegli uno degli esperimenti attivi qui sotto per entrare nella simulazione."
 
 msgid ""
 "Choose the construction flow below based on whether you are creating actors or information "
@@ -113,11 +199,27 @@ msgstr ""
 msgid "Choose the language of the dashboard for this user."
 msgstr "Scegli la lingua della dashboard per questo utente."
 
+msgid "Clear Logs"
+msgstr "Cancella i log"
+
 msgid "Click to expand"
 msgstr "Clicca per espandere"
 
 msgid "Click to expand/collapse"
 msgstr "Clicca per espandere o comprimere"
+
+msgid "Client Compute Time"
+msgstr "Tempo di calcolo del client"
+
+msgid "Client Logs Analysis"
+msgstr "Analisi dei log dei client"
+
+msgid "Client Settings"
+msgstr "Impostazioni del client"
+
+#, python-format
+msgid "Client creation and execution stay disabled until %(b)s is executed."
+msgstr "La creazione e l'esecuzione dei client restano disabilitate finché non viene eseguito %(b)s."
 
 msgid "Client:"
 msgstr "Client:"
@@ -128,8 +230,44 @@ msgstr "Client"
 msgid "Close"
 msgstr "Chiudi"
 
+msgid "Combine all enabled features"
+msgstr "Combina tutte le funzioni attive"
+
 msgid "Completed"
 msgstr "Completati"
+
+msgid "Configurable Features"
+msgstr "Funzioni configurabili"
+
+msgid "Configure Feed Limits"
+msgstr "Configura i limiti dei feed"
+
+msgid "Configure Memory Embeddings"
+msgstr "Configura gli embedding della memoria"
+
+msgid "Configure Opinion Dynamics"
+msgstr "Configura le dinamiche di opinione"
+
+#, python-format
+msgid "Configure RSS/image feeds and retrieval limits from %(b)s"
+msgstr "Configura i feed RSS e di immagini e i limiti di recupero da %(b)s"
+
+msgid "Configure Stress / Reward"
+msgstr "Configura stress / ricompensa"
+
+msgid "Configured RSS feeds"
+msgstr "Feed RSS configurati"
+
+msgid "Configured image feeds"
+msgstr "Feed di immagini configurati"
+
+msgid "Control panel for simulation server, web interface, and data analysis environment."
+msgstr ""
+"Pannello di controllo del server di simulazione, dell'interfaccia web e dell'ambiente di analisi "
+"dei dati."
+
+msgid "Create AdHoc Agent Client"
+msgstr "Crea un client di agenti ad hoc"
 
 msgid "Create and configure one or more clients for the experiment. Each client manages a population."
 msgstr "Crea e configura uno o più client per l'esperimento. Ogni client gestisce una popolazione."
@@ -137,14 +275,23 @@ msgstr "Crea e configura uno o più client per l'esperimento. Ogni client gestis
 msgid "Create your account"
 msgstr "Crea il tuo account"
 
+msgid "Current"
+msgstr "Attuale"
+
 msgid "Current execution progress"
 msgstr "Avanzamento dell'esecuzione in corso"
+
+msgid "Current value"
+msgstr "Valore attuale"
 
 msgid "Currently Running Experiments"
 msgstr "Esperimenti in esecuzione"
 
 msgid "Custom agents"
 msgstr "Agenti personalizzati"
+
+msgid "Daily"
+msgstr "Giornaliero"
 
 msgid "Dashboard language"
 msgstr "Lingua della dashboard"
@@ -168,15 +315,42 @@ msgstr "Elimina il client"
 msgid "Delete Experiment"
 msgstr "Elimina l'esperimento"
 
+msgid "Describe the problem (optional):"
+msgstr "Descrivi il problema (facoltativo):"
+
 #, python-format
 msgid "Describe your simulation with an %(link)s."
 msgstr "Descrivi la tua simulazione con un %(link)s."
 
+msgid "Deselect All"
+msgstr "Deseleziona tutto"
+
 msgid "Details"
 msgstr "Dettagli"
 
+msgid "Diffusion, emergence, reach"
+msgstr "Diffusione, emergenza, copertura"
+
 msgid "Download"
 msgstr "Scarica"
+
+msgid "Download Experiment"
+msgstr "Scarica l'esperimento"
+
+msgid "Download or remove this experiment."
+msgstr "Scarica o rimuovi questo esperimento."
+
+msgid "Edit"
+msgstr "Modifica"
+
+msgid "Edit Client Settings"
+msgstr "Modifica le impostazioni del client"
+
+msgid "Edit LLM Prompts"
+msgstr "Modifica i prompt LLM"
+
+msgid "Edit server settings"
+msgstr "Modifica le impostazioni del server"
 
 msgid "Education Level"
 msgstr "Livello di istruzione"
@@ -184,12 +358,37 @@ msgstr "Livello di istruzione"
 msgid "Email"
 msgstr "Email"
 
+msgid "Emotion"
+msgstr "Emozione"
+
+msgid "Emotion Statistics"
+msgstr "Statistiche sulle emozioni"
+
+msgid "Emotion tags and dominant patterns"
+msgstr "Etichette emotive e schemi dominanti"
+
+msgid "Enable or disable runtime annotations and memory."
+msgstr "Attiva o disattiva le annotazioni e la memoria durante l'esecuzione."
+
+msgid ""
+"Enable or disable runtime annotations and memory. Update this configuration before starting or "
+"stopping the server and before managing clients."
+msgstr ""
+"Attiva o disattiva le annotazioni e la memoria durante l'esecuzione. Aggiorna questa "
+"configurazione prima di avviare o fermare il server e prima di gestire i client."
+
 msgid "Endpoint:"
 msgstr "Endpoint:"
+
+msgid "Enter topic name"
+msgstr "Inserisci il nome dell'argomento"
 
 #, python-format
 msgid "Error %(code)s"
 msgstr "Errore %(code)s"
+
+msgid "Estimated remaining time:"
+msgstr "Tempo rimanente stimato:"
 
 msgid "Exception:"
 msgstr "Eccezione:"
@@ -203,6 +402,18 @@ msgstr "Espanso"
 
 msgid "Experiment"
 msgstr "Esperimento"
+
+msgid "Experiment Configuration"
+msgstr "Configurazione dell'esperimento"
+
+msgid "Experiment Matrix"
+msgstr "Matrice degli esperimenti"
+
+msgid "Experiment Overview"
+msgstr "Panoramica dell'esperimento"
+
+msgid "Experiment identification and settings."
+msgstr "Identificazione e impostazioni dell'esperimento."
 
 msgid "Experiment owner"
 msgstr "Proprietario dell'esperimento"
@@ -225,8 +436,23 @@ msgstr "Estremo"
 msgid "Extreme Interest"
 msgstr "Interesse estremo"
 
+msgid "False"
+msgstr "Falso"
+
+msgid "Feed Health"
+msgstr "Stato dei feed"
+
+msgid "Feed Retrieval Limits"
+msgstr "Limiti di recupero dei feed"
+
 msgid "Female"
 msgstr "Donna"
+
+msgid "Filter Methods"
+msgstr "Filtra i metodi"
+
+msgid "Filter Paths"
+msgstr "Filtra i percorsi"
 
 msgid "Follow these steps to set up and run a simulation:"
 msgstr "Segui questi passaggi per configurare ed eseguire una simulazione:"
@@ -240,6 +466,12 @@ msgstr "Impostazioni del frontend"
 msgid "Gender"
 msgstr "Genere"
 
+msgid "Generate Experiments"
+msgstr "Genera esperimenti"
+
+msgid "Generated Configs"
+msgstr "Configurazioni generate"
+
 msgid "Go to"
 msgstr "Vai alla"
 
@@ -252,8 +484,17 @@ msgstr "Ho capito"
 msgid "HPC"
 msgstr "HPC"
 
+msgid "HPC Reset"
+msgstr "Reimpostazione HPC"
+
 msgid "HPC Simulator"
 msgstr "Simulatore HPC"
+
+msgid "Hashtag Evolution"
+msgstr "Evoluzione degli hashtag"
+
+msgid "Help us improve YSocial: submit the experiment log!"
+msgstr "Aiutaci a migliorare YSocial: invia il log dell'esperimento!"
 
 msgid "High"
 msgstr "Alto"
@@ -267,8 +508,28 @@ msgstr "Diploma superiore"
 msgid "Home"
 msgstr "Home"
 
+msgid "Host:"
+msgstr "Host:"
+
+msgid "Hourly"
+msgstr "Orario"
+
+msgid "Image-share posts emitted"
+msgstr "Post con immagini pubblicati"
+
 msgid "Infinite"
 msgstr "Infinito"
+
+msgid ""
+"Inspect nested config values, unlock the ones you want to vary, and generate the full combination"
+" set."
+msgstr ""
+"Esamina i valori annidati della configurazione, sblocca quelli che vuoi variare e genera "
+"l'insieme completo delle combinazioni."
+
+#, python-format
+msgid "Install Detoxify first from %(link)s to enable toxicity annotation."
+msgstr "Installa prima Detoxify da %(link)s per attivare l'annotazione della tossicità."
 
 msgid "Interest"
 msgstr "Interesse"
@@ -302,14 +563,42 @@ msgstr "Unisciti a Y Social e inizia a esplorare."
 msgid "LLM Server: %(backend)s"
 msgstr "Server LLM: %(backend)s"
 
+msgid "LLM annotations (toxicity, sentiment, emotion) are unavailable for rule-based experiments."
+msgstr ""
+"Le annotazioni LLM (tossicità, sentimento, emozione) non sono disponibili per gli esperimenti "
+"basati su regole."
+
+msgid ""
+"LLM annotations (toxicity, sentiment, emotion) are unavailable for rule-based forum experiments. "
+"Opinion dynamics remains available; memory is available only for LLM forum experiments."
+msgstr ""
+"Le annotazioni LLM (tossicità, sentimento, emozione) non sono disponibili per gli esperimenti del"
+" forum basati su regole. Le dinamiche di opinione restano disponibili; la memoria è disponibile "
+"solo per gli esperimenti del forum con LLM."
+
 msgid "Language"
 msgstr "Lingua"
+
+msgid "Launch clients and open the forum interface from the same control panel"
+msgstr "Avvia i client e apri l'interfaccia del forum dallo stesso pannello di controllo"
+
+msgid "Launch clients and open the web interface from the same control panel"
+msgstr "Avvia i client e apri l'interfaccia web dallo stesso pannello di controllo"
 
 msgid "Load"
 msgstr "Carica"
 
 msgid "Load Experiment"
 msgstr "Carica l'esperimento"
+
+msgid "Load Matrix"
+msgstr "Carica la matrice"
+
+msgid "Loaded articles"
+msgstr "Articoli caricati"
+
+msgid "Loaded image posts"
+msgstr "Post con immagini caricati"
 
 msgid "Log Out"
 msgstr "Esci"
@@ -323,11 +612,39 @@ msgstr "Basso"
 msgid "Low Interest"
 msgstr "Interesse basso"
 
+msgid "Maintain the active simulation topics from the overview card"
+msgstr "Gestisci gli argomenti attivi della simulazione dalla scheda di panoramica"
+
 msgid "Male"
 msgstr "Uomo"
 
+msgid ""
+"Manage agent-plugin runtimes that can extend this experiment with dedicated ad hoc agent "
+"execution flows."
+msgstr ""
+"Gestisci i runtime dei plugin di agenti che possono estendere questo esperimento con flussi di "
+"esecuzione dedicati di agenti ad hoc."
+
+msgid "Manage clients running agent populations for this experiment."
+msgstr "Gestisci i client che eseguono le popolazioni di agenti di questo esperimento."
+
+msgid "Management"
+msgstr "Gestione"
+
 msgid "Master"
 msgstr "Laurea magistrale"
+
+msgid "Mean Duration by Path (seconds)"
+msgstr "Durata media per percorso (secondi)"
+
+msgid "Mean Execution Time by Method (seconds)"
+msgstr "Tempo medio di esecuzione per metodo (secondi)"
+
+msgid "Memory"
+msgstr "Memoria"
+
+msgid "Memory Embeddings"
+msgstr "Embedding della memoria"
 
 msgid "Message:"
 msgstr "Messaggio:"
@@ -343,6 +660,12 @@ msgstr "Varie"
 
 msgid "My Profile"
 msgstr "Il mio profilo"
+
+msgid "Name"
+msgstr "Nome"
+
+msgid "Network Analysis"
+msgstr "Analisi della rete"
 
 msgid "New Blog Post!"
 msgstr "Nuovo articolo del blog!"
@@ -365,8 +688,29 @@ msgstr "Nessun argomento di discussione attivo per questo esperimento."
 msgid "No active experiments available"
 msgstr "Nessun esperimento attivo disponibile"
 
+msgid "No ad hoc agents' clients registered yet"
+msgstr "Nessun client di agenti ad hoc registrato"
+
+msgid "No client configuration files were found for this experiment."
+msgstr "Non sono stati trovati file di configurazione dei client per questo esperimento."
+
+msgid "No clients available"
+msgstr "Nessun client disponibile"
+
+msgid "No clients registered"
+msgstr "Nessun client registrato"
+
+msgid "No configurable values found in this file."
+msgstr "Nessun valore configurabile trovato in questo file."
+
+msgid "No configuration files were found for this experiment."
+msgstr "Non sono stati trovati file di configurazione per questo esperimento."
+
 msgid "No notifications yet."
 msgstr "Ancora nessuna notifica."
+
+msgid "No server configuration file was found for this experiment."
+msgstr "Non è stato trovato il file di configurazione del server per questo esperimento."
 
 msgid "Not"
 msgstr "Non"
@@ -374,20 +718,90 @@ msgstr "Non"
 msgid "Not Interested"
 msgstr "Non interessato"
 
+msgid "Not configured. Semantic memory falls back to lexical retrieval."
+msgstr "Non configurato. La memoria semantica ripiega sul recupero lessicale."
+
 msgid "Notifications"
 msgstr "Notifiche"
+
+msgid "Only owner/admin/shared researchers can clear logs"
+msgstr ""
+"Solo il proprietario, gli amministratori e i ricercatori con accesso condiviso possono cancellare"
+" i log"
+
+msgid "Only owner/admin/shared researchers can delete"
+msgstr "Solo il proprietario, gli amministratori e i ricercatori con accesso condiviso possono eliminare"
+
+msgid "Only owner/admin/shared researchers can edit avatar mode"
+msgstr ""
+"Solo il proprietario, gli amministratori e i ricercatori con accesso condiviso possono modificare"
+" la modalità degli avatar"
+
+msgid "Only owner/admin/shared researchers can edit feed limits"
+msgstr ""
+"Solo il proprietario, gli amministratori e i ricercatori con accesso condiviso possono modificare"
+" i limiti dei feed"
+
+msgid "Only owner/admin/shared researchers can edit forum feeds"
+msgstr ""
+"Solo il proprietario, gli amministratori e i ricercatori con accesso condiviso possono modificare"
+" i feed del forum"
+
+msgid "Only owner/admin/shared researchers can edit image feeds"
+msgstr ""
+"Solo il proprietario, gli amministratori e i ricercatori con accesso condiviso possono modificare"
+" i feed di immagini"
+
+msgid "Only owner/admin/shared researchers can edit memory embeddings"
+msgstr ""
+"Solo il proprietario, gli amministratori e i ricercatori con accesso condiviso possono modificare"
+" gli embedding della memoria"
+
+msgid "Only owner/admin/shared researchers can edit stress/reward settings"
+msgstr ""
+"Solo il proprietario, gli amministratori e i ricercatori con accesso condiviso possono modificare"
+" le impostazioni di stress/ricompensa"
+
+msgid "Open"
+msgstr "Apri"
 
 msgid "Open JupyterLab"
 msgstr "Apri JupyterLab"
 
+msgid "Open JupyterLab for ad hoc inspection and notebook-based analysis"
+msgstr "Apri JupyterLab per ispezioni ad hoc e analisi basate su notebook"
+
+#, python-format
+msgid "Open prompt and embedding settings from %(b)s"
+msgstr "Apri le impostazioni di prompt ed embedding da %(b)s"
+
+msgid "Open prompt and embedding settings from the same panel"
+msgstr "Apri le impostazioni di prompt ed embedding dallo stesso pannello"
+
+msgid "Open the active experiment dashboards from a single compact panel."
+msgstr "Apri le dashboard degli esperimenti attivi da un unico pannello compatto."
+
 msgid "Opinion"
 msgstr "Opinione"
+
+msgid "Opinion Dynamics"
+msgstr "Dinamiche di opinione"
+
+msgid "Opinion Evolution"
+msgstr "Evoluzione delle opinioni"
+
+msgid "Opinion groups and agent trends"
+msgstr "Gruppi di opinione e tendenze degli agenti"
 
 msgid "Opinion scale not yet configured."
 msgstr "Scala delle opinioni non ancora configurata."
 
 msgid "Owner"
 msgstr "Proprietario"
+
+#, python-format
+msgid "Owner: %(owner)s"
+msgstr "Proprietario: %(owner)s"
 
 msgid "Page Not Found"
 msgstr "Pagina non trovata"
@@ -410,8 +824,18 @@ msgstr "Dottorato"
 msgid "Photo Sharing"
 msgstr "Condivisione di foto"
 
+msgid "Pick a source group first, then choose one experiment from that group."
+msgstr "Scegli prima un gruppo di origine, poi un esperimento di quel gruppo."
+
 msgid "Platform"
 msgstr "Piattaforma"
+
+msgid "Platform Type"
+msgstr "Tipo di piattaforma"
+
+#, python-format
+msgid "Platform: %(platform)s"
+msgstr "Piattaforma: %(platform)s"
 
 msgid "Please check the URL or go back to the homepage."
 msgstr "Controlla l'URL oppure torna alla home page."
@@ -422,14 +846,31 @@ msgstr "Controlla i dati inseriti e riprova."
 msgid "Please contact an administrator if you believe this is an error."
 msgstr "Contatta un amministratore se pensi che si tratti di un errore."
 
+msgid ""
+"Please describe what you were doing and what went wrong. This helps us understand and fix the "
+"issue faster."
+msgstr ""
+"Descrivi cosa stavi facendo e cosa è andato storto. Ci aiuta a capire e risolvere il problema più"
+" in fretta."
+
 msgid "Plugin Manager"
 msgstr "Gestione plugin"
 
 msgid "Plugin-backed resource"
 msgstr "Risorsa fornita da un plugin"
 
+msgid "Polarity mix and compound trends"
+msgstr "Mix di polarità e tendenze composte"
+
 msgid "Populations"
 msgstr "Popolazioni"
+
+msgid "Port:"
+msgstr "Porta:"
+
+#, python-format
+msgid "Port: %(port)s"
+msgstr "Porta: %(port)s"
 
 msgid "Previous"
 msgstr "Indietro"
@@ -443,11 +884,44 @@ msgstr "Immagine del profilo"
 msgid "Quick Reference Guide"
 msgstr "Guida rapida"
 
+msgid "RSS-derived posts emitted"
+msgstr "Post derivati da RSS pubblicati"
+
 msgid "Rate interest and opinion for each topic."
 msgstr "Indica interesse e opinione per ogni argomento."
 
 msgid "Read Article"
 msgstr "Leggi l'articolo"
+
+msgid "Real-time analysis of server API calls from _server.log file."
+msgstr "Analisi in tempo reale delle chiamate API del server dal file _server.log."
+
+msgid "Recommendation exposure and reach"
+msgstr "Esposizione e copertura delle raccomandazioni"
+
+msgid "Recommendations"
+msgstr "Raccomandazioni"
+
+msgid "Recsys Evolution"
+msgstr "Evoluzione del sistema di raccomandazione"
+
+msgid "Reddit-like placeholders are enabled across the forum interface."
+msgstr "I segnaposto in stile Reddit sono attivi in tutta l'interfaccia del forum."
+
+msgid "Refresh Data"
+msgstr "Aggiorna i dati"
+
+msgid "Refresh interval in seconds (5-300)"
+msgstr "Intervallo di aggiornamento in secondi (5-300)"
+
+msgid "Registered Users"
+msgstr "Utenti registrati"
+
+msgid "Remaining Time Forecast"
+msgstr "Previsione del tempo rimanente"
+
+msgid "Remaining slots:"
+msgstr "Slot rimanenti:"
 
 msgid "Remember me"
 msgstr "Ricordami"
@@ -461,8 +935,27 @@ msgstr "Remoto"
 msgid "Remote Experiment"
 msgstr "Esperimento remoto"
 
+msgid "Remove alternative value"
+msgstr "Rimuovi il valore alternativo"
+
+msgid "Rename"
+msgstr "Rinomina"
+
 msgid "Replay Tutorial"
 msgstr "Rivedi il tutorial"
+
+msgid "Request Logs Analysis"
+msgstr "Analisi dei log delle richieste"
+
+msgid "Reset HPC Experiment"
+msgstr "Reimposta l'esperimento HPC"
+
+msgid ""
+"Reset experiment to initial state: clear logs, delete DB, restore population backups, and reset "
+"dashboard counters."
+msgstr ""
+"Riporta l'esperimento allo stato iniziale: cancella i log, elimina il database, ripristina i "
+"backup delle popolazioni e azzera i contatori della dashboard."
 
 msgid "Resume Client"
 msgstr "Riprendi il client"
@@ -485,14 +978,80 @@ msgstr "Eseguire un esperimento YSocial"
 msgid "SHOW"
 msgstr "MOSTRA"
 
+msgid "Save"
+msgstr "Salva"
+
 msgid "Save & Enter My Feed"
 msgstr "Salva ed entra nel mio feed"
+
+msgid "Save Topics"
+msgstr "Salva gli argomenti"
 
 msgid "Save language"
 msgstr "Salva la lingua"
 
+msgid "Scores, trends, high-toxicity content"
+msgstr "Punteggi, tendenze, contenuti molto tossici"
+
 msgid "Search posts, users, links..."
 msgstr "Cerca post, utenti, link..."
+
+msgid "Select All"
+msgstr "Seleziona tutto"
+
+msgid "Select Client:"
+msgstr "Seleziona il client:"
+
+msgid "Select Experiment"
+msgstr "Seleziona un esperimento"
+
+msgid "Select Image Feeds"
+msgstr "Seleziona i feed di immagini"
+
+msgid "Select RSS Feeds"
+msgstr "Seleziona i feed RSS"
+
+msgid "Select an Experiment to Join"
+msgstr "Seleziona un esperimento a cui partecipare"
+
+msgid "Select an experiment above to inspect its configuration matrix."
+msgstr "Seleziona un esperimento qui sopra per esaminarne la matrice di configurazione."
+
+msgid "Select source group..."
+msgstr "Seleziona il gruppo di origine..."
+
+msgid "Selected Experiment"
+msgstr "Esperimento selezionato"
+
+msgid "Sentiment"
+msgstr "Sentimento"
+
+msgid "Sentiment Evolution"
+msgstr "Evoluzione del sentimento"
+
+msgid "Server & Analysis Controls"
+msgstr "Controlli del server e dell'analisi"
+
+msgid "Server Address"
+msgstr "Indirizzo del server"
+
+msgid "Server Compute Time"
+msgstr "Tempo di calcolo del server"
+
+msgid "Server Controls"
+msgstr "Controlli del server"
+
+msgid "Server Logs Analysis"
+msgstr "Analisi dei log del server"
+
+msgid "Server Settings"
+msgstr "Impostazioni del server"
+
+msgid "Server Trends Analysis"
+msgstr "Analisi delle tendenze del server"
+
+msgid "Server, Clients, and Analytics"
+msgstr "Server, client e analisi"
 
 msgid "Share Experiments"
 msgstr "Condividi gli esperimenti"
@@ -509,11 +1068,31 @@ msgstr "Registrati"
 msgid "Sign in to continue to your experiments."
 msgstr "Accedi per continuare con i tuoi esperimenti."
 
+msgid "Simulation Clients"
+msgstr "Client della simulazione"
+
+msgid "Simulation Time Trend"
+msgstr "Andamento del tempo di simulazione"
+
+msgid "Simulation Topics"
+msgstr "Argomenti della simulazione"
+
+#, python-format
+msgid "Simulation: %(name)s"
+msgstr "Simulazione: %(name)s"
+
+msgid "Something went wrong?"
+msgstr "Qualcosa è andato storto?"
+
 msgid "Start JupyterLab"
 msgstr "Avvia JupyterLab"
 
 msgid "Start Ollama"
 msgstr "Avvia Ollama"
+
+#, python-format
+msgid "Start or stop the server from %(b)s"
+msgstr "Avvia o ferma il server da %(b)s"
 
 msgid "Start the experiment and run the clients to begin your simulation."
 msgstr "Avvia l'esperimento e i client per iniziare la simulazione."
@@ -527,31 +1106,163 @@ msgstr "Ferma l'esperimento"
 msgid "Stop JupyterLab"
 msgstr "Ferma JupyterLab"
 
+msgid "Stop the experiment before clearing logs"
+msgstr "Ferma l'esperimento prima di cancellare i log"
+
+msgid "Stop the experiment before deleting it"
+msgstr "Ferma l'esperimento prima di eliminarlo"
+
 msgid "Stopped / Scheduled"
 msgstr "Fermati / Pianificati"
 
+msgid "Stress / Reward Evolution"
+msgstr "Evoluzione di stress / ricompensa"
+
+msgid "Stress / Reward Settings"
+msgstr "Impostazioni di stress / ricompensa"
+
+msgid "Stress/Reward"
+msgstr "Stress/ricompensa"
+
+msgid "Structure, density, components"
+msgstr "Struttura, densità, componenti"
+
+msgid "Submit Logs"
+msgstr "Invia i log"
+
+msgid "Target Group"
+msgstr "Gruppo di destinazione"
+
 msgid "Telemetry Information"
 msgstr "Informazioni sulla telemetria"
+
+msgid "Test Connection"
+msgstr "Prova la connessione"
+
+msgid ""
+"The center column controls execution and the lower sections expose logs and diagnostics for both "
+"the server and active clients."
+msgstr ""
+"La colonna centrale controlla l'esecuzione e le sezioni in basso mostrano log e diagnostica del "
+"server e dei client attivi."
+
+msgid ""
+"The matrix loader searched the experiment folder and its subfolders but did not find a readable "
+"server or client JSON config."
+msgstr ""
+"Il caricatore della matrice ha cercato nella cartella dell'esperimento e nelle sue sottocartelle,"
+" ma non ha trovato una configurazione JSON leggibile del server o dei client."
 
 msgid "This experiment has at least one client set to run until manually stopped"
 msgstr ""
 "Questo esperimento ha almeno un client configurato per funzionare finché non viene fermato "
 "manualmente"
 
+msgid ""
+"This experiment has no clients yet, so client log analysis is unavailable until a client is "
+"created."
+msgstr ""
+"Questo esperimento non ha ancora client, quindi l'analisi dei log dei client non è disponibile "
+"finché non ne viene creato uno."
+
+msgid ""
+"This will compress and send your experiment's log files and configuration to help us diagnose "
+"issues and improve the platform."
+msgstr ""
+"Verranno compressi e inviati i file di log e la configurazione del tuo esperimento, per aiutarci "
+"a diagnosticare i problemi e migliorare la piattaforma."
+
 msgid "Toggle menu"
 msgstr "Mostra/nascondi il menu"
+
+msgid "Toggle the generated value between false and true"
+msgstr "Passa il valore generato tra falso e vero"
+
+msgid "Topic Evolution"
+msgstr "Evoluzione degli argomenti"
 
 msgid "Topics & Opinions"
 msgstr "Argomenti e opinioni"
 
+msgid "Total configurations:"
+msgstr "Configurazioni totali:"
+
+msgid "Total simulation time so far:"
+msgstr "Tempo di simulazione totale finora:"
+
+msgid "Toxicity"
+msgstr "Tossicità"
+
+msgid "Toxicity Evolution"
+msgstr "Evoluzione della tossicità"
+
 msgid "Trace excerpt:"
 msgstr "Estratto della traccia:"
+
+msgid "Trend analysis of server compute time and simulation time progression."
+msgstr ""
+"Analisi delle tendenze del tempo di calcolo del server e dell'avanzamento del tempo di "
+"simulazione."
+
+msgid "True"
+msgstr "Vero"
+
+msgid "Type a value and press Enter"
+msgstr "Scrivi un valore e premi Invio"
 
 msgid "URL:"
 msgstr "URL:"
 
+msgid ""
+"Unlock a feature and provide alternative values. Turn Cartesian mode on to combine all enabled "
+"features; leave it off to generate independent variants one feature at a time."
+msgstr ""
+"Sblocca una funzione e fornisci valori alternativi. Attiva la modalità cartesiana per combinare "
+"tutte le funzioni attive; lasciala disattivata per generare varianti indipendenti, una funzione "
+"alla volta."
+
 msgid "Unsupported language."
 msgstr "Lingua non supportata."
+
+#, python-format
+msgid "Update %(b)s first. Until then, server control actions and client workflows stay locked."
+msgstr ""
+"Prima aggiorna %(b)s. Fino ad allora le azioni di controllo del server e i flussi dei client "
+"restano bloccati."
+
+msgid "Update Configuration"
+msgstr "Aggiorna la configurazione"
+
+msgid "Update configuration first"
+msgstr "Prima aggiorna la configurazione"
+
+#, python-format
+msgid "Update runtime annotations and memory in %(b)s"
+msgstr "Aggiorna annotazioni e memoria in %(b)s"
+
+#, python-format
+msgid "Use %(b)s to download or remove the experiment"
+msgstr "Usa %(b)s per scaricare o rimuovere l'esperimento"
+
+#, python-format
+msgid "Use %(requests)s and %(clients)s to inspect runtime behavior"
+msgstr "Usa %(requests)s e %(clients)s per ispezionare il comportamento durante l'esecuzione"
+
+msgid ""
+"Use the left column to inspect metadata, update topics, toggle annotations, and open advanced "
+"configuration such as prompts, embeddings, and stress/reward settings."
+msgstr ""
+"Usa la colonna di sinistra per esaminare i metadati, aggiornare gli argomenti, attivare le "
+"annotazioni e aprire la configurazione avanzata, come prompt, embedding e impostazioni di "
+"stress/ricompensa."
+
+msgid ""
+"Use the left column to inspect metadata, update topics, toggle annotations, and open forum-"
+"specific configuration such as prompts, feeds, limits, embeddings, and stress/reward settings."
+msgstr ""
+"Usa la colonna di sinistra per esaminare i metadati, aggiornare gli argomenti, attivare le "
+"annotazioni e aprire la configurazione specifica del forum, come prompt, feed, limiti, embedding "
+"e impostazioni di stress/ricompensa."
 
 msgid ""
 "Use this page as the single entry point for building the entities that populate and influence "
@@ -569,6 +1280,9 @@ msgstr "Nome utente"
 msgid "Users"
 msgstr "Utenti"
 
+msgid "Users with access to participate in this experiment."
+msgstr "Utenti autorizzati a partecipare a questo esperimento."
+
 msgid "View Client Details"
 msgstr "Vedi i dettagli del client"
 
@@ -577,6 +1291,9 @@ msgstr "Vedi i dettagli dell'esperimento"
 
 msgid "View Release"
 msgstr "Vedi la versione"
+
+msgid "Visible Rows"
+msgstr "Righe visibili"
 
 msgid "We're working to fix the issue. Please try again later."
 msgstr "Stiamo lavorando per risolvere il problema. Riprova più tardi."
@@ -587,6 +1304,13 @@ msgstr "Benvenuto, %(username)s!"
 
 msgid "Welcome back"
 msgstr "Bentornato"
+
+msgid "What issue did you encounter? What were you trying to do when the error occurred?"
+msgstr "Quale problema hai incontrato? Cosa stavi cercando di fare quando si è verificato l'errore?"
+
+#, python-format
+msgid "When %(b)s is enabled, Detoxify is used automatically."
+msgstr "Quando %(b)s è attivo, Detoxify viene usato automaticamente."
 
 msgid "Where the Digital World comes to life."
 msgstr "Dove il mondo digitale prende vita."
@@ -610,6 +1334,9 @@ msgstr "Y Social | Configura il tuo profilo"
 msgid "Y Social | Sign up"
 msgstr "Y Social | Registrazione"
 
+msgid "YServer running on external machine"
+msgstr "YServer in esecuzione su una macchina esterna"
+
 msgid "YSocial"
 msgstr "YSocial"
 
@@ -627,6 +1354,9 @@ msgstr ""
 msgid "You can add to your population %(pages)s and %(agents)s."
 msgstr "Puoi aggiungere alla tua popolazione %(pages)s e %(agents)s."
 
+msgid "You can assign the generated experiments to an existing group or create a new one here."
+msgstr "Puoi assegnare gli esperimenti generati a un gruppo esistente o crearne uno nuovo qui."
+
 msgid "You can edit your profile later from the Settings menu."
 msgstr "Potrai modificare il profilo più tardi dal menu Impostazioni."
 
@@ -636,11 +1366,17 @@ msgstr "Non hai il permesso di eseguire questa azione."
 msgid "Your Profile"
 msgstr "Il tuo profilo"
 
+msgid "agents.recsys_type / agents.frecsys_type"
+msgstr "agents.recsys_type / agents.frecsys_type"
+
 msgid "login page"
 msgstr "pagina di accesso"
 
 msgid "never"
 msgstr "mai"
+
+msgid "sec"
+msgstr "s"
 
 msgid "settings"
 msgstr "impostazioni"

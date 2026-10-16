@@ -16,6 +16,9 @@ sys.path.insert(0, str(Path(__file__).parent))
 from audit_strings import JINJA, TextCollector, read  # noqa: E402
 from scan_unmarked import load_exceptions  # noqa: E402
 
+INLINE = r"(?:a|b|strong|em|code|u|small|kbd)"
+INLINE_CLOSE = re.compile(r"^</%s\s*>$" % INLINE, re.I)
+INLINE_OPEN = re.compile(r"<%s[\s>]" % INLINE, re.I)
 ATTRS = ("title", "placeholder", "aria-label", "alt")
 
 
@@ -36,8 +39,16 @@ def mark(path, exceptions):
         if "\n" in text or "data-cascade" in text:
             continue
         esc = re.escape(text)
-        pat_text = re.compile(r">(\s*)" + esc + r"(\s*)<")
-        out, n = pat_text.subn(lambda m: ">%s{{ %s }}%s<" % (m.group(1), quote(text), m.group(2)), out)
+        pat_text = re.compile(r"(<[^<>]*>)(\s*)" + esc + r"(\s*)(?=<)")
+
+        def repl(m, text=text, snapshot=out):
+            before = m.group(1)
+            after = snapshot[m.end():m.end() + 40]
+            if INLINE_CLOSE.search(before) or INLINE_OPEN.match(after):
+                return m.group(0)  # sentence fragment next to inline markup
+            return "%s%s{{ %s }}%s" % (before, m.group(2), quote(text), m.group(3))
+
+        out, n = pat_text.subn(repl, out)
         for attr in ATTRS:
             pat = re.compile(r'(\s%s=)"%s"' % (attr, esc))
             out, k = pat.subn(lambda m: '%s"{{ %s }}"' % (m.group(1), quote(text).replace('"', "'") if "'" not in text else quote(text).replace('"', "&quot;")), out)
