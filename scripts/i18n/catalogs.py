@@ -116,15 +116,27 @@ def check():
         if not mo.is_file():
             problems.append(f"{lang}: messages.mo missing (run `compile`)")
             continue
-        mo_translated = {m.id: m.string for m in read_mo(mo.open("rb")) if m.id}
+        mo_translated = {_key(m): _norm(m.string) for m in read_mo(mo.open("rb")) if m.id}
         po_translated = {
-            m.id: m.string for m in po_cat if m.id and m.string and not m.fuzzy
+            _key(m): _norm(m.string)
+            for m in po_cat
+            if m.id and any(m.string if isinstance(m.string, (list, tuple)) else [m.string])
+            and not m.fuzzy
         }
         if mo_translated != po_translated:
             problems.append(
                 f"{lang}: messages.mo is out of date with the .po (run `compile`)"
             )
     return problems
+
+
+def _key(message):
+    """Hashable id: plural messages carry a (singular, plural) pair."""
+    return tuple(message.id) if isinstance(message.id, (list, tuple)) else message.id
+
+
+def _norm(string):
+    return tuple(string) if isinstance(string, (list, tuple)) else string
 
 
 def pseudo():
