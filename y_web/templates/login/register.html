@@ -1,32 +1,32 @@
 {% extends 'login/scene_base.html' %}
-{% block title %}Y Social | Sign up{% endblock %}
+{% block title %}{{ _('Y Social | Sign up') }}{% endblock %}
 {% block sync %}{% include 'shared/browser_sync.html' %}{% endblock %}
 
 {% block card %}
         {% with messages = get_flashed_messages() %}
         {% if messages %}
-        <div class="yl-error" role="alert">{{ messages[0] }}. Go to <a href="{{ url_for('auth.login') }}">login page</a>.</div>
+        <div class="yl-error" role="alert">{{ messages[0] }}. {{ _('Go to') }} <a href="{{ url_for('auth.login') }}">{{ _('login page') }}</a>.</div>
         {% endif %}
         {% endwith %}
 
         <form method="POST" action="{{ url_for('auth.signup') }}" class="yl-form">
-            <h2>Create your account</h2>
-            <p class="yl-sub">Join Y Social and start exploring.</p>
+            <h2>{{ _('Create your account') }}</h2>
+            <p class="yl-sub">{{ _('Join Y Social and start exploring.') }}</p>
 
             <div class="yl-field">
                 <input id="yl-email" type="email" name="email" placeholder=" " autocomplete="email" autofocus required>
-                <label for="yl-email">Email</label>
+                <label for="yl-email">{{ _('Email') }}</label>
             </div>
             <div class="yl-field">
                 <input id="yl-name" type="text" name="name" placeholder=" " autocomplete="username" required>
-                <label for="yl-name">Username</label>
+                <label for="yl-name">{{ _('Username') }}</label>
             </div>
             <div class="yl-field">
                 <input id="yl-pass" type="password" name="password" placeholder=" " autocomplete="new-password" required>
-                <label for="yl-pass">Password</label>
-                <button class="yl-eye" id="yl-eye" type="button" aria-label="Show password">SHOW</button>
+                <label for="yl-pass">{{ _('Password') }}</label>
+                <button class="yl-eye" id="yl-eye" type="button" aria-label="{{ _('Show password') }}">{{ _('SHOW') }}</button>
             </div>
-            <button class="yl-btn" type="submit"><span class="yl-spin"></span><span>Sign Up</span></button>
-            <div class="yl-foot">Already registered? <a href="{{ url_for('auth.login') }}">Login</a></div>
+            <button class="yl-btn" type="submit"><span class="yl-spin"></span><span>{{ _('Sign Up') }}</span></button>
+            <div class="yl-foot">{{ _('Already registered?') }} <a href="{{ url_for('auth.login') }}">{{ _('Login') }}</a></div>
         </form>
 {% endblock %}

@@ -7,7 +7,7 @@
  <i class="mdi mdi-arrow-up-bold ys-icon-white"></i>
             </div>
  <div class="ys-flex-1">
- <div class="ys-text-xs-hint">New Release Available!</div>
+ <div class="ys-text-xs-hint">{{ _('New Release Available!') }}</div>
  <div class="ys-text-sm-dark">
  {{ release_info.release_name }} <span class="ys-text-brand-bold">(v{{ release_info.latest_version_tag }})</span>
  <span class="ys-badge-count">{{ release_info.published_at[:10] if release_info.published_at else '' }}</span>
@@ -20,10 +20,10 @@
  <a href="#" onclick="openExternalUrl(event, '{{ release_info.download_url }}')" class="ys-btn-brand">
                 {% if is_github_page %}
  <i class="mdi mdi-open-in-new ys-icon-md"></i>
-                <span>View Release</span>
+                <span>{{ _('View Release') }}</span>
                 {% else %}
  <i class="mdi mdi-download ys-icon-md"></i>
-                <span>Download</span>
+                <span>{{ _('Download') }}</span>
                 {% endif %}
             </a>
             {% endif %}
@@ -44,7 +44,7 @@
  <i class="mdi mdi-post ys-icon-white"></i>
             </div>
  <div class="ys-flex-1">
- <div class="ys-text-xs-hint">New Blog Post!</div>
+ <div class="ys-text-xs-hint">{{ _('New Blog Post!') }}</div>
  <div class="ys-text-sm-dark">
                     {{ blog_post.title }}
  <span class="ys-badge-count">{{ blog_post.published_at[:10] if blog_post.published_at else '' }}</span>
@@ -54,7 +54,7 @@
  <div class="ys-flex-gap-8">
             <a href="#" onclick="markBlogPostAsRead(event, {{ blog_post.id }}, '{{ blog_post.link }}')" style="display: inline-flex; align-items: center; gap: 6px; background: #ff9800; color: white; padding: 6px 14px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 500; transition: background 0.2s;">
  <i class="mdi mdi-open-in-new ys-icon-md"></i>
-                <span>Read Article</span>
+                <span>{{ _('Read Article') }}</span>
             </a>
  <button onclick="dismissBlogPost({{ blog_post.id }})" class="ys-btn-outline-gray" onmouseover="this.style.borderColor='#ff9800'; this.style.color='#ff9800';" onmouseout="this.style.borderColor='#ddd'; this.style.color='#666';">
  <i class="mdi mdi-close ys-text-14"></i>
@@ -81,7 +81,7 @@
         </label> -->
         <div class="buttons header-buttons">
             <!-- Tutorial Replay Button - only shown on pages with tutorials -->
- <button id="tutorial-replay-btn" class="button is-solid live-button has-icon tutorial-icon-button d-none" onclick="replayPageTutorial()" title="Replay Tutorial">
+ <button id="tutorial-replay-btn" class="button is-solid live-button has-icon tutorial-icon-button d-none" onclick="replayPageTutorial()" title="{{ _('Replay Tutorial') }}">
                 <i data-feather="help-circle"></i>
             </button>
             {% if active_experiments %}
@@ -89,7 +89,7 @@
                     {# Single experiment - direct link #}
                     <a class="button is-solid live-button has-icon" href="/admin/join_experiment/{{ active_experiments[0].idexp }}">
                         <i data-feather="video"></i>
-                        <span class="btn-text">Join {{ active_experiments[0].exp_name }}</span>
+                        <span class="btn-text">{{ _('Join %(name)s', name=active_experiments[0].exp_name) }}</span>
                     </a>
                 {% else %}
                     {# Multiple experiments - dropdown menu #}
@@ -97,7 +97,7 @@
                         <div class="dropdown-trigger">
                             <button class="button is-solid live-button has-icon" aria-haspopup="true" aria-controls="join-simulation-menu">
                                 <i data-feather="video"></i>
-                                <span class="btn-text">Join Simulation</span>
+                                <span class="btn-text">{{ _('Join Simulation') }}</span>
                                 <i data-feather="chevron-down" style="margin-left: 0.5rem; width: 16px; height: 16px;"></i>
                             </button>
                         </div>
@@ -114,29 +114,29 @@
                 {% endif %}
             {% else %}
                 {# No active experiments - disabled button #}
-                <button class="button is-solid live-button has-icon is-disabled" disabled title="No active experiments available">
+                <button class="button is-solid live-button has-icon is-disabled" disabled title="{{ _('No active experiments available') }}">
                     <i data-feather="alert-circle"></i>
-                    <span class="btn-text">No Active Experiments</span>
+                    <span class="btn-text">{{ _('No Active Experiments') }}</span>
                 </button>
             {% endif %}
             <div class="dropdown is-hoverable is-right toolbar-menu notification-dropdown-wrap" id="download-notifications-dropdown">
                 <div class="dropdown-trigger">
-                    <button class="button is-solid live-button has-icon notification-menu-button" aria-haspopup="true" aria-controls="download-notifications-menu" title="Notifications">
+                    <button class="button is-solid live-button has-icon notification-menu-button" aria-haspopup="true" aria-controls="download-notifications-menu" title="{{ _('Notifications') }}">
                         <i data-feather="bell"></i>
  <span id="download-notifications-badge" class="download-notification-badge d-none">0</span>
                     </button>
                 </div>
                 <div class="dropdown-menu" id="download-notifications-menu" role="menu">
                     <div class="dropdown-content" id="download-notifications-list">
-                        <div class="dropdown-item">No notifications yet.</div>
+                        <div class="dropdown-item">{{ _('No notifications yet.') }}</div>
                     </div>
                 </div>
             </div>
             <div class="dropdown is-hoverable is-right toolbar-menu account-dropdown-wrap">
                 <div class="dropdown-trigger">
-                    <button class="button is-solid live-button has-icon account-menu-button" aria-haspopup="true" aria-controls="account-menu" title="Account">
+                    <button class="button is-solid live-button has-icon account-menu-button" aria-haspopup="true" aria-controls="account-menu" title="{{ _('Account') }}">
                         <i data-feather="user"></i>
-                        <span class="btn-text">Account</span>
+                        <span class="btn-text">{{ _('Account') }}</span>
                         <i data-feather="chevron-down" style="margin-left: 0.35rem; width: 14px; height: 14px;"></i>
                     </button>
                 </div>

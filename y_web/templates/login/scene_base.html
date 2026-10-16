@@ -36,8 +36,8 @@
 <main class="yl-stage">
     <section class="yl-card" id="yl-card">
         <div class="yl-brand">
-            <img src="{{ url_for('static', filename='assets/img/vector/logo/Ysocial.png') }}" alt="YSocial"/>
-            <p>Where the Digital World comes to life.</p>
+            <img src="{{ url_for('static', filename='assets/img/vector/logo/Ysocial.png') }}" alt="{{ _('YSocial') }}"/>
+            <p>{{ _('Where the Digital World comes to life.') }}</p>
         </div>
         {% block card %}{% endblock %}
     </section>

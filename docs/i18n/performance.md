@@ -21,3 +21,7 @@ Flask-Babel resolves the translations on every `gettext()` call and Jinja's new-
 ## Remaining risk for Phase 2
 
 The admin templates hold about 1,900 unique strings and a heavy page renders a few hundred of them: at 2.7 us each that is roughly 1 ms on pages that render in 3 to 5 ms, still around the limit of the 5% criterion. The measurement must be repeated on the first converted area (F2-1) and, if needed, strings that never change can be resolved once per process instead of per request. Tracked as an open point of gate G1.
+
+## F2-1 remeasurement (layout, menu, login, onboarding, errors)
+
+F2-1 adds about 30 `_()` calls to every admin page (menu in `head.html`, top bar in `dash_head.html`) and the strings of login, onboarding and the four error pages. At 2.7 us per call the shared layout costs about 0.08 ms per admin page, around 2% of a 4 ms page and inside the run-to-run noise (about 5%). The admin pages converted in later tasks add their own strings, so the figure is re-checked at the end of F2-3 (heaviest pages: dashboard, experiment details, populations).

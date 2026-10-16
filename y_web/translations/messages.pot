@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-16 13:24+0000\n"
+"POT-Creation-Date: 2026-10-16 15:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,19 +17,137 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
+msgid "About"
+msgstr ""
+
+msgid "Access Denied"
+msgstr ""
+
+msgid "Account"
+msgstr ""
+
+msgid "Admin"
+msgstr ""
+
+msgid "Age"
+msgstr ""
+
+msgid "Agent Resources"
+msgstr ""
+
+msgid "Already registered?"
+msgstr ""
+
 msgid "Automatic (browser language)"
+msgstr ""
+
+msgid "Bachelor"
+msgstr ""
+
+msgid "Bad Request"
+msgstr ""
+
+msgid ""
+"Before entering your feed, personalise your profile and share your "
+"interest level and opinion for each active discussion topic."
 msgstr ""
 
 msgid "Choose the language of the dashboard for this user."
 msgstr ""
 
+msgid "Close"
+msgstr ""
+
+msgid "Create your account"
+msgstr ""
+
 msgid "Dashboard language"
+msgstr ""
+
+msgid "Debug Information:"
+msgstr ""
+
+msgid "Download"
+msgstr ""
+
+msgid "Education Level"
 msgstr ""
 
 msgid "Email"
 msgstr ""
 
+msgid "Endpoint:"
+msgstr ""
+
+#, python-format
+msgid "Error %(code)s"
+msgstr ""
+
+msgid "Exception:"
+msgstr ""
+
+msgid "Experiments"
+msgstr ""
+
+msgid "Extensions"
+msgstr ""
+
+msgid "Extreme"
+msgstr ""
+
+msgid "Extreme Interest"
+msgstr ""
+
+msgid "Female"
+msgstr ""
+
+msgid "Frontend Settings"
+msgstr ""
+
+msgid "Gender"
+msgstr ""
+
+msgid "Go to"
+msgstr ""
+
+msgid "Go to Homepage"
+msgstr ""
+
+msgid "High"
+msgstr ""
+
+msgid "High Interest"
+msgstr ""
+
+msgid "High School"
+msgstr ""
+
+msgid "Home"
+msgstr ""
+
+msgid "Interest"
+msgstr ""
+
+msgid "Interest level"
+msgstr ""
+
+msgid "Interested"
+msgstr ""
+
+msgid "Internal Server Error"
+msgstr ""
+
 msgid "Invalid user ID."
+msgstr ""
+
+#, python-format
+msgid "Join %(name)s"
+msgstr ""
+
+msgid "Join Simulation"
+msgstr ""
+
+msgid "Join Y Social and start exploring."
 msgstr ""
 
 msgid "Language"
@@ -41,16 +159,118 @@ msgstr ""
 msgid "Login"
 msgstr ""
 
+msgid "Low"
+msgstr ""
+
+msgid "Low Interest"
+msgstr ""
+
+msgid "Male"
+msgstr ""
+
+msgid "Master"
+msgstr ""
+
+msgid "Message:"
+msgstr ""
+
+msgid "Method:"
+msgstr ""
+
+msgid "Miscellanea"
+msgstr ""
+
 msgid "My Profile"
+msgstr ""
+
+msgid "New Blog Post!"
+msgstr ""
+
+msgid "New Release Available!"
+msgstr ""
+
+msgid "No Active Experiments"
+msgstr ""
+
+msgid "No active discussion topics for this experiment."
+msgstr ""
+
+msgid "No active experiments available"
+msgstr ""
+
+msgid "No notifications yet."
+msgstr ""
+
+msgid "Not"
+msgstr ""
+
+msgid "Not Interested"
+msgstr ""
+
+msgid "Notifications"
+msgstr ""
+
+msgid "Opinion"
+msgstr ""
+
+msgid "Opinion scale not yet configured."
+msgstr ""
+
+msgid "Page Not Found"
 msgstr ""
 
 msgid "Password"
 msgstr ""
 
+msgid "Path:"
+msgstr ""
+
+msgid "Personalise your account details."
+msgstr ""
+
+msgid "PhD"
+msgstr ""
+
+msgid "Please check the URL or go back to the homepage."
+msgstr ""
+
+msgid "Please check your input and try again."
+msgstr ""
+
+msgid "Please contact an administrator if you believe this is an error."
+msgstr ""
+
+msgid "Plugin Manager"
+msgstr ""
+
+msgid "Populations"
+msgstr ""
+
+msgid "Profile Header"
+msgstr ""
+
+msgid "Profile Picture"
+msgstr ""
+
+msgid "Rate interest and opinion for each topic."
+msgstr ""
+
+msgid "Read Article"
+msgstr ""
+
 msgid "Remember me"
 msgstr ""
 
+msgid "Replay Tutorial"
+msgstr ""
+
+msgid "Route args:"
+msgstr ""
+
 msgid "SHOW"
+msgstr ""
+
+msgid "Save & Enter My Feed"
 msgstr ""
 
 msgid "Save language"
@@ -65,7 +285,22 @@ msgstr ""
 msgid "Show password"
 msgstr ""
 
+msgid "Sign Up"
+msgstr ""
+
 msgid "Sign in to continue to your experiments."
+msgstr ""
+
+msgid "Toggle menu"
+msgstr ""
+
+msgid "Topics & Opinions"
+msgstr ""
+
+msgid "Trace excerpt:"
+msgstr ""
+
+msgid "URL:"
 msgstr ""
 
 msgid "Unsupported language."
@@ -74,9 +309,59 @@ msgstr ""
 msgid "User not found"
 msgstr ""
 
+msgid "Username"
+msgstr ""
+
+msgid "Users"
+msgstr ""
+
+msgid "View Release"
+msgstr ""
+
+msgid "We're working to fix the issue. Please try again later."
+msgstr ""
+
+#, python-format
+msgid "Welcome %(username)s!"
+msgstr ""
+
 msgid "Welcome back"
 msgstr ""
 
+msgid "Where the Digital World comes to life."
+msgstr ""
+
+msgid "Wrapped exception:"
+msgstr ""
+
+msgid "Y Social | Dashboard"
+msgstr ""
+
+#, python-format
+msgid "Y Social | Error %(code)s"
+msgstr ""
+
+msgid "Y Social | Login"
+msgstr ""
+
+msgid "Y Social | Setup Your Profile"
+msgstr ""
+
+msgid "Y Social | Sign up"
+msgstr ""
+
+msgid "YSocial"
+msgstr ""
+
+msgid "You can edit your profile later from the Settings menu."
+msgstr ""
+
 msgid "You do not have permission to perform this action."
+msgstr ""
+
+msgid "Your Profile"
+msgstr ""
+
+msgid "login page"
 msgstr ""
 

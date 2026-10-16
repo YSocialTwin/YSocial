@@ -1,26 +1,26 @@
 {% extends 'login/scene_base.html' %}
-{% block title %}Y Social | 403{% endblock %}
+{% block title %}{{ _('Y Social | Error %(code)s', code='403') }}{% endblock %}
 {# Calm network (no information cascade) on error pages #}
 {% block body_attrs %}data-cascade="off"{% endblock %}
 
 {% block card %}
         <div class="yl-center">
             <div class="yl-errcode" aria-hidden="true">{{ error.status_code if error else '403' }}</div>
-            <h2>Access Denied</h2>
-            <p class="yl-sub">Error {{ error.status_code if error else '403' }}</p>
+            <h2>{{ _('Access Denied') }}</h2>
+            <p class="yl-sub">{{ _('Error %(code)s', code=(error.status_code if error else '403')) }}</p>
             <p class="yl-lead">
                 {{ error.error_description if error else 'You don\'t have permission to access this resource.' }}<br>
-                Please contact an administrator if you believe this is an error.
+                {{ _('Please contact an administrator if you believe this is an error.') }}
             </p>
 
             {% if error and error.requested_url %}
             <div class="yl-debug">
-                <p><strong>Debug Information:</strong></p>
-                <p><strong>URL:</strong> {{ error.requested_url }}</p>
-                {% if error.method %}<p><strong>Method:</strong> {{ error.method }}</p>{% endif %}
+                <p><strong>{{ _('Debug Information:') }}</strong></p>
+                <p><strong>{{ _('URL:') }}</strong> {{ error.requested_url }}</p>
+                {% if error.method %}<p><strong>{{ _('Method:') }}</strong> {{ error.method }}</p>{% endif %}
             </div>
             {% endif %}
 
-            <a href="/" class="yl-btn yl-btn-link">Go to Homepage</a>
+            <a href="/" class="yl-btn yl-btn-link">{{ _('Go to Homepage') }}</a>
         </div>
 {% endblock %}

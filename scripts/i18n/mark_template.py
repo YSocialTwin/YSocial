@@ -1,0 +1,62 @@
+"""Mark plain user-visible strings in Jinja templates with ``_()``.
+
+    python scripts/i18n/mark_template.py y_web/templates/admin/head.html [more files]
+
+Only the unambiguous cases are rewritten: an element whose whole text is a literal
+string (``<span>Home</span>``) and the attributes title/placeholder/aria-label/alt/
+value-less labels (``title="Close"``). Text mixed with Jinja expressions, fragments
+split by inline tags and anything else are left alone and reported, so they can be
+handled by hand (named placeholders, ``{% trans %}`` blocks...).
+"""
+import re
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent))
+from audit_strings import JINJA, TextCollector, read  # noqa: E402
+from scan_unmarked import load_exceptions  # noqa: E402
+
+ATTRS = ("title", "placeholder", "aria-label", "alt")
+
+
+def quote(text):
+    if "'" not in text:
+        return "_('%s')" % text
+    return '_("%s")' % text.replace('"', '\\"')
+
+
+def mark(path, exceptions):
+    src = Path(path).read_text(encoding="utf-8")
+    collector = TextCollector()
+    collector.feed(JINJA.sub("", src))
+    found = {t for t in collector.texts + collector.attrs if t not in exceptions}
+    out = src
+    done = set()
+    for text in sorted(found, key=len, reverse=True):
+        if "\n" in text or "data-cascade" in text:
+            continue
+        esc = re.escape(text)
+        pat_text = re.compile(r">(\s*)" + esc + r"(\s*)<")
+        out, n = pat_text.subn(lambda m: ">%s{{ %s }}%s<" % (m.group(1), quote(text), m.group(2)), out)
+        for attr in ATTRS:
+            pat = re.compile(r'(\s%s=)"%s"' % (attr, esc))
+            out, k = pat.subn(lambda m: '%s"{{ %s }}"' % (m.group(1), quote(text).replace('"', "'") if "'" not in text else quote(text).replace('"', "&quot;")), out)
+            n += k
+        if n:
+            done.add(text)
+    if out != src:
+        Path(path).write_text(out, encoding="utf-8")
+    return done, sorted(found - done)
+
+
+def main(argv):
+    ex = load_exceptions()
+    for p in argv:
+        done, left = mark(p, ex)
+        print("%s: marked %d, left %d" % (p, len(done), len(left)))
+        for t in left:
+            print("   left:", repr(t)[:100])
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

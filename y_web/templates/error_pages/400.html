@@ -1,26 +1,26 @@
 {% extends 'login/scene_base.html' %}
-{% block title %}Y Social | 400{% endblock %}
+{% block title %}{{ _('Y Social | Error %(code)s', code='400') }}{% endblock %}
 {# Calm network (no information cascade) on error pages #}
 {% block body_attrs %}data-cascade="off"{% endblock %}
 
 {% block card %}
         <div class="yl-center">
             <div class="yl-errcode" aria-hidden="true">{{ error.status_code if error else '400' }}</div>
-            <h2>Bad Request</h2>
-            <p class="yl-sub">Error {{ error.status_code if error else '400' }}</p>
+            <h2>{{ _('Bad Request') }}</h2>
+            <p class="yl-sub">{{ _('Error %(code)s', code=(error.status_code if error else '400')) }}</p>
             <p class="yl-lead">
                 {{ error.error_description if error else 'The request could not be understood by the server.' }}<br>
-                Please check your input and try again.
+                {{ _('Please check your input and try again.') }}
             </p>
 
             {% if error and error.requested_url %}
             <div class="yl-debug">
-                <p><strong>Debug Information:</strong></p>
-                <p><strong>URL:</strong> {{ error.requested_url }}</p>
-                {% if error.method %}<p><strong>Method:</strong> {{ error.method }}</p>{% endif %}
+                <p><strong>{{ _('Debug Information:') }}</strong></p>
+                <p><strong>{{ _('URL:') }}</strong> {{ error.requested_url }}</p>
+                {% if error.method %}<p><strong>{{ _('Method:') }}</strong> {{ error.method }}</p>{% endif %}
             </div>
             {% endif %}
 
-            <a href="/" class="yl-btn yl-btn-link">Go to Homepage</a>
+            <a href="/" class="yl-btn yl-btn-link">{{ _('Go to Homepage') }}</a>
         </div>
 {% endblock %}

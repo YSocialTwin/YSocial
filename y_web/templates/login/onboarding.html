@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
     <meta http-equiv="x-ua-compatible" content="ie=edge"/>
-    <title>Y Social | Setup Your Profile</title>
+    <title>{{ _('Y Social | Setup Your Profile') }}</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='assets/img/favicon.png') }}"/>
     <link href="https://fonts.googleapis.com/css?family=Montserrat:600,700,800,900" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css?family=Roboto:400,500" rel="stylesheet"/>
@@ -134,9 +134,9 @@
 </div>
 
 <div class="ys-ob-hero">
-    <img class="ys-ob-logo" src="{{ url_for('static', filename='assets/img/vector/logo/Ysocial.png') }}" alt="YSocial"/>
-    <h1>Welcome {{ user.username }}!</h1>
-    <p>Before entering your feed, personalise your profile and share your interest level and opinion for each active discussion topic.</p>
+    <img class="ys-ob-logo" src="{{ url_for('static', filename='assets/img/vector/logo/Ysocial.png') }}" alt="{{ _('YSocial') }}"/>
+    <h1>{{ _('Welcome %(username)s!', username=user.username) }}</h1>
+    <p>{{ _('Before entering your feed, personalise your profile and share your interest level and opinion for each active discussion topic.') }}</p>
 </div>
 
 <div class="ys-ob-page">
@@ -148,35 +148,35 @@
                 <div class="ys-ob-card__head">
                     <div class="ys-ob-card__icon"><i class="mdi mdi-account-edit"></i></div>
                     <div>
-                        <p class="ys-ob-card__title">Your Profile</p>
-                        <p class="ys-ob-card__subtitle">Personalise your account details.</p>
+                        <p class="ys-ob-card__title">{{ _('Your Profile') }}</p>
+                        <p class="ys-ob-card__subtitle">{{ _('Personalise your account details.') }}</p>
                     </div>
                 </div>
                 <div class="ys-ob-card__body">
                     <div class="ys-ob-grid">
 
                         <div class="ys-ob-field">
-                            <label>Age</label>
+                            <label>{{ _('Age') }}</label>
                             <input name="age" id="field-age" type="number" min="13" max="120" value="{{ user.age or '' }}" required>
                         </div>
 
                         <div class="ys-ob-field">
-                            <label>Gender</label>
+                            <label>{{ _('Gender') }}</label>
                             <select name="gender" id="field-gender" required>
                                 <option value=""></option>
-                                <option value="male"   {{ 'selected' if user.gender == 'male'   }}>Male</option>
-                                <option value="female" {{ 'selected' if user.gender == 'female' }}>Female</option>
+                                <option value="male"   {{ 'selected' if user.gender == 'male'   }}>{{ _('Male') }}</option>
+                                <option value="female" {{ 'selected' if user.gender == 'female' }}>{{ _('Female') }}</option>
                             </select>
                         </div>
 
                         <div class="ys-ob-field">
-                            <label>Education Level</label>
+                            <label>{{ _('Education Level') }}</label>
                             <select name="education_level" id="field-education" required>
                                 <option value=""></option>
-                                <option value="high school" {{ 'selected' if user.education_level == 'high school' }}>High School</option>
-                                <option value=" bachelor"   {{ 'selected' if user.education_level == ' bachelor'   }}>Bachelor</option>
-                                <option value=" master"     {{ 'selected' if user.education_level == ' master'     }}>Master</option>
-                                <option value=" phd"        {{ 'selected' if user.education_level == ' phd'        }}>PhD</option>
+                                <option value="high school" {{ 'selected' if user.education_level == 'high school' }}>{{ _('High School') }}</option>
+                                <option value=" bachelor"   {{ 'selected' if user.education_level == ' bachelor'   }}>{{ _('Bachelor') }}</option>
+                                <option value=" master"     {{ 'selected' if user.education_level == ' master'     }}>{{ _('Master') }}</option>
+                                <option value=" phd"        {{ 'selected' if user.education_level == ' phd'        }}>{{ _('PhD') }}</option>
                             </select>
                         </div>
 
@@ -185,7 +185,7 @@
 
                         {% if available_profile_pics %}
                         <div class="ys-ob-field full">
-                            <label>Profile Picture</label>
+                            <label>{{ _('Profile Picture') }}</label>
                             <div class="ys-ob-avatar-row">
                                 <img id="profile-pic-preview"
                                      src="{{ profile_pic or url_for('static', filename='assets/img/users/' + available_profile_pics[0]) }}"
@@ -197,7 +197,7 @@
 
                         {% if available_cover_images %}
                         <div class="ys-ob-field full">
-                            <label>Profile Header</label>
+                            <label>{{ _('Profile Header') }}</label>
                             <img id="cover-image-preview"
                                  src="{{ cover_image or url_for('static', filename='assets/img/demo/bg/4.png') }}"
                                  style="width:100%;max-height:80px;object-fit:cover;border-radius:7px;border:1.5px solid #e2e2ee;margin-bottom:6px;"
@@ -216,8 +216,8 @@
                     <div class="ys-ob-card__head">
                         <div class="ys-ob-card__icon"><i class="mdi mdi-tag-multiple"></i></div>
                         <div>
-                            <p class="ys-ob-card__title">Topics &amp; Opinions</p>
-                            <p class="ys-ob-card__subtitle">Rate interest and opinion for each topic.</p>
+                            <p class="ys-ob-card__title">{{ _('Topics & Opinions') }}</p>
+                            <p class="ys-ob-card__subtitle">{{ _('Rate interest and opinion for each topic.') }}</p>
                         </div>
                     </div>
                     <div class="ys-ob-card__body">
@@ -234,8 +234,8 @@
 
                             <!-- Interest level slider -->
                             <div class="ys-ob-topic__q">
-                                Interest level
-                                <span class="ys-ob-topic__q-val" id="interest-val-{{ topic.id }}">Not Interested</span>
+                                {{ _('Interest level') }}
+                                <span class="ys-ob-topic__q-val" id="interest-val-{{ topic.id }}">{{ _('Not Interested') }}</span>
                             </div>
                             {% set i_idx = saved_interest_idx.get(topic.id|string, 0) %}
                             <div class="ys-slider-wrap">
@@ -245,10 +245,10 @@
                                        data-topic="{{ topic.id }}" data-type="interest"
                                        id="interest-slider-{{ topic.id }}">
                                 <div class="ys-slider-ticks">
-                                    <span {% if i_idx == 0 %}class="active"{% endif %}>Not<br>Interested</span>
-                                    <span {% if i_idx == 1 %}class="active"{% endif %}>Low<br>Interest</span>
-                                    <span {% if i_idx == 2 %}class="active"{% endif %}>High<br>Interest</span>
-                                    <span {% if i_idx == 3 %}class="active"{% endif %}>Extreme<br>Interest</span>
+                                    <span {% if i_idx == 0 %}class="active"{% endif %}>{{ _('Not') }}<br>{{ _('Interested') }}</span>
+                                    <span {% if i_idx == 1 %}class="active"{% endif %}>{{ _('Low') }}<br>{{ _('Interest') }}</span>
+                                    <span {% if i_idx == 2 %}class="active"{% endif %}>{{ _('High') }}<br>{{ _('Interest') }}</span>
+                                    <span {% if i_idx == 3 %}class="active"{% endif %}>{{ _('Extreme') }}<br>{{ _('Interest') }}</span>
                                 </div>
                             </div>
 
@@ -257,7 +257,7 @@
                             <!-- Opinion slider -->
                             {% set o_idx = saved_opinions.get(topic.id|string, mid_op) %}
                             <div class="ys-ob-topic__q">
-                                Opinion
+                                {{ _('Opinion') }}
                                 <span class="ys-ob-topic__q-val" id="opinion-val-{{ topic.id }}" style="color:#949494;">{{ opinion_groups[o_idx].name.strip() }}</span>
                             </div>
                             <div class="ys-slider-wrap">
@@ -276,9 +276,9 @@
                         {% endfor %}
 
                         {% elif topics %}
-                        <div class="ys-ob-no-topics">Opinion scale not yet configured.</div>
+                        <div class="ys-ob-no-topics">{{ _('Opinion scale not yet configured.') }}</div>
                         {% else %}
-                        <div class="ys-ob-no-topics">No active discussion topics for this experiment.</div>
+                        <div class="ys-ob-no-topics">{{ _('No active discussion topics for this experiment.') }}</div>
                         {% endif %}
 
                     </div>
@@ -288,9 +288,9 @@
                 <div class="ys-ob-submit">
                     <button type="submit" class="ys-ob-submit-btn">
                         <i class="mdi mdi-check-circle-outline"></i>
-                        Save &amp; Enter My Feed
+                        {{ _('Save & Enter My Feed') }}
                     </button>
-                    <div class="ys-ob-submit-hint">You can edit your profile later from the Settings menu.</div>
+                    <div class="ys-ob-submit-hint">{{ _('You can edit your profile later from the Settings menu.') }}</div>
                 </div>
 
             </div><!-- /topics wrap -->
@@ -301,7 +301,7 @@
 <script src="{{ url_for('static', filename='assets/js/app.js') }}"></script>
 <script>
 (function () {
-    var INTEREST_LABELS = ['Not Interested', 'Low Interest', 'High Interest', 'Extreme Interest'];
+    var INTEREST_LABELS = {{ [_('Not Interested'), _('Low Interest'), _('High Interest'), _('Extreme Interest')]|tojson }};
     var INTEREST_VALUES = ['0.0', '0.33', '0.67', '1.0'];
     var INTEREST_COLORS = ['#b6e0e8', '#6dc3d0', '#3d9aa8', '#1f6b78'];
 

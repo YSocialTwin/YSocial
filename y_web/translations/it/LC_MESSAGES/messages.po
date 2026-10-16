@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-16 13:24+0000\n"
+"POT-Creation-Date: 2026-10-16 15:00+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -18,66 +18,353 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
+msgid "About"
+msgstr "Informazioni"
+
+msgid "Access Denied"
+msgstr "Accesso negato"
+
+msgid "Account"
+msgstr "Account"
+
+msgid "Admin"
+msgstr "Amministrazione"
+
+msgid "Age"
+msgstr "Età"
+
+msgid "Agent Resources"
+msgstr "Risorse degli agenti"
+
+msgid "Already registered?"
+msgstr "Già registrato?"
+
 msgid "Automatic (browser language)"
+msgstr "Automatica (lingua del browser)"
+
+msgid "Bachelor"
+msgstr "Laurea triennale"
+
+msgid "Bad Request"
+msgstr "Richiesta non valida"
+
+msgid ""
+"Before entering your feed, personalise your profile and share your interest level and opinion for"
+" each active discussion topic."
 msgstr ""
+"Prima di entrare nel tuo feed, personalizza il profilo e indica il tuo livello di interesse e la "
+"tua opinione per ogni argomento di discussione attivo."
 
 msgid "Choose the language of the dashboard for this user."
-msgstr ""
+msgstr "Scegli la lingua della dashboard per questo utente."
+
+msgid "Close"
+msgstr "Chiudi"
+
+msgid "Create your account"
+msgstr "Crea il tuo account"
 
 msgid "Dashboard language"
-msgstr ""
+msgstr "Lingua della dashboard"
+
+msgid "Debug Information:"
+msgstr "Informazioni di debug:"
+
+msgid "Download"
+msgstr "Scarica"
+
+msgid "Education Level"
+msgstr "Livello di istruzione"
 
 msgid "Email"
 msgstr "Email"
 
+msgid "Endpoint:"
+msgstr "Endpoint:"
+
+#, python-format
+msgid "Error %(code)s"
+msgstr "Errore %(code)s"
+
+msgid "Exception:"
+msgstr "Eccezione:"
+
+msgid "Experiments"
+msgstr "Esperimenti"
+
+msgid "Extensions"
+msgstr "Estensioni"
+
+msgid "Extreme"
+msgstr "Estremo"
+
+msgid "Extreme Interest"
+msgstr "Interesse estremo"
+
+msgid "Female"
+msgstr "Donna"
+
+msgid "Frontend Settings"
+msgstr "Impostazioni del frontend"
+
+msgid "Gender"
+msgstr "Genere"
+
+msgid "Go to"
+msgstr "Vai alla"
+
+msgid "Go to Homepage"
+msgstr "Vai alla home page"
+
+msgid "High"
+msgstr "Alto"
+
+msgid "High Interest"
+msgstr "Interesse alto"
+
+msgid "High School"
+msgstr "Diploma superiore"
+
+msgid "Home"
+msgstr "Home"
+
+msgid "Interest"
+msgstr "Interesse"
+
+msgid "Interest level"
+msgstr "Livello di interesse"
+
+msgid "Interested"
+msgstr "Interessato"
+
+msgid "Internal Server Error"
+msgstr "Errore interno del server"
+
 msgid "Invalid user ID."
-msgstr ""
+msgstr "ID utente non valido."
+
+#, python-format
+msgid "Join %(name)s"
+msgstr "Partecipa a %(name)s"
+
+msgid "Join Simulation"
+msgstr "Partecipa alla simulazione"
+
+msgid "Join Y Social and start exploring."
+msgstr "Unisciti a Y Social e inizia a esplorare."
 
 msgid "Language"
-msgstr ""
+msgstr "Lingua"
 
 msgid "Log Out"
-msgstr ""
+msgstr "Esci"
 
 msgid "Login"
 msgstr "Accedi"
 
+msgid "Low"
+msgstr "Basso"
+
+msgid "Low Interest"
+msgstr "Interesse basso"
+
+msgid "Male"
+msgstr "Uomo"
+
+msgid "Master"
+msgstr "Laurea magistrale"
+
+msgid "Message:"
+msgstr "Messaggio:"
+
+msgid "Method:"
+msgstr "Metodo:"
+
+msgid "Miscellanea"
+msgstr "Varie"
+
 msgid "My Profile"
-msgstr ""
+msgstr "Il mio profilo"
+
+msgid "New Blog Post!"
+msgstr "Nuovo articolo del blog!"
+
+msgid "New Release Available!"
+msgstr "Nuova versione disponibile!"
+
+msgid "No Active Experiments"
+msgstr "Nessun esperimento attivo"
+
+msgid "No active discussion topics for this experiment."
+msgstr "Nessun argomento di discussione attivo per questo esperimento."
+
+msgid "No active experiments available"
+msgstr "Nessun esperimento attivo disponibile"
+
+msgid "No notifications yet."
+msgstr "Ancora nessuna notifica."
+
+msgid "Not"
+msgstr "Non"
+
+msgid "Not Interested"
+msgstr "Non interessato"
+
+msgid "Notifications"
+msgstr "Notifiche"
+
+msgid "Opinion"
+msgstr "Opinione"
+
+msgid "Opinion scale not yet configured."
+msgstr "Scala delle opinioni non ancora configurata."
+
+msgid "Page Not Found"
+msgstr "Pagina non trovata"
 
 msgid "Password"
 msgstr "Password"
 
+msgid "Path:"
+msgstr "Percorso:"
+
+msgid "Personalise your account details."
+msgstr "Personalizza i dati del tuo account."
+
+msgid "PhD"
+msgstr "Dottorato"
+
+msgid "Please check the URL or go back to the homepage."
+msgstr "Controlla l'URL oppure torna alla home page."
+
+msgid "Please check your input and try again."
+msgstr "Controlla i dati inseriti e riprova."
+
+msgid "Please contact an administrator if you believe this is an error."
+msgstr "Contatta un amministratore se pensi che si tratti di un errore."
+
+msgid "Plugin Manager"
+msgstr "Gestione plugin"
+
+msgid "Populations"
+msgstr "Popolazioni"
+
+msgid "Profile Header"
+msgstr "Immagine di copertina"
+
+msgid "Profile Picture"
+msgstr "Immagine del profilo"
+
+msgid "Rate interest and opinion for each topic."
+msgstr "Indica interesse e opinione per ogni argomento."
+
+msgid "Read Article"
+msgstr "Leggi l'articolo"
+
 msgid "Remember me"
 msgstr "Ricordami"
+
+msgid "Replay Tutorial"
+msgstr "Rivedi il tutorial"
+
+msgid "Route args:"
+msgstr "Argomenti della route:"
 
 msgid "SHOW"
 msgstr "MOSTRA"
 
+msgid "Save & Enter My Feed"
+msgstr "Salva ed entra nel mio feed"
+
 msgid "Save language"
-msgstr ""
+msgstr "Salva la lingua"
 
 msgid "Search posts, users, links..."
 msgstr "Cerca post, utenti, link..."
 
 msgid "Share Experiments"
-msgstr ""
+msgstr "Condividi gli esperimenti"
 
 msgid "Show password"
 msgstr "Mostra password"
 
+msgid "Sign Up"
+msgstr "Registrati"
+
 msgid "Sign in to continue to your experiments."
 msgstr "Accedi per continuare con i tuoi esperimenti."
 
+msgid "Toggle menu"
+msgstr "Mostra/nascondi il menu"
+
+msgid "Topics & Opinions"
+msgstr "Argomenti e opinioni"
+
+msgid "Trace excerpt:"
+msgstr "Estratto della traccia:"
+
+msgid "URL:"
+msgstr "URL:"
+
 msgid "Unsupported language."
-msgstr ""
+msgstr "Lingua non supportata."
 
 msgid "User not found"
-msgstr ""
+msgstr "Utente non trovato"
+
+msgid "Username"
+msgstr "Nome utente"
+
+msgid "Users"
+msgstr "Utenti"
+
+msgid "View Release"
+msgstr "Vedi la versione"
+
+msgid "We're working to fix the issue. Please try again later."
+msgstr "Stiamo lavorando per risolvere il problema. Riprova più tardi."
+
+#, python-format
+msgid "Welcome %(username)s!"
+msgstr "Benvenuto, %(username)s!"
 
 msgid "Welcome back"
 msgstr "Bentornato"
 
+msgid "Where the Digital World comes to life."
+msgstr "Dove il mondo digitale prende vita."
+
+msgid "Wrapped exception:"
+msgstr "Eccezione incapsulata:"
+
+msgid "Y Social | Dashboard"
+msgstr "Y Social | Dashboard"
+
+#, python-format
+msgid "Y Social | Error %(code)s"
+msgstr "Y Social | Errore %(code)s"
+
+msgid "Y Social | Login"
+msgstr "Y Social | Accesso"
+
+msgid "Y Social | Setup Your Profile"
+msgstr "Y Social | Configura il tuo profilo"
+
+msgid "Y Social | Sign up"
+msgstr "Y Social | Registrazione"
+
+msgid "YSocial"
+msgstr "YSocial"
+
+msgid "You can edit your profile later from the Settings menu."
+msgstr "Potrai modificare il profilo più tardi dal menu Impostazioni."
+
 msgid "You do not have permission to perform this action."
-msgstr ""
+msgstr "Non hai il permesso di eseguire questa azione."
+
+msgid "Your Profile"
+msgstr "Il tuo profilo"
+
+msgid "login page"
+msgstr "pagina di accesso"
 

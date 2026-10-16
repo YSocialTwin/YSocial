@@ -1,33 +1,33 @@
 {% extends 'login/scene_base.html' %}
-{% block title %}Y Social | 500{% endblock %}
+{% block title %}{{ _('Y Social | Error %(code)s', code='500') }}{% endblock %}
 {# Calm network (no information cascade) on error pages #}
 {% block body_attrs %}data-cascade="off"{% endblock %}
 
 {% block card %}
         <div class="yl-center">
             <div class="yl-errcode" aria-hidden="true">{{ error.status_code if error else '500' }}</div>
-            <h2>Internal Server Error</h2>
-            <p class="yl-sub">Error {{ error.status_code if error else '500' }}</p>
+            <h2>{{ _('Internal Server Error') }}</h2>
+            <p class="yl-sub">{{ _('Error %(code)s', code=(error.status_code if error else '500')) }}</p>
             <p class="yl-lead">
                 {{ error.error_description if error else 'Something went wrong on our end.' }}<br>
-                We're working to fix the issue. Please try again later.
+                {{ _("We're working to fix the issue. Please try again later.") }}
             </p>
 
             {% if error and error.requested_url %}
             <div class="yl-debug">
-                <p><strong>Debug Information:</strong></p>
-                <p><strong>URL:</strong> {{ error.requested_url }}</p>
-                {% if error.method %}<p><strong>Method:</strong> {{ error.method }}</p>{% endif %}
-                {% if error.path %}<p><strong>Path:</strong> {{ error.path }}</p>{% endif %}
-                {% if error.endpoint %}<p><strong>Endpoint:</strong> {{ error.endpoint }}</p>{% endif %}
-                {% if error.view_args %}<p><strong>Route args:</strong> {{ error.view_args }}</p>{% endif %}
-                {% if error.exception_class %}<p><strong>Exception:</strong> {{ error.exception_class }}</p>{% endif %}
-                {% if error.exception_message %}<p><strong>Message:</strong> {{ error.exception_message }}</p>{% endif %}
-                {% if error.wrapped_exception_class and error.wrapped_exception_class != error.exception_class %}<p><strong>Wrapped exception:</strong> {{ error.wrapped_exception_class }}</p>{% endif %}
-                {% if error.traceback_excerpt %}<p class="yl-pre"><strong>Trace excerpt:</strong><br>{{ error.traceback_excerpt }}</p>{% endif %}
+                <p><strong>{{ _('Debug Information:') }}</strong></p>
+                <p><strong>{{ _('URL:') }}</strong> {{ error.requested_url }}</p>
+                {% if error.method %}<p><strong>{{ _('Method:') }}</strong> {{ error.method }}</p>{% endif %}
+                {% if error.path %}<p><strong>{{ _('Path:') }}</strong> {{ error.path }}</p>{% endif %}
+                {% if error.endpoint %}<p><strong>{{ _('Endpoint:') }}</strong> {{ error.endpoint }}</p>{% endif %}
+                {% if error.view_args %}<p><strong>{{ _('Route args:') }}</strong> {{ error.view_args }}</p>{% endif %}
+                {% if error.exception_class %}<p><strong>{{ _('Exception:') }}</strong> {{ error.exception_class }}</p>{% endif %}
+                {% if error.exception_message %}<p><strong>{{ _('Message:') }}</strong> {{ error.exception_message }}</p>{% endif %}
+                {% if error.wrapped_exception_class and error.wrapped_exception_class != error.exception_class %}<p><strong>{{ _('Wrapped exception:') }}</strong> {{ error.wrapped_exception_class }}</p>{% endif %}
+                {% if error.traceback_excerpt %}<p class="yl-pre"><strong>{{ _('Trace excerpt:') }}</strong><br>{{ error.traceback_excerpt }}</p>{% endif %}
             </div>
             {% endif %}
 
-            <a href="/" class="yl-btn yl-btn-link">Go to Homepage</a>
+            <a href="/" class="yl-btn yl-btn-link">{{ _('Go to Homepage') }}</a>
         </div>
 {% endblock %}
