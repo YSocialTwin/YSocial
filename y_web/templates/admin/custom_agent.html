@@ -89,7 +89,7 @@
                                                 style="display: contents;"
                                             ></div>
                                             <span class="left">
-                                                {{ parameter.name.replace('_', ' ').title() }}{% if parameter.required %} <small>{{ _('(required)') }}</small>{% endif %}
+                                                {{ parameter.label or parameter.name.replace('_', ' ').title() }}{% if parameter.required %} <small>{{ _('(required)') }}</small>{% endif %}
                                             </span>
                                             <span class="right ys-w-70">
                                                 {% set parameter_type = parameter.type|string %}

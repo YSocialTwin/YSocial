@@ -170,6 +170,17 @@ def _custom_agent_slug(name: str) -> str:
     return tokens[0][0] + "".join(tokens[1:])
 
 
+def _localize_agent_entry(repo_name: str, entry: dict) -> dict:
+    """Return *entry* with its user-visible manifest strings in the interface language."""
+    from y_web.src.external_runtime.plugin_i18n import (
+        localize_manifest,
+        repo_key_for_dir,
+    )
+
+    key = repo_key_for_dir(repo_name)
+    return localize_manifest(key, entry) if key else entry
+
+
 def _plugin_agent_specs() -> list[dict]:
     specs = []
     for repo_name, manifest_path in _manifest_paths():
@@ -182,8 +193,10 @@ def _plugin_agent_specs() -> list[dict]:
             agent_type = str(entry.get("agent_type") or "").strip()
             if not agent_type:
                 continue
+            display_name_en = str(entry.get("display_name") or agent_type)
+            slug = _custom_agent_slug(display_name_en)  # identity: never from translated text
+            entry = _localize_agent_entry(repo_name, entry)
             display_name = str(entry.get("display_name") or agent_type)
-            slug = _custom_agent_slug(display_name)
             accepted_slugs = {slug, agent_type}
             # Compatibility for existing Hello World records created before generalization.
             if slug == "hworld":
@@ -195,8 +208,9 @@ def _plugin_agent_specs() -> list[dict]:
                     "accepted_slugs": sorted(accepted_slugs),
                     "agent_type": agent_type,
                     "display_name": display_name,
+                    "display_name_en": display_name_en,
                     "description": str(
-                        entry.get("description") or "Plugin-defined agent type."
+                        entry.get("description") or _("Plugin-defined agent type.")
                     ),
                     "parameters": entry.get("parameters", []) or [],
                     "parameter_sections": entry.get("parameter_sections", []) or [],
@@ -267,19 +281,19 @@ def _discover_plugin_agent_types() -> list[dict]:
         plugin_cards.append(
             {
                 "title": spec["display_name"],
-                "subtitle": f"Plugin agent type · {spec['repo_name']}",
+                "subtitle": _("Plugin agent type · %(repo)s", repo=spec["repo_name"]),
                 "icon": "package",
                 "accent": "#7c3aed",
                 "surface": "linear-gradient(135deg, #faf5ff 0%, #f5f3ff 55%, #ffffff 100%)",
                 "border": "#ddd6fe",
                 "description": spec["description"],
                 "highlights": [
-                    f"Type id: {spec['agent_type']}",
-                    f"{len(required_parameters)} required parameters",
+                    _("Type id: %(id)s", id=spec["agent_type"]),
+                    _("%(count)s required parameters", count=len(required_parameters)),
                     (
-                        "Optional parameters: " + ", ".join(optional_parameters[:3])
+                        _("Optional parameters: %(names)s", names=", ".join(optional_parameters[:3]))
                         if optional_parameters
-                        else "No optional parameters declared"
+                        else _("No optional parameters declared")
                     ),
                 ],
                 "meta": {
@@ -289,9 +303,9 @@ def _discover_plugin_agent_types() -> list[dict]:
                     "repo_name": spec["repo_name"],
                     "slug": spec["slug"],
                 },
-                "cta_label": f"Open {spec['display_name'].replace(' Agent', '')} Builder",
+                "cta_label": _("Open %(name)s Builder", name=spec["display_name"].replace(" Agent", "")),
                 "cta_href": f"/admin/custom_agent/{spec['slug']}",
-                "secondary_label": "Configure this plugin agent from a manifest-driven custom agent page.",
+                "secondary_label": _("Configure this plugin agent from a manifest-driven custom agent page."),
                 "deployment_tags": ["microblogging", "forum"],
                 "is_plugin": True,
             }

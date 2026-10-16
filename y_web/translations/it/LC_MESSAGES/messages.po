@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-16 18:52+0000\n"
+"POT-Creation-Date: 2026-10-16 19:03+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -44,6 +44,10 @@ msgstr ""
 #, python-format
 msgid "%(count)s new"
 msgstr "%(count)s nuovi"
+
+#, python-format
+msgid "%(count)s required parameters"
+msgstr "%(count)s parametri obbligatori"
 
 #, python-format
 msgid ""
@@ -2055,6 +2059,11 @@ msgid "Configure the vision LLM for image content analysis and transcription."
 msgstr ""
 "Configura l'LLM di visione per l'analisi e la trascrizione dei contenuti "
 "delle immagini."
+
+msgid "Configure this plugin agent from a manifest-driven custom agent page."
+msgstr ""
+"Configura questo agente del plugin da una pagina di agente personalizzato"
+" guidata dal manifest."
 
 msgid "Configure vision LLM for image content analysis."
 msgstr "Configura l'LLM di visione per l'analisi dei contenuti delle immagini."
@@ -5700,6 +5709,9 @@ msgstr "Ancora nessuna notifica."
 msgid "No operation has been run on this plugin yet."
 msgstr "Non è ancora stata eseguita alcuna operazione su questo plugin."
 
+msgid "No optional parameters declared"
+msgstr "Nessun parametro facoltativo dichiarato"
+
 msgid "No pages assigned"
 msgstr "Nessuna pagina assegnata"
 
@@ -5980,6 +5992,10 @@ msgstr ""
 msgid "Open"
 msgstr "Apri"
 
+#, python-format
+msgid "Open %(name)s Builder"
+msgstr "Apri il costruttore di %(name)s"
+
 msgid "Open JupyterLab"
 msgstr "Apri JupyterLab"
 
@@ -6100,6 +6116,10 @@ msgstr "Ampiezza di opinione (α)"
 #, python-format
 msgid "Opinion: %(value)s"
 msgstr "Opinione: %(value)s"
+
+#, python-format
+msgid "Optional parameters: %(names)s"
+msgstr "Parametri facoltativi: %(names)s"
 
 msgid "Optional: Group experiments together"
 msgstr "Facoltativo: raggruppa gli esperimenti"
@@ -6372,8 +6392,15 @@ msgstr "Gestione plugin"
 msgid "Plugin Source"
 msgstr "Origine del plugin"
 
+#, python-format
+msgid "Plugin agent type · %(repo)s"
+msgstr "Tipo di agente del plugin · %(repo)s"
+
 msgid "Plugin-backed resource"
 msgstr "Risorsa fornita da un plugin"
+
+msgid "Plugin-defined agent type."
+msgstr "Tipo di agente definito da un plugin."
 
 msgid "Plugins"
 msgstr "Plugin"
@@ -9134,6 +9161,10 @@ msgstr "Scrivi un argomento e premi Invio"
 
 msgid "Type a value and press Enter"
 msgstr "Scrivi un valore e premi Invio"
+
+#, python-format
+msgid "Type id: %(id)s"
+msgstr "ID del tipo: %(id)s"
 
 msgid "Type of Network"
 msgstr "Tipo di rete"

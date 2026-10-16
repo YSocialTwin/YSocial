@@ -162,11 +162,55 @@ _MANIFEST_TEXT_KEYS = frozenset(
 )
 
 
+_AUTOREGISTERED: set[str] = set()
+
+
+def _autoregister(repo_key: str) -> None:
+    """Register the catalog of a plugin that is not loaded as a backend plugin.
+
+    Agent and frontend-suite plugins only expose manifests, so nothing registers their
+    ``i18n`` block at start-up; read it from ``meta/registry.json`` on first use.
+    """
+    if repo_key in _AUTOREGISTERED:
+        return
+    _AUTOREGISTERED.add(repo_key)
+    try:
+        import json
+
+        from y_web.src.external_runtime.registry import SUPPORTED_EXTERNAL_REPOS
+
+        spec = SUPPORTED_EXTERNAL_REPOS.get(repo_key)
+        if spec is None:
+            return
+        payload = json.loads(
+            (Path(spec.path) / "meta" / "registry.json").read_text(encoding="utf-8")
+        )
+        config, problems = normalize_i18n_manifest(repo_key, Path(spec.path), payload.get("i18n"))
+        if config and not problems:
+            register_plugin_i18n(repo_key, config)
+    except Exception:  # a plugin without a catalog just stays in English
+        return
+
+
 def domain_for_repo(repo_key: str) -> str | None:
     """Return the i18n domain registered by plugin *repo_key*, if any."""
     for domain, config in _DOMAINS.items():
         if config["repo_key"] == repo_key:
             return domain
+    _autoregister(repo_key)
+    for domain, config in _DOMAINS.items():
+        if config["repo_key"] == repo_key:
+            return domain
+    return None
+
+
+def repo_key_for_dir(dir_name: str) -> str | None:
+    """Map a directory under ``external/`` (``y_agents_plugins``) to its repo key."""
+    from y_web.src.external_runtime.registry import SUPPORTED_EXTERNAL_REPOS
+
+    for key, spec in SUPPORTED_EXTERNAL_REPOS.items():
+        if Path(spec.path).name == dir_name:
+            return key
     return None
 
 

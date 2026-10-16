@@ -207,8 +207,20 @@ def _adhoc_agent_specs() -> list[dict]:
             agent_type = str(entry.get("agent_type") or "").strip()
             if not agent_type:
                 continue
+            display_name_en = str(entry.get("display_name") or agent_type).strip()
+            slug = _custom_agent_slug(display_name_en)  # identity: never from translated text
+            from y_web.src.external_runtime.plugin_i18n import (
+                localize_manifest,
+                repo_key_for_dir,
+            )
+
+            _repo_key = repo_key_for_dir(repo_dir.name)
+            _titles_en = [
+                (t or {}).get("title") for t in (entry.get("prompt_templates") or [])
+            ]
+            if _repo_key:
+                entry = localize_manifest(_repo_key, entry)
             display_name = str(entry.get("display_name") or agent_type).strip()
-            slug = _custom_agent_slug(display_name)
             accepted_slugs = {slug, agent_type}
             if slug == "hworld":
                 accepted_slugs.add("hword")
@@ -235,6 +247,7 @@ def _adhoc_agent_specs() -> list[dict]:
                     "accepted_slugs": sorted(accepted_slugs),
                     "agent_type": agent_type,
                     "display_name": display_name,
+                    "display_name_en": display_name_en,
                     "description": str(entry.get("description") or "").strip(),
                     "requires_llm": bool(
                         entry.get("requires_llm", entry.get("llm_required", False))
@@ -249,7 +262,11 @@ def _adhoc_agent_specs() -> list[dict]:
                     ),
                     "client_parameter_sections": client_parameter_sections,
                     "client_parameters": client_parameters,
-                    "prompt_templates": list(entry.get("prompt_templates") or []),
+                    # ``title_key`` is the English title the page logic matches on.
+                    "prompt_templates": [
+                        {**t, "title_key": _titles_en[i] if i < len(_titles_en) else t.get("title")}
+                        for i, t in enumerate(entry.get("prompt_templates") or [])
+                    ],
                     "repo_name": repo_dir.name,
                 }
             )
@@ -2218,7 +2235,7 @@ def create_adhoc_client():
                 "population_id": population.id,
                 "population_name": population.name,
                 "agent_type_slug": spec["slug"],
-                "agent_type_display": spec["display_name"],
+                "agent_type_display": spec.get("display_name_en") or spec["display_name"],
                 "plugin_repository": spec["repo_name"],
             },
         },

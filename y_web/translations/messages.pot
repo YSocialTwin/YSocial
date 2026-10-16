@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-16 18:52+0000\n"
+"POT-Creation-Date: 2026-10-16 19:03+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -37,6 +37,10 @@ msgstr ""
 
 #, python-format
 msgid "%(count)s new"
+msgstr ""
+
+#, python-format
+msgid "%(count)s required parameters"
 msgstr ""
 
 #, python-format
@@ -1808,6 +1812,9 @@ msgid ""
 msgstr ""
 
 msgid "Configure the vision LLM for image content analysis and transcription."
+msgstr ""
+
+msgid "Configure this plugin agent from a manifest-driven custom agent page."
 msgstr ""
 
 msgid "Configure vision LLM for image content analysis."
@@ -5191,6 +5198,9 @@ msgstr ""
 msgid "No operation has been run on this plugin yet."
 msgstr ""
 
+msgid "No optional parameters declared"
+msgstr ""
+
 msgid "No pages assigned"
 msgstr ""
 
@@ -5438,6 +5448,10 @@ msgstr ""
 msgid "Open"
 msgstr ""
 
+#, python-format
+msgid "Open %(name)s Builder"
+msgstr ""
+
 msgid "Open JupyterLab"
 msgstr ""
 
@@ -5548,6 +5562,10 @@ msgstr ""
 
 #, python-format
 msgid "Opinion: %(value)s"
+msgstr ""
+
+#, python-format
+msgid "Optional parameters: %(names)s"
 msgstr ""
 
 msgid "Optional: Group experiments together"
@@ -5802,7 +5820,14 @@ msgstr ""
 msgid "Plugin Source"
 msgstr ""
 
+#, python-format
+msgid "Plugin agent type · %(repo)s"
+msgstr ""
+
 msgid "Plugin-backed resource"
+msgstr ""
+
+msgid "Plugin-defined agent type."
 msgstr ""
 
 msgid "Plugins"
@@ -8338,6 +8363,10 @@ msgid "Type a topic and press Enter"
 msgstr ""
 
 msgid "Type a value and press Enter"
+msgstr ""
+
+#, python-format
+msgid "Type id: %(id)s"
 msgstr ""
 
 msgid "Type of Network"

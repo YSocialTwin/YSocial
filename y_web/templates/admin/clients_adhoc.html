@@ -444,7 +444,7 @@ const YS_ADHOC_CLIENTS = {
     function renderParameterField(parameter) {
         const spec = selectedSpec();
         const name = parameter.name;
-        const label = name.replaceAll('_', ' ').replace(/\b\w/g, match => match.toUpperCase());
+        const label = parameter.label || name.replaceAll('_', ' ').replace(/\b\w/g, match => match.toUpperCase());
         const description = parameter.description ? `<small class="ys-hint-text">${escapeHtml(parameter.description)}</small>` : '';
         const required = parameter.required ? 'required' : '';
         const defaultValue = parameter.default ?? '';
@@ -535,7 +535,7 @@ const YS_ADHOC_CLIENTS = {
     function renderPromptTemplates(spec, filterTitle = null) {
         let templates = Array.isArray(spec?.prompt_templates) ? spec.prompt_templates : [];
         if (filterTitle) {
-            templates = templates.filter(template => String(template?.title || '') === String(filterTitle));
+            templates = templates.filter(template => String(template?.title_key || template?.title || '') === String(filterTitle));
         }
         if (!templates.length) return '';
         return '\n            <div class="ys-adhoc-current-prompts">\n                <div class="ys-adhoc-target-builder-help">' + YI18n.t('Current built-in prompts passed to this agent:') + '</div>\n                ' + templates.map(template => `
