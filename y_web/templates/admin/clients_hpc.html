@@ -78,7 +78,7 @@
                                     </div>
 
                                     <div class="box-line">
-                                        <span class="left">{{ _('% New Agents (daily)') }}</span>
+                                        <span class="left">{{ _('%% New Agents (daily)') }}</span>
  <span class="right ys-w-70"><input type="number"
                                                                                        name="percentage_new_agents_iteration"
                                                                                        class="input"
@@ -89,7 +89,7 @@
                                                                                        required></span>
                                     </div>
                                     <div class="box-line">
-                                        <span class="left">{{ _('% Daily Churn') }}</span>
+                                        <span class="left">{{ _('%% Daily Churn') }}</span>
  <span class="right ys-w-70"><input type="number"
                                                                                        name="percentage_removed_agents_iteration"
                                                                                        class="input"
@@ -938,7 +938,7 @@
                                     <div id="section-topic-interest" class="tutorial-section">
                                     <div class="form-section-header">{{ _('Topic Interest Distribution') }}</div>
                                     <div class="form-section-description">
-                                        {{ _('Specify the percentage of agents interested in each topic. Default is 100% for all topics.') }}
+                                        {{ _('Specify the percentage of agents interested in each topic. Default is 100%% for all topics.') }}
                                     </div>
 
                                     <div class="topic-interest-boxes">
@@ -1279,21 +1279,21 @@
  <div class="network-option-card ys-card-gray-mb">
                                                 <div class="network-card-title">
                                                     <span class="network-card-icon">👥</span>
-                                                    {{ _('Archetype Distribution (%)') }}
+                                                    {{ _('Archetype Distribution (%%)') }}
                                                 </div>
  <p class="ys-field-hint">
-                                                    {{ _('Define the percentage of agents in each behavioral archetype (must sum to 100%).') }}
+                                                    {{ _('Define the percentage of agents in each behavioral archetype (must sum to 100%%).') }}
                                                 </p>
                                              
                                             <div class="archetype-boxes">
                                                 <div class="archetype-box" id="archetype-validator-box">
                                                     <h4>{{ _('The Validator') }}</h4>
-                                                    <p>{{ _('Active Audience - ~70% of activity is validating others') }}</p>
+                                                    <p>{{ _('Active Audience - ~70%% of activity is validating others') }}</p>
  <input type="number" id="archetype_validator" name="archetype_validator" value="52" step="0.1" min="0" max="100"> <span class="ys-text-xs-muted">%</span>
                                                 </div>
                                                 <div class="archetype-box" id="archetype-broadcaster-box">
                                                     <h4>{{ _('The Broadcaster') }}</h4>
-                                                    <p>{{ _('Content Creator - ~75% of actions are posts/comments') }}</p>
+                                                    <p>{{ _('Content Creator - ~75%% of actions are posts/comments') }}</p>
  <input type="number" id="archetype_broadcaster" name="archetype_broadcaster" value="20" step="0.1" min="0" max="100"> <span class="ys-text-xs-muted">%</span>
                                                 </div>
                                                 <div class="archetype-box" id="archetype-explorer-box">
@@ -1308,10 +1308,10 @@
  <div class="network-option-card ys-card-white">
                                                 <div class="network-card-title">
                                                     <span class="network-card-icon">🔄</span>
-                                                    {{ _('Transition Probabilities (%)') }}
+                                                    {{ _('Transition Probabilities (%%)') }}
                                                 </div>
  <p class="ys-field-hint">
-                                                    {{ _('Probability that an agent transitions from one archetype to another (each row must sum to 100%).') }}
+                                                    {{ _('Probability that an agent transitions from one archetype to another (each row must sum to 100%%).') }}
                                                 </p>
                                             
                                             <table class="transition-table-compact">
@@ -1433,8 +1433,8 @@
                                 <b>{{ _('Agent Archetypes and Transitions (Optional)') }}</b><br>
                                 {{ _('Configure behavioral archetypes and transition probabilities for agents.') }}<br><br>
                                 <em>{{ _('Enable/Disable Toggle:') }}</em> {{ _('When disabled, all agents can perform all actions without archetype restrictions.') }}<br><br>
-                                <em>{{ _('The Validator:') }}</em> {{ _('Active Audience (~70% validation activity)') }}<br>
-                                <em>{{ _('The Broadcaster:') }}</em> {{ _('Content Creator (~75% posts/comments)') }}<br>
+                                <em>{{ _('The Validator:') }}</em> {{ _('Active Audience (~70%% validation activity)') }}<br>
+                                <em>{{ _('The Broadcaster:') }}</em> {{ _('Content Creator (~75%% posts/comments)') }}<br>
                                 <em>{{ _('The Explorer:') }}</em> {{ _('Network Growth (focused on connections, enabled only when follow probabilities > 0)') }}<br><br>
                                 {{ _('Default values (52-20-28) are based on real-world Bluesky data.') }}
                             </p>

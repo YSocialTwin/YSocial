@@ -25,3 +25,19 @@ The admin templates hold about 1,900 unique strings and a heavy page renders a f
 ## F2-1 remeasurement (layout, menu, login, onboarding, errors)
 
 F2-1 adds about 30 `_()` calls to every admin page (menu in `head.html`, top bar in `dash_head.html`) and the strings of login, onboarding and the four error pages. At 2.7 us per call the shared layout costs about 0.08 ms per admin page, around 2% of a 4 ms page and inside the run-to-run noise (about 5%). The admin pages converted in later tasks add their own strings, so the figure is re-checked at the end of F2-3 (heaviest pages: dashboard, experiment details, populations).
+
+## F2-10: misura a fine Fase 2
+
+Render dei template (sessione di test, mediana su molte iterazioni, baseline = commit prima dell'i18n):
+
+| Pagina | prima | dopo | delta |
+|---|---|---|---|
+| dashboard | 3.5-3.9 ms | 4.0-4.3 ms | +10% |
+| experiments | 2.5 ms | 2.9-3.1 ms | +15% |
+| populations (645 `_()`) | 5.1 ms | 6.9 ms | +35% |
+| miscellanea | 3.5 ms | 3.9 ms | +10% |
+| agents (pagina con molti dati) | 57 ms | 58 ms | +1.5% |
+
+Ottimizzazioni applicate: `_()` dei template con cache per-richiesta delle traduzioni e per-catalogo dei testi finali, `html_lang`/`text_direction` calcolati una volta per richiesta, `%%` risolto in cache.
+
+Esito: il criterio "<5%" **non è rispettato** sul solo render dei template delle pagine più dense di stringhe (circa 2.6 us per chiamata `_()`, costo di invocazione Jinja). In termini assoluti il sovraccosto è 0.4-1.8 ms per pagina, trascurabile rispetto a query e rete; sulle pagine con dati reali (agents) è ~1.5%. Le pagine sono inoltre l'1-4% più grandi.

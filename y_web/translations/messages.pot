@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-16 15:59+0000\n"
+"POT-Creation-Date: 2026-10-16 16:04+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -20,10 +20,12 @@ msgstr ""
 msgid "\"Who to follow\" algorithm shown to standard users by default"
 msgstr ""
 
-msgid "% Daily Churn"
+#, python-format
+msgid "%% Daily Churn"
 msgstr ""
 
-msgid "% New Agents (daily)"
+#, python-format
+msgid "%% New Agents (daily)"
 msgstr ""
 
 #, python-format
@@ -341,11 +343,12 @@ msgstr ""
 msgid "Active Alter"
 msgstr ""
 
-msgid "Active Audience (~70% validation activity)"
+#, python-format
+msgid "Active Audience (~70%% validation activity)"
 msgstr ""
 
 #, python-format
-msgid "Active Audience - ~70% of activity is validating others"
+msgid "Active Audience - ~70%% of activity is validating others"
 msgstr ""
 
 msgid "Active Experiments"
@@ -507,7 +510,8 @@ msgstr ""
 msgid "Age Classes"
 msgstr ""
 
-msgid "Age Classes %"
+#, python-format
+msgid "Age Classes %%"
 msgstr ""
 
 msgid "Age End"
@@ -754,7 +758,8 @@ msgstr ""
 msgid "Archetype Configuration"
 msgstr ""
 
-msgid "Archetype Distribution (%)"
+#, python-format
+msgid "Archetype Distribution (%%)"
 msgstr ""
 
 msgid "Archetype Personas"
@@ -1025,7 +1030,8 @@ msgstr ""
 msgid "Broadcaster"
 msgstr ""
 
-msgid "Broadcaster %"
+#, python-format
+msgid "Broadcaster %%"
 msgstr ""
 
 msgid "Broadcaster Persona"
@@ -1654,11 +1660,12 @@ msgstr ""
 msgid "Content Analysis"
 msgstr ""
 
-msgid "Content Creator (~75% posts/comments)"
+#, python-format
+msgid "Content Creator (~75%% posts/comments)"
 msgstr ""
 
 #, python-format
-msgid "Content Creator - ~75% of actions are posts/comments"
+msgid "Content Creator - ~75%% of actions are posts/comments"
 msgstr ""
 
 msgid "Content Pages"
@@ -1856,7 +1863,8 @@ msgstr ""
 msgid "Creates fresh copies of every experiment in the selected group."
 msgstr ""
 
-msgid "Creator Tier %"
+#, python-format
+msgid "Creator Tier %%"
 msgstr ""
 
 msgid "Critical/Judgmental"
@@ -2041,9 +2049,10 @@ msgstr ""
 msgid "Define one or more %(link)s."
 msgstr ""
 
+#, python-format
 msgid ""
 "Define the percentage of agents in each behavioral archetype (must sum to"
-" 100%)."
+" 100%%)."
 msgstr ""
 
 msgid ""
@@ -2255,11 +2264,12 @@ msgid ""
 " simulations."
 msgstr ""
 
+#, python-format
 msgid ""
 "Drag activity profiles from available to assigned, then set the "
-"percentage for each. Percentages must total 100%. Green bars identify the"
-" hours of the simulated day when agents assigned to the selected profile "
-"are active."
+"percentage for each. Percentages must total 100%%. Green bars identify "
+"the hours of the simulated day when agents assigned to the selected "
+"profile are active."
 msgstr ""
 
 msgid "Drag populations here"
@@ -2305,7 +2315,8 @@ msgstr ""
 msgid "Edit server settings"
 msgstr ""
 
-msgid "Education %"
+#, python-format
+msgid "Education %%"
 msgstr ""
 
 msgid "Education Level"
@@ -2796,7 +2807,8 @@ msgstr ""
 msgid "Explorer"
 msgstr ""
 
-msgid "Explorer %"
+#, python-format
+msgid "Explorer %%"
 msgstr ""
 
 msgid "Explorer Persona"
@@ -3771,10 +3783,12 @@ msgstr ""
 msgid "Inventive/Curious"
 msgstr ""
 
-msgid "Is Private %"
+#, python-format
+msgid "Is Private %%"
 msgstr ""
 
-msgid "Is Verified %"
+#, python-format
+msgid "Is Verified %%"
 msgstr ""
 
 msgid "Item not found"
@@ -5076,7 +5090,8 @@ msgstr ""
 msgid "Polarity mix and compound trends"
 msgstr ""
 
-msgid "Political %"
+#, python-format
+msgid "Political %%"
 msgstr ""
 
 msgid "Political Leaning"
@@ -5272,9 +5287,10 @@ msgid ""
 "of content he interacted with"
 msgstr ""
 
+#, python-format
 msgid ""
 "Probability that an agent transitions from one archetype to another (each"
-" row must sum to 100%)."
+" row must sum to 100%%)."
 msgstr ""
 
 msgid ""
@@ -6387,7 +6403,7 @@ msgstr ""
 #, python-format
 msgid ""
 "Specify the percentage of agents interested in each topic. Default is "
-"100% for all topics."
+"100%% for all topics."
 msgstr ""
 
 msgid ""
@@ -6487,7 +6503,8 @@ msgstr ""
 msgid "Stopped / Scheduled"
 msgstr ""
 
-msgid "Story Visibility %"
+#, python-format
+msgid "Story Visibility %%"
 msgstr ""
 
 msgid "Stress"
@@ -7107,13 +7124,15 @@ msgstr ""
 msgid "Total configurations:"
 msgstr ""
 
-msgid "Total must equal 100%"
+#, python-format
+msgid "Total must equal 100%%"
 msgstr ""
 
 msgid "Total simulation time so far:"
 msgstr ""
 
-msgid "Totals must equal 100%."
+#, python-format
+msgid "Totals must equal 100%%."
 msgstr ""
 
 msgid "Toxic content warning chip"
@@ -7122,7 +7141,8 @@ msgstr ""
 msgid "Toxicity"
 msgstr ""
 
-msgid "Toxicity %"
+#, python-format
+msgid "Toxicity %%"
 msgstr ""
 
 msgid "Toxicity Evolution"
@@ -7149,7 +7169,8 @@ msgstr ""
 msgid "Tracked Aggregates"
 msgstr ""
 
-msgid "Transition Probabilities (%)"
+#, python-format
+msgid "Transition Probabilities (%%)"
 msgstr ""
 
 msgid "Trend analysis of server compute time and simulation time progression."
@@ -7552,7 +7573,8 @@ msgstr ""
 msgid "Validator"
 msgstr ""
 
-msgid "Validator %"
+#, python-format
+msgid "Validator %%"
 msgstr ""
 
 msgid "Validator Persona"

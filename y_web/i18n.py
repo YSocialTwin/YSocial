@@ -14,6 +14,11 @@ Two language contexts are kept apart (plan decisions D3 and D4):
 """
 
 from flask import current_app, g, request
+
+try:  # Flask >= 2.2
+    from flask.globals import _cv_app
+except ImportError:  # pragma: no cover
+    _cv_app = None
 from flask_babel import (
     Babel,
     format_date,
@@ -99,20 +104,33 @@ def wrap(tag, text, **attrs):
     return Markup("<%s%s>%s</%s>") % (Markup(tag), Markup(rendered), text, Markup(tag))
 
 
+def _locale_info():
+    """``(html lang, direction)`` of the active locale, computed once per request."""
+    app_g = _cv_app.get().g if _cv_app is not None else g
+    info = app_g.__dict__.get("_ys_locale_info")
+    if info is None:
+        locale = get_locale()
+        if locale is None:
+            info = (DEFAULT_LOCALE, "ltr")
+        else:
+            code = str(locale)
+            if code == PSEUDO_CARRIER:
+                lang = PSEUDO_LANGUAGE
+            else:
+                lang = code.replace("_", "-")
+            info = (lang, "rtl" if locale.text_direction == "rtl" else "ltr")
+        app_g._ys_locale_info = info
+    return info
+
+
 def html_lang():
     """Value for ``<html lang>``: a BCP-47 tag (``en-XA`` for the pseudo-locale)."""
-    locale = get_locale()
-    if locale is None:
-        return DEFAULT_LOCALE
-    if str(locale) == PSEUDO_CARRIER:
-        return PSEUDO_LANGUAGE
-    return str(locale).replace("_", "-")
+    return _locale_info()[0]
 
 
 def text_direction():
     """Return ``"rtl"`` or ``"ltr"`` for the active locale (``<html dir>``)."""
-    locale = get_locale()
-    return "rtl" if locale is not None and locale.text_direction == "rtl" else "ltr"
+    return _locale_info()[1]
 
 
 def normalize_language(code):
@@ -189,10 +207,12 @@ def _request_translations():
     microseconds; a page with hundreds of marked strings would pay that hundreds
     of times, so the template ``_()`` uses this per-request cache instead.
     """
-    cached = getattr(g, "_ys_translations", None)
+    # ``g`` is a LocalProxy (about 0.4 us per access); the context's own object is not.
+    app_g = _cv_app.get().g if _cv_app is not None else g
+    cached = app_g.__dict__.get("_ys_translations")
     if cached is None:
         cached = get_translations()
-        g._ys_translations = cached
+        app_g._ys_translations = cached
     return cached
 
 
@@ -207,10 +227,24 @@ def _fast_template_gettext(eval_ctx, message, **variables):
     Like Jinja's version, ``%`` in a message must be written ``%%`` and variables
     are HTML-escaped when autoescape is on.
     """
-    rv = _request_translations().ugettext(message)
-    if eval_ctx.autoescape:
-        rv = Markup(rv)
-    return rv % variables
+    translations = _request_translations()
+    if variables:
+        rv = translations.ugettext(message)
+        return (Markup(rv) if eval_ctx.autoescape else rv) % variables
+    # Messages without variables never change for a given catalog: keep the final
+    # (``%%`` collapsed, already marked safe) result on the catalog object itself,
+    # so a reloaded or different catalog never serves stale text.
+    cache = translations.__dict__.get("_ys_final")
+    if cache is None:
+        cache = translations._ys_final = ({}, {})
+    table = cache[0 if eval_ctx.autoescape else 1]
+    rv = table.get(message)
+    if rv is None:
+        rv = translations.ugettext(message)
+        if "%" in rv:
+            rv = rv.replace("%%", "%")
+        rv = table[message] = Markup(rv) if eval_ctx.autoescape else rv
+    return rv
 
 
 def _template_ngettext(singular, plural, n):

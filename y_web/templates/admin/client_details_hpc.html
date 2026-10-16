@@ -88,11 +88,11 @@
                                     <span class="right"><input type="number" name="days" class="input" value="{{ current_days }}"></span>
                                 </div>
                                 <div class="box-line">
-                                    <span class="left">{{ _('% New Agents (daily)') }}</span>
+                                    <span class="left">{{ _('%% New Agents (daily)') }}</span>
                                     <span class="right"><input type="number" step="0.01" name="percentage_new_agents_iteration" class="input" value="{{ current_percentage_new_agents_iteration }}"></span>
                                 </div>
                                 <div class="box-line">
-                                    <span class="left">{{ _('% Daily Churn') }}</span>
+                                    <span class="left">{{ _('%% Daily Churn') }}</span>
                                     <span class="right"><input type="number" step="0.01" name="percentage_removed_agents_iteration" class="input" value="{{ current_percentage_removed_agents_iteration }}"></span>
                                 </div>
                                 <hr>
@@ -222,9 +222,9 @@
                         <div class="box-content">
                             <div class="box-lines">
                                 <div class="box-line"><span class="left">{{ _('Enable Archetypes') }}</span><span class="right"><input type="checkbox" name="enable_archetypes" {% if config and config.simulation and config.simulation.agent_archetypes and config.simulation.agent_archetypes.enabled %}checked{% endif %}></span></div>
-                                <div class="box-line"><span class="left">{{ _('Validator %') }}</span><span class="right"><input type="number" name="archetype_validator" class="input" value="52"></span></div>
-                                <div class="box-line"><span class="left">{{ _('Broadcaster %') }}</span><span class="right"><input type="number" name="archetype_broadcaster" class="input" value="20"></span></div>
-                                <div class="box-line"><span class="left">{{ _('Explorer %') }}</span><span class="right"><input type="number" name="archetype_explorer" class="input" value="28"></span></div>
+                                <div class="box-line"><span class="left">{{ _('Validator %%') }}</span><span class="right"><input type="number" name="archetype_validator" class="input" value="52"></span></div>
+                                <div class="box-line"><span class="left">{{ _('Broadcaster %%') }}</span><span class="right"><input type="number" name="archetype_broadcaster" class="input" value="20"></span></div>
+                                <div class="box-line"><span class="left">{{ _('Explorer %%') }}</span><span class="right"><input type="number" name="archetype_explorer" class="input" value="28"></span></div>
                             </div>
                         </div>
                         <div class="button-wrap"><button class="button is-solid primary-button is-fullwidth">{{ _('Save Archetypes') }}</button></div>

@@ -38,7 +38,17 @@ def word_pattern(word):
     return "".join(parts)
 
 
+def escape_percent(text):
+    """Template ``_()`` formats with ``%``: a literal percent sign must be ``%%``."""
+    parts = re.split(r"(%%)", text)
+    return "".join(
+        p if p == "%%" else re.sub(r"%(?!\([A-Za-z_]\w*\)[sdif])", "%%", p)
+        for p in parts
+    )
+
+
 def quote(text):
+    text = escape_percent(text)
     if "'" not in text:
         return "_('%s')" % text
     return '_("%s")' % text.replace('"', '\\"')

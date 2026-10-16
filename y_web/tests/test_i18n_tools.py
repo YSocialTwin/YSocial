@@ -142,3 +142,22 @@ def test_scan_baseline_matches_current_state():
 def test_catalog_languages_exclude_pseudo_carrier():
     assert PSEUDO_CARRIER not in catalogs.languages()
     assert "it" in catalogs.languages()
+
+
+def test_template_gettext_literals_escape_percent_signs():
+    """Template ``_()`` formats with ``%``: a literal percent sign must be ``%%``."""
+    import pathlib
+    import re
+
+    call = re.compile(
+        r"""\b_\(\s*(?P<q>['"])(?P<s>(?:\\.|(?!(?P=q)).)*)(?P=q)""", re.S
+    )
+    lone = re.compile(r"%(?!%|\([A-Za-z_]\w*\)[sdif])")
+    bad = []
+    for path in (pathlib.Path(__file__).resolve().parents[1] / "templates").rglob(
+        "*.html"
+    ):
+        for m in call.finditer(path.read_text(encoding="utf-8")):
+            if lone.search(m.group("s").replace("%%", "")):
+                bad.append((path.name, m.group("s")[:60]))
+    assert bad == []
