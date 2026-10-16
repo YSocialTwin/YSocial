@@ -14,9 +14,12 @@ def _unescape(s):
     return re.sub(r"\\(.)", lambda m: {"n": "\n"}.get(m.group(1), m.group(1)), s)
 
 
+TPL_DIR = pathlib.Path(__file__).resolve().parents[1] / "templates" / "admin"
+
+
 def _used_keys():
     keys = set()
-    for f in JS_DIR.glob("admin-*.js"):
+    for f in [*JS_DIR.glob("admin-*.js"), *TPL_DIR.rglob("*.html")]:
         keys |= {_unescape(k) for k in CALL.findall(f.read_text(encoding="utf-8"))}
     return keys
 

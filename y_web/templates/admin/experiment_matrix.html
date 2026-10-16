@@ -1158,7 +1158,7 @@
             if (!empty && unlocked) {
                 const placeholder = document.createElement('span');
                 placeholder.className = 'matrix-tag-empty';
-                placeholder.textContent = elements.editor.dataset.emptyLabel || 'Add alternative values';
+                placeholder.textContent = elements.editor.dataset.emptyLabel || YI18n.t('Add alternative values');
                 elements.list.appendChild(placeholder);
             }
         } else {
@@ -1198,7 +1198,7 @@
         const remove = document.createElement('button');
         remove.type = 'button';
         remove.className = 'matrix-tag-remove';
-        remove.setAttribute('aria-label', 'Remove alternative value');
+        remove.setAttribute('aria-label', YI18n.t('Remove alternative value'));
         remove.textContent = '×';
         remove.addEventListener('click', function() {
             chip.remove();

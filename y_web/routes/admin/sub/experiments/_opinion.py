@@ -1309,7 +1309,7 @@ def update_opinion_group():
     group = db.session.scalars(select(OpinionGroup).filter_by(id=group_id)).first()
 
     if not group:
-        return jsonify({"success": False, "message": "Opinion group not found"}), 404
+        return jsonify({"success": False, "message": _("Opinion group not found")}), 404
 
     # Update fields if provided
     if "name" in data:
@@ -1320,14 +1320,14 @@ def update_opinion_group():
             if not (0 <= lower_bound <= 1):
                 return (
                     jsonify(
-                        {"success": False, "message": "Lower bound must be in [0, 1]"}
+                        {"success": False, "message": _("Lower bound must be in [0, 1]")}
                     ),
                     400,
                 )
             group.lower_bound = lower_bound
         except ValueError:
             return (
-                jsonify({"success": False, "message": "Invalid lower_bound value"}),
+                jsonify({"success": False, "message": _("Invalid lower_bound value")}),
                 400,
             )
     if "upper_bound" in data:
@@ -1336,14 +1336,14 @@ def update_opinion_group():
             if not (0 <= upper_bound <= 1):
                 return (
                     jsonify(
-                        {"success": False, "message": "Upper bound must be in [0, 1]"}
+                        {"success": False, "message": _("Upper bound must be in [0, 1]")}
                     ),
                     400,
                 )
             group.upper_bound = upper_bound
         except ValueError:
             return (
-                jsonify({"success": False, "message": "Invalid upper_bound value"}),
+                jsonify({"success": False, "message": _("Invalid upper_bound value")}),
                 400,
             )
 
@@ -1351,7 +1351,7 @@ def update_opinion_group():
     if group.lower_bound > group.upper_bound:
         return (
             jsonify(
-                {"success": False, "message": "Lower bound must be <= upper bound"}
+                {"success": False, "message": _("Lower bound must be <= upper bound")}
             ),
             400,
         )
@@ -1371,7 +1371,7 @@ def update_opinion_group():
                 jsonify(
                     {
                         "success": False,
-                        "message": f"Overlaps with '{existing.name}' [{existing.lower_bound}, {existing.upper_bound}]",
+                        "message": _("Overlaps with '%(name)s' [%(lower_bound)s, %(upper_bound)s]", name=existing.name, lower_bound=existing.lower_bound, upper_bound=existing.upper_bound),
                     }
                 ),
                 400,
@@ -1434,7 +1434,7 @@ def delete_opinion_group(group_id):
 
     group = db.session.scalars(select(OpinionGroup).filter_by(id=group_id)).first()
     if not group:
-        return jsonify({"success": False, "message": "Opinion group not found"}), 404
+        return jsonify({"success": False, "message": _("Opinion group not found")}), 404
 
     db.session.delete(group)
     db.session.commit()
@@ -1511,7 +1511,7 @@ def update_opinion_distribution():
 
     if not dist:
         return (
-            jsonify({"success": False, "message": "Opinion distribution not found"}),
+            jsonify({"success": False, "message": _("Opinion distribution not found")}),
             404,
         )
 
@@ -1560,7 +1560,7 @@ def delete_opinion_distribution(dist_id):
     dist = db.session.scalars(select(OpinionDistribution).filter_by(id=dist_id)).first()
     if not dist:
         return (
-            jsonify({"success": False, "message": "Opinion distribution not found"}),
+            jsonify({"success": False, "message": _("Opinion distribution not found")}),
             404,
         )
 
@@ -2889,11 +2889,11 @@ def opinion_evolution_data(expid):
     # Get experiment
     experiment = db.session.scalars(select(Exps).filter_by(idexp=expid)).first()
     if not experiment:
-        return jsonify({"error": "Experiment not found"}), 404
+        return jsonify({"error": _("Experiment not found")}), 404
 
     # Check if opinions are enabled for this experiment
     if not experiment.annotations or "opinions" not in experiment.annotations:
-        return jsonify({"error": "Opinion dynamics not enabled"}), 400
+        return jsonify({"error": _("Opinion dynamics not enabled")}), 400
 
     # Activate experiment if not active (to access its database)
     from y_web.src.experiment.context import register_experiment_database
@@ -2915,7 +2915,7 @@ def opinion_evolution_data(expid):
             return (
                 jsonify(
                     {
-                        "error": "The current experiment database does not contain opinion evolution tables."
+                        "error": _("The current experiment database does not contain opinion evolution tables.")
                     }
                 ),
                 400,
@@ -3899,14 +3899,14 @@ def stress_reward_evolution_data(expid):
         _load_stress_reward_experiment_context(expid, require_manage=False)
     )
     if error_response is not None:
-        return jsonify({"error": "Stress/reward analytics not available"}), 400
+        return jsonify({"error": _("Stress/reward analytics not available")}), 400
 
     db_path = _resolve_experiment_db_path(experiment)
     if not _experiment_db_has_required_stress_reward_tables(db_path):
         return (
             jsonify(
                 {
-                    "error": "The current experiment database does not contain stress/reward evolution tables."
+                    "error": _("The current experiment database does not contain stress/reward evolution tables.")
                 }
             ),
             400,
@@ -4507,7 +4507,7 @@ def _build_network_analytics_payload(
         out_degrees = dict(graph.out_degree())
         total_degrees = dict(graph.degree())
         degree_x_values, in_degree_ccdf = _ccdf_from_degrees(list(in_degrees.values()))
-        _, out_degree_ccdf = _ccdf_from_degrees(list(out_degrees.values()))
+        _unused, out_degree_ccdf = _ccdf_from_degrees(list(out_degrees.values()))
 
         ego_candidates = sorted(
             (node for node in graph.nodes() if total_degrees.get(node, 0) > 0),
@@ -7449,7 +7449,7 @@ def _annotation_analytics_json(expid, annotation_key):
         expid, annotation_key, config["label"], require_manage=False
     )
     if error_response is not None:
-        return jsonify({"error": f"{config['title']} not available"}), 400
+        return jsonify({"error": _("%(title)s not available", title=config['title'])}), 400
 
     required_table_sets = config.get("required_table_sets")
     if required_table_sets is not None:
@@ -7461,7 +7461,7 @@ def _annotation_analytics_json(expid, annotation_key):
             db_path, config["required_tables"]
         )
     if not has_required_tables:
-        return jsonify({"error": f"{config['title']} tables not available"}), 400
+        return jsonify({"error": _("%(title)s tables not available", title=config['title'])}), 400
 
     filter_day = request.args.get("day", type=int, default=1)
     filter_hour = request.args.get("hour", type=int, default=1)
@@ -7588,14 +7588,14 @@ def topic_evolution_data(expid):
         expid, require_manage=False
     )
     if error_response is not None:
-        return jsonify({"error": "Topic evolution not available"}), 400
+        return jsonify({"error": _("Topic evolution not available")}), 400
 
     required_table_sets = (
         {"post_topics", "post", "rounds", "user_mgmt"},
         {"photo_topics", "photos", "rounds", "user_mgmt"},
     )
     if not _experiment_db_has_any_required_tables(db_path, required_table_sets):
-        return jsonify({"error": "Topic-evolution tables not available"}), 400
+        return jsonify({"error": _("Topic-evolution tables not available")}), 400
 
     filter_day = request.args.get("day", type=int, default=1)
     filter_hour = request.args.get("hour", type=int, default=1)
@@ -7682,14 +7682,14 @@ def hashtag_evolution_data(expid):
         expid, require_manage=False
     )
     if error_response is not None:
-        return jsonify({"error": "Hashtag evolution not available"}), 400
+        return jsonify({"error": _("Hashtag evolution not available")}), 400
 
     required_table_sets = (
         {"post_hashtags", "hashtags", "post", "rounds", "user_mgmt"},
         {"photo_hashtags", "hashtags", "photos", "rounds", "user_mgmt"},
     )
     if not _experiment_db_has_any_required_tables(db_path, required_table_sets):
-        return jsonify({"error": "Hashtag-evolution tables not available"}), 400
+        return jsonify({"error": _("Hashtag-evolution tables not available")}), 400
 
     filter_day = request.args.get("day", type=int, default=1)
     filter_hour = request.args.get("hour", type=int, default=1)
@@ -7769,14 +7769,14 @@ def recsys_evolution_data(expid):
         expid, require_manage=False
     )
     if error_response is not None:
-        return jsonify({"error": "Recommendation analytics not available"}), 400
+        return jsonify({"error": _("Recommendation analytics not available")}), 400
 
     required_table_sets = (
         {"recommendations", "post", "rounds", "user_mgmt"},
         {"recommendations", "photos", "rounds", "user_mgmt"},
     )
     if not _experiment_db_has_any_required_tables(db_path, required_table_sets):
-        return jsonify({"error": "Recommendation-tracking tables not available"}), 400
+        return jsonify({"error": _("Recommendation-tracking tables not available")}), 400
 
     filter_day = request.args.get("day", type=int, default=1)
     filter_hour = request.args.get("hour", type=int, default=1)
@@ -7867,14 +7867,14 @@ def network_analysis_data(expid):
         expid, require_manage=False
     )
     if error_response is not None:
-        return jsonify({"error": "Network analysis not available"}), 400
+        return jsonify({"error": _("Network analysis not available")}), 400
 
     required_tables = {"rounds", "user_mgmt"}
     available_network_types = _available_network_analysis_types(db_path)
     if (not _experiment_db_has_required_tables(db_path, required_tables)) or (
         not available_network_types
     ):
-        return jsonify({"error": "Network-analysis tables not available"}), 400
+        return jsonify({"error": _("Network-analysis tables not available")}), 400
 
     filter_day = request.args.get("day", type=int, default=1)
     filter_hour = request.args.get("hour", type=int, default=1)

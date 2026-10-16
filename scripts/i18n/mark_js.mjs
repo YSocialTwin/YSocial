@@ -73,7 +73,7 @@ function build(node, src) {
       key += '{' + nm + '}';
     }
   }
-  if (!hasText(key.replace(/\{\w+\}/g, ''))) return null;
+  if (key.includes('__J') || !hasText(key.replace(/\{\w+\}/g, ''))) return null;
   return { key, params };
 }
 
@@ -130,7 +130,7 @@ function buildHtml(node, src) {
     const start = m.index + m[1].length, text = m[2];
     if (m[0] === '' ) { runRe.lastIndex++; continue; }
     const bare = text.replace(/\u0001\d+\u0002/g, '');
-    if (!hasText(bare) || /^\s*&[a-z]+;\s*$/.test(bare)) continue;
+    if (!hasText(bare) || bare.includes('__J') || /^\s*&[a-z]+;\s*$/.test(bare)) continue;
     const lead = text.match(/^\s*/)[0], trail = text.match(/\s*$/)[0];
     const core = text.slice(lead.length, text.length - trail.length);
     if (!core || /\{\w+\}/.test(core)) continue;
@@ -140,7 +140,7 @@ function buildHtml(node, src) {
   while ((m = attrRe.exec(pseudo)) !== null) {
     const text = m[1]; const start = m.index + m[0].indexOf('"') + 1;
     const bare = text.replace(/\u0001\d+\u0002/g, '');
-    if (!hasText(bare)) continue;
+    if (!hasText(bare) || bare.includes('__J')) continue;
     if (/\{\w+\}/.test(text)) continue;
     pieces.push({ s: start, e: start + text.length, core: text });
   }
@@ -182,11 +182,16 @@ function htmlSkip(n) { return false; }
 function looksText(v) { return /^[A-Z0-9✓●✗⚠]/.test(v) || /\s/.test(v); }
 let propTargets = () => {};
 let total = 0;
-for (const f of files) {
-  const src = fs.readFileSync(f, 'utf8');
+function sanitize(t) {
+  // Same-length masking of Jinja so the script parses; offsets stay valid.
+  return t.replace(/\{\{[\s\S]*?\}\}/g, (m) => '__J' + '_'.repeat(Math.max(0, m.length - 3)))
+          .replace(/\{%[\s\S]*?%\}/g, (m) => m.length >= 4 ? '/*' + ' '.repeat(m.length - 4) + '*/' : ' '.repeat(m.length))
+          .replace(/\{#[\s\S]*?#\}/g, (m) => m.length >= 4 ? '/*' + ' '.repeat(m.length - 4) + '*/' : ' '.repeat(m.length));
+}
+function transform(src, f) {
   let ast;
-  try { ast = acorn.parse(src, { ecmaVersion: 'latest', sourceType: 'script', allowHashBang: true }); }
-  catch (e) { console.error('PARSE FAIL', f, e.message); continue; }
+  try { ast = acorn.parse(sanitize(src), { ecmaVersion: 'latest', sourceType: 'script', allowHashBang: true }); }
+  catch (e) { console.error('PARSE FAIL', f, e.message); return null; }
   const edits = [];
   const add = (node, b) => edits.push([node.start, node.end, render(b)]);
   walk.full(ast, (n) => { if (n.type === 'ObjectExpression') for (const p of n.properties) parents.set(p, n); });
@@ -241,9 +246,28 @@ for (const f of files) {
   for (const e of edits) if (!kept.length || e[0] >= kept[kept.length - 1][1]) kept.push(e);
   let out = src;
   for (const [s, e, r] of kept.reverse()) out = out.slice(0, s) + r + out.slice(e);
-  if (kept.length) {
-    total += kept.length;
-    console.log(f, kept.length);
+  return { out, count: kept.length };
+}
+
+for (const f of files) {
+  const text = fs.readFileSync(f, 'utf8');
+  let out = text, count = 0;
+  if (f.endsWith('.html')) {
+    const re = /(<script(?![^>]*\bsrc=)[^>]*>)([\s\S]*?)(<\/script>)/gi;
+    let m, res = '', last = 0;
+    while ((m = re.exec(text)) !== null) {
+      const body = m[2];
+      if (/type=["'](?!text\/javascript)/i.test(m[1]) || !body.trim()) continue;
+      const r = transform(body, f + '@' + m.index);
+      if (r && r.count) { res += text.slice(last, m.index + m[1].length) + r.out; last = m.index + m[1].length + body.length; count += r.count; }
+    }
+    out = res + text.slice(last);
+  } else {
+    const r = transform(text, f);
+    if (r) { out = r.out; count = r.count; }
+  }
+  if (count) {
+    total += count; console.log(f, count);
     if (!dry) fs.writeFileSync(f, out);
   }
 }

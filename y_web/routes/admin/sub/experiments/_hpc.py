@@ -117,6 +117,7 @@ from ._blueprint import (
     experiments,
 )
 from ._helpers import *  # noqa: F401,F403
+from y_web.i18n import gettext as _
 
 
 @experiments.route("/admin/test_remote_server/<int:exp_id>", methods=["POST"])
@@ -131,7 +132,7 @@ def test_remote_server(exp_id):
         port = data.get("port")
 
         if not host or not port:
-            return jsonify({"success": False, "message": "Host and port are required"})
+            return jsonify({"success": False, "message": _("Host and port are required")})
 
         # Try to connect to the server
         import socket
@@ -147,27 +148,27 @@ def test_remote_server(exp_id):
                 return jsonify(
                     {
                         "success": True,
-                        "message": f"Successfully connected to {host}:{port}",
+                        "message": _("Successfully connected to %(host)s:%(port)s", host=host, port=port),
                     }
                 )
             else:
                 return jsonify(
                     {
                         "success": False,
-                        "message": f"Cannot connect to {host}:{port} - Connection refused",
+                        "message": _("Cannot connect to %(host)s:%(port)s - Connection refused", host=host, port=port),
                     }
                 )
         except socket.gaierror:
-            return jsonify({"success": False, "message": f"Invalid hostname: {host}"})
+            return jsonify({"success": False, "message": _("Invalid hostname: %(host)s", host=host)})
         except socket.timeout:
             return jsonify(
-                {"success": False, "message": f"Connection timeout to {host}:{port}"}
+                {"success": False, "message": _("Connection timeout to %(host)s:%(port)s", host=host, port=port)}
             )
         except Exception as e:
-            return jsonify({"success": False, "message": f"Connection error: {str(e)}"})
+            return jsonify({"success": False, "message": _("Connection error: %(error)s", error=str(e))})
 
     except Exception as e:
-        return jsonify({"success": False, "message": f"Error: {str(e)}"})
+        return jsonify({"success": False, "message": _("Error: %(error)s", error=str(e))})
 
 
 @experiments.route("/admin/update_remote_server/<int:exp_id>", methods=["POST"])
@@ -184,30 +185,30 @@ def update_remote_server(exp_id):
         port = data.get("port")
 
         if not host:
-            return jsonify({"success": False, "message": "Host address is required"})
+            return jsonify({"success": False, "message": _("Host address is required")})
 
         # Validate hostname/IP format
         if not re.match(r"^[a-zA-Z0-9\.\-\:]+$", host):
-            return jsonify({"success": False, "message": "Invalid host format"})
+            return jsonify({"success": False, "message": _("Invalid host format")})
 
         # Validate port
         try:
             port = int(port)
             if not (1 <= port <= 65535):
                 return jsonify(
-                    {"success": False, "message": "Port must be between 1 and 65535"}
+                    {"success": False, "message": _("Port must be between 1 and 65535")}
                 )
         except (TypeError, ValueError):
-            return jsonify({"success": False, "message": "Invalid port number"})
+            return jsonify({"success": False, "message": _("Invalid port number")})
 
         # Get experiment
         exp = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
         if not exp:
-            return jsonify({"success": False, "message": "Experiment not found"})
+            return jsonify({"success": False, "message": _("Experiment not found")})
 
         if exp.is_remote != 1:
             return jsonify(
-                {"success": False, "message": "This is not a remote experiment"}
+                {"success": False, "message": _("This is not a remote experiment")}
             )
 
         # Update database
@@ -274,12 +275,12 @@ def update_remote_server(exp_id):
                             json.dump(client_config, f, indent=4)
 
         return jsonify(
-            {"success": True, "message": "Server settings updated successfully"}
+            {"success": True, "message": _("Server settings updated successfully")}
         )
 
     except Exception as e:
         return jsonify(
-            {"success": False, "message": f"Error updating server: {str(e)}"}
+            {"success": False, "message": _("Error updating server: %(error)s", error=str(e))}
         )
 
 
@@ -341,7 +342,7 @@ def update_hpc_monitor_settings():
 
     data = request.get_json()
     if not data:
-        return jsonify({"success": False, "message": "No data provided"}), 400
+        return jsonify({"success": False, "message": _("No data provided")}), 400
 
     ensure_hpc_monitor_settings_schema()
 
@@ -370,7 +371,7 @@ def update_hpc_monitor_settings():
                     jsonify(
                         {
                             "success": False,
-                            "message": "Check interval must be between 1 and 300 seconds",
+                            "message": _("Check interval must be between 1 and 300 seconds"),
                         }
                     ),
                     400,
@@ -378,7 +379,7 @@ def update_hpc_monitor_settings():
             settings.check_interval_seconds = interval
         except (ValueError, TypeError):
             return (
-                jsonify({"success": False, "message": "Invalid check interval value"}),
+                jsonify({"success": False, "message": _("Invalid check interval value")}),
                 400,
             )
 
@@ -394,7 +395,7 @@ def update_hpc_monitor_settings():
                     jsonify(
                         {
                             "success": False,
-                            "message": "Invalid max HPC group value",
+                            "message": _("Invalid max HPC group value"),
                         }
                     ),
                     400,
@@ -404,7 +405,7 @@ def update_hpc_monitor_settings():
                     jsonify(
                         {
                             "success": False,
-                            "message": "Max HPC experiments per group must be at least 1, or choose unlimited",
+                            "message": _("Max HPC experiments per group must be at least 1, or choose unlimited"),
                         }
                     ),
                     400,
@@ -419,7 +420,7 @@ def update_hpc_monitor_settings():
                     jsonify(
                         {
                             "success": False,
-                            "message": "Max simulations per vLLM worker must be at least 1",
+                            "message": _("Max simulations per vLLM worker must be at least 1"),
                         }
                     ),
                     400,
@@ -430,7 +431,7 @@ def update_hpc_monitor_settings():
                 jsonify(
                     {
                         "success": False,
-                        "message": "Invalid max simulations per vLLM worker value",
+                        "message": _("Invalid max simulations per vLLM worker value"),
                     }
                 ),
                 400,

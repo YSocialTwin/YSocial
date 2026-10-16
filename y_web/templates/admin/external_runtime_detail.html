@@ -197,8 +197,8 @@
     var entryKey = {{ entry.key|tojson }}, entryPaired = {{ entry.paired|tojson }};
     document.querySelectorAll('[data-remove-repo]').forEach(function (btn) {
         btn.addEventListener('click', async function () {
-            if (!window.confirm('Remove ' + btn.dataset.label + ' from external/? This deletes the local plugin files.')) return;
-            if (window.showLoading) window.showLoading('Removing...');
+            if (!window.confirm(YI18n.t('Remove {label} from external/? This deletes the local plugin files.', {label: btn.dataset.label}))) return;
+            if (window.showLoading) window.showLoading(YI18n.t('Removing...'));
             try {
                 await fetch(url(btn.dataset.removeRepo, 'delete'), {method: 'POST', credentials: 'same-origin',
                     headers: {'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json'}});

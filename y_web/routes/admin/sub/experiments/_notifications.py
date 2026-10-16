@@ -603,7 +603,7 @@ def mark_download_notification_read(notification_id):
     check_privileges(current_user.username)
     admin_user = _current_admin_user()
     if not admin_user:
-        return jsonify({"success": False, "error": "User not found"}), 404
+        return jsonify({"success": False, "error": _("User not found")}), 404
 
     notification = db.session.scalars(
         select(DownloadNotification).filter_by(
@@ -611,7 +611,7 @@ def mark_download_notification_read(notification_id):
         )
     ).first()
     if not notification:
-        return jsonify({"success": False, "error": "Notification not found"}), 404
+        return jsonify({"success": False, "error": _("Notification not found")}), 404
 
     notification.is_read = True
     db.session.commit()
@@ -630,7 +630,7 @@ def cancel_download_notification(notification_id):
     check_privileges(current_user.username)
     admin_user = _current_admin_user()
     if not admin_user:
-        return jsonify({"success": False, "error": "User not found"}), 404
+        return jsonify({"success": False, "error": _("User not found")}), 404
 
     notification = db.session.scalars(
         select(DownloadNotification).filter_by(
@@ -638,7 +638,7 @@ def cancel_download_notification(notification_id):
         )
     ).first()
     if not notification:
-        return jsonify({"success": False, "error": "Notification not found"}), 404
+        return jsonify({"success": False, "error": _("Notification not found")}), 404
 
     if (
         not notification.is_read
@@ -675,7 +675,7 @@ def delete_notification(notification_id):
     check_privileges(current_user.username)
     admin_user = _current_admin_user()
     if not admin_user:
-        return jsonify({"success": False, "error": "User not found"}), 404
+        return jsonify({"success": False, "error": _("User not found")}), 404
 
     notification = db.session.scalars(
         select(DownloadNotification).filter_by(
@@ -683,7 +683,7 @@ def delete_notification(notification_id):
         )
     ).first()
     if not notification:
-        return jsonify({"success": False, "error": "Notification not found"}), 404
+        return jsonify({"success": False, "error": _("Notification not found")}), 404
 
     file_path = notification.resource_path
     if file_path and _is_path_in_temp_data(file_path) and os.path.exists(file_path):

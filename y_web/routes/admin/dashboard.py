@@ -103,7 +103,7 @@ def fetch_models():
 
     llm_url = _normalize_llm_models_url(request.args.get("llm_url"))
     if not llm_url:
-        return jsonify({"error": "llm_url parameter is required"}), 400
+        return jsonify({"error": _("llm_url parameter is required")}), 400
 
     try:
         models = get_llm_models(llm_url)
@@ -111,7 +111,7 @@ def fetch_models():
             return jsonify({"success": True, "models": models, "url": llm_url})
         else:
             return (
-                jsonify({"success": False, "message": f"No models found at {llm_url}"}),
+                jsonify({"success": False, "message": _("No models found at %(llm_url)s", llm_url=llm_url)}),
                 404,
             )
     except Exception as e:
@@ -119,7 +119,7 @@ def fetch_models():
             jsonify(
                 {
                     "success": False,
-                    "message": f"Failed to connect to {llm_url}: {str(e)}",
+                    "message": _("Failed to connect to %(llm_url)s: %(error)s", llm_url=llm_url, error=str(e)),
                 }
             ),
             500,
@@ -132,7 +132,7 @@ def fetch_embedding_models():
     """AJAX endpoint to fetch only embedding models from a compatible LLM/Ollama server."""
     llm_url = _normalize_llm_models_url(request.args.get("llm_url"))
     if not llm_url:
-        return jsonify({"error": "llm_url parameter is required"}), 400
+        return jsonify({"error": _("llm_url parameter is required")}), 400
 
     try:
         models = [
@@ -146,7 +146,7 @@ def fetch_embedding_models():
             jsonify(
                 {
                     "success": False,
-                    "message": f"Failed to connect to {llm_url}: {str(e)}",
+                    "message": _("Failed to connect to %(llm_url)s: %(error)s", llm_url=llm_url, error=str(e)),
                 }
             ),
             500,
@@ -428,7 +428,7 @@ def dashboard_experiments_by_status(status):
             get_visible_experiment_query(user).order_by(Exps.idexp.asc()).all()
         )
     else:
-        return jsonify({"error": "Access denied"}), 403
+        return jsonify({"error": _("Access denied")}), 403
 
     # Categorize experiments by status
     experiments = []
@@ -549,7 +549,7 @@ def dashboard_status():
     if user.role in ("admin", "researcher"):
         all_experiments = get_visible_experiment_query(user).all()
     else:
-        return jsonify({"error": "Access denied"}), 403
+        return jsonify({"error": _("Access denied")}), 403
 
     # Count experiments by status
     running_count = 0
@@ -768,7 +768,7 @@ def dismiss_telemetry_notice():
     ).first()
 
     if not user or user.role != "admin":
-        return jsonify({"success": False, "message": "Access denied"}), 403
+        return jsonify({"success": False, "message": _("Access denied")}), 403
 
     user.telemetry_notice_shown = True
     db.session.commit()

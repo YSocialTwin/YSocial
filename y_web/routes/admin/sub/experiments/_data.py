@@ -390,14 +390,14 @@ def experiment_clients(exp_id):
         # Get experiment
         experiment = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
         if not experiment:
-            return jsonify({"error": "Experiment not found"}), 404
+            return jsonify({"error": _("Experiment not found")}), 404
 
         # Check user permissions
         user = db.session.scalars(
             select(Admin_users).filter_by(username=current_user.username)
         ).first()
         if not user_can_view_experiment(user, experiment):
-            return jsonify({"error": "Access denied"}), 403
+            return jsonify({"error": _("Access denied")}), 403
 
         # Import log metrics function and path utilities
         from y_web.src.hpc.log_metrics import update_client_log_metrics
@@ -408,7 +408,7 @@ def experiment_clients(exp_id):
         # Get experiment folder path
         uid = get_experiment_uid_from_db_name(experiment.db_name)
         if uid is None:
-            return jsonify({"error": "Invalid experiment path format"}), 400
+            return jsonify({"error": _("Invalid experiment path format")}), 400
 
         exp_folder = os.path.join(BASE_DIR, "y_web", "experiments", uid)
         log_folder = (
@@ -805,11 +805,11 @@ def update_experiment_descr(uid):
 
     exp = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     if not exp:
-        return jsonify({"success": False, "message": "Experiment not found"}), 404
+        return jsonify({"success": False, "message": _("Experiment not found")}), 404
 
     admin_user = _current_admin_user_or_none()
     if not user_can_manage_experiment(admin_user, exp):
-        return jsonify({"success": False, "message": "Forbidden"}), 403
+        return jsonify({"success": False, "message": _("Forbidden")}), 403
 
     data = request.get_json(silent=True) or {}
     exp_descr = (data.get("exp_descr") or request.form.get("exp_descr") or "").strip()
@@ -830,7 +830,7 @@ def update_experiment_descr(uid):
             jsonify(
                 {
                     "success": False,
-                    "message": f"Failed to update experiment description: {e}",
+                    "message": _("Failed to update experiment description: %(error)s", error=e),
                 }
             ),
             500,
@@ -1550,14 +1550,14 @@ def submit_experiment_logs(exp_id):
     # Get experiment details
     experiment = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
     if not experiment:
-        return jsonify({"success": False, "message": "Experiment not found"}), 404
+        return jsonify({"success": False, "message": _("Experiment not found")}), 404
 
     # Check if telemetry is enabled for current user
     if not current_user.telemetry_enabled:
         return jsonify(
             {
                 "success": False,
-                "message": "Telemetry is disabled. Please enable it in your user settings to submit logs.",
+                "message": _("Telemetry is disabled. Please enable it in your user settings to submit logs."),
             }
         )
 
@@ -1577,7 +1577,7 @@ def submit_experiment_logs(exp_id):
     db_name_parts = experiment.db_name.split(os.sep)
     if len(db_name_parts) < 2:
         return jsonify(
-            {"success": False, "message": "Invalid experiment database path format."}
+            {"success": False, "message": _("Invalid experiment database path format.")}
         )
 
     experiment_folder_name = db_name_parts[1]
@@ -1604,7 +1604,7 @@ def experiment_logs(exp_id):
         # Get experiment details
         experiment = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
         if not experiment:
-            return jsonify({"error": "Experiment not found"}), 404
+            return jsonify({"error": _("Experiment not found")}), 404
 
         from y_web.src.hpc.log_metrics import update_server_log_metrics
         from y_web.src.hpc.log_parser import has_server_log_files
@@ -1616,7 +1616,7 @@ def experiment_logs(exp_id):
         # Use helper function to extract UID regardless of path separator
         uid = get_experiment_uid_from_db_name(experiment.db_name)
         if uid is None:
-            return jsonify({"error": "Invalid experiment path format"}), 400
+            return jsonify({"error": _("Invalid experiment path format")}), 400
 
         exp_folder = os.path.join(BASE_DIR, "y_web", "experiments", uid)
         log_folder = (
@@ -1629,7 +1629,7 @@ def experiment_logs(exp_id):
         # Check if any log files exist (main or rotated)
         if not has_server_log_files(log_file):
             return jsonify(
-                {"call_volume": {}, "mean_duration": {}, "error": "Log file not found"}
+                {"call_volume": {}, "mean_duration": {}, "error": _("Log file not found")}
             )
 
         # Update metrics incrementally from log file
@@ -1695,7 +1695,7 @@ def experiment_logs(exp_id):
         return (
             jsonify(
                 {
-                    "error": f"Internal server error: {str(e)}",
+                    "error": _("Internal server error: %(error)s", error=str(e)),
                     "call_volume": {},
                     "mean_duration": {},
                 }
@@ -1714,7 +1714,7 @@ def experiment_trends(exp_id):
         # Get experiment details
         experiment = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
         if not experiment:
-            return jsonify({"error": "Experiment not found"}), 404
+            return jsonify({"error": _("Experiment not found")}), 404
 
         from y_web.src.hpc.log_metrics import (
             update_client_log_metrics,
@@ -1729,7 +1729,7 @@ def experiment_trends(exp_id):
         # Use helper function to extract UID regardless of path separator
         uid = get_experiment_uid_from_db_name(experiment.db_name)
         if uid is None:
-            return jsonify({"error": "Invalid experiment path format"}), 400
+            return jsonify({"error": _("Invalid experiment path format")}), 400
 
         exp_folder = os.path.join(BASE_DIR, "y_web", "experiments", uid)
         # For HPC experiments, logs are stored in /logs subfolder
@@ -1748,7 +1748,7 @@ def experiment_trends(exp_id):
                     "daily_simulation": {},
                     "hourly_compute": {},
                     "hourly_simulation": {},
-                    "error": "Log file not found",
+                    "error": _("Log file not found"),
                 }
             )
 
@@ -1962,7 +1962,7 @@ def experiment_trends(exp_id):
         return (
             jsonify(
                 {
-                    "error": f"Internal server error: {str(e)}",
+                    "error": _("Internal server error: %(error)s", error=str(e)),
                     "daily_compute": {},
                     "daily_simulation": {},
                     "hourly_compute": {},
@@ -1990,14 +1990,14 @@ def client_logs(client_id):
         # Get client details
         client = db.session.scalars(select(Client).filter_by(id=client_id)).first()
         if not client:
-            return jsonify({"error": "Client not found"}), 404
+            return jsonify({"error": _("Client not found")}), 404
 
         # Get experiment details
         experiment = db.session.scalars(
             select(Exps).filter_by(idexp=client.id_exp)
         ).first()
         if not experiment:
-            return jsonify({"error": "Experiment not found"}), 404
+            return jsonify({"error": _("Experiment not found")}), 404
 
         from y_web.src.hpc.log_metrics import update_client_log_metrics
         from y_web.src.system.path_utils import get_writable_path
@@ -2008,7 +2008,7 @@ def client_logs(client_id):
         # Use helper function to extract UID regardless of path separator
         uid = get_experiment_uid_from_db_name(experiment.db_name)
         if uid is None:
-            return jsonify({"error": "Invalid experiment path format"}), 400
+            return jsonify({"error": _("Invalid experiment path format")}), 400
 
         exp_folder = os.path.join(BASE_DIR, "y_web", "experiments", uid)
         # For HPC experiments, logs are stored in /logs subfolder
@@ -2043,7 +2043,7 @@ def client_logs(client_id):
                 {
                     "call_volume": {},
                     "mean_execution_time": {},
-                    "error": "Log file not found",
+                    "error": _("Log file not found"),
                 }
             )
 
@@ -2097,7 +2097,7 @@ def client_logs(client_id):
         return (
             jsonify(
                 {
-                    "error": f"Internal server error: {str(e)}",
+                    "error": _("Internal server error: %(error)s", error=str(e)),
                     "call_volume": {},
                     "mean_execution_time": {},
                 }
@@ -2179,7 +2179,7 @@ def detoxify_download_status():
         select(Admin_users).filter_by(username=current_user.username)
     ).first()
     if user.role != "admin":
-        return jsonify({"error": "Access denied"}), 403
+        return jsonify({"error": _("Access denied")}), 403
 
     check_privileges(current_user.username)
     state = refresh_detoxify_download_state()
@@ -2194,14 +2194,14 @@ def detoxify_download_start():
         select(Admin_users).filter_by(username=current_user.username)
     ).first()
     if user.role != "admin":
-        return jsonify({"error": "Access denied"}), 403
+        return jsonify({"error": _("Access denied")}), 403
 
     check_privileges(current_user.username)
 
     payload = request.get_json(silent=True) or request.form
     target_dir = str(payload.get("download_path", "")).strip()
     if not target_dir:
-        return jsonify({"error": "Download path is required."}), 400
+        return jsonify({"error": _("Download path is required.")}), 400
 
     notification = DownloadNotification(
         user_id=user.id,
@@ -2223,7 +2223,7 @@ def detoxify_download_start():
         return (
             jsonify(
                 {
-                    "error": f"Unable to start Detoxify download: {exc}",
+                    "error": _("Unable to start Detoxify download: %(error)s", error=exc),
                 }
             ),
             500,

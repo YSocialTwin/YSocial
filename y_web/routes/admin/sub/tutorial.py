@@ -58,6 +58,7 @@ from y_web.src.models import (
 )
 from y_web.src.system.miscellanea import check_privileges
 from y_web.src.system.path_utils import get_resource_path, get_writable_path
+from y_web.i18n import gettext as _
 
 tutorial = Blueprint("tutorial", __name__)
 
@@ -95,7 +96,7 @@ def dismiss_tutorial():
     ).first()
 
     if not user or user.role not in ["admin", "researcher"]:
-        return jsonify({"success": False, "message": "Access denied"}), 403
+        return jsonify({"success": False, "message": _("Access denied")}), 403
 
     user.tutorial_shown = True
     db.session.commit()
@@ -117,7 +118,7 @@ def reset_tutorial():
     ).first()
 
     if not user or user.role not in ["admin", "researcher"]:
-        return jsonify({"success": False, "message": "Access denied"}), 403
+        return jsonify({"success": False, "message": _("Access denied")}), 403
 
     user.tutorial_shown = False
     db.session.commit()
@@ -209,7 +210,7 @@ def create_tutorial_experiment():
 
     data = request.get_json()
     if not data:
-        return jsonify({"success": False, "message": "No data provided"}), 400
+        return jsonify({"success": False, "message": _("No data provided")}), 400
 
     try:
         ensure_population_username_type_column()
@@ -241,17 +242,17 @@ def create_tutorial_experiment():
         # Validate required fields
         if not population_name:
             return (
-                jsonify({"success": False, "message": "Population name is required"}),
+                jsonify({"success": False, "message": _("Population name is required")}),
                 400,
             )
         if not experiment_name:
             return (
-                jsonify({"success": False, "message": "Experiment name is required"}),
+                jsonify({"success": False, "message": _("Experiment name is required")}),
                 400,
             )
         if not client_name:
             return (
-                jsonify({"success": False, "message": "Client name is required"}),
+                jsonify({"success": False, "message": _("Client name is required")}),
                 400,
             )
 
@@ -261,7 +262,7 @@ def create_tutorial_experiment():
                 jsonify(
                     {
                         "success": False,
-                        "message": "Population size must be between 10 and 100",
+                        "message": _("Population size must be between 10 and 100"),
                     }
                 ),
                 400,
@@ -271,7 +272,7 @@ def create_tutorial_experiment():
                 jsonify(
                     {
                         "success": False,
-                        "message": "Simulation length must be between 1 and 30 days",
+                        "message": _("Simulation length must be between 1 and 30 days"),
                     }
                 ),
                 400,
@@ -285,7 +286,7 @@ def create_tutorial_experiment():
                 jsonify(
                     {
                         "success": False,
-                        "message": f"Population '{population_name}' already exists",
+                        "message": _("Population '%(population_name)s' already exists", population_name=population_name),
                     }
                 ),
                 400,
@@ -295,7 +296,7 @@ def create_tutorial_experiment():
                 jsonify(
                     {
                         "success": False,
-                        "message": f"Experiment '{experiment_name}' already exists",
+                        "message": _("Experiment '%(experiment_name)s' already exists", experiment_name=experiment_name),
                     }
                 ),
                 400,
@@ -445,7 +446,7 @@ def create_tutorial_experiment():
         port = get_suggested_port()
         if not port:
             return (
-                jsonify({"success": False, "message": "No available port found"}),
+                jsonify({"success": False, "message": _("No available port found")}),
                 500,
             )
 
@@ -918,14 +919,14 @@ def create_tutorial_experiment():
                 "success": True,
                 "experiment_id": exp.idexp,
                 "client_id": client.id,
-                "message": "Experiment created successfully!",
+                "message": _("Experiment created successfully!"),
             }
         )
 
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Tutorial wizard error: {str(e)}", exc_info=True)
-        return jsonify({"success": False, "message": f"Error: {str(e)}"}), 500
+        return jsonify({"success": False, "message": _("Error: %(error)s", error=str(e))}), 500
 
 
 @tutorial.route("/admin/tutorial/run_simulation", methods=["POST"])
@@ -952,7 +953,7 @@ def run_tutorial_simulation():
 
     data = request.get_json()
     if not data:
-        return jsonify({"success": False, "message": "No data provided"}), 400
+        return jsonify({"success": False, "message": _("No data provided")}), 400
 
     experiment_id = data.get("experiment_id")
     client_id = data.get("client_id")
@@ -960,7 +961,7 @@ def run_tutorial_simulation():
     if not experiment_id or not client_id:
         return (
             jsonify(
-                {"success": False, "message": "Missing experiment_id or client_id"}
+                {"success": False, "message": _("Missing experiment_id or client_id")}
             ),
             400,
         )
@@ -969,19 +970,19 @@ def run_tutorial_simulation():
         # Get the experiment
         exp = db.session.scalars(select(Exps).filter_by(idexp=experiment_id)).first()
         if not exp:
-            return jsonify({"success": False, "message": "Experiment not found"}), 404
+            return jsonify({"success": False, "message": _("Experiment not found")}), 404
 
         # Get the client
         client = db.session.scalars(select(Client).filter_by(id=client_id)).first()
         if not client:
-            return jsonify({"success": False, "message": "Client not found"}), 404
+            return jsonify({"success": False, "message": _("Client not found")}), 404
 
         # Get the population
         population = db.session.scalars(
             select(Population).filter_by(id=client.population_id)
         ).first()
         if not population:
-            return jsonify({"success": False, "message": "Population not found"}), 404
+            return jsonify({"success": False, "message": _("Population not found")}), 404
 
         # Start the experiment server if not already running
         if exp.running == 0:
@@ -1011,13 +1012,13 @@ def run_tutorial_simulation():
         db.session.query(Client).filter_by(id=client_id).update({Client.status: 1})
         db.session.commit()
 
-        return jsonify({"success": True, "message": "Simulation started successfully!"})
+        return jsonify({"success": True, "message": _("Simulation started successfully!")})
 
     except Exception as e:
         current_app.logger.error(
             f"Error starting tutorial simulation: {str(e)}", exc_info=True
         )
-        return jsonify({"success": False, "message": f"Error: {str(e)}"}), 500
+        return jsonify({"success": False, "message": _("Error: %(error)s", error=str(e))}), 500
 
 
 # =====================================================
@@ -1061,7 +1062,7 @@ def dismiss_exp_details_tutorial():
     ).first()
 
     if not user or user.role not in ["admin", "researcher"]:
-        return jsonify({"success": False, "message": "Access denied"}), 403
+        return jsonify({"success": False, "message": _("Access denied")}), 403
 
     user.exp_details_tutorial_shown = True
     db.session.commit()
@@ -1083,7 +1084,7 @@ def reset_exp_details_tutorial():
     ).first()
 
     if not user or user.role not in ["admin", "researcher"]:
-        return jsonify({"success": False, "message": "Access denied"}), 403
+        return jsonify({"success": False, "message": _("Access denied")}), 403
 
     user.exp_details_tutorial_shown = False
     db.session.commit()

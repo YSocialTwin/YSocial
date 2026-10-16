@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-16 15:27+0000\n"
+"POT-Creation-Date: 2026-10-16 15:49+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -105,6 +105,14 @@ msgstr ""
 #, python-format
 msgid "%(platform)s Memory Embeddings"
 msgstr "Embedding della memoria di %(platform)s"
+
+#, python-format
+msgid "%(title)s not available"
+msgstr "%(title)s non disponibile"
+
+#, python-format
+msgid "%(title)s tables not available"
+msgstr "Tabelle %(title)s non disponibili"
 
 #, python-format
 msgid "%(user)s (%(n)s interactions)"
@@ -252,6 +260,9 @@ msgid "About Us"
 msgstr "Chi siamo"
 
 msgid "Access Denied"
+msgstr "Accesso negato"
+
+msgid "Access denied"
 msgstr "Accesso negato"
 
 msgid "Access denied."
@@ -961,6 +972,9 @@ msgstr "Tratti di personalità Big Five"
 msgid "Binomial"
 msgstr "Binomial"
 
+msgid "Blog post not found"
+msgstr "Post del blog non trovato"
+
 msgid "Bluesky Data"
 msgstr "dati di Bluesky"
 
@@ -1018,12 +1032,28 @@ msgstr "Volume di chiamate per percorso"
 msgid "Cancel"
 msgstr "Annulla"
 
+#, python-format
+msgid "Cannot connect to %(host)s:%(port)s - Connection refused"
+msgstr "Impossibile connettersi a %(host)s:%(port)s - Connessione rifiutata"
+
+msgid "Cannot delete a running group"
+msgstr "Impossibile eliminare un gruppo in esecuzione"
+
 msgid ""
 "Cannot delete this custom population because at least one custom agent would be left without a "
 "population."
 msgstr ""
 "Impossibile eliminare questa popolazione personalizzata perché almeno un agente personalizzato "
 "resterebbe senza popolazione."
+
+msgid "Cannot mix HPC experiments with Standard experiments in the same group."
+msgstr "Non è possibile mescolare esperimenti HPC ed esperimenti standard nello stesso gruppo."
+
+msgid "Cannot mix Standard experiments with HPC experiments in the same group."
+msgstr "Non è possibile mescolare esperimenti standard ed esperimenti HPC nello stesso gruppo."
+
+msgid "Cannot remove experiments from a running group"
+msgstr "Impossibile rimuovere esperimenti da un gruppo in esecuzione"
 
 msgid "Cartesian product"
 msgstr "Prodotto cartesiano"
@@ -1064,6 +1094,9 @@ msgstr "Cerca nuove versioni di YSocial e resta aggiornato."
 
 msgid "Check for new YSocial releases to access the latest features and improvements."
 msgstr "Cerca nuove versioni di YSocial per accedere alle ultime funzioni e miglioramenti."
+
+msgid "Check interval must be between 1 and 300 seconds"
+msgstr "L'intervallo di controllo deve essere compreso tra 1 e 300 secondi"
 
 msgid "Checks"
 msgstr "Controlli"
@@ -1245,8 +1278,14 @@ msgstr ""
 msgid "Client name already exists."
 msgstr "Il nome del client esiste già."
 
+msgid "Client name is required"
+msgstr "Il nome del client è obbligatorio"
+
 msgid "Client name is required."
 msgstr "Il nome del client è obbligatorio."
+
+msgid "Client not found"
+msgstr "Client non trovato"
 
 msgid "Client not found or does not belong to this experiment."
 msgstr "Client non trovato o non appartenente a questo esperimento."
@@ -1583,6 +1622,14 @@ msgstr "Conferma la password"
 msgid "Connect"
 msgstr "Connetti"
 
+#, python-format
+msgid "Connection error: %(error)s"
+msgstr "Errore di connessione: %(error)s"
+
+#, python-format
+msgid "Connection timeout to %(host)s:%(port)s"
+msgstr "Timeout di connessione a %(host)s:%(port)s"
+
 msgid "Conscientiousness"
 msgstr "Coscienziosità"
 
@@ -1684,6 +1731,13 @@ msgstr "Impossibile eliminare %(failed_paths)s file di log a causa di errori del
 msgid "Could not delete ad hoc client: %(error)s"
 msgstr "Impossibile eliminare il client ad hoc: %(error)s"
 
+msgid "Could not prepare the experiment database for this module."
+msgstr "Impossibile preparare il database dell'esperimento per questo modulo."
+
+#, python-format
+msgid "Could not resolve notebook directory for experiment ID: %(experiment_id)s"
+msgstr "Impossibile determinare la cartella dei notebook per l'esperimento con ID: %(experiment_id)s"
+
 msgid "Count"
 msgstr "Conteggio"
 
@@ -1783,6 +1837,10 @@ msgstr "Creato"
 #, python-format
 msgid "Created %(created)s matrix experiment(s) in group '%(target_group)s'."
 msgstr "Creati %(created)s esperimenti a matrice nel gruppo '%(target_group)s'."
+
+#, python-format
+msgid "Created %(created_groups)s groups"
+msgstr "Creati %(created_groups)s gruppi"
 
 msgid "Created using predefined parameters. Agents are automatically generated."
 msgstr "Creata con parametri predefiniti. Gli agenti vengono generati automaticamente."
@@ -2180,6 +2238,9 @@ msgstr "Il file da scaricare non è più disponibile."
 msgid "Download or remove this experiment."
 msgstr "Scarica o rimuovi questo esperimento."
 
+msgid "Download path is required."
+msgstr "Il percorso di download è obbligatorio."
+
 msgid "Download selected experiments as a ZIP file"
 msgstr "Scarica gli esperimenti selezionati come file ZIP"
 
@@ -2455,6 +2516,10 @@ msgid "Error creating copy '%(copy_name)s': %(error)s"
 msgstr "Errore nella creazione della copia '%(copy_name)s': %(error)s"
 
 #, python-format
+msgid "Error creating notebook: %(error)s"
+msgstr "Errore nella creazione del notebook: %(error)s"
+
+#, python-format
 msgid "Error deleting user: %(error)s"
 msgstr "Errore nell'eliminazione dell'utente: %(error)s"
 
@@ -2493,6 +2558,14 @@ msgstr "Errore nell'avvio del client: %(error)s"
 #, python-format
 msgid "Error updating client configuration: %(error)s"
 msgstr "Errore nell'aggiornamento della configurazione del client: %(error)s"
+
+#, python-format
+msgid "Error updating server: %(error)s"
+msgstr "Errore nell'aggiornamento del server: %(error)s"
+
+#, python-format
+msgid "Error: %(error)s"
+msgstr "Errore: %(error)s"
 
 msgid "Error: No available port found in range 5000-6000. Cannot upload experiment."
 msgstr "Errore: nessuna porta disponibile nell'intervallo 5000-6000. Impossibile caricare l'esperimento."
@@ -2577,6 +2650,10 @@ msgstr "Esperimento '%(exp_name)s' spostato da completato a fermo (durata del cl
 msgid "Experiment '%(exp_names_to_create)s' successfully created as a copy of '%(exp_name)s'."
 msgstr "Esperimento '%(exp_names_to_create)s' creato con successo come copia di '%(exp_name)s'."
 
+#, python-format
+msgid "Experiment '%(experiment_name)s' already exists"
+msgstr "L'esperimento '%(experiment_name)s' esiste già"
+
 msgid "Experiment Clock Mode"
 msgstr "Modalità dell'orologio dell'esperimento"
 
@@ -2607,17 +2684,26 @@ msgstr "Partecipazione agli esperimenti"
 msgid "Experiment Schedule"
 msgstr "Pianificazione dell'esperimento"
 
+msgid "Experiment already in group"
+msgstr "L'esperimento è già nel gruppo"
+
 msgid "Experiment compatibility"
 msgstr "Compatibilità con gli esperimenti"
 
 msgid "Experiment configuration updated."
 msgstr "Configurazione dell'esperimento aggiornata."
 
+msgid "Experiment created successfully!"
+msgstr "Esperimento creato con successo!"
+
 msgid "Experiment identification and settings."
 msgstr "Identificazione e impostazioni dell'esperimento."
 
 msgid "Experiment name"
 msgstr "Nome dell'esperimento"
+
+msgid "Experiment name is required"
+msgstr "Il nome dell'esperimento è obbligatorio"
 
 msgid "Experiment name is required."
 msgstr "Il nome dell'esperimento è obbligatorio."
@@ -2633,6 +2719,14 @@ msgstr "Esperimento non trovato o non attivo."
 
 msgid "Experiment not found."
 msgstr "Esperimento non trovato."
+
+#, python-format
+msgid "Experiment not found: %(exp_id)s"
+msgstr "Esperimento non trovato: %(exp_id)s"
+
+#, python-format
+msgid "Experiment not found: %(expid)s"
+msgstr "Esperimento non trovato: %(expid)s"
 
 msgid "Experiment owner"
 msgstr "Proprietario dell'esperimento"
@@ -2751,6 +2845,10 @@ msgid "Failed to clear experiment logs: %(error)s"
 msgstr "Impossibile eliminare i log dell'esperimento: %(error)s"
 
 #, python-format
+msgid "Failed to connect to %(llm_url)s: %(error)s"
+msgstr "Connessione a %(llm_url)s non riuscita: %(error)s"
+
+#, python-format
 msgid "Failed to delete %(failed_ids)s experiment(s): %(join)s"
 msgstr "Impossibile eliminare %(failed_ids)s esperimenti: %(join)s"
 
@@ -2765,6 +2863,10 @@ msgstr "Impossibile reimpostare l'esperimento HPC: %(error)s"
 #, python-format
 msgid "Failed to update configuration: %(error)s"
 msgstr "Impossibile aggiornare la configurazione: %(error)s"
+
+#, python-format
+msgid "Failed to update experiment description: %(error)s"
+msgstr "Impossibile aggiornare la descrizione dell'esperimento: %(error)s"
 
 #, python-format
 msgid "Failed to update experiment topics: %(error)s"
@@ -2857,6 +2959,9 @@ msgstr "Filtra per gruppo (tutti = tutti i gruppi)"
 msgid "Filter experiments by group"
 msgstr "Filtra gli esperimenti per gruppo"
 
+msgid "First group has no experiments"
+msgstr "Il primo gruppo non ha esperimenti"
+
 msgid "Follow"
 msgstr "Segui"
 
@@ -2903,6 +3008,9 @@ msgid ""
 msgstr ""
 "Per l'argomento selezionato, esamina gli agenti presi di mira e confronta la loro traiettoria di "
 "opinione con i tempi delle interazioni di propaganda."
+
+msgid "Forbidden"
+msgstr "Vietato"
 
 msgid "Format: username,email,role,password (one per line)"
 msgstr "Formato: nome utente,email,ruolo,password (uno per riga)"
@@ -3109,6 +3217,9 @@ msgstr "Consenti a questo utente di partecipare a un esperimento."
 msgid "Group"
 msgstr "Gruppo"
 
+msgid "Group not found"
+msgstr "Gruppo non trovato"
+
 msgid "Groups"
 msgstr "Gruppi"
 
@@ -3176,6 +3287,12 @@ msgstr "Pre-prompt del gestore"
 msgid "Hashtag Evolution"
 msgstr "Evoluzione degli hashtag"
 
+msgid "Hashtag evolution not available"
+msgstr "Evoluzione degli hashtag non disponibile"
+
+msgid "Hashtag-evolution tables not available"
+msgstr "Tabelle di evoluzione degli hashtag non disponibili"
+
 msgid "Header Image URL"
 msgstr "URL dell'immagine di copertina"
 
@@ -3238,6 +3355,12 @@ msgstr "Host"
 
 msgid "Host Address"
 msgstr "Indirizzo dell'host"
+
+msgid "Host address is required"
+msgstr "L'indirizzo dell'host è obbligatorio"
+
+msgid "Host and port are required"
+msgstr "Host e porta sono obbligatori"
 
 msgid "Host format"
 msgstr "Formato dell'host"
@@ -3495,6 +3618,10 @@ msgstr "Solo interlocutore"
 msgid "Internal Server Error"
 msgstr "Errore interno del server"
 
+#, python-format
+msgid "Internal server error: %(error)s"
+msgstr "Errore interno del server: %(error)s"
+
 msgid "Interval"
 msgstr "Intervallo"
 
@@ -3507,9 +3634,18 @@ msgstr "Probabilità di arco nel blocco"
 msgid "Intra-block probability"
 msgstr "Probabilità nel blocco"
 
+msgid "Invalid JSON format"
+msgstr "Formato JSON non valido"
+
 #, python-format
 msgid "Invalid JSON parameters for distribution '%(name)s': %(error)s"
 msgstr "Parametri JSON non validi per la distribuzione '%(name)s': %(error)s"
+
+msgid "Invalid RSS feed URL"
+msgstr "URL del feed RSS non valido"
+
+msgid "Invalid URL format"
+msgstr "Formato dell'URL non valido"
 
 msgid "Invalid User ID or Experiment ID."
 msgstr "ID utente o ID esperimento non valido."
@@ -3527,8 +3663,15 @@ msgstr "Valori degli archetipi non validi: %(error)s"
 msgid "Invalid bound values. Must be numbers."
 msgstr "Valori dei limiti non validi. Devono essere numeri."
 
+msgid "Invalid check interval value"
+msgstr "Valore dell'intervallo di controllo non valido"
+
 msgid "Invalid download path."
 msgstr "Percorso di download non valido."
+
+#, python-format
+msgid "Invalid experiment ID: %(experiment_id)s"
+msgstr "ID esperimento non valido: %(experiment_id)s"
 
 msgid "Invalid experiment IDs provided."
 msgstr "ID esperimento non validi."
@@ -3536,9 +3679,38 @@ msgstr "ID esperimento non validi."
 msgid "Invalid experiment database configuration"
 msgstr "Configurazione del database dell'esperimento non valida"
 
+msgid "Invalid experiment database path format."
+msgstr "Formato del percorso del database dell'esperimento non valido."
+
+msgid "Invalid experiment path format"
+msgstr "Formato del percorso dell'esperimento non valido"
+
+msgid "Invalid experiments_per_group value"
+msgstr "Valore di experiments_per_group non valido"
+
+msgid "Invalid host format"
+msgstr "Formato dell'host non valido"
+
+#, python-format
+msgid "Invalid hostname: %(host)s"
+msgstr "Nome host non valido: %(host)s"
+
 #, python-format
 msgid "Invalid input values: %(error)s"
 msgstr "Valori di input non validi: %(error)s"
+
+#, python-format
+msgid "Invalid instance ID: %(instance_id)s"
+msgstr "ID istanza non valido: %(instance_id)s"
+
+msgid "Invalid lower_bound value"
+msgstr "Valore di lower_bound non valido"
+
+msgid "Invalid max HPC group value"
+msgstr "Valore massimo HPC per gruppo non valido"
+
+msgid "Invalid max simulations per vLLM worker value"
+msgstr "Valore massimo di simulazioni per worker vLLM non valido"
 
 msgid "Invalid or expired session. Please log in again."
 msgstr "Sessione non valida o scaduta. Accedi di nuovo."
@@ -3548,6 +3720,9 @@ msgstr "Formato dei parametri non valido. Deve essere JSON valido."
 
 msgid "Invalid population IDs provided."
 msgstr "ID popolazione non validi."
+
+msgid "Invalid port number"
+msgstr "Numero di porta non valido"
 
 msgid "Invalid remote host format. Use IP address or domain name."
 msgstr "Formato dell'host remoto non valido. Usa un indirizzo IP o un nome di dominio."
@@ -3563,6 +3738,9 @@ msgstr "Richiesta non valida."
 
 msgid "Invalid revoke request."
 msgstr "Richiesta di revoca non valida."
+
+msgid "Invalid upper_bound value"
+msgstr "Valore di upper_bound non valido"
 
 msgid "Invalid user ID."
 msgstr "ID utente non valido."
@@ -3582,6 +3760,9 @@ msgstr "Privato %"
 msgid "Is Verified %"
 msgstr "Verificato %"
 
+msgid "Item not found"
+msgstr "Elemento non trovato"
+
 #, python-format
 msgid "Join %(name)s"
 msgstr "Partecipa a %(name)s"
@@ -3600,6 +3781,9 @@ msgstr "Esperimenti a cui partecipa"
 
 msgid "Jupyter Lab"
 msgstr "Jupyter Lab"
+
+msgid "Jupyter Notebook functionality is disabled."
+msgstr "La funzionalità Jupyter Notebook è disattivata."
 
 msgid ""
 "Keep defaults for small and medium experiments. Increase limits only when you need broader "
@@ -3799,6 +3983,9 @@ msgstr "Esci"
 msgid "Log Synchronization:"
 msgstr "Sincronizzazione dei log:"
 
+msgid "Log file not found"
+msgstr "File di log non trovato"
+
 msgid ""
 "Log metrics reset and re-parsed. Plots now show data from original run and will include extended "
 "data after client restart."
@@ -3829,6 +4016,12 @@ msgstr "Interesse basso"
 
 msgid "Lower Bound"
 msgstr "Limite inferiore"
+
+msgid "Lower bound must be <= upper bound"
+msgstr "Il limite inferiore deve essere <= al limite superiore"
+
+msgid "Lower bound must be in [0, 1]"
+msgstr "Il limite inferiore deve essere in [0, 1]"
 
 msgid "Lower bound must be less than or equal to upper bound."
 msgstr "Il limite inferiore deve essere minore o uguale al limite superiore."
@@ -3893,6 +4086,9 @@ msgstr ""
 msgid "Matrix"
 msgstr "Matrix"
 
+msgid "Max HPC experiments per group must be at least 1, or choose unlimited"
+msgstr "Il numero massimo di esperimenti HPC per gruppo deve essere almeno 1, oppure scegli illimitato"
+
 msgid "Max Model Length"
 msgstr "Lunghezza massima del modello"
 
@@ -3905,6 +4101,9 @@ msgstr "Token massimi"
 msgid "Max number of thread items (post + comments) to fetch for context."
 msgstr "Numero massimo di elementi della discussione (post e commenti) da recuperare come contesto."
 
+msgid "Max simulations per vLLM worker must be at least 1"
+msgstr "Il numero massimo di simulazioni per worker vLLM deve essere almeno 1"
+
 msgid "Max tokens"
 msgstr "Token massimi"
 
@@ -3913,6 +4112,14 @@ msgstr "Max/gruppo"
 
 msgid "Max:"
 msgstr "Max:"
+
+#, python-format
+msgid ""
+"Maximum %(max_hpc_per_group)s HPC experiments allowed per group. This group already has "
+"%(hpc_count)s HPC experiments."
+msgstr ""
+"Sono ammessi al massimo %(max_hpc_per_group)s esperimenti HPC per gruppo. Questo gruppo ne ha già"
+" %(hpc_count)s."
 
 msgid "Maximum actions"
 msgstr "Azioni massime"
@@ -3995,6 +4202,15 @@ msgstr "Azioni minime"
 msgid "Miscellanea"
 msgstr "Varie"
 
+msgid "Missing exp_id"
+msgstr "exp_id mancante"
+
+msgid "Missing exp_id or module_id"
+msgstr "exp_id o module_id mancante"
+
+msgid "Missing experiment_id or client_id"
+msgstr "experiment_id o client_id mancante"
+
 msgid "Mixing parameter (mu)"
 msgstr "Parametro di mescolamento (mu)"
 
@@ -4060,6 +4276,9 @@ msgstr "Nome"
 msgid "Name and hours are required."
 msgstr "Nome e ore sono obbligatori."
 
+msgid "Name is required"
+msgstr "Il nome è obbligatorio"
+
 msgid "Name:"
 msgstr "Nome:"
 
@@ -4101,12 +4320,18 @@ msgstr "Scienza delle reti"
 msgid "Network Type"
 msgstr "Tipo di rete"
 
+msgid "Network analysis not available"
+msgstr "Analisi di rete non disponibile"
+
 msgid ""
 "Network file format error: provide a csv file containing two columns with agent names. No header "
 "required."
 msgstr ""
 "Errore di formato del file di rete: fornisci un file csv con due colonne di nomi di agenti. "
 "Nessuna intestazione richiesta."
+
+msgid "Network-analysis tables not available"
+msgstr "Tabelle di analisi di rete non disponibili"
 
 msgid "Neuroticism"
 msgstr "Nevroticismo"
@@ -4223,6 +4448,9 @@ msgstr "No"
 msgid "No Active Experiments"
 msgstr "Nessun esperimento attivo"
 
+msgid "No URL provided"
+msgstr "Nessun URL fornito"
+
 msgid "No active discussion topics for this experiment."
 msgstr "Nessun argomento di discussione attivo per questo esperimento."
 
@@ -4247,8 +4475,14 @@ msgstr "Al momento non è installato alcun plugin di agenti ad hoc."
 msgid "No ad hoc agents' clients registered yet"
 msgstr "Nessun client di agenti ad hoc registrato"
 
+msgid "No available experiments to assign"
+msgstr "Nessun esperimento disponibile da assegnare"
+
 msgid "No available port could be assigned for the new experiment."
 msgstr "Nessuna porta disponibile da assegnare al nuovo esperimento."
+
+msgid "No available port found"
+msgstr "Nessuna porta disponibile"
 
 msgid "No client configuration files were found for this experiment."
 msgstr "Non sono stati trovati file di configurazione dei client per questo esperimento."
@@ -4268,6 +4502,9 @@ msgstr "Nessun valore configurabile trovato in questo file."
 msgid "No configuration files were found for this experiment."
 msgstr "Non sono stati trovati file di configurazione per questo esperimento."
 
+msgid "No data provided"
+msgstr "Nessun dato fornito"
+
 msgid "No experiment matrix combinations were created."
 msgstr "Non è stata creata alcuna combinazione della matrice di esperimenti."
 
@@ -4286,8 +4523,17 @@ msgstr "Ancora nessun esperimento"
 msgid "No feed description available."
 msgstr "Nessuna descrizione del feed disponibile."
 
+msgid "No file provided"
+msgstr "Nessun file fornito"
+
+msgid "No file selected"
+msgstr "Nessun file selezionato"
+
 msgid "No groups created yet"
 msgstr "Ancora nessun gruppo creato"
+
+msgid "No groups defined or all groups completed"
+msgstr "Nessun gruppo definito o tutti i gruppi completati"
 
 msgid "No interests assigned"
 msgstr "Nessun interesse assegnato"
@@ -4303,6 +4549,10 @@ msgstr "Ancora nessun log"
 
 msgid "No matching visibility assignment found."
 msgstr "Nessuna assegnazione di visibilità corrispondente trovata."
+
+#, python-format
+msgid "No models found at %(llm_url)s"
+msgstr "Nessun modello trovato su %(llm_url)s"
 
 msgid "No notifications yet."
 msgstr "Ancora nessuna notifica."
@@ -4382,11 +4632,18 @@ msgstr "Non impostato"
 msgid "Note:"
 msgstr "Nota:"
 
+#, python-format
+msgid "Notebook created at %(filepath)s"
+msgstr "Notebook creato in %(filepath)s"
+
 msgid "Notice:"
 msgstr "Avviso:"
 
 msgid "Notification menu"
 msgstr "Menu delle notifiche"
+
+msgid "Notification not found"
+msgstr "Notifica non trovata"
 
 msgid "Notification not found."
 msgstr "Notifica non trovata."
@@ -4569,6 +4826,9 @@ msgstr "Categorie di opinione"
 msgid "Opinion configuration route does not match the experiment modality."
 msgstr "La rotta di configurazione delle opinioni non corrisponde alla modalità dell'esperimento."
 
+msgid "Opinion distribution not found"
+msgstr "Distribuzione di opinione non trovata"
+
 msgid "Opinion distribution update route does not match the experiment modality."
 msgstr ""
 "La rotta di aggiornamento della distribuzione delle opinioni non corrisponde alla modalità "
@@ -4586,6 +4846,12 @@ msgstr ""
 
 msgid "Opinion dynamics is not enabled for this experiment."
 msgstr "Le dinamiche di opinione non sono attive per questo esperimento."
+
+msgid "Opinion dynamics not enabled"
+msgstr "Dinamiche di opinione non attive"
+
+msgid "Opinion group not found"
+msgstr "Gruppo di opinione non trovato"
 
 #, python-format
 msgid ""
@@ -4632,6 +4898,10 @@ msgstr "Socievole/Energico"
 
 msgid "Overall cap for injected memory context across tiers."
 msgstr "Limite complessivo del contesto di memoria inserito, su tutti i livelli."
+
+#, python-format
+msgid "Overlaps with '%(name)s' [%(lower_bound)s, %(upper_bound)s]"
+msgstr "Si sovrappone a '%(name)s' [%(lower_bound)s, %(upper_bound)s]"
 
 msgid "Owned Experiments"
 msgstr "Esperimenti posseduti"
@@ -4834,6 +5104,10 @@ msgstr "Orientamenti politici"
 msgid "Population"
 msgstr "Popolazione"
 
+#, python-format
+msgid "Population '%(population_name)s' already exists"
+msgstr "La popolazione '%(population_name)s' esiste già"
+
 msgid "Population Memberships"
 msgstr "Appartenenza a popolazioni"
 
@@ -4887,6 +5161,9 @@ msgstr "La popolazione è fissa per un client ad hoc esistente."
 msgid "Population name '%(new_population_name)s' already exists. Please choose a different name."
 msgstr "Il nome popolazione '%(new_population_name)s' esiste già. Scegli un nome diverso."
 
+msgid "Population name is required"
+msgstr "Il nome della popolazione è obbligatorio"
+
 msgid "Population name is required."
 msgstr "Il nome della popolazione è obbligatorio."
 
@@ -4901,6 +5178,9 @@ msgstr "Popolazione non trovata."
 
 msgid "Population size must be a valid integer."
 msgstr "La dimensione della popolazione deve essere un intero valido."
+
+msgid "Population size must be between 10 and 100"
+msgstr "La dimensione della popolazione deve essere compresa tra 10 e 100"
 
 msgid "Population size must be greater than zero."
 msgstr "La dimensione della popolazione deve essere maggiore di zero."
@@ -4924,6 +5204,9 @@ msgstr "Popolazioni in cui questo agente è attualmente distribuito."
 
 msgid "Port"
 msgstr "Porta"
+
+msgid "Port must be between 1 and 65535"
+msgstr "La porta deve essere compresa tra 1 e 65535"
 
 msgid "Port:"
 msgstr "Porta:"
@@ -5241,8 +5524,14 @@ msgstr "Limite di raccomandazioni"
 msgid "Recommendation Systems"
 msgstr "Sistemi di raccomandazione"
 
+msgid "Recommendation analytics not available"
+msgstr "Analisi delle raccomandazioni non disponibile"
+
 msgid "Recommendation exposure and reach"
 msgstr "Esposizione e copertura delle raccomandazioni"
+
+msgid "Recommendation-tracking tables not available"
+msgstr "Tabelle di tracciamento delle raccomandazioni non disponibili"
 
 msgid "Recommendations"
 msgstr "Raccomandazioni"
@@ -5267,6 +5556,10 @@ msgstr "Recupero da Reddit"
 
 msgid "Reddit could not be reached. Retry later."
 msgstr "Impossibile raggiungere Reddit. Riprova più tardi."
+
+#, python-format
+msgid "Reddit returned HTTP %(code)s while loading r/%(subreddit)s. Retry later."
+msgstr "Reddit ha restituito HTTP %(code)s durante il caricamento di r/%(subreddit)s. Riprova più tardi."
 
 #, python-format
 msgid "Reddit returned HTTP %(code)s."
@@ -5616,6 +5909,15 @@ msgstr ""
 msgid "Scale Free (Barabási-Albert)"
 msgstr "Scale-free (Barabási-Albert)"
 
+msgid "Schedule already running"
+msgstr "Pianificazione già in esecuzione"
+
+msgid "Schedule not running"
+msgstr "Pianificazione non in esecuzione"
+
+msgid "Schedule stopped"
+msgstr "Pianificazione fermata"
+
 #, python-format
 msgid "Schema migration failed: %(error)s"
 msgstr "Migrazione dello schema non riuscita: %(error)s"
@@ -5894,6 +6196,9 @@ msgstr ""
 "Metriche del server azzerate e rianalizzate. Metriche del client azzerate ma non ancora "
 "rianalizzate. I grafici si aggiorneranno del tutto al prossimo aggiornamento."
 
+msgid "Server settings updated successfully"
+msgstr "Impostazioni del server aggiornate con successo"
+
 msgid "Server, Clients, and Analytics"
 msgstr "Server, client e analisi"
 
@@ -6038,6 +6343,12 @@ msgstr "Argomenti della simulazione"
 msgid "Simulation length and population dynamics."
 msgstr "Durata della simulazione e dinamiche della popolazione."
 
+msgid "Simulation length must be between 1 and 30 days"
+msgstr "La durata della simulazione deve essere compresa tra 1 e 30 giorni"
+
+msgid "Simulation started successfully!"
+msgstr "Simulazione avviata con successo!"
+
 msgid "Simulation time context"
 msgstr "Contesto temporale della simulazione"
 
@@ -6145,6 +6456,10 @@ msgstr "Avvia l'esperimento e i client per iniziare la simulazione."
 msgid "Start the experiment server before running ad hoc clients."
 msgstr "Avvia il server dell'esperimento prima di eseguire i client ad hoc."
 
+#, python-format
+msgid "Started %(started_count)s experiments in group '%(name)s'"
+msgstr "Avviati %(started_count)s esperimenti nel gruppo '%(name)s'"
+
 msgid "State"
 msgstr "Stato"
 
@@ -6226,6 +6541,9 @@ msgstr "Stress/ricompensa"
 msgid "Stress/Reward Churn"
 msgstr "Ricambio di stress/ricompensa"
 
+msgid "Stress/reward analytics not available"
+msgstr "Analisi di stress/ricompensa non disponibile"
+
 msgid "Stress/reward settings are available only for microblogging, forum, and HPC experiments."
 msgstr ""
 "Le impostazioni di stress/ricompensa sono disponibili solo per gli esperimenti di microblogging, "
@@ -6264,6 +6582,10 @@ msgstr "Probabilità di successo (0-1)"
 #, python-format
 msgid "Successfully assigned %(assigned)s user(s) to experiment '%(exp_name)s'."
 msgstr "Assegnati con successo %(assigned)s utenti all'esperimento '%(exp_name)s'."
+
+#, python-format
+msgid "Successfully connected to %(host)s:%(port)s"
+msgstr "Connessione a %(host)s:%(port)s riuscita"
 
 #, python-format
 msgid "Successfully created %(created)s user(s)."
@@ -6361,6 +6683,9 @@ msgstr "Informazioni sulla telemetria"
 
 msgid "Telemetry Settings"
 msgstr "Impostazioni di telemetria"
+
+msgid "Telemetry is disabled. Please enable it in your user settings to submit logs."
+msgstr "La telemetria è disattivata. Attivala nelle impostazioni utente per inviare i log."
 
 msgid "Telemetry:"
 msgstr "Telemetria:"
@@ -6662,6 +6987,12 @@ msgstr ""
 "Questo è un simulatore sperimentale che garantisce una maggiore scalabilità delle simulazioni a "
 "costo di una configurazione più dettagliata e complessa."
 
+msgid "This is not a remote experiment"
+msgstr "Questo non è un esperimento remoto"
+
+msgid "This module is not available for this experiment type."
+msgstr "Questo modulo non è disponibile per questo tipo di esperimento."
+
 msgid "This page is only available for forum experiments."
 msgstr "Questa pagina è disponibile solo per gli esperimenti del forum."
 
@@ -6763,11 +7094,17 @@ msgstr "Distribuzione dell'interesse per gli argomenti"
 msgid "Topic classification chips"
 msgstr "Etichette di classificazione degli argomenti"
 
+msgid "Topic evolution not available"
+msgstr "Evoluzione degli argomenti non disponibile"
+
 msgid "Topic guidance"
 msgstr "Indicazioni sull'argomento"
 
 msgid "Topic not found."
 msgstr "Argomento non trovato."
+
+msgid "Topic-evolution tables not available"
+msgstr "Tabelle di evoluzione degli argomenti non disponibili"
 
 msgid "Topic-specific target opinion over time, with MoP interaction volume shown on the secondary axis."
 msgstr ""
@@ -6885,6 +7222,9 @@ msgstr "Tipo di rete"
 msgid "URL"
 msgstr "URL"
 
+msgid "URL is required"
+msgstr "L'URL è obbligatorio"
+
 msgid "URL:"
 msgstr "URL:"
 
@@ -6906,6 +7246,10 @@ msgstr "Impossibile determinare l'utente amministratore corrente."
 
 msgid "Unable to resolve current user."
 msgstr "Impossibile determinare l'utente corrente."
+
+#, python-format
+msgid "Unable to start Detoxify download: %(error)s"
+msgstr "Impossibile avviare il download di Detoxify: %(error)s"
 
 msgid "Unavailable"
 msgstr "Non disponibile"
@@ -6949,8 +7293,14 @@ msgstr "Université Lyon 1"
 msgid "Unknown external runtime repository."
 msgstr "Repository del runtime esterno sconosciuto."
 
+msgid "Unknown module"
+msgstr "Modulo sconosciuto"
+
 msgid "Unknown platform type for this experiment."
 msgstr "Tipo di piattaforma sconosciuto per questo esperimento."
+
+msgid "Unknown suite"
+msgstr "Suite sconosciuta"
 
 msgid "Unlimited when off"
 msgstr "Illimitato se disattivato"
@@ -7081,6 +7431,9 @@ msgstr "Carica un file CSV con gli archi (uno per riga: origine,destinazione)."
 
 msgid "Upper Bound"
 msgstr "Limite superiore"
+
+msgid "Upper bound must be in [0, 1]"
+msgstr "Il limite superiore deve essere in [0, 1]"
 
 msgid "Usage"
 msgstr "Utilizzo"
@@ -7366,6 +7719,10 @@ msgid "Warning: Population file not found. Segment values may be limited."
 msgstr "Attenzione: file della popolazione non trovato. I valori dei segmenti potrebbero essere limitati."
 
 #, python-format
+msgid "Watchdog %(value)s"
+msgstr "Watchdog %(value)s"
+
+#, python-format
 msgid "Watchdog check complete: %(processes_checked)s checked, %(processes_restarted)s restarted"
 msgstr ""
 "Controllo del watchdog completato: %(processes_checked)s controllati, %(processes_restarted)s "
@@ -7639,6 +7996,15 @@ msgstr "es. http://localhost:8000/v1"
 msgid "e.g., localhost:8000"
 msgstr "es. localhost:8000"
 
+msgid "experiment_id is required"
+msgstr "experiment_id è obbligatorio"
+
+msgid "experiments_per_group is required"
+msgstr "experiments_per_group è obbligatorio"
+
+msgid "group_ids is required"
+msgstr "group_ids è obbligatorio"
+
 msgid "http://127.0.0.1:11434"
 msgstr "http://127.0.0.1:11434"
 
@@ -7647,6 +8013,9 @@ msgstr "http://127.0.0.1:11434/v1"
 
 msgid "https://example.com/feed.xml or https://www.reddit.com/r/politics/new.json?limit=100"
 msgstr "https://example.com/feed.xml or https://www.reddit.com/r/politics/new.json?limit=100"
+
+msgid "llm_url parameter is required"
+msgstr "Il parametro llm_url è obbligatorio"
 
 msgid "local changes"
 msgstr "modifiche locali"
@@ -7683,6 +8052,10 @@ msgstr "oppure illimitato"
 
 msgid "prerelease"
 msgstr "pre-release"
+
+#, python-format
+msgid "r/%(subreddit)s does not exist."
+msgstr "r/%(subreddit)s non esiste."
 
 #, python-format
 msgid "r/%(subreddit_input)s does not exist."

@@ -424,7 +424,7 @@ def parse_rss_feed():
     payload = request.get_json(silent=True) or {}
     feed_url = str(payload.get("feed_url", "")).strip()
     if not feed_url:
-        return jsonify({"error": "No URL provided"}), 400
+        return jsonify({"error": _("No URL provided")}), 400
 
     if "://" not in feed_url:
         feed_url = f"https://{feed_url}"
@@ -433,12 +433,12 @@ def parse_rss_feed():
         feed_content = _read_feed_with_headers(feed_url)
         parsed_feed = _parse_admin_feed_metadata(feed_url, feed_content)
         if parsed_feed is None:
-            return jsonify({"error": "Invalid RSS feed URL"}), 400
+            return jsonify({"error": _("Invalid RSS feed URL")}), 400
         return jsonify(parsed_feed)
     except HTTPError as exc:
-        return jsonify({"error": f"Feed source returned HTTP {exc.code}."}), 400
+        return jsonify({"error": _("Feed source returned HTTP %(code)s.", code=exc.code)}), 400
     except URLError:
-        return jsonify({"error": "Feed source could not be reached."}), 400
+        return jsonify({"error": _("Feed source could not be reached.")}), 400
     except Exception as exc:
         return jsonify({"error": str(exc)}), 400
 
@@ -523,11 +523,11 @@ def upload_rss_feeds(uid):
 
     rss_feeds_path = os.path.join(experiment_dir, "rss_feeds.json")
     if "file" not in request.files:
-        return jsonify({"error": "No file provided"}), 400
+        return jsonify({"error": _("No file provided")}), 400
 
     upload = request.files["file"]
     if upload.filename == "":
-        return jsonify({"error": "No file selected"}), 400
+        return jsonify({"error": _("No file selected")}), 400
 
     try:
         content = upload.read().decode("utf-8")
@@ -543,7 +543,7 @@ def upload_rss_feeds(uid):
             json.dump(new_feeds, handle, indent=2)
         return jsonify({"success": True, "count": len(new_feeds)})
     except json.JSONDecodeError:
-        return jsonify({"error": "Invalid JSON format"}), 400
+        return jsonify({"error": _("Invalid JSON format")}), 400
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
     except Exception as exc:
@@ -560,11 +560,11 @@ def upload_url_feeds(uid):
 
     url_feeds_path = os.path.join(experiment_dir, "url_feeds.txt")
     if "file" not in request.files:
-        return jsonify({"error": "No file provided"}), 400
+        return jsonify({"error": _("No file provided")}), 400
 
     upload = request.files["file"]
     if upload.filename == "":
-        return jsonify({"error": "No file selected"}), 400
+        return jsonify({"error": _("No file selected")}), 400
 
     try:
         content = upload.read().decode("utf-8")
@@ -755,11 +755,11 @@ def upload_image_feeds(uid):
 
     image_feeds_path = os.path.join(experiment_dir, "image_feeds.json")
     if "file" not in request.files:
-        return jsonify({"error": "No file provided"}), 400
+        return jsonify({"error": _("No file provided")}), 400
 
     upload = request.files["file"]
     if upload.filename == "":
-        return jsonify({"error": "No file selected"}), 400
+        return jsonify({"error": _("No file selected")}), 400
 
     try:
         content = upload.read().decode("utf-8")
@@ -808,7 +808,7 @@ def upload_image_feeds(uid):
             json.dump(normalized_feeds, handle, indent=2)
         return jsonify({"success": True, "count": len(normalized_feeds)})
     except json.JSONDecodeError:
-        return jsonify({"error": "Invalid JSON format"}), 400
+        return jsonify({"error": _("Invalid JSON format")}), 400
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
     except Exception as exc:
@@ -922,20 +922,19 @@ def parse_image_feed():
         return jsonify({"error": str(exc)}), 400
     except HTTPError as exc:
         if exc.code == 404:
-            return jsonify({"error": f"r/{subreddit} does not exist."}), 400
+            return jsonify({"error": _("r/%(subreddit)s does not exist.", subreddit=subreddit)}), 400
         return (
             jsonify(
                 {
                     "error": (
-                        f"Reddit returned HTTP {exc.code} while loading r/{subreddit}. "
-                        "Retry later."
+                        _("Reddit returned HTTP %(code)s while loading r/%(subreddit)s. Retry later.", code=exc.code, subreddit=subreddit)
                     )
                 }
             ),
             400,
         )
     except URLError:
-        return jsonify({"error": "Reddit could not be reached. Retry later."}), 400
+        return jsonify({"error": _("Reddit could not be reached. Retry later.")}), 400
     except Exception as exc:
         return jsonify({"error": str(exc)}), 400
 

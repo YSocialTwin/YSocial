@@ -26,6 +26,7 @@ from y_web.src.models.config import Content_Recsys, Follow_Recsys
 from y_web.src.system.miscellanea import check_privileges
 
 from ._blueprint import experiments
+from y_web.i18n import gettext as _
 
 # ------------------------------------------------------------------
 # Supported platforms and what each one's templates actually offer
@@ -291,11 +292,11 @@ def frontend_settings_get():
 
     exp_id = request.args.get("exp_id", type=int)
     if not exp_id:
-        return jsonify({"ok": False, "error": "Missing exp_id"}), 400
+        return jsonify({"ok": False, "error": _("Missing exp_id")}), 400
 
     exp = db.session.get(Exps, exp_id)
     if exp is None or exp.platform_type not in SUPPORTED_PLATFORMS:
-        return jsonify({"ok": False, "error": "Experiment not found"}), 404
+        return jsonify({"ok": False, "error": _("Experiment not found")}), 404
 
     return jsonify(
         {
@@ -329,11 +330,11 @@ def frontend_settings_save():
     new_settings = data.get("settings", {})
 
     if not exp_id:
-        return jsonify({"ok": False, "error": "Missing exp_id"}), 400
+        return jsonify({"ok": False, "error": _("Missing exp_id")}), 400
 
     exp = db.session.get(Exps, exp_id)
     if exp is None or exp.platform_type not in SUPPORTED_PLATFORMS:
-        return jsonify({"ok": False, "error": "Experiment not found"}), 404
+        return jsonify({"ok": False, "error": _("Experiment not found")}), 404
 
     safe = {}
     for k, default in DEFAULT_SETTINGS.items():
@@ -451,11 +452,11 @@ def frontend_plugin_suite_settings_get(repo_key):
 
     exp_id = request.args.get("exp_id", type=int)
     if not exp_id:
-        return jsonify({"ok": False, "error": "Missing exp_id"}), 400
+        return jsonify({"ok": False, "error": _("Missing exp_id")}), 400
 
     exp = db.session.get(Exps, exp_id)
     if exp is None or exp.platform_type not in SUPPORTED_PLATFORMS:
-        return jsonify({"ok": False, "error": "Experiment not found"}), 404
+        return jsonify({"ok": False, "error": _("Experiment not found")}), 404
 
     from y_web.src.external_runtime.frontend_plugins import (
         frontend_plugin_repo_keys,
@@ -464,7 +465,7 @@ def frontend_plugin_suite_settings_get(repo_key):
     from y_web.src.models import FrontendAddsOnExpModuleSettings
 
     if repo_key not in frontend_plugin_repo_keys():
-        return jsonify({"ok": False, "error": "Unknown suite"}), 404
+        return jsonify({"ok": False, "error": _("Unknown suite")}), 404
 
     from y_web.src.external_runtime.registry import (
         runtime_installed_and_visible,
@@ -475,7 +476,7 @@ def frontend_plugin_suite_settings_get(repo_key):
     # it out must not be the ONLY thing stopping a direct call to this
     # endpoint from reaching a private, not-yet-visible suite.
     if not runtime_installed_and_visible(repo_key, current_user):
-        return jsonify({"ok": False, "error": "Unknown suite"}), 404
+        return jsonify({"ok": False, "error": _("Unknown suite")}), 404
 
     report = validate_frontend_suite(repo_key)
     if not report["installed"]:
@@ -564,11 +565,11 @@ def frontend_plugin_suite_settings_save(repo_key):
     raw_config = data.get("config") or {}
 
     if not exp_id or not module_id:
-        return jsonify({"ok": False, "error": "Missing exp_id or module_id"}), 400
+        return jsonify({"ok": False, "error": _("Missing exp_id or module_id")}), 400
 
     exp = db.session.get(Exps, exp_id)
     if exp is None or exp.platform_type not in SUPPORTED_PLATFORMS:
-        return jsonify({"ok": False, "error": "Experiment not found"}), 404
+        return jsonify({"ok": False, "error": _("Experiment not found")}), 404
 
     from y_web.src.external_runtime.frontend_plugins import (
         discover_frontend_modules,
@@ -578,14 +579,14 @@ def frontend_plugin_suite_settings_save(repo_key):
     from y_web.src.models import FrontendAddsOnExpModuleSettings
 
     if repo_key not in frontend_plugin_repo_keys():
-        return jsonify({"ok": False, "error": "Unknown suite"}), 404
+        return jsonify({"ok": False, "error": _("Unknown suite")}), 404
 
     from y_web.src.external_runtime.registry import (
         runtime_installed_and_visible,
     )
 
     if not runtime_installed_and_visible(repo_key, current_user):
-        return jsonify({"ok": False, "error": "Unknown suite"}), 404
+        return jsonify({"ok": False, "error": _("Unknown suite")}), 404
 
     manifest = None
     for entry in discover_frontend_modules(repo_key):
@@ -593,20 +594,20 @@ def frontend_plugin_suite_settings_save(repo_key):
             manifest = entry
             break
     if manifest is None:
-        return jsonify({"ok": False, "error": "Unknown module"}), 404
+        return jsonify({"ok": False, "error": _("Unknown module")}), 404
     if exp.platform_type not in (manifest.get("platforms") or ["microblogging"]):
         return (
             jsonify(
                 {
                     "ok": False,
-                    "error": "This module is not available for this experiment type.",
+                    "error": _("This module is not available for this experiment type."),
                 }
             ),
             409,
         )
 
     safe_config = {}
-    _, applicable_params = _manifest_for_platform(manifest, exp.platform_type)
+    _unused, applicable_params = _manifest_for_platform(manifest, exp.platform_type)
     for param in applicable_params:
         name = param["name"]
         if name in raw_config:
@@ -619,7 +620,7 @@ def frontend_plugin_suite_settings_save(repo_key):
                 jsonify(
                     {
                         "ok": False,
-                        "error": "Could not prepare the experiment database for this module.",
+                        "error": _("Could not prepare the experiment database for this module."),
                     }
                 ),
                 500,

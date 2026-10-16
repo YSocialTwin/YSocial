@@ -74,8 +74,8 @@ document.addEventListener('click', async function (event) {
     if (!button) return;
     event.preventDefault();
     var label = button.dataset.label || 'this plugin';
-    if (!window.confirm('Remove ' + label + ' (all its components) from external/? This deletes the local plugin files.')) return;
-    if (window.showLoading) window.showLoading('Removing ' + label + '...');
+    if (!window.confirm(YI18n.t('Remove {label} (all its components) from external/? This deletes the local plugin files.', {label}))) return;
+    if (window.showLoading) window.showLoading(YI18n.t('Removing {label}...', {label}));
     try {
         await fetch(button.dataset.removeUrl, {
             method: 'POST', credentials: 'same-origin',

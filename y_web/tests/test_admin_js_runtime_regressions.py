@@ -79,7 +79,7 @@ def test_admin_experiments_start_jupyter_redirects_to_lab_page():
 
     assert "window.location.href = `/admin/lab/${expId}`;" in start_block
     assert (
-        "throw new Error((data && data.message) || 'Failed to start JupyterLab');"
+        "throw new Error((data && data.message) || YI18n.t('Failed to start JupyterLab'));"
         in start_block
     )
     assert "response => response.json()" not in start_block
@@ -192,7 +192,7 @@ def test_new_experiment_form_uses_repo_availability_bridge():
     )
     assert "const hpcAvailable = !!repoAvailability.hpc;" in admin_settings_js
     assert "const forumAvailable = !!repoAvailability.forum;" in admin_settings_js
-    assert "hpcToggleLabel.textContent = 'Required';" in admin_settings_js
+    assert "hpcToggleLabel.textContent = YI18n.t('Required');" in admin_settings_js
     assert (
         "microbloggingOption.disabled = !microbloggingAvailable && !hpcAvailable;"
         in admin_settings_js

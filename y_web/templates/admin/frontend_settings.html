@@ -783,13 +783,13 @@ input:checked + .slider-small:before { transform: translateX(16px); }
     _fillSimple('default_photo_feed_tab', data.photo_feed_tabs || []);
     const hint = document.getElementById('posts-per-page-hint');
     if (hint) hint.textContent = platform === 'microblogging'
-      ? 'Number of posts shown per page when infinite scrolling is disabled'
-      : 'Number of items loaded at a time in the feed';
+      ? YI18n.t('Number of posts shown per page when infinite scrolling is disabled')
+      : YI18n.t('Number of items loaded at a time in the feed');
     // description of the Feed & Profile box
     const fp = document.querySelector('#box-feed-profile .box-content > p');
     if (fp) fp.textContent = platform === 'microblogging'
-      ? 'Configure default recommendation algorithms and profile/onboarding options for standard users.'
-      : 'Configure the default feed view of this platform. Recommendation algorithms are specific to each platform and are not shared with microblogging.';
+      ? YI18n.t('Configure default recommendation algorithms and profile/onboarding options for standard users.')
+      : YI18n.t('Configure the default feed view of this platform. Recommendation algorithms are specific to each platform and are not shared with microblogging.');
     toggleInfiniteScrollControls(platform === 'microblogging' ? document.getElementById('infinite_scroll_enabled').checked : false);
   }
 
@@ -834,7 +834,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
     groups.forEach(g => {
       const opt = document.createElement('option');
       opt.value = g;
-      opt.textContent = g === NO_GROUP ? '(no group)' : g;
+      opt.textContent = g === NO_GROUP ? YI18n.t('(no group)') : g;
       groupSelect.appendChild(opt);
     });
     groupSelect.disabled = groups.length === 0;
@@ -899,7 +899,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       // Group by category
       const cats = {};
       items.forEach(r => { (cats[r.category] = cats[r.category] || []).push(r); });
-      sel.innerHTML = '<option value="">— system default —</option>';
+      sel.innerHTML = '<option value="">' + YI18n.t('— system default —') + '</option>';
       Object.keys(cats).forEach(cat => {
         const og = document.createElement('optgroup');
         og.label = cat;
@@ -1079,7 +1079,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
     evt.preventDefault();
     if (!currentExpId) return;
     const statusEl = document.getElementById('status-' + section);
-    statusEl.textContent = 'Saving…';
+    statusEl.textContent = YI18n.t('Saving…');
     statusEl.className = 'ys-fs-save-status';
     try {
       const resp = await fetch(SAVE_URL, {
@@ -1089,14 +1089,14 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       });
       const data = await resp.json();
       if (data.ok) {
-        statusEl.textContent = 'Saved ✓';
+        statusEl.textContent = YI18n.t('Saved ✓');
         statusEl.className = 'ys-fs-save-status is-ok';
       } else {
-        statusEl.textContent = 'Error: ' + (data.error || 'unknown');
+        statusEl.textContent = YI18n.t('Error: {error}', {error: data.error || 'unknown'});
         statusEl.className = 'ys-fs-save-status is-err';
       }
     } catch (e) {
-      statusEl.textContent = 'Network error';
+      statusEl.textContent = YI18n.t('Network error');
       statusEl.className = 'ys-fs-save-status is-err';
     }
     setTimeout(() => { statusEl.textContent = ''; statusEl.className = 'ys-fs-save-status'; }, 4000);
@@ -1144,8 +1144,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       renderFrontendAddsOnModules(expId, repoKey, usable);
       if (hidden && !usable.length) {
         document.getElementById('suite-' + repoKey + '-modules-list').innerHTML =
-          '<p class="ys-fs-placeholder" style="padding:20px;">No module of this suite is available for ' +
-          (PLATFORMS.find(p => p.value === platform) || {label: platform}).label + ' experiments.</p>';
+          '<p class="ys-fs-placeholder" style="padding:20px;">' + YI18n.t('No module of this suite is available for {label} experiments.', {label: (PLATFORMS.find(p => p.value === platform) || {label: platform}).label}) + '</p>';
       }
     } catch (e) {
       box.style.display = 'none';
@@ -1176,20 +1175,13 @@ input:checked + .slider-small:before { transform: translateX(16px); }
     if (param.type === 'string_list') {
       const joined = Array.isArray(value) ? value.join(', ') : '';
       const escaped = joined.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      return '<textarea id="' + id + '" rows="2" placeholder="comma or newline separated" ' +
-        'style="width:100%;padding:0.35rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;' +
-        'font:inherit;resize:vertical;">' + escaped + '</textarea>';
+      return '<textarea id="' + id + '" rows="2" placeholder="' + YI18n.t('comma or newline separated') + '" style="width:100%;padding:0.35rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;font:inherit;resize:vertical;">' + escaped + '</textarea>';
     }
     if (param.type === 'llm_endpoint_host') {
       const visionArg = param.vision ? 'true' : 'false';
       const btnLabel = param.vision ? 'Fetch Vision Models' : 'Fetch Models';
       const statusId = 'edu-fetch-status-' + repoKey + '-' + moduleId + '-' + param.name;
-      return '<div class="ys-flex-row-mb">' +
-        '<input type="text" id="' + id + '" class="input ys-flex-1" placeholder="e.g., http://127.0.0.1:11434/v1" value="' +
-        (value != null ? String(value).replace(/"/g, '&quot;') : '') + '">' +
-        '<button type="button" class="button is-light" onclick="_eduFetchModelsFor(\'' + repoKey + '\',\'' +
-        moduleId + '\',\'' + param.name + '\',\'' + (param.pairs_with || '') + '\',' + visionArg + ')">' +
-        btnLabel + '</button></div><div id="' + statusId + '" class="ys-badge-min"></div>';
+      return '<div class="ys-flex-row-mb"><input type="text" id="' + id + '" class="input ys-flex-1" placeholder="' + YI18n.t('e.g., http://127.0.0.1:11434/v1') + '" value="' + value != null ? String(value).replace(/"/g, '&quot;') : '' + '"><button type="button" class="button is-light" onclick="_eduFetchModelsFor(\'' + repoKey + '\',\'' + moduleId + '\',\'' + param.name + '\',\'' + param.pairs_with || '' + '\',' + visionArg + ')">' + btnLabel + '</button></div><div id="' + statusId + '" class="ys-badge-min"></div>';
     }
     if (param.type === 'llm_endpoint_model') {
       const placeholder = param.vision ? 'Select a vision model' : 'Select a model';
@@ -1229,10 +1221,10 @@ input:checked + .slider-small:before { transform: translateX(16px); }
     const statusEl = document.getElementById('edu-fetch-status-' + repoKey + '-' + moduleId + '-' + hostParamName);
     const llmUrl = hostEl ? hostEl.value.trim() : '';
     if (!llmUrl) {
-      if (statusEl) statusEl.innerHTML = '<span style="color:#b91c1c;">Enter a server URL first</span>';
+      if (statusEl) statusEl.innerHTML = '<span style="color:#b91c1c;">' + YI18n.t('Enter a server URL first') + '</span>';
       return;
     }
-    if (statusEl) statusEl.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Fetching...';
+    if (statusEl) statusEl.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> ' + YI18n.t('Fetching...');
     try {
       const resp = await fetch('/admin/api/fetch_models?llm_url=' + encodeURIComponent(llmUrl));
       const data = await resp.json();
@@ -1252,12 +1244,12 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       }
       if (statusEl) {
         statusEl.innerHTML = models.length
-          ? '<span style="color:green;"><i class="mdi mdi-check"></i> ' + models.length + ' model' + (models.length === 1 ? '' : 's') + ' loaded</span>'
-          : '<span style="color:#b45309;">No ' + (vision ? 'vision ' : '') + 'models found</span>';
+          ? '<span style="color:green;"><i class="mdi mdi-check"></i> ' + (models.length === 1 ? YI18n.t('1 model loaded') : YI18n.t('{length} models loaded', {length: models.length})) + '</span>'
+          : '<span style="color:#b45309;">' + (vision ? YI18n.t('No vision models found') : YI18n.t('No models found')) + '</span>';
         setTimeout(function () { statusEl.innerHTML = ''; }, 4000);
       }
     } catch (e) {
-      if (statusEl) statusEl.innerHTML = '<span style="color:#b91c1c;"><i class="mdi mdi-alert"></i> Connection failed</span>';
+      if (statusEl) statusEl.innerHTML = '<span style="color:#b91c1c;"><i class="mdi mdi-alert"></i> ' + YI18n.t('Connection failed') + '</span>';
     }
   }
 
@@ -1297,7 +1289,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
   function renderFrontendAddsOnModules(expId, repoKey, modules) {
     const list = document.getElementById('suite-' + repoKey + '-modules-list');
     if (!modules.length) {
-      list.innerHTML = '<p class="ys-fs-placeholder" style="padding:20px;">No modules declared by this suite.</p>';
+      list.innerHTML = '<p class="ys-fs-placeholder" style="padding:20px;">' + YI18n.t('No modules declared by this suite.') + '</p>';
       return;
     }
 
@@ -1305,7 +1297,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       const statusInfo = STATUS_LABELS[m.status] || [m.status, ''];
       const sections = m.parameter_sections && m.parameter_sections.length
         ? m.parameter_sections
-        : [{ key: 'general', label: 'Parameters' }];
+        : [{ key: 'general', label: YI18n.t('Parameters') }];
       const bySection = {};
       (m.parameters || []).forEach(function (p) {
         const key = p.section || 'general';
@@ -1360,31 +1352,10 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       }).join('');
 
       const memoryEmbeddingsHtml = (repoKey === 'reactive_agents' && m.module_id === 'responsive_agents')
-        ? ('<div class="edu-param-section">' +
-            '<div class="edu-param-section-header">Memory embeddings</div>' +
-            '<div class="edu-param-section-desc">Semantic memory retrieval used by this module\'s persona/memory context is configured once per experiment, not per plugin.</div>' +
-            '<div class="ys-toggle-row"><a class="button is-light" href="/admin/embedding_settings/' + expId + '" target="_blank" rel="noopener">Configure Memory Embeddings</a></div>' +
-            '</div>')
+        ? ('<div class="edu-param-section"><div class="edu-param-section-header">' + YI18n.t('Memory embeddings') + '</div><div class="edu-param-section-desc">' + YI18n.t('Semantic memory retrieval used by this module\'s persona/memory context is configured once per experiment, not per plugin.') + '</div><div class="ys-toggle-row"><a class="button is-light" href="/admin/embedding_settings/' + expId + '" target="_blank" rel="noopener">' + YI18n.t('Configure Memory Embeddings') + '</a></div></div>')
         : '';
 
-      return '<div class="misc-compact-box" style="margin-bottom:12px;" data-edu-module-id="' + m.module_id + '" data-edu-repo-key="' + repoKey + '">' +
-        '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">' +
-        '<div><strong>' + m.display_name + '</strong> ' +
-        '<span class="ys-text-xs-hint">v' + m.version + '</span> ' +
-        '<span class="ys-fs-save-status ' + statusInfo[1] + '" style="display:inline;">' + statusInfo[0] + '</span>' +
-        ((m.description && !(repoKey === 'reactive_agents' && m.module_id === 'responsive_agents')) ? '<div class="ys-text-xs-hint" style="margin-top:2px;">' + m.description + '</div>' : '') +
-        '</div>' +
-        '<div style="display:flex;gap:10px;align-items:center;">' +
-        '<label class="switch-small"><input type="checkbox" class="edu-enable-toggle"' +
-        (m.enabled ? ' checked' : '') + '><span class="slider-small round"></span></label>' +
-        '<button type="button" class="button is-light edu-configure-toggle">Configure</button>' +
-        '</div></div>' +
-        '<div class="edu-configure-panel" style="display:none;margin-top:12px;border-top:1px solid #f1f3f5;padding-top:10px;">' +
-        sectionsHtml + memoryEmbeddingsHtml +
-        '<div class="ys-fs-save-row">' +
-        '<button class="button is-solid primary-button edu-save-btn">Save module</button>' +
-        '<span class="ys-fs-save-status edu-status"></span>' +
-        '</div></div></div>';
+      return '<div class="misc-compact-box" style="margin-bottom:12px;" data-edu-module-id="' + m.module_id + '" data-edu-repo-key="' + repoKey + '"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;"><div><strong>' + m.display_name + '</strong> <span class="ys-text-xs-hint">v' + m.version + '</span> <span class="ys-fs-save-status ' + statusInfo[1] + '" style="display:inline;">' + statusInfo[0] + '</span>' + (m.description && !(repoKey === 'reactive_agents' && m.module_id === 'responsive_agents')) ? '<div class="ys-text-xs-hint" style="margin-top:2px;">' + m.description + '</div>' : '' + '</div><div style="display:flex;gap:10px;align-items:center;"><label class="switch-small"><input type="checkbox" class="edu-enable-toggle"' + m.enabled ? ' checked' : '' + '><span class="slider-small round"></span></label><button type="button" class="button is-light edu-configure-toggle">' + YI18n.t('Configure') + '</button></div></div><div class="edu-configure-panel" style="display:none;margin-top:12px;border-top:1px solid #f1f3f5;padding-top:10px;">' + sectionsHtml + memoryEmbeddingsHtml + '<div class="ys-fs-save-row"><button class="button is-solid primary-button edu-save-btn">' + YI18n.t('Save module') + '</button><span class="ys-fs-save-status edu-status"></span></div></div></div>';
     }).join('');
 
     // Wire up per-module interactions (delegation would also work, but the
@@ -1414,7 +1385,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
           config[p.name] = _eduReadParamValue(cardRepoKey, moduleId, p);
         });
         const statusEl = card.querySelector('.edu-status');
-        statusEl.textContent = 'Saving…';
+        statusEl.textContent = YI18n.t('Saving…');
         statusEl.className = 'ys-fs-save-status edu-status';
         try {
           const resp = await fetch(_suiteUrl(SUITE_SAVE_URL_TEMPLATE, cardRepoKey), {
@@ -1424,15 +1395,15 @@ input:checked + .slider-small:before { transform: translateX(16px); }
           });
           const data = await resp.json();
           if (data.ok) {
-            statusEl.textContent = 'Saved ✓';
+            statusEl.textContent = YI18n.t('Saved ✓');
             statusEl.className = 'ys-fs-save-status edu-status is-ok';
             loadFrontendAddsOnSettings(expId, cardRepoKey);
           } else {
-            statusEl.textContent = 'Error: ' + (data.error || 'unknown');
+            statusEl.textContent = YI18n.t('Error: {error}', {error: data.error || 'unknown'});
             statusEl.className = 'ys-fs-save-status edu-status is-err';
           }
         } catch (e) {
-          statusEl.textContent = 'Network error';
+          statusEl.textContent = YI18n.t('Network error');
           statusEl.className = 'ys-fs-save-status edu-status is-err';
         }
       });

@@ -633,7 +633,7 @@
     input.type = 'text';
     input.name = name;
     input.className = 'input';
-    input.placeholder = 'Select or type a new interest';
+    input.placeholder = YI18n.t('Select or type a new interest');
     input.setAttribute('list', topicDatalistId);
     return input;
   }
@@ -650,12 +650,12 @@
     const stubbornSelect = document.createElement('select');
     stubbornSelect.name = 'interest_feature_stubborn[]';
     stubbornSelect.className = 'input';
-    stubbornSelect.innerHTML = '<option value="0">Mutable</option><option value="1">Stubborn</option>';
+    stubbornSelect.innerHTML = '<option value="0">' + YI18n.t('Mutable') + '</option><option value="1">' + YI18n.t('Stubborn') + '</option>';
 
     const removeButton = document.createElement('button');
     removeButton.type = 'button';
     removeButton.className = 'button is-light is-small';
-    removeButton.textContent = 'Remove';
+    removeButton.textContent = YI18n.t('Remove');
     removeButton.addEventListener('click', () => row.remove());
 
     inner.appendChild(wrapField('Interest', interestSelect));
@@ -676,18 +676,18 @@
     keyInput.type = 'text';
     keyInput.name = 'custom_feature_key[]';
     keyInput.className = 'input';
-    keyInput.placeholder = 'Field name';
+    keyInput.placeholder = YI18n.t('Field name');
 
     const valueInput = document.createElement('input');
     valueInput.type = 'text';
     valueInput.name = 'custom_feature_value[]';
     valueInput.className = 'input';
-    valueInput.placeholder = 'Field value';
+    valueInput.placeholder = YI18n.t('Field value');
 
     const removeButton = document.createElement('button');
     removeButton.type = 'button';
     removeButton.className = 'button is-light is-small';
-    removeButton.textContent = 'Remove';
+    removeButton.textContent = YI18n.t('Remove');
     removeButton.addEventListener('click', () => row.remove());
 
     inner.appendChild(wrapField('Key', keyInput));

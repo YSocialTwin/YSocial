@@ -304,13 +304,13 @@ const YS_ADHOC_CLIENTS = {
 
         populationSelect.disabled = YS_ADHOC_CLIENTS.readonlyIdentity || !spec || items.length === 0;
         if (!spec) {
-            hint.textContent = 'Select an agent type to load compatible populations.';
+            hint.textContent = YI18n.t('Select an agent type to load compatible populations.');
         } else if (YS_ADHOC_CLIENTS.readonlyIdentity) {
-            hint.textContent = 'Population is fixed for an existing ad hoc client.';
+            hint.textContent = YI18n.t('Population is fixed for an existing ad hoc client.');
         } else if (items.length === 0) {
-            hint.textContent = 'No compatible populations are currently available for this agent type.';
+            hint.textContent = YI18n.t('No compatible populations are currently available for this agent type.');
         } else {
-            hint.textContent = 'Select one of the populations compatible with the chosen agent type.';
+            hint.textContent = YI18n.t('Select one of the populations compatible with the chosen agent type.');
         }
     }
 
@@ -495,60 +495,15 @@ const YS_ADHOC_CLIENTS = {
         }
 
         if (type === 'topic_targets') {
-            return `
-                <div class="box-line" data-setting-name="${escapeHtml(name)}" ${parameter.visible_if ? `data-visible-if-setting="${escapeHtml(parameter.visible_if.setting || parameter.visible_if.field || '')}" data-visible-if-equals="${escapeHtml(parameter.visible_if.equals || '')}"` : ''}>
-                    <span class="left">${escapeHtml(label)}</span>
-                    <span class="right ys-w-70">
-                        <input type="hidden" name="agent_setting__${escapeHtml(name)}" id="agent_setting__${escapeHtml(name)}" value="${escapeHtml(JSON.stringify(Array.isArray(initialValue) ? initialValue : []))}">
-                        <div class="ys-adhoc-target-builder" data-setting-name="${escapeHtml(name)}" data-initial-value="${escapeHtml(JSON.stringify(Array.isArray(initialValue) ? initialValue : []))}">
-                            <div class="ys-adhoc-target-builder-help">
-                                Add one row per persuasion campaign. Each row chooses a topic, the desired opinion category to move users toward, and optional filters on whom to target.
-                            </div>
-                            <div class="ys-adhoc-target-rows"></div>
-                            <button type="button" class="button is-light ys-adhoc-add-target">+ Add Topic</button>
-                        </div>
-                        ${description}
-                    </span>
-                </div>
-            `;
+            return '\n                <div class="box-line" data-setting-name="' + escapeHtml(name) + '" ' + parameter.visible_if ? `data-visible-if-setting="${escapeHtml(parameter.visible_if.setting || parameter.visible_if.field || '')}" data-visible-if-equals="${escapeHtml(parameter.visible_if.equals || '')}"` : '' + '>\n                    <span class="left">' + escapeHtml(label) + '</span>\n                    <span class="right ys-w-70">\n                        <input type="hidden" name="agent_setting__' + escapeHtml(name) + '" id="agent_setting__' + escapeHtml(name) + '" value="' + escapeHtml(JSON.stringify(Array.isArray(initialValue) ? initialValue : [])) + '">\n                        <div class="ys-adhoc-target-builder" data-setting-name="' + escapeHtml(name) + '" data-initial-value="' + escapeHtml(JSON.stringify(Array.isArray(initialValue) ? initialValue : [])) + '">\n                            <div class="ys-adhoc-target-builder-help">\n                                ' + YI18n.t('Add one row per persuasion campaign. Each row chooses a topic, the desired opinion category to move users toward, and optional filters on whom to target.') + '\n                            </div>\n                            <div class="ys-adhoc-target-rows"></div>\n                            <button type="button" class="button is-light ys-adhoc-add-target">' + YI18n.t('+ Add Topic') + '</button>\n                        </div>\n                        ' + description + '\n                    </span>\n                </div>\n            ';
         }
 
         if (type === 'mop_targets') {
-            return `
-                <div class="box-line" data-setting-name="${escapeHtml(name)}" ${parameter.visible_if ? `data-visible-if-setting="${escapeHtml(parameter.visible_if.setting || parameter.visible_if.field || '')}" data-visible-if-equals="${escapeHtml(parameter.visible_if.equals || '')}"` : ''}>
-                    <span class="left">${escapeHtml(label)}</span>
-                    <span class="right ys-w-70">
-                        <input type="hidden" name="agent_setting__${escapeHtml(name)}" id="agent_setting__${escapeHtml(name)}" value="${escapeHtml(JSON.stringify(Array.isArray(initialValue) ? initialValue : []))}">
-                        <div class="ys-adhoc-mop-builder" data-setting-name="${escapeHtml(name)}" data-initial-value="${escapeHtml(JSON.stringify(Array.isArray(initialValue) ? initialValue : []))}">
-                            <div class="ys-adhoc-target-builder-help">
-                                Add one campaign row per topic the MoP network should push. The opinion objective is optional.
-                            </div>
-                            <div class="ys-adhoc-mop-rows"></div>
-                            <button type="button" class="button is-light ys-adhoc-add-mop-target">+ Add Goal</button>
-                        </div>
-                        ${description}
-                    </span>
-                </div>
-            `;
+            return '\n                <div class="box-line" data-setting-name="' + escapeHtml(name) + '" ' + parameter.visible_if ? `data-visible-if-setting="${escapeHtml(parameter.visible_if.setting || parameter.visible_if.field || '')}" data-visible-if-equals="${escapeHtml(parameter.visible_if.equals || '')}"` : '' + '>\n                    <span class="left">' + escapeHtml(label) + '</span>\n                    <span class="right ys-w-70">\n                        <input type="hidden" name="agent_setting__' + escapeHtml(name) + '" id="agent_setting__' + escapeHtml(name) + '" value="' + escapeHtml(JSON.stringify(Array.isArray(initialValue) ? initialValue : [])) + '">\n                        <div class="ys-adhoc-mop-builder" data-setting-name="' + escapeHtml(name) + '" data-initial-value="' + escapeHtml(JSON.stringify(Array.isArray(initialValue) ? initialValue : [])) + '">\n                            <div class="ys-adhoc-target-builder-help">\n                                ' + YI18n.t('Add one campaign row per topic the MoP network should push. The opinion objective is optional.') + '\n                            </div>\n                            <div class="ys-adhoc-mop-rows"></div>\n                            <button type="button" class="button is-light ys-adhoc-add-mop-target">' + YI18n.t('+ Add Goal') + '</button>\n                        </div>\n                        ' + description + '\n                    </span>\n                </div>\n            ';
         }
 
         if (type === 'target_filters') {
-            return `
-                <div class="box-line" data-setting-name="${escapeHtml(name)}" ${parameter.visible_if ? `data-visible-if-setting="${escapeHtml(parameter.visible_if.setting || parameter.visible_if.field || '')}" data-visible-if-equals="${escapeHtml(parameter.visible_if.equals || '')}"` : ''}>
-                    <span class="left">${escapeHtml(label)}</span>
-                    <span class="right ys-w-70">
-                        <input type="hidden" name="agent_setting__${escapeHtml(name)}" id="agent_setting__${escapeHtml(name)}" value="${escapeHtml(JSON.stringify(Array.isArray(initialValue) ? initialValue : []))}">
-                        <div class="ys-adhoc-target-filter-builder" data-setting-name="${escapeHtml(name)}" data-initial-value="${escapeHtml(JSON.stringify(Array.isArray(initialValue) ? initialValue : []))}">
-                            <div class="ys-adhoc-target-builder-help">
-                                Add one row per demographic filter. Select a feature first, then choose one of the known values when available.
-                            </div>
-                            <div class="ys-adhoc-target-filter-rows"></div>
-                            <button type="button" class="button is-light ys-adhoc-add-target-filter">+ Add Filter</button>
-                        </div>
-                        ${description}
-                    </span>
-                </div>
-            `;
+            return '\n                <div class="box-line" data-setting-name="' + escapeHtml(name) + '" ' + parameter.visible_if ? `data-visible-if-setting="${escapeHtml(parameter.visible_if.setting || parameter.visible_if.field || '')}" data-visible-if-equals="${escapeHtml(parameter.visible_if.equals || '')}"` : '' + '>\n                    <span class="left">' + escapeHtml(label) + '</span>\n                    <span class="right ys-w-70">\n                        <input type="hidden" name="agent_setting__' + escapeHtml(name) + '" id="agent_setting__' + escapeHtml(name) + '" value="' + escapeHtml(JSON.stringify(Array.isArray(initialValue) ? initialValue : [])) + '">\n                        <div class="ys-adhoc-target-filter-builder" data-setting-name="' + escapeHtml(name) + '" data-initial-value="' + escapeHtml(JSON.stringify(Array.isArray(initialValue) ? initialValue : [])) + '">\n                            <div class="ys-adhoc-target-builder-help">\n                                ' + YI18n.t('Add one row per demographic filter. Select a feature first, then choose one of the known values when available.') + '\n                            </div>\n                            <div class="ys-adhoc-target-filter-rows"></div>\n                            <button type="button" class="button is-light ys-adhoc-add-target-filter">' + YI18n.t('+ Add Filter') + '</button>\n                        </div>\n                        ' + description + '\n                    </span>\n                </div>\n            ';
         }
 
         if (type === 'multiline_string') {
@@ -583,17 +538,12 @@ const YS_ADHOC_CLIENTS = {
             templates = templates.filter(template => String(template?.title || '') === String(filterTitle));
         }
         if (!templates.length) return '';
-        return `
-            <div class="ys-adhoc-current-prompts">
-                <div class="ys-adhoc-target-builder-help">Current built-in prompts passed to this agent:</div>
-                ${templates.map(template => `
+        return '\n            <div class="ys-adhoc-current-prompts">\n                <div class="ys-adhoc-target-builder-help">' + YI18n.t('Current built-in prompts passed to this agent:') + '</div>\n                ' + templates.map(template => `
                     <div class="dashboard-box is-compact" style="margin: 8px 0;">
                         <div class="form-section-header" style="margin-bottom: 6px;">${escapeHtml(template.title || 'Prompt')}</div>
                         <pre style="white-space: pre-wrap; word-break: break-word; margin: 0; font-size: 0.9rem;">${escapeHtml(template.body || '')}</pre>
                     </div>
-                `).join('')}
-            </div>
-        `;
+                `).join('') + '\n            </div>\n        ';
     }
 
     function addTopicTargetRow(builder, initial = {}) {
@@ -602,58 +552,7 @@ const YS_ADHOC_CLIENTS = {
         const startingOptions = JSON.parse(builder.dataset.startingOptions || '[]');
         const row = document.createElement('div');
         row.className = 'mb-2 ys-adhoc-target-row';
-        row.innerHTML = `
-            <div class="ys-adhoc-target-grid">
-                <div class="ys-adhoc-target-field">
-                    <label>Topic</label>
-                    <div class="select is-fullwidth">
-                        <select class="input ys-adhoc-target-topic">
-                            <option value=""></option>
-                            ${YS_ADHOC_CLIENTS.experimentTopics.map(topic => `<option value="${escapeHtml(topic.id)}">${escapeHtml(topic.name)}</option>`).join('')}
-                        </select>
-                    </div>
-                </div>
-                <div class="ys-adhoc-target-field">
-                    <label>Opinion Propaganda</label>
-                    <div class="select is-fullwidth">
-                        <select class="input ys-adhoc-target-opinion-group">
-                            <option value=""></option>
-                            ${YS_ADHOC_CLIENTS.opinionGroups.map(group => `<option value="${escapeHtml(group.name)}">${escapeHtml(group.name)} (${group.lower_bound.toFixed(2)}-${group.upper_bound.toFixed(2)})</option>`).join('')}
-                        </select>
-                    </div>
-                </div>
-                <div class="ys-adhoc-target-field">
-                    <label>Target Agent Opinion</label>
-                    <div class="select is-fullwidth">
-                        <select class="input ys-adhoc-target-agent-opinion-group">
-                            <option value=""></option>
-                            ${YS_ADHOC_CLIENTS.opinionGroups.map(group => `<option value="${escapeHtml(group.name)}">${escapeHtml(group.name)} (${group.lower_bound.toFixed(2)}-${group.upper_bound.toFixed(2)})</option>`).join('')}
-                        </select>
-                    </div>
-                </div>
-                <div class="ys-adhoc-target-field">
-                    <label>Political Leaning (optional)</label>
-                    <div class="select is-fullwidth">
-                        <select class="input ys-adhoc-target-leaning">
-                            <option value=""></option>
-                            ${YS_ADHOC_CLIENTS.leanings.map(item => `<option value="${escapeHtml(item.name)}">${escapeHtml(item.name)}</option>`).join('')}
-                        </select>
-                    </div>
-                </div>
-                <div class="ys-adhoc-target-field ys-adhoc-target-field-wide">
-                    <label>Age Classes (optional)</label>
-                    <div class="select is-fullwidth">
-                        <select class="input ys-adhoc-target-age-classes" multiple size="3">
-                            ${YS_ADHOC_CLIENTS.ageClasses.map(item => `<option value="${escapeHtml(item.name)}">${escapeHtml(item.name)} (${item.age_start}-${item.age_end})</option>`).join('')}
-                        </select>
-                    </div>
-                </div>
-                <div class="ys-adhoc-target-field ys-adhoc-target-field-action">
-                    <label>&nbsp;</label>
-                    <button type="button" class="button is-light ys-adhoc-remove-target">Remove</button>
-                </div>
-            </div>
-        `;
+        row.innerHTML = '\n            <div class="ys-adhoc-target-grid">\n                <div class="ys-adhoc-target-field">\n                    <label>' + YI18n.t('Topic') + '</label>\n                    <div class="select is-fullwidth">\n                        <select class="input ys-adhoc-target-topic">\n                            <option value=""></option>\n                            ' + YS_ADHOC_CLIENTS.experimentTopics.map(topic => `<option value="${escapeHtml(topic.id)}">${escapeHtml(topic.name)}</option>`).join('') + '\n                        </select>\n                    </div>\n                </div>\n                <div class="ys-adhoc-target-field">\n                    <label>' + YI18n.t('Opinion Propaganda') + '</label>\n                    <div class="select is-fullwidth">\n                        <select class="input ys-adhoc-target-opinion-group">\n                            <option value=""></option>\n                            ' + YS_ADHOC_CLIENTS.opinionGroups.map(group => `<option value="${escapeHtml(group.name)}">${escapeHtml(group.name)} (${group.lower_bound.toFixed(2)}-${group.upper_bound.toFixed(2)})</option>`).join('') + '\n                        </select>\n                    </div>\n                </div>\n                <div class="ys-adhoc-target-field">\n                    <label>' + YI18n.t('Target Agent Opinion') + '</label>\n                    <div class="select is-fullwidth">\n                        <select class="input ys-adhoc-target-agent-opinion-group">\n                            <option value=""></option>\n                            ' + YS_ADHOC_CLIENTS.opinionGroups.map(group => `<option value="${escapeHtml(group.name)}">${escapeHtml(group.name)} (${group.lower_bound.toFixed(2)}-${group.upper_bound.toFixed(2)})</option>`).join('') + '\n                        </select>\n                    </div>\n                </div>\n                <div class="ys-adhoc-target-field">\n                    <label>' + YI18n.t('Political Leaning (optional)') + '</label>\n                    <div class="select is-fullwidth">\n                        <select class="input ys-adhoc-target-leaning">\n                            <option value=""></option>\n                            ' + YS_ADHOC_CLIENTS.leanings.map(item => `<option value="${escapeHtml(item.name)}">${escapeHtml(item.name)}</option>`).join('') + '\n                        </select>\n                    </div>\n                </div>\n                <div class="ys-adhoc-target-field ys-adhoc-target-field-wide">\n                    <label>' + YI18n.t('Age Classes (optional)') + '</label>\n                    <div class="select is-fullwidth">\n                        <select class="input ys-adhoc-target-age-classes" multiple size="3">\n                            ' + YS_ADHOC_CLIENTS.ageClasses.map(item => `<option value="${escapeHtml(item.name)}">${escapeHtml(item.name)} (${item.age_start}-${item.age_end})</option>`).join('') + '\n                        </select>\n                    </div>\n                </div>\n                <div class="ys-adhoc-target-field ys-adhoc-target-field-action">\n                    <label>&nbsp;</label>\n                    <button type="button" class="button is-light ys-adhoc-remove-target">' + YI18n.t('Remove') + '</button>\n                </div>\n            </div>\n        ';
         rows.appendChild(row);
         const topicSelect = row.querySelector('.ys-adhoc-target-topic');
         const opinionGroupSelect = row.querySelector('.ys-adhoc-target-opinion-group');
@@ -680,32 +579,7 @@ const YS_ADHOC_CLIENTS = {
         if (!rows) return;
         const row = document.createElement('div');
         row.className = 'mb-2 ys-adhoc-target-row';
-        row.innerHTML = `
-            <div class="ys-adhoc-target-grid">
-                <div class="ys-adhoc-target-field">
-                    <label>Topic</label>
-                    <div class="select is-fullwidth">
-                        <select class="input ys-adhoc-mop-topic">
-                            <option value=""></option>
-                            ${YS_ADHOC_CLIENTS.experimentTopics.map(topic => `<option value="${escapeHtml(topic.id)}">${escapeHtml(topic.name)}</option>`).join('')}
-                        </select>
-                    </div>
-                </div>
-                <div class="ys-adhoc-target-field">
-                    <label>Opinion Goal (optional)</label>
-                    <div class="select is-fullwidth">
-                        <select class="input ys-adhoc-mop-opinion-group">
-                            <option value=""></option>
-                            ${YS_ADHOC_CLIENTS.opinionGroups.map(group => `<option value="${escapeHtml(group.name)}">${escapeHtml(group.name)} (${group.lower_bound.toFixed(2)}-${group.upper_bound.toFixed(2)})</option>`).join('')}
-                        </select>
-                    </div>
-                </div>
-                <div class="ys-adhoc-target-field ys-adhoc-target-field-action">
-                    <label>&nbsp;</label>
-                    <button type="button" class="button is-light ys-adhoc-remove-mop-target">Remove</button>
-                </div>
-            </div>
-        `;
+        row.innerHTML = '\n            <div class="ys-adhoc-target-grid">\n                <div class="ys-adhoc-target-field">\n                    <label>' + YI18n.t('Topic') + '</label>\n                    <div class="select is-fullwidth">\n                        <select class="input ys-adhoc-mop-topic">\n                            <option value=""></option>\n                            ' + YS_ADHOC_CLIENTS.experimentTopics.map(topic => `<option value="${escapeHtml(topic.id)}">${escapeHtml(topic.name)}</option>`).join('') + '\n                        </select>\n                    </div>\n                </div>\n                <div class="ys-adhoc-target-field">\n                    <label>' + YI18n.t('Opinion Goal (optional)') + '</label>\n                    <div class="select is-fullwidth">\n                        <select class="input ys-adhoc-mop-opinion-group">\n                            <option value=""></option>\n                            ' + YS_ADHOC_CLIENTS.opinionGroups.map(group => `<option value="${escapeHtml(group.name)}">${escapeHtml(group.name)} (${group.lower_bound.toFixed(2)}-${group.upper_bound.toFixed(2)})</option>`).join('') + '\n                        </select>\n                    </div>\n                </div>\n                <div class="ys-adhoc-target-field ys-adhoc-target-field-action">\n                    <label>&nbsp;</label>\n                    <button type="button" class="button is-light ys-adhoc-remove-mop-target">' + YI18n.t('Remove') + '</button>\n                </div>\n            </div>\n        ';
         rows.appendChild(row);
         const topicSelect = row.querySelector('.ys-adhoc-mop-topic');
         const opinionGroupSelect = row.querySelector('.ys-adhoc-mop-opinion-group');
@@ -752,27 +626,7 @@ const YS_ADHOC_CLIENTS = {
         const definitions = targetFilterDefinitions();
         const row = document.createElement('div');
         row.className = 'mb-2 ys-adhoc-target-row';
-        row.innerHTML = `
-            <div class="ys-adhoc-target-grid">
-                <div class="ys-adhoc-target-field">
-                    <label>Feature</label>
-                    <div class="select is-fullwidth">
-                        <select class="input ys-adhoc-target-filter-feature">
-                            <option value=""></option>
-                            ${definitions.map(item => `<option value="${escapeHtml(item.key)}">${escapeHtml(item.label || item.key)}</option>`).join('')}
-                        </select>
-                    </div>
-                </div>
-                <div class="ys-adhoc-target-field ys-adhoc-target-field-wide">
-                    <label>Value</label>
-                    <div class="ys-adhoc-target-filter-value"></div>
-                </div>
-                <div class="ys-adhoc-target-field ys-adhoc-target-field-action">
-                    <label>&nbsp;</label>
-                    <button type="button" class="button is-light ys-adhoc-remove-target-filter">Remove</button>
-                </div>
-            </div>
-        `;
+        row.innerHTML = '\n            <div class="ys-adhoc-target-grid">\n                <div class="ys-adhoc-target-field">\n                    <label>' + YI18n.t('Feature') + '</label>\n                    <div class="select is-fullwidth">\n                        <select class="input ys-adhoc-target-filter-feature">\n                            <option value=""></option>\n                            ' + definitions.map(item => `<option value="${escapeHtml(item.key)}">${escapeHtml(item.label || item.key)}</option>`).join('') + '\n                        </select>\n                    </div>\n                </div>\n                <div class="ys-adhoc-target-field ys-adhoc-target-field-wide">\n                    <label>' + YI18n.t('Value') + '</label>\n                    <div class="ys-adhoc-target-filter-value"></div>\n                </div>\n                <div class="ys-adhoc-target-field ys-adhoc-target-field-action">\n                    <label>&nbsp;</label>\n                    <button type="button" class="button is-light ys-adhoc-remove-target-filter">' + YI18n.t('Remove') + '</button>\n                </div>\n            </div>\n        ';
         rows.appendChild(row);
         const featureSelect = row.querySelector('.ys-adhoc-target-filter-feature');
         if (featureSelect && initial.feature != null) {
@@ -952,10 +806,10 @@ const YS_ADHOC_CLIENTS = {
         if (!urlInput || !select || !status) return;
         const llmUrl = urlInput.value.trim();
         if (!llmUrl) {
-            status.textContent = 'Provide an LLM URL first.';
+            status.textContent = YI18n.t('Provide an LLM URL first.');
             return;
         }
-        status.textContent = 'Fetching models...';
+        status.textContent = YI18n.t('Fetching models...');
         fetch(`/admin/api/fetch_models?llm_url=${encodeURIComponent(llmUrl)}`)
             .then(response => response.json())
             .then(data => {
@@ -968,13 +822,13 @@ const YS_ADHOC_CLIENTS = {
                 });
                 llmModelsFetched = true;
                 llmModelSelected = false;
-                status.textContent = (data.models || []).length ? 'Models loaded.' : 'No models returned.';
+                status.textContent = (data.models || []).length ? YI18n.t('Models loaded.') : YI18n.t('No models returned.');
                 updateCreateButton();
             })
             .catch(() => {
                 llmModelsFetched = false;
                 llmModelSelected = false;
-                status.textContent = 'Failed to fetch models.';
+                status.textContent = YI18n.t('Failed to fetch models.');
                 updateCreateButton();
             });
     }

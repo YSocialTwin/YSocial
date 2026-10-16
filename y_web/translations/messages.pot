@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-16 15:27+0000\n"
+"POT-Creation-Date: 2026-10-16 15:49+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -106,6 +106,14 @@ msgstr ""
 
 #, python-format
 msgid "%(platform)s Memory Embeddings"
+msgstr ""
+
+#, python-format
+msgid "%(title)s not available"
+msgstr ""
+
+#, python-format
+msgid "%(title)s tables not available"
 msgstr ""
 
 #, python-format
@@ -253,6 +261,9 @@ msgid "About Us"
 msgstr ""
 
 msgid "Access Denied"
+msgstr ""
+
+msgid "Access denied"
 msgstr ""
 
 msgid "Access denied."
@@ -953,6 +964,9 @@ msgstr ""
 msgid "Binomial"
 msgstr ""
 
+msgid "Blog post not found"
+msgstr ""
+
 msgid "Bluesky Data"
 msgstr ""
 
@@ -1012,9 +1026,25 @@ msgstr ""
 msgid "Cancel"
 msgstr ""
 
+#, python-format
+msgid "Cannot connect to %(host)s:%(port)s - Connection refused"
+msgstr ""
+
+msgid "Cannot delete a running group"
+msgstr ""
+
 msgid ""
 "Cannot delete this custom population because at least one custom agent "
 "would be left without a population."
+msgstr ""
+
+msgid "Cannot mix HPC experiments with Standard experiments in the same group."
+msgstr ""
+
+msgid "Cannot mix Standard experiments with HPC experiments in the same group."
+msgstr ""
+
+msgid "Cannot remove experiments from a running group"
 msgstr ""
 
 msgid "Cartesian product"
@@ -1053,6 +1083,9 @@ msgstr ""
 msgid ""
 "Check for new YSocial releases to access the latest features and "
 "improvements."
+msgstr ""
+
+msgid "Check interval must be between 1 and 300 seconds"
 msgstr ""
 
 msgid "Checks"
@@ -1230,7 +1263,13 @@ msgstr ""
 msgid "Client name already exists."
 msgstr ""
 
+msgid "Client name is required"
+msgstr ""
+
 msgid "Client name is required."
+msgstr ""
+
+msgid "Client not found"
 msgstr ""
 
 msgid "Client not found or does not belong to this experiment."
@@ -1532,6 +1571,14 @@ msgstr ""
 msgid "Connect"
 msgstr ""
 
+#, python-format
+msgid "Connection error: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Connection timeout to %(host)s:%(port)s"
+msgstr ""
+
 msgid "Conscientiousness"
 msgstr ""
 
@@ -1631,6 +1678,13 @@ msgstr ""
 msgid "Could not delete ad hoc client: %(error)s"
 msgstr ""
 
+msgid "Could not prepare the experiment database for this module."
+msgstr ""
+
+#, python-format
+msgid "Could not resolve notebook directory for experiment ID: %(experiment_id)s"
+msgstr ""
+
 msgid "Count"
 msgstr ""
 
@@ -1727,6 +1781,10 @@ msgstr ""
 
 #, python-format
 msgid "Created %(created)s matrix experiment(s) in group '%(target_group)s'."
+msgstr ""
+
+#, python-format
+msgid "Created %(created_groups)s groups"
 msgstr ""
 
 msgid "Created using predefined parameters. Agents are automatically generated."
@@ -2123,6 +2181,9 @@ msgstr ""
 msgid "Download or remove this experiment."
 msgstr ""
 
+msgid "Download path is required."
+msgstr ""
+
 msgid "Download selected experiments as a ZIP file"
 msgstr ""
 
@@ -2388,6 +2449,10 @@ msgid "Error creating copy '%(copy_name)s': %(error)s"
 msgstr ""
 
 #, python-format
+msgid "Error creating notebook: %(error)s"
+msgstr ""
+
+#, python-format
 msgid "Error deleting user: %(error)s"
 msgstr ""
 
@@ -2425,6 +2490,14 @@ msgstr ""
 
 #, python-format
 msgid "Error updating client configuration: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Error updating server: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Error: %(error)s"
 msgstr ""
 
 msgid ""
@@ -2518,6 +2591,10 @@ msgid ""
 "'%(exp_name)s'."
 msgstr ""
 
+#, python-format
+msgid "Experiment '%(experiment_name)s' already exists"
+msgstr ""
+
 msgid "Experiment Clock Mode"
 msgstr ""
 
@@ -2548,16 +2625,25 @@ msgstr ""
 msgid "Experiment Schedule"
 msgstr ""
 
+msgid "Experiment already in group"
+msgstr ""
+
 msgid "Experiment compatibility"
 msgstr ""
 
 msgid "Experiment configuration updated."
 msgstr ""
 
+msgid "Experiment created successfully!"
+msgstr ""
+
 msgid "Experiment identification and settings."
 msgstr ""
 
 msgid "Experiment name"
+msgstr ""
+
+msgid "Experiment name is required"
 msgstr ""
 
 msgid "Experiment name is required."
@@ -2573,6 +2659,14 @@ msgid "Experiment not found or not active."
 msgstr ""
 
 msgid "Experiment not found."
+msgstr ""
+
+#, python-format
+msgid "Experiment not found: %(exp_id)s"
+msgstr ""
+
+#, python-format
+msgid "Experiment not found: %(expid)s"
 msgstr ""
 
 msgid "Experiment owner"
@@ -2691,6 +2785,10 @@ msgid "Failed to clear experiment logs: %(error)s"
 msgstr ""
 
 #, python-format
+msgid "Failed to connect to %(llm_url)s: %(error)s"
+msgstr ""
+
+#, python-format
 msgid "Failed to delete %(failed_ids)s experiment(s): %(join)s"
 msgstr ""
 
@@ -2704,6 +2802,10 @@ msgstr ""
 
 #, python-format
 msgid "Failed to update configuration: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Failed to update experiment description: %(error)s"
 msgstr ""
 
 #, python-format
@@ -2797,6 +2899,9 @@ msgstr ""
 msgid "Filter experiments by group"
 msgstr ""
 
+msgid "First group has no experiments"
+msgstr ""
+
 msgid "Follow"
 msgstr ""
 
@@ -2841,6 +2946,9 @@ msgstr ""
 msgid ""
 "For the currently selected topic, inspect targeted agents and compare "
 "their opinion trajectory with the timing of propaganda interactions."
+msgstr ""
+
+msgid "Forbidden"
 msgstr ""
 
 msgid "Format: username,email,role,password (one per line)"
@@ -3048,6 +3156,9 @@ msgstr ""
 msgid "Group"
 msgstr ""
 
+msgid "Group not found"
+msgstr ""
+
 msgid "Groups"
 msgstr ""
 
@@ -3119,6 +3230,12 @@ msgstr ""
 msgid "Hashtag Evolution"
 msgstr ""
 
+msgid "Hashtag evolution not available"
+msgstr ""
+
+msgid "Hashtag-evolution tables not available"
+msgstr ""
+
 msgid "Header Image URL"
 msgstr ""
 
@@ -3177,6 +3294,12 @@ msgid "Host"
 msgstr ""
 
 msgid "Host Address"
+msgstr ""
+
+msgid "Host address is required"
+msgstr ""
+
+msgid "Host and port are required"
 msgstr ""
 
 msgid "Host format"
@@ -3427,6 +3550,10 @@ msgstr ""
 msgid "Internal Server Error"
 msgstr ""
 
+#, python-format
+msgid "Internal server error: %(error)s"
+msgstr ""
+
 msgid "Interval"
 msgstr ""
 
@@ -3439,8 +3566,17 @@ msgstr ""
 msgid "Intra-block probability"
 msgstr ""
 
+msgid "Invalid JSON format"
+msgstr ""
+
 #, python-format
 msgid "Invalid JSON parameters for distribution '%(name)s': %(error)s"
+msgstr ""
+
+msgid "Invalid RSS feed URL"
+msgstr ""
+
+msgid "Invalid URL format"
 msgstr ""
 
 msgid "Invalid User ID or Experiment ID."
@@ -3459,7 +3595,14 @@ msgstr ""
 msgid "Invalid bound values. Must be numbers."
 msgstr ""
 
+msgid "Invalid check interval value"
+msgstr ""
+
 msgid "Invalid download path."
+msgstr ""
+
+#, python-format
+msgid "Invalid experiment ID: %(experiment_id)s"
 msgstr ""
 
 msgid "Invalid experiment IDs provided."
@@ -3468,8 +3611,37 @@ msgstr ""
 msgid "Invalid experiment database configuration"
 msgstr ""
 
+msgid "Invalid experiment database path format."
+msgstr ""
+
+msgid "Invalid experiment path format"
+msgstr ""
+
+msgid "Invalid experiments_per_group value"
+msgstr ""
+
+msgid "Invalid host format"
+msgstr ""
+
+#, python-format
+msgid "Invalid hostname: %(host)s"
+msgstr ""
+
 #, python-format
 msgid "Invalid input values: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Invalid instance ID: %(instance_id)s"
+msgstr ""
+
+msgid "Invalid lower_bound value"
+msgstr ""
+
+msgid "Invalid max HPC group value"
+msgstr ""
+
+msgid "Invalid max simulations per vLLM worker value"
 msgstr ""
 
 msgid "Invalid or expired session. Please log in again."
@@ -3479,6 +3651,9 @@ msgid "Invalid parameters format. Must be valid JSON."
 msgstr ""
 
 msgid "Invalid population IDs provided."
+msgstr ""
+
+msgid "Invalid port number"
 msgstr ""
 
 msgid "Invalid remote host format. Use IP address or domain name."
@@ -3494,6 +3669,9 @@ msgid "Invalid request."
 msgstr ""
 
 msgid "Invalid revoke request."
+msgstr ""
+
+msgid "Invalid upper_bound value"
 msgstr ""
 
 msgid "Invalid user ID."
@@ -3514,6 +3692,9 @@ msgstr ""
 msgid "Is Verified %"
 msgstr ""
 
+msgid "Item not found"
+msgstr ""
+
 #, python-format
 msgid "Join %(name)s"
 msgstr ""
@@ -3531,6 +3712,9 @@ msgid "Joined Experiments"
 msgstr ""
 
 msgid "Jupyter Lab"
+msgstr ""
+
+msgid "Jupyter Notebook functionality is disabled."
 msgstr ""
 
 msgid ""
@@ -3727,6 +3911,9 @@ msgstr ""
 msgid "Log Synchronization:"
 msgstr ""
 
+msgid "Log file not found"
+msgstr ""
+
 msgid ""
 "Log metrics reset and re-parsed. Plots now show data from original run "
 "and will include extended data after client restart."
@@ -3754,6 +3941,12 @@ msgid "Low Interest"
 msgstr ""
 
 msgid "Lower Bound"
+msgstr ""
+
+msgid "Lower bound must be <= upper bound"
+msgstr ""
+
+msgid "Lower bound must be in [0, 1]"
 msgstr ""
 
 msgid "Lower bound must be less than or equal to upper bound."
@@ -3813,6 +4006,9 @@ msgstr ""
 msgid "Matrix"
 msgstr ""
 
+msgid "Max HPC experiments per group must be at least 1, or choose unlimited"
+msgstr ""
+
 msgid "Max Model Length"
 msgstr ""
 
@@ -3825,6 +4021,9 @@ msgstr ""
 msgid "Max number of thread items (post + comments) to fetch for context."
 msgstr ""
 
+msgid "Max simulations per vLLM worker must be at least 1"
+msgstr ""
+
 msgid "Max tokens"
 msgstr ""
 
@@ -3832,6 +4031,12 @@ msgid "Max/group"
 msgstr ""
 
 msgid "Max:"
+msgstr ""
+
+#, python-format
+msgid ""
+"Maximum %(max_hpc_per_group)s HPC experiments allowed per group. This "
+"group already has %(hpc_count)s HPC experiments."
 msgstr ""
 
 msgid "Maximum actions"
@@ -3911,6 +4116,15 @@ msgstr ""
 msgid "Miscellanea"
 msgstr ""
 
+msgid "Missing exp_id"
+msgstr ""
+
+msgid "Missing exp_id or module_id"
+msgstr ""
+
+msgid "Missing experiment_id or client_id"
+msgstr ""
+
 msgid "Mixing parameter (mu)"
 msgstr ""
 
@@ -3972,6 +4186,9 @@ msgstr ""
 msgid "Name and hours are required."
 msgstr ""
 
+msgid "Name is required"
+msgstr ""
+
 msgid "Name:"
 msgstr ""
 
@@ -4013,9 +4230,15 @@ msgstr ""
 msgid "Network Type"
 msgstr ""
 
+msgid "Network analysis not available"
+msgstr ""
+
 msgid ""
 "Network file format error: provide a csv file containing two columns with"
 " agent names. No header required."
+msgstr ""
+
+msgid "Network-analysis tables not available"
 msgstr ""
 
 msgid "Neuroticism"
@@ -4133,6 +4356,9 @@ msgstr ""
 msgid "No Active Experiments"
 msgstr ""
 
+msgid "No URL provided"
+msgstr ""
+
 msgid "No active discussion topics for this experiment."
 msgstr ""
 
@@ -4157,7 +4383,13 @@ msgstr ""
 msgid "No ad hoc agents' clients registered yet"
 msgstr ""
 
+msgid "No available experiments to assign"
+msgstr ""
+
 msgid "No available port could be assigned for the new experiment."
+msgstr ""
+
+msgid "No available port found"
 msgstr ""
 
 msgid "No client configuration files were found for this experiment."
@@ -4178,6 +4410,9 @@ msgstr ""
 msgid "No configuration files were found for this experiment."
 msgstr ""
 
+msgid "No data provided"
+msgstr ""
+
 msgid "No experiment matrix combinations were created."
 msgstr ""
 
@@ -4196,7 +4431,16 @@ msgstr ""
 msgid "No feed description available."
 msgstr ""
 
+msgid "No file provided"
+msgstr ""
+
+msgid "No file selected"
+msgstr ""
+
 msgid "No groups created yet"
+msgstr ""
+
+msgid "No groups defined or all groups completed"
 msgstr ""
 
 msgid "No interests assigned"
@@ -4212,6 +4456,10 @@ msgid "No logs yet"
 msgstr ""
 
 msgid "No matching visibility assignment found."
+msgstr ""
+
+#, python-format
+msgid "No models found at %(llm_url)s"
 msgstr ""
 
 msgid "No notifications yet."
@@ -4296,10 +4544,17 @@ msgstr ""
 msgid "Note:"
 msgstr ""
 
+#, python-format
+msgid "Notebook created at %(filepath)s"
+msgstr ""
+
 msgid "Notice:"
 msgstr ""
 
 msgid "Notification menu"
+msgstr ""
+
+msgid "Notification not found"
 msgstr ""
 
 msgid "Notification not found."
@@ -4465,6 +4720,9 @@ msgstr ""
 msgid "Opinion configuration route does not match the experiment modality."
 msgstr ""
 
+msgid "Opinion distribution not found"
+msgstr ""
+
 msgid "Opinion distribution update route does not match the experiment modality."
 msgstr ""
 
@@ -4477,6 +4735,12 @@ msgid ""
 msgstr ""
 
 msgid "Opinion dynamics is not enabled for this experiment."
+msgstr ""
+
+msgid "Opinion dynamics not enabled"
+msgstr ""
+
+msgid "Opinion group not found"
 msgstr ""
 
 #, python-format
@@ -4521,6 +4785,10 @@ msgid "Outgoing/Energetic"
 msgstr ""
 
 msgid "Overall cap for injected memory context across tiers."
+msgstr ""
+
+#, python-format
+msgid "Overlaps with '%(name)s' [%(lower_bound)s, %(upper_bound)s]"
 msgstr ""
 
 msgid "Owned Experiments"
@@ -4726,6 +4994,10 @@ msgstr ""
 msgid "Population"
 msgstr ""
 
+#, python-format
+msgid "Population '%(population_name)s' already exists"
+msgstr ""
+
 msgid "Population Memberships"
 msgstr ""
 
@@ -4779,6 +5051,9 @@ msgid ""
 " different name."
 msgstr ""
 
+msgid "Population name is required"
+msgstr ""
+
 msgid "Population name is required."
 msgstr ""
 
@@ -4792,6 +5067,9 @@ msgid "Population not found."
 msgstr ""
 
 msgid "Population size must be a valid integer."
+msgstr ""
+
+msgid "Population size must be between 10 and 100"
 msgstr ""
 
 msgid "Population size must be greater than zero."
@@ -4815,6 +5093,9 @@ msgid "Populations where this agent is currently deployed."
 msgstr ""
 
 msgid "Port"
+msgstr ""
+
+msgid "Port must be between 1 and 65535"
 msgstr ""
 
 msgid "Port:"
@@ -5129,7 +5410,13 @@ msgstr ""
 msgid "Recommendation Systems"
 msgstr ""
 
+msgid "Recommendation analytics not available"
+msgstr ""
+
 msgid "Recommendation exposure and reach"
+msgstr ""
+
+msgid "Recommendation-tracking tables not available"
 msgstr ""
 
 msgid "Recommendations"
@@ -5154,6 +5441,10 @@ msgid "Reddit Retrieval"
 msgstr ""
 
 msgid "Reddit could not be reached. Retry later."
+msgstr ""
+
+#, python-format
+msgid "Reddit returned HTTP %(code)s while loading r/%(subreddit)s. Retry later."
 msgstr ""
 
 #, python-format
@@ -5494,6 +5785,15 @@ msgstr ""
 msgid "Scale Free (Barabási-Albert)"
 msgstr ""
 
+msgid "Schedule already running"
+msgstr ""
+
+msgid "Schedule not running"
+msgstr ""
+
+msgid "Schedule stopped"
+msgstr ""
+
 #, python-format
 msgid "Schema migration failed: %(error)s"
 msgstr ""
@@ -5760,6 +6060,9 @@ msgid ""
 "parsed yet. Plots will fully update on next refresh."
 msgstr ""
 
+msgid "Server settings updated successfully"
+msgstr ""
+
 msgid "Server, Clients, and Analytics"
 msgstr ""
 
@@ -5894,6 +6197,12 @@ msgstr ""
 msgid "Simulation length and population dynamics."
 msgstr ""
 
+msgid "Simulation length must be between 1 and 30 days"
+msgstr ""
+
+msgid "Simulation started successfully!"
+msgstr ""
+
 msgid "Simulation time context"
 msgstr ""
 
@@ -6005,6 +6314,10 @@ msgstr ""
 msgid "Start the experiment server before running ad hoc clients."
 msgstr ""
 
+#, python-format
+msgid "Started %(started_count)s experiments in group '%(name)s'"
+msgstr ""
+
 msgid "State"
 msgstr ""
 
@@ -6090,6 +6403,9 @@ msgstr ""
 msgid "Stress/Reward Churn"
 msgstr ""
 
+msgid "Stress/reward analytics not available"
+msgstr ""
+
 msgid ""
 "Stress/reward settings are available only for microblogging, forum, and "
 "HPC experiments."
@@ -6127,6 +6443,10 @@ msgstr ""
 
 #, python-format
 msgid "Successfully assigned %(assigned)s user(s) to experiment '%(exp_name)s'."
+msgstr ""
+
+#, python-format
+msgid "Successfully connected to %(host)s:%(port)s"
 msgstr ""
 
 #, python-format
@@ -6220,6 +6540,11 @@ msgid "Telemetry Information"
 msgstr ""
 
 msgid "Telemetry Settings"
+msgstr ""
+
+msgid ""
+"Telemetry is disabled. Please enable it in your user settings to submit "
+"logs."
 msgstr ""
 
 msgid "Telemetry:"
@@ -6503,6 +6828,12 @@ msgid ""
 "complexity."
 msgstr ""
 
+msgid "This is not a remote experiment"
+msgstr ""
+
+msgid "This module is not available for this experiment type."
+msgstr ""
+
 msgid "This page is only available for forum experiments."
 msgstr ""
 
@@ -6600,10 +6931,16 @@ msgstr ""
 msgid "Topic classification chips"
 msgstr ""
 
+msgid "Topic evolution not available"
+msgstr ""
+
 msgid "Topic guidance"
 msgstr ""
 
 msgid "Topic not found."
+msgstr ""
+
+msgid "Topic-evolution tables not available"
 msgstr ""
 
 msgid ""
@@ -6718,6 +7055,9 @@ msgstr ""
 msgid "URL"
 msgstr ""
 
+msgid "URL is required"
+msgstr ""
+
 msgid "URL:"
 msgstr ""
 
@@ -6740,6 +7080,10 @@ msgid "Unable to resolve current admin user."
 msgstr ""
 
 msgid "Unable to resolve current user."
+msgstr ""
+
+#, python-format
+msgid "Unable to start Detoxify download: %(error)s"
 msgstr ""
 
 msgid "Unavailable"
@@ -6784,7 +7128,13 @@ msgstr ""
 msgid "Unknown external runtime repository."
 msgstr ""
 
+msgid "Unknown module"
+msgstr ""
+
 msgid "Unknown platform type for this experiment."
+msgstr ""
+
+msgid "Unknown suite"
 msgstr ""
 
 msgid "Unlimited when off"
@@ -6919,6 +7269,9 @@ msgid "Upload a CSV file with edges (one per line: source,target)."
 msgstr ""
 
 msgid "Upper Bound"
+msgstr ""
+
+msgid "Upper bound must be in [0, 1]"
 msgstr ""
 
 msgid "Usage"
@@ -7188,6 +7541,10 @@ msgid ""
 msgstr ""
 
 msgid "Warning: Population file not found. Segment values may be limited."
+msgstr ""
+
+#, python-format
+msgid "Watchdog %(value)s"
 msgstr ""
 
 #, python-format
@@ -7464,6 +7821,15 @@ msgstr ""
 msgid "e.g., localhost:8000"
 msgstr ""
 
+msgid "experiment_id is required"
+msgstr ""
+
+msgid "experiments_per_group is required"
+msgstr ""
+
+msgid "group_ids is required"
+msgstr ""
+
 msgid "http://127.0.0.1:11434"
 msgstr ""
 
@@ -7473,6 +7839,9 @@ msgstr ""
 msgid ""
 "https://example.com/feed.xml or "
 "https://www.reddit.com/r/politics/new.json?limit=100"
+msgstr ""
+
+msgid "llm_url parameter is required"
 msgstr ""
 
 msgid "local changes"
@@ -7509,6 +7878,10 @@ msgid "or unlimited"
 msgstr ""
 
 msgid "prerelease"
+msgstr ""
+
+#, python-format
+msgid "r/%(subreddit)s does not exist."
 msgstr ""
 
 #, python-format

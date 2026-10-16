@@ -445,7 +445,7 @@ def report_content(exp_id):
 
     if report_type not in {"offensive", "toxic"}:
         if is_ajax:
-            return jsonify({"message": "Unsupported report type.", "status": 400}), 400
+            return jsonify({"message": _("Unsupported report type."), "status": 400}), 400
         flash(_("Unsupported report type."), "error")
         return redirect(request.referrer or url_for("main.index"))
 
@@ -455,7 +455,7 @@ def report_content(exp_id):
     if not exp_user:
         if is_ajax:
             return (
-                jsonify({"message": "User not found in experiment", "status": 404}),
+                jsonify({"message": _("User not found in experiment"), "status": 404}),
                 404,
             )
         flash(_("User not found in experiment"), "error")
@@ -474,7 +474,7 @@ def report_content(exp_id):
     ).first()
     if target_post is None or current_round is None:
         if is_ajax:
-            return jsonify({"message": "Content not found.", "status": 404}), 404
+            return jsonify({"message": _("Content not found."), "status": 404}), 404
         flash(_("Content not found."), "error")
         return redirect(request.referrer or url_for("main.index"))
 
@@ -488,7 +488,7 @@ def report_content(exp_id):
         if is_ajax:
             return jsonify(
                 {
-                    "message": "Content already reported.",
+                    "message": _("Content already reported."),
                     "status": 200,
                     "post_id": target_post.id,
                     "report_count": current_count,
@@ -517,7 +517,7 @@ def report_content(exp_id):
     if is_ajax:
         return jsonify(
             {
-                "message": "Content reported.",
+                "message": _("Content reported."),
                 "status": 200,
                 "post_id": target_post.id,
                 "report_count": new_count,

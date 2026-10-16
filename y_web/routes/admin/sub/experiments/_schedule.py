@@ -117,6 +117,7 @@ from ._blueprint import (
     experiments,
 )
 from ._helpers import *  # noqa: F401,F403
+from y_web.i18n import gettext as _
 
 
 @experiments.route("/admin/schedule/groups", methods=["GET"])
@@ -189,7 +190,7 @@ def create_schedule_group():
 
     data = request.get_json()
     if not data or "name" not in data:
-        return jsonify({"success": False, "message": "Name is required"}), 400
+        return jsonify({"success": False, "message": _("Name is required")}), 400
 
     # Get max order index
     max_order = (
@@ -229,13 +230,13 @@ def delete_schedule_group(group_id):
 
     group = db.session.get(ExperimentScheduleGroup, group_id)
     if not group:
-        return jsonify({"success": False, "message": "Group not found"}), 404
+        return jsonify({"success": False, "message": _("Group not found")}), 404
 
     # Check if the group is currently running
     status = db.session.scalars(select(ExperimentScheduleStatus)).first()
     if status and status.is_running and status.current_group_id == group_id:
         return (
-            jsonify({"success": False, "message": "Cannot delete a running group"}),
+            jsonify({"success": False, "message": _("Cannot delete a running group")}),
             400,
         )
 
@@ -269,15 +270,15 @@ def add_experiment_to_group(group_id):
 
     data = request.get_json()
     if not data or "experiment_id" not in data:
-        return jsonify({"success": False, "message": "experiment_id is required"}), 400
+        return jsonify({"success": False, "message": _("experiment_id is required")}), 400
 
     group = db.session.get(ExperimentScheduleGroup, group_id)
     if not group:
-        return jsonify({"success": False, "message": "Group not found"}), 404
+        return jsonify({"success": False, "message": _("Group not found")}), 404
 
     exp = db.session.get(Exps, data["experiment_id"])
     if not exp:
-        return jsonify({"success": False, "message": "Experiment not found"}), 404
+        return jsonify({"success": False, "message": _("Experiment not found")}), 404
 
     # Check if already in this group
     existing = db.session.scalars(
@@ -287,7 +288,7 @@ def add_experiment_to_group(group_id):
     ).first()
     if existing:
         return (
-            jsonify({"success": False, "message": "Experiment already in group"}),
+            jsonify({"success": False, "message": _("Experiment already in group")}),
             400,
         )
 
@@ -314,7 +315,7 @@ def add_experiment_to_group(group_id):
                 jsonify(
                     {
                         "success": False,
-                        "message": "Cannot mix HPC experiments with Standard experiments in the same group.",
+                        "message": _("Cannot mix HPC experiments with Standard experiments in the same group."),
                     }
                 ),
                 400,
@@ -335,8 +336,7 @@ def add_experiment_to_group(group_id):
                         {
                             "success": False,
                             "message": (
-                                f"Maximum {max_hpc_per_group} HPC experiments allowed per group. "
-                                f"This group already has {hpc_count} HPC experiments."
+                                _("Maximum %(max_hpc_per_group)s HPC experiments allowed per group. This group already has %(hpc_count)s HPC experiments.", max_hpc_per_group=max_hpc_per_group, hpc_count=hpc_count)
                             ),
                         }
                     ),
@@ -358,7 +358,7 @@ def add_experiment_to_group(group_id):
                 jsonify(
                     {
                         "success": False,
-                        "message": "Cannot mix Standard experiments with HPC experiments in the same group.",
+                        "message": _("Cannot mix Standard experiments with HPC experiments in the same group."),
                     }
                 ),
                 400,
@@ -408,7 +408,7 @@ def remove_experiment_from_group(item_id):
 
     item = db.session.get(ExperimentScheduleItem, item_id)
     if not item:
-        return jsonify({"success": False, "message": "Item not found"}), 404
+        return jsonify({"success": False, "message": _("Item not found")}), 404
 
     # Check if the group is currently running
     status = db.session.scalars(select(ExperimentScheduleStatus)).first()
@@ -417,7 +417,7 @@ def remove_experiment_from_group(item_id):
             jsonify(
                 {
                     "success": False,
-                    "message": "Cannot remove experiments from a running group",
+                    "message": _("Cannot remove experiments from a running group"),
                 }
             ),
             400,
@@ -445,7 +445,7 @@ def reorder_schedule_groups():
 
     data = request.get_json()
     if not data or "group_ids" not in data:
-        return jsonify({"success": False, "message": "group_ids is required"}), 400
+        return jsonify({"success": False, "message": _("group_ids is required")}), 400
 
     for index, group_id in enumerate(data["group_ids"]):
         group = db.session.get(ExperimentScheduleGroup, group_id)
@@ -895,7 +895,7 @@ def start_schedule():
     status = _get_or_create_schedule_status()
 
     if status.is_running:
-        return jsonify({"success": False, "message": "Schedule already running"}), 400
+        return jsonify({"success": False, "message": _("Schedule already running")}), 400
 
     # Clear old logs when starting a new schedule
     db.session.execute(delete(ExperimentScheduleLog))
@@ -915,7 +915,7 @@ def start_schedule():
             jsonify(
                 {
                     "success": False,
-                    "message": "No groups defined or all groups completed",
+                    "message": _("No groups defined or all groups completed"),
                 }
             ),
             400,
@@ -927,7 +927,7 @@ def start_schedule():
     ).all()
     if not items:
         return (
-            jsonify({"success": False, "message": "First group has no experiments"}),
+            jsonify({"success": False, "message": _("First group has no experiments")}),
             400,
         )
 
@@ -972,7 +972,7 @@ def start_schedule():
     return jsonify(
         {
             "success": True,
-            "message": f"Started {started_count} experiments in group '{first_group.name}'",
+            "message": _("Started %(started_count)s experiments in group '%(name)s'", started_count=started_count, name=first_group.name),
             "current_group": first_group.name,
             "current_group_id": first_group.id,
             "logs": logs,
@@ -996,7 +996,7 @@ def stop_schedule():
     with _schedule_check_lock:
         status = _get_or_create_schedule_status()
         if not status or not status.is_running:
-            return jsonify({"success": False, "message": "Schedule not running"}), 400
+            return jsonify({"success": False, "message": _("Schedule not running")}), 400
 
         # Disable schedule advancement immediately so no queued experiment can
         # be launched while we are tearing down the current group.
@@ -1050,7 +1050,7 @@ def stop_schedule():
         status.started_at = None
         db.session.commit()
 
-    return jsonify({"success": True, "message": "Schedule stopped"})
+    return jsonify({"success": True, "message": _("Schedule stopped")})
 
 
 @experiments.route("/admin/schedule/check_progress", methods=["POST"])
@@ -1480,7 +1480,7 @@ def auto_create_groups():
     data = request.get_json()
     if not data or "experiments_per_group" not in data:
         return (
-            jsonify({"success": False, "message": "experiments_per_group is required"}),
+            jsonify({"success": False, "message": _("experiments_per_group is required")}),
             400,
         )
 
@@ -1491,7 +1491,7 @@ def auto_create_groups():
     except (ValueError, TypeError):
         return (
             jsonify(
-                {"success": False, "message": "Invalid experiments_per_group value"}
+                {"success": False, "message": _("Invalid experiments_per_group value")}
             ),
             400,
         )
@@ -1547,7 +1547,7 @@ def auto_create_groups():
     if not available_exps:
         return (
             jsonify(
-                {"success": False, "message": "No available experiments to assign"}
+                {"success": False, "message": _("No available experiments to assign")}
             ),
             400,
         )
@@ -1646,7 +1646,7 @@ def auto_create_groups():
     return jsonify(
         {
             "success": True,
-            "message": f"Created {len(created_groups)} groups",
+            "message": _("Created %(created_groups)s groups", created_groups=len(created_groups)),
             "groups": created_groups,
         }
     )

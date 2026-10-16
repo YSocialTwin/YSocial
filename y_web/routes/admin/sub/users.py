@@ -1011,11 +1011,11 @@ def update_telemetry_preference_ajax():
     ).first()
 
     if not current_admin_user or current_admin_user.role != "admin":
-        return jsonify({"success": False, "message": "Access denied"}), 403
+        return jsonify({"success": False, "message": _("Access denied")}), 403
 
     data = request.get_json()
     if data is None:
-        return jsonify({"success": False, "message": "No data provided"}), 400
+        return jsonify({"success": False, "message": _("No data provided")}), 400
 
     telemetry_enabled = data.get("telemetry_enabled", False)
 
@@ -1088,13 +1088,13 @@ def mark_blog_post_read(post_id):
         print(
             f"Access denied for user {current_user.username} marking blog post {post_id} as read"
         )
-        return jsonify({"error": "Access denied"}), 403
+        return jsonify({"error": _("Access denied")}), 403
 
     try:
         blog_post = db.session.get(BlogPost, post_id)
         if not blog_post:
             print(f"Blog post {post_id} not found")
-            return jsonify({"error": "Blog post not found"}), 404
+            return jsonify({"error": _("Blog post not found")}), 404
 
         print(f"Marking blog post {post_id} as read by {current_user.username}")
         print(f"Current is_read value: {blog_post.is_read}")
@@ -1130,17 +1130,17 @@ def open_external_url():
     privilege_check = check_privileges(current_user.username)
     if privilege_check:
         print(f"Access denied for user {current_user.username} opening external URL")
-        return jsonify({"error": "Access denied"}), 403
+        return jsonify({"error": _("Access denied")}), 403
 
     try:
         data = request.get_json(silent=True) or {}
         url = data.get("url")
         if not url:
-            return jsonify({"error": "URL is required"}), 400
+            return jsonify({"error": _("URL is required")}), 400
 
         # Basic URL validation - ensure it starts with http:// or https://
         if not url.startswith(("http://", "https://")):
-            return jsonify({"error": "Invalid URL format"}), 400
+            return jsonify({"error": _("Invalid URL format")}), 400
 
         print(f"Opening external URL in system browser: {url}")
         # Open the URL in the system's default browser
@@ -1168,7 +1168,7 @@ def watchdog_status():
     ).first()
 
     if not current_admin_user or current_admin_user.role != "admin":
-        return jsonify({"error": "Access denied"}), 403
+        return jsonify({"error": _("Access denied")}), 403
 
     try:
         from y_web.src.simulation.watchdog import get_watchdog_status
@@ -1194,7 +1194,7 @@ def watchdog_run_now():
     ).first()
 
     if not current_admin_user or current_admin_user.role != "admin":
-        return jsonify({"error": "Access denied"}), 403
+        return jsonify({"error": _("Access denied")}), 403
 
     try:
         from y_web.src.simulation.watchdog import run_watchdog_once
@@ -1230,7 +1230,7 @@ def watchdog_set_interval():
 
     if not current_admin_user or current_admin_user.role != "admin":
         if is_ajax:
-            return jsonify({"success": False, "message": "Access denied"}), 403
+            return jsonify({"success": False, "message": _("Access denied")}), 403
         flash(
             _("Access denied. Only administrators can modify watchdog settings."), "error"
         )
@@ -1290,7 +1290,7 @@ def watchdog_toggle():
     ).first()
 
     if not current_admin_user or current_admin_user.role != "admin":
-        return jsonify({"success": False, "message": "Access denied"}), 403
+        return jsonify({"success": False, "message": _("Access denied")}), 403
 
     try:
         data = request.get_json()
@@ -1310,7 +1310,7 @@ def watchdog_toggle():
                 {
                     "success": True,
                     "enabled": watchdog.is_running,
-                    "message": f"Watchdog {'enabled' if enabled else 'disabled'}",
+                    "message": _("Watchdog %(value)s", value='enabled' if enabled else 'disabled'),
                 }
             ),
             200,
