@@ -22,7 +22,15 @@ ROOT = Path(__file__).resolve().parents[2]
 WEB = ROOT / "y_web"
 EXTERNAL = ROOT / "external"
 
-SKIP_PARTS = {"__pycache__", "tests", "node_modules", ".git", "migrations", "alembic", "site"}
+SKIP_PARTS = {
+    "__pycache__",
+    "tests",
+    "node_modules",
+    ".git",
+    "migrations",
+    "alembic",
+    "site",
+}
 SIM_AREAS = ["microblogging", "forum", "photo", "shared", "login", "error_pages"]
 PLUGINS = [
     "TrainingModules",
@@ -32,7 +40,15 @@ PLUGINS = [
     "y_agents_plugins",
 ]
 LIB_JS = {"app.js", "browser-sync-client.js"}  # bundled third-party code
-ATTRS = {"title", "placeholder", "alt", "aria-label", "data-title", "data-tooltip", "label"}
+ATTRS = {
+    "title",
+    "placeholder",
+    "alt",
+    "aria-label",
+    "data-title",
+    "data-tooltip",
+    "label",
+}
 JINJA = re.compile(r"\{\{.*?\}\}|\{%.*?%\}|\{#.*?#\}", re.S)
 LETTERS = re.compile(r"[A-Za-z]{2,}")
 
@@ -95,8 +111,18 @@ class TextCollector(HTMLParser):
 
 
 def audit_templates(paths):
-    res = dict(files=len(paths), lines=0, bytes=0, texts=0, attrs=0, unique=set(), scripts=0,
-               script_lines=0, script_literals=0, lang_hardcoded=0)
+    res = dict(
+        files=len(paths),
+        lines=0,
+        bytes=0,
+        texts=0,
+        attrs=0,
+        unique=set(),
+        scripts=0,
+        script_lines=0,
+        script_literals=0,
+        lang_hardcoded=0,
+    )
     for p in paths:
         raw = read(p)
         res["lines"] += raw.count("\n") + 1
@@ -174,7 +200,11 @@ def audit_python(paths):
             if not isinstance(node, ast.Call):
                 continue
             fn = node.func
-            name = fn.id if isinstance(fn, ast.Name) else fn.attr if isinstance(fn, ast.Attribute) else ""
+            name = (
+                fn.id
+                if isinstance(fn, ast.Name)
+                else fn.attr if isinstance(fn, ast.Attribute) else ""
+            )
             if name == "flash":
                 flash_total += 1
                 n += 1
@@ -198,15 +228,33 @@ def audit_python(paths):
                 abort_msg += 1
         if n:
             by_file[str(p.relative_to(ROOT))] = n
-    return dict(flash_total=flash_total, flash_literal=flash_literal, flash_fstring=flash_fstring,
-                flash_other=flash_other, json_total=json_total, json_with_message=json_msg,
-                abort_with_message=abort_msg, files_with_messages=len(by_file),
-                top_files=sorted(by_file.items(), key=lambda kv: -kv[1])[:8])
+    return dict(
+        flash_total=flash_total,
+        flash_literal=flash_literal,
+        flash_fstring=flash_fstring,
+        flash_other=flash_other,
+        json_total=json_total,
+        json_with_message=json_msg,
+        abort_with_message=abort_msg,
+        files_with_messages=len(by_file),
+        top_files=sorted(by_file.items(), key=lambda kv: -kv[1])[:8],
+    )
 
 
 # ----------------------------------------------------------------- manifests
-MANIFEST_KEYS = {"name", "display_name", "description", "label", "title", "help", "placeholder",
-                 "tooltip", "category", "group", "summary"}
+MANIFEST_KEYS = {
+    "name",
+    "display_name",
+    "description",
+    "label",
+    "title",
+    "help",
+    "placeholder",
+    "tooltip",
+    "category",
+    "group",
+    "summary",
+}
 
 
 def manifest_strings(obj, out):
@@ -236,12 +284,18 @@ def collect():
     data = {}
     t = files(WEB / "templates", ".html")
     data["templates_total"] = audit_templates(t)
-    data["templates_admin"] = audit_templates([p for p in t if "admin" in p.relative_to(WEB / "templates").parts[:1]])
+    data["templates_admin"] = audit_templates(
+        [p for p in t if "admin" in p.relative_to(WEB / "templates").parts[:1]]
+    )
     for a in SIM_AREAS:
         data["templates_" + a] = audit_templates(
             [p for p in t if p.relative_to(WEB / "templates").parts[0] == a]
         )
-    other_dirs = {p.relative_to(WEB / "templates").parts[0] for p in t} - set(SIM_AREAS) - {"admin"}
+    other_dirs = (
+        {p.relative_to(WEB / "templates").parts[0] for p in t}
+        - set(SIM_AREAS)
+        - {"admin"}
+    )
     data["templates_other_dirs"] = sorted(other_dirs)
     own, lib, tut = audit_js(files(WEB / "static" / "assets" / "js", ".js"))
     data["js_own"] = own
@@ -265,9 +319,12 @@ def collect():
 
 
 def js_sum(entries):
-    return dict(files=len(entries), lines=sum(e["lines"] for e in entries),
-                literals=sum(len(e["literals"]) for e in entries),
-                unique=len({s for e in entries for s in e["literals"]}))
+    return dict(
+        files=len(entries),
+        lines=sum(e["lines"] for e in entries),
+        literals=sum(len(e["literals"]) for e in entries),
+        unique=len({s for e in entries for s in e["literals"]}),
+    )
 
 
 PLAN = {  # figures quoted in the plan ("Piano multilingua"): (value, kind); kind "min" = quoted as a lower bound
@@ -286,63 +343,106 @@ def render(d):
     w = L.append
     tt = d["templates_total"]
     w("# i18n audit: string census (F0-1)\n")
-    w("Generated by `scripts/i18n/audit_strings.py`; re-run it to refresh. Figures are heuristic counts that size the "
-      "work, not a list of strings to translate.\n")
+    w(
+        "Generated by `scripts/i18n/audit_strings.py`; re-run it to refresh. Figures are heuristic counts that size the "
+        "work, not a list of strings to translate.\n"
+    )
     w("## Method\n")
-    w("- **Templates**: Jinja tags are removed, then the HTML is parsed; a *string* is a text node containing at least "
-      "two letters, plus the attributes `title`, `placeholder`, `alt`, `aria-label`, `label`, `data-title`, "
-      "`data-tooltip` and the `value` of submit/button inputs. Text inside `<script>` and `<style>` is excluded. "
-      "*Unique* de-duplicates identical strings inside the area.")
-    w("- **Inline scripts**: `<script>` blocks without `src`; literals are quoted strings of two or more words.")
-    w("- **Python**: AST walk of `flash()` and `jsonify()` calls (`jsonify` counted when it carries `error`, `message`, "
-      "`msg` or `detail`); tests, migrations and alembic are skipped.")
-    w("- **JavaScript**: own files only (minified or bundled files are listed as libraries); a literal is a quoted "
-      "string of two or more words that does not look like code, a path or a URL. Tutorials are reported apart.")
-    w("- **Manifests**: string values of `name`, `display_name`, `description`, `label`, `title`, `help`, "
-      "`placeholder`, `tooltip`, `category`, `group`, `summary` in `meta/*.json`.\n")
+    w(
+        "- **Templates**: Jinja tags are removed, then the HTML is parsed; a *string* is a text node containing at least "
+        "two letters, plus the attributes `title`, `placeholder`, `alt`, `aria-label`, `label`, `data-title`, "
+        "`data-tooltip` and the `value` of submit/button inputs. Text inside `<script>` and `<style>` is excluded. "
+        "*Unique* de-duplicates identical strings inside the area."
+    )
+    w(
+        "- **Inline scripts**: `<script>` blocks without `src`; literals are quoted strings of two or more words."
+    )
+    w(
+        "- **Python**: AST walk of `flash()` and `jsonify()` calls (`jsonify` counted when it carries `error`, `message`, "
+        "`msg` or `detail`); tests, migrations and alembic are skipped."
+    )
+    w(
+        "- **JavaScript**: own files only (minified or bundled files are listed as libraries); a literal is a quoted "
+        "string of two or more words that does not look like code, a path or a URL. Tutorials are reported apart."
+    )
+    w(
+        "- **Manifests**: string values of `name`, `display_name`, `description`, `label`, `title`, `help`, "
+        "`placeholder`, `tooltip`, `category`, `group`, `summary` in `meta/*.json`.\n"
+    )
 
     w("## Core: templates\n")
-    w("| Area | Files | Lines | Text nodes | Attributes | Unique strings | Inline scripts | Hard-coded `lang` |")
+    w(
+        "| Area | Files | Lines | Text nodes | Attributes | Unique strings | Inline scripts | Hard-coded `lang` |"
+    )
     w("|---|---:|---:|---:|---:|---:|---:|---:|")
-    rows = [("admin", d["templates_admin"])] + [(a, d["templates_" + a]) for a in SIM_AREAS]
+    rows = [("admin", d["templates_admin"])] + [
+        (a, d["templates_" + a]) for a in SIM_AREAS
+    ]
     for name, r in rows + [("**total**", tt)]:
-        w(f"| {name} | {r['files']} | {r['lines']} | {r['texts']} | {r['attrs']} | {r['unique']} | "
-          f"{r['scripts']} | {r['lang_hardcoded']} |")
+        w(
+            f"| {name} | {r['files']} | {r['lines']} | {r['texts']} | {r['attrs']} | {r['unique']} | "
+            f"{r['scripts']} | {r['lang_hardcoded']} |"
+        )
     if d["templates_other_dirs"]:
-        w(f"\nOther template folders not listed above: {', '.join(d['templates_other_dirs'])}.")
+        w(
+            f"\nOther template folders not listed above: {', '.join(d['templates_other_dirs'])}."
+        )
     w("")
     w("## Core: server-side messages\n")
     pc = d["python_core"]
     w("| Measure | Count |\n|---|---:|")
     w(f"| `flash()` calls | {pc['flash_total']} |")
     w(f"| of which literal string | {pc['flash_literal']} |")
-    w(f"| of which f-string (needs rewriting with placeholders) | {pc['flash_fstring']} |")
+    w(
+        f"| of which f-string (needs rewriting with placeholders) | {pc['flash_fstring']} |"
+    )
     w(f"| of which variable or other expression | {pc['flash_other']} |")
     w(f"| `jsonify()` with error/message | {pc['json_with_message']} |")
     w(f"| `jsonify()` calls in total | {pc['json_total']} |")
     w(f"| `abort()` with a message | {pc['abort_with_message']} |")
-    w(f"\nFiles with the most messages: " + ", ".join(f"`{f}` ({n})" for f, n in pc["top_files"]) + ".\n")
+    w(
+        f"\nFiles with the most messages: "
+        + ", ".join(f"`{f}` ({n})" for f, n in pc["top_files"])
+        + ".\n"
+    )
 
     w("## Core: JavaScript\n")
     own, tut = js_sum(d["js_own"]), js_sum(d["js_tutorials"])
-    w("| Group | Files | Lines | Text-like literals | Unique |\n|---|---:|---:|---:|---:|")
-    w(f"| own code (no tutorials) | {own['files']} | {own['lines']} | {own['literals']} | {own['unique']} |")
-    w(f"| tutorials | {tut['files']} | {tut['lines']} | {tut['literals']} | {tut['unique']} |")
-    w(f"| bundled / minified libraries (excluded) | {len(d['js_lib'])} | {sum(n for _, n in d['js_lib'])} | | |")
-    w(f"\nLargest own files by literals: " + ", ".join(
-        f"`{e['file']}` ({len(e['literals'])})"
-        for e in sorted(d["js_own"], key=lambda e: -len(e["literals"]))[:8]) + ".\n")
+    w(
+        "| Group | Files | Lines | Text-like literals | Unique |\n|---|---:|---:|---:|---:|"
+    )
+    w(
+        f"| own code (no tutorials) | {own['files']} | {own['lines']} | {own['literals']} | {own['unique']} |"
+    )
+    w(
+        f"| tutorials | {tut['files']} | {tut['lines']} | {tut['literals']} | {tut['unique']} |"
+    )
+    w(
+        f"| bundled / minified libraries (excluded) | {len(d['js_lib'])} | {sum(n for _, n in d['js_lib'])} | | |"
+    )
+    w(
+        f"\nLargest own files by literals: "
+        + ", ".join(
+            f"`{e['file']}` ({len(e['literals'])})"
+            for e in sorted(d["js_own"], key=lambda e: -len(e["literals"]))[:8]
+        )
+        + ".\n"
+    )
 
     w("## Plugins\n")
-    w("| Plugin | Templates | Template strings (text+attr) | Inline scripts | Python files | `flash()` | JSON messages "
-      "| Own JS files | JS literals | Manifest strings |")
+    w(
+        "| Plugin | Templates | Template strings (text+attr) | Inline scripts | Python files | `flash()` | JSON messages "
+        "| Own JS files | JS literals | Manifest strings |"
+    )
     w("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
     for name, p in d["plugins"].items():
         j = js_sum(p["js_own"])
         t = p["templates"]
-        w(f"| {name} | {t['files']} | {t['texts'] + t['attrs']} | {t['scripts']} | {p['py_files']} | "
-          f"{p['python']['flash_total']} | {p['python']['json_with_message']} | {j['files']} | {j['literals']} | "
-          f"{p['manifests']['strings']} |")
+        w(
+            f"| {name} | {t['files']} | {t['texts'] + t['attrs']} | {t['scripts']} | {p['py_files']} | "
+            f"{p['python']['flash_total']} | {p['python']['json_with_message']} | {j['files']} | {j['literals']} | "
+            f"{p['manifests']['strings']} |"
+        )
     w("")
 
     w("## Comparison with the plan estimates (G0 criterion: deviation within 25%)\n")
@@ -352,8 +452,12 @@ def render(d):
         "Chiamate flash()": pc["flash_total"],
         "Risposte JSON con error/message": pc["json_with_message"],
         "Blocchi <script> inline": tt["scripts"],
-        "File JS (cartella static/assets/js)": len(d["js_own"]) + len(d["js_tutorials"]) + len(d["js_lib"]),
-        "File *-tutorial.js": sum(1 for e in d["js_tutorials"] if e["file"].endswith("-tutorial.js")),
+        "File JS (cartella static/assets/js)": len(d["js_own"])
+        + len(d["js_tutorials"])
+        + len(d["js_lib"]),
+        "File *-tutorial.js": sum(
+            1 for e in d["js_tutorials"] if e["file"].endswith("-tutorial.js")
+        ),
     }
     w("| Measure | Plan | Measured | Deviation | Check |\n|---|---:|---:|---:|---|")
     for k, (planned, kind) in PLAN.items():
@@ -363,26 +467,42 @@ def render(d):
             check = "lower bound respected" if m >= planned else "below the lower bound"
         else:
             check = "within 25%" if abs(dev) <= 25 else "OUTSIDE 25%"
-        w(f"| {k} | {'>= ' if kind == 'min' else ''}{planned} | {m} | {dev:+.0f}% | {check} |")
-    w("\nThe plan quoted the JSON-message and JS-file figures as lower bounds (\"almeno\", \"piu di\"); the "
-      "measured values are consistent with that, but the JSON messages are about 2.4 times the quoted floor, "
-      "which weighs on F2-7.\n")
+        w(
+            f"| {k} | {'>= ' if kind == 'min' else ''}{planned} | {m} | {dev:+.0f}% | {check} |"
+        )
+    w(
+        '\nThe plan quoted the JSON-message and JS-file figures as lower bounds ("almeno", "piu di"); the '
+        "measured values are consistent with that, but the JSON messages are about 2.4 times the quoted floor, "
+        "which weighs on F2-7.\n"
+    )
     w("## Findings that affect the plan\n")
-    w(f"- {pc['flash_fstring']} of {pc['flash_total']} `flash()` calls are f-strings and {pc['flash_other']} pass a "
-      "variable: they need rewriting with named placeholders (risk R1) before they can be marked.")
-    w(f"- Core templates hold about {tt['unique']} unique strings; `admin` alone is "
-      f"{d['templates_admin']['unique']} ({d['templates_admin']['unique'] * 100 // max(1, tt['unique'])}% of the total).")
-    w(f"- The simulation frontends (microblogging, forum, photo, shared, login, error pages) hold "
-      f"{sum(d['templates_' + a]['unique'] for a in SIM_AREAS)} unique strings: a much smaller catalogue than admin.")
-    w(f"- Own JavaScript has {own['literals'] + tut['literals']} text-like literals "
-      f"({tut['literals']} in tutorials); `lightbox.js` alone has {max(len(e['literals']) for e in d['js_own'] if e['file'] == 'lightbox.js') if any(e['file'] == 'lightbox.js' for e in d['js_own']) else 0}, "
-      "so the JS runtime (F1-5) is needed for the admin pages too.")
-    w(f"- Training Modules is the largest plugin ({d['plugins']['TrainingModules']['templates']['files']} templates, "
-      f"{d['plugins']['TrainingModules']['templates']['texts'] + d['plugins']['TrainingModules']['templates']['attrs']} "
-      "template strings). Manifest strings are concentrated in `y_agents_plugins` and `reactive_agents`.")
-    w("- `<html lang=...>` is hard-coded in "
-      f"{tt['lang_hardcoded']} core templates (the plan counted 11; the login and error pages now share "
-      "`login/scene_base.html`, and 4 more live in plugin templates).")
+    w(
+        f"- {pc['flash_fstring']} of {pc['flash_total']} `flash()` calls are f-strings and {pc['flash_other']} pass a "
+        "variable: they need rewriting with named placeholders (risk R1) before they can be marked."
+    )
+    w(
+        f"- Core templates hold about {tt['unique']} unique strings; `admin` alone is "
+        f"{d['templates_admin']['unique']} ({d['templates_admin']['unique'] * 100 // max(1, tt['unique'])}% of the total)."
+    )
+    w(
+        f"- The simulation frontends (microblogging, forum, photo, shared, login, error pages) hold "
+        f"{sum(d['templates_' + a]['unique'] for a in SIM_AREAS)} unique strings: a much smaller catalogue than admin."
+    )
+    w(
+        f"- Own JavaScript has {own['literals'] + tut['literals']} text-like literals "
+        f"({tut['literals']} in tutorials); `lightbox.js` alone has {max(len(e['literals']) for e in d['js_own'] if e['file'] == 'lightbox.js') if any(e['file'] == 'lightbox.js' for e in d['js_own']) else 0}, "
+        "so the JS runtime (F1-5) is needed for the admin pages too."
+    )
+    w(
+        f"- Training Modules is the largest plugin ({d['plugins']['TrainingModules']['templates']['files']} templates, "
+        f"{d['plugins']['TrainingModules']['templates']['texts'] + d['plugins']['TrainingModules']['templates']['attrs']} "
+        "template strings). Manifest strings are concentrated in `y_agents_plugins` and `reactive_agents`."
+    )
+    w(
+        "- `<html lang=...>` is hard-coded in "
+        f"{tt['lang_hardcoded']} core templates (the plan counted 11; the login and error pages now share "
+        "`login/scene_base.html`, and 4 more live in plugin templates)."
+    )
     return "\n".join(L) + "\n"
 
 
@@ -393,7 +513,12 @@ def main():
     a = ap.parse_args()
     d = collect()
     if a.json:
-        json.dump(d, sys.stdout, indent=1, default=lambda o: sorted(o) if isinstance(o, set) else str(o))
+        json.dump(
+            d,
+            sys.stdout,
+            indent=1,
+            default=lambda o: sorted(o) if isinstance(o, set) else str(o),
+        )
         return
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     Path(a.out).write_text(render(d), encoding="utf-8")

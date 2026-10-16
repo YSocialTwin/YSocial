@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-16 13:06+0000\n"
+"POT-Creation-Date: 2026-10-16 13:24+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -18,39 +18,66 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: y_web/templates/forum/feed.html:148
-msgid "Search posts, users, links..."
-msgstr "Cerca post, utenti, link..."
+msgid "Automatic (browser language)"
+msgstr ""
 
-#: y_web/templates/login/login.html:44
-msgid "Welcome back"
-msgstr "Bentornato"
+msgid "Choose the language of the dashboard for this user."
+msgstr ""
 
-#: y_web/templates/login/login.html:45
-msgid "Sign in to continue to your experiments."
-msgstr "Accedi per continuare con i tuoi esperimenti."
+msgid "Dashboard language"
+msgstr ""
 
-#: y_web/templates/login/login.html:49
 msgid "Email"
 msgstr "Email"
 
-#: y_web/templates/login/login.html:53
+msgid "Invalid user ID."
+msgstr ""
+
+msgid "Language"
+msgstr ""
+
+msgid "Log Out"
+msgstr ""
+
+msgid "Login"
+msgstr "Accedi"
+
+msgid "My Profile"
+msgstr ""
+
 msgid "Password"
 msgstr "Password"
 
-#: y_web/templates/login/login.html:54
-msgid "Show password"
-msgstr "Mostra password"
-
-#: y_web/templates/login/login.html:54
-msgid "SHOW"
-msgstr "MOSTRA"
-
-#: y_web/templates/login/login.html:57
 msgid "Remember me"
 msgstr "Ricordami"
 
-#: y_web/templates/login/login.html:59
-msgid "Login"
-msgstr "Accedi"
+msgid "SHOW"
+msgstr "MOSTRA"
+
+msgid "Save language"
+msgstr ""
+
+msgid "Search posts, users, links..."
+msgstr "Cerca post, utenti, link..."
+
+msgid "Share Experiments"
+msgstr ""
+
+msgid "Show password"
+msgstr "Mostra password"
+
+msgid "Sign in to continue to your experiments."
+msgstr "Accedi per continuare con i tuoi esperimenti."
+
+msgid "Unsupported language."
+msgstr ""
+
+msgid "User not found"
+msgstr ""
+
+msgid "Welcome back"
+msgstr "Bentornato"
+
+msgid "You do not have permission to perform this action."
+msgstr ""
 

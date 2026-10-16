@@ -208,3 +208,6 @@ cython_debug/
 /STRATA_OpenAI_Teen_Development_Grant_Draft.md
 /STRATA_OpenAI_Teen_Development_Grant_Full_Proposal_Draft.md
 /YSocial_analisi_codebase.md
+
+# pseudo-locale catalog (generated, development only)
+y_web/translations/en_US_POSIX/

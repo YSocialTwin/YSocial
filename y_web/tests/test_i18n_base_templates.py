@@ -45,7 +45,7 @@ def test_base_templates_set_lang_and_dir():
         "login/scene_base.html",
     ):
         text = (TEMPLATES / name).read_text(encoding="utf-8")
-        assert 'lang="{{ get_locale() }}"' in text, name
+        assert 'lang="{{ html_lang() }}"' in text, name
         assert 'dir="{{ text_direction() }}"' in text, name
 
 

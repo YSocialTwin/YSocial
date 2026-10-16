@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-16 13:06+0000\n"
+"POT-Creation-Date: 2026-10-16 13:24+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,39 +17,66 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: y_web/templates/forum/feed.html:148
-msgid "Search posts, users, links..."
+msgid "Automatic (browser language)"
 msgstr ""
 
-#: y_web/templates/login/login.html:44
-msgid "Welcome back"
+msgid "Choose the language of the dashboard for this user."
 msgstr ""
 
-#: y_web/templates/login/login.html:45
-msgid "Sign in to continue to your experiments."
+msgid "Dashboard language"
 msgstr ""
 
-#: y_web/templates/login/login.html:49
 msgid "Email"
 msgstr ""
 
-#: y_web/templates/login/login.html:53
+msgid "Invalid user ID."
+msgstr ""
+
+msgid "Language"
+msgstr ""
+
+msgid "Log Out"
+msgstr ""
+
+msgid "Login"
+msgstr ""
+
+msgid "My Profile"
+msgstr ""
+
 msgid "Password"
 msgstr ""
 
-#: y_web/templates/login/login.html:54
-msgid "Show password"
-msgstr ""
-
-#: y_web/templates/login/login.html:54
-msgid "SHOW"
-msgstr ""
-
-#: y_web/templates/login/login.html:57
 msgid "Remember me"
 msgstr ""
 
-#: y_web/templates/login/login.html:59
-msgid "Login"
+msgid "SHOW"
+msgstr ""
+
+msgid "Save language"
+msgstr ""
+
+msgid "Search posts, users, links..."
+msgstr ""
+
+msgid "Share Experiments"
+msgstr ""
+
+msgid "Show password"
+msgstr ""
+
+msgid "Sign in to continue to your experiments."
+msgstr ""
+
+msgid "Unsupported language."
+msgstr ""
+
+msgid "User not found"
+msgstr ""
+
+msgid "Welcome back"
+msgstr ""
+
+msgid "You do not have permission to perform this action."
 msgstr ""
 

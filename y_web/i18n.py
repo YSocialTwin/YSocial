@@ -25,6 +25,8 @@ from flask_babel import (
 )
 from flask_login import current_user
 
+from y_web.i18n_pseudo import PSEUDO_CARRIER, PSEUDO_LANGUAGE
+
 DEFAULT_LOCALE = "en"
 ADMIN_COOKIE = "ys_lang"
 SIMULATION_COOKIE = "ys_lang_sim"
@@ -56,9 +58,24 @@ def supported_languages():
     return tuple(langs)
 
 
+def pseudo_enabled():
+    """True when the ``en-XA`` pseudo-locale is switched on (development/CI only)."""
+    return bool(current_app.config.get("PSEUDO_LOCALE_ENABLED"))
+
+
 def available_languages():
     """Return ``[(code, native name), ...]`` for the supported languages."""
     return [(code, LANGUAGE_NAMES.get(code, code)) for code in supported_languages()]
+
+
+def html_lang():
+    """Value for ``<html lang>``: a BCP-47 tag (``en-XA`` for the pseudo-locale)."""
+    locale = get_locale()
+    if locale is None:
+        return DEFAULT_LOCALE
+    if str(locale) == PSEUDO_CARRIER:
+        return PSEUDO_LANGUAGE
+    return str(locale).replace("_", "-")
 
 
 def text_direction():
@@ -72,6 +89,8 @@ def normalize_language(code):
     if not code:
         return None
     code = str(code).strip().replace("_", "-")
+    if code.lower() == PSEUDO_LANGUAGE.lower():
+        return PSEUDO_LANGUAGE if pseudo_enabled() else None
     langs = supported_languages()
     if code in langs:
         return code
@@ -109,7 +128,13 @@ def _experiment_language():
 
 
 def select_locale():
-    """Pick the interface language for the current request."""
+    """Pick the interface language for the current request (a Babel locale code)."""
+    chosen = _chosen_language()
+    return PSEUDO_CARRIER if chosen == PSEUDO_LANGUAGE else chosen
+
+
+def _chosen_language():
+    """Resolve the language code (``en-XA`` included) for the current request."""
     if is_simulation_request():
         exp_lang, allow_override = _experiment_language()
         if allow_override:
@@ -131,10 +156,12 @@ def init_i18n(app):
     app.config.setdefault("BABEL_DEFAULT_LOCALE", DEFAULT_LOCALE)
     app.config.setdefault("BABEL_TRANSLATION_DIRECTORIES", "translations")
     app.config.setdefault("SUPPORTED_LANGUAGES", (DEFAULT_LOCALE,))
+    app.config.setdefault("PSEUDO_LOCALE_ENABLED", False)
     babel.init_app(app, locale_selector=select_locale)
     app.jinja_env.globals["get_locale"] = get_locale
     app.jinja_env.globals["available_languages"] = available_languages
     app.jinja_env.globals["text_direction"] = text_direction
+    app.jinja_env.globals["html_lang"] = html_lang
     # Locale-aware formatting for dates and numbers: {{ value|localdate }}.
     app.jinja_env.filters["localdate"] = format_date
     app.jinja_env.filters["localtime"] = format_time

@@ -19,6 +19,7 @@ from y_web.i18n import (
     SIMULATION_COOKIE,
     normalize_language,
 )
+from y_web.i18n_pseudo import PSEUDO_LANGUAGE, pseudolocalize_catalog
 from y_web.src.external_runtime.plugin_hooks import is_local_redirect
 
 i18n_bp = Blueprint("i18n", __name__)
@@ -44,7 +45,11 @@ def js_catalog(domain, lang):
         abort(404)
     if not (JS_CATALOG_DIR / domain / f"{DEFAULT_LOCALE}.json").is_file():
         abort(404)
-    resp = jsonify(load_js_catalog(domain, lang))
+    if lang == PSEUDO_LANGUAGE:
+        catalog = pseudolocalize_catalog(load_js_catalog(domain, DEFAULT_LOCALE))
+    else:
+        catalog = load_js_catalog(domain, lang)
+    resp = jsonify(catalog)
     resp.headers["Cache-Control"] = "public, max-age=300"
     return resp
 

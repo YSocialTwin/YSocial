@@ -37,6 +37,8 @@ class BaseConfig:
     BABEL_DEFAULT_TIMEZONE = "UTC"
     BABEL_TRANSLATION_DIRECTORIES = "translations"
     SUPPORTED_LANGUAGES = ("en", "it")
+    # Pseudo-locale "en-XA" (accented, padded text) to find unmarked strings.
+    PSEUDO_LOCALE_ENABLED = os.environ.get("YSOCIAL_PSEUDO_LOCALE", "") == "1"
 
     # LLM
     LLM_BACKEND: str | None = os.environ.get("LLM_BACKEND")

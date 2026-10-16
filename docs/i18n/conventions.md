@@ -24,11 +24,13 @@ Rules for writing translatable code in YSocial and its plugins. They follow the 
 
 ## 3. Catalogs and workflow
 
-- Extraction config: `babel.cfg` (tests and static are ignored). Commands: `pybabel extract -F babel.cfg -o y_web/translations/messages.pot --project=YSocial y_web`, then `pybabel update -i y_web/translations/messages.pot -d y_web/translations`, then `pybabel compile -d y_web/translations`.
+- Tooling: `python scripts/i18n/catalogs.py update` (extract + merge into every `.po`), then translate, then `python scripts/i18n/catalogs.py compile`. `check` fails when the committed `.pot`/`.mo` are stale (used by CI). Extraction config is `babel.cfg` (tests and static are ignored).
+- Pseudo-locale `en-XA`: set `YSOCIAL_PSEUDO_LOCALE=1`, run `python scripts/i18n/catalogs.py pseudo`, then choose `en-XA` (cookie `ys_lang=en-XA`). Marked text appears accented and padded (`[Ŵéļçómé~~]`); plain English means an unmarked string. The catalog is generated, git-ignored, development only.
+- Scanner: `python scripts/i18n/scan_unmarked.py --check` fails if a file has more unmarked strings than `docs/i18n/scan_baseline.json` (a ratchet that only goes down; `--update` after converting an area). English-only strings go in `docs/i18n/scan_exceptions.txt` with a reason.
+- Plugin manifests: `python scripts/i18n/catalogs.py manifests <plugin_dir> --domain <name>` writes `<plugin_dir>/translations/<name>.pot` from `meta/*.json`.
 - `.po`, `.pot` and the compiled `.mo` of `y_web/translations` are committed (decision at G0: no compile step in build or packaging). Always run `pybabel compile` before committing a catalog change. Translations are kept as `.po` files in the repository and reviewed through pull requests.
 - Pilot languages: English and Italian. Supported languages are listed in `y_web/i18n.py` (`SUPPORTED_LOCALES`); a language is added by a catalog plus an entry there.
 - Language selection order: user choice stored in the session, `Accept-Language`, English. The admin language is per user (D3, pending approval). The simulation frontend language is set per experiment, with an optional user override (D4).
-- Pseudo-locale `en-XA` (planned) is used in CI to catch untranslated strings.
 - `<html lang>` always comes from `get_locale()`; never hard-code it.
 
 ## 4. Plugins
