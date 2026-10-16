@@ -141,7 +141,7 @@
     listEl.innerHTML = items.map(agent => {
       const session = sessionsByTarget.get(String(agent.user_id))
       const preview = session?.last_message_preview || agent.preview || agent.profession || 'Start a conversation'
-      const stamp = session?.last_message_at ? new Date(session.last_message_at).toLocaleDateString() : ''
+      const stamp = session?.last_message_at ? new Date(session.last_message_at).toLocaleDateString(document.documentElement.lang || undefined) : ''
       const active = state.currentSession && String(state.currentSession.target_user_id) === String(agent.user_id)
       return `
         <button class="photo-messages-list-item ${active ? 'is-active' : ''}" type="button" data-agent-id="${escapeHtml(agent.user_id)}">

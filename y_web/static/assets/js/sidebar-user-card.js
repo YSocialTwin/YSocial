@@ -6,6 +6,6 @@
 (function () {
     var target = document.getElementById("sidebar-current-date");
     if (target) {
-        target.textContent = new Date().toLocaleString();
+        target.textContent = new Date().toLocaleString(document.documentElement.lang || undefined);
     }
 })();

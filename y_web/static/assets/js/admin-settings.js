@@ -965,7 +965,7 @@ var AdminSettings = (function() {
               const logDiv = document.getElementById('schedule-log');
               if (logDiv && data.logs && data.logs.length > 0) {
                   logDiv.innerHTML = data.logs.map(log => {
-                      const timestamp = log.created_at ? new Date(log.created_at).toLocaleTimeString() : '';
+                      const timestamp = log.created_at ? new Date(log.created_at).toLocaleTimeString(document.documentElement.lang || undefined) : '';
                       const colorClass = log.log_type === 'success' ? 'color: #28a745;' : 
                                          log.log_type === 'error' ? 'color: #dc3545;' :
                                          log.log_type === 'warning' ? 'color: #ffc107;' : '';
@@ -1210,7 +1210,7 @@ var AdminSettings = (function() {
           logDiv.innerHTML = '';
       }
     
-      const timestamp = new Date().toLocaleTimeString();
+      const timestamp = new Date().toLocaleTimeString(document.documentElement.lang || undefined);
       const msgDiv = document.createElement('div');
       msgDiv.innerHTML = `<span style="color: #6c757d;">[${timestamp}]</span> ${message}`;
       logDiv.appendChild(msgDiv);

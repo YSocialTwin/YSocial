@@ -1293,7 +1293,7 @@ var AdminMiscellanea = (function() {
         
           if (data.last_check) {
               const lastCheck = new Date(data.last_check);
-              document.getElementById('last-hpc-check-time').textContent = lastCheck.toLocaleString();
+              document.getElementById('last-hpc-check-time').textContent = lastCheck.toLocaleString(document.documentElement.lang || undefined);
           } else {
               document.getElementById('last-hpc-check-time').textContent = YI18n.t('Never');
           }
@@ -1411,7 +1411,7 @@ var AdminMiscellanea = (function() {
         
           if (data.last_run) {
               const lastRun = new Date(data.last_run);
-              document.getElementById('watchdog-last-run').textContent = lastRun.toLocaleString();
+              document.getElementById('watchdog-last-run').textContent = lastRun.toLocaleString(document.documentElement.lang || undefined);
           } else {
               document.getElementById('watchdog-last-run').textContent = YI18n.t('Never');
           }

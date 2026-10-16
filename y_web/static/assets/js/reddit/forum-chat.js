@@ -167,7 +167,7 @@
     listEl.innerHTML = items.map(agent => {
       const session = sessionsByTarget.get(Number(agent.user_id))
       const preview = session?.last_message_preview || agent.preview || agent.profession || 'Start a conversation'
-      const stamp = session?.last_message_at ? new Date(session.last_message_at).toLocaleDateString() : ''
+      const stamp = session?.last_message_at ? new Date(session.last_message_at).toLocaleDateString(document.documentElement.lang || undefined) : ''
       return `
         <button class="forum-chat-list-item" type="button" data-agent-id="${agent.user_id}">
           <div class="forum-chat-list-avatar">${avatarMarkup(agent.username, agent.profile_pic)}</div>
