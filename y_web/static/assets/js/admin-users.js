@@ -47,7 +47,7 @@ var AdminUsers = (function() {
                         var role = row.cells[5].data;
                         var isAdmin = role.toLowerCase() === 'admin';
                         var deleteButton = isAdmin
-                            ? '<button disabled style="background-color: #ccc; color: #666; padding: 5px 10px; border-radius: 4px; border: none; font-size: 0.85rem;">Delete</button>'
+                            ? '<button disabled style="background-color: #ccc; color: #666; padding: 5px 10px; border-radius: 4px; border: none; font-size: 0.85rem;">' + YI18n.t('Delete') + '</button>'
                             : '<button class="delete-button" data-id="' + id + '" style="background-color: #dc3545; color: white; padding: 5px 10px; border-radius: 4px; border: none; font-size: 0.85rem; cursor: pointer;">' + YI18n.t('Delete') + '</button>';
                         return gridjs.html(
                             '<div style="display: flex; gap: 8px; justify-content: center;"><a href="/admin/user_details/' + id + '" style="background-color: #28a745; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 0.9rem;">' + YI18n.t('Details') + '</a>' + deleteButton + '</div>'

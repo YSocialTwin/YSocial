@@ -211,7 +211,7 @@ function renderDownloadNotifications(items, unreadCount) {
 
     var rows = [];
     if (!items || items.length === 0) {
-        rows.push('<div class="dropdown-item">No notifications yet.</div>');
+        rows.push('<div class="dropdown-item">' + YI18n.t('No notifications yet.') + '</div>');
     } else {
         items.slice(0, 5).forEach(function(item) {
             var statusTagClass =
@@ -247,7 +247,7 @@ function renderDownloadNotifications(items, unreadCount) {
     }
 
     rows.push('<hr class="dropdown-divider">');
-    rows.push('<a class="dropdown-item has-text-weight-semibold" href="/admin/notifications">See all</a>');
+    rows.push('<a class="dropdown-item has-text-weight-semibold" href="/admin/notifications">' + YI18n.t('See all') + '</a>');
     list.innerHTML = rows.join('');
 }
 

@@ -19,7 +19,7 @@ var AdminPages = (function() {
     }
 
     function buildActivityProfileFormatter(cell) {
-        if (!cell || !cell.hours) return gridjs.html('<span style="color: #999; font-size: 0.85em;">Not assigned</span>');
+        if (!cell || !cell.hours) return gridjs.html('<span style="color: #999; font-size: 0.85em;">' + YI18n.t('Not assigned') + '</span>');
         var hours = cell.hours.split(',').map(function(h) { return parseInt(h.trim()); });
         var barHtml = Array.from({length: 24}, function(_, i) {
             var isActive = hours.includes(i);
@@ -31,7 +31,7 @@ var AdminPages = (function() {
 
     function buildActivityProfileTagsHtml(values) {
         if (!values || values.length === 0) {
-            return '<span style="color: #999; font-size: 0.85em;">Not assigned</span>';
+            return '<span style="color: #999; font-size: 0.85em;">' + YI18n.t('Not assigned') + '</span>';
         }
         var tags = values.map(function(value) {
             return '<span style="display: inline-block; background-color: #039be5; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; margin: 2px;">'+value+'</span>';
@@ -157,7 +157,7 @@ var AdminPages = (function() {
         new gridjs.Grid({
             columns: [
                 { id: 'logo', name: '', formatter: function(cell) {
-                    return gridjs.html('<div style="display: flex; justify-content: center; align-items: center; height: 100%; width: 100%;"><img src="' + cell + '" alt="' + 'logo' + '" style="height: 25px; object-fit: contain; margin: 0; padding: 0; display: block;"></div>');
+                    return gridjs.html('<div style="display: flex; justify-content: center; align-items: center; height: 100%; width: 100%;"><img src="' + cell + '" alt="logo" style="height: 25px; object-fit: contain; margin: 0; padding: 0; display: block;"></div>');
                 }, sort: false, searchable: false, width: '60px' },
                 { id: 'id', hidden: true },
                 { id: 'name', name: YI18n.t('Name'), attributes: editableCellAttributes },
@@ -280,7 +280,7 @@ var AdminPages = (function() {
                 { id: 'daily_activity_level', name: YI18n.t('Activity Level') },
                 { id: 'ext_fields', name: YI18n.t('Extension Fields'), formatter: function(cell) {
                     if (!cell || Object.keys(cell).length === 0) {
-                        return gridjs.html('<span style="color: #999; font-size: 0.85em;">None</span>');
+                        return gridjs.html('<span style="color: #999; font-size: 0.85em;">' + YI18n.t('None') + '</span>');
                     }
                     var items = Object.entries(cell).map(function(entry) {
                         return '<div><b>'+entry[0]+'</b>: '+entry[1]+'</div>';

@@ -108,8 +108,8 @@
               title: function(context) {
                 const key = context[0].label;
                 const mapping = (trendData.timestamp_mapping || {})[key];
-                if (mapping) return 'Day ' + mapping.day + ', Hour ' + mapping.hour;
-                return 'Step ' + key;
+                if (mapping) return YI18n.t('Day {day}, Hour {hour}', {day: mapping.day, hour: mapping.hour});
+                return YI18n.t('Step {key}', {key});
               },
               label: function(context) {
                 return context.dataset.label + ': ' + Number(context.parsed.y || 0).toFixed(3);
@@ -179,8 +179,8 @@
               title: function(context) {
                 const key = context[0].label;
                 const mapping = (targetData.timestamp_mapping || {})[key];
-                if (mapping) return 'Day ' + mapping.day + ', Hour ' + mapping.hour;
-                return 'Step ' + key;
+                if (mapping) return YI18n.t('Day {day}, Hour {hour}', {day: mapping.day, hour: mapping.hour});
+                return YI18n.t('Step {key}', {key});
               },
               label: function(context) {
                 if (context.dataset.label === YI18n.t('SA Interactions')) {
@@ -286,8 +286,8 @@
     saTargetChart.options.plugins.tooltip.callbacks.title = function(context) {
       const key = context[0].label;
       const mapping = (targetData.timestamp_mapping || {})[key];
-      if (mapping) return 'Day ' + mapping.day + ', Hour ' + mapping.hour;
-      return 'Step ' + key;
+      if (mapping) return YI18n.t('Day {day}, Hour {hour}', {day: mapping.day, hour: mapping.hour});
+      return YI18n.t('Step {key}', {key});
     };
     saTargetChart.update('none');
   }
@@ -310,8 +310,8 @@
     trendChart.options.plugins.tooltip.callbacks.title = function(context) {
       const key = context[0].label;
       const mapping = (trendData.timestamp_mapping || {})[key];
-      if (mapping) return 'Day ' + mapping.day + ', Hour ' + mapping.hour;
-      return 'Step ' + key;
+      if (mapping) return YI18n.t('Day {day}, Hour {hour}', {day: mapping.day, hour: mapping.hour});
+      return YI18n.t('Step {key}', {key});
     };
     trendChart.update('none');
 

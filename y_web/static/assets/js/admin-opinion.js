@@ -21,7 +21,7 @@ var AdminOpinion = (function() {
     function buildDistributionParamsMarkup(parameters) {
         var entries = Object.entries(parameters || {});
         if (!entries.length) {
-            return '<div class="dist-note">No fixed parameters defined for this distribution.</div>';
+            return '<div class="dist-note">' + YI18n.t('No fixed parameters defined for this distribution.') + '</div>';
         }
         return '<div class="dist-meta-label">' + YI18n.t('Fixed Parameters') + '</div><div class="dist-params">' + entries.map(function(e) {
                 return '<span class="dist-param"><span class="dist-param-key">' + e[0] + ':</span><span>' + formatDistributionParamValue(e[1]) + '</span></span>';
@@ -640,8 +640,8 @@ var AdminOpinion = (function() {
                             title: function(context) {
                                 var key = context[0].label;
                                 var mapping = (targetData.timestamp_mapping || {})[key];
-                                if (mapping) return 'Day ' + mapping.day + ', Hour ' + mapping.hour;
-                                return 'Step ' + key;
+                                if (mapping) return YI18n.t('Day {day}, Hour {hour}', {day: mapping.day, hour: mapping.hour});
+                                return YI18n.t('Step {key}', {key});
                             },
                             label: function(context) {
                                 if (context.dataset.label === YI18n.t('Propaganda Interactions')) {
@@ -749,8 +749,8 @@ var AdminOpinion = (function() {
         _propagandaTargetChartInstance.options.plugins.tooltip.callbacks.title = function(context) {
             var key = context[0].label;
             var mapping = (targetData.timestamp_mapping || {})[key];
-            if (mapping) return 'Day ' + mapping.day + ', Hour ' + mapping.hour;
-            return 'Step ' + key;
+            if (mapping) return YI18n.t('Day {day}, Hour {hour}', {day: mapping.day, hour: mapping.hour});
+            return YI18n.t('Step {key}', {key});
         };
         _propagandaTargetChartInstance.update('none');
     }
@@ -794,8 +794,8 @@ var AdminOpinion = (function() {
                             title: function(context) {
                                 var key = context[0].label;
                                 var mapping = (targetData.timestamp_mapping || {})[key];
-                                if (mapping) return 'Day ' + mapping.day + ', Hour ' + mapping.hour;
-                                return 'Step ' + key;
+                                if (mapping) return YI18n.t('Day {day}, Hour {hour}', {day: mapping.day, hour: mapping.hour});
+                                return YI18n.t('Step {key}', {key});
                             },
                             label: function(context) {
                                 if (context.dataset.label === YI18n.t('MoP Interactions')) {
@@ -893,8 +893,8 @@ var AdminOpinion = (function() {
         _mopTargetChartInstance.options.plugins.tooltip.callbacks.title = function(context) {
             var key = context[0].label;
             var mapping = (targetData.timestamp_mapping || {})[key];
-            if (mapping) return 'Day ' + mapping.day + ', Hour ' + mapping.hour;
-            return 'Step ' + key;
+            if (mapping) return YI18n.t('Day {day}, Hour {hour}', {day: mapping.day, hour: mapping.hour});
+            return YI18n.t('Step {key}', {key});
         };
         _mopTargetChartInstance.update('none');
     }
@@ -986,8 +986,8 @@ var AdminOpinion = (function() {
                                 var mapping = (_currentGroupTrendsData && _currentGroupTrendsData.timestamp_mapping)
                                     ? _currentGroupTrendsData.timestamp_mapping[position]
                                     : null;
-                                if (mapping) return 'Day ' + mapping.day + ', Hour ' + mapping.hour;
-                                return 'Step ' + position;
+                                if (mapping) return YI18n.t('Day {day}, Hour {hour}', {day: mapping.day, hour: mapping.hour});
+                                return YI18n.t('Step {position}', {position});
                             },
                             label: function(context) {
                                 return context.dataset.label + ': ' + context.parsed.y.toFixed(1) + '%';

@@ -32,7 +32,7 @@ def dump(domain, lang, data):
 def main(argv):
     cmd, domain = argv[0], argv[1]
     if cmd == "sync":
-        keys = set(load(domain, "en"))
+        keys = set()
         for f in argv[2:]:
             keys |= {unescape(k) for k in CALL.findall(Path(f).read_text(encoding="utf-8"))}
         dump(domain, "en", {k: k for k in keys})

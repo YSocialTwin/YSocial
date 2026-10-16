@@ -332,7 +332,7 @@ var AdminExperiments = (function() {
                               bodyFont: { size: 11 },
                               callbacks: {
                                   label: function(context) {
-                                      return 'Calls: ' + context.parsed.y;
+                                      return YI18n.t('Calls: {y}', {y: context.parsed.y});
                                   }
                               }
                           }
@@ -390,7 +390,7 @@ var AdminExperiments = (function() {
                               bodyFont: { size: 11 },
                               callbacks: {
                                   label: function(context) {
-                                      return 'Time: ' + context.parsed.y.toFixed(4) + 's';
+                                      return YI18n.t('Time: {tofixed}s', {tofixed: context.parsed.y.toFixed(4)});
                                   }
                               }
                           }
@@ -1324,7 +1324,7 @@ var AdminExperiments = (function() {
                               bodyFont: { size: 11 },
                               callbacks: {
                                   label: function(context) {
-                                      return 'Calls: ' + context.parsed.y;
+                                      return YI18n.t('Calls: {y}', {y: context.parsed.y});
                                   }
                               }
                           }
@@ -1382,7 +1382,7 @@ var AdminExperiments = (function() {
                                   bodyFont: { size: 11 },
                                   callbacks: {
                                       label: function(context) {
-                                          return 'Duration: ' + context.parsed.y.toFixed(4) + 's';
+                                          return YI18n.t('Duration: {tofixed}s', {tofixed: context.parsed.y.toFixed(4)});
                                       }
                                   }
                               }
@@ -1724,7 +1724,7 @@ var AdminExperimentsForum = (function() {
                               bodyFont: { size: 11 },
                               callbacks: {
                                   label: function(context) {
-                                      return 'Calls: ' + context.parsed.y;
+                                      return YI18n.t('Calls: {y}', {y: context.parsed.y});
                                   }
                               }
                           }
@@ -1782,7 +1782,7 @@ var AdminExperimentsForum = (function() {
                               bodyFont: { size: 11 },
                               callbacks: {
                                   label: function(context) {
-                                      return 'Time: ' + context.parsed.y.toFixed(4) + 's';
+                                      return YI18n.t('Time: {tofixed}s', {tofixed: context.parsed.y.toFixed(4)});
                                   }
                               }
                           }
@@ -2635,7 +2635,7 @@ var AdminExperimentsForum = (function() {
                               bodyFont: { size: 11 },
                               callbacks: {
                                   label: function(context) {
-                                      return 'Calls: ' + context.parsed.y;
+                                      return YI18n.t('Calls: {y}', {y: context.parsed.y});
                                   }
                               }
                           }
@@ -2693,7 +2693,7 @@ var AdminExperimentsForum = (function() {
                                   bodyFont: { size: 11 },
                                   callbacks: {
                                       label: function(context) {
-                                          return 'Duration: ' + context.parsed.y.toFixed(4) + 's';
+                                          return YI18n.t('Duration: {tofixed}s', {tofixed: context.parsed.y.toFixed(4)});
                                       }
                                   }
                               }

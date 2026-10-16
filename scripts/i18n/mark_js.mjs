@@ -11,7 +11,7 @@ const walk = require('acorn-walk');
 
 const SETTERS = new Set(['textContent', 'innerText', 'title', 'placeholder', 'ariaLabel']);
 const ATTRS = new Set(['title', 'placeholder', 'aria-label', 'alt']);
-const CALLS = new Set(['alert', 'confirm', 'prompt', 'showToast', 'showLoading', 'showHpcMonitorMessage', 'setParseStatus', 'showTelemetryMessage']);
+const CALLS = new Set(['alert', 'confirm', 'prompt', 'showToast', 'showLoading', 'showHpcMonitorMessage', 'showTelemetryMessage']);
 const dry = process.argv.includes('--dry');
 const files = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 
@@ -123,10 +123,11 @@ function buildHtml(node, src) {
   const out = []; // JS source pieces
   let changed = false, last = 0;
   const push = (lit) => { if (lit) out.push(quote(lit)); };
+  const hasTags = /<[a-z]/i.test(pseudo);
   const runRe = /(^|>)([^<>]*)(?=<|$)/g;
   let m;
   const pieces = [];
-  while ((m = runRe.exec(pseudo)) !== null) {
+  while (hasTags && (m = runRe.exec(pseudo)) !== null) {
     const start = m.index + m[1].length, text = m[2];
     if (m[0] === '' ) { runRe.lastIndex++; continue; }
     const bare = text.replace(/\u0001\d+\u0002/g, '');
@@ -227,7 +228,11 @@ function transform(src, f) {
     } else if (n.type === 'BinaryExpression' && (n.operator === '===' || n.operator === '!==') && n.right.type === 'Literal' &&
                typeof n.right.value === 'string' && n.left.type === 'MemberExpression' && n.left.property.name === 'label') {
       targets(n.right, src, add);
-    } else if ((n.type === 'TemplateLiteral' || (n.type === 'BinaryExpression' && n.operator === '+')) && /<[a-z]/i.test(src.slice(n.start, n.end)) && !htmlSkip(n)) {
+    } else if (n.type === 'ReturnStatement' && n.argument && (n.argument.type === 'BinaryExpression' || n.argument.type === 'Literal' || n.argument.type === 'TemplateLiteral')) {
+      const b = build(n.argument, src);
+      if (b && /^[A-Z][A-Za-z]+( [A-Za-z]+)*[:(!.?]?( |$)/.test(b.key) && !/[<>\/=]/.test(b.key) && b.key.length < 80) add(n.argument, b);
+    } else if ((n.type === 'TemplateLiteral' || n.type === 'Literal' && typeof n.value === 'string' || (n.type === 'BinaryExpression' && n.operator === '+')) &&
+               /<[a-z]|\b(?:title|placeholder|alt|aria-label)="/i.test(src.slice(n.start, n.end)) && src.slice(Math.max(0, n.start - 8), n.start) !== 'YI18n.t(' && !htmlSkip(n)) {
       const r = buildHtml(n, src); if (r) edits.push([n.start, n.end, r]);
     } else if (n.type === 'AssignmentExpression' && (n.operator === '=' || n.operator === '+=') && n.left.type === 'MemberExpression' &&
                !n.left.computed && n.left.property.name === 'innerHTML') {

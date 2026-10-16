@@ -80,7 +80,7 @@ var AdminClientDetails = (function() {
                         bodyFont: { size: 11 },
                         callbacks: {
                             label: function(context) {
-                                return 'Active: ' + context.parsed.y.toFixed(2) + '%';
+                                return YI18n.t('Active: {tofixed}%', {tofixed: context.parsed.y.toFixed(2)});
                             }
                         }
                     }

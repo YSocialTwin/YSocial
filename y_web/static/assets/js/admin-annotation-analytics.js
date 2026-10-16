@@ -354,8 +354,8 @@
               title: function (context) {
                 var key = context[0].label;
                 var mapping = (definition.timestamp_mapping || {})[key];
-                if (mapping) return 'Day ' + mapping.day + ', Hour ' + mapping.hour;
-                return 'Step ' + key;
+                if (mapping) return YI18n.t('Day {day}, Hour {hour}', {day: mapping.day, hour: mapping.hour});
+                return YI18n.t('Step {key}', {key});
               },
               label: function (context) {
                 if (context.dataset.label === YI18n.t('Moderator Actions')) {
@@ -550,9 +550,9 @@
               label: function (context) {
                 var raw = context.raw || {};
                 if (options.tooltipMode === 'reach') {
-                  return 'Reached: ' + String(raw.actual || 0) + ' agents (' + Number(raw.percent || 0).toFixed(2) + '%)';
+                  return YI18n.t('Reached: {actual} agents ({tofixed}%)', {actual: String(raw.actual || 0), tofixed: Number(raw.percent || 0).toFixed(2)});
                 }
-                return 'Volume: ' + String(raw.actual || 0);
+                return YI18n.t('Volume: {actual}', {actual: String(raw.actual || 0)});
               }
             }
           }

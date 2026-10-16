@@ -21,9 +21,9 @@ var AdminPopulations = (function() {
 
   const popDetails = window.YS_DATA_POP_DETAILS;
   const platformLabel = (platformType) => {
-      if (platformType === 'forum') return 'Forum';
-      if (platformType === 'photo_sharing') return 'Photo Sharing';
-      return 'Microblogging';
+      if (platformType === 'forum') return YI18n.t('Forum');
+      if (platformType === 'photo_sharing') return YI18n.t('Photo Sharing');
+      return YI18n.t('Microblogging');
   };
 
   if (popDetails) {
