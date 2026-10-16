@@ -423,6 +423,11 @@ def flask_app():
         WTF_CSRF_ENABLED=False,
     )
 
+    # Templates use gettext (_), so the minimal app needs Flask-Babel too.
+    from y_web.i18n import init_i18n
+
+    init_i18n(app)
+
     # Minimal route that renders login/login.html
     @app.route("/login")
     def login():

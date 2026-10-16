@@ -6,6 +6,7 @@
 # --- Web & Database ---
 Flask>=3.0
 Flask-Login>=0.6.2
+Flask-Babel>=4.0
 Flask-SQLAlchemy>=3.0
 Flask-Migrate>=4.0.0
 SQLAlchemy>=2.0,<3.0

@@ -198,6 +198,10 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
     db.init_app(app)
     login_manager.init_app(app)
 
+    from y_web.i18n import init_i18n
+
+    init_i18n(app)
+
     from y_web.src.agents.platform import ensure_population_username_type_column
     from y_web.src.models import Admin_users, User_mgmt
 

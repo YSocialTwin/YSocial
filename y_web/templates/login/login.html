@@ -41,22 +41,22 @@
         {% else %}
         <!-- Normal login form -->
         <form method="POST" action="/login" class="yl-form">
-            <h2>Welcome back</h2>
-            <p class="yl-sub">Sign in to continue to your experiments.</p>
+            <h2>{{ _('Welcome back') }}</h2>
+            <p class="yl-sub">{{ _('Sign in to continue to your experiments.') }}</p>
 
             <div class="yl-field">
                 <input id="yl-email" type="email" name="email" placeholder=" " autocomplete="username" autofocus required>
-                <label for="yl-email">Email</label>
+                <label for="yl-email">{{ _('Email') }}</label>
             </div>
             <div class="yl-field">
                 <input id="yl-pass" type="password" name="password" placeholder=" " autocomplete="current-password" required>
-                <label for="yl-pass">Password</label>
-                <button class="yl-eye" id="yl-eye" type="button" aria-label="Show password">SHOW</button>
+                <label for="yl-pass">{{ _('Password') }}</label>
+                <button class="yl-eye" id="yl-eye" type="button" aria-label="{{ _('Show password') }}">{{ _('SHOW') }}</button>
             </div>
             <div class="yl-row">
-                <label><input type="checkbox" name="remember"> Remember me</label>
+                <label><input type="checkbox" name="remember"> {{ _('Remember me') }}</label>
             </div>
-            <button class="yl-btn" type="submit"><span class="yl-spin"></span><span>Login</span></button>
+            <button class="yl-btn" type="submit"><span class="yl-spin"></span><span>{{ _('Login') }}</span></button>
         </form>
         {% endif %}
 {% endblock %}
