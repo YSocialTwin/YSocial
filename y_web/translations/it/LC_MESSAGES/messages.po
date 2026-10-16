@@ -31,7 +31,7 @@ msgstr "%% di nuovi agenti (giornaliero)"
 
 #, python-format
 msgid "%(articles)s topics are annotated by the LLM: such tagging allows to dynamically introduce novel topics among the interests of the agents that interact with the news source."
-msgstr "I temi degli %(articles)s sono annotati dall'LLM: questa etichettatura permette di introdurre dinamicamente nuovi temi tra gli interessi degli agenti che interagiscono con la fonte di notizie."
+msgstr "Gli argomenti degli %(articles)s sono annotati dall'LLM: questa etichettatura permette di introdurre dinamicamente nuovi argomenti tra gli interessi degli agenti che interagiscono con la fonte di notizie."
 
 #, python-format
 msgid "%(count)s new"
@@ -2255,7 +2255,7 @@ msgid "Digest Events Limit"
 msgstr "Limite di eventi del riepilogo"
 
 msgid "Digest Update Cadence (rounds)"
-msgstr "Cadenza di aggiornamento del riepilogo (turni)"
+msgstr "Cadenza di aggiornamento del riepilogo (round)"
 
 msgid "Dilikes"
 msgstr "Non mi piace"
@@ -2929,7 +2929,7 @@ msgid "Exponential"
 msgstr "Esponenziale"
 
 msgid "Exponential decay over simulation rounds. 0 = disabled."
-msgstr "Decadimento esponenziale nei turni di simulazione. 0 = disattivato."
+msgstr "Decadimento esponenziale nei round di simulazione. 0 = disattivato."
 
 msgid "Extend Simulation"
 msgstr "Estendi la simulazione"
@@ -3444,7 +3444,7 @@ msgid "HPC reset is available only when the experiment is stopped."
 msgstr "La reimpostazione HPC è disponibile solo quando l'esperimento è fermo."
 
 msgid "Half-life Rounds"
-msgstr "Turni di dimezzamento"
+msgstr "Round di dimezzamento"
 
 msgid "Handler Actions Provided Instructions"
 msgstr "Istruzioni fornite sulle azioni del gestore"
@@ -4324,7 +4324,7 @@ msgid "Max Model Length"
 msgstr "Lunghezza massima del modello"
 
 msgid "Max Replies per Round"
-msgstr "Numero massimo di risposte per turno"
+msgstr "Numero massimo di risposte per round"
 
 msgid "Max Tokens"
 msgstr "Token massimi"
@@ -4361,7 +4361,7 @@ msgid "Maximum images to retrieve from each subreddit-based image feed."
 msgstr "Numero massimo di immagini da recuperare per ogni feed di immagini basato su subreddit."
 
 msgid "Maximum number of replies an agent can make per simulation round"
-msgstr "Numero massimo di risposte che un agente può dare per turno di simulazione"
+msgstr "Numero massimo di risposte che un agente può dare per round di simulazione"
 
 msgid "Maximum posts to retrieve from Reddit subreddit feeds."
 msgstr "Numero massimo di post da recuperare dai feed dei subreddit di Reddit."
@@ -5894,7 +5894,7 @@ msgid "Reads"
 msgstr "Legge"
 
 msgid "Real-time (one wall-clock hour per round)"
-msgstr "Tempo reale (un'ora di orologio per turno)"
+msgstr "Tempo reale (un'ora di orologio per round)"
 
 msgid "Real-time analysis of server API calls from _server.log file."
 msgstr "Analisi in tempo reale delle chiamate API del server dal file _server.log."
@@ -5996,7 +5996,7 @@ msgid "Reflection Cadence"
 msgstr "Cadenza delle riflessioni"
 
 msgid "Reflection Cadence (rounds)"
-msgstr "Cadenza delle riflessioni (turni)"
+msgstr "Cadenza delle riflessioni (round)"
 
 msgid "Reflection Max Items"
 msgstr "Elementi massimi per riflessione"
@@ -6086,7 +6086,7 @@ msgid "Reply Behavior Controls"
 msgstr "Controlli del comportamento di risposta"
 
 msgid "Reply Cooldown (rounds)"
-msgstr "Pausa tra risposte (turni)"
+msgstr "Pausa tra risposte (round)"
 
 msgid "Reply to posts and threads"
 msgstr "Rispondere a post e discussioni"
@@ -6234,7 +6234,7 @@ msgid "Romanian"
 msgstr "Rumena"
 
 msgid "Rounds to wait before replying to the same user again"
-msgstr "Turni da attendere prima di rispondere di nuovo allo stesso utente"
+msgstr "Round da attendere prima di rispondere di nuovo allo stesso utente"
 
 msgid "Route args:"
 msgstr "Argomenti della route:"
@@ -6404,13 +6404,13 @@ msgid "Search Max Chars"
 msgstr "Caratteri massimi della ricerca"
 
 msgid "Search Time Window (rounds)"
-msgstr "Finestra temporale di ricerca (turni)"
+msgstr "Finestra temporale di ricerca (round)"
 
 msgid "Search Top-K"
 msgstr "Top-K della ricerca"
 
 msgid "Search Window (rounds)"
-msgstr "Finestra di ricerca (turni)"
+msgstr "Finestra di ricerca (round)"
 
 msgid "Search a Hashtag"
 msgstr "Cerca un hashtag"
@@ -7266,7 +7266,7 @@ msgid "Target aggregate stress/reward by day, with SA interaction volume shown o
 msgstr "Stress/ricompensa aggregati del bersaglio per giorno, con il volume delle interazioni SA sull'asse secondario."
 
 msgid "Teacher (training modules only)"
-msgstr "Insegnante (solo moduli di formazione)"
+msgstr "Docente (solo moduli di formazione)"
 
 #, python-format
 msgid "Telemetry %(value)s successfully."
