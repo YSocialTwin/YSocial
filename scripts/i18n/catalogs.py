@@ -13,7 +13,6 @@ Always run ``update`` and ``compile`` before committing a catalog change.
 """
 
 import argparse
-import re
 import subprocess
 import sys
 import tempfile
@@ -32,7 +31,6 @@ from y_web.i18n_pseudo import PSEUDO_CARRIER, pseudolocalize  # noqa: E402
 TRANSLATIONS = ROOT / "y_web" / "translations"
 POT = TRANSLATIONS / "messages.pot"
 BABEL_CFG = ROOT / "babel.cfg"
-HEADER_DATES = re.compile(r"^\"(POT-Creation-Date|PO-Revision-Date):.*$", re.M)
 
 
 def _pybabel(*args):
@@ -89,10 +87,6 @@ def compile_all():
         _pybabel("compile", "-d", str(TRANSLATIONS), "-l", lang)
 
 
-def _normalized(path):
-    return HEADER_DATES.sub("", Path(path).read_text(encoding="utf-8"))
-
-
 def _msgids(catalog):
     return {m.id for m in catalog if m.id}
 
@@ -103,11 +97,13 @@ def check():
     with tempfile.TemporaryDirectory() as tmp:
         fresh = Path(tmp) / "messages.pot"
         extract(fresh)
-        if _normalized(fresh) != _normalized(POT):
-            problems.append(
-                "messages.pot is stale: run `catalogs.py update` and commit it"
-            )
         fresh_ids = _msgids(read_po(fresh.open("rb")))
+    committed_ids = _msgids(read_po(POT.open("rb"))) if POT.is_file() else set()
+    if fresh_ids != committed_ids:
+        problems.append(
+            f"messages.pot is stale ({len(fresh_ids - committed_ids)} new, "
+            f"{len(committed_ids - fresh_ids)} removed): run `catalogs.py update` and commit it"
+        )
     for lang in languages():
         po = TRANSLATIONS / lang / "LC_MESSAGES" / "messages.po"
         mo = po.with_suffix(".mo")

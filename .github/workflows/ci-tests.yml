@@ -33,6 +33,13 @@ jobs:
         pip install -r requirements.txt
         pip install pytest pytest-cov
 
+    - name: Check i18n catalogs and unmarked strings
+      # Fails when messages.pot / the .po / the .mo are out of date, or when a file
+      # gained user-visible strings that are not marked for translation.
+      run: |
+        python scripts/i18n/catalogs.py check
+        python scripts/i18n/scan_unmarked.py --check
+
     - name: Run tests with coverage
       # The deselected tests below pass in isolation and in every local
       # batched run (the full suite split across a few pytest invocations),
