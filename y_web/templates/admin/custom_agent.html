@@ -9,7 +9,7 @@
             <div class="columns">
                 <div class="column is-12">
                     <div class="dashboard-box" style="margin-bottom: 24px;">
-                        <h3 class="title is-5 is-thin">Available {{ custom_spec.display_name }} Populations</h3>
+                        <h3 class="title is-5 is-thin">{{ _('Available %(name)s Populations', name=custom_spec.display_name) }}</h3>
                         <div class="box-content">
                             <div
                                 id="custom-populations-table"
@@ -20,7 +20,7 @@
                     </div>
 
                     <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Available {{ custom_spec.display_name }}s</h3>
+                        <h3 class="title is-5 is-thin">{{ _('Available %(name)ss', name=custom_spec.display_name) }}</h3>
                         <div class="box-content">
                             <div
                                 id="custom-agents-table"
@@ -36,18 +36,18 @@
             <div class="columns">
                 <div class="column is-8">
                     <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Create {{ custom_spec.display_name }}</h3>
+                        <h3 class="title is-5 is-thin">{{ _('Create %(name)s', name=custom_spec.display_name) }}</h3>
                         <div class="box-content">
                             <form action="/admin/create_custom_agent/{{ custom_spec.slug }}" method="POST" onsubmit="showLoading('Creating custom agent...');">
                                 <div class="box-lines">
                                     <div class="tutorial-section">
-                                        <b>Simulation Configuration</b>
+                                        <b>{{ _('Simulation Configuration') }}</b>
                                         <div class="box-line">
-                                            <span class="left">Target Population</span>
+                                            <span class="left">{{ _('Target Population') }}</span>
                                             <div class="select">
                                                 <select name="population" id="hello_target_population">
                                                     <option value="none"></option>
-                                                    <option value="__new__">Create new {{ custom_spec.display_name }} population...</option>
+                                                    <option value="__new__">{{ _('Create new %(name)s population...', name=custom_spec.display_name) }}</option>
                                                     {% for population in populations %}
                                                     <option value="{{ population.id }}">{{ population.name }}</option>
                                                     {% endfor %}
@@ -56,18 +56,18 @@
                                         </div>
                                         <div id="hello-new-population-fields" style="display: none;">
                                             <div class="box-line">
-                                                <span class="left">New Population Name</span>
+                                                <span class="left">{{ _('New Population Name') }}</span>
                                                 <span class="right ys-w-70"><input type="text" name="new_population_name" class="input"></span>
                                             </div>
                                             <div class="box-line">
-                                                <span class="left">New Population Description</span>
+                                                <span class="left">{{ _('New Population Description') }}</span>
                                                 <span class="right ys-w-70"><input type="text" name="new_population_descr" class="input"></span>
                                             </div>
                                         </div>
                                     </div>
                                     <hr>
                                     <div class="tutorial-section">
-                                        <b>{{ custom_spec.display_name }} Parameters</b>
+                                        <b>{{ _('%(name)s Parameters', name=custom_spec.display_name) }}</b>
                                         {% for section in custom_parameter_sections %}
                                         <div class="custom-agent-parameter-section" style="margin-top: 18px;">
                                             <div style="margin-bottom: 10px;">
@@ -89,7 +89,7 @@
                                                 style="display: contents;"
                                             ></div>
                                             <span class="left">
-                                                {{ parameter.name.replace('_', ' ').title() }}{% if parameter.required %} <small>(required)</small>{% endif %}
+                                                {{ parameter.name.replace('_', ' ').title() }}{% if parameter.required %} <small>{{ _('(required)') }}</small>{% endif %}
                                             </span>
                                             <span class="right ys-w-70">
                                                 {% set parameter_type = parameter.type|string %}
@@ -122,11 +122,11 @@
                                                         {% endfor %}
                                                     </select>
                                                 </div>
-                                                <small style="display: block; color: #6b7280; margin-top: 6px;">Hold Cmd/Ctrl to select multiple values.</small>
+                                                <small style="display: block; color: #6b7280; margin-top: 6px;">{{ _('Hold Cmd/Ctrl to select multiple values.') }}</small>
                                                 {% elif parameter_type == 'number' %}
                                                 <input type="number" step="any" name="{{ parameter.name }}" class="input" value="{{ form_value }}" {% if parameter.required %}required{% endif %}>
                                                 {% elif parameter_type.startswith('array') %}
-                                                <textarea name="{{ parameter.name }}" class="textarea" placeholder="Comma-separated values" {% if parameter.required %}required{% endif %}>{{ form_value }}</textarea>
+                                                <textarea name="{{ parameter.name }}" class="textarea" placeholder="{{ _('Comma-separated values') }}" {% if parameter.required %}required{% endif %}>{{ form_value }}</textarea>
                                                 {% else %}
                                                 <input type="text" name="{{ parameter.name }}" class="input" value="{{ form_value }}" {% if parameter.required %}required{% endif %}>
                                                 {% endif %}
@@ -141,7 +141,7 @@
                                     </div>
                                 </div>
                                 <div class="button-wrap">
-                                    <button class="button is-solid primary-button is-fullwidth">Create {{ custom_spec.display_name }}</button>
+                                    <button class="button is-solid primary-button is-fullwidth">{{ _('Create %(name)s', name=custom_spec.display_name) }}</button>
                                 </div>
                             </form>
                         </div>
@@ -154,9 +154,9 @@
                         <div class="help-block">
                             <p>{{ custom_spec.description }}</p>
                             <hr>
-                            <p><b>Generated Slug</b><br>{{ custom_spec.slug }}</p>
+                            <p><b>{{ _('Generated Slug') }}</b><br>{{ custom_spec.slug }}</p>
                             <hr>
-                            <p><b>Plugin Source</b><br>{{ custom_spec.repo_name }}</p>
+                            <p><b>{{ _('Plugin Source') }}</b><br>{{ custom_spec.repo_name }}</p>
                         </div>
                     </div>
                 </div>

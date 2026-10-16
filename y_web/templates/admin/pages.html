@@ -12,7 +12,7 @@
                 <div class="column is-12">
 
                     <div class="dashboard-box" id="box-available-pages">
-                        <h3 class="title is-5 is-thin">Available Pages</h3>
+                        <h3 class="title is-5 is-thin">{{ _('Available Pages') }}</h3>
 
                         <div class="box-content">
 
@@ -33,33 +33,33 @@
                     <!--Dashboard box-->
 
                     <div class="dashboard-box" id="box-create-page">
-                        <h3 class="title is-5 is-thin">Create Page</h3>
+                        <h3 class="title is-5 is-thin">{{ _('Create Page') }}</h3>
                         <div class="box-content">
                             <form action="/admin/create_page" enctype="multipart/form-data" method="POST" onsubmit="showLoading('Creating page...');">
                                 <div class="box-lines">
 
                                     <div class="box-line">
-                                        <span class="left">Page Name</span>
+                                        <span class="left">{{ _('Page Name') }}</span>
  <span class="right ys-w-70"><input type="text" name="name"
                                                                                        class="input"></span>
                                     </div>
                                     <div class="box-line">
-                                        <span class="left">Description</span>
+                                        <span class="left">{{ _('Description') }}</span>
  <span class="right ys-w-70"><input type="text" name="descr"
                                                                                        class="input"></span>
                                     </div>
                                     <div class="box-line">
-                                        <span class="left">Type</span>
+                                        <span class="left">{{ _('Type') }}</span>
                                         <div class="select">
                                             <select name="page_type">
-                                                <option value="media">Media Page</option>
-                                                <option value="other">Other</option>
+                                                <option value="media">{{ _('Media Page') }}</option>
+                                                <option value="other">{{ _('Other') }}</option>
                                             </select>
                                         </div>
                                     </div>
 
                                     <div class="box-line">
-                                        <span class="left">Political Leaning</span>
+                                        <span class="left">{{ _('Political Leaning') }}</span>
                                         <div class="select">
                                             <select name="leaning">
                                                 <option value=""></option>
@@ -70,24 +70,24 @@
                                         </div>
                                     </div>
                                     <div class="box-line">
-                                        <span class="left">RSS Feed</span>
+                                        <span class="left">{{ _('RSS Feed') }}</span>
  <span class="right ys-w-70"><input type="text" name="feed"
                                                                                        class="input"></span>
                                     </div>
 
                                     <div class="box-line">
-                                        <span class="left">Logo Image<small>(public url)</small></span>
+                                        <span class="left">{{ _('Logo Image') }}<small>{{ _('(public url)') }}</small></span>
  <span class="right ys-w-70"><input type="text" name="logo"
                                                                                        class="input"></span>
                                     </div>
 
                                     <hr>
-                                    <div class="form-section-header-page">Activity Profile</div>
+                                    <div class="form-section-header-page">{{ _('Activity Profile') }}</div>
                                     <div class="form-section-description-page">
-                                        Select when this page will be active for posting content. The default "Always On" profile keeps the page active 24/7.
+                                        {{ _('Select when this page will be active for posting content. The default "Always On" profile keeps the page active 24/7.') }}
                                     </div>
                                     <div class="box-line">
-                                        <span class="left">Activity Pattern</span>
+                                        <span class="left">{{ _('Activity Pattern') }}</span>
                                         
                                             <div class="select">
                                                 <select name="activity_profile" id="activity_profile_select">
@@ -106,7 +106,7 @@
                                 </div>
                                 <div class="button-wrap">
                                     <button class="button is-solid primary-button is-fullwidth">
-                                        Create
+                                        {{ _('Create') }}
                                     </button>
                                 </div>
                             </form>
@@ -120,39 +120,37 @@
                 <div class="column is-4">
                     <!--Box-->
                     <div class="sidebar-box">
-                        <h3>Guide</h3>
+                        <h3>{{ _('Guide') }}</h3>
                         <div class="help-block">
 
                             <p>
-                                <b>Pages</b>
-                                are a particular type of synthetic agent that can be used to display information to users.
-                                Each page has a name, description, type, and keywords.
+                                {{ _('%(pages)s are a particular type of synthetic agent that can be used to display information to users. Each page has a name, description, type, and keywords.', pages=wrap('b', _('Pages'))) }}
                             </p>
 
                             <p>
-                                <b>News.</b><br>
-                                Each News Page is associated with an RSS feed - the feed is used to populate, in real time, the page timeline with real-world articles.
+                                <b>{{ _('News.') }}</b><br>
+                                {{ _('Each News Page is associated with an RSS feed - the feed is used to populate, in real time, the page timeline with real-world articles.') }}
                                 <br><br>
-                                <b>Articles'</b> topics are annotated by the LLM: such tagging allows to dynamically introduce novel topics among the interests of the agents that interact with the news source.
+                                {{ _("%(articles)s topics are annotated by the LLM: such tagging allows to dynamically introduce novel topics among the interests of the agents that interact with the news source.", articles=wrap('b', _("Articles'"))) }}
 
                             </p>
                         </div>
                     </div>
 
                     <div class="sidebar-box">
-                        <h3>Load Pages Collection</h3>
+                        <h3>{{ _('Load Pages Collection') }}</h3>
                         <form action="/admin/upload_page_collection" enctype="multipart/form-data" method="POST">
                             <div class="file-upload-wrapper-pages">
                                 <input type="file" id="collection_file" name="collection" accept=".json" onchange="displayPageCollectionFileName(this)">
                                 <label for="collection_file" class="file-upload-label-pages">
                                     <span class="file-upload-icon-pages">📁</span>
-                                    <span class="file-upload-text-pages">Choose JSON file...</span>
+                                    <span class="file-upload-text-pages">{{ _('Choose JSON file...') }}</span>
                                 </label>
                                 <div id="collection-file-name-display" class="file-name-display-pages"></div>
                             </div>
                             <div class="button-wrap">
                                 <button class="button is-solid primary-button is-fullwidth">
-                                    Upload Collection
+                                    {{ _('Upload Collection') }}
                                 </button>
                             </div>
                         </form>

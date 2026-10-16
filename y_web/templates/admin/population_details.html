@@ -11,7 +11,7 @@
             <div class="columns">
                 <div class="column is-12">
                     <div class="dashboard-box">
-                        <a href="/admin/populations">Populations</a> > Details: {{ population.name }}
+                        <a href="/admin/populations">{{ _('Populations') }}</a> &gt; {{ _('Details:') }} {{ population.name }}
                     </div>
                 </div>
             </div>
@@ -22,25 +22,25 @@
 
                     <!--Dashboard box-->
                     <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Population Overview</h3>
+                        <h3 class="title is-5 is-thin">{{ _('Population Overview') }}</h3>
  <p class="ys-text-small">
-                            Core information about this synthetic population, including configuration and agent demographics.
+                            {{ _('Core information about this synthetic population, including configuration and agent demographics.') }}
                         </p>
 
                         <div class="box-content">
                             <div class="box-lines">
-                                <b>Basic Information</b>
- <p class="ys-label-hint">Population name, description, and configuration settings.</p>
+                                <b>{{ _('Basic Information') }}</b>
+ <p class="ys-label-hint">{{ _('Population name, description, and configuration settings.') }}</p>
                                 <div class="box-line">
-                                    <span class="left">Name</span>
+                                    <span class="left">{{ _('Name') }}</span>
                                     <span class="right">{{ population.name }}</span>
                                 </div>
                                 <div class="box-line">
-                                    <span class="left">Description</span>
+                                    <span class="left">{{ _('Description') }}</span>
                                     <span class="right">{{ population.descr }}</span>
                                 </div>
                                 <div class="box-line">
-                                    <span class="left">Initial Size<small>(initial agents)</small></span>
+                                    <span class="left">{{ _('Initial Size') }}<small>{{ _('(initial agents)') }}</small></span>
                                     <span class="right">{{ population.size }}</span>
                                 </div>
 
@@ -48,11 +48,11 @@
                                 <div class="buttons" style="display: flex; justify-content: right; gap: 10px; margin-top: 20px;">
  <a class="button is-info ys-flex-gap-5" href="/admin/download_population/{{ population.id }}">
                                         <i class="mdi mdi-download"></i>
-                                        <span>Download</span>
+                                        <span>{{ _('Download') }}</span>
                                     </a>
  <a class="button is-danger ys-flex-gap-5" href="/admin/delete_population/{{ population.id }}">
                                         <i class="mdi mdi-delete"></i>
-                                        <span>Delete</span>
+                                        <span>{{ _('Delete') }}</span>
                                     </a>
                             </div>
 
@@ -63,15 +63,15 @@
                 <div class="column is-6">
 
                     <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Experiment Deployments</h3>
+                        <h3 class="title is-5 is-thin">{{ _('Experiment Deployments') }}</h3>
  <p class="ys-text-small">
-                            Experiments where this population is currently deployed.
+                            {{ _('Experiments where this population is currently deployed.') }}
                         </p>
                         <div class="box-content">
                             <div class="box-lines">
                                 {% if population_experiments %}
                                 <div class="box-line">
-                                    <span class="left">Active Experiments</span>
+                                    <span class="left">{{ _('Active Experiments') }}</span>
                                     <span class="right">
                                         <ul>
                                         {% for exp in population_experiments %}
@@ -82,12 +82,12 @@
                                 </div>
                                 {% else %}
                                 <div class="box-line">
-                                    <span class="left">No experiments yet</span>
+                                    <span class="left">{{ _('No experiments yet') }}</span>
                                 </div>
                                 {% endif %}
                                 <div class="box-line">
                                     <span class="left">
-                                        <small>ℹ️ Populations are automatically assigned to experiments when creating a client.</small>
+                                        <small>{{ _('ℹ️ Populations are automatically assigned to experiments when creating a client.') }}</small>
                                     </span>
                                 </div>
                             </div>
@@ -109,9 +109,9 @@
 
                 <div class="column is-12">
                     <hr style="margin: 2em 0;">
- <h3 class="title is-5 is-thin text-center">Population Statistics & Analytics</h3>
+ <h3 class="title is-5 is-thin text-center">{{ _('Population Statistics & Analytics') }}</h3>
                 <p style="text-align: center; font-size: 0.9em; color: #666; margin-top: 0.5em;">
-                    Visual analysis of agent distribution across demographics, attributes, and behavior patterns.
+                    {{ _('Visual analysis of agent distribution across demographics, attributes, and behavior patterns.') }}
                 </p>
                 </div>
             </div>

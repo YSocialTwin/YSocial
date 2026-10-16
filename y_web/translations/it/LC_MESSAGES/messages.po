@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-16 15:10+0000\n"
+"POT-Creation-Date: 2026-10-16 15:14+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -23,6 +23,15 @@ msgstr "% di ricambio giornaliero"
 
 msgid "% New Agents (daily)"
 msgstr "% di nuovi agenti (giornaliero)"
+
+#, python-format
+msgid ""
+"%(articles)s topics are annotated by the LLM: such tagging allows to dynamically introduce novel "
+"topics among the interests of the agents that interact with the news source."
+msgstr ""
+"I temi degli %(articles)s sono annotati dall'LLM: questa etichettatura permette di introdurre "
+"dinamicamente nuovi temi tra gli interessi degli agenti che interagiscono con la fonte di "
+"notizie."
 
 #, python-format
 msgid "%(n)s activity profiles"
@@ -41,17 +50,47 @@ msgid "%(n)s visible resources"
 msgstr "%(n)s risorse visibili"
 
 #, python-format
+msgid "%(name)s Parameters"
+msgstr "Parametri di %(name)s"
+
+#, python-format
 msgid "%(num)d file"
 msgid_plural "%(num)d files"
 msgstr[0] "%(num)d file"
 msgstr[1] "%(num)d file"
 
 #, python-format
+msgid ""
+"%(pages)s are a particular type of synthetic agent that can be used to display information to "
+"users. Each page has a name, description, type, and keywords."
+msgstr ""
+"Le %(pages)s sono un particolare tipo di agente sintetico usato per mostrare informazioni agli "
+"utenti. Ogni pagina ha un nome, una descrizione, un tipo e delle parole chiave."
+
+#, python-format
 msgid "(%(count)s total)"
 msgstr "(%(count)s in totale)"
 
+msgid "(Only for Photo Sharing populations)"
+msgstr "(Solo per le popolazioni di condivisione di foto)"
+
+msgid "(Optional - Click to expand)"
+msgstr "(Facoltativo: clicca per espandere)"
+
 msgid "(Optional)"
 msgstr "(Facoltativo)"
+
+msgid "(initial agents)"
+msgstr "(agenti iniziali)"
+
+msgid "(optional)"
+msgstr "(facoltativo)"
+
+msgid "(public url)"
+msgstr "(URL pubblico)"
+
+msgid "(required)"
+msgstr "(obbligatorio)"
 
 msgid "-- Select a client --"
 msgstr "-- Seleziona un client --"
@@ -75,6 +114,9 @@ msgstr ""
 "Un client gestisce una popolazione di agenti che interagiscono nella simulazione. Ogni client "
 "funziona in modo indipendente, con la propria configurazione e le proprie impostazioni LLM."
 
+msgid "A population is a group of agents/pages that are used in a simulation."
+msgstr "Una popolazione è un gruppo di agenti/pagine usati in una simulazione."
+
 msgid "API Key"
 msgstr "Chiave API"
 
@@ -86,6 +128,9 @@ msgstr "Accesso negato"
 
 msgid "Account"
 msgstr "Account"
+
+msgid "Actions Per User Once Active"
+msgstr "Azioni per utente una volta attivo"
 
 msgid "Actions include posting, commenting, reading, searching, and platform-specific features."
 msgstr ""
@@ -102,10 +147,28 @@ msgstr "Pubblico attivo (~70% di attività di convalida)"
 msgid "Active Audience - ~70% of activity is validating others"
 msgstr "Pubblico attivo: ~70% dell'attività consiste nel convalidare gli altri"
 
+msgid "Active Experiments"
+msgstr "Esperimenti attivi"
+
+msgid "Active Populations"
+msgstr "Popolazioni attive"
+
 msgid "Active experiments grouped by their project group. Click on a group header to expand/collapse."
 msgstr ""
 "Esperimenti attivi raggruppati per gruppo di progetto. Clicca sull'intestazione di un gruppo per "
 "espanderlo o comprimerlo."
+
+msgid "Activity & Engagement Configuration"
+msgstr "Configurazione di attività e coinvolgimento"
+
+msgid "Activity Level"
+msgstr "Livello di attività"
+
+msgid "Activity Pattern"
+msgstr "Schema di attività"
+
+msgid "Activity Profile"
+msgstr "Profilo di attività"
 
 msgid "Activity Rates Configuration"
 msgstr "Configurazione dei tassi di attività"
@@ -138,8 +201,37 @@ msgstr "Aggiungi"
 msgid "Add Client"
 msgstr "Aggiungi un client"
 
+msgid "Add Custom Field"
+msgstr "Aggiungi un campo personalizzato"
+
+msgid "Add Interest"
+msgstr "Aggiungi un interesse"
+
+msgid "Add Tag"
+msgstr "Aggiungi un tag"
+
+msgid "Add Topic to Page"
+msgstr "Aggiungi un argomento alla pagina"
+
+msgid "Add a new filter tag"
+msgstr "Aggiungi un nuovo tag di filtro"
+
+msgid ""
+"Add explicit interests for this agent. If an opinion group is selected, the related opinion value"
+" is stored too. Stubborn interests are exported with immutable opinion hints."
+msgstr ""
+"Aggiungi interessi espliciti per questo agente. Se si seleziona un gruppo di opinione, viene "
+"salvato anche il relativo valore. Gli interessi ostinati vengono esportati con indicazioni di "
+"opinione immutabili."
+
+msgid "Add to Population"
+msgstr "Aggiungi alla popolazione"
+
 msgid "Additional Configuration"
 msgstr "Configurazione aggiuntiva"
+
+msgid "Additional fields persisted outside the core agent schema."
+msgstr "Campi aggiuntivi salvati al di fuori dello schema di base dell'agente."
 
 msgid "Additional settings exposed by the selected plugin agent type."
 msgstr "Impostazioni aggiuntive esposte dal tipo di agente del plugin selezionato."
@@ -153,11 +245,23 @@ msgstr "Modifica prompt, feed, limiti, embedding e comportamento degli avatar de
 msgid "Admin"
 msgstr "Amministrazione"
 
+msgid "Advanced Role-Playing"
+msgstr "Gioco di ruolo avanzato"
+
+msgid "Advanced Role-Playing Profile"
+msgstr "Profilo di gioco di ruolo avanzato"
+
 msgid "Advanced Settings"
 msgstr "Impostazioni avanzate"
 
 msgid "Age"
 msgstr "Età"
+
+msgid "Age Classes"
+msgstr "Fasce di età"
+
+msgid "Age Classes %"
+msgstr "Fasce di età %"
 
 msgid "Agent Archetypes"
 msgstr "Archetipi degli agenti"
@@ -171,8 +275,14 @@ msgstr "Archetipi degli agenti e transizioni (facoltativo)"
 msgid "Agent Memory (Run-Scoped)"
 msgstr "Memoria degli agenti (limitata all'esecuzione)"
 
+msgid "Agent Name"
+msgstr "Nome dell'agente"
+
 msgid "Agent Populations"
 msgstr "Popolazioni di agenti"
+
+msgid "Agent Profile"
+msgstr "Profilo dell'agente"
 
 msgid "Agent Resources"
 msgstr "Risorse degli agenti"
@@ -198,6 +308,9 @@ msgstr "Parametri di interazione e coinvolgimento degli agenti."
 msgid "Agent-Specific Configuration"
 msgstr "Configurazione specifica degli agenti"
 
+msgid "Agents"
+msgstr "Agenti"
+
 msgid "Agents' Actions Relevance"
 msgstr "Rilevanza delle azioni degli agenti"
 
@@ -212,6 +325,9 @@ msgstr "Stato aggregato ed effetti degli attaccanti"
 
 msgid "Aggregation:"
 msgstr "Aggregazione:"
+
+msgid "Agreeableness"
+msgstr "Gradevolezza"
 
 msgid ""
 "All actions are scored from 0 to 10, where 0 means that the action is never performed. Scores "
@@ -240,6 +356,9 @@ msgstr ""
 msgid "Already registered?"
 msgstr "Già registrato?"
 
+msgid "Alternative profile"
+msgstr "Profilo alternativo"
+
 msgid "Alternative values"
 msgstr "Valori alternativi"
 
@@ -263,11 +382,29 @@ msgstr "Configurazione degli archetipi"
 msgid "Archetype Distribution (%)"
 msgstr "Distribuzione degli archetipi (%)"
 
+msgid "Articles'"
+msgstr "articoli"
+
+msgid "Assign this agent to additional populations for use in experiments."
+msgstr "Assegna questo agente ad altre popolazioni da usare negli esperimenti."
+
+msgid "Assigned Agents"
+msgstr "Agenti assegnati"
+
+msgid "Assigned Profiles & Percentages"
+msgstr "Profili e percentuali assegnati"
+
 msgid "Assigned Resources"
 msgstr "Risorse assegnate"
 
+msgid "Associate content topics with this page for better categorization."
+msgstr "Associa argomenti di contenuto a questa pagina per una migliore categorizzazione."
+
 msgid "Async Embedding"
 msgstr "Embedding asincrono"
+
+msgid "Attention Budget"
+msgstr "Budget di attenzione"
 
 msgid "Auto-refresh"
 msgstr "Aggiornamento automatico"
@@ -278,11 +415,40 @@ msgstr "Automatica (lingua del browser)"
 msgid "Available"
 msgstr "Disponibile"
 
+#, python-format
+msgid "Available %(name)s Populations"
+msgstr "Popolazioni di %(name)s disponibili"
+
+#, python-format
+msgid "Available %(name)ss"
+msgstr "%(name)s disponibili"
+
+msgid "Available Categories"
+msgstr "Categorie disponibili"
+
+msgid "Available Header Images"
+msgstr "Immagini di copertina disponibili"
+
+msgid "Available Hello World Populations"
+msgstr "Popolazioni Hello World disponibili"
+
 msgid "Available Models"
 msgstr "Modelli disponibili"
 
+msgid "Available Pages"
+msgstr "Pagine disponibili"
+
 msgid "Available Populations"
 msgstr "Popolazioni disponibili"
+
+msgid "Available Populations (Drag to select)"
+msgstr "Popolazioni disponibili (trascina per selezionare)"
+
+msgid "Available Profile Pictures"
+msgstr "Immagini del profilo disponibili"
+
+msgid "Available Profiles (Drag to assign)"
+msgstr "Profili disponibili (trascina per assegnare)"
 
 msgid "Average degree"
 msgstr "Grado medio"
@@ -317,6 +483,9 @@ msgstr "Informazioni di base"
 msgid "Basic Models"
 msgstr "Modelli di base"
 
+msgid "Basic demographic attributes and language preferences."
+msgstr "Attributi demografici di base e preferenze linguistiche."
+
 msgid ""
 "Before entering your feed, personalise your profile and share your interest level and opinion for"
 " each active discussion topic."
@@ -326,6 +495,15 @@ msgstr ""
 
 msgid "Behavioral Settings"
 msgstr "Impostazioni comportamentali"
+
+msgid "Behavioral patterns and activity characteristics."
+msgstr "Schemi comportamentali e caratteristiche di attività."
+
+msgid "Big Five Personality Profile"
+msgstr "Profilo di personalità Big Five"
+
+msgid "Big Five Personality profile"
+msgstr "Profilo di personalità Big Five"
 
 msgid "Bluesky Data"
 msgstr "dati di Bluesky"
@@ -363,6 +541,9 @@ msgid "Character cap on thread text sent to the LLM (24B/Ollama-safe default)."
 msgstr ""
 "Limite di caratteri per il testo della discussione inviato all'LLM (valore predefinito sicuro per"
 " 24B/Ollama)."
+
+msgid "Choose JSON file..."
+msgstr "Scegli il file JSON..."
 
 msgid "Choose an existing group or type a new one"
 msgstr "Scegli un gruppo esistente o scrivine uno nuovo"
@@ -409,11 +590,31 @@ msgstr ""
 "Clicca su «Convalida il modello» per verificare che minicpm-v:latest sia disponibile. Questo "
 "attiva le azioni sulle immagini."
 
+msgid "Click tags to toggle them. Selected tags are used as the available favorite filter pool."
+msgstr ""
+"Clicca sui tag per attivarli o disattivarli. I tag selezionati formano il gruppo di filtri "
+"preferiti disponibili."
+
+msgid "Click to activate/deactivate categories. Active categories are highlighted in green."
+msgstr "Clicca per attivare o disattivare le categorie. Le categorie attive sono evidenziate in verde."
+
 msgid "Click to expand"
 msgstr "Clicca per espandere"
 
 msgid "Click to expand/collapse"
 msgstr "Clicca per espandere o comprimere"
+
+msgid "Click to select age classes..."
+msgstr "Clicca per selezionare le fasce di età..."
+
+msgid "Click to select education levels..."
+msgstr "Clicca per selezionare i livelli di istruzione..."
+
+msgid "Click to select political leanings..."
+msgstr "Clicca per selezionare gli orientamenti politici..."
+
+msgid "Click to select toxicity levels..."
+msgstr "Clicca per selezionare i livelli di tossicità..."
 
 msgid "Client Compute Time"
 msgstr "Tempo di calcolo del client"
@@ -464,6 +665,9 @@ msgstr "Finestra di avvio a freddo"
 msgid "Combine all enabled features"
 msgstr "Combina tutte le funzioni attive"
 
+msgid "Comma-separated values"
+msgstr "Valori separati da virgole"
+
 msgid "Comment a Post"
 msgstr "Commenta un post"
 
@@ -481,6 +685,13 @@ msgstr "Grafo completo"
 
 msgid "Completed"
 msgstr "Completati"
+
+msgid ""
+"Comprehensive profile of this synthetic agent, including demographics, personality, and "
+"behavioral characteristics."
+msgstr ""
+"Profilo completo di questo agente sintetico, con dati demografici, personalità e caratteristiche "
+"comportamentali."
 
 msgid "Configurable Features"
 msgstr "Funzioni configurabili"
@@ -518,8 +729,24 @@ msgstr ""
 "Configura una rete sociale iniziale tra gli agenti. Puoi generare una rete sintetica oppure "
 "caricare un file di rete personalizzato."
 
+msgid ""
+"Configure agent activity patterns and engagement behavior. Define when agents are active during "
+"the day by assigning activity profiles, and specify how many actions users perform once active "
+"using statistical distributions."
+msgstr ""
+"Configura gli schemi di attività e il comportamento di coinvolgimento degli agenti. Definisci "
+"quando gli agenti sono attivi durante il giorno assegnando profili di attività e indica quante "
+"azioni compiono una volta attivi, tramite distribuzioni statistiche."
+
 msgid "Configure behavioral archetypes and transition probabilities for agents."
 msgstr "Configura gli archetipi comportamentali e le probabilità di transizione degli agenti."
+
+msgid ""
+"Configure demographic attributes including age range, nationality, and language to define the "
+"population's basic characteristics."
+msgstr ""
+"Configura gli attributi demografici, tra cui fascia di età, nazionalità e lingua, per definire le"
+" caratteristiche di base della popolazione."
 
 msgid "Configure duration, agent behavior, and network dynamics."
 msgstr "Configura la durata, il comportamento degli agenti e le dinamiche della rete."
@@ -561,6 +788,14 @@ msgid ""
 msgstr ""
 "Configura il recupero e il riepilogo facoltativi della memoria per i client standard. La memoria "
 "è disattivata per impostazione predefinita."
+
+msgid ""
+"Configure photo-sharing specific fields. Percentages are applied per generated agent and the "
+"favorite filters define the pool used for random agent tag assignment."
+msgstr ""
+"Configura i campi specifici della condivisione di foto. Le percentuali sono applicate a ogni "
+"agente generato e i filtri preferiti definiscono il gruppo usato per l'assegnazione casuale dei "
+"tag agli agenti."
 
 msgid "Configure the LLM backend and model for agent content generation."
 msgstr "Configura il backend LLM e il modello per la generazione dei contenuti degli agenti."
@@ -610,6 +845,15 @@ msgstr "Feed RSS configurati"
 msgid "Configured image feeds"
 msgstr "Feed di immagini configurati"
 
+msgid "Conscientiousness"
+msgstr "Coscienziosità"
+
+msgid "Consistent/Cautious"
+msgstr "Coerente/Cauto"
+
+msgid "Content & Deployment"
+msgstr "Contenuti e distribuzione"
+
 msgid "Content Creator (~75% posts/comments)"
 msgstr "Creatore di contenuti (~75% di post/commenti)"
 
@@ -640,11 +884,23 @@ msgstr ""
 "Pannello di controllo del server di simulazione, dell'interfaccia web e dell'ambiente di analisi "
 "dei dati."
 
+msgid "Core information about this synthetic population, including configuration and agent demographics."
+msgstr ""
+"Informazioni di base su questa popolazione sintetica, con configurazione e dati demografici degli"
+" agenti."
+
 msgid "Create"
 msgstr "Crea"
 
+#, python-format
+msgid "Create %(name)s"
+msgstr "Crea %(name)s"
+
 msgid "Create AdHoc Agent Client"
 msgstr "Crea un client di agenti ad hoc"
+
+msgid "Create Empty Population"
+msgstr "Crea una popolazione vuota"
 
 msgid "Create New AdHoc Agent Client"
 msgstr "Crea un nuovo client di agenti ad hoc"
@@ -661,15 +917,47 @@ msgstr "Crea un nuovo client HPC"
 msgid "Create New Photo Sharing Client"
 msgstr "Crea un nuovo client per condivisione di foto"
 
+msgid "Create Page"
+msgstr "Crea una pagina"
+
+msgid "Create Synthetic Population"
+msgstr "Crea una popolazione sintetica"
+
+msgid ""
+"Create a new population by merging multiple existing populations. Agents and pages will be "
+"combined without duplicates."
+msgstr ""
+"Crea una nuova popolazione unendo più popolazioni esistenti. Agenti e pagine verranno combinati "
+"senza duplicati."
+
 msgid "Create and configure one or more clients for the experiment. Each client manages a population."
 msgstr "Crea e configura uno o più client per l'esperimento. Ogni client gestisce una popolazione."
+
+#, python-format
+msgid "Create new %(name)s population..."
+msgstr "Crea una nuova popolazione di %(name)s..."
+
+msgid "Create new Hello World population..."
+msgstr "Crea una nuova popolazione Hello World..."
 
 #, python-format
 msgid "Create or upload a population with username type %(type)s in the populations page."
 msgstr "Crea o carica una popolazione con tipo di nome utente %(type)s nella pagina delle popolazioni."
 
+msgid "Create populations from scratch. Once created, you can add agents to them."
+msgstr "Crea popolazioni da zero. Una volta create, potrai aggiungervi degli agenti."
+
 msgid "Create your account"
 msgstr "Crea il tuo account"
+
+msgid "Created using predefined parameters. Agents are automatically generated."
+msgstr "Creata con parametri predefiniti. Gli agenti vengono generati automaticamente."
+
+msgid "Creator Tier %"
+msgstr "Livello creatore %"
+
+msgid "Critical/Judgmental"
+msgstr "Critico/Giudicante"
 
 msgid "Current"
 msgstr "Attuale"
@@ -689,14 +977,23 @@ msgstr "Valore attuale"
 msgid "Currently Running Experiments"
 msgstr "Esperimenti in esecuzione"
 
+msgid "Custom Fields"
+msgstr "Campi personalizzati"
+
 msgid "Custom LLM URL (optional)"
 msgstr "URL LLM personalizzato (facoltativo)"
 
 msgid "Custom Network:"
 msgstr "Rete personalizzata:"
 
+msgid "Custom Population Overview"
+msgstr "Panoramica della popolazione personalizzata"
+
 msgid "Custom agents"
 msgstr "Agenti personalizzati"
+
+msgid "Custom behavioral instructions for enhanced agent simulation."
+msgstr "Istruzioni comportamentali personalizzate per una simulazione degli agenti più accurata."
 
 msgid "Customize Hourly Rates"
 msgstr "Personalizza i tassi orari"
@@ -706,6 +1003,9 @@ msgstr "Personalizza gli schemi di attività degli agenti per ora."
 
 msgid "Daily"
 msgstr "Giornaliero"
+
+msgid "Daily Budget"
+msgstr "Budget giornaliero"
 
 msgid "Daily agent creation and removal rates"
 msgstr "Tassi giornalieri di creazione e rimozione degli agenti"
@@ -740,6 +1040,12 @@ msgstr ""
 msgid "Default values from %(link)s"
 msgstr "Valori predefiniti dai %(link)s"
 
+#, python-format
+msgid "Define additional key-value data such as %(example)s. These fields are exported as %(field)s."
+msgstr ""
+"Definisci dati chiave-valore aggiuntivi, come %(example)s. Questi campi vengono esportati come "
+"%(field)s."
+
 msgid "Define initial connections between agents:"
 msgstr "Definisci le connessioni iniziali tra gli agenti:"
 
@@ -749,6 +1055,13 @@ msgstr "Definisci una o più %(link)s."
 
 msgid "Define the percentage of agents in each behavioral archetype (must sum to 100%)."
 msgstr "Definisci la percentuale di agenti in ogni archetipo comportamentale (la somma deve essere 100%)."
+
+msgid ""
+"Define the population name, description, and size. These settings identify the population and "
+"determine the number of synthetic agents to generate."
+msgstr ""
+"Definisci nome, descrizione e dimensione della popolazione. Queste impostazioni identificano la "
+"popolazione e stabiliscono il numero di agenti sintetici da generare."
 
 msgid "Degree exponent (tau1)"
 msgstr "Esponente del grado (tau1)"
@@ -761,6 +1074,20 @@ msgstr "Elimina il client"
 
 msgid "Delete Experiment"
 msgstr "Elimina l'esperimento"
+
+msgid "Delete Orphaned Agents"
+msgstr "Elimina gli agenti orfani"
+
+msgid "Demographic Information"
+msgstr "Informazioni demografiche"
+
+msgid "Demographics"
+msgstr "Dati demografici"
+
+msgid "Deploy this page to agent populations so they can interact with its content."
+msgstr ""
+"Distribuisci questa pagina alle popolazioni di agenti, così che possano interagire con i suoi "
+"contenuti."
 
 msgid "Describe the problem (optional):"
 msgstr "Descrivi il problema (facoltativo):"
@@ -781,6 +1108,9 @@ msgstr "Deseleziona tutto"
 msgid "Details"
 msgstr "Dettagli"
 
+msgid "Details:"
+msgstr "Dettagli:"
+
 msgid "Diffusion, emergence, reach"
 msgstr "Diffusione, emergenza, copertura"
 
@@ -789,6 +1119,9 @@ msgstr "Limite di eventi del riepilogo"
 
 msgid "Digest Update Cadence (rounds)"
 msgstr "Cadenza di aggiornamento del riepilogo (turni)"
+
+msgid "Distribution:"
+msgstr "Distribuzione:"
 
 msgid "Download"
 msgstr "Scarica"
@@ -802,8 +1135,21 @@ msgstr "Scarica l'esperimento"
 msgid "Download or remove this experiment."
 msgstr "Scarica o rimuovi questo esperimento."
 
+msgid "Drag populations here"
+msgstr "Trascina qui le popolazioni"
+
+msgid "Drag profiles here to assign them"
+msgstr "Trascina qui i profili per assegnarli"
+
 msgid "Duration & Growth"
 msgstr "Durata e crescita"
+
+msgid ""
+"Each News Page is associated with an RSS feed - the feed is used to populate, in real time, the "
+"page timeline with real-world articles."
+msgstr ""
+"Ogni pagina di notizie è associata a un feed RSS: il feed serve a popolare in tempo reale la "
+"timeline della pagina con articoli del mondo reale."
 
 msgid ""
 "Each client can be deployed by imposing a starting social network among the agents of its "
@@ -830,8 +1176,17 @@ msgstr "Modifica i prompt LLM"
 msgid "Edit server settings"
 msgstr "Modifica le impostazioni del server"
 
+msgid "Education %"
+msgstr "Istruzione %"
+
 msgid "Education Level"
 msgstr "Livello di istruzione"
+
+msgid "Education Levels"
+msgstr "Livelli di istruzione"
+
+msgid "Efficient/Organized"
+msgstr "Efficiente/Organizzato"
 
 msgid "Email"
 msgstr "Email"
@@ -847,6 +1202,9 @@ msgstr "Statistiche sulle emozioni"
 
 msgid "Emotion tags and dominant patterns"
 msgstr "Etichette emotive e schemi dominanti"
+
+msgid "Empty Populations"
+msgstr "Popolazioni vuote"
 
 #, python-format
 msgid "Enable %(memory)s in %(link)s before configuring client-level memory."
@@ -918,6 +1276,12 @@ msgstr ""
 "Inserisci valori personalizzati per ore specifiche (lascia vuoto per usare i valori predefiniti "
 "mostrati nei segnaposto)."
 
+msgid "Enter description"
+msgstr "Inserisci la descrizione"
+
+msgid "Enter name"
+msgstr "Inserisci il nome"
+
 msgid "Enter topic name"
 msgstr "Inserisci il nome dell'argomento"
 
@@ -947,6 +1311,12 @@ msgstr "Le popolazioni non assegnate esistenti sono incompatibili con questo tip
 msgid "Expanded"
 msgstr "Espanso"
 
+msgid "Expected Activity"
+msgstr "Attività prevista"
+
+msgid "Expected Social Behavior"
+msgstr "Comportamento sociale previsto"
+
 msgid "Experiment"
 msgstr "Esperimento"
 
@@ -958,6 +1328,9 @@ msgstr "Modalità dell'orologio dell'esperimento:"
 
 msgid "Experiment Configuration"
 msgstr "Configurazione dell'esperimento"
+
+msgid "Experiment Deployments"
+msgstr "Distribuzioni negli esperimenti"
 
 msgid "Experiment Matrix"
 msgstr "Matrice degli esperimenti"
@@ -983,6 +1356,12 @@ msgstr "Esperimenti"
 msgid "Experiments grouped by project. Click to expand/collapse."
 msgstr "Esperimenti raggruppati per progetto. Clicca per espandere o comprimere."
 
+msgid "Experiments where this custom population is currently deployed."
+msgstr "Esperimenti in cui questa popolazione personalizzata è attualmente distribuita."
+
+msgid "Experiments where this population is currently deployed."
+msgstr "Esperimenti in cui questa popolazione è attualmente distribuita."
+
 msgid "Experiments with infinite-duration clients cannot be used in scheduled experiment groups."
 msgstr ""
 "Gli esperimenti con client a durata infinita non possono essere usati nei gruppi di esperimenti "
@@ -994,6 +1373,9 @@ msgstr "Esploratore"
 msgid "Explorer %"
 msgstr "Esploratore %"
 
+msgid "Exponent parameter"
+msgstr "Parametro esponente"
+
 msgid "Exponential"
 msgstr "Esponenziale"
 
@@ -1002,6 +1384,12 @@ msgstr "Estendi la simulazione"
 
 msgid "Extensions"
 msgstr "Estensioni"
+
+msgid "Extravagant/Careless"
+msgstr "Stravagante/Sbadato"
+
+msgid "Extraversion"
+msgstr "Estroversione"
 
 msgid "Extreme"
 msgstr "Estremo"
@@ -1012,14 +1400,23 @@ msgstr "Interesse estremo"
 msgid "False"
 msgstr "Falso"
 
+msgid "Favorite Filters"
+msgstr "Filtri preferiti"
+
 msgid "Feed Health"
 msgstr "Stato dei feed"
 
 msgid "Feed Retrieval Limits"
 msgstr "Limiti di recupero dei feed"
 
+msgid "Feed URL"
+msgstr "URL del feed"
+
 msgid "Female"
 msgstr "Donna"
+
+msgid "Female:"
+msgstr "Donne:"
 
 msgid "Fetch Models"
 msgstr "Recupera i modelli"
@@ -1054,6 +1451,9 @@ msgstr "Segui questi passaggi per configurare ed eseguire una simulazione:"
 msgid "Follow:"
 msgstr "Follow:"
 
+msgid "Followers:"
+msgstr "Follower:"
+
 msgid "For how long a content can be proposed by recommender systems"
 msgstr "Per quanto tempo un contenuto può essere proposto dai sistemi di raccomandazione"
 
@@ -1065,6 +1465,9 @@ msgstr "Forum"
 
 msgid "Forum uses link-sharing to publish content imported from RSS and feed sources."
 msgstr "Il forum usa la condivisione di link per pubblicare i contenuti importati da RSS e da altre fonti."
+
+msgid "Friendly/Compassionate"
+msgstr "Amichevole/Compassionevole"
 
 msgid "Friendship RecSys"
 msgstr "Sistema di raccomandazione delle amicizie"
@@ -1084,6 +1487,9 @@ msgstr "GPU per attore"
 msgid "Gender"
 msgstr "Genere"
 
+msgid "Gender Distribution"
+msgstr "Distribuzione di genere"
+
 msgid "Generate Experiments"
 msgstr "Genera esperimenti"
 
@@ -1096,6 +1502,12 @@ msgstr "Genera con i modelli Random o Scale-Free"
 msgid "Generated Configs"
 msgstr "Configurazioni generate"
 
+msgid "Generated Slug"
+msgstr "Slug generato"
+
+msgid "Geometric"
+msgstr "Geometrica"
+
 msgid "Global Actions Likelihood"
 msgstr "Probabilità globale delle azioni"
 
@@ -1107,6 +1519,9 @@ msgstr "Vai alla home page"
 
 msgid "Got it"
 msgstr "Ho capito"
+
+msgid "Guide"
+msgstr "Guida"
 
 msgid "HPC"
 msgstr "HPC"
@@ -1122,6 +1537,12 @@ msgstr "Turni di dimezzamento"
 
 msgid "Hashtag Evolution"
 msgstr "Evoluzione degli hashtag"
+
+msgid "Header Image URL"
+msgstr "URL dell'immagine di copertina"
+
+msgid "Hello World Settings"
+msgstr "Impostazioni Hello World"
 
 msgid "Help us improve YSocial: submit the experiment log!"
 msgstr "Aiutaci a migliorare YSocial: invia il log dell'esperimento!"
@@ -1147,11 +1568,18 @@ msgstr "Interesse alto"
 msgid "High School"
 msgstr "Diploma superiore"
 
+msgid "Hold Cmd/Ctrl to select multiple values."
+msgstr "Tieni premuto Cmd/Ctrl per selezionare più valori."
+
 msgid "Home"
 msgstr "Home"
 
 msgid "Host:"
 msgstr "Host:"
+
+#, python-format
+msgid "Hour %(hour)s"
+msgstr "Ora %(hour)s"
 
 msgid "Hourly"
 msgstr "Orario"
@@ -1204,6 +1632,14 @@ msgstr "Backend di inferenza"
 msgid "Infinite"
 msgstr "Infinito"
 
+msgid "Influencer:"
+msgstr "Influencer:"
+
+msgid "Information about this content source page, including topics and populations where it's deployed."
+msgstr ""
+"Informazioni su questa pagina di fonte di contenuti, con argomenti e popolazioni in cui è "
+"distribuita."
+
 msgid "Information about this simulation client, including assigned population and content sources."
 msgstr ""
 "Informazioni su questo client di simulazione, compresi popolazione assegnata e fonti dei "
@@ -1211,6 +1647,9 @@ msgstr ""
 
 msgid "Initial Number of Agents"
 msgstr "Numero iniziale di agenti"
+
+msgid "Initial Size"
+msgstr "Dimensione iniziale"
 
 msgid ""
 "Inspect nested config values, unlock the ones you want to vary, and generate the full combination"
@@ -1241,6 +1680,14 @@ msgstr "Percentuale di interesse"
 msgid "Interested"
 msgstr "Interessato"
 
+msgid "Interests & Opinions"
+msgstr "Interessi e opinioni"
+
+msgid "Interests, opinion hints, and custom key-value data stored in the dashboard database."
+msgstr ""
+"Interessi, indicazioni di opinione e dati chiave-valore personalizzati salvati nel database della"
+" dashboard."
+
 msgid "Internal Server Error"
 msgstr "Errore interno del server"
 
@@ -1252,6 +1699,15 @@ msgstr "Probabilità nel blocco"
 
 msgid "Invalid user ID."
 msgstr "ID utente non valido."
+
+msgid "Inventive/Curious"
+msgstr "Inventivo/Curioso"
+
+msgid "Is Private %"
+msgstr "Privato %"
+
+msgid "Is Verified %"
+msgstr "Verificato %"
 
 #, python-format
 msgid "Join %(name)s"
@@ -1316,14 +1772,26 @@ msgstr ""
 " forum basati su regole. Le dinamiche di opinione restano disponibili; la memoria è disponibile "
 "solo per gli esperimenti del forum con LLM."
 
+msgid "Lambda (λ):"
+msgstr "Lambda (λ):"
+
+msgid "Lambda parameter"
+msgstr "Parametro lambda"
+
 msgid "Language"
 msgstr "Lingua"
+
+msgid "Language Spoken"
+msgstr "Lingua parlata"
 
 msgid "Large Language Models"
 msgstr "Modelli linguistici di grandi dimensioni"
 
 msgid "Large Language Models (Image Transcription)"
 msgstr "Modelli linguistici di grandi dimensioni (trascrizione delle immagini)"
+
+msgid "Latest articles from this page's RSS feed."
+msgstr "Ultimi articoli del feed RSS di questa pagina."
 
 msgid "Launch clients and open the forum interface from the same control panel"
 msgstr "Avvia i client e apri l'interfaccia del forum dallo stesso pannello di controllo"
@@ -1349,11 +1817,20 @@ msgstr "Carica l'esperimento"
 msgid "Load Matrix"
 msgstr "Carica la matrice"
 
+msgid "Load Pages Collection"
+msgstr "Carica una raccolta di pagine"
+
+msgid "Load Population from file"
+msgstr "Carica una popolazione da file"
+
 msgid "Loaded articles"
 msgstr "Articoli caricati"
 
 msgid "Loaded image posts"
 msgstr "Post con immagini caricati"
+
+msgid "Loading populations..."
+msgstr "Caricamento delle popolazioni..."
 
 msgid "Local Diffusion Model"
 msgstr "Modello di diffusione locale"
@@ -1363,6 +1840,12 @@ msgstr "Esci"
 
 msgid "Login"
 msgstr "Accedi"
+
+msgid "Logo"
+msgstr "Logo"
+
+msgid "Logo Image"
+msgstr "Immagine del logo"
 
 msgid "Low"
 msgstr "Basso"
@@ -1375,6 +1858,9 @@ msgstr "Gestisci gli argomenti attivi della simulazione dalla scheda di panorami
 
 msgid "Male"
 msgstr "Uomo"
+
+msgid "Male:"
+msgstr "Uomini:"
 
 msgid ""
 "Manage agent-plugin runtimes that can extend this experiment with dedicated ad hoc agent "
@@ -1413,6 +1899,12 @@ msgstr "Numero massimo di elementi della discussione (post e commenti) da recupe
 msgid "Max tokens"
 msgstr "Token massimi"
 
+msgid "Max:"
+msgstr "Max:"
+
+msgid "Maximum actions"
+msgstr "Azioni massime"
+
 msgid "Maximum number of replies an agent can make per simulation round"
 msgstr "Numero massimo di risposte che un agente può dare per turno di simulazione"
 
@@ -1422,11 +1914,26 @@ msgstr "Durata media per percorso (secondi)"
 msgid "Mean Execution Time by Method (seconds)"
 msgstr "Tempo medio di esecuzione per metodo (secondi)"
 
+msgid "Media Page"
+msgstr "Pagina media"
+
+msgid "Medium"
+msgstr "Medio"
+
+msgid "Medium-High"
+msgstr "Medio-alto"
+
+msgid "Medium-Low"
+msgstr "Medio-basso"
+
 msgid "Memory"
 msgstr "Memoria"
 
 msgid "Memory Embeddings"
 msgstr "Embedding della memoria"
+
+msgid "Merge Populations"
+msgstr "Unisci le popolazioni"
 
 msgid "Message:"
 msgstr "Messaggio:"
@@ -1439,6 +1946,12 @@ msgstr "Microblogging"
 
 msgid "Min Probability Ratio"
 msgstr "Rapporto minimo di probabilità"
+
+msgid "Min:"
+msgstr "Min:"
+
+msgid "Minimum actions"
+msgstr "Azioni minime"
 
 msgid "Miscellanea"
 msgstr "Varie"
@@ -1457,6 +1970,12 @@ msgstr "Nome"
 
 msgid "Name:"
 msgstr "Nome:"
+
+msgid "Nationalities"
+msgstr "Nazionalità"
+
+msgid "Nationality"
+msgstr "Nazionalità"
 
 msgid "Nearest neighbors (k)"
 msgstr "Vicini più prossimi (k)"
@@ -1481,6 +2000,9 @@ msgstr "Crescita della rete: incentrata sull'espansione del grafo sociale"
 msgid "Network Model"
 msgstr "Modello di rete"
 
+msgid "Neuroticism"
+msgstr "Nevroticismo"
+
 msgid "New Agents/Churn:"
 msgstr "Nuovi agenti/ricambio:"
 
@@ -1499,11 +2021,20 @@ msgstr "Nuovo client HPC"
 msgid "New Photo Sharing Client"
 msgstr "Nuovo client per condivisione di foto"
 
+msgid "New Population Description"
+msgstr "Descrizione della nuova popolazione"
+
+msgid "New Population Name"
+msgstr "Nome della nuova popolazione"
+
 msgid "New Release Available!"
 msgstr "Nuova versione disponibile!"
 
 msgid "News Pages"
 msgstr "Pagine di notizie"
+
+msgid "News."
+msgstr "Notizie."
 
 msgid "Next"
 msgstr "Avanti"
@@ -1516,6 +2047,9 @@ msgstr "Nessun argomento di discussione attivo per questo esperimento."
 
 msgid "No active experiments available"
 msgstr "Nessun esperimento attivo disponibile"
+
+msgid "No activity profiles available. Create some in the Miscellanea page first."
+msgstr "Nessun profilo di attività disponibile. Creane prima alcuni nella pagina Varie."
 
 msgid "No ad hoc agents' clients registered yet"
 msgstr "Nessun client di agenti ad hoc registrato"
@@ -1535,6 +2069,9 @@ msgstr "Nessun valore configurabile trovato in questo file."
 msgid "No configuration files were found for this experiment."
 msgstr "Non sono stati trovati file di configurazione per questo esperimento."
 
+msgid "No experiments yet"
+msgstr "Ancora nessun esperimento"
+
 msgid "No notifications yet."
 msgstr "Ancora nessuna notifica."
 
@@ -1548,14 +2085,23 @@ msgstr "Non ci sono popolazioni disponibili per questo esperimento %(platform)s.
 msgid "No server configuration file was found for this experiment."
 msgstr "Non è stato trovato il file di configurazione del server per questo esperimento."
 
+msgid "No topics assigned"
+msgstr "Nessun argomento assegnato"
+
 msgid "Not"
 msgstr "Non"
 
 msgid "Not Interested"
 msgstr "Non interessato"
 
+msgid "Not assigned to any population"
+msgstr "Non assegnato a nessuna popolazione"
+
 msgid "Not configured. Semantic memory falls back to lexical retrieval."
 msgstr "Non configurato. La memoria semantica ripiega sul recupero lessicale."
+
+msgid "Not deployed to any population"
+msgstr "Non distribuita in nessuna popolazione"
 
 msgid "Not set"
 msgstr "Non impostato"
@@ -1653,6 +2199,9 @@ msgstr "Apri le impostazioni di prompt ed embedding dallo stesso pannello"
 msgid "Open the active experiment dashboards from a single compact panel."
 msgstr "Apri le dashboard degli esperimenti attivi da un unico pannello compatto."
 
+msgid "Openness to Experience"
+msgstr "Apertura mentale"
+
 msgid "Opinion"
 msgstr "Opinione"
 
@@ -1675,6 +2224,16 @@ msgstr "Gruppi di opinione e tendenze degli agenti"
 msgid "Opinion scale not yet configured."
 msgstr "Scala delle opinioni non ancora configurata."
 
+#, python-format
+msgid "Opinion: %(value)s"
+msgstr "Opinione: %(value)s"
+
+msgid "Other"
+msgstr "Altro"
+
+msgid "Outgoing/Energetic"
+msgstr "Socievole/Energico"
+
 msgid "Overall cap for injected memory context across tiers."
 msgstr "Limite complessivo del contesto di memoria inserito, su tutti i livelli."
 
@@ -1685,8 +2244,20 @@ msgstr "Proprietario"
 msgid "Owner: %(owner)s"
 msgstr "Proprietario: %(owner)s"
 
+msgid "Page Name"
+msgstr "Nome della pagina"
+
 msgid "Page Not Found"
 msgstr "Pagina non trovata"
+
+msgid "Page Overview"
+msgstr "Panoramica della pagina"
+
+msgid "Page identification and RSS feed configuration."
+msgstr "Identificazione della pagina e configurazione del feed RSS."
+
+msgid "Pages"
+msgstr "Pagine"
 
 msgid "Pair Limit"
 msgstr "Limite per coppia"
@@ -1711,6 +2282,9 @@ msgstr "Dottorato"
 
 msgid "Photo Sharing"
 msgstr "Condivisione di foto"
+
+msgid "Photo Sharing Configuration"
+msgstr "Configurazione della condivisione di foto"
 
 msgid "Pick a source group first, then choose one experiment from that group."
 msgstr "Scegli prima un gruppo di origine, poi un esperimento di quel gruppo."
@@ -1741,17 +2315,53 @@ msgstr ""
 "Descrivi cosa stavi facendo e cosa è andato storto. Ci aiuta a capire e risolvere il problema più"
 " in fretta."
 
+msgid "Plugin Extensions"
+msgstr "Estensioni dei plugin"
+
 msgid "Plugin Manager"
 msgstr "Gestione plugin"
+
+msgid "Plugin Source"
+msgstr "Origine del plugin"
 
 msgid "Plugin-backed resource"
 msgstr "Risorsa fornita da un plugin"
 
+msgid "Poisson"
+msgstr "Poisson"
+
 msgid "Polarity mix and compound trends"
 msgstr "Mix di polarità e tendenze composte"
 
+msgid "Political %"
+msgstr "Politica %"
+
+msgid "Political Leaning"
+msgstr "Orientamento politico"
+
+msgid "Political Leanings"
+msgstr "Orientamenti politici"
+
 msgid "Population"
 msgstr "Popolazione"
+
+msgid "Population Memberships"
+msgstr "Appartenenza a popolazioni"
+
+msgid "Population Name"
+msgstr "Nome della popolazione"
+
+msgid "Population Overview"
+msgstr "Panoramica della popolazione"
+
+msgid "Population Platform"
+msgstr "Piattaforma della popolazione"
+
+msgid "Population Size"
+msgstr "Dimensione della popolazione"
+
+msgid "Population Statistics & Analytics"
+msgstr "Statistiche e analisi della popolazione"
 
 msgid "Population and content pages used in this simulation."
 msgstr "Popolazione e pagine di contenuti usate in questa simulazione."
@@ -1759,11 +2369,17 @@ msgstr "Popolazione e pagine di contenuti usate in questa simulazione."
 msgid "Population is fixed for an existing ad hoc client."
 msgstr "La popolazione è fissa per un client ad hoc esistente."
 
+msgid "Population name, description, and configuration settings."
+msgstr "Nome, descrizione e impostazioni di configurazione della popolazione."
+
 msgid "Population:"
 msgstr "Popolazione:"
 
 msgid "Populations"
 msgstr "Popolazioni"
+
+msgid "Populations where this agent is currently deployed."
+msgstr "Popolazioni in cui questo agente è attualmente distribuito."
 
 msgid "Port:"
 msgstr "Porta:"
@@ -1781,6 +2397,12 @@ msgstr "Cluster a legge di potenza"
 msgid "Previous"
 msgstr "Indietro"
 
+msgid "Private:"
+msgstr "Privato:"
+
+msgid "Pro:"
+msgstr "Pro:"
+
 msgid "Probability Daily Follow"
 msgstr "Probabilità di follow giornaliero"
 
@@ -1795,6 +2417,9 @@ msgstr "Probabilità di follow secondario"
 
 msgid "Probability Secondary Follow:"
 msgstr "Probabilità di follow secondario:"
+
+msgid "Probability parameter"
+msgstr "Parametro di probabilità"
 
 msgid ""
 "Probability that an agent is asked if he would like to follow the author of content he interacted"
@@ -1813,17 +2438,35 @@ msgstr ""
 "Probabilità che, in un dato giorno di simulazione, a un agente attivo venga chiesto se vuole "
 "connettersi con un altro agente"
 
+msgid "Profession"
+msgstr "Professione"
+
+msgid "Profession Categories"
+msgstr "Categorie professionali"
+
+msgid "Professional and ideological identity traits."
+msgstr "Tratti identitari professionali e ideologici."
+
 msgid "Profile Header"
 msgstr "Immagine di copertina"
 
 msgid "Profile Picture"
 msgstr "Immagine del profilo"
 
+msgid "Profile Picture URL"
+msgstr "URL dell'immagine del profilo"
+
 msgid "Prompt Max Chars"
 msgstr "Caratteri massimi del prompt"
 
+msgid "Public:"
+msgstr "Pubblico:"
+
 msgid "Quick Reference Guide"
 msgstr "Guida rapida"
+
+msgid "RSS Feed"
+msgstr "Feed RSS"
 
 msgid "RSS-derived posts emitted"
 msgstr "Post derivati da RSS pubblicati"
@@ -1833,6 +2476,9 @@ msgstr "Rete casuale (Erdős-Rényi)"
 
 msgid "Rate interest and opinion for each topic."
 msgstr "Indica interesse e opinione per ogni argomento."
+
+msgid "Rate parameter"
+msgstr "Parametro di tasso"
 
 msgid "Ray Agents Batch Size"
 msgstr "Dimensione del lotto di agenti Ray"
@@ -1854,6 +2500,9 @@ msgstr "Anteprima in tempo reale della distribuzione oraria delle attività."
 
 msgid "Recency horizon for semantic search candidates."
 msgstr "Orizzonte di recenza per i candidati della ricerca semantica."
+
+msgid "Recent News"
+msgstr "Notizie recenti"
 
 msgid "Recommendation Limit"
 msgstr "Limite di raccomandazioni"
@@ -1951,6 +2600,9 @@ msgstr ""
 msgid "Reset to default values"
 msgstr "Ripristina i valori predefiniti"
 
+msgid "Resilient/Confident"
+msgstr "Resiliente/Sicuro di sé"
+
 msgid "Resume Client"
 msgstr "Riprendi il client"
 
@@ -2018,6 +2670,9 @@ msgstr "Salva la lingua"
 msgid "Scale Free (Barabási-Albert)"
 msgstr "Scale-free (Barabási-Albert)"
 
+msgid "Scores for the five major personality dimensions (0.0 - 1.0 scale)."
+msgstr "Punteggi delle cinque principali dimensioni della personalità (scala 0,0 - 1,0)."
+
 msgid "Scores, trends, high-toxicity content"
 msgstr "Punteggi, tendenze, contenuti molto tossici"
 
@@ -2072,8 +2727,22 @@ msgstr "Seleziona un tipo di agente per caricare le popolazioni compatibili."
 msgid "Select an experiment above to inspect its configuration matrix."
 msgstr "Seleziona un esperimento qui sopra per esaminarne la matrice di configurazione."
 
+msgid ""
+"Select diverse values for education, political leanings, and toxicity levels to create a varied "
+"and realistic population. Click to select multiple options."
+msgstr ""
+"Seleziona valori diversi per istruzione, orientamenti politici e livelli di tossicità per creare "
+"una popolazione varia e realistica. Clicca per selezionare più opzioni."
+
 msgid "Select one of the installed ad hoc agent families."
 msgstr "Seleziona una delle famiglie di agenti ad hoc installate."
+
+msgid ""
+"Select profession categories to be used during agent generation. By default, all categories are "
+"available."
+msgstr ""
+"Seleziona le categorie professionali da usare nella generazione degli agenti. Per impostazione "
+"predefinita sono disponibili tutte."
 
 msgid "Select source group..."
 msgstr "Seleziona il gruppo di origine..."
@@ -2088,11 +2757,34 @@ msgstr ""
 "Seleziona gli algoritmi di raccomandazione per i suggerimenti di contenuti e amicizie che "
 "influenzeranno le interazioni degli agenti."
 
+msgid "Select when this agent can publish its fixed HELLO WORLD post."
+msgstr "Seleziona quando questo agente può pubblicare il suo post fisso HELLO WORLD."
+
+msgid ""
+"Select when this agent will be active during the day. The default \"Always On\" profile keeps the"
+" agent active 24/7."
+msgstr ""
+"Seleziona quando questo agente sarà attivo durante il giorno. Il profilo predefinito «Sempre "
+"attivo» mantiene l'agente attivo 24 ore su 24."
+
+msgid ""
+"Select when this page will be active for posting content. The default \"Always On\" profile keeps"
+" the page active 24/7."
+msgstr ""
+"Seleziona quando questa pagina sarà attiva per pubblicare contenuti. Il profilo predefinito "
+"«Sempre attivo» mantiene la pagina attiva 24 ore su 24."
+
 msgid "Selected Experiment"
 msgstr "Esperimento selezionato"
 
+msgid "Selected Populations to Merge"
+msgstr "Popolazioni selezionate da unire"
+
 msgid "Semantic Retrieval"
 msgstr "Recupero semantico"
+
+msgid "Sensitive/Nervous"
+msgstr "Sensibile/Nervoso"
 
 msgid "Sentiment"
 msgstr "Sentimento"
@@ -2173,11 +2865,21 @@ msgstr "Registrati"
 msgid "Sign in to continue to your experiments."
 msgstr "Accedi per continuare con i tuoi esperimenti."
 
+msgid ""
+"Simplified details for a custom population type that does not expose the full synthetic-"
+"population analytics model."
+msgstr ""
+"Dettagli semplificati per un tipo di popolazione personalizzata che non espone il modello "
+"completo di analisi delle popolazioni sintetiche."
+
 msgid "Simulated (run as fast as possible)"
 msgstr "Simulato (il più veloce possibile)"
 
 msgid "Simulation Clients"
 msgstr "Client della simulazione"
+
+msgid "Simulation Configuration"
+msgstr "Configurazione della simulazione"
 
 msgid "Simulation Length (days)"
 msgstr "Durata della simulazione (giorni)"
@@ -2207,6 +2909,9 @@ msgstr "Simulazione: %(name)s"
 msgid "Small World (Watts-Strogatz)"
 msgstr "Small world (Watts-Strogatz)"
 
+msgid "Social Attributes"
+msgstr "Attributi sociali"
+
 msgid "Social Corruption Rate"
 msgstr "Tasso di corruzione sociale"
 
@@ -2222,6 +2927,9 @@ msgstr "Struttura della rete sociale (facoltativo)"
 msgid "Social Resummarize Every (events)"
 msgstr "Riassumi il contesto sociale ogni (eventi)"
 
+msgid "Solitary/Reserved"
+msgstr "Solitario/Riservato"
+
 msgid "Something went wrong?"
 msgstr "Qualcosa è andato storto?"
 
@@ -2230,6 +2938,15 @@ msgid "Specify the percentage of agents interested in each topic. Default is 100
 msgstr ""
 "Indica la percentuale di agenti interessati a ogni argomento. Il valore predefinito è 100% per "
 "tutti gli argomenti."
+
+msgid "Specifying the agent pre-prompt overrides the other configuration variables."
+msgstr "Specificare il pre-prompt dell'agente sostituisce le altre variabili di configurazione."
+
+msgid "Spoken Language"
+msgstr "Lingua parlata"
+
+msgid "Standard:"
+msgstr "Standard:"
 
 msgid "Start Day"
 msgstr "Giorno di inizio"
@@ -2268,6 +2985,9 @@ msgstr "Ferma l'esperimento prima di eliminarlo"
 msgid "Stopped / Scheduled"
 msgstr "Fermati / Pianificati"
 
+msgid "Story Visibility %"
+msgstr "Visibilità delle storie %"
+
 msgid "Stress / Reward Evolution"
 msgstr "Evoluzione di stress / ricompensa"
 
@@ -2280,8 +3000,14 @@ msgstr "Stress/ricompensa"
 msgid "Structure, density, components"
 msgstr "Struttura, densità, componenti"
 
+msgid "Structured Features"
+msgstr "Caratteristiche strutturate"
+
 msgid "Structured Models"
 msgstr "Modelli strutturati"
+
+msgid "Stubborn"
+msgstr "Ostinato"
 
 msgid "Submit Logs"
 msgstr "Invia i log"
@@ -2289,11 +3015,20 @@ msgstr "Invia i log"
 msgid "Subset of population to activate initially. Leave empty to use all agents."
 msgstr "Sottoinsieme della popolazione da attivare all'inizio. Lascia vuoto per usare tutti gli agenti."
 
+msgid "Success probability (0-1)"
+msgstr "Probabilità di successo (0-1)"
+
 msgid "Synthetic Network:"
 msgstr "Rete sintetica:"
 
+msgid "Synthetic Populations"
+msgstr "Popolazioni sintetiche"
+
 msgid "Target Group"
 msgstr "Gruppo di destinazione"
+
+msgid "Target Population"
+msgstr "Popolazione di destinazione"
 
 msgid "Telemetry Information"
 msgstr "Informazioni sulla telemetria"
@@ -2352,6 +3087,14 @@ msgid ""
 msgstr ""
 "La rete può essere generata in modo sintetico oppure creata e caricata dall'utente. Per creare un"
 " file di rete personalizzato, scarica l'elenco dei nomi degli agenti con"
+
+msgid "The selected distribution controls how attention budgets are sampled between min and max."
+msgstr ""
+"La distribuzione selezionata controlla come vengono campionati i budget di attenzione tra minimo "
+"e massimo."
+
+msgid "Thematic Characterization"
+msgstr "Caratterizzazione tematica"
 
 msgid "These options are mutually exclusive."
 msgstr "Queste opzioni si escludono a vicenda."
@@ -2422,14 +3165,23 @@ msgstr "Mostra/nascondi il menu"
 msgid "Toggle the generated value between false and true"
 msgstr "Passa il valore generato tra falso e vero"
 
+msgid "Topic"
+msgstr "Argomento"
+
 msgid "Topic Evolution"
 msgstr "Evoluzione degli argomenti"
 
 msgid "Topic Interest Distribution"
 msgstr "Distribuzione dell'interesse per gli argomenti"
 
+msgid "Topics"
+msgstr "Argomenti"
+
 msgid "Topics & Opinions"
 msgstr "Argomenti e opinioni"
+
+msgid "Topics covered and population assignments."
+msgstr "Argomenti trattati e assegnazioni alle popolazioni."
 
 msgid "Total Max Chars"
 msgstr "Caratteri massimi totali"
@@ -2440,14 +3192,29 @@ msgstr "Caratteri totali della memoria"
 msgid "Total configurations:"
 msgstr "Configurazioni totali:"
 
+msgid "Total must equal 100%"
+msgstr "Il totale deve essere 100%"
+
 msgid "Total simulation time so far:"
 msgstr "Tempo di simulazione totale finora:"
+
+msgid "Totals must equal 100%."
+msgstr "I totali devono essere 100%."
 
 msgid "Toxicity"
 msgstr "Tossicità"
 
+msgid "Toxicity %"
+msgstr "Tossicità %"
+
 msgid "Toxicity Evolution"
 msgstr "Evoluzione della tossicità"
+
+msgid "Toxicity Level"
+msgstr "Livello di tossicità"
+
+msgid "Toxicity Levels"
+msgstr "Livelli di tossicità"
 
 msgid "Trace excerpt:"
 msgstr "Estratto della traccia:"
@@ -2466,6 +3233,9 @@ msgstr "Probabilità di triangolo (p)"
 msgid "True"
 msgstr "Vero"
 
+msgid "Type"
+msgstr "Tipo"
+
 msgid "Type a value and press Enter"
 msgstr "Scrivi un valore e premi Invio"
 
@@ -2474,6 +3244,9 @@ msgstr "Tipo di rete"
 
 msgid "URL:"
 msgstr "URL:"
+
+msgid "Uniform"
+msgstr "Uniforme"
 
 msgid "Unique identifier for this client"
 msgstr "Identificativo univoco di questo client"
@@ -2488,6 +3261,9 @@ msgstr ""
 
 msgid "Unsupported language."
 msgstr "Lingua non supportata."
+
+msgid "Update"
+msgstr "Aggiorna"
 
 #, python-format
 msgid "Update %(b)s first. Until then, server control actions and client workflows stay locked."
@@ -2507,6 +3283,12 @@ msgstr "Prima aggiorna la configurazione"
 #, python-format
 msgid "Update runtime annotations and memory in %(b)s"
 msgstr "Aggiorna annotazioni e memoria in %(b)s"
+
+msgid "Upload"
+msgstr "Carica"
+
+msgid "Upload Collection"
+msgstr "Carica la raccolta"
 
 msgid "Upload Custom Network"
 msgstr "Carica una rete personalizzata"
@@ -2608,6 +3390,11 @@ msgstr "Modello di visione"
 msgid "Vision Temperature"
 msgstr "Temperatura del modello di visione"
 
+msgid "Visual analysis of agent distribution across demographics, attributes, and behavior patterns."
+msgstr ""
+"Analisi visiva della distribuzione degli agenti per dati demografici, attributi e schemi di "
+"comportamento."
+
 msgid "We're working to fix the issue. Please try again later."
 msgstr "Stiamo lavorando per risolvere il problema. Riprova più tardi."
 
@@ -2620,6 +3407,9 @@ msgstr "Bentornato"
 
 msgid "What is a Client?"
 msgstr "Che cos'è un client?"
+
+msgid "What is a Population?"
+msgstr "Che cos'è una popolazione?"
 
 msgid "What issue did you encounter? What were you trying to do when the error occurred?"
 msgstr "Quale problema hai incontrato? Cosa stavi cercando di fare quando si è verificato l'errore?"
@@ -2698,6 +3488,9 @@ msgstr "Non hai il permesso di eseguire questa azione."
 msgid "Your Profile"
 msgstr "Il tuo profilo"
 
+msgid "Zipf"
+msgstr "Zipf"
+
 msgid "`Simulated` runs quickly; `Real-time` processes the current wall-clock hour."
 msgstr "`Simulato` procede velocemente; `Tempo reale` elabora l'ora di orologio corrente."
 
@@ -2724,6 +3517,18 @@ msgstr "impostazioni"
 
 msgid "vLLM"
 msgstr "vLLM"
+
+msgid "ℹ️ A page can be added to multiple populations."
+msgstr "ℹ️ Una pagina può essere aggiunta a più popolazioni."
+
+msgid "ℹ️ An agent can be added to multiple populations."
+msgstr "ℹ️ Un agente può essere aggiunto a più popolazioni."
+
+msgid "ℹ️ Multiple topics can be associated with the same page."
+msgstr "ℹ️ Più argomenti possono essere associati alla stessa pagina."
+
+msgid "ℹ️ Populations are automatically assigned to experiments when creating a client."
+msgstr "ℹ️ Le popolazioni vengono assegnate automaticamente agli esperimenti quando si crea un client."
 
 msgid "∞ Infinite"
 msgstr "∞ Infinito"
