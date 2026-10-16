@@ -52,6 +52,7 @@ from y_web.src.models import Exps, User_mgmt
 from y_web.src.models.admin import Admin_users, Agent, Page
 from y_web.src.models.experiment import Rounds
 from y_web.src.recsys.follow_recsys import get_suggested_users
+from y_web.i18n import gettext as _
 
 
 def _photo_page_size(ui_settings) -> int:
@@ -2025,7 +2026,7 @@ def photo_feed_logged():
         select(Exps).filter(Exps.status != 0, Exps.platform_type == "photo_sharing")
     ).all()
     if not exps:
-        flash("No active photo-sharing experiment. Please activate one first.")
+        flash(_("No active photo-sharing experiment. Please activate one first."))
         return redirect("/admin/experiments")
 
     if len(exps) > 1:

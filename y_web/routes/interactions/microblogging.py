@@ -30,6 +30,7 @@ from y_web.src.models import (
     User_interest,
     User_mgmt,
 )
+from y_web.i18n import gettext as _
 
 
 @user.route("/<int:exp_id>/publish")
@@ -49,7 +50,7 @@ def publish_post(exp_id):
         select(User_mgmt).filter_by(username=current_user.username)
     ).first()
     if not exp_user:
-        flash("User not found in experiment", "error")
+        flash(_("User not found in experiment"), "error")
         return redirect(request.referrer)
     exp_user_id = exp_user.id
 

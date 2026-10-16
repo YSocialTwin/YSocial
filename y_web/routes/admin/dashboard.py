@@ -49,6 +49,7 @@ from y_web.src.system.miscellanea import (
 )
 
 from .sub.experiments._helpers import _experiment_has_started_once
+from y_web.i18n import gettext as _
 
 admin = Blueprint("admin", __name__)
 
@@ -180,7 +181,7 @@ def dashboard():
     else:
         # Regular users should not access this page
         # They are redirected to their experiment feed
-        flash("Access denied. Please use the experiment feed.")
+        flash(_("Access denied. Please use the experiment feed."))
         return redirect(url_for("auth.login"))
 
     # Categorize experiments by status

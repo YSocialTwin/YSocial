@@ -16,6 +16,7 @@ from y_web.src.models import (
 from y_web.src.system.miscellanea import check_privileges
 
 from ._blueprint import clientsr
+from y_web.i18n import gettext as _
 
 
 @clientsr.route("/admin/update_agents_activity/<int:uid>", methods=["POST"])
@@ -50,7 +51,7 @@ def update_agents_activity(uid):
             # save the new configuration
             json.dump(config, open(path, "w"), indent=4)
     else:
-        flash("Configuration file not found.", "error")
+        flash(_("Configuration file not found."), "error")
 
     return redirect(request.referrer)
 
@@ -107,7 +108,7 @@ def reset_agents_activity(uid):
             # save the new configuration
             json.dump(config, open(path, "w"), indent=4)
     else:
-        flash("Configuration file not found.", "error")
+        flash(_("Configuration file not found."), "error")
 
     return redirect(request.referrer)
 
@@ -139,14 +140,14 @@ def update_agent_archetypes(uid):
         trans_expl_val = float(request.form.get("trans_expl_val", "0")) / 100.0
         trans_expl_broad = float(request.form.get("trans_expl_broad", "0")) / 100.0
     except (ValueError, TypeError) as e:
-        flash(f"Invalid input values: {str(e)}", "error")
+        flash(_("Invalid input values: %(error)s", error=str(e)), "error")
         return redirect(request.referrer)
 
     # Validate that percentages sum to approximately 100%
     archetype_sum = archetype_validator + archetype_broadcaster + archetype_explorer
     if abs(archetype_sum - 1.0) > 0.01:
         flash(
-            f"Archetype percentages must sum to 100% (current sum: {archetype_sum * 100:.1f}%)",
+            _("Archetype percentages must sum to 100%% (current sum: %(archetype_sum)s%%)", archetype_sum=format(archetype_sum * 100, '.1f')),
             "error",
         )
         return redirect(request.referrer)
@@ -158,19 +159,19 @@ def update_agent_archetypes(uid):
 
     if abs(val_sum - 1.0) > 0.01:
         flash(
-            f"Validator transition probabilities must sum to 100% (current sum: {val_sum * 100:.1f}%)",
+            _("Validator transition probabilities must sum to 100%% (current sum: %(val_sum)s%%)", val_sum=format(val_sum * 100, '.1f')),
             "error",
         )
         return redirect(request.referrer)
     if abs(broad_sum - 1.0) > 0.01:
         flash(
-            f"Broadcaster transition probabilities must sum to 100% (current sum: {broad_sum * 100:.1f}%)",
+            _("Broadcaster transition probabilities must sum to 100%% (current sum: %(broad_sum)s%%)", broad_sum=format(broad_sum * 100, '.1f')),
             "error",
         )
         return redirect(request.referrer)
     if abs(expl_sum - 1.0) > 0.01:
         flash(
-            f"Explorer transition probabilities must sum to 100% (current sum: {expl_sum * 100:.1f}%)",
+            _("Explorer transition probabilities must sum to 100%% (current sum: %(expl_sum)s%%)", expl_sum=format(expl_sum * 100, '.1f')),
             "error",
         )
         return redirect(request.referrer)
@@ -178,7 +179,7 @@ def update_agent_archetypes(uid):
     # Get client details
     client = db.session.scalars(select(Client).filter_by(id=uid)).first()
     if not client:
-        flash("Client not found.", "error")
+        flash(_("Client not found."), "error")
         return redirect(request.referrer)
 
     # Update client with new values
@@ -247,9 +248,9 @@ def update_agent_archetypes(uid):
             with open(path, "w") as f:
                 json.dump(config, f, indent=4)
     else:
-        flash("Configuration file not found.", "error")
+        flash(_("Configuration file not found."), "error")
 
-    flash("Agent archetypes updated successfully.", "success")
+    flash(_("Agent archetypes updated successfully."), "success")
     return redirect(request.referrer)
 
 
@@ -262,7 +263,7 @@ def reset_agent_archetypes(uid):
     # Get client details
     client = db.session.scalars(select(Client).filter_by(id=uid)).first()
     if not client:
-        flash("Client not found.", "error")
+        flash(_("Client not found."), "error")
         return redirect(request.referrer)
 
     # Reset to default Bluesky values
@@ -327,7 +328,7 @@ def reset_agent_archetypes(uid):
             with open(path, "w") as f:
                 json.dump(config, f, indent=4)
     else:
-        flash("Configuration file not found.", "error")
+        flash(_("Configuration file not found."), "error")
 
-    flash("Agent archetypes reset to default values.", "success")
+    flash(_("Agent archetypes reset to default values."), "success")
     return redirect(request.referrer)

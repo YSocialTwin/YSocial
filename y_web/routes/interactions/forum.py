@@ -35,6 +35,7 @@ from y_web.src.models import (
     User_mgmt,
     Websites,
 )
+from y_web.i18n import gettext as _
 
 
 @user.route("/<int:exp_id>/publish_reddit")
@@ -60,7 +61,7 @@ def publish_post_reddit(exp_id):
         select(User_mgmt).filter_by(username=current_user.username)
     ).first()
     if not exp_user:
-        flash("User not found in experiment", "error")
+        flash(_("User not found in experiment"), "error")
         return redirect(request.referrer)
     exp_user_id = exp_user.id
 
@@ -397,7 +398,7 @@ def publish_comment(exp_id):
         select(User_mgmt).filter_by(username=current_user.username)
     ).first()
     if not exp_user:
-        flash("User not found in experiment", "error")
+        flash(_("User not found in experiment"), "error")
         return (
             redirect(request.referrer)
             if request.referrer
@@ -423,7 +424,7 @@ def publish_comment(exp_id):
     # get the thread if of the post with id pid
     parent_post = db.session.scalars(select(Post).filter_by(id=pid)).first()
     if not parent_post:
-        flash("Parent post not found", "error")
+        flash(_("Parent post not found"), "error")
         return (
             redirect(request.referrer)
             if request.referrer

@@ -19,6 +19,7 @@ from y_web.src.external_runtime.plugin_hooks import (
     is_local_redirect,
 )
 from y_web.src.models import Admin_users, Exps, User_Experiment, User_mgmt
+from y_web.i18n import gettext as _
 
 # Roles that log in as experiment participants. "student" is an alias of
 # "user": it follows exactly the same flow (experiment selection, feed).
@@ -61,7 +62,7 @@ def login_post():
     # check if the user actually exists
     # take the user-supplied password, hash it, and compare it to the hashed password in the database
     if not user or not check_password_hash(user.password, password):
-        flash("Please check your login details and try again.")
+        flash(_("Please check your login details and try again."))
         return redirect(url_for("auth.login"))
 
         # Log service start event
@@ -96,7 +97,7 @@ def login_post():
 
         if not user_experiments:
             flash(
-                "You are not assigned to any experiments. Please contact an administrator."
+                _("You are not assigned to any experiments. Please contact an administrator.")
             )
             return redirect(url_for("auth.login"))
 
@@ -107,7 +108,7 @@ def login_post():
         ).all()
 
         if not active_exps:
-            flash("No active experiments available. Please contact an administrator.")
+            flash(_("No active experiments available. Please contact an administrator."))
             return redirect(url_for("auth.login"))
 
         # Store credentials in session for experiment selection
@@ -145,14 +146,14 @@ def login_post():
             home = url_for("training_modules.modules_page")
         except Exception:
             flash(
-                "The training area is not available. Please contact an administrator."
+                _("The training area is not available. Please contact an administrator.")
             )
             return redirect(url_for("auth.login"))
         login_user(user, remember=remember)
         return redirect(home)
 
     else:
-        flash("Invalid user role. Please contact an administrator.")
+        flash(_("Invalid user role. Please contact an administrator."))
         return redirect(url_for("auth.login"))
 
 
@@ -168,12 +169,12 @@ def select_experiment():
     auth_token = request.form.get("auth_token")
 
     if not exp_id or not auth_token:
-        flash("Invalid request.")
+        flash(_("Invalid request."))
         return redirect(url_for("auth.login"))
 
     # Verify session token
     if "exp_select_token" not in session or session["exp_select_token"] != auth_token:
-        flash("Invalid or expired session. Please log in again.")
+        flash(_("Invalid or expired session. Please log in again."))
         return redirect(url_for("auth.login"))
 
     user_id = session.get("exp_select_user_id")
@@ -187,7 +188,7 @@ def select_experiment():
     # Get user
     user = db.session.scalars(select(Admin_users).filter_by(id=user_id)).first()
     if not user:
-        flash("User not found.")
+        flash(_("User not found."))
         return redirect(url_for("auth.login"))
 
     username = str(getattr(user, "username", "") or "")
@@ -199,7 +200,7 @@ def select_experiment():
         select(User_Experiment).filter_by(user_id=user.id, exp_id=int(exp_id))
     ).first()
     if not user_exp:
-        flash("You do not have access to this experiment.")
+        flash(_("You do not have access to this experiment."))
         return redirect(url_for("auth.login"))
 
     # Get experiment
@@ -207,7 +208,7 @@ def select_experiment():
         select(Exps).filter_by(idexp=int(exp_id), status=1)
     ).first()
     if not exp:
-        flash("Experiment not found or not active.")
+        flash(_("Experiment not found or not active."))
         return redirect(url_for("auth.login"))
 
     try:
@@ -221,7 +222,7 @@ def select_experiment():
             account_id=user.id,
         )
         if not user_agent:
-            flash("User not found in experiment database.")
+            flash(_("User not found in experiment database."))
             return redirect(url_for("auth.login"))
 
         login_user(user_agent, remember=remember)
@@ -231,7 +232,7 @@ def select_experiment():
         return redirect(f"/{exp.idexp}/onboarding/{user_agent.id}")
 
     except Exception as e:
-        flash(f"Error accessing experiment: {str(e)}")
+        flash(_("Error accessing experiment: %(error)s", error=str(e)))
         return redirect(url_for("auth.login"))
 
 

@@ -20,7 +20,7 @@ from flask import (
     request,
     url_for,
 )
-from flask_babel import gettext as _
+from y_web.i18n import gettext as _
 from flask_login import current_user, login_required
 from sqlalchemy import delete, select
 from werkzeug.security import generate_password_hash
@@ -59,7 +59,7 @@ def user_data():
     ).first()
     if user.role not in ["admin", "researcher"]:
         flash(
-            "Access denied. This page is only accessible to administrators and researchers.",
+            _("Access denied. This page is only accessible to administrators and researchers."),
             "error",
         )
         return redirect(url_for("admin.dashboard"))
@@ -216,7 +216,7 @@ def user_details(uid):
         current_admin_user.role not in ["admin", "researcher"]
         and current_admin_user.id != uid
     ):
-        flash("You do not have permission to view this page.", "error")
+        flash(_("You do not have permission to view this page."), "error")
         return redirect(url_for("admin.dashboard"))
 
     # get user details
@@ -304,7 +304,7 @@ def add_user():
         "teacher",
     ]:
         flash(
-            "You do not have permission to create admin, researcher or teacher users. Only 'user' role is allowed.",
+            _("You do not have permission to create admin, researcher or teacher users. Only 'user' role is allowed."),
             "error",
         )
         return redirect(url_for("users.user_data"))
@@ -332,7 +332,7 @@ def delete_user(uid):
 
     user = db.session.scalars(select(Admin_users).filter_by(id=uid)).first()
     if not user:
-        flash("User not found.", "error")
+        flash(_("User not found."), "error")
         return redirect(url_for("users.user_data"))
 
     # Check if user can be deleted (not self-delete)
@@ -340,7 +340,7 @@ def delete_user(uid):
         select(Admin_users).filter_by(username=current_user.username)
     ).first()
     if current_admin_user.id == uid:
-        flash("You cannot delete your own account.", "error")
+        flash(_("You cannot delete your own account."), "error")
         return redirect(url_for("users.user_data"))
 
     try:
@@ -350,10 +350,10 @@ def delete_user(uid):
         # Delete the user
         db.session.delete(user)
         db.session.commit()
-        flash("User deleted successfully.", "success")
+        flash(_("User deleted successfully."), "success")
     except Exception as e:
         db.session.rollback()
-        flash(f"Error deleting user: {str(e)}", "error")
+        flash(_("Error deleting user: %(error)s", error=str(e)), "error")
 
     return redirect(url_for("users.user_data"))
 
@@ -373,26 +373,26 @@ def add_user_to_experiment():
     experiment_id = request.form.get("experiment_id")
 
     if not user_id or not experiment_id:
-        flash("User ID and Experiment ID are required.", "error")
+        flash(_("User ID and Experiment ID are required."), "error")
         return redirect(url_for("users.user_data"))
 
     try:
         user_id = int(user_id)
         experiment_id = int(experiment_id)
     except ValueError:
-        flash("Invalid User ID or Experiment ID.", "error")
+        flash(_("Invalid User ID or Experiment ID."), "error")
         return redirect(url_for("users.user_data"))
 
     # get username
     user = db.session.scalars(select(Admin_users).filter_by(id=user_id)).first()
     if not user:
-        flash("User not found.", "error")
+        flash(_("User not found."), "error")
         return redirect(url_for("users.user_data"))
 
     # get experiment
     exp = db.session.scalars(select(Exps).filter_by(idexp=experiment_id)).first()
     if not exp:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return user_details(user_id)
 
     user_exp, _created = ensure_experiment_user(
@@ -407,7 +407,7 @@ def add_user_to_experiment():
     )
     if user_exp is None:
         flash(
-            "Error adding user to experiment: unable to open experiment database.",
+            _("Error adding user to experiment: unable to open experiment database."),
             "error",
         )
         return user_details(user_id)
@@ -421,12 +421,12 @@ def add_user_to_experiment():
         db.session.add(user_exp_record)
         db.session.commit()
         flash(
-            f"User '{user.username}' successfully added to experiment '{exp.exp_name}'.",
+            _("User '%(username)s' successfully added to experiment '%(exp_name)s'.", username=user.username, exp_name=exp.exp_name),
             "success",
         )
     else:
         flash(
-            f"User '{user.username}' is already assigned to experiment '{exp.exp_name}'.",
+            _("User '%(username)s' is already assigned to experiment '%(exp_name)s'.", username=user.username, exp_name=exp.exp_name),
             "info",
         )
 
@@ -448,7 +448,7 @@ def update_user_llm():
     try:
         user_id_int = int(user_id)
     except (ValueError, TypeError):
-        flash("Invalid user ID.", "error")
+        flash(_("Invalid user ID."), "error")
         return redirect(url_for("admin.dashboard"))
 
     # Get current user
@@ -461,7 +461,7 @@ def update_user_llm():
         current_admin_user.role not in ["admin", "researcher"]
         and current_admin_user.id != user_id_int
     ):
-        flash("You do not have permission to perform this action.", "error")
+        flash(_("You do not have permission to perform this action."), "error")
         return redirect(url_for("admin.dashboard"))
     llm = request.form.get("llm")
     llm_url = request.form.get("custom_llm_url", "").strip()
@@ -489,7 +489,7 @@ def set_perspective_api_user():
     try:
         user_id_int = int(user_id)
     except (ValueError, TypeError):
-        flash("Invalid user ID.", "error")
+        flash(_("Invalid user ID."), "error")
         return redirect(url_for("admin.dashboard"))
 
     # Get current user
@@ -502,7 +502,7 @@ def set_perspective_api_user():
         current_admin_user.role not in ["admin", "researcher"]
         and current_admin_user.id != user_id_int
     ):
-        flash("You do not have permission to perform this action.", "error")
+        flash(_("You do not have permission to perform this action."), "error")
         return redirect(url_for("admin.dashboard"))
     perspective_api = request.form.get("perspective_api")
 
@@ -584,7 +584,7 @@ def update_user_password():
     try:
         user_id_int = int(user_id)
     except (ValueError, TypeError):
-        flash("Invalid user ID.", "error")
+        flash(_("Invalid user ID."), "error")
         return redirect(url_for("admin.dashboard"))
 
     # Get current user
@@ -597,14 +597,14 @@ def update_user_password():
         current_admin_user.role not in ["admin", "researcher"]
         and current_admin_user.id != user_id_int
     ):
-        flash("You do not have permission to perform this action.", "error")
+        flash(_("You do not have permission to perform this action."), "error")
         return redirect(url_for("admin.dashboard"))
     new_password = request.form.get("new_password")
     confirm_password = request.form.get("confirm_password")
 
     # Check if passwords match
     if new_password != confirm_password:
-        flash("Passwords do not match", "error")
+        flash(_("Passwords do not match"), "error")
         return user_details(user_id)
 
     # Validate password complexity
@@ -616,13 +616,13 @@ def update_user_password():
     # Update password
     user = db.session.scalars(select(Admin_users).filter_by(id=user_id_int)).first()
     if not user:
-        flash("User not found", "error")
+        flash(_("User not found"), "error")
         return redirect(url_for("users.user_data"))
 
     user.password = generate_password_hash(new_password)
     db.session.commit()
 
-    flash("Password updated successfully", "success")
+    flash(_("Password updated successfully"), "success")
     return user_details(user_id_int)
 
 
@@ -641,7 +641,7 @@ def update_user_email():
     try:
         user_id_int = int(user_id)
     except (ValueError, TypeError):
-        flash("Invalid user ID.", "error")
+        flash(_("Invalid user ID."), "error")
         return redirect(url_for("admin.dashboard"))
 
     # Get current user
@@ -654,7 +654,7 @@ def update_user_email():
         current_admin_user.role not in ["admin", "researcher"]
         and current_admin_user.id != user_id_int
     ):
-        flash("You do not have permission to perform this action.", "error")
+        flash(_("You do not have permission to perform this action."), "error")
         return redirect(url_for("admin.dashboard"))
     new_email = request.form.get("new_email")
 
@@ -669,19 +669,19 @@ def update_user_email():
         select(Admin_users).filter_by(email=new_email)
     ).first()
     if existing_user and existing_user.id != user_id_int:
-        flash("Email is already in use by another user", "error")
+        flash(_("Email is already in use by another user"), "error")
         return user_details(user_id_int)
 
     # Update email
     user = db.session.scalars(select(Admin_users).filter_by(id=user_id_int)).first()
     if not user:
-        flash("User not found", "error")
+        flash(_("User not found"), "error")
         return redirect(url_for("users.user_data"))
 
     user.email = new_email
     db.session.commit()
 
-    flash("Email updated successfully", "success")
+    flash(_("Email updated successfully"), "success")
     return user_details(user_id_int)
 
 
@@ -761,7 +761,7 @@ def bulk_create_users():
     role_filter = request.form.get("role", "user")  # Default role for bulk creation
 
     if not users_data:
-        flash("No user data provided.", "error")
+        flash(_("No user data provided."), "error")
         return redirect(url_for("users.user_data"))
 
     lines = users_data.split("\n")
@@ -832,7 +832,7 @@ def bulk_create_users():
     try:
         db.session.commit()
         if created > 0:
-            flash(f"Successfully created {created} user(s).", "success")
+            flash(_("Successfully created %(created)s user(s).", created=created), "success")
         if errors:
             flash(
                 f"Errors: {'; '.join(errors[:5])}"
@@ -841,7 +841,7 @@ def bulk_create_users():
             )
     except Exception as e:
         db.session.rollback()
-        flash(f"Database error: {str(e)}", "error")
+        flash(_("Database error: %(error)s", error=str(e)), "error")
 
     return redirect(url_for("users.user_data"))
 
@@ -861,14 +861,14 @@ def bulk_assign_users():
     exp_id = request.form.get("experiment_id")
 
     if not user_ids or not exp_id:
-        flash("No users or experiment selected.", "error")
+        flash(_("No users or experiment selected."), "error")
         return redirect(url_for("users.user_data"))
 
     try:
         exp_id = int(exp_id)
         exp = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
         if not exp:
-            flash("Experiment not found.", "error")
+            flash(_("Experiment not found."), "error")
             return redirect(url_for("users.user_data"))
 
         assigned = 0
@@ -927,7 +927,7 @@ def bulk_assign_users():
 
         if assigned > 0:
             flash(
-                f"Successfully assigned {assigned} user(s) to experiment '{exp.exp_name}'.",
+                _("Successfully assigned %(assigned)s user(s) to experiment '%(exp_name)s'.", assigned=assigned, exp_name=exp.exp_name),
                 "success",
             )
         if errors:
@@ -938,7 +938,7 @@ def bulk_assign_users():
             )
 
     except Exception as e:
-        flash(f"Error during bulk assignment: {str(e)}", "error")
+        flash(_("Error during bulk assignment: %(error)s", error=str(e)), "error")
 
     return redirect(url_for("users.user_data"))
 
@@ -958,7 +958,7 @@ def update_telemetry_preference():
     try:
         user_id_int = int(user_id)
     except (ValueError, TypeError):
-        flash("Invalid user ID.", "error")
+        flash(_("Invalid user ID."), "error")
         return redirect(url_for("admin.dashboard"))
 
     # Check if user is admin
@@ -968,13 +968,13 @@ def update_telemetry_preference():
 
     if not current_admin_user or current_admin_user.role != "admin":
         flash(
-            "Access denied. Only administrators can modify telemetry settings.", "error"
+            _("Access denied. Only administrators can modify telemetry settings."), "error"
         )
         return redirect(url_for("admin.dashboard"))
 
     # Only allow admins to update their own telemetry settings
     if current_admin_user.id != user_id_int:
-        flash("You can only modify your own telemetry settings.", "error")
+        flash(_("You can only modify your own telemetry settings."), "error")
         return redirect(url_for("users.user_details", uid=user_id_int))
 
     # Get telemetry preference from form
@@ -983,14 +983,14 @@ def update_telemetry_preference():
     # Update user's telemetry preference
     user = db.session.scalars(select(Admin_users).filter_by(id=user_id_int)).first()
     if not user:
-        flash("User not found.", "error")
+        flash(_("User not found."), "error")
         return redirect(url_for("users.user_data"))
 
     user.telemetry_enabled = telemetry_enabled
     db.session.commit()
 
     flash(
-        f"Telemetry {'enabled' if telemetry_enabled else 'disabled'} successfully.",
+        _("Telemetry %(value)s successfully.", value='enabled' if telemetry_enabled else 'disabled'),
         "success",
     )
     return redirect(url_for("users.user_details", uid=user_id_int))
@@ -1041,7 +1041,7 @@ def check_for_updates_route():
     ).first()
 
     if not current_admin_user or current_admin_user.role != "admin":
-        flash("Access denied. Only administrators can check for updates.", "error")
+        flash(_("Access denied. Only administrators can check for updates."), "error")
         return redirect(url_for("admin.dashboard"))
 
     try:
@@ -1051,13 +1051,13 @@ def check_for_updates_route():
 
         if has_update:
             flash(
-                f"New version available: {release_info.get('release_name')} (v{release_info.get('latest_version')})",
+                _("New version available: %(get)s (v%(get2)s)", get=release_info.get('release_name'), get2=release_info.get('latest_version')),
                 "success",
             )
         else:
-            flash("Your YSocial installation is up to date.", "info")
+            flash(_("Your YSocial installation is up to date."), "info")
     except Exception as e:
-        flash(f"Error checking for updates: {str(e)}", "error")
+        flash(_("Error checking for updates: %(error)s", error=str(e)), "error")
 
     # Redirect back to the user details page
     return redirect(url_for("users.user_details", uid=current_admin_user.id))
@@ -1201,8 +1201,7 @@ def watchdog_run_now():
 
         results = run_watchdog_once()
         flash(
-            f"Watchdog check complete: {results['processes_checked']} checked, "
-            f"{results['processes_restarted']} restarted",
+            _("Watchdog check complete: %(processes_checked)s checked, %(processes_restarted)s restarted", processes_checked=results['processes_checked'], processes_restarted=results['processes_restarted']),
             "success",
         )
         return jsonify(results), 200
@@ -1233,7 +1232,7 @@ def watchdog_set_interval():
         if is_ajax:
             return jsonify({"success": False, "message": "Access denied"}), 403
         flash(
-            "Access denied. Only administrators can modify watchdog settings.", "error"
+            _("Access denied. Only administrators can modify watchdog settings."), "error"
         )
         return redirect(url_for("admin.dashboard"))
 
@@ -1257,17 +1256,17 @@ def watchdog_set_interval():
         if is_ajax:
             return jsonify({"success": True, "interval_minutes": interval_minutes}), 200
 
-        flash(f"Watchdog interval set to {interval_minutes} minutes.", "success")
+        flash(_("Watchdog interval set to %(interval_minutes)s minutes.", interval_minutes=interval_minutes), "success")
     except Exception as e:
         if is_ajax:
             return jsonify({"success": False, "message": str(e)}), 500
-        flash(f"Error setting watchdog interval: {str(e)}", "error")
+        flash(_("Error setting watchdog interval: %(error)s", error=str(e)), "error")
 
     # Validate user_id for redirect
     try:
         user_id_int = int(user_id)
     except (ValueError, TypeError):
-        flash("Invalid user ID.", "error")
+        flash(_("Invalid user ID."), "error")
         return redirect(url_for("admin.dashboard"))
 
     return redirect(url_for("users.user_details", uid=user_id_int))

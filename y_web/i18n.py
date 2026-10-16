@@ -23,6 +23,7 @@ from flask_babel import (
     format_time,
     get_locale,
     get_translations,
+    gettext as _babel_gettext,
 )
 from flask_login import current_user
 from jinja2 import pass_eval_context
@@ -69,6 +70,19 @@ def pseudo_enabled():
 def available_languages():
     """Return ``[(code, native name), ...]`` for the supported languages."""
     return [(code, LANGUAGE_NAMES.get(code, code)) for code in supported_languages()]
+
+
+
+def gettext(message, **variables):
+    """Request-time gettext for Python code (flash messages, JSON errors).
+
+    Falls back to the untranslated message when Flask-Babel is not
+    initialised (bare Flask apps used in unit tests or scripts).
+    """
+    try:
+        return _babel_gettext(message, **variables)
+    except (KeyError, RuntimeError):
+        return message % variables if variables else message
 
 
 def wrap(tag, text, **attrs):

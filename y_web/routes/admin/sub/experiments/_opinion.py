@@ -120,6 +120,7 @@ from ._helpers import (
     _current_admin_user_or_none,
     _load_stress_reward_experiment_context,
 )
+from y_web.i18n import gettext as _
 
 
 def _resolve_opinion_evolution_topics(expid):
@@ -1394,16 +1395,16 @@ def create_opinion_group():
         lower_bound = float(lower_bound)
         upper_bound = float(upper_bound)
     except (ValueError, TypeError):
-        flash("Invalid bound values. Must be numbers.", "error")
+        flash(_("Invalid bound values. Must be numbers."), "error")
         return redirect(request.referrer)
 
     # Validate bounds are in [0, 1] and lower <= upper
     if not (0 <= lower_bound <= 1 and 0 <= upper_bound <= 1):
-        flash("Bounds must be in the range [0, 1].", "error")
+        flash(_("Bounds must be in the range [0, 1]."), "error")
         return redirect(request.referrer)
 
     if lower_bound > upper_bound:
-        flash("Lower bound must be less than or equal to upper bound.", "error")
+        flash(_("Lower bound must be less than or equal to upper bound."), "error")
         return redirect(request.referrer)
 
     # Check for overlaps with existing groups
@@ -1413,9 +1414,7 @@ def create_opinion_group():
         # Two ranges [a1, a2] and [b1, b2] overlap if: a1 < b2 AND b1 < a2
         if lower_bound < existing.upper_bound and existing.lower_bound < upper_bound:
             flash(
-                f"Opinion group overlaps with existing group '{existing.name}' "
-                f"[{existing.lower_bound}, {existing.upper_bound}]. "
-                "Groups must not overlap.",
+                _("Opinion group overlaps with existing group '%(name)s' [%(lower_bound)s, %(upper_bound)s]. Groups must not overlap.", name=existing.name, lower_bound=existing.lower_bound, upper_bound=existing.upper_bound),
                 "error",
             )
             return redirect(request.referrer)
@@ -1538,7 +1537,7 @@ def create_opinion_distribution():
     try:
         json.loads(parameters)
     except (json.JSONDecodeError, TypeError):
-        flash("Invalid parameters format. Must be valid JSON.", "error")
+        flash(_("Invalid parameters format. Must be valid JSON."), "error")
         return redirect(request.referrer)
 
     dist = OpinionDistribution(
@@ -2584,12 +2583,12 @@ def opinion_evolution(expid):
     # Get experiment
     experiment = db.session.scalars(select(Exps).filter_by(idexp=expid)).first()
     if not experiment:
-        flash("Experiment not found.")
+        flash(_("Experiment not found."))
         return redirect("/admin/experiments")
 
     # Check if opinions are enabled for this experiment
     if not experiment.annotations or "opinions" not in experiment.annotations:
-        flash("Opinion dynamics is not enabled for this experiment.")
+        flash(_("Opinion dynamics is not enabled for this experiment."))
         return redirect(f"/admin/experiment_details/{expid}")
 
     # Activate experiment if not active (to access its database)
@@ -2654,7 +2653,7 @@ def opinion_evolution(expid):
         bound_db_uri = current_app.config["SQLALCHEMY_BINDS"].get(bind_key)
         if not _experiment_db_has_required_opinion_tables(bound_db_uri):
             flash(
-                "The current experiment database does not contain opinion evolution tables.",
+                _("The current experiment database does not contain opinion evolution tables."),
                 "warning",
             )
             return render_template(
@@ -3864,7 +3863,7 @@ def stress_reward_evolution(expid):
     db_path = _resolve_experiment_db_path(experiment)
     if not _experiment_db_has_required_stress_reward_tables(db_path):
         flash(
-            "The current experiment database does not contain stress/reward evolution tables.",
+            _("The current experiment database does not contain stress/reward evolution tables."),
             "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=expid))
@@ -3941,12 +3940,12 @@ def _load_annotation_experiment_context(
 
     experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     if not experiment:
-        flash("Experiment not found", "error")
+        flash(_("Experiment not found"), "error")
         return None, None, redirect(url_for("experiments.settings"))
 
     admin_user = _current_admin_user_or_none()
     if require_manage and not user_can_manage_experiment(admin_user, experiment):
-        flash("You do not have permission to manage this experiment.", "error")
+        flash(_("You do not have permission to manage this experiment."), "error")
         return None, None, redirect(url_for("experiments.experiment_details", uid=uid))
 
     db_path = _resolve_analytics_db_path(experiment)
@@ -3974,7 +3973,7 @@ def _load_annotation_experiment_context(
 
     if not enabled:
         flash(
-            f"Enable {annotation_label} annotation in Experiment Configuration first.",
+            _("Enable %(annotation_label)s annotation in Experiment Configuration first.", annotation_label=annotation_label),
             "warning",
         )
         return None, None, redirect(url_for("experiments.experiment_details", uid=uid))
@@ -3988,12 +3987,12 @@ def _load_network_experiment_context(uid, require_manage=False):
 
     experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     if not experiment:
-        flash("Experiment not found", "error")
+        flash(_("Experiment not found"), "error")
         return None, None, redirect(url_for("experiments.settings"))
 
     admin_user = _current_admin_user_or_none()
     if require_manage and not user_can_manage_experiment(admin_user, experiment):
-        flash("You do not have permission to manage this experiment.", "error")
+        flash(_("You do not have permission to manage this experiment."), "error")
         return None, None, redirect(url_for("experiments.experiment_details", uid=uid))
 
     return experiment, _resolve_analytics_db_path(experiment), None
@@ -7407,7 +7406,7 @@ def _render_annotation_analytics_page(expid, annotation_key):
         )
     if not has_required_tables:
         flash(
-            f"The current experiment database does not contain {config['title'].lower()} tables.",
+            _("The current experiment database does not contain %(lower)s tables.", lower=config['title'].lower()),
             "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=expid))
@@ -7544,7 +7543,7 @@ def topic_evolution(expid):
     )
     if not _experiment_db_has_any_required_tables(db_path, required_table_sets):
         flash(
-            "The current experiment database does not contain topic-evolution tables.",
+            _("The current experiment database does not contain topic-evolution tables."),
             "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=expid))
@@ -7639,7 +7638,7 @@ def hashtag_evolution(expid):
     )
     if not _experiment_db_has_any_required_tables(db_path, required_table_sets):
         flash(
-            "The current experiment database does not contain hashtag-evolution tables.",
+            _("The current experiment database does not contain hashtag-evolution tables."),
             "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=expid))
@@ -7732,7 +7731,7 @@ def recsys_evolution(expid):
     )
     if not _experiment_db_has_any_required_tables(db_path, required_table_sets):
         flash(
-            "The current experiment database does not contain recommendation-tracking tables.",
+            _("The current experiment database does not contain recommendation-tracking tables."),
             "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=expid))
@@ -7813,7 +7812,7 @@ def network_analysis(expid):
         not available_network_types
     ):
         flash(
-            "The current experiment database does not contain supported network-analysis tables.",
+            _("The current experiment database does not contain supported network-analysis tables."),
             "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=expid))

@@ -116,6 +116,7 @@ from ._blueprint import (
     _schedule_check_lock,
     experiments,
 )
+from y_web.i18n import gettext as _
 
 DEFAULT_STRESS_REWARD_SYSTEM = {
     "coupling": {
@@ -671,11 +672,11 @@ def _load_forum_experiment_context(uid, require_manage=True):
 
     experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     if not experiment:
-        flash("Experiment not found", "error")
+        flash(_("Experiment not found"), "error")
         return None, None, redirect(url_for("experiments.settings"))
 
     if experiment.platform_type != "forum":
-        flash("This page is only available for forum experiments.", "warning")
+        flash(_("This page is only available for forum experiments."), "warning")
         return (
             None,
             None,
@@ -684,7 +685,7 @@ def _load_forum_experiment_context(uid, require_manage=True):
 
     admin_user = _current_admin_user_or_none()
     if require_manage and not user_can_manage_experiment(admin_user, experiment):
-        flash("You do not have permission to manage this experiment.", "error")
+        flash(_("You do not have permission to manage this experiment."), "error")
         return (
             None,
             None,
@@ -696,7 +697,7 @@ def _load_forum_experiment_context(uid, require_manage=True):
     base_dir = get_writable_path()
     exp_folder = get_experiment_uid_from_db_name(experiment.db_name)
     if not exp_folder:
-        flash("Invalid experiment database configuration", "error")
+        flash(_("Invalid experiment database configuration"), "error")
         return None, None, redirect(url_for("experiments.settings"))
 
     experiment_dir = os.path.join(base_dir, "y_web", "experiments", exp_folder)
@@ -710,12 +711,12 @@ def _load_memory_capable_experiment_context(uid, require_manage=True):
 
     experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     if not experiment:
-        flash("Experiment not found", "error")
+        flash(_("Experiment not found"), "error")
         return None, None, redirect(url_for("experiments.settings"))
 
     admin_user = _current_admin_user_or_none()
     if require_manage and not user_can_manage_experiment(admin_user, experiment):
-        flash("You do not have permission to manage this experiment.", "error")
+        flash(_("You do not have permission to manage this experiment."), "error")
         return (
             None,
             None,
@@ -727,7 +728,7 @@ def _load_memory_capable_experiment_context(uid, require_manage=True):
     base_dir = get_writable_path()
     exp_folder = get_experiment_uid_from_db_name(experiment.db_name)
     if not exp_folder:
-        flash("Invalid experiment database configuration", "error")
+        flash(_("Invalid experiment database configuration"), "error")
         return None, None, redirect(url_for("experiments.settings"))
 
     experiment_dir = os.path.join(base_dir, "y_web", "experiments", exp_folder)
@@ -741,12 +742,12 @@ def _load_stress_reward_experiment_context(uid, require_manage=True):
 
     experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     if not experiment:
-        flash("Experiment not found", "error")
+        flash(_("Experiment not found"), "error")
         return None, None, redirect(url_for("experiments.settings"))
 
     admin_user = _current_admin_user_or_none()
     if require_manage and not user_can_manage_experiment(admin_user, experiment):
-        flash("You do not have permission to manage this experiment.", "error")
+        flash(_("You do not have permission to manage this experiment."), "error")
         return None, None, redirect(url_for("experiments.experiment_details", uid=uid))
 
     if getattr(experiment, "platform_type", "") not in {
@@ -755,7 +756,7 @@ def _load_stress_reward_experiment_context(uid, require_manage=True):
         "hpc",
     }:
         flash(
-            "Stress/reward settings are available only for microblogging, forum, and HPC experiments.",
+            _("Stress/reward settings are available only for microblogging, forum, and HPC experiments."),
             "error",
         )
         return None, None, redirect(url_for("experiments.experiment_details", uid=uid))
@@ -765,7 +766,7 @@ def _load_stress_reward_experiment_context(uid, require_manage=True):
     base_dir = get_writable_path()
     exp_folder = get_experiment_uid_from_db_name(experiment.db_name)
     if not exp_folder:
-        flash("Invalid experiment database configuration", "error")
+        flash(_("Invalid experiment database configuration"), "error")
         return None, None, redirect(url_for("experiments.settings"))
 
     experiment_dir = os.path.join(base_dir, "y_web", "experiments", exp_folder)
@@ -789,7 +790,7 @@ def _load_stress_reward_experiment_context(uid, require_manage=True):
 
     stress_reward_cfg = normalize_stress_reward_config(config.get("stress_reward"))
     if not bool(stress_reward_cfg.get("enabled", False)):
-        flash("Enable stress/reward in Experiment Configuration first.", "warning")
+        flash(_("Enable stress/reward in Experiment Configuration first."), "warning")
         return None, None, redirect(url_for("experiments.experiment_details", uid=uid))
 
     return experiment, experiment_dir, None
@@ -1166,7 +1167,7 @@ def get_suggested_port():
     # Fall back to an OS-assigned free port if the configured range is exhausted.
     # This prevents older servers from failing hard when a large historical
     # experiment catalog has saturated the common port range.
-    for _ in range(32):
+    for _attempt in range(32):
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                 sock.bind(("127.0.0.1", 0))

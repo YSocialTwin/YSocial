@@ -140,6 +140,7 @@ from ._helpers import (
     normalize_stress_reward_config,
     sync_stress_reward_client_config,
 )
+from y_web.i18n import gettext as _
 
 
 def _sync_detoxify_download_notification(admin_user, state):
@@ -525,7 +526,7 @@ def experiment_details(uid):
     experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     admin_user = _current_admin_user_or_none()
     if not user_can_view_experiment(admin_user, experiment):
-        flash("You are not allowed to view this experiment.", "error")
+        flash(_("You are not allowed to view this experiment."), "error")
         return redirect(url_for("experiments.settings"))
 
     # get experiment populations along with population names and ids
@@ -846,31 +847,31 @@ def update_experiment_name(uid):
 
     exp = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     if not exp:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
 
     admin_user = _current_admin_user_or_none()
     if not user_can_manage_experiment(admin_user, exp):
-        flash("You do not have permission to rename this experiment.", "error")
+        flash(_("You do not have permission to rename this experiment."), "error")
         return redirect(url_for("experiments.experiment_details", uid=uid))
 
     if int(getattr(exp, "running", 0) or 0) == 1:
-        flash("Stop the experiment before renaming it.", "warning")
+        flash(_("Stop the experiment before renaming it."), "warning")
         return redirect(url_for("experiments.experiment_details", uid=uid))
 
     new_exp_name = (request.form.get("exp_name") or "").strip()
     if not new_exp_name:
-        flash("Experiment name is required.", "warning")
+        flash(_("Experiment name is required."), "warning")
         return redirect(url_for("experiments.experiment_details", uid=uid))
     if len(new_exp_name) > 50:
-        flash("Experiment name must be 50 characters or fewer.", "warning")
+        flash(_("Experiment name must be 50 characters or fewer."), "warning")
         return redirect(url_for("experiments.experiment_details", uid=uid))
 
     duplicate_exp = db.session.scalars(
         select(Exps).filter(Exps.exp_name == new_exp_name, Exps.idexp != uid)
     ).first()
     if duplicate_exp:
-        flash("An experiment with that name already exists.", "warning")
+        flash(_("An experiment with that name already exists."), "warning")
         return redirect(url_for("experiments.experiment_details", uid=uid))
 
     try:
@@ -910,10 +911,10 @@ def update_experiment_name(uid):
             exc,
             exc_info=True,
         )
-        flash(f"Failed to rename experiment: {exc}", "error")
+        flash(_("Failed to rename experiment: %(error)s", error=exc), "error")
         return redirect(url_for("experiments.experiment_details", uid=uid))
 
-    flash(f"Experiment renamed to '{new_exp_name}'.", "success")
+    flash(_("Experiment renamed to '%(new_exp_name)s'.", new_exp_name=new_exp_name), "success")
     return redirect(url_for("experiments.experiment_details", uid=uid))
 
 
@@ -925,12 +926,12 @@ def update_experiment_config(uid):
 
     exp = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     if not exp:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
 
     admin_user = _current_admin_user_or_none()
     if not user_can_manage_experiment(admin_user, exp):
-        flash("You do not have permission to update this experiment.", "error")
+        flash(_("You do not have permission to update this experiment."), "error")
         return redirect(url_for("experiments.experiment_details", uid=uid))
 
     def _is_checked(field_name):
@@ -962,7 +963,7 @@ def update_experiment_config(uid):
     elif toxicity_enabled and not detoxify_ready:
         toxicity_enabled = False
         flash(
-            "Install Detoxify from Miscellanea before enabling toxicity annotation.",
+            _("Install Detoxify from Miscellanea before enabling toxicity annotation."),
             "warning",
         )
 
@@ -1001,7 +1002,7 @@ def update_experiment_config(uid):
         )
         cfg_path = os.path.join(exp_folder, cfg_name)
         if not os.path.exists(cfg_path):
-            flash(f"Configuration file not found: {cfg_name}", "error")
+            flash(_("Configuration file not found: %(cfg_name)s", cfg_name=cfg_name), "error")
             return redirect(url_for("experiments.experiment_details", uid=uid))
 
         with open(cfg_path, "r") as f:
@@ -1113,10 +1114,10 @@ def update_experiment_config(uid):
                 )
 
         db.session.commit()
-        flash("Experiment configuration updated.", "success")
+        flash(_("Experiment configuration updated."), "success")
     except Exception as exc:
         db.session.rollback()
-        flash(f"Failed to update configuration: {str(exc)}", "error")
+        flash(_("Failed to update configuration: %(error)s", error=str(exc)), "error")
 
     return redirect(url_for("experiments.experiment_details", uid=uid))
 
@@ -1279,9 +1280,9 @@ def update_stress_reward_settings(uid):
                     exc_info=True,
                 )
 
-        flash("Stress/reward settings updated.", "success")
+        flash(_("Stress/reward settings updated."), "success")
     except Exception as exc:
-        flash(f"Failed to update stress/reward settings: {str(exc)}", "error")
+        flash(_("Failed to update stress/reward settings: %(error)s", error=str(exc)), "error")
 
     return redirect(url_for("experiments.stress_reward_settings", uid=uid))
 
@@ -1294,12 +1295,12 @@ def update_experiment_topics(uid):
 
     exp = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     if not exp:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
 
     admin_user = _current_admin_user_or_none()
     if not user_can_manage_experiment(admin_user, exp):
-        flash("You do not have permission to update experiment topics.", "error")
+        flash(_("You do not have permission to update experiment topics."), "error")
         return redirect(url_for("experiments.experiment_details", uid=uid))
 
     raw_topics = (request.form.get("topics") or "").split(",")
@@ -1316,7 +1317,7 @@ def update_experiment_topics(uid):
         topics.append(topic)
 
     if not topics:
-        flash("Please provide at least one simulation topic.", "warning")
+        flash(_("Please provide at least one simulation topic."), "warning")
         return redirect(url_for("experiments.experiment_details", uid=uid))
 
     try:
@@ -1349,10 +1350,10 @@ def update_experiment_topics(uid):
                 json.dump(config, f, indent=4)
 
         db.session.commit()
-        flash("Experiment topics updated.", "success")
+        flash(_("Experiment topics updated."), "success")
     except Exception as exc:
         db.session.rollback()
-        flash(f"Failed to update experiment topics: {str(exc)}", "error")
+        flash(_("Failed to update experiment topics: %(error)s", error=str(exc)), "error")
 
     return redirect(url_for("experiments.experiment_details", uid=uid))
 
@@ -1365,15 +1366,15 @@ def clear_experiment_logs(uid):
 
     exp = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     if not exp:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
     if int(getattr(exp, "running", 0) or 0) == 1:
-        flash("Stop the experiment before clearing logs.", "warning")
+        flash(_("Stop the experiment before clearing logs."), "warning")
         return redirect(url_for("experiments.experiment_details", uid=uid))
 
     admin_user = _current_admin_user_or_none()
     if not user_can_manage_experiment(admin_user, exp):
-        flash("You do not have permission to clear logs for this experiment.", "error")
+        flash(_("You do not have permission to clear logs for this experiment."), "error")
         return redirect(url_for("experiments.experiment_details", uid=uid))
 
     try:
@@ -1385,24 +1386,24 @@ def clear_experiment_logs(uid):
 
         if deleted_count:
             flash(
-                f"Cleared {deleted_count} log file(s) from the experiment folder.",
+                _("Cleared %(deleted_count)s log file(s) from the experiment folder.", deleted_count=deleted_count),
                 "success",
             )
         else:
-            flash("No log files were found to clear.", "warning")
+            flash(_("No log files were found to clear."), "warning")
 
         for failed_path in failed_paths:
             current_app.logger.warning(f"Could not delete log file {failed_path}")
         if failed_paths:
             flash(
-                f"Could not delete {len(failed_paths)} log file(s) due to filesystem errors.",
+                _("Could not delete %(failed_paths)s log file(s) due to filesystem errors.", failed_paths=len(failed_paths)),
                 "warning",
             )
     except Exception as exc:
         current_app.logger.error(
             f"Failed to clear experiment logs: {exc}", exc_info=True
         )
-        flash(f"Failed to clear experiment logs: {str(exc)}", "error")
+        flash(_("Failed to clear experiment logs: %(error)s", error=str(exc)), "error")
 
     return redirect(url_for("experiments.experiment_details", uid=uid))
 
@@ -1415,27 +1416,27 @@ def reset_hpc_experiment(uid):
 
     exp = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     if not exp:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
     if exp.simulator_type != "HPC":
-        flash("Reset is available only for HPC experiments.", "warning")
+        flash(_("Reset is available only for HPC experiments."), "warning")
         return redirect(url_for("experiments.experiment_details", uid=uid))
     if exp.running == 1:
-        flash("HPC reset is available only when the experiment is stopped.", "warning")
+        flash(_("HPC reset is available only when the experiment is stopped."), "warning")
         return redirect(url_for("experiments.experiment_details", uid=uid))
 
     clients = db.session.scalars(select(Client).filter_by(id_exp=uid)).all()
     has_started_once = _experiment_has_started_once(exp, clients=clients)
     if not has_started_once:
         flash(
-            "HPC reset is available only for experiments that have been started at least once.",
+            _("HPC reset is available only for experiments that have been started at least once."),
             "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=uid))
 
     admin_user = _current_admin_user_or_none()
     if not user_can_manage_experiment(admin_user, exp):
-        flash("You do not have permission to reset this experiment.", "error")
+        flash(_("You do not have permission to reset this experiment."), "error")
         return redirect(url_for("experiments.experiment_details", uid=uid))
 
     try:
@@ -1527,12 +1528,12 @@ def reset_hpc_experiment(uid):
 
         db.session.commit()
         flash(
-            f"HPC experiment reset completed. Restored {restored_count} population backup file(s).",
+            _("HPC experiment reset completed. Restored %(restored_count)s population backup file(s).", restored_count=restored_count),
             "success",
         )
     except Exception as exc:
         db.session.rollback()
-        flash(f"Failed to reset HPC experiment: {str(exc)}", "error")
+        flash(_("Failed to reset HPC experiment: %(error)s", error=str(exc)), "error")
 
     return redirect(url_for("experiments.experiment_details", uid=uid))
 
@@ -2121,7 +2122,7 @@ def miscellanea():
         select(Admin_users).filter_by(username=current_user.username)
     ).first()
     if user.role != "admin":
-        flash("Access denied. This page is only accessible to administrators.", "error")
+        flash(_("Access denied. This page is only accessible to administrators."), "error")
         return redirect(url_for("admin.dashboard"))
 
     check_privileges(current_user.username)
@@ -2575,7 +2576,7 @@ def create_topic():
         select(Topic_List).filter_by(name=topic)
     ).first()
     if existing_topic:
-        flash("The topic already exists.")
+        flash(_("The topic already exists."))
         return redirect(request.referrer)
 
     new_topic = Topic_List(name=topic)
@@ -2642,7 +2643,7 @@ def delete_topic(topic_id):
 
     topic = db.session.scalars(select(Topic_List).filter_by(id=topic_id)).first()
     if not topic:
-        flash("Topic not found.")
+        flash(_("Topic not found."))
         return miscellanea()
     db.session.delete(topic)
     db.session.commit()
@@ -2657,7 +2658,7 @@ def delete_language(language_id):
 
     language = db.session.scalars(select(Languages).filter_by(id=language_id)).first()
     if not language:
-        flash("Language not found.")
+        flash(_("Language not found."))
         return miscellanea()
     db.session.delete(language)
     db.session.commit()
@@ -2672,7 +2673,7 @@ def delete_leaning(leaning_id):
 
     leaning = db.session.scalars(select(Leanings).filter_by(id=leaning_id)).first()
     if not leaning:
-        flash("Leaning not found.")
+        flash(_("Leaning not found."))
         return miscellanea()
     db.session.delete(leaning)
     db.session.commit()
@@ -2689,7 +2690,7 @@ def delete_nationality(nationality_id):
         select(Nationalities).filter_by(id=nationality_id)
     ).first()
     if not nationality:
-        flash("Nationality not found.")
+        flash(_("Nationality not found."))
         return miscellanea()
     db.session.delete(nationality)
     db.session.commit()
@@ -2708,7 +2709,7 @@ def delete_education_level(education_level_id):
         select(Education).filter_by(id=education_level_id)
     ).first()
     if not education_level:
-        flash("Education level not found.")
+        flash(_("Education level not found."))
         return miscellanea()
     db.session.delete(education_level)
     db.session.commit()
@@ -2725,7 +2726,7 @@ def delete_profession(profession_id):
         select(Profession).filter_by(id=profession_id)
     ).first()
     if not profession:
-        flash("Profession not found.")
+        flash(_("Profession not found."))
         return miscellanea()
     db.session.delete(profession)
     db.session.commit()
@@ -2809,7 +2810,7 @@ def delete_toxicity_level(toxicity_level_id):
         select(Toxicity_Levels).filter_by(id=toxicity_level_id)
     ).first()
     if not toxicity_level:
-        flash("Toxicity level not found.")
+        flash(_("Toxicity level not found."))
         return miscellanea()
     db.session.delete(toxicity_level)
     db.session.commit()
@@ -2901,7 +2902,7 @@ def create_age_class():
         age_start = int(request.form.get("age_start", 0))
         age_end = int(request.form.get("age_end", 100))
     except (ValueError, TypeError):
-        flash("Invalid age value provided.")
+        flash(_("Invalid age value provided."))
         return miscellanea()
 
     age_class = AgeClass(
@@ -2923,7 +2924,7 @@ def delete_age_class(age_class_id):
 
     age_class = db.session.scalars(select(AgeClass).filter_by(id=age_class_id)).first()
     if not age_class:
-        flash("Age class not found.")
+        flash(_("Age class not found."))
         return miscellanea()
     db.session.delete(age_class)
     db.session.commit()
@@ -3004,7 +3005,7 @@ def create_activity_profile():
     hours = request.form.get("hours")
 
     if not name or not hours:
-        flash("Name and hours are required.")
+        flash(_("Name and hours are required."))
         return redirect(request.referrer)
 
     # Check if the profile already exists
@@ -3012,7 +3013,7 @@ def create_activity_profile():
         select(ActivityProfile).filter_by(name=name)
     ).first()
     if existing_profile:
-        flash("An activity profile with this name already exists.")
+        flash(_("An activity profile with this name already exists."))
         return redirect(request.referrer)
 
     profile = ActivityProfile(name=name, hours=hours)
@@ -3034,7 +3035,7 @@ def delete_activity_profile(profile_id):
         select(ActivityProfile).filter_by(id=profile_id)
     ).first()
     if not profile:
-        flash("Activity profile not found.")
+        flash(_("Activity profile not found."))
         return miscellanea()
     db.session.delete(profile)
     db.session.commit()

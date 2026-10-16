@@ -65,6 +65,7 @@ from y_web.src.models import (
     User_mgmt,
 )
 from y_web.src.recsys import get_suggested_posts, get_suggested_users
+from y_web.i18n import gettext as _
 
 
 def _build_friends_view_model(user_id, page, active_tab):
@@ -143,7 +144,7 @@ def feeed_logged():
     # Get active experiments
     exps = db.session.scalars(select(Exps).filter(Exps.status != 0)).all()
     if not exps:
-        flash("No active experiment. Please activate an experiment first.")
+        flash(_("No active experiment. Please activate an experiment first."))
         return redirect("/admin/experiments")
 
     if len(exps) > 1:
@@ -211,7 +212,7 @@ def feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
                 ).first()
                 if not user:
                     flash(
-                        "User not found in experiment. Please contact administrator.",
+                        _("User not found in experiment. Please contact administrator."),
                         "error",
                     )
                     return redirect(f"/admin/experiments")
@@ -346,7 +347,7 @@ def feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
             select(User_mgmt).filter_by(username=current_user.username)
         ).first()
         if not logged_user:
-            flash("User not found in experiment", "error")
+            flash(_("User not found in experiment"), "error")
             return redirect(url_for("main.index"))
         logged_id = logged_user.id
 
@@ -836,13 +837,13 @@ def get_thread(exp_id, post_id):
         select(User_mgmt).filter_by(username=current_user.username)
     ).first()
     if not logged_user:
-        flash("User not found in experiment", "error")
+        flash(_("User not found in experiment"), "error")
         return redirect(url_for("main.index"))
     exp_user_id = logged_user.id
 
     requested_post = db.session.scalars(select(Post).filter_by(id=post_id)).first()
     if not requested_post:
-        flash("Post not found", "error")
+        flash(_("Post not found"), "error")
         return redirect(url_for("main.index"))
 
     thread_root_id = getattr(requested_post, "thread_id", None) or requested_post.id
@@ -859,7 +860,7 @@ def get_thread(exp_id, post_id):
 
     hidden_ids = _hidden_author_ids_for_viewer(exp_id, exp_user_id)
     if hidden_ids and root_post.user_id in hidden_ids:
-        flash("Post not found", "error")
+        flash(_("Post not found"), "error")
         return redirect(url_for("main.index"))
 
     # Get all comments with this thread_id

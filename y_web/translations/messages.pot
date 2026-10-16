@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-16 15:22+0000\n"
+"POT-Creation-Date: 2026-10-16 15:27+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -34,7 +34,41 @@ msgid ""
 msgstr ""
 
 #, python-format
+msgid ""
+"%(created_count)s experiment copies successfully created from "
+"'%(exp_name)s'."
+msgstr ""
+
+#, python-format
+msgid ""
+"%(created_count)s experiment copies successfully created in group "
+"'%(target_group)s'."
+msgstr ""
+
+#, python-format
+msgid ""
+"%(display_name)s agents can only be assigned to matching custom "
+"populations."
+msgstr ""
+
+#, python-format
+msgid ""
+"%(display_name)s agents must be assigned to at least one matching custom "
+"population."
+msgstr ""
+
+#, python-format
 msgid "%(label)s Operation Log"
+msgstr ""
+
+#, python-format
+msgid "%(label)s enabled. Restart required: its routes are loaded at startup."
+msgstr ""
+
+#, python-format
+msgid ""
+"%(label)s is a symlinked development checkout: update it from its own "
+"repository."
 msgstr ""
 
 #, python-format
@@ -193,6 +227,10 @@ msgstr ""
 msgid "A discussion thread."
 msgstr ""
 
+#, python-format
+msgid "A new %(display_name)s population name is required."
+msgstr ""
+
 msgid "A population is a group of agents/pages that are used in a simulation."
 msgstr ""
 
@@ -215,6 +253,29 @@ msgid "About Us"
 msgstr ""
 
 msgid "Access Denied"
+msgstr ""
+
+msgid "Access denied."
+msgstr ""
+
+msgid "Access denied. Only administrators can check for updates."
+msgstr ""
+
+msgid "Access denied. Only administrators can modify telemetry settings."
+msgstr ""
+
+msgid "Access denied. Only administrators can modify watchdog settings."
+msgstr ""
+
+msgid "Access denied. Please use the experiment feed."
+msgstr ""
+
+msgid ""
+"Access denied. This page is only accessible to administrators and "
+"researchers."
+msgstr ""
+
+msgid "Access denied. This page is only accessible to administrators."
 msgstr ""
 
 msgid "Account"
@@ -291,6 +352,9 @@ msgstr ""
 msgid "Activity Rates Visualization"
 msgstr ""
 
+msgid "Activity profile not found."
+msgstr ""
+
 msgid "Actor Name Prefix"
 msgstr ""
 
@@ -302,6 +366,30 @@ msgstr ""
 
 #, python-format
 msgid "Ad hoc agent client workflows stay disabled until %(b)s is executed."
+msgstr ""
+
+msgid "Ad hoc agent clients are not available for remote experiments."
+msgstr ""
+
+msgid "Ad hoc agent clients are not available for rule-based experiments."
+msgstr ""
+
+#, python-format
+msgid "Ad hoc client configuration '%(name)s' saved."
+msgstr ""
+
+msgid "Ad hoc client configuration is invalid."
+msgstr ""
+
+msgid "Ad hoc client configuration not found."
+msgstr ""
+
+msgid "Ad hoc client deleted."
+msgstr ""
+
+msgid ""
+"Ad hoc client settings updated. Running clients will pick up the changes "
+"on the next round."
 msgstr ""
 
 msgid "AdHoc Agents' Clients"
@@ -394,6 +482,17 @@ msgstr ""
 msgid "Age Start"
 msgstr ""
 
+msgid "Age class not found."
+msgstr ""
+
+#, python-format
+msgid "Agent %(l)s or %(l2)s not found in network file."
+msgstr ""
+
+#, python-format
+msgid "Agent %(l)s or %(l2)s not found."
+msgstr ""
+
 msgid "Agent Archetypes"
 msgstr ""
 
@@ -445,16 +544,32 @@ msgstr ""
 msgid "Agent archetype persona"
 msgstr ""
 
+msgid "Agent archetypes reset to default values."
+msgstr ""
+
+msgid "Agent archetypes updated successfully."
+msgstr ""
+
 msgid "Agent gender"
 msgstr ""
 
 msgid "Agent interaction and engagement parameters."
 msgstr ""
 
+msgid "Agent is assigned to a population. Cannot delete."
+msgstr ""
+
 msgid "Agent name"
 msgstr ""
 
+#, python-format
+msgid "Agent name '%(name)s' already exists. Please choose a different name."
+msgstr ""
+
 msgid "Agent nationality"
+msgstr ""
+
+msgid "Agent not found."
 msgstr ""
 
 msgid "Agent profession"
@@ -545,6 +660,23 @@ msgstr ""
 msgid "Amplification of popular posts. 0 = disabled."
 msgstr ""
 
+msgid "An Ollama host is required when memory embeddings are enabled."
+msgstr ""
+
+msgid "An activity profile with this name already exists."
+msgstr ""
+
+#, python-format
+msgid "An ad hoc client config named '%(safe_client_name)s' already exists."
+msgstr ""
+
+#, python-format
+msgid "An experiment with name '%(name)s' already exists."
+msgstr ""
+
+msgid "An experiment with that name already exists."
+msgstr ""
+
 msgid "Analysis of client(s) execution."
 msgstr ""
 
@@ -581,6 +713,13 @@ msgid "Archetype Distribution (%)"
 msgstr ""
 
 msgid "Archetype Personas"
+msgstr ""
+
+#, python-format
+msgid "Archetype percentages must sum to 100%% (current sum: %(archetype_sum)s%%)"
+msgstr ""
+
+msgid "Archive generation started. You will be notified when the file is ready."
 msgstr ""
 
 msgid "Are you using YSocial for your research? Please cite us!"
@@ -817,10 +956,16 @@ msgstr ""
 msgid "Bluesky Data"
 msgstr ""
 
+msgid "Both experiment name and source experiment are required."
+msgstr ""
+
 msgid "Bounded Confidence"
 msgstr ""
 
 msgid "Bounded Confidence Parameters"
+msgstr ""
+
+msgid "Bounds must be in the range [0, 1]."
 msgstr ""
 
 msgid "Brief explanation of the client's purpose"
@@ -835,6 +980,12 @@ msgstr ""
 msgid "Broadcaster Persona"
 msgstr ""
 
+#, python-format
+msgid ""
+"Broadcaster transition probabilities must sum to 100%% (current sum: "
+"%(broad_sum)s%%)"
+msgstr ""
+
 msgid "Broadcaster:"
 msgstr ""
 
@@ -842,6 +993,11 @@ msgid "Bulk Assign Users to Experiment"
 msgstr ""
 
 msgid "Bulk Create Users"
+msgstr ""
+
+msgid ""
+"Bulk archive generation started. You will be notified when the file is "
+"ready."
 msgstr ""
 
 msgid "Business Hours (9-17)"
@@ -854,6 +1010,11 @@ msgid "Call Volume by Path"
 msgstr ""
 
 msgid "Cancel"
+msgstr ""
+
+msgid ""
+"Cannot delete this custom population because at least one custom agent "
+"would be left without a population."
 msgstr ""
 
 msgid "Cartesian product"
@@ -958,6 +1119,10 @@ msgstr ""
 msgid "Clear Logs"
 msgstr ""
 
+#, python-format
+msgid "Cleared %(deleted_count)s log file(s) from the experiment folder."
+msgstr ""
+
 msgid "Click \"Fetch Models\" to load available models from your LLM server"
 msgstr ""
 
@@ -1011,6 +1176,12 @@ msgstr ""
 msgid "Client Compute Time"
 msgstr ""
 
+msgid "Client ID is missing."
+msgstr ""
+
+msgid "Client ID is required."
+msgstr ""
+
 msgid "Client Logs Analysis"
 msgstr ""
 
@@ -1027,10 +1198,48 @@ msgid "Client Settings"
 msgstr ""
 
 #, python-format
+msgid "Client configuration file not found: %(client_config_file)s"
+msgstr ""
+
+#, python-format
+msgid "Client configuration file updated with extended duration (%(days)s days)."
+msgstr ""
+
+#, python-format
 msgid "Client creation and execution stay disabled until %(b)s is executed."
 msgstr ""
 
 msgid "Client identification and configuration."
+msgstr ""
+
+msgid ""
+"Client log metrics reset and re-parsed. Server metrics unchanged. Client "
+"plots updated."
+msgstr ""
+
+msgid ""
+"Client log metrics reset. Server metrics unchanged. Client plots will "
+"update on next refresh."
+msgstr ""
+
+msgid ""
+"Client metrics reset and re-parsed. Server metrics reset but not re-"
+"parsed yet. Plots will fully update on next refresh."
+msgstr ""
+
+msgid "Client name already exists."
+msgstr ""
+
+msgid "Client name is required."
+msgstr ""
+
+msgid "Client not found or does not belong to this experiment."
+msgstr ""
+
+msgid "Client not found."
+msgstr ""
+
+msgid "Client simulation parameters updated."
 msgstr ""
 
 msgid "Client:"
@@ -1043,6 +1252,10 @@ msgid "Clock Timezone"
 msgstr ""
 
 msgid "Clock Timezone:"
+msgstr ""
+
+#, python-format
+msgid "Cloned %(label)s on branch %(branch)s."
 msgstr ""
 
 msgid "Close"
@@ -1108,6 +1321,13 @@ msgid "Computational Social Science"
 msgstr ""
 
 msgid "Configurable Features"
+msgstr ""
+
+msgid "Configuration file not found."
+msgstr ""
+
+#, python-format
+msgid "Configuration file not found: %(cfg_name)s"
 msgstr ""
 
 msgid "Configuration settings controlling simulation behavior and dynamics."
@@ -1352,7 +1572,16 @@ msgstr ""
 msgid "Content Visibility (hours)"
 msgstr ""
 
+msgid "Content already reported."
+msgstr ""
+
+msgid "Content not found."
+msgstr ""
+
 msgid "Content of a post"
+msgstr ""
+
+msgid "Content reported."
 msgstr ""
 
 msgid "Content:"
@@ -1392,6 +1621,14 @@ msgid "Core parameters"
 msgstr ""
 
 msgid "Core simulation handler instructions for processing agent actions."
+msgstr ""
+
+#, python-format
+msgid "Could not delete %(failed_paths)s log file(s) due to filesystem errors."
+msgstr ""
+
+#, python-format
+msgid "Could not delete ad hoc client: %(error)s"
 msgstr ""
 
 msgid "Count"
@@ -1488,6 +1725,10 @@ msgstr ""
 msgid "Created"
 msgstr ""
 
+#, python-format
+msgid "Created %(created)s matrix experiment(s) in group '%(target_group)s'."
+msgstr ""
+
 msgid "Created using predefined parameters. Agents are automatically generated."
 msgstr ""
 
@@ -1551,6 +1792,9 @@ msgstr ""
 msgid "Custom Population Overview"
 msgstr ""
 
+msgid "Custom agent type not found."
+msgstr ""
+
 msgid "Custom agents"
 msgstr ""
 
@@ -1584,6 +1828,10 @@ msgid "Dashboard language"
 msgstr ""
 
 msgid "Database Fallback"
+msgstr ""
+
+#, python-format
+msgid "Database error: %(error)s"
 msgstr ""
 
 msgid "Day"
@@ -1711,6 +1959,14 @@ msgid "Delete all completed experiments"
 msgstr ""
 
 msgid "Delete all stopped/scheduled experiments"
+msgstr ""
+
+#, python-format
+msgid "Deleted %(deleted_count)s experiment(s)."
+msgstr ""
+
+#, python-format
+msgid "Deleted %(label)s."
 msgstr ""
 
 msgid "Demographic Information"
@@ -1861,6 +2117,9 @@ msgstr ""
 msgid "Download all completed experiments as a ZIP file"
 msgstr ""
 
+msgid "Download file is no longer available."
+msgstr ""
+
 msgid "Download or remove this experiment."
 msgstr ""
 
@@ -1924,16 +2183,28 @@ msgstr ""
 msgid "Education Levels"
 msgstr ""
 
+msgid "Education level not found."
+msgstr ""
+
 msgid "Efficient/Organized"
 msgstr ""
 
 msgid "Email"
 msgstr ""
 
+msgid "Email is already in use by another user"
+msgstr ""
+
+msgid "Email updated successfully"
+msgstr ""
+
 msgid "Embedding Model"
 msgstr ""
 
 msgid "Embedding Service"
+msgstr ""
+
+msgid "Embedding settings updated successfully."
 msgstr ""
 
 msgid "Emotion"
@@ -1955,6 +2226,10 @@ msgid "Empty Populations"
 msgstr ""
 
 msgid "Enable"
+msgstr ""
+
+#, python-format
+msgid "Enable %(annotation_label)s annotation in Experiment Configuration first."
 msgstr ""
 
 #, python-format
@@ -2028,6 +2303,9 @@ msgstr ""
 msgid "Enable run-scoped memory"
 msgstr ""
 
+msgid "Enable stress/reward in Experiment Configuration first."
+msgstr ""
+
 msgid "Enable/Disable Toggle:"
 msgstr ""
 
@@ -2094,6 +2372,66 @@ msgstr ""
 msgid "Error %(code)s"
 msgstr ""
 
+#, python-format
+msgid "Error accessing experiment: %(error)s"
+msgstr ""
+
+msgid "Error adding user to experiment: unable to open experiment database."
+msgstr ""
+
+#, python-format
+msgid "Error checking for updates: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Error creating copy '%(copy_name)s': %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Error deleting user: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Error during bulk assignment: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Error loading population file: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Error pausing ad hoc client: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Error sampling from distribution '%(distribution_name)s': %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Error saving population file: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Error setting watchdog interval: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Error starting ad hoc client: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Error starting client: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Error updating client configuration: %(error)s"
+msgstr ""
+
+msgid ""
+"Error: No available port found in range 5000-6000. Cannot upload "
+"experiment."
+msgstr ""
+
 msgid "Estimated remaining time:"
 msgstr ""
 
@@ -2110,6 +2448,9 @@ msgid "Event"
 msgstr ""
 
 msgid "Event weights"
+msgstr ""
+
+msgid "Every unlocked feature needs at least one alternative value."
 msgstr ""
 
 msgid "Evidence Tail Max"
@@ -2151,6 +2492,32 @@ msgstr ""
 msgid "Experiment"
 msgstr ""
 
+#, python-format
+msgid ""
+"Experiment '%(created_names)s' successfully created as part of copied "
+"group '%(target_group)s'."
+msgstr ""
+
+#, python-format
+msgid "Experiment '%(exp_name)s' activated."
+msgstr ""
+
+#, python-format
+msgid "Experiment '%(exp_name)s' deactivated."
+msgstr ""
+
+#, python-format
+msgid ""
+"Experiment '%(exp_name)s' moved from completed to stopped (client "
+"duration extended)."
+msgstr ""
+
+#, python-format
+msgid ""
+"Experiment '%(exp_names_to_create)s' successfully created as a copy of "
+"'%(exp_name)s'."
+msgstr ""
+
 msgid "Experiment Clock Mode"
 msgstr ""
 
@@ -2184,13 +2551,38 @@ msgstr ""
 msgid "Experiment compatibility"
 msgstr ""
 
+msgid "Experiment configuration updated."
+msgstr ""
+
 msgid "Experiment identification and settings."
 msgstr ""
 
 msgid "Experiment name"
 msgstr ""
 
+msgid "Experiment name is required."
+msgstr ""
+
+msgid "Experiment name must be 50 characters or fewer."
+msgstr ""
+
+msgid "Experiment not found"
+msgstr ""
+
+msgid "Experiment not found or not active."
+msgstr ""
+
+msgid "Experiment not found."
+msgstr ""
+
 msgid "Experiment owner"
+msgstr ""
+
+#, python-format
+msgid "Experiment renamed to '%(new_exp_name)s'."
+msgstr ""
+
+msgid "Experiment topics updated."
 msgstr ""
 
 msgid "Experiment type"
@@ -2238,6 +2630,12 @@ msgid "Explorer %"
 msgstr ""
 
 msgid "Explorer Persona"
+msgstr ""
+
+#, python-format
+msgid ""
+"Explorer transition probabilities must sum to 100%% (current sum: "
+"%(expl_sum)s%%)"
 msgstr ""
 
 msgid "Explorer:"
@@ -2288,6 +2686,34 @@ msgstr ""
 msgid "Extreme Interest"
 msgstr ""
 
+#, python-format
+msgid "Failed to clear experiment logs: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Failed to delete %(failed_ids)s experiment(s): %(join)s"
+msgstr ""
+
+#, python-format
+msgid "Failed to rename experiment: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Failed to reset HPC experiment: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Failed to update configuration: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Failed to update experiment topics: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Failed to update stress/reward settings: %(error)s"
+msgstr ""
+
 msgid "False"
 msgstr ""
 
@@ -2318,6 +2744,16 @@ msgstr ""
 msgid "Feed algorithm shown to standard users by default"
 msgstr ""
 
+msgid "Feed limits updated successfully."
+msgstr ""
+
+msgid "Feed source could not be reached."
+msgstr ""
+
+#, python-format
+msgid "Feed source returned HTTP %(code)s."
+msgstr ""
+
 msgid "Female"
 msgstr ""
 
@@ -2334,6 +2770,19 @@ msgid "Fetch Vision Models"
 msgstr ""
 
 msgid "Fetch available vision models"
+msgstr ""
+
+#, python-format
+msgid "Fetched %(label)s from branch %(branch)s."
+msgstr ""
+
+#, python-format
+msgid "Field '%(replace)s' contains an invalid value."
+msgstr ""
+
+msgid ""
+"File format error: provide a csv file containing two columns with agent "
+"names. No header required."
 msgstr ""
 
 msgid "Filter Methods"
@@ -2415,6 +2864,17 @@ msgstr ""
 msgid "Forum RSS Resources"
 msgstr ""
 
+msgid "Forum avatar mode updated successfully."
+msgstr ""
+
+msgid ""
+"Forum experiments are unavailable because YServerReddit and YClientReddit"
+" are not both present."
+msgstr ""
+
+msgid "Forum feed assignments updated successfully."
+msgstr ""
+
 msgid ""
 "Forum uses link-sharing to publish content imported from RSS and feed "
 "sources."
@@ -2462,6 +2922,9 @@ msgid "Gender"
 msgstr ""
 
 msgid "Gender Distribution"
+msgstr ""
+
+msgid "Gender distribution must total 100%."
 msgstr ""
 
 msgid "Generate"
@@ -2518,6 +2981,22 @@ msgstr ""
 msgid "Git checkout unavailable"
 msgstr ""
 
+#, python-format
+msgid ""
+"Git is not available on this host. Install %(label)s from a GitHub "
+"release first."
+msgstr ""
+
+#, python-format
+msgid ""
+"Git is not available on this host. Use the release install flow for "
+"%(label)s."
+msgstr ""
+
+#, python-format
+msgid "Git is not available on this host. Use the release source for %(label)s."
+msgstr ""
+
 msgid "GitHub Discussions"
 msgstr ""
 
@@ -2528,6 +3007,12 @@ msgid "GitHub release"
 msgstr ""
 
 msgid "GitHub session"
+msgstr ""
+
+msgid "GitHub session cleared."
+msgstr ""
+
+msgid "GitHub session enabled for plugin release access."
 msgstr ""
 
 msgid "GitHub:"
@@ -2590,7 +3075,36 @@ msgstr ""
 msgid "HPC Simulator"
 msgstr ""
 
+#, python-format
+msgid "HPC client '%(name)s' created successfully"
+msgstr ""
+
+msgid "HPC client configuration file not found."
+msgstr ""
+
+#, python-format
+msgid ""
+"HPC experiment reset completed. Restored %(restored_count)s population "
+"backup file(s)."
+msgstr ""
+
+msgid ""
+"HPC microblogging experiments are unavailable because YSimulator is not "
+"present."
+msgstr ""
+
+msgid "HPC prompts updated successfully!"
+msgstr ""
+
 msgid "HPC prompts use a system/user template pattern:"
+msgstr ""
+
+msgid ""
+"HPC reset is available only for experiments that have been started at "
+"least once."
+msgstr ""
+
+msgid "HPC reset is available only when the experiment is stopped."
 msgstr ""
 
 msgid "Half-life Rounds"
@@ -2609,6 +3123,9 @@ msgid "Header Image URL"
 msgstr ""
 
 msgid "Hello World Settings"
+msgstr ""
+
+msgid "Hello World agent plugin is not currently installed."
 msgstr ""
 
 msgid "Help us improve YSocial: submit the experiment log!"
@@ -2743,6 +3260,12 @@ msgstr ""
 msgid "Image description"
 msgstr ""
 
+msgid "Image feed resource not found."
+msgstr ""
+
+msgid "Image feeds updated successfully."
+msgstr ""
+
 msgid ""
 "Image sharing/commenting is currently disabled. Fetch the available "
 "vision models and select one to enable this feature."
@@ -2823,7 +3346,18 @@ msgstr ""
 msgid "Install Detoxify first from %(link)s to enable toxicity annotation."
 msgstr ""
 
+msgid "Install Detoxify from Miscellanea before enabling toxicity annotation."
+msgstr ""
+
 msgid "Installed"
+msgstr ""
+
+#, python-format
+msgid "Installed %(label)s from GitHub release %(release_tag)s."
+msgstr ""
+
+#, python-format
+msgid "Installed dependencies for %(label)s."
 msgstr ""
 
 msgid "Instructions"
@@ -2896,13 +3430,79 @@ msgstr ""
 msgid "Interval"
 msgstr ""
 
+msgid "Interview is unavailable because memory is disabled for this experiment."
+msgstr ""
+
 msgid "Intra-block edge probability"
 msgstr ""
 
 msgid "Intra-block probability"
 msgstr ""
 
+#, python-format
+msgid "Invalid JSON parameters for distribution '%(name)s': %(error)s"
+msgstr ""
+
+msgid "Invalid User ID or Experiment ID."
+msgstr ""
+
+msgid "Invalid age value provided."
+msgstr ""
+
+msgid "Invalid agent or population selection."
+msgstr ""
+
+#, python-format
+msgid "Invalid archetype values: %(error)s"
+msgstr ""
+
+msgid "Invalid bound values. Must be numbers."
+msgstr ""
+
+msgid "Invalid download path."
+msgstr ""
+
+msgid "Invalid experiment IDs provided."
+msgstr ""
+
+msgid "Invalid experiment database configuration"
+msgstr ""
+
+#, python-format
+msgid "Invalid input values: %(error)s"
+msgstr ""
+
+msgid "Invalid or expired session. Please log in again."
+msgstr ""
+
+msgid "Invalid parameters format. Must be valid JSON."
+msgstr ""
+
+msgid "Invalid population IDs provided."
+msgstr ""
+
+msgid "Invalid remote host format. Use IP address or domain name."
+msgstr ""
+
+msgid "Invalid remote port. Please enter a valid number."
+msgstr ""
+
+msgid "Invalid remote port. Port must be between 1 and 65535."
+msgstr ""
+
+msgid "Invalid request."
+msgstr ""
+
+msgid "Invalid revoke request."
+msgstr ""
+
 msgid "Invalid user ID."
+msgstr ""
+
+msgid "Invalid user role. Please contact an administrator."
+msgstr ""
+
+msgid "Invalid user session."
 msgstr ""
 
 msgid "Inventive/Curious"
@@ -3022,6 +3622,9 @@ msgstr ""
 msgid "Language Spoken"
 msgstr ""
 
+msgid "Language not found."
+msgstr ""
+
 msgid "Languages"
 msgstr ""
 
@@ -3053,6 +3656,9 @@ msgid "Launch clients and open the forum interface from the same control panel"
 msgstr ""
 
 msgid "Launch clients and open the web interface from the same control panel"
+msgstr ""
+
+msgid "Leaning not found."
 msgstr ""
 
 msgid "Leave empty for all agents"
@@ -3121,6 +3727,14 @@ msgstr ""
 msgid "Log Synchronization:"
 msgstr ""
 
+msgid ""
+"Log metrics reset and re-parsed. Plots now show data from original run "
+"and will include extended data after client restart."
+msgstr ""
+
+msgid "Log metrics reset. Plots will update with extended data on next refresh."
+msgstr ""
+
 msgid "Log-Normal"
 msgstr ""
 
@@ -3140,6 +3754,9 @@ msgid "Low Interest"
 msgstr ""
 
 msgid "Lower Bound"
+msgstr ""
+
+msgid "Lower bound must be less than or equal to upper bound."
 msgstr ""
 
 msgid "Maintain the active simulation topics from the overview card"
@@ -3262,6 +3879,9 @@ msgstr ""
 msgid "Merge Populations"
 msgstr ""
 
+msgid "Merged population type must match the selected population platform type."
+msgstr ""
+
 msgid "Message:"
 msgstr ""
 
@@ -3272,6 +3892,11 @@ msgid "Microblogging"
 msgstr ""
 
 msgid "Microblogging (i.e., X/BlueSky)"
+msgstr ""
+
+msgid ""
+"Microblogging experiments are unavailable because neither YServer/YClient"
+" nor YSimulator is present."
 msgstr ""
 
 msgid "Min Probability Ratio"
@@ -3344,6 +3969,9 @@ msgstr ""
 msgid "Name"
 msgstr ""
 
+msgid "Name and hours are required."
+msgstr ""
+
 msgid "Name:"
 msgstr ""
 
@@ -3351,6 +3979,9 @@ msgid "Nationalities"
 msgstr ""
 
 msgid "Nationality"
+msgstr ""
+
+msgid "Nationality not found."
 msgstr ""
 
 msgid "Nearest neighbors (k)"
@@ -3380,6 +4011,11 @@ msgid "Network Science"
 msgstr ""
 
 msgid "Network Type"
+msgstr ""
+
+msgid ""
+"Network file format error: provide a csv file containing two columns with"
+" agent names. No header required."
 msgstr ""
 
 msgid "Neuroticism"
@@ -3469,6 +4105,10 @@ msgstr ""
 msgid "New post"
 msgstr ""
 
+#, python-format
+msgid "New version available: %(get)s (v%(get2)s)"
+msgstr ""
+
 msgid "News"
 msgstr ""
 
@@ -3496,16 +4136,34 @@ msgstr ""
 msgid "No active discussion topics for this experiment."
 msgstr ""
 
+msgid "No active experiment. Please activate an experiment first."
+msgstr ""
+
 msgid "No active experiments available"
+msgstr ""
+
+msgid "No active experiments available. Please contact an administrator."
+msgstr ""
+
+msgid "No active photo-sharing experiment. Please activate one first."
 msgstr ""
 
 msgid "No activity profiles available. Create some in the Miscellanea page first."
 msgstr ""
 
+msgid "No ad hoc agent plugins are currently installed."
+msgstr ""
+
 msgid "No ad hoc agents' clients registered yet"
 msgstr ""
 
+msgid "No available port could be assigned for the new experiment."
+msgstr ""
+
 msgid "No client configuration files were found for this experiment."
+msgstr ""
+
+msgid "No client file found for the population"
 msgstr ""
 
 msgid "No clients available"
@@ -3520,6 +4178,18 @@ msgstr ""
 msgid "No configuration files were found for this experiment."
 msgstr ""
 
+msgid "No experiment matrix combinations were created."
+msgstr ""
+
+msgid "No experiments found in the selected group."
+msgstr ""
+
+msgid "No experiments selected for deletion."
+msgstr ""
+
+msgid "No experiments selected for download."
+msgstr ""
+
 msgid "No experiments yet"
 msgstr ""
 
@@ -3532,10 +4202,16 @@ msgstr ""
 msgid "No interests assigned"
 msgstr ""
 
+msgid "No log files were found to clear."
+msgstr ""
+
 msgid "No logs available for this repository."
 msgstr ""
 
 msgid "No logs yet"
+msgstr ""
+
+msgid "No matching visibility assignment found."
 msgstr ""
 
 msgid "No notifications yet."
@@ -3578,6 +4254,12 @@ msgstr ""
 msgid "No topics assigned"
 msgstr ""
 
+msgid "No user data provided."
+msgstr ""
+
+msgid "No users or experiment selected."
+msgstr ""
+
 msgid "No visibility grants configured yet."
 msgstr ""
 
@@ -3618,6 +4300,9 @@ msgid "Notice:"
 msgstr ""
 
 msgid "Notification menu"
+msgstr ""
+
+msgid "Notification not found."
 msgstr ""
 
 msgid "Notifications"
@@ -3675,12 +4360,18 @@ msgstr ""
 msgid "Only Ollama is currently supported for memory embeddings."
 msgstr ""
 
+msgid "Only administrators can manage external runtime repositories."
+msgstr ""
+
 msgid ""
 "Only embedding models are listed. Choose one that is actually installed "
 "on the target Ollama instance before saving."
 msgstr ""
 
 msgid "Only embedding-capable models are shown in this selector."
+msgstr ""
+
+msgid "Only installed backend plugins can be enabled or disabled."
 msgstr ""
 
 msgid "Only owner/admin/shared researchers can clear logs"
@@ -3771,9 +4462,27 @@ msgstr ""
 msgid "Opinion categories"
 msgstr ""
 
+msgid "Opinion configuration route does not match the experiment modality."
+msgstr ""
+
+msgid "Opinion distribution update route does not match the experiment modality."
+msgstr ""
+
+msgid "Opinion dynamics configuration saved successfully."
+msgstr ""
+
 msgid ""
 "Opinion dynamics is enabled for this experiment. After client creation, "
 "you will be redirected to forum opinion configuration."
+msgstr ""
+
+msgid "Opinion dynamics is not enabled for this experiment."
+msgstr ""
+
+#, python-format
+msgid ""
+"Opinion group overlaps with existing group '%(name)s' [%(lower_bound)s, "
+"%(upper_bound)s]. Groups must not overlap."
 msgstr ""
 
 msgid "Opinion groups and agent trends"
@@ -3839,10 +4548,20 @@ msgstr ""
 msgid "Page identification and RSS feed configuration."
 msgstr ""
 
+msgid "Page is assigned to a population. Cannot delete."
+msgstr ""
+
+#, python-format
+msgid "Page name '%(name)s' already exists. Please choose a different name."
+msgstr ""
+
 msgid "Pages"
 msgstr ""
 
 msgid "Pair Limit"
+msgstr ""
+
+msgid "Parent post not found"
 msgstr ""
 
 msgid "Parse"
@@ -3860,6 +4579,12 @@ msgstr ""
 msgid ""
 "Password must be at least 8 characters with one uppercase, one number, "
 "and one special symbol"
+msgstr ""
+
+msgid "Password updated successfully"
+msgstr ""
+
+msgid "Passwords do not match"
 msgstr ""
 
 msgid "Path:"
@@ -3898,6 +4623,23 @@ msgstr ""
 msgid "Photo Sharing Configuration"
 msgstr ""
 
+msgid ""
+"Photo Sharing experiments are unavailable because YPhotoSharing is not "
+"present."
+msgstr ""
+
+msgid "Photo attention budget min/max must be valid integers."
+msgstr ""
+
+msgid "Photo attention budget must use positive min/max values with min <= max."
+msgstr ""
+
+msgid "Photo creator tier percentages must sum to 100%."
+msgstr ""
+
+msgid "Photo story visibility percentages must sum to 100%."
+msgstr ""
+
 msgid "Pick a source group first, then choose one experiment from that group."
 msgstr ""
 
@@ -3920,6 +4662,9 @@ msgstr ""
 msgid "Please check your input and try again."
 msgstr ""
 
+msgid "Please check your login details and try again."
+msgstr ""
+
 msgid "Please contact an administrator if you believe this is an error."
 msgstr ""
 
@@ -3929,6 +4674,20 @@ msgid ""
 msgstr ""
 
 msgid "Please enter a valid email address"
+msgstr ""
+
+msgid "Please pick a source experiment from the selected source group."
+msgstr ""
+
+msgid ""
+"Please provide a population name and select at least 2 populations to "
+"merge."
+msgstr ""
+
+msgid "Please provide at least one simulation topic."
+msgstr ""
+
+msgid "Please select at least 2 populations to merge."
 msgstr ""
 
 msgid "Plugin"
@@ -3985,13 +4744,65 @@ msgstr ""
 msgid "Population Statistics & Analytics"
 msgstr ""
 
+#, python-format
+msgid ""
+"Population Username Type '%(pop_type)s' is incompatible with experiment "
+"platform 'forum'."
+msgstr ""
+
+#, python-format
+msgid ""
+"Population Username Type '%(pop_type)s' is incompatible with experiment "
+"platform 'microblogging'."
+msgstr ""
+
 msgid "Population and content pages used in this simulation."
+msgstr ""
+
+#, python-format
+msgid "Population file not found: %(population_file)s"
+msgstr ""
+
+#, python-format
+msgid "Population generation failed: %(error)s. No partial population was kept."
+msgstr ""
+
+msgid "Population is assigned to an experiment. Cannot delete."
 msgstr ""
 
 msgid "Population is fixed for an existing ad hoc client."
 msgstr ""
 
+#, python-format
+msgid ""
+"Population name '%(new_population_name)s' already exists. Please choose a"
+" different name."
+msgstr ""
+
+msgid "Population name is required."
+msgstr ""
+
 msgid "Population name, description, and configuration settings."
+msgstr ""
+
+msgid "Population not found"
+msgstr ""
+
+msgid "Population not found."
+msgstr ""
+
+msgid "Population size must be a valid integer."
+msgstr ""
+
+msgid "Population size must be greater than zero."
+msgstr ""
+
+#, python-format
+msgid "Population with ID %(pop_id)s not found."
+msgstr ""
+
+#, python-format
+msgid "Population with name '%(merged_name)s' already exists."
 msgstr ""
 
 msgid "Population:"
@@ -4029,6 +4840,9 @@ msgid "Post date & time"
 msgstr ""
 
 msgid "Post new content"
+msgstr ""
+
+msgid "Post not found"
 msgstr ""
 
 msgid "PostDoc Researcher"
@@ -4100,6 +4914,9 @@ msgid "Profession"
 msgstr ""
 
 msgid "Profession Categories"
+msgstr ""
+
+msgid "Profession not found."
 msgstr ""
 
 msgid "Professional and ideological identity traits."
@@ -4185,6 +5002,9 @@ msgid ""
 "recorded for the selected topic up to the selected time."
 msgstr ""
 
+msgid "Provide a GitHub token before connecting."
+msgstr ""
+
 msgid ""
 "Provides instructions and evaluates results (e.g., identifying topics, "
 "emotions)"
@@ -4211,6 +5031,12 @@ msgstr ""
 msgid ""
 "RSS and Reddit JSON feed sources are now stored in the dashboard database"
 " and can be reused across multiple forum experiments."
+msgstr ""
+
+msgid "RSS feed URL is required."
+msgstr ""
+
+msgid "RSS feed resource not found."
 msgstr ""
 
 msgid "RSS-derived posts emitted"
@@ -4327,6 +5153,13 @@ msgstr ""
 msgid "Reddit Retrieval"
 msgstr ""
 
+msgid "Reddit could not be reached. Retry later."
+msgstr ""
+
+#, python-format
+msgid "Reddit returned HTTP %(code)s."
+msgstr ""
+
 msgid "Reddit-like placeholders are enabled across the forum interface."
 msgstr ""
 
@@ -4381,6 +5214,12 @@ msgstr ""
 msgid "Remote Server"
 msgstr ""
 
+msgid "Remote host address is required for remote experiments."
+msgstr ""
+
+msgid "Remote port is required for remote experiments."
+msgstr ""
+
 msgid "Remove"
 msgstr ""
 
@@ -4411,6 +5250,9 @@ msgstr ""
 msgid "Request Logs Analysis"
 msgstr ""
 
+msgid "Requested file is not ready for download."
+msgstr ""
+
 msgid ""
 "Requires an available Ollama embedding model. Leave disabled for the "
 "safest default setup."
@@ -4433,6 +5275,9 @@ msgid ""
 "population backups, and reset dashboard counters."
 msgstr ""
 
+msgid "Reset is available only for HPC experiments."
+msgstr ""
+
 msgid "Reset to default values"
 msgstr ""
 
@@ -4440,6 +5285,10 @@ msgid "Resilient/Confident"
 msgstr ""
 
 msgid "Restart required"
+msgstr ""
+
+#, python-format
+msgid "Restart required: %(label)s routes are loaded at startup."
 msgstr ""
 
 msgid "Resume Client"
@@ -4458,6 +5307,18 @@ msgid "Reusable RSS Resources"
 msgstr ""
 
 msgid "Reusable RSS feeds"
+msgstr ""
+
+msgid "Reusable forum RSS feed deleted."
+msgstr ""
+
+msgid "Reusable forum RSS feed saved."
+msgstr ""
+
+msgid "Reusable forum image feed deleted."
+msgstr ""
+
+msgid "Reusable forum image feed saved."
 msgstr ""
 
 msgid "Reusable image source"
@@ -4633,6 +5494,10 @@ msgstr ""
 msgid "Scale Free (Barabási-Albert)"
 msgstr ""
 
+#, python-format
+msgid "Schema migration failed: %(error)s"
+msgstr ""
+
 msgid "Scientific Papers"
 msgstr ""
 
@@ -4702,6 +5567,18 @@ msgstr ""
 msgid "Select a network model..."
 msgstr ""
 
+msgid "Select a population compatible with the chosen ad hoc agent type."
+msgstr ""
+
+msgid "Select a valid ad hoc agent type."
+msgstr ""
+
+msgid "Select a valid group."
+msgstr ""
+
+msgid "Select a valid population."
+msgstr ""
+
 msgid "Select an Experiment to Join"
 msgstr ""
 
@@ -4716,12 +5593,25 @@ msgstr ""
 msgid "Select an embedding model"
 msgstr ""
 
+msgid "Select an embedding model before saving the configuration."
+msgstr ""
+
 msgid "Select an experiment above to inspect its configuration matrix."
 msgstr ""
 
 msgid ""
 "Select an experiment type, group and name to view and edit its frontend "
 "settings."
+msgstr ""
+
+#, python-format
+msgid "Select at least one %(label)s."
+msgstr ""
+
+msgid "Select at least one interest for the image feed."
+msgstr ""
+
+msgid "Select at least one researcher user."
 msgstr ""
 
 msgid ""
@@ -4810,6 +5700,11 @@ msgstr ""
 msgid "Selected Target Trend"
 msgstr ""
 
+msgid ""
+"Selected populations have incompatible platform types and cannot be "
+"merged."
+msgstr ""
+
 #, python-format
 msgid "Self-hosted LLM Server (%(backend)s)"
 msgstr ""
@@ -4848,6 +5743,21 @@ msgid "Server Settings"
 msgstr ""
 
 msgid "Server Trends Analysis"
+msgstr ""
+
+msgid ""
+"Server log metrics reset and re-parsed. Client metrics unchanged. Server "
+"plots updated."
+msgstr ""
+
+msgid ""
+"Server log metrics reset. Client metrics unchanged. Server plots will "
+"update on next refresh."
+msgstr ""
+
+msgid ""
+"Server metrics reset and re-parsed. Client metrics reset but not re-"
+"parsed yet. Plots will fully update on next refresh."
 msgstr ""
 
 msgid "Server, Clients, and Analytics"
@@ -5042,6 +5952,9 @@ msgstr ""
 msgid "Source Group"
 msgstr ""
 
+msgid "Source experiment not found."
+msgstr ""
+
 msgid ""
 "Specific prompts for different agent action types (post, comment, share, "
 "etc.)."
@@ -5059,6 +5972,9 @@ msgid ""
 msgstr ""
 
 msgid "Spoken Language"
+msgstr ""
+
+msgid "Standard agents can only be assigned to standard populations."
 msgstr ""
 
 msgid "Standard option; works without git."
@@ -5086,6 +6002,9 @@ msgstr ""
 msgid "Start the experiment and run the clients to begin your simulation."
 msgstr ""
 
+msgid "Start the experiment server before running ad hoc clients."
+msgstr ""
+
 msgid "State"
 msgstr ""
 
@@ -5106,6 +6025,12 @@ msgstr ""
 
 #, python-format
 msgid ""
+"Stop active %(lower)s experiments before modifying %(label)s: "
+"%(names)s%(extra)s."
+msgstr ""
+
+#, python-format
+msgid ""
 "Stop the active experiments that use this plugin before changing it: "
 "%(names)s."
 msgstr ""
@@ -5113,7 +6038,16 @@ msgstr ""
 msgid "Stop the experiment before clearing logs"
 msgstr ""
 
+msgid "Stop the experiment before clearing logs."
+msgstr ""
+
 msgid "Stop the experiment before deleting it"
+msgstr ""
+
+msgid "Stop the experiment before deleting it."
+msgstr ""
+
+msgid "Stop the experiment before renaming it."
 msgstr ""
 
 msgid "Stopped / Scheduled"
@@ -5139,6 +6073,14 @@ msgid ""
 " recorded up to the selected time."
 msgstr ""
 
+msgid "Stress Attacker requires stress/reward to be enabled for this experiment."
+msgstr ""
+
+msgid ""
+"Stress Attacker requires stress/reward to remain enabled for this "
+"experiment."
+msgstr ""
+
 msgid "Stress Distribution"
 msgstr ""
 
@@ -5146,6 +6088,14 @@ msgid "Stress/Reward"
 msgstr ""
 
 msgid "Stress/Reward Churn"
+msgstr ""
+
+msgid ""
+"Stress/reward settings are available only for microblogging, forum, and "
+"HPC experiments."
+msgstr ""
+
+msgid "Stress/reward settings updated."
 msgstr ""
 
 msgid "Structure, density, components"
@@ -5173,6 +6123,28 @@ msgid "Subset of population to activate initially. Leave empty to use all agents
 msgstr ""
 
 msgid "Success probability (0-1)"
+msgstr ""
+
+#, python-format
+msgid "Successfully assigned %(assigned)s user(s) to experiment '%(exp_name)s'."
+msgstr ""
+
+#, python-format
+msgid "Successfully created %(created)s user(s)."
+msgstr ""
+
+#, python-format
+msgid ""
+"Successfully created merged population '%(merged_name)s' with "
+"%(unique_agent_ids)s agents and %(unique_page_ids)s pages."
+msgstr ""
+
+#, python-format
+msgid "Successfully deleted %(deleted_count)s orphaned agent(s)."
+msgstr ""
+
+#, python-format
+msgid "Successfully updated opinions for %(updated_count)s agent-topic pairs."
 msgstr ""
 
 msgid "Suggested Friends"
@@ -5237,6 +6209,10 @@ msgstr ""
 msgid "Teacher (training modules only)"
 msgstr ""
 
+#, python-format
+msgid "Telemetry %(value)s successfully."
+msgstr ""
+
 msgid "Telemetry Data"
 msgstr ""
 
@@ -5265,6 +6241,10 @@ msgid "Terminal output of the latest operations on this plugin, newest first."
 msgstr ""
 
 msgid "Test Connection"
+msgstr ""
+
+#, python-format
+msgid "The %(label)s percentages must sum to 100%%."
 msgstr ""
 
 msgid "The Agent:"
@@ -5313,6 +6293,9 @@ msgstr ""
 msgid "The Website political leaning (if available)."
 msgstr ""
 
+msgid "The ad hoc agent type is no longer available."
+msgstr ""
+
 msgid "The agent age."
 msgstr ""
 
@@ -5345,9 +6328,45 @@ msgid ""
 "and diagnostics for both the server and active clients."
 msgstr ""
 
+#, python-format
+msgid "The current experiment database does not contain %(lower)s tables."
+msgstr ""
+
+msgid "The current experiment database does not contain hashtag-evolution tables."
+msgstr ""
+
+msgid "The current experiment database does not contain opinion evolution tables."
+msgstr ""
+
+msgid ""
+"The current experiment database does not contain recommendation-tracking "
+"tables."
+msgstr ""
+
+msgid ""
+"The current experiment database does not contain stress/reward evolution "
+"tables."
+msgstr ""
+
+msgid ""
+"The current experiment database does not contain supported network-"
+"analysis tables."
+msgstr ""
+
+msgid "The current experiment database does not contain topic-evolution tables."
+msgstr ""
+
 msgid ""
 "The dashboard database stores the canonical subreddit definitions, "
 "including their mapped interests."
+msgstr ""
+
+msgid ""
+"The experiment already exists. Please check the experiment name and try "
+"again."
+msgstr ""
+
+msgid "The experiment needs to be activated first."
 msgstr ""
 
 msgid "The image textual description."
@@ -5367,15 +6386,64 @@ msgstr ""
 msgid "The post text."
 msgstr ""
 
+msgid "The provided passwords do not match."
+msgstr ""
+
+msgid "The referenced ad hoc agent type is no longer available."
+msgstr ""
+
+msgid ""
+"The selected ad hoc agent type requires opinion dynamics to be enabled "
+"for this experiment."
+msgstr ""
+
+msgid ""
+"The selected ad hoc agent type requires opinion dynamics to remain "
+"enabled for this experiment."
+msgstr ""
+
 msgid ""
 "The selected distribution controls how attention budgets are sampled "
 "between min and max."
 msgstr ""
 
+msgid "The selected population does not contain any agents."
+msgstr ""
+
+msgid ""
+"The selected population has no usable agents or is missing age data. "
+"Rebuild or re-upload the population before creating a client."
+msgstr ""
+
 msgid "The three agent archetypes have distinct characteristics:"
 msgstr ""
 
+msgid "The topic already exists."
+msgstr ""
+
+msgid "The training area is not available. Please contact an administrator."
+msgstr ""
+
+msgid ""
+"The updated forum feed assignment has been saved. Running clients will "
+"use the new feeds after they are restarted."
+msgstr ""
+
+msgid ""
+"The updated image feed assignment has been saved. Running clients will "
+"use the new feeds after they are restarted."
+msgstr ""
+
 msgid "Thematic Characterization"
+msgstr ""
+
+msgid ""
+"There was an error loading the experiment files. Please check the files "
+"and try again."
+msgstr ""
+
+#, python-format
+msgid "There was an error loading the experiment files: %(error)s"
 msgstr ""
 
 #, python-format
@@ -5412,6 +6480,11 @@ msgstr ""
 msgid "Theta (Backfire Strength)"
 msgstr ""
 
+msgid ""
+"This ad hoc client requires an LLM model because at least one managed "
+"agent uses an LLM-backed behavior."
+msgstr ""
+
 msgid "This experiment has at least one client set to run until manually stopped"
 msgstr ""
 
@@ -5428,6 +6501,17 @@ msgid ""
 "This is an experimental simulator that guarantees higher simulation "
 "scalability at the cost of more fine-grained configuration and setting "
 "complexity."
+msgstr ""
+
+msgid "This page is only available for forum experiments."
+msgstr ""
+
+msgid ""
+"This page is only for HPC experiments. Redirecting to standard prompts "
+"page."
+msgstr ""
+
+msgid "This update is only for HPC experiments."
 msgstr ""
 
 msgid ""
@@ -5451,6 +6535,9 @@ msgid "Thread Decay (lambda)"
 msgstr ""
 
 msgid "Thread Resummarize Every (events)"
+msgstr ""
+
+msgid "Thread not found."
 msgstr ""
 
 msgid "Thumbs-down reaction"
@@ -5514,6 +6601,9 @@ msgid "Topic classification chips"
 msgstr ""
 
 msgid "Topic guidance"
+msgstr ""
+
+msgid "Topic not found."
 msgstr ""
 
 msgid ""
@@ -5589,6 +6679,9 @@ msgstr ""
 msgid "Toxicity level instruction"
 msgstr ""
 
+msgid "Toxicity level not found."
+msgstr ""
+
 msgid "Trace excerpt:"
 msgstr ""
 
@@ -5628,7 +6721,40 @@ msgstr ""
 msgid "URL:"
 msgstr ""
 
+#, python-format
+msgid "Unable to confirm stop for HPC client '%(name)s'."
+msgstr ""
+
+msgid ""
+"Unable to confirm stop for one or more HPC clients. Experiment remains "
+"active."
+msgstr ""
+
+msgid "Unable to prepare the experiment user."
+msgstr ""
+
+msgid "Unable to prepare your experiment profile."
+msgstr ""
+
+msgid "Unable to resolve current admin user."
+msgstr ""
+
+msgid "Unable to resolve current user."
+msgstr ""
+
 msgid "Unavailable"
+msgstr ""
+
+#, python-format
+msgid "Unexpected error pausing ad hoc client: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Unexpected error starting ad hoc client: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Unexpected error starting client: %(error)s"
 msgstr ""
 
 msgid "Uniform"
@@ -5655,6 +6781,12 @@ msgstr ""
 msgid "Université Lyon 1"
 msgstr ""
 
+msgid "Unknown external runtime repository."
+msgstr ""
+
+msgid "Unknown platform type for this experiment."
+msgstr ""
+
 msgid "Unlimited when off"
 msgstr ""
 
@@ -5664,7 +6796,16 @@ msgid ""
 "variants one feature at a time."
 msgstr ""
 
+msgid "Unsupported GitHub session action."
+msgstr ""
+
 msgid "Unsupported language."
+msgstr ""
+
+msgid "Unsupported report type."
+msgstr ""
+
+msgid "Unsupported runtime action."
 msgstr ""
 
 msgid "Update"
@@ -5685,6 +6826,44 @@ msgstr ""
 msgid "Update Email"
 msgstr ""
 
+msgid ""
+"Update Experiment Configuration before changing ad hoc client execution "
+"state."
+msgstr ""
+
+msgid "Update Experiment Configuration before changing client execution state."
+msgstr ""
+
+msgid ""
+"Update Experiment Configuration before changing server or client "
+"execution state."
+msgstr ""
+
+msgid ""
+"Update Experiment Configuration before creating clients for this "
+"experiment."
+msgstr ""
+
+msgid ""
+"Update Experiment Configuration before modifying clients for this "
+"experiment."
+msgstr ""
+
+msgid ""
+"Update Experiment Configuration before running ad hoc clients for this "
+"experiment."
+msgstr ""
+
+msgid ""
+"Update Experiment Configuration before running clients for this "
+"experiment."
+msgstr ""
+
+msgid ""
+"Update Experiment Configuration before starting the server or creating "
+"clients."
+msgstr ""
+
 msgid "Update HPC Prompts"
 msgstr ""
 
@@ -5697,8 +6876,25 @@ msgstr ""
 msgid "Update configuration first"
 msgstr ""
 
+msgid "Update route does not match the experiment modality."
+msgstr ""
+
 #, python-format
 msgid "Update runtime annotations and memory in %(b)s"
+msgstr ""
+
+#, python-format
+msgid "Updated %(label)s to branch %(branch)s."
+msgstr ""
+
+#, python-format
+msgid "Updated database values, but failed to sync client config: %(error)s"
+msgstr ""
+
+#, python-format
+msgid ""
+"Updated database values, but failed to sync population config "
+"'%(basename)s': %(error)s"
 msgstr ""
 
 msgid "Upload"
@@ -5751,6 +6947,20 @@ msgid ""
 "query the compatible models endpoint automatically."
 msgstr ""
 
+msgid "Use the dedicated HPC client creation route for this experiment."
+msgstr ""
+
+msgid "Use the dedicated forum client creation route for this experiment."
+msgstr ""
+
+msgid "Use the dedicated standard client creation route for this experiment."
+msgstr ""
+
+msgid ""
+"Use the dedicated standard or forum client creation route for this "
+"experiment."
+msgstr ""
+
 msgid ""
 "Use the left column to inspect metadata, update topics, toggle "
 "annotations, and open advanced configuration such as prompts, embeddings,"
@@ -5777,6 +6987,17 @@ msgstr ""
 msgid "User"
 msgstr ""
 
+#, python-format
+msgid "User '%(username)s' is already assigned to experiment '%(exp_name)s'."
+msgstr ""
+
+#, python-format
+msgid "User '%(username)s' successfully added to experiment '%(exp_name)s'."
+msgstr ""
+
+msgid "User ID and Experiment ID are required."
+msgstr ""
+
 msgid "User Interactions"
 msgstr ""
 
@@ -5792,7 +7013,22 @@ msgstr ""
 msgid "User Types"
 msgstr ""
 
+msgid "User deleted successfully."
+msgstr ""
+
 msgid "User not found"
+msgstr ""
+
+msgid "User not found in experiment"
+msgstr ""
+
+msgid "User not found in experiment database."
+msgstr ""
+
+msgid "User not found in experiment. Please contact administrator."
+msgstr ""
+
+msgid "User not found."
 msgstr ""
 
 msgid "Username"
@@ -5829,6 +7065,10 @@ msgid ""
 "assign them to any forum experiment as needed."
 msgstr ""
 
+#, python-format
+msgid "Validated %(label)s."
+msgstr ""
+
 msgid "Validation"
 msgstr ""
 
@@ -5839,6 +7079,12 @@ msgid "Validator %"
 msgstr ""
 
 msgid "Validator Persona"
+msgstr ""
+
+#, python-format
+msgid ""
+"Validator transition probabilities must sum to 100%% (current sum: "
+"%(val_sum)s%%)"
 msgstr ""
 
 msgid "Validator:"
@@ -5854,6 +7100,9 @@ msgid "View Experiment Details"
 msgstr ""
 
 msgid "View Release"
+msgstr ""
+
+msgid "Visibility assignment revoked."
 msgstr ""
 
 msgid "Visible Rows"
@@ -5883,6 +7132,72 @@ msgid ""
 msgstr ""
 
 msgid "Visualization Mode"
+msgstr ""
+
+msgid "Warning: Client config file not found. Extension applied to database only."
+msgstr ""
+
+msgid ""
+"Warning: Config file missing 'simulation' section. Extension applied to "
+"database only."
+msgstr ""
+
+msgid ""
+"Warning: Could not find population record. Extension applied to database "
+"only."
+msgstr ""
+
+msgid "Warning: Could not reset log metrics. Plots may not show extended data."
+msgstr ""
+
+#, python-format
+msgid ""
+"Warning: Could not reset log metrics: %(error)s. Plots may not show "
+"extended data."
+msgstr ""
+
+#, python-format
+msgid ""
+"Warning: Could not update client config file: %(error)s. Extension "
+"applied to database only."
+msgstr ""
+
+msgid "Warning: Error reading population file. Segment values may be limited."
+msgstr ""
+
+#, python-format
+msgid "Warning: Failed to parse client config %(item)s: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Warning: Failed to read client config %(item)s: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Warning: Failed to update port in client config %(item)s: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Warning: Failed to write updated client config %(item)s: %(error)s"
+msgstr ""
+
+#, python-format
+msgid ""
+"Warning: Metrics reset but re-parsing failed: %(error)s. Plots will "
+"update on next refresh."
+msgstr ""
+
+msgid "Warning: Population file not found. Segment values may be limited."
+msgstr ""
+
+#, python-format
+msgid ""
+"Watchdog check complete: %(processes_checked)s checked, "
+"%(processes_restarted)s restarted"
+msgstr ""
+
+#, python-format
+msgid "Watchdog interval set to %(interval_minutes)s minutes."
 msgstr ""
 
 msgid ""
@@ -6019,6 +7334,18 @@ msgstr ""
 msgid "Yes"
 msgstr ""
 
+msgid "You are not allowed to access this experiment."
+msgstr ""
+
+msgid "You are not allowed to start this experiment."
+msgstr ""
+
+msgid "You are not allowed to view this experiment."
+msgstr ""
+
+msgid "You are not assigned to any experiments. Please contact an administrator."
+msgstr ""
+
 #, python-format
 msgid "You can add to your population %(pages)s and %(agents)s."
 msgstr ""
@@ -6031,10 +7358,63 @@ msgstr ""
 msgid "You can edit your profile later from the Settings menu."
 msgstr ""
 
+msgid "You can only modify your own telemetry settings."
+msgstr ""
+
+msgid "You can only revoke visibility for experiments you own."
+msgstr ""
+
+msgid "You can only share experiments you own."
+msgstr ""
+
+msgid "You cannot delete your own account."
+msgstr ""
+
+msgid "You do not have access to this experiment."
+msgstr ""
+
+msgid "You do not have permission to clear logs for this experiment."
+msgstr ""
+
+msgid ""
+"You do not have permission to create admin, researcher or teacher users. "
+"Only 'user' role is allowed."
+msgstr ""
+
+msgid "You do not have permission to delete this experiment."
+msgstr ""
+
+msgid "You do not have permission to manage this experiment."
+msgstr ""
+
 msgid "You do not have permission to perform this action."
 msgstr ""
 
+msgid "You do not have permission to rename this experiment."
+msgstr ""
+
+msgid "You do not have permission to reset this experiment."
+msgstr ""
+
+msgid "You do not have permission to stop this experiment."
+msgstr ""
+
+msgid "You do not have permission to update experiment topics."
+msgstr ""
+
+msgid "You do not have permission to update this experiment."
+msgstr ""
+
+msgid "You do not have permission to view this page."
+msgstr ""
+
+msgid "You do not have visibility on this plugin repository."
+msgstr ""
+
 msgid "Your Profile"
+msgstr ""
+
+msgid "Your YSocial installation is up to date."
 msgstr ""
 
 msgid "ZIP File"
@@ -6129,6 +7509,10 @@ msgid "or unlimited"
 msgstr ""
 
 msgid "prerelease"
+msgstr ""
+
+#, python-format
+msgid "r/%(subreddit_input)s does not exist."
 msgstr ""
 
 msgid "release archive"

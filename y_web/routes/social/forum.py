@@ -60,6 +60,7 @@ from y_web.src.models import (
     Websites,
 )
 from y_web.src.recsys import get_suggested_users
+from y_web.i18n import gettext as _
 
 
 def _normalize_forum_community_slug(value):
@@ -178,7 +179,7 @@ def interview(exp_id):
         abort(404)
     if not _experiment_memory_enabled(exp_id):
         flash(
-            "Interview is unavailable because memory is disabled for this experiment."
+            _("Interview is unavailable because memory is disabled for this experiment.")
         )
         if platform_type == "forum":
             return redirect(
@@ -253,7 +254,7 @@ def get_thread_reddit(exp_id, post_id):
 
     requested_post = db.session.scalars(select(Post).filter_by(id=post_id)).first()
     if requested_post is None:
-        flash("Thread not found.")
+        flash(_("Thread not found."))
         return redirect(
             f"/{exp_id}/rfeed/all/feed/rf/1?feed_type={_forum_default_feed_type(exp_id)}"
         )
@@ -272,7 +273,7 @@ def get_thread_reddit(exp_id, post_id):
 
     hidden_ids = _hidden_author_ids_for_viewer(exp_id, viewer_id)
     if hidden_ids and root_post.user_id in hidden_ids:
-        flash("Thread not found.")
+        flash(_("Thread not found."))
         return redirect(
             f"/{exp_id}/rfeed/all/feed/rf/1?feed_type={_forum_default_feed_type(exp_id)}"
         )
@@ -287,7 +288,7 @@ def get_thread_reddit(exp_id, post_id):
         dropped_ids = _hidden_post_ids_in_thread(records, hidden_ids)
         posts = [p for p in posts if p.id not in dropped_ids]
     if root_post is None:
-        flash("Thread not found.")
+        flash(_("Thread not found."))
         return redirect(
             f"/{exp_id}/rfeed/all/feed/rf/1?feed_type={_forum_default_feed_type(exp_id)}"
         )
@@ -529,7 +530,7 @@ def feeed_logged_reddit():
     # Get active experiments
     exps = db.session.scalars(select(Exps).filter(Exps.status != 0)).all()
     if not exps:
-        flash("No active experiment. Please activate an experiment first.")
+        flash(_("No active experiment. Please activate an experiment first."))
         return redirect("/admin/experiments")
 
     if len(exps) > 1:
@@ -546,7 +547,7 @@ def feeed_logged_reddit():
 def rnotifications_logged():
     exps = db.session.scalars(select(Exps).filter(Exps.status != 0)).all()
     if not exps:
-        flash("No active experiment. Please activate an experiment first.")
+        flash(_("No active experiment. Please activate an experiment first."))
         return redirect("/admin/experiments")
     if len(exps) > 1:
         return redirect("/admin/join_simulation")
@@ -561,7 +562,7 @@ def rnotifications(exp_id):
 
     exp = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
     if not exp:
-        flash("Experiment not found.")
+        flash(_("Experiment not found."))
         return redirect("/admin/experiments")
     if exp.platform_type != "forum":
         return redirect(f"/{exp_id}/feed/{current_user.id}/feed/rf/1")

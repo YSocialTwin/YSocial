@@ -129,6 +129,7 @@ from ._helpers import (
     _get_experiment_folder,
     default_stress_reward_config,
 )
+from y_web.i18n import gettext as _
 
 
 def _external_repo_availability():
@@ -211,7 +212,7 @@ def settings():
         )
     else:
         # Regular users should not access this page
-        flash("Access denied. Please use the experiment feed.")
+        flash(_("Access denied. Please use the experiment feed."))
         return redirect(url_for("auth.login"))
 
     users = db.session.scalars(select(Admin_users)).all()
@@ -326,7 +327,7 @@ def visibility_settings():
     is_admin = role == "admin"
     is_researcher = role == "researcher"
     if not user or (not is_admin and not is_researcher):
-        flash("Access denied.", "error")
+        flash(_("Access denied."), "error")
         return redirect(url_for("admin.dashboard"))
 
     if is_admin:
@@ -416,18 +417,18 @@ def visibility_settings_add_experiment():
     check_privileges(current_user.username)
     user = _current_admin_user_or_none()
     if not user:
-        flash("Invalid user session.", "error")
+        flash(_("Invalid user session."), "error")
         return redirect(url_for("experiments.visibility_settings"))
     is_admin = (user.role or "").strip().lower() == "admin"
 
     exp_id = request.form.get("exp_id", type=int)
     experiment = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
     if not experiment:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.visibility_settings"))
 
     if not is_admin and experiment.owner != user.username:
-        flash("You can only share experiments you own.", "error")
+        flash(_("You can only share experiments you own."), "error")
         return redirect(url_for("experiments.visibility_settings"))
 
     action = (request.form.get("action") or "grant").strip().lower()
@@ -436,7 +437,7 @@ def visibility_settings_add_experiment():
 
     researcher_ids = _get_selected_researcher_ids()
     if not researcher_ids:
-        flash("Select at least one researcher user.", "warning")
+        flash(_("Select at least one researcher user."), "warning")
         return redirect(url_for("experiments.visibility_settings"))
 
     changed = 0
@@ -486,13 +487,13 @@ def visibility_settings_add_group():
     check_privileges(current_user.username)
     user = _current_admin_user_or_none()
     if not user:
-        flash("Invalid user session.", "error")
+        flash(_("Invalid user session."), "error")
         return redirect(url_for("experiments.visibility_settings"))
     is_admin = (user.role or "").strip().lower() == "admin"
 
     group_name = (request.form.get("group_name") or "").strip()
     if not group_name:
-        flash("Select a valid group.", "warning")
+        flash(_("Select a valid group."), "warning")
         return redirect(url_for("experiments.visibility_settings"))
 
     experiments_query = Exps.query.filter(Exps.exp_group == group_name)
@@ -501,7 +502,7 @@ def visibility_settings_add_group():
     group_experiments = experiments_query.all()
 
     if not group_experiments:
-        flash("No experiments found in the selected group.", "warning")
+        flash(_("No experiments found in the selected group."), "warning")
         return redirect(url_for("experiments.visibility_settings"))
 
     action = (request.form.get("action") or "grant").strip().lower()
@@ -510,7 +511,7 @@ def visibility_settings_add_group():
 
     researcher_ids = _get_selected_researcher_ids()
     if not researcher_ids:
-        flash("Select at least one researcher user.", "warning")
+        flash(_("Select at least one researcher user."), "warning")
         return redirect(url_for("experiments.visibility_settings"))
 
     changed = 0
@@ -562,22 +563,22 @@ def visibility_settings_revoke_assignment():
     check_privileges(current_user.username)
     user = _current_admin_user_or_none()
     if not user:
-        flash("Invalid user session.", "error")
+        flash(_("Invalid user session."), "error")
         return redirect(url_for("experiments.visibility_settings"))
     is_admin = (user.role or "").strip().lower() == "admin"
 
     exp_id = request.form.get("exp_id", type=int)
     researcher_id = request.form.get("researcher_id", type=int)
     if not exp_id or not researcher_id:
-        flash("Invalid revoke request.", "error")
+        flash(_("Invalid revoke request."), "error")
         return redirect(url_for("experiments.visibility_settings"))
 
     experiment = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
     if not experiment:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.visibility_settings"))
     if not is_admin and experiment.owner != user.username:
-        flash("You can only revoke visibility for experiments you own.", "error")
+        flash(_("You can only revoke visibility for experiments you own."), "error")
         return redirect(url_for("experiments.visibility_settings"))
 
     deleted_count = User_Experiment.query.filter_by(
@@ -585,9 +586,9 @@ def visibility_settings_revoke_assignment():
     ).delete(synchronize_session=False)
     db.session.commit()
     if deleted_count:
-        flash("Visibility assignment revoked.", "success")
+        flash(_("Visibility assignment revoked."), "success")
     else:
-        flash("No matching visibility assignment found.", "warning")
+        flash(_("No matching visibility assignment found."), "warning")
     return redirect(url_for("experiments.visibility_settings"))
 
 
@@ -602,14 +603,14 @@ def join_simulation():
     """
     admin_user = _current_admin_user_or_none()
     if not admin_user:
-        flash("Unable to resolve current user.")
+        flash(_("Unable to resolve current user."))
         return redirect(url_for("experiments.settings"))
 
     # Get visible active experiments
     active_exps = get_visible_experiment_query(admin_user).filter_by(status=1).all()
 
     if not active_exps:
-        flash("No active experiment. Please activate an experiment first.")
+        flash(_("No active experiment. Please activate an experiment first."))
         return redirect(request.referrer)
 
     # If only one active experiment, redirect directly
@@ -642,7 +643,7 @@ def join_experiment(exp_id):
 
     exp = db.session.scalars(select(Exps).filter_by(idexp=exp_id, status=1)).first()
     if exp is None:
-        flash("Experiment not found or not active.")
+        flash(_("Experiment not found or not active."))
         return redirect("/admin/experiments")
 
     admin_user = _current_admin_user_or_none()
@@ -654,7 +655,7 @@ def join_experiment(exp_id):
             call_first_non_null("staff_experiment_access", current_user, exp_id)
             is not True
         ):
-            flash("You are not allowed to access this experiment.", "error")
+            flash(_("You are not allowed to access this experiment."), "error")
             return redirect("/admin/experiments")
 
     user_id = current_user.id
@@ -675,7 +676,7 @@ def join_experiment(exp_id):
         account_id=user_id,
     )
     if user_record is None:
-        flash("Unable to prepare your experiment profile.")
+        flash(_("Unable to prepare your experiment profile."))
         return redirect("/admin/experiments")
     if created:
         current_app.logger.info(
@@ -693,7 +694,7 @@ def join_experiment(exp_id):
     elif exp.platform_type == "photo_sharing":
         return redirect(f"/{exp_id}/photo/feed/all/feed/rf/1")
     else:
-        flash("Unknown platform type for this experiment.")
+        flash(_("Unknown platform type for this experiment."))
         return redirect("/admin/experiments")
 
 
@@ -720,12 +721,12 @@ def change_active_experiment(exp_id):
     exp = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
 
     if not exp:
-        flash("Experiment not found.")
+        flash(_("Experiment not found."))
         return redirect(request.referrer)
 
     admin_user = _current_admin_user_or_none()
     if not user_can_view_experiment(admin_user, exp):
-        flash("You are not allowed to access this experiment.", "error")
+        flash(_("You are not allowed to access this experiment."), "error")
         return redirect(url_for("experiments.settings"))
 
     # Toggle experiment status
@@ -733,7 +734,7 @@ def change_active_experiment(exp_id):
         # Deactivate the experiment
         exp.status = 0
         db.session.commit()
-        flash(f"Experiment '{exp.exp_name}' deactivated.")
+        flash(_("Experiment '%(exp_name)s' deactivated.", exp_name=exp.exp_name))
     else:
         # Activate the experiment
         exp.status = 1
@@ -764,7 +765,7 @@ def change_active_experiment(exp_id):
             account_id=admin_user_id,
         )
         if participant is None:
-            flash("Unable to prepare the experiment user.")
+            flash(_("Unable to prepare the experiment user."))
             return redirect(url_for("experiments.settings"))
         if created:
             current_app.logger.info(
@@ -784,7 +785,7 @@ def change_active_experiment(exp_id):
             db.session.add(user_exp)
             db.session.commit()
 
-        flash(f"Experiment '{exp.exp_name}' activated.")
+        flash(_("Experiment '%(exp_name)s' activated.", exp_name=exp.exp_name))
 
     # Reload user session from admin database (not experiment database)
     # Use Admin_users which is in the main database
@@ -860,7 +861,7 @@ def upload_experiment():
     suggested_port = get_suggested_port()
     if not suggested_port:
         flash(
-            "Error: No available port found in range 5000-6000. Cannot upload experiment."
+            _("Error: No available port found in range 5000-6000. Cannot upload experiment.")
         )
         shutil.rmtree(
             f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}",
@@ -901,7 +902,7 @@ def upload_experiment():
 
         if exp:
             flash(
-                "The experiment already exists. Please check the experiment name and try again."
+                _("The experiment already exists. Please check the experiment name and try again.")
             )
             shutil.rmtree(
                 f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}",
@@ -1082,10 +1083,10 @@ def upload_experiment():
                     with open(client_config_path, "r") as f:
                         client_config = json.load(f)
                 except json.JSONDecodeError as e:
-                    flash(f"Warning: Failed to parse client config {item}: {str(e)}")
+                    flash(_("Warning: Failed to parse client config %(item)s: %(error)s", item=item, error=str(e)))
                     continue
                 except IOError as e:
-                    flash(f"Warning: Failed to read client config {item}: {str(e)}")
+                    flash(_("Warning: Failed to read client config %(item)s: %(error)s", item=item, error=str(e)))
                     continue
 
                 # Update the API endpoint in servers section
@@ -1106,11 +1107,11 @@ def upload_experiment():
                             json.dump(client_config, f, indent=4)
                     except IOError as e:
                         flash(
-                            f"Warning: Failed to write updated client config {item}: {str(e)}"
+                            _("Warning: Failed to write updated client config %(item)s: %(error)s", item=item, error=str(e))
                         )
                     except Exception as e:
                         flash(
-                            f"Warning: Failed to update port in client config {item}: {str(e)}"
+                            _("Warning: Failed to update port in client config %(item)s: %(error)s", item=item, error=str(e))
                         )
 
         exp = Exps(
@@ -1167,7 +1168,7 @@ def upload_experiment():
                 db.session.commit()
 
     except Exception as e:
-        flash(f"There was an error loading the experiment files: {str(e)}")
+        flash(_("There was an error loading the experiment files: %(error)s", error=str(e)))
         # remove the directory containing the files
         shutil.rmtree(
             f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}",
@@ -1422,7 +1423,7 @@ def upload_experiment():
         if len(client) == 0:
             if not is_hpc_experiment:
                 # Standard experiments REQUIRE client config
-                flash("No client file found for the population")
+                flash(_("No client file found for the population"))
                 shutil.rmtree(
                     f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}",
                     ignore_errors=True,
@@ -1640,7 +1641,7 @@ def upload_database():
 
         if exp:
             flash(
-                "The experiment already exists. Please check the experiment name and try again."
+                _("The experiment already exists. Please check the experiment name and try again.")
             )
             shutil.rmtree(
                 f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}",
@@ -1670,7 +1671,7 @@ def upload_database():
 
     except:
         flash(
-            "There was an error loading the experiment files. Please check the files and try again."
+            _("There was an error loading the experiment files. Please check the files and try again.")
         )
         # remove the directory containing the files
         shutil.rmtree(
@@ -1919,14 +1920,14 @@ def create_experiment():
 
     if platform_type == "forum" and not repo_availability["forum"]:
         flash(
-            "Forum experiments are unavailable because YServerReddit and YClientReddit are not both present.",
+            _("Forum experiments are unavailable because YServerReddit and YClientReddit are not both present."),
             "error",
         )
         return redirect(url_for("experiments.settings"))
 
     if platform_type == "photo_sharing" and not repo_availability["photo_sharing"]:
         flash(
-            "Photo Sharing experiments are unavailable because YPhotoSharing is not present.",
+            _("Photo Sharing experiments are unavailable because YPhotoSharing is not present."),
             "error",
         )
         return redirect(url_for("experiments.settings"))
@@ -1938,7 +1939,7 @@ def create_experiment():
                     simulator_type = "Standard"
                 else:
                     flash(
-                        "HPC microblogging experiments are unavailable because YSimulator is not present.",
+                        _("HPC microblogging experiments are unavailable because YSimulator is not present."),
                         "error",
                     )
                     return redirect(url_for("experiments.settings"))
@@ -1948,7 +1949,7 @@ def create_experiment():
                     simulator_type = "HPC"
                 else:
                     flash(
-                        "Microblogging experiments are unavailable because neither YServer/YClient nor YSimulator is present.",
+                        _("Microblogging experiments are unavailable because neither YServer/YClient nor YSimulator is present."),
                         "error",
                     )
                     return redirect(url_for("experiments.settings"))
@@ -1968,7 +1969,7 @@ def create_experiment():
         # For remote experiments, use the provided host and port
         host = request.form.get("remote_host", "").strip()
         if not host:
-            flash("Remote host address is required for remote experiments.")
+            flash(_("Remote host address is required for remote experiments."))
             return redirect(url_for("experiments.settings"))
 
         # Basic validation for hostname/IP format
@@ -1978,23 +1979,23 @@ def create_experiment():
 
         # Pattern allows: alphanumeric, dots, hyphens, and colons (for IPv6)
         if not re.match(r"^[a-zA-Z0-9\.\-\:]+$", host):
-            flash("Invalid remote host format. Use IP address or domain name.")
+            flash(_("Invalid remote host format. Use IP address or domain name."))
             return redirect(url_for("experiments.settings"))
 
         # Validate and parse remote_port
         remote_port_str = request.form.get("remote_port", "").strip()
         if not remote_port_str:
-            flash("Remote port is required for remote experiments.")
+            flash(_("Remote port is required for remote experiments."))
             return redirect(url_for("experiments.settings"))
 
         try:
             port = int(remote_port_str)
             # Validate port range
             if not (1 <= port <= 65535):
-                flash("Invalid remote port. Port must be between 1 and 65535.")
+                flash(_("Invalid remote port. Port must be between 1 and 65535."))
                 return redirect(url_for("experiments.settings"))
         except ValueError:
-            flash("Invalid remote port. Please enter a valid number.")
+            flash(_("Invalid remote port. Please enter a valid number."))
             return redirect(url_for("experiments.settings"))
     else:
         # For local experiments, use default local settings
@@ -2003,7 +2004,7 @@ def create_experiment():
         port = get_suggested_port()
         if port is None:
             flash(
-                "No available port could be assigned for the new experiment.",
+                _("No available port could be assigned for the new experiment."),
                 "error",
             )
             return redirect(url_for("experiments.settings"))
@@ -2373,10 +2374,10 @@ def delete_simulation(exp_id):
     admin_user = _current_admin_user_or_none()
     exp = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
     if exp and not user_can_manage_experiment(admin_user, exp):
-        flash("You do not have permission to delete this experiment.", "error")
+        flash(_("You do not have permission to delete this experiment."), "error")
         return settings()
     if exp and int(getattr(exp, "running", 0) or 0) == 1:
-        flash("Stop the experiment before deleting it.", "warning")
+        flash(_("Stop the experiment before deleting it."), "warning")
         return redirect(url_for("experiments.experiment_details", uid=exp.idexp))
 
     deleted, error_message = _delete_simulation_internal(exp_id)
@@ -2533,14 +2534,14 @@ def delete_simulations_bulk():
     try:
         exp_ids = json.loads(exp_ids_json)
     except json.JSONDecodeError:
-        flash("Invalid experiment IDs provided.", "error")
+        flash(_("Invalid experiment IDs provided."), "error")
         return redirect(url_for("experiments.settings"))
 
     admin_user = _current_admin_user_or_none()
     normalized_ids = _resolve_bulk_experiment_ids(exp_ids, admin_user=admin_user)
 
     if not normalized_ids:
-        flash("No experiments selected for deletion.", "warning")
+        flash(_("No experiments selected for deletion."), "warning")
         return redirect(url_for("experiments.settings"))
 
     deleted_count = 0
@@ -2551,17 +2552,17 @@ def delete_simulations_bulk():
         if exp and not user_can_manage_experiment(admin_user, exp):
             failed_ids.append(eid)
             continue
-        deleted, _ = _delete_simulation_internal(eid)
+        deleted, _unused = _delete_simulation_internal(eid)
         if deleted:
             deleted_count += 1
         else:
             failed_ids.append(eid)
 
     if deleted_count:
-        flash(f"Deleted {deleted_count} experiment(s).", "success")
+        flash(_("Deleted %(deleted_count)s experiment(s).", deleted_count=deleted_count), "success")
     if failed_ids:
         flash(
-            f"Failed to delete {len(failed_ids)} experiment(s): {', '.join(map(str, failed_ids[:10]))}",
+            _("Failed to delete %(failed_ids)s experiment(s): %(join)s", failed_ids=len(failed_ids), join=', '.join(map(str, failed_ids[:10]))),
             "warning",
         )
 
@@ -2578,12 +2579,12 @@ def start_experiment(uid):
     exp = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     admin_user = _current_admin_user_or_none()
     if not user_can_view_experiment(admin_user, exp):
-        flash("You are not allowed to start this experiment.", "error")
+        flash(_("You are not allowed to start this experiment."), "error")
         return redirect(url_for("experiments.settings"))
 
     if _experiment_configuration_update_required(exp):
         flash(
-            "Update Experiment Configuration before starting the server or creating clients.",
+            _("Update Experiment Configuration before starting the server or creating clients."),
             "warning",
         )
         return experiment_details(uid)
@@ -2625,12 +2626,12 @@ def stop_experiment(uid):
     exp = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     admin_user = _current_admin_user_or_none()
     if not user_can_manage_experiment(admin_user, exp):
-        flash("You do not have permission to stop this experiment.", "error")
+        flash(_("You do not have permission to stop this experiment."), "error")
         return redirect(url_for("experiments.settings"))
 
     if _experiment_configuration_update_required(exp):
         flash(
-            "Update Experiment Configuration before changing server or client execution state.",
+            _("Update Experiment Configuration before changing server or client execution state."),
             "warning",
         )
         return experiment_details(uid)
@@ -2666,7 +2667,7 @@ def stop_experiment(uid):
 
     if not all_clients_stopped:
         flash(
-            "Unable to confirm stop for one or more HPC clients. Experiment remains active.",
+            _("Unable to confirm stop for one or more HPC clients. Experiment remains active."),
             "warning",
         )
         return experiment_details(uid)
@@ -2757,7 +2758,7 @@ def prompts_forum(uid):
     experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
 
     if not experiment:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
 
     if experiment.simulator_type == "HPC":
@@ -2792,13 +2793,13 @@ def prompts_hpc(uid):
     experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
 
     if not experiment:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
 
     # Ensure this is an HPC experiment
     if experiment.simulator_type != "HPC":
         flash(
-            "This page is only for HPC experiments. Redirecting to standard prompts page.",
+            _("This page is only for HPC experiments. Redirecting to standard prompts page."),
             "warning",
         )
         return redirect(url_for("experiments.prompts", uid=uid))
@@ -2863,12 +2864,12 @@ def update_prompts_hpc(uid):
     experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
 
     if not experiment:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
 
     # Ensure this is an HPC experiment
     if experiment.simulator_type != "HPC":
-        flash("This update is only for HPC experiments.", "error")
+        flash(_("This update is only for HPC experiments."), "error")
         return redirect(request.referrer)
 
     # get the prompts file for the experiment
@@ -2931,7 +2932,7 @@ def update_prompts_hpc(uid):
     with open(prompts_filename, "w") as f:
         json.dump(prompts, f, indent=2)
 
-    flash("HPC prompts updated successfully!", "success")
+    flash(_("HPC prompts updated successfully!"), "success")
 
     return redirect(request.referrer)
 
@@ -2962,7 +2963,7 @@ def copy_experiment():
 
     # Validate inputs
     if not new_exp_name or not source_exp_id:
-        flash("Both experiment name and source experiment are required.")
+        flash(_("Both experiment name and source experiment are required."))
         return redirect(url_for("experiments.settings"))
 
     # Parse and validate num_copies
@@ -2976,7 +2977,7 @@ def copy_experiment():
     # Get source experiment
     source_exp = db.session.scalars(select(Exps).filter_by(idexp=source_exp_id)).first()
     if not source_exp:
-        flash("Source experiment not found.")
+        flash(_("Source experiment not found."))
         return redirect(url_for("experiments.settings"))
 
     # Generate list of experiment names to create
@@ -2986,7 +2987,7 @@ def copy_experiment():
     for name in exp_names_to_create:
         existing_exp = db.session.scalars(select(Exps).filter_by(exp_name=name)).first()
         if existing_exp:
-            flash(f"An experiment with name '{name}' already exists.")
+            flash(_("An experiment with name '%(name)s' already exists.", name=name))
             return redirect(url_for("experiments.settings"))
 
     # Create each copy
@@ -3013,16 +3014,16 @@ def copy_experiment():
             current_app.logger.error(
                 f"Error copying experiment to '{copy_name}': {str(e)}", exc_info=True
             )
-            flash(f"Error creating copy '{copy_name}': {str(e)}")
+            flash(_("Error creating copy '%(copy_name)s': %(error)s", copy_name=copy_name, error=str(e)))
 
     if created_count > 0:
         if created_count == 1:
             flash(
-                f"Experiment '{exp_names_to_create[0]}' successfully created as a copy of '{source_exp.exp_name}'."
+                _("Experiment '%(exp_names_to_create)s' successfully created as a copy of '%(exp_name)s'.", exp_names_to_create=exp_names_to_create[0], exp_name=source_exp.exp_name)
             )
         else:
             flash(
-                f"{created_count} experiment copies successfully created from '{source_exp.exp_name}'."
+                _("%(created_count)s experiment copies successfully created from '%(exp_name)s'.", created_count=created_count, exp_name=source_exp.exp_name)
             )
 
     return redirect(url_for("experiments.settings"))
@@ -3194,11 +3195,11 @@ def copy_experiment_group():
 
     if created_count == 1:
         flash(
-            f"Experiment '{created_names[0]}' successfully created as part of copied group '{target_group}'."
+            _("Experiment '%(created_names)s' successfully created as part of copied group '%(target_group)s'.", created_names=created_names[0], target_group=target_group)
         )
     else:
         flash(
-            f"{created_count} experiment copies successfully created in group '{target_group}'."
+            _("%(created_count)s experiment copies successfully created in group '%(target_group)s'.", created_count=created_count, target_group=target_group)
         )
 
     return redirect(url_for("experiments.settings"))
@@ -3212,11 +3213,11 @@ def experiment_matrix():
 
     user = _current_admin_user_or_none()
     if not user:
-        flash("Invalid user session.", "error")
+        flash(_("Invalid user session."), "error")
         return redirect(url_for("experiments.settings"))
 
     if user.role not in ("admin", "researcher"):
-        flash("Access denied. Please use the experiment feed.")
+        flash(_("Access denied. Please use the experiment feed."))
         return redirect(url_for("auth.login"))
 
     visible_query = get_visible_experiment_query(user)
@@ -3320,7 +3321,7 @@ def experiment_matrix():
             and (source_exp.exp_group or "").strip() != source_group
         ):
             flash(
-                "Please pick a source experiment from the selected source group.",
+                _("Please pick a source experiment from the selected source group."),
                 "error",
             )
             return redirect(
@@ -3335,10 +3336,10 @@ def experiment_matrix():
             and source_group
             and (source_exp.exp_group or "").strip() != source_group
         ):
-            flash("Source experiment not found.", "error")
+            flash(_("Source experiment not found."), "error")
             return redirect(url_for("experiments.settings"))
         if not source_exp:
-            flash("Source experiment not found.", "error")
+            flash(_("Source experiment not found."), "error")
             return redirect(url_for("experiments.settings"))
 
         variation_items = _matrix_parse_variation_payload(variation_payload)
@@ -3355,7 +3356,7 @@ def experiment_matrix():
             invalid_items = [item for item in unlocked_items if not item.get("values")]
             if invalid_items:
                 flash(
-                    "Every unlocked feature needs at least one alternative value.",
+                    _("Every unlocked feature needs at least one alternative value."),
                     "warning",
                 )
                 return redirect(
@@ -3427,7 +3428,7 @@ def experiment_matrix():
                 )
             else:
                 flash(
-                    f"Created {created} matrix experiment(s) in group '{target_group or '-'}'.",
+                    _("Created %(created)s matrix experiment(s) in group '%(target_group)s'.", created=created, target_group=target_group or '-'),
                     "success",
                 )
         else:
@@ -3444,7 +3445,7 @@ def experiment_matrix():
                     "error",
                 )
             else:
-                flash("No experiment matrix combinations were created.", "warning")
+                flash(_("No experiment matrix combinations were created."), "warning")
 
         return redirect(
             url_for(

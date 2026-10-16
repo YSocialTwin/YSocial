@@ -84,6 +84,7 @@ from y_web.src.recsys.content_recsys import (
     is_supported_content_recsys_mode,
 )
 from y_web.src.system.path_utils import get_writable_path
+from y_web.i18n import gettext as _
 
 
 def _latest_follow_action(*, follower_id, user_id):
@@ -299,7 +300,7 @@ def profile():
     # Get active experiments
     exps = db.session.scalars(select(Exps).filter(Exps.status != 0)).all()
     if not exps:
-        flash("No active experiment. Please activate an experiment first.")
+        flash(_("No active experiment. Please activate an experiment first."))
         return redirect("/admin/experiments")
 
     if len(exps) > 1:
@@ -316,7 +317,7 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
     """Handle profile logged operation."""
     exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if not exp:
-        flash("Experiment not found", "error")
+        flash(_("Experiment not found"), "error")
         return redirect(url_for("main.index"))
 
     # Get experiment user (not admin user) for logged_id
@@ -327,7 +328,7 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
         if getattr(exp, "platform_type", "") == "forum":
             logged_id = current_user.id
         else:
-            flash("User not found in experiment", "error")
+            flash(_("User not found in experiment"), "error")
             return redirect(url_for("main.index"))
     else:
         logged_id = logged_user.id
@@ -345,7 +346,7 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
 
     # If user still not found, redirect with error message
     if not user:
-        flash("User not found in experiment", "error")
+        flash(_("User not found in experiment"), "error")
         return redirect(url_for("main.index"))
 
     if getattr(exp, "platform_type", "") == "photo_sharing":
@@ -584,7 +585,7 @@ def edit_profile(exp_id, user_id):
         select(User_mgmt).filter_by(username=current_user.username)
     ).first()
     if not logged_user:
-        flash("User not found in experiment", "error")
+        flash(_("User not found in experiment"), "error")
         return redirect(url_for("main.index"))
     logged_id = logged_user.id
 
@@ -992,7 +993,7 @@ def update_password(exp_id, user_id):
 
     if npassword != npassword2:
         # return an error message
-        flash("The provided passwords do not match.")
+        flash(_("The provided passwords do not match."))
         return redirect(request.referrer)
 
     pwd = generate_password_hash(npassword, method="pbkdf2:sha256")
@@ -1027,7 +1028,7 @@ def onboarding(exp_id, user_id):
 
     user = db.session.scalars(select(User_mgmt).filter_by(id=user_id)).first()
     if not user:
-        flash("User not found.", "error")
+        flash(_("User not found."), "error")
         return redirect(url_for("auth.login"))
 
     # ── Skip onboarding if already completed ──────────────────────────────
@@ -1305,7 +1306,7 @@ def save_onboarding(exp_id, user_id):
     # ── 0. Load user ───────────────────────────────────────────────────────
     user = db.session.scalars(select(User_mgmt).filter_by(id=user_id_val)).first()
     if not user:
-        flash("User not found.", "error")
+        flash(_("User not found."), "error")
         return redirect(url_for("auth.login"))
 
     # ── 1. Save profile fields ─────────────────────────────────────────────

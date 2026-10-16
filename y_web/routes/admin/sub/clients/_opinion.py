@@ -39,6 +39,7 @@ from ._crud import (
     _get_experiment_mode,
     _opinion_dynamics_enabled_for_client_creation,
 )
+from y_web.i18n import gettext as _
 
 
 def _opinion_configuration_internal(idexp, expected_mode):
@@ -48,13 +49,13 @@ def _opinion_configuration_internal(idexp, expected_mode):
     # Get client_id from query parameters
     client_id = request.args.get("client_id", type=int)
     if not client_id:
-        flash("Client ID is required.", "error")
+        flash(_("Client ID is required."), "error")
         return redirect(url_for("experiments.experiment_details", uid=idexp))
 
     # Get experiment details
     exp = db.session.scalars(select(Exps).filter_by(idexp=idexp)).first()
     if not exp:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
 
     actual_mode = (
@@ -64,7 +65,7 @@ def _opinion_configuration_internal(idexp, expected_mode):
     )
     if actual_mode != expected_mode:
         flash(
-            "Opinion configuration route does not match the experiment modality.",
+            _("Opinion configuration route does not match the experiment modality."),
             "error",
         )
         if actual_mode == "hpc":
@@ -94,11 +95,11 @@ def _opinion_configuration_internal(idexp, expected_mode):
     # Get client details
     client = db.session.scalars(select(Client).filter_by(id=client_id)).first()
     if not client or client.id_exp != idexp:
-        flash("Client not found or does not belong to this experiment.", "error")
+        flash(_("Client not found or does not belong to this experiment."), "error")
         return redirect(url_for("experiments.experiment_details", uid=idexp))
 
     if not _opinion_dynamics_enabled_for_client_creation(exp):
-        flash("Opinion dynamics is not enabled for this experiment.", "warning")
+        flash(_("Opinion dynamics is not enabled for this experiment."), "warning")
         return redirect(url_for("experiments.experiment_details", uid=idexp))
 
     # Get experiment topics
@@ -112,7 +113,7 @@ def _opinion_configuration_internal(idexp, expected_mode):
         select(Population).filter_by(id=client.population_id)
     ).first()
     if not population:
-        flash("Population not found.", "error")
+        flash(_("Population not found."), "error")
         return redirect(url_for("experiments.experiment_details", uid=idexp))
 
     # Load population JSON file to get actual segment values
@@ -194,13 +195,13 @@ def _opinion_configuration_internal(idexp, expected_mode):
         else:
             print(f"Population file does not exist: {population_file}")
             flash(
-                "Warning: Population file not found. Segment values may be limited.",
+                _("Warning: Population file not found. Segment values may be limited."),
                 "warning",
             )
     except Exception as e:
         print(f"Error reading population file: {e}")
         flash(
-            f"Warning: Error reading population file. Segment values may be limited.",
+            _("Warning: Error reading population file. Segment values may be limited.", ),
             "warning",
         )
 
@@ -313,7 +314,7 @@ def opinion_configuration(idexp):
 
     exp = db.session.scalars(select(Exps).filter_by(idexp=idexp)).first()
     if not exp:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
 
     client_id = request.args.get("client_id", type=int)
@@ -392,7 +393,7 @@ def _sample_opinion_from_distribution(distribution_name, distributions_map):
         return np.random.uniform(0, 1)
     except Exception as e:
         flash(
-            f"Error sampling from distribution '{distribution_name}': {str(e)}",
+            _("Error sampling from distribution '%(distribution_name)s': %(error)s", distribution_name=distribution_name, error=str(e)),
             "warning",
         )
         return random.random()
@@ -493,12 +494,12 @@ def _resolve_opinion_submission_context(expected_mode):
     if not idexp:
         return None, redirect(url_for("experiments.settings"))
     if not client_id:
-        flash("Client ID is missing.", "error")
+        flash(_("Client ID is missing."), "error")
         return None, redirect(url_for("experiments.experiment_details", uid=idexp))
 
     exp = db.session.scalars(select(Exps).filter_by(idexp=idexp)).first()
     if not exp:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return None, redirect(url_for("experiments.settings"))
 
     actual_mode = (
@@ -508,7 +509,7 @@ def _resolve_opinion_submission_context(expected_mode):
     )
     if actual_mode != expected_mode:
         flash(
-            "Opinion distribution update route does not match the experiment modality.",
+            _("Opinion distribution update route does not match the experiment modality."),
             "error",
         )
         if actual_mode == "hpc":
@@ -537,14 +538,14 @@ def _resolve_opinion_submission_context(expected_mode):
 
     client = db.session.scalars(select(Client).filter_by(id=client_id)).first()
     if not client or client.id_exp != int(idexp):
-        flash("Client not found or does not belong to this experiment.", "error")
+        flash(_("Client not found or does not belong to this experiment."), "error")
         return None, redirect(url_for("experiments.experiment_details", uid=idexp))
 
     population = db.session.scalars(
         select(Population).filter_by(id=client.population_id)
     ).first()
     if not population:
-        flash("Population not found.", "error")
+        flash(_("Population not found."), "error")
         return None, redirect(url_for("experiments.experiment_details", uid=idexp))
 
     selected_dimensions = [
@@ -578,14 +579,14 @@ def _resolve_opinion_submission_context(expected_mode):
         f"{population.name.replace(' ', '')}.json",
     )
     if not os.path.exists(population_file):
-        flash(f"Population file not found: {population_file}", "error")
+        flash(_("Population file not found: %(population_file)s", population_file=population_file), "error")
         return None, redirect(url_for("experiments.experiment_details", uid=idexp))
 
     try:
         with open(population_file, "r") as handle:
             pop_data = json.load(handle)
     except Exception as e:
-        flash(f"Error loading population file: {str(e)}", "error")
+        flash(_("Error loading population file: %(error)s", error=str(e)), "error")
         return None, redirect(url_for("experiments.experiment_details", uid=idexp))
 
     distributions_map = {}
@@ -597,13 +598,13 @@ def _resolve_opinion_submission_context(expected_mode):
             }
         except json.JSONDecodeError as e:
             flash(
-                f"Invalid JSON parameters for distribution '{dist.name}': {str(e)}",
+                _("Invalid JSON parameters for distribution '%(name)s': %(error)s", name=dist.name, error=str(e)),
                 "warning",
             )
 
     opinion_dynamics_enabled = _opinion_dynamics_enabled_for_client_creation(exp)
     if not opinion_dynamics_enabled:
-        flash("Opinion dynamics is not enabled for this experiment.", "warning")
+        flash(_("Opinion dynamics is not enabled for this experiment."), "warning")
         return None, redirect(url_for("experiments.experiment_details", uid=idexp))
 
     client_config_file = os.path.join(
@@ -680,11 +681,11 @@ def _apply_opinion_distributions_to_population(context):
         with open(context["population_file"], "w") as handle:
             json.dump(pop_data, handle, indent=4)
         flash(
-            f"Successfully updated opinions for {updated_count} agent-topic pairs.",
+            _("Successfully updated opinions for %(updated_count)s agent-topic pairs.", updated_count=updated_count),
             "success",
         )
     except Exception as e:
-        flash(f"Error saving population file: {str(e)}", "error")
+        flash(_("Error saving population file: %(error)s", error=str(e)), "error")
         return redirect(url_for("experiments.experiment_details", uid=context["idexp"]))
     return None
 
@@ -723,12 +724,12 @@ def _persist_non_hpc_opinion_dynamics(context):
             ] = opinion_dynamics
             with open(context["client_config_file"], "w") as handle:
                 json.dump(client_config, handle, indent=4)
-            flash("Opinion dynamics configuration saved successfully.", "success")
+            flash(_("Opinion dynamics configuration saved successfully."), "success")
         except Exception as e:
-            flash(f"Error updating client configuration: {str(e)}", "warning")
+            flash(_("Error updating client configuration: %(error)s", error=str(e)), "warning")
     else:
         flash(
-            f"Client configuration file not found: {context['client_config_file']}",
+            _("Client configuration file not found: %(client_config_file)s", client_config_file=context['client_config_file']),
             "warning",
         )
 
@@ -773,12 +774,12 @@ def _persist_hpc_opinion_dynamics(context):
             client_config["opinion_dynamics"] = opinion_dynamics
             with open(context["client_config_file"], "w") as handle:
                 json.dump(client_config, handle, indent=4)
-            flash("Opinion dynamics configuration saved successfully.", "success")
+            flash(_("Opinion dynamics configuration saved successfully."), "success")
         except Exception as e:
-            flash(f"Error updating client configuration: {str(e)}", "warning")
+            flash(_("Error updating client configuration: %(error)s", error=str(e)), "warning")
     else:
         flash(
-            f"Client configuration file not found: {context['client_config_file']}",
+            _("Client configuration file not found: %(client_config_file)s", client_config_file=context['client_config_file']),
             "warning",
         )
 
@@ -966,7 +967,7 @@ def set_opinion_distributions():
     idexp = request.form.get("idexp")
     exp = db.session.scalars(select(Exps).filter_by(idexp=idexp)).first()
     if not exp:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
 
     experiment_mode = _get_experiment_mode(exp)

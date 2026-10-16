@@ -60,6 +60,7 @@ from y_web.src.system.miscellanea import (
     llm_backend_status,
     ollama_status,
 )
+from y_web.i18n import gettext as _
 
 agents = Blueprint("agents", __name__)
 
@@ -495,14 +496,14 @@ def _resolve_custom_population_assignment(spec: dict):
     new_population_descr = (request.form.get("new_population_descr") or "").strip()
     if population == "__new__":
         if not new_population_name:
-            flash(f"A new {spec['display_name']} population name is required.", "error")
+            flash(_("A new %(display_name)s population name is required.", display_name=spec['display_name']), "error")
             return None
         existing = db.session.scalars(
             select(Population).filter_by(name=new_population_name)
         ).first()
         if existing:
             flash(
-                f"Population name '{new_population_name}' already exists. Please choose a different name.",
+                _("Population name '%(new_population_name)s' already exists. Please choose a different name.", new_population_name=new_population_name),
                 "error",
             )
             return None
@@ -519,7 +520,7 @@ def _resolve_custom_population_assignment(spec: dict):
 
     if not population or population == "none":
         flash(
-            f"{spec['display_name']} agents must be assigned to at least one matching custom population.",
+            _("%(display_name)s agents must be assigned to at least one matching custom population.", display_name=spec['display_name']),
             "error",
         )
         return None
@@ -527,7 +528,7 @@ def _resolve_custom_population_assignment(spec: dict):
     pop = db.session.scalars(select(Population).filter_by(id=population)).first()
     if pop is None or pop.pop_type not in spec["accepted_slugs"]:
         flash(
-            f"{spec['display_name']} agents can only be assigned to matching custom populations.",
+            _("%(display_name)s agents can only be assigned to matching custom populations.", display_name=spec['display_name']),
             "error",
         )
         return None
@@ -966,7 +967,7 @@ def custom_agent_data(agent_slug=None):
     check_privileges(current_user.username)
     spec = _find_custom_agent_spec(agent_slug or request.args.get("slug"))
     if spec is None:
-        flash("Custom agent type not found.", "error")
+        flash(_("Custom agent type not found."), "error")
         return redirect("/admin/agents_dashboard")
     return _render_custom_agent_builder(spec)
 
@@ -977,7 +978,7 @@ def hello_agent_data():
     """Compatibility redirect for the previous Hello World route."""
     spec = _find_custom_agent_spec("hello_world")
     if spec is None:
-        flash("Hello World agent plugin is not currently installed.", "error")
+        flash(_("Hello World agent plugin is not currently installed."), "error")
         return redirect("/admin/agents_dashboard")
     return redirect(f"/admin/custom_agent/{spec['slug']}")
 
@@ -1041,7 +1042,7 @@ def create_agent():
     # Validate that agent name is unique
     existing_agent = db.session.scalars(select(Agent).filter_by(name=name)).first()
     if existing_agent:
-        flash(f"Agent name '{name}' already exists. Please choose a different name.")
+        flash(_("Agent name '%(name)s' already exists. Please choose a different name.", name=name))
         return _agent_builder_for_type(user_type)
 
     if population not in (None, "", "none"):
@@ -1052,7 +1053,7 @@ def create_agent():
             user_type, assigned_population.pop_type
         ):
             flash(
-                "Standard agents can only be assigned to standard populations.", "error"
+                _("Standard agents can only be assigned to standard populations."), "error"
             )
             return _agent_builder_for_type(user_type)
 
@@ -1105,7 +1106,7 @@ def create_custom_agent(agent_slug):
     check_privileges(current_user.username)
     spec = _find_custom_agent_spec(agent_slug)
     if spec is None:
-        flash("Custom agent type not found.", "error")
+        flash(_("Custom agent type not found."), "error")
         return redirect("/admin/agents_dashboard")
 
     name = (request.form.get("name") or "").strip()
@@ -1116,7 +1117,7 @@ def create_custom_agent(agent_slug):
 
     existing_agent = db.session.scalars(select(Agent).filter_by(name=name)).first()
     if existing_agent:
-        flash(f"Agent name '{name}' already exists. Please choose a different name.")
+        flash(_("Agent name '%(name)s' already exists. Please choose a different name.", name=name))
         return _render_custom_agent_builder(spec)
 
     agent = Agent(
@@ -1147,7 +1148,7 @@ def create_custom_agent(agent_slug):
             value = _normalize_custom_agent_parameter_value(parameter, raw_value)
         except ValueError:
             flash(
-                f"Field '{param_name.replace('_', ' ')}' contains an invalid value.",
+                _("Field '%(replace)s' contains an invalid value.", replace=param_name.replace('_', ' ')),
                 "error",
             )
             db.session.delete(agent)
@@ -1169,7 +1170,7 @@ def create_hello_agent():
     """Compatibility wrapper for the previous Hello World creation route."""
     spec = _find_custom_agent_spec("hello_world")
     if spec is None:
-        flash("Hello World agent plugin is not currently installed.", "error")
+        flash(_("Hello World agent plugin is not currently installed."), "error")
         return redirect("/admin/agents_dashboard")
     return create_custom_agent(spec["slug"])
 
@@ -1270,19 +1271,19 @@ def add_to_population():
     ).first()
 
     if agent is None or target_population is None:
-        flash("Invalid agent or population selection.", "error")
+        flash(_("Invalid agent or population selection."), "error")
         return agent_details(agent_id)
 
     if not _population_matches_agent_type(agent.ag_type, target_population.pop_type):
         custom_spec = _find_custom_agent_spec(agent.ag_type) if agent.ag_type else None
         if custom_spec:
             flash(
-                f"{custom_spec['display_name']} agents can only be assigned to matching custom populations.",
+                _("%(display_name)s agents can only be assigned to matching custom populations.", display_name=custom_spec['display_name']),
                 "error",
             )
         else:
             flash(
-                "Standard agents can only be assigned to standard populations.", "error"
+                _("Standard agents can only be assigned to standard populations."), "error"
             )
         return agent_details(agent_id)
 
@@ -1311,7 +1312,7 @@ def delete_agent(uid):
 
     agent = db.session.scalars(select(Agent).filter_by(id=uid)).first()
     if agent is None:
-        flash("Agent not found.", "error")
+        flash(_("Agent not found."), "error")
         return redirect("/admin/agents")
 
     agent_type = agent.ag_type if agent else None
@@ -1320,7 +1321,7 @@ def delete_agent(uid):
         select(Agent_Population).filter_by(agent_id=uid)
     ).all()
     if agent_population and agent_type in (None, ""):
-        flash("Agent is assigned to a population. Cannot delete.")
+        flash(_("Agent is assigned to a population. Cannot delete."))
         return _agent_builder_for_type(agent_type)
 
     db.session.delete(agent)
@@ -1375,5 +1376,5 @@ def delete_orphaned_agents():
 
     db.session.commit()
 
-    flash(f"Successfully deleted {deleted_count} orphaned agent(s).")
+    flash(_("Successfully deleted %(deleted_count)s orphaned agent(s).", deleted_count=deleted_count))
     return agent_data()

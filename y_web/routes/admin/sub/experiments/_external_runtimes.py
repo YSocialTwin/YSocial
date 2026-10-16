@@ -35,6 +35,7 @@ from y_web.src.models import Admin_users, Exps
 from y_web.src.system.miscellanea import check_privileges
 
 from ._blueprint import experiments
+from y_web.i18n import gettext as _
 
 _MUTATING_ACTIONS = {
     "acquire",
@@ -74,7 +75,7 @@ def _require_admin_user():
         select(Admin_users).filter_by(username=current_user.username)
     ).first()
     if admin_user is None or admin_user.role != "admin":
-        flash("Only administrators can manage external runtime repositories.", "error")
+        flash(_("Only administrators can manage external runtime repositories."), "error")
         return None
     return admin_user
 
@@ -115,7 +116,7 @@ def _run_suite_schema_migration(repo_key: str) -> None:
         repo_key
     )
     if outcome and outcome.get("error"):
-        flash(f"Schema migration failed: {outcome['error']}", "error")
+        flash(_("Schema migration failed: %(error)s", error=outcome['error']), "error")
 
 
 def _toggle_plugin(repo_key: str, spec, admin_user, enabled: bool):
@@ -126,14 +127,14 @@ def _toggle_plugin(repo_key: str, spec, admin_user, enabled: bool):
     )
 
     if spec.group != "backend_settings" or not spec.path.exists():
-        flash("Only installed backend plugins can be enabled or disabled.", "error")
+        flash(_("Only installed backend plugins can be enabled or disabled."), "error")
         return _external_runtimes_response(
             repo_key=repo_key, status="error", message="Not supported."
         )
     set_plugin_enabled(repo_key, enabled, admin_user.username)
     if enabled and suite_restart_required(repo_key):
         flash(
-            f"{spec.label} enabled. Restart required: its routes are loaded at startup.",
+            _("%(label)s enabled. Restart required: its routes are loaded at startup.", label=spec.label),
             "warning",
         )
     else:
@@ -336,10 +337,10 @@ def external_runtime_detail(entry_key: str):
         try:
             spec = runtime_spec(key)
         except KeyError:
-            flash("Unknown external runtime repository.", "error")
+            flash(_("Unknown external runtime repository."), "error")
             return redirect(url_for("experiments.external_runtimes"))
         if not runtime_visible_to_user(spec, admin_user):
-            flash("You do not have visibility on this plugin repository.", "error")
+            flash(_("You do not have visibility on this plugin repository."), "error")
             return redirect(url_for("experiments.external_runtimes"))
         status = get_runtime_status(
             key, github_token=github_token, include_remote_metadata=True
@@ -389,15 +390,15 @@ def external_runtime_github_session():
     if action == "connect":
         token = (request.form.get("github_token") or "").strip()
         if not token:
-            flash("Provide a GitHub token before connecting.", "error")
+            flash(_("Provide a GitHub token before connecting."), "error")
         else:
             session[_GITHUB_TOKEN_SESSION_KEY] = token
-            flash("GitHub session enabled for plugin release access.", "success")
+            flash(_("GitHub session enabled for plugin release access."), "success")
     elif action == "disconnect":
         session.pop(_GITHUB_TOKEN_SESSION_KEY, None)
-        flash("GitHub session cleared.", "success")
+        flash(_("GitHub session cleared."), "success")
     else:
-        flash("Unsupported GitHub session action.", "error")
+        flash(_("Unsupported GitHub session action."), "error")
 
     target = (request.form.get("next") or "").strip()
     if target.startswith("/admin/external_runtimes") and not target.startswith("//"):
@@ -437,7 +438,7 @@ def _external_runtime_action_single(repo_key: str, action: str):
         )
 
     if action not in _MUTATING_ACTIONS:
-        flash("Unsupported runtime action.", "error")
+        flash(_("Unsupported runtime action."), "error")
         return _external_runtimes_response(
             repo_key=repo_key, status="error", message="Unsupported runtime action."
         )
@@ -445,7 +446,7 @@ def _external_runtime_action_single(repo_key: str, action: str):
     try:
         spec = runtime_spec(repo_key)
     except KeyError:
-        flash("Unknown external runtime repository.", "error")
+        flash(_("Unknown external runtime repository."), "error")
         return _external_runtimes_response(
             repo_key=repo_key,
             status="error",
@@ -453,7 +454,7 @@ def _external_runtime_action_single(repo_key: str, action: str):
         )
 
     if not runtime_visible_to_user(spec, admin_user):
-        flash("You do not have visibility on this plugin repository.", "error")
+        flash(_("You do not have visibility on this plugin repository."), "error")
         return _external_runtimes_response(
             repo_key=repo_key, status="error", message="Not visible."
         )
@@ -484,7 +485,7 @@ def _external_runtime_action_single(repo_key: str, action: str):
                 else f" and {len(active_experiments) - 3} more"
             )
             flash(
-                f"Stop active {spec.group_label.lower()} experiments before modifying {spec.label}: {names}{extra}.",
+                _("Stop active %(lower)s experiments before modifying %(label)s: %(names)s%(extra)s.", lower=spec.group_label.lower(), label=spec.label, names=names, extra=extra),
                 "error",
             )
             return _external_runtimes_response(
@@ -499,7 +500,7 @@ def _external_runtime_action_single(repo_key: str, action: str):
         exists = spec.path.exists() or spec.path.is_symlink()
         if exists and spec.path.is_symlink():
             flash(
-                f"{spec.label} is a symlinked development checkout: update it from its own repository.",
+                _("%(label)s is a symlinked development checkout: update it from its own repository.", label=spec.label),
                 "error",
             )
             return _external_runtimes_response(
@@ -514,7 +515,7 @@ def _external_runtime_action_single(repo_key: str, action: str):
             action = "reinstall"
         if (wants_git or action == "update") and not git_available:
             flash(
-                f"Git is not available on this host. Use the release source for {spec.label}.",
+                _("Git is not available on this host. Use the release source for %(label)s.", label=spec.label),
                 "error",
             )
             return _external_runtimes_response(
@@ -522,7 +523,7 @@ def _external_runtime_action_single(repo_key: str, action: str):
             )
     if action in {"clone", "fetch", "update"} and not git_available:
         flash(
-            f"Git is not available on this host. Use the release install flow for {spec.label}.",
+            _("Git is not available on this host. Use the release install flow for %(label)s.", label=spec.label),
             "error",
         )
         return _external_runtimes_response(
@@ -532,7 +533,7 @@ def _external_runtime_action_single(repo_key: str, action: str):
         )
     if action == "install" and not git_available and not spec.path.exists():
         flash(
-            f"Git is not available on this host. Install {spec.label} from a GitHub release first.",
+            _("Git is not available on this host. Install %(label)s from a GitHub release first.", label=spec.label),
             "error",
         )
         return _external_runtimes_response(
@@ -552,7 +553,7 @@ def _external_runtime_action_single(repo_key: str, action: str):
                 clone_runtime_repo(
                     repo_key, branch, admin_user.username, github_token=github_token
                 )
-                flash(f"Cloned {spec.label} on branch {branch}.", "success")
+                flash(_("Cloned %(label)s on branch %(branch)s.", label=spec.label, branch=branch), "success")
                 installed_now = True
             else:
                 download_runtime_release(
@@ -562,7 +563,7 @@ def _external_runtime_action_single(repo_key: str, action: str):
                     github_token=github_token,
                 )
                 flash(
-                    f"Installed {spec.label} from GitHub release {release_tag or 'latest available release'}.",
+                    _("Installed %(label)s from GitHub release %(release_tag)s.", label=spec.label, release_tag=release_tag or 'latest available release'),
                     "success",
                 )
                 installed_now = True
@@ -574,7 +575,7 @@ def _external_runtime_action_single(repo_key: str, action: str):
                 github_token=github_token,
             )
             flash(
-                f"Installed {spec.label} from GitHub release {release_tag or 'latest available release'}.",
+                _("Installed %(label)s from GitHub release %(release_tag)s.", label=spec.label, release_tag=release_tag or 'latest available release'),
                 "success",
             )
             installed_now = True
@@ -582,37 +583,37 @@ def _external_runtime_action_single(repo_key: str, action: str):
             clone_runtime_repo(
                 repo_key, branch, admin_user.username, github_token=github_token
             )
-            flash(f"Cloned {spec.label} on branch {branch}.", "success")
+            flash(_("Cloned %(label)s on branch %(branch)s.", label=spec.label, branch=branch), "success")
             installed_now = True
         elif action == "fetch":
             fetch_runtime_repo(
                 repo_key, branch, admin_user.username, github_token=github_token
             )
-            flash(f"Fetched {spec.label} from branch {branch}.", "success")
+            flash(_("Fetched %(label)s from branch %(branch)s.", label=spec.label, branch=branch), "success")
         elif action == "update":
             update_runtime_repo(
                 repo_key, branch, admin_user.username, github_token=github_token
             )
-            flash(f"Updated {spec.label} to branch {branch}.", "success")
+            flash(_("Updated %(label)s to branch %(branch)s.", label=spec.label, branch=branch), "success")
             if sync:
                 installed_now = (
                     True  # an update also refreshes dependencies, validation and schema
                 )
         elif action == "install":
             install_runtime_dependencies(repo_key, admin_user.username)
-            flash(f"Installed dependencies for {spec.label}.", "success")
+            flash(_("Installed dependencies for %(label)s.", label=spec.label), "success")
         elif action == "validate":
             validate_runtime_repo(repo_key, admin_user.username)
-            flash(f"Validated {spec.label}.", "success")
+            flash(_("Validated %(label)s.", label=spec.label), "success")
         elif action == "delete":
             delete_runtime_repo(repo_key, admin_user.username)
-            flash(f"Deleted {spec.label}.", "success")
+            flash(_("Deleted %(label)s.", label=spec.label), "success")
 
         if installed_now:
             install_runtime_dependencies(repo_key, admin_user.username)
-            flash(f"Installed dependencies for {spec.label}.", "success")
+            flash(_("Installed dependencies for %(label)s.", label=spec.label), "success")
             validate_runtime_repo(repo_key, admin_user.username)
-            flash(f"Validated {spec.label}.", "success")
+            flash(_("Validated %(label)s.", label=spec.label), "success")
             _run_suite_schema_migration(repo_key)
             from y_web.src.external_runtime.backend_plugins import (
                 suite_restart_required,
@@ -620,7 +621,7 @@ def _external_runtime_action_single(repo_key: str, action: str):
 
             if suite_restart_required(repo_key):
                 flash(
-                    f"Restart required: {spec.label} routes are loaded at startup.",
+                    _("Restart required: %(label)s routes are loaded at startup.", label=spec.label),
                     "warning",
                 )
     except ExternalRuntimeError as exc:
@@ -651,11 +652,11 @@ def external_runtime_logs(repo_key: str):
     try:
         spec = runtime_spec(repo_key)
     except KeyError:
-        flash("Unknown external runtime repository.", "error")
+        flash(_("Unknown external runtime repository."), "error")
         return redirect(url_for("experiments.external_runtimes"))
 
     if not runtime_visible_to_user(spec, admin_user):
-        flash("You do not have visibility on this plugin repository.", "error")
+        flash(_("You do not have visibility on this plugin repository."), "error")
         return redirect(url_for("experiments.external_runtimes"))
 
     return render_template(
