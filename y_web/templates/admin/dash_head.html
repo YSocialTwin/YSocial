@@ -144,14 +144,22 @@
                     <div class="dropdown-content">
                         {% if current_user_id %}
                         <a class="dropdown-item" href="/admin/user_details/{{ current_user_id }}">
-                            My Profile
+                            {{ _('My Profile') }}
                         </a>
                         {% endif %}
                         <a class="dropdown-item" href="/admin/visibility_settings">
-                            Share Experiments
+                            {{ _('Share Experiments') }}
                         </a>
+                        <form method="POST" action="/set-language" class="language-switcher">
+                            <input type="hidden" name="next" value="{{ request.full_path.rstrip('?') }}">
+                            {% for code, name in available_languages() %}
+                            <button type="submit" name="lang" value="{{ code }}" class="dropdown-item{% if get_locale()|string == code %} is-active{% endif %}">
+                                {{ name }}
+                            </button>
+                            {% endfor %}
+                        </form>
                         <a class="dropdown-item" href="/logout">
-                            Log Out
+                            {{ _('Log Out') }}
                         </a>
                     </div>
                 </div>

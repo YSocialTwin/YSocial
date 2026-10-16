@@ -14,7 +14,15 @@ Two language contexts are kept apart (plan decisions D3 and D4):
 """
 
 from flask import current_app, request
-from flask_babel import Babel, get_locale
+from flask_babel import (
+    Babel,
+    format_date,
+    format_datetime,
+    format_decimal,
+    format_number,
+    format_time,
+    get_locale,
+)
 from flask_login import current_user
 
 DEFAULT_LOCALE = "en"
@@ -51,6 +59,12 @@ def supported_languages():
 def available_languages():
     """Return ``[(code, native name), ...]`` for the supported languages."""
     return [(code, LANGUAGE_NAMES.get(code, code)) for code in supported_languages()]
+
+
+def text_direction():
+    """Return ``"rtl"`` or ``"ltr"`` for the active locale (``<html dir>``)."""
+    locale = get_locale()
+    return "rtl" if locale is not None and locale.text_direction == "rtl" else "ltr"
 
 
 def normalize_language(code):
@@ -120,3 +134,10 @@ def init_i18n(app):
     babel.init_app(app, locale_selector=select_locale)
     app.jinja_env.globals["get_locale"] = get_locale
     app.jinja_env.globals["available_languages"] = available_languages
+    app.jinja_env.globals["text_direction"] = text_direction
+    # Locale-aware formatting for dates and numbers: {{ value|localdate }}.
+    app.jinja_env.filters["localdate"] = format_date
+    app.jinja_env.filters["localtime"] = format_time
+    app.jinja_env.filters["localdatetime"] = format_datetime
+    app.jinja_env.filters["localnumber"] = format_number
+    app.jinja_env.filters["localdecimal"] = format_decimal

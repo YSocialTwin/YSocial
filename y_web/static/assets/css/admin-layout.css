@@ -195,3 +195,13 @@ body.is-dark .dashboard-toolbar .actions .buttons .live-button.is-disabled:hover
     padding-top: 8px;
     border-top: 0;
 }
+
+/* language switcher in the account menu: buttons that look like menu links */
+.language-switcher .dropdown-item {
+  width: 100%;
+  background: none;
+  border: 0;
+  text-align: start;
+  font: inherit;
+  cursor: pointer;
+}

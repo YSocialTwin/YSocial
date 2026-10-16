@@ -9,9 +9,17 @@ import json
 import re
 from pathlib import Path
 
-from flask import Blueprint, abort, jsonify
+from flask import Blueprint, abort, jsonify, redirect, request
+from flask_login import current_user
 
-from y_web.i18n import DEFAULT_LOCALE, normalize_language
+from y_web import db
+from y_web.i18n import (
+    ADMIN_COOKIE,
+    DEFAULT_LOCALE,
+    SIMULATION_COOKIE,
+    normalize_language,
+)
+from y_web.src.external_runtime.plugin_hooks import is_local_redirect
 
 i18n_bp = Blueprint("i18n", __name__)
 
@@ -39,3 +47,36 @@ def js_catalog(domain, lang):
     resp = jsonify(load_js_catalog(domain, lang))
     resp.headers["Cache-Control"] = "public, max-age=300"
     return resp
+
+
+@i18n_bp.route("/set-language", methods=["POST"])
+def set_language():
+    """Remember the chosen language (cookie, plus the user profile for admins).
+
+    Form fields: ``lang`` (a supported code; empty = automatic), ``next`` (a local
+    path to return to) and ``scope`` (``admin``, the default, or ``sim`` for the
+    participant override cookie).
+    """
+    raw = (request.form.get("lang") or "").strip()
+    lang = normalize_language(raw) if raw else None
+    if raw and lang != raw:
+        abort(400)
+
+    target = request.form.get("next") or request.referrer or "/"
+    if not is_local_redirect(target):
+        target = "/"
+    response = redirect(target)
+
+    if request.form.get("scope") == "sim":
+        cookie = SIMULATION_COOKIE
+    else:
+        cookie = ADMIN_COOKIE
+        if current_user.is_authenticated and hasattr(current_user, "lang"):
+            current_user.lang = lang
+            db.session.commit()
+
+    if lang:
+        response.set_cookie(cookie, lang, max_age=60 * 60 * 24 * 365, samesite="Lax")
+    else:
+        response.delete_cookie(cookie)
+    return response
