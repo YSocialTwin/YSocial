@@ -5,6 +5,7 @@ Tests for client logs endpoint
 import json
 import os
 import tempfile
+import uuid
 from collections import defaultdict
 
 import pytest
@@ -18,10 +19,15 @@ from y_web import db
 
 pytestmark = pytest.mark.integration
 
+# A fresh folder per run: a log file left behind by an earlier run (cleanup can be refused) must not leak in.
+EXP_FOLDER = f"test_exp_{uuid.uuid4().hex[:8]}"
+
 
 @pytest.fixture
 def app():
     """Create a test app for client logs endpoint testing"""
+    global EXP_FOLDER
+    EXP_FOLDER = f"test_exp_{uuid.uuid4().hex[:8]}"  # per test: a leftover log cannot reach another test
     app = Flask(__name__)
     db_fd, db_path = tempfile.mkstemp()
 
@@ -263,7 +269,7 @@ def app():
             owner="admin",
             status=1,
             running=1,
-            db_name="experiments/test_exp_123/database_server.db",
+            db_name=f"experiments/{EXP_FOLDER}/database_server.db",
         )
         db.session.add(exp)
         db.session.commit()
@@ -319,7 +325,7 @@ class TestClientLogsEndpoint:
         """Test that the endpoint correctly parses a log file"""
         # Create a test log file
         with app.app_context():
-            log_dir = "y_web/experiments/test_exp_123"
+            log_dir = f"y_web/experiments/{EXP_FOLDER}"
             os.makedirs(log_dir, exist_ok=True)
 
             log_file = os.path.join(log_dir, "TestClient_client.log")
@@ -355,8 +361,10 @@ class TestClientLogsEndpoint:
         assert data["mean_execution_time"]["post"] == pytest.approx(0.8521, rel=1e-4)
 
         # Cleanup
-        if os.path.exists(log_file):
+        try:
             os.remove(log_file)
+        except OSError:
+            pass
 
     def test_client_logs_handles_missing_log_file(self, client):
         """Test that the endpoint handles missing log files gracefully"""

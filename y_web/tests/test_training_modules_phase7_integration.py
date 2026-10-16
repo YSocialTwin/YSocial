@@ -256,7 +256,7 @@ def test_component_path_through_the_real_core(core_app):
         == 401
     )
     page = me.get(f"/training/runs/{rid}").get_data(as_text=True)
-    assert page.count('data-status="completed"') == 0
+    assert len(re.findall(r'data-step="[^"]+" data-status="completed"', page)) == 0
     ok = _callback(anonymous, launch_id, nonce="nonce-int-0003")
     assert ok.status_code == 200 and ok.get_json() == {"status": "accepted"}
     replay = _callback(anonymous, launch_id, nonce="nonce-int-0003")
@@ -265,7 +265,7 @@ def test_component_path_through_the_real_core(core_app):
         _callback(anonymous, launch_id, nonce="nonce-int-0004").status_code == 409
     )  # launch already consumed
     page = me.get(f"/training/runs/{rid}").get_data(as_text=True)
-    assert page.count('data-status="completed"') == 1
+    assert len(re.findall(r'data-step="[^"]+" data-status="completed"', page)) == 1
 
     # second step: the callback is lost, the signed pull recovers it
     r = me.post(
@@ -280,7 +280,7 @@ def test_component_path_through_the_real_core(core_app):
     fake.finished[second] = True
     page = me.get(f"/training/runs/{rid}").get_data(as_text=True)
     assert (
-        page.count('data-status="completed"') == 2
+        len(re.findall(r'data-step="[^"]+" data-status="completed"', page)) == 2
         and "completed all the required steps" in page
     )
 

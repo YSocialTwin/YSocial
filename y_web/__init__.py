@@ -198,10 +198,7 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
     db.init_app(app)
     login_manager.init_app(app)
 
-    from y_web.i18n import init_i18n
-
-    init_i18n(app)
-
+    __import__("y_web.i18n", fromlist=["init_i18n"]).init_i18n(app)
     from y_web.src.agents.platform import ensure_population_username_type_column
     from y_web.src.models import Admin_users, User_mgmt
 
@@ -244,9 +241,7 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
         """Setup experiment context and desktop mode for each request."""
         from y_web.src.system.role_gate import teacher_gate
 
-        denied = setup_experiment_context()
-        if denied is None:  # the gate runs after the experiment context (see role_gate)
-            denied = teacher_gate()
+        denied = setup_experiment_context() or teacher_gate()  # the gate runs after the context (see role_gate)
         if denied is not None:
             return denied
 
