@@ -1,7 +1,10 @@
 """Wrap flash()/message literals of Python modules in gettext calls.
 
-Usage: mark_python.py [--keys message,error] file.py ...
+Usage: mark_python.py [--keys message,error] [--calls _error:1,RealContentError:1]
+                      [--dict-keys message] [--import "from .i18n import _"] file.py ...
 Literal strings become _("..."); f-strings become _("... %(v)s", v=expr).
+--calls wraps the 0-based positional argument of calls to the named functions or
+classes; --import replaces the default flask_babel import (plugins use their own).
 """
 import ast, re, sys
 
@@ -53,6 +56,8 @@ def conv(node):
                 expr = v.value
                 if v.conversion not in (-1, None) and v.conversion != 115 and v.conversion != 114:
                     return None
+                if v.conversion == 114 and v.format_spec is not None:
+                    return None
                 src = ast.unparse(expr)
                 if v.format_spec is not None:
                     spec = "".join(x.value for x in v.format_spec.values if isinstance(x, ast.Constant))
@@ -70,14 +75,15 @@ def conv(node):
                         nm = "%s%d" % (base, i); i += 1
                     names[src] = nm
                     args.append("%s=%s" % (nm, src))
-                fmt += "%%(%s)s" % nm
+                fmt += ("%%(%s)r" if v.conversion == 114 else "%%(%s)s") % nm
         if not re.search(r"[A-Za-z]{2}", re.sub(r"%\(\w+\)s", "", fmt)):
             return None
         q = repr(fmt) if '"' in fmt else '"%s"' % fmt.replace("\\", "\\\\").replace("\n", "\\n")
         return "_(%s, %s)" % (q, ", ".join(args))
     return None
 
-def main(files, keys):
+def main(files, keys, calls=None, import_line=None, dict_keys=()):
+    calls = calls or {}
     for fn in files:
         src = open(fn, encoding="utf-8").read()
         tree = ast.parse(src)
@@ -92,10 +98,16 @@ def main(files, keys):
             if r:
                 edits.append((offs[node.lineno-1] + node.col_offset, offs[node.end_lineno-1] + node.end_col_offset, r))
         for n in ast.walk(tree):
+            if isinstance(n, ast.Dict) and dict_keys:
+                for k, v in zip(n.keys, n.values):
+                    if isinstance(k, ast.Constant) and k.value in dict_keys:
+                        add(v)
             if isinstance(n, ast.Call):
                 f = n.func
                 name = f.id if isinstance(f, ast.Name) else getattr(f, "attr", "")
-                if name == "flash" and n.args:
+                if name in calls and len(n.args) > calls[name]:
+                    add(n.args[calls[name]])
+                elif name == "flash" and n.args:
                     add(n.args[0])
                 elif name == "jsonify" and keys:
                     for a in list(n.args) + [k.value for k in n.keywords]:
@@ -112,6 +124,9 @@ def main(files, keys):
             b = b[:s] + r.encode() + b[e:]
         out = b.decode()
         has = re.search(r"^from flask_babel import .*\bgettext as _\b", out, re.M)
+        line = import_line or "from flask_babel import gettext as _"
+        if import_line and import_line in out:
+            has = True
         uses_us = any(isinstance(t, ast.Name) and t.id == "_" and isinstance(t.ctx, ast.Store) for t in ast.walk(tree))
         if uses_us:
             print("WARN _ assigned in", fn)
@@ -125,12 +140,22 @@ def main(files, keys):
             end = pos.end()
             if out[pos.start():end].rstrip().endswith("("):
                 end = out.index("\n)", end) + 2
-            out = out[:end] + "\nfrom flask_babel import gettext as _" + out[end:]
+            out = out[:end] + "\n" + line + out[end:]
         open(fn, "w", encoding="utf-8").write(out)
         print(fn, len(edits))
 
 if __name__ == "__main__":
-    a = sys.argv[1:]; keys = set()
-    if a and a[0] == "--keys":
-        keys = set(a[1].split(",")); a = a[2:]
-    main(a, keys)
+    a = sys.argv[1:]; keys = set(); calls = {}; imp = None; dkeys = set()
+    while a and a[0].startswith("--"):
+        if a[0] == "--keys":
+            keys = set(a[1].split(","))
+        elif a[0] == "--calls":
+            for item in a[1].split(","):
+                nm, _, idx = item.partition(":")
+                calls[nm] = int(idx or 0)
+        elif a[0] == "--dict-keys":
+            dkeys = set(a[1].split(","))
+        elif a[0] == "--import":
+            imp = a[1]
+        a = a[2:]
+    main(a, keys, calls, imp, dkeys)

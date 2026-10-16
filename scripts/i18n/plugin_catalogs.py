@@ -29,8 +29,16 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from manifest_extractor import extract_plugin_manifests  # noqa: E402
 
 SKIP_DIRS = ["tests", "test", "node_modules", "_to_delete", "__pycache__", "docs", "venv", ".venv"]
-JS_CALL = re.compile(r"YI18n\.(?:t|tn)\(\s*'((?:\\.|[^'\\])*)'")
+JS_CALL = re.compile(r"""YI18n\.(?:t|tn)\(\s*(?:'((?:\\.|[^'\\])*)'|"((?:\\.|[^"\\])*)")""")
 PH = re.compile(r"\{(\w+)\}")
+# Python messages are wrapped in ``_()``; templates call ``plugin_gettext('<domain>', 'text')`` or a local macro named ``T``.
+KEYWORDS = {
+    "_": None,
+    "gettext": None,
+    "ngettext": (1, 2),
+    "plugin_gettext": (2,),
+    "T": (1,),
+}
 METHODS = [("**.py", "python"), ("**/templates/**.html", "jinja2")]
 OPTIONS = {"**/templates/**.html": {"extensions": "jinja2.ext.i18n"}}
 
@@ -40,7 +48,7 @@ def _extract(plugin_dir):
         str(plugin_dir),
         method_map=METHODS,
         options_map=OPTIONS,
-        keywords={"_": None, "gettext": None, "ngettext": (1, 2)},
+        keywords=KEYWORDS,
         comment_tags=(),
         directory_filter=lambda d: Path(d).name not in SKIP_DIRS,
     )
@@ -126,7 +134,7 @@ def cmd_js_sync(plugin_dir, domain):
     keys = {}
     for path in js_files(plugin_dir):
         for match in JS_CALL.finditer(path.read_text(encoding="utf-8")):
-            text = unescape(match.group(1))
+            text = unescape(match.group(1) if match.group(1) is not None else match.group(2))
             keys[text] = text
     base = js_dir(plugin_dir, domain)
     keys.update(read_json(base / "_static.json"))
