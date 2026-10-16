@@ -25,9 +25,9 @@ Rules for writing translatable code in YSocial and its plugins. They follow the 
 ## 3. Catalogs and workflow
 
 - Extraction config: `babel.cfg` (tests and static are ignored). Commands: `pybabel extract -F babel.cfg -o y_web/translations/messages.pot --project=YSocial y_web`, then `pybabel update -i y_web/translations/messages.pot -d y_web/translations`, then `pybabel compile -d y_web/translations`.
-- `.po` and `.pot` are committed. `.mo` files are git-ignored: *provisional*, build and packaging must compile them (open question on `y_social.spec` and Dockerfile).
-- Supported languages are listed in `y_web/i18n.py` (`SUPPORTED_LOCALES`); a language is added by a catalog plus an entry there.
-- Language selection order: user choice stored in the session, `Accept-Language`, English. A per-user admin language and a per-experiment simulation language are later phases.
+- `.po`, `.pot` and the compiled `.mo` of `y_web/translations` are committed (decision at G0: no compile step in build or packaging). Always run `pybabel compile` before committing a catalog change. Translations are kept as `.po` files in the repository and reviewed through pull requests.
+- Pilot languages: English and Italian. Supported languages are listed in `y_web/i18n.py` (`SUPPORTED_LOCALES`); a language is added by a catalog plus an entry there.
+- Language selection order: user choice stored in the session, `Accept-Language`, English. The admin language is per user (D3, pending approval). The simulation frontend language is set per experiment, with an optional user override (D4).
 - Pseudo-locale `en-XA` (planned) is used in CI to catch untranslated strings.
 - `<html lang>` always comes from `get_locale()`; never hard-code it.
 

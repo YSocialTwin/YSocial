@@ -1,0 +1,55 @@
+# Translations template for YSocial.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the YSocial project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: YSocial VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-10-16 13:06+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: y_web/templates/forum/feed.html:148
+msgid "Search posts, users, links..."
+msgstr ""
+
+#: y_web/templates/login/login.html:44
+msgid "Welcome back"
+msgstr ""
+
+#: y_web/templates/login/login.html:45
+msgid "Sign in to continue to your experiments."
+msgstr ""
+
+#: y_web/templates/login/login.html:49
+msgid "Email"
+msgstr ""
+
+#: y_web/templates/login/login.html:53
+msgid "Password"
+msgstr ""
+
+#: y_web/templates/login/login.html:54
+msgid "Show password"
+msgstr ""
+
+#: y_web/templates/login/login.html:54
+msgid "SHOW"
+msgstr ""
+
+#: y_web/templates/login/login.html:57
+msgid "Remember me"
+msgstr ""
+
+#: y_web/templates/login/login.html:59
+msgid "Login"
+msgstr ""
+
