@@ -162,12 +162,42 @@ def _user_language():
     return None
 
 
+def _current_experiment_id():
+    """Experiment of the current simulation request (URL ``exp_id``, else the request context)."""
+    raw = (request.view_args or {}).get("exp_id")
+    if raw is None:
+        try:
+            from y_web.src.experiment.context import get_current_experiment_id
+
+            raw = get_current_experiment_id()
+        except Exception:  # pragma: no cover - defensive
+            raw = None
+    try:
+        return int(raw) if raw is not None else None
+    except (TypeError, ValueError):
+        return None
+
+
+def resolve_experiment_language():
+    """Default ``experiment_language_resolver``: ``(language, allow_override)`` from the experiment's frontend settings.
+
+    ``None`` when the request has no experiment or the experiment sets no language
+    (the participant then gets English, plus the optional override cookie).
+    """
+    exp_id = _current_experiment_id()
+    if exp_id is None:
+        return None
+    from y_web.routes.social.helpers import _load_ui_settings
+
+    ui = _load_ui_settings(exp_id)
+    return ui.get("language") or None, bool(ui.get("language_switch_allowed", False))
+
+
 def _experiment_language():
     """Return ``(language, allow_override)`` for the active experiment."""
-    if experiment_language_resolver is None:
-        return None, True
+    resolver = experiment_language_resolver or resolve_experiment_language
     try:
-        result = experiment_language_resolver()
+        result = resolver()
     except Exception:  # pragma: no cover - defensive
         return None, True
     if not result:

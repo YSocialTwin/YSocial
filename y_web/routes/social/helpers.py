@@ -699,6 +699,8 @@ _UI_DEFAULTS = {
     "show_trending_hashtags": True,
     "show_recsys_info": False,
     "show_annotation_stats": False,
+    "language": "",
+    "language_switch_allowed": False,
     "notifications_menu": True,
     "default_content_recsys": "",
     "default_follow_recsys": "",

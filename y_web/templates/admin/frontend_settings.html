@@ -647,6 +647,26 @@ input:checked + .slider-small:before { transform: translateX(16px); }
                        style="width:70px;padding:0.25rem 0.4rem;border:1px solid #ccc;border-radius:4px;font-size:0.9rem;">
               </div>
 
+              <!-- Interface language of the participant pages -->
+              <div class="ys-toggle-row" data-cap="language">
+                <span class="ys-toggle-label">
+                  {{ _('Interface language') }}
+                  <small>{{ _('Language of the participant pages in this experiment. Post, comment and agent texts are never translated.') }}</small>
+                </span>
+                <select id="language" aria-label="{{ _('Interface language') }}"
+                        style="padding:0.25rem 0.4rem;border:1px solid #ccc;border-radius:4px;font-size:0.9rem;">
+                  <option value="">{{ _('Default (English)') }}</option>
+                  {% for code, name in language_options %}<option value="{{ code }}">{{ name }}</option>{% endfor %}
+                </select>
+              </div>
+              <div class="ys-toggle-row" data-cap="language_switch_allowed">
+                <span class="ys-toggle-label">
+                  {{ _('Let participants change the language') }}
+                  <small>{{ _('Off keeps the language fixed for everybody, so it does not become a variable of the experiment.') }}</small>
+                </span>
+                <label class="switch-small"><input type="checkbox" id="language_switch_allowed"><span class="slider-small round"></span></label>
+              </div>
+
               <div class="ys-fs-save-row">
                 <button class="button is-solid primary-button" onclick="saveSection(event,'feed-profile')">{{ _('Save feed & profile') }}</button>
                 <span class="ys-fs-save-status" id="status-feed-profile"></span>
@@ -945,7 +965,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       'annotation_sentiment','annotation_toxicity','annotation_agent_type','annotation_author_type',
       'show_post_time','show_suggested_friends','show_trending_hashtags','show_recsys_info','show_annotation_stats',
       'notifications_menu','profile_topics_box','onboarding_enabled',
-      'infinite_scroll_enabled',
+      'infinite_scroll_enabled','language_switch_allowed',
     ];
     boolIds.forEach(key => {
       const el = document.getElementById(key);
@@ -972,7 +992,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
     }
 
     // String selects
-    ['default_content_recsys','default_follow_recsys'].forEach(key => {
+    ['default_content_recsys','default_follow_recsys','language'].forEach(key => {
       const el = document.getElementById(key);
       if (el) el.value = s[key] || '';
     });
@@ -1054,7 +1074,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       'show_post_time','show_suggested_friends','show_trending_hashtags','show_recsys_info','show_annotation_stats',
       'notifications_menu',
       'profile_topics_box','onboarding_enabled',
-      'infinite_scroll_enabled',
+      'infinite_scroll_enabled','language_switch_allowed',
     ];
     const out = {};
     boolIds.forEach(id => { const el = document.getElementById(id); out[id] = el ? el.checked : true; });
@@ -1067,7 +1087,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       out[id] = el ? parseFloat(el.value) || 0 : 0;
     });
     // String settings (select elements)
-    ['default_content_recsys','default_follow_recsys','filter_bubble_sort','default_forum_feed_type','default_photo_feed_tab'].forEach(id => {
+    ['default_content_recsys','default_follow_recsys','filter_bubble_sort','default_forum_feed_type','default_photo_feed_tab','language'].forEach(id => {
       const el = document.getElementById(id);
       out[id] = el ? el.value : '';
     });

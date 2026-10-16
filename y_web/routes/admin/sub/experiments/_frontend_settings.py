@@ -26,7 +26,7 @@ from y_web.src.models.config import Content_Recsys, Follow_Recsys
 from y_web.src.system.miscellanea import check_privileges
 
 from ._blueprint import experiments
-from y_web.i18n import gettext as _
+from y_web.i18n import available_languages, gettext as _
 
 # ------------------------------------------------------------------
 # Supported platforms and what each one's templates actually offer
@@ -113,6 +113,9 @@ DEFAULT_SETTINGS = {
     "show_trending_hashtags": True,  # show the "Trending Hashtags" box (microblogging only)
     "show_suggested_friends": True,  # show the "Suggested Friends" box (microblogging / photo)
     "show_recsys_info": False,  # box: the user's content recommender system, explained (microblogging / photo)
+    # Interface language of the participant pages (decision D4: set per experiment)
+    "language": "",  # empty = the default language (English); otherwise a supported code
+    "language_switch_allowed": False,  # let participants pick another language (cookie ys_lang_sim)
     "show_annotation_stats": False,  # box: live distributions of the user's annotations (needs the annotation add-on)
     # Feed & Profile
     "default_content_recsys": "",  # empty = system default
@@ -141,6 +144,13 @@ _ENUM_SETTINGS = {
     "default_forum_feed_type": {item["name"] for item in FORUM_FEED_TYPES},
     "default_photo_feed_tab": {item["name"] for item in PHOTO_FEED_TABS},
 }
+
+
+def _language_choices() -> set:
+    """Values accepted for the ``language`` setting: empty (default) or a supported language."""
+    from y_web.i18n import supported_languages
+
+    return {""} | set(supported_languages())
 
 
 def _load_settings(exp_id: int) -> dict:
@@ -265,6 +275,7 @@ def frontend_settings():
         exps_json=exps_json,
         platforms_json=platforms_json,
         recsys_json=recsys_json,
+        language_options=available_languages(),
         frontend_plugin_suites=frontend_plugin_suites,
     )
 
@@ -355,7 +366,7 @@ def frontend_settings_save():
         else:
             # string settings (recsys names, sort mode…)
             value = str(new_settings[k])
-            allowed = _ENUM_SETTINGS.get(k)
+            allowed = _language_choices() if k == "language" else _ENUM_SETTINGS.get(k)
             safe[k] = value if allowed is None or value in allowed else default
 
     if safe.get("show_annotation_stats") and not annotation_module_enabled(exp_id):
