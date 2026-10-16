@@ -33,14 +33,14 @@ var AdminUsers = (function() {
         new gridjs.Grid({
             columns: [
                 { id: 'id', hidden: true },
-                { id: 'username', name: 'Username', attributes: editableCellAttributes },
-                { id: 'email', name: 'Email' },
-                { id: 'password', name: 'Password', hidden: true, sort: false, attributes: editableCellAttributes },
-                { id: 'last_seen', name: 'Last Seen', sort: false, hidden: true },
-                { id: 'role', name: 'Role', sort: true, attributes: roleEditableCellAttributes },
+                { id: 'username', name: YI18n.t('Username'), attributes: editableCellAttributes },
+                { id: 'email', name: YI18n.t('Email') },
+                { id: 'password', name: YI18n.t('Password'), hidden: true, sort: false, attributes: editableCellAttributes },
+                { id: 'last_seen', name: YI18n.t('Last Seen'), sort: false, hidden: true },
+                { id: 'role', name: YI18n.t('Role'), sort: true, attributes: roleEditableCellAttributes },
                 {
                     id: 'actions',
-                    name: 'Actions',
+                    name: YI18n.t('Actions'),
                     sort: false,
                     formatter: function(cell, row) {
                         var id = row.cells[0].data;
@@ -48,11 +48,9 @@ var AdminUsers = (function() {
                         var isAdmin = role.toLowerCase() === 'admin';
                         var deleteButton = isAdmin
                             ? '<button disabled style="background-color: #ccc; color: #666; padding: 5px 10px; border-radius: 4px; border: none; font-size: 0.85rem;">Delete</button>'
-                            : '<button class="delete-button" data-id="' + id + '" style="background-color: #dc3545; color: white; padding: 5px 10px; border-radius: 4px; border: none; font-size: 0.85rem; cursor: pointer;">Delete</button>';
+                            : '<button class="delete-button" data-id="' + id + '" style="background-color: #dc3545; color: white; padding: 5px 10px; border-radius: 4px; border: none; font-size: 0.85rem; cursor: pointer;">' + YI18n.t('Delete') + '</button>';
                         return gridjs.html(
-                            '<div style="display: flex; gap: 8px; justify-content: center;">' +
-                            '<a href="/admin/user_details/' + id + '" style="background-color: #28a745; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 0.9rem;">Details</a>' +
-                            deleteButton + '</div>'
+                            '<div style="display: flex; gap: 8px; justify-content: center;"><a href="/admin/user_details/' + id + '" style="background-color: #28a745; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 0.9rem;">' + YI18n.t('Details') + '</a>' + deleteButton + '</div>'
                         );
                     }
                 }
@@ -110,7 +108,7 @@ var AdminUsers = (function() {
             var target = event.target;
             if (target.classList.contains('delete-button')) {
                 var id = target.getAttribute('data-id');
-                if (confirm('Are you sure you want to delete this user?')) {
+                if (confirm(YI18n.t('Are you sure you want to delete this user?'))) {
                     window.location.href = '/admin/delete_user/' + id;
                 }
             }
@@ -126,14 +124,14 @@ var AdminUsers = (function() {
         var llmUrl = urlInput.value.trim();
 
         if (!llmUrl) {
-            statusDiv.innerHTML = '<span style="color: #ff6b6b;">Please enter an LLM URL</span>';
+            statusDiv.innerHTML = '<span style="color: #ff6b6b;">' + YI18n.t('Please enter an LLM URL') + '</span>';
             return;
         }
-        statusDiv.innerHTML = '<span style="color: #4a90e2;">Fetching models...</span>';
+        statusDiv.innerHTML = '<span style="color: #4a90e2;">' + YI18n.t('Fetching models...') + '</span>';
 
         fetch('/admin/api/fetch_models?llm_url=' + encodeURIComponent(llmUrl))
             .then(function(response) {
-                if (!response.ok) throw new Error('Network response was not ok');
+                if (!response.ok) throw new Error(YI18n.t('Network response was not ok'));
                 return response.json();
             })
             .then(function(data) {
@@ -141,7 +139,7 @@ var AdminUsers = (function() {
                     selectElement.innerHTML = '';
                     var defaultOption = document.createElement('option');
                     defaultOption.value = '';
-                    defaultOption.textContent = 'Select a model';
+                    defaultOption.textContent = YI18n.t('Select a model');
                     selectElement.appendChild(defaultOption);
                     data.models.forEach(function(model) {
                         var option = document.createElement('option');
@@ -149,14 +147,14 @@ var AdminUsers = (function() {
                         option.textContent = model;
                         selectElement.appendChild(option);
                     });
-                    statusDiv.innerHTML = '<span style="color: #28a745;">\u2713 Loaded ' + data.models.length + ' models from ' + (data.url || llmUrl) + '</span>';
+                    statusDiv.innerHTML = '<span style="color: #28a745;">' + YI18n.t('✓ Loaded {length} models from {url}', {length: data.models.length, url: data.url || llmUrl}) + '</span>';
                 } else {
                     statusDiv.innerHTML = '<span style="color: #ff6b6b;">\u2717 ' + (data.message || 'No models found') + '</span>';
                 }
             })
             .catch(function(error) {
                 console.error('Error:', error);
-                statusDiv.innerHTML = '<span style="color: #ff6b6b;">\u2717 Error: Could not fetch models. Check if server is reachable.</span>';
+                statusDiv.innerHTML = '<span style="color: #ff6b6b;">' + YI18n.t('✗ Error: Could not fetch models. Check if server is reachable.') + '</span>';
             });
     }
 
@@ -169,14 +167,14 @@ var AdminUsers = (function() {
         var llmUrl = urlInput.value.trim();
 
         if (!llmUrl) {
-            statusDiv.innerHTML = '<span style="color: #ff6b6b;">Please enter an LLM URL</span>';
+            statusDiv.innerHTML = '<span style="color: #ff6b6b;">' + YI18n.t('Please enter an LLM URL') + '</span>';
             return;
         }
-        statusDiv.innerHTML = '<span style="color: #4a90e2;">Fetching models...</span>';
+        statusDiv.innerHTML = '<span style="color: #4a90e2;">' + YI18n.t('Fetching models...') + '</span>';
 
         fetch('/admin/api/fetch_models?llm_url=' + encodeURIComponent(llmUrl))
             .then(function(response) {
-                if (!response.ok) throw new Error('Network response was not ok');
+                if (!response.ok) throw new Error(YI18n.t('Network response was not ok'));
                 return response.json();
             })
             .then(function(data) {
@@ -188,14 +186,14 @@ var AdminUsers = (function() {
                         option.textContent = model;
                         selectElement.appendChild(option);
                     });
-                    statusDiv.innerHTML = '<span style="color: #28a745;">\u2713 Loaded ' + data.models.length + ' models</span>';
+                    statusDiv.innerHTML = '<span style="color: #28a745;">' + YI18n.t('✓ Loaded {length} models', {length: data.models.length}) + '</span>';
                 } else {
                     statusDiv.innerHTML = '<span style="color: #ff6b6b;">\u2717 ' + (data.message || 'No models found') + '</span>';
                 }
             })
             .catch(function(error) {
                 console.error('Error:', error);
-                statusDiv.innerHTML = '<span style="color: #ff6b6b;">\u2717 Error: Could not fetch models. Check if server is reachable.</span>';
+                statusDiv.innerHTML = '<span style="color: #ff6b6b;">' + YI18n.t('✗ Error: Could not fetch models. Check if server is reachable.') + '</span>';
             });
     }
 

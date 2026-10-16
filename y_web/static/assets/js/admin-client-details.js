@@ -7,11 +7,11 @@ var AdminClientDetails = (function() {
         var llmUrl = urlInput.value.trim();
 
         if (!llmUrl) {
-            alert('Please enter an LLM server URL');
+            alert(YI18n.t('Please enter an LLM server URL'));
             return;
         }
 
-        status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Fetching...';
+        status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> ' + YI18n.t('Fetching...');
 
         fetch('/admin/api/fetch_models?llm_url=' + encodeURIComponent(llmUrl))
             .then(function(response) { return response.json(); })
@@ -20,19 +20,19 @@ var AdminClientDetails = (function() {
                     status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> ' + data.error + '</span>';
                     setTimeout(function() { status.innerHTML = ''; }, 5000);
                 } else {
-                    select.innerHTML = '<option value="">Select a model</option>';
+                    select.innerHTML = '<option value="">' + YI18n.t('Select a model') + '</option>';
                     data.models.forEach(function(model) {
                         var option = document.createElement('option');
                         option.value = model;
                         option.textContent = model;
                         select.appendChild(option);
                     });
-                    status.innerHTML = '<span style="color: green;"><i class="mdi mdi-check"></i> ' + data.models.length + ' models loaded</span>';
+                    status.innerHTML = '<span style="color: green;"><i class="mdi mdi-check"></i> ' + YI18n.t('{length} models loaded', {length: data.models.length}) + '</span>';
                     setTimeout(function() { status.innerHTML = ''; }, 3000);
                 }
             })
             .catch(function() {
-                status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> Connection failed</span>';
+                status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> ' + YI18n.t('Connection failed') + '</span>';
                 setTimeout(function() { status.innerHTML = ''; }, 5000);
             });
     }
@@ -60,7 +60,7 @@ var AdminClientDetails = (function() {
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Activity %',
+                    label: YI18n.t('Activity %'),
                     data: activityData,
                     backgroundColor: 'rgba(34, 197, 94, 0.6)',
                     borderColor: 'rgba(34, 197, 94, 1)',

@@ -23,12 +23,9 @@ var AdminOpinion = (function() {
         if (!entries.length) {
             return '<div class="dist-note">No fixed parameters defined for this distribution.</div>';
         }
-        return '<div class="dist-meta-label">Fixed Parameters</div>' +
-            '<div class="dist-params">' +
-            entries.map(function(e) {
+        return '<div class="dist-meta-label">' + YI18n.t('Fixed Parameters') + '</div><div class="dist-params">' + entries.map(function(e) {
                 return '<span class="dist-param"><span class="dist-param-key">' + e[0] + ':</span><span>' + formatDistributionParamValue(e[1]) + '</span></span>';
-            }).join('') +
-            '</div>';
+            }).join('') + '</div>';
     }
 
     function buildDistributionNote(type) {
@@ -39,7 +36,7 @@ var AdminOpinion = (function() {
         if (supported.has(type)) {
             return '';
         }
-        return '<div class="dist-note is-custom">Custom distribution type <strong>' + type + '</strong>. Sampling is delegated to the backend implementation, so newly added DB-driven distributions remain available without template changes.</div>';
+        return '<div class="dist-note is-custom">' + YI18n.t('Custom distribution type') + ' <strong>' + type + '</strong>' + YI18n.t('. Sampling is delegated to the backend implementation, so newly added DB-driven distributions remain available without template changes.') + '</div>';
     }
 
     function clampProbability(value) {
@@ -431,7 +428,7 @@ var AdminOpinion = (function() {
     function createTimeseriesDatasets(timeseriesData) {
         return timeseriesData.agents.map(function(agent) {
             return {
-                label: 'Agent ' + agent.agent_id,
+                label: YI18n.t('Agent {agent_id}', {agent_id: agent.agent_id}),
                 data: agent.data,
                 borderColor: agent.color,
                 backgroundColor: agent.color.replace('0.7', '0.1'),
@@ -588,7 +585,7 @@ var AdminOpinion = (function() {
             playButton.classList.remove('playing');
             playIcon.classList.remove('mdi-pause');
             playIcon.classList.add('mdi-play');
-            playButton.title = 'Play';
+            playButton.title = YI18n.t('Play');
             return;
         }
         currentValue += step;
@@ -612,7 +609,7 @@ var AdminOpinion = (function() {
                 datasets: [
                     {
                         type: 'line',
-                        label: 'Target Opinion',
+                        label: YI18n.t('Target Opinion'),
                         data: ((targetData.datasets || [])[0] || {}).data || [],
                         borderColor: 'rgba(59, 130, 246, 1)',
                         backgroundColor: 'rgba(59, 130, 246, 0.16)',
@@ -623,7 +620,7 @@ var AdminOpinion = (function() {
                     },
                     {
                         type: 'bar',
-                        label: 'Propaganda Interactions',
+                        label: YI18n.t('Propaganda Interactions'),
                         data: ((targetData.datasets || [])[1] || {}).data || [],
                         borderColor: 'rgba(249, 115, 22, 1)',
                         backgroundColor: 'rgba(249, 115, 22, 0.4)',
@@ -647,7 +644,7 @@ var AdminOpinion = (function() {
                                 return 'Step ' + key;
                             },
                             label: function(context) {
-                                if (context.dataset.label === 'Propaganda Interactions') {
+                                if (context.dataset.label === YI18n.t('Propaganda Interactions')) {
                                     return context.dataset.label + ': ' + Number(context.parsed.y || 0).toFixed(0);
                                 }
                                 return context.dataset.label + ': ' + Number(context.parsed.y || 0).toFixed(3);
@@ -660,17 +657,17 @@ var AdminOpinion = (function() {
                         beginAtZero: true,
                         min: 0,
                         max: 1,
-                        title: { display: true, text: 'Opinion Value' }
+                        title: { display: true, text: YI18n.t('Opinion Value') }
                     },
                     y1: {
                         beginAtZero: true,
                         position: 'right',
                         grid: { drawOnChartArea: false },
                         ticks: { precision: 0 },
-                        title: { display: true, text: 'Interactions' }
+                        title: { display: true, text: YI18n.t('Interactions') }
                     },
                     x: {
-                        title: { display: true, text: 'Simulation Days' }
+                        title: { display: true, text: YI18n.t('Simulation Days') }
                     }
                 }
             }
@@ -710,8 +707,7 @@ var AdminOpinion = (function() {
         var currentSelection = propagandaTargets.selected_uid || '';
         select.innerHTML = options.map(function(option) {
             var selected = option.uid === currentSelection ? ' selected' : '';
-            return '<option value="' + option.uid + '"' + selected + '>' +
-                option.username + ' (' + option.interaction_count + ' interactions)</option>';
+            return '<option value="' + option.uid + '"' + selected + '>' + YI18n.t('{username} ({interaction_count} interactions)', {username: option.username, interaction_count: option.interaction_count}) + '</option>';
         }).join('');
 
         var targetName = document.getElementById('propaganda-target-name');
@@ -726,13 +722,9 @@ var AdminOpinion = (function() {
             var events = propagandaTargets.interaction_events || [];
             eventsBody.innerHTML = events.length
                 ? events.map(function(event) {
-                    return '<tr>' +
-                        '<td>Day ' + event.day + ', Hour ' + event.hour + '</td>' +
-                        '<td>' + (event.interaction_count || 0) + '</td>' +
-                        '<td>' + ((event.attacker_usernames || []).join(', ') || '—') + '</td>' +
-                        '</tr>';
+                    return '<tr><td>' + YI18n.t('Day {day}, Hour {hour}', {day: event.day, hour: event.hour}) + '</td><td>' + event.interaction_count || 0 + '</td><td>' + (event.attacker_usernames || []).join(', ') || '—' + '</td></tr>';
                 }).join('')
-                : '<tr><td colspan=\"3\">No propaganda interactions recorded up to the selected time.</td></tr>';
+                : '<tr><td colspan="3">' + YI18n.t('No propaganda interactions recorded up to the selected time.') + '</td></tr>';
         }
 
         var targetData = propagandaTargets.trend_data || { timestamps: [], datasets: [], timestamp_mapping: {} };
@@ -771,7 +763,7 @@ var AdminOpinion = (function() {
                 datasets: [
                     {
                         type: 'line',
-                        label: 'Target Opinion',
+                        label: YI18n.t('Target Opinion'),
                         data: ((targetData.datasets || [])[0] || {}).data || [],
                         borderColor: 'rgba(20, 184, 166, 1)',
                         backgroundColor: 'rgba(20, 184, 166, 0.16)',
@@ -782,7 +774,7 @@ var AdminOpinion = (function() {
                     },
                     {
                         type: 'bar',
-                        label: 'MoP Interactions',
+                        label: YI18n.t('MoP Interactions'),
                         data: ((targetData.datasets || [])[1] || {}).data || [],
                         borderColor: 'rgba(124, 58, 237, 1)',
                         backgroundColor: 'rgba(124, 58, 237, 0.35)',
@@ -806,7 +798,7 @@ var AdminOpinion = (function() {
                                 return 'Step ' + key;
                             },
                             label: function(context) {
-                                if (context.dataset.label === 'MoP Interactions') {
+                                if (context.dataset.label === YI18n.t('MoP Interactions')) {
                                     return context.dataset.label + ': ' + Number(context.parsed.y || 0).toFixed(0);
                                 }
                                 return context.dataset.label + ': ' + Number(context.parsed.y || 0).toFixed(3);
@@ -819,17 +811,17 @@ var AdminOpinion = (function() {
                         beginAtZero: true,
                         min: 0,
                         max: 1,
-                        title: { display: true, text: 'Opinion Value' }
+                        title: { display: true, text: YI18n.t('Opinion Value') }
                     },
                     y1: {
                         beginAtZero: true,
                         position: 'right',
                         grid: { drawOnChartArea: false },
                         ticks: { precision: 0 },
-                        title: { display: true, text: 'Interactions' }
+                        title: { display: true, text: YI18n.t('Interactions') }
                     },
                     x: {
-                        title: { display: true, text: 'Simulation Days' }
+                        title: { display: true, text: YI18n.t('Simulation Days') }
                     }
                 }
             }
@@ -858,8 +850,7 @@ var AdminOpinion = (function() {
         var currentSelection = mopTargets.selected_uid || '';
         select.innerHTML = options.map(function(option) {
             var selected = option.uid === currentSelection ? ' selected' : '';
-            return '<option value="' + option.uid + '"' + selected + '>' +
-                option.username + ' (' + option.interaction_count + ' interactions)</option>';
+            return '<option value="' + option.uid + '"' + selected + '>' + YI18n.t('{username} ({interaction_count} interactions)', {username: option.username, interaction_count: option.interaction_count}) + '</option>';
         }).join('');
 
         var targetName = document.getElementById('mop-target-name');
@@ -875,14 +866,9 @@ var AdminOpinion = (function() {
             eventsBody.innerHTML = events.length
                 ? events.map(function(event) {
                     var type = String(event.interaction_type || '');
-                    return '<tr>' +
-                        '<td>Day ' + event.day + ', Hour ' + event.hour + '</td>' +
-                        '<td>' + type.charAt(0).toUpperCase() + type.slice(1) + '</td>' +
-                        '<td>' + (event.interaction_count || 0) + '</td>' +
-                        '<td>' + ((event.attacker_usernames || []).join(', ') || '—') + '</td>' +
-                        '</tr>';
+                    return '<tr><td>' + YI18n.t('Day {day}, Hour {hour}', {day: event.day, hour: event.hour}) + '</td><td>' + type.charAt(0).toUpperCase() + type.slice(1) + '</td><td>' + event.interaction_count || 0 + '</td><td>' + (event.attacker_usernames || []).join(', ') || '—' + '</td></tr>';
                 }).join('')
-                : '<tr><td colspan=\"4\">No MoP interactions recorded up to the selected time.</td></tr>';
+                : '<tr><td colspan="4">' + YI18n.t('No MoP interactions recorded up to the selected time.') + '</td></tr>';
         }
 
         var targetData = mopTargets.trend_data || { timestamps: [], datasets: [], timestamp_mapping: {} };
@@ -938,7 +924,7 @@ var AdminOpinion = (function() {
             data: {
                 labels: chartLabels,
                 datasets: [{
-                    label: 'Percentage of Agents',
+                    label: YI18n.t('Percentage of Agents'),
                     data: chartPercentages,
                     backgroundColor: colorSet.colors,
                     borderColor: colorSet.borderColors,
@@ -967,9 +953,9 @@ var AdminOpinion = (function() {
                         beginAtZero: true,
                         max: yAxisMax,
                         ticks: { callback: function(value) { return value.toFixed(1) + '%'; } },
-                        title: { display: true, text: 'Percentage of Agents' }
+                        title: { display: true, text: YI18n.t('Percentage of Agents') }
                     },
-                    x: { title: { display: true, text: 'Opinion Group' } }
+                    x: { title: { display: true, text: YI18n.t('Opinion Group') } }
                 }
             }
         });
@@ -1015,12 +1001,12 @@ var AdminOpinion = (function() {
                         beginAtZero: true,
                         max: 100,
                         ticks: { callback: function(value) { return value.toFixed(0) + '%'; } },
-                        title: { display: true, text: 'Percentage of Agents' }
+                        title: { display: true, text: YI18n.t('Percentage of Agents') }
                     },
                     x: {
                         type: 'category',
                         stacked: true,
-                        title: { display: true, text: 'Simulation Days' },
+                        title: { display: true, text: YI18n.t('Simulation Days') },
                         ticks: { maxTicksLimit: 10 }
                     }
                 }
@@ -1052,11 +1038,11 @@ var AdminOpinion = (function() {
                         min: 0,
                         max: 1,
                         ticks: { stepSize: 0.2 },
-                        title: { display: true, text: 'Opinion Value' }
+                        title: { display: true, text: YI18n.t('Opinion Value') }
                     },
                     x: {
                         type: 'category',
-                        title: { display: true, text: 'Simulation Days' },
+                        title: { display: true, text: YI18n.t('Simulation Days') },
                         ticks: { maxTicksLimit: 10 }
                     }
                 }
@@ -1159,13 +1145,13 @@ var AdminOpinion = (function() {
                 playButton.classList.remove('playing');
                 playIcon.classList.remove('mdi-pause');
                 playIcon.classList.add('mdi-play');
-                playButton.title = 'Play';
+                playButton.title = YI18n.t('Play');
             } else {
                 _isPlaying = true;
                 playButton.classList.add('playing');
                 playIcon.classList.remove('mdi-play');
                 playIcon.classList.add('mdi-pause');
-                playButton.title = 'Pause';
+                playButton.title = YI18n.t('Pause');
                 playStep(timeSlider, playButton, playIcon);
                 _playInterval = setInterval(function() { playStep(timeSlider, playButton, playIcon); }, getCurrentInterval());
             }

@@ -246,7 +246,7 @@ var AdminDashboard = (function() {
               if (nextBtn) nextBtn.disabled = paginationState[status].page >= totalPages;
               if (pageInfo) {
                   pageInfo.textContent = status === 'running'
-                      ? `Page ${paginationState[status].page} of ${totalPages}`
+                      ? YI18n.t('Page {page} of {totalpages}', {page: paginationState[status].page, totalpages: totalPages})
                       : `${paginationState[status].page}/${totalPages}`;
               }
           }
@@ -261,22 +261,22 @@ var AdminDashboard = (function() {
 
   // Experiment server control functions
   function startExperimentServer(expId) {
-      showLoading('Starting experiment server...');
+      showLoading(YI18n.t('Starting experiment server...'));
       window.location.href = `/admin/start_experiment/${expId}`;
   }
 
   function stopExperimentServer(expId) {
-      showLoading('Stopping experiment server...');
+      showLoading(YI18n.t('Stopping experiment server...'));
       window.location.href = `/admin/stop_experiment/${expId}`;
   }
 
   function selectExperiment(expId) {
-      showLoading('Loading experiment interface...');
+      showLoading(YI18n.t('Loading experiment interface...'));
       window.location.href = `/admin/select_experiment/${expId}`;
   }
 
   function joinExperiment(expId) {
-      showLoading('Joining experiment...');
+      showLoading(YI18n.t('Joining experiment...'));
       window.location.href = `/admin/join_experiment/${expId}`;
   }
 
@@ -292,69 +292,33 @@ var AdminDashboard = (function() {
           : (hasStartedOnce ? `${expProgress !== null ? expProgress : 0}%` : 'NA');
     
       const infiniteBadge = hasInfiniteClient ? 
-          `<span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="Infinite">∞</span>` : '';
+          '<span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="' + YI18n.t('Infinite') + '">∞</span>' : '';
     
       const clientCountBadge = clientCount > 0 ?
-          `<span style="background: #e0e0e0; color: #666; font-size: 0.6em; padding: 0 4px; border-radius: 6px; line-height: 1.4;" title="Clients">${clientCount}</span>` : '';
+          '<span style="background: #e0e0e0; color: #666; font-size: 0.6em; padding: 0 4px; border-radius: 6px; line-height: 1.4;" title="' + YI18n.t('Clients') + '">' + clientCount + '</span>' : '';
 
       const progressBadge = (expStatus === 'stopped' || expStatus === 'scheduled') ?
-          `<span style="background: linear-gradient(90deg, #039be5 0%, #00b4d8 100%); color: white; font-size: 0.65em; padding: 1px 6px; border-radius: 8px; font-weight: 600; line-height: 1.4; white-space: nowrap;" title="Current execution progress">
-              Execution: ${progressLabel}
-          </span>` : '';
+          '<span style="background: linear-gradient(90deg, #039be5 0%, #00b4d8 100%); color: white; font-size: 0.65em; padding: 1px 6px; border-radius: 8px; font-weight: 600; line-height: 1.4; white-space: nowrap;" title="' + YI18n.t('Current execution progress') + '">\n              ' + YI18n.t('Execution: {progresslabel}', {progresslabel: progressLabel}) + '\n          </span>' : '';
     
       const runButton = exp.running === 0 ?
-          `<a class="link-tooltip" href="#" onclick="startExperimentServer('${exp.idexp}'); return false;" title="Run">
-              <i class="mdi mdi-play-box-outline" style="font-size: 16px;"></i>
-          </a>` :
-          (exp.can_manage ? `<a class="link-tooltip" href="#" onclick="stopExperimentServer('${exp.idexp}'); return false;" title="Stop">
-              <i class="mdi mdi-stop active" style="font-size: 16px;"></i>
-          </a>` : '');
+          '<a class="link-tooltip" href="#" onclick="startExperimentServer(\'' + exp.idexp + '\'); return false;" title="' + YI18n.t('Run') + '">\n              <i class="mdi mdi-play-box-outline" style="font-size: 16px;"></i>\n          </a>' :
+          (exp.can_manage ? '<a class="link-tooltip" href="#" onclick="stopExperimentServer(\'' + exp.idexp + '\'); return false;" title="' + YI18n.t('Stop') + '">\n              <i class="mdi mdi-stop active" style="font-size: 16px;"></i>\n          </a>' : '');
     
       const deleteExpButton = exp.status === 0 && exp.can_manage ?
-          `<a class="link-tooltip" href="javascript:void(0);" 
-             onclick="if(confirm('Are you sure you want to delete this experiment? This action cannot be undone.')) { window.location.href='/admin/delete_simulation/${exp.idexp}'; }" 
-             title="Delete">
-              <i class="mdi mdi-delete" style="font-size: 16px;"></i>
-          </a>` : '';
+          '<a class="link-tooltip" href="javascript:void(0);" \n             onclick="if(confirm(YI18n.t(\'Are you sure you want to delete this experiment? This action cannot be undone.\'))) { window.location.href=\'/admin/delete_simulation/' + exp.idexp + '\'; }" \n             title="' + YI18n.t('Delete') + '">\n              <i class="mdi mdi-delete" style="font-size: 16px;"></i>\n          </a>' : '';
     
       const ownerBadge = exp.owner ? 
-          `<span style="background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="Owner">${exp.owner}</span>` : '';
+          '<span style="background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="' + YI18n.t('Owner') + '">' + exp.owner + '</span>' : '';
 
-      const platformBadge = `<span style="background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="Platform">${exp.platform_type === 'forum' ? 'Forum' : exp.platform_type === 'photo_sharing' ? 'Photo Sharing' : 'Microblogging'}</span>`;
+      const platformBadge = '<span style="background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="' + YI18n.t('Platform') + '">' + exp.platform_type === 'forum' ? 'Forum' : exp.platform_type === 'photo_sharing' ? 'Photo Sharing' : 'Microblogging' + '</span>';
     
       const hpcBadge = exp.simulator_type === 'HPC' ?
-          `<span style="background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="HPC">HPC</span>` : '';
+          '<span style="background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="' + YI18n.t('HPC') + '">' + YI18n.t('HPC') + '</span>' : '';
     
       const remoteBadge = exp.is_remote === 1 ?
-          `<span style="background: linear-gradient(90deg, #2196F3 0%, #03A9F4 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="Remote">Remote</span>` : '';
+          '<span style="background: linear-gradient(90deg, #2196F3 0%, #03A9F4 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="' + YI18n.t('Remote') + '">' + YI18n.t('Remote') + '</span>' : '';
     
-      return `
-      <div class="box-content" style="background: #fafafa; border: 1px solid #e6e6e6; border-left: 2px solid ${sectionColor}; border-radius: 4px; padding: 4px 8px; margin-bottom: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
-          <div class="box-lines">
-              <div class="box-line" style="padding: 0; display: flex; align-items: center; justify-content: space-between; gap: 4px;">
-                  <span class="left" style="display: flex; align-items: center; gap: 4px; flex: 1; min-width: 0; overflow: hidden;">
-                      <strong style="color: #0d95e8; font-size: 0.85em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;" title="${exp.exp_name}">${exp.exp_name}</strong>
-                      ${ownerBadge}
-                      ${platformBadge}
-                      ${hpcBadge}
-                      ${remoteBadge}
-                      ${clientCountBadge}
-                      ${infiniteBadge}
-                  </span>
-                  <span class="right" style="display: flex; gap: 2px; align-items: center; flex-shrink: 0;">
-                      ${progressBadge}
-                      ${runButton}
-                      <a class="link-tooltip" href="#" onclick="selectExperiment('${exp.idexp}'); return false;" title="Load">
-                          <i class="mdi mdi-select-all ${exp.status === 1 ? 'active' : ''}" style="font-size: 16px;"></i>
-                      </a>
-                      <a href="/admin/experiment_details/${exp.idexp}" class="link-tooltip" title="Details">
-                          <i class="mdi mdi-open-in-new" style="font-size: 14px; color: #039be5;"></i>
-                      </a>
-                      ${deleteExpButton}
-                  </span>
-              </div>
-          </div>
-      </div>`;
+      return '\n      <div class="box-content" style="background: #fafafa; border: 1px solid #e6e6e6; border-left: 2px solid ' + sectionColor + '; border-radius: 4px; padding: 4px 8px; margin-bottom: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">\n          <div class="box-lines">\n              <div class="box-line" style="padding: 0; display: flex; align-items: center; justify-content: space-between; gap: 4px;">\n                  <span class="left" style="display: flex; align-items: center; gap: 4px; flex: 1; min-width: 0; overflow: hidden;">\n                      <strong style="color: #0d95e8; font-size: 0.85em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;" title="' + exp.exp_name + '">' + exp.exp_name + '</strong>\n                      ' + ownerBadge + '\n                      ' + platformBadge + '\n                      ' + hpcBadge + '\n                      ' + remoteBadge + '\n                      ' + clientCountBadge + '\n                      ' + infiniteBadge + '\n                  </span>\n                  <span class="right" style="display: flex; gap: 2px; align-items: center; flex-shrink: 0;">\n                      ' + progressBadge + '\n                      ' + runButton + '\n                      <a class="link-tooltip" href="#" onclick="selectExperiment(\'' + exp.idexp + '\'); return false;" title="' + YI18n.t('Load') + '">\n                          <i class="mdi mdi-select-all ' + exp.status === 1 ? 'active' : '' + '" style="font-size: 16px;"></i>\n                      </a>\n                      <a href="/admin/experiment_details/' + exp.idexp + '" class="link-tooltip" title="' + YI18n.t('Details') + '">\n                          <i class="mdi mdi-open-in-new" style="font-size: 14px; color: #039be5;"></i>\n                      </a>\n                      ' + deleteExpButton + '\n                  </span>\n              </div>\n          </div>\n      </div>';
   }
 
   // Render a single experiment box from JSON data (full version for running experiments)
@@ -364,123 +328,52 @@ var AdminDashboard = (function() {
           let runButtonHtml = '';
           if (client.status === 0 && exp.running === 1) {
               if (client.elapsed === 0) {
-                  runButtonHtml = `<a class="link-tooltip" href="/admin/run_client/${client.id}/${exp.idexp}" title="Run Client">
-                      <i class="mdi mdi-play-box-outline" style="font-size: 20px;"></i>
-                  </a>`;
+                  runButtonHtml = '<a class="link-tooltip" href="/admin/run_client/' + client.id + '/' + exp.idexp + '" title="' + YI18n.t('Run Client') + '">\n                      <i class="mdi mdi-play-box-outline" style="font-size: 20px;"></i>\n                  </a>';
               } else if (client.expected === -1 || (client.elapsed > 0 && client.elapsed < client.expected)) {
-                  runButtonHtml = `<a class="link-tooltip" href="/admin/resume_client/${client.id}/${exp.idexp}" title="Resume Client">
-                      <i class="mdi mdi-play-box-outline" style="font-size: 20px;"></i>
-                  </a>`;
+                  runButtonHtml = '<a class="link-tooltip" href="/admin/resume_client/' + client.id + '/' + exp.idexp + '" title="' + YI18n.t('Resume Client') + '">\n                      <i class="mdi mdi-play-box-outline" style="font-size: 20px;"></i>\n                  </a>';
               }
           }
         
           const pauseButtonHtml = client.status === 1 ? 
-              `<a class="link-tooltip" href="/admin/pause_client/${client.id}/${exp.idexp}" title="Pause Client">
-                  <i class="mdi mdi-pause active" style="font-size: 20px;"></i>
-              </a>` : '';
+              '<a class="link-tooltip" href="/admin/pause_client/' + client.id + '/' + exp.idexp + '" title="' + YI18n.t('Pause Client') + '">\n                  <i class="mdi mdi-pause active" style="font-size: 20px;"></i>\n              </a>' : '';
         
           const deleteButtonHtml = client.status === 0 ?
-              `<a class="link-tooltip" href="javascript:void(0);" 
-                 onclick="if(confirm('Are you sure you want to delete this client? This action cannot be undone.')) { window.location.href='/admin/delete_client/${client.id}'; }" 
-                 title="Delete Client">
-                  <i class="mdi mdi-delete" style="font-size: 20px;"></i>
-              </a>` : '';
+              '<a class="link-tooltip" href="javascript:void(0);" \n                 onclick="if(confirm(YI18n.t(\'Are you sure you want to delete this client? This action cannot be undone.\'))) { window.location.href=\'/admin/delete_client/' + client.id + '\'; }" \n                 title="' + YI18n.t('Delete Client') + '">\n                  <i class="mdi mdi-delete" style="font-size: 20px;"></i>\n              </a>' : '';
         
           const detailsLink = client.elapsed > 0 ?
-              `<a href="/admin/client_details/${client.id}" class="link-tooltip" title="View Client Details">
-                  <i class="mdi mdi-open-in-new" style="font-size: 16px; color: #039be5;"></i>
-              </a>` : '';
+              '<a href="/admin/client_details/' + client.id + '" class="link-tooltip" title="' + YI18n.t('View Client Details') + '">\n                  <i class="mdi mdi-open-in-new" style="font-size: 16px; color: #039be5;"></i>\n              </a>' : '';
         
-          return `
-          <div class="box-line" style="padding-left: 20px; padding-top: 8px; padding-bottom: 8px;">
-              <span class="left" style="font-size: 0.9em; display: flex; align-items: center; gap: 5px;">Client:
-                  <i class="mdi mdi-account-cog" style="font-size: 16px; color: #7f8c8d;"></i>
-                  <em style="color: #0d95e8">${client.name}</em>
-                  ${detailsLink}
-              </span>
-              <span class="right" style="width: 55%; display: flex; align-items: center; gap: 10px;">
-                  <div class="sleek-progress-container" style="flex: 1; position: relative; background: linear-gradient(to right, #f5f5f5 0%, #e8e8e8 100%); border-radius: 20px; height: 24px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.08);">
-                      <div id="progress-bar-${client.id}" class="sleek-progress-bar" data-exp-id="${exp.idexp}"
-                           style="position: absolute; left: 0; top: 0; height: 100%; width: ${client.progress}%; background: linear-gradient(90deg, #039be5 0%, #4facfe 100%); border-radius: 20px; transition: width 0.4s ease-in-out; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(3,155,229,0.3);">
-                          <span style="font-size: 0.75em; font-weight: 600; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">${client.progress}%</span>
-                      </div>
-                  </div>
-                  <div style="display: flex; gap: 3px;">
-                      ${runButtonHtml}
-                      ${pauseButtonHtml}
-                      ${deleteButtonHtml}
-                  </div>
-              </span>
-          </div>`;
+          return '\n          <div class="box-line" style="padding-left: 20px; padding-top: 8px; padding-bottom: 8px;">\n              <span class="left" style="font-size: 0.9em; display: flex; align-items: center; gap: 5px;">' + YI18n.t('Client:') + '\n                  <i class="mdi mdi-account-cog" style="font-size: 16px; color: #7f8c8d;"></i>\n                  <em style="color: #0d95e8">' + client.name + '</em>\n                  ' + detailsLink + '\n              </span>\n              <span class="right" style="width: 55%; display: flex; align-items: center; gap: 10px;">\n                  <div class="sleek-progress-container" style="flex: 1; position: relative; background: linear-gradient(to right, #f5f5f5 0%, #e8e8e8 100%); border-radius: 20px; height: 24px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.08);">\n                      <div id="progress-bar-' + client.id + '" class="sleek-progress-bar" data-exp-id="' + exp.idexp + '"\n                           style="position: absolute; left: 0; top: 0; height: 100%; width: ' + client.progress + '%; background: linear-gradient(90deg, #039be5 0%, #4facfe 100%); border-radius: 20px; transition: width 0.4s ease-in-out; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(3,155,229,0.3);">\n                          <span style="font-size: 0.75em; font-weight: 600; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">' + client.progress + '%</span>\n                      </div>\n                  </div>\n                  <div style="display: flex; gap: 3px;">\n                      ' + runButtonHtml + '\n                      ' + pauseButtonHtml + '\n                      ' + deleteButtonHtml + '\n                  </div>\n              </span>\n          </div>';
       }).join('');
     
       const infiniteBadge = hasInfiniteClient ? 
-          `<span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="This experiment has at least one client set to run until manually stopped">∞ Infinite</span>` : '';
+          '<span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="' + YI18n.t('This experiment has at least one client set to run until manually stopped') + '">' + YI18n.t('∞ Infinite') + '</span>' : '';
     
       const runButton = exp.running === 0 ?
-          `<a class="link-tooltip" href="#" onclick="startExperimentServer('${exp.idexp}'); return false;" title="Run Experiment">
-              <i class="mdi mdi-play-box-outline" style="font-size: 24px;"></i>
-          </a>` :
-          (exp.can_manage ? `<a class="link-tooltip" href="#" onclick="stopExperimentServer('${exp.idexp}'); return false;" title="Stop Experiment">
-              <i class="mdi mdi-stop active" style="font-size: 24px;"></i>
-          </a>` : '');
+          '<a class="link-tooltip" href="#" onclick="startExperimentServer(\'' + exp.idexp + '\'); return false;" title="' + YI18n.t('Run Experiment') + '">\n              <i class="mdi mdi-play-box-outline" style="font-size: 24px;"></i>\n          </a>' :
+          (exp.can_manage ? '<a class="link-tooltip" href="#" onclick="stopExperimentServer(\'' + exp.idexp + '\'); return false;" title="' + YI18n.t('Stop Experiment') + '">\n              <i class="mdi mdi-stop active" style="font-size: 24px;"></i>\n          </a>' : '');
     
       const joinButton = exp.status === 1 ?
-          `<a class="link-tooltip" href="#" onclick="joinExperiment('${exp.idexp}'); return false;" title="Join This Experiment">
-              <i class="mdi mdi-login" style="font-size: 24px;"></i>
-          </a>` : '';
+          '<a class="link-tooltip" href="#" onclick="joinExperiment(\'' + exp.idexp + '\'); return false;" title="' + YI18n.t('Join This Experiment') + '">\n              <i class="mdi mdi-login" style="font-size: 24px;"></i>\n          </a>' : '';
     
       const deleteExpButton = exp.status === 0 && exp.can_manage ?
-          `<a class="link-tooltip" href="javascript:void(0);" 
-             onclick="if(confirm('Are you sure you want to delete this experiment? This action cannot be undone.')) { window.location.href='/admin/delete_simulation/${exp.idexp}'; }" 
-             title="Delete Experiment">
-              <i class="mdi mdi-delete" style="font-size: 24px;"></i>
-          </a>` : '';
+          '<a class="link-tooltip" href="javascript:void(0);" \n             onclick="if(confirm(YI18n.t(\'Are you sure you want to delete this experiment? This action cannot be undone.\'))) { window.location.href=\'/admin/delete_simulation/' + exp.idexp + '\'; }" \n             title="' + YI18n.t('Delete Experiment') + '">\n              <i class="mdi mdi-delete" style="font-size: 24px;"></i>\n          </a>' : '';
     
       const clientsSeparator = exp.clients.length > 0 ? 
           '<hr style="border-top: 2px solid #e6e6e6; margin-top: 0px; padding-top: 0px; margin-bottom: 0px;">' : '';
     
       const ownerBadgeFull = exp.owner ?
-          `<span style="background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="Experiment owner">${exp.owner}</span>` : '';
+          '<span style="background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="' + YI18n.t('Experiment owner') + '">' + exp.owner + '</span>' : '';
 
-      const platformBadgeFull = `<span style="background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="Platform">${exp.platform_type === 'forum' ? 'Forum' : exp.platform_type === 'photo_sharing' ? 'Photo Sharing' : 'Microblogging'}</span>`;
+      const platformBadgeFull = '<span style="background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="' + YI18n.t('Platform') + '">' + exp.platform_type === 'forum' ? 'Forum' : exp.platform_type === 'photo_sharing' ? 'Photo Sharing' : 'Microblogging' + '</span>';
     
       const hpcBadgeFull = exp.simulator_type === 'HPC' ?
-          `<span style="background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="HPC Simulator">HPC</span>` : '';
+          '<span style="background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="' + YI18n.t('HPC Simulator') + '">' + YI18n.t('HPC') + '</span>' : '';
     
       const remoteBadgeFull = exp.is_remote === 1 ?
-          `<span style="background: linear-gradient(90deg, #2196F3 0%, #03A9F4 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="Remote Experiment">Remote</span>` : '';
+          '<span style="background: linear-gradient(90deg, #2196F3 0%, #03A9F4 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="' + YI18n.t('Remote Experiment') + '">' + YI18n.t('Remote') + '</span>' : '';
     
-      return `
-      <div class="box-content" style="background: #fafafa; border: 1px solid #e6e6e6; border-left: 4px solid ${sectionColor}; border-radius: 8px; padding-left: 15px; padding-right: 15px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
-          <div class="box-lines">
-              <div class="box-line" style="padding-bottom: 5px; margin-bottom: 5px;">
-                  <span class="left" style="display: flex; align-items: center; gap: 10px;">
-                      Experiment: <strong style="color: #0d95e8">${exp.exp_name}</strong>
-                      ${ownerBadgeFull}
-                      ${platformBadgeFull}
-                      ${hpcBadgeFull}
-                      ${remoteBadgeFull}
-                      ${infiniteBadge}
-                      <a href="/admin/experiment_details/${exp.idexp}" class="link-tooltip" title="View Experiment Details">
-                          <i class="mdi mdi-open-in-new" style="font-size: 16px; color: #039be5;"></i>
-                      </a>
-                  </span>
-                  <span class="right" style="display: flex; gap: 8px; align-items: center;">
-                      <div style="display: flex; gap: 3px; padding-right: 8px; border-right: 1px solid #ddd;">
-                          ${runButton}
-                          <a class="link-tooltip" href="#" onclick="selectExperiment('${exp.idexp}'); return false;" title="Load Experiment">
-                              <i class="mdi mdi-select-all ${exp.status === 1 ? 'active' : ''}" style="font-size: 24px;"></i>
-                          </a>
-                          ${joinButton}
-                          ${deleteExpButton}
-                      </div>
-                  </span>
-              </div>
-              ${clientsSeparator}
-              ${clientsHtml}
-          </div>
-      </div>`;
+      return '\n      <div class="box-content" style="background: #fafafa; border: 1px solid #e6e6e6; border-left: 4px solid ' + sectionColor + '; border-radius: 8px; padding-left: 15px; padding-right: 15px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">\n          <div class="box-lines">\n              <div class="box-line" style="padding-bottom: 5px; margin-bottom: 5px;">\n                  <span class="left" style="display: flex; align-items: center; gap: 10px;">\n                      ' + YI18n.t('Experiment:') + ' <strong style="color: #0d95e8">' + exp.exp_name + '</strong>\n                      ' + ownerBadgeFull + '\n                      ' + platformBadgeFull + '\n                      ' + hpcBadgeFull + '\n                      ' + remoteBadgeFull + '\n                      ' + infiniteBadge + '\n                      <a href="/admin/experiment_details/' + exp.idexp + '" class="link-tooltip" title="' + YI18n.t('View Experiment Details') + '">\n                          <i class="mdi mdi-open-in-new" style="font-size: 16px; color: #039be5;"></i>\n                      </a>\n                  </span>\n                  <span class="right" style="display: flex; gap: 8px; align-items: center;">\n                      <div style="display: flex; gap: 3px; padding-right: 8px; border-right: 1px solid #ddd;">\n                          ' + runButton + '\n                          <a class="link-tooltip" href="#" onclick="selectExperiment(\'' + exp.idexp + '\'); return false;" title="' + YI18n.t('Load Experiment') + '">\n                              <i class="mdi mdi-select-all ' + exp.status === 1 ? 'active' : '' + '" style="font-size: 24px;"></i>\n                          </a>\n                          ' + joinButton + '\n                          ' + deleteExpButton + '\n                      </div>\n                  </span>\n              </div>\n              ' + clientsSeparator + '\n              ' + clientsHtml + '\n          </div>\n      </div>';
   }
 
   // Pagination state - will be initialized when experiments exist
@@ -515,7 +408,7 @@ var AdminDashboard = (function() {
               const pageInfo = document.getElementById('running-page-info');
               if (prevBtn) prevBtn.disabled = newPage <= 1;
               if (nextBtn) nextBtn.disabled = newPage >= data.total_pages;
-              if (pageInfo) pageInfo.textContent = `Page ${newPage} of ${data.total_pages}`;
+              if (pageInfo) pageInfo.textContent = YI18n.t('Page {newpage} of {total_pages}', {newpage: newPage, total_pages: data.total_pages});
           }
       } catch (error) {
           console.error('Error paginating running experiments:', error);
@@ -602,7 +495,7 @@ async function markRead(id) {
 }
 
 async function deleteNotification(id) {
-    if (!confirm('Delete this notification and remove attached file if present?')) {
+    if (!confirm(YI18n.t('Delete this notification and remove attached file if present?'))) {
         return;
     }
 
@@ -625,7 +518,7 @@ async function deleteNotification(id) {
       if (!frame) return;
       frame.addEventListener('error', function() {
           var config = window.YS_DATA_JUPYTER || {};
-          alert('Jupyter Lab appears to be offline. Redirecting to home...');
+          alert(YI18n.t('Jupyter Lab appears to be offline. Redirecting to home...'));
           window.location.href = config.homeUrl || '/';
       });
   }, 5000);

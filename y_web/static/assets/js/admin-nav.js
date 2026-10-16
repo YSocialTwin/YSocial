@@ -220,7 +220,7 @@ function renderDownloadNotifications(items, unreadCount) {
                     : (item.status === 'failed' ? 'is-danger' : (item.status === 'processing' ? 'is-info' : 'is-light'));
             var unreadClass = item.is_read ? '' : ' download-item-unread';
             var action = item.action_url
-                ? '<a class="download-notification-link" href="' + item.action_url + '">Download</a>'
+                ? '<a class="download-notification-link" href="' + item.action_url + '">' + YI18n.t('Download') + '</a>'
                 : '';
             var relatedHtml = '';
             if (item.related_experiments && item.related_experiments.length > 0) {

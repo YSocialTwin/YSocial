@@ -35,7 +35,7 @@
     <!-- Loading Indicator - Cache-busting version parameter ensures updates are loaded -->
     <script src="{{ url_for('static', filename='assets/js/loading-indicator.js') }}?v=1.2"></script>
     
-    <script src="{{ url_for('static', filename='assets/js/i18n.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='assets/js/i18n.js') }}" data-domains="admin" defer></script>
 </head>
 
 <body>

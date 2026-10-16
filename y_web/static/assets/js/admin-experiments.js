@@ -90,31 +90,31 @@ var AdminExperiments = (function() {
 
   // Experiment server control functions
   function startExperimentServer(expId) {
-      showLoading('Starting experiment server...');
+      showLoading(YI18n.t('Starting experiment server...'));
       window.location.href = `/admin/start_experiment/${expId}`;
   }
 
   function stopExperimentServer(expId) {
-      showLoading('Stopping experiment server...');
+      showLoading(YI18n.t('Stopping experiment server...'));
       window.location.href = `/admin/stop_experiment/${expId}`;
   }
 
   function selectExperiment(expId) {
-      showLoading('Loading experiment interface...');
+      showLoading(YI18n.t('Loading experiment interface...'));
       window.location.href = `/admin/select_experiment/${expId}`;
   }
 
   function joinExperiment(expId) {
-      showLoading('Joining experiment...');
+      showLoading(YI18n.t('Joining experiment...'));
       window.location.href = `/admin/join_experiment/${expId}`;
   }
 
   function startJupyter(expId) {
-      showLoading('Starting JupyterLab...');
+      showLoading(YI18n.t('Starting JupyterLab...'));
       fetch(`/admin/lab_start/${expId}`)
           .then(response => {
               if (!response.ok) {
-                  throw new Error(`HTTP ${response.status}`);
+                  throw new Error(YI18n.t('HTTP {status}', {status: response.status}));
               }
               return response.json();
           })
@@ -124,18 +124,18 @@ var AdminExperiments = (function() {
                   return;
               }
 
-              throw new Error((data && data.message) || 'Failed to start JupyterLab');
+              throw new Error((data && data.message) || YI18n.t('Failed to start JupyterLab'));
           })
           .catch(error => {
               console.error('Error starting JupyterLab:', error);
               hideLoading();
-              showToast('Error starting JupyterLab', 'error');
+              showToast(YI18n.t('Error starting JupyterLab'), 'error');
               setTimeout(() => location.reload(), 1500);
           });
   }
 
   function stopJupyter(instanceId) {
-      showLoading('Stopping JupyterLab...');
+      showLoading(YI18n.t('Stopping JupyterLab...'));
       fetch(`/admin/lab_stop/${instanceId}`)
           .then(response => response.json())
           .then(data => {
@@ -144,7 +144,7 @@ var AdminExperiments = (function() {
           .catch(error => {
               console.error('Error stopping JupyterLab:', error);
               hideLoading();
-              showToast('Error stopping JupyterLab', 'error');
+              showToast(YI18n.t('Error stopping JupyterLab'), 'error');
               setTimeout(() => location.reload(), 1500);
           });
   }
@@ -246,7 +246,7 @@ var AdminExperiments = (function() {
       const refreshBtn = document.getElementById('refreshClientLogsBtn');
       if (refreshBtn) {
           refreshBtn.disabled = true;
-          refreshBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Loading...';
+          refreshBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> ' + YI18n.t('Loading...');
       }
 
       // Fetch and display client logs data
@@ -269,7 +269,7 @@ var AdminExperiments = (function() {
                   if (clientLogsError) {
                       clientLogsError.style.display = 'block';
                   }
-                  document.getElementById('client-logs-error-text').textContent = 'No log data available for this client.';
+                  document.getElementById('client-logs-error-text').textContent = YI18n.t('No log data available for this client.');
                   return;
               }
 
@@ -310,7 +310,7 @@ var AdminExperiments = (function() {
                   data: {
                       labels: allClientMethodsData.methods,
                       datasets: [{
-                          label: 'Number of Calls',
+                          label: YI18n.t('Number of Calls'),
                           data: volumeData,
                           backgroundColor: 'rgba(255, 107, 107, 0.6)',
                           borderColor: 'rgba(255, 107, 107, 1)',
@@ -368,7 +368,7 @@ var AdminExperiments = (function() {
                   data: {
                       labels: allClientMethodsData.methods,
                       datasets: [{
-                          label: 'Mean Execution Time (s)',
+                          label: YI18n.t('Mean Execution Time (s)'),
                           data: executionTimeData,
                           backgroundColor: 'rgba(255, 140, 0, 0.6)',
                           borderColor: 'rgba(255, 140, 0, 1)',
@@ -414,14 +414,14 @@ var AdminExperiments = (function() {
               if (clientLogsError) {
                   clientLogsError.style.display = 'block';
               }
-              document.getElementById('client-logs-error-text').textContent = 'Failed to load client logs: ' + error.message;
+              document.getElementById('client-logs-error-text').textContent = YI18n.t('Failed to load client logs: {message}', {message: error.message});
           })
           .finally(() => {
               // Re-enable refresh button
               const refreshBtn = document.getElementById('refreshClientLogsBtn');
               if (refreshBtn) {
                   refreshBtn.disabled = false;
-                  refreshBtn.innerHTML = '<i class="mdi mdi-refresh"></i> Refresh Data';
+                  refreshBtn.innerHTML = '<i class="mdi mdi-refresh"></i> ' + YI18n.t('Refresh Data');
               }
           });
   }
@@ -452,7 +452,7 @@ var AdminExperiments = (function() {
       } else {
           // Show brief feedback that a client must be selected
           if (errorMessage) errorMessage.style.display = 'block';
-          if (errorText) errorText.textContent = 'Please select a client first.';
+          if (errorText) errorText.textContent = YI18n.t('Please select a client first.');
           setTimeout(() => {
               if (errorMessage) errorMessage.style.display = 'none';
           }, ERROR_MESSAGE_AUTO_HIDE_DELAY);
@@ -530,7 +530,7 @@ var AdminExperiments = (function() {
     
       // Disable button and show loading
       btn.disabled = true;
-      btn.innerHTML = '<span class="icon"><i class="mdi mdi-loading mdi-spin"></i></span><span>Submitting...</span>';
+      btn.innerHTML = '<span class="icon"><i class="mdi mdi-loading mdi-spin"></i></span><span>' + YI18n.t('Submitting...') + '</span>';
       messageDiv.style.display = 'none';
     
       // Get the problem description
@@ -562,16 +562,16 @@ var AdminExperiments = (function() {
         
           // Re-enable button
           btn.disabled = false;
-          btn.innerHTML = '<span class="icon"><i class="mdi mdi-upload"></i></span><span>Submit Logs</span>';
+          btn.innerHTML = '<span class="icon"><i class="mdi mdi-upload"></i></span><span>' + YI18n.t('Submit Logs') + '</span>';
       })
       .catch(error => {
           messageDiv.style.display = 'block';
           messageDiv.style.color = '#dc3545';
-          messageDiv.innerHTML = `<i class="mdi mdi-alert-circle"></i> Error: ${error.message}`;
+          messageDiv.innerHTML = '<i class="mdi mdi-alert-circle"></i> ' + YI18n.t('Error: {message}', {message: error.message});
         
           // Re-enable button
           btn.disabled = false;
-          btn.innerHTML = '<span class="icon"><i class="mdi mdi-upload"></i></span><span>Submit Logs</span>';
+          btn.innerHTML = '<span class="icon"><i class="mdi mdi-upload"></i></span><span>' + YI18n.t('Submit Logs') + '</span>';
       });
   }
 
@@ -590,7 +590,7 @@ var AdminExperiments = (function() {
       const port = document.getElementById('display-port').textContent;
       const statusDiv = document.getElementById('remote-status-message');
     
-      statusDiv.innerHTML = '<div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 8px; font-size: 0.85em;"><i class="mdi mdi-loading mdi-spin"></i> Testing connection...</div>';
+      statusDiv.innerHTML = '<div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 8px; font-size: 0.85em;"><i class="mdi mdi-loading mdi-spin"></i> ' + YI18n.t('Testing connection...') + '</div>';
       statusDiv.style.display = 'block';
     
       const expData = currentExperimentData();
@@ -611,7 +611,7 @@ var AdminExperiments = (function() {
           }
       })
       .catch(error => {
-          statusDiv.innerHTML = '<div style="background: #f8d7da; border: 1px solid #dc3545; border-radius: 4px; padding: 8px; font-size: 0.85em; color: #721c24;"><i class="mdi mdi-alert-circle"></i> Error testing connection</div>';
+          statusDiv.innerHTML = '<div style="background: #f8d7da; border: 1px solid #dc3545; border-radius: 4px; padding: 8px; font-size: 0.85em; color: #721c24;"><i class="mdi mdi-alert-circle"></i> ' + YI18n.t('Error testing connection') + '</div>';
       });
   }
 
@@ -621,16 +621,16 @@ var AdminExperiments = (function() {
       const statusDiv = document.getElementById('remote-status-message');
     
       if (!host) {
-          alert('Please enter a host address');
+          alert(YI18n.t('Please enter a host address'));
           return;
       }
     
       if (!port || port < 1 || port > 65535) {
-          alert('Please enter a valid port (1-65535)');
+          alert(YI18n.t('Please enter a valid port (1-65535)'));
           return;
       }
     
-      statusDiv.innerHTML = '<div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 8px; font-size: 0.85em;"><i class="mdi mdi-loading mdi-spin"></i> Updating server settings...</div>';
+      statusDiv.innerHTML = '<div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 8px; font-size: 0.85em;"><i class="mdi mdi-loading mdi-spin"></i> ' + YI18n.t('Updating server settings...') + '</div>';
       statusDiv.style.display = 'block';
     
       const expData = currentExperimentData();
@@ -647,14 +647,14 @@ var AdminExperiments = (function() {
               document.getElementById('display-host').textContent = host;
               document.getElementById('display-port').textContent = port;
               cancelRemoteServerEdit();
-              statusDiv.innerHTML = '<div style="background: #d4edda; border: 1px solid #28a745; border-radius: 4px; padding: 8px; font-size: 0.85em; color: #155724;"><i class="mdi mdi-check-circle"></i> Server settings updated successfully</div>';
+              statusDiv.innerHTML = '<div style="background: #d4edda; border: 1px solid #28a745; border-radius: 4px; padding: 8px; font-size: 0.85em; color: #155724;"><i class="mdi mdi-check-circle"></i> ' + YI18n.t('Server settings updated successfully') + '</div>';
               setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
           } else {
               statusDiv.innerHTML = `<div style="background: #f8d7da; border: 1px solid #dc3545; border-radius: 4px; padding: 8px; font-size: 0.85em; color: #721c24;"><i class="mdi mdi-alert-circle"></i> ${data.message}</div>`;
           }
       })
       .catch(error => {
-          statusDiv.innerHTML = '<div style="background: #f8d7da; border: 1px solid #dc3545; border-radius: 4px; padding: 8px; font-size: 0.85em; color: #721c24;"><i class="mdi mdi-alert-circle"></i> Error updating server settings</div>';
+          statusDiv.innerHTML = '<div style="background: #f8d7da; border: 1px solid #dc3545; border-radius: 4px; padding: 8px; font-size: 0.85em; color: #721c24;"><i class="mdi mdi-alert-circle"></i> ' + YI18n.t('Error updating server settings') + '</div>';
       });
   }
 
@@ -831,7 +831,7 @@ var AdminExperiments = (function() {
               data: {
                   labels: labels,
                   datasets: [{
-                      label: 'Server (s)',
+                      label: YI18n.t('Server (s)'),
                       data: computeData,
                       borderColor: 'rgba(33, 150, 243, 1)',
                       backgroundColor: 'rgba(33, 150, 243, 0.1)',
@@ -950,7 +950,7 @@ var AdminExperiments = (function() {
               data: {
                   labels: labels,
                   datasets: [{
-                      label: 'Simulation Time (s)',
+                      label: YI18n.t('Simulation Time (s)'),
                       data: simulationData,
                       borderColor: 'rgba(76, 175, 80, 1)',
                       backgroundColor: 'rgba(76, 175, 80, 0.1)',
@@ -989,10 +989,10 @@ var AdminExperiments = (function() {
       });
 
       if (keys.length === 0) {
-          document.getElementById('forecast-elapsed').textContent = 'No data';
-          document.getElementById('forecast-avg-slot').textContent = 'No data';
-          document.getElementById('forecast-remaining-slots').textContent = 'No data';
-          document.getElementById('forecast-remaining-time').textContent = 'No data';
+          document.getElementById('forecast-elapsed').textContent = YI18n.t('No data');
+          document.getElementById('forecast-avg-slot').textContent = YI18n.t('No data');
+          document.getElementById('forecast-remaining-slots').textContent = YI18n.t('No data');
+          document.getElementById('forecast-remaining-time').textContent = YI18n.t('No data');
           return;
       }
 
@@ -1067,7 +1067,7 @@ var AdminExperiments = (function() {
       const refreshBtn = document.getElementById('refreshTrendsBtn');
       if (refreshBtn) {
           refreshBtn.disabled = true;
-          refreshBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Loading...';
+          refreshBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> ' + YI18n.t('Loading...');
       }
 
       const expData = currentExperimentData();
@@ -1090,13 +1090,13 @@ var AdminExperiments = (function() {
           .catch(error => {
               console.error('Error fetching trends:', error);
               document.getElementById('trends-error-message').style.display = 'block';
-              document.getElementById('trends-error-text').textContent = 'Failed to load trends: ' + error.message;
+              document.getElementById('trends-error-text').textContent = YI18n.t('Failed to load trends: {message}', {message: error.message});
           })
           .finally(() => {
               // Re-enable refresh button
               if (refreshBtn) {
                   refreshBtn.disabled = false;
-                  refreshBtn.innerHTML = '<i class="mdi mdi-refresh"></i> Refresh Data';
+                  refreshBtn.innerHTML = '<i class="mdi mdi-refresh"></i> ' + YI18n.t('Refresh Data');
               }
           });
   }
@@ -1243,7 +1243,7 @@ var AdminExperiments = (function() {
       const refreshBtn = document.getElementById('refreshLogsBtn');
       if (refreshBtn) {
           refreshBtn.disabled = true;
-          refreshBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Loading...';
+          refreshBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> ' + YI18n.t('Loading...');
       }
 
       const expData = currentExperimentData();
@@ -1302,7 +1302,7 @@ var AdminExperiments = (function() {
                   data: {
                       labels: allPathsData.paths,
                       datasets: [{
-                          label: 'Number of Calls',
+                          label: YI18n.t('Number of Calls'),
                           data: volumeData,
                           backgroundColor: 'rgba(3, 155, 229, 0.6)',
                           borderColor: 'rgba(3, 155, 229, 1)',
@@ -1360,7 +1360,7 @@ var AdminExperiments = (function() {
                       data: {
                           labels: allPathsData.paths,
                           datasets: [{
-                              label: 'Mean Duration (s)',
+                              label: YI18n.t('Mean Duration (s)'),
                               data: durationData,
                               backgroundColor: 'rgba(76, 175, 80, 0.6)',
                               borderColor: 'rgba(76, 175, 80, 1)',
@@ -1404,13 +1404,13 @@ var AdminExperiments = (function() {
       .catch(error => {
           console.error('Error fetching logs:', error);
           document.getElementById('logs-error-message').style.display = 'block';
-          document.getElementById('logs-error-text').textContent = 'Failed to load server logs: ' + error.message;
+          document.getElementById('logs-error-text').textContent = YI18n.t('Failed to load server logs: {message}', {message: error.message});
       })
       .finally(() => {
           // Re-enable refresh button
           if (refreshBtn) {
               refreshBtn.disabled = false;
-              refreshBtn.innerHTML = '<i class="mdi mdi-refresh"></i> Refresh Data';
+              refreshBtn.innerHTML = '<i class="mdi mdi-refresh"></i> ' + YI18n.t('Refresh Data');
           }
       });
   }
@@ -1482,31 +1482,31 @@ const currentExperimentData = () => window.YS_DATA_EXP_FORUM || window.YS_DATA_E
 var AdminExperimentsForum = (function() {
   // Experiment server control functions
   function startExperimentServer(expId) {
-      showLoading('Starting experiment server...');
+      showLoading(YI18n.t('Starting experiment server...'));
       window.location.href = `/admin/start_experiment/${expId}`;
   }
 
   function stopExperimentServer(expId) {
-      showLoading('Stopping experiment server...');
+      showLoading(YI18n.t('Stopping experiment server...'));
       window.location.href = `/admin/stop_experiment/${expId}`;
   }
 
   function selectExperiment(expId) {
-      showLoading('Loading experiment interface...');
+      showLoading(YI18n.t('Loading experiment interface...'));
       window.location.href = `/admin/select_experiment/${expId}`;
   }
 
   function joinExperiment(expId) {
-      showLoading('Joining experiment...');
+      showLoading(YI18n.t('Joining experiment...'));
       window.location.href = `/admin/join_experiment/${expId}`;
   }
 
   function startJupyter(expId) {
-      showLoading('Starting JupyterLab...');
+      showLoading(YI18n.t('Starting JupyterLab...'));
       fetch(`/admin/lab_start/${expId}`)
           .then(response => {
               if (!response.ok) {
-                  throw new Error(`HTTP ${response.status}`);
+                  throw new Error(YI18n.t('HTTP {status}', {status: response.status}));
               }
               return response.json();
           })
@@ -1516,18 +1516,18 @@ var AdminExperimentsForum = (function() {
                   return;
               }
 
-              throw new Error((data && data.message) || 'Failed to start JupyterLab');
+              throw new Error((data && data.message) || YI18n.t('Failed to start JupyterLab'));
           })
           .catch(error => {
               console.error('Error starting JupyterLab:', error);
               hideLoading();
-              showToast('Error starting JupyterLab', 'error');
+              showToast(YI18n.t('Error starting JupyterLab'), 'error');
               setTimeout(() => location.reload(), 1500);
           });
   }
 
   function stopJupyter(instanceId) {
-      showLoading('Stopping JupyterLab...');
+      showLoading(YI18n.t('Stopping JupyterLab...'));
       fetch(`/admin/lab_stop/${instanceId}`)
           .then(response => response.json())
           .then(data => {
@@ -1536,7 +1536,7 @@ var AdminExperimentsForum = (function() {
           .catch(error => {
               console.error('Error stopping JupyterLab:', error);
               hideLoading();
-              showToast('Error stopping JupyterLab', 'error');
+              showToast(YI18n.t('Error stopping JupyterLab'), 'error');
               setTimeout(() => location.reload(), 1500);
           });
   }
@@ -1638,7 +1638,7 @@ var AdminExperimentsForum = (function() {
       const refreshBtn = document.getElementById('refreshClientLogsBtn');
       if (refreshBtn) {
           refreshBtn.disabled = true;
-          refreshBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Loading...';
+          refreshBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> ' + YI18n.t('Loading...');
       }
 
       // Fetch and display client logs data
@@ -1661,7 +1661,7 @@ var AdminExperimentsForum = (function() {
                   if (clientLogsError) {
                       clientLogsError.style.display = 'block';
                   }
-                  document.getElementById('client-logs-error-text').textContent = 'No log data available for this client.';
+                  document.getElementById('client-logs-error-text').textContent = YI18n.t('No log data available for this client.');
                   return;
               }
 
@@ -1702,7 +1702,7 @@ var AdminExperimentsForum = (function() {
                   data: {
                       labels: allClientMethodsData.methods,
                       datasets: [{
-                          label: 'Number of Calls',
+                          label: YI18n.t('Number of Calls'),
                           data: volumeData,
                           backgroundColor: 'rgba(255, 107, 107, 0.6)',
                           borderColor: 'rgba(255, 107, 107, 1)',
@@ -1760,7 +1760,7 @@ var AdminExperimentsForum = (function() {
                   data: {
                       labels: allClientMethodsData.methods,
                       datasets: [{
-                          label: 'Mean Execution Time (s)',
+                          label: YI18n.t('Mean Execution Time (s)'),
                           data: executionTimeData,
                           backgroundColor: 'rgba(255, 140, 0, 0.6)',
                           borderColor: 'rgba(255, 140, 0, 1)',
@@ -1806,14 +1806,14 @@ var AdminExperimentsForum = (function() {
               if (clientLogsError) {
                   clientLogsError.style.display = 'block';
               }
-              document.getElementById('client-logs-error-text').textContent = 'Failed to load client logs: ' + error.message;
+              document.getElementById('client-logs-error-text').textContent = YI18n.t('Failed to load client logs: {message}', {message: error.message});
           })
           .finally(() => {
               // Re-enable refresh button
               const refreshBtn = document.getElementById('refreshClientLogsBtn');
               if (refreshBtn) {
                   refreshBtn.disabled = false;
-                  refreshBtn.innerHTML = '<i class="mdi mdi-refresh"></i> Refresh Data';
+                  refreshBtn.innerHTML = '<i class="mdi mdi-refresh"></i> ' + YI18n.t('Refresh Data');
               }
           });
   }
@@ -1844,7 +1844,7 @@ var AdminExperimentsForum = (function() {
       } else {
           // Show brief feedback that a client must be selected
           if (errorMessage) errorMessage.style.display = 'block';
-          if (errorText) errorText.textContent = 'Please select a client first.';
+          if (errorText) errorText.textContent = YI18n.t('Please select a client first.');
           setTimeout(() => {
               if (errorMessage) errorMessage.style.display = 'none';
           }, ERROR_MESSAGE_AUTO_HIDE_DELAY);
@@ -1922,7 +1922,7 @@ var AdminExperimentsForum = (function() {
     
       // Disable button and show loading
       btn.disabled = true;
-      btn.innerHTML = '<span class="icon"><i class="mdi mdi-loading mdi-spin"></i></span><span>Submitting...</span>';
+      btn.innerHTML = '<span class="icon"><i class="mdi mdi-loading mdi-spin"></i></span><span>' + YI18n.t('Submitting...') + '</span>';
       messageDiv.style.display = 'none';
     
       // Get the problem description
@@ -1954,16 +1954,16 @@ var AdminExperimentsForum = (function() {
         
           // Re-enable button
           btn.disabled = false;
-          btn.innerHTML = '<span class="icon"><i class="mdi mdi-upload"></i></span><span>Submit Logs</span>';
+          btn.innerHTML = '<span class="icon"><i class="mdi mdi-upload"></i></span><span>' + YI18n.t('Submit Logs') + '</span>';
       })
       .catch(error => {
           messageDiv.style.display = 'block';
           messageDiv.style.color = '#dc3545';
-          messageDiv.innerHTML = `<i class="mdi mdi-alert-circle"></i> Error: ${error.message}`;
+          messageDiv.innerHTML = '<i class="mdi mdi-alert-circle"></i> ' + YI18n.t('Error: {message}', {message: error.message});
         
           // Re-enable button
           btn.disabled = false;
-          btn.innerHTML = '<span class="icon"><i class="mdi mdi-upload"></i></span><span>Submit Logs</span>';
+          btn.innerHTML = '<span class="icon"><i class="mdi mdi-upload"></i></span><span>' + YI18n.t('Submit Logs') + '</span>';
       });
   }
 
@@ -1982,7 +1982,7 @@ var AdminExperimentsForum = (function() {
       const port = document.getElementById('display-port').textContent;
       const statusDiv = document.getElementById('remote-status-message');
     
-      statusDiv.innerHTML = '<div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 8px; font-size: 0.85em;"><i class="mdi mdi-loading mdi-spin"></i> Testing connection...</div>';
+      statusDiv.innerHTML = '<div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 8px; font-size: 0.85em;"><i class="mdi mdi-loading mdi-spin"></i> ' + YI18n.t('Testing connection...') + '</div>';
       statusDiv.style.display = 'block';
     
       const expData = currentExperimentData();
@@ -2003,7 +2003,7 @@ var AdminExperimentsForum = (function() {
           }
       })
       .catch(error => {
-          statusDiv.innerHTML = '<div style="background: #f8d7da; border: 1px solid #dc3545; border-radius: 4px; padding: 8px; font-size: 0.85em; color: #721c24;"><i class="mdi mdi-alert-circle"></i> Error testing connection</div>';
+          statusDiv.innerHTML = '<div style="background: #f8d7da; border: 1px solid #dc3545; border-radius: 4px; padding: 8px; font-size: 0.85em; color: #721c24;"><i class="mdi mdi-alert-circle"></i> ' + YI18n.t('Error testing connection') + '</div>';
       });
   }
 
@@ -2013,16 +2013,16 @@ var AdminExperimentsForum = (function() {
       const statusDiv = document.getElementById('remote-status-message');
     
       if (!host) {
-          alert('Please enter a host address');
+          alert(YI18n.t('Please enter a host address'));
           return;
       }
     
       if (!port || port < 1 || port > 65535) {
-          alert('Please enter a valid port (1-65535)');
+          alert(YI18n.t('Please enter a valid port (1-65535)'));
           return;
       }
     
-      statusDiv.innerHTML = '<div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 8px; font-size: 0.85em;"><i class="mdi mdi-loading mdi-spin"></i> Updating server settings...</div>';
+      statusDiv.innerHTML = '<div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 8px; font-size: 0.85em;"><i class="mdi mdi-loading mdi-spin"></i> ' + YI18n.t('Updating server settings...') + '</div>';
       statusDiv.style.display = 'block';
     
       const expData = currentExperimentData();
@@ -2039,14 +2039,14 @@ var AdminExperimentsForum = (function() {
               document.getElementById('display-host').textContent = host;
               document.getElementById('display-port').textContent = port;
               cancelRemoteServerEdit();
-              statusDiv.innerHTML = '<div style="background: #d4edda; border: 1px solid #28a745; border-radius: 4px; padding: 8px; font-size: 0.85em; color: #155724;"><i class="mdi mdi-check-circle"></i> Server settings updated successfully</div>';
+              statusDiv.innerHTML = '<div style="background: #d4edda; border: 1px solid #28a745; border-radius: 4px; padding: 8px; font-size: 0.85em; color: #155724;"><i class="mdi mdi-check-circle"></i> ' + YI18n.t('Server settings updated successfully') + '</div>';
               setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
           } else {
               statusDiv.innerHTML = `<div style="background: #f8d7da; border: 1px solid #dc3545; border-radius: 4px; padding: 8px; font-size: 0.85em; color: #721c24;"><i class="mdi mdi-alert-circle"></i> ${data.message}</div>`;
           }
       })
       .catch(error => {
-          statusDiv.innerHTML = '<div style="background: #f8d7da; border: 1px solid #dc3545; border-radius: 4px; padding: 8px; font-size: 0.85em; color: #721c24;"><i class="mdi mdi-alert-circle"></i> Error updating server settings</div>';
+          statusDiv.innerHTML = '<div style="background: #f8d7da; border: 1px solid #dc3545; border-radius: 4px; padding: 8px; font-size: 0.85em; color: #721c24;"><i class="mdi mdi-alert-circle"></i> ' + YI18n.t('Error updating server settings') + '</div>';
       });
   }
 
@@ -2150,7 +2150,7 @@ var AdminExperimentsForum = (function() {
               data: {
                   labels: labels,
                   datasets: [{
-                      label: 'Server (s)',
+                      label: YI18n.t('Server (s)'),
                       data: computeData,
                       borderColor: 'rgba(33, 150, 243, 1)',
                       backgroundColor: 'rgba(33, 150, 243, 0.1)',
@@ -2269,7 +2269,7 @@ var AdminExperimentsForum = (function() {
               data: {
                   labels: labels,
                   datasets: [{
-                      label: 'Simulation Time (s)',
+                      label: YI18n.t('Simulation Time (s)'),
                       data: simulationData,
                       borderColor: 'rgba(76, 175, 80, 1)',
                       backgroundColor: 'rgba(76, 175, 80, 0.1)',
@@ -2308,10 +2308,10 @@ var AdminExperimentsForum = (function() {
       });
 
       if (keys.length === 0) {
-          document.getElementById('forecast-elapsed').textContent = 'No data';
-          document.getElementById('forecast-avg-slot').textContent = 'No data';
-          document.getElementById('forecast-remaining-slots').textContent = 'No data';
-          document.getElementById('forecast-remaining-time').textContent = 'No data';
+          document.getElementById('forecast-elapsed').textContent = YI18n.t('No data');
+          document.getElementById('forecast-avg-slot').textContent = YI18n.t('No data');
+          document.getElementById('forecast-remaining-slots').textContent = YI18n.t('No data');
+          document.getElementById('forecast-remaining-time').textContent = YI18n.t('No data');
           return;
       }
 
@@ -2386,7 +2386,7 @@ var AdminExperimentsForum = (function() {
       const refreshBtn = document.getElementById('refreshTrendsBtn');
       if (refreshBtn) {
           refreshBtn.disabled = true;
-          refreshBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Loading...';
+          refreshBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> ' + YI18n.t('Loading...');
       }
 
       const expData = currentExperimentData();
@@ -2409,13 +2409,13 @@ var AdminExperimentsForum = (function() {
           .catch(error => {
               console.error('Error fetching trends:', error);
               document.getElementById('trends-error-message').style.display = 'block';
-              document.getElementById('trends-error-text').textContent = 'Failed to load trends: ' + error.message;
+              document.getElementById('trends-error-text').textContent = YI18n.t('Failed to load trends: {message}', {message: error.message});
           })
           .finally(() => {
               // Re-enable refresh button
               if (refreshBtn) {
                   refreshBtn.disabled = false;
-                  refreshBtn.innerHTML = '<i class="mdi mdi-refresh"></i> Refresh Data';
+                  refreshBtn.innerHTML = '<i class="mdi mdi-refresh"></i> ' + YI18n.t('Refresh Data');
               }
           });
   }
@@ -2562,7 +2562,7 @@ var AdminExperimentsForum = (function() {
       const refreshBtn = document.getElementById('refreshLogsBtn');
       if (refreshBtn) {
           refreshBtn.disabled = true;
-          refreshBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Loading...';
+          refreshBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> ' + YI18n.t('Loading...');
       }
 
       const expData = currentExperimentData();
@@ -2613,7 +2613,7 @@ var AdminExperimentsForum = (function() {
                   data: {
                       labels: allPathsData.paths,
                       datasets: [{
-                          label: 'Number of Calls',
+                          label: YI18n.t('Number of Calls'),
                           data: volumeData,
                           backgroundColor: 'rgba(3, 155, 229, 0.6)',
                           borderColor: 'rgba(3, 155, 229, 1)',
@@ -2671,7 +2671,7 @@ var AdminExperimentsForum = (function() {
                       data: {
                           labels: allPathsData.paths,
                           datasets: [{
-                              label: 'Mean Duration (s)',
+                              label: YI18n.t('Mean Duration (s)'),
                               data: durationData,
                               backgroundColor: 'rgba(76, 175, 80, 0.6)',
                               borderColor: 'rgba(76, 175, 80, 1)',
@@ -2715,13 +2715,13 @@ var AdminExperimentsForum = (function() {
       .catch(error => {
           console.error('Error fetching logs:', error);
           document.getElementById('logs-error-message').style.display = 'block';
-          document.getElementById('logs-error-text').textContent = 'Failed to load server logs: ' + error.message;
+          document.getElementById('logs-error-text').textContent = YI18n.t('Failed to load server logs: {message}', {message: error.message});
       })
       .finally(() => {
           // Re-enable refresh button
           if (refreshBtn) {
               refreshBtn.disabled = false;
-              refreshBtn.innerHTML = '<i class="mdi mdi-refresh"></i> Refresh Data';
+              refreshBtn.innerHTML = '<i class="mdi mdi-refresh"></i> ' + YI18n.t('Refresh Data');
           }
       });
   }

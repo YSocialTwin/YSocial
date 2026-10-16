@@ -61,7 +61,14 @@
       .catch(function () { return {}; });
   }
 
-  var ready = load('core');
+  // Extra domains: <script src=".../i18n.js" data-domains="admin,other" defer>
+  var script = document.currentScript;
+  var extra = script && script.getAttribute('data-domains');
+  var loads = [load('core')];
+  if (extra) {
+    extra.split(',').forEach(function (d) { d = d.trim(); if (d) { loads.push(load(d)); } });
+  }
+  var ready = Promise.all(loads);
   window.YI18n = {
     t: t, tn: tn, load: load, ready: ready, lang: lang,
     formatNumber: formatNumber, formatDate: formatDate

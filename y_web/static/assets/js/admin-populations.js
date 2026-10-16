@@ -31,7 +31,7 @@ var AdminPopulations = (function() {
       type: 'bar',
       data: {
           datasets: [{
-              label: 'Age',
+              label: YI18n.t('Age'),
               data: popDetails.ages.data,
               backgroundColor: 'rgba(168, 85, 247, 0.7)',
               borderColor: 'rgba(168, 85, 247, 1)',
@@ -46,7 +46,7 @@ var AdminPopulations = (function() {
               legend: { display: false },
               title: {
                   display: true,
-                  text: 'Age Distribution',
+                  text: YI18n.t('Age Distribution'),
                   font: { size: 14, weight: 'bold' }
               }
           },
@@ -70,7 +70,7 @@ var AdminPopulations = (function() {
       type: 'bar',
       data: {
           datasets: [{
-              label: 'Gender',
+              label: YI18n.t('Gender'),
               data: popDetails.gender.data,
               backgroundColor: 'rgba(139, 92, 246, 0.7)',
               borderColor: 'rgba(139, 92, 246, 1)',
@@ -85,7 +85,7 @@ var AdminPopulations = (function() {
               legend: { display: false },
               title: {
                   display: true,
-                  text: 'Gender Distribution',
+                  text: YI18n.t('Gender Distribution'),
                   font: { size: 14, weight: 'bold' }
               }
           },
@@ -105,7 +105,7 @@ var AdminPopulations = (function() {
       type: 'bar',
       data: {
           datasets: [{
-              label: 'Nationalities',
+              label: YI18n.t('Nationalities'),
               data: popDetails.nationalities.data,
               backgroundColor: 'rgba(59, 130, 246, 0.7)',
               borderColor: 'rgba(59, 130, 246, 1)',
@@ -120,7 +120,7 @@ var AdminPopulations = (function() {
               legend: { display: false },
               title: {
                   display: true,
-                  text: 'Nationalities',
+                  text: YI18n.t('Nationalities'),
                   font: { size: 14, weight: 'bold' }
               }
           },
@@ -140,7 +140,7 @@ var AdminPopulations = (function() {
       type: 'bar',
       data: {
           datasets: [{
-              label: 'Education',
+              label: YI18n.t('Education'),
               data: popDetails.education.data,
               backgroundColor: 'rgba(236, 72, 153, 0.7)',
               borderColor: 'rgba(236, 72, 153, 1)',
@@ -155,7 +155,7 @@ var AdminPopulations = (function() {
               legend: { display: false },
               title: {
                   display: true,
-                  text: 'Education Levels',
+                  text: YI18n.t('Education Levels'),
                   font: { size: 14, weight: 'bold' }
               }
           },
@@ -175,7 +175,7 @@ var AdminPopulations = (function() {
       type: 'bar',
       data: {
           datasets: [{
-              label: 'Spoken Languages',
+              label: YI18n.t('Spoken Languages'),
               data: popDetails.languages.data,
               backgroundColor: 'rgba(234, 179, 8, 0.7)',
               borderColor: 'rgba(234, 179, 8, 1)',
@@ -190,7 +190,7 @@ var AdminPopulations = (function() {
               legend: { display: false },
               title: {
                   display: true,
-                  text: 'Spoken Languages',
+                  text: YI18n.t('Spoken Languages'),
                   font: { size: 14, weight: 'bold' }
               }
           },
@@ -210,7 +210,7 @@ var AdminPopulations = (function() {
       type: 'bar',
       data: {
           datasets: [{
-              label: 'Political Leanings',
+              label: YI18n.t('Political Leanings'),
               data: popDetails.leanings.data,
               backgroundColor: 'rgba(34, 197, 94, 0.7)',
               borderColor: 'rgba(34, 197, 94, 1)',
@@ -225,7 +225,7 @@ var AdminPopulations = (function() {
               legend: { display: false },
               title: {
                   display: true,
-                  text: 'Political Leanings',
+                  text: YI18n.t('Political Leanings'),
                   font: { size: 14, weight: 'bold' }
               }
           },
@@ -245,7 +245,7 @@ var AdminPopulations = (function() {
       type: 'bar',
       data: {
           datasets: [{
-              label: 'Toxicity Levels',
+              label: YI18n.t('Toxicity Levels'),
               data: popDetails.toxicity.data,
               backgroundColor: 'rgba(239, 68, 68, 0.7)',
               borderColor: 'rgba(239, 68, 68, 1)',
@@ -260,7 +260,7 @@ var AdminPopulations = (function() {
               legend: { display: false },
               title: {
                   display: true,
-                  text: 'Toxicity Levels',
+                  text: YI18n.t('Toxicity Levels'),
                   font: { size: 14, weight: 'bold' }
               }
           },
@@ -280,7 +280,7 @@ var AdminPopulations = (function() {
       type: 'bar',
       data: {
           datasets: [{
-              label: 'Activity Profiles',
+              label: YI18n.t('Activity Profiles'),
               data: popDetails.activityProfiles.data,
               backgroundColor: 'rgba(99, 102, 241, 0.7)',
               borderColor: 'rgba(99, 102, 241, 1)',
@@ -295,7 +295,7 @@ var AdminPopulations = (function() {
               legend: { display: false },
               title: {
                   display: true,
-                  text: 'Activity Profiles Distribution',
+                  text: YI18n.t('Activity Profiles Distribution'),
                   font: { size: 14, weight: 'bold' }
               }
           },
@@ -324,7 +324,7 @@ var AdminPopulations = (function() {
       type: 'bar',
       data: {
           datasets: [{
-              label: 'Professions',
+              label: YI18n.t('Professions'),
               data: topProfData,
               backgroundColor: 'rgba(16, 185, 129, 0.7)',
               borderColor: 'rgba(16, 185, 129, 1)',
@@ -340,7 +340,7 @@ var AdminPopulations = (function() {
               legend: { display: false },
               title: {
                   display: true,
-                  text: 'Top Professions',
+                  text: YI18n.t('Top Professions'),
                   font: { size: 14, weight: 'bold' }
               }
           },
@@ -372,7 +372,7 @@ var AdminPopulations = (function() {
       type: 'bar',
       data: {
           datasets: [{
-              label: 'Daily Activity Levels',
+              label: YI18n.t('Daily Activity Levels'),
               data: popDetails.activity.data,
               backgroundColor: 'rgba(20, 184, 166, 0.7)',
               borderColor: 'rgba(20, 184, 166, 1)',
@@ -387,7 +387,7 @@ var AdminPopulations = (function() {
               legend: { display: false },
               title: {
                   display: true,
-                  text: 'Daily Activity Levels',
+                  text: YI18n.t('Daily Activity Levels'),
                   font: { size: 14, weight: 'bold' }
               }
           },
@@ -426,16 +426,16 @@ var AdminPopulations = (function() {
   new gridjs.Grid({
     columns: [
       { id: 'id', hidden: true },
-      { id: 'name', name: 'Name', attributes: editableCellAttributes },
+      { id: 'name', name: YI18n.t('Name'), attributes: editableCellAttributes },
       {
         id: 'platform_type',
-        name: 'Platform',
+        name: YI18n.t('Platform'),
         formatter: (cell) => platformLabel(cell),
       },
-      { id: "size", name: 'Agents' },
+      { id: "size", name: YI18n.t('Agents') },
       { 
         id: 'education', 
-        name: 'Education',
+        name: YI18n.t('Education'),
         sort: false,
         formatter: (cell) => {
           if (!cell || cell.length === 0) {
@@ -449,7 +449,7 @@ var AdminPopulations = (function() {
       },
       { 
         id: 'leanings', 
-        name: 'Political Leaning',
+        name: YI18n.t('Political Leaning'),
         sort: false,
         formatter: (cell) => {
           if (!cell || cell.length === 0) {
@@ -463,7 +463,7 @@ var AdminPopulations = (function() {
       },
       { 
         id: 'toxicity', 
-        name: 'Toxicity',
+        name: YI18n.t('Toxicity'),
         sort: false,
         formatter: (cell) => {
           if (!cell || cell.length === 0) {
@@ -477,7 +477,7 @@ var AdminPopulations = (function() {
       },
       { 
         id: 'activity_profiles', 
-        name: 'Activity Profiles',
+        name: YI18n.t('Activity Profiles'),
         sort: false,
         formatter: (cell) => {
           if (!cell || cell.length === 0) {
@@ -491,22 +491,11 @@ var AdminPopulations = (function() {
       },
       {
         id: 'actions',
-        name: 'Actions',
+        name: YI18n.t('Actions'),
         sort: false,
         formatter: (cell, row) => {
           const id = row.cells[0].data;
-          return gridjs.html(`
-            <div style="display: flex; gap: 8px; justify-content: center;">
-              <a href="/admin/population_details/${id}"
-                 style="background-color: #28a745; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">
-                Details
-              </a>
-               <a href="/admin/delete_population/${id}"
-                 style="background-color: #dc3545; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">
-                Delete
-              </a>
-            </div>
-          `);
+          return gridjs.html('\n            <div style="display: flex; gap: 8px; justify-content: center;">\n              <a href="/admin/population_details/' + id + '"\n                 style="background-color: #28a745; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">\n                ' + YI18n.t('Details') + '\n              </a>\n               <a href="/admin/delete_population/' + id + '"\n                 style="background-color: #dc3545; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">\n                ' + YI18n.t('Delete') + '\n              </a>\n            </div>\n          ');
         }
       },
     ],
@@ -586,16 +575,16 @@ var AdminPopulations = (function() {
     const target = event.target;
     if (target.classList.contains('delete-button')) {
       const id = target.getAttribute('data-id');
-      if (confirm('Are you sure you want to delete this population?')) {
+      if (confirm(YI18n.t('Are you sure you want to delete this population?'))) {
         fetch(`/admin/delete_population/${id}`, {
           method: 'DELETE',
         })
         .then(response => {
-          if (!response.ok) throw new Error('Failed to delete');
+          if (!response.ok) throw new Error(YI18n.t('Failed to delete'));
           location.reload(); // Refresh the table
         })
         .catch(err => {
-          alert('Error deleting population.');
+          alert(YI18n.t('Error deleting population.'));
           console.error(err);
         });
       }
@@ -632,7 +621,7 @@ var AdminPopulations = (function() {
           .catch(error => {
               console.error('Error loading populations:', error);
               document.getElementById('merge-available-populations').innerHTML = 
-                  '<div class="merge-empty-state">Error loading populations</div>';
+                  '<div class="merge-empty-state">' + YI18n.t('Error loading populations') + '</div>';
           });
   }
 
@@ -647,21 +636,11 @@ var AdminPopulations = (function() {
       );
 
       if (available.length === 0) {
-          container.innerHTML = '<div class="merge-empty-state">No populations available</div>';
+          container.innerHTML = '<div class="merge-empty-state">' + YI18n.t('No populations available') + '</div>';
           return;
       }
 
-      container.innerHTML = available.map(pop => `
-          <div class="merge-population-item" 
-               draggable="true" 
-               data-pop-id="${pop.id}"
-               data-pop-name="${pop.name}"
-               data-pop-size="${pop.size}"
-               data-pop-type="${pop.username_type}">
-              <span class="merge-population-name">${pop.name}</span>
-              <span class="merge-population-size">${pop.size} agents, ${platformLabel(pop.username_type)}</span>
-          </div>
-      `).join('');
+      container.innerHTML = available.map(pop => '\n          <div class="merge-population-item" \n               draggable="true" \n               data-pop-id="' + pop.id + '"\n               data-pop-name="' + pop.name + '"\n               data-pop-size="' + pop.size + '"\n               data-pop-type="' + pop.username_type + '">\n              <span class="merge-population-name">' + pop.name + '</span>\n              <span class="merge-population-size">' + YI18n.t('{size} agents, {platformlabel}', {size: pop.size, platformlabel: platformLabel(pop.username_type)}) + '</span>\n          </div>\n      ').join('');
 
       // Add drag event listeners
       container.querySelectorAll('.merge-population-item').forEach(item => {
@@ -674,17 +653,11 @@ var AdminPopulations = (function() {
       const container = document.getElementById('merge-selected-populations');
     
       if (mergeSelectedPopulations.length === 0) {
-          container.innerHTML = '<div class="merge-empty-state">Drag populations here</div>';
+          container.innerHTML = '<div class="merge-empty-state">' + YI18n.t('Drag populations here') + '</div>';
           return;
       }
 
-      container.innerHTML = mergeSelectedPopulations.map(pop => `
-          <div class="merge-population-item">
-              <span class="merge-population-name">${pop.name}</span>
-              <span class="merge-population-size">${pop.size} agents, ${platformLabel(pop.username_type)}</span>
-              <button type="button" class="merge-remove-btn" onclick="removeMergePopulation(${pop.id})">×</button>
-          </div>
-      `).join('');
+      container.innerHTML = mergeSelectedPopulations.map(pop => '\n          <div class="merge-population-item">\n              <span class="merge-population-name">' + pop.name + '</span>\n              <span class="merge-population-size">' + YI18n.t('{size} agents, {platformlabel}', {size: pop.size, platformlabel: platformLabel(pop.username_type)}) + '</span>\n              <button type="button" class="merge-remove-btn" onclick="removeMergePopulation(' + pop.id + ')">×</button>\n          </div>\n      ').join('');
 
       // Update hidden field
       document.getElementById('selected_population_ids').value = 
@@ -764,7 +737,7 @@ var AdminPopulations = (function() {
   bindById('merge_populations_form', 'submit', function(e) {
       if (mergeSelectedPopulations.length < 2) {
           e.preventDefault();
-          alert('Please select at least 2 populations to merge');
+          alert(YI18n.t('Please select at least 2 populations to merge'));
           return false;
       }
   });
@@ -813,7 +786,7 @@ var AdminPopulations = (function() {
           // Validate that at least one profession category is selected
           if (selectedProfessionBackgrounds.size === 0) {
               e.preventDefault();
-              alert('Please select at least one Profession Category. This field is required.');
+              alert(YI18n.t('Please select at least one Profession Category. This field is required.'));
               return false;
           }
         
@@ -906,7 +879,7 @@ var AdminPopulations = (function() {
       const items = Object.entries(data);
     
       if (items.length === 0) {
-          display.innerHTML = '<span class="multi-select-placeholder">Click to select...</span>';
+          display.innerHTML = '<span class="multi-select-placeholder">' + YI18n.t('Click to select...') + '</span>';
       } else {
           display.innerHTML = items.map(([id, item]) => 
               `<span class="multi-select-tag">
@@ -1014,10 +987,10 @@ var AdminPopulations = (function() {
     
       if (Math.abs(total - 100) < 0.01) {
           validation.className = 'percentage-validation-compact success';
-          validation.textContent = `✓ Total: ${total.toFixed(2)}%`;
+          validation.textContent = YI18n.t('✓ Total: {tofixed}%', {tofixed: total.toFixed(2)});
       } else {
           validation.className = 'percentage-validation-compact error';
-          validation.textContent = `⚠ Total: ${total.toFixed(2)}% (must equal 100%)`;
+          validation.textContent = YI18n.t('⚠ Total: {tofixed}% (must equal 100%)', {tofixed: total.toFixed(2)});
       }
   }
 
@@ -1037,7 +1010,7 @@ var AdminPopulations = (function() {
       const femalePercentage = parseInt(document.getElementById('female_percentage').value) || 0;
       if (malePercentage + femalePercentage !== 100) {
           e.preventDefault();
-          alert('Gender distribution must total 100%');
+          alert(YI18n.t('Gender distribution must total 100%'));
           return false;
       }
     
@@ -1046,7 +1019,7 @@ var AdminPopulations = (function() {
       const ageClassesItems = Object.values(ageClassesData);
       if (ageClassesItems.length === 0) {
           e.preventDefault();
-          alert('Please select at least one Age Class. This field is required.');
+          alert(YI18n.t('Please select at least one Age Class. This field is required.'));
           return false;
       }
     
@@ -1059,7 +1032,7 @@ var AdminPopulations = (function() {
               const total = items.reduce((sum, item) => sum + item.percentage, 0);
               if (Math.abs(total - 100) > 0.01) {
                   e.preventDefault();
-                  alert(`Please ensure ${fieldName.replace(/_/g, ' ')} percentages sum to 100%`);
+                  alert(YI18n.t('Please ensure {replace} percentages sum to 100%', {replace: fieldName.replace(/_/g, ' ')}));
                   return false;
               }
           }
@@ -1068,7 +1041,7 @@ var AdminPopulations = (function() {
       // Validate activity profiles percentages
       if (assignedProfiles.length > 0 && !validatePercentages()) {
           e.preventDefault();
-          alert('Please ensure that the total percentage of assigned activity profiles equals 100%');
+          alert(YI18n.t('Please ensure that the total percentage of assigned activity profiles equals 100%'));
           return false;
       }
     
@@ -1212,7 +1185,7 @@ var AdminPopulations = (function() {
       const container = document.getElementById('assigned-profiles');
     
       if (assignedProfiles.length === 0) {
-          container.innerHTML = '<div class="empty-state-compact">Drag profiles here to assign them</div>';
+          container.innerHTML = '<div class="empty-state-compact">' + YI18n.t('Drag profiles here to assign them') + '</div>';
           return;
       }
 
@@ -1262,11 +1235,11 @@ var AdminPopulations = (function() {
     
       if (Math.abs(total - 100) < 0.01) {
           validation.className = 'percentage-validation-compact success';
-          validation.textContent = `✓ Total: ${total.toFixed(2)}% - Perfect!`;
+          validation.textContent = YI18n.t('✓ Total: {tofixed}% - Perfect!', {tofixed: total.toFixed(2)});
           return true;
       } else {
           validation.className = 'percentage-validation-compact error';
-          validation.textContent = `⚠ Total: ${total.toFixed(2)}% - Must equal 100%`;
+          validation.textContent = YI18n.t('⚠ Total: {tofixed}% - Must equal 100%', {tofixed: total.toFixed(2)});
           return false;
       }
   }

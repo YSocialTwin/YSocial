@@ -22,9 +22,9 @@ var AdminFeeds = (function() {
 
     function parseSubreddit() {
         var subreddit = document.getElementById('subreddit_name').value.trim().toLowerCase();
-        if (!subreddit) { alert('Please enter a subreddit name or Reddit URL'); return; }
+        if (!subreddit) { alert(YI18n.t('Please enter a subreddit name or Reddit URL')); return; }
         _currentSubreddit = '';
-        setParseStatus('loading', 'Parsing...');
+        setParseStatus('loading', YI18n.t('Parsing...'));
         document.getElementById('parse_result').style.display = 'block';
         document.getElementById('sample_images').replaceChildren();
         fetch('/admin/api/parse_image_feed', {
@@ -36,11 +36,11 @@ var AdminFeeds = (function() {
         .then(function(res) {
             if (!res.ok || res.data.error) {
                 _currentSubreddit = '';
-                setParseStatus('error', res.data.error || 'Could not parse subreddit.');
+                setParseStatus('error', res.data.error || YI18n.t('Could not parse subreddit.'));
                 return;
             }
             _currentSubreddit = res.data.subreddit || '';
-            setParseStatus('success', 'Found ' + res.data.image_count + ' images (' + res.data.nsfw_filtered + ' NSFW filtered)');
+            setParseStatus('success', YI18n.t('Found {image_count} images ({nsfw_filtered} NSFW filtered)', {image_count: res.data.image_count, nsfw_filtered: res.data.nsfw_filtered}));
             var sampleDiv = document.getElementById('sample_images');
             sampleDiv.replaceChildren();
             res.data.sample_images.forEach(function(url) {
@@ -51,15 +51,15 @@ var AdminFeeds = (function() {
                 sampleDiv.appendChild(img);
             });
         })
-        .catch(function(e) { setParseStatus('error', e.message || 'Unexpected error'); });
+        .catch(function(e) { setParseStatus('error', e.message || YI18n.t('Unexpected error')); });
     }
 
     function addParsedSubreddit() {
-        if (!_currentSubreddit) { alert('Please parse a subreddit first'); return; }
+        if (!_currentSubreddit) { alert(YI18n.t('Please parse a subreddit first')); return; }
         var interestsSelect = document.getElementById('parsed_interests');
         var selectedInterests = Array.from(interestsSelect.selectedOptions).map(function(opt) { return opt.value; });
-        if (selectedInterests.length === 0) { alert('Please select at least one interest'); return; }
-        if (_imageFeeds.some(function(f) { return f.subreddit === _currentSubreddit; })) { alert('This subreddit is already added'); return; }
+        if (selectedInterests.length === 0) { alert(YI18n.t('Please select at least one interest')); return; }
+        if (_imageFeeds.some(function(f) { return f.subreddit === _currentSubreddit; })) { alert(YI18n.t('This subreddit is already added')); return; }
         _imageFeeds.push({ subreddit: _currentSubreddit, interests: selectedInterests });
         updateFeedsDisplay();
             document.getElementById('subreddit_name').value = '';
@@ -77,17 +77,17 @@ var AdminFeeds = (function() {
         var expId = config.expId;
         var fileInput = document.getElementById('image_upload_file');
         var mode = document.getElementById('image_upload_mode').value;
-        if (!fileInput.files[0]) { alert('Please select a file'); return; }
+        if (!fileInput.files[0]) { alert(YI18n.t('Please select a file')); return; }
         var formData = new FormData();
         formData.append('file', fileInput.files[0]);
         formData.append('mode', mode);
         fetch('/admin/upload_image_feeds/' + expId, { method: 'POST', body: formData })
         .then(function(r) { return r.json().then(function(data) { return {ok: r.ok, data: data}; }); })
         .then(function(res) {
-            if (!res.ok || res.data.error) throw new Error(res.data.error || 'Upload failed');
+            if (!res.ok || res.data.error) throw new Error(res.data.error || YI18n.t('Upload failed'));
             window.location.reload();
         })
-        .catch(function(error) { alert(error.message || 'Upload failed'); });
+        .catch(function(error) { alert(error.message || YI18n.t('Upload failed')); });
     }
 
     function exportImageFeeds() {
@@ -109,7 +109,7 @@ var AdminFeeds = (function() {
         if (_imageFeeds.length === 0) {
             var emptyState = document.createElement('p');
             emptyState.style.color = '#999';
-            emptyState.textContent = 'No image feeds configured.';
+            emptyState.textContent = YI18n.t('No image feeds configured.');
             listDiv.appendChild(emptyState);
             return;
         }
@@ -170,7 +170,7 @@ var AdminFeeds = (function() {
 
     function parseRssFeed() {
         var feedUrl = document.getElementById('rss_feed_url').value.trim();
-        if (!feedUrl) { alert('Please enter an RSS feed URL'); return; }
+        if (!feedUrl) { alert(YI18n.t('Please enter an RSS feed URL')); return; }
         fetch('/admin/api/parse_rss_feed', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -178,21 +178,21 @@ var AdminFeeds = (function() {
         })
         .then(function(r) { return r.json().then(function(data) { return {ok: r.ok, data: data}; }); })
         .then(function(res) {
-            if (!res.ok || res.data.error) throw new Error(res.data.error || 'Could not parse RSS feed');
+            if (!res.ok || res.data.error) throw new Error(res.data.error || YI18n.t('Could not parse RSS feed'));
             _parsedRssFeed = res.data;
             document.getElementById('rss_parse_name').textContent = res.data.name || '-';
             document.getElementById('rss_parse_site').textContent = res.data.url_site || '-';
-            document.getElementById('rss_parse_description').textContent = res.data.description || 'No description available';
+            document.getElementById('rss_parse_description').textContent = res.data.description || YI18n.t('No description available');
             document.getElementById('rss_parse_entries').textContent = res.data.entries_count;
             document.getElementById('rss_parse_result').style.display = 'block';
         })
-        .catch(function(error) { alert(error.message || 'Could not parse RSS feed'); });
+        .catch(function(error) { alert(error.message || YI18n.t('Could not parse RSS feed')); });
     }
 
     function addParsedRssFeed() {
-        if (!_parsedRssFeed) { alert('Please parse a feed first'); return; }
+        if (!_parsedRssFeed) { alert(YI18n.t('Please parse a feed first')); return; }
         if (_rssFeeds.some(function(feed) { return feed.feed_url === _parsedRssFeed.feed_url; })) {
-            alert('This RSS feed is already configured'); return;
+            alert(YI18n.t('This RSS feed is already configured')); return;
         }
         _rssFeeds.push(_parsedRssFeed);
         updateRssFeedsDisplay();
@@ -216,7 +216,7 @@ var AdminFeeds = (function() {
         if (!_rssFeeds.length) {
             var emptyState = document.createElement('p');
             emptyState.style.color = '#999';
-            emptyState.textContent = 'No RSS feeds configured.';
+            emptyState.textContent = YI18n.t('No RSS feeds configured.');
             container.appendChild(emptyState);
             return;
         }
@@ -267,17 +267,17 @@ var AdminFeeds = (function() {
         var expId = config.expId;
         var fileInput = document.getElementById('rss_upload_file');
         var mode = document.getElementById('rss_upload_mode').value;
-        if (!fileInput.files[0]) { alert('Please select a file'); return; }
+        if (!fileInput.files[0]) { alert(YI18n.t('Please select a file')); return; }
         var formData = new FormData();
         formData.append('file', fileInput.files[0]);
         formData.append('mode', mode);
         fetch('/admin/upload_rss_feeds/' + expId, { method: 'POST', body: formData })
         .then(function(r) { return r.json().then(function(data) { return {ok: r.ok, data: data}; }); })
         .then(function(res) {
-            if (!res.ok || res.data.error) throw new Error(res.data.error || 'Upload failed');
+            if (!res.ok || res.data.error) throw new Error(res.data.error || YI18n.t('Upload failed'));
             window.location.reload();
         })
-        .catch(function(error) { alert(error.message || 'Upload failed'); });
+        .catch(function(error) { alert(error.message || YI18n.t('Upload failed')); });
     }
 
     function initRssFeeds() {
