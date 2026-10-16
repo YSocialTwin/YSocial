@@ -11,7 +11,7 @@ from pathlib import Path
 
 from flask import Blueprint, abort, jsonify
 
-from y_web.i18n import DEFAULT_LOCALE, SUPPORTED_LOCALES
+from y_web.i18n import DEFAULT_LOCALE, normalize_language
 
 i18n_bp = Blueprint("i18n", __name__)
 
@@ -32,7 +32,7 @@ def load_js_catalog(domain, lang):
 @i18n_bp.route("/i18n/<domain>/<lang>.json")
 def js_catalog(domain, lang):
     """Return the JSON catalog; 404 for unknown domain or language."""
-    if not _DOMAIN_RE.match(domain) or lang not in SUPPORTED_LOCALES:
+    if not _DOMAIN_RE.match(domain) or normalize_language(lang) != lang:
         abort(404)
     if not (JS_CATALOG_DIR / domain / f"{DEFAULT_LOCALE}.json").is_file():
         abort(404)
