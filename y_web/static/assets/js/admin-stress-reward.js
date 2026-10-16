@@ -255,7 +255,7 @@
       const events = saTargets.interaction_events || [];
       eventTable.innerHTML = events.length
         ? events.map(function(event) {
-            return '<tr><td>' + YI18n.t('Day {day}, Hour {hour}', {day: event.day, hour: event.hour}) + '</td><td>' + String(event.interaction_type || '').charAt(0).toUpperCase() + String(event.interaction_type || '').slice(1) + '</td><td>' + event.interaction_count || 0 + '</td><td>' + (event.attacker_usernames || []).join(', ') || '—' + '</td></tr>';
+            return '<tr><td>' + YI18n.t('Day {day}, Hour {hour}', {day: event.day, hour: event.hour}) + '</td><td>' + String(event.interaction_type || '').charAt(0).toUpperCase() + String(event.interaction_type || '').slice(1) + '</td><td>' + (event.interaction_count || 0) + '</td><td>' + ((event.attacker_usernames || []).join(', ') || '—') + '</td></tr>';
           }).join('')
         : '<tr><td colspan="4">' + YI18n.t('No SA interactions recorded up to the selected time.') + '</td></tr>';
     }

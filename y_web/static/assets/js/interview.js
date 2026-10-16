@@ -337,7 +337,7 @@
       const modeUsed = snapshot.memory_mode_used || 'n/a'
       const runId = snapshot.run_id || 'none'
       const extra = summarizeMemoryIssue(snapshot)
-      memoryStatusEl.innerHTML = '\n        <strong>' + YI18n.t('Run:') + '</strong> ' + escapeHtml(String(runId)) + '<br>\n        <strong>' + YI18n.t('Requested:') + '</strong> ' + escapeHtml(String(modeRequested)) + '<br>\n        <strong>' + YI18n.t('Used:') + '</strong> ' + escapeHtml(String(modeUsed)) + '\n        ' + extra ? `<div style="margin-top:0.45rem;">${escapeHtml(String(extra))}</div>` : '' + '\n      '
+      memoryStatusEl.innerHTML = '\n        <strong>' + YI18n.t('Run:') + '</strong> ' + escapeHtml(String(runId)) + '<br>\n        <strong>' + YI18n.t('Requested:') + '</strong> ' + escapeHtml(String(modeRequested)) + '<br>\n        <strong>' + YI18n.t('Used:') + '</strong> ' + escapeHtml(String(modeUsed)) + '\n        ' + (extra ? `<div style="margin-top:0.45rem;">${escapeHtml(String(extra))}</div>` : '') + '\n      '
     }
 
     if (loadState === 'unavailable' || memoryModeUsed === 'unavailable') {

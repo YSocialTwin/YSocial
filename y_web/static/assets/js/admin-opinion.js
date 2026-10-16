@@ -722,7 +722,7 @@ var AdminOpinion = (function() {
             var events = propagandaTargets.interaction_events || [];
             eventsBody.innerHTML = events.length
                 ? events.map(function(event) {
-                    return '<tr><td>' + YI18n.t('Day {day}, Hour {hour}', {day: event.day, hour: event.hour}) + '</td><td>' + event.interaction_count || 0 + '</td><td>' + (event.attacker_usernames || []).join(', ') || '—' + '</td></tr>';
+                    return '<tr><td>' + YI18n.t('Day {day}, Hour {hour}', {day: event.day, hour: event.hour}) + '</td><td>' + (event.interaction_count || 0) + '</td><td>' + ((event.attacker_usernames || []).join(', ') || '—') + '</td></tr>';
                 }).join('')
                 : '<tr><td colspan="3">' + YI18n.t('No propaganda interactions recorded up to the selected time.') + '</td></tr>';
         }
@@ -866,7 +866,7 @@ var AdminOpinion = (function() {
             eventsBody.innerHTML = events.length
                 ? events.map(function(event) {
                     var type = String(event.interaction_type || '');
-                    return '<tr><td>' + YI18n.t('Day {day}, Hour {hour}', {day: event.day, hour: event.hour}) + '</td><td>' + type.charAt(0).toUpperCase() + type.slice(1) + '</td><td>' + event.interaction_count || 0 + '</td><td>' + (event.attacker_usernames || []).join(', ') || '—' + '</td></tr>';
+                    return '<tr><td>' + YI18n.t('Day {day}, Hour {hour}', {day: event.day, hour: event.hour}) + '</td><td>' + type.charAt(0).toUpperCase() + type.slice(1) + '</td><td>' + (event.interaction_count || 0) + '</td><td>' + ((event.attacker_usernames || []).join(', ') || '—') + '</td></tr>';
                 }).join('')
                 : '<tr><td colspan="4">' + YI18n.t('No MoP interactions recorded up to the selected time.') + '</td></tr>';
         }

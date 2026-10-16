@@ -959,7 +959,7 @@
                 buildThreadUrl(post.post_id) +
                 '" style="background: none; border: none; cursor: pointer; padding: 6px 8px; border-radius: 4px; color: #878a8c; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 4px; text-decoration: none;">',
             '      <i data-feather="message-square" style="width: 16px; height: 16px;"></i>',
-            '      <span><span data-role="comment-count">' + post.t_comments || 0 + '</span> ' + YI18n.t('Comments') + '</span>',
+            '      <span><span data-role="comment-count">' + (post.t_comments || 0) + '</span> ' + YI18n.t('Comments') + '</span>',
             "    </a>",
             "  </div>",
             "</div>",
@@ -1670,7 +1670,7 @@
             : "2px solid transparent";
         var reportLinkHtml =
             comment.author_id !== loggedUserId
-                ? '<a class="forum-report-button' + comment.is_reported ? ' is-active' : '' + '" href="' + window.EXP_PREFIX || "" + '/report_content?post_id=' + comment.post_id + '&type=offensive" style="color: #7c7c7c; text-decoration: none; padding: 2px 4px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;"><i data-feather="flag" class="ys-icon-xxs"></i><span>' + YI18n.t('Report') + '</span><span>' + comment.report_count || 0 + '</span></a>'
+                ? '<a class="forum-report-button' + (comment.is_reported ? ' is-active' : '') + '" href="' + (window.EXP_PREFIX || "") + '/report_content?post_id=' + comment.post_id + '&type=offensive" style="color: #7c7c7c; text-decoration: none; padding: 2px 4px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;"><i data-feather="flag" class="ys-icon-xxs"></i><span>' + YI18n.t('Report') + '</span><span>' + (comment.report_count || 0) + '</span></a>'
                 : "";
 
         var html = [

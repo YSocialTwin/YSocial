@@ -150,9 +150,12 @@ function buildHtml(node, src) {
   pieces.sort((a, b) => a.s - b.s);
   if (!pieces.length) return null;
   const names = new Map();
+  // An expression spliced into a '+' chain must keep its own precedence: `${a ? b : c}` -> `(a ? b : c)`.
+  const SIMPLE = new Set(['Identifier', 'MemberExpression', 'CallExpression', 'Literal', 'TemplateLiteral', 'ThisExpression', 'ArrayExpression', 'ObjectExpression']);
+  function paren(ex) { const t = src.slice(ex.start, ex.end); return SIMPLE.has(ex.type) ? t : '(' + t + ')'; }
   function expand(seg) { // static pseudo segment -> JS pieces (literal text + expr refs)
     const res = []; let i = 0; const re = /\u0001(\d+)\u0002/g; let mm;
-    while ((mm = re.exec(seg)) !== null) { if (mm.index > i) res.push(quote(seg.slice(i, mm.index))); res.push(src.slice(exprs[+mm[1]].start, exprs[+mm[1]].end)); i = mm.index + mm[0].length; }
+    while ((mm = re.exec(seg)) !== null) { if (mm.index > i) res.push(quote(seg.slice(i, mm.index))); res.push(paren(exprs[+mm[1]])); i = mm.index + mm[0].length; }
     if (i < seg.length) res.push(quote(seg.slice(i)));
     return res;
   }

@@ -392,7 +392,7 @@
     var select = document.getElementById('annotation-recsys-author-select');
     if (select) {
       var selected = panel.selected_uid || '';
-      var placeholderHtml = '<option value=""' + selected ? '' : ' selected' + '>' + YI18n.t('Choose an author…') + '</option>';
+      var placeholderHtml = '<option value=""' + (selected ? '' : ' selected') + '>' + YI18n.t('Choose an author…') + '</option>';
       select.innerHTML = placeholderHtml + (panel.options || []).map(function (option) {
         var sel = option.uid === selected ? ' selected' : '';
         return '<option value="' + option.uid + '"' + sel + '>' + YI18n.t('{username} ({recommendation_count} recs)', {username: option.username, recommendation_count: option.recommendation_count}) + '</option>';
@@ -773,7 +773,7 @@
       var events = targets.interaction_events || [];
       eventTable.innerHTML = events.length
         ? events.map(function (event) {
-            return '<tr><td>' + YI18n.t('Day {day}, Hour {hour}', {day: event.day, hour: event.hour}) + '</td><td>' + String(event.moderation_type || '').replace(/_/g, ' ').replace(/\b\w/g, function (ch) { return ch.toUpperCase(); }) + '</td><td>' + event.moderation_count + '</td><td>' + ((event.moderator_usernames || []).join(', ')) || '—' + '</td></tr>';
+            return '<tr><td>' + YI18n.t('Day {day}, Hour {hour}', {day: event.day, hour: event.hour}) + '</td><td>' + String(event.moderation_type || '').replace(/_/g, ' ').replace(/\b\w/g, function (ch) { return ch.toUpperCase(); }) + '</td><td>' + event.moderation_count + '</td><td>' + (((event.moderator_usernames || []).join(', ')) || '—') + '</td></tr>';
           }).join('')
         : '<tr><td colspan="4" class="has-text-centered has-text-grey">' + YI18n.t('No moderation actions recorded.') + '</td></tr>';
     }
@@ -841,7 +841,7 @@
       var egoSelect = document.getElementById('annotation-network-ego-select');
       if (egoSelect && analytics.ego_network) {
         var selected = analytics.ego_network.selected_uid || '';
-        var placeholderHtml = '<option value=""' + selected ? '' : ' selected' + '>' + YI18n.t('Choose an account…') + '</option>';
+        var placeholderHtml = '<option value=""' + (selected ? '' : ' selected') + '>' + YI18n.t('Choose an account…') + '</option>';
         egoSelect.innerHTML = placeholderHtml + (analytics.ego_network.options || []).map(function (option) {
           var sel = option.uid === selected ? ' selected' : '';
           return '<option value="' + option.uid + '"' + sel + '>' + YI18n.t('{username} (deg {degree})', {username: option.username, degree: option.degree}) + '</option>';
