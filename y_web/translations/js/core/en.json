@@ -1,0 +1,8 @@
+{
+  "login.show": "SHOW",
+  "login.hide": "HIDE",
+  "login.show_password": "Show password",
+  "login.hide_password": "Hide password",
+  "login.continue_to": "Continue to {name}",
+  "login.continue_default": "Continue to Experiment"
+}

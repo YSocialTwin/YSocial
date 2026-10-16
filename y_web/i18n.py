@@ -4,7 +4,7 @@ The English source string is the msgid; catalogs live in ``y_web/translations``.
 """
 
 from flask import request, session
-from flask_babel import Babel
+from flask_babel import Babel, get_locale
 
 SUPPORTED_LOCALES = ("en", "it")
 DEFAULT_LOCALE = "en"
@@ -25,3 +25,4 @@ def init_i18n(app):
     app.config.setdefault("BABEL_DEFAULT_LOCALE", DEFAULT_LOCALE)
     app.config.setdefault("BABEL_TRANSLATION_DIRECTORIES", "translations")
     babel.init_app(app, locale_selector=select_locale)
+    app.jinja_env.globals["get_locale"] = get_locale

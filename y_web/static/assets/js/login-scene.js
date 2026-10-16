@@ -3,6 +3,7 @@
 (function () {
   'use strict';
   var $ = function (id) { return document.getElementById(id); };
+  var tr = function (k, p) { return window.YI18n ? window.YI18n.t(k, p) : k; };
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ---------- helpers del form (funzionano anche senza la scena) ---------- */
@@ -11,8 +12,8 @@
     eye.addEventListener('click', function () {
       var hide = pass.type === 'password';
       pass.type = hide ? 'text' : 'password';
-      eye.textContent = hide ? 'HIDE' : 'SHOW';
-      eye.setAttribute('aria-label', hide ? 'Hide password' : 'Show password');
+      eye.textContent = tr(hide ? 'login.hide' : 'login.show');
+      eye.setAttribute('aria-label', tr(hide ? 'login.hide_password' : 'login.show_password'));
     });
   }
   var convT = 0;                       /* 1 = la rete converge verso il centro */
@@ -29,11 +30,11 @@
     var upd = function () {
       var on = document.querySelector('.yl-xp input:checked');
       go.disabled = !on;
-      $('yl-go-t').textContent = on ? 'Continue to ' + on.getAttribute('data-name') : 'Continue to Experiment';
+      $('yl-go-t').textContent = on ? tr('login.continue_to', { name: on.getAttribute('data-name') }) : tr('login.continue_default');
     };
     Array.prototype.forEach.call(radios, function (r) { r.addEventListener('change', upd); });
     if (radios.length === 1) radios[0].checked = true;
-    upd();
+    if (window.YI18n) { window.YI18n.ready.then(upd); } else { upd(); }
     var q = $('yl-q'), cards = $('yl-cards');
     if (cards) setTimeout(function () { cards.classList.add('ready'); }, 1500);
     if (q) q.addEventListener('input', function () {

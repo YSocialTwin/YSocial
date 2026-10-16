@@ -33,6 +33,7 @@ def register_blueprints(app):
     from .api import api_interview, api_reddit, api_social
     from .auth import auth
     from .errors import errors
+    from .i18n import i18n_bp
     from .interactions import user
     from .social import main
 
@@ -48,6 +49,7 @@ def register_blueprints(app):
     app.register_blueprint(experiments)
     app.register_blueprint(clientsr)
     app.register_blueprint(errors)
+    app.register_blueprint(i18n_bp)
     app.register_blueprint(lab)
     app.register_blueprint(tutorial)
     app.register_blueprint(api_reddit)

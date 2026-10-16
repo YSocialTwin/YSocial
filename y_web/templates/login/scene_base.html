@@ -1,7 +1,7 @@
 {# Shared shell for the "scene" pages (login, register, error pages): animated network behind a glass card.
    Child templates fill: title, body_attrs, sync, card. Set data-cascade="off" in body_attrs for a calm network. #}
 <!doctype html>
-<html lang="en">
+<html lang="{{ get_locale() }}">
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
@@ -43,6 +43,7 @@
     </section>
 </main>
 
+<script src="{{ url_for('static', filename='assets/js/i18n.js') }}" defer></script>
 <script src="{{ url_for('static', filename='assets/js/login-scene.js') }}" defer></script>
 </body>
 </html>
