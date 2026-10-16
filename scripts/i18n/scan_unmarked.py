@@ -101,6 +101,20 @@ def scan_python(path, exceptions):
     return count
 
 
+def catalog_keys():
+    """English texts already in a browser catalog: data-driven strings (guided
+    tutorials) that are translated at render time count as marked."""
+    import json
+
+    keys = set()
+    for en in (ROOT / "y_web" / "translations" / "js").glob("*/en.json"):
+        try:
+            keys |= set(json.loads(en.read_text(encoding="utf-8")))
+        except ValueError:
+            continue
+    return keys
+
+
 def scan_js(path, exceptions):
     src = read(path)
     if (
@@ -108,7 +122,8 @@ def scan_js(path, exceptions):
         or len(src) / max(1, src.count("\n") + 1) > 200
     ):
         return 0  # bundled or minified library
-    return len([s for s in js_literals(src) if s not in exceptions])
+    known = catalog_keys()
+    return len([s for s in js_literals(src) if s not in exceptions and s not in known])
 
 
 def scan_all():

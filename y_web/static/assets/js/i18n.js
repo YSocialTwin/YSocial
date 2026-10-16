@@ -69,8 +69,14 @@
     extra.split(',').forEach(function (d) { d = d.trim(); if (d) { loads.push(load(d)); } });
   }
   var ready = Promise.all(loads);
+  var pending = {};
+  // Load a domain once, on demand (e.g. the guided tutorials).
+  function ensure(domain) {
+    if (!pending[domain]) { pending[domain] = load(domain); }
+    return pending[domain];
+  }
   window.YI18n = {
-    t: t, tn: tn, load: load, ready: ready, lang: lang,
+    t: t, tn: tn, load: load, ensure: ensure, ready: ready, lang: lang,
     formatNumber: formatNumber, formatDate: formatDate
   };
 })();

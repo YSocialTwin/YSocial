@@ -13,6 +13,8 @@ const SETTERS = new Set(['textContent', 'innerText', 'title', 'placeholder', 'ar
 const ATTRS = new Set(['title', 'placeholder', 'aria-label', 'alt']);
 const CALLS = new Set(['alert', 'confirm', 'prompt', 'showToast', 'showLoading', 'showHpcMonitorMessage', 'showTelemetryMessage']);
 const dry = process.argv.includes('--dry');
+const noHtml = process.argv.includes('--no-html'); // skip the generic HTML-literal rule (step data holds HTML too)
+const noProps = process.argv.includes('--no-props'); // skip object-property rules (data-driven text is translated at render time)
 const files = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 
 function hasText(s) { return (s.match(/[A-Za-z]/g) || []).length >= 2; }
@@ -216,7 +218,7 @@ function transform(src, f) {
     } else if (n.type === 'AssignmentExpression' && n.operator === '=' && n.left.type === 'MemberExpression' &&
                !n.left.computed && SETTERS.has(n.left.property.name)) {
       targets(n.right, src, add);
-    } else if (n.type === 'Property' && !n.computed && n.value && (PROPS.has(n.key.name || n.key.value))) {
+    } else if (!noProps && n.type === 'Property' && !n.computed && n.value && (PROPS.has(n.key.name || n.key.value))) {
       const okey = n.key.name || n.key.value;
       if (okey === 'name') {
         // only for column-like objects (gridjs: id/sort/formatter/width)
@@ -231,7 +233,7 @@ function transform(src, f) {
     } else if (n.type === 'ReturnStatement' && n.argument && (n.argument.type === 'BinaryExpression' || n.argument.type === 'Literal' || n.argument.type === 'TemplateLiteral')) {
       const b = build(n.argument, src);
       if (b && /^[A-Z][A-Za-z]+( [A-Za-z]+)*[:(!.?]?( |$)/.test(b.key) && !/[<>\/=]/.test(b.key) && b.key.length < 80) add(n.argument, b);
-    } else if ((n.type === 'TemplateLiteral' || n.type === 'Literal' && typeof n.value === 'string' || (n.type === 'BinaryExpression' && n.operator === '+')) &&
+    } else if (!noHtml && (n.type === 'TemplateLiteral' || n.type === 'Literal' && typeof n.value === 'string' || (n.type === 'BinaryExpression' && n.operator === '+')) &&
                /<[a-z]|\b(?:title|placeholder|alt|aria-label)="/i.test(src.slice(n.start, n.end)) && src.slice(Math.max(0, n.start - 8), n.start) !== 'YI18n.t(' && !htmlSkip(n)) {
       const r = buildHtml(n, src); if (r) edits.push([n.start, n.end, r]);
     } else if (n.type === 'AssignmentExpression' && (n.operator === '=' || n.operator === '+=') && n.left.type === 'MemberExpression' &&

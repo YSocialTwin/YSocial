@@ -174,7 +174,9 @@
         if (!overlay) return;
         overlay.classList.remove('d-none');
         overlay.style.display = 'block';
-        showStep(currentStep);
+        Promise.resolve(window.YI18n ? YI18n.ensure('tutorials') : null).then(function () {
+            if (tutorialActive) showStep(currentStep);
+        });
     }
     
     // Find element by selector
@@ -214,19 +216,19 @@
         
         // Update step indicator
         document.getElementById('exp-tutorial-step-indicator').textContent = 
-            `Step ${stepIndex + 1} of ${tutorialSteps.length}`;
+            YI18n.t('Step {stepindex} of {length}', {stepindex: stepIndex + 1, length: tutorialSteps.length});
         
         // Update content
-        document.getElementById('exp-tutorial-title').textContent = step.title;
-        document.getElementById('exp-tutorial-description').innerHTML = step.description;
+        document.getElementById('exp-tutorial-title').textContent = YI18n.t(step.title);
+        document.getElementById('exp-tutorial-description').innerHTML = YI18n.t(step.description);
         
         // Update button text for last step
         const nextBtn = document.getElementById('exp-tutorial-next');
         if (step.isLast) {
-            nextBtn.textContent = 'Finish Tutorial ✓';
+            nextBtn.textContent = YI18n.t('Finish Tutorial ✓');
             nextBtn.style.background = 'linear-gradient(135deg, #4caf50 0%, #66bb6a 100%)';
         } else {
-            nextBtn.textContent = 'Got it! Next →';
+            nextBtn.textContent = YI18n.t('Got it! Next →');
             nextBtn.style.background = 'linear-gradient(135deg, #039be5 0%, #00bcd4 100%)';
         }
         

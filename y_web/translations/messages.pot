@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-16 15:49+0000\n"
+"POT-Creation-Date: 2026-10-16 15:59+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -145,6 +145,15 @@ msgstr ""
 msgid "(Optional)"
 msgstr ""
 
+msgid "(at least 2)"
+msgstr ""
+
+msgid "(available in developer/docker mode)"
+msgstr ""
+
+msgid "(e.g., personality traits & toxicity)"
+msgstr ""
+
 msgid "(for text annotation)"
 msgstr ""
 
@@ -232,6 +241,11 @@ msgid ""
 " LLM settings."
 msgstr ""
 
+msgid ""
+"A client runs the simulation with your population. For advanced settings,"
+" visit the client details page after creation."
+msgstr ""
+
 msgid "A discussion thread."
 msgstr ""
 
@@ -240,6 +254,12 @@ msgid "A new %(display_name)s population name is required."
 msgstr ""
 
 msgid "A population is a group of agents/pages that are used in a simulation."
+msgstr ""
+
+#, python-format
+msgid ""
+"A population is a group of synthetic agents that will participate in your"
+" simulation. For more advanced options, visit the %(link)s page."
 msgstr ""
 
 msgid "A subset of agent's interests."
@@ -349,6 +369,9 @@ msgid "Activity Level"
 msgstr ""
 
 msgid "Activity Pattern"
+msgstr ""
+
+msgid "Activity Patterns"
 msgstr ""
 
 msgid "Activity Profile"
@@ -647,6 +670,11 @@ msgid ""
 "new content."
 msgstr ""
 
+msgid ""
+"All actions are scored from 0 to 10, where 0 means the action is never "
+"performed. Scores greater than 0 are relative to each other."
+msgstr ""
+
 msgid "All annotations"
 msgstr ""
 
@@ -679,6 +707,12 @@ msgstr ""
 
 #, python-format
 msgid "An ad hoc client config named '%(safe_client_name)s' already exists."
+msgstr ""
+
+#, python-format
+msgid ""
+"An experiment defines the simulation environment. For more options, visit"
+" the %(link)s page."
 msgstr ""
 
 #, python-format
@@ -888,6 +922,9 @@ msgid "Average time per slot:"
 msgstr ""
 
 msgid "Bachelor"
+msgstr ""
+
+msgid "Back"
 msgstr ""
 
 msgid "Back to Experiments"
@@ -1165,6 +1202,11 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Click \"Run Simulation\" to start both the experiment server and your "
+"client!"
+msgstr ""
+
+msgid ""
 "Click \"Validate Model\" to verify minicpm-v:latest is available. This "
 "enables image-related actions."
 msgstr ""
@@ -1206,6 +1248,9 @@ msgstr ""
 msgid "Click to select toxicity levels..."
 msgstr ""
 
+msgid "Client"
+msgstr ""
+
 msgid "Client Compute Time"
 msgstr ""
 
@@ -1219,6 +1264,9 @@ msgid "Client Logs Analysis"
 msgstr ""
 
 msgid "Client Memory"
+msgstr ""
+
+msgid "Client Name"
 msgstr ""
 
 msgid "Client Overview"
@@ -1386,6 +1434,9 @@ msgid "Configure RSS/image feeds and retrieval limits from %(b)s"
 msgstr ""
 
 msgid "Configure Stress / Reward"
+msgstr ""
+
+msgid "Configure Your Client"
 msgstr ""
 
 msgid ""
@@ -1568,6 +1619,9 @@ msgstr ""
 msgid "Confirm Password"
 msgstr ""
 
+msgid "Congratulations!"
+msgstr ""
+
 msgid "Connect"
 msgstr ""
 
@@ -1611,6 +1665,9 @@ msgid "Content Pages"
 msgstr ""
 
 msgid "Content RecSys"
+msgstr ""
+
+msgid "Content Recommendation"
 msgstr ""
 
 msgid "Content Recommender"
@@ -1737,6 +1794,12 @@ msgid "Create Profile"
 msgstr ""
 
 msgid "Create Synthetic Population"
+msgstr ""
+
+msgid "Create Your Experiment"
+msgstr ""
+
+msgid "Create Your Population"
 msgstr ""
 
 msgid ""
@@ -2192,6 +2255,13 @@ msgid ""
 " simulations."
 msgstr ""
 
+msgid ""
+"Drag activity profiles from available to assigned, then set the "
+"percentage for each. Percentages must total 100%. Green bars identify the"
+" hours of the simulated day when agents assigned to the selected profile "
+"are active."
+msgstr ""
+
 msgid "Drag populations here"
 msgstr ""
 
@@ -2298,6 +2368,9 @@ msgid "Enable %(memory)s in %(link)s before configuring client-level memory."
 msgstr ""
 
 msgid "Enable AI-driven agents in the simulation"
+msgstr ""
+
+msgid "Enable AI-powered agents using a local Ollama server."
 msgstr ""
 
 msgid "Enable Agent Archetypes Distribution"
@@ -2415,6 +2488,9 @@ msgid "Enter or select a group..."
 msgstr ""
 
 msgid "Enter topic name"
+msgstr ""
+
+msgid "Enter topics that agents will discuss. Press Enter after each topic."
 msgstr ""
 
 msgid "Entries per Image Feed"
@@ -2914,6 +2990,9 @@ msgstr ""
 msgid "Follow Decisions"
 msgstr ""
 
+msgid "Follow Recommendation"
+msgstr ""
+
 msgid "Follow Recommender"
 msgstr ""
 
@@ -3138,6 +3217,9 @@ msgstr ""
 msgid "Got it"
 msgstr ""
 
+msgid "Got it! Next →"
+msgstr ""
+
 msgid "Grant Group Visibility"
 msgstr ""
 
@@ -3342,6 +3424,9 @@ msgid "How to order posts when scores are equal"
 msgstr ""
 
 msgid "Hybrid (score × recency)"
+msgstr ""
+
+msgid "Hybrid Human-LLM"
 msgstr ""
 
 msgid "ISTI-CNR"
@@ -3737,6 +3822,9 @@ msgstr ""
 msgid "LLM (Image Transcription)"
 msgstr ""
 
+msgid "LLM Agents"
+msgstr ""
+
 msgid "LLM Backend"
 msgstr ""
 
@@ -3855,6 +3943,9 @@ msgid "Leave empty to use name from config..."
 msgstr ""
 
 msgid "Leave fields empty to use the default activity profile."
+msgstr ""
+
+msgid "Let's create your first simulation in just 4 easy steps."
 msgstr ""
 
 msgid "Like"
@@ -4348,6 +4439,9 @@ msgid "News."
 msgstr ""
 
 msgid "Next"
+msgstr ""
+
+msgid "Next →"
 msgstr ""
 
 msgid "No"
@@ -5011,6 +5105,9 @@ msgid "Population Platform"
 msgstr ""
 
 msgid "Population Size"
+msgstr ""
+
+msgid "Population Size:"
 msgstr ""
 
 msgid "Population Statistics & Analytics"
@@ -5937,6 +6034,9 @@ msgstr ""
 msgid "Select source group..."
 msgstr ""
 
+msgid "Select the Ollama model for agent content generation."
+msgstr ""
+
 msgid "Select the agent population to use"
 msgstr ""
 
@@ -6080,6 +6180,9 @@ msgid ""
 "mean more frequent actions. Use 0 to disable an action."
 msgstr ""
 
+msgid "Settings"
+msgstr ""
+
 msgid "Share"
 msgstr ""
 
@@ -6179,6 +6282,9 @@ msgstr ""
 msgid "Simulation Configuration"
 msgstr ""
 
+msgid "Simulation Days"
+msgstr ""
+
 msgid "Simulation Length (days)"
 msgstr ""
 
@@ -6213,10 +6319,19 @@ msgstr ""
 msgid "Simulation: %(name)s"
 msgstr ""
 
+msgid "Simulations"
+msgstr ""
+
 msgid "Site"
 msgstr ""
 
 msgid "Skeptical, fact-checks, brief responses"
+msgstr ""
+
+msgid "Skip"
+msgstr ""
+
+msgid "Skip Tutorial"
 msgstr ""
 
 msgid "Sliding Window Days"
@@ -6322,6 +6437,12 @@ msgid "State"
 msgstr ""
 
 msgid "Status"
+msgstr ""
+
+msgid "Step 1 of 7"
+msgstr ""
+
+msgid "Step 1 of X"
 msgstr ""
 
 msgid "Stochastic Block Model"
@@ -7046,6 +7167,9 @@ msgstr ""
 msgid "Type"
 msgstr ""
 
+msgid "Type a topic and press Enter"
+msgstr ""
+
 msgid "Type a value and press Enter"
 msgstr ""
 
@@ -7592,6 +7716,9 @@ msgstr ""
 msgid "Welcome back"
 msgstr ""
 
+msgid "Welcome to YSocial! 🎉"
+msgstr ""
+
 msgid "What is a Client?"
 msgstr ""
 
@@ -7601,6 +7728,9 @@ msgstr ""
 msgid ""
 "What issue did you encounter? What were you trying to do when the error "
 "occurred?"
+msgstr ""
+
+msgid "What's Next?"
 msgstr ""
 
 msgid "When"
@@ -7768,6 +7898,9 @@ msgstr ""
 msgid "You do not have visibility on this plugin repository."
 msgstr ""
 
+msgid "You've successfully created your first YSocial experiment!"
+msgstr ""
+
 msgid "Your Profile"
 msgstr ""
 
@@ -7785,11 +7918,20 @@ msgid ""
 "hour."
 msgstr ""
 
+msgid "advanced population settings"
+msgstr ""
+
+msgid "agents"
+msgstr ""
+
 msgid "agents.recsys_type / agents.frecsys_type"
 msgstr ""
 
 #, python-format
 msgid "ahead %(ahead)s / behind %(behind)s"
+msgstr ""
+
+msgid "algorithms"
 msgstr ""
 
 msgid "and"
@@ -7812,7 +7954,16 @@ msgstr ""
 msgid "e.g., 192.168.1.100 or example.com"
 msgstr ""
 
+msgid "e.g., Main Simulation"
+msgstr ""
+
 msgid "e.g., Morning Active"
+msgstr ""
+
+msgid "e.g., My First Experiment"
+msgstr ""
+
+msgid "e.g., My First Population"
 msgstr ""
 
 msgid "e.g., http://localhost:8000/v1"
@@ -7865,6 +8016,9 @@ msgstr ""
 msgid "missing"
 msgstr ""
 
+msgid "multiple clients"
+msgstr ""
+
 msgid "never"
 msgstr ""
 
@@ -7888,6 +8042,9 @@ msgstr ""
 msgid "r/%(subreddit_input)s does not exist."
 msgstr ""
 
+msgid "recommendation"
+msgstr ""
+
 msgid "release archive"
 msgstr ""
 
@@ -7903,6 +8060,12 @@ msgstr ""
 msgid "symlink"
 msgstr ""
 
+msgid "to analyze simulation results"
+msgstr ""
+
+msgid "to compare simulation scenarios"
+msgstr ""
+
 msgid "vLLM"
 msgstr ""
 
@@ -7910,6 +8073,9 @@ msgid "vLLM server not running. Start manually:"
 msgstr ""
 
 msgid "y-not.social"
+msgstr ""
+
+msgid "ySights"
 msgstr ""
 
 msgid "— installed and updated independently"
@@ -7954,5 +8120,23 @@ msgid "∞ Infinite"
 msgstr ""
 
 msgid "⚠ Requires LLM agents enabled"
+msgstr ""
+
+msgid "✔️ Create"
+msgstr ""
+
+msgid "✔️ Experiment with"
+msgstr ""
+
+msgid "✔️ Explore"
+msgstr ""
+
+msgid "✔️ Navigate the Experiment with an OSN like interface"
+msgstr ""
+
+msgid "✔️ Play with"
+msgstr ""
+
+msgid "✔️ Use"
 msgstr ""
 

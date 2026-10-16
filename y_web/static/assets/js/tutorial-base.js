@@ -142,16 +142,16 @@
             }
             
             // Update UI
-            elements.stepIndicator.textContent = `Step ${stepIndex + 1} of ${state.steps.length}`;
-            elements.title.textContent = step.title;
-            elements.description.innerHTML = step.description;
+            elements.stepIndicator.textContent = YI18n.t('Step {stepindex} of {length}', {stepindex: stepIndex + 1, length: state.steps.length});
+            elements.title.textContent = YI18n.t(step.title);
+            elements.description.innerHTML = YI18n.t(step.description);
             
             // Update button
             if (step.isLast) {
-                elements.nextBtn.textContent = 'Finish Tutorial ✓';
+                elements.nextBtn.textContent = YI18n.t('Finish Tutorial ✓');
                 elements.nextBtn.style.background = 'linear-gradient(135deg, #4caf50 0%, #66bb6a 100%)';
             } else {
-                elements.nextBtn.textContent = 'Got it! Next →';
+                elements.nextBtn.textContent = YI18n.t('Got it! Next →');
                 elements.nextBtn.style.background = 'linear-gradient(135deg, #039be5 0%, #00bcd4 100%)';
             }
             
@@ -249,7 +249,10 @@
             state.currentStep = 0;
             elements.overlay.classList.remove('d-none');
             elements.overlay.style.display = 'block';
-            showStep(state.currentStep);
+            // Step texts are English keys; the catalog is fetched once, on demand.
+            Promise.resolve(window.YI18n ? YI18n.ensure('tutorials') : null).then(function () {
+                if (state.active) { showStep(state.currentStep); }
+            });
         }
         
         // Event listeners

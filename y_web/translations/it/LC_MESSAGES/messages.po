@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-16 15:49+0000\n"
+"POT-Creation-Date: 2026-10-16 15:59+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -143,6 +143,15 @@ msgstr "(Facoltativo: clicca per espandere)"
 msgid "(Optional)"
 msgstr "(Facoltativo)"
 
+msgid "(at least 2)"
+msgstr "(almeno 2)"
+
+msgid "(available in developer/docker mode)"
+msgstr "(disponibile in modalità sviluppatore/docker)"
+
+msgid "(e.g., personality traits & toxicity)"
+msgstr "(es. tratti di personalità e tossicità)"
+
 msgid "(for text annotation)"
 msgstr "(per l'annotazione dei testi)"
 
@@ -231,6 +240,13 @@ msgstr ""
 "Un client gestisce una popolazione di agenti che interagiscono nella simulazione. Ogni client "
 "funziona in modo indipendente, con la propria configurazione e le proprie impostazioni LLM."
 
+msgid ""
+"A client runs the simulation with your population. For advanced settings, visit the client "
+"details page after creation."
+msgstr ""
+"Un client esegue la simulazione con la tua popolazione. Per le impostazioni avanzate, visita la "
+"pagina dei dettagli del client dopo la creazione."
+
 msgid "A discussion thread."
 msgstr "Una discussione."
 
@@ -240,6 +256,14 @@ msgstr "È necessario un nuovo nome di popolazione %(display_name)s."
 
 msgid "A population is a group of agents/pages that are used in a simulation."
 msgstr "Una popolazione è un gruppo di agenti/pagine usati in una simulazione."
+
+#, python-format
+msgid ""
+"A population is a group of synthetic agents that will participate in your simulation. For more "
+"advanced options, visit the %(link)s page."
+msgstr ""
+"Una popolazione è un gruppo di agenti sintetici che parteciperanno alla tua simulazione. Per "
+"opzioni più avanzate, visita la pagina %(link)s."
 
 msgid "A subset of agent's interests."
 msgstr "Un sottoinsieme degli interessi dell'agente."
@@ -347,6 +371,9 @@ msgstr "Livello di attività"
 
 msgid "Activity Pattern"
 msgstr "Schema di attività"
+
+msgid "Activity Patterns"
+msgstr "Pattern di attività"
 
 msgid "Activity Profile"
 msgstr "Profilo di attività"
@@ -651,6 +678,13 @@ msgstr ""
 "contenuto» ha punteggio 3 e «Commenta un post» ha punteggio 6, l'agente commenterà il doppio di "
 "quanto pubblica nuovi contenuti."
 
+msgid ""
+"All actions are scored from 0 to 10, where 0 means the action is never performed. Scores greater "
+"than 0 are relative to each other."
+msgstr ""
+"Tutte le azioni hanno un punteggio da 0 a 10, dove 0 significa che l'azione non viene mai "
+"eseguita. I punteggi maggiori di 0 sono relativi tra loro."
+
 msgid "All annotations"
 msgstr "Tutte le annotazioni"
 
@@ -684,6 +718,10 @@ msgstr "Esiste già un profilo di attività con questo nome."
 #, python-format
 msgid "An ad hoc client config named '%(safe_client_name)s' already exists."
 msgstr "Esiste già una configurazione di client ad hoc chiamata '%(safe_client_name)s'."
+
+#, python-format
+msgid "An experiment defines the simulation environment. For more options, visit the %(link)s page."
+msgstr "Un esperimento definisce l'ambiente di simulazione. Per altre opzioni, visita la pagina %(link)s."
 
 #, python-format
 msgid "An experiment with name '%(name)s' already exists."
@@ -895,6 +933,9 @@ msgstr "Tempo medio per slot:"
 
 msgid "Bachelor"
 msgstr "Laurea triennale"
+
+msgid "Back"
+msgstr "Indietro"
 
 msgid "Back to Experiments"
 msgstr "Torna agli esperimenti"
@@ -1176,6 +1217,9 @@ msgstr ""
 "Clicca su «Recupera i modelli di visione» per caricare i modelli con capacità visive, poi "
 "selezionane uno per attivare le azioni sulle immagini."
 
+msgid "Click \"Run Simulation\" to start both the experiment server and your client!"
+msgstr "Clicca \"Esegui la simulazione\" per avviare sia il server dell'esperimento sia il tuo client!"
+
 msgid ""
 "Click \"Validate Model\" to verify minicpm-v:latest is available. This enables image-related "
 "actions."
@@ -1219,6 +1263,9 @@ msgstr "Clicca per selezionare gli orientamenti politici..."
 msgid "Click to select toxicity levels..."
 msgstr "Clicca per selezionare i livelli di tossicità..."
 
+msgid "Client"
+msgstr "Client"
+
 msgid "Client Compute Time"
 msgstr "Tempo di calcolo del client"
 
@@ -1233,6 +1280,9 @@ msgstr "Analisi dei log dei client"
 
 msgid "Client Memory"
 msgstr "Memoria del client"
+
+msgid "Client Name"
+msgstr "Nome del client"
 
 msgid "Client Overview"
 msgstr "Panoramica del client"
@@ -1404,6 +1454,9 @@ msgstr "Configura i feed RSS e di immagini e i limiti di recupero da %(b)s"
 
 msgid "Configure Stress / Reward"
 msgstr "Configura stress / ricompensa"
+
+msgid "Configure Your Client"
+msgstr "Configura il tuo client"
 
 msgid ""
 "Configure a client dedicated to plugin-backed ad hoc agent families. Each client targets one "
@@ -1619,6 +1672,9 @@ msgstr "Feed di immagini configurati"
 msgid "Confirm Password"
 msgstr "Conferma la password"
 
+msgid "Congratulations!"
+msgstr "Congratulazioni!"
+
 msgid "Connect"
 msgstr "Connetti"
 
@@ -1663,6 +1719,9 @@ msgstr "Pagine di contenuti"
 
 msgid "Content RecSys"
 msgstr "Sistema di raccomandazione dei contenuti"
+
+msgid "Content Recommendation"
+msgstr "Raccomandazione dei contenuti"
 
 msgid "Content Recommender"
 msgstr "Sistema di raccomandazione dei contenuti"
@@ -1791,6 +1850,12 @@ msgstr "Crea il profilo"
 
 msgid "Create Synthetic Population"
 msgstr "Crea una popolazione sintetica"
+
+msgid "Create Your Experiment"
+msgstr "Crea il tuo esperimento"
+
+msgid "Create Your Population"
+msgstr "Crea la tua popolazione"
 
 msgid ""
 "Create a new population by merging multiple existing populations. Agents and pages will be "
@@ -2249,6 +2314,15 @@ msgstr ""
 "Scarica il modello Detoxify una sola volta e tienilo disponibile offline per le simulazioni "
 "future."
 
+msgid ""
+"Drag activity profiles from available to assigned, then set the percentage for each. Percentages "
+"must total 100%. Green bars identify the hours of the simulated day when agents assigned to the "
+"selected profile are active."
+msgstr ""
+"Trascina i profili di attività da disponibili ad assegnati, poi imposta la percentuale di "
+"ciascuno. Le percentuali devono totalizzare 100%. Le barre verdi indicano le ore del giorno "
+"simulato in cui gli agenti assegnati al profilo selezionato sono attivi."
+
 msgid "Drag populations here"
 msgstr "Trascina qui le popolazioni"
 
@@ -2360,6 +2434,9 @@ msgstr "Attiva %(memory)s in %(link)s prima di configurare la memoria a livello 
 
 msgid "Enable AI-driven agents in the simulation"
 msgstr "Attiva gli agenti guidati da IA nella simulazione"
+
+msgid "Enable AI-powered agents using a local Ollama server."
+msgstr "Attiva gli agenti basati su IA usando un server Ollama locale."
 
 msgid "Enable Agent Archetypes Distribution"
 msgstr "Attiva la distribuzione degli archetipi degli agenti"
@@ -2483,6 +2560,9 @@ msgstr "Inserisci o seleziona un gruppo..."
 
 msgid "Enter topic name"
 msgstr "Inserisci il nome dell'argomento"
+
+msgid "Enter topics that agents will discuss. Press Enter after each topic."
+msgstr "Inserisci gli argomenti di cui discuteranno gli agenti. Premi Invio dopo ogni argomento."
 
 msgid "Entries per Image Feed"
 msgstr "Voci per feed di immagini"
@@ -2974,6 +3054,9 @@ msgstr "Decadimento dell'azione di follow"
 msgid "Follow Decisions"
 msgstr "Decisioni di follow"
 
+msgid "Follow Recommendation"
+msgstr "Raccomandazione dei follow"
+
 msgid "Follow Recommender"
 msgstr "Sistema di raccomandazione dei follow"
 
@@ -3197,6 +3280,9 @@ msgstr "Vai alla home page"
 msgid "Got it"
 msgstr "Ho capito"
 
+msgid "Got it! Next →"
+msgstr "Capito! Avanti →"
+
 msgid "Grant Group Visibility"
 msgstr "Concedi la visibilità al gruppo"
 
@@ -3403,6 +3489,9 @@ msgstr "Come ordinare i post a parità di punteggio"
 
 msgid "Hybrid (score × recency)"
 msgstr "Ibrido (punteggio × recenza)"
+
+msgid "Hybrid Human-LLM"
+msgstr "Ibrido umano-LLM"
 
 msgid "ISTI-CNR"
 msgstr "ISTI-CNR"
@@ -3807,6 +3896,9 @@ msgstr "LLM"
 msgid "LLM (Image Transcription)"
 msgstr "LLM (trascrizione delle immagini)"
 
+msgid "LLM Agents"
+msgstr "Agenti LLM"
+
 msgid "LLM Backend"
 msgstr "Backend LLM"
 
@@ -3928,6 +4020,9 @@ msgstr "Lascia vuoto per usare il nome della configurazione..."
 
 msgid "Leave fields empty to use the default activity profile."
 msgstr "Lascia i campi vuoti per usare il profilo di attività predefinito."
+
+msgid "Let's create your first simulation in just 4 easy steps."
+msgstr "Creiamo la tua prima simulazione in soli 4 semplici passi."
 
 msgid "Like"
 msgstr "Mi piace"
@@ -4441,6 +4536,9 @@ msgstr "Notizie."
 
 msgid "Next"
 msgstr "Avanti"
+
+msgid "Next →"
+msgstr "Avanti →"
 
 msgid "No"
 msgstr "No"
@@ -5122,6 +5220,9 @@ msgstr "Piattaforma della popolazione"
 
 msgid "Population Size"
 msgstr "Dimensione della popolazione"
+
+msgid "Population Size:"
+msgstr "Dimensione della popolazione:"
 
 msgid "Population Statistics & Analytics"
 msgstr "Statistiche e analisi della popolazione"
@@ -6064,6 +6165,9 @@ msgstr ""
 msgid "Select source group..."
 msgstr "Seleziona il gruppo di origine..."
 
+msgid "Select the Ollama model for agent content generation."
+msgstr "Seleziona il modello Ollama per la generazione dei contenuti degli agenti."
+
 msgid "Select the agent population to use"
 msgstr "Seleziona la popolazione di agenti da usare"
 
@@ -6218,6 +6322,9 @@ msgstr ""
 "Imposta le probabilità relative (0-10) per ogni tipo di azione. Valori più alti significano "
 "azioni più frequenti. Usa 0 per disattivare un'azione."
 
+msgid "Settings"
+msgstr "Impostazioni"
+
 msgid "Share"
 msgstr "Condividi"
 
@@ -6325,6 +6432,9 @@ msgstr "Client della simulazione"
 msgid "Simulation Configuration"
 msgstr "Configurazione della simulazione"
 
+msgid "Simulation Days"
+msgstr "Giorni di simulazione"
+
 msgid "Simulation Length (days)"
 msgstr "Durata della simulazione (giorni)"
 
@@ -6359,11 +6469,20 @@ msgstr "Simulazione:"
 msgid "Simulation: %(name)s"
 msgstr "Simulazione: %(name)s"
 
+msgid "Simulations"
+msgstr "Simulazioni"
+
 msgid "Site"
 msgstr "Site"
 
 msgid "Skeptical, fact-checks, brief responses"
 msgstr "Scettico, verifica i fatti, risposte brevi"
+
+msgid "Skip"
+msgstr "Salta"
+
+msgid "Skip Tutorial"
+msgstr "Salta il tutorial"
 
 msgid "Sliding Window Days"
 msgstr "Giorni della finestra scorrevole"
@@ -6465,6 +6584,12 @@ msgstr "Stato"
 
 msgid "Status"
 msgstr "Stato"
+
+msgid "Step 1 of 7"
+msgstr "Passo 1 di 7"
+
+msgid "Step 1 of X"
+msgstr "Passo 1 di X"
 
 msgid "Stochastic Block Model"
 msgstr "Modello a blocchi stocastico"
@@ -7213,6 +7338,9 @@ msgstr "Vero"
 msgid "Type"
 msgstr "Tipo"
 
+msgid "Type a topic and press Enter"
+msgstr "Scrivi un argomento e premi Invio"
+
 msgid "Type a value and press Enter"
 msgstr "Scrivi un valore e premi Invio"
 
@@ -7771,6 +7899,9 @@ msgstr "Benvenuto, %(username)s!"
 msgid "Welcome back"
 msgstr "Bentornato"
 
+msgid "Welcome to YSocial! 🎉"
+msgstr "Benvenuto in YSocial! 🎉"
+
 msgid "What is a Client?"
 msgstr "Che cos'è un client?"
 
@@ -7779,6 +7910,9 @@ msgstr "Che cos'è una popolazione?"
 
 msgid "What issue did you encounter? What were you trying to do when the error occurred?"
 msgstr "Quale problema hai incontrato? Cosa stavi cercando di fare quando si è verificato l'errore?"
+
+msgid "What's Next?"
+msgstr "E ora?"
 
 msgid "When"
 msgstr "Quando"
@@ -7945,6 +8079,9 @@ msgstr "Non hai il permesso di visualizzare questa pagina."
 msgid "You do not have visibility on this plugin repository."
 msgstr "Non hai visibilità su questo repository di plugin."
 
+msgid "You've successfully created your first YSocial experiment!"
+msgstr "Hai creato con successo il tuo primo esperimento YSocial!"
+
 msgid "Your Profile"
 msgstr "Il tuo profilo"
 
@@ -7960,12 +8097,21 @@ msgstr "Zipf"
 msgid "`Simulated` runs quickly; `Real-time` processes the current wall-clock hour."
 msgstr "`Simulato` procede velocemente; `Tempo reale` elabora l'ora di orologio corrente."
 
+msgid "advanced population settings"
+msgstr "impostazioni avanzate delle popolazioni"
+
+msgid "agents"
+msgstr "agenti"
+
 msgid "agents.recsys_type / agents.frecsys_type"
 msgstr "agents.recsys_type / agents.frecsys_type"
 
 #, python-format
 msgid "ahead %(ahead)s / behind %(behind)s"
 msgstr "avanti di %(ahead)s / indietro di %(behind)s"
+
+msgid "algorithms"
+msgstr "algoritmi"
 
 msgid "and"
 msgstr "e"
@@ -7987,8 +8133,17 @@ msgstr "dipendenze %(deps)s, convalida %(validation)s"
 msgid "e.g., 192.168.1.100 or example.com"
 msgstr "e.g., 192.168.1.100 or example.com"
 
+msgid "e.g., Main Simulation"
+msgstr "es. Simulazione principale"
+
 msgid "e.g., Morning Active"
 msgstr "es. Attivo al mattino"
+
+msgid "e.g., My First Experiment"
+msgstr "es. Il mio primo esperimento"
+
+msgid "e.g., My First Population"
+msgstr "es. La mia prima popolazione"
 
 msgid "e.g., http://localhost:8000/v1"
 msgstr "es. http://localhost:8000/v1"
@@ -8038,6 +8193,9 @@ msgstr "min"
 msgid "missing"
 msgstr "mancante"
 
+msgid "multiple clients"
+msgstr "più client"
+
 msgid "never"
 msgstr "mai"
 
@@ -8061,6 +8219,9 @@ msgstr "r/%(subreddit)s non esiste."
 msgid "r/%(subreddit_input)s does not exist."
 msgstr "r/%(subreddit_input)s non esiste."
 
+msgid "recommendation"
+msgstr "raccomandazione"
+
 msgid "release archive"
 msgstr "archivio di release"
 
@@ -8076,6 +8237,12 @@ msgstr "impostazioni"
 msgid "symlink"
 msgstr "collegamento simbolico"
 
+msgid "to analyze simulation results"
+msgstr "per analizzare i risultati della simulazione"
+
+msgid "to compare simulation scenarios"
+msgstr "per confrontare scenari di simulazione"
+
 msgid "vLLM"
 msgstr "vLLM"
 
@@ -8084,6 +8251,9 @@ msgstr "Il server vLLM non è in esecuzione. Avvialo manualmente:"
 
 msgid "y-not.social"
 msgstr "y-not.social"
+
+msgid "ySights"
+msgstr "ySights"
 
 msgid "— installed and updated independently"
 msgstr "— installati e aggiornati separatamente"
@@ -8126,6 +8296,24 @@ msgstr "∞ Infinito"
 
 msgid "⚠ Requires LLM agents enabled"
 msgstr "⚠ Richiede gli agenti LLM attivi"
+
+msgid "✔️ Create"
+msgstr "✔️ Crea"
+
+msgid "✔️ Experiment with"
+msgstr "✔️ Sperimenta con"
+
+msgid "✔️ Explore"
+msgstr "✔️ Esplora"
+
+msgid "✔️ Navigate the Experiment with an OSN like interface"
+msgstr "✔️ Naviga nell'esperimento con un'interfaccia da social network"
+
+msgid "✔️ Play with"
+msgstr "✔️ Gioca con"
+
+msgid "✔️ Use"
+msgstr "✔️ Usa"
 
 #~ msgid "All telemetry data is GDPR compliant. You can disable it anytime from the application"
 #~ msgstr ""

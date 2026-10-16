@@ -103,7 +103,7 @@
         );
         
         if (available.length === 0) {
-            container.innerHTML = '<div style="text-align: center; color: #999; font-size: 0.8em; padding: 8px;">All profiles assigned</div>';
+            container.innerHTML = '<div style="text-align: center; color: #999; font-size: 0.8em; padding: 8px;">' + YI18n.t('All profiles assigned') + '</div>';
             return;
         }
         
@@ -139,7 +139,7 @@
         if (!container) return;
         
         if (tutAssignedProfiles.length === 0) {
-            container.innerHTML = '<div class="empty-state" style="text-align: center; color: #999; font-size: 0.8em; padding: 10px;">Drag profiles here to assign them</div>';
+            container.innerHTML = '<div class="empty-state" style="text-align: center; color: #999; font-size: 0.8em; padding: 10px;">' + YI18n.t('Drag profiles here to assign them') + '</div>';
             return;
         }
         
@@ -277,13 +277,13 @@
             validation.style.background = '#efe';
             validation.style.border = '1px solid #cfc';
             validation.style.color = '#0a0';
-            validation.textContent = `✓ Total: ${total.toFixed(2)}% - Perfect!`;
+            validation.textContent = YI18n.t('✓ Total: {tofixed}% - Perfect!', {tofixed: total.toFixed(2)});
             return true;
         } else {
             validation.style.background = '#fee';
             validation.style.border = '1px solid #fcc';
             validation.style.color = '#c00';
-            validation.textContent = `⚠ Total: ${total.toFixed(2)}% - Must equal 100%`;
+            validation.textContent = YI18n.t('⚠ Total: {tofixed}% - Must equal 100%', {tofixed: total.toFixed(2)});
             return false;
         }
     }
@@ -339,7 +339,7 @@
         const wrapper = document.getElementById(`tut-${type}-display-wrapper`);
         
         if (array.length === 0) {
-            wrapper.innerHTML = `<span id="tut-${type}-display" class="multi-select-placeholder" style="color: #999; font-size: 0.9em;">Click to select ${type === 'education' ? 'education levels' : 'political leanings'}...</span>`;
+            wrapper.innerHTML = '<span id="tut-' + type + '-display" class="multi-select-placeholder" style="color: #999; font-size: 0.9em;">' + (type === 'education' ? YI18n.t('Click to select education levels...') : YI18n.t('Click to select political leanings...')) + '</span>';
         } else {
             wrapper.innerHTML = array.map(item => 
                 `<span class="multi-select-tag" style="background: #22c55e; color: white; padding: 3px 8px; border-radius: 3px; font-size: 0.85em; display: inline-flex; align-items: center; gap: 5px;">
@@ -427,9 +427,9 @@
             section.style.borderLeftColor = '#ccc';
             icon.className = 'mdi mdi-robot-off';
             icon.style.color = '#ccc';
-            status.textContent = 'Unavailable';
+            status.textContent = YI18n.t('Unavailable');
             status.style.background = '#ccc';
-            desc.textContent = 'Ollama is not running. Start Ollama to enable LLM agents.';
+            desc.textContent = YI18n.t('Ollama is not running. Start Ollama to enable LLM agents.');
         } else {
             // Ollama available - enable toggle
             toggle.disabled = false;
@@ -453,7 +453,7 @@
             slider.style.backgroundColor = '#22c55e';
             icon.className = 'mdi mdi-robot';
             icon.style.color = '#22c55e';
-            status.textContent = 'Enabled';
+            status.textContent = YI18n.t('Enabled');
             status.style.background = '#22c55e';
             section.style.borderLeftColor = '#22c55e';
             topicsSection.style.display = 'block';
@@ -463,7 +463,7 @@
             slider.style.backgroundColor = '#ccc';
             icon.className = 'mdi mdi-robot-off';
             icon.style.color = '#6c757d';
-            status.textContent = 'Disabled';
+            status.textContent = YI18n.t('Disabled');
             status.style.background = '#6c757d';
             section.style.borderLeftColor = '#039be5';
             topicsSection.style.display = 'none';
@@ -576,13 +576,13 @@
         skipBtn.style.display = currentStep < 4 ? 'block' : 'none';
         
         if (currentStep === 3) {
-            nextBtn.innerHTML = 'Create Simulation <i class="mdi mdi-check"></i>';
+            nextBtn.innerHTML = YI18n.t('Create Simulation') + ' <i class="mdi mdi-check"></i>';
         } else if (currentStep === 4) {
-            nextBtn.innerHTML = '<i class="mdi mdi-play"></i> Run Simulation';
+            nextBtn.innerHTML = '<i class="mdi mdi-play"></i> ' + YI18n.t('Run Simulation');
             nextBtn.style.background = 'linear-gradient(90deg, #22c55e 0%, #4ade80 100%)';
             nextBtn.style.boxShadow = '0 2px 6px rgba(34, 197, 94, 0.3)';
         } else {
-            nextBtn.innerHTML = 'Next <i class="mdi mdi-arrow-right"></i>';
+            nextBtn.innerHTML = YI18n.t('Next') + ' <i class="mdi mdi-arrow-right"></i>';
             nextBtn.style.background = 'linear-gradient(90deg, #039be5 0%, #4facfe 100%)';
             nextBtn.style.boxShadow = '0 2px 6px rgba(3, 155, 229, 0.3)';
         }
@@ -688,7 +688,7 @@
     function createExperiment() {
         const nextBtn = document.getElementById('tutorial-next-btn');
         nextBtn.disabled = true;
-        nextBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Creating...';
+        nextBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> ' + YI18n.t('Creating...');
         
         // Get the action relevance values (0-10 scale, convert to probability 0-1)
         const postValue = parseInt(document.getElementById('tut-post-prob').value);
@@ -759,14 +759,14 @@
             } else {
                 showError(result.message || 'An error occurred. Please try again.');
                 nextBtn.disabled = false;
-                nextBtn.innerHTML = 'Create Simulation <i class="mdi mdi-check"></i>';
+                nextBtn.innerHTML = YI18n.t('Create Simulation') + ' <i class="mdi mdi-check"></i>';
             }
         })
         .catch(error => {
             console.error('Error creating experiment:', error);
             showError('An error occurred. Please try again.');
             nextBtn.disabled = false;
-            nextBtn.innerHTML = 'Create Simulation <i class="mdi mdi-check"></i>';
+            nextBtn.innerHTML = YI18n.t('Create Simulation') + ' <i class="mdi mdi-check"></i>';
         });
     }
     
@@ -774,7 +774,7 @@
     function runSimulation() {
         const nextBtn = document.getElementById('tutorial-next-btn');
         nextBtn.disabled = true;
-        nextBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Starting...';
+        nextBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> ' + YI18n.t('Starting...');
         
         // Use the new JSON API endpoint to start both server and client
         fetch('/admin/tutorial/run_simulation', {

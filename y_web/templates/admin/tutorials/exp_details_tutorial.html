@@ -60,7 +60,7 @@
                     border-radius: 12px;
                     font-size: 0.75em;
                     font-weight: 600;
-                ">Step 1 of 7</span>
+                ">{{ _('Step 1 of 7') }}</span>
             </div>
             <button id="exp-tutorial-close" style="
                 background: rgba(255, 255, 255, 0.2);
@@ -75,7 +75,7 @@
                 align-items: center;
                 justify-content: center;
                 transition: background 0.2s;
-            " title="Skip Tutorial">&times;</button>
+            " title="{{ _('Skip Tutorial') }}">&times;</button>
         </div>
         
         <!-- Content -->
@@ -111,7 +111,7 @@
                 cursor: pointer;
                 padding: 6px 12px;
                 transition: color 0.2s;
-            ">Skip Tutorial</button>
+            ">{{ _('Skip Tutorial') }}</button>
             
             <button id="exp-tutorial-next" style="
                 background: linear-gradient(135deg, #039be5 0%, #00bcd4 100%);
@@ -124,7 +124,7 @@
                 cursor: pointer;
                 box-shadow: 0 4px 12px rgba(3, 155, 229, 0.3);
                 transition: transform 0.2s, box-shadow 0.2s;
-            ">Got it! Next →</button>
+            ">{{ _('Got it! Next →') }}</button>
         </div>
     </div>
 </div>
