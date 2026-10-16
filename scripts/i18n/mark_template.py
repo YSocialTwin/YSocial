@@ -19,7 +19,7 @@ from scan_unmarked import load_exceptions  # noqa: E402
 INLINE = r"(?:a|b|strong|em|code|u|small|kbd)"
 INLINE_CLOSE = re.compile(r"^</%s\s*>$" % INLINE, re.I)
 INLINE_OPEN = re.compile(r"<%s[\s>]" % INLINE, re.I)
-ATTRS = ("title", "placeholder", "aria-label", "alt")
+ATTRS = ("title", "placeholder", "aria-label", "alt", "label", "data-tooltip", "data-title")
 
 
 def quote(text):
@@ -38,13 +38,14 @@ def mark(path, exceptions):
     for text in sorted(found, key=len, reverse=True):
         if "\n" in text or "data-cascade" in text:
             continue
-        esc = re.escape(text)
+        esc = r"\s+".join(re.escape(w) for w in text.split(" "))
         pat_text = re.compile(r"(<[^<>]*>)(\s*)" + esc + r"(\s*)(?=<)")
 
         def repl(m, text=text, snapshot=out):
             before = m.group(1)
             after = snapshot[m.end():m.end() + 40]
-            if INLINE_CLOSE.search(before) or INLINE_OPEN.match(after):
+            continues = not text[0].isupper()  # sentence goes on after the tag
+            if (INLINE_CLOSE.search(before) and continues) or INLINE_OPEN.match(after):
                 return m.group(0)  # sentence fragment next to inline markup
             return "%s%s{{ %s }}%s" % (before, m.group(2), quote(text), m.group(3))
 
