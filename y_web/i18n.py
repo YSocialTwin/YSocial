@@ -72,9 +72,22 @@ def pseudo_enabled():
     return bool(current_app.config.get("PSEUDO_LOCALE_ENABLED"))
 
 
+# Gate G5: a language is "stable" only with >=98% coverage AND a completed native review
+# (docs/i18n/review-checklist.md); until then the selectors label it "beta".
+LANGUAGE_STATUS = {"it": "beta"}
+
+
+def language_status(code):
+    """``"stable"`` or ``"beta"`` for a language code (the source language is always stable)."""
+    return LANGUAGE_STATUS.get(code, "stable")
+
+
 def available_languages():
-    """Return ``[(code, native name), ...]`` for the supported languages."""
-    return [(code, LANGUAGE_NAMES.get(code, code)) for code in supported_languages()]
+    """Return ``[(code, native name), ...]`` for the supported languages (beta ones are labelled)."""
+    return [
+        (code, LANGUAGE_NAMES.get(code, code) + (" (beta)" if language_status(code) == "beta" else ""))
+        for code in supported_languages()
+    ]
 
 
 
