@@ -21,8 +21,13 @@ MANIFEST_KEYS = {
 
 def _walk(obj, path, out):
     if isinstance(obj, dict):
+        # A parameter definition ({"name": "max_items", "type": ...}) names an
+        # identifier, not user-visible text: its ``label`` is the text to translate.
+        is_parameter = "name" in obj and ("type" in obj or "section" in obj)
         for key, value in obj.items():
             if isinstance(value, str):
+                if key == "name" and is_parameter:
+                    continue
                 if key in MANIFEST_KEYS and any(ch.isalpha() for ch in value):
                     out.append((value.strip(), f"{path}/{key}"))
             else:
