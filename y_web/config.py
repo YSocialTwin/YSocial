@@ -32,6 +32,12 @@ class BaseConfig:
     TEMPLATES_AUTO_RELOAD = True
     SESSION_COOKIE_NAME = "YSocial_session"
 
+    # Internationalisation (Flask-Babel). Catalogs live in y_web/translations.
+    BABEL_DEFAULT_LOCALE = "en"
+    BABEL_DEFAULT_TIMEZONE = "UTC"
+    BABEL_TRANSLATION_DIRECTORIES = "translations"
+    SUPPORTED_LANGUAGES = ("en", "it")
+
     # LLM
     LLM_BACKEND: str | None = os.environ.get("LLM_BACKEND")
     LLM_URL: str | None = os.environ.get("LLM_URL")
