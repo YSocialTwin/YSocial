@@ -39,6 +39,8 @@ jobs:
       run: |
         python scripts/i18n/catalogs.py check
         python scripts/i18n/scan_unmarked.py --check
+        python scripts/i18n/check_glossary.py
+        python scripts/i18n/coverage_report.py --min 98
 
     - name: Run tests with coverage
       # The deselected tests below pass in isolation and in every local
