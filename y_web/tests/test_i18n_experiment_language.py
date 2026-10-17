@@ -161,13 +161,17 @@ def test_participant_language_selector_follows_the_experiment_switch():
         i18n.experiment_language_resolver = None
 
 
+def test_forum_profile_view_has_no_language_selector():
+    assert "profile_language_field" not in (ROOT / "y_web" / "templates" / "forum" / "profile.html").read_text(encoding="utf-8")
+
+
 def test_language_is_chosen_in_the_profile_not_in_the_feed_header():
     """The participant language lives in the profile pages; the feed headers carry no selector."""
     from flask import Blueprint, Flask, render_template
 
     for name in ("microblogging/header.html", "forum/header.html", "photo/base.html"):
         assert "language_switcher" not in (ROOT / "y_web" / "templates" / name).read_text(encoding="utf-8")
-    for name in ("microblogging/edit_profile.html", "photo/base.html", "forum/profile.html"):
+    for name in ("microblogging/edit_profile.html", "photo/base.html", "forum/edit_profile.html"):
         assert "shared/profile_language_field.html" in (ROOT / "y_web" / "templates" / name).read_text(encoding="utf-8")
 
     app = Flask("y_web")

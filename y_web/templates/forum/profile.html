@@ -21,11 +21,6 @@
                         </a>
                         {% endif %}
                     </div>
-                    {% if logged_id|string == user['user_data']['id']|string %}
-                    <div class="forum-profile-language" style="max-width:260px;margin:6px 0;">
-                        {% with ys_lang_wrap_class='forum-profile-language__field' %}{% include "shared/profile_language_field.html" %}{% endwith %}
-                    </div>
-                    {% endif %}
                     <div class="forum-profile-subline">
                         {% if user['user_data'].is_page == 1 %}
                         {{ _('Community Page') }}
