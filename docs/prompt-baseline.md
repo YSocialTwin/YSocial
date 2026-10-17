@@ -1,6 +1,6 @@
 # English baseline (gate G0)
 
-Status: **one model measured, one pending.** The scripts were prepared in an environment without access to an LLM server; the first run was made by the user on a local Ollama (details below). The second model, the more capable one, is still to be run.
+Status: **one model measured; a second one was waived by the user for G0 (decision of 2026-10-17: one model only).** The scripts were prepared in an environment without access to an LLM server; the first run was made by the user on a local Ollama (details below). G0 therefore rests on a single, favourable model; the G3 comparison should add a second model if one becomes available.
 
 ## How to run
 
@@ -16,7 +16,6 @@ Each round asks four questions with the current English prompts of `data_schema/
 | Model | Parsing success | Action | Follow | Reaction | Vote | Mean prompt tokens | Mean completion tokens |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | llama3.2 (Ollama, local, 50 rounds, seed 1; `docs/baseline_llama3.2.json`) | 100% (200/200) | 100% | 100% | 100% | 100% | 98 to 114 | about 2 |
-| (model 2, to run) | | | | | | | |
 
 Gate G0 asks for at least 95% parsing success on both models. If the English baseline is lower, the English prompts or parsers are fixed first.
 
