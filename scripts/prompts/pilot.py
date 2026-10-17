@@ -162,13 +162,13 @@ def run(args):
     for model in args.models:
         for language in args.languages:
             for seed in args.seeds:
-                target = out / model.replace("/", "_") / language / f"seed{seed}.jsonl"
+                target = out / safe_name(model) / language / f"seed{seed}.jsonl"
                 if target.exists() and not args.force:
                     print(f"skip {target} (exists)")
                     continue
                 target.parent.mkdir(parents=True, exist_ok=True)
                 args.model = model
-                rng = random.Random(f"{seed}-{language}")  # the same agents and stimuli order for every model
+                rng = random.Random(f"{seed}")  # same agents for every model AND every language: only the language varies
                 with tempfile.TemporaryDirectory() as folder:
                     use_language(language, folder)
                     prompts = pack(language, "prompts.json")
@@ -311,6 +311,10 @@ def analyze(args):
     text = report(rows, planned)
     Path(args.report).write_text(text, encoding="utf-8")
     print(f"{args.report}: {len(rows)} calls analysed")
+
+
+def safe_name(model):
+    return re.sub(r"[^A-Za-z0-9._-]+", "_", model)
 
 
 def main(argv=None):

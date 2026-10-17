@@ -65,3 +65,20 @@ def test_score_understands_loose_replies_and_flags_meta_text():
     assert pilot.score(row) == {"ok": True, "exact": False, "choice": "YES"}
     post = {"task": "post", "language": "it", "reply": "Ecco il post: oggi la città non è come prima, non mi piace"}
     assert pilot.score(post)["meta"] is True and pilot.score(post)["lang"] is True
+
+
+def test_agents_do_not_depend_on_language():
+    """The only thing that varies between languages in the pilot is the language itself."""
+    import random
+
+    values = pilot.pack("en", "profile_values.json")
+    seen = []
+    for language in ("en", "it"):
+        rng = random.Random("1")
+        agent = pilot.Agent(rng, values, language)
+        seen.append((agent.name, agent.age, agent.profession, agent.nationality))
+    assert seen[0] == seen[1]
+
+
+def test_safe_name_is_a_plain_folder_name():
+    assert pilot.safe_name("feadxus/Llama:Q2_K") == "feadxus_Llama_Q2_K"
