@@ -80,8 +80,15 @@ def user_data():
         select(Admin_users).order_by(Admin_users.username)
     ).all()
 
+    signup_config = None
+    if user.role == "admin":  # the self-registration panel is for administrators only
+        from y_web.src.signup import candidates as signup_candidates
+
+        signup_config = signup_candidates()
+
     return render_template(
         "admin/users.html",
+        signup=signup_config,
         m=models,
         llm_backend=llm_backend,
         experiments=experiments,

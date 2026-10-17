@@ -2116,7 +2116,6 @@ def miscellanea():
         Rendered miscellaneous settings template
     """
     from y_web.src.llm.vllm_manager import get_llm_models
-    from y_web.src.signup import candidates as signup_candidates
 
     # Check if user is admin (researchers should not access this page)
     user = db.session.scalars(
@@ -2169,7 +2168,6 @@ def miscellanea():
         active_pulls=ollama_pulls,
         detoxify_model_path=str(get_model_cache_root()),
         detoxify_download_state=detoxify_download_state,
-        signup=signup_candidates(),
         len=len,
     )
 

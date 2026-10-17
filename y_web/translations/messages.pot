@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 10:49+0000\n"
+"POT-Creation-Date: 2026-10-17 11:25+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -3849,6 +3849,9 @@ msgid ""
 "names. No header required."
 msgstr ""
 
+msgid "Filter"
+msgstr ""
+
 msgid "Filter Methods"
 msgstr ""
 
@@ -4460,9 +4463,6 @@ msgid "How often memory reflections are generated."
 msgstr ""
 
 msgid "How to order posts when scores are equal"
-msgstr ""
-
-msgid "How visitors can create their own account."
 msgstr ""
 
 msgid "Human"
@@ -5093,11 +5093,6 @@ msgid "Less"
 msgstr ""
 
 msgid "Let participants change the language"
-msgstr ""
-
-msgid ""
-"Let visitors create a participant account from the login page and join "
-"the simulations and training modules you select below."
 msgstr ""
 
 msgid "Let's create your first simulation in just 4 easy steps."
@@ -6043,9 +6038,6 @@ msgstr ""
 msgid "No server configuration file was found for this experiment."
 msgstr ""
 
-msgid "No simulations yet."
-msgstr ""
-
 msgid "No story previews are available yet."
 msgstr ""
 
@@ -6062,9 +6054,6 @@ msgid "No topics assigned"
 msgstr ""
 
 msgid "No toxicity annotations have been recorded up to the selected time."
-msgstr ""
-
-msgid "No training modules yet."
 msgstr ""
 
 msgid "No user data provided."
@@ -6129,6 +6118,9 @@ msgstr ""
 
 #, python-format
 msgid "Notebook created at %(filepath)s"
+msgstr ""
+
+msgid "Nothing matches your search."
 msgstr ""
 
 msgid "Notice"
@@ -6223,6 +6215,11 @@ msgstr ""
 msgid "Only Ollama is currently supported for memory embeddings."
 msgstr ""
 
+msgid ""
+"Only active ones are offered; the sign-up link appears on the login page "
+"when at least one is available."
+msgstr ""
+
 msgid "Only administrators can manage external runtime repositories."
 msgstr ""
 
@@ -6259,12 +6256,6 @@ msgid "Only owner/admin/shared researchers can edit memory embeddings"
 msgstr ""
 
 msgid "Only owner/admin/shared researchers can edit stress/reward settings"
-msgstr ""
-
-msgid ""
-"Only simulations and modules that are active at the moment are offered to"
-" visitors; the sign-up link appears on the login page when at least one "
-"is available."
 msgstr ""
 
 msgid "Open"
@@ -6496,9 +6487,6 @@ msgid "Partially installed"
 msgstr ""
 
 msgid "Participant"
-msgstr ""
-
-msgid "Participants"
 msgstr ""
 
 msgid "Password"
@@ -7882,6 +7870,9 @@ msgstr ""
 msgid "Search results for"
 msgstr ""
 
+msgid "Search simulations and modules…"
+msgstr ""
+
 msgid "Search topics and photo tags."
 msgstr ""
 
@@ -8089,6 +8080,9 @@ msgid ""
 msgstr ""
 
 msgid "Select..."
+msgstr ""
+
+msgid "Selected"
 msgstr ""
 
 msgid "Selected Agent"
@@ -9563,9 +9557,6 @@ msgstr ""
 msgid "Training module"
 msgstr ""
 
-msgid "Training modules"
-msgstr ""
-
 msgid ""
 "Training modules available for your participants. Turn a module on or off"
 " from here."
@@ -10128,6 +10119,11 @@ msgid "Vision Model"
 msgstr ""
 
 msgid "Vision Temperature"
+msgstr ""
+
+msgid ""
+"Visitors can create a participant account from the login page and join "
+"the selected, active simulations and training modules."
 msgstr ""
 
 msgid ""

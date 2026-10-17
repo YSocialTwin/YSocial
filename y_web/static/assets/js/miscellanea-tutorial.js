@@ -28,14 +28,6 @@
             position: 'left',
             tab: 'system-settings'
         },
-        'self-registration': {
-            id: 'self-registration',
-            selector: '#box-self-registration',
-            title: '🧑‍🤝‍🧑 Self-registration',
-            description: `<p>Let visitors <b>create their own account</b> from the login page. Switch the page on and tick the <b>simulations</b> and <b>training modules</b> they can join; only the ones that are active are offered.</p>`,
-            position: 'left',
-            tab: 'system-settings'
-        },
         'log-sync': {
             id: 'log-sync',
             selector: '#box-log-sync',

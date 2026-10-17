@@ -3579,3 +3579,29 @@ input:checked + .slider:before {
 .dash-module-title { font-weight: 600; font-size: 0.9rem; color: #1f2937; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dash-module-meta { font-size: 0.75rem; color: #6b7280; }
 .dash-module-empty { color: #9ca3af; font-style: italic; }
+
+/* Users page: self-registration panel (compact) */
+#box-self-registration .sr-head { display:flex; align-items:center; gap:.6rem; margin-bottom:.35rem; }
+#box-self-registration .sr-title { font-weight:600; font-size:.9rem; }
+#box-self-registration .sr-note { margin-left:auto; font-size:.72rem; color:#b26a00; }
+#box-self-registration .sr-help { margin:.25rem 0 .6rem; font-size:.76rem; line-height:1.35; color:#7a8094; }
+#box-self-registration .sr-search { width:100%; margin-bottom:.5rem; }
+#box-self-registration .sr-filters { display:flex; flex-wrap:wrap; align-items:center; gap:.3rem; margin-bottom:.5rem; }
+#box-self-registration .sr-chip { border:1px solid #dfe3ec; background:#fff; color:#555b70; border-radius:999px; padding:.1rem .6rem; font-size:.72rem; cursor:pointer; }
+#box-self-registration .sr-chip.is-active { background:#3d70b2; border-color:#3d70b2; color:#fff; }
+#box-self-registration .sr-count { margin-left:auto; font-size:.72rem; color:#7a8094; }
+#box-self-registration .sr-list { max-height:15rem; overflow-y:auto; border:1px solid #e6e9f2; border-radius:.5rem; }
+#box-self-registration .sr-row { display:flex; align-items:center; gap:.5rem; padding:.35rem .6rem; font-size:.82rem; cursor:pointer; border-bottom:1px solid #eef0f6; }
+#box-self-registration .sr-row:last-of-type { border-bottom:0; }
+#box-self-registration .sr-row:hover { background:#f6f8fc; }
+#box-self-registration .sr-row[hidden] { display:none; }
+#box-self-registration .sr-name { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#box-self-registration .sr-tags { display:flex; align-items:center; gap:.25rem; flex:none; }
+#box-self-registration .sr-tag { font-size:.62rem; font-weight:600; letter-spacing:.02em; padding:.05rem .4rem; border-radius:999px; background:#eef0f6; color:#555b70; }
+#box-self-registration .sr-tag.is-sim { background:#e5f0fb; color:#245a99; }
+#box-self-registration .sr-tag.is-training { background:#ece9fb; color:#5a4fb0; }
+#box-self-registration .sr-dot { width:.5rem; height:.5rem; border-radius:50%; background:#c4c9d8; }
+#box-self-registration .sr-dot.is-on { background:#2fa66a; }
+#box-self-registration .sr-empty { margin:0; padding:.6rem; font-size:.78rem; color:#7a8094; text-align:center; }
+#box-self-registration .sr-message { min-height:1rem; font-size:.74rem; }
+#box-self-registration .sr-message.is-ok { color:#1a7f45; } #box-self-registration .sr-message.is-error { color:#c0392b; }

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 10:49+0000\n"
+"POT-Creation-Date: 2026-10-17 11:25+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -3554,6 +3554,9 @@ msgstr "Il campo '%(replace)s' contiene un valore non valido."
 msgid "File format error: provide a csv file containing two columns with agent names. No header required."
 msgstr "Errore di formato del file: fornisci un file csv con due colonne di nomi di agenti. Nessuna intestazione richiesta."
 
+msgid "Filter"
+msgstr "Filtro"
+
 msgid "Filter Methods"
 msgstr "Filtra i metodi"
 
@@ -4128,9 +4131,6 @@ msgstr "Con quale frequenza vengono generate le riflessioni della memoria."
 
 msgid "How to order posts when scores are equal"
 msgstr "Come ordinare i post a parità di punteggio"
-
-msgid "How visitors can create their own account."
-msgstr "Come i visitatori possono creare il proprio account."
 
 msgid "Human"
 msgstr "Umano"
@@ -4728,9 +4728,6 @@ msgstr "Meno"
 
 msgid "Let participants change the language"
 msgstr "Permetti ai partecipanti di cambiare lingua"
-
-msgid "Let visitors create a participant account from the login page and join the simulations and training modules you select below."
-msgstr "Consenti ai visitatori di creare un account partecipante dalla pagina di login e di unirsi alle simulazioni e ai moduli di training selezionati qui sotto."
 
 msgid "Let's create your first simulation in just 4 easy steps."
 msgstr "Creiamo la tua prima simulazione in soli 4 semplici passi."
@@ -5641,9 +5638,6 @@ msgstr "Nessuna annotazione di sentiment registrata fino all'istante selezionato
 msgid "No server configuration file was found for this experiment."
 msgstr "Non è stato trovato il file di configurazione del server per questo esperimento."
 
-msgid "No simulations yet."
-msgstr "Nessuna simulazione."
-
 msgid "No story previews are available yet."
 msgstr "Non ci sono ancora anteprime di storie disponibili."
 
@@ -5661,9 +5655,6 @@ msgstr "Nessun argomento assegnato"
 
 msgid "No toxicity annotations have been recorded up to the selected time."
 msgstr "Nessuna annotazione di tossicità registrata fino all'istante selezionato."
-
-msgid "No training modules yet."
-msgstr "Nessun modulo di training."
 
 msgid "No user data provided."
 msgstr "Nessun dato utente fornito."
@@ -5728,6 +5719,9 @@ msgstr "Nota:"
 #, python-format
 msgid "Notebook created at %(filepath)s"
 msgstr "Notebook creato in %(filepath)s"
+
+msgid "Nothing matches your search."
+msgstr "Nessun risultato per la ricerca."
 
 msgid "Notice"
 msgstr "Avviso"
@@ -5813,6 +5807,9 @@ msgstr "Sono elencati solo gli agenti LLM."
 msgid "Only Ollama is currently supported for memory embeddings."
 msgstr "Per gli embedding della memoria è attualmente supportato solo Ollama."
 
+msgid "Only active ones are offered; the sign-up link appears on the login page when at least one is available."
+msgstr "Vengono proposti solo gli elementi attivi; il link di registrazione compare nella pagina di login quando ne è disponibile almeno uno."
+
 msgid "Only administrators can manage external runtime repositories."
 msgstr "Solo gli amministratori possono gestire i repository dei runtime esterni."
 
@@ -5848,9 +5845,6 @@ msgstr "Solo il proprietario, gli amministratori e i ricercatori con accesso con
 
 msgid "Only owner/admin/shared researchers can edit stress/reward settings"
 msgstr "Solo il proprietario, gli amministratori e i ricercatori con accesso condiviso possono modificare le impostazioni di stress/ricompensa"
-
-msgid "Only simulations and modules that are active at the moment are offered to visitors; the sign-up link appears on the login page when at least one is available."
-msgstr "Ai visitatori vengono proposte solo le simulazioni e i moduli attivi in questo momento; il link di registrazione compare nella pagina di login quando ne è disponibile almeno uno."
 
 msgid "Open"
 msgstr "Apri"
@@ -6074,9 +6068,6 @@ msgstr "Installato parzialmente"
 
 msgid "Participant"
 msgstr "Partecipante"
-
-msgid "Participants"
-msgstr "Partecipanti"
 
 msgid "Password"
 msgstr "Password"
@@ -7394,6 +7385,9 @@ msgstr "Risultati della ricerca"
 msgid "Search results for"
 msgstr "Risultati della ricerca per"
 
+msgid "Search simulations and modules…"
+msgstr "Cerca simulazioni e moduli…"
+
 msgid "Search topics and photo tags."
 msgstr "Cerca argomenti e tag delle foto."
 
@@ -7571,6 +7565,9 @@ msgstr "Seleziona quali feed di immagini di subreddit riutilizzabili assegnare a
 
 msgid "Select..."
 msgstr "Seleziona..."
+
+msgid "Selected"
+msgstr "Selezionati"
 
 msgid "Selected Agent"
 msgstr "Agente selezionato"
@@ -8907,9 +8904,6 @@ msgstr "Training"
 msgid "Training module"
 msgstr "Modulo di training"
 
-msgid "Training modules"
-msgstr "Moduli di training"
-
 msgid "Training modules available for your participants. Turn a module on or off from here."
 msgstr "Moduli didattici disponibili per i tuoi partecipanti. Attivali o disattivali da qui."
 
@@ -9419,6 +9413,9 @@ msgstr "Modello di visione"
 
 msgid "Vision Temperature"
 msgstr "Temperatura del modello di visione"
+
+msgid "Visitors can create a participant account from the login page and join the selected, active simulations and training modules."
+msgstr "I visitatori possono creare un account partecipante dalla pagina di login e unirsi alle simulazioni e ai moduli di training selezionati e attivi."
 
 msgid "Visual analysis of agent distribution across demographics, attributes, and behavior patterns."
 msgstr "Analisi visiva della distribuzione degli agenti per dati demografici, attributi e schemi di comportamento."
@@ -10497,4 +10494,25 @@ msgstr "✔️ Usa"
 
 #~ msgid "login page"
 #~ msgstr "pagina di accesso"
+
+#~ msgid "How visitors can create their own account."
+#~ msgstr "Come i visitatori possono creare il proprio account."
+
+#~ msgid "Let visitors create a participant account from the login page and join the simulations and training modules you select below."
+#~ msgstr "Consenti ai visitatori di creare un account partecipante dalla pagina di login e di unirsi alle simulazioni e ai moduli di training selezionati qui sotto."
+
+#~ msgid "No simulations yet."
+#~ msgstr "Nessuna simulazione."
+
+#~ msgid "No training modules yet."
+#~ msgstr "Nessun modulo di training."
+
+#~ msgid "Only simulations and modules that are active at the moment are offered to visitors; the sign-up link appears on the login page when at least one is available."
+#~ msgstr "Ai visitatori vengono proposte solo le simulazioni e i moduli attivi in questo momento; il link di registrazione compare nella pagina di login quando ne è disponibile almeno uno."
+
+#~ msgid "Participants"
+#~ msgstr "Partecipanti"
+
+#~ msgid "Training modules"
+#~ msgstr "Moduli di training"
 

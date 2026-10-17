@@ -108,10 +108,15 @@ def test_wiring_in_templates_and_routes():
     assert "signup_open() %}" in login and "auth.signup" in login
     register = (ROOT / "templates/login/register.html").read_text(encoding="utf-8")
     assert "signup_token" in register and 'name="pick"' in register
-    misc = (ROOT / "templates/admin/miscellanea.html").read_text(encoding="utf-8")
-    assert 'id="box-self-registration"' in misc and "signup_enabled" in misc
-    assert "/admin/signup_settings" in (ROOT / "static/assets/js/admin-miscellanea.js").read_text(encoding="utf-8")
-    assert "box-self-registration" in (ROOT / "static/assets/js/miscellanea-tutorial.js").read_text(encoding="utf-8")
+    users_page = (ROOT / "templates/admin/users.html").read_text(encoding="utf-8")
+    assert 'id="box-self-registration"' in users_page and "signup_enabled" in users_page
+    assert "{% if signup is not none %}" in users_page and 'id="signup-search"' in users_page
+    assert 'class="sr-tag is-platform"' in users_page and 'class="sr-tag is-training"' in users_page
+    assert "box-self-registration" not in (ROOT / "templates/admin/miscellanea.html").read_text(encoding="utf-8")
+    assert "/admin/signup_settings" in (ROOT / "static/assets/js/admin-users.js").read_text(encoding="utf-8")
+    assert "box-self-registration" in (ROOT / "static/assets/js/users-tutorial.js").read_text(encoding="utf-8")
+    users_route = (ROOT / "routes/admin/sub/users.py").read_text(encoding="utf-8")
+    assert 'if user.role == "admin":' in users_route and "signup_candidates()" in users_route
     routes = (ROOT / "routes/auth/routes.py").read_text(encoding="utf-8")
     assert "compare_digest" in routes and "is_open()" in routes
 

@@ -449,6 +449,7 @@
   "{length} embedding model(s) loaded.": "{length} embedding model(s) loaded.",
   "{length} models loaded": "{length} models loaded",
   "{length} vision models loaded": "{length} vision models loaded",
+  "{n} selected": "{n} selected",
   "{size} agents, {platformlabel}": "{size} agents, {platformlabel}",
   "{username} (deg {degree})": "{username} (deg {degree})",
   "{username} ({interaction_count} interactions)": "{username} ({interaction_count} interactions)",

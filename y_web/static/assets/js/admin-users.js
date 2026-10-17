@@ -197,15 +197,93 @@ var AdminUsers = (function() {
             });
     }
 
+    // ── Self-registration panel (administrators) ───────────────────────────
+
+    function initSelfRegistration() {
+        var box = document.getElementById('box-self-registration');
+        if (!box || box.dataset.initialized) return;
+        box.dataset.initialized = 'true';
+
+        var toggle = document.getElementById('signup_enabled');
+        var status = document.getElementById('signup-status');
+        var message = document.getElementById('signup-message');
+        var search = document.getElementById('signup-search');
+        var count = document.getElementById('signup-count');
+        var empty = document.getElementById('signup-empty');
+        var rows = Array.prototype.slice.call(box.querySelectorAll('.sr-row'));
+        var filter = 'all';
+
+        function checked(cls) {
+            return Array.prototype.map.call(box.querySelectorAll(cls + ':checked'), function(i) { return i.value; });
+        }
+
+        function refresh() {
+            var q = (search.value || '').trim().toLowerCase();
+            var shown = 0;
+            rows.forEach(function(row) {
+                var on = row.querySelector('input').checked;
+                var match = (!q || row.dataset.text.indexOf(q) !== -1) &&
+                    (filter === 'all' || (filter === 'selected' ? on : row.dataset.kind === filter));
+                row.hidden = !match;
+                if (match) shown++;
+            });
+            empty.hidden = shown !== 0;
+            count.textContent = YI18n.t('{n} selected', {n: box.querySelectorAll('.sr-row input:checked').length});
+        }
+
+        function note(text, isError) {
+            message.textContent = text;
+            message.className = 'sr-message' + (isError ? ' is-error' : ' is-ok');
+            setTimeout(function() { message.textContent = ''; }, 3000);
+        }
+
+        function save() {
+            fetch('/admin/signup_settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    enabled: toggle.checked,
+                    experiments: checked('.signup-exp'),
+                    modules: checked('.signup-mod')
+                })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (!data.success) { note(data.message || YI18n.t('Failed to update'), true); return; }
+                status.textContent = toggle.checked && !data.open ? YI18n.t('On, but nothing is available to join yet') : '';
+                note(YI18n.t('Self-registration settings saved'), false);
+            })
+            .catch(function() { note(YI18n.t('Error updating setting'), true); });
+        }
+
+        search.addEventListener('input', refresh);
+        box.querySelector('#signup-filters').addEventListener('click', function(e) {
+            var chip = e.target.closest('.sr-chip');
+            if (!chip) return;
+            filter = chip.dataset.filter;
+            box.querySelectorAll('.sr-chip').forEach(function(c) { c.classList.toggle('is-active', c === chip); });
+            refresh();
+        });
+        box.addEventListener('change', function(e) {
+            if (e.target.matches('input[type=checkbox]')) {
+                if (e.target !== toggle) refresh();
+                save();
+            }
+        });
+        refresh();
+    }
+
     return {
         initUsersGrid: initUsersGrid,
         fetchModelsForAddUser: fetchModelsForAddUser,
-        fetchModelsForUser: fetchModelsForUser
+        fetchModelsForUser: fetchModelsForUser,
+        initSelfRegistration: initSelfRegistration
     };
 })();
 
 document.addEventListener('DOMContentLoaded', function() {
     AdminUsers.initUsersGrid();
+    AdminUsers.initSelfRegistration();
 });
 
 // Expose globally for use in HTML onclick attributes

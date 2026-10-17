@@ -103,8 +103,3 @@
 /* keep long tables inside the card */
 .misc-app .gridjs-wrapper { max-width:100%; overflow-x:auto; }
 .misc-app .misc-box-full { grid-column:1 / -1; }
-
-.misc-app .signup-target { display:flex; align-items:center; gap:10px; padding:.4rem 0; border-bottom:1px solid var(--tm-border); font-size:.88rem; cursor:pointer; }
-.misc-app .signup-target > span { flex:1; }
-.misc-app .signup-badge { padding:.1rem .5rem; border-radius:999px; font-size:.7rem; font-weight:600; background:#eef0f3; color:var(--tm-muted); }
-.misc-app .signup-badge.is-on { background:#e3f5ea; color:#1a7f45; }

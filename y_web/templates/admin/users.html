@@ -176,6 +176,57 @@
 
                 <!--Dashboard column-->
                 <div class="column is-4">
+                    {% if signup is not none %}
+                    <div class="dashboard-box is-compact" id="box-self-registration">
+                        <h3 class="title is-5 is-thin">{{ _('Self-registration') }}</h3>
+                        <div class="sr-head">
+                            <label class="switch-small">
+                                <input type="checkbox" id="signup_enabled" {% if signup.enabled %}checked{% endif %}>
+                                <span class="slider-small round"></span>
+                            </label>
+                            <span class="sr-title">{{ _('Sign-up page') }}</span>
+                            <span id="signup-status" class="sr-note"></span>
+                        </div>
+                        <p class="sr-help">{{ _('Visitors can create a participant account from the login page and join the selected, active simulations and training modules.') }}</p>
+                        <input type="search" id="signup-search" class="input is-small sr-search" placeholder="{{ _('Search simulations and modules…') }}" aria-label="{{ _('Search simulations and modules…') }}" autocomplete="off">
+                        <div class="sr-filters" id="signup-filters" role="group" aria-label="{{ _('Filter') }}">
+                            <button type="button" class="sr-chip is-active" data-filter="all">{{ _('All') }}</button>
+                            <button type="button" class="sr-chip" data-filter="experiment">{{ _('Simulations') }}</button>
+                            {% if signup.modules is not none %}<button type="button" class="sr-chip" data-filter="training">{{ _('Training') }}</button>{% endif %}
+                            <button type="button" class="sr-chip" data-filter="selected">{{ _('Selected') }}</button>
+                            <span class="sr-count" id="signup-count"></span>
+                        </div>
+                        <div class="sr-list" id="signup-list">
+                            {% for exp in signup.experiments %}
+                            <label class="sr-row" data-kind="experiment" data-text="{{ (exp.name ~ ' ' ~ exp.platform)|lower }}">
+                                <input type="checkbox" class="signup-exp" value="{{ exp.id }}" {% if exp.selected %}checked{% endif %}>
+                                <span class="sr-name">{{ exp.name }}</span>
+                                <span class="sr-tags">
+                                    <span class="sr-tag is-sim">{{ _('Simulation') }}</span>
+                                    <span class="sr-tag is-platform">{{ (exp.platform or '')|replace('_', ' ')|capitalize }}</span>
+                                    <span class="sr-dot {{ 'is-on' if exp.active else 'is-off' }}" title="{{ _('Active') if exp.active else _('Not active') }}"></span>
+                                </span>
+                            </label>
+                            {% endfor %}
+                            {% if signup.modules is not none %}
+                            {% for mod in signup.modules %}
+                            {% set live = mod.active and mod.open_run %}
+                            <label class="sr-row" data-kind="training" data-text="{{ mod.title|lower }}">
+                                <input type="checkbox" class="signup-mod" value="{{ mod.uid }}" {% if mod.selected %}checked{% endif %}>
+                                <span class="sr-name">{{ mod.title }}</span>
+                                <span class="sr-tags">
+                                    <span class="sr-tag is-training">{{ _('Training') }}</span>
+                                    <span class="sr-dot {{ 'is-on' if live else 'is-off' }}" title="{% if mod.archived %}{{ _('Archived') }}{% elif not mod.open_run %}{{ _('No open run') }}{% else %}{{ _('Active') }}{% endif %}"></span>
+                                </span>
+                            </label>
+                            {% endfor %}
+                            {% endif %}
+                            <p class="sr-empty" id="signup-empty" hidden>{{ _('Nothing matches your search.') }}</p>
+                        </div>
+                        <p class="sr-help">{{ _('Only active ones are offered; the sign-up link appears on the login page when at least one is available.') }}</p>
+                        <div id="signup-message" class="sr-message" role="status"></div>
+                    </div>
+                    {% endif %}
                     <!--Box-->
                     <div class="dashboard-box is-compact">
                         <h3 class="title is-5 is-thin">{{ _('Quick Reference Guide') }}</h3>

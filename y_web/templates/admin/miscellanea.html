@@ -367,52 +367,6 @@
                     <strong>{{ _('System Settings:') }}</strong> {{ _('Configure system-level settings for the YSocial platform, including telemetry, HPC client monitoring, process monitoring, and system updates.') }}</div>
                 </div>
 
-                <div class="misc-group-head"><span class="misc-group-icon"><i class="mdi mdi-account-plus-outline"></i></span><div><h3 class="misc-group-title">{{ _('Participants') }}</h3><p class="misc-group-sub">{{ _('How visitors can create their own account.') }}</p></div></div>
-                <div class="misc-grid">
-                    <div class="misc-compact-box" id="box-self-registration">
-                        <h3><span class="misc-box-icon"><i class="mdi mdi-account-plus-outline"></i></span>{{ _('Self-registration') }}</h3>
-                        <div class="help-block ys-mb-15">
-                            <p>{{ _('Let visitors create a participant account from the login page and join the simulations and training modules you select below.') }}</p>
-                        </div>
-                        <div class="box-lines">
-                            <div class="box-line ys-flex-row-pad">
-                                <span class="left" style="flex: 0 0 140px; font-weight: 500;">{{ _('Sign-up page') }}</span>
-                                <span class="right ys-flex-row-1">
-                                    <label class="switch-small">
-                                        <input type="checkbox" id="signup_enabled" {% if signup.enabled %}checked{% endif %}>
-                                        <span class="slider-small round"></span>
-                                    </label>
-                                    <span id="signup-status" class="ys-ml-hint"></span>
-                                </span>
-                            </div>
-                        </div>
-                        <h4 class="ys-section-label ys-mt-15">{{ _('Simulations') }}</h4>
-                        {% for exp in signup.experiments %}
-                        <label class="signup-target">
-                            <input type="checkbox" class="signup-exp" value="{{ exp.id }}" {% if exp.selected %}checked{% endif %}>
-                            <span>{{ exp.name }}</span>
-                            <small class="signup-badge {{ 'is-on' if exp.active else 'is-off' }}">{{ _('Active') if exp.active else _('Not active') }}</small>
-                        </label>
-                        {% else %}
-                        <p class="ys-text-xs-mt">{{ _('No simulations yet.') }}</p>
-                        {% endfor %}
-                        {% if signup.modules is not none %}
-                        <h4 class="ys-section-label ys-mt-15">{{ _('Training modules') }}</h4>
-                        {% for mod in signup.modules %}
-                        <label class="signup-target">
-                            <input type="checkbox" class="signup-mod" value="{{ mod.uid }}" {% if mod.selected %}checked{% endif %}>
-                            <span>{{ mod.title }}</span>
-                            <small class="signup-badge {{ 'is-on' if (mod.active and mod.open_run) else 'is-off' }}">{% if mod.archived %}{{ _('Archived') }}{% elif not mod.open_run %}{{ _('No open run') }}{% else %}{{ _('Active') }}{% endif %}</small>
-                        </label>
-                        {% else %}
-                        <p class="ys-text-xs-mt">{{ _('No training modules yet.') }}</p>
-                        {% endfor %}
-                        {% endif %}
-                        <p class="ys-text-xs-mt">{{ _('Only simulations and modules that are active at the moment are offered to visitors; the sign-up link appears on the login page when at least one is available.') }}</p>
-                        <div id="signup-message" class="ys-hidden-chip"></div>
-                    </div>
-                </div>
-
                 <div class="misc-group-head"><span class="misc-group-icon"><i class="mdi mdi-update"></i></span><div><h3 class="misc-group-title">{{ _('Updates & privacy') }}</h3><p class="misc-group-sub">{{ _('Platform releases and anonymous usage data.') }}</p></div></div>
                 <div class="misc-grid misc-grid-2col">
                     <!-- System Updates -->

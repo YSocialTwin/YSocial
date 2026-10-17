@@ -52,7 +52,14 @@
                     <li><b>Select Users</b> - Hold Ctrl/Cmd to select multiple</li>
                     <li>Users will be able to access the experiment interface</li>
                 </ul>`,
-            position: 'overlay',
+            position: 'overlay'
+        },
+        {
+            id: 'self-registration',
+            selector: '#box-self-registration',
+            title: '🧑‍🤝‍🧑 Self-registration',
+            description: `<p>Let visitors <b>create their own account</b> from the login page. Switch the sign-up page on, then search and tick the <b>simulations</b> and <b>training modules</b> they can join; only the active ones are offered.</p>`,
+            position: 'left',
             isLast: true
         }
     ];
