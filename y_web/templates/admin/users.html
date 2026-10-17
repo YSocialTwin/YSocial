@@ -199,7 +199,7 @@
                         <div class="sr-list" id="signup-list">
                             {% for exp in signup.experiments %}
                             <label class="sr-row" data-kind="experiment" data-text="{{ (exp.name ~ ' ' ~ exp.platform)|lower }}">
-                                <input type="checkbox" class="signup-exp" value="{{ exp.id }}" {% if exp.selected %}checked{% endif %}>
+                                <span class="switch-small"><input type="checkbox" class="signup-exp" value="{{ exp.id }}" role="switch" aria-label="{{ exp.name }}" {% if exp.selected %}checked{% endif %}><span class="slider-small round"></span></span>
                                 <span class="sr-name">{{ exp.name }}</span>
                                 <span class="sr-tags">
                                     <span class="sr-tag is-sim">{{ _('Simulation') }}</span>
@@ -212,7 +212,7 @@
                             {% for mod in signup.modules %}
                             {% set live = mod.active and mod.open_run %}
                             <label class="sr-row" data-kind="training" data-text="{{ mod.title|lower }}">
-                                <input type="checkbox" class="signup-mod" value="{{ mod.uid }}" {% if mod.selected %}checked{% endif %}>
+                                <span class="switch-small"><input type="checkbox" class="signup-mod" value="{{ mod.uid }}" role="switch" aria-label="{{ mod.title }}" {% if mod.selected %}checked{% endif %}><span class="slider-small round"></span></span>
                                 <span class="sr-name">{{ mod.title }}</span>
                                 <span class="sr-tags">
                                     <span class="sr-tag is-training">{{ _('Training') }}</span>

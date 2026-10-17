@@ -111,6 +111,7 @@ def test_wiring_in_templates_and_routes():
     users_page = (ROOT / "templates/admin/users.html").read_text(encoding="utf-8")
     assert 'id="box-self-registration"' in users_page and "signup_enabled" in users_page
     assert "{% if signup is not none %}" in users_page and 'id="signup-search"' in users_page
+    assert users_page.count('role="switch"') == 2 and "slider-small" in users_page   # toggles, not plain checkboxes
     assert 'class="sr-tag is-platform"' in users_page and 'class="sr-tag is-training"' in users_page
     assert "box-self-registration" not in (ROOT / "templates/admin/miscellanea.html").read_text(encoding="utf-8")
     assert "/admin/signup_settings" in (ROOT / "static/assets/js/admin-users.js").read_text(encoding="utf-8")

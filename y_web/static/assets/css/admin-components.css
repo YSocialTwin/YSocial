@@ -3605,3 +3605,4 @@ input:checked + .slider:before {
 #box-self-registration .sr-empty { margin:0; padding:.6rem; font-size:.78rem; color:#7a8094; text-align:center; }
 #box-self-registration .sr-message { min-height:1rem; font-size:.74rem; }
 #box-self-registration .sr-message.is-ok { color:#1a7f45; } #box-self-registration .sr-message.is-error { color:#c0392b; }
+#box-self-registration .sr-row .switch-small { flex:none; margin:0; }
