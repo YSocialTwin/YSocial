@@ -37,6 +37,20 @@ Plugins are organized into two top-level categories:
     - `y_agents_plugins`
     - `Agent Memory` (`y_memory_subsystem`)
 
+### Agent Memory
+
+`Agent Memory` (`external/y_memory_subsystem`) provides the `yclient_memory` library the
+clients use for agent memory. YWeb adds its `src` folder to the `PYTHONPATH` of every
+process it launches (clients, HPC clients, ad hoc agents), so installing the plugin is
+enough: `yclient-memory` is no longer a YWeb requirement. The clients keep it in their own
+requirements for standalone use; if neither is present, enabling memory fails with a message
+that names the plugin.
+
+The memory texts follow the prompt language of the experiment (`en` or `it`). A run keeps
+the language it started with; memories already stored are not translated. Versions of the
+library older than 0.2.0 ignore the language and stay in English, with one warning in the
+client log. See the library's `docs/languages.md` to add a language.
+
 The experiment creation flow already uses these plugin states to determine which experiment types are available.
 
 ## Acquisition Model
