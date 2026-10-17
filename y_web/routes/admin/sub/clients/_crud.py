@@ -458,6 +458,8 @@ def _adhoc_agent_specs() -> list[dict]:
                 }
             parameters.append(prompt_override)
         spec["client_parameters"] = parameters
+    for spec in specs:  # identity never depends on the interface language
+        spec.setdefault("display_name_en", spec["display_name"])
     return specs
 
 

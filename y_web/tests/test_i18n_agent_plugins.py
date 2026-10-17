@@ -25,8 +25,8 @@ def test_agent_specs_follow_the_interface_language(agents_app, loader):
         english = _by_type(loader())
     with agents_app.test_request_context("/", headers={"Accept-Language": "it"}):
         italian = _by_type(loader())
-    if "stress_attacker" not in english:
-        pytest.skip("agent plugin not installed")
+    if "stress_attacker" not in english or english["stress_attacker"].get("repo_name") == "builtin":
+        pytest.skip("agent plugin not installed (built-in fallback specs have no catalog)")
     en, it = english["stress_attacker"], italian["stress_attacker"]
     # identity never depends on the language
     assert en["slug"] == it["slug"] and en["accepted_slugs"] == it["accepted_slugs"]
@@ -37,8 +37,8 @@ def test_agent_specs_follow_the_interface_language(agents_app, loader):
 def test_adhoc_parameter_labels_and_prompt_keys(agents_app):
     with agents_app.test_request_context("/", headers={"Accept-Language": "it"}):
         spec = _by_type(_adhoc_agent_specs()).get("propaganda")
-    if spec is None:
-        pytest.skip("agent plugin not installed")
+    if spec is None or spec.get("repo_name") == "builtin":
+        pytest.skip("agent plugin not installed (built-in fallback specs have no catalog)")
     labels = {p.get("label") for p in spec["client_parameters"]}
     assert "Budget giornaliero" in labels or "Numero massimo di bersagli simultanei" in labels
     # prompt text is an LLM prompt: it is never translated; the page matches on the English title
@@ -87,3 +87,14 @@ def test_plugin_sidebar_texts_are_translated(agents_app):
 def test_admin_sidebar_label_is_short_in_italian(agents_app):
     with agents_app.test_request_context("/", headers={"Accept-Language": "it"}):
         assert i18n.gettext("Admin") == "Admin"
+
+
+def test_builtin_fallback_specs_keep_an_english_identity(agents_app, tmp_path, monkeypatch):
+    """Without the external plugin repos (base CI) the built-in specs still carry ``display_name_en``."""
+    import y_web.routes.admin.sub.clients._crud as crud
+
+    monkeypatch.setattr(crud, "EXTERNAL_DIR", tmp_path / "no-external")
+    with agents_app.test_request_context("/", headers={"Accept-Language": "it"}):
+        specs = crud._adhoc_agent_specs()
+    assert specs and all(s["repo_name"] == "builtin" and s["display_name_en"] for s in specs)
+    assert {s["agent_type"]: s["display_name_en"] for s in specs}["stress_attacker"] == "Stress Attacker"
