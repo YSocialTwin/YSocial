@@ -523,6 +523,10 @@ def _forum_current_profile_pic(exp_id, forum_user=None):
 
 
 def _experiment_memory_enabled(exp_id):
+    from y_web.src.system.memory_plugin import agent_memory_plugin_installed
+
+    if not agent_memory_plugin_installed():
+        return False
     exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if not exp or getattr(exp, "platform_type", "") not in {
         "forum",

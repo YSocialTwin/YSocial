@@ -180,6 +180,7 @@
                         </form>
                     </div>
 
+{% if memory_plugin_installed %}
                     <div class="dashboard-box" id="box-memory-config">
                         <h3 class="title is-5 is-thin">{{ _('Client Memory') }}</h3>
                         <form action="/admin/update_forum_client_settings/{{ client.id }}" method="POST">
@@ -195,6 +196,7 @@
                         <div class="button-wrap"><button class="button is-solid primary-button is-fullwidth">{{ _('Save Memory') }}</button></div>
                         </form>
                     </div>
+{% endif %}
 
                     <div class="dashboard-box" id="box-archetype-config">
                         <h3 class="title is-5 is-thin">{{ _('Agent Archetypes') }}</h3>

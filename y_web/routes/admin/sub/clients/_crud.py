@@ -22,6 +22,7 @@ from sqlalchemy import delete, select
 
 from y_web import db
 from y_web.i18n import gettext as _
+from y_web.src.system.memory_plugin import agent_memory_plugin_installed
 from y_web.routes.admin.sub.experiments._helpers import (
     _experiment_configuration_update_required,
     _experiment_uses_llm_agents,
@@ -1651,7 +1652,9 @@ def _build_client_creation_context(idexp, recsys_mode):
         experiment_opinion_dynamics_enabled = (
             _opinion_dynamics_enabled_for_client_creation(exp)
         )
-        memory_configuration_supported = bool(llm_agents_enabled)
+        memory_configuration_supported = bool(llm_agents_enabled) and (
+            agent_memory_plugin_installed()
+        )
 
     if exp is not None and getattr(exp, "platform_type", "microblogging") == "forum":
         latest_client = db.session.scalars(
@@ -6585,6 +6588,9 @@ def _opinion_dynamics_enabled_for_client_creation(experiment):
 def _memory_enabled_for_client_creation(experiment):
     """Resolve whether experiment-level memory is enabled for client creation flows."""
     if experiment is None:
+        return False
+
+    if not agent_memory_plugin_installed():
         return False
 
     supported = bool(bool(_experiment_uses_llm_agents(experiment)))

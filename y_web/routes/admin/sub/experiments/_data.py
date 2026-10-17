@@ -37,6 +37,7 @@ from sqlalchemy import select
 
 from y_web import db  # , app
 from y_web.i18n import gettext as _
+from y_web.src.system.memory_plugin import agent_memory_plugin_installed
 from y_web.src.content.avatars import normalize_forum_avatar_mode
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
@@ -623,7 +624,9 @@ def experiment_details(uid):
     has_agent_plugins_installed = False
     adhoc_clients = []
     memory_module_enabled = False
-    memory_configuration_supported = bool(llm_agents_enabled_effective)
+    memory_configuration_supported = bool(llm_agents_enabled_effective) and (
+        agent_memory_plugin_installed()
+    )
     toxicity_annotation_enabled = bool(
         experiment.annotations and "toxicity" in experiment.annotations
     )
@@ -972,9 +975,14 @@ def update_experiment_config(uid):
             "warning",
         )
 
-    memory_configuration_supported = bool(llm_agents_enabled_effective)
+    memory_configuration_supported = bool(llm_agents_enabled_effective) and (
+        agent_memory_plugin_installed()
+    )
     if memory_configuration_supported:
         memory_enabled = _is_checked("memory_enabled")
+    elif bool(llm_agents_enabled_effective):
+        # Plugin missing: keep what is stored, the setting is not offered.
+        memory_enabled = None
     else:
         memory_enabled = False
 
@@ -1089,7 +1097,7 @@ def update_experiment_config(uid):
                     ] = opinion_dynamics_enabled
                     if not isinstance(client_config.get("agents"), dict):
                         client_config["agents"] = {}
-                    if not memory_enabled:
+                    if memory_enabled is False:
                         client_config["agents"]["memory_enabled"] = False
                     client_config = sync_stress_reward_client_config(
                         client_config, stress_reward_config

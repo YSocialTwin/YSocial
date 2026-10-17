@@ -170,7 +170,8 @@
                                     </div>
 
                                     <!-- Agent Memory Section -->
-                                    <div id="section-memory" class="tutorial-section">
+                                    {% if memory_configuration_supported %}
+<div id="section-memory" class="tutorial-section">
                                         <div class="form-section-header">{{ _('Agent Memory (Run-Scoped)') }}</div>
                                         <div class="form-section-description">
                                             {{ _('Configure optional client-side memory retrieval and summarization for HPC runs. Memory is disabled by default.') }}
@@ -248,7 +249,8 @@
                                     </div>
 
                                     <!-- Image Generation Model Section -->
-                                    <div id="section-transformer-model" class="tutorial-section">
+                                    {% endif %}
+<div id="section-transformer-model" class="tutorial-section">
                                         <div class="form-section-header">{{ _('Image Generation Model (Transformer-based)') }}</div>
                                         <div class="form-section-description">
                                             {{ _('Configure the diffusion/transformer model used by agents to dynamically generate images during the simulation.') }}

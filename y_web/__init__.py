@@ -325,6 +325,13 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
             return dict(feed_home_url="/feed")
 
     @app.context_processor
+    def inject_memory_plugin_installed():
+        """Memory settings are shown only while the Agent Memory plugin is installed."""
+        from y_web.src.system.memory_plugin import agent_memory_plugin_installed
+
+        return dict(memory_plugin_installed=agent_memory_plugin_installed())
+
+    @app.context_processor
     def inject_experiment_memory_enabled():
         """Inject whether the active experiment has memory-enabled chat."""
         from y_web.routes.social.helpers import _experiment_memory_enabled

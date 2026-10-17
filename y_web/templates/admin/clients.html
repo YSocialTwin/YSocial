@@ -188,7 +188,8 @@
                                     </div>
                                     </div><!-- End section-simulation-params -->
 
-                                    <div id="section-memory" class="tutorial-section">
+                                    {% if memory_configuration_supported %}
+<div id="section-memory" class="tutorial-section">
                                     <div class="form-section-header">{{ _('Agent Memory (Run-Scoped)') }}</div>
                                     <div class="form-section-description">
                                         {{ _('Configure optional memory retrieval and summarization for Standard clients. Memory is disabled by default.') }}
@@ -254,6 +255,7 @@
                                         </div>
                                     </div>
                                     </div><!-- End section-memory -->
+{% endif %}
                                     <div id="section-actions-relevance" class="tutorial-section">
                                     <div class="form-section-header">{{ _("Agents' Actions Relevance") }}</div>
                                     <div class="form-section-description">
