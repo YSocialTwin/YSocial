@@ -1169,3 +1169,28 @@ def test_agent_memory_source_absent_leaves_env_alone(tmp_path, monkeypatch):
     monkeypatch.setattr(subprocess_env, "get_writable_path", lambda: str(tmp_path))
     monkeypatch.setenv("PYTHONPATH", "/somewhere")
     assert subprocess_env.build_subprocess_env()["PYTHONPATH"] == "/somewhere"
+
+
+import os  # noqa: E402
+
+
+def test_child_process_imports_yclient_memory_from_the_plugin_checkout():
+    """Real subprocess: the child resolves ``yclient_memory`` from the plugin, not from pip."""
+    import subprocess
+    import sys
+
+    from y_web.src.simulation import subprocess_env
+
+    src = subprocess_env.agent_memory_source_dir()
+    if not src:
+        pytest.skip("Agent Memory plugin is not checked out in external/")
+    env = subprocess_env.build_subprocess_env()
+    code = "import yclient_memory, sys; print(yclient_memory.__file__)"
+    result = subprocess.run(
+        [sys.executable, "-c", code],
+        env={"PYTHONPATH": env["PYTHONPATH"], "PATH": os.environ.get("PATH", "")},
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    assert os.path.realpath(result.stdout.strip()).startswith(os.path.realpath(src))
