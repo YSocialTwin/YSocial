@@ -85,7 +85,9 @@ def test_application_start_applies_the_migration(core_app):  # noqa: F811
 
 def test_filter_bubble_row_migration_tolerates_a_database_without_the_table():
     """0003 seeds ``content_recsys``; on a database that does not have the table yet it must do nothing, not crash."""
-    spec = importlib.util.spec_from_file_location("m0003", VERSIONS / "0003_add_filter_bubble_recsys_row.py")
+    spec = importlib.util.spec_from_file_location(
+        "m0003", VERSIONS / "0003_add_filter_bubble_recsys_row.py"
+    )
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     engine = sa.create_engine("sqlite://")
@@ -95,7 +97,16 @@ def test_filter_bubble_row_migration_tolerates_a_database_without_the_table():
             module.upgrade()
             module.downgrade()
         assert "content_recsys" not in sa.inspect(conn).get_table_names()
-        conn.execute(sa.text("CREATE TABLE content_recsys (name TEXT, value TEXT, category TEXT, enabled TEXT)"))
+        conn.execute(
+            sa.text(
+                "CREATE TABLE content_recsys (name TEXT, value TEXT, category TEXT, enabled TEXT)"
+            )
+        )
         with Operations.context(MigrationContext.configure(conn)):
             module.upgrade()
-        assert conn.execute(sa.text("SELECT COUNT(*) FROM content_recsys WHERE name='FilterBubble'")).scalar() == 1
+        assert (
+            conn.execute(
+                sa.text("SELECT COUNT(*) FROM content_recsys WHERE name='FilterBubble'")
+            ).scalar()
+            == 1
+        )
