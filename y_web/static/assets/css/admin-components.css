@@ -3609,7 +3609,9 @@ input:checked + .slider:before {
 
 /* Prompt language selector: a compact box of its own above the prompts form */
 .dashboard-box.ys-prompt-language { padding: 0.875rem 1.25rem; }
-.ys-prompt-language-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.ys-prompt-language-title { margin: 0; flex: 0 0 auto; }
-.ys-prompt-language-select { flex: 0 1 240px; min-width: 160px; }
-.ys-prompt-language-note { margin: 8px 0 0; }
+.ys-prompt-language .ys-prompt-language-row { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+.ys-prompt-language .ys-prompt-language-title { margin: 0; flex: 0 0 auto; font-size: 1rem; font-weight: 500; line-height: 2.5rem; }
+.ys-prompt-language .ys-prompt-language-select { flex: 0 1 220px; min-width: 150px; height: 2.5rem; }
+.ys-prompt-language .ys-prompt-language-select select { height: 2.5rem; font-size: 0.95rem; padding-top: 0; padding-bottom: 0; width: 100%; }
+.ys-prompt-language .button { height: 2.5rem; font-size: 0.95rem; padding: 0 1.25rem; margin: 0; }
+.ys-prompt-language .ys-prompt-language-note { margin: 0.5rem 0 0; font-size: 0.85rem; line-height: 1.4; }
