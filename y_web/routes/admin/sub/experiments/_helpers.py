@@ -116,7 +116,9 @@ from ._blueprint import (
     _schedule_check_lock,
     experiments,
 )
-from y_web.i18n import gettext as _
+from flask_babel import format_datetime
+
+from y_web.i18n import N_, gettext as _
 
 DEFAULT_STRESS_REWARD_SYSTEM = {
     "coupling": {
@@ -993,6 +995,64 @@ def _read_forum_avatar_settings(experiment_dir):
     return settings
 
 
+_NOTIFICATION_STATUS_LABELS = {
+    "ready": N_("ready"),
+    "failed": N_("failed"),
+    "processing": N_("processing"),
+    "cancelled": N_("cancelled"),
+}
+
+# Notification texts are stored in the database in English (the msgid) and
+# translated when they are shown, in the language of the viewing admin.
+_NOTIFICATION_TEXTS = [
+    N_("Detoxify Model Download"),
+    N_("Bulk export experiments"),
+    N_("Preparing experiment archive in background..."),
+    N_("Your experiment archive is ready to download."),
+    N_("Your bulk experiments archive is ready to download."),
+    N_("Archive generation failed."),
+    N_("Bulk archive generation failed."),
+    N_("Notification cancelled."),
+    N_("Download file is no longer available."),
+    N_("Detoxify model download in progress."),
+    N_("Detoxify model download failed."),
+]
+_NOTIFICATION_PATTERNS = [
+    (re.compile(r"^Export (?P<name>.+)$", re.S), N_("Export %(name)s")),
+    (re.compile(r"^Experiment shared: (?P<name>.+)$", re.S), N_("Experiment shared: %(name)s")),
+    (re.compile(r"^Experiment group shared: (?P<name>.+)$", re.S), N_("Experiment group shared: %(name)s")),
+    (
+        re.compile(r"^Preparing archive for (?P<count>\d+) experiment\(s\) in background\.\.\.$"),
+        N_("Preparing archive for %(count)s experiment(s) in background..."),
+    ),
+    (
+        re.compile(r"^(?P<user>.+) granted you visibility to experiment '(?P<name>.+)'\.$", re.S),
+        N_("%(user)s granted you visibility to experiment '%(name)s'."),
+    ),
+    (
+        re.compile(r"^(?P<user>.+) granted you visibility to group '(?P<name>.+)'\.$", re.S),
+        N_("%(user)s granted you visibility to group '%(name)s'."),
+    ),
+    (
+        re.compile(r"^Detoxify model is ready at (?P<path>.+?)\. Future simulations will reuse this local cache\.?$", re.S),
+        N_("Detoxify model is ready at %(path)s. Future simulations will reuse this local cache."),
+    ),
+]
+
+
+def _localize_notification_text(text):
+    """Translate a stored (English) notification title or message for display."""
+    if not text:
+        return text
+    if text in _NOTIFICATION_TEXTS:
+        return _(text)
+    for pattern, msgid in _NOTIFICATION_PATTERNS:
+        match = pattern.match(text)
+        if match:
+            return _(msgid, **match.groupdict())
+    return text
+
+
 def _serialize_download_notification(notification):
     """Convert notification model to JSON-safe structure."""
     clean_message, related_exp_ids = _extract_related_experiment_ids(
@@ -1025,9 +1085,19 @@ def _serialize_download_notification(notification):
     )
     return {
         "id": notification.id,
-        "title": notification.title,
-        "message": clean_message,
+        "title": _localize_notification_text(notification.title),
+        "message": _localize_notification_text(clean_message),
         "status": notification.status,
+        "status_label": (
+            _(_NOTIFICATION_STATUS_LABELS[notification.status])
+            if notification.status in _NOTIFICATION_STATUS_LABELS
+            else notification.status
+        ),
+        "created_label": (
+            format_datetime(notification.created_at, "short")
+            if notification.created_at
+            else ""
+        ),
         "resource_name": notification.resource_name,
         "is_read": bool(notification.is_read),
         "created_at": (

@@ -465,7 +465,7 @@ def visibility_settings_add_experiment():
                 status="ready",
                 related_exp_ids=[experiment.idexp],
             )
-        success_msg = f"Granted access to {changed} researcher(s) for experiment '{experiment.exp_name}'."
+        success_msg = _("Granted access to %(count)s researcher(s) for experiment '%(name)s'.", count=changed, name=experiment.exp_name)
     else:
         deleted_count = (
             User_Experiment.query.filter(User_Experiment.exp_id == experiment.idexp)
@@ -473,7 +473,7 @@ def visibility_settings_add_experiment():
             .delete(synchronize_session=False)
         )
         changed = int(deleted_count or 0)
-        success_msg = f"Revoked access for {changed} researcher(s) from experiment '{experiment.exp_name}'."
+        success_msg = _("Revoked access for %(count)s researcher(s) from experiment '%(name)s'.", count=changed, name=experiment.exp_name)
 
     db.session.commit()
     flash(success_msg, "success")
@@ -540,7 +540,7 @@ def visibility_settings_add_group():
                 message=f"{user.username} granted you visibility to group '{group_name}'.",
                 status="ready",
             )
-        success_msg = f"Granted group '{group_name}' visibility to selected researchers ({changed} new assignment(s))."
+        success_msg = _("Granted group '%(group)s' visibility to selected researchers (%(count)s new assignment(s)).", group=group_name, count=changed)
     else:
         group_exp_ids = [exp.idexp for exp in group_experiments]
         deleted_count = (
@@ -549,7 +549,7 @@ def visibility_settings_add_group():
             .delete(synchronize_session=False)
         )
         changed = int(deleted_count or 0)
-        success_msg = f"Revoked group '{group_name}' visibility from selected researchers ({changed} assignment(s) removed)."
+        success_msg = _("Revoked group '%(group)s' visibility from selected researchers (%(count)s assignment(s) removed).", group=group_name, count=changed)
 
     db.session.commit()
     flash(success_msg, "success")

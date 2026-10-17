@@ -236,7 +236,7 @@ function renderDownloadNotifications(items, unreadCount) {
                 '<div class="dropdown-item download-notification-item' + unreadClass + '">' +
                 '<div class="download-notification-title">' + escapeHtml(item.title) + '</div>' +
                 '<div class="download-notification-meta">' +
-                '<span class="tag ' + statusTagClass + '">' + escapeHtml(item.status) + '</span>' +
+                '<span class="tag ' + statusTagClass + '">' + escapeHtml(item.status_label || item.status) + '</span>' +
                 action +
                 '</div>' +
                 '<div class="download-notification-message">' + escapeHtml(item.message) + '</div>' +

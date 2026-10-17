@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 09:11+0000\n"
+"POT-Creation-Date: 2026-10-17 09:13+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -216,6 +216,14 @@ msgstr "%(user)s (%(n)s raccomandazioni)"
 #, python-format
 msgid "%(user)s (deg %(n)s)"
 msgstr "%(user)s (grado %(n)s)"
+
+#, python-format
+msgid "%(user)s granted you visibility to experiment '%(name)s'."
+msgstr "%(user)s ti ha concesso la visibilità sull'esperimento «%(name)s»."
+
+#, python-format
+msgid "%(user)s granted you visibility to group '%(name)s'."
+msgstr "%(user)s ti ha concesso la visibilità sul gruppo «%(name)s»."
 
 #, python-format
 msgid "%(username)s avatar"
@@ -1071,6 +1079,9 @@ msgstr ""
 "Le percentuali degli archetipi devono sommare a 100%% (somma attuale: "
 "%(archetype_sum)s%%)"
 
+msgid "Archive generation failed."
+msgstr "Generazione dell'archivio non riuscita."
+
 msgid "Archive generation started. You will be notified when the file is ready."
 msgstr ""
 "Generazione dell'archivio avviata. Riceverai una notifica quando il file "
@@ -1490,12 +1501,18 @@ msgstr "Assegna in blocco gli utenti all'esperimento"
 msgid "Bulk Create Users"
 msgstr "Crea utenti in blocco"
 
+msgid "Bulk archive generation failed."
+msgstr "Generazione dell'archivio multiplo non riuscita."
+
 msgid ""
 "Bulk archive generation started. You will be notified when the file is "
 "ready."
 msgstr ""
 "Generazione massiva degli archivi avviata. Riceverai una notifica quando "
 "il file sarà pronto."
+
+msgid "Bulk export experiments"
+msgstr "Esportazione multipla di esperimenti"
 
 msgid "Business Hours (9-17)"
 msgstr "Orario d'ufficio (9-17)"
@@ -3189,6 +3206,23 @@ msgstr "Dettagli:"
 msgid "Detoxify"
 msgstr "Detoxify"
 
+msgid "Detoxify Model Download"
+msgstr "Download del modello Detoxify"
+
+msgid "Detoxify model download failed."
+msgstr "Download del modello Detoxify non riuscito."
+
+msgid "Detoxify model download in progress."
+msgstr "Download del modello Detoxify in corso."
+
+#, python-format
+msgid ""
+"Detoxify model is ready at %(path)s. Future simulations will reuse this "
+"local cache."
+msgstr ""
+"Il modello Detoxify è pronto in %(path)s. Le prossime simulazioni "
+"riutilizzeranno questa cache locale."
+
 msgid ""
 "Detoxify model ready. New simulations will reuse this local cache "
 "automatically."
@@ -3940,6 +3974,10 @@ msgstr "Configurazione dell'esperimento aggiornata."
 msgid "Experiment created successfully!"
 msgstr "Esperimento creato con successo!"
 
+#, python-format
+msgid "Experiment group shared: %(name)s"
+msgstr "Gruppo di esperimenti condiviso: %(name)s"
+
 msgid "Experiment identification and settings."
 msgstr "Identificazione e impostazioni dell'esperimento."
 
@@ -3978,6 +4016,10 @@ msgstr "Proprietario dell'esperimento"
 #, python-format
 msgid "Experiment renamed to '%(new_exp_name)s'."
 msgstr "Esperimento rinominato in '%(new_exp_name)s'."
+
+#, python-format
+msgid "Experiment shared: %(name)s"
+msgstr "Esperimento condiviso: %(name)s"
 
 msgid "Experiment topics updated."
 msgstr "Argomenti dell'esperimento aggiornati."
@@ -4059,6 +4101,10 @@ msgstr "Esponenziale"
 
 msgid "Exponential decay over simulation rounds. 0 = disabled."
 msgstr "Decadimento esponenziale nei round di simulazione. 0 = disattivato."
+
+#, python-format
+msgid "Export %(name)s"
+msgstr "Esporta %(name)s"
 
 msgid "Extend Simulation"
 msgstr "Estendi la simulazione"
@@ -4609,6 +4655,18 @@ msgstr ""
 
 msgid "Grant this user access to participate in an experiment."
 msgstr "Consenti a questo utente di partecipare a un esperimento."
+
+#, python-format
+msgid "Granted access to %(count)s researcher(s) for experiment '%(name)s'."
+msgstr "Accesso concesso a %(count)s ricercatore/i per l'esperimento «%(name)s»."
+
+#, python-format
+msgid ""
+"Granted group '%(group)s' visibility to selected researchers (%(count)s "
+"new assignment(s))."
+msgstr ""
+"Visibilità del gruppo «%(group)s» concessa ai ricercatori selezionati "
+"(%(count)s nuove assegnazioni)."
 
 msgid "Graph Proximity"
 msgstr "Prossimità nel grafo"
@@ -6606,6 +6664,9 @@ msgstr "Avviso"
 msgid "Notice:"
 msgstr "Avviso:"
 
+msgid "Notification cancelled."
+msgstr "Notifica annullata."
+
 msgid "Notification menu"
 msgstr "Menu delle notifiche"
 
@@ -7497,6 +7558,13 @@ msgstr "Cluster a legge di potenza"
 msgid "Preferential Attachment"
 msgstr "Attaccamento preferenziale"
 
+#, python-format
+msgid "Preparing archive for %(count)s experiment(s) in background..."
+msgstr "Preparazione in background dell'archivio per %(count)s esperimento/i..."
+
+msgid "Preparing experiment archive in background..."
+msgstr "Preparazione dell'archivio dell'esperimento in background..."
+
 msgid ""
 "Prevents data loss during log rotation by periodically reading logs from "
 "active experiments."
@@ -8165,6 +8233,18 @@ msgstr "Revoca la visibilità al gruppo"
 
 msgid "Revoke Visibility"
 msgstr "Revoca la visibilità"
+
+#, python-format
+msgid "Revoked access for %(count)s researcher(s) from experiment '%(name)s'."
+msgstr "Accesso revocato a %(count)s ricercatore/i per l'esperimento «%(name)s»."
+
+#, python-format
+msgid ""
+"Revoked group '%(group)s' visibility from selected researchers (%(count)s"
+" assignment(s) removed)."
+msgstr ""
+"Visibilità del gruppo «%(group)s» revocata ai ricercatori selezionati "
+"(%(count)s assegnazioni rimosse)."
 
 msgid "Reward Distribution"
 msgstr "Distribuzione della ricompensa"
@@ -11347,6 +11427,12 @@ msgstr "L'installazione di YSocial è aggiornata."
 msgid "Your annotations"
 msgstr "Le tue annotazioni"
 
+msgid "Your bulk experiments archive is ready to download."
+msgstr "L'archivio multiplo degli esperimenti è pronto per il download."
+
+msgid "Your experiment archive is ready to download."
+msgstr "L'archivio dell'esperimento è pronto per il download."
+
 msgid "Your recommender system"
 msgstr "Il tuo sistema di raccomandazione"
 
@@ -11395,6 +11481,9 @@ msgstr "rilevamento automatico dai log"
 msgid "branch %(name)s"
 msgstr "branch %(name)s"
 
+msgid "cancelled"
+msgstr "annullata"
+
 #, python-format
 msgid "dependencies %(deps)s, validation %(validation)s"
 msgstr "dipendenze %(deps)s, convalida %(validation)s"
@@ -11425,6 +11514,9 @@ msgstr "experiment_id è obbligatorio"
 
 msgid "experiments_per_group is required"
 msgstr "experiments_per_group è obbligatorio"
+
+msgid "failed"
+msgstr "non riuscita"
 
 msgid "failure"
 msgstr "fallita"
@@ -11499,6 +11591,9 @@ msgstr "oppure illimitato"
 msgid "prerelease"
 msgstr "pre-release"
 
+msgid "processing"
+msgstr "in corso"
+
 #, python-format
 msgid "r/%(subreddit)s does not exist."
 msgstr "r/%(subreddit)s non esiste."
@@ -11506,6 +11601,9 @@ msgstr "r/%(subreddit)s non esiste."
 #, python-format
 msgid "r/%(subreddit_input)s does not exist."
 msgstr "r/%(subreddit_input)s non esiste."
+
+msgid "ready"
+msgstr "pronta"
 
 msgid "recommendation"
 msgstr "raccomandazione"

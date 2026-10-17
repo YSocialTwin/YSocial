@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 09:11+0000\n"
+"POT-Creation-Date: 2026-10-17 09:13+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -194,6 +194,14 @@ msgstr ""
 
 #, python-format
 msgid "%(user)s (deg %(n)s)"
+msgstr ""
+
+#, python-format
+msgid "%(user)s granted you visibility to experiment '%(name)s'."
+msgstr ""
+
+#, python-format
+msgid "%(user)s granted you visibility to group '%(name)s'."
 msgstr ""
 
 #, python-format
@@ -979,6 +987,9 @@ msgstr ""
 msgid "Archetype percentages must sum to 100%% (current sum: %(archetype_sum)s%%)"
 msgstr ""
 
+msgid "Archive generation failed."
+msgstr ""
+
 msgid "Archive generation started. You will be notified when the file is ready."
 msgstr ""
 
@@ -1379,9 +1390,15 @@ msgstr ""
 msgid "Bulk Create Users"
 msgstr ""
 
+msgid "Bulk archive generation failed."
+msgstr ""
+
 msgid ""
 "Bulk archive generation started. You will be notified when the file is "
 "ready."
+msgstr ""
+
+msgid "Bulk export experiments"
 msgstr ""
 
 msgid "Business Hours (9-17)"
@@ -2828,6 +2845,21 @@ msgstr ""
 msgid "Detoxify"
 msgstr ""
 
+msgid "Detoxify Model Download"
+msgstr ""
+
+msgid "Detoxify model download failed."
+msgstr ""
+
+msgid "Detoxify model download in progress."
+msgstr ""
+
+#, python-format
+msgid ""
+"Detoxify model is ready at %(path)s. Future simulations will reuse this "
+"local cache."
+msgstr ""
+
 msgid ""
 "Detoxify model ready. New simulations will reuse this local cache "
 "automatically."
@@ -3510,6 +3542,10 @@ msgstr ""
 msgid "Experiment created successfully!"
 msgstr ""
 
+#, python-format
+msgid "Experiment group shared: %(name)s"
+msgstr ""
+
 msgid "Experiment identification and settings."
 msgstr ""
 
@@ -3547,6 +3583,10 @@ msgstr ""
 
 #, python-format
 msgid "Experiment renamed to '%(new_exp_name)s'."
+msgstr ""
+
+#, python-format
+msgid "Experiment shared: %(name)s"
 msgstr ""
 
 msgid "Experiment topics updated."
@@ -3619,6 +3659,10 @@ msgid "Exponential"
 msgstr ""
 
 msgid "Exponential decay over simulation rounds. 0 = disabled."
+msgstr ""
+
+#, python-format
+msgid "Export %(name)s"
 msgstr ""
 
 msgid "Extend Simulation"
@@ -4132,6 +4176,16 @@ msgid ""
 msgstr ""
 
 msgid "Grant this user access to participate in an experiment."
+msgstr ""
+
+#, python-format
+msgid "Granted access to %(count)s researcher(s) for experiment '%(name)s'."
+msgstr ""
+
+#, python-format
+msgid ""
+"Granted group '%(group)s' visibility to selected researchers (%(count)s "
+"new assignment(s))."
 msgstr ""
 
 msgid "Graph Proximity"
@@ -5998,6 +6052,9 @@ msgstr ""
 msgid "Notice:"
 msgstr ""
 
+msgid "Notification cancelled."
+msgstr ""
+
 msgid "Notification menu"
 msgstr ""
 
@@ -6798,6 +6855,13 @@ msgstr ""
 msgid "Preferential Attachment"
 msgstr ""
 
+#, python-format
+msgid "Preparing archive for %(count)s experiment(s) in background..."
+msgstr ""
+
+msgid "Preparing experiment archive in background..."
+msgstr ""
+
 msgid ""
 "Prevents data loss during log rotation by periodically reading logs from "
 "active experiments."
@@ -7435,6 +7499,16 @@ msgid "Revoke Group Visibility"
 msgstr ""
 
 msgid "Revoke Visibility"
+msgstr ""
+
+#, python-format
+msgid "Revoked access for %(count)s researcher(s) from experiment '%(name)s'."
+msgstr ""
+
+#, python-format
+msgid ""
+"Revoked group '%(group)s' visibility from selected researchers (%(count)s"
+" assignment(s) removed)."
 msgstr ""
 
 msgid "Reward Distribution"
@@ -10270,6 +10344,12 @@ msgstr ""
 msgid "Your annotations"
 msgstr ""
 
+msgid "Your bulk experiments archive is ready to download."
+msgstr ""
+
+msgid "Your experiment archive is ready to download."
+msgstr ""
+
 msgid "Your recommender system"
 msgstr ""
 
@@ -10316,6 +10396,9 @@ msgstr ""
 msgid "branch %(name)s"
 msgstr ""
 
+msgid "cancelled"
+msgstr ""
+
 #, python-format
 msgid "dependencies %(deps)s, validation %(validation)s"
 msgstr ""
@@ -10345,6 +10428,9 @@ msgid "experiment_id is required"
 msgstr ""
 
 msgid "experiments_per_group is required"
+msgstr ""
+
+msgid "failed"
 msgstr ""
 
 msgid "failure"
@@ -10418,12 +10504,18 @@ msgstr ""
 msgid "prerelease"
 msgstr ""
 
+msgid "processing"
+msgstr ""
+
 #, python-format
 msgid "r/%(subreddit)s does not exist."
 msgstr ""
 
 #, python-format
 msgid "r/%(subreddit_input)s does not exist."
+msgstr ""
+
+msgid "ready"
 msgstr ""
 
 msgid "recommendation"
