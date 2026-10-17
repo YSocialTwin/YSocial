@@ -27,6 +27,7 @@ from sqlalchemy.sql.expression import func
 from werkzeug.security import generate_password_hash
 
 from y_web import db
+from y_web.i18n import gettext as _
 from y_web.routes.admin.sub.experiments._frontend_settings import _load_recsys_options
 from y_web.routes.social._blueprint import main
 from y_web.routes.social.helpers import (
@@ -84,7 +85,6 @@ from y_web.src.recsys.content_recsys import (
     is_supported_content_recsys_mode,
 )
 from y_web.src.system.path_utils import get_writable_path
-from y_web.i18n import gettext as _
 
 
 def _latest_follow_action(*, follower_id, user_id):
@@ -616,7 +616,15 @@ def edit_profile(exp_id, user_id):
         # Forum: a user may only edit their own profile; no topics/opinions
         # and no recommender selection on this platform.
         if str(logged_id) != str(user_id):
-            return redirect(url_for("main.profile_logged", exp_id=exp_id, user_id=logged_id, mode="recent", page=1))
+            return redirect(
+                url_for(
+                    "main.profile_logged",
+                    exp_id=exp_id,
+                    user_id=logged_id,
+                    mode="recent",
+                    page=1,
+                )
+            )
         return render_template(
             "forum/edit_profile.html",
             user=user,
@@ -809,11 +817,15 @@ def update_profile_data(exp_id, user_id):
     cover_image = request.form.get("cover_image")
     if "profile_pic" in request.form:
         if user.is_page == 1:
-            page = db.session.scalars(select(Page).filter_by(name=user.username)).first()
+            page = db.session.scalars(
+                select(Page).filter_by(name=user.username)
+            ).first()
             if page is not None:
                 page.logo = profile_pic
         else:
-            agent = db.session.scalars(select(Agent).filter_by(name=user.username)).first()
+            agent = db.session.scalars(
+                select(Agent).filter_by(name=user.username)
+            ).first()
             if agent is not None:
                 agent.profile_pic = profile_pic
 

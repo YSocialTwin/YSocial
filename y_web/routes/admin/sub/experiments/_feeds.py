@@ -36,6 +36,7 @@ from flask_login import current_user, login_required, login_user
 from sqlalchemy import select
 
 from y_web import db  # , app
+from y_web.i18n import gettext as _
 from y_web.src.content.avatars import normalize_forum_avatar_mode
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
@@ -130,7 +131,6 @@ from ._helpers import (
     _read_experiment_embedding_settings,
     _read_feed_with_headers,
 )
-from y_web.i18n import gettext as _
 
 FORUM_IMAGE_FEED_INTERESTS = sorted(
     [
@@ -408,7 +408,9 @@ def update_rss_feeds(uid):
         and int(getattr(experiment, "running", 0) or 0) == 1
     ):
         flash(
-            _("The updated forum feed assignment has been saved. Running clients will use the new feeds after they are restarted."),
+            _(
+                "The updated forum feed assignment has been saved. Running clients will use the new feeds after they are restarted."
+            ),
             "info",
         )
     flash(_("Forum feed assignments updated successfully."), "success")
@@ -436,7 +438,10 @@ def parse_rss_feed():
             return jsonify({"error": _("Invalid RSS feed URL")}), 400
         return jsonify(parsed_feed)
     except HTTPError as exc:
-        return jsonify({"error": _("Feed source returned HTTP %(code)s.", code=exc.code)}), 400
+        return (
+            jsonify({"error": _("Feed source returned HTTP %(code)s.", code=exc.code)}),
+            400,
+        )
     except URLError:
         return jsonify({"error": _("Feed source could not be reached.")}), 400
     except Exception as exc:
@@ -738,7 +743,9 @@ def update_image_feeds(uid):
         and int(getattr(experiment, "running", 0) or 0) == 1
     ):
         flash(
-            _("The updated image feed assignment has been saved. Running clients will use the new feeds after they are restarted."),
+            _(
+                "The updated image feed assignment has been saved. Running clients will use the new feeds after they are restarted."
+            ),
             "info",
         )
     flash(_("Image feeds updated successfully."), "success")
@@ -859,7 +866,13 @@ def create_forum_image_resource():
         )
     except HTTPError as exc:
         if exc.code == 404:
-            flash(_("r/%(subreddit_input)s does not exist.", subreddit_input=subreddit_input), "error")
+            flash(
+                _(
+                    "r/%(subreddit_input)s does not exist.",
+                    subreddit_input=subreddit_input,
+                ),
+                "error",
+            )
         else:
             flash(_("Reddit returned HTTP %(code)s.", code=exc.code), "error")
         return redirect("/admin/forum_image_resources")
@@ -922,12 +935,21 @@ def parse_image_feed():
         return jsonify({"error": str(exc)}), 400
     except HTTPError as exc:
         if exc.code == 404:
-            return jsonify({"error": _("r/%(subreddit)s does not exist.", subreddit=subreddit)}), 400
+            return (
+                jsonify(
+                    {"error": _("r/%(subreddit)s does not exist.", subreddit=subreddit)}
+                ),
+                400,
+            )
         return (
             jsonify(
                 {
                     "error": (
-                        _("Reddit returned HTTP %(code)s while loading r/%(subreddit)s. Retry later.", code=exc.code, subreddit=subreddit)
+                        _(
+                            "Reddit returned HTTP %(code)s while loading r/%(subreddit)s. Retry later.",
+                            code=exc.code,
+                            subreddit=subreddit,
+                        )
                     )
                 }
             ),
@@ -1032,7 +1054,9 @@ def update_embedding_settings(uid):
                 request.referrer or url_for("experiments.embedding_settings", uid=uid)
             )
         if not model:
-            flash(_("Select an embedding model before saving the configuration."), "error")
+            flash(
+                _("Select an embedding model before saving the configuration."), "error"
+            )
             return redirect(
                 request.referrer or url_for("experiments.embedding_settings", uid=uid)
             )

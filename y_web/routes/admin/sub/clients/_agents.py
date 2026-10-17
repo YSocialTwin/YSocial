@@ -8,6 +8,7 @@ from flask_login import current_user, login_required
 from sqlalchemy import select
 
 from y_web import db
+from y_web.i18n import gettext as _
 from y_web.src.models import (
     Client,
     Exps,
@@ -16,7 +17,6 @@ from y_web.src.models import (
 from y_web.src.system.miscellanea import check_privileges
 
 from ._blueprint import clientsr
-from y_web.i18n import gettext as _
 
 
 @clientsr.route("/admin/update_agents_activity/<int:uid>", methods=["POST"])
@@ -147,7 +147,10 @@ def update_agent_archetypes(uid):
     archetype_sum = archetype_validator + archetype_broadcaster + archetype_explorer
     if abs(archetype_sum - 1.0) > 0.01:
         flash(
-            _("Archetype percentages must sum to 100%% (current sum: %(archetype_sum)s%%)", archetype_sum=format(archetype_sum * 100, '.1f')),
+            _(
+                "Archetype percentages must sum to 100%% (current sum: %(archetype_sum)s%%)",
+                archetype_sum=format(archetype_sum * 100, ".1f"),
+            ),
             "error",
         )
         return redirect(request.referrer)
@@ -159,19 +162,28 @@ def update_agent_archetypes(uid):
 
     if abs(val_sum - 1.0) > 0.01:
         flash(
-            _("Validator transition probabilities must sum to 100%% (current sum: %(val_sum)s%%)", val_sum=format(val_sum * 100, '.1f')),
+            _(
+                "Validator transition probabilities must sum to 100%% (current sum: %(val_sum)s%%)",
+                val_sum=format(val_sum * 100, ".1f"),
+            ),
             "error",
         )
         return redirect(request.referrer)
     if abs(broad_sum - 1.0) > 0.01:
         flash(
-            _("Broadcaster transition probabilities must sum to 100%% (current sum: %(broad_sum)s%%)", broad_sum=format(broad_sum * 100, '.1f')),
+            _(
+                "Broadcaster transition probabilities must sum to 100%% (current sum: %(broad_sum)s%%)",
+                broad_sum=format(broad_sum * 100, ".1f"),
+            ),
             "error",
         )
         return redirect(request.referrer)
     if abs(expl_sum - 1.0) > 0.01:
         flash(
-            _("Explorer transition probabilities must sum to 100%% (current sum: %(expl_sum)s%%)", expl_sum=format(expl_sum * 100, '.1f')),
+            _(
+                "Explorer transition probabilities must sum to 100%% (current sum: %(expl_sum)s%%)",
+                expl_sum=format(expl_sum * 100, ".1f"),
+            ),
             "error",
         )
         return redirect(request.referrer)

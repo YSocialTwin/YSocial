@@ -233,7 +233,10 @@ def test_suggested_friends_templates_are_gated():
         "photo-feed-layout--no-rail" in photo and "ui.show_suggested_friends" in photo
     )
     admin = (root / "admin/frontend_settings.html").read_text(encoding="utf-8")
-    assert "<h3>{{ _('Annotations') }}</h3>" in admin and "Post Annotations</h3>" not in admin
+    assert (
+        "<h3>{{ _('Annotations') }}</h3>" in admin
+        and "Post Annotations</h3>" not in admin
+    )
 
 
 def test_recsys_info_and_annotation_stats_settings(suites_app, logged):
@@ -381,23 +384,36 @@ def test_show_trending_hashtags_setting(suites_app, logged):
 
 
 def test_platform_only_controls_are_not_offered_to_microblogging(suites_app, logged):
-    """"Default feed ordering" is a forum control and "Default home tab" a photo one:
+    """ "Default feed ordering" is a forum control and "Default home tab" a photo one:
     microblogging keeps every other control but must not offer them."""
     micro = _exp(suites_app, "microblogging", "m_excl")
     forum = _exp(suites_app, "forum", "f_excl")
     photo = _exp(suites_app, "photo_sharing", "p_excl")
-    g = lambda exp: logged.get(f"/admin/frontend_settings/get_settings?exp_id={exp}").get_json()
+    g = lambda exp: logged.get(
+        f"/admin/frontend_settings/get_settings?exp_id={exp}"
+    ).get_json()
     m, f, p = g(micro), g(forum), g(photo)
     assert m["capabilities"] is None
-    assert set(m["excluded_capabilities"]) == {"default_forum_feed_type", "default_photo_feed_tab"}
+    assert set(m["excluded_capabilities"]) == {
+        "default_forum_feed_type",
+        "default_photo_feed_tab",
+    }
     assert f["excluded_capabilities"] == [] and p["excluded_capabilities"] == []
-    assert "default_forum_feed_type" in f["capabilities"] and "default_photo_feed_tab" in p["capabilities"]
-    assert "default_photo_feed_tab" not in f["capabilities"] and "default_forum_feed_type" not in p["capabilities"]
+    assert (
+        "default_forum_feed_type" in f["capabilities"]
+        and "default_photo_feed_tab" in p["capabilities"]
+    )
+    assert (
+        "default_photo_feed_tab" not in f["capabilities"]
+        and "default_forum_feed_type" not in p["capabilities"]
+    )
 
 
 def test_interface_language_controls_exist_on_every_platform(suites_app, logged):
     """The interface language is resolved for all platforms, so its two controls are offered everywhere."""
     for platform, tag in (("forum", "f_lang"), ("photo_sharing", "p_lang")):
         exp = _exp(suites_app, platform, tag)
-        caps = logged.get(f"/admin/frontend_settings/get_settings?exp_id={exp}").get_json()["capabilities"]
+        caps = logged.get(
+            f"/admin/frontend_settings/get_settings?exp_id={exp}"
+        ).get_json()["capabilities"]
         assert "language" in caps and "language_switch_allowed" in caps

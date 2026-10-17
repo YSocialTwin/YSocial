@@ -156,8 +156,17 @@ def init_plugin_i18n(app) -> None:
 # Manifest keys whose string values are shown to users (same list the extractor uses).
 _MANIFEST_TEXT_KEYS = frozenset(
     {
-        "name", "display_name", "description", "label", "title", "help",
-        "placeholder", "tooltip", "category", "group", "summary",
+        "name",
+        "display_name",
+        "description",
+        "label",
+        "title",
+        "help",
+        "placeholder",
+        "tooltip",
+        "category",
+        "group",
+        "summary",
     }
 )
 
@@ -185,7 +194,9 @@ def _autoregister(repo_key: str) -> None:
         payload = json.loads(
             (Path(spec.path) / "meta" / "registry.json").read_text(encoding="utf-8")
         )
-        config, problems = normalize_i18n_manifest(repo_key, Path(spec.path), payload.get("i18n"))
+        config, problems = normalize_i18n_manifest(
+            repo_key, Path(spec.path), payload.get("i18n")
+        )
         if config and not problems:
             register_plugin_i18n(repo_key, config)
     except Exception:  # a plugin without a catalog just stays in English
@@ -244,7 +255,11 @@ def localize_manifest(repo_key: str, data):
             out = {}
             for key, value in obj.items():
                 if isinstance(value, str):
-                    if key in _MANIFEST_TEXT_KEYS and not (key == "name" and is_parameter) and any(c.isalpha() for c in value):
+                    if (
+                        key in _MANIFEST_TEXT_KEYS
+                        and not (key == "name" and is_parameter)
+                        and any(c.isalpha() for c in value)
+                    ):
                         out[key] = plugin_gettext(domain, value.strip())
                     else:
                         out[key] = value

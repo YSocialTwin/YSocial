@@ -9,6 +9,7 @@ reader's language. Only sentence-like literals are touched (a capital letter fol
 words, or one capitalised word); object keys, comparisons and anything already inside a
 Jinja tag are left alone. Review the diff: strings glued with + need a manual rewrite.
 """
+
 import re
 import sys
 
@@ -41,16 +42,24 @@ def convert(body, func):
     out, last, count = [], 0, 0
     for m in LIT.finditer(body):
         text = unescape(m.group(1))
-        if not (SENTENCE.match(text) and (" " in text or WORD.match(text)) or WORD.match(text)):
+        if not (
+            SENTENCE.match(text)
+            and (" " in text or WORD.match(text))
+            or WORD.match(text)
+        ):
             continue
         if "{{" in text or "{%" in text or "\x00" in text:
             continue
-        before, after = body[: m.start()], body[m.end():]
-        if re.match(r"\s*:", after) or re.search(r"(===?|!==?)\s*$", before) or re.match(r"\s*(===?|!==?)", after):
+        before, after = body[: m.start()], body[m.end() :]
+        if (
+            re.match(r"\s*:", after)
+            or re.search(r"(===?|!==?)\s*$", before)
+            or re.match(r"\s*(===?|!==?)", after)
+        ):
             continue
         if re.search(r"\[\s*$", before) and re.match(r"\s*\]", after):
             continue
-        out.append(body[last: m.start()])
+        out.append(body[last : m.start()])
         out.append("{{ %s(%s)|tojson }}" % (func, jinja_literal(text)))
         last = m.end()
         count += 1

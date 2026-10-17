@@ -6,6 +6,7 @@
 Areas: core .po, every plugin .po, and every JS catalog directory (reference = en.json).
 Exit status 1 when any area is below --min percent for a language.
 """
+
 import argparse
 import glob
 import json
@@ -33,14 +34,22 @@ def po_stats(path, locale):
 
 def collect():
     rows = []
-    for po in [ROOT / "y_web/translations"] + sorted(Path(p) for p in glob.glob(str(ROOT / "external/*/translations"))):
+    for po in [ROOT / "y_web/translations"] + sorted(
+        Path(p) for p in glob.glob(str(ROOT / "external/*/translations"))
+    ):
         for lang_dir in sorted(po.iterdir()) if po.is_dir() else []:
-            files = list((lang_dir / "LC_MESSAGES").glob("*.po")) if (lang_dir / "LC_MESSAGES").is_dir() else []
+            files = (
+                list((lang_dir / "LC_MESSAGES").glob("*.po"))
+                if (lang_dir / "LC_MESSAGES").is_dir()
+                else []
+            )
             for f in files:
                 area = "core" if po.parent.name == "y_web" else po.parent.name
                 d, t = po_stats(f, lang_dir.name)
                 rows.append((area + " (py/html)", lang_dir.name, d, t))
-    for jsdir in [ROOT / "y_web/translations/js"] + sorted(Path(p) for p in glob.glob(str(ROOT / "external/*/translations/js"))):
+    for jsdir in [ROOT / "y_web/translations/js"] + sorted(
+        Path(p) for p in glob.glob(str(ROOT / "external/*/translations/js"))
+    ):
         for dom in sorted(jsdir.iterdir()):
             ref = dom / "en.json"
             if not ref.is_file():
@@ -66,14 +75,25 @@ def main():
     out = []
     for area, lang, d, t in rows:
         pct = 100.0 * d / t if t else 100.0
-        out.append({"area": area, "lang": lang, "translated": d, "total": t, "pct": round(pct, 2)})
+        out.append(
+            {
+                "area": area,
+                "lang": lang,
+                "translated": d,
+                "total": t,
+                "pct": round(pct, 2),
+            }
+        )
         bad += pct < a.min
     if a.json:
         print(json.dumps(out, indent=1))
     else:
         for r in out:
             flag = "" if r["pct"] >= a.min else "  <-- below %.0f%%" % a.min
-            print("%-34s %-6s %5d/%-5d %6.2f%%%s" % (r["area"], r["lang"], r["translated"], r["total"], r["pct"], flag))
+            print(
+                "%-34s %-6s %5d/%-5d %6.2f%%%s"
+                % (r["area"], r["lang"], r["translated"], r["total"], r["pct"], flag)
+            )
     return 1 if bad else 0
 
 

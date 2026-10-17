@@ -35,10 +35,13 @@ from flask import (
     request,
     url_for,
 )
+from flask_babel import format_datetime
 from flask_login import current_user, login_required, login_user
 from sqlalchemy import select
 
 from y_web import db  # , app
+from y_web.i18n import N_
+from y_web.i18n import gettext as _
 from y_web.src.content.avatars import normalize_forum_avatar_mode
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
@@ -116,9 +119,6 @@ from ._blueprint import (
     _schedule_check_lock,
     experiments,
 )
-from flask_babel import format_datetime
-
-from y_web.i18n import N_, gettext as _
 
 DEFAULT_STRESS_REWARD_SYSTEM = {
     "coupling": {
@@ -758,7 +758,9 @@ def _load_stress_reward_experiment_context(uid, require_manage=True):
         "hpc",
     }:
         flash(
-            _("Stress/reward settings are available only for microblogging, forum, and HPC experiments."),
+            _(
+                "Stress/reward settings are available only for microblogging, forum, and HPC experiments."
+            ),
             "error",
         )
         return None, None, redirect(url_for("experiments.experiment_details", uid=uid))
@@ -1019,23 +1021,41 @@ _NOTIFICATION_TEXTS = [
 ]
 _NOTIFICATION_PATTERNS = [
     (re.compile(r"^Export (?P<name>.+)$", re.S), N_("Export %(name)s")),
-    (re.compile(r"^Experiment shared: (?P<name>.+)$", re.S), N_("Experiment shared: %(name)s")),
-    (re.compile(r"^Experiment group shared: (?P<name>.+)$", re.S), N_("Experiment group shared: %(name)s")),
     (
-        re.compile(r"^Preparing archive for (?P<count>\d+) experiment\(s\) in background\.\.\.$"),
+        re.compile(r"^Experiment shared: (?P<name>.+)$", re.S),
+        N_("Experiment shared: %(name)s"),
+    ),
+    (
+        re.compile(r"^Experiment group shared: (?P<name>.+)$", re.S),
+        N_("Experiment group shared: %(name)s"),
+    ),
+    (
+        re.compile(
+            r"^Preparing archive for (?P<count>\d+) experiment\(s\) in background\.\.\.$"
+        ),
         N_("Preparing archive for %(count)s experiment(s) in background..."),
     ),
     (
-        re.compile(r"^(?P<user>.+) granted you visibility to experiment '(?P<name>.+)'\.$", re.S),
+        re.compile(
+            r"^(?P<user>.+) granted you visibility to experiment '(?P<name>.+)'\.$",
+            re.S,
+        ),
         N_("%(user)s granted you visibility to experiment '%(name)s'."),
     ),
     (
-        re.compile(r"^(?P<user>.+) granted you visibility to group '(?P<name>.+)'\.$", re.S),
+        re.compile(
+            r"^(?P<user>.+) granted you visibility to group '(?P<name>.+)'\.$", re.S
+        ),
         N_("%(user)s granted you visibility to group '%(name)s'."),
     ),
     (
-        re.compile(r"^Detoxify model is ready at (?P<path>.+?)\. Future simulations will reuse this local cache\.?$", re.S),
-        N_("Detoxify model is ready at %(path)s. Future simulations will reuse this local cache."),
+        re.compile(
+            r"^Detoxify model is ready at (?P<path>.+?)\. Future simulations will reuse this local cache\.?$",
+            re.S,
+        ),
+        N_(
+            "Detoxify model is ready at %(path)s. Future simulations will reuse this local cache."
+        ),
     ),
 ]
 

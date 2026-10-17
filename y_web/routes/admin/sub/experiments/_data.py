@@ -36,6 +36,7 @@ from flask_login import current_user, login_required, login_user
 from sqlalchemy import select
 
 from y_web import db  # , app
+from y_web.i18n import gettext as _
 from y_web.src.content.avatars import normalize_forum_avatar_mode
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
@@ -140,7 +141,6 @@ from ._helpers import (
     normalize_stress_reward_config,
     sync_stress_reward_client_config,
 )
-from y_web.i18n import gettext as _
 
 
 def _sync_detoxify_download_notification(admin_user, state):
@@ -830,7 +830,9 @@ def update_experiment_descr(uid):
             jsonify(
                 {
                     "success": False,
-                    "message": _("Failed to update experiment description: %(error)s", error=e),
+                    "message": _(
+                        "Failed to update experiment description: %(error)s", error=e
+                    ),
                 }
             ),
             500,
@@ -914,7 +916,10 @@ def update_experiment_name(uid):
         flash(_("Failed to rename experiment: %(error)s", error=exc), "error")
         return redirect(url_for("experiments.experiment_details", uid=uid))
 
-    flash(_("Experiment renamed to '%(new_exp_name)s'.", new_exp_name=new_exp_name), "success")
+    flash(
+        _("Experiment renamed to '%(new_exp_name)s'.", new_exp_name=new_exp_name),
+        "success",
+    )
     return redirect(url_for("experiments.experiment_details", uid=uid))
 
 
@@ -1002,7 +1007,10 @@ def update_experiment_config(uid):
         )
         cfg_path = os.path.join(exp_folder, cfg_name)
         if not os.path.exists(cfg_path):
-            flash(_("Configuration file not found: %(cfg_name)s", cfg_name=cfg_name), "error")
+            flash(
+                _("Configuration file not found: %(cfg_name)s", cfg_name=cfg_name),
+                "error",
+            )
             return redirect(url_for("experiments.experiment_details", uid=uid))
 
         with open(cfg_path, "r") as f:
@@ -1282,7 +1290,10 @@ def update_stress_reward_settings(uid):
 
         flash(_("Stress/reward settings updated."), "success")
     except Exception as exc:
-        flash(_("Failed to update stress/reward settings: %(error)s", error=str(exc)), "error")
+        flash(
+            _("Failed to update stress/reward settings: %(error)s", error=str(exc)),
+            "error",
+        )
 
     return redirect(url_for("experiments.stress_reward_settings", uid=uid))
 
@@ -1353,7 +1364,9 @@ def update_experiment_topics(uid):
         flash(_("Experiment topics updated."), "success")
     except Exception as exc:
         db.session.rollback()
-        flash(_("Failed to update experiment topics: %(error)s", error=str(exc)), "error")
+        flash(
+            _("Failed to update experiment topics: %(error)s", error=str(exc)), "error"
+        )
 
     return redirect(url_for("experiments.experiment_details", uid=uid))
 
@@ -1374,7 +1387,9 @@ def clear_experiment_logs(uid):
 
     admin_user = _current_admin_user_or_none()
     if not user_can_manage_experiment(admin_user, exp):
-        flash(_("You do not have permission to clear logs for this experiment."), "error")
+        flash(
+            _("You do not have permission to clear logs for this experiment."), "error"
+        )
         return redirect(url_for("experiments.experiment_details", uid=uid))
 
     try:
@@ -1386,7 +1401,10 @@ def clear_experiment_logs(uid):
 
         if deleted_count:
             flash(
-                _("Cleared %(deleted_count)s log file(s) from the experiment folder.", deleted_count=deleted_count),
+                _(
+                    "Cleared %(deleted_count)s log file(s) from the experiment folder.",
+                    deleted_count=deleted_count,
+                ),
                 "success",
             )
         else:
@@ -1396,7 +1414,10 @@ def clear_experiment_logs(uid):
             current_app.logger.warning(f"Could not delete log file {failed_path}")
         if failed_paths:
             flash(
-                _("Could not delete %(failed_paths)s log file(s) due to filesystem errors.", failed_paths=len(failed_paths)),
+                _(
+                    "Could not delete %(failed_paths)s log file(s) due to filesystem errors.",
+                    failed_paths=len(failed_paths),
+                ),
                 "warning",
             )
     except Exception as exc:
@@ -1422,14 +1443,18 @@ def reset_hpc_experiment(uid):
         flash(_("Reset is available only for HPC experiments."), "warning")
         return redirect(url_for("experiments.experiment_details", uid=uid))
     if exp.running == 1:
-        flash(_("HPC reset is available only when the experiment is stopped."), "warning")
+        flash(
+            _("HPC reset is available only when the experiment is stopped."), "warning"
+        )
         return redirect(url_for("experiments.experiment_details", uid=uid))
 
     clients = db.session.scalars(select(Client).filter_by(id_exp=uid)).all()
     has_started_once = _experiment_has_started_once(exp, clients=clients)
     if not has_started_once:
         flash(
-            _("HPC reset is available only for experiments that have been started at least once."),
+            _(
+                "HPC reset is available only for experiments that have been started at least once."
+            ),
             "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=uid))
@@ -1528,7 +1553,10 @@ def reset_hpc_experiment(uid):
 
         db.session.commit()
         flash(
-            _("HPC experiment reset completed. Restored %(restored_count)s population backup file(s).", restored_count=restored_count),
+            _(
+                "HPC experiment reset completed. Restored %(restored_count)s population backup file(s).",
+                restored_count=restored_count,
+            ),
             "success",
         )
     except Exception as exc:
@@ -1557,7 +1585,9 @@ def submit_experiment_logs(exp_id):
         return jsonify(
             {
                 "success": False,
-                "message": _("Telemetry is disabled. Please enable it in your user settings to submit logs."),
+                "message": _(
+                    "Telemetry is disabled. Please enable it in your user settings to submit logs."
+                ),
             }
         )
 
@@ -1629,7 +1659,11 @@ def experiment_logs(exp_id):
         # Check if any log files exist (main or rotated)
         if not has_server_log_files(log_file):
             return jsonify(
-                {"call_volume": {}, "mean_duration": {}, "error": _("Log file not found")}
+                {
+                    "call_volume": {},
+                    "mean_duration": {},
+                    "error": _("Log file not found"),
+                }
             )
 
         # Update metrics incrementally from log file
@@ -2122,7 +2156,9 @@ def miscellanea():
         select(Admin_users).filter_by(username=current_user.username)
     ).first()
     if user.role != "admin":
-        flash(_("Access denied. This page is only accessible to administrators."), "error")
+        flash(
+            _("Access denied. This page is only accessible to administrators."), "error"
+        )
         return redirect(url_for("admin.dashboard"))
 
     check_privileges(current_user.username)
@@ -2223,7 +2259,9 @@ def detoxify_download_start():
         return (
             jsonify(
                 {
-                    "error": _("Unable to start Detoxify download: %(error)s", error=exc),
+                    "error": _(
+                        "Unable to start Detoxify download: %(error)s", error=exc
+                    ),
                 }
             ),
             500,

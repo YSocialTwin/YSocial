@@ -12,6 +12,7 @@ from sqlalchemy import select
 from werkzeug.security import check_password_hash
 
 from y_web import db
+from y_web.i18n import gettext as _
 from y_web.routes.auth._blueprint import auth
 from y_web.src.experiment.helpers import ensure_experiment_user
 from y_web.src.external_runtime.plugin_hooks import (
@@ -19,7 +20,6 @@ from y_web.src.external_runtime.plugin_hooks import (
     is_local_redirect,
 )
 from y_web.src.models import Admin_users, Exps, User_Experiment, User_mgmt
-from y_web.i18n import gettext as _
 
 # Roles that log in as experiment participants. "student" is an alias of
 # "user": it follows exactly the same flow (experiment selection, feed).
@@ -97,7 +97,9 @@ def login_post():
 
         if not user_experiments:
             flash(
-                _("You are not assigned to any experiments. Please contact an administrator.")
+                _(
+                    "You are not assigned to any experiments. Please contact an administrator."
+                )
             )
             return redirect(url_for("auth.login"))
 
@@ -108,7 +110,9 @@ def login_post():
         ).all()
 
         if not active_exps:
-            flash(_("No active experiments available. Please contact an administrator."))
+            flash(
+                _("No active experiments available. Please contact an administrator.")
+            )
             return redirect(url_for("auth.login"))
 
         # Store credentials in session for experiment selection
@@ -146,7 +150,9 @@ def login_post():
             home = url_for("training_modules.modules_page")
         except Exception:
             flash(
-                _("The training area is not available. Please contact an administrator.")
+                _(
+                    "The training area is not available. Please contact an administrator."
+                )
             )
             return redirect(url_for("auth.login"))
         login_user(user, remember=remember)
@@ -199,7 +205,10 @@ def signup_post():
     }
     try:
         result = signup_logic.create_account(
-            form["username"], form["email"], request.form.get("password", ""), form["picks"]
+            form["username"],
+            form["email"],
+            request.form.get("password", ""),
+            form["picks"],
         )
     except signup_logic.SignupError as exc:
         return render_template(

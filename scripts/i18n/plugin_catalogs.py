@@ -29,8 +29,19 @@ from babel.messages.pofile import read_po, write_po
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from manifest_extractor import extract_plugin_manifests  # noqa: E402
 
-SKIP_DIRS = ["tests", "test", "node_modules", "_to_delete", "__pycache__", "docs", "venv", ".venv"]
-JS_CALL = re.compile(r"""YI18n\.(?:t|tn)\(\s*(?:'((?:\\.|[^'\\])*)'|"((?:\\.|[^"\\])*)")""")
+SKIP_DIRS = [
+    "tests",
+    "test",
+    "node_modules",
+    "_to_delete",
+    "__pycache__",
+    "docs",
+    "venv",
+    ".venv",
+]
+JS_CALL = re.compile(
+    r"""YI18n\.(?:t|tn)\(\s*(?:'((?:\\.|[^'\\])*)'|"((?:\\.|[^"\\])*)")"""
+)
 PH = re.compile(r"\{(\w+)\}")
 # Python messages are wrapped in ``_()``; templates call ``plugin_gettext('<domain>', 'text')`` or a local macro named ``T``.
 KEYWORDS = {
@@ -64,7 +75,9 @@ def build_pot(plugin_dir, domain):
     for text, where in extract_plugin_manifests(plugin_dir):
         catalog.add(text, locations=[(where, 0)], auto_comments=["manifest string"])
     for filename, lineno, message, comments, _ctx in _extract(plugin_dir):
-        catalog.add(message, locations=[(filename, lineno)], auto_comments=list(comments))
+        catalog.add(
+            message, locations=[(filename, lineno)], auto_comments=list(comments)
+        )
     return catalog
 
 
@@ -94,13 +107,20 @@ def cmd_update(plugin_dir, domain, langs):
             catalog = Catalog(locale=lang, project=domain, charset="utf-8")
         catalog.update(template, no_fuzzy_matching=True)
         with po_path.open("wb") as fh:
-            write_po(fh, catalog, width=int(os.environ.get("PO_WIDTH", "100")), sort_output=True)
+            write_po(
+                fh,
+                catalog,
+                width=int(os.environ.get("PO_WIDTH", "100")),
+                sort_output=True,
+            )
         missing = sum(1 for m in catalog if m.id and not m.string)
         print(f"{lang}: {len(catalog)} strings, {missing} untranslated")
 
 
 def cmd_compile(plugin_dir, domain):
-    for po_path in sorted(translations_dir(plugin_dir).glob(f"*/LC_MESSAGES/{domain}.po")):
+    for po_path in sorted(
+        translations_dir(plugin_dir).glob(f"*/LC_MESSAGES/{domain}.po")
+    ):
         catalog = read_po(po_path.open("rb"), locale=po_path.parent.parent.name)
         with po_path.with_suffix(".mo").open("wb") as fh:
             write_mo(fh, catalog)
@@ -139,7 +159,9 @@ def cmd_js_sync(plugin_dir, domain):
     keys = {}
     for path in js_files(plugin_dir):
         for match in JS_CALL.finditer(path.read_text(encoding="utf-8")):
-            text = unescape(match.group(1) if match.group(1) is not None else match.group(2))
+            text = unescape(
+                match.group(1) if match.group(1) is not None else match.group(2)
+            )
             keys[text] = text
     base = js_dir(plugin_dir, domain)
     keys.update(read_json(base / "_static.json"))
@@ -170,14 +192,22 @@ def cmd_check(plugin_dir, domain, langs):
     problems = 0
     current = build_pot(plugin_dir, domain)
     pot_path = translations_dir(plugin_dir) / f"{domain}.pot"
-    committed = {m.id for m in read_po(pot_path.open("rb")) if m.id} if pot_path.is_file() else set()
+    committed = (
+        {m.id for m in read_po(pot_path.open("rb")) if m.id}
+        if pot_path.is_file()
+        else set()
+    )
     if {m.id for m in current if m.id} != committed:
         print("the .pot is stale: run extract")
         problems += 1
     for lang in langs:
         mo = translations_dir(plugin_dir) / lang / "LC_MESSAGES" / f"{domain}.mo"
         po = mo.with_suffix(".po")
-        if not mo.is_file() or not po.is_file() or mo.stat().st_mtime + 2 < po.stat().st_mtime:
+        if (
+            not mo.is_file()
+            or not po.is_file()
+            or mo.stat().st_mtime + 2 < po.stat().st_mtime
+        ):
             print(f"{lang}: .mo missing or older than .po: run compile")
             problems += 1
         if js_dir(plugin_dir, domain).is_dir():
@@ -186,8 +216,12 @@ def cmd_check(plugin_dir, domain, langs):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument("cmd", choices=["extract", "update", "compile", "js-sync", "js-check", "check"])
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawTextHelpFormatter
+    )
+    parser.add_argument(
+        "cmd", choices=["extract", "update", "compile", "js-sync", "js-check", "check"]
+    )
     parser.add_argument("plugin_dir")
     parser.add_argument("--domain", required=True)
     parser.add_argument("--langs", default="it")

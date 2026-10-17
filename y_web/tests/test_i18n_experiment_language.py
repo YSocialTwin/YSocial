@@ -20,7 +20,9 @@ def logged(suites_app):
 
 
 def _save(client, exp_id, **settings):
-    r = client.post("/admin/frontend_settings/save", json={"exp_id": exp_id, "settings": settings})
+    r = client.post(
+        "/admin/frontend_settings/save", json={"exp_id": exp_id, "settings": settings}
+    )
     assert r.get_json()["ok"]
 
 
@@ -35,7 +37,10 @@ def _resolve(app, exp_id):
 def test_language_defaults_to_unset_and_fixed(suites_app, logged):
     exp = _exp(suites_app, "microblogging", "lang-default")
     data = logged.get(f"/admin/frontend_settings/get_settings?exp_id={exp}").get_json()
-    assert data["settings"]["language"] == "" and data["settings"]["language_switch_allowed"] is False
+    assert (
+        data["settings"]["language"] == ""
+        and data["settings"]["language_switch_allowed"] is False
+    )
     assert _resolve(suites_app, exp) == (None, False)
 
 
@@ -51,18 +56,30 @@ def test_saved_language_reaches_the_resolver(suites_app, logged, platform):
 def test_unsupported_language_is_discarded(suites_app, logged):
     exp = _exp(suites_app, "forum", "lang-bad")
     _save(logged, exp, language="xx")
-    assert logged.get(f"/admin/frontend_settings/get_settings?exp_id={exp}").get_json()["settings"]["language"] == ""
+    assert (
+        logged.get(f"/admin/frontend_settings/get_settings?exp_id={exp}").get_json()[
+            "settings"
+        ]["language"]
+        == ""
+    )
 
 
 def test_admin_page_offers_the_supported_languages(suites_app, logged):
     html = logged.get("/admin/frontend_settings").get_data(as_text=True)
-    assert 'id="language"' in html and '<option value="it">Italiano (beta)</option>' in html
+    assert (
+        'id="language"' in html
+        and '<option value="it">Italiano (beta)</option>' in html
+    )
 
 
-def test_experiment_language_selects_the_locale_and_cookie_override_follows_the_switch(suites_app, logged):
+def test_experiment_language_selects_the_locale_and_cookie_override_follows_the_switch(
+    suites_app, logged
+):
     exp = _exp(suites_app, "microblogging", "lang-locale")
     _save(logged, exp, language="it", language_switch_allowed=False)
-    with suites_app.test_request_context(f"/{exp}/feed", headers={"Accept-Language": "en"}) as ctx:
+    with suites_app.test_request_context(
+        f"/{exp}/feed", headers={"Accept-Language": "en"}
+    ) as ctx:
         ctx.request.view_args = {"exp_id": exp}
         ctx.request.blueprint  # noqa: B018
         assert i18n._experiment_language() == ("it", False)
@@ -81,7 +98,9 @@ LABEL_FIELDS = {"author_type_badge", "adhoc_agent_badge"}
 
 def test_user_generated_text_never_goes_through_the_catalogs():
     """Posts, comments, agent replies and profile bios are data: ``_(item['content'])`` would be a leak."""
-    pattern = re.compile(r"_\(\s*(?:item|cm|thread|post|comment|message|user|agent)\s*(?:\[|\.get\()\s*['\"](\w+)")
+    pattern = re.compile(
+        r"_\(\s*(?:item|cm|thread|post|comment|message|user|agent)\s*(?:\[|\.get\()\s*['\"](\w+)"
+    )
     offenders = []
     for folder in SIM_DIRS:
         for path in (ROOT / "y_web" / "templates" / folder).rglob("*.html"):
@@ -98,14 +117,23 @@ def test_simulation_javascript_catalog_is_complete_and_consistent():
     assert en.keys() == it.keys() and len(en) > 100
     placeholder = re.compile(r"\{(\w+)\}")
     for key, text in it.items():
-        assert text and sorted(placeholder.findall(key)) == sorted(placeholder.findall(text)), key
+        assert text and sorted(placeholder.findall(key)) == sorted(
+            placeholder.findall(text)
+        ), key
     call = re.compile(r"YI18n\.tn?\(\s*'((?:\\.|[^'\\])*)'")
     used = set()
     for path in (ROOT / "y_web" / "static" / "assets" / "js").rglob("*.js"):
         if path.name.startswith("admin") or path.name in {"i18n.js", "app.js"}:
             continue
-        used |= {k.replace("\\'", "'") for k in call.findall(path.read_text(encoding="utf-8", errors="ignore"))}
-    admin_or_core = json.loads((ROOT / "y_web" / "translations" / "js" / "core" / "en.json").read_text(encoding="utf-8")).keys()
+        used |= {
+            k.replace("\\'", "'")
+            for k in call.findall(path.read_text(encoding="utf-8", errors="ignore"))
+        }
+    admin_or_core = json.loads(
+        (ROOT / "y_web" / "translations" / "js" / "core" / "en.json").read_text(
+            encoding="utf-8"
+        )
+    ).keys()
     missing = {k for k in used if k not in en and k not in admin_or_core}
     # keys of other domains (admin, tutorials) live in their own catalogs
     other = set()
@@ -116,8 +144,15 @@ def test_simulation_javascript_catalog_is_complete_and_consistent():
 
 
 def test_simulation_pages_load_the_simulation_catalog():
-    for page in ("microblogging/header.html", "forum/header.html", "photo/base.html", "login/scene_base.html"):
-        assert 'data-domains="simulation"' in (ROOT / "y_web" / "templates" / page).read_text(encoding="utf-8")
+    for page in (
+        "microblogging/header.html",
+        "forum/header.html",
+        "photo/base.html",
+        "login/scene_base.html",
+    ):
+        assert 'data-domains="simulation"' in (
+            ROOT / "y_web" / "templates" / page
+        ).read_text(encoding="utf-8")
 
 
 def test_italian_catalog_translates_the_participant_labels():
@@ -132,7 +167,10 @@ def test_italian_catalog_translates_the_participant_labels():
             return app.jinja_env.from_string(source).render()
 
     assert render("{{ _('Unfollow') }}") == "Non seguire pi\u00f9"
-    assert render("{{ _('Day %(day)s - %(hour)s:00', day=3, hour=7) }}") == "Giorno 3 - 7:00"
+    assert (
+        render("{{ _('Day %(day)s - %(hour)s:00', day=3, hour=7) }}")
+        == "Giorno 3 - 7:00"
+    )
     assert render("{{ ngettext('%(num)s photo', '%(num)s photos', 2) }}") == "2 foto"
     assert render("{{ _('AI Agent') }}") == "Agente IA"
 
@@ -156,13 +194,18 @@ def test_participant_language_selector_follows_the_experiment_switch():
         assert 'name="lang"' not in app.test_client().get("/1/x").get_data(as_text=True)
         i18n.experiment_language_resolver = lambda: ("it", True)
         html = app.test_client().get("/1/x").get_data(as_text=True)
-        assert 'name="scope" value="sim"' in html and '<option value="it" selected>Italiano (beta)</option>' in html
+        assert (
+            'name="scope" value="sim"' in html
+            and '<option value="it" selected>Italiano (beta)</option>' in html
+        )
     finally:
         i18n.experiment_language_resolver = None
 
 
 def test_forum_profile_view_has_no_language_selector():
-    assert "profile_language_field" not in (ROOT / "y_web" / "templates" / "forum" / "profile.html").read_text(encoding="utf-8")
+    assert "profile_language_field" not in (
+        ROOT / "y_web" / "templates" / "forum" / "profile.html"
+    ).read_text(encoding="utf-8")
 
 
 def test_language_is_chosen_in_the_profile_not_in_the_feed_header():
@@ -170,9 +213,17 @@ def test_language_is_chosen_in_the_profile_not_in_the_feed_header():
     from flask import Blueprint, Flask, render_template
 
     for name in ("microblogging/header.html", "forum/header.html", "photo/base.html"):
-        assert "language_switcher" not in (ROOT / "y_web" / "templates" / name).read_text(encoding="utf-8")
-    for name in ("microblogging/edit_profile.html", "photo/base.html", "forum/edit_profile.html"):
-        assert "shared/profile_language_field.html" in (ROOT / "y_web" / "templates" / name).read_text(encoding="utf-8")
+        assert "language_switcher" not in (
+            ROOT / "y_web" / "templates" / name
+        ).read_text(encoding="utf-8")
+    for name in (
+        "microblogging/edit_profile.html",
+        "photo/base.html",
+        "forum/edit_profile.html",
+    ):
+        assert "shared/profile_language_field.html" in (
+            ROOT / "y_web" / "templates" / name
+        ).read_text(encoding="utf-8")
 
     app = Flask("y_web")
     app.config.update(SECRET_KEY="t", SUPPORTED_LANGUAGES=("en", "it"), TESTING=True)
@@ -190,7 +241,10 @@ def test_language_is_chosen_in_the_profile_not_in_the_feed_header():
         assert 'name="lang"' not in app.test_client().get("/1/p").get_data(as_text=True)
         i18n.experiment_language_resolver = lambda: ("it", True)
         html = app.test_client().get("/1/p").get_data(as_text=True)
-        assert 'form="ys-profile-language-form"' in html and 'action="/set-language"' in html
+        assert (
+            'form="ys-profile-language-form"' in html
+            and 'action="/set-language"' in html
+        )
         assert '<option value="it" selected>Italiano (beta)</option>' in html
     finally:
         i18n.experiment_language_resolver = None

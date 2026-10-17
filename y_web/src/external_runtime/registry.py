@@ -10,8 +10,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Sequence
 
-from y_web.src.system.path_utils import get_resource_path, get_writable_path
 from y_web.i18n import N_
+from y_web.src.system.path_utils import get_resource_path, get_writable_path
 
 # Texts of the plugin list that live in this module or in repositories without a
 # translation catalog of their own. They are only declared here (for extraction);
@@ -25,7 +25,9 @@ RUNTIME_TEXTS = (
     N_("Hosts the microblogging platform the agents interact with (server side)."),
     N_("Runs the agents of a forum simulation (client side)."),
     N_("Hosts the forum platform the agents interact with (server side)."),
-    N_("Simulation runtime for photo-sharing experiments, with an Instagram-like platform."),
+    N_(
+        "Simulation runtime for photo-sharing experiments, with an Instagram-like platform."
+    ),
     N_("Runs large-scale simulations in a distributed way on HPC clusters."),
 )
 

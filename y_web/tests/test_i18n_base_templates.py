@@ -106,7 +106,9 @@ def test_set_language_simulation_scope_uses_simulation_cookie(i18n_app):
 def test_admin_language_selector_is_its_own_menu_not_part_of_account():
     from pathlib import Path
 
-    html = (Path(__file__).resolve().parents[1] / "templates/admin/dash_head.html").read_text(encoding="utf-8")
+    html = (
+        Path(__file__).resolve().parents[1] / "templates/admin/dash_head.html"
+    ).read_text(encoding="utf-8")
     language = html.index('id="language-menu"')
     account = html.index('id="account-menu"')
     assert language < account

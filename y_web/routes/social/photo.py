@@ -34,6 +34,7 @@ from sqlalchemy import select
 from werkzeug.utils import secure_filename
 
 from y_web import db
+from y_web.i18n import gettext as _
 from y_web.routes.social._blueprint import main
 from y_web.routes.social.helpers import (
     _content_recsys_info,
@@ -52,7 +53,6 @@ from y_web.src.models import Exps, User_mgmt
 from y_web.src.models.admin import Admin_users, Agent, Page
 from y_web.src.models.experiment import Rounds
 from y_web.src.recsys.follow_recsys import get_suggested_users
-from y_web.i18n import gettext as _
 
 
 def _photo_page_size(ui_settings) -> int:

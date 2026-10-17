@@ -19,6 +19,7 @@ from sqlalchemy import (
 )
 
 from y_web import db
+from y_web.i18n import gettext as _
 from y_web.src.models import (
     AgeClass,
     Client,
@@ -39,7 +40,6 @@ from ._crud import (
     _get_experiment_mode,
     _opinion_dynamics_enabled_for_client_creation,
 )
-from y_web.i18n import gettext as _
 
 
 def _opinion_configuration_internal(idexp, expected_mode):
@@ -201,7 +201,9 @@ def _opinion_configuration_internal(idexp, expected_mode):
     except Exception as e:
         print(f"Error reading population file: {e}")
         flash(
-            _("Warning: Error reading population file. Segment values may be limited.", ),
+            _(
+                "Warning: Error reading population file. Segment values may be limited.",
+            ),
             "warning",
         )
 
@@ -393,7 +395,11 @@ def _sample_opinion_from_distribution(distribution_name, distributions_map):
         return np.random.uniform(0, 1)
     except Exception as e:
         flash(
-            _("Error sampling from distribution '%(distribution_name)s': %(error)s", distribution_name=distribution_name, error=str(e)),
+            _(
+                "Error sampling from distribution '%(distribution_name)s': %(error)s",
+                distribution_name=distribution_name,
+                error=str(e),
+            ),
             "warning",
         )
         return random.random()
@@ -509,7 +515,9 @@ def _resolve_opinion_submission_context(expected_mode):
     )
     if actual_mode != expected_mode:
         flash(
-            _("Opinion distribution update route does not match the experiment modality."),
+            _(
+                "Opinion distribution update route does not match the experiment modality."
+            ),
             "error",
         )
         if actual_mode == "hpc":
@@ -579,7 +587,13 @@ def _resolve_opinion_submission_context(expected_mode):
         f"{population.name.replace(' ', '')}.json",
     )
     if not os.path.exists(population_file):
-        flash(_("Population file not found: %(population_file)s", population_file=population_file), "error")
+        flash(
+            _(
+                "Population file not found: %(population_file)s",
+                population_file=population_file,
+            ),
+            "error",
+        )
         return None, redirect(url_for("experiments.experiment_details", uid=idexp))
 
     try:
@@ -598,7 +612,11 @@ def _resolve_opinion_submission_context(expected_mode):
             }
         except json.JSONDecodeError as e:
             flash(
-                _("Invalid JSON parameters for distribution '%(name)s': %(error)s", name=dist.name, error=str(e)),
+                _(
+                    "Invalid JSON parameters for distribution '%(name)s': %(error)s",
+                    name=dist.name,
+                    error=str(e),
+                ),
                 "warning",
             )
 
@@ -681,7 +699,10 @@ def _apply_opinion_distributions_to_population(context):
         with open(context["population_file"], "w") as handle:
             json.dump(pop_data, handle, indent=4)
         flash(
-            _("Successfully updated opinions for %(updated_count)s agent-topic pairs.", updated_count=updated_count),
+            _(
+                "Successfully updated opinions for %(updated_count)s agent-topic pairs.",
+                updated_count=updated_count,
+            ),
             "success",
         )
     except Exception as e:
@@ -726,10 +747,16 @@ def _persist_non_hpc_opinion_dynamics(context):
                 json.dump(client_config, handle, indent=4)
             flash(_("Opinion dynamics configuration saved successfully."), "success")
         except Exception as e:
-            flash(_("Error updating client configuration: %(error)s", error=str(e)), "warning")
+            flash(
+                _("Error updating client configuration: %(error)s", error=str(e)),
+                "warning",
+            )
     else:
         flash(
-            _("Client configuration file not found: %(client_config_file)s", client_config_file=context['client_config_file']),
+            _(
+                "Client configuration file not found: %(client_config_file)s",
+                client_config_file=context["client_config_file"],
+            ),
             "warning",
         )
 
@@ -776,10 +803,16 @@ def _persist_hpc_opinion_dynamics(context):
                 json.dump(client_config, handle, indent=4)
             flash(_("Opinion dynamics configuration saved successfully."), "success")
         except Exception as e:
-            flash(_("Error updating client configuration: %(error)s", error=str(e)), "warning")
+            flash(
+                _("Error updating client configuration: %(error)s", error=str(e)),
+                "warning",
+            )
     else:
         flash(
-            _("Client configuration file not found: %(client_config_file)s", client_config_file=context['client_config_file']),
+            _(
+                "Client configuration file not found: %(client_config_file)s",
+                client_config_file=context["client_config_file"],
+            ),
             "warning",
         )
 

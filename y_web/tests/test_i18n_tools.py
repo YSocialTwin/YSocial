@@ -149,9 +149,7 @@ def test_template_gettext_literals_escape_percent_signs():
     import pathlib
     import re
 
-    call = re.compile(
-        r"""\b_\(\s*(?P<q>['"])(?P<s>(?:\\.|(?!(?P=q)).)*)(?P=q)""", re.S
-    )
+    call = re.compile(r"""\b_\(\s*(?P<q>['"])(?P<s>(?:\\.|(?!(?P=q)).)*)(?P=q)""", re.S)
     lone = re.compile(r"%(?!%|\([A-Za-z_]\w*\)[sdif])")
     bad = []
     for path in (pathlib.Path(__file__).resolve().parents[1] / "templates").rglob(

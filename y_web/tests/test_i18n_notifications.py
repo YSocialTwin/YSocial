@@ -24,8 +24,14 @@ def it_app():
         ("Notification cancelled.", "Notifica annullata."),
         ("Export My Exp", "Esporta My Exp"),
         ("Experiment shared: Foo", "Esperimento condiviso: Foo"),
-        ("Preparing archive for 3 experiment(s) in background...", "Preparazione in background dell'archivio per 3 esperimento/i..."),
-        ("bob granted you visibility to experiment 'Foo'.", "bob ti ha concesso la visibilità sull'esperimento «Foo»."),
+        (
+            "Preparing archive for 3 experiment(s) in background...",
+            "Preparazione in background dell'archivio per 3 esperimento/i...",
+        ),
+        (
+            "bob granted you visibility to experiment 'Foo'.",
+            "bob ti ha concesso la visibilità sull'esperimento «Foo».",
+        ),
         ("Something unknown stays as is", "Something unknown stays as is"),
     ],
 )

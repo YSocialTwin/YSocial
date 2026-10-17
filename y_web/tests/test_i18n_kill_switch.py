@@ -1,4 +1,5 @@
 """YSOCIAL_LANGUAGES withdraws a language without a deploy (phase 6)."""
+
 import importlib
 
 import y_web.config as config

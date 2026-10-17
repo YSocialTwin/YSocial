@@ -10,6 +10,7 @@ from flask_login import current_user, login_required
 from sqlalchemy import select
 
 from y_web import db
+from y_web.i18n import gettext as _
 from y_web.routes.admin.sub.experiments._helpers import (
     _experiment_configuration_update_required,
 )
@@ -28,7 +29,6 @@ from y_web.src.system.miscellanea import check_privileges, get_db_type
 from y_web.src.system.path_utils import get_resource_path
 
 from ._blueprint import clientsr
-from y_web.i18n import gettext as _
 
 
 def _sync_duration_fields_in_client_config(config: dict, days: int) -> dict:
@@ -190,7 +190,10 @@ def extend_simulation(id_client):
         exp.exp_status = "stopped"
         db.session.commit()
         flash(
-            _("Experiment '%(exp_name)s' moved from completed to stopped (client duration extended).", exp_name=exp.exp_name),
+            _(
+                "Experiment '%(exp_name)s' moved from completed to stopped (client duration extended).",
+                exp_name=exp.exp_name,
+            ),
             "info",
         )
 
@@ -214,7 +217,9 @@ def extend_simulation(id_client):
             ).first()
             if not population:
                 flash(
-                    _("Warning: Could not find population record. Extension applied to database only."),
+                    _(
+                        "Warning: Could not find population record. Extension applied to database only."
+                    ),
                     "warning",
                 )
             else:
@@ -241,22 +246,32 @@ def extend_simulation(id_client):
                             json.dump(config, f, indent=2)
 
                         flash(
-                            _("Client configuration file updated with extended duration (%(days)s days).", days=client.days),
+                            _(
+                                "Client configuration file updated with extended duration (%(days)s days).",
+                                days=client.days,
+                            ),
                             "success",
                         )
                     else:
                         flash(
-                            _("Warning: Config file missing 'simulation' section. Extension applied to database only."),
+                            _(
+                                "Warning: Config file missing 'simulation' section. Extension applied to database only."
+                            ),
                             "warning",
                         )
                 else:
                     flash(
-                        _("Warning: Client config file not found. Extension applied to database only.", ),
+                        _(
+                            "Warning: Client config file not found. Extension applied to database only.",
+                        ),
                         "warning",
                     )
         except Exception as e:
             flash(
-                _("Warning: Could not update client config file: %(error)s. Extension applied to database only.", error=str(e)),
+                _(
+                    "Warning: Could not update client config file: %(error)s. Extension applied to database only.",
+                    error=str(e),
+                ),
                 "warning",
             )
 
@@ -328,7 +343,10 @@ def extend_simulation(id_client):
                             reparse_success_server = True
                 except Exception as e:
                     flash(
-                        _("Warning: Metrics reset but re-parsing failed: %(error)s. Plots will update on next refresh.", error=str(e)),
+                        _(
+                            "Warning: Metrics reset but re-parsing failed: %(error)s. Plots will update on next refresh.",
+                            error=str(e),
+                        ),
                         "warning",
                     )
 
@@ -336,60 +354,81 @@ def extend_simulation(id_client):
             if reset_result_client and reset_result_server:
                 if reparse_success_client and reparse_success_server:
                     flash(
-                        _("Log metrics reset and re-parsed. Plots now show data from original run and will include extended data after client restart."),
+                        _(
+                            "Log metrics reset and re-parsed. Plots now show data from original run and will include extended data after client restart."
+                        ),
                         "success",
                     )
                 elif reparse_success_client or reparse_success_server:
                     # Partial re-parsing success
                     if reparse_success_client and not reparse_success_server:
                         flash(
-                            _("Client metrics reset and re-parsed. Server metrics reset but not re-parsed yet. Plots will fully update on next refresh."),
+                            _(
+                                "Client metrics reset and re-parsed. Server metrics reset but not re-parsed yet. Plots will fully update on next refresh."
+                            ),
                             "success",
                         )
                     else:  # reparse_success_server and not reparse_success_client
                         flash(
-                            _("Server metrics reset and re-parsed. Client metrics reset but not re-parsed yet. Plots will fully update on next refresh."),
+                            _(
+                                "Server metrics reset and re-parsed. Client metrics reset but not re-parsed yet. Plots will fully update on next refresh."
+                            ),
                             "success",
                         )
                 else:
                     # Reset succeeded but re-parsing failed for both
                     flash(
-                        _("Log metrics reset. Plots will update with extended data on next refresh."),
+                        _(
+                            "Log metrics reset. Plots will update with extended data on next refresh."
+                        ),
                         "success",
                     )
             elif reset_result_client:
                 # Only client reset succeeded
                 if reparse_success_client:
                     flash(
-                        _("Client log metrics reset and re-parsed. Server metrics unchanged. Client plots updated."),
+                        _(
+                            "Client log metrics reset and re-parsed. Server metrics unchanged. Client plots updated."
+                        ),
                         "success",
                     )
                 else:
                     flash(
-                        _("Client log metrics reset. Server metrics unchanged. Client plots will update on next refresh."),
+                        _(
+                            "Client log metrics reset. Server metrics unchanged. Client plots will update on next refresh."
+                        ),
                         "success",
                     )
             elif reset_result_server:
                 # Only server reset succeeded
                 if reparse_success_server:
                     flash(
-                        _("Server log metrics reset and re-parsed. Client metrics unchanged. Server plots updated."),
+                        _(
+                            "Server log metrics reset and re-parsed. Client metrics unchanged. Server plots updated."
+                        ),
                         "success",
                     )
                 else:
                     flash(
-                        _("Server log metrics reset. Client metrics unchanged. Server plots will update on next refresh."),
+                        _(
+                            "Server log metrics reset. Client metrics unchanged. Server plots will update on next refresh."
+                        ),
                         "success",
                     )
             else:
                 # Both resets failed
                 flash(
-                    _("Warning: Could not reset log metrics. Plots may not show extended data."),
+                    _(
+                        "Warning: Could not reset log metrics. Plots may not show extended data."
+                    ),
                     "warning",
                 )
         except Exception as e:
             flash(
-                _("Warning: Could not reset log metrics: %(error)s. Plots may not show extended data.", error=str(e)),
+                _(
+                    "Warning: Could not reset log metrics: %(error)s. Plots may not show extended data.",
+                    error=str(e),
+                ),
                 "warning",
             )
 
@@ -406,7 +445,9 @@ def run_client(uid, idexp):
     exp = db.session.scalars(select(Exps).filter_by(idexp=idexp)).first()
     if _experiment_configuration_update_required(exp):
         flash(
-            _("Update Experiment Configuration before running clients for this experiment."),
+            _(
+                "Update Experiment Configuration before running clients for this experiment."
+            ),
             "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
@@ -460,7 +501,9 @@ def resume_client(uid, idexp):
     exp = db.session.scalars(select(Exps).filter_by(idexp=idexp)).first()
     if _experiment_configuration_update_required(exp):
         flash(
-            _("Update Experiment Configuration before running clients for this experiment."),
+            _(
+                "Update Experiment Configuration before running clients for this experiment."
+            ),
             "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
@@ -513,7 +556,9 @@ def pause_client(uid, idexp):
     exp = db.session.scalars(select(Exps).filter_by(idexp=idexp)).first()
     if _experiment_configuration_update_required(exp):
         flash(
-            _("Update Experiment Configuration before changing client execution state."),
+            _(
+                "Update Experiment Configuration before changing client execution state."
+            ),
             "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
@@ -529,7 +574,10 @@ def pause_client(uid, idexp):
     if exp.simulator_type == "HPC":
         if stop_result is False:
             flash(
-                _("Unable to confirm stop for HPC client '%(name)s'.", name=client.name),
+                _(
+                    "Unable to confirm stop for HPC client '%(name)s'.",
+                    name=client.name,
+                ),
                 "warning",
             )
         client.status = 0
@@ -575,7 +623,10 @@ def stop_client(uid, idexp):
     if exp.simulator_type == "HPC":
         if stop_result is False:
             flash(
-                _("Unable to confirm stop for HPC client '%(name)s'.", name=client.name),
+                _(
+                    "Unable to confirm stop for HPC client '%(name)s'.",
+                    name=client.name,
+                ),
                 "warning",
             )
         client.status = 0
@@ -609,13 +660,17 @@ def run_adhoc_client(idexp, client_key):
     exp = db.session.scalars(select(Exps).filter_by(idexp=idexp)).first()
     if _experiment_configuration_update_required(exp):
         flash(
-            _("Update Experiment Configuration before running ad hoc clients for this experiment."),
+            _(
+                "Update Experiment Configuration before running ad hoc clients for this experiment."
+            ),
             "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
 
     if exp.is_remote == 0 and exp.running == 0:
-        flash(_("Start the experiment server before running ad hoc clients."), "warning")
+        flash(
+            _("Start the experiment server before running ad hoc clients."), "warning"
+        )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
 
     try:
@@ -623,7 +678,10 @@ def run_adhoc_client(idexp, client_key):
     except FileNotFoundError as e:
         flash(_("Error starting ad hoc client: %(error)s", error=str(e)), "error")
     except Exception as e:
-        flash(_("Unexpected error starting ad hoc client: %(error)s", error=str(e)), "error")
+        flash(
+            _("Unexpected error starting ad hoc client: %(error)s", error=str(e)),
+            "error",
+        )
 
     return redirect(url_for("experiments.experiment_details", uid=idexp))
 
@@ -637,7 +695,9 @@ def pause_adhoc_client(idexp, client_key):
     exp = db.session.scalars(select(Exps).filter_by(idexp=idexp)).first()
     if _experiment_configuration_update_required(exp):
         flash(
-            _("Update Experiment Configuration before changing ad hoc client execution state."),
+            _(
+                "Update Experiment Configuration before changing ad hoc client execution state."
+            ),
             "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
@@ -647,6 +707,9 @@ def pause_adhoc_client(idexp, client_key):
     except FileNotFoundError as e:
         flash(_("Error pausing ad hoc client: %(error)s", error=str(e)), "error")
     except Exception as e:
-        flash(_("Unexpected error pausing ad hoc client: %(error)s", error=str(e)), "error")
+        flash(
+            _("Unexpected error pausing ad hoc client: %(error)s", error=str(e)),
+            "error",
+        )
 
     return redirect(url_for("experiments.experiment_details", uid=idexp))

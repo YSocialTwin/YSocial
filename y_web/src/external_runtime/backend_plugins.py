@@ -1034,4 +1034,6 @@ def training_signup_api():
     report = validate_backend_suite(TRAINING_REPO_KEY)
     if not report.get("valid") or not plugin_enabled(TRAINING_REPO_KEY):
         return None
-    return _import_from_suite(TRAINING_REPO_KEY, "modules.training_editor.backend.self_registration")
+    return _import_from_suite(
+        TRAINING_REPO_KEY, "modules.training_editor.backend.self_registration"
+    )

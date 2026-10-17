@@ -10,6 +10,7 @@ from flask_login import current_user, login_required
 from sqlalchemy import select
 
 from y_web import db
+from y_web.i18n import gettext as _
 from y_web.src.hpc.population_backup import _population_json_candidates
 from y_web.src.models import (
     Agent,
@@ -25,7 +26,6 @@ from y_web.src.system.miscellanea import check_privileges
 
 from ._blueprint import clientsr
 from ._crud import _get_experiment_folder_name, _get_experiment_mode
-from y_web.i18n import gettext as _
 
 
 def _update_client_simulation_internal(uid, expected_mode):
@@ -384,7 +384,11 @@ def _sync_population_recsys_fields(
                 updated_paths.append(candidate)
         except Exception as exc:
             flash(
-                _("Updated database values, but failed to sync population config '%(basename)s': %(error)s", basename=os.path.basename(candidate), error=exc),
+                _(
+                    "Updated database values, but failed to sync population config '%(basename)s': %(error)s",
+                    basename=os.path.basename(candidate),
+                    error=exc,
+                ),
                 "warning",
             )
 
@@ -470,7 +474,10 @@ def _update_recsys_internal(uid, expected_mode):
                 json.dump(client_config, handle, indent=4)
         except Exception as exc:
             flash(
-                _("Updated database values, but failed to sync client config: %(error)s", error=exc),
+                _(
+                    "Updated database values, but failed to sync client config: %(error)s",
+                    error=exc,
+                ),
                 "warning",
             )
 

@@ -12,6 +12,7 @@ from flask_login import current_user, login_required
 from sqlalchemy import select
 
 from y_web import db
+from y_web.i18n import gettext as _
 from y_web.routes.interactions._blueprint import user
 from y_web.routes.interactions.common import _maybe_update_fb_interests
 from y_web.src.content.article_extractor import extract_article_info
@@ -35,7 +36,6 @@ from y_web.src.models import (
     User_mgmt,
     Websites,
 )
-from y_web.i18n import gettext as _
 
 
 @user.route("/<int:exp_id>/publish_reddit")

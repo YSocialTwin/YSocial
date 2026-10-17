@@ -29,17 +29,36 @@ def _app():
 
 def _render(app, lang):
     user = SimpleNamespace(
-        id=7, username="alice", email="a@b.c", age=30, gender="female",
-        nationality="Italian", language="Italian", leaning="Centrist",
-        education_level="bachelor", password="x", is_page=0,
+        id=7,
+        username="alice",
+        email="a@b.c",
+        age=30,
+        gender="female",
+        nationality="Italian",
+        language="Italian",
+        leaning="Centrist",
+        education_level="bachelor",
+        password="x",
+        is_page=0,
     )
-    with app.test_request_context("/1/edit_profile/7", headers={"Accept-Language": lang}):
+    with app.test_request_context(
+        "/1/edit_profile/7", headers={"Accept-Language": lang}
+    ):
         return render_template(
-            "forum/edit_profile.html", user=user, profile_pic="",
-            available_profile_pics=["a.png"], cover_image="",
-            available_cover_images=["b.png"], is_page=0, username="alice",
-            user_id=7, logged_username="alice", logged_id=7, is_admin=False,
-            exp_id=1, forum_memory_enabled=False,
+            "forum/edit_profile.html",
+            user=user,
+            profile_pic="",
+            available_profile_pics=["a.png"],
+            cover_image="",
+            available_cover_images=["b.png"],
+            is_page=0,
+            username="alice",
+            user_id=7,
+            logged_username="alice",
+            logged_id=7,
+            is_admin=False,
+            exp_id=1,
+            forum_memory_enabled=False,
         )
 
 

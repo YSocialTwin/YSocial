@@ -36,6 +36,7 @@ from flask_login import current_user, login_required, login_user
 from sqlalchemy import select
 
 from y_web import db  # , app
+from y_web.i18n import gettext as _
 from y_web.migrations.add_hpc_monitor_settings import (
     ensure_hpc_monitor_settings_schema,
 )
@@ -117,7 +118,6 @@ from ._blueprint import (
     experiments,
 )
 from ._helpers import *  # noqa: F401,F403
-from y_web.i18n import gettext as _
 
 
 @experiments.route("/admin/test_remote_server/<int:exp_id>", methods=["POST"])
@@ -132,7 +132,9 @@ def test_remote_server(exp_id):
         port = data.get("port")
 
         if not host or not port:
-            return jsonify({"success": False, "message": _("Host and port are required")})
+            return jsonify(
+                {"success": False, "message": _("Host and port are required")}
+            )
 
         # Try to connect to the server
         import socket
@@ -148,27 +150,52 @@ def test_remote_server(exp_id):
                 return jsonify(
                     {
                         "success": True,
-                        "message": _("Successfully connected to %(host)s:%(port)s", host=host, port=port),
+                        "message": _(
+                            "Successfully connected to %(host)s:%(port)s",
+                            host=host,
+                            port=port,
+                        ),
                     }
                 )
             else:
                 return jsonify(
                     {
                         "success": False,
-                        "message": _("Cannot connect to %(host)s:%(port)s - Connection refused", host=host, port=port),
+                        "message": _(
+                            "Cannot connect to %(host)s:%(port)s - Connection refused",
+                            host=host,
+                            port=port,
+                        ),
                     }
                 )
         except socket.gaierror:
-            return jsonify({"success": False, "message": _("Invalid hostname: %(host)s", host=host)})
+            return jsonify(
+                {
+                    "success": False,
+                    "message": _("Invalid hostname: %(host)s", host=host),
+                }
+            )
         except socket.timeout:
             return jsonify(
-                {"success": False, "message": _("Connection timeout to %(host)s:%(port)s", host=host, port=port)}
+                {
+                    "success": False,
+                    "message": _(
+                        "Connection timeout to %(host)s:%(port)s", host=host, port=port
+                    ),
+                }
             )
         except Exception as e:
-            return jsonify({"success": False, "message": _("Connection error: %(error)s", error=str(e))})
+            return jsonify(
+                {
+                    "success": False,
+                    "message": _("Connection error: %(error)s", error=str(e)),
+                }
+            )
 
     except Exception as e:
-        return jsonify({"success": False, "message": _("Error: %(error)s", error=str(e))})
+        return jsonify(
+            {"success": False, "message": _("Error: %(error)s", error=str(e))}
+        )
 
 
 @experiments.route("/admin/update_remote_server/<int:exp_id>", methods=["POST"])
@@ -280,7 +307,10 @@ def update_remote_server(exp_id):
 
     except Exception as e:
         return jsonify(
-            {"success": False, "message": _("Error updating server: %(error)s", error=str(e))}
+            {
+                "success": False,
+                "message": _("Error updating server: %(error)s", error=str(e)),
+            }
         )
 
 
@@ -371,7 +401,9 @@ def update_hpc_monitor_settings():
                     jsonify(
                         {
                             "success": False,
-                            "message": _("Check interval must be between 1 and 300 seconds"),
+                            "message": _(
+                                "Check interval must be between 1 and 300 seconds"
+                            ),
                         }
                     ),
                     400,
@@ -379,7 +411,9 @@ def update_hpc_monitor_settings():
             settings.check_interval_seconds = interval
         except (ValueError, TypeError):
             return (
-                jsonify({"success": False, "message": _("Invalid check interval value")}),
+                jsonify(
+                    {"success": False, "message": _("Invalid check interval value")}
+                ),
                 400,
             )
 
@@ -405,7 +439,9 @@ def update_hpc_monitor_settings():
                     jsonify(
                         {
                             "success": False,
-                            "message": _("Max HPC experiments per group must be at least 1, or choose unlimited"),
+                            "message": _(
+                                "Max HPC experiments per group must be at least 1, or choose unlimited"
+                            ),
                         }
                     ),
                     400,
@@ -420,7 +456,9 @@ def update_hpc_monitor_settings():
                     jsonify(
                         {
                             "success": False,
-                            "message": _("Max simulations per vLLM worker must be at least 1"),
+                            "message": _(
+                                "Max simulations per vLLM worker must be at least 1"
+                            ),
                         }
                     ),
                     400,

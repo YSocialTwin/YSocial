@@ -36,6 +36,7 @@ from flask_login import current_user, login_required, login_user
 from sqlalchemy import func, select
 
 from y_web import db  # , app
+from y_web.i18n import gettext as _
 from y_web.src.content.avatars import normalize_forum_avatar_mode
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
@@ -124,7 +125,6 @@ from ._helpers import (
     _sanitize_filename,
     _serialize_download_notification,
 )
-from y_web.i18n import gettext as _
 
 
 def _create_sqlite_copy_for_postgresql(experiment, folder):
@@ -528,7 +528,9 @@ def download_experiments_bulk():
     ).start()
 
     flash(
-        _("Bulk archive generation started. You will be notified when the file is ready."),
+        _(
+            "Bulk archive generation started. You will be notified when the file is ready."
+        ),
         "info",
     )
     return redirect(request.referrer or url_for("experiments.settings"))

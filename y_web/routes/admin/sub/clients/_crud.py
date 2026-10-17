@@ -21,6 +21,7 @@ from flask_login import current_user, login_required
 from sqlalchemy import delete, select
 
 from y_web import db
+from y_web.i18n import gettext as _
 from y_web.routes.admin.sub.experiments._helpers import (
     _experiment_configuration_update_required,
     _experiment_uses_llm_agents,
@@ -72,7 +73,6 @@ from y_web.src.system.path_utils import get_resource_path
 
 from ._blueprint import clientsr
 from ._helpers import _forum_effective_link_share, allocate_topics_by_percentage
-from y_web.i18n import gettext as _
 
 PLUGIN_REGISTRY_RELATIVE_PATHS = (
     Path("meta") / "registry.json",
@@ -208,7 +208,9 @@ def _adhoc_agent_specs() -> list[dict]:
             if not agent_type:
                 continue
             display_name_en = str(entry.get("display_name") or agent_type).strip()
-            slug = _custom_agent_slug(display_name_en)  # identity: never from translated text
+            slug = _custom_agent_slug(
+                display_name_en
+            )  # identity: never from translated text
             from y_web.src.external_runtime.plugin_i18n import (
                 localize_manifest,
                 repo_key_for_dir,
@@ -264,7 +266,12 @@ def _adhoc_agent_specs() -> list[dict]:
                     "client_parameters": client_parameters,
                     # ``title_key`` is the English title the page logic matches on.
                     "prompt_templates": [
-                        {**t, "title_key": _titles_en[i] if i < len(_titles_en) else t.get("title")}
+                        {
+                            **t,
+                            "title_key": (
+                                _titles_en[i] if i < len(_titles_en) else t.get("title")
+                            ),
+                        }
                         for i, t in enumerate(entry.get("prompt_templates") or [])
                     ],
                     "repo_name": repo_dir.name,
@@ -1739,7 +1746,9 @@ def clients_standard(idexp):
         return redirect(url_for("clientsr.clients_forum", idexp=idexp))
     if _experiment_configuration_update_required(exp):
         flash(
-            _("Update Experiment Configuration before creating clients for this experiment."),
+            _(
+                "Update Experiment Configuration before creating clients for this experiment."
+            ),
             "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
@@ -1764,7 +1773,9 @@ def clients_forum(idexp):
         return redirect(url_for("clientsr.clients_standard", idexp=idexp))
     if _experiment_configuration_update_required(exp):
         flash(
-            _("Update Experiment Configuration before creating clients for this experiment."),
+            _(
+                "Update Experiment Configuration before creating clients for this experiment."
+            ),
             "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
@@ -1791,7 +1802,9 @@ def clients_hpc(idexp):
         return redirect(url_for("clientsr.clients_standard", idexp=idexp))
     if _experiment_configuration_update_required(exp):
         flash(
-            _("Update Experiment Configuration before creating clients for this experiment."),
+            _(
+                "Update Experiment Configuration before creating clients for this experiment."
+            ),
             "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
@@ -1819,7 +1832,9 @@ def clients_photo(idexp):
         return redirect(url_for("clientsr.clients_hpc", idexp=idexp))
     if _experiment_configuration_update_required(exp):
         flash(
-            _("Update Experiment Configuration before creating clients for this experiment."),
+            _(
+                "Update Experiment Configuration before creating clients for this experiment."
+            ),
             "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
@@ -1841,7 +1856,8 @@ def clients_adhoc(idexp):
         return redirect(url_for("experiments.settings"))
     if exp.is_remote == 1:
         flash(
-            _("Ad hoc agent clients are not available for remote experiments."), "warning"
+            _("Ad hoc agent clients are not available for remote experiments."),
+            "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
     if not _experiment_uses_llm_agents(exp):
@@ -1852,7 +1868,9 @@ def clients_adhoc(idexp):
         return redirect(url_for("experiments.experiment_details", uid=idexp))
     if _experiment_configuration_update_required(exp):
         flash(
-            _("Update Experiment Configuration before creating clients for this experiment."),
+            _(
+                "Update Experiment Configuration before creating clients for this experiment."
+            ),
             "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
@@ -1924,7 +1942,8 @@ def edit_adhoc_client(idexp, client_key):
         return redirect(url_for("experiments.settings"))
     if exp.is_remote == 1:
         flash(
-            _("Ad hoc agent clients are not available for remote experiments."), "warning"
+            _("Ad hoc agent clients are not available for remote experiments."),
+            "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
     if not _experiment_uses_llm_agents(exp):
@@ -1935,7 +1954,9 @@ def edit_adhoc_client(idexp, client_key):
         return redirect(url_for("experiments.experiment_details", uid=idexp))
     if _experiment_configuration_update_required(exp):
         flash(
-            _("Update Experiment Configuration before modifying clients for this experiment."),
+            _(
+                "Update Experiment Configuration before modifying clients for this experiment."
+            ),
             "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
@@ -1963,7 +1984,9 @@ def edit_adhoc_client(idexp, client_key):
         "agent_type"
     ) == "stress_attacker" and not _stress_reward_enabled_for_adhoc(exp):
         flash(
-            _("Stress Attacker requires stress/reward to be enabled for this experiment."),
+            _(
+                "Stress Attacker requires stress/reward to be enabled for this experiment."
+            ),
             "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
@@ -2049,7 +2072,9 @@ def create_adhoc_client():
 
     if _experiment_configuration_update_required(exp):
         flash(
-            _("Update Experiment Configuration before creating clients for this experiment."),
+            _(
+                "Update Experiment Configuration before creating clients for this experiment."
+            ),
             "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=exp_id))
@@ -2070,7 +2095,9 @@ def create_adhoc_client():
         "agent_type"
     ) == "stress_attacker" and not _stress_reward_enabled_for_adhoc(exp):
         flash(
-            _("Stress Attacker requires stress/reward to be enabled for this experiment."),
+            _(
+                "Stress Attacker requires stress/reward to be enabled for this experiment."
+            ),
             "error",
         )
         return redirect(url_for("clientsr.clients_adhoc", idexp=exp_id))
@@ -2078,7 +2105,9 @@ def create_adhoc_client():
         "requires_opinion_dynamics"
     ) and not _opinion_dynamics_enabled_for_client_creation(exp):
         flash(
-            _("The selected ad hoc agent type requires opinion dynamics to be enabled for this experiment."),
+            _(
+                "The selected ad hoc agent type requires opinion dynamics to be enabled for this experiment."
+            ),
             "error",
         )
         return redirect(url_for("clientsr.clients_adhoc", idexp=exp_id))
@@ -2088,7 +2117,8 @@ def create_adhoc_client():
     ).first()
     if population is None or population.pop_type not in spec["accepted_slugs"]:
         flash(
-            _("Select a population compatible with the chosen ad hoc agent type."), "error"
+            _("Select a population compatible with the chosen ad hoc agent type."),
+            "error",
         )
         return redirect(url_for("clientsr.clients_adhoc", idexp=exp_id))
 
@@ -2116,7 +2146,10 @@ def create_adhoc_client():
 
     if os.path.exists(config_filename):
         flash(
-            _("An ad hoc client config named '%(safe_client_name)s' already exists.", safe_client_name=safe_client_name),
+            _(
+                "An ad hoc client config named '%(safe_client_name)s' already exists.",
+                safe_client_name=safe_client_name,
+            ),
             "error",
         )
         return redirect(url_for("clientsr.clients_adhoc", idexp=exp_id))
@@ -2163,7 +2196,9 @@ def create_adhoc_client():
     )
     if llm_required and not llm_model:
         flash(
-            _("This ad hoc client requires an LLM model because at least one managed agent uses an LLM-backed behavior."),
+            _(
+                "This ad hoc client requires an LLM model because at least one managed agent uses an LLM-backed behavior."
+            ),
             "error",
         )
         return redirect(url_for("clientsr.clients_adhoc", idexp=exp_id))
@@ -2235,7 +2270,8 @@ def create_adhoc_client():
                 "population_id": population.id,
                 "population_name": population.name,
                 "agent_type_slug": spec["slug"],
-                "agent_type_display": spec.get("display_name_en") or spec["display_name"],
+                "agent_type_display": spec.get("display_name_en")
+                or spec["display_name"],
                 "plugin_repository": spec["repo_name"],
             },
         },
@@ -2265,7 +2301,9 @@ def update_adhoc_client(idexp, client_key):
         return redirect(url_for("experiments.settings"))
     if _experiment_configuration_update_required(exp):
         flash(
-            _("Update Experiment Configuration before modifying clients for this experiment."),
+            _(
+                "Update Experiment Configuration before modifying clients for this experiment."
+            ),
             "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
@@ -2295,7 +2333,9 @@ def update_adhoc_client(idexp, client_key):
         "agent_type"
     ) == "stress_attacker" and not _stress_reward_enabled_for_adhoc(exp):
         flash(
-            _("Stress Attacker requires stress/reward to remain enabled for this experiment."),
+            _(
+                "Stress Attacker requires stress/reward to remain enabled for this experiment."
+            ),
             "error",
         )
         return redirect(
@@ -2305,7 +2345,9 @@ def update_adhoc_client(idexp, client_key):
         "requires_opinion_dynamics"
     ) and not _opinion_dynamics_enabled_for_client_creation(exp):
         flash(
-            _("The selected ad hoc agent type requires opinion dynamics to remain enabled for this experiment."),
+            _(
+                "The selected ad hoc agent type requires opinion dynamics to remain enabled for this experiment."
+            ),
             "error",
         )
         return redirect(
@@ -2323,7 +2365,9 @@ def update_adhoc_client(idexp, client_key):
     write_adhoc_json(config_path, updated)
     initialize_state_for_config(config_path)
     flash(
-        _("Ad hoc client settings updated. Running clients will pick up the changes on the next round."),
+        _(
+            "Ad hoc client settings updated. Running clients will pick up the changes on the next round."
+        ),
         "success",
     )
     return redirect(url_for("experiments.experiment_details", uid=idexp))
@@ -3522,7 +3566,11 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
                                 o.write(f"{l[0]},{l[1]}\n")
                             else:
                                 flash(
-                                    _("Agent %(l)s or %(l2)s not found in network file.", l=l[0], l2=l[1]),
+                                    _(
+                                        "Agent %(l)s or %(l2)s not found in network file.",
+                                        l=l[0],
+                                        l2=l[1],
+                                    ),
                                     "warning",
                                 )
 
@@ -3536,7 +3584,9 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
                 if os.path.exists(network_path):
                     os.remove(network_path)
                 flash(
-                    _("Network file format error: provide a csv file containing two columns with agent names. No header required."),
+                    _(
+                        "Network file format error: provide a csv file containing two columns with agent names. No header required."
+                    ),
                     "error",
                 )
 
@@ -3680,7 +3730,8 @@ def _create_standard_client_internal():
         return redirect(url_for("experiments.settings"))
     if getattr(exp, "simulator_type", "Standard") == "HPC":
         flash(
-            _("Use the dedicated HPC client creation route for this experiment."), "error"
+            _("Use the dedicated HPC client creation route for this experiment."),
+            "error",
         )
         return redirect(url_for("clientsr.clients_hpc", idexp=exp_id))
     if exp.platform_type != "microblogging":
@@ -4095,7 +4146,10 @@ def _create_standard_client_internal():
     pop_type = infer_population_username_type(population)
     if pop_type not in {None, "microblogging"}:
         flash(
-            _("Population Username Type '%(pop_type)s' is incompatible with experiment platform 'microblogging'.", pop_type=pop_type),
+            _(
+                "Population Username Type '%(pop_type)s' is incompatible with experiment platform 'microblogging'.",
+                pop_type=pop_type,
+            ),
             "error",
         )
         return redirect(request.referrer)
@@ -4468,7 +4522,9 @@ def _create_standard_client_internal():
 
     if not _apply_population_attributes_to_client_config(config, population_id):
         flash(
-            _("The selected population has no usable agents or is missing age data. Rebuild or re-upload the population before creating a client."),
+            _(
+                "The selected population has no usable agents or is missing age data. Rebuild or re-upload the population before creating a client."
+            ),
             "error",
         )
         return redirect(request.referrer)
@@ -4806,7 +4862,11 @@ def _create_standard_client_internal():
                                 o.write(f"{l[0]},{l[1]}\n")
                             else:
                                 flash(
-                                    _("Agent %(l)s or %(l2)s not found in network file.", l=l[0], l2=l[1]),
+                                    _(
+                                        "Agent %(l)s or %(l2)s not found in network file.",
+                                        l=l[0],
+                                        l2=l[1],
+                                    ),
                                     "warning",
                                 )
 
@@ -4819,7 +4879,9 @@ def _create_standard_client_internal():
                 if os.path.exists(network_path):
                     os.remove(network_path)
                 flash(
-                    _("Network file format error: provide a csv file containing two columns with agent names. No header required."),
+                    _(
+                        "Network file format error: provide a csv file containing two columns with agent names. No header required."
+                    ),
                     "error",
                 )
 
@@ -5000,7 +5062,8 @@ def _create_forum_client_internal():
         return redirect(url_for("experiments.settings"))
     if getattr(exp, "simulator_type", "Standard") == "HPC":
         flash(
-            _("Use the dedicated HPC client creation route for this experiment."), "error"
+            _("Use the dedicated HPC client creation route for this experiment."),
+            "error",
         )
         return redirect(url_for("clientsr.clients_hpc", idexp=exp_id))
     if exp.platform_type != "forum":
@@ -5421,7 +5484,10 @@ def _create_forum_client_internal():
     pop_type = infer_population_username_type(population)
     if pop_type not in {None, "forum"}:
         flash(
-            _("Population Username Type '%(pop_type)s' is incompatible with experiment platform 'forum'.", pop_type=pop_type),
+            _(
+                "Population Username Type '%(pop_type)s' is incompatible with experiment platform 'forum'.",
+                pop_type=pop_type,
+            ),
             "error",
         )
         return redirect(request.referrer)
@@ -5761,7 +5827,9 @@ def _create_forum_client_internal():
 
     if not _apply_population_attributes_to_client_config(config, population_id):
         flash(
-            _("The selected population has no usable agents or is missing age data. Rebuild or re-upload the population before creating a client."),
+            _(
+                "The selected population has no usable agents or is missing age data. Rebuild or re-upload the population before creating a client."
+            ),
             "error",
         )
         return redirect(request.referrer)
@@ -6122,7 +6190,11 @@ def _create_forum_client_internal():
                                 o.write(f"{l[0]},{l[1]}\n")
                             else:
                                 flash(
-                                    _("Agent %(l)s or %(l2)s not found in network file.", l=l[0], l2=l[1]),
+                                    _(
+                                        "Agent %(l)s or %(l2)s not found in network file.",
+                                        l=l[0],
+                                        l2=l[1],
+                                    ),
                                     "warning",
                                 )
 
@@ -6135,7 +6207,9 @@ def _create_forum_client_internal():
                 if os.path.exists(network_path):
                     os.remove(network_path)
                 flash(
-                    _("Network file format error: provide a csv file containing two columns with agent names. No header required."),
+                    _(
+                        "Network file format error: provide a csv file containing two columns with agent names. No header required."
+                    ),
                     "error",
                 )
 
@@ -6331,7 +6405,9 @@ def create_hpc_client_route():
         return redirect(url_for("experiments.settings"))
     if getattr(exp, "simulator_type", "Standard") != "HPC":
         flash(
-            _("Use the dedicated standard or forum client creation route for this experiment."),
+            _(
+                "Use the dedicated standard or forum client creation route for this experiment."
+            ),
             "error",
         )
         if exp.platform_type == "forum":

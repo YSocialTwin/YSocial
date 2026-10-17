@@ -15,6 +15,7 @@ from sqlalchemy import and_, desc, func, select
 from sqlalchemy.sql.expression import func
 
 from y_web import db
+from y_web.i18n import gettext as _
 from y_web.routes.social._blueprint import main
 from y_web.routes.social.helpers import (
     _experiment_memory_enabled,
@@ -60,7 +61,6 @@ from y_web.src.models import (
     Websites,
 )
 from y_web.src.recsys import get_suggested_users
-from y_web.i18n import gettext as _
 
 
 def _normalize_forum_community_slug(value):
@@ -179,7 +179,9 @@ def interview(exp_id):
         abort(404)
     if not _experiment_memory_enabled(exp_id):
         flash(
-            _("Interview is unavailable because memory is disabled for this experiment.")
+            _(
+                "Interview is unavailable because memory is disabled for this experiment."
+            )
         )
         if platform_type == "forum":
             return redirect(
