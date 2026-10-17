@@ -20,6 +20,9 @@ nav:
       - CLI Reference: reference/cli.md
       - External Runtime Management: reference/external-runtime-management.md
       - Usage Examples: USAGE_EXAMPLES.md
+  - Internationalisation:
+      - Adding a Language: i18n/adding-a-language.md
+      - Conventions: i18n/conventions.md
   - Packaging:
       - PyInstaller Builds: packaging.md
       - macOS Code Signing: MACOS_CODE_SIGNING.md

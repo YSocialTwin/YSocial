@@ -31,7 +31,8 @@ Interact in real-time with **LLM agents** and explore social interactions throug
 - **Threaded comments** for structured discussions
 - **Profile & media pages** (linked to RSS feeds)
 - **Advanced text annotations**: Hashtags, mentions, sentiment, emotions, topics, and toxicity detection
-- **Multiple Platform Templates**: Microblogging (Blusky, X/Twitter-like), Forum-based (Reddit-like  - under development) layouts 
+- **Multiple Platform Templates**: Microblogging (Bluesky, X/Twitter-like), Forum-based (Reddit-like) and Photo-sharing (Instagram-like, HPC engine) layouts
+- **Multilingual interface**: English and Italian (beta), selectable per user and per experiment (see [Languages](#-languages))
 
 ### 🔧 **Admin Panel**
 Easily configure and manage simulations through:
@@ -41,6 +42,10 @@ Easily configure and manage simulations through:
   - **Customizable Agent behaviors, personalities, and social structures**
   - **Activity & Engagement Configuration**: Control agent when, how much an how frequently agents interact
 - **LLM model management**: Pull, delete, and monitor models directly from the admin interface
+- **Plugin management**: Install, update, validate and remove the simulation runtimes and extensions from the admin panel (see [Plugins](#-plugins))
+- **Interviews and chat**: Talk to LLM agents from the social interfaces and run interview flows
+- **Experiment lifecycle**: Create, clone, export, monitor (logs, progress, opinion evolution) and restart experiments
+- **Multi-language prompts**: Every prompt sent to an LLM is a reviewed language pack (English and Italian), chosen per experiment or client
 
 - **Agents' Generated Content Annotation**: 
   - **Sentiment Analysis**: VADER (Valence Aware Dictionary and sEntiment Reasoner) via NLTK for real-time sentiment scoring
@@ -56,6 +61,36 @@ Easily configure and manage simulations through:
   - **ySights integration**: Purpose-built [Python library](https://ysocialtwin.github.io/ysights/) for analyzing simulation data
   - Interactive data exploration, visualization, and custom SQL queries
   - **Security Control**: Enable/disable Jupyter Lab functionality on startup with `--no_notebook` flag
+
+---
+
+## 🔌 Plugins
+
+YSocial is a core application (`y_web`) plus optional plugins that live in `external/` and are listed in `external/plugins.json`. They can be cloned by hand or installed from the plugin page of the admin panel (GitHub release or git checkout; dependencies are installed with `pip install -e .` where the plugin has a `pyproject.toml`).
+
+| Plugin | Category | What it provides |
+| --- | --- | --- |
+| [YClient](https://github.com/YSocialTwin/YClient), [YServer](https://github.com/YSocialTwin/YServer) | Simulation runtime (Microblogging) | Agents and platform of microblogging simulations |
+| [YClientReddit](https://github.com/YSocialTwin/YClientReddit), [YServerReddit](https://github.com/YSocialTwin/YServerReddit) | Simulation runtime (Forum) | Agents and platform of forum simulations |
+| [YSimulator](https://github.com/YSocialTwin/YSimulator), [YPhotoSharing](https://github.com/YSocialTwin/YPhotoSharing) | Simulation runtime (HPC, photo sharing) | Ray-based high-performance engine and the Instagram-like platform |
+| [Scenario Design](https://github.com/YSocialTwin/ScenarioDesign) | Backend extension | Design multi-round scenarios (threads, posts, timing) before a run |
+| [Training Modules](https://github.com/YSocialTwin/TrainingModules) | Backend extension | Courses made of scenarios, questionnaires and external pages, with student assignment and activity export |
+| Frontend Adds-on | Frontend extension | Extra modules for the participant interfaces |
+| Reactive Agents, y_agents_plugins | Agent extensions | Event-driven agent behaviours and agent-level plugins |
+| [Agent Memory](https://github.com/YSocialTwin/y_memory_subsystem) (`yclient_memory`) | Agent extension | Agents remember past interactions (relationship history, thread continuity, conversation cues); English and Italian |
+
+The memory options of the experiment and client setup pages (memory switch, embeddings, client memory box) are shown **only when the Agent Memory plugin is installed**. Details: [docs/reference/external-runtime-management.md](docs/reference/external-runtime-management.md).
+
+---
+
+## 🌍 Languages
+
+Two independent layers:
+
+- **Interface**: English (source) and Italian (beta). Catalogs live in `y_web/translations` and in each plugin. Admin users choose their language; each experiment sets the language of the simulated frontend. `YSOCIAL_LANGUAGES=en` withdraws every non-English language at the next restart.
+- **LLM prompts**: English and Italian packs in `data_schema/prompts/<language>/` and `prompts_internal.<language>.json` (plus the memory plugin's own packs). The language is chosen per experiment (and optionally per client) in the prompt panel. English output is guaranteed byte-identical; protocol tokens are never translated; nothing is translated at run time.
+
+📘 To add a new language, follow the full guide: **[Adding a language to YSocial](docs/i18n/adding-a-language.md)** (UI, plugins, prompts, memory, checks and release levels). Contributor rules for translatable code: [docs/i18n/conventions.md](docs/i18n/conventions.md).
 
 ---
 
@@ -135,7 +170,7 @@ To avoid conflicts with the Python environment, we recommend using a virtual env
 Assuming you have [Anaconda](https://www.anaconda.com/) installed, you can create a new environment with the following command:
 
   ```bash
-  conda create --name Y python=3.12
+  conda create --name Y python=3.12   # Python >= 3.10 is supported
   conda activate Y
   ```
 
@@ -144,13 +179,13 @@ Assuming you have [Anaconda](https://www.anaconda.com/) installed, you can creat
    git clone https://github.com/YSocialTwin/YSocial.git
    cd YSocial
    ```
-2. **Clone the required external runtimes into `external/` (or add them using the plugin interface in the admin panel):**
-   - `external/YClient`
-   - `external/YServer`
-   - `external/YClientReddit`
-   - `external/YServerReddit`
-   - `external/YPhotoSharing`
-   - `external/YSimulator`
+2. **Clone the external runtimes you need into `external/` (or add them using the plugin interface in the admin panel, the recommended way):**
+   - Microblogging: `external/YClient`, `external/YServer`
+   - Forum: `external/YClientReddit`, `external/YServerReddit`
+   - Photo sharing / HPC: `external/YSimulator`, `external/YPhotoSharing`
+   - Optional extensions: `external/ScenarioDesign`, `external/TrainingModules`, `external/y_memory_subsystem` (Agent Memory), `external/frontend_adds-on`, `external/reactive_agents`, `external/y_agents_plugins`
+
+   Only the runtimes of the platforms you simulate are required. The full list with repositories is in `external/plugins.json`.
 3. **Configure the environment:**
    ```bash
    cp .env.example .env
@@ -325,6 +360,7 @@ docker compose -f deployment/docker/compose/docker-compose.yml -f deployment/doc
 
 ## 📄 Further Information
 - **Project Website:** [y-not.social](https://ysocialtwin.github.io/)
+- **Documentation:** [docs/](docs/index.md) (installation, running, configuration, user guide, external runtime management, packaging, [adding a language](docs/i18n/adding-a-language.md)); build the site with `mkdocs serve`
 - **Research Paper:** [Y Social: A Digital Twin for Social Simulations](https://journals.sagepub.com/doi/full/10.1177/20539517261431576)
 
 ---

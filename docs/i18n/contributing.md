@@ -20,5 +20,5 @@ Ogni PR che cambia testi visibili aggiorna l'italiano. Le correzioni linguistich
 ## Kill switch
 `YSOCIAL_LANGUAGES=en` (variabile d'ambiente, riavvio dell'app) ritira tutte le lingue tranne l'inglese: i selettori spariscono e le lingue salvate (utente, esperimento) ricadono sull'inglese. Esempio di ripristino: `YSOCIAL_LANGUAGES=en,it`.
 
-## Nuova lingua (fuori perimetro attuale)
-Richiede decisione esplicita: aggiungere il codice in `YSOCIAL_LANGUAGES`/`BaseConfig`, nome in `LANGUAGE_NAMES`, catalogo core + plugin + JS, revisione e glossario per la lingua.
+## Nuova lingua
+Guida completa (UI, plugin, prompt, memoria, controlli, rilascio) in inglese: [adding-a-language.md](adding-a-language.md). Richiede comunque una decisione esplicita dei referenti.
