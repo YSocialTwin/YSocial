@@ -90,6 +90,10 @@ def _answer_tokens(text, tokens):
     return found
 
 
+# Words that are protocol tokens elsewhere but are only a heading label in these prompts (nothing is parsed from them).
+HEADING_LABELS = {("adapter__generate_photo_comment__4", "COMMENT")}
+
+
 def compare(english, other, field_re, tokens, label, allow_partial=False):
     """Problems found when ``other`` is held against ``english`` (both parsed JSON)."""
     problems = []
@@ -114,6 +118,8 @@ def compare(english, other, field_re, tokens, label, allow_partial=False):
         if others != others_en:
             problems.append(f"{label}{path}: braces differ from English")
         for token in sorted(_answer_tokens(source, tokens)):
+            if (path.rsplit("/", 1)[-1], token) in HEADING_LABELS:
+                continue
             if token not in set(re.findall(r"[A-Za-z_]+", text)):
                 problems.append(f"{label}{path}: protocol token {token} is missing or translated")
     return problems
