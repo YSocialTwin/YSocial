@@ -26,6 +26,7 @@ from ._memory import (
     _INTERVIEW_WEAK_QUERY_TERMS,
     _experiment_sqlite_db_path,
 )
+from y_web import prompt_store
 
 
 def _extract_query_terms(admin_text: str, *, max_terms: int = 8) -> List[str]:
@@ -1319,10 +1320,10 @@ def _build_evidence_guard(
     lines.append(f"- strict_no_inference={strict_no_inference}")
     if strict_no_inference:
         lines.append(
-            '- For activity-specific questions, answer "can\'t confirm" unless exact evidence is present.'
+            prompt_store.get("_facts__build_evidence_guard__1")
         )
         lines.append(
-            "- Do not introduce new movie/book titles, usernames, or thread narratives not in evidence."
+            prompt_store.get("_facts__build_evidence_guard__2")
         )
 
     meta = {

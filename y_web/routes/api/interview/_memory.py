@@ -47,6 +47,7 @@ from ._server import (
     _post_server_json,
     _post_server_json_with_retries,
 )
+from y_web import prompt_store
 
 
 def _resolve_interview_profile_pic(user: User_mgmt, exp: Exps) -> str:
@@ -1538,7 +1539,7 @@ def _format_memory_pack(snapshot: Dict[str, Any], *, max_chars: int = 4500) -> s
                 "- Reliability warning: memory retrieval is weak for this query."
             )
             parts.append(
-                "- Do not infer specific prior interactions from memory alone."
+                prompt_store.get("_memory__format_memory_pack__1")
             )
 
     # Keep legacy rendering for backward compatibility and semantic fallback mode.

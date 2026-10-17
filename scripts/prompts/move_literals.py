@@ -254,7 +254,7 @@ def main():
     ap.add_argument("--package", required=True, help="package directory, relative to the YWeb root")
     ap.add_argument("--apply", action="store_true")
     ap.add_argument("--import-line")
-    ap.add_argument("--only", help="only files whose path contains this text")
+    ap.add_argument("--only", help="only files whose path contains one of these comma-separated texts")
     ap.add_argument("--skip", help="skip files whose path contains this text", action="append", default=[])
     args = ap.parse_args()
     pkg = scan.ROOT / args.package
@@ -267,7 +267,7 @@ def main():
         rel = str(path.relative_to(scan.ROOT))
         if any(s in "/" + rel for s in SKIP_DIRS) or path.name == "prompt_store.py":
             continue
-        if args.only and args.only not in rel or any(s in rel for s in args.skip):
+        if args.only and not any(o in rel for o in args.only.split(",")) or any(s in rel for s in args.skip):
             continue
         mover = Mover(path, pack, import_line)
         try:

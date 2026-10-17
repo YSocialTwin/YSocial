@@ -10,6 +10,7 @@ import os
 import re
 
 from y_web.src.llm.autogen_compat import AssistantAgent
+from y_web import prompt_store
 
 
 class ContentAnnotator(object):
@@ -69,7 +70,7 @@ class ContentAnnotator(object):
                     "temperature": 0,
                     "max_tokens": -1,
                 },
-                system_message="You are a clever and efficient text annotator. Act as specified by the Handler.",
+                system_message=prompt_store.get("content_annotation__init____1"),
                 max_consecutive_auto_reply=1,
             )
 
@@ -80,7 +81,7 @@ class ContentAnnotator(object):
                     "temperature": 0,
                     "max_tokens": -1,
                 },
-                system_message="You are the Handler which provides task details to the annotator.",
+                system_message=prompt_store.get("content_annotation__init____2"),
                 max_consecutive_auto_reply=0,
             )
         else:
@@ -107,10 +108,10 @@ class ContentAnnotator(object):
         self.handler.initiate_chat(
             self.annotator,
             silent=True,
-            message=f"""Read the following text and annotate it with the emotions it elicits. 
-                - Use the GoEmotions taxonomy, which includes: admiration, amusement, anger, annoyance, approval, caring, confusion, curiosity, desire, disappointment, disapproval, disgust, embarrassment, excitement, fear, gratitude, grief, joy, love, nervousness, optimism, pride, realization, relief, remorse, sadness, surprise, and trust.
-                - Do not write additional text to the identified emotions. 
-                \n\n##START TEXT##\n\n{text}\n\n#END TEXT##""",
+            message=prompt_store.prompt(
+                        "content_annotation__annotate_emotions__1",
+                        text=text,
+                    ),
         )
 
         res = self.handler.chat_messages[self.annotator][-1]["content"]
@@ -136,11 +137,10 @@ class ContentAnnotator(object):
         self.handler.initiate_chat(
             self.annotator,
             silent=True,
-            message=f"""Read the following text and detect 3 general topic discussed in it; 
-                    - Each topic must be described 2 words; 
-                    - Format your response as follows. 
-                    \n\n #T: First Topic; #T: Second Topic; #T: Third Topic.",
-                    \n\n##START TEXT##\n\n{text}\n\n#END TEXT##""",
+            message=prompt_store.prompt(
+                        "content_annotation__annotate_topics__1",
+                        text=text,
+                    ),
         )
 
         res = self.handler.chat_messages[self.annotator][-1]["content"]

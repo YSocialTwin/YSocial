@@ -11,6 +11,7 @@ from y_web.src.llm.autogen_compat import (
     AssistantAgent,
     MultimodalConversableAgent,
 )
+from y_web import prompt_store
 
 
 class Annotator(object):
@@ -90,8 +91,10 @@ class Annotator(object):
         self.user_proxy.initiate_chat(
             self.image_agent,
             silent=True,
-            message=f"""Describe the following image. 
-            Write in english. <img {image}>""",
+            message=prompt_store.prompt(
+                        "image_annotator__annotate__1",
+                        image=image,
+                    ),
         )
 
         payload = self.image_agent.chat_messages[self.user_proxy][-1]["content"]

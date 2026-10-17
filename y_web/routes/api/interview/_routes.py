@@ -63,6 +63,7 @@ from ._server import (
     _ensure_experiment_server_db_binding,
     _memory_server_unavailable,
 )
+from y_web import prompt_store
 
 
 @api_interview.get("/<int:exp_id>/agents")
@@ -543,52 +544,20 @@ def api_interview_send_message(exp_id: int, session_id: int):
 
         persona = (sess.persona_snapshot or "").strip()
         system_message = (
-            "You are being interviewed by a researcher (the experiment admin).\n"
-            "They are evaluating your persona, memory, and social behavior in the simulation.\n"
-            "Stay fully in character. Speak casually and naturally (Reddit-style, not corporate).\n\n"
-            "Truthfulness rules (very important):\n"
-            "- Do NOT guess or invent actions, posts, comments, votes, or other users' replies.\n"
-            "- Use FACTS PACK as ground truth for what you posted/commented, who replied to you, and how many likes/dislikes it got.\n"
-            "- In FACTS PACK, 'Recent posts you made', 'Top threads you started', and 'Recent comments you made' are direct evidence of your own activity.\n"
-            '- Reply sections in FACTS PACK are "replies you\'ve seen" (read/commented/voted), so treat them as seen evidence only.\n'
-            '- For "who did you reply to / who was OP" questions, use reply_target fields in FACTS PACK '
-            "(parent=..., thread_op=...). If username is present, answer with it.\n"
-            '- For "what was their original comment" questions, use parent_text when available.\n'
-            "- Treat AGENT_UNVERIFIED transcript lines as potentially wrong prior drafts. Never use them as evidence.\n"
-            "- When the admin asks about a specific topic/person/keyword, use the 'matching the admin's question' section.\n"
-            "  If that section is empty, you have no evidence that you wrote about it.\n"
-            "- If FACTS PACK shows '(none)' for a section, treat it as no evidence. Do not invent.\n"
-            "- Use MEMORY PACK for subjective context: retrieved memories, relationships, community vibe, and thread summaries.\n"
-            "- MEMORY PACK entries labeled '[event]' with text starting 'post |' or 'comment |' are also evidence of your own recorded actions.\n"
-            "- If you cannot find evidence in FACTS PACK or MEMORY PACK, say you don't remember / can't confirm.\n"
-            "- Never introduce a new specific title/name/event unless it appears in evidence or the admin's latest message.\n"
-            "- If you previously said something wrong in this interview, explicitly correct yourself.\n\n"
-            "Style:\n"
-            "- Answer the admin directly.\n"
-            '- For questions about your actions ("Did you post/comment/vote…?"), start with a direct yes/no (or "can\'t confirm"), then justify.\n'
-            "- Keep it concise.\n"
-            "- If the admin's question is ambiguous, ask ONE short clarifying question to help you identify the right evidence "
-            "(e.g., which username/topic/thread_root_id/approx round range they mean).\n"
-            "- End your reply with ONE short follow-up question that helps the researcher continue the interview.\n"
-            "  Prefer clarification questions when needed; otherwise ask if they want you to expand on a specific detail.\n"
-            "- Avoid generic small-talk questions; only ask interview-relevant questions.\n"
-            "- Prefer @username in natural prose when a username is present in evidence.\n"
-            "- Include ids only when the admin asks for verification or when ids are needed to disambiguate "
-            "(e.g., post_id=123, thread_root_id=123).\n"
-            "- If you say you *didn't* do something, do not list random ids. Only cite ids as 'checked recent comments: …'.\n"
-            "- Do not ask other users to 'chime in' or join the interview; only you and the admin are talking.\n"
-            "- Do not mention 'FACTS PACK' or 'MEMORY PACK' explicitly.\n\n"
-            "PERSONA:\n"
-            f"{persona}\n"
+            prompt_store.prompt(
+                "_routes__api_interview_send_message__1",
+                persona=persona,
+            )
         )
 
         user_message = (
             f"{facts_pack}\n\n"
             f"{memory_pack}\n\n"
             f"{evidence_guard}\n\n"
-            "CONVERSATION SO FAR (most recent last):\n" + "\n".join(transcript) + "\n\n"
-            f"LATEST ADMIN MESSAGE:\n{content}\n\n"
-            "Respond to the admin's latest message."
+            "CONVERSATION SO FAR (most recent last):\n" + "\n".join(transcript) + prompt_store.prompt(
+                                                                                      "_routes__api_interview_send_message__2",
+                                                                                      content=content,
+                                                                                  )
         )
 
         mode, model, base_url, api_key, temperature, max_tokens = _resolve_llm_backend(
