@@ -113,6 +113,36 @@
             </div>
         </div>
 
+{% endif %}
+        <!-- Plugin-contributed top-level groups (manifest suite.sidebar.group,
+             see backend_plugins.backend_suite_sidebar_groups()); same markup
+             as the groups above. -->
+        {% for group in extension_sidebar_groups %}
+        <div class="dashboard-aside-group" id="sidebar-group-{{ group.repo_key }}">
+            <button type="button" class="dashboard-aside-link dashboard-aside-group-toggle" id="sidebar-group-toggle-{{ group.repo_key }}" data-group="{{ group.repo_key }}" aria-expanded="false" aria-controls="sidebar-submenu-{{ group.repo_key }}">
+                <div>
+                    <i data-feather="{{ group.icon }}"></i>
+                    <span>{{ group.label }}</span>
+                    <i data-feather="chevron-right" class="dashboard-aside-group-chevron"></i>
+                </div>
+            </button>
+            <div class="dashboard-aside-submenu" id="sidebar-submenu-{{ group.repo_key }}">
+                <div class="dashboard-aside-submenu-title">{{ group.label }}</div>
+                {% set ns = namespace(section=None) %}
+                {% for item in group['items'] %}
+                {% if item.section and item.section != ns.section %}{% set ns.section = item.section %}
+                <div class="dashboard-aside-submenu-title dashboard-aside-submenu-section">{{ item.section }}</div>
+                {% endif %}
+                <a href="{{ item.url }}" class="dashboard-aside-link dashboard-aside-sublink">
+                    <i data-feather="{{ item.icon }}"></i>
+                    <span>{{ item.label }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+{% if current_user_role != "teacher" %}
+
         <!-- Extensions: plugin-contributed configuration and pages. Any
              future backend settings suite that declares a "sidebar" block
              in its own meta/registry.json (see
@@ -142,33 +172,6 @@
         </div>
 
 {% endif %}
-        <!-- Plugin-contributed top-level groups (manifest suite.sidebar.group,
-             see backend_plugins.backend_suite_sidebar_groups()); same markup
-             as the groups above. -->
-        {% for group in extension_sidebar_groups %}
-        <div class="dashboard-aside-group" id="sidebar-group-{{ group.repo_key }}">
-            <button type="button" class="dashboard-aside-link dashboard-aside-group-toggle" id="sidebar-group-toggle-{{ group.repo_key }}" data-group="{{ group.repo_key }}" aria-expanded="false" aria-controls="sidebar-submenu-{{ group.repo_key }}">
-                <div>
-                    <i data-feather="{{ group.icon }}"></i>
-                    <span>{{ group.label }}</span>
-                    <i data-feather="chevron-right" class="dashboard-aside-group-chevron"></i>
-                </div>
-            </button>
-            <div class="dashboard-aside-submenu" id="sidebar-submenu-{{ group.repo_key }}">
-                <div class="dashboard-aside-submenu-title">{{ group.label }}</div>
-                {% set ns = namespace(section=None) %}
-                {% for item in group['items'] %}
-                {% if item.section and item.section != ns.section %}{% set ns.section = item.section %}
-                <div class="dashboard-aside-submenu-title dashboard-aside-submenu-section">{{ item.section }}</div>
-                {% endif %}
-                <a href="{{ item.url }}" class="dashboard-aside-link dashboard-aside-sublink">
-                    <i data-feather="{{ item.icon }}"></i>
-                    <span>{{ item.label }}</span>
-                </a>
-                {% endfor %}
-            </div>
-        </div>
-        {% endfor %}
     </div>
 
     <!-- Pinned to the bottom of the sidebar column (margin-top:auto in

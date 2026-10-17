@@ -175,3 +175,19 @@ def test_without_plugins_the_sidebar_has_no_plugin_group(core_app):
     html = _page(core_app, "admin")
     assert 'id="sidebar-group-training_modules"' not in html
     assert 'id="sidebar-group-extensions"' in html
+
+
+def test_plugin_groups_sit_between_experiments_and_extensions(
+    core_app, tmp_path, monkeypatch
+):
+    app = _build(
+        core_app,
+        tmp_path,
+        monkeypatch,
+        {"label": "Fake", "icon": "box", "endpoint": "fake_suite_bp.a", "group": GROUP},
+    )
+    html = _page(app, "admin")
+    experiments = html.index('id="sidebar-group-experiments"')
+    plugin = html.index('id="sidebar-group-fake_suite"')
+    extensions = html.index('id="sidebar-group-extensions"')
+    assert experiments < plugin < extensions
