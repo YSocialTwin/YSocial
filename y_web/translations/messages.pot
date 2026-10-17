@@ -10822,3 +10822,14 @@ msgstr ""
 msgid "✔️ Use"
 msgstr ""
 
+#: y_web/templates/admin/_prompt_language_switch.html:14
+msgid "Load prompts"
+msgstr ""
+
+#: y_web/templates/admin/_prompt_language_switch.html:4
+msgid "Replace the prompts of this experiment with the ones of the selected language? Changes you made to them will be lost."
+msgstr ""
+
+#: y_web/routes/admin/sub/experiments/_crud.py
+msgid "Prompts loaded in the selected language."
+msgstr ""

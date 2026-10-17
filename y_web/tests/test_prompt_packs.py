@@ -90,3 +90,65 @@ def test_the_selector_appears_only_with_more_than_one_language():
     assert 'name="prompt_language"' in html and 'value="it"' in html
     assert 'value=""' not in html
     assert 'value=""' in _render_selector(two, "client")
+
+
+def test_profile_values_are_written_per_language_in_the_run_folder(tmp_path):
+    pp.record_language(tmp_path, experiment="it", client="c1", client_language="en")
+    values = json.loads((tmp_path / "profile_values.it.json").read_text(encoding="utf-8"))
+    assert values["nationality"]["American"] == "statunitense"
+    assert not (tmp_path / "profile_values.en.json").exists()
+
+
+def test_launch_env_names_the_language_only_when_it_is_not_english():
+    class Obj:
+        def __init__(self, language):
+            self.prompt_language = language
+
+    assert pp.launch_env(Obj("en"), Obj(None)) == {}
+    assert pp.launch_env(Obj("it"), Obj(None)) == {"YSOCIAL_PROMPT_LANGUAGE": "it"}
+    assert pp.launch_env(Obj("it"), Obj("en")) == {}
+    assert pp.launch_env(Obj("zz"), Obj(None)) == {}
+
+
+def test_a_run_folder_in_italian_makes_the_client_prompt_in_italian(tmp_path, monkeypatch):
+    from y_web import prompt_store as ps
+
+    for name in (ps.ENV_VAR, ps.FOLDER_VAR):
+        monkeypatch.setenv(name, "x")
+        monkeypatch.delenv(name)
+    monkeypatch.setattr(ps, "_language", None)
+    monkeypatch.setattr(ps, "_values", {})
+    pp.write_pack("prompts.json", tmp_path / "prompts.json", "it")
+    pp.record_language(tmp_path, experiment="it")
+    assert ps.use_language_from_folder(tmp_path) == "it"
+
+    class Agent:
+        name, age, gender, nationality, profession = "Ann", 31, "female", "American", "Doctor"
+        leaning, oe, co, ex, ag, ne = "centrist", "inventive/curious", "organized", "outgoing", "friendly", "calm"
+        education_level, toxicity, language = "master", "low", "English"
+        topics_opinions = topics_sentiment = ""
+
+    template = json.loads((tmp_path / "prompts.json").read_text(encoding="utf-8"))["agent_roleplay"]
+    text = ps.render(template, self=ps.localize(Agent()), interest=["music"], interests=["music"])
+    assert "donna" in text and "statunitense" in text and "female" not in text and "American" not in text
+
+
+def test_the_language_switch_appears_only_with_more_than_one_language():
+    from jinja2 import Environment, FileSystemLoader
+
+    root = Path(__file__).resolve().parents[1] / "templates"
+    env = Environment(loader=FileSystemLoader(str(root)))
+    env.globals["_"] = lambda text: text
+
+    class Exp:
+        idexp, prompt_language = 7, "it"
+
+    render = lambda langs: env.get_template("admin/_prompt_language_switch.html").render(
+        prompt_languages=langs, experiment=Exp()
+    )
+    one = [{"code": "en", "native_name": "English"}]
+    two = one + [{"code": "it", "native_name": "Italiano"}]
+    assert "prompts_language" not in render(one)
+    html = render(two)
+    assert "/admin/prompts_language/7" in html and 'value="it" selected' in html
+    assert "confirm(" in html

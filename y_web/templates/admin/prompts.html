@@ -27,6 +27,7 @@
  <p class="ys-text-small">
                             {{ _('Configure system prompts that guide agent and page behavior during simulation. These instructions are sent to the LLM before each action.') }}
                         </p>
+                        {% include 'admin/_prompt_language_switch.html' %}
                         <div class="box-content">
                             <form action="/admin/update_prompts/{{ experiment.idexp }}" enctype="multipart/form-data" method="POST">
                                 <div class="box-lines">

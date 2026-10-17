@@ -20,6 +20,7 @@ PARTIALS = {
     "dash_head",
     "_flash_messages",
     "_prompt_language",
+    "_prompt_language_switch",
     "prompts_forum",
     "experiment_details_photo",
     "select_experiment_unused",

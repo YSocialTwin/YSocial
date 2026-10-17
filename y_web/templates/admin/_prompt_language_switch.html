@@ -1,0 +1,20 @@
+{# Choose the language of an experiment's prompts: reloads the prompt file from that language's pack.
+   Shown only when more than one language pack is installed. #}
+{% if prompt_languages and prompt_languages|length > 1 %}
+<form action="/admin/prompts_language/{{ experiment.idexp }}" method="POST" class="ys-prompt-language"
+      onsubmit="return confirm({{ _('Replace the prompts of this experiment with the ones of the selected language? Changes you made to them will be lost.')|tojson }});">
+    <div class="box-line">
+        <span class="left">{{ _('Prompt language') }}</span>
+        <span class="right ys-w-70">
+            <div class="select">
+                <select name="prompt_language" class="w-100">
+                    {% for lang in prompt_languages %}
+                    <option value="{{ lang.code }}" {% if lang.code == (experiment.prompt_language or 'en') %}selected{% endif %}>{{ lang.native_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="button is-solid primary-button">{{ _('Load prompts') }}</button>
+        </span>
+    </div>
+</form>
+{% endif %}

@@ -2902,6 +2902,44 @@ def prompts_hpc(uid):
     )
 
 
+def _experiment_prompt_pack(experiment):
+    """(pack file, file name in the experiment folder) holding the prompts of an experiment."""
+    if experiment.platform_type == "photo_sharing":
+        return "prompts_ygram.json", "prompts_ygram.json"
+    if experiment.platform_type == "forum":
+        return "prompts_forum.json", "prompts.json"
+    if experiment.simulator_type == "HPC":
+        return "prompts_hpc.json", "prompts.json"
+    return "prompts.json", "prompts.json"
+
+
+@experiments.route("/admin/prompts_language/<int:uid>", methods=["POST"])
+@login_required
+def set_prompt_language(uid):
+    """Load the prompts of the chosen language into the experiment (the default stays English)."""
+    check_privileges(current_user.username)
+
+    from y_web.src.system.path_utils import get_writable_path
+
+    experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
+    if not experiment:
+        flash(_("Experiment not found."), "error")
+        return redirect(url_for("experiments.settings"))
+
+    language = prompt_packs.resolve(request.form.get("prompt_language"))
+    exp_dir = os.path.join(
+        get_writable_path(), "y_web", "experiments", experiment.db_name.split(os.sep)[1]
+    )
+    pack, target = _experiment_prompt_pack(experiment)
+    if os.path.exists(os.path.join(exp_dir, target)):  # HPC clients write theirs when they are created
+        prompt_packs.write_pack(pack, os.path.join(exp_dir, target), language)
+    prompt_packs.record_language(exp_dir, experiment=language)
+    experiment.prompt_language = language
+    db.session.commit()
+    flash(_("Prompts loaded in the selected language."), "success")
+    return redirect(request.referrer or url_for("experiments.prompts", uid=uid))
+
+
 @experiments.route("/admin/update_prompts/<int:uid>", methods=["POST"])
 @login_required
 def update_prompts(uid):
