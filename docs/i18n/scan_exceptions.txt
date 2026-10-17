@@ -8,3 +8,5 @@ disconnect # value of a form field, never shown
 arXiv:2408.00818 # identifier
 john_doe,john@example.com,researcher,SecurePass1!\njane_smith,jane@example.com,user\nadmin_user,admin@example.com,admin,AdminPass1! # CSV example
 john_doe,john@example.com,user,SecurePass1!\njane_smith,jane@example.com,user\nbob_wilson,bob@example.com,user,BobPass1! # CSV example
+"YSocial: An artificial intelligence powered social media virtual twin." # title of a paper
+Big Data & Society # journal name
