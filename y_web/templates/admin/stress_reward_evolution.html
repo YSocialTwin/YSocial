@@ -2,13 +2,13 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-components.css') }}"/>
 
 <div class="view-wrapper is-dashboard">
-    <div id="creator-dashboard" class="dashboard-container">
+    <div id="creator-dashboard" data-tutorial-page="stress_reward_evolution" class="dashboard-container">
         {% include "admin/dash_head.html" %}
 
         <div class="dashboard-body">
             <div class="columns">
                 <div class="column is-12">
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" data-tut="temporal-controls">
                         <a href="/admin/experiments">{{ _('Experiments') }}</a> >
                         <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }}</a> &gt;
                         {{ _('Stress / Reward Evolution') }}
@@ -93,7 +93,7 @@
 
             <div class="columns">
                 <div class="column is-4">
-                    <div class="dashboard-box chart-box-container">
+                    <div class="dashboard-box chart-box-container" data-tut="stress-distribution">
                         <div class="annotation-chart-head ys-mb-15">
                             <h3 class="title is-6 is-thin">{{ _('Stress Distribution') }}</h3>
                             <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="stressDistributionChartContainer" title="{{ _('Expand plot') }}">
@@ -109,7 +109,7 @@
                     </div>
                 </div>
                 <div class="column is-4">
-                    <div class="dashboard-box chart-box-container">
+                    <div class="dashboard-box chart-box-container" data-tut="reward-distribution">
                         <div class="annotation-chart-head ys-mb-15">
                             <h3 class="title is-6 is-thin">{{ _('Reward Distribution') }}</h3>
                             <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="rewardDistributionChartContainer" title="{{ _('Expand plot') }}">
@@ -125,7 +125,7 @@
                     </div>
                 </div>
                 <div class="column is-4">
-                    <div class="dashboard-box chart-box-container">
+                    <div class="dashboard-box chart-box-container" data-tut="average-aggregate-trends">
                         <div class="annotation-chart-head ys-mb-15">
                             <h3 class="title is-6 is-thin">{{ _('Average Aggregate Trends') }}</h3>
                             <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="stressRewardTrendChartContainer" title="{{ _('Expand plot') }}">
@@ -145,7 +145,7 @@
             {% if sa_targets.available %}
             <div class="columns">
                 <div class="column is-12">
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" data-tut="stress-attacker-target-drill-down">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
                             <div>
                                 <h3 class="title is-5 is-thin ys-mb-10">{{ _('Stress Attacker Target Drill-down') }}</h3>
@@ -199,7 +199,7 @@
 
                             <div class="columns">
                                 <div class="column is-7" id="sr-sa-chart-column" {% if not sa_targets.options %}style="display: none;"{% endif %}>
-                                    <div class="dashboard-box chart-box-container" style="margin-bottom: 0;">
+                                    <div class="dashboard-box chart-box-container" style="margin-bottom: 0;" data-tut="selected-target-trend">
                                         <div class="annotation-chart-head ys-mb-15">
                                             <h3 class="title is-6 is-thin">{{ _('Selected Target Trend') }}</h3>
                                             <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="srSaTargetTrendChartContainer" title="{{ _('Expand plot') }}">
@@ -215,7 +215,7 @@
                                     </div>
                                 </div>
                                 <div class="column is-5" id="sr-sa-events-column" {% if not sa_targets.options %}style="display: none;"{% endif %}>
-                                    <div class="dashboard-box" style="margin-bottom: 0;">
+                                    <div class="dashboard-box" style="margin-bottom: 0;" data-tut="recent-sa-interactions">
                                         <h3 class="title is-6 is-thin ys-mb-15">{{ _('Recent SA Interactions') }}</h3>
                                         <div style="max-height: 360px; overflow-y: auto;">
                                             <table class="table is-fullwidth is-striped is-hoverable is-size-7">

@@ -89,6 +89,20 @@
                 </ul>`,
             position: 'left',
             isLast: true
+        },
+        {
+            id: 'copy-group',
+            selector: '#box-copy-group',
+            title: '📑 Copy Group',
+            description: `<p><b>Duplicate a whole project group</b> of experiments, with their configuration, under a new name.</p>`,
+            position: 'top'
+        },
+        {
+            id: 'experiment-matrix',
+            selector: '#box-experiment-matrix',
+            title: '🧮 Experiment Matrix',
+            description: `<p>Generate <b>many experiments at once</b> by varying selected parameters of a source experiment.</p>`,
+            position: 'top'
         }
     ];
     

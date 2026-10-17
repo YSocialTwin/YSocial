@@ -2,7 +2,7 @@
 
 <div class="view-wrapper is-dashboard">
     <!--Dashboard container-->
-    <div id="creator-dashboard" class="dashboard-container">
+    <div id="creator-dashboard" data-tutorial-page="page_details" class="dashboard-container">
         <!--Toolbar-->
         {% include "admin/dash_head.html" %}
 
@@ -10,7 +10,7 @@
 
             <div class="columns">
                 <div class="column is-12">
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" data-tut="page-overview">
                         <a href="/admin/pages">{{ _('Pages') }}</a> &gt; {{ _('Details:') }} {{ page.name }}
                     </div>
                 </div>
@@ -95,7 +95,7 @@
                     </div>
 
 
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" data-tut="add-to-population">
                         <h3 class="title is-5 is-thin">{{ _('Add to Population') }}</h3>
  <p class="ys-text-small">
                             {{ _('Deploy this page to agent populations so they can interact with its content.') }}
@@ -129,7 +129,7 @@
                         </div>
                     </div>
 
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" data-tut="add-topic-to-page">
                         <h3 class="title is-5 is-thin">{{ _('Add Topic to Page') }}</h3>
  <p class="ys-text-small">
                             {{ _('Associate content topics with this page for better categorization.') }}
@@ -169,7 +169,7 @@
                 <!--Dashboard column-->
                 <div class="column is-6">
                     <!--Box-->
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" data-tut="recent-news">
 
                         <div class="box-content">
  <div class="box-lines ys-flex-center">

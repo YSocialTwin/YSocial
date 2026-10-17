@@ -2,7 +2,7 @@
 <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script><script src="{{ url_for('static', filename='assets/js/admin-gridjs-i18n.js') }}"></script>
 
 <div class="view-wrapper is-dashboard">
-    <div id="creator-dashboard" class="dashboard-container">
+    <div id="creator-dashboard" data-tutorial-page="visibility_settings" class="dashboard-container">
         {% include "admin/dash_head.html" %}
 
         <div class="dashboard-body">
@@ -13,7 +13,7 @@
 
             <div class="columns is-multiline">
                 <div class="column is-12">
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" data-tut="share-experiments">
                         <h3 class="title is-5 is-thin">{{ _('Share Experiments') }}</h3>
                         <p style="font-size: 0.9em; color: #666; margin-top: 8px;">
                             {{ _('Grant or revoke experiment visibility for selected researcher users. Shared researchers can view and manage stop/delete actions for those experiments.') }}
@@ -22,7 +22,7 @@
                 </div>
 
                 <div class="column is-12-tablet is-6-desktop">
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" data-tut="share-single-experiment">
                         <h4 class="title is-6 is-thin">{{ _('Share Single Experiment') }}</h4>
                         <form method="POST" action="/admin/visibility_settings/experiment">
  <div class="field ys-mb-12">
@@ -62,7 +62,7 @@
                 </div>
 
                 <div class="column is-12-tablet is-6-desktop">
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" data-tut="share-entire-group">
                         <h4 class="title is-6 is-thin">{{ _('Share Entire Group') }}</h4>
                         <form method="POST" action="/admin/visibility_settings/group">
  <div class="field ys-mb-12">
@@ -102,7 +102,7 @@
                 </div>
 
                 <div class="column is-12">
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" data-tut="current-researcher-visibility">
                         <h4 class="title is-6 is-thin">{{ _('Current Researcher Visibility') }}</h4>
                         {% if shared_rows %}
                         <div id="researcher-visibility-table"></div>

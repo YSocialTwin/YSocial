@@ -3,7 +3,7 @@
 <div class="view-wrapper is-dashboard">
     <!--Dashboard container-->
 
-    <div id="creator-dashboard" class="dashboard-container">
+    <div id="creator-dashboard" data-tutorial-page="about" class="dashboard-container">
         <!--Toolbar-->
 
         {% include "admin/dash_head.html" %}
@@ -15,7 +15,7 @@
                 <div class="column is-8">
 
                     <!--Dashboard box-->
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" data-tut="about-us">
                         <h3 class="title is-5 is-thin">{{ _('About Us') }}</h3>
                         <div class="box-content">
 
@@ -106,7 +106,7 @@
 
                     </div>
 
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" data-tut="supporting-institutions">
                         <h3 class="title is-5 is-thin">{{ _('Supporting Institutions') }}</h3>
                         <div class="box-content">
                             <div class="box-lines">
@@ -145,7 +145,7 @@
                 <!--Dashboard column-->
                 <div class="column is-4">
                     <!--Dashboard box-->
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" data-tut="supporting-projects">
                         <h3 class="title is-5 is-thin">{{ _('Supporting Projects') }}</h3>
                         <div class="box-content">
                             <div class="box-lines">
@@ -176,7 +176,7 @@
                         </div>
                     </div>
 
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" data-tut="get-in-touch">
                         <div class="box-content">
                             <h3 class="title is-5 is-thin">{{ _('Get in Touch!') }}</h3>
                             <div class="box-lines">
@@ -217,7 +217,7 @@
                         </div>
                     </div>
 
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" data-tut="scientific-papers">
                         <div class="box-content">
                             <h3 class="title is-5 is-thin">{{ _('Scientific Papers') }}</h3>
                             <div class="box-lines">

@@ -2,13 +2,13 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-components.css') }}"/>
 
 <div class="view-wrapper is-dashboard">
-    <div id="creator-dashboard" class="dashboard-container">
+    <div id="creator-dashboard" data-tutorial-page="opinion_evolution" class="dashboard-container">
         {% include "admin/dash_head.html" %}
 
         <div class="dashboard-body">
             <div class="columns">
                 <div class="column is-12">
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" data-tut="temporal-controls">
                         <a href="/admin/experiments">{{ _('Experiments') }}</a> > 
                         <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }}</a> &gt;
                         {{ _('Opinion Evolution') }}
@@ -107,7 +107,7 @@
             <!-- Opinion Distribution Chart -->
             <div class="columns">
                 <div class="column is-4">
-                    <div class="dashboard-box chart-box-container">
+                    <div class="dashboard-box chart-box-container" data-tut="opinion-distribution">
                         <div class="annotation-chart-head ys-mb-15">
  <h3 class="title is-6 is-thin">{{ _('Opinion Distribution') }}</h3>
                             <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="opinionChartContainer" title="{{ _('Expand plot') }}">
@@ -126,7 +126,7 @@
 
                 <!-- Opinion Group Trends Chart -->
                 <div class="column is-4">
-                    <div class="dashboard-box chart-box-container">
+                    <div class="dashboard-box chart-box-container" data-tut="opinion-group-trends">
                         <div class="annotation-chart-head ys-mb-15">
  <h3 class="title is-6 is-thin">{{ _('Opinion Group Trends') }}</h3>
                             <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="groupTrendsChartContainer" title="{{ _('Expand plot') }}">
@@ -145,7 +145,7 @@
 
                 <!-- Agent Opinion Time Series Chart -->
                 <div class="column is-4">
-                    <div class="dashboard-box chart-box-container">
+                    <div class="dashboard-box chart-box-container" data-tut="agent-opinion-evolution">
                         <div class="annotation-chart-head ys-mb-15">
  <h3 class="title is-6 is-thin mb-0">{{ _('Agent Opinion Evolution') }}</h3>
                             
@@ -176,7 +176,7 @@
             {% if propaganda_targets.available %}
             <div class="columns">
                 <div class="column is-12">
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" data-tut="propaganda-target-drill-down">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
                             <div>
                                 <h3 class="title is-5 is-thin ys-mb-10">{{ _('Propaganda Target Drill-down') }}</h3>
@@ -234,7 +234,7 @@
 
                             <div class="columns">
                                 <div class="column is-7" id="propaganda-chart-column" {% if not propaganda_targets.options %}style="display: none;"{% endif %}>
-                                    <div class="dashboard-box chart-box-container" style="margin-bottom: 0;">
+                                    <div class="dashboard-box chart-box-container" style="margin-bottom: 0;" data-tut="selected-target-opinion-trend">
                                         <div class="annotation-chart-head ys-mb-15">
                                             <h3 class="title is-6 is-thin">{{ _('Selected Target Opinion Trend') }}</h3>
                                             <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="propagandaTargetTrendChartContainer" title="{{ _('Expand plot') }}">
@@ -250,7 +250,7 @@
                                     </div>
                                 </div>
                                 <div class="column is-5" id="propaganda-events-column" {% if not propaganda_targets.options %}style="display: none;"{% endif %}>
-                                    <div class="dashboard-box" style="margin-bottom: 0;">
+                                    <div class="dashboard-box" style="margin-bottom: 0;" data-tut="recent-propaganda-interactions">
                                         <h3 class="title is-6 is-thin ys-mb-15">{{ _('Recent Propaganda Interactions') }}</h3>
                                         <div style="max-height: 360px; overflow-y: auto;">
                                             <table class="table is-fullwidth is-striped is-hoverable is-size-7">
@@ -284,7 +284,7 @@
             {% if mop_targets.available %}
             <div class="columns">
                 <div class="column is-12">
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" data-tut="master-of-puppets-target-drill-down">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
                             <div>
                                 <h3 class="title is-5 is-thin ys-mb-10">{{ _('Master of Puppets Target Drill-down') }}</h3>
@@ -354,7 +354,7 @@
                                     </div>
                                 </div>
                                 <div class="column is-5" id="mop-events-column" {% if not mop_targets.options %}style="display: none;"{% endif %}>
-                                    <div class="dashboard-box" style="margin-bottom: 0;">
+                                    <div class="dashboard-box" style="margin-bottom: 0;" data-tut="recent-mop-interactions">
                                         <h3 class="title is-6 is-thin ys-mb-15">{{ _('Recent MoP Interactions') }}</h3>
                                         <div style="max-height: 360px; overflow-y: auto;">
                                             <table class="table is-fullwidth is-striped is-hoverable is-size-7">

@@ -2,13 +2,13 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-components.css') }}"/>
 
 <div class="view-wrapper is-dashboard">
-    <div id="creator-dashboard" class="dashboard-container">
+    <div id="creator-dashboard" data-tutorial-page="annotation_analytics" class="dashboard-container">
         {% include "admin/dash_head.html" %}
 
         <div class="dashboard-body">
             <div class="columns">
                 <div class="column is-12">
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" data-tut="temporal-controls">
                         <a href="/admin/experiments">{{ _('Experiments') }}</a> >
                         <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }}</a> >
                         {{ page_title }}
@@ -313,7 +313,7 @@
             {% if page_key == "toxicity" and analytics.moderator_targets and analytics.moderator_targets.available %}
             <div class="columns">
                 <div class="column is-12">
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" data-tut="moderator-target-drill-down">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
                             <div>
                                 <h3 class="title is-5 is-thin ys-mb-10">{{ _('Moderator Target Drill-down') }}</h3>
@@ -367,7 +367,7 @@
 
                             <div class="columns">
                                 <div class="column is-7" id="tox-moderator-chart-column" {% if not analytics.moderator_targets.options %}style="display:none;"{% endif %}>
-                                    <div class="dashboard-box chart-box-container" style="margin-bottom: 0;">
+                                    <div class="dashboard-box chart-box-container" style="margin-bottom: 0;" data-tut="selected-target-toxicity-trend">
                                         <div class="annotation-chart-head ys-mb-15">
                                             <h3 class="title is-6 is-thin">{{ _('Selected Target Toxicity Trend') }}</h3>
                                             <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="toxModeratorTargetTrendChartContainer" title="{{ _('Expand plot') }}">
@@ -383,7 +383,7 @@
                                     </div>
                                 </div>
                                 <div class="column is-5" id="tox-moderator-events-column" {% if not analytics.moderator_targets.options %}style="display:none;"{% endif %}>
-                                    <div class="dashboard-box" style="margin-bottom: 0;">
+                                    <div class="dashboard-box" style="margin-bottom: 0;" data-tut="recent-moderator-interventions">
                                         <h3 class="title is-6 is-thin ys-mb-15">{{ _('Recent Moderator Interventions') }}</h3>
                                         <div style="max-height: 360px; overflow-y: auto;">
                                             <table class="table is-fullwidth is-striped is-hoverable is-size-7">
@@ -419,7 +419,7 @@
             {% if page_key == "recsys" and analytics.recsys_author and analytics.recsys_author.available %}
             <div class="columns">
                 <div class="column is-12">
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" data-tut="author-recommendation-drill-down">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
                             <div>
                                 <h3 class="title is-5 is-thin ys-mb-10">{{ _('Author Recommendation Drill-down') }}</h3>
@@ -518,7 +518,7 @@
 
                             <div class="columns" id="recsys-author-table-row" {% if not analytics.recsys_author.selected_uid %}style="display:none;"{% endif %}>
                                 <div class="column is-12">
-                                    <div class="dashboard-box" style="margin-bottom: 0;">
+                                    <div class="dashboard-box" style="margin-bottom: 0;" data-tut="selected-author-recommended-posts">
                                         <h3 class="title is-6 is-thin ys-mb-15">{{ _('Selected Author Recommended Posts') }}</h3>
                                         <div style="max-height: 320px; overflow-y: auto;">
                                             <table class="table is-fullwidth is-striped is-hoverable is-size-7">

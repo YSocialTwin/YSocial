@@ -3,7 +3,7 @@
 
 <div class="view-wrapper is-dashboard">
     <!--Dashboard container-->
-    <div id="creator-dashboard" class="dashboard-container">
+    <div id="creator-dashboard" data-tutorial-page="opinion_configuration_forum" class="dashboard-container">
         <!--Toolbar-->
         {% include "admin/dash_head.html" %}
 
@@ -11,7 +11,7 @@
 
             <div class="columns">
                 <div class="column is-12">
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" data-tut="opinion-distribution-configuration">
                         <a href="/admin/experiments">{{ _('Experiments') }}</a> &gt; {{ _('Simulation:') }} <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }} </a> &gt; {{ _('Opinion Configuration') }}
                     </div>
                 </div>

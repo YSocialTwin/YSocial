@@ -552,13 +552,13 @@
 </style>
 
 <div class="view-wrapper is-dashboard">
-    <div id="creator-dashboard" class="dashboard-container">
+    <div id="creator-dashboard" data-tutorial-page="experiment_matrix" class="dashboard-container">
         {% include "admin/dash_head.html" %}
 
         <div class="dashboard-body">
             <div class="columns">
                 <div class="column is-12">
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" data-tut="experiment-matrix">
                         <a href="/admin/experiments">{{ _('Experiments') }}</a> &gt; {{ _('Experiment Matrix') }}
                         {% if selected_experiment %}
                         : <a href="/admin/experiment_details/{{ selected_experiment.idexp }}">{{ selected_experiment.exp_name }}</a>

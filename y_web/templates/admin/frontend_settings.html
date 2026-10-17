@@ -289,7 +289,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
 </style>
 
 <div class="view-wrapper is-dashboard">
-  <div id="creator-dashboard" class="dashboard-container">
+  <div id="creator-dashboard" data-tutorial-page="frontend_settings" class="dashboard-container">
     {% include "admin/dash_head.html" %}
 
     <div class="dashboard-body">
@@ -340,7 +340,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
         <div class="misc-grid misc-grid-2col">
 
           <!-- ══ BOX 1 — Interactions ══════════════════════════ -->
-          <div class="misc-compact-box" id="box-interactions">
+          <div class="misc-compact-box" id="box-interactions" data-tut="user-interactions">
             <h3>{{ _('User Interactions') }} <span class="ys-fs-exp-badge" id="badge-exp-name"></span></h3>
             <div class="box-content">
               <p style="color:#6b7280;font-size:.85rem;margin-bottom:14px;">
@@ -399,7 +399,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
           </div>
 
           <!-- ══ BOX 2 — Annotations ═══════════════════════════ -->
-          <div class="misc-compact-box" id="box-annotations" data-cap-any="annotations_enabled annotation_agent_type show_post_time show_suggested_friends show_trending_hashtags show_recsys_info show_annotation_stats">
+          <div class="misc-compact-box" id="box-annotations" data-cap-any="annotations_enabled annotation_agent_type show_post_time show_suggested_friends show_trending_hashtags show_recsys_info show_annotation_stats" data-tut="annotations">
             <h3>{{ _('Annotations') }}</h3>
             <div class="box-content">
               <p style="color:#6b7280;font-size:.85rem;margin-bottom:14px;">
@@ -471,7 +471,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
           </div>
 
           <!-- ══ BOX 4 — Feed & Profile ══════════════════════════ -->
-          <div class="misc-compact-box" id="box-feed-profile">
+          <div class="misc-compact-box" id="box-feed-profile" data-tut="feed-profile">
             <h3>{{ _('Feed & Profile') }}</h3>
             <div class="box-content">
               <p style="color:#6b7280;font-size:.85rem;margin-bottom:14px;">

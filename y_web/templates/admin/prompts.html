@@ -2,7 +2,7 @@
 
 <div class="view-wrapper is-dashboard">
     <!--Dashboard container-->
-    <div id="creator-dashboard" class="dashboard-container">
+    <div id="creator-dashboard" data-tutorial-page="prompts" class="dashboard-container">
         <!--Toolbar-->
         {% include "admin/dash_head.html" %}
 
@@ -11,7 +11,7 @@
 
             <div class="columns">
                 <div class="column is-12">
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" data-tut="llm-prompts-configuration">
                         <a href="/admin/experiments">{{ _('Experiments') }}</a> &gt; {{ _('Simulation:') }} <a href="">{{ experiment.exp_name }}</a> &gt; {{ _('Prompts') }}
                     </div>
                 </div>
@@ -161,7 +161,7 @@
                 <!--Dashboard column-->
                 <div class="column is-4">
                     <!--Box-->
-                    <div class="dashboard-box is-compact">
+                    <div class="dashboard-box is-compact" data-tut="quick-reference-guide">
                         <h3 class="title is-5 is-thin">{{ _('Quick Reference Guide') }}</h3>
                         <div class="help-block">
                             <p>

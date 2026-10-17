@@ -2,7 +2,7 @@
 
 <div class="view-wrapper is-dashboard">
     <!--Dashboard container-->
-    <div id="creator-dashboard" class="dashboard-container">
+    <div id="creator-dashboard" data-tutorial-page="population_details" class="dashboard-container">
         <!--Toolbar-->
         {% include "admin/dash_head.html" %}
 
@@ -10,7 +10,7 @@
 
             <div class="columns">
                 <div class="column is-12">
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" data-tut="population-overview">
                         <a href="/admin/populations">{{ _('Populations') }}</a> &gt; {{ _('Details:') }} {{ population.name }}
                     </div>
                 </div>
@@ -62,7 +62,7 @@
 
                 <div class="column is-6">
 
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" data-tut="experiment-deployments">
                         <h3 class="title is-5 is-thin">{{ _('Experiment Deployments') }}</h3>
  <p class="ys-text-small">
                             {{ _('Experiments where this population is currently deployed.') }}

@@ -2,13 +2,13 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-components.css') }}"/>
 
 <div class="view-wrapper is-dashboard">
-    <div id="creator-dashboard" class="dashboard-container">
+    <div id="creator-dashboard" data-tutorial-page="custom_agent" class="dashboard-container">
         {% include "admin/dash_head.html" %}
 
         <div class="dashboard-body">
             <div class="columns">
                 <div class="column is-12">
-                    <div class="dashboard-box" style="margin-bottom: 24px;">
+                    <div class="dashboard-box" style="margin-bottom: 24px;" data-tut="available-populations">
                         <h3 class="title is-5 is-thin">{{ _('Available %(name)s Populations', name=custom_spec.display_name) }}</h3>
                         <div class="box-content">
                             <div
@@ -19,7 +19,7 @@
                         </div>
                     </div>
 
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" data-tut="available-agents">
                         <h3 class="title is-5 is-thin">{{ _('Available %(name)ss', name=custom_spec.display_name) }}</h3>
                         <div class="box-content">
                             <div
@@ -35,7 +35,7 @@
 
             <div class="columns">
                 <div class="column is-8">
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" data-tut="create">
                         <h3 class="title is-5 is-thin">{{ _('Create %(name)s', name=custom_spec.display_name) }}</h3>
                         <div class="box-content">
                             <form action="/admin/create_custom_agent/{{ custom_spec.slug }}" method="POST" onsubmit="showLoading('Creating custom agent...');">
