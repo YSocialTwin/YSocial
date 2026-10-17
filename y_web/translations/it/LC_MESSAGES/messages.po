@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 09:36+0000\n"
+"POT-Creation-Date: 2026-10-17 09:47+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -132,6 +132,10 @@ msgstr ""
 " dal suo repository."
 
 #, python-format
+msgid "%(n)s active runs"
+msgstr "%(n)s esecuzioni attive"
+
+#, python-format
 msgid "%(n)s activity profiles"
 msgstr "%(n)s profili di attività"
 
@@ -150,6 +154,10 @@ msgstr "%(n)s popolazioni"
 #, python-format
 msgid "%(n)s resources"
 msgstr "%(n)s risorse"
+
+#, python-format
+msgid "%(n)s steps"
+msgstr "%(n)s passi"
 
 #, python-format
 msgid "%(n)s visible resources"
@@ -520,6 +528,9 @@ msgstr ""
 "Le azioni comprendono pubblicare, commentare, leggere, cercare e le "
 "funzioni specifiche della piattaforma."
 
+msgid "Activate"
+msgstr "Attiva"
+
 msgid "Activate run-scoped memory"
 msgstr "Attiva la memoria limitata all'esecuzione"
 
@@ -564,6 +575,9 @@ msgstr "Discussione attiva del feed"
 
 msgid "Active generated topic"
 msgstr "Argomento generato attivo"
+
+msgid "Active modules"
+msgstr "Moduli attivi"
 
 msgid "Active propaganda topics in this experiment:"
 msgstr "Argomenti di propaganda attivi in questo esperimento:"
@@ -2957,6 +2971,9 @@ msgstr "Giorno %(day)s, ora %(hour)s"
 msgid "Days"
 msgstr "Giorni"
 
+msgid "Deactivate"
+msgstr "Disattiva"
+
 msgid "Debug Information:"
 msgstr "Informazioni di debug:"
 
@@ -4021,6 +4038,9 @@ msgstr "Esperimento:"
 msgid "Experiments"
 msgstr "Esperimenti"
 
+msgid "Experiments and their simulation clients."
+msgstr "Esperimenti e relativi client di simulazione."
+
 msgid ""
 "Experiments do not assume any embedding backend. Without this "
 "configuration, semantic memory features degrade gracefully to lexical "
@@ -4999,6 +5019,9 @@ msgstr "CCDF del grado entrante"
 
 msgid "Inactive Alter"
 msgstr "Alter inattivo"
+
+msgid "Inactive modules"
+msgstr "Moduli inattivi"
 
 msgid "Indian"
 msgstr "Indiana"
@@ -6047,6 +6070,9 @@ msgstr ""
 msgid "Moderators"
 msgstr "Moderatori"
 
+msgid "Modules open to new participants."
+msgstr "Moduli aperti a nuovi partecipanti."
+
 msgid "Monitor and auto-restart hung server/client processes."
 msgstr "Monitora e riavvia automaticamente i processi server/client bloccati."
 
@@ -6361,6 +6387,9 @@ msgstr "Nessun esperimento attivo disponibile"
 msgid "No active experiments available. Please contact an administrator."
 msgstr "Nessun esperimento attivo disponibile. Contatta un amministratore."
 
+msgid "No active modules."
+msgstr "Nessun modulo attivo."
+
 msgid "No active photo-sharing experiment. Please activate one first."
 msgstr "Nessun esperimento di condivisione foto attivo. Attivane prima uno."
 
@@ -6466,6 +6495,9 @@ msgstr "Ancora nessun hashtag corrispondente."
 
 msgid "No hashtags yet."
 msgstr "Ancora nessun hashtag."
+
+msgid "No inactive modules."
+msgstr "Nessun modulo inattivo."
 
 msgid "No interests assigned"
 msgstr "Nessun interesse assegnato"
@@ -9516,6 +9548,13 @@ msgstr "Cambia utente foto"
 msgid "Switch user"
 msgstr "Cambia utente"
 
+msgid ""
+"Switched off: they accept no new participants. Turn them on again at any "
+"time."
+msgstr ""
+"Disattivati: non accettano nuovi partecipanti. Puoi riattivarli in "
+"qualsiasi momento."
+
 msgid "Synthetic Agents"
 msgstr "Agenti sintetici"
 
@@ -10358,6 +10397,16 @@ msgstr "Agenti monitorati"
 
 msgid "Tracked Aggregates"
 msgstr "Aggregati monitorati"
+
+msgid "Training"
+msgstr "Training"
+
+msgid ""
+"Training modules available for your participants. Turn a module on or off"
+" from here."
+msgstr ""
+"Moduli didattici disponibili per i tuoi partecipanti. Attivali o "
+"disattivali da qui."
 
 #, python-format
 msgid "Transition Probabilities (%%)"
@@ -11491,6 +11540,9 @@ msgstr "annullata"
 msgid "dependencies %(deps)s, validation %(validation)s"
 msgstr "dipendenze %(deps)s, convalida %(validation)s"
 
+msgid "draft"
+msgstr "bozza"
+
 msgid "e.g., 192.168.1.100 or example.com"
 msgstr "e.g., 192.168.1.100 or example.com"
 
@@ -11596,6 +11648,9 @@ msgstr "pre-release"
 
 msgid "processing"
 msgstr "in corso"
+
+msgid "published"
+msgstr "pubblicato"
 
 #, python-format
 msgid "r/%(subreddit)s does not exist."

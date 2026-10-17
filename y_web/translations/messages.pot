@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 09:36+0000\n"
+"POT-Creation-Date: 2026-10-17 09:47+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -114,6 +114,10 @@ msgid ""
 msgstr ""
 
 #, python-format
+msgid "%(n)s active runs"
+msgstr ""
+
+#, python-format
 msgid "%(n)s activity profiles"
 msgstr ""
 
@@ -131,6 +135,10 @@ msgstr ""
 
 #, python-format
 msgid "%(n)s resources"
+msgstr ""
+
+#, python-format
+msgid "%(n)s steps"
 msgstr ""
 
 #, python-format
@@ -479,6 +487,9 @@ msgid ""
 "specific features."
 msgstr ""
 
+msgid "Activate"
+msgstr ""
+
 msgid "Activate run-scoped memory"
 msgstr ""
 
@@ -520,6 +531,9 @@ msgid "Active feed thread"
 msgstr ""
 
 msgid "Active generated topic"
+msgstr ""
+
+msgid "Active modules"
 msgstr ""
 
 msgid "Active propaganda topics in this experiment:"
@@ -2621,6 +2635,9 @@ msgstr ""
 msgid "Days"
 msgstr ""
 
+msgid "Deactivate"
+msgstr ""
+
 msgid "Debug Information:"
 msgstr ""
 
@@ -3595,6 +3612,9 @@ msgstr ""
 msgid "Experiments"
 msgstr ""
 
+msgid "Experiments and their simulation clients."
+msgstr ""
+
 msgid ""
 "Experiments do not assume any embedding backend. Without this "
 "configuration, semantic memory features degrade gracefully to lexical "
@@ -4502,6 +4522,9 @@ msgid "In-Degree CCDF"
 msgstr ""
 
 msgid "Inactive Alter"
+msgstr ""
+
+msgid "Inactive modules"
 msgstr ""
 
 msgid "Indian"
@@ -5459,6 +5482,9 @@ msgstr ""
 msgid "Moderators"
 msgstr ""
 
+msgid "Modules open to new participants."
+msgstr ""
+
 msgid "Monitor and auto-restart hung server/client processes."
 msgstr ""
 
@@ -5761,6 +5787,9 @@ msgstr ""
 msgid "No active experiments available. Please contact an administrator."
 msgstr ""
 
+msgid "No active modules."
+msgstr ""
+
 msgid "No active photo-sharing experiment. Please activate one first."
 msgstr ""
 
@@ -5861,6 +5890,9 @@ msgid "No hashtags matched yet."
 msgstr ""
 
 msgid "No hashtags yet."
+msgstr ""
+
+msgid "No inactive modules."
 msgstr ""
 
 msgid "No interests assigned"
@@ -8678,6 +8710,11 @@ msgstr ""
 msgid "Switch user"
 msgstr ""
 
+msgid ""
+"Switched off: they accept no new participants. Turn them on again at any "
+"time."
+msgstr ""
+
 msgid "Synthetic Agents"
 msgstr ""
 
@@ -9411,6 +9448,14 @@ msgid "Tracked Agents"
 msgstr ""
 
 msgid "Tracked Aggregates"
+msgstr ""
+
+msgid "Training"
+msgstr ""
+
+msgid ""
+"Training modules available for your participants. Turn a module on or off"
+" from here."
 msgstr ""
 
 #, python-format
@@ -10410,6 +10455,9 @@ msgstr ""
 msgid "dependencies %(deps)s, validation %(validation)s"
 msgstr ""
 
+msgid "draft"
+msgstr ""
+
 msgid "e.g., 192.168.1.100 or example.com"
 msgstr ""
 
@@ -10512,6 +10560,9 @@ msgid "prerelease"
 msgstr ""
 
 msgid "processing"
+msgstr ""
+
+msgid "published"
 msgstr ""
 
 #, python-format

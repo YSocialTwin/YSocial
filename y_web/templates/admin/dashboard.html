@@ -263,6 +263,15 @@
 
                 <div class="column is-8">
 
+                    <!-- ===== Simulations section ===== -->
+                    <div class="dash-section dash-section-simulations" id="section-simulations">
+                        <div class="dash-section-head">
+                            <span class="dash-section-icon"><i class="mdi mdi-flask-outline"></i></span>
+                            <div>
+                                <h2 class="dash-section-title">{{ _('Simulations') }}</h2>
+                                <p class="dash-section-sub">{{ _('Experiments and their simulation clients.') }}</p>
+                            </div>
+                        </div>
                     <!--Dashboard box-->
                     {% if total_experiments > 0 %}
                     
@@ -356,8 +365,52 @@
                     </div>
                     {% endif %}
 
-                    {% if total_experiments > 0 %}
+                    </div>
+                    <!-- ===== end Simulations section ===== -->
 
+                    {% if training_overview %}
+                    <!-- ===== Training section ===== -->
+                    <div class="dash-section dash-section-training" id="section-training" data-csrf="{{ training_overview.csrf_token }}">
+                        <div class="dash-section-head">
+                            <span class="dash-section-icon"><i class="mdi mdi-school-outline"></i></span>
+                            <div>
+                                <h2 class="dash-section-title">{{ _('Training') }}</h2>
+                                <p class="dash-section-sub">{{ _('Training modules available for your participants. Turn a module on or off from here.') }}</p>
+                            </div>
+                        </div>
+                        <div class="columns is-multiline" style="margin-bottom: 0; display: flex; align-items: stretch;">
+                            {% for box_id, box_modules, box_dot, box_title, box_help, box_empty, box_action, box_label in [
+                                ('box-active-modules', training_overview.active, 'ys-dot-running', _('Active modules'), _('Modules open to new participants.'), _('No active modules.'), 'archive', _('Deactivate')),
+                                ('box-inactive-modules', training_overview.inactive, 'ys-dot-secondary', _('Inactive modules'), _('Switched off: they accept no new participants. Turn them on again at any time.'), _('No inactive modules.'), 'unarchive', _('Activate'))] %}
+                            <div class="column is-6-desktop is-12-tablet is-12-mobile d-flex">
+                                <div class="dashboard-box ys-flex-col-0mb" id="{{ box_id }}">
+                                    <h3 class="title is-6 is-thin ys-flex-gap-8-mb">
+                                        <span class="{{ box_dot }}"></span>
+                                        {{ box_title }}
+                                        <span class="ys-text-tiny-normal">{{ _('(%(count)s total)', count=box_modules|length) }}</span>
+                                    </h3>
+                                    <p class="group-helper-text ys-text-xs-gray-mb">{{ box_help }}</p>
+                                    <div class="ys-flex-1 dash-module-list">
+                                        {% for module in box_modules %}
+                                        <div class="dash-module-row">
+                                            <div class="dash-module-main">
+                                                <a class="dash-module-title" href="{{ url_for('training_modules.modules_page') }}" title="{{ module.title }}">{{ module.title }}</a>
+                                                <span class="dash-module-meta">
+                                                    {% if module.status == 'draft' %}{{ _('draft') }} · {% elif module.status == 'published' %}{{ _('published') }} · {% endif %}{{ _('%(n)s steps', n=module.steps) }}{% if module.active_runs %} · {{ _('%(n)s active runs', n=module.active_runs) }}{% endif %}
+                                                </span>
+                                            </div>
+                                            <button type="button" class="button is-small is-light dash-module-toggle" data-module-uid="{{ module.uid }}" data-module-action="{{ box_action }}">{{ box_label }}</button>
+                                        </div>
+                                        {% else %}
+                                        <p class="ys-text-small dash-module-empty">{{ box_empty }}</p>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <!-- ===== end Training section ===== -->
                     {% endif %}
 
                 </div>

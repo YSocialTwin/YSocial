@@ -523,6 +523,30 @@ async function deleteNotification(id) {
       });
   }, 5000);
 
+  // Training section: switch a module on/off (archive/unarchive in the plugin)
+  function initTrainingToggles() {
+      var section = document.getElementById('section-training');
+      if (!section) return;
+      var token = section.getAttribute('data-csrf') || '';
+      section.addEventListener('click', function(ev) {
+          var btn = ev.target.closest('.dash-module-toggle');
+          if (!btn || btn.disabled) return;
+          btn.disabled = true;
+          fetch('/admin/training/api/modules/' + encodeURIComponent(btn.dataset.moduleUid) + '/' + btn.dataset.moduleAction, {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json', 'X-CSRF-Token': token},
+              body: '{}'
+          }).then(function(resp) {
+              if (!resp.ok) throw new Error(resp.status);
+              window.location.reload();
+          }).catch(function() {
+              btn.disabled = false;
+              alert(YI18n.t('Could not update the module. Please try again.'));
+          });
+      });
+  }
+  initTrainingToggles();
+
   // Expose globally for HTML onclick attributes
   window.markRead = markRead;
   window.deleteNotification = deleteNotification;

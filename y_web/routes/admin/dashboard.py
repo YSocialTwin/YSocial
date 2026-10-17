@@ -366,8 +366,18 @@ def dashboard():
     def can_manage_experiment_for_current_user(experiment):
         return user_can_manage_experiment(user, experiment)
 
+    try:
+        from y_web.src.external_runtime.backend_plugins import (
+            training_dashboard_overview,
+        )
+
+        training_overview = training_dashboard_overview(current_user)
+    except Exception:
+        training_overview = None
+
     return render_template(
         "admin/dashboard.html",
+        training_overview=training_overview,
         running_experiments=active_exps,
         completed_experiments=completed_exps,
         stopped_experiments=stopped_exps,

@@ -246,5 +246,7 @@
   "🧩 Ad Hoc Agent Clients": "🧩 Client di agenti ad hoc",
   "🧩 Extensions": "🧩 Estensioni",
   "🧪 Experiments": "🧪 Esperimenti",
-  "🧾 Experiment Overview": "🧾 Panoramica dell'esperimento"
+  "🧾 Experiment Overview": "🧾 Panoramica dell'esperimento",
+  "🎓 Training Modules": "🎓 Moduli di training",
+  "<p>Appears only when the <b>Training Modules</b> plugin is active:</p>\n                <ul style=\"margin: 10px 0 0 18px; padding: 0; list-style: disc;\">\n                    <li><b>Active modules</b> - open to new participants</li>\n                    <li><b>Inactive modules</b> - switched off, can be turned on again</li>\n                    <li>Use the <b>Activate / Deactivate</b> buttons to switch a module</li>\n                </ul>": "<p>Compare solo quando il plugin <b>Training Modules</b> è attivo:</p><ul style=\"margin: 10px 0 0 18px; padding: 0; list-style: disc;\"><li><b>Moduli attivi</b> - aperti a nuovi partecipanti</li><li><b>Moduli inattivi</b> - disattivati, si possono riattivare</li><li>Usa i pulsanti <b>Attiva / Disattiva</b> per cambiare lo stato di un modulo</li></ul>"
 }

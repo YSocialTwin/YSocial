@@ -73,6 +73,7 @@
   "Connection failed.": "Connessione non riuscita.",
   "Could not parse RSS feed": "Impossibile analizzare il feed RSS",
   "Could not parse subreddit.": "Impossibile analizzare il subreddit.",
+  "Could not update the module. Please try again.": "Impossibile aggiornare il modulo. Riprova.",
   "Create Simulation": "Crea simulazione",
   "Creating...": "Creazione...",
   "Current built-in prompts passed to this agent:": "Prompt predefiniti attuali passati a questo agente:",

@@ -246,5 +246,7 @@
   "🧩 Ad Hoc Agent Clients": "🧩 Ad Hoc Agent Clients",
   "🧩 Extensions": "🧩 Extensions",
   "🧪 Experiments": "🧪 Experiments",
-  "🧾 Experiment Overview": "🧾 Experiment Overview"
+  "🧾 Experiment Overview": "🧾 Experiment Overview",
+  "🎓 Training Modules": "🎓 Training Modules",
+  "<p>Appears only when the <b>Training Modules</b> plugin is active:</p>\n                <ul style=\"margin: 10px 0 0 18px; padding: 0; list-style: disc;\">\n                    <li><b>Active modules</b> - open to new participants</li>\n                    <li><b>Inactive modules</b> - switched off, can be turned on again</li>\n                    <li>Use the <b>Activate / Deactivate</b> buttons to switch a module</li>\n                </ul>": "<p>Appears only when the <b>Training Modules</b> plugin is active:</p>\n                <ul style=\"margin: 10px 0 0 18px; padding: 0; list-style: disc;\">\n                    <li><b>Active modules</b> - open to new participants</li>\n                    <li><b>Inactive modules</b> - switched off, can be turned on again</li>\n                    <li>Use the <b>Activate / Deactivate</b> buttons to switch a module</li>\n                </ul>"
 }

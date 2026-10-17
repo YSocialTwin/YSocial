@@ -114,6 +114,18 @@
             position: 'left'
         },
         {
+            id: 'training-section',
+            selector: '#section-training',
+            title: '🎓 Training Modules',
+            description: `<p>Appears only when the <b>Training Modules</b> plugin is active:</p>
+                <ul style="margin: 10px 0 0 18px; padding: 0; list-style: disc;">
+                    <li><b>Active modules</b> - open to new participants</li>
+                    <li><b>Inactive modules</b> - switched off, can be turned on again</li>
+                    <li>Use the <b>Activate / Deactivate</b> buttons to switch a module</li>
+                </ul>`,
+            position: 'top'
+        },
+        {
             id: 'quick-reference',
             selector: '#box-quick-reference',
             title: '📚 Quick Reference Guide',

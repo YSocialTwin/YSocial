@@ -986,3 +986,44 @@ def inject_backend_plugin_visibility() -> dict:
             extension_sidebar_groups=[],
             plugin_experiment_widgets=_experiment_widgets,
         )
+
+
+TRAINING_REPO_KEY = "training_modules"
+
+
+def training_dashboard_overview(user) -> dict | None:
+    """Modules for the admin dashboard's Training boxes, or ``None``.
+
+    ``None`` unless the Training Modules suite is installed, valid and enabled
+    (so the dashboard shows no Training section at all). Otherwise a dict with
+    the ``active`` and ``inactive`` (archived) module lists visible to *user*
+    and the plugin's CSRF token for the toggle calls. Never raises.
+    """
+    try:
+        report = validate_backend_suite(TRAINING_REPO_KEY)
+        if not report.get("valid") or not plugin_enabled(TRAINING_REPO_KEY):
+            return None
+        base = "modules.training_editor.backend"
+        versions = _import_from_suite(TRAINING_REPO_KEY, f"{base}.versions")
+        csrf = _import_from_suite(TRAINING_REPO_KEY, f"{base}.csrf")
+        db_mod = _import_from_suite(TRAINING_REPO_KEY, f"{base}.db")
+        with db_mod.get_engine().connect() as conn:
+            modules = versions.list_modules(conn, user)
+        modules = [
+            {
+                "uid": m["module_uid"],
+                "title": m["title"],
+                "status": m["latest_status"],
+                "steps": m["step_count"],
+                "active_runs": m["active_runs"],
+                "archived": bool(m["archived"]),
+            }
+            for m in modules
+        ]
+        return {
+            "active": [m for m in modules if not m["archived"]],
+            "inactive": [m for m in modules if m["archived"]],
+            "csrf_token": csrf.get_token(),
+        }
+    except Exception:
+        return None

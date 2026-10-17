@@ -73,6 +73,7 @@
   "Connection failed.": "Connection failed.",
   "Could not parse RSS feed": "Could not parse RSS feed",
   "Could not parse subreddit.": "Could not parse subreddit.",
+  "Could not update the module. Please try again.": "Could not update the module. Please try again.",
   "Create Simulation": "Create Simulation",
   "Creating...": "Creating...",
   "Current built-in prompts passed to this agent:": "Current built-in prompts passed to this agent:",
