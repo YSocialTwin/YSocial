@@ -1,20 +1,30 @@
-{# Choose the language of an experiment's prompts: reloads the prompt file from that language's pack.
-   Shown only when more than one language pack is installed. #}
+{# Language of this experiment's prompts: the choice is stored per experiment and reloads the prompt file from that language's pack.
+   Shown only when more than one language pack is installed. Same look as the other sections of the prompts pages. #}
 {% if prompt_languages and prompt_languages|length > 1 %}
-<form action="/admin/prompts_language/{{ experiment.idexp }}" method="POST" class="ys-prompt-language"
-      onsubmit="return confirm({{ _('Replace the prompts of this experiment with the ones of the selected language? Changes you made to them will be lost.')|tojson }});">
-    <div class="box-line">
-        <span class="left">{{ _('Prompt language') }}</span>
-        <span class="right ys-w-70">
-            <div class="select">
-                <select name="prompt_language" class="w-100">
-                    {% for lang in prompt_languages %}
-                    <option value="{{ lang.code }}" {% if lang.code == (experiment.prompt_language or 'en') %}selected{% endif %}>{{ lang.native_name }}</option>
-                    {% endfor %}
-                </select>
+<div class="box-content ys-prompt-language">
+    <form action="/admin/prompts_language/{{ experiment.idexp }}" method="POST"
+          onsubmit="return confirm({{ _('Replace the prompts of this experiment with the ones of the selected language? Changes you made to them will be lost.')|tojson }});">
+        <div class="box-lines">
+            <h4 class="title is-6 is-thin">{{ _('Prompt language') }}</h4>
+            <p class="ys-label-hint">{{ _('Language of the prompts used by the agents of this simulation. Loading a language replaces the prompts below with that language\'s version.') }}</p>
+            <div class="box-line">
+                <span class="left">{{ _('Language') }}</span>
+                <span class="right ys-w-70">
+                    <div class="select">
+                        <select name="prompt_language" class="w-100">
+                            {% for lang in prompt_languages %}
+                            <option value="{{ lang.code }}" {% if lang.code == (experiment.prompt_language or 'en') %}selected{% endif %}>{{ lang.native_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </span>
             </div>
-            <button type="submit" class="button is-solid primary-button">{{ _('Load prompts') }}</button>
-        </span>
-    </div>
-</form>
+            <p class="ys-label-hint">{{ _('Prompts in the selected language work only if the language model chosen for the simulation supports that language.') }}</p>
+        </div>
+        <div class="button-wrap">
+            <button type="submit" class="button is-solid primary-button is-fullwidth">{{ _('Load prompts') }}</button>
+        </div>
+    </form>
+    <hr>
+</div>
 {% endif %}

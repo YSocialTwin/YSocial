@@ -10833,3 +10833,12 @@ msgstr ""
 #: y_web/routes/admin/sub/experiments/_crud.py
 msgid "Prompts loaded in the selected language."
 msgstr ""
+
+#: y_web/templates/admin/_prompt_language_switch.html
+msgid "Language of the prompts used by the agents of this simulation. Loading a language replaces the prompts below with that language's version."
+msgstr ""
+
+#: y_web/templates/admin/_prompt_language_switch.html
+msgid "Prompts in the selected language work only if the language model chosen for the simulation supports that language."
+msgstr ""
+

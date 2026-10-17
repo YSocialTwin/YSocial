@@ -11933,6 +11933,14 @@ msgstr "Sostituire i prompt di questo esperimento con quelli della lingua selezi
 msgid "Prompts loaded in the selected language."
 msgstr "Prompt caricati nella lingua selezionata."
 
+#: y_web/templates/admin/_prompt_language_switch.html
+msgid "Language of the prompts used by the agents of this simulation. Loading a language replaces the prompts below with that language's version."
+msgstr "Lingua dei prompt usati dagli agenti di questa simulazione. Caricare una lingua sostituisce i prompt sottostanti con la versione in quella lingua."
+
+#: y_web/templates/admin/_prompt_language_switch.html
+msgid "Prompts in the selected language work only if the language model chosen for the simulation supports that language."
+msgstr "I prompt nella lingua selezionata funzionano solo se il modello linguistico scelto per la simulazione supporta quella lingua."
+
 #~ msgid "% Daily Churn"
 #~ msgstr "% di ricambio giornaliero"
 
