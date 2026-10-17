@@ -25,7 +25,7 @@ def test_unknown_key_raises_and_other_languages_fall_back_to_english():
     with pytest.raises(ps.PromptError):
         ps.get("no_such_key")
     key = "_routes__api_interview_send_message__1"
-    assert ps.get(key, "it") == ps.get(key, "en")
+    assert ps.get(key, "zz") == ps.get(key, "en")
 
 
 def test_values_are_rendered_like_an_f_string():
@@ -102,3 +102,16 @@ def test_other_languages_use_their_file_and_fall_back_per_key(tmp_path, monkeypa
         assert ps.prompt("a", who="Ann") == "Ciao Ann"
     finally:
         ps.set_language("en")
+
+
+def test_italian_pack_is_complete_and_translated():
+    import json
+    import pathlib
+
+    here = pathlib.Path(ps.__file__).parent
+    en = json.loads((here / "prompts_internal.json").read_text(encoding="utf-8"))
+    it = json.loads((here / "prompts_internal.it.json").read_text(encoding="utf-8"))
+    assert set(en) == set(it)
+    assert sum(1 for k in en if en[k] != it[k]) >= len(en) * 0.8
+    # English is the default and is never altered by the presence of other packs
+    assert ps.get(next(iter(en)), "en") == en[next(iter(en))]

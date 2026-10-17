@@ -71,3 +71,9 @@ def test_internal_packs_are_compared_too(tree):
     _write(base / "prompts_internal.json", {"k": "Reply {who}. YES or NO"})
     _write(base / "prompts_internal.xx.json", {"k": "Rispondi {chi}. YES o NO"})
     assert any("fields differ" in line for line in vp.run(tree))
+
+
+def test_token_used_as_emphasis_is_not_an_answer_token():
+    tokens = {"AGREE", "DISAGREE", "NEUTRAL"}
+    assert vp._answer_tokens("Reply AGREE, DISAGREE or NEUTRAL.", tokens) == tokens
+    assert vp._answer_tokens("If you STRONGLY DISAGREE, say so.", tokens) == set()
