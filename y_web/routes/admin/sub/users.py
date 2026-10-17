@@ -1317,3 +1317,28 @@ def watchdog_toggle():
         )
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
+
+
+@users.route("/admin/signup_settings", methods=["POST"])
+@login_required
+def update_signup_settings():
+    """Switch self-registration on/off and choose which experiments/modules accept it (admin only)."""
+    from y_web.src import signup as signup_logic
+
+    user = db.session.scalars(
+        select(Admin_users).filter_by(username=current_user.username)
+    ).first()
+    if user is None or user.role != "admin":
+        return jsonify({"success": False, "message": _("Access denied")}), 403
+
+    data = request.get_json(silent=True) or {}
+    experiments = [str(x) for x in data.get("experiments") or []]
+    modules = [str(x) for x in data.get("modules") or []]
+    signup_logic.save(bool(data.get("enabled")), experiments, modules)
+    return jsonify(
+        {
+            "success": True,
+            "open": signup_logic.is_open(),
+            "offers": len(signup_logic.offers()),
+        }
+    )

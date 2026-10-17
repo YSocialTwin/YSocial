@@ -970,3 +970,32 @@ class PluginState(db.Model):
         db.DateTime, nullable=False, default=db.func.now(), onupdate=db.func.now()
     )
     updated_by = db.Column(db.String(255), nullable=True)
+
+
+class SignupSettings(db.Model):
+    """Self-registration switch (single row, ``id`` = 1). A missing row means disabled."""
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "signup_settings"
+
+    id = db.Column(db.Integer, primary_key=True)
+    enabled = db.Column(
+        db.Boolean, nullable=False, default=False, server_default=db.false()
+    )
+
+
+class SignupTarget(db.Model):
+    """An experiment or training module a visitor may join when creating an account.
+
+    ``kind`` is ``"experiment"`` (``ref`` = ``Exps.idexp``) or ``"training"``
+    (``ref`` = module uid). A target is offered only while the experiment is
+    activated / the module is not archived and has an open run.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "signup_target"
+    __table_args__ = (db.UniqueConstraint("kind", "ref", name="uq_signup_target"),)
+
+    id = db.Column(db.Integer, primary_key=True)
+    kind = db.Column(db.String(16), nullable=False)
+    ref = db.Column(db.String(64), nullable=False)

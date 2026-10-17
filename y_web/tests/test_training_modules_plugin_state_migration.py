@@ -35,13 +35,13 @@ def test_alembic_has_a_single_head_and_0006_is_in_its_history():
 
     import y_web
 
-    assert _head_revision() == ["0008_add_admin_users_lang"]
+    assert _head_revision() == ["0009_add_signup_tables"]
     cfg = Config()
     cfg.set_main_option(
         "script_location", os.path.join(os.path.dirname(y_web.__file__), "alembic")
     )
     history = [r.revision for r in ScriptDirectory.from_config(cfg).walk_revisions()]
-    assert REV_0006 in history and history.index(REV_0006) == 2
+    assert REV_0006 in history and history.index(REV_0006) == 3
 
 
 def test_startup_creates_plugin_state(core_app):

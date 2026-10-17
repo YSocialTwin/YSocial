@@ -3,29 +3,50 @@
 {% block sync %}{% include 'shared/browser_sync.html' %}{% endblock %}
 
 {% block card %}
+        {% if error %}
+        <div class="yl-error" role="alert">{{ error }}</div>
+        {% else %}
         {% with messages = get_flashed_messages() %}
         {% if messages %}
-        <div class="yl-error" role="alert">{{ messages[0] }}. {{ _('Go to') }} <a href="{{ url_for('auth.login') }}">{{ _('login page') }}</a>.</div>
+        <div class="yl-error" role="alert">{{ messages[0] }}</div>
         {% endif %}
         {% endwith %}
+        {% endif %}
 
-        <form method="POST" action="{{ url_for('auth.signup') }}" class="yl-form">
+        <form method="POST" action="{{ url_for('auth.signup_post') }}" class="yl-form">
+            <input type="hidden" name="signup_token" value="{{ signup_token }}">
             <h2>{{ _('Create your account') }}</h2>
-            <p class="yl-sub">{{ _('Join Y Social and start exploring.') }}</p>
+            <p class="yl-sub">{{ _('Join Y Social and choose what you want to take part in.') }}</p>
 
             <div class="yl-field">
-                <input id="yl-email" type="email" name="email" placeholder=" " autocomplete="email" autofocus required>
+                <input id="yl-email" type="email" name="email" value="{{ form.get('email', '') }}" placeholder=" " autocomplete="email" maxlength="50" autofocus required>
                 <label for="yl-email">{{ _('Email') }}</label>
             </div>
             <div class="yl-field">
-                <input id="yl-name" type="text" name="name" placeholder=" " autocomplete="username" required>
+                <input id="yl-name" type="text" name="name" value="{{ form.get('username', '') }}" placeholder=" " autocomplete="username" minlength="3" maxlength="15" required>
                 <label for="yl-name">{{ _('Username') }}</label>
             </div>
             <div class="yl-field">
-                <input id="yl-pass" type="password" name="password" placeholder=" " autocomplete="new-password" required>
+                <input id="yl-pass" type="password" name="password" placeholder=" " autocomplete="new-password" minlength="8" required>
                 <label for="yl-pass">{{ _('Password') }}</label>
                 <button class="yl-eye" id="yl-eye" type="button" aria-label="{{ _('Show password') }}">{{ _('SHOW') }}</button>
             </div>
+
+            <p class="yl-sub" id="yl-offers-label">{{ _('Join') }}</p>
+            <div class="yl-cards" role="group" aria-labelledby="yl-offers-label">
+                {% for offer in offers %}
+                {% set key = offer.kind ~ ':' ~ offer.ref %}
+                <label class="yl-xp">
+                    <input type="checkbox" name="pick" value="{{ key }}" {% if key in form.get('picks', []) or offers|length == 1 %}checked{% endif %}>
+                    <span class="yl-ic" aria-hidden="true">{{ (offer.label or '?')[:1]|upper }}</span>
+                    <span>
+                        <b>{{ offer.label }}</b>
+                        <span class="yl-meta">{% if offer.kind == 'training' %}{{ _('Training module') }}{% else %}{{ _('Simulation') }}{% if offer.detail %} · {{ offer.detail|capitalize }}{% endif %}{% endif %}</span>
+                    </span>
+                </label>
+                {% endfor %}
+            </div>
+
             <button class="yl-btn" type="submit"><span class="yl-spin"></span><span>{{ _('Sign Up') }}</span></button>
             <div class="yl-foot">{{ _('Already registered?') }} <a href="{{ url_for('auth.login') }}">{{ _('Login') }}</a></div>
         </form>

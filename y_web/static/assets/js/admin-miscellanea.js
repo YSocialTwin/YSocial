@@ -1271,6 +1271,47 @@ var AdminMiscellanea = (function() {
       }
   })();
 
+
+  // Self-registration: the switch and the chosen targets are saved together
+  (function() {
+      const box = document.getElementById('box-self-registration');
+      if (!box || box.dataset.initialized) return;
+      box.dataset.initialized = 'true';
+      const msg = document.getElementById('signup-message');
+      function show(text, isError) {
+          msg.textContent = text;
+          msg.style.display = 'block';
+          msg.style.color = isError ? '#c0392b' : '#1a7f45';
+          setTimeout(function() { msg.style.display = 'none'; }, 3000);
+      }
+      function values(cls) {
+          return Array.from(box.querySelectorAll(cls + ':checked')).map(function(i) { return i.value; });
+      }
+      function save() {
+          fetch('/admin/signup_settings', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                  enabled: document.getElementById('signup_enabled').checked,
+                  experiments: values('.signup-exp'),
+                  modules: values('.signup-mod')
+              })
+          })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+              if (!data.success) { show(data.message || YI18n.t('Failed to update'), true); return; }
+              const enabled = document.getElementById('signup_enabled').checked;
+              document.getElementById('signup-status').textContent =
+                  enabled && !data.open ? YI18n.t('On, but nothing is available to join yet') : '';
+              show(YI18n.t('Self-registration settings saved'), false);
+          })
+          .catch(function() { show(YI18n.t('Error updating setting'), true); });
+      }
+      box.addEventListener('change', function(e) {
+          if (e.target.matches('input[type=checkbox]')) save();
+      });
+  })();
+
   // Load current HPC monitor settings
   async function loadHpcMonitorSettings() {
       try {

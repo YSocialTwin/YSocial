@@ -1027,3 +1027,11 @@ def training_dashboard_overview(user) -> dict | None:
         }
     except Exception:
         return None
+
+
+def training_signup_api():
+    """The Training Modules self-registration helpers (``candidates()``, ``enroll()``), or ``None``."""
+    report = validate_backend_suite(TRAINING_REPO_KEY)
+    if not report.get("valid") or not plugin_enabled(TRAINING_REPO_KEY):
+        return None
+    return _import_from_suite(TRAINING_REPO_KEY, "modules.training_editor.backend.self_registration")

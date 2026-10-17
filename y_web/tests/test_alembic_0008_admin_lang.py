@@ -34,7 +34,8 @@ def _run(engine, filename):
 
 def test_the_revision_chain_is_linear_and_ends_with_the_language_column():
     script = _script_dir()
-    assert script.get_heads() == ["0008_add_admin_users_lang"]
+    assert script.get_heads() == ["0009_add_signup_tables"]
+    assert script.get_revision("0009_add_signup_tables").down_revision == "0008_add_admin_users_lang"
     assert script.get_revision("0008_add_admin_users_lang").down_revision == (
         "0007_sync_legacy_dashboard_schema"
     )
@@ -65,4 +66,4 @@ def test_application_start_applies_the_migration(core_app):  # noqa: F811
         assert "lang" in {c["name"] for c in sa.inspect(engine).get_columns("admin_users")}
         with engine.connect() as conn:
             head = conn.execute(sa.text("SELECT version_num FROM alembic_version")).scalars().all()
-        assert "0008_add_admin_users_lang" in head
+        assert "0009_add_signup_tables" in head

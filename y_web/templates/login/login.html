@@ -57,6 +57,9 @@
                 <label><input type="checkbox" name="remember"> {{ _('Remember me') }}</label>
             </div>
             <button class="yl-btn" type="submit"><span class="yl-spin"></span><span>{{ _('Login') }}</span></button>
+            {% if signup_open is defined and signup_open() %}
+            <div class="yl-foot">{{ _('New here?') }} <a href="{{ url_for('auth.signup') }}">{{ _('Create an account') }}</a></div>
+            {% endif %}
         </form>
         {% endif %}
 {% endblock %}

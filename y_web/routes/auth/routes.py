@@ -157,6 +157,72 @@ def login_post():
         return redirect(url_for("auth.login"))
 
 
+def _signup_closed():
+    flash(_("Registration is not available at the moment."))
+    return redirect(url_for("auth.login"))
+
+
+@auth.route("/signup", methods=["GET"])
+def signup():
+    """Self-registration page (only while the administrator has switched it on)."""
+    from y_web.src import signup as signup_logic
+
+    if not signup_logic.is_open():
+        return _signup_closed()
+    import secrets
+
+    token = session["signup_token"] = secrets.token_urlsafe(24)
+    return render_template(
+        "login/register.html", offers=signup_logic.offers(), signup_token=token, form={}
+    )
+
+
+@auth.route("/signup", methods=["POST"])
+def signup_post():
+    """Create a participant account and join the chosen experiments / training modules."""
+    import hmac
+
+    from y_web.src import signup as signup_logic
+
+    if not signup_logic.is_open():
+        return _signup_closed()
+    expected = session.get("signup_token") or ""
+    supplied = request.form.get("signup_token") or ""
+    if not expected or not hmac.compare_digest(expected, supplied):
+        flash(_("Invalid or expired session. Please try again."))
+        return redirect(url_for("auth.signup"))
+
+    form = {
+        "username": request.form.get("name", ""),
+        "email": request.form.get("email", ""),
+        "picks": request.form.getlist("pick"),
+    }
+    try:
+        result = signup_logic.create_account(
+            form["username"], form["email"], request.form.get("password", ""), form["picks"]
+        )
+    except signup_logic.SignupError as exc:
+        return render_template(
+            "login/register.html",
+            offers=signup_logic.offers(),
+            signup_token=expected,
+            form=form,
+            error=str(exc),
+        )
+
+    session.pop("signup_token", None)
+    if result["failed"]:
+        flash(
+            _(
+                "Your account has been created, but you could not be added to: %(names)s. Please contact an administrator.",
+                names=", ".join(result["failed"]),
+            )
+        )
+    else:
+        flash(_("Your account has been created. You can now sign in."))
+    return redirect(url_for("auth.login"))
+
+
 @auth.route("/select_experiment", methods=["POST"])
 def select_experiment():
     """

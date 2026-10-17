@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 09:59+0000\n"
+"POT-Creation-Date: 2026-10-17 10:49+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -493,6 +493,9 @@ msgstr ""
 msgid "Activate run-scoped memory"
 msgstr ""
 
+msgid "Active"
+msgstr ""
+
 msgid "Active Alter"
 msgstr ""
 
@@ -924,6 +927,9 @@ msgstr ""
 msgid "An Ollama host is required when memory embeddings are enabled."
 msgstr ""
 
+msgid "An account with this username or email already exists."
+msgstr ""
+
 msgid "An activity profile with this name already exists."
 msgstr ""
 
@@ -1005,6 +1011,9 @@ msgid "Archive generation failed."
 msgstr ""
 
 msgid "Archive generation started. You will be notified when the file is ready."
+msgstr ""
+
+msgid "Archived"
 msgstr ""
 
 msgid "Are you using YSocial for your research? Please cite us!"
@@ -1526,6 +1535,9 @@ msgid "Choose an existing group or type a new one"
 msgstr ""
 
 msgid "Choose an image from your gallery or upload a new one."
+msgstr ""
+
+msgid "Choose at least one of the available activities."
 msgstr ""
 
 msgid "Choose edge list file (CSV)..."
@@ -2304,6 +2316,9 @@ msgid ""
 msgstr ""
 
 msgid "Create a story from your gallery"
+msgstr ""
+
+msgid "Create an account"
 msgstr ""
 
 msgid ""
@@ -4162,9 +4177,6 @@ msgstr ""
 msgid "Global Actions Likelihood"
 msgstr ""
 
-msgid "Go to"
-msgstr ""
-
 msgid "Go to Homepage"
 msgstr ""
 
@@ -4448,6 +4460,9 @@ msgid "How often memory reflections are generated."
 msgstr ""
 
 msgid "How to order posts when scores are equal"
+msgstr ""
+
+msgid "How visitors can create their own account."
 msgstr ""
 
 msgid "Human"
@@ -4807,6 +4822,9 @@ msgstr ""
 msgid "Invalid or expired session. Please log in again."
 msgstr ""
 
+msgid "Invalid or expired session. Please try again."
+msgstr ""
+
 msgid "Invalid parameters format. Must be valid JSON."
 msgstr ""
 
@@ -4872,6 +4890,9 @@ msgstr ""
 msgid "Japanese"
 msgstr ""
 
+msgid "Join"
+msgstr ""
+
 #, python-format
 msgid "Join %(name)s"
 msgstr ""
@@ -4882,7 +4903,7 @@ msgstr ""
 msgid "Join This Experiment"
 msgstr ""
 
-msgid "Join Y Social and start exploring."
+msgid "Join Y Social and choose what you want to take part in."
 msgstr ""
 
 msgid "Joined Experiments"
@@ -5072,6 +5093,11 @@ msgid "Less"
 msgstr ""
 
 msgid "Let participants change the language"
+msgstr ""
+
+msgid ""
+"Let visitors create a participant account from the login page and join "
+"the simulations and training modules you select below."
 msgstr ""
 
 msgid "Let's create your first simulation in just 4 easy steps."
@@ -5735,6 +5761,9 @@ msgstr ""
 msgid "New Zealander"
 msgstr ""
 
+msgid "New here?"
+msgstr ""
+
 msgid "New message"
 msgstr ""
 
@@ -5935,6 +5964,9 @@ msgstr ""
 msgid "No notifications yet."
 msgstr ""
 
+msgid "No open run"
+msgstr ""
+
 msgid "No operation has been run on this plugin yet."
 msgstr ""
 
@@ -6011,6 +6043,9 @@ msgstr ""
 msgid "No server configuration file was found for this experiment."
 msgstr ""
 
+msgid "No simulations yet."
+msgstr ""
+
 msgid "No story previews are available yet."
 msgstr ""
 
@@ -6027,6 +6062,9 @@ msgid "No topics assigned"
 msgstr ""
 
 msgid "No toxicity annotations have been recorded up to the selected time."
+msgstr ""
+
+msgid "No training modules yet."
 msgstr ""
 
 msgid "No user data provided."
@@ -6054,6 +6092,9 @@ msgid "Not"
 msgstr ""
 
 msgid "Not Interested"
+msgstr ""
+
+msgid "Not active"
 msgstr ""
 
 msgid "Not assigned"
@@ -6218,6 +6259,12 @@ msgid "Only owner/admin/shared researchers can edit memory embeddings"
 msgstr ""
 
 msgid "Only owner/admin/shared researchers can edit stress/reward settings"
+msgstr ""
+
+msgid ""
+"Only simulations and modules that are active at the moment are offered to"
+" visitors; the sign-up link appears on the login page when at least one "
+"is available."
 msgstr ""
 
 msgid "Open"
@@ -6451,6 +6498,9 @@ msgstr ""
 msgid "Participant"
 msgstr ""
 
+msgid "Participants"
+msgstr ""
+
 msgid "Password"
 msgstr ""
 
@@ -6602,6 +6652,9 @@ msgid ""
 msgstr ""
 
 msgid "Please enter a valid email address"
+msgstr ""
+
+msgid "Please enter a valid email address."
 msgstr ""
 
 msgid "Please pick a source experiment from the selected source group."
@@ -7364,6 +7417,9 @@ msgstr ""
 msgid "Registered Users"
 msgstr ""
 
+msgid "Registration is not available at the moment."
+msgstr ""
+
 msgid "Related:"
 msgstr ""
 
@@ -8095,6 +8151,9 @@ msgstr ""
 msgid "Self-hosted LLM Server (%(backend)s)"
 msgstr ""
 
+msgid "Self-registration"
+msgstr ""
+
 msgid "Semantic Retrieval"
 msgstr ""
 
@@ -8300,6 +8359,9 @@ msgstr ""
 msgid "Sign in to continue to your experiments."
 msgstr ""
 
+msgid "Sign-up page"
+msgstr ""
+
 msgid "Silent Majorities"
 msgstr ""
 
@@ -8309,6 +8371,9 @@ msgid ""
 msgstr ""
 
 msgid "Simulated (run as fast as possible)"
+msgstr ""
+
+msgid "Simulation"
 msgstr ""
 
 msgid "Simulation Clients"
@@ -9031,6 +9096,10 @@ msgstr ""
 msgid "The page you are looking for does not exist."
 msgstr ""
 
+#, python-format
+msgid "The password must have at least %(n)s characters."
+msgstr ""
+
 msgid "The post text."
 msgstr ""
 
@@ -9100,6 +9169,11 @@ msgstr ""
 msgid ""
 "The updated image feed assignment has been saved. Running clients will "
 "use the new feeds after they are restarted."
+msgstr ""
+
+msgid ""
+"The username must have 3 to 15 characters: letters, digits, dots, dashes "
+"or underscores."
 msgstr ""
 
 msgid "Thematic Characterization"
@@ -9484,6 +9558,12 @@ msgid "Tracked Aggregates"
 msgstr ""
 
 msgid "Training"
+msgstr ""
+
+msgid "Training module"
+msgstr ""
+
+msgid "Training modules"
 msgstr ""
 
 msgid ""
@@ -10429,6 +10509,15 @@ msgstr ""
 msgid "Your YSocial installation is up to date."
 msgstr ""
 
+#, python-format
+msgid ""
+"Your account has been created, but you could not be added to: %(names)s. "
+"Please contact an administrator."
+msgstr ""
+
+msgid "Your account has been created. You can now sign in."
+msgstr ""
+
 msgid "Your annotations"
 msgstr ""
 
@@ -10551,9 +10640,6 @@ msgid "llm_url parameter is required"
 msgstr ""
 
 msgid "local changes"
-msgstr ""
-
-msgid "login page"
 msgstr ""
 
 msgid "main navigation"

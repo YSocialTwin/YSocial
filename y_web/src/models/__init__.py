@@ -47,6 +47,8 @@ from y_web.src.models.admin import (
     Page,
     Page_Population,
     PluginState,
+    SignupSettings,
+    SignupTarget,
     Population,
     Population_Experiment,
     ReleaseInfo,

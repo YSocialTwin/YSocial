@@ -38,6 +38,17 @@ def register_blueprints(app):
     from .social import main
 
     app.register_blueprint(auth)
+
+    def _signup_open():
+        # the sign-up link of the login page: never an error for the visitor
+        try:
+            from y_web.src.signup import is_open
+
+            return is_open()
+        except Exception:
+            return False
+
+    app.jinja_env.globals["signup_open"] = _signup_open
     app.register_blueprint(main)
     app.register_blueprint(user)
     app.register_blueprint(admin)
