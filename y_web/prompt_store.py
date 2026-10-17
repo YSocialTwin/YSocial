@@ -10,17 +10,25 @@ Step 1 of the multilingual prompts task: prompts that used to be written inside 
 * raises :class:`PromptError` when a field named in the text is not passed, instead of leaving it in the prompt;
 * never evaluates anything.
 
-``language`` is accepted so call sites do not change when language packs are added; only English exists today
-and any other language falls back to it.
+Languages: English lives in ``prompts_internal.json``; another language ``xx`` lives in
+``prompts_internal.xx.json`` next to it and only needs the keys it translates. A key missing from a language
+(or a language without a file) falls back to English and logs a warning once. ``set_language`` sets the
+language used when a call passes none; nothing is ever translated at run time.
 
 This file is copied unchanged into every repository that builds prompts; keep the copies identical.
 """
 
 import json
+import logging
 import re
 from pathlib import Path
 
 PACK_FILE = Path(__file__).with_name("prompts_internal.json")
+DEFAULT_LANGUAGE = "en"
+_language = DEFAULT_LANGUAGE
+_warned = set()
+_LANG = re.compile(r"^[a-z]{2,3}(?:-[a-z0-9]{2,8})?$")
+log = logging.getLogger(__name__)
 _NAME = r"[A-Za-z_][A-Za-z0-9_]*"
 _PATH = rf"(?P<root>{_NAME})(?P<steps>(?:\.{_NAME}|\[(?:'[^'\n]*'|\"[^\"\n]*\"|\d+)\])*)"
 _JOIN = rf"(?:'(?P<sq>[^'\n]*)'|\"(?P<dq>[^\"\n]*)\")\.join\((?P<jroot>{_NAME})\)"
@@ -37,18 +45,55 @@ class PromptError(KeyError):
         return str(self.args[0]) if self.args else ""
 
 
-def _pack(language="en"):
-    path = PACK_FILE
+def _clean(language):
+    language = (language or "").strip().lower()
+    return language if _LANG.match(language) else DEFAULT_LANGUAGE
+
+
+def set_language(language):
+    """Language used by calls that do not pass one (empty or unknown values mean English)."""
+    global _language
+    _language = _clean(language)
+
+
+def current_language():
+    return _language
+
+
+def _pack_path(language):
+    if language == DEFAULT_LANGUAGE:
+        return PACK_FILE
+    return PACK_FILE.with_name(f"{PACK_FILE.stem}.{language}{PACK_FILE.suffix}")
+
+
+def _pack(language):
+    path = _pack_path(language)
     if path not in _cache:
-        with open(path, encoding="utf-8") as handle:
-            _cache[path] = json.load(handle)
+        if path.exists():
+            with open(path, encoding="utf-8") as handle:
+                _cache[path] = json.load(handle)
+        else:
+            _cache[path] = {}
     return _cache[path]
 
 
-def get(key, language="en"):
-    """The template text for ``key`` (English until other languages exist)."""
+def _warn_once(language, key):
+    if (language, key) not in _warned:
+        _warned.add((language, key))
+        log.warning("prompt %r has no %r text; using English", key, language)
+
+
+def get(key, language=None):
+    """The template text for ``key`` in ``language`` (default: the current language), else in English."""
+    language = _clean(language) if language else _language
+    if language != DEFAULT_LANGUAGE:
+        text = _pack(language).get(key)
+        if text is not None:
+            return text
+        if key in _pack(DEFAULT_LANGUAGE):
+            _warn_once(language, key)
     try:
-        return _pack(language)[key]
+        return _pack(DEFAULT_LANGUAGE)[key]
     except KeyError:
         raise PromptError(f"unknown prompt key: {key}") from None
 
@@ -85,6 +130,6 @@ def render(template, **fields):
     return _FIELD.sub(lambda match: _resolve(match, fields), template)
 
 
-def prompt(key, language="en", **fields):
+def prompt(key, language=None, **fields):
     """``render(get(key), **fields)``."""
     return render(get(key, language), **fields)
