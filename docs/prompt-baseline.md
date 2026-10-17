@@ -1,6 +1,6 @@
 # English baseline (gate G0)
 
-Status: **not measured yet.** No LLM server was reachable from the environment that prepared the scripts, so the live numbers below are empty. Run the script on the two models chosen for the pilot and paste the results here.
+Status: **one model measured, one pending.** The scripts were prepared in an environment without access to an LLM server; the first run was made by the user on a local Ollama (details below). The second model, the more capable one, is still to be run.
 
 ## How to run
 
@@ -15,8 +15,8 @@ Each round asks four questions with the current English prompts of `data_schema/
 
 | Model | Parsing success | Action | Follow | Reaction | Vote | Mean prompt tokens | Mean completion tokens |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| (model 1) | | | | | | | |
-| (model 2) | | | | | | | |
+| llama3.2 (Ollama, local, 50 rounds, seed 1; `docs/baseline_llama3.2.json`) | 100% (200/200) | 100% | 100% | 100% | 100% | 98 to 114 | about 2 |
+| (model 2, to run) | | | | | | | |
 
 Gate G0 asks for at least 95% parsing success on both models. If the English baseline is lower, the English prompts or parsers are fixed first.
 
@@ -25,3 +25,7 @@ Gate G0 asks for at least 95% parsing success on both models. If the English bas
 - The answer is uppercased where needed, `!` is removed and the text is split on whitespace; a token matches only as a whole word. `NEUTRAL.` or `YES,` therefore does **not** match, while `NEUTRAL` and `yes` (where the code uppercases) do. Step 2 makes the parser tolerant of punctuation and case; the baseline measures today's behaviour first.
 - The action choice scans for the tokens in a fixed order (`COMMENT`, `POST`, `READ`, `SEARCH`, `FOLLOW`, `SHARE`, `CAST`, `IMAGE`); an answer containing two of them takes the first in that order.
 - Reaction and follow prompts also use `YES`, `NO`, `NEUTRAL`; the vote prompt uses `LEFT`, `RIGHT`, `NONE`.
+
+## Reading of the first result
+
+All 200 answers of llama3.2 were accepted by the parsers (G0 threshold: at least 95%), with answers of about two tokens and 0.07 to 0.24 s per request. This model follows the one-word format very closely, so it is a favourable case: a result of 100% leaves no room to see a drop later, and the comparison of G3 will be more informative with a second, less obedient or larger model. These four prompts are also only a sample of the actions; comment and post generation, annotation and the Reddit memory prompts are not covered yet.
