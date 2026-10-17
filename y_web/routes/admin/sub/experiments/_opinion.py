@@ -120,7 +120,7 @@ from ._helpers import (
     _current_admin_user_or_none,
     _load_stress_reward_experiment_context,
 )
-from y_web.i18n import gettext as _
+from y_web.i18n import N_, gettext as _
 
 
 def _resolve_opinion_evolution_topics(expid):
@@ -260,8 +260,8 @@ def _build_propaganda_target_opinion_trend(
         "timestamps": timestamps,
         "timestamp_mapping": timestamp_mapping,
         "datasets": [
-            {"label": "Target Opinion", "data": opinion_series},
-            {"label": "Propaganda Interactions", "data": interaction_series},
+            {"label": _("Target Opinion"), "data": opinion_series},
+            {"label": _("Propaganda Interactions"), "data": interaction_series},
         ],
     }
 
@@ -638,8 +638,8 @@ def _build_mop_target_opinion_trend(
         "timestamps": timestamps,
         "timestamp_mapping": timestamp_mapping,
         "datasets": [
-            {"label": "Target Opinion", "data": opinion_series},
-            {"label": "MoP Interactions", "data": interaction_series},
+            {"label": _("Target Opinion"), "data": opinion_series},
+            {"label": _("MoP Interactions"), "data": interaction_series},
         ],
     }
 
@@ -3284,8 +3284,8 @@ def _build_stress_reward_trends(db_path, filter_day, filter_hour):
         "timestamps": timestamps,
         "timestamp_mapping": timestamp_mapping,
         "datasets": [
-            {"label": "Average Stress", "data": stress_series},
-            {"label": "Average Reward", "data": reward_series},
+            {"label": _("Average Stress"), "data": stress_series},
+            {"label": _("Average Reward"), "data": reward_series},
         ],
     }
 
@@ -3429,9 +3429,9 @@ def _build_sa_target_trend(conn, target_uid, filter_day, filter_hour):
         "timestamps": timestamps,
         "timestamp_mapping": timestamp_mapping,
         "datasets": [
-            {"label": "Target Stress", "data": stress_series},
-            {"label": "Target Reward", "data": reward_series},
-            {"label": "SA Interactions", "data": interaction_series},
+            {"label": _("Target Stress"), "data": stress_series},
+            {"label": _("Target Reward"), "data": reward_series},
+            {"label": _("SA Interactions"), "data": interaction_series},
         ],
     }
 
@@ -3663,9 +3663,9 @@ def _build_moderator_target_trend(conn, target_uid, filter_day, filter_hour):
         "timestamps": timestamps,
         "timestamp_mapping": timestamp_mapping,
         "datasets": [
-            {"label": "Average Target Toxicity", "data": average_series},
-            {"label": "Peak Target Toxicity", "data": peak_series},
-            {"label": "Moderator Actions", "data": moderation_series},
+            {"label": _("Average Target Toxicity"), "data": average_series},
+            {"label": _("Peak Target Toxicity"), "data": peak_series},
+            {"label": _("Moderator Actions"), "data": moderation_series},
         ],
     }
 
@@ -4620,101 +4620,101 @@ def _build_network_analytics_payload(
     snapshots = locals().get("snapshots", [])
     timestamps = [
         (
-            f"Day {point[0]}, Hour {point[1]}"
+            _("Day %(day)s, Hour %(hour)s", day=point[0], hour=point[1])
             if point[1] is not None
-            else f"Day {point[0]}"
+            else _("Day %(day)s", day=point[0])
         )
-        for point, _ in snapshots
+        for point, _metric in snapshots
     ]
     trend_metrics = [metric for _, metric in snapshots]
 
     network_label = "follow" if network_type == "follow" else "mention"
-    network_title = "Follow Network" if network_type == "follow" else "Mention Network"
-    edge_label = "Edges" if network_type == "follow" else "Mention Edges"
+    network_title = _("Follow Network") if network_type == "follow" else _("Mention Network")
+    edge_label = _("Edges") if network_type == "follow" else _("Mention Edges")
     structure_description = (
-        "Daily evolution of density and transitivity in the follow network."
+        _("Daily evolution of density and transitivity in the follow network.")
         if network_type == "follow"
-        else "Daily evolution of density and transitivity in the mention network."
+        else _("Daily evolution of density and transitivity in the mention network.")
     )
     size_description = (
-        "Daily evolution of active nodes and directed follow edges."
+        _("Daily evolution of active nodes and directed follow edges.")
         if network_type == "follow"
-        else "Daily evolution of active nodes and directed mention edges."
+        else _("Daily evolution of active nodes and directed mention edges.")
     )
     ego_description = (
-        "Select an account to inspect its evolving one-hop ego follow network. Nodes keep their layout once they appear; the selected account stays highlighted."
+        _("Select an account to inspect its evolving one-hop ego follow network. Nodes keep their layout once they appear; the selected account stays highlighted.")
         if network_type == "follow"
-        else "Select an account to inspect its evolving one-hop ego mention network. Nodes keep their layout once they appear; the selected account stays highlighted."
+        else _("Select an account to inspect its evolving one-hop ego mention network. Nodes keep their layout once they appear; the selected account stays highlighted.")
     )
 
     stats = [
         {
             "key": "node_count",
-            "label": "Nodes",
+            "label": _("Nodes"),
             "value": metrics["node_count"],
             "color": "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
         },
         {
             "key": "edge_count",
-            "label": "Edges",
+            "label": _("Edges"),
             "value": metrics["edge_count"],
             "color": "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
         },
         {
             "key": "density",
-            "label": "Density",
+            "label": _("Density"),
             "value": f"{metrics['density']:.4f}",
             "color": "linear-gradient(135deg, #14b8a6 0%, #0f766e 100%)",
         },
         {
             "key": "component_count",
-            "label": "Components",
+            "label": _("Components"),
             "value": metrics["component_count"],
             "color": "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
         },
         {
             "key": "largest_component_size",
-            "label": "Largest Component",
+            "label": _("Largest Component"),
             "value": metrics["largest_component_size"],
             "color": "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
         },
         {
             "key": "current_day",
-            "label": "Current Day",
-            "value": f"Day {filter_day}",
+            "label": _("Current Day"),
+            "value": _("Day %(day)s", day=filter_day),
             "color": "linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)",
         },
         {
             "key": "current_hour",
-            "label": "Current Hour",
-            "value": f"Hour {filter_hour}",
+            "label": _("Current Hour"),
+            "value": _("Hour %(hour)s", hour=filter_hour),
             "color": "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)",
         },
     ]
 
     return {
-        "page_title": "Network Analysis",
-        "title": "Network Analysis",
-        "description": f"Track how the {network_label} network evolves across the experiment.",
+        "page_title": _("Network Analysis"),
+        "title": _("Network Analysis"),
+        "description": _("Track how the %(network_label)s network evolves across the experiment.", network_label=network_label),
         "network_type": network_type,
         "granularity": granularity,
         "network_type_options": [
-            {"value": "follow", "label": "Follow Network"},
-            {"value": "mention", "label": "Mention Network"},
+            {"value": "follow", "label": _("Follow Network")},
+            {"value": "mention", "label": _("Mention Network")},
         ],
         "granularity_options": [
-            {"value": "day", "label": "Daily"},
-            {"value": "hour", "label": "Hourly"},
+            {"value": "day", "label": _("Daily")},
+            {"value": "hour", "label": _("Hourly")},
         ],
         "stats": stats,
         "distribution": {
-            "title": "In-Degree CCDF",
-            "description": f"Current in-degree complementary cumulative distribution in log-log scale for the {network_label} network.",
+            "title": _("In-Degree CCDF"),
+            "description": _("Current in-degree complementary cumulative distribution in log-log scale for the %(network_label)s network.", network_label=network_label),
             "type": "line",
             "labels": [str(value) for value in degree_x_values],
             "datasets": [
                 {
-                    "label": "In-Degree CCDF",
+                    "label": _("In-Degree CCDF"),
                     "data": in_degree_ccdf,
                     "borderColor": "#60a5fa",
                     "fill": False,
@@ -4730,13 +4730,13 @@ def _build_network_analytics_payload(
             },
         },
         "trend": {
-            "title": "Out-Degree CCDF",
-            "description": f"Current out-degree complementary cumulative distribution in log-log scale for the {network_label} network.",
+            "title": _("Out-Degree CCDF"),
+            "description": _("Current out-degree complementary cumulative distribution in log-log scale for the %(network_label)s network.", network_label=network_label),
             "type": "line",
             "labels": [str(value) for value in degree_x_values],
             "datasets": [
                 {
-                    "label": "Out-Degree CCDF",
+                    "label": _("Out-Degree CCDF"),
                     "data": out_degree_ccdf,
                     "borderColor": "#a78bfa",
                     "fill": False,
@@ -4752,13 +4752,13 @@ def _build_network_analytics_payload(
             },
         },
         "secondary": {
-            "title": "Network Size Over Time",
+            "title": _("Network Size Over Time"),
             "description": size_description,
             "type": "line",
             "labels": timestamps,
             "datasets": [
                 {
-                    "label": "Active Nodes",
+                    "label": _("Active Nodes"),
                     "data": [metric["active_nodes"] for metric in trend_metrics],
                     "borderColor": "#2563eb",
                     "fill": False,
@@ -4775,13 +4775,13 @@ def _build_network_analytics_payload(
             "options": {"beginAtZero": True},
         },
         "component_share": {
-            "title": "Largest Component Share Over Time",
-            "description": "Share of nodes contained in the largest weakly connected component by day.",
+            "title": _("Largest Component Share Over Time"),
+            "description": _("Share of nodes contained in the largest weakly connected component by day."),
             "type": "line",
             "labels": timestamps,
             "datasets": [
                 {
-                    "label": "Largest Component Share",
+                    "label": _("Largest Component Share"),
                     "data": [
                         metric["largest_component_share"] for metric in trend_metrics
                     ],
@@ -4793,20 +4793,20 @@ def _build_network_analytics_payload(
             "options": {"beginAtZero": True, "max": 1},
         },
         "network_structure": {
-            "title": "Structural Metrics Over Time",
+            "title": _("Structural Metrics Over Time"),
             "description": structure_description,
             "type": "line",
             "labels": timestamps,
             "datasets": [
                 {
-                    "label": "Density",
+                    "label": _("Density"),
                     "data": [metric["density"] for metric in trend_metrics],
                     "borderColor": "#14b8a6",
                     "fill": False,
                     "tension": 0.25,
                 },
                 {
-                    "label": "Transitivity",
+                    "label": _("Transitivity"),
                     "data": [metric["clustering"] for metric in trend_metrics],
                     "borderColor": "#ec4899",
                     "fill": False,
@@ -4816,7 +4816,7 @@ def _build_network_analytics_payload(
             "options": {"beginAtZero": True, "max": 1},
         },
         "ego_network": {
-            "title": f"{network_title} Ego Network Over Time",
+            "title": _("%(network_title)s Ego Network Over Time", network_title=network_title),
             "description": ego_description,
             "selected_uid": selected_uid,
             "selected_username": (
@@ -5154,10 +5154,10 @@ def _build_topic_evolution_payload(
 
     if trend_mode == "cumulative":
         trend_definition = {
-            "title": "Topic Volume Cumulative Trend",
-            "description": "Cumulative topic-related activity volume for the selected topics.",
+            "title": _("Topic Volume Cumulative Trend"),
+            "description": _("Cumulative topic-related activity volume for the selected topics."),
             "type": "line",
-            "labels": [f"Day {day}" for day in days],
+            "labels": [_("Day %(day)s", day=day) for day in days],
             "datasets": [
                 {
                     "label": topic_labels[index],
@@ -5174,10 +5174,10 @@ def _build_topic_evolution_payload(
             "options": {"beginAtZero": True, "legendPosition": "bottom"},
         }
         secondary_definition = {
-            "title": "Population Reach Cumulative Trend",
-            "description": "Cumulative share of the population that has been involved with each selected topic.",
+            "title": _("Population Reach Cumulative Trend"),
+            "description": _("Cumulative share of the population that has been involved with each selected topic."),
             "type": "line",
-            "labels": [f"Day {day}" for day in days],
+            "labels": [_("Day %(day)s", day=day) for day in days],
             "datasets": [
                 {
                     "label": topic_labels[index],
@@ -5223,7 +5223,7 @@ def _build_topic_evolution_payload(
                             round(actual_volume / row_max, 4) if row_max else 0.0
                         ),
                         "topic_label": topic_labels[row_index],
-                        "time_label": f"Day {day}",
+                        "time_label": _("Day %(day)s", day=day),
                     }
                 )
                 secondary_cells.append(
@@ -5234,14 +5234,14 @@ def _build_topic_evolution_payload(
                         "percent": reach_pct,
                         "intensity": round(reach_pct / 100.0, 4),
                         "topic_label": topic_labels[row_index],
-                        "time_label": f"Day {day}",
+                        "time_label": _("Day %(day)s", day=day),
                     }
                 )
         trend_definition = {
-            "title": "Topic Volume Heatmap",
-            "description": "Each row is a selected topic, each column is a day, and color depth is normalized within each topic row. Tooltips report actual daily volume.",
+            "title": _("Topic Volume Heatmap"),
+            "description": _("Each row is a selected topic, each column is a day, and color depth is normalized within each topic row. Tooltips report actual daily volume."),
             "type": "heatmap",
-            "labels": [f"Day {day}" for day in days],
+            "labels": [_("Day %(day)s", day=day) for day in days],
             "row_labels": topic_labels,
             "cells": trend_cells,
             "options": {
@@ -5252,10 +5252,10 @@ def _build_topic_evolution_payload(
             },
         }
         secondary_definition = {
-            "title": "Population Reach Heatmap",
-            "description": "Each row is a selected topic, each column is a day, and color depth reflects the share of the population reached that day.",
+            "title": _("Population Reach Heatmap"),
+            "description": _("Each row is a selected topic, each column is a day, and color depth reflects the share of the population reached that day."),
             "type": "heatmap",
-            "labels": [f"Day {day}" for day in days],
+            "labels": [_("Day %(day)s", day=day) for day in days],
             "row_labels": topic_labels,
             "cells": secondary_cells,
             "options": {
@@ -5269,53 +5269,53 @@ def _build_topic_evolution_payload(
     stats = [
         {
             "key": "selected_topics",
-            "label": "Selected Topics",
+            "label": _("Selected Topics"),
             "value": len(selected_topic_ids),
             "color": "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
         },
         {
             "key": "active_topics",
-            "label": "Active Topics",
+            "label": _("Active Topics"),
             "value": active_topic_count,
             "color": "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
         },
         {
             "key": "emerged_topics",
-            "label": "Emerging Topics",
+            "label": _("Emerging Topics"),
             "value": new_topic_count,
             "color": "linear-gradient(135deg, #10b981 0%, #059669 100%)",
         },
         {
             "key": "vanished_topics",
-            "label": "Vanishing Topics",
+            "label": _("Vanishing Topics"),
             "value": vanished_topic_count,
             "color": "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
         },
         {
             "key": "current_day",
-            "label": "Current Day",
-            "value": f"Day {filter_day}",
+            "label": _("Current Day"),
+            "value": _("Day %(day)s", day=filter_day),
             "color": "linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)",
         },
         {
             "key": "current_hour",
-            "label": "Current Hour",
-            "value": f"Hour {filter_hour}",
+            "label": _("Current Hour"),
+            "value": _("Hour %(hour)s", hour=filter_hour),
             "color": "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)",
         },
     ]
 
     return {
-        "page_title": "Topic Evolution",
-        "title": "Topic Evolution",
-        "description": "Track topic diffusion, emergence, and disappearance through content and interaction activity.",
+        "page_title": _("Topic Evolution"),
+        "title": _("Topic Evolution"),
+        "description": _("Track topic diffusion, emergence, and disappearance through content and interaction activity."),
         "stats": stats,
         "trend_mode": trend_mode,
-        "selector_label": "Topics to Visualize",
-        "selector_hint": "Cmd/Ctrl for multi-select",
+        "selector_label": _("Topics to Visualize"),
+        "selector_hint": _("Cmd/Ctrl for multi-select"),
         "trend_mode_options": [
-            {"value": "daily", "label": "Daily Heatmap"},
-            {"value": "cumulative", "label": "Cumulative Trends"},
+            {"value": "daily", "label": _("Daily Heatmap")},
+            {"value": "cumulative", "label": _("Cumulative Trends")},
         ],
         "selected_ids": selected_topic_ids,
         "selector_options": [
@@ -5328,8 +5328,8 @@ def _build_topic_evolution_payload(
         "selected_topic_ids": selected_topic_ids,
         "topic_options": topic_options,
         "distribution": {
-            "title": "Topic Footprint at Selected Time",
-            "description": "Cumulative topic-related volume up to the selected time, including content and downstream interactions.",
+            "title": _("Topic Footprint at Selected Time"),
+            "description": _("Cumulative topic-related volume up to the selected time, including content and downstream interactions."),
             "type": "bar",
             "labels": [
                 next(
@@ -5344,7 +5344,7 @@ def _build_topic_evolution_payload(
             ],
             "datasets": [
                 {
-                    "label": "Total Volume",
+                    "label": _("Total Volume"),
                     "data": [
                         next(
                             (
@@ -5368,13 +5368,13 @@ def _build_topic_evolution_payload(
         "trend": trend_definition,
         "secondary": secondary_definition,
         "topic_lifecycle": {
-            "title": "Topic Lifecycle Over Time",
-            "description": "Compact view of how many topics remain active, emerge, and disappear across the observed horizon.",
+            "title": _("Topic Lifecycle Over Time"),
+            "description": _("Compact view of how many topics remain active, emerge, and disappear across the observed horizon."),
             "type": "line",
-            "labels": [f"Day {int(row['day'])}" for row in lifecycle_rows],
+            "labels": [_("Day %(day)s", day=int(row['day'])) for row in lifecycle_rows],
             "datasets": [
                 {
-                    "label": "Active Topics",
+                    "label": _("Active Topics"),
                     "data": [_safe_int(row["active_topics"]) for row in lifecycle_rows],
                     "borderColor": "#8b5cf6",
                     "backgroundColor": "rgba(124, 58, 237, 0.10)",
@@ -5385,7 +5385,7 @@ def _build_topic_evolution_payload(
                     "tension": 0.28,
                 },
                 {
-                    "label": "New Topics",
+                    "label": _("New Topics"),
                     "data": [_safe_int(row["new_topics"]) for row in lifecycle_rows],
                     "borderColor": "#10b981",
                     "backgroundColor": "transparent",
@@ -5396,7 +5396,7 @@ def _build_topic_evolution_payload(
                     "tension": 0.25,
                 },
                 {
-                    "label": "Vanished Topics",
+                    "label": _("Vanished Topics"),
                     "data": [
                         _safe_int(row["vanished_topics"]) for row in lifecycle_rows
                     ],
@@ -5412,15 +5412,15 @@ def _build_topic_evolution_payload(
             "options": {"beginAtZero": True, "legendPosition": "bottom"},
         },
         "summary": {
-            "title": "Selected Topic Summary",
+            "title": _("Selected Topic Summary"),
             "columns": [
-                "Topic",
-                "First Seen",
-                "Last Seen",
-                "Total Volume",
-                "Distinct Participants",
-                "Population Share",
-                "Current Day Volume",
+                _("Topic"),
+                _("First Seen"),
+                _("Last Seen"),
+                _("Total Volume"),
+                _("Distinct Participants"),
+                _("Population Share"),
+                _("Current Day Volume"),
             ],
             "rows": [
                 [
@@ -5432,8 +5432,8 @@ def _build_topic_evolution_payload(
                         ),
                         str(row["topic_id"]),
                     ),
-                    f"Day {_safe_int(row['first_day'])}",
-                    f"Day {_safe_int(row['last_day'])}",
+                    _("Day %(day)s", day=_safe_int(row['first_day'])),
+                    _("Day %(day)s", day=_safe_int(row['last_day'])),
                     _safe_int(row["total_volume"]),
                     _safe_int(row["participants"]),
                     f"{round(100.0 * _safe_int(row['participants']) / max(total_population, 1), 2)}%",
@@ -5441,7 +5441,7 @@ def _build_topic_evolution_payload(
                 ]
                 for row in summary_rows
             ],
-            "empty_message": "No topic activity has been recorded up to the selected time.",
+            "empty_message": _("No topic activity has been recorded up to the selected time."),
         },
     }
 
@@ -5737,10 +5737,10 @@ def _build_hashtag_evolution_payload(
 
     if trend_mode == "cumulative":
         trend_definition = {
-            "title": "Hashtag Volume Cumulative Trend",
-            "description": "Cumulative hashtag-related activity volume for the selected hashtags.",
+            "title": _("Hashtag Volume Cumulative Trend"),
+            "description": _("Cumulative hashtag-related activity volume for the selected hashtags."),
             "type": "line",
-            "labels": [f"Day {day}" for day in days],
+            "labels": [_("Day %(day)s", day=day) for day in days],
             "datasets": [
                 {
                     "label": hashtag_labels[index],
@@ -5759,10 +5759,10 @@ def _build_hashtag_evolution_payload(
             "options": {"beginAtZero": True, "legendPosition": "bottom"},
         }
         secondary_definition = {
-            "title": "Hashtag Reach Cumulative Trend",
-            "description": "Cumulative share of the population that has been involved with each selected hashtag.",
+            "title": _("Hashtag Reach Cumulative Trend"),
+            "description": _("Cumulative share of the population that has been involved with each selected hashtag."),
             "type": "line",
-            "labels": [f"Day {day}" for day in days],
+            "labels": [_("Day %(day)s", day=day) for day in days],
             "datasets": [
                 {
                     "label": hashtag_labels[index],
@@ -5808,7 +5808,7 @@ def _build_hashtag_evolution_payload(
                             round(actual_volume / row_max, 4) if row_max else 0.0
                         ),
                         "topic_label": hashtag_labels[row_index],
-                        "time_label": f"Day {day}",
+                        "time_label": _("Day %(day)s", day=day),
                     }
                 )
                 secondary_cells.append(
@@ -5819,14 +5819,14 @@ def _build_hashtag_evolution_payload(
                         "percent": reach_pct,
                         "intensity": round(reach_pct / 100.0, 4),
                         "topic_label": hashtag_labels[row_index],
-                        "time_label": f"Day {day}",
+                        "time_label": _("Day %(day)s", day=day),
                     }
                 )
         trend_definition = {
-            "title": "Hashtag Volume Heatmap",
-            "description": "Each row is a selected hashtag, each column is a day, and color depth is normalized within each hashtag row. Tooltips report actual daily volume.",
+            "title": _("Hashtag Volume Heatmap"),
+            "description": _("Each row is a selected hashtag, each column is a day, and color depth is normalized within each hashtag row. Tooltips report actual daily volume."),
             "type": "heatmap",
-            "labels": [f"Day {day}" for day in days],
+            "labels": [_("Day %(day)s", day=day) for day in days],
             "row_labels": hashtag_labels,
             "cells": trend_cells,
             "options": {
@@ -5837,10 +5837,10 @@ def _build_hashtag_evolution_payload(
             },
         }
         secondary_definition = {
-            "title": "Population Reach Heatmap",
-            "description": "Each row is a selected hashtag, each column is a day, and color depth reflects the share of the population reached that day.",
+            "title": _("Population Reach Heatmap"),
+            "description": _("Each row is a selected hashtag, each column is a day, and color depth reflects the share of the population reached that day."),
             "type": "heatmap",
-            "labels": [f"Day {day}" for day in days],
+            "labels": [_("Day %(day)s", day=day) for day in days],
             "row_labels": hashtag_labels,
             "cells": secondary_cells,
             "options": {
@@ -5854,53 +5854,53 @@ def _build_hashtag_evolution_payload(
     stats = [
         {
             "key": "selected_topics",
-            "label": "Selected Hashtags",
+            "label": _("Selected Hashtags"),
             "value": len(selected_hashtag_ids),
             "color": "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
         },
         {
             "key": "active_topics",
-            "label": "Active Hashtags",
+            "label": _("Active Hashtags"),
             "value": active_hashtag_count,
             "color": "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
         },
         {
             "key": "emerged_topics",
-            "label": "Emerging Hashtags",
+            "label": _("Emerging Hashtags"),
             "value": new_hashtag_count,
             "color": "linear-gradient(135deg, #10b981 0%, #059669 100%)",
         },
         {
             "key": "vanished_topics",
-            "label": "Vanishing Hashtags",
+            "label": _("Vanishing Hashtags"),
             "value": vanished_hashtag_count,
             "color": "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
         },
         {
             "key": "current_day",
-            "label": "Current Day",
-            "value": f"Day {filter_day}",
+            "label": _("Current Day"),
+            "value": _("Day %(day)s", day=filter_day),
             "color": "linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)",
         },
         {
             "key": "current_hour",
-            "label": "Current Hour",
-            "value": f"Hour {filter_hour}",
+            "label": _("Current Hour"),
+            "value": _("Hour %(hour)s", hour=filter_hour),
             "color": "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)",
         },
     ]
 
     return {
-        "page_title": "Hashtag Evolution",
-        "title": "Hashtag Evolution",
-        "description": "Track hashtag diffusion, emergence, and disappearance through content and interaction activity.",
+        "page_title": _("Hashtag Evolution"),
+        "title": _("Hashtag Evolution"),
+        "description": _("Track hashtag diffusion, emergence, and disappearance through content and interaction activity."),
         "stats": stats,
         "trend_mode": trend_mode,
-        "selector_label": "Hashtags to Visualize",
-        "selector_hint": "Cmd/Ctrl for multi-select",
+        "selector_label": _("Hashtags to Visualize"),
+        "selector_hint": _("Cmd/Ctrl for multi-select"),
         "trend_mode_options": [
-            {"value": "daily", "label": "Daily Heatmap"},
-            {"value": "cumulative", "label": "Cumulative Trends"},
+            {"value": "daily", "label": _("Daily Heatmap")},
+            {"value": "cumulative", "label": _("Cumulative Trends")},
         ],
         "selected_ids": selected_hashtag_ids,
         "selector_options": [
@@ -5920,8 +5920,8 @@ def _build_hashtag_evolution_payload(
             for option in hashtag_options
         ],
         "distribution": {
-            "title": "Hashtag Footprint at Selected Time",
-            "description": "Cumulative hashtag-related volume up to the selected time, including content and downstream interactions.",
+            "title": _("Hashtag Footprint at Selected Time"),
+            "description": _("Cumulative hashtag-related volume up to the selected time, including content and downstream interactions."),
             "type": "bar",
             "labels": [
                 next(
@@ -5936,7 +5936,7 @@ def _build_hashtag_evolution_payload(
             ],
             "datasets": [
                 {
-                    "label": "Total Volume",
+                    "label": _("Total Volume"),
                     "data": [
                         next(
                             (
@@ -5961,13 +5961,13 @@ def _build_hashtag_evolution_payload(
         "trend": trend_definition,
         "secondary": secondary_definition,
         "topic_lifecycle": {
-            "title": "Hashtag Lifecycle Over Time",
-            "description": "Compact view of how many hashtags remain active, emerge, and disappear across the observed horizon.",
+            "title": _("Hashtag Lifecycle Over Time"),
+            "description": _("Compact view of how many hashtags remain active, emerge, and disappear across the observed horizon."),
             "type": "line",
-            "labels": [f"Day {int(row['day'])}" for row in lifecycle_rows],
+            "labels": [_("Day %(day)s", day=int(row['day'])) for row in lifecycle_rows],
             "datasets": [
                 {
-                    "label": "Active Hashtags",
+                    "label": _("Active Hashtags"),
                     "data": [_safe_int(row["active_topics"]) for row in lifecycle_rows],
                     "borderColor": "#8b5cf6",
                     "backgroundColor": "rgba(124, 58, 237, 0.10)",
@@ -5978,7 +5978,7 @@ def _build_hashtag_evolution_payload(
                     "tension": 0.28,
                 },
                 {
-                    "label": "New Hashtags",
+                    "label": _("New Hashtags"),
                     "data": [_safe_int(row["new_topics"]) for row in lifecycle_rows],
                     "borderColor": "#10b981",
                     "backgroundColor": "transparent",
@@ -5989,7 +5989,7 @@ def _build_hashtag_evolution_payload(
                     "tension": 0.25,
                 },
                 {
-                    "label": "Vanished Hashtags",
+                    "label": _("Vanished Hashtags"),
                     "data": [
                         _safe_int(row["vanished_topics"]) for row in lifecycle_rows
                     ],
@@ -6005,21 +6005,21 @@ def _build_hashtag_evolution_payload(
             "options": {"beginAtZero": True, "legendPosition": "bottom"},
         },
         "summary": {
-            "title": "Selected Hashtag Summary",
+            "title": _("Selected Hashtag Summary"),
             "columns": [
-                "Hashtag",
-                "First Seen",
-                "Last Seen",
-                "Total Volume",
-                "Distinct Participants",
-                "Population Share",
-                "Current Day Volume",
+                _("Hashtag"),
+                _("First Seen"),
+                _("Last Seen"),
+                _("Total Volume"),
+                _("Distinct Participants"),
+                _("Population Share"),
+                _("Current Day Volume"),
             ],
             "rows": [
                 [
                     f"#{str(row['hashtag'])}",
-                    f"Day {_safe_int(row['first_day'])}",
-                    f"Day {_safe_int(row['last_day'])}",
+                    _("Day %(day)s", day=_safe_int(row['first_day'])),
+                    _("Day %(day)s", day=_safe_int(row['last_day'])),
                     _safe_int(row["total_volume"]),
                     _safe_int(row["participants"]),
                     f"{round(100.0 * _safe_int(row['participants']) / max(total_population, 1), 2)}%",
@@ -6027,7 +6027,7 @@ def _build_hashtag_evolution_payload(
                 ]
                 for row in summary_rows
             ],
-            "empty_message": "No hashtag activity has been recorded up to the selected time.",
+            "empty_message": _("No hashtag activity has been recorded up to the selected time."),
         },
     }
 
@@ -6210,61 +6210,61 @@ def _build_toxicity_analytics_payload(
         "#64748b",
     ]
     category_labels = {
-        "toxicity": "Toxicity",
-        "severe_toxicity": "Severe Toxicity",
-        "identity_attack": "Identity Attack",
-        "insult": "Insult",
-        "profanity": "Profanity",
-        "threat": "Threat",
-        "sexually_explicit": "Sexually Explicit",
-        "flirtation": "Flirtation",
+        "toxicity": _("Toxicity"),
+        "severe_toxicity": _("Severe Toxicity"),
+        "identity_attack": _("Identity Attack"),
+        "insult": _("Insult"),
+        "profanity": _("Profanity"),
+        "threat": _("Threat"),
+        "sexually_explicit": _("Sexually Explicit"),
+        "flirtation": _("Flirtation"),
     }
     stats = [
         {
             "key": "annotated_posts",
-            "label": "Annotated Posts",
+            "label": _("Annotated Posts"),
             "value": _safe_int(snapshot["annotated_posts"]),
             "color": "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
         },
         {
             "key": "average_toxicity",
-            "label": "Average Toxicity",
+            "label": _("Average Toxicity"),
             "value": f"{_safe_float(snapshot['average_toxicity']):.3f}",
             "color": "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
         },
         {
             "key": "peak_toxicity",
-            "label": "Peak Toxicity",
+            "label": _("Peak Toxicity"),
             "value": f"{_safe_float(snapshot['peak_toxicity']):.3f}",
             "color": "linear-gradient(135deg, #7c2d12 0%, #9a3412 100%)",
         },
         {
             "key": "current_day",
-            "label": "Current Day",
-            "value": f"Day {filter_day}",
+            "label": _("Current Day"),
+            "value": _("Day %(day)s", day=filter_day),
             "color": "linear-gradient(135deg, #10b981 0%, #059669 100%)",
         },
         {
             "key": "current_hour",
-            "label": "Current Hour",
-            "value": f"Hour {filter_hour}",
+            "label": _("Current Hour"),
+            "value": _("Hour %(hour)s", hour=filter_hour),
             "color": "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
         },
     ]
 
     return {
-        "page_title": "Toxicity Evolution",
-        "title": "Toxicity Evolution",
-        "description": "Track how toxic content annotations accumulate over time.",
+        "page_title": _("Toxicity Evolution"),
+        "title": _("Toxicity Evolution"),
+        "description": _("Track how toxic content annotations accumulate over time."),
         "stats": stats,
         "distribution": {
-            "title": "Toxicity Distribution",
-            "description": "Current toxicity score distribution across annotated posts, using 0.1 bins.",
+            "title": _("Toxicity Distribution"),
+            "description": _("Current toxicity score distribution across annotated posts, using 0.1 bins."),
             "type": "bar",
             "labels": distribution_labels,
             "datasets": [
                 {
-                    "label": "Posts",
+                    "label": _("Posts"),
                     "data": distribution_data,
                     "backgroundColor": [
                         (
@@ -6285,10 +6285,10 @@ def _build_toxicity_analytics_payload(
             "options": {"beginAtZero": True},
         },
         "trend": {
-            "title": "Average Toxicity Trend",
-            "description": "Daily average score for each toxicity category up to the selected time.",
+            "title": _("Average Toxicity Trend"),
+            "description": _("Daily average score for each toxicity category up to the selected time."),
             "type": "line",
-            "labels": [f"Day {int(row['day'])}" for row in trend_rows],
+            "labels": [_("Day %(day)s", day=int(row['day'])) for row in trend_rows],
             "datasets": [
                 {
                     "label": category_labels.get(
@@ -6304,10 +6304,10 @@ def _build_toxicity_analytics_payload(
             "options": {"beginAtZero": True, "max": average_y_max},
         },
         "secondary": {
-            "title": "Toxicity Category Trends",
-            "description": f"Daily percentage of annotated posts crossing the {threshold:.1f} threshold for each toxicity category.",
+            "title": _("Toxicity Category Trends"),
+            "description": _("Daily percentage of annotated posts crossing the %(threshold)s threshold for each toxicity category.", threshold=format(threshold, '.1f')),
             "type": "line",
-            "labels": [f"Day {int(row['day'])}" for row in category_trend_rows],
+            "labels": [_("Day %(day)s", day=int(row['day'])) for row in category_trend_rows],
             "datasets": [
                 {
                     "label": category_labels.get(
@@ -6325,18 +6325,18 @@ def _build_toxicity_analytics_payload(
             "options": {"beginAtZero": True, "max": category_y_max},
         },
         "summary": {
-            "title": "Most Toxic Posts",
-            "columns": ["Author", "Toxicity", "When", "Content"],
+            "title": _("Most Toxic Posts"),
+            "columns": [_("Author"), _("Toxicity"), _("When"), _("Content")],
             "rows": [
                 [
                     row["username"],
                     f"{_safe_float(row['toxicity']):.3f}",
-                    f"Day {row['day']}, Hour {row['hour']}",
+                    _("Day %(day)s, Hour %(hour)s", day=row['day'], hour=row['hour']),
                     _truncate_text(row["tweet"]),
                 ]
                 for row in top_rows
             ],
-            "empty_message": "No toxicity annotations have been recorded up to the selected time.",
+            "empty_message": _("No toxicity annotations have been recorded up to the selected time."),
         },
         "moderator_targets": _build_moderator_target_panel(
             db_path,
@@ -6353,8 +6353,8 @@ def _build_sentiment_analytics_payload(db_path, filter_day, filter_hour):
         conn.row_factory = sqlite3.Row
         schema = _analytics_content_schema(conn)
         time_condition = _build_annotation_time_condition("r")
-        content_label = "Photo" if schema["is_photo_sharing"] else "Post"
-        content_label_plural = "Photos" if schema["is_photo_sharing"] else "Posts"
+        content_label = _("Photo") if schema["is_photo_sharing"] else _("Post")
+        content_label_plural = _("Photos") if schema["is_photo_sharing"] else _("Posts")
 
         snapshot = conn.execute(
             f"""
@@ -6441,49 +6441,49 @@ def _build_sentiment_analytics_payload(db_path, filter_day, filter_hour):
     stats = [
         {
             "key": "annotated_posts",
-            "label": f"Annotated {content_label_plural}",
+            "label": _("Annotated %(content_label_plural)s", content_label_plural=content_label_plural),
             "value": _safe_int(snapshot["annotated_posts"]),
             "color": "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
         },
         {
             "key": "average_compound",
-            "label": "Average Compound",
+            "label": _("Average Compound"),
             "value": f"{_safe_float(snapshot['average_compound']):.3f}",
             "color": "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)",
         },
         {
             "key": "positive_count",
-            "label": "Positive Posts",
+            "label": _("Positive Posts"),
             "value": _safe_int(snapshot["positive_count"]),
             "color": "linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)",
         },
         {
             "key": "current_day",
-            "label": "Current Day",
-            "value": f"Day {filter_day}",
+            "label": _("Current Day"),
+            "value": _("Day %(day)s", day=filter_day),
             "color": "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
         },
         {
             "key": "current_hour",
-            "label": "Current Hour",
-            "value": f"Hour {filter_hour}",
+            "label": _("Current Hour"),
+            "value": _("Hour %(hour)s", hour=filter_hour),
             "color": "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
         },
     ]
 
     return {
-        "page_title": "Sentiment Evolution",
-        "title": "Sentiment Evolution",
-        "description": "Inspect how sentiment annotations evolve across the experiment.",
+        "page_title": _("Sentiment Evolution"),
+        "title": _("Sentiment Evolution"),
+        "description": _("Inspect how sentiment annotations evolve across the experiment."),
         "stats": stats,
         "distribution": {
-            "title": "Sentiment Distribution",
-            "description": f"Current polarity breakdown across annotated {content_label_plural.lower()}.",
+            "title": _("Sentiment Distribution"),
+            "description": _("Current polarity breakdown across annotated %(lower)s.", lower=content_label_plural.lower()),
             "type": "doughnut",
-            "labels": ["Positive", "Neutral", "Negative"],
+            "labels": [_("Positive"), _("Neutral"), _("Negative")],
             "datasets": [
                 {
-                    "label": "Posts",
+                    "label": _("Posts"),
                     "data": [
                         _safe_int(snapshot["positive_count"]),
                         _safe_int(snapshot["neutral_count"]),
@@ -6495,13 +6495,13 @@ def _build_sentiment_analytics_payload(db_path, filter_day, filter_hour):
             "options": {},
         },
         "trend": {
-            "title": "Average Compound Trend",
-            "description": "Average sentiment compound by day up to the selected time.",
+            "title": _("Average Compound Trend"),
+            "description": _("Average sentiment compound by day up to the selected time."),
             "type": "line",
-            "labels": [f"Day {int(row['day'])}" for row in trend_rows],
+            "labels": [_("Day %(day)s", day=int(row['day'])) for row in trend_rows],
             "datasets": [
                 {
-                    "label": "Average Compound",
+                    "label": _("Average Compound"),
                     "data": [
                         _safe_float(row["average_compound"]) for row in trend_rows
                     ],
@@ -6514,23 +6514,23 @@ def _build_sentiment_analytics_payload(db_path, filter_day, filter_hour):
             "options": {"min": -1, "max": 1},
         },
         "secondary": {
-            "title": "Sentiment Mix Over Time",
-            "description": f"Positive, neutral, and negative {content_label.lower()} counts by day.",
+            "title": _("Sentiment Mix Over Time"),
+            "description": _("Positive, neutral, and negative %(lower)s counts by day.", lower=content_label.lower()),
             "type": "bar",
-            "labels": [f"Day {int(row['day'])}" for row in trend_rows],
+            "labels": [_("Day %(day)s", day=int(row['day'])) for row in trend_rows],
             "datasets": [
                 {
-                    "label": "Positive",
+                    "label": _("Positive"),
                     "data": [_safe_int(row["positive_count"]) for row in trend_rows],
                     "backgroundColor": "#22c55e",
                 },
                 {
-                    "label": "Neutral",
+                    "label": _("Neutral"),
                     "data": [_safe_int(row["neutral_count"]) for row in trend_rows],
                     "backgroundColor": "#94a3b8",
                 },
                 {
-                    "label": "Negative",
+                    "label": _("Negative"),
                     "data": [_safe_int(row["negative_count"]) for row in trend_rows],
                     "backgroundColor": "#ef4444",
                 },
@@ -6538,18 +6538,18 @@ def _build_sentiment_analytics_payload(db_path, filter_day, filter_hour):
             "options": {"beginAtZero": True, "stacked": True},
         },
         "summary": {
-            "title": f"Most Polarized {content_label_plural}",
-            "columns": ["Author", "Compound", "When", "Content"],
+            "title": _("Most Polarized %(content_label_plural)s", content_label_plural=content_label_plural),
+            "columns": [_("Author"), _("Compound"), _("When"), _("Content")],
             "rows": [
                 [
                     row["username"],
                     f"{_safe_float(row['compound']):.3f}",
-                    f"Day {row['day']}, Hour {row['hour']}",
+                    _("Day %(day)s, Hour %(hour)s", day=row['day'], hour=row['hour']),
                     _truncate_text(row["content_text"]),
                 ]
                 for row in extreme_rows
             ],
-            "empty_message": "No sentiment annotations have been recorded up to the selected time.",
+            "empty_message": _("No sentiment annotations have been recorded up to the selected time."),
         },
     }
 
@@ -6560,8 +6560,8 @@ def _build_emotion_analytics_payload(db_path, filter_day, filter_hour):
         conn.row_factory = sqlite3.Row
         schema = _analytics_content_schema(conn)
         time_condition = _build_annotation_time_condition("r")
-        content_label = "Photo" if schema["is_photo_sharing"] else "Post"
-        content_label_plural = "Photos" if schema["is_photo_sharing"] else "Posts"
+        content_label = _("Photo") if schema["is_photo_sharing"] else _("Post")
+        content_label_plural = _("Photos") if schema["is_photo_sharing"] else _("Posts")
 
         distribution_rows = conn.execute(
             f"""
@@ -6644,49 +6644,49 @@ def _build_emotion_analytics_payload(db_path, filter_day, filter_hour):
     stats = [
         {
             "key": "annotated_posts",
-            "label": f"Annotated {content_label_plural}",
+            "label": _("Annotated %(content_label_plural)s", content_label_plural=content_label_plural),
             "value": _safe_int(stats_row["annotated_posts"]),
             "color": "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
         },
         {
             "key": "total_tags",
-            "label": "Emotion Tags",
+            "label": _("Emotion Tags"),
             "value": _safe_int(stats_row["total_tags"]),
             "color": "linear-gradient(135deg, #ec4899 0%, #db2777 100%)",
         },
         {
             "key": "top_emotion",
-            "label": "Top Emotion",
+            "label": _("Top Emotion"),
             "value": top_emotion,
             "color": "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
         },
         {
             "key": "current_day",
-            "label": "Current Day",
-            "value": f"Day {filter_day}",
+            "label": _("Current Day"),
+            "value": _("Day %(day)s", day=filter_day),
             "color": "linear-gradient(135deg, #10b981 0%, #059669 100%)",
         },
         {
             "key": "current_hour",
-            "label": "Current Hour",
-            "value": f"Hour {filter_hour}",
+            "label": _("Current Hour"),
+            "value": _("Hour %(hour)s", hour=filter_hour),
             "color": "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
         },
     ]
 
     return {
-        "page_title": "Emotion Statistics",
-        "title": "Emotion Statistics",
-        "description": "Track which emotions are being annotated in experiment content.",
+        "page_title": _("Emotion Statistics"),
+        "title": _("Emotion Statistics"),
+        "description": _("Track which emotions are being annotated in experiment content."),
         "stats": stats,
         "distribution": {
-            "title": "Emotion Distribution",
-            "description": f"Current distribution of annotated {content_label_plural.lower()}.",
+            "title": _("Emotion Distribution"),
+            "description": _("Current distribution of annotated %(lower)s.", lower=content_label_plural.lower()),
             "type": "bar",
             "labels": [row["emotion"] for row in distribution_rows[:10]],
             "datasets": [
                 {
-                    "label": "Emotion Tags",
+                    "label": _("Emotion Tags"),
                     "data": [
                         int(row["emotion_count"] or 0) for row in distribution_rows[:10]
                     ],
@@ -6696,10 +6696,10 @@ def _build_emotion_analytics_payload(db_path, filter_day, filter_hour):
             "options": {"beginAtZero": True},
         },
         "trend": {
-            "title": "Top Emotions Over Time",
-            "description": "Daily counts for the most frequent emotions so far.",
+            "title": _("Top Emotions Over Time"),
+            "description": _("Daily counts for the most frequent emotions so far."),
             "type": "line",
-            "labels": [f"Day {day}" for day in days],
+            "labels": [_("Day %(day)s", day=day) for day in days],
             "datasets": [
                 {
                     "label": emotion,
@@ -6711,18 +6711,18 @@ def _build_emotion_analytics_payload(db_path, filter_day, filter_hour):
             "options": {"beginAtZero": True},
         },
         "secondary": {
-            "title": "Annotation Volume",
-            "description": f"Total emotion tags versus distinct annotated {content_label_plural.lower()} per day.",
+            "title": _("Annotation Volume"),
+            "description": _("Total emotion tags versus distinct annotated %(lower)s per day.", lower=content_label_plural.lower()),
             "type": "bar",
-            "labels": [f"Day {int(row['day'])}" for row in secondary_rows],
+            "labels": [_("Day %(day)s", day=int(row['day'])) for row in secondary_rows],
             "datasets": [
                 {
-                    "label": "Emotion Tags",
+                    "label": _("Emotion Tags"),
                     "data": [_safe_int(row["emotion_tags"]) for row in secondary_rows],
                     "backgroundColor": "#c084fc",
                 },
                 {
-                    "label": f"Annotated {content_label_plural}",
+                    "label": _("Annotated %(content_label_plural)s", content_label_plural=content_label_plural),
                     "data": [
                         _safe_int(row["annotated_posts"]) for row in secondary_rows
                     ],
@@ -6732,13 +6732,13 @@ def _build_emotion_analytics_payload(db_path, filter_day, filter_hour):
             "options": {"beginAtZero": True},
         },
         "summary": {
-            "title": f"Top Emotions",
-            "columns": ["Emotion", "Tags"],
+            "title": _("Top Emotions", ),
+            "columns": [_("Emotion"), _("Tags")],
             "rows": [
                 [row["emotion"], _safe_int(row["emotion_count"])]
                 for row in distribution_rows[:15]
             ],
-            "empty_message": "No emotion annotations have been recorded up to the selected time.",
+            "empty_message": _("No emotion annotations have been recorded up to the selected time."),
         },
     }
 
@@ -6903,24 +6903,24 @@ def _build_recsys_evolution_payload(
             "followers_count": 0,
             "followees_count": 0,
             "reach_trend": {
-                "title": "Cumulative Unique Recipients Reached",
-                "description": "Select an author to inspect how many unique agents received recommendations for their posts over time.",
+                "title": _("Cumulative Unique Recipients Reached"),
+                "description": _("Select an author to inspect how many unique agents received recommendations for their posts over time."),
                 "type": "line",
                 "labels": [],
                 "datasets": [],
                 "options": {"beginAtZero": True},
             },
             "receiver_diversity_trend": {
-                "title": "Unique Authors Recommended to Selected User",
-                "description": "Cumulative number of distinct authors whose contents have been recommended to the selected user.",
+                "title": _("Unique Authors Recommended to Selected User"),
+                "description": _("Cumulative number of distinct authors whose contents have been recommended to the selected user."),
                 "type": "line",
                 "labels": [],
                 "datasets": [],
                 "options": {"beginAtZero": True},
             },
             "post_distribution": {
-                "title": "Recommendation Distribution for Selected Author",
-                "description": "Per-post distribution of how often the selected author’s posts have been recommended.",
+                "title": _("Recommendation Distribution for Selected Author"),
+                "description": _("Per-post distribution of how often the selected author’s posts have been recommended."),
                 "type": "bar",
                 "labels": [],
                 "datasets": [],
@@ -7077,14 +7077,14 @@ def _build_recsys_evolution_payload(
                     "followers_count": len(followers),
                     "followees_count": len(followees),
                     "reach_trend": {
-                        "title": "Unique Agents Reached by Recommendations",
-                        "description": "Cumulative reach of the selected author, plus the average cumulative reach of the authors following them and the authors they follow.",
+                        "title": _("Unique Agents Reached by Recommendations"),
+                        "description": _("Cumulative reach of the selected author, plus the average cumulative reach of the authors following them and the authors they follow."),
                         "type": "line",
-                        "labels": [f"Day {day}" for day in distinct_days],
+                        "labels": [_("Day %(day)s", day=day) for day in distinct_days],
                         "datasets": (
                             [
                                 {
-                                    "label": "Selected Author",
+                                    "label": _("Selected Author"),
                                     "data": reach_series,
                                     "borderColor": "#2563eb",
                                     "backgroundColor": "rgba(37, 99, 235, 0.14)",
@@ -7098,7 +7098,7 @@ def _build_recsys_evolution_payload(
                             + (
                                 [
                                     {
-                                        "label": "Avg. Reach of People Following This Author",
+                                        "label": _("Avg. Reach of People Following This Author"),
                                         "data": follower_avg_series,
                                         "borderColor": "#8b5cf6",
                                         "backgroundColor": "transparent",
@@ -7116,7 +7116,7 @@ def _build_recsys_evolution_payload(
                             + (
                                 [
                                     {
-                                        "label": "Avg. Reach of People This Author Follows",
+                                        "label": _("Avg. Reach of People This Author Follows"),
                                         "data": followee_avg_series,
                                         "borderColor": "#10b981",
                                         "backgroundColor": "transparent",
@@ -7135,14 +7135,14 @@ def _build_recsys_evolution_payload(
                         "options": {"beginAtZero": True},
                     },
                     "receiver_diversity_trend": {
-                        "title": "Unique Authors Recommended to Selected User",
-                        "description": "Cumulative number of distinct authors recommended to the selected user, plus the average cumulative diversity seen by the people following them and the people they follow.",
+                        "title": _("Unique Authors Recommended to Selected User"),
+                        "description": _("Cumulative number of distinct authors recommended to the selected user, plus the average cumulative diversity seen by the people following them and the people they follow."),
                         "type": "line",
-                        "labels": [f"Day {day}" for day in distinct_days],
+                        "labels": [_("Day %(day)s", day=day) for day in distinct_days],
                         "datasets": (
                             [
                                 {
-                                    "label": "Selected User",
+                                    "label": _("Selected User"),
                                     "data": receiver_diversity_series,
                                     "borderColor": "#f59e0b",
                                     "backgroundColor": "rgba(245, 158, 11, 0.14)",
@@ -7156,7 +7156,7 @@ def _build_recsys_evolution_payload(
                             + (
                                 [
                                     {
-                                        "label": "Avg. Diversity of People Following This Author",
+                                        "label": _("Avg. Diversity of People Following This Author"),
                                         "data": follower_receiver_diversity_avg_series,
                                         "borderColor": "#8b5cf6",
                                         "backgroundColor": "transparent",
@@ -7174,7 +7174,7 @@ def _build_recsys_evolution_payload(
                             + (
                                 [
                                     {
-                                        "label": "Avg. Diversity of People This Author Follows",
+                                        "label": _("Avg. Diversity of People This Author Follows"),
                                         "data": followee_receiver_diversity_avg_series,
                                         "borderColor": "#10b981",
                                         "backgroundColor": "transparent",
@@ -7193,13 +7193,13 @@ def _build_recsys_evolution_payload(
                         "options": {"beginAtZero": True},
                     },
                     "post_distribution": {
-                        "title": "Recommendation Distribution for Selected Author",
-                        "description": "Kernel density estimate of recommendation counts across the selected author’s posts.",
+                        "title": _("Recommendation Distribution for Selected Author"),
+                        "description": _("Kernel density estimate of recommendation counts across the selected author’s posts."),
                         "type": "line",
                         "labels": [],
                         "datasets": [
                             {
-                                "label": "Density",
+                                "label": _("Density"),
                                 "data": [
                                     {"x": kde_xs[index], "y": kde_ys[index]}
                                     for index in range(len(kde_xs))
@@ -7217,8 +7217,8 @@ def _build_recsys_evolution_payload(
                             "beginAtZero": True,
                             "legendDisplay": False,
                             "xType": "linear",
-                            "xTitle": "Recommendation Count",
-                            "yTitle": "Density",
+                            "xTitle": _("Recommendation Count"),
+                            "yTitle": _("Density"),
                         },
                     },
                     "summary_rows": [
@@ -7243,38 +7243,38 @@ def _build_recsys_evolution_payload(
     stats = [
         {
             "key": "recommendation_events",
-            "label": "Recommendation Events",
+            "label": _("Recommendation Events"),
             "value": len(expanded_rows),
             "color": "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
         },
         {
             "key": "recommended_slots",
-            "label": "Recommended Slots",
+            "label": _("Recommended Slots"),
             "value": sum(recommendation_count_by_post.values()),
             "color": "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
         },
         {
             "key": "distinct_posts",
-            "label": "Distinct Recommended Posts",
+            "label": _("Distinct Recommended Posts"),
             "value": len(recommendation_count_by_post),
             "color": "linear-gradient(135deg, #10b981 0%, #059669 100%)",
         },
         {
             "key": "distinct_authors",
-            "label": "Authors Reached",
+            "label": _("Authors Reached"),
             "value": len(recommendation_count_by_author),
             "color": "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
         },
         {
             "key": "current_day",
-            "label": "Current Day",
-            "value": f"Day {filter_day}",
+            "label": _("Current Day"),
+            "value": _("Day %(day)s", day=filter_day),
             "color": "linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)",
         },
         {
             "key": "current_hour",
-            "label": "Current Hour",
-            "value": f"Hour {filter_hour}",
+            "label": _("Current Hour"),
+            "value": _("Hour %(hour)s", hour=filter_hour),
             "color": "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)",
         },
     ]
@@ -7299,18 +7299,18 @@ def _build_recsys_evolution_payload(
         )
 
     return {
-        "page_title": "Recommendation System Evolution",
-        "title": "Recommendation System Evolution",
-        "description": "Analyze how content recommendation exposure is distributed across posts, authors, and recommender configurations.",
+        "page_title": _("Recommendation System Evolution"),
+        "title": _("Recommendation System Evolution"),
+        "description": _("Analyze how content recommendation exposure is distributed across posts, authors, and recommender configurations."),
         "stats": stats,
         "distribution": {
-            "title": "Content Recsys Used",
-            "description": "Number of recommendation events served to receivers grouped by their configured content recommender.",
+            "title": _("Content Recsys Used"),
+            "description": _("Number of recommendation events served to receivers grouped by their configured content recommender."),
             "type": "bar",
             "labels": [item[0] for item in sorted_recsys],
             "datasets": [
                 {
-                    "label": "Recommendation Events",
+                    "label": _("Recommendation Events"),
                     "data": [item[1] for item in sorted_recsys],
                     "backgroundColor": "#2563eb",
                     "borderRadius": 8,
@@ -7319,22 +7319,22 @@ def _build_recsys_evolution_payload(
             "options": {"beginAtZero": True},
         },
         "trend": {
-            "title": "Distribution of Content Recommendation Counts",
-            "description": "Histogram of how many times individual posts have been recommended.",
+            "title": _("Distribution of Content Recommendation Counts"),
+            "description": _("Histogram of how many times individual posts have been recommended."),
             **_frequency_histogram(
                 distribution_counts_by_post_frequency,
-                "Posts",
+                _("Posts"),
                 "#8b5cf6",
             ),
         },
         "secondary": {
-            "title": "Distribution of Author Recommendation Counts",
-            "description": "Each bar is one author, and its height is the total number of times that author’s posts appeared in recommendation sets.",
+            "title": _("Distribution of Author Recommendation Counts"),
+            "description": _("Each bar is one author, and its height is the total number of times that author’s posts appeared in recommendation sets."),
             "type": "bar",
             "labels": [usernames.get(uid, str(uid)) for uid in author_option_rows[:25]],
             "datasets": [
                 {
-                    "label": "Recommendation Appearances",
+                    "label": _("Recommendation Appearances"),
                     "data": [
                         recommendation_count_by_author[uid]
                         for uid in author_option_rows[:25]
@@ -7347,16 +7347,16 @@ def _build_recsys_evolution_payload(
             "options": {"beginAtZero": True, "legendDisplay": False},
         },
         "summary": {
-            "title": "Most Reached Authors",
+            "title": _("Most Reached Authors"),
             "columns": [
-                "Author",
-                "Total Recommendations",
-                "Unique Recipients",
-                "Recommended Posts",
-                "Own Recsys",
+                _("Author"),
+                _("Total Recommendations"),
+                _("Unique Recipients"),
+                _("Recommended Posts"),
+                _("Own Recsys"),
             ],
             "rows": summary_rows,
-            "empty_message": "No recommendation events have been recorded up to the selected time.",
+            "empty_message": _("No recommendation events have been recorded up to the selected time."),
         },
         "recsys_author": selected_author_panel,
     }
@@ -7365,19 +7365,19 @@ def _build_recsys_evolution_payload(
 _ANNOTATION_ANALYTICS_REGISTRY = {
     "toxicity": {
         "label": "toxicity",
-        "title": "Toxicity Evolution",
+        "title": N_("Toxicity Evolution"),
         "required_tables": {"post_toxicity", "post", "rounds"},
         "builder": _build_toxicity_analytics_payload,
     },
     "sentiment": {
         "label": "sentiment",
-        "title": "Sentiment Evolution",
+        "title": N_("Sentiment Evolution"),
         "required_tables": {"post_sentiment", "rounds"},
         "builder": _build_sentiment_analytics_payload,
     },
     "emotion": {
         "label": "emotion",
-        "title": "Emotion Statistics",
+        "title": N_("Emotion Statistics"),
         "required_table_sets": (
             {"post_emotions", "emotions", "post", "rounds"},
             {"photo_emotions", "emotions", "photos", "rounds"},
@@ -7389,6 +7389,7 @@ _ANNOTATION_ANALYTICS_REGISTRY = {
 
 def _render_annotation_analytics_page(expid, annotation_key):
     config = _ANNOTATION_ANALYTICS_REGISTRY[annotation_key]
+    declared_title = config["title"]  # declared with N_ in the registry
     experiment, db_path, error_response = _load_annotation_experiment_context(
         expid, annotation_key, config["label"], require_manage=False
     )
@@ -7432,7 +7433,7 @@ def _render_annotation_analytics_page(expid, annotation_key):
         "admin/annotation_analytics.html",
         experiment=experiment,
         page_key=annotation_key,
-        page_title=config["title"],
+        page_title=_(declared_title),
         max_day=max_day,
         max_hour=max_hour,
         filter_day=filter_day,

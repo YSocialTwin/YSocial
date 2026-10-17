@@ -132,7 +132,19 @@
                                 </label>
                             </div>
                             <div class="nav-drop-body account-items">
-                                <!-- Forum mode: user profiles are disabled -->
+                                {% if logged_id is defined and logged_id %}
+                                <a id="profile-link" href="/{{ exp_id }}/profile/{{ logged_id }}/recent/1" class="account-item">
+                                    <div class="media">
+                                        <div class="icon-wrap">
+                                            <i data-feather="user"></i>
+                                        </div>
+                                        <div class="media-content">
+                                            <h3>{{ _('My profile') }}</h3>
+                                            <small>{{ _('Your activity and your interface language.') }}</small>
+                                        </div>
+                                    </div>
+                                </a>
+                                {% endif %}
 
                                 {% if forum_memory_enabled and current_user_role in ['admin', 'researcher'] %}
                                 <a href="/{{ exp_id }}/interview" class="account-item">
@@ -276,7 +288,11 @@
                     <span><i data-feather="settings"></i>{{ _('Admin Dashboard') }}</span>
                 </a>
                 {% endif %}
-                <!-- Forum mode: user profiles are disabled -->
+                {% if logged_id is defined and logged_id %}
+                <a href="/{{ exp_id }}/profile/{{ logged_id }}/recent/1" class="navbar-item is-flex is-mobile-icon">
+                    <span><i data-feather="user"></i>{{ _('My profile') }}</span>
+                </a>
+                {% endif %}
 
             </div>
         </div>

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 08:49+0000\n"
+"POT-Creation-Date: 2026-10-17 09:01+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -143,6 +143,10 @@ msgstr ""
 
 #, python-format
 msgid "%(name)s agents"
+msgstr ""
+
+#, python-format
+msgid "%(network_title)s Ego Network Over Time"
 msgstr ""
 
 #, python-format
@@ -484,7 +488,16 @@ msgstr ""
 msgid "Active Experiments"
 msgstr ""
 
+msgid "Active Hashtags"
+msgstr ""
+
+msgid "Active Nodes"
+msgstr ""
+
 msgid "Active Populations"
+msgstr ""
+
+msgid "Active Topics"
 msgstr ""
 
 msgid "Active experiments"
@@ -918,6 +931,21 @@ msgstr ""
 msgid "Analytics Pages"
 msgstr ""
 
+msgid ""
+"Analyze how content recommendation exposure is distributed across posts, "
+"authors, and recommender configurations."
+msgstr ""
+
+#, python-format
+msgid "Annotated %(content_label_plural)s"
+msgstr ""
+
+msgid "Annotated Posts"
+msgstr ""
+
+msgid "Annotation Volume"
+msgstr ""
+
 msgid "Annotation statistics"
 msgstr ""
 
@@ -1024,6 +1052,9 @@ msgstr ""
 msgid "Austrian"
 msgstr ""
 
+msgid "Author"
+msgstr ""
+
 msgid "Author Drill-down"
 msgstr ""
 
@@ -1031,6 +1062,9 @@ msgid "Author Recommendation Drill-down"
 msgstr ""
 
 msgid "Author type"
+msgstr ""
+
+msgid "Authors Reached"
 msgstr ""
 
 msgid "Auto"
@@ -1118,16 +1152,46 @@ msgstr ""
 msgid "Average Aggregate Trends"
 msgstr ""
 
+msgid "Average Compound"
+msgstr ""
+
+msgid "Average Compound Trend"
+msgstr ""
+
 msgid "Average Reward"
 msgstr ""
 
 msgid "Average Stress"
 msgstr ""
 
+msgid "Average Target Toxicity"
+msgstr ""
+
+msgid "Average Toxicity"
+msgstr ""
+
+msgid "Average Toxicity Trend"
+msgstr ""
+
 msgid "Average degree"
 msgstr ""
 
+msgid "Average sentiment compound by day up to the selected time."
+msgstr ""
+
 msgid "Average time per slot:"
+msgstr ""
+
+msgid "Avg. Diversity of People Following This Author"
+msgstr ""
+
+msgid "Avg. Diversity of People This Author Follows"
+msgstr ""
+
+msgid "Avg. Reach of People Following This Author"
+msgstr ""
+
+msgid "Avg. Reach of People This Author Follows"
 msgstr ""
 
 msgid "Azerbaijani"
@@ -1655,6 +1719,9 @@ msgstr ""
 msgid "Close"
 msgstr ""
 
+msgid "Cmd/Ctrl for multi-select"
+msgstr ""
+
 msgid "Cognitive NetSci"
 msgstr ""
 
@@ -1730,16 +1797,32 @@ msgstr ""
 msgid "Community size exponent (tau2)"
 msgstr ""
 
+msgid ""
+"Compact view of how many hashtags remain active, emerge, and disappear "
+"across the observed horizon."
+msgstr ""
+
+msgid ""
+"Compact view of how many topics remain active, emerge, and disappear "
+"across the observed horizon."
+msgstr ""
+
 msgid "Complete Graph"
 msgstr ""
 
 msgid "Completed"
 msgstr ""
 
+msgid "Components"
+msgstr ""
+
 msgid "Components (independent)"
 msgstr ""
 
 msgid "Compose and publish new posts"
+msgstr ""
+
+msgid "Compound"
 msgstr ""
 
 msgid ""
@@ -1999,6 +2082,9 @@ msgstr ""
 msgid "Contacts"
 msgstr ""
 
+msgid "Content"
+msgstr ""
+
 msgid "Content & Behavior"
 msgstr ""
 
@@ -2029,6 +2115,9 @@ msgid "Content Recommendation"
 msgstr ""
 
 msgid "Content Recommender"
+msgstr ""
+
+msgid "Content Recsys Used"
 msgstr ""
 
 msgid "Content Visibility (hours)"
@@ -2274,6 +2363,54 @@ msgstr ""
 msgid "Croatian"
 msgstr ""
 
+msgid "Cumulative Trends"
+msgstr ""
+
+msgid "Cumulative Unique Recipients Reached"
+msgstr ""
+
+msgid "Cumulative hashtag-related activity volume for the selected hashtags."
+msgstr ""
+
+msgid ""
+"Cumulative hashtag-related volume up to the selected time, including "
+"content and downstream interactions."
+msgstr ""
+
+msgid ""
+"Cumulative number of distinct authors recommended to the selected user, "
+"plus the average cumulative diversity seen by the people following them "
+"and the people they follow."
+msgstr ""
+
+msgid ""
+"Cumulative number of distinct authors whose contents have been "
+"recommended to the selected user."
+msgstr ""
+
+msgid ""
+"Cumulative reach of the selected author, plus the average cumulative "
+"reach of the authors following them and the authors they follow."
+msgstr ""
+
+msgid ""
+"Cumulative share of the population that has been involved with each "
+"selected hashtag."
+msgstr ""
+
+msgid ""
+"Cumulative share of the population that has been involved with each "
+"selected topic."
+msgstr ""
+
+msgid "Cumulative topic-related activity volume for the selected topics."
+msgstr ""
+
+msgid ""
+"Cumulative topic-related volume up to the selected time, including "
+"content and downstream interactions."
+msgstr ""
+
 msgid "Curious, asks questions, seeks new perspectives"
 msgstr ""
 
@@ -2281,6 +2418,9 @@ msgid "Current"
 msgstr ""
 
 msgid "Current Day"
+msgstr ""
+
+msgid "Current Day Volume"
 msgstr ""
 
 msgid "Current Email"
@@ -2304,16 +2444,41 @@ msgstr ""
 msgid "Current Researcher Visibility"
 msgstr ""
 
+#, python-format
+msgid "Current distribution of annotated %(lower)s."
+msgstr ""
+
 msgid "Current execution progress"
 msgstr ""
 
+#, python-format
+msgid ""
+"Current in-degree complementary cumulative distribution in log-log scale "
+"for the %(network_label)s network."
+msgstr ""
+
 msgid "Current local time"
+msgstr ""
+
+#, python-format
+msgid ""
+"Current out-degree complementary cumulative distribution in log-log scale"
+" for the %(network_label)s network."
+msgstr ""
+
+#, python-format
+msgid "Current polarity breakdown across annotated %(lower)s."
 msgstr ""
 
 msgid "Current reward level"
 msgstr ""
 
 msgid "Current stress level"
+msgstr ""
+
+msgid ""
+"Current toxicity score distribution across annotated posts, using 0.1 "
+"bins."
 msgstr ""
 
 msgid "Current value"
@@ -2364,7 +2529,34 @@ msgstr ""
 msgid "Daily Budget"
 msgstr ""
 
+msgid "Daily Heatmap"
+msgstr ""
+
 msgid "Daily agent creation and removal rates"
+msgstr ""
+
+msgid "Daily average score for each toxicity category up to the selected time."
+msgstr ""
+
+msgid "Daily counts for the most frequent emotions so far."
+msgstr ""
+
+msgid "Daily evolution of active nodes and directed follow edges."
+msgstr ""
+
+msgid "Daily evolution of active nodes and directed mention edges."
+msgstr ""
+
+msgid "Daily evolution of density and transitivity in the follow network."
+msgstr ""
+
+msgid "Daily evolution of density and transitivity in the mention network."
+msgstr ""
+
+#, python-format
+msgid ""
+"Daily percentage of annotated posts crossing the %(threshold)s threshold "
+"for each toxicity category."
 msgstr ""
 
 msgid ""
@@ -2386,6 +2578,10 @@ msgid "Database error: %(error)s"
 msgstr ""
 
 msgid "Day"
+msgstr ""
+
+#, python-format
+msgid "Day %(day)s"
 msgstr ""
 
 #, python-format
@@ -2553,6 +2749,9 @@ msgstr ""
 msgid "Demographics & Attributes:"
 msgstr ""
 
+msgid "Density"
+msgstr ""
+
 msgid "Dependencies"
 msgstr ""
 
@@ -2676,10 +2875,22 @@ msgstr ""
 msgid "Dislikes"
 msgstr ""
 
+msgid "Distinct Participants"
+msgstr ""
+
+msgid "Distinct Recommended Posts"
+msgstr ""
+
 msgid "Distributed HPC simulation runtime for large-scale YSocial experiments."
 msgstr ""
 
 msgid "Distribution Type"
+msgstr ""
+
+msgid "Distribution of Author Recommendation Counts"
+msgstr ""
+
+msgid "Distribution of Content Recommendation Counts"
 msgstr ""
 
 msgid "Distribution of agent opinions across different opinion groups."
@@ -2767,14 +2978,42 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Each bar is one author, and its height is the total number of times that "
+"author’s posts appeared in recommendation sets."
+msgstr ""
+
+msgid ""
 "Each client can be deployed by imposing a starting social network among "
 "the agents of its populations."
+msgstr ""
+
+msgid ""
+"Each row is a selected hashtag, each column is a day, and color depth is "
+"normalized within each hashtag row. Tooltips report actual daily volume."
+msgstr ""
+
+msgid ""
+"Each row is a selected hashtag, each column is a day, and color depth "
+"reflects the share of the population reached that day."
+msgstr ""
+
+msgid ""
+"Each row is a selected topic, each column is a day, and color depth is "
+"normalized within each topic row. Tooltips report actual daily volume."
+msgstr ""
+
+msgid ""
+"Each row is a selected topic, each column is a day, and color depth "
+"reflects the share of the population reached that day."
 msgstr ""
 
 msgid "Eats"
 msgstr ""
 
 msgid "Edge probability (p)"
+msgstr ""
+
+msgid "Edges"
 msgstr ""
 
 msgid "Edges per node (m)"
@@ -2845,13 +3084,25 @@ msgstr ""
 msgid "Embedding settings updated successfully."
 msgstr ""
 
+msgid "Emerging Hashtags"
+msgstr ""
+
+msgid "Emerging Topics"
+msgstr ""
+
 msgid "Emotion"
+msgstr ""
+
+msgid "Emotion Distribution"
 msgstr ""
 
 msgid "Emotion Focus"
 msgstr ""
 
 msgid "Emotion Statistics"
+msgstr ""
+
+msgid "Emotion Tags"
 msgstr ""
 
 msgid "Emotion tags and dominant patterns"
@@ -3526,7 +3777,13 @@ msgstr ""
 msgid "Finnish"
 msgstr ""
 
+msgid "First Seen"
+msgstr ""
+
 msgid "First group has no experiments"
+msgstr ""
+
+msgid "Flirtation"
 msgstr ""
 
 msgid "Follow"
@@ -3539,6 +3796,9 @@ msgid "Follow Action Decay"
 msgstr ""
 
 msgid "Follow Decisions"
+msgstr ""
+
+msgid "Follow Network"
 msgstr ""
 
 msgid "Follow Recommendation"
@@ -3940,10 +4200,28 @@ msgstr ""
 msgid "Handler Pre-prompts"
 msgstr ""
 
+msgid "Hashtag"
+msgstr ""
+
 msgid "Hashtag Evolution"
 msgstr ""
 
 msgid "Hashtag Focus"
+msgstr ""
+
+msgid "Hashtag Footprint at Selected Time"
+msgstr ""
+
+msgid "Hashtag Lifecycle Over Time"
+msgstr ""
+
+msgid "Hashtag Reach Cumulative Trend"
+msgstr ""
+
+msgid "Hashtag Volume Cumulative Trend"
+msgstr ""
+
+msgid "Hashtag Volume Heatmap"
 msgstr ""
 
 msgid "Hashtag evolution not available"
@@ -3953,6 +4231,9 @@ msgid "Hashtag-evolution tables not available"
 msgstr ""
 
 msgid "Hashtags"
+msgstr ""
+
+msgid "Hashtags to Visualize"
 msgstr ""
 
 msgid "Header Image URL"
@@ -3995,6 +4276,9 @@ msgid "High energy, viral-focused, controversial"
 msgstr ""
 
 msgid "Higher-order Modeling"
+msgstr ""
+
+msgid "Histogram of how many times individual posts have been recommended."
 msgstr ""
 
 msgid "Hold Cmd/Ctrl to select multiple values."
@@ -4090,6 +4374,9 @@ msgstr ""
 msgid "ISTI-CNR"
 msgstr ""
 
+msgid "Identity Attack"
+msgstr ""
+
 msgid "If >1, creates copies named: name_1, name_2, etc. There is no hard cap."
 msgstr ""
 
@@ -4144,6 +4431,9 @@ msgid "Images are cropped to a square preview when needed."
 msgstr ""
 
 msgid "Importance Mode"
+msgstr ""
+
+msgid "In-Degree CCDF"
 msgstr ""
 
 msgid "Inactive Alter"
@@ -4202,6 +4492,9 @@ msgid ""
 "population over time."
 msgstr ""
 
+msgid "Inspect how sentiment annotations evolve across the experiment."
+msgstr ""
+
 msgid ""
 "Inspect nested config values, unlock the ones you want to vary, and "
 "generate the full combination set."
@@ -4254,6 +4547,9 @@ msgid "Instructions for content pages to generate posts and responses."
 msgstr ""
 
 msgid "Instructions that define agent behavior and roleplay characteristics."
+msgstr ""
+
+msgid "Insult"
 msgstr ""
 
 msgid "Inter-block edge probability"
@@ -4509,6 +4805,11 @@ msgid ""
 " you need broader topical variety or longer-running content pools."
 msgstr ""
 
+msgid ""
+"Kernel density estimate of recommendation counts across the selected "
+"author’s posts."
+msgstr ""
+
 msgid "LFR Benchmark"
 msgstr ""
 
@@ -4613,10 +4914,22 @@ msgstr ""
 msgid "Large Language Models (Image Transcription)"
 msgstr ""
 
+msgid "Largest Component"
+msgstr ""
+
+msgid "Largest Component Share"
+msgstr ""
+
+msgid "Largest Component Share Over Time"
+msgstr ""
+
 msgid "Last Check"
 msgstr ""
 
 msgid "Last Run"
+msgstr ""
+
+msgid "Last Seen"
 msgstr ""
 
 msgid "Latest aggregate reward state binned across tracked agents."
@@ -4961,6 +5274,12 @@ msgstr ""
 msgid "Memory Embeddings"
 msgstr ""
 
+msgid "Mention Edges"
+msgstr ""
+
+msgid "Mention Network"
+msgstr ""
+
 msgid "Mentioning Posts"
 msgstr ""
 
@@ -5037,6 +5356,9 @@ msgstr ""
 msgid "MoP Accounts"
 msgstr ""
 
+msgid "MoP Interactions"
+msgstr ""
+
 msgid "MoP Puppet"
 msgstr ""
 
@@ -5089,6 +5411,16 @@ msgstr ""
 msgid "Most Commented"
 msgstr ""
 
+#, python-format
+msgid "Most Polarized %(content_label_plural)s"
+msgstr ""
+
+msgid "Most Reached Authors"
+msgstr ""
+
+msgid "Most Toxic Posts"
+msgstr ""
+
 msgid "Most commented"
 msgstr ""
 
@@ -5120,6 +5452,9 @@ msgstr ""
 msgid "My Profile"
 msgstr ""
 
+msgid "My profile"
+msgstr ""
+
 msgid "Name"
 msgstr ""
 
@@ -5142,6 +5477,9 @@ msgid "Nationality not found."
 msgstr ""
 
 msgid "Nearest neighbors (k)"
+msgstr ""
+
+msgid "Negative"
 msgstr ""
 
 msgid "Nepalese"
@@ -5170,6 +5508,9 @@ msgstr ""
 msgid "Network Science"
 msgstr ""
 
+msgid "Network Size Over Time"
+msgstr ""
+
 msgid "Network Type"
 msgstr ""
 
@@ -5188,6 +5529,9 @@ msgid "Neuroticism"
 msgstr ""
 
 msgid "Neuroticism."
+msgstr ""
+
+msgid "Neutral"
 msgstr ""
 
 msgid "Neutral (0.5)"
@@ -5232,6 +5576,9 @@ msgstr ""
 msgid "New HPC Client"
 msgstr ""
 
+msgid "New Hashtags"
+msgstr ""
+
 msgid "New Language"
 msgstr ""
 
@@ -5269,6 +5616,9 @@ msgid "New Release Available!"
 msgstr ""
 
 msgid "New Topic"
+msgstr ""
+
+msgid "New Topics"
 msgstr ""
 
 msgid "New Toxicity Level"
@@ -5398,6 +5748,9 @@ msgstr ""
 msgid "No description available."
 msgstr ""
 
+msgid "No emotion annotations have been recorded up to the selected time."
+msgstr ""
+
 msgid "No emotions are trending yet."
 msgstr ""
 
@@ -5432,6 +5785,9 @@ msgid "No groups created yet"
 msgstr ""
 
 msgid "No groups defined or all groups completed"
+msgstr ""
+
+msgid "No hashtag activity has been recorded up to the selected time."
 msgstr ""
 
 msgid "No hashtags are trending yet."
@@ -5505,6 +5861,9 @@ msgstr ""
 msgid "No recent interests available."
 msgstr ""
 
+msgid "No recommendation events have been recorded up to the selected time."
+msgstr ""
+
 msgid "No recommended photos are available yet."
 msgstr ""
 
@@ -5532,6 +5891,9 @@ msgstr ""
 msgid "No saved photos available yet."
 msgstr ""
 
+msgid "No sentiment annotations have been recorded up to the selected time."
+msgstr ""
+
 msgid "No server configuration file was found for this experiment."
 msgstr ""
 
@@ -5541,10 +5903,16 @@ msgstr ""
 msgid "No tagged photos available yet."
 msgstr ""
 
+msgid "No topic activity has been recorded up to the selected time."
+msgstr ""
+
 msgid "No topics are trending yet."
 msgstr ""
 
 msgid "No topics assigned"
+msgstr ""
+
+msgid "No toxicity annotations have been recorded up to the selected time."
 msgstr ""
 
 msgid "No user data provided."
@@ -5554,6 +5922,9 @@ msgid "No users or experiment selected."
 msgstr ""
 
 msgid "No visibility grants configured yet."
+msgstr ""
+
+msgid "Nodes"
 msgstr ""
 
 msgid "None"
@@ -5649,6 +6020,11 @@ msgid "Number of pages to fetch at 100 entries per page."
 msgstr ""
 
 msgid "Number of posts shown per page when infinite scrolling is disabled"
+msgstr ""
+
+msgid ""
+"Number of recommendation events served to receivers grouped by their "
+"configured content recommender."
 msgstr ""
 
 msgid "Number of top semantic memory items considered per retrieval."
@@ -5875,6 +6251,9 @@ msgstr ""
 msgid "Other"
 msgstr ""
 
+msgid "Out-Degree CCDF"
+msgstr ""
+
 msgid "Outgoing/Energetic"
 msgstr ""
 
@@ -5883,6 +6262,9 @@ msgstr ""
 
 #, python-format
 msgid "Overlaps with '%(name)s' [%(lower_bound)s, %(upper_bound)s]"
+msgstr ""
+
+msgid "Own Recsys"
 msgstr ""
 
 msgid "Owned Experiments"
@@ -5975,6 +6357,12 @@ msgstr ""
 msgid "Pause Client"
 msgstr ""
 
+msgid "Peak Target Toxicity"
+msgstr ""
+
+msgid "Peak Toxicity"
+msgstr ""
+
 msgid "People"
 msgstr ""
 
@@ -5988,6 +6376,11 @@ msgid "People and pages you can follow in this experiment."
 msgstr ""
 
 msgid "People worth following right now"
+msgstr ""
+
+msgid ""
+"Per-post distribution of how often the selected author’s posts have been "
+"recommended."
 msgstr ""
 
 msgid "Persist memory events"
@@ -6018,6 +6411,9 @@ msgid "PhD"
 msgstr ""
 
 msgid "PhD Student in AI"
+msgstr ""
+
+msgid "Photo"
 msgstr ""
 
 msgid "Photo Sharing"
@@ -6174,6 +6570,15 @@ msgstr ""
 msgid "Population Platform"
 msgstr ""
 
+msgid "Population Reach Cumulative Trend"
+msgstr ""
+
+msgid "Population Reach Heatmap"
+msgstr ""
+
+msgid "Population Share"
+msgstr ""
+
 msgid "Population Size"
 msgstr ""
 
@@ -6275,7 +6680,17 @@ msgstr ""
 msgid "Portuguese"
 msgstr ""
 
+msgid "Positive"
+msgstr ""
+
 msgid "Positive / neutral / negative score"
+msgstr ""
+
+msgid "Positive Posts"
+msgstr ""
+
+#, python-format
+msgid "Positive, neutral, and negative %(lower)s counts by day."
 msgstr ""
 
 msgid "Post"
@@ -6443,6 +6858,9 @@ msgstr ""
 msgid "Process Watchdog:"
 msgstr ""
 
+msgid "Profanity"
+msgstr ""
+
 msgid "Profession"
 msgstr ""
 
@@ -6552,6 +6970,9 @@ msgid "Propaganda Agent"
 msgstr ""
 
 msgid "Propaganda Agents"
+msgstr ""
+
+msgid "Propaganda Interactions"
 msgstr ""
 
 msgid "Propaganda Target Drill-down"
@@ -6695,10 +7116,25 @@ msgstr ""
 msgid "Recognition"
 msgstr ""
 
+msgid "Recommendation Appearances"
+msgstr ""
+
+msgid "Recommendation Count"
+msgstr ""
+
+msgid "Recommendation Distribution for Selected Author"
+msgstr ""
+
+msgid "Recommendation Events"
+msgstr ""
+
 msgid "Recommendation Limit"
 msgstr ""
 
 msgid "Recommendation Preferences"
+msgstr ""
+
+msgid "Recommendation System Evolution"
 msgstr ""
 
 msgid "Recommendation Systems"
@@ -6717,6 +7153,9 @@ msgid "Recommendations"
 msgstr ""
 
 msgid "Recommended Posts"
+msgstr ""
+
+msgid "Recommended Slots"
 msgstr ""
 
 msgid "Recommended Use"
@@ -7319,10 +7758,27 @@ msgstr ""
 msgid "Select an Experiment to Join"
 msgstr ""
 
+msgid ""
+"Select an account to inspect its evolving one-hop ego follow network. "
+"Nodes keep their layout once they appear; the selected account stays "
+"highlighted."
+msgstr ""
+
+msgid ""
+"Select an account to inspect its evolving one-hop ego mention network. "
+"Nodes keep their layout once they appear; the selected account stays "
+"highlighted."
+msgstr ""
+
 msgid "Select an active experiment to continue."
 msgstr ""
 
 msgid "Select an agent type to load compatible populations."
+msgstr ""
+
+msgid ""
+"Select an author to inspect how many unique agents received "
+"recommendations for their posts over time."
 msgstr ""
 
 msgid ""
@@ -7440,6 +7896,12 @@ msgstr ""
 msgid "Selected Experiment"
 msgstr ""
 
+msgid "Selected Hashtag Summary"
+msgstr ""
+
+msgid "Selected Hashtags"
+msgstr ""
+
 msgid "Selected Populations to Merge"
 msgstr ""
 
@@ -7453,6 +7915,15 @@ msgid "Selected Target Toxicity Trend"
 msgstr ""
 
 msgid "Selected Target Trend"
+msgstr ""
+
+msgid "Selected Topic Summary"
+msgstr ""
+
+msgid "Selected Topics"
+msgstr ""
+
+msgid "Selected User"
 msgstr ""
 
 msgid "Selected image preview"
@@ -7488,7 +7959,13 @@ msgstr ""
 msgid "Sentiment"
 msgstr ""
 
+msgid "Sentiment Distribution"
+msgstr ""
+
 msgid "Sentiment Evolution"
+msgstr ""
+
+msgid "Sentiment Mix Over Time"
 msgstr ""
 
 msgid "Server & Analysis Controls"
@@ -7556,6 +8033,12 @@ msgstr ""
 msgid "Settings"
 msgstr ""
 
+msgid "Severe Toxicity"
+msgstr ""
+
+msgid "Sexually Explicit"
+msgstr ""
+
 msgid "Share"
 msgstr ""
 
@@ -7584,6 +8067,9 @@ msgid "Share Single Experiment"
 msgstr ""
 
 msgid "Share and comment an Image"
+msgstr ""
+
+msgid "Share of nodes contained in the largest weakly connected component by day."
 msgstr ""
 
 msgid "Share weight"
@@ -7985,6 +8471,9 @@ msgstr ""
 msgid "Stress/reward settings updated."
 msgstr ""
 
+msgid "Structural Metrics Over Time"
+msgstr ""
+
 msgid "Structure, density, components"
 msgstr ""
 
@@ -8130,6 +8619,9 @@ msgstr ""
 msgid "Tab of the photo feed shown when a participant opens it"
 msgstr ""
 
+msgid "Tags"
+msgstr ""
+
 msgid "Taiwanese"
 msgstr ""
 
@@ -8139,7 +8631,16 @@ msgstr ""
 msgid "Target Group"
 msgstr ""
 
+msgid "Target Opinion"
+msgstr ""
+
 msgid "Target Population"
+msgstr ""
+
+msgid "Target Reward"
+msgstr ""
+
+msgid "Target Stress"
 msgstr ""
 
 msgid ""
@@ -8571,6 +9072,9 @@ msgstr ""
 msgid "Thread not found."
 msgstr ""
 
+msgid "Threat"
+msgstr ""
+
 msgid "Thumbs-down reaction"
 msgstr ""
 
@@ -8634,6 +9138,15 @@ msgstr ""
 msgid "Top"
 msgstr ""
 
+msgid "Top Emotion"
+msgstr ""
+
+msgid "Top Emotions"
+msgstr ""
+
+msgid "Top Emotions Over Time"
+msgstr ""
+
 msgid "Topic"
 msgstr ""
 
@@ -8643,7 +9156,19 @@ msgstr ""
 msgid "Topic Focus"
 msgstr ""
 
+msgid "Topic Footprint at Selected Time"
+msgstr ""
+
 msgid "Topic Interest Distribution"
+msgstr ""
+
+msgid "Topic Lifecycle Over Time"
+msgstr ""
+
+msgid "Topic Volume Cumulative Trend"
+msgstr ""
+
+msgid "Topic Volume Heatmap"
 msgstr ""
 
 msgid "Topic classification chips"
@@ -8704,7 +9229,14 @@ msgstr ""
 msgid "Total Recs"
 msgstr ""
 
+msgid "Total Volume"
+msgstr ""
+
 msgid "Total configurations:"
+msgstr ""
+
+#, python-format
+msgid "Total emotion tags versus distinct annotated %(lower)s per day."
 msgstr ""
 
 #, python-format
@@ -8728,6 +9260,12 @@ msgstr ""
 msgid "Toxicity %%"
 msgstr ""
 
+msgid "Toxicity Category Trends"
+msgstr ""
+
+msgid "Toxicity Distribution"
+msgstr ""
+
 msgid "Toxicity Evolution"
 msgstr ""
 
@@ -8746,6 +9284,26 @@ msgstr ""
 msgid "Trace excerpt:"
 msgstr ""
 
+msgid ""
+"Track hashtag diffusion, emergence, and disappearance through content and"
+" interaction activity."
+msgstr ""
+
+#, python-format
+msgid "Track how the %(network_label)s network evolves across the experiment."
+msgstr ""
+
+msgid "Track how toxic content annotations accumulate over time."
+msgstr ""
+
+msgid ""
+"Track topic diffusion, emergence, and disappearance through content and "
+"interaction activity."
+msgstr ""
+
+msgid "Track which emotions are being annotated in experiment content."
+msgstr ""
+
 msgid "Tracked Agents"
 msgstr ""
 
@@ -8754,6 +9312,9 @@ msgstr ""
 
 #, python-format
 msgid "Transition Probabilities (%%)"
+msgstr ""
+
+msgid "Transitivity"
 msgstr ""
 
 msgid "Travels"
@@ -8858,6 +9419,12 @@ msgid "Uniform"
 msgstr ""
 
 msgid "Unique Agents"
+msgstr ""
+
+msgid "Unique Agents Reached by Recommendations"
+msgstr ""
+
+msgid "Unique Authors Recommended to Selected User"
 msgstr ""
 
 msgid "Unique Recipients"
@@ -9229,6 +9796,18 @@ msgid ""
 msgstr ""
 
 msgid "Validator:"
+msgstr ""
+
+msgid "Vanished Hashtags"
+msgstr ""
+
+msgid "Vanished Topics"
+msgstr ""
+
+msgid "Vanishing Hashtags"
+msgstr ""
+
+msgid "Vanishing Topics"
 msgstr ""
 
 msgid "Version"
@@ -9659,6 +10238,9 @@ msgid "Your Profile"
 msgstr ""
 
 msgid "Your YSocial installation is up to date."
+msgstr ""
+
+msgid "Your activity and your interface language."
 msgstr ""
 
 msgid "Your annotations"
