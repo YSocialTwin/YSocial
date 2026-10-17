@@ -83,8 +83,6 @@ def ensure_external_runtime_layout() -> None:
         "YServerReddit",
         "YSimulator",
         "YPhotoSharing",
-        "y_agents_plugins",
-        "y_memory_subsystem",
     ):
         try:
             result = _seed_external_runtime_repo(repo_name)

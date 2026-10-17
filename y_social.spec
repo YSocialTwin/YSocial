@@ -4,7 +4,8 @@ PyInstaller specification file for YSocial application.
 
 This spec file bundles the entire YSocial application including:
 - Main application code (y_web package)
-- External dependencies (YServer, YClient submodules)
+- Simulation runtimes found in external/ at build time (optional; every other plugin is
+  installed later from the plugin page into the writable external/ folder)
 - Static files (CSS, JS, images, templates)
 - Data files (database schemas, prompts)
 - Configuration files
@@ -57,11 +58,14 @@ hidden_imports = [
     "cryptography",
     "openai",
     "ollama",
-    "pyautogen",
+    "flask_babel",
+    "babel",
+    "flask_migrate",
+    "alembic",
     "perspective",
     "networkx",
     "numpy",
-    "pillow",
+    "PIL",
     "psutil",
     # "ysights",  # Excluded - only used in notebooks
     # "jupyterlab",  # Excluded - notebooks disabled by default in PyInstaller
@@ -97,7 +101,9 @@ hidden_imports += collect_submodules("wtforms")
 hidden_imports += collect_submodules("nltk")
 hidden_imports += collect_submodules("bs4")
 hidden_imports += collect_submodules("openai")
-hidden_imports += collect_submodules("pyautogen")
+hidden_imports += collect_submodules("flask_babel")
+hidden_imports += collect_submodules("alembic")
+hidden_imports += collect_submodules("flask_migrate")
 # hidden_imports += collect_submodules("ysights")  # Excluded - only used in notebooks
 hidden_imports += collect_submodules("sklearn")
 hidden_imports += collect_submodules("webview")
@@ -107,6 +113,9 @@ datas = []
 
 # Add NLTK data
 datas += collect_data_files("nltk")
+
+# Babel locale data (number/date formats of the interface languages)
+datas += collect_data_files("babel")
 
 # Collect package metadata for packages that use importlib.metadata
 # This fixes "PackageNotFoundError: No package metadata was found for X" errors
@@ -145,6 +154,9 @@ datas += [
     (os.path.join(basedir, "y_web", "static"), "y_web/static"),
     (os.path.join(basedir, "y_web", "templates"), "y_web/templates"),
     (os.path.join(basedir, "data_schema"), "data_schema"),
+    # Alembic scripts are loaded from disk (ScriptDirectory lists the files of versions/),
+    # so env.py and every revision must be present as real .py files.
+    (os.path.join(basedir, "y_web", "alembic"), "y_web/alembic"),
     # Gettext (.po/.mo) and browser (.json) catalogs of the interface languages
     (os.path.join(basedir, "y_web", "translations"), "y_web/translations"),
     (os.path.join(basedir, "config_files"), "config_files"),
