@@ -1138,3 +1138,11 @@ def test_admin_engine_supports_flask_sqlalchemy_2_and_3():
 
     assert backend_plugins._admin_engine(_New(), None) == "admin-engine"
     assert backend_plugins._admin_engine(_Old(), object()) == "old-engine:db_admin"
+
+
+def test_agent_memory_is_a_registered_plugin():
+    spec = registry.runtime_spec("agent_memory")
+    assert spec.github_repo == "YSocialTwin/y_memory_subsystem"
+    assert spec.path.name == "y_memory_subsystem"
+    assert spec.group == "agent_plugins"
+    assert spec.validate_import == "yclient_memory"

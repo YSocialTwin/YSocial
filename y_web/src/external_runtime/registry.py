@@ -29,6 +29,9 @@ RUNTIME_TEXTS = (
         "Simulation runtime for photo-sharing experiments, with an Instagram-like platform."
     ),
     N_("Runs large-scale simulations in a distributed way on HPC clusters."),
+    N_(
+        "Gives simulated agents a memory of past interactions: relationship history, thread continuity and conversation cues used when they reply."
+    ),
 )
 
 ROOT = Path(get_writable_path())
@@ -81,6 +84,7 @@ def ensure_external_runtime_layout() -> None:
         "YSimulator",
         "YPhotoSharing",
         "y_agents_plugins",
+        "y_memory_subsystem",
     ):
         try:
             result = _seed_external_runtime_repo(repo_name)
@@ -251,6 +255,22 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         install_commands=(),
         validate_entrypoints=(),
         validate_import=None,
+        is_private=False,
+    ),
+    "agent_memory": ExternalRuntimeSpec(
+        key="agent_memory",
+        group="agent_plugins",
+        group_label="Agent Plugins",
+        category="agent_extensions",
+        category_label="Agent Extensions",
+        label="Agent Memory",
+        path=EXTERNAL_DIR / "y_memory_subsystem",
+        github_repo="YSocialTwin/y_memory_subsystem",
+        repo_url="https://github.com/YSocialTwin/y_memory_subsystem.git",
+        default_branch="main",
+        install_commands=(),
+        validate_entrypoints=(),
+        validate_import="yclient_memory",
         is_private=False,
     ),
     "reactive_agents": ExternalRuntimeSpec(

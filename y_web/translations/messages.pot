@@ -7668,6 +7668,9 @@ msgstr ""
 msgid "Running a YSocial Experiment"
 msgstr ""
 
+msgid "Gives simulated agents a memory of past interactions: relationship history, thread continuity and conversation cues used when they reply."
+msgstr ""
+
 msgid "Runs large-scale simulations in a distributed way on HPC clusters."
 msgstr ""
 

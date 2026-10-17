@@ -35,6 +35,7 @@ Plugins are organized into two top-level categories:
     - `YSimulator`
   - `Agent Plugins`
     - `y_agents_plugins`
+    - `Agent Memory` (`y_memory_subsystem`)
 
 The experiment creation flow already uses these plugin states to determine which experiment types are available.
 

@@ -8401,6 +8401,9 @@ msgstr "In esecuzione"
 msgid "Running a YSocial Experiment"
 msgstr "Eseguire un esperimento YSocial"
 
+msgid "Gives simulated agents a memory of past interactions: relationship history, thread continuity and conversation cues used when they reply."
+msgstr "Dà agli agenti simulati una memoria delle interazioni passate: storia della relazione, continuità del thread e indicazioni di conversazione usate quando rispondono."
+
 msgid "Runs large-scale simulations in a distributed way on HPC clusters."
 msgstr "Esegue simulazioni su larga scala in modo distribuito su cluster HPC."
 

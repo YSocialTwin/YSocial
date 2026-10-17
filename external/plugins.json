@@ -109,6 +109,16 @@
         "YSocialTwin"
       ],
       "repository_url": "https://github.com/YSocialTwin/y_agents_plugins"
+    },
+    {
+      "plugin_name": "Agent Memory",
+      "category": "Agent Extensions",
+      "group": "Agent Plugins",
+      "description": "Gives simulated agents a memory of past interactions: relationship history, thread continuity and conversation cues used when they reply.",
+      "authors": [
+        "YSocialTwin"
+      ],
+      "repository_url": "https://github.com/YSocialTwin/y_memory_subsystem"
     }
   ]
 }
