@@ -37,7 +37,7 @@ def packs_root() -> Path:
 
 def normalize(language) -> str:
     """A safe language code; anything empty, malformed or without a pack means English."""
-    code = (language or "").strip().lower()
+    code = (language if isinstance(language, str) else "").strip().lower()
     if code and _LANG.match(code) and (packs_root() / code / "manifest.json").exists():
         return code
     return DEFAULT_LANGUAGE
@@ -117,7 +117,7 @@ def write_pack(name: str, destination, language=None) -> None:
 
 def resolve(requested, default=None) -> str:
     """The language to use: the requested one if it has a pack, else the default, else English."""
-    code = (requested or "").strip().lower()
+    code = (requested if isinstance(requested, str) else "").strip().lower()
     if code and normalize(code) == code:
         return code
     return normalize(default)
