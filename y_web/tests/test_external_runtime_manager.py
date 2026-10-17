@@ -1146,3 +1146,26 @@ def test_agent_memory_is_a_registered_plugin():
     assert spec.path.name == "y_memory_subsystem"
     assert spec.group == "agent_plugins"
     assert spec.validate_import == "yclient_memory"
+
+
+def test_agent_memory_source_reaches_child_processes(tmp_path, monkeypatch):
+    from y_web.src.simulation import subprocess_env
+
+    src = tmp_path / "external" / "y_memory_subsystem" / "src" / "yclient_memory"
+    src.mkdir(parents=True)
+    monkeypatch.setattr(subprocess_env, "get_writable_path", lambda: str(tmp_path))
+    monkeypatch.setenv("PYTHONPATH", "/somewhere")
+    env = subprocess_env.build_subprocess_env()
+    import os
+
+    parts = env["PYTHONPATH"].split(os.pathsep)
+    assert parts[0] == "/somewhere"
+    assert str(src.parent) in parts
+
+
+def test_agent_memory_source_absent_leaves_env_alone(tmp_path, monkeypatch):
+    from y_web.src.simulation import subprocess_env
+
+    monkeypatch.setattr(subprocess_env, "get_writable_path", lambda: str(tmp_path))
+    monkeypatch.setenv("PYTHONPATH", "/somewhere")
+    assert subprocess_env.build_subprocess_env()["PYTHONPATH"] == "/somewhere"

@@ -577,8 +577,6 @@ xxhash==4.0.1
     # via langsmith
 yarl==1.24.5
     # via aiohttp
-yclient-memory==0.1.0
-    # via -r requirements/base.txt
 ysights==0.2.0
     # via -r requirements/base.txt
 zipp==4.1.0

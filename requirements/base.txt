@@ -57,4 +57,3 @@ pywebview
 ysights
 gunicorn
 gevent
-yclient-memory
