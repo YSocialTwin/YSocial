@@ -23,6 +23,7 @@ for candidate in (ROOT, PLUGIN_SRC):
         sys.path.insert(0, candidate_str)
 
 try:
+    from y_agents_plugins import prompt_store  # noqa: E402
     from y_agents_plugins.config import AppConfig  # noqa: E402
     from y_agents_plugins.core import AgentContext, AgentSpec  # noqa: E402
     from y_agents_plugins.db import ExperimentDatabase  # noqa: E402
@@ -37,6 +38,7 @@ try:
     )
 except ModuleNotFoundError:
     # External plugin runtime is optional in base installations and in CI test jobs.
+    prompt_store = None
     AppConfig = None
     AgentContext = None
     AgentSpec = None
@@ -227,6 +229,9 @@ def run(config_path: Path, state_path: Path) -> int:
         )
     logger = logging.getLogger("adhoc_client_runner")
     execution_logger = ExecutionLogger()
+    if prompt_store is not None and hasattr(prompt_store, "use_language_from_folder"):
+        # the prompts of the plugin agents follow the language chosen for the experiment
+        prompt_store.use_language_from_folder(config_path.parent)
     config = AppConfig.from_file(config_path)
     config_mtime = _config_mtime(config_path)
     state = _load_state(state_path)
