@@ -762,7 +762,9 @@ def start_hpc_client(exp, cli, population):
     print(f"Agents: {agents_file}")
     print(f"Prompts: {prompts_file}")
 
-    env = build_subprocess_env()
+    from y_web.src.system import prompt_packs
+
+    env = build_subprocess_env(prompt_packs.launch_env(exp, cli))
 
     try:
         # Start the process with Popen

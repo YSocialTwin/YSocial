@@ -143,6 +143,22 @@ def record_language(experiment_dir, experiment=None, client=None, client_languag
     data.setdefault("experiment", DEFAULT_LANGUAGE)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+    for code in {data["experiment"], *data.get("clients", {}).values()}:
+        write_profile_values(experiment_dir, code)
+
+
+def write_profile_values(directory, language) -> None:
+    """Put ``profile_values.<language>.json`` in a run folder: how the clients read profile values in that language."""
+    code = normalize(language)
+    if code == DEFAULT_LANGUAGE:
+        return
+    write_pack("profile_values.json", Path(directory) / f"profile_values.{code}.json", code)
+
+
+def launch_env(exp, client=None) -> Dict[str, str]:
+    """Environment that tells a client process which language its prompts are in (nothing for English)."""
+    language = resolve(getattr(client, "prompt_language", None), getattr(exp, "prompt_language", None))
+    return {} if language == DEFAULT_LANGUAGE else {"YSOCIAL_PROMPT_LANGUAGE": language}
 
 
 def register_context(app):

@@ -13,19 +13,30 @@ Step 1 of the multilingual prompts task: prompts that used to be written inside 
 Languages: English lives in ``prompts_internal.json``; another language ``xx`` lives in
 ``prompts_internal.xx.json`` next to it and only needs the keys it translates. A key missing from a language
 (or a language without a file) falls back to English and logs a warning once. ``set_language`` sets the
-language used when a call passes none; nothing is ever translated at run time.
+language used when a call passes none (it also sets ``YSOCIAL_PROMPT_LANGUAGE`` so every copy of this module in
+the process, e.g. the plugins', follows it); nothing is ever translated at run time.
+
+A run folder may hold ``prompt_language.json`` (written by YWeb: the language of the experiment and of each
+client) and ``profile_values.<language>.json`` (how profile values such as a nationality or a profession read in
+that language). :func:`use_language_from_folder` activates them; :func:`localize` then shows an object's profile
+attributes in that language to a prompt, without touching the object, the database or the logic.
 
 This file is copied unchanged into every repository that builds prompts; keep the copies identical.
 """
 
 import json
 import logging
+import os
 import re
 from pathlib import Path
 
 PACK_FILE = Path(__file__).with_name("prompts_internal.json")
 DEFAULT_LANGUAGE = "en"
-_language = DEFAULT_LANGUAGE
+ENV_VAR = "YSOCIAL_PROMPT_LANGUAGE"
+FOLDER_VAR = "YSOCIAL_PROMPT_FOLDER"
+RECORD_FILE = "prompt_language.json"
+_language = None
+_values = {}
 _warned = set()
 _LANG = re.compile(r"^[a-z]{2,3}(?:-[a-z0-9]{2,8})?$")
 log = logging.getLogger(__name__)
@@ -54,10 +65,113 @@ def set_language(language):
     """Language used by calls that do not pass one (empty or unknown values mean English)."""
     global _language
     _language = _clean(language)
+    os.environ[ENV_VAR] = _language
 
 
 def current_language():
-    return _language
+    return _language or _clean(os.environ.get(ENV_VAR))
+
+
+def language_from_folder(folder, client=None):
+    """The language recorded in ``folder`` for ``client`` (else for the experiment, else English)."""
+    try:
+        with open(Path(folder) / RECORD_FILE, encoding="utf-8") as handle:
+            data = json.load(handle)
+    except (OSError, ValueError):
+        return DEFAULT_LANGUAGE
+    if not isinstance(data, dict):
+        return DEFAULT_LANGUAGE
+    clients = data.get("clients") if isinstance(data.get("clients"), dict) else {}
+    return _clean(clients.get(str(client)) or data.get("experiment"))
+
+
+def use_language_from_folder(folder, client=None):
+    """Make the language of ``folder`` (``YSOCIAL_PROMPT_LANGUAGE`` if set, else its record) the current one.
+
+    The folder is also remembered (``YSOCIAL_PROMPT_FOLDER``) so that worker processes started afterwards, which
+    inherit the environment, find the profile values too. Returns the language.
+    """
+    language = _clean(os.environ[ENV_VAR]) if os.environ.get(ENV_VAR) else language_from_folder(folder, client)
+    set_language(language)
+    os.environ[FOLDER_VAR] = str(folder)
+    _values.pop(language, None)
+    return language
+
+
+def env_for_workers():
+    """Environment variables worker processes (e.g. Ray) need to speak the current language."""
+    if current_language() == DEFAULT_LANGUAGE:
+        return {}
+    env = {ENV_VAR: current_language()}
+    if os.environ.get(FOLDER_VAR):
+        env[FOLDER_VAR] = os.environ[FOLDER_VAR]
+    return env
+
+
+def _values_for(language):
+    if language not in _values:
+        table = {}
+        folder = os.environ.get(FOLDER_VAR)
+        if language != DEFAULT_LANGUAGE and folder:
+            try:
+                with open(Path(folder) / f"profile_values.{language}.json", encoding="utf-8") as handle:
+                    table = json.load(handle)
+            except (OSError, ValueError):
+                log.warning("no profile values for %r in %s; profile values stay in English", language, folder)
+        _values[language] = table
+    return _values[language]
+
+
+# attribute of an agent / website -> category of profile_values.json
+_CATEGORY = {
+    "gender": "gender",
+    "leaning": "leaning",
+    "education_level": "education_level",
+    "toxicity": "toxicity",
+    "nationality": "nationality",
+    "language": "language",
+    "profession": "profession",
+    "oe": "big_five",
+    "co": "big_five",
+    "ex": "big_five",
+    "ag": "big_five",
+    "ne": "big_five",
+    "political_leaning": "leaning",
+}
+
+
+class _Localized:
+    """Read-only view of an object whose profile attributes read in the current language."""
+
+    def __init__(self, target, values):
+        object.__setattr__(self, "_target", target)
+        object.__setattr__(self, "_values", values)
+
+    def __getattr__(self, name):
+        value = getattr(self._target, name)
+        table = self._values.get(_CATEGORY.get(name))
+        if table and isinstance(value, str):
+            return table.get(value, value)
+        return value
+
+
+def localize(obj):
+    """``obj`` as a prompt should see it: profile values in the current language (English: ``obj`` itself)."""
+    values = _values_for(current_language())
+    return _Localized(obj, values) if values else obj
+
+
+def localize_attrs(attrs):
+    """A copy of a dict of agent attributes with its profile values in the current language."""
+    values = _values_for(current_language())
+    if not values or not isinstance(attrs, dict):
+        return attrs
+    out = dict(attrs)
+    for key, value in attrs.items():
+        table = values.get(_CATEGORY.get(key))
+        if table and isinstance(value, str):
+            out[key] = table.get(value, value)
+    return out
 
 
 def _pack_path(language):
@@ -85,7 +199,7 @@ def _warn_once(language, key):
 
 def get(key, language=None):
     """The template text for ``key`` in ``language`` (default: the current language), else in English."""
-    language = _clean(language) if language else _language
+    language = _clean(language) if language else current_language()
     if language != DEFAULT_LANGUAGE:
         text = _pack(language).get(key)
         if text is not None:
