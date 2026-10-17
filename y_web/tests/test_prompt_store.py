@@ -192,3 +192,17 @@ def test_profile_values_read_in_the_prompt_language_without_touching_the_agent(c
 def test_english_runs_pass_nothing_to_workers(clean_language, tmp_path):
     ps.use_language_from_folder(_run_folder(tmp_path, "en"))
     assert ps.env_for_workers() == {}
+
+
+def test_single_values_such_as_the_follow_action_are_localized(clean_language, tmp_path):
+    import json
+
+    folder = _run_folder(tmp_path, "it")
+    (folder / "profile_values.it.json").write_text(
+        json.dumps({"action": {"follow": "seguire", "unfollow": "smettere di seguire"}}), encoding="utf-8"
+    )
+    assert ps.localize_value("action", "follow") == "follow"  # English until a language is active
+    ps.use_language_from_folder(folder)
+    assert ps.localize_value("action", "follow") == "seguire"
+    assert ps.localize_value("action", "unknown") == "unknown"
+    assert ps.localize_value("nope", "follow") == "follow"

@@ -161,6 +161,14 @@ def localize(obj):
     return _Localized(obj, values) if values else obj
 
 
+def localize_value(category, value):
+    """One profile value (``category`` is a key of profile_values.json, e.g. ``"action"``) in the current language."""
+    table = _values_for(current_language()).get(category)
+    if table and isinstance(value, str):
+        return table.get(value, value)
+    return value
+
+
 def localize_attrs(attrs):
     """A copy of a dict of agent attributes with its profile values in the current language."""
     values = _values_for(current_language())
