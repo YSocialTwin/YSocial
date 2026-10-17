@@ -16,12 +16,12 @@
                                     <h2 class="title is-4" style="margin: 4px 0 6px 0; color: #0f172a;">{{ _('Agent Resources Dashboard') }}</h2>
                                     <p class="ys-text-sm-muted" style="max-width: 720px; line-height: 1.5; margin-bottom: 0;">
                                         {{ _('Use this page as the single entry point for building the entities that populate and influence your simulations.') }}
-                                        Synthetic agents define user behavior, while content pages define the information sources and institutional actors that shape exposure.
+                                        {{ _('Synthetic agents define user behavior, while content pages define the information sources and institutional actors that shape exposure.') }}
                                     </p>
                                 </div>
                                 <div style="display: grid; gap: 6px; min-width: 220px;">
                                     <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
-                                        <span class="badge badge-info">{{ agent_resources_summary.total_populations }} populations</span>
+                                        <span class="badge badge-info">{{ _('%(n)s populations', n=agent_resources_summary.total_populations) }}</span>
                                         <span class="badge badge-success">{{ _('%(n)s activity profiles', n=agent_resources_summary.activity_profiles) }}</span>
                                         <span class="badge badge-warning">{{ _('%(n)s plugin types', n=agent_resources_summary.plugin_agent_types) }}</span>
                                         <span class="badge badge-secondary">{{ _('%(n)s visible resources', n=agent_resources_summary.resource_cards) }}</span>
@@ -46,7 +46,7 @@
                                 <div class="ys-text-xs-hint" style="margin-top: 2px;">{{ group.description }}</div>
                             </div>
                             <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                                <span class="badge badge-info">{{ group.cards|length }} resources</span>
+                                <span class="badge badge-info">{{ _('%(n)s resources', n=group.cards|length) }}</span>
                                 <span class="ys-text-xs-hint">{% if group.key == 'all' %}{{ _('Expanded') }}{% else %}{{ _('Click to expand') }}{% endif %}</span>
                             </div>
                         </summary>

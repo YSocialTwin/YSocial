@@ -45,3 +45,18 @@ def test_adhoc_parameter_labels_and_prompt_keys(agents_app):
     for template in spec["prompt_templates"]:
         assert template["title_key"] in {"Opening Propaganda System Prompt", "Reply Propaganda System Prompt"}
         assert template["body"].startswith("You ")
+
+
+@pytest.mark.parametrize(
+    "msgid, expected",
+    [
+        ("Open Agent Builder", "Apri il Builder di agenti"),
+        ("Available Agents", "Agenti disponibili"),
+        ("Forum Only", "Solo forum"),
+        ("Not assigned", "Non assegnato"),
+        ("%(n)s populations", "%(n)s popolazioni"),
+    ],
+)
+def test_agents_dashboard_strings_are_translated(agents_app, msgid, expected):
+    with agents_app.test_request_context("/", headers={"Accept-Language": "it"}):
+        assert i18n.gettext(msgid) == expected

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-16 19:03+0000\n"
+"POT-Creation-Date: 2026-10-17 08:15+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -36,11 +36,43 @@ msgid ""
 msgstr ""
 
 #, python-format
+msgid "%(count)s agents currently defined"
+msgstr ""
+
+#, python-format
+msgid "%(count)s media pages with news-oriented behavior"
+msgstr ""
+
+#, python-format
 msgid "%(count)s new"
 msgstr ""
 
 #, python-format
+msgid "%(count)s pages currently defined"
+msgstr ""
+
+#, python-format
+msgid "%(count)s populations already contain custom agents"
+msgstr ""
+
+#, python-format
+msgid "%(count)s populations already include pages"
+msgstr ""
+
+#, python-format
 msgid "%(count)s required parameters"
+msgstr ""
+
+#, python-format
+msgid "%(count)s reusable RSS feeds available"
+msgstr ""
+
+#, python-format
+msgid "%(count)s reusable activity profiles available"
+msgstr ""
+
+#, python-format
+msgid "%(count)s reusable image feeds available"
 msgstr ""
 
 #, python-format
@@ -94,11 +126,23 @@ msgid "%(n)s plugin types"
 msgstr ""
 
 #, python-format
+msgid "%(n)s populations"
+msgstr ""
+
+#, python-format
+msgid "%(n)s resources"
+msgstr ""
+
+#, python-format
 msgid "%(n)s visible resources"
 msgstr ""
 
 #, python-format
 msgid "%(name)s Parameters"
+msgstr ""
+
+#, python-format
+msgid "%(name)s agents"
 msgstr ""
 
 #, python-format
@@ -693,6 +737,17 @@ msgstr ""
 msgid "Agent type"
 msgstr ""
 
+msgid ""
+"Agent types that can be deployed in both microblogging and forum "
+"simulations."
+msgstr ""
+
+msgid "Agent types that currently target forum experiments only."
+msgstr ""
+
+msgid "Agent types that currently target microblogging experiments only."
+msgstr ""
+
 msgid "Agent's political leaning"
 msgstr ""
 
@@ -736,6 +791,9 @@ msgid "Agreeableness."
 msgstr ""
 
 msgid "All"
+msgstr ""
+
+msgid "All Experiments"
 msgstr ""
 
 msgid "All Friends"
@@ -964,6 +1022,9 @@ msgstr ""
 msgid "Available %(name)ss"
 msgstr ""
 
+msgid "Available Agents"
+msgstr ""
+
 msgid "Available Categories"
 msgstr ""
 
@@ -1190,6 +1251,9 @@ msgid "Browse previews in small batches."
 msgstr ""
 
 msgid "Browse recent photos, people and hashtags in this experiment."
+msgstr ""
+
+msgid "Built-in resource"
 msgstr ""
 
 msgid "Bulgarian"
@@ -1730,6 +1794,11 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Configure page identity, leaning, feed sources, and upload page "
+"collections in bulk."
+msgstr ""
+
+msgid ""
 "Configure photo-sharing specific fields. Percentages are applied per "
 "generated agent and the favorite filters define the pool used for random "
 "agent tag assignment."
@@ -1999,6 +2068,9 @@ msgstr ""
 msgid "Create AdHoc Agent Client"
 msgstr ""
 
+msgid "Create Agent"
+msgstr ""
+
 msgid "Create Empty Population"
 msgstr ""
 
@@ -2056,6 +2128,16 @@ msgid ""
 "groups while a batch is running."
 msgstr ""
 
+msgid ""
+"Create feed entries centrally, then reuse them across forum simulations "
+"without revalidating the same source each time."
+msgstr ""
+
+msgid ""
+"Create institutional and media pages that publish content, expose RSS "
+"feeds, and shape the information environment seen by agents."
+msgstr ""
+
 #, python-format
 msgid "Create new %(name)s population..."
 msgstr ""
@@ -2099,6 +2181,9 @@ msgid "Created using predefined parameters. Agents are automatically generated."
 msgstr ""
 
 msgid "Creates fresh copies of every experiment in the selected group."
+msgstr ""
+
+msgid "Creating agent..."
 msgstr ""
 
 #, python-format
@@ -2436,6 +2521,11 @@ msgid "Description:"
 msgstr ""
 
 msgid "Deselect All"
+msgstr ""
+
+msgid ""
+"Design individual user personas with demographics, political leaning, "
+"personality traits, activity profiles, and role-play directives."
 msgstr ""
 
 msgid "Details"
@@ -3431,10 +3521,19 @@ msgstr ""
 msgid "Forum Image Feed Assignment"
 msgstr ""
 
+msgid "Forum Image Feeds"
+msgstr ""
+
 msgid "Forum Image Resources"
 msgstr ""
 
+msgid "Forum Only"
+msgstr ""
+
 msgid "Forum RSS Feed Assignment"
+msgstr ""
+
+msgid "Forum RSS Feeds"
 msgstr ""
 
 msgid "Forum RSS Resources"
@@ -3446,6 +3545,9 @@ msgstr ""
 msgid ""
 "Forum experiments are unavailable because YServerReddit and YClientReddit"
 " are not both present."
+msgstr ""
+
+msgid "Forum experiments assign from the shared registry"
 msgstr ""
 
 msgid "Forum feed assignments updated successfully."
@@ -4583,10 +4685,21 @@ msgstr ""
 msgid "Maintain the active simulation topics from the overview card"
 msgstr ""
 
+msgid ""
+"Maintain the canonical image-feed catalog here and assign only the feeds "
+"needed by each forum simulation."
+msgstr ""
+
 msgid "Male"
 msgstr ""
 
 msgid "Male:"
+msgstr ""
+
+msgid "Manage Image Resources"
+msgstr ""
+
+msgid "Manage RSS Resources"
 msgstr ""
 
 msgid "Manage Shared Image Resources"
@@ -4601,6 +4714,11 @@ msgid ""
 msgstr ""
 
 msgid "Manage clients running agent populations for this experiment."
+msgstr ""
+
+msgid ""
+"Manage existing agents, remove orphaned entries, and create fully custom "
+"profiles."
 msgstr ""
 
 msgid ""
@@ -4752,6 +4870,9 @@ msgid "Microblogging"
 msgstr ""
 
 msgid "Microblogging (i.e., X/BlueSky)"
+msgstr ""
+
+msgid "Microblogging Only"
 msgstr ""
 
 msgid ""
@@ -5298,6 +5419,9 @@ msgstr ""
 msgid "Not Interested"
 msgstr ""
 
+msgid "Not assigned"
+msgstr ""
+
 msgid "Not assigned to any population"
 msgstr ""
 
@@ -5452,10 +5576,16 @@ msgstr ""
 msgid "Open %(name)s Builder"
 msgstr ""
 
+msgid "Open Agent Builder"
+msgstr ""
+
 msgid "Open JupyterLab"
 msgstr ""
 
 msgid "Open JupyterLab for ad hoc inspection and notebook-based analysis"
+msgstr ""
+
+msgid "Open Page Builder"
 msgstr ""
 
 msgid "Open Timeline."
@@ -6133,6 +6263,9 @@ msgstr ""
 msgid "Profiles and pages matching your search."
 msgstr ""
 
+msgid "Profiles vs. Advanced Roleplay"
+msgstr ""
+
 msgid "Progress"
 msgstr ""
 
@@ -6419,6 +6552,11 @@ msgid "Refresh Memory"
 msgstr ""
 
 msgid "Refresh interval in seconds (5-300)"
+msgstr ""
+
+msgid ""
+"Register reusable subreddit-based image feeds for forum experiments, "
+"including interest tags used during image ingestion."
 msgstr ""
 
 msgid "Registered Users"
@@ -7619,6 +7757,9 @@ msgstr ""
 msgid "Subreddit"
 msgstr ""
 
+msgid "Subreddit validation is done before assignment"
+msgstr ""
+
 msgid "Subset of population to activate initially. Leave empty to use all agents."
 msgstr ""
 
@@ -7702,10 +7843,18 @@ msgstr ""
 msgid "Switch user"
 msgstr ""
 
+msgid "Synthetic Agents"
+msgstr ""
+
 msgid "Synthetic Network:"
 msgstr ""
 
 msgid "Synthetic Populations"
+msgstr ""
+
+msgid ""
+"Synthetic agents define user behavior, while content pages define the "
+"information sources and institutional actors that shape exposure."
 msgstr ""
 
 msgid "System Settings"
@@ -7874,6 +8023,13 @@ msgstr ""
 msgid "The agent profession."
 msgstr ""
 
+msgid ""
+"The agent profile is a set of predefined characteristics that can be used"
+" to specify its behavior (through LLM pre-prompts). The advanced roleplay"
+" allows to specify a custom pre-prompt that overrides the other "
+"configuration variables."
+msgstr ""
+
 msgid "The agent spoken language."
 msgstr ""
 
@@ -7964,6 +8120,9 @@ msgid "The request could not be understood by the server."
 msgstr ""
 
 msgid "The requested page could not be found."
+msgstr ""
+
+msgid "The same subreddit definition can be reused safely"
 msgstr ""
 
 msgid ""
@@ -8766,6 +8925,11 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Validate and register reusable RSS sources for forum simulations. Once "
+"saved, the same feed can be assigned across multiple experiments."
+msgstr ""
+
+msgid ""
 "Validate subreddit-based image feeds once, store them centrally, and "
 "assign them to any forum experiment as needed."
 msgstr ""
@@ -8775,6 +8939,9 @@ msgid "Validated %(label)s."
 msgstr ""
 
 msgid "Validation"
+msgstr ""
+
+msgid "Validation happens once in the dashboard workspace"
 msgstr ""
 
 msgid "Validator"
@@ -8815,6 +8982,12 @@ msgid "View all friends."
 msgstr ""
 
 msgid "Viewing as"
+msgstr ""
+
+msgid ""
+"Virtual entities that represent social media users in simulations. They "
+"can be configured with different demographic information, interests, and "
+"personality traits."
 msgstr ""
 
 msgid "Visibility assignment revoked."

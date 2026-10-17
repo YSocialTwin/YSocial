@@ -111,18 +111,18 @@ def _group_agent_resource_cards(cards: list[dict]) -> list[dict]:
     definitions = [
         {
             "key": "all",
-            "label": "All Experiments",
-            "description": "Agent types that can be deployed in both microblogging and forum simulations.",
+            "label": _("All Experiments"),
+            "description": _("Agent types that can be deployed in both microblogging and forum simulations."),
         },
         {
             "key": "microblogging",
-            "label": "Microblogging Only",
-            "description": "Agent types that currently target microblogging experiments only.",
+            "label": _("Microblogging Only"),
+            "description": _("Agent types that currently target microblogging experiments only."),
         },
         {
             "key": "forum",
-            "label": "Forum Only",
-            "description": "Agent types that currently target forum experiments only.",
+            "label": _("Forum Only"),
+            "description": _("Agent types that currently target forum experiments only."),
         },
     ]
 
@@ -364,24 +364,24 @@ def _agent_builder_context(**overrides):
         "toxicity_levels": db.session.scalars(select(Toxicity_Levels)).all(),
         "activity_profiles": db.session.scalars(select(ActivityProfile)).all(),
         "page_kind": "standard",
-        "table_title": "Available Agents",
-        "create_title": "Create Agent",
+        "table_title": _("Available Agents"),
+        "create_title": _("Create Agent"),
         "form_action": "/admin/create_agent",
-        "submit_label": "Create",
-        "loading_message": "Creating agent...",
+        "submit_label": _("Create"),
+        "loading_message": _("Creating agent..."),
         "delete_orphaned_visible": True,
         "list_endpoint": "/admin/agents_data",
         "details_url_prefix": "/admin/agent_details/",
         "delete_url_prefix": "/admin/delete_agent/",
-        "builder_intro_title": "Quick Reference Guide",
+        "builder_intro_title": _("Quick Reference Guide"),
         "builder_intro_lines": [
             {
-                "title": "Synthetic Agents",
-                "body": "Virtual entities that represent social media users in simulations. They can be configured with different demographic information, interests, and personality traits.",
+                "title": _("Synthetic Agents"),
+                "body": _("Virtual entities that represent social media users in simulations. They can be configured with different demographic information, interests, and personality traits."),
             },
             {
-                "title": "Profiles vs. Advanced Roleplay",
-                "body": "The agent profile is a set of predefined characteristics that can be used to specify its behavior (through LLM pre-prompts). The advanced roleplay allows to specify a custom pre-prompt that overrides the other configuration variables.",
+                "title": _("Profiles vs. Advanced Roleplay"),
+                "body": _("The agent profile is a set of predefined characteristics that can be used to specify its behavior (through LLM pre-prompts). The advanced roleplay allows to specify a custom pre-prompt that overrides the other configuration variables."),
             },
         ],
         "hello_populations": [],
@@ -434,7 +434,7 @@ def _custom_agent_rows(spec: dict) -> list[dict]:
         row = {
             "id": agent.id,
             "name": agent.name,
-            "activity_profile": activity_profile_name or "Not assigned",
+            "activity_profile": activity_profile_name or _("Not assigned"),
         }
         for parameter in spec["parameters"]:
             param_name = str(parameter.get("name") or "")
@@ -459,8 +459,8 @@ def _custom_agent_rows(spec: dict) -> list[dict]:
 
 def _custom_agent_grid_columns(spec: dict) -> list[dict]:
     columns = [
-        {"id": "name", "name": "Name"},
-        {"id": "activity_profile", "name": "Activity Profile"},
+        {"id": "name", "name": _("Name")},
+        {"id": "activity_profile", "name": _("Activity Profile")},
     ]
     for parameter in spec["parameters"]:
         param_name = str(parameter.get("name") or "")
@@ -849,21 +849,21 @@ def agents_dashboard():
     plugin_agent_cards = _discover_plugin_agent_types()
     agent_resource_cards = [
         {
-            "title": "Synthetic Agents",
-            "subtitle": "Built-in resource",
+            "title": _("Synthetic Agents"),
+            "subtitle": _("Built-in resource"),
             "icon": "cpu",
             "accent": "#0f766e",
             "surface": "linear-gradient(135deg, #ecfeff 0%, #f0fdfa 55%, #ffffff 100%)",
             "border": "#99f6e4",
-            "description": "Design individual user personas with demographics, political leaning, personality traits, activity profiles, and role-play directives.",
+            "description": _("Design individual user personas with demographics, political leaning, personality traits, activity profiles, and role-play directives."),
             "highlights": [
-                f"{synthetic_agent_count} agents currently defined",
-                f"{populations_with_agents} populations already contain custom agents",
-                f"{activity_profile_count} reusable activity profiles available",
+                _("%(count)s agents currently defined", count=synthetic_agent_count),
+                _("%(count)s populations already contain custom agents", count=populations_with_agents),
+                _("%(count)s reusable activity profiles available", count=activity_profile_count),
             ],
-            "cta_label": "Open Agent Builder",
+            "cta_label": _("Open Agent Builder"),
             "cta_href": "/admin/agents",
-            "secondary_label": "Manage existing agents, remove orphaned entries, and create fully custom profiles.",
+            "secondary_label": _("Manage existing agents, remove orphaned entries, and create fully custom profiles."),
             "meta": {},
             "deployment_tags": ["microblogging", "forum"],
             "is_plugin": False,
@@ -873,21 +873,21 @@ def agents_dashboard():
     if _page_resources_available():
         agent_resource_cards.append(
             {
-                "title": "News Pages",
-                "subtitle": "Built-in resource",
+                "title": _("News Pages"),
+                "subtitle": _("Built-in resource"),
                 "icon": "file-text",
                 "accent": "#1d4ed8",
                 "surface": "linear-gradient(135deg, #eff6ff 0%, #eef2ff 55%, #ffffff 100%)",
                 "border": "#bfdbfe",
-                "description": "Create institutional and media pages that publish content, expose RSS feeds, and shape the information environment seen by agents.",
+                "description": _("Create institutional and media pages that publish content, expose RSS feeds, and shape the information environment seen by agents."),
                 "highlights": [
-                    f"{page_count} pages currently defined",
-                    f"{media_page_count} media pages with news-oriented behavior",
-                    f"{populations_with_pages} populations already include pages",
+                    _("%(count)s pages currently defined", count=page_count),
+                    _("%(count)s media pages with news-oriented behavior", count=media_page_count),
+                    _("%(count)s populations already include pages", count=populations_with_pages),
                 ],
-                "cta_label": "Open Page Builder",
+                "cta_label": _("Open Page Builder"),
                 "cta_href": "/admin/pages",
-                "secondary_label": "Configure page identity, leaning, feed sources, and upload page collections in bulk.",
+                "secondary_label": _("Configure page identity, leaning, feed sources, and upload page collections in bulk."),
                 "meta": {},
                 "deployment_tags": ["microblogging"],
                 "is_plugin": False,
@@ -897,41 +897,41 @@ def agents_dashboard():
     agent_resource_cards.extend(
         [
             {
-                "title": "Forum RSS Feeds",
-                "subtitle": "Built-in resource",
+                "title": _("Forum RSS Feeds"),
+                "subtitle": _("Built-in resource"),
                 "icon": "rss",
                 "accent": "#c2410c",
                 "surface": "linear-gradient(135deg, #fff7ed 0%, #fffbeb 55%, #ffffff 100%)",
                 "border": "#fdba74",
-                "description": "Validate and register reusable RSS sources for forum simulations. Once saved, the same feed can be assigned across multiple experiments.",
+                "description": _("Validate and register reusable RSS sources for forum simulations. Once saved, the same feed can be assigned across multiple experiments."),
                 "highlights": [
-                    f"{forum_rss_feed_count} reusable RSS feeds available",
-                    "Validation happens once in the dashboard workspace",
-                    "Forum experiments assign from the shared registry",
+                    _("%(count)s reusable RSS feeds available", count=forum_rss_feed_count),
+                    _("Validation happens once in the dashboard workspace"),
+                    _("Forum experiments assign from the shared registry"),
                 ],
-                "cta_label": "Manage RSS Resources",
+                "cta_label": _("Manage RSS Resources"),
                 "cta_href": "/admin/forum_rss_resources",
-                "secondary_label": "Create feed entries centrally, then reuse them across forum simulations without revalidating the same source each time.",
+                "secondary_label": _("Create feed entries centrally, then reuse them across forum simulations without revalidating the same source each time."),
                 "meta": {},
                 "deployment_tags": ["forum"],
                 "is_plugin": False,
             },
             {
-                "title": "Forum Image Feeds",
-                "subtitle": "Built-in resource",
+                "title": _("Forum Image Feeds"),
+                "subtitle": _("Built-in resource"),
                 "icon": "image",
                 "accent": "#7c3aed",
                 "surface": "linear-gradient(135deg, #f5f3ff 0%, #faf5ff 55%, #ffffff 100%)",
                 "border": "#c4b5fd",
-                "description": "Register reusable subreddit-based image feeds for forum experiments, including interest tags used during image ingestion.",
+                "description": _("Register reusable subreddit-based image feeds for forum experiments, including interest tags used during image ingestion."),
                 "highlights": [
-                    f"{forum_image_feed_count} reusable image feeds available",
-                    "Subreddit validation is done before assignment",
-                    "The same subreddit definition can be reused safely",
+                    _("%(count)s reusable image feeds available", count=forum_image_feed_count),
+                    _("Subreddit validation is done before assignment"),
+                    _("The same subreddit definition can be reused safely"),
                 ],
-                "cta_label": "Manage Image Resources",
+                "cta_label": _("Manage Image Resources"),
                 "cta_href": "/admin/forum_image_resources",
-                "secondary_label": "Maintain the canonical image-feed catalog here and assign only the feeds needed by each forum simulation.",
+                "secondary_label": _("Maintain the canonical image-feed catalog here and assign only the feeds needed by each forum simulation."),
                 "meta": {},
                 "deployment_tags": ["forum"],
                 "is_plugin": False,
@@ -1249,7 +1249,11 @@ def agent_details(uid):
     back_href = (
         f"/admin/custom_agent/{custom_spec['slug']}" if custom_spec else "/admin/agents"
     )
-    back_label = f"{custom_spec['display_name']}s" if custom_spec else "Agents"
+    back_label = (
+        _("%(name)s agents", name=custom_spec["display_name"])
+        if custom_spec
+        else _("Agents")
+    )
 
     return render_template(
         "admin/agent_details.html",

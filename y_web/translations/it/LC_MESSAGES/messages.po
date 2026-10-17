@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-16 19:03+0000\n"
+"POT-Creation-Date: 2026-10-17 08:15+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -42,12 +42,44 @@ msgstr ""
 "gli interessi degli agenti che interagiscono con la fonte di notizie."
 
 #, python-format
+msgid "%(count)s agents currently defined"
+msgstr "%(count)s agenti attualmente definiti"
+
+#, python-format
+msgid "%(count)s media pages with news-oriented behavior"
+msgstr "%(count)s pagine media con comportamento orientato alle notizie"
+
+#, python-format
 msgid "%(count)s new"
 msgstr "%(count)s nuovi"
 
 #, python-format
+msgid "%(count)s pages currently defined"
+msgstr "%(count)s pagine attualmente definite"
+
+#, python-format
+msgid "%(count)s populations already contain custom agents"
+msgstr "%(count)s popolazioni contengono già agenti personalizzati"
+
+#, python-format
+msgid "%(count)s populations already include pages"
+msgstr "%(count)s popolazioni includono già pagine"
+
+#, python-format
 msgid "%(count)s required parameters"
 msgstr "%(count)s parametri obbligatori"
+
+#, python-format
+msgid "%(count)s reusable RSS feeds available"
+msgstr "%(count)s feed RSS riutilizzabili disponibili"
+
+#, python-format
+msgid "%(count)s reusable activity profiles available"
+msgstr "%(count)s profili di attività riutilizzabili disponibili"
+
+#, python-format
+msgid "%(count)s reusable image feeds available"
+msgstr "%(count)s feed di immagini riutilizzabili disponibili"
 
 #, python-format
 msgid ""
@@ -112,12 +144,24 @@ msgid "%(n)s plugin types"
 msgstr "%(n)s tipi di plugin"
 
 #, python-format
+msgid "%(n)s populations"
+msgstr "%(n)s popolazioni"
+
+#, python-format
+msgid "%(n)s resources"
+msgstr "%(n)s risorse"
+
+#, python-format
 msgid "%(n)s visible resources"
 msgstr "%(n)s risorse visibili"
 
 #, python-format
 msgid "%(name)s Parameters"
 msgstr "Parametri di %(name)s"
+
+#, python-format
+msgid "%(name)s agents"
+msgstr "Agenti %(name)s"
 
 #, python-format
 msgid "%(num)d file"
@@ -751,6 +795,21 @@ msgstr "Runtime dell'agente"
 msgid "Agent type"
 msgstr "Tipo di agente"
 
+msgid ""
+"Agent types that can be deployed in both microblogging and forum "
+"simulations."
+msgstr ""
+"Tipi di agente utilizzabili sia nelle simulazioni di microblogging sia in"
+" quelle di forum."
+
+msgid "Agent types that currently target forum experiments only."
+msgstr "Tipi di agente che al momento sono rivolti solo agli esperimenti di forum."
+
+msgid "Agent types that currently target microblogging experiments only."
+msgstr ""
+"Tipi di agente che al momento sono rivolti solo agli esperimenti di "
+"microblogging."
+
 msgid "Agent's political leaning"
 msgstr "Orientamento politico dell'agente"
 
@@ -795,6 +854,9 @@ msgstr "Gradevolezza."
 
 msgid "All"
 msgstr "Tutti"
+
+msgid "All Experiments"
+msgstr "Tutti gli esperimenti"
 
 msgid "All Friends"
 msgstr "Tutti gli amici"
@@ -1053,6 +1115,9 @@ msgstr "Popolazioni di %(name)s disponibili"
 msgid "Available %(name)ss"
 msgstr "%(name)s disponibili"
 
+msgid "Available Agents"
+msgstr "Agenti disponibili"
+
 msgid "Available Categories"
 msgstr "Categorie disponibili"
 
@@ -1293,6 +1358,9 @@ msgstr "Sfoglia le anteprime a piccoli gruppi."
 
 msgid "Browse recent photos, people and hashtags in this experiment."
 msgstr "Sfoglia foto, persone e hashtag recenti di questo esperimento."
+
+msgid "Built-in resource"
+msgstr "Risorsa integrata"
 
 msgid "Bulgarian"
 msgstr "Bulgara"
@@ -1933,6 +2001,13 @@ msgstr ""
 "client standard. La memoria è disattivata per impostazione predefinita."
 
 msgid ""
+"Configure page identity, leaning, feed sources, and upload page "
+"collections in bulk."
+msgstr ""
+"Configura l'identità della pagina, l'orientamento e le fonti dei feed, e "
+"carica collezioni di pagine in blocco."
+
+msgid ""
 "Configure photo-sharing specific fields. Percentages are applied per "
 "generated agent and the favorite filters define the pool used for random "
 "agent tag assignment."
@@ -2263,6 +2338,9 @@ msgstr "Crea %(name)s"
 msgid "Create AdHoc Agent Client"
 msgstr "Crea un client di agenti ad hoc"
 
+msgid "Create Agent"
+msgstr "Crea agente"
+
 msgid "Create Empty Population"
 msgstr "Crea una popolazione vuota"
 
@@ -2330,6 +2408,20 @@ msgstr ""
 " Il riempimento dinamico facoltativo può riusare gli slot liberi dei "
 "gruppi successivi mentre un blocco è in esecuzione."
 
+msgid ""
+"Create feed entries centrally, then reuse them across forum simulations "
+"without revalidating the same source each time."
+msgstr ""
+"Crea le voci dei feed in modo centralizzato e riutilizzale nelle "
+"simulazioni di forum senza riconvalidare ogni volta la stessa fonte."
+
+msgid ""
+"Create institutional and media pages that publish content, expose RSS "
+"feeds, and shape the information environment seen by agents."
+msgstr ""
+"Crea pagine istituzionali e media che pubblicano contenuti, espongono "
+"feed RSS e modellano l'ambiente informativo visto dagli agenti."
+
 #, python-format
 msgid "Create new %(name)s population..."
 msgstr "Crea una nuova popolazione di %(name)s..."
@@ -2380,6 +2472,9 @@ msgstr ""
 
 msgid "Creates fresh copies of every experiment in the selected group."
 msgstr "Crea copie nuove di ogni esperimento del gruppo selezionato."
+
+msgid "Creating agent..."
+msgstr "Creazione dell'agente in corso..."
 
 #, python-format
 msgid "Creator Tier %%"
@@ -2739,6 +2834,14 @@ msgstr "Descrizione:"
 
 msgid "Deselect All"
 msgstr "Deseleziona tutto"
+
+msgid ""
+"Design individual user personas with demographics, political leaning, "
+"personality traits, activity profiles, and role-play directives."
+msgstr ""
+"Progetta singole personas utente con dati demografici, orientamento "
+"politico, tratti della personalità, profili di attività e direttive di "
+"role-play."
 
 msgid "Details"
 msgstr "Dettagli"
@@ -3809,11 +3912,20 @@ msgstr "Forum (cioè Reddit)"
 msgid "Forum Image Feed Assignment"
 msgstr "Assegnazione dei feed di immagini del forum"
 
+msgid "Forum Image Feeds"
+msgstr "Feed di immagini del forum"
+
 msgid "Forum Image Resources"
 msgstr "Risorse di immagini del forum"
 
+msgid "Forum Only"
+msgstr "Solo forum"
+
 msgid "Forum RSS Feed Assignment"
 msgstr "Assegnazione dei feed RSS del forum"
+
+msgid "Forum RSS Feeds"
+msgstr "Feed RSS del forum"
 
 msgid "Forum RSS Resources"
 msgstr "Risorse RSS del forum"
@@ -3827,6 +3939,9 @@ msgid ""
 msgstr ""
 "Gli esperimenti del forum non sono disponibili perché YServerReddit e "
 "YClientReddit non sono entrambi presenti."
+
+msgid "Forum experiments assign from the shared registry"
+msgstr "Gli esperimenti di forum li assegnano dal registro condiviso"
 
 msgid "Forum feed assignments updated successfully."
 msgstr "Assegnazioni dei feed del forum aggiornate con successo."
@@ -5053,11 +5168,24 @@ msgstr "Il limite inferiore deve essere minore o uguale al limite superiore."
 msgid "Maintain the active simulation topics from the overview card"
 msgstr "Gestisci gli argomenti attivi della simulazione dalla scheda di panoramica"
 
+msgid ""
+"Maintain the canonical image-feed catalog here and assign only the feeds "
+"needed by each forum simulation."
+msgstr ""
+"Mantieni qui il catalogo canonico dei feed di immagini e assegna a ogni "
+"simulazione di forum solo i feed necessari."
+
 msgid "Male"
 msgstr "Uomo"
 
 msgid "Male:"
 msgstr "Uomini:"
+
+msgid "Manage Image Resources"
+msgstr "Gestisci risorse immagine"
+
+msgid "Manage RSS Resources"
+msgstr "Gestisci risorse RSS"
 
 msgid "Manage Shared Image Resources"
 msgstr "Gestisci le risorse di immagini condivise"
@@ -5076,6 +5204,13 @@ msgid "Manage clients running agent populations for this experiment."
 msgstr ""
 "Gestisci i client che eseguono le popolazioni di agenti di questo "
 "esperimento."
+
+msgid ""
+"Manage existing agents, remove orphaned entries, and create fully custom "
+"profiles."
+msgstr ""
+"Gestisci gli agenti esistenti, rimuovi le voci orfane e crea profili "
+"completamente personalizzati."
 
 msgid ""
 "Manage your self-hosted Large Language Model server, view available "
@@ -5248,6 +5383,9 @@ msgstr "Microblogging"
 
 msgid "Microblogging (i.e., X/BlueSky)"
 msgstr "Microblogging (cioè X/BlueSky)"
+
+msgid "Microblogging Only"
+msgstr "Solo microblogging"
 
 msgid ""
 "Microblogging experiments are unavailable because neither YServer/YClient"
@@ -5813,6 +5951,9 @@ msgstr "Non"
 msgid "Not Interested"
 msgstr "Non interessato"
 
+msgid "Not assigned"
+msgstr "Non assegnato"
+
 msgid "Not assigned to any population"
 msgstr "Non assegnato a nessuna popolazione"
 
@@ -5994,13 +6135,19 @@ msgstr "Apri"
 
 #, python-format
 msgid "Open %(name)s Builder"
-msgstr "Apri il costruttore di %(name)s"
+msgstr "Apri il Builder di %(name)s"
+
+msgid "Open Agent Builder"
+msgstr "Apri il Builder di agenti"
 
 msgid "Open JupyterLab"
 msgstr "Apri JupyterLab"
 
 msgid "Open JupyterLab for ad hoc inspection and notebook-based analysis"
 msgstr "Apri JupyterLab per ispezioni ad hoc e analisi basate su notebook"
+
+msgid "Open Page Builder"
+msgstr "Apri il Builder di pagine"
 
 msgid "Open Timeline."
 msgstr "Apri la cronologia."
@@ -6723,6 +6870,9 @@ msgstr "Immagine del profilo"
 msgid "Profiles and pages matching your search."
 msgstr "Profili e pagine corrispondenti alla ricerca."
 
+msgid "Profiles vs. Advanced Roleplay"
+msgstr "Profili vs. Roleplay avanzato"
+
 msgid "Progress"
 msgstr "Avanzamento"
 
@@ -7021,6 +7171,14 @@ msgstr "Aggiorna la memoria"
 
 msgid "Refresh interval in seconds (5-300)"
 msgstr "Intervallo di aggiornamento in secondi (5-300)"
+
+msgid ""
+"Register reusable subreddit-based image feeds for forum experiments, "
+"including interest tags used during image ingestion."
+msgstr ""
+"Registra feed di immagini basati su subreddit riutilizzabili per gli "
+"esperimenti di forum, inclusi i tag di interesse usati durante "
+"l'acquisizione delle immagini."
 
 msgid "Registered Users"
 msgstr "Utenti registrati"
@@ -8315,6 +8473,9 @@ msgstr "Invia i log"
 msgid "Subreddit"
 msgstr "Subreddit"
 
+msgid "Subreddit validation is done before assignment"
+msgstr "La validazione dei subreddit avviene prima dell'assegnazione"
+
 msgid "Subset of population to activate initially. Leave empty to use all agents."
 msgstr ""
 "Sottoinsieme della popolazione da attivare all'inizio. Lascia vuoto per "
@@ -8406,11 +8567,22 @@ msgstr "Cambia utente foto"
 msgid "Switch user"
 msgstr "Cambia utente"
 
+msgid "Synthetic Agents"
+msgstr "Agenti sintetici"
+
 msgid "Synthetic Network:"
 msgstr "Rete sintetica:"
 
 msgid "Synthetic Populations"
 msgstr "Popolazioni sintetiche"
+
+msgid ""
+"Synthetic agents define user behavior, while content pages define the "
+"information sources and institutional actors that shape exposure."
+msgstr ""
+"Gli agenti sintetici definiscono il comportamento degli utenti, mentre le"
+" pagine di contenuto definiscono le fonti informative e gli attori "
+"istituzionali che determinano l'esposizione."
 
 msgid "System Settings"
 msgstr "Impostazioni di sistema"
@@ -8588,6 +8760,17 @@ msgstr "L'orientamento politico dell'agente."
 msgid "The agent profession."
 msgstr "La professione dell'agente."
 
+msgid ""
+"The agent profile is a set of predefined characteristics that can be used"
+" to specify its behavior (through LLM pre-prompts). The advanced roleplay"
+" allows to specify a custom pre-prompt that overrides the other "
+"configuration variables."
+msgstr ""
+"Il profilo dell'agente è un insieme di caratteristiche predefinite che "
+"permettono di specificarne il comportamento (tramite pre-prompt per LLM)."
+" Il roleplay avanzato consente di specificare un pre-prompt "
+"personalizzato che sostituisce le altre variabili di configurazione."
+
 msgid "The agent spoken language."
 msgstr "La lingua parlata dall'agente."
 
@@ -8703,6 +8886,9 @@ msgstr "Il server non ha potuto comprendere la richiesta."
 
 msgid "The requested page could not be found."
 msgstr "La pagina richiesta non è stata trovata."
+
+msgid "The same subreddit definition can be reused safely"
+msgstr "La stessa definizione di subreddit può essere riutilizzata in sicurezza"
 
 msgid ""
 "The selected ad hoc agent type requires opinion dynamics to be enabled "
@@ -9621,6 +9807,14 @@ msgstr ""
 "riusala in più esperimenti del forum."
 
 msgid ""
+"Validate and register reusable RSS sources for forum simulations. Once "
+"saved, the same feed can be assigned across multiple experiments."
+msgstr ""
+"Convalida e registra fonti RSS riutilizzabili per le simulazioni di "
+"forum. Una volta salvato, lo stesso feed può essere assegnato a più "
+"esperimenti."
+
+msgid ""
 "Validate subreddit-based image feeds once, store them centrally, and "
 "assign them to any forum experiment as needed."
 msgstr ""
@@ -9634,6 +9828,9 @@ msgstr "%(label)s convalidato."
 
 msgid "Validation"
 msgstr "Convalida"
+
+msgid "Validation happens once in the dashboard workspace"
+msgstr "La validazione avviene una sola volta nell'area di lavoro della dashboard"
 
 msgid "Validator"
 msgstr "Validatore"
@@ -9676,6 +9873,15 @@ msgstr "Vedi tutti gli amici."
 
 msgid "Viewing as"
 msgstr "Visualizzazione come"
+
+msgid ""
+"Virtual entities that represent social media users in simulations. They "
+"can be configured with different demographic information, interests, and "
+"personality traits."
+msgstr ""
+"Entità virtuali che rappresentano gli utenti dei social media nelle "
+"simulazioni. Possono essere configurate con diverse informazioni "
+"demografiche, interessi e tratti della personalità."
 
 msgid "Visibility assignment revoked."
 msgstr "Assegnazione di visibilità revocata."
@@ -10423,45 +10629,11 @@ msgstr "✔️ Gioca con"
 msgid "✔️ Use"
 msgstr "✔️ Usa"
 
-#~ msgid ""
-#~ "All telemetry data is GDPR compliant."
-#~ " You can disable it anytime from "
-#~ "the application"
-#~ msgstr ""
+#~ msgid "% Daily Churn"
+#~ msgstr "% di ricambio giornaliero"
 
-#~ msgid "Define one or more"
-#~ msgstr ""
-
-#~ msgid "Describe your simulation with an"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "YSocial collects anonymous usage data to"
-#~ " improve the platform. This includes "
-#~ "feature usage patterns and error "
-#~ "reports, but"
-#~ msgstr ""
-
-#~ msgid "You can add to your population"
-#~ msgstr ""
-
-#~ msgid "and"
-#~ msgstr ""
-
-#~ msgid "your experiment data, personal information, or sensitive content."
-#~ msgstr ""
-
-#~ msgid "Comment weight (w"
-#~ msgstr ""
-
-#~ msgid "Reaction weight (w"
-#~ msgstr ""
-
-#~ msgid "Share weight (w"
-#~ msgstr ""
-
-#~ msgid "vllm serve <model> --host 0.0.0.0 --port 8000"
-#~ msgstr "vllm serve <model> --host 0.0.0.0 --port 8000"
+#~ msgid "% New Agents (daily)"
+#~ msgstr "% di nuovi agenti (giornaliero)"
 
 #~ msgid ""
 #~ "%(created_count)s experiment copies successfully "
@@ -10499,6 +10671,15 @@ msgstr "✔️ Usa"
 #~ msgid "A new %(spec_display_name)s population name is required."
 #~ msgstr ""
 
+#~ msgid "Active Audience (~70% validation activity)"
+#~ msgstr "Pubblico attivo (~70% di attività di convalida)"
+
+#~ msgid "Active Audience - ~70% of activity is validating others"
+#~ msgstr "Pubblico attivo: ~70% dell'attività consiste nel convalidare gli altri"
+
+#~ msgid "Age Classes %"
+#~ msgstr "Fasce di età %"
+
 #~ msgid "Agent %(l_0)s or %(l_1)s not found in network file."
 #~ msgstr ""
 
@@ -10506,9 +10687,21 @@ msgstr "✔️ Usa"
 #~ msgstr ""
 
 #~ msgid ""
+#~ "All telemetry data is GDPR compliant."
+#~ " You can disable it anytime from "
+#~ "the application"
+#~ msgstr ""
+
+#~ msgid "Archetype Distribution (%)"
+#~ msgstr "Distribuzione degli archetipi (%)"
+
+#~ msgid ""
 #~ "Archetype percentages must sum to 100%%"
 #~ " (current sum: %(format_archetype_sum_100)s%%)"
 #~ msgstr ""
+
+#~ msgid "Broadcaster %"
+#~ msgstr "Broadcaster %"
 
 #~ msgid ""
 #~ "Broadcaster transition probabilities must sum"
@@ -10527,6 +10720,15 @@ msgstr "✔️ Usa"
 #~ msgid "Cloned %(spec_label)s on branch %(branch)s."
 #~ msgstr ""
 
+#~ msgid "Comment weight (w"
+#~ msgstr ""
+
+#~ msgid "Content Creator (~75% posts/comments)"
+#~ msgstr "Creatore di contenuti (~75% di post/commenti)"
+
+#~ msgid "Content Creator - ~75% of actions are posts/comments"
+#~ msgstr "Creatore di contenuti: ~75% delle azioni sono post/commenti"
+
 #~ msgid ""
 #~ "Could not delete %(len_failed_paths)s log "
 #~ "file(s) due to filesystem errors."
@@ -10540,11 +10742,48 @@ msgstr "✔️ Usa"
 #~ " group '%(target_group_or)s'."
 #~ msgstr ""
 
+#~ msgid "Creator Tier %"
+#~ msgstr "Livello creatore %"
+
 #~ msgid "Database error: %(str_e)s"
 #~ msgstr ""
 
+#~ msgid "Define one or more"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Define the percentage of agents in "
+#~ "each behavioral archetype (must sum to"
+#~ " 100%)."
+#~ msgstr ""
+#~ "Definisci la percentuale di agenti in"
+#~ " ogni archetipo comportamentale (la somma"
+#~ " deve essere 100%)."
+
 #~ msgid "Deleted %(spec_label)s."
 #~ msgstr ""
+
+#~ msgid "Describe your simulation with an"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Drag activity profiles from available to"
+#~ " assigned, then set the percentage "
+#~ "for each. Percentages must total 100%."
+#~ " Green bars identify the hours of "
+#~ "the simulated day when agents assigned"
+#~ " to the selected profile are active."
+#~ msgstr ""
+#~ "Trascina i profili di attività da "
+#~ "disponibili ad assegnati, poi imposta la"
+#~ " percentuale di ciascuno. Le percentuali"
+#~ " devono totalizzare 100%. Le barre "
+#~ "verdi indicano le ore del giorno "
+#~ "simulato in cui gli agenti assegnati "
+#~ "al profilo selezionato sono attivi."
+
+#~ msgid "Education %"
+#~ msgstr "Istruzione %"
 
 #~ msgid "Error accessing experiment: %(str_e)s"
 #~ msgstr ""
@@ -10608,6 +10847,9 @@ msgstr "✔️ Usa"
 #~ "created as a copy of "
 #~ "'%(source_exp_exp_name)s'."
 #~ msgstr ""
+
+#~ msgid "Explorer %"
+#~ msgstr "Esploratore %"
 
 #~ msgid ""
 #~ "Explorer transition probabilities must sum "
@@ -10682,6 +10924,12 @@ msgstr "✔️ Usa"
 #~ msgid "Invalid input values: %(str_e)s"
 #~ msgstr ""
 
+#~ msgid "Is Private %"
+#~ msgstr "Privato %"
+
+#~ msgid "Is Verified %"
+#~ msgstr "Verificato %"
+
 #~ msgid ""
 #~ "New version available: %(release_info_get_release)s"
 #~ " (v%(release_info_get_latest_)s)"
@@ -10694,7 +10942,22 @@ msgstr "✔️ Usa"
 #~ "overlap."
 #~ msgstr ""
 
+#~ msgid "Political %"
+#~ msgstr "Politica %"
+
 #~ msgid "Population generation failed: %(exc)s. No partial population was kept."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Probability that an agent transitions "
+#~ "from one archetype to another (each "
+#~ "row must sum to 100%)."
+#~ msgstr ""
+#~ "Probabilità che un agente passi da "
+#~ "un archetipo a un altro (ogni riga"
+#~ " deve sommare a 100%)."
+
+#~ msgid "Reaction weight (w"
 #~ msgstr ""
 
 #~ msgid "Reddit returned HTTP %(exc_code)s."
@@ -10706,11 +10969,27 @@ msgstr "✔️ Usa"
 #~ msgid "Schema migration failed: %(outcome_error)s"
 #~ msgstr ""
 
+#~ msgid "Share weight (w"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Specify the percentage of agents "
+#~ "interested in each topic. Default is "
+#~ "100% for all topics."
+#~ msgstr ""
+#~ "Indica la percentuale di agenti "
+#~ "interessati a ogni argomento. Il valore"
+#~ " predefinito è 100% per tutti gli "
+#~ "argomenti."
+
 #~ msgid ""
 #~ "Stop active %(spec_group_label_lower)s experiments"
 #~ " before modifying %(spec_label)s: "
 #~ "%(names)s%(extra)s."
 #~ msgstr ""
+
+#~ msgid "Story Visibility %"
+#~ msgstr "Visibilità delle storie %"
 
 #~ msgid ""
 #~ "Successfully assigned %(assigned)s user(s) to"
@@ -10733,6 +11012,18 @@ msgstr "✔️ Usa"
 
 #~ msgid "There was an error loading the experiment files: %(str_e)s"
 #~ msgstr ""
+
+#~ msgid "Total must equal 100%"
+#~ msgstr "Il totale deve essere 100%"
+
+#~ msgid "Totals must equal 100%."
+#~ msgstr "I totali devono essere 100%."
+
+#~ msgid "Toxicity %"
+#~ msgstr "Tossicità %"
+
+#~ msgid "Transition Probabilities (%)"
+#~ msgstr "Probabilità di transizione (%)"
 
 #~ msgid "Unable to confirm stop for HPC client '%(client_name)s'."
 #~ msgstr ""
@@ -10770,6 +11061,9 @@ msgstr "✔️ Usa"
 
 #~ msgid "Validated %(spec_label)s."
 #~ msgstr ""
+
+#~ msgid "Validator %"
+#~ msgstr "Validatore %"
 
 #~ msgid ""
 #~ "Validator transition probabilities must sum"
@@ -10813,110 +11107,22 @@ msgstr "✔️ Usa"
 #~ "%(results_processes_restar)s restarted"
 #~ msgstr ""
 
-#~ msgid "% Daily Churn"
-#~ msgstr "% di ricambio giornaliero"
-
-#~ msgid "% New Agents (daily)"
-#~ msgstr "% di nuovi agenti (giornaliero)"
-
-#~ msgid "Active Audience (~70% validation activity)"
-#~ msgstr "Pubblico attivo (~70% di attività di convalida)"
-
-#~ msgid "Active Audience - ~70% of activity is validating others"
-#~ msgstr "Pubblico attivo: ~70% dell'attività consiste nel convalidare gli altri"
-
-#~ msgid "Age Classes %"
-#~ msgstr "Fasce di età %"
-
-#~ msgid "Archetype Distribution (%)"
-#~ msgstr "Distribuzione degli archetipi (%)"
-
-#~ msgid "Broadcaster %"
-#~ msgstr "Broadcaster %"
-
-#~ msgid "Content Creator (~75% posts/comments)"
-#~ msgstr "Creatore di contenuti (~75% di post/commenti)"
-
-#~ msgid "Content Creator - ~75% of actions are posts/comments"
-#~ msgstr "Creatore di contenuti: ~75% delle azioni sono post/commenti"
-
-#~ msgid "Creator Tier %"
-#~ msgstr "Livello creatore %"
-
 #~ msgid ""
-#~ "Define the percentage of agents in "
-#~ "each behavioral archetype (must sum to"
-#~ " 100%)."
+#~ "YSocial collects anonymous usage data to"
+#~ " improve the platform. This includes "
+#~ "feature usage patterns and error "
+#~ "reports, but"
 #~ msgstr ""
-#~ "Definisci la percentuale di agenti in"
-#~ " ogni archetipo comportamentale (la somma"
-#~ " deve essere 100%)."
 
-#~ msgid ""
-#~ "Drag activity profiles from available to"
-#~ " assigned, then set the percentage "
-#~ "for each. Percentages must total 100%."
-#~ " Green bars identify the hours of "
-#~ "the simulated day when agents assigned"
-#~ " to the selected profile are active."
+#~ msgid "You can add to your population"
 #~ msgstr ""
-#~ "Trascina i profili di attività da "
-#~ "disponibili ad assegnati, poi imposta la"
-#~ " percentuale di ciascuno. Le percentuali"
-#~ " devono totalizzare 100%. Le barre "
-#~ "verdi indicano le ore del giorno "
-#~ "simulato in cui gli agenti assegnati "
-#~ "al profilo selezionato sono attivi."
 
-#~ msgid "Education %"
-#~ msgstr "Istruzione %"
-
-#~ msgid "Explorer %"
-#~ msgstr "Esploratore %"
-
-#~ msgid "Is Private %"
-#~ msgstr "Privato %"
-
-#~ msgid "Is Verified %"
-#~ msgstr "Verificato %"
-
-#~ msgid "Political %"
-#~ msgstr "Politica %"
-
-#~ msgid ""
-#~ "Probability that an agent transitions "
-#~ "from one archetype to another (each "
-#~ "row must sum to 100%)."
+#~ msgid "and"
 #~ msgstr ""
-#~ "Probabilità che un agente passi da "
-#~ "un archetipo a un altro (ogni riga"
-#~ " deve sommare a 100%)."
 
-#~ msgid ""
-#~ "Specify the percentage of agents "
-#~ "interested in each topic. Default is "
-#~ "100% for all topics."
+#~ msgid "vllm serve <model> --host 0.0.0.0 --port 8000"
+#~ msgstr "vllm serve <model> --host 0.0.0.0 --port 8000"
+
+#~ msgid "your experiment data, personal information, or sensitive content."
 #~ msgstr ""
-#~ "Indica la percentuale di agenti "
-#~ "interessati a ogni argomento. Il valore"
-#~ " predefinito è 100% per tutti gli "
-#~ "argomenti."
-
-#~ msgid "Story Visibility %"
-#~ msgstr "Visibilità delle storie %"
-
-#~ msgid "Total must equal 100%"
-#~ msgstr "Il totale deve essere 100%"
-
-#~ msgid "Totals must equal 100%."
-#~ msgstr "I totali devono essere 100%."
-
-#~ msgid "Toxicity %"
-#~ msgstr "Tossicità %"
-
-#~ msgid "Transition Probabilities (%)"
-#~ msgstr "Probabilità di transizione (%)"
-
-#~ msgid "Validator %"
-#~ msgstr "Validatore %"
 
