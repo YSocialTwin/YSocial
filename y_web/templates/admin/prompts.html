@@ -21,13 +21,14 @@
                 <!--Dashboard column-->
                 <div class="column is-8">
 
+                    {% include 'admin/_prompt_language_switch.html' %}
+
                     <!--Dashboard box-->
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">{{ _('LLM Prompts Configuration') }}</h3>
  <p class="ys-text-small">
                             {{ _('Configure system prompts that guide agent and page behavior during simulation. These instructions are sent to the LLM before each action.') }}
                         </p>
-                        {% include 'admin/_prompt_language_switch.html' %}
                         <div class="box-content">
                             <form action="/admin/update_prompts/{{ experiment.idexp }}" enctype="multipart/form-data" method="POST">
                                 <div class="box-lines">

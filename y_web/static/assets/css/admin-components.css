@@ -3606,3 +3606,10 @@ input:checked + .slider:before {
 #box-self-registration .sr-message { min-height:1rem; font-size:.74rem; }
 #box-self-registration .sr-message.is-ok { color:#1a7f45; } #box-self-registration .sr-message.is-error { color:#c0392b; }
 #box-self-registration .sr-row .switch-small { flex:none; margin:0; }
+
+/* Prompt language selector: a compact box of its own above the prompts form */
+.dashboard-box.ys-prompt-language { padding: 0.875rem 1.25rem; }
+.ys-prompt-language-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.ys-prompt-language-title { margin: 0; flex: 0 0 auto; }
+.ys-prompt-language-select { flex: 0 1 240px; min-width: 160px; }
+.ys-prompt-language-note { margin: 8px 0 0; }

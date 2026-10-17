@@ -21,13 +21,14 @@
                 <!--Dashboard column-->
                 <div class="column is-8">
 
+                    {% include 'admin/_prompt_language_switch.html' %}
+
                     <!--Dashboard box-->
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">{{ _('HPC LLM Prompts Configuration') }}</h3>
  <p class="ys-text-small">
                             {{ _('Configure system and user prompt templates for the HPC simulator. These templates use structured system/user patterns for LLM interactions.') }}
                         </p>
-                        {% include 'admin/_prompt_language_switch.html' %}
                         <div class="box-content">
                             <form action="/admin/update_prompts_hpc/{{ experiment.idexp }}" enctype="multipart/form-data" method="POST">
                                 <div class="box-lines">
