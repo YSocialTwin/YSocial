@@ -64,6 +64,7 @@ from ._server import (
     _memory_server_unavailable,
 )
 from y_web import prompt_store
+from y_web.src.system import prompt_packs
 
 
 @api_interview.get("/<int:exp_id>/agents")
@@ -507,7 +508,10 @@ def api_interview_send_message(exp_id: int, session_id: int):
             except Exception:
                 memory_snapshot = {}
 
-        memory_pack = _format_memory_pack(memory_snapshot or {})
+        prompt_language = prompt_packs.resolve(getattr(exp, "prompt_language", None))
+        memory_pack = _format_memory_pack(
+            memory_snapshot or {}, language=prompt_language
+        )
         facts_snapshot = _build_facts_snapshot(
             exp=exp,
             agent_user_id=normalized_agent_user_id,
@@ -540,24 +544,27 @@ def api_interview_send_message(exp_id: int, session_id: int):
         evidence_guard, evidence_guard_meta = _build_evidence_guard(
             facts_snapshot=facts_snapshot,
             memory_snapshot=memory_snapshot,
+            language=prompt_language,
         )
 
         persona = (sess.persona_snapshot or "").strip()
-        system_message = (
-            prompt_store.prompt(
-                "_routes__api_interview_send_message__1",
-                persona=persona,
-            )
+        system_message = prompt_store.prompt(
+            "_routes__api_interview_send_message__1",
+            language=prompt_language,
+            persona=persona,
         )
 
         user_message = (
             f"{facts_pack}\n\n"
             f"{memory_pack}\n\n"
             f"{evidence_guard}\n\n"
-            "CONVERSATION SO FAR (most recent last):\n" + "\n".join(transcript) + prompt_store.prompt(
-                                                                                      "_routes__api_interview_send_message__2",
-                                                                                      content=content,
-                                                                                  )
+            "CONVERSATION SO FAR (most recent last):\n"
+            + "\n".join(transcript)
+            + prompt_store.prompt(
+                "_routes__api_interview_send_message__2",
+                language=prompt_language,
+                content=content,
+            )
         )
 
         mode, model, base_url, api_key, temperature, max_tokens = _resolve_llm_backend(
@@ -627,6 +634,7 @@ def api_interview_send_message(exp_id: int, session_id: int):
             facts_snapshot=facts_snapshot,
             memory_snapshot=memory_snapshot,
             strict_no_inference=strict_no_inference,
+            language=prompt_language,
         )
         meta["reply_sanitize"] = sanitize_meta
         if debug_trace:

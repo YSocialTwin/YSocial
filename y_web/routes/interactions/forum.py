@@ -11,6 +11,7 @@ from flask import flash, redirect, request, url_for
 from flask_login import current_user, login_required
 from sqlalchemy import select
 
+from y_web.src.system import prompt_packs
 from y_web import db
 from y_web.i18n import gettext as _
 from y_web.routes.interactions._blueprint import user
@@ -78,7 +79,11 @@ def publish_post_reddit(exp_id):
         if is_image_url:
             try:
                 llm_v = "minicpm-v"
-                image_annotator = Annotator(llm_v, llm_url=llm_url)
+                image_annotator = Annotator(
+                    llm_v,
+                    llm_url=llm_url,
+                    language=prompt_packs.experiment_language(exp_id),
+                )
                 annotation = image_annotator.annotate(url)
 
                 img = db.session.scalars(select(Images).filter_by(url=url)).first()
@@ -228,7 +233,9 @@ def publish_post_reddit(exp_id):
     toxicity(text, current_user.username, post.id, db)
     sentiment = vader_sentiment(text)
 
-    annotator = ContentAnnotator(llm=llm, llm_url=llm_url)
+    annotator = ContentAnnotator(
+        llm=llm, llm_url=llm_url, language=prompt_packs.experiment_language(exp_id)
+    )
     emotions = annotator.annotate_emotions(text)
     hashtags = annotator.extract_components(text, c_type="hashtags")
     mentions = annotator.extract_components(text, c_type="mentions")
@@ -500,7 +507,9 @@ def publish_comment(exp_id):
     llm = user.llm if user.llm != "" else "llama3.1"
     llm_url = user.llm_url if user.llm_url != "" else None
 
-    annotator = ContentAnnotator(llm=llm, llm_url=llm_url)
+    annotator = ContentAnnotator(
+        llm=llm, llm_url=llm_url, language=prompt_packs.experiment_language(exp_id)
+    )
     emotions = annotator.annotate_emotions(text)
     hashtags = annotator.extract_components(text, c_type="hashtags")
     mentions = annotator.extract_components(text, c_type="mentions")

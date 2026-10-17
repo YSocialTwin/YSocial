@@ -460,7 +460,7 @@ def test_microblog_chat_routes_are_exposed():
     assert "_social_chat_followed_agent_ids" in route_source
     assert "_build_facts_snapshot" in route_source
     assert "_format_facts_pack" in route_source
-    assert "FACTS CONTEXT" in route_source
+    assert "social__social_chat_generate_reply__1" in route_source
     assert '"facts_snapshot_present"' in route_source
     assert "session.last_message_at =" in route_source
     assert "memory_query_text" in route_source

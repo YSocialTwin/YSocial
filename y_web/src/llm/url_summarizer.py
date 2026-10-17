@@ -7,11 +7,14 @@ from urllib.parse import urlparse
 
 import requests
 
+from y_web import prompt_store
+
 
 class UrlSummarizer:
     """Fetch a URL and summarize its textual content with an OpenAI-compatible LLM."""
 
-    def __init__(self, config: dict[str, Any]):
+    def __init__(self, config: dict[str, Any], language: str | None = None):
+        self._language = language
         self._config = dict(config or {})
         self._model = str(self._config.get("model") or "").strip()
         self._base_url = str(self._config.get("base_url") or "").strip().rstrip("/")
@@ -88,17 +91,17 @@ class UrlSummarizer:
 
     def _summarize_text(self, text: str) -> str:
         chat_url = f"{self._base_url}/v1/chat/completions"
-        prompt = (
-            "Summarize the article content below in 2-4 concise sentences. "
-            "Focus on key facts and avoid filler.\n\n"
-            f"ARTICLE:\n{text}"
+        prompt = prompt_store.prompt(
+            "url_summarizer__summarize_text__2", language=self._language, text=text
         )
         payload = {
             "model": self._model,
             "messages": [
                 {
                     "role": "system",
-                    "content": "You summarize web articles accurately and concisely.",
+                    "content": prompt_store.get(
+                        "url_summarizer__summarize_text__1", language=self._language
+                    ),
                 },
                 {"role": "user", "content": prompt},
             ],

@@ -161,6 +161,20 @@ def launch_env(exp, client=None) -> Dict[str, str]:
     return {} if language == DEFAULT_LANGUAGE else {"YSOCIAL_PROMPT_LANGUAGE": language}
 
 
+def experiment_language(exp_id) -> str:
+    """Prompt language of an experiment, for code in the web process that serves several experiments (English if unknown)."""
+    try:
+        from sqlalchemy import select
+
+        from y_web import db
+        from y_web.src.models import Exps
+
+        exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
+        return resolve(getattr(exp, "prompt_language", None))
+    except Exception:
+        return DEFAULT_LANGUAGE
+
+
 def register_context(app):
     """Expose the available language packs to every template (experiment and client forms)."""
 

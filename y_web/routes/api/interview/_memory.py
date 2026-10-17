@@ -364,13 +364,15 @@ def _list_experiment_agents_sqlite(exp: Exps) -> List[Any]:
         conn = sqlite3.connect(str(db_path))
         conn.row_factory = sqlite3.Row
         try:
-            rows = conn.execute("""
+            rows = conn.execute(
+                """
                 select *
                 from user_mgmt
                 where coalesce(is_page, 0) = 0
                   and coalesce(user_type, 'user') != 'user'
                 order by username asc, id asc
-                """).fetchall()
+                """
+            ).fetchall()
         finally:
             conn.close()
     except Exception:
@@ -1012,13 +1014,15 @@ def _build_memory_snapshot_local_db(
                 return str(usernames_by_id.get(str(uid), "") or "")
 
             post_rows = db.session.execute(
-                text("""
+                text(
+                    """
                     SELECT id, round, thread_id, tweet
                     FROM post
                     WHERE CAST(user_id AS TEXT) = :uid
                     ORDER BY id DESC
                     LIMIT 20
-                    """),
+                    """
+                ),
                 {"uid": normalized_agent_user_id_text},
             ).fetchall()
             for row in reversed(post_rows):
@@ -1054,7 +1058,8 @@ def _build_memory_snapshot_local_db(
                     )
 
             mention_rows = db.session.execute(
-                text("""
+                text(
+                    """
                     SELECT
                       m.post_id,
                       p.id AS source_post_id,
@@ -1067,7 +1072,8 @@ def _build_memory_snapshot_local_db(
                     WHERE CAST(m.user_id AS TEXT) = :uid
                     ORDER BY m.id DESC
                     LIMIT 20
-                    """),
+                    """
+                ),
                 {"uid": normalized_agent_user_id_text},
             ).fetchall()
             for row in reversed(mention_rows):
@@ -1091,7 +1097,8 @@ def _build_memory_snapshot_local_db(
                 )
 
             reaction_rows = db.session.execute(
-                text("""
+                text(
+                    """
                     SELECT
                       r.post_id,
                       r.round AS round_id,
@@ -1103,7 +1110,8 @@ def _build_memory_snapshot_local_db(
                     WHERE CAST(r.user_id AS TEXT) = :uid
                     ORDER BY r.id DESC
                     LIMIT 20
-                    """),
+                    """
+                ),
                 {"uid": normalized_agent_user_id_text},
             ).fetchall()
             for row in reversed(reaction_rows):
@@ -1438,7 +1446,9 @@ def _build_memory_snapshot(
         return local
 
 
-def _format_memory_pack(snapshot: Dict[str, Any], *, max_chars: int = 4500) -> str:
+def _format_memory_pack(
+    snapshot: Dict[str, Any], *, max_chars: int = 4500, language: Optional[str] = None
+) -> str:
     if not isinstance(snapshot, dict):
         return ""
 
@@ -1539,7 +1549,7 @@ def _format_memory_pack(snapshot: Dict[str, Any], *, max_chars: int = 4500) -> s
                 "- Reliability warning: memory retrieval is weak for this query."
             )
             parts.append(
-                prompt_store.get("_memory__format_memory_pack__1")
+                prompt_store.get("_memory__format_memory_pack__1", language=language)
             )
 
     # Keep legacy rendering for backward compatibility and semantic fallback mode.

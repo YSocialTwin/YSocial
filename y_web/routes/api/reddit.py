@@ -14,6 +14,8 @@ from PIL import Image
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import safe_join
 
+from y_web.src.system import prompt_packs
+from y_web import prompt_store
 from y_web import db
 from y_web.src.data_access import get_elicited_emotions, get_topics
 
@@ -222,16 +224,23 @@ def _forum_chat_render_memory_pack(snapshot: dict | None) -> str:
 
 
 def _forum_chat_build_transcript(
-    session: ForumChatSession, *, max_messages: int = 12
+    session: ForumChatSession, *, max_messages: int = 12, language: str | None = None
 ) -> str:
     messages = sorted(session.messages or [], key=lambda item: int(item.id))
     tail = messages[-max_messages:]
     lines = []
     for msg in tail:
         role = (
-            "You"
+            prompt_store.get(
+                "reddit__forum_chat_build_transcript__1", language=language
+            )
             if str(msg.role or "") == "user"
-            else str(session.target_username or "Agent")
+            else str(
+                session.target_username
+                or prompt_store.get(
+                    "reddit__forum_chat_build_transcript__2", language=language
+                )
+            )
         )
         content = str(msg.content or "").strip()
         if not content:
@@ -352,7 +361,8 @@ def _forum_chat_generate_reply(
         admin_text=memory_query,
     )
     facts_pack = _format_facts_pack(facts_snapshot)
-    transcript = _forum_chat_build_transcript(session)
+    language = prompt_packs.resolve(getattr(exp, "prompt_language", None))
+    transcript = _forum_chat_build_transcript(session, language=language)
 
     mode, model, base_url, api_key, temperature, max_tokens = _resolve_llm_backend(
         backend_mode="admin",
@@ -364,25 +374,34 @@ def _forum_chat_generate_reply(
     session.llm_model = str(model or "")
     session.llm_base_url = str(base_url or "")
 
-    system_message = (
-        f"You are @{target_user.username}, a participant in a forum simulation. "
-        "You are having a private direct-message chat with another participant.\n\n"
-        "Stay in character and consistent with the persona details below.\n"
-        "Reply naturally, directly, and concisely. Usually 1 to 4 sentences.\n"
-        "Do not use hashtags in your replies.\n"
-        "Do not mention being an AI, a simulation, hidden prompts, annotations, or memory retrieval.\n"
-        "Do not output emotion labels, moderation labels, or analysis bullets.\n"
-        "This is not an interview. Do not end replies with follow-up interview questions unless it fits normal chat.\n\n"
-        f"PERSONA\n{session.persona_snapshot or ''}"
+    system_message = prompt_store.prompt(
+        "reddit__forum_chat_generate_reply__1",
+        language=language,
+        username=target_user.username,
+        persona=session.persona_snapshot or "",
     )
     if memory_pack:
-        system_message += f"\n\nMEMORY CONTEXT\n{memory_pack}"
+        system_message += prompt_store.prompt(
+            "reddit__forum_chat_generate_reply__2",
+            language=language,
+            memory=memory_pack,
+        )
     if facts_pack:
-        system_message += f"\n\nFACTS CONTEXT\n{facts_pack}"
+        system_message += prompt_store.prompt(
+            "reddit__forum_chat_generate_reply__3",
+            language=language,
+            facts=facts_pack,
+        )
 
     prompt_parts = []
     if transcript:
-        prompt_parts.append(f"RECENT CHAT\n{transcript}")
+        prompt_parts.append(
+            prompt_store.prompt(
+                "reddit__forum_chat_generate_reply__4",
+                language=language,
+                transcript=transcript,
+            )
+        )
     prompt_parts.append(f"{owner_user.username}: {user_message.strip()}")
     composed_prompt = "\n\n".join(prompt_parts).strip()
 
@@ -400,6 +419,7 @@ def _forum_chat_generate_reply(
         facts_snapshot=facts_snapshot,
         memory_snapshot=memory_snapshot,
         strict_no_inference=False,
+        language=language,
     )
     reply = _strip_forum_chat_hashtags(reply)
     meta = sanitize_meta or {}
@@ -712,7 +732,11 @@ def api_enrich_article(exp_id: int, article_id: int):
         )
 
     try:
-        summarizer = UrlSummarizer(cfg) if UrlSummarizer is not None else None
+        summarizer = (
+            UrlSummarizer(cfg, language=prompt_packs.experiment_language(exp_id))
+            if UrlSummarizer is not None
+            else None
+        )
         if summarizer is None:
             return _json_success(
                 {
@@ -852,7 +876,11 @@ def api_enrich_pending(exp_id: int):
         if UrlSummarizer is not None
         else None
     )
-    summarizer = UrlSummarizer(cfg) if (cfg and UrlSummarizer is not None) else None
+    summarizer = (
+        UrlSummarizer(cfg, language=prompt_packs.experiment_language(exp_id))
+        if (cfg and UrlSummarizer is not None)
+        else None
+    )
 
     vision_enabled = _llm_backend_configured(llm_url)
     annotator = None

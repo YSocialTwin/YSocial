@@ -22,7 +22,7 @@ class Annotator(object):
     of images for accessibility and content understanding.
     """
 
-    def __init__(self, llmv, llm_url=None):
+    def __init__(self, llmv, llm_url=None, language=None):
         """
         Initialize the image annotator with a vision LLM.
 
@@ -30,8 +30,10 @@ class Annotator(object):
             llmv: Vision-capable LLM model name/identifier
             llm_url: Optional custom LLM server URL. If None, uses
                      environment variable or defaults based on backend.
+            language: Prompt language (e.g. the experiment's); None = English.
         """
 
+        self.language = language
         if llm_url is not None:
             base_url = llm_url
         else:
@@ -92,9 +94,10 @@ class Annotator(object):
             self.image_agent,
             silent=True,
             message=prompt_store.prompt(
-                        "image_annotator__annotate__1",
-                        image=image,
-                    ),
+                "image_annotator__annotate__1",
+                language=self.language,
+                image=image,
+            ),
         )
 
         payload = self.image_agent.chat_messages[self.user_proxy][-1]["content"]

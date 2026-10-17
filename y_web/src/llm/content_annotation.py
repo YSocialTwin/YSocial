@@ -21,7 +21,7 @@ class ContentAnnotator(object):
     to analyze text content for emotional content and topics.
     """
 
-    def __init__(self, llm=None, llm_url=None):
+    def __init__(self, llm=None, llm_url=None, language=None):
         """
         Initialize the content annotator with LLM configuration.
 
@@ -30,8 +30,10 @@ class ContentAnnotator(object):
                  annotator is disabled and methods return empty results.
             llm_url: Optional custom LLM server URL. If None, uses
                      environment variable or defaults based on backend.
+            language: Prompt language (e.g. the experiment's); None = English.
         """
 
+        self.language = language
         if llm is not None:
             if llm_url is not None:
                 base_url = llm_url
@@ -70,7 +72,9 @@ class ContentAnnotator(object):
                     "temperature": 0,
                     "max_tokens": -1,
                 },
-                system_message=prompt_store.get("content_annotation__init____1"),
+                system_message=prompt_store.get(
+                    "content_annotation__init____1", language=language
+                ),
                 max_consecutive_auto_reply=1,
             )
 
@@ -81,7 +85,9 @@ class ContentAnnotator(object):
                     "temperature": 0,
                     "max_tokens": -1,
                 },
-                system_message=prompt_store.get("content_annotation__init____2"),
+                system_message=prompt_store.get(
+                    "content_annotation__init____2", language=language
+                ),
                 max_consecutive_auto_reply=0,
             )
         else:
@@ -109,9 +115,10 @@ class ContentAnnotator(object):
             self.annotator,
             silent=True,
             message=prompt_store.prompt(
-                        "content_annotation__annotate_emotions__1",
-                        text=text,
-                    ),
+                "content_annotation__annotate_emotions__1",
+                language=self.language,
+                text=text,
+            ),
         )
 
         res = self.handler.chat_messages[self.annotator][-1]["content"]
@@ -138,9 +145,10 @@ class ContentAnnotator(object):
             self.annotator,
             silent=True,
             message=prompt_store.prompt(
-                        "content_annotation__annotate_topics__1",
-                        text=text,
-                    ),
+                "content_annotation__annotate_topics__1",
+                language=self.language,
+                text=text,
+            ),
         )
 
         res = self.handler.chat_messages[self.annotator][-1]["content"]

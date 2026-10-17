@@ -56,7 +56,7 @@ def test_every_call_site_uses_an_existing_key_and_matching_fields():
         template = ps.get(key)  # raises PromptError when the key is missing
         seen += 1
         if node.func.attr == "prompt":
-            passed = {k.arg for k in node.keywords if k.arg}
+            passed = {k.arg for k in node.keywords if k.arg and k.arg != "language"}
             assert passed == ps.fields_of(template), f"{fname}: {key}"
     assert seen > 0
 

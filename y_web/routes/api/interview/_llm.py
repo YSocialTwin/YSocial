@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from typing import Any, Dict, List, Optional, Tuple
 
+from y_web import prompt_store
 from y_web.src.models import Admin_users, Client, Exps, User_mgmt
 
 from ._facts import (
@@ -19,6 +20,7 @@ def _sanitize_interview_reply(
     facts_snapshot: Dict[str, Any],
     memory_snapshot: Dict[str, Any],
     strict_no_inference: bool,
+    language: Optional[str] = None,
 ) -> Tuple[str, Dict[str, Any]]:
     text = (reply or "").strip()
     if not text:
@@ -40,9 +42,8 @@ def _sanitize_interview_reply(
 
     unknown_ids = sorted([v for v in claimed_ids if v not in known_ids])
     if unknown_ids:
-        fallback = (
-            "I can't confirm those specific ids from my records right now. "
-            "Can you give me a post_id, thread_root_id, or username to verify?"
+        fallback = prompt_store.prompt(
+            "_llm__sanitize_interview_reply__1", language=language
         )
         return fallback, {
             "sanitized": True,
@@ -55,15 +56,9 @@ def _sanitize_interview_reply(
         lowered = text.lower()
         has_strong_claim = any(
             w in lowered
-            for w in [
-                "i commented on",
-                "i posted about",
-                "i replied to",
-                "i upvoted",
-                "i downvoted",
-                "i trust",
-                "i first encountered",
-            ]
+            for w in prompt_store.get(
+                "_llm__sanitize_interview_reply__2", language=language
+            ).splitlines()
         )
         has_reference = bool(claimed_ids)
         if has_strong_claim and not has_reference:
@@ -79,10 +74,10 @@ def _sanitize_interview_reply(
                         f"\"{c.get('text')}\" (score={float(c.get('score') or 0.0):.2f}, "
                         f"round={c.get('round_id')}, thread_root_id={c.get('thread_root_id')})"
                     )
-                fallback = (
-                    "I can't confirm one exact post yet, but I found likely matches: "
-                    + "; ".join(candidate_bits)
-                    + ". Did you mean one of those?"
+                fallback = prompt_store.prompt(
+                    "_llm__sanitize_interview_reply__3",
+                    language=language,
+                    candidates=candidate_bits,
                 )
                 return fallback, {
                     "sanitized": True,
@@ -100,10 +95,10 @@ def _sanitize_interview_reply(
                         f"post_id={c.get('post_id')} thread_root_id={c.get('thread_root_id')} "
                         f"round={c.get('round')}: \"{c.get('text')}\""
                     )
-                fallback = (
-                    "I can't confirm one exact match yet, but these look likely: "
-                    + "; ".join(candidate_bits)
-                    + ". Did you mean one of these?"
+                fallback = prompt_store.prompt(
+                    "_llm__sanitize_interview_reply__4",
+                    language=language,
+                    candidates=candidate_bits,
                 )
                 return fallback, {
                     "sanitized": True,
@@ -111,10 +106,8 @@ def _sanitize_interview_reply(
                     "candidate_count": len(facts_candidates),
                     "known_ids_count": len(known_ids),
                 }
-            fallback = (
-                "I can't confirm that from my records for this query. "
-                "If you can share a little more detail (topic wording, who was involved, or rough timing), "
-                "I can narrow it down. If you have it, a post_id or thread_root_id can also help verify."
+            fallback = prompt_store.prompt(
+                "_llm__sanitize_interview_reply__5", language=language
             )
             return fallback, {
                 "sanitized": True,
@@ -124,7 +117,12 @@ def _sanitize_interview_reply(
 
     # De-loop explicit-ID requests when semantic candidates exist.
     if (
-        "can't confirm" in text.lower()
+        any(
+            marker in text.lower()
+            for marker in prompt_store.get(
+                "_llm__sanitize_interview_reply__7", language=language
+            ).splitlines()
+        )
         and "post_id" in text.lower()
         and "thread_root_id" in text.lower()
     ):
@@ -139,10 +137,10 @@ def _sanitize_interview_reply(
                 candidate_bits.append(
                     f"\"{c.get('text')}\" (score={float(c.get('score') or 0.0):.2f}, round={c.get('round_id')})"
                 )
-            fallback = (
-                "I can't confirm one exact post yet, but I found likely matches: "
-                + "; ".join(candidate_bits)
-                + ". Did you mean one of these?"
+            fallback = prompt_store.prompt(
+                "_llm__sanitize_interview_reply__6",
+                language=language,
+                candidates=candidate_bits,
             )
             return fallback, {
                 "sanitized": True,
@@ -159,10 +157,10 @@ def _sanitize_interview_reply(
                 candidate_bits.append(
                     f"post_id={c.get('post_id')} thread_root_id={c.get('thread_root_id')}: \"{c.get('text')}\""
                 )
-            fallback = (
-                "I can't confirm one exact post yet, but I found likely matches: "
-                + "; ".join(candidate_bits)
-                + ". Did you mean one of these?"
+            fallback = prompt_store.prompt(
+                "_llm__sanitize_interview_reply__6",
+                language=language,
+                candidates=candidate_bits,
             )
             return fallback, {
                 "sanitized": True,

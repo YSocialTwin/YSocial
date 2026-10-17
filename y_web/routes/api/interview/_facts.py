@@ -1264,6 +1264,7 @@ def _build_evidence_guard(
     *,
     facts_snapshot: Dict[str, Any],
     memory_snapshot: Dict[str, Any],
+    language: Optional[str] = None,
 ) -> Tuple[str, Dict[str, Any]]:
     facts = facts_snapshot if isinstance(facts_snapshot, dict) else {}
     mem = memory_snapshot if isinstance(memory_snapshot, dict) else {}
@@ -1320,10 +1321,10 @@ def _build_evidence_guard(
     lines.append(f"- strict_no_inference={strict_no_inference}")
     if strict_no_inference:
         lines.append(
-            prompt_store.get("_facts__build_evidence_guard__1")
+            prompt_store.get("_facts__build_evidence_guard__1", language=language)
         )
         lines.append(
-            prompt_store.get("_facts__build_evidence_guard__2")
+            prompt_store.get("_facts__build_evidence_guard__2", language=language)
         )
 
     meta = {
