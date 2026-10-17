@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 09:09+0000\n"
+"POT-Creation-Date: 2026-10-17 09:11+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -3449,6 +3449,9 @@ msgstr "Modifica profilo"
 
 msgid "Edit server settings"
 msgstr "Modifica le impostazioni del server"
+
+msgid "Edit your profile and your interface language."
+msgstr "Modifica il tuo profilo e la lingua dell'interfaccia."
 
 msgid "Edit your profile details"
 msgstr "Modifica i dettagli del tuo profilo"
@@ -7720,6 +7723,9 @@ msgstr ""
 msgid "Provides specific instructions and input"
 msgstr "Fornisce istruzioni e input specifici"
 
+msgid "Public profile attributes and appearance."
+msgstr "Attributi e aspetto del profilo pubblico."
+
 msgid "Public profile attributes and recommendation preferences."
 msgstr "Attributi pubblici del profilo e preferenze di raccomandazione."
 
@@ -10535,6 +10541,13 @@ msgid "Update configuration first"
 msgstr "Prima aggiorna la configurazione"
 
 msgid ""
+"Update profile details, interface language, and account security from one"
+" place."
+msgstr ""
+"Aggiorna in un unico posto i dettagli del profilo, la lingua "
+"dell'interfaccia e la sicurezza dell'account."
+
+msgid ""
 "Update profile details, recommendations, and account security from one "
 "place."
 msgstr ""
@@ -11330,9 +11343,6 @@ msgstr "Il tuo profilo"
 
 msgid "Your YSocial installation is up to date."
 msgstr "L'installazione di YSocial è aggiornata."
-
-msgid "Your activity and your interface language."
-msgstr "La tua attività e la lingua della tua interfaccia."
 
 msgid "Your annotations"
 msgstr "Le tue annotazioni"
@@ -12154,6 +12164,9 @@ msgstr "✔️ Usa"
 
 #~ msgid "You can add to your population"
 #~ msgstr ""
+
+#~ msgid "Your activity and your interface language."
+#~ msgstr "La tua attività e la lingua della tua interfaccia."
 
 #~ msgid "and"
 #~ msgstr ""

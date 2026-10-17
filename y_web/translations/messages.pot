@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 09:09+0000\n"
+"POT-Creation-Date: 2026-10-17 09:11+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -3050,6 +3050,9 @@ msgid "Edit profile"
 msgstr ""
 
 msgid "Edit server settings"
+msgstr ""
+
+msgid "Edit your profile and your interface language."
 msgstr ""
 
 msgid "Edit your profile details"
@@ -7006,6 +7009,9 @@ msgstr ""
 msgid "Provides specific instructions and input"
 msgstr ""
 
+msgid "Public profile attributes and appearance."
+msgstr ""
+
 msgid "Public profile attributes and recommendation preferences."
 msgstr ""
 
@@ -9566,6 +9572,11 @@ msgid "Update configuration first"
 msgstr ""
 
 msgid ""
+"Update profile details, interface language, and account security from one"
+" place."
+msgstr ""
+
+msgid ""
 "Update profile details, recommendations, and account security from one "
 "place."
 msgstr ""
@@ -10254,9 +10265,6 @@ msgid "Your Profile"
 msgstr ""
 
 msgid "Your YSocial installation is up to date."
-msgstr ""
-
-msgid "Your activity and your interface language."
 msgstr ""
 
 msgid "Your annotations"

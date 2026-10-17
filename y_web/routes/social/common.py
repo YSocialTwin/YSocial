@@ -611,6 +611,29 @@ def edit_profile(exp_id, user_id):
         os.path.basename(path) for path in available_cover_image_urls()
     ]
 
+    _exp_for_page = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
+    if getattr(_exp_for_page, "platform_type", "") == "forum":
+        # Forum: a user may only edit their own profile; no topics/opinions
+        # and no recommender selection on this platform.
+        if str(logged_id) != str(user_id):
+            return redirect(url_for("main.profile_logged", exp_id=exp_id, user_id=logged_id, mode="recent", page=1))
+        return render_template(
+            "forum/edit_profile.html",
+            user=user,
+            profile_pic=profile_pic,
+            available_profile_pics=available_profile_pics,
+            cover_image=_get_user_cover_image(user.id),
+            available_cover_images=available_cover_images,
+            is_page=user.is_page,
+            username=user.username,
+            user_id=user_id,
+            logged_username=current_user.username,
+            logged_id=logged_id,
+            is_admin=is_admin(current_user.username),
+            exp_id=exp_id,
+            forum_memory_enabled=_forum_memory_enabled(exp_id),
+        )
+
     # ── Topic/opinion data (same logic as onboarding GET) ─────────────────
     def _get_exp_engine_ep():
         try:
@@ -775,7 +798,8 @@ def update_profile_data(exp_id, user_id):
                 or url_for("main.edit_profile", exp_id=exp_id, user_id=user_id)
             )
         user.recsys_type = canonical_recsys
-    user.frecsys_type = request.form.get("frecsys_type")
+    if request.form.get("frecsys_type") is not None:
+        user.frecsys_type = request.form.get("frecsys_type")
     user.age = int(request.form.get("age"))
     profile_pic = request.form.get("profile_pic")
     cover_image = request.form.get("cover_image") or random_cover_image_url()

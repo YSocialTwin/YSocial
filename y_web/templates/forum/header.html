@@ -133,14 +133,14 @@
                             </div>
                             <div class="nav-drop-body account-items">
                                 {% if logged_id is defined and logged_id %}
-                                <a id="profile-link" href="/{{ exp_id }}/profile/{{ logged_id }}/recent/1" class="account-item">
+                                <a id="profile-link" href="/{{ exp_id }}/edit_profile/{{ logged_id }}" class="account-item">
                                     <div class="media">
                                         <div class="icon-wrap">
                                             <i data-feather="user"></i>
                                         </div>
                                         <div class="media-content">
                                             <h3>{{ _('My profile') }}</h3>
-                                            <small>{{ _('Your activity and your interface language.') }}</small>
+                                            <small>{{ _('Edit your profile and your interface language.') }}</small>
                                         </div>
                                     </div>
                                 </a>
@@ -289,7 +289,7 @@
                 </a>
                 {% endif %}
                 {% if logged_id is defined and logged_id %}
-                <a href="/{{ exp_id }}/profile/{{ logged_id }}/recent/1" class="navbar-item is-flex is-mobile-icon">
+                <a href="/{{ exp_id }}/edit_profile/{{ logged_id }}" class="navbar-item is-flex is-mobile-icon">
                     <span><i data-feather="user"></i>{{ _('My profile') }}</span>
                 </a>
                 {% endif %}
