@@ -10,21 +10,31 @@ Status: first pass for gate G0. Generated tables come from `scripts/prompts/inve
 4. **`eval` is only in the microblogging and Reddit clients** (6 sites, listed below). YSimulator and YPhotoSharing render with `str.format` (48 sites in YSimulator), which cannot run code but does fail on a missing or renamed field.
 5. **HPC and photo prompts are nested** (`system_template` / `user_template` per action) and `evaluate_opinion` has a user template built dynamically in `llm_service.py`.
 
-## Protocol tokens the code reads from model answers (hand-written, to be confirmed at the next pass)
+## Protocol tokens read from model answers (hand-triaged from the parser candidates below)
 
-The parsers compare uppercase English words with the answer, for example `"COMMENT" in text.split()` after `upper()` in `YClient/y_client/classes/base_agent.py` (action choice) and `"YES" in text.split()` for follow decisions.
+Parsers compare whole uppercase English words with the answer, for example `"COMMENT" in text.split()` after `upper()` and `"YES" in text.split()` (YClient `base_agent.py`); a token followed by punctuation (`NEUTRAL.`) does not match.
 
-| Area | Tokens found in prompts or comparisons |
-| --- | --- |
-| Action choice | `COMMENT`, `POST`, `READ`, `SEARCH`, `SHARE`, `FOLLOW`, `UNFOLLOW`, `IGNORE`, `NONE`, `SKIP`, `CAST` |
-| Yes/no decisions | `YES`, `NO`, `ACCEPT` |
-| Reactions | `LIKE`, `LOVE`, `LAUGH`, `ANGRY`, `NEUTRAL` |
-| Opinion dynamics | `AGREE`, `DISAGREE`, `NEUTRAL`, `NOCHANGE` |
-| Moderation | `REPORT_TOXIC` and the other `REPORT_*` labels |
-| Annotations (JSON keys and values) | `tone`, `directness`, `support_strength`, `summary_text`, GoEmotions labels, topic lists |
-| Reddit memory (JSON fields) | `gist_...`, `summary_text`, behaviour labels and other fields in the `handler_memory_*` prompts |
+| Decision | Tokens | Where (function) |
+| --- | --- | --- |
+| Action choice, microblogging | `COMMENT`, `POST`, `READ`, `SEARCH`, `FOLLOW`, `SHARE`, `CAST`, `IMAGE` | YClient `base_agent.select_action`, `select_action_lite`, and the fake agent |
+| Action choice, Reddit | the same plus `NEWS`, `SHARE_IMAGE`, `SHARE_LINK` | YClientReddit `base_agent.select_action`, `select_image` |
+| Follow and reciprocal follow | `YES` (anything else counts as no) | `__evaluate_follow`, `_should_reciprocate_follow_event` |
+| Reaction to a post | `YES`, `NO`, `NEUTRAL` (Reddit also `NEUTRAL`) | `reaction` |
+| Vote | `LEFT`, `RIGHT`, `NONE` | `cast` |
+| Moderation report | `REPORT`, `REPORT_TOXIC`, `REPORT_OFFENSIVE`, `TOXIC`, `OFFENSIVE` | `_extract_report_type` |
+| Reddit comment skip | `SKIP` | YClientReddit `comment` |
+| Opinion evaluation | `AGREE`, `DISAGREE`, `NEUTRAL` | `llm_evaluation` in the four clients, `evaluate_opinion` and its batch version in YSimulator, `reactive_agents/opinion_dynamics.py` |
+| HPC reactions | `COMMENT`, `LIKE` | YSimulator `decide_reaction`, `decide_reaction_batch`; `reactive_agents` `decide_photo_reaction`, `decide_thread_reaction` |
+| HPC read reaction | `IGNORE`, `LIKE`, `LOVE`, `LAUGH`, `ANGRY`, `SAD`, `DISLIKE`, `COMMENT`, `SHARE`, `REPORT`, `REPORT_TOXIC`, `REPORT_OFFENSIVE`, `TOXIC`, `OFFENSIVE` | YSimulator `generate_read_reaction` (+ batch) and `batch_processor` |
+| HPC search action | `COMMENT`, `SHARE` and the reactions above | YSimulator `decide_search_action`, `_process_vllm_search_batch` |
+| Photo sharing | `FOLLOW`; `ACCEPT`; `POSITIVE`, `NEGATIVE`; `IGNORE`, `LAUGH`, `LIKE`, `LOVE` | YPhotoSharing `decide_follow`, `decide_follow_request`, `extract_sentiment`, `react_to_photo` |
+| Generic yes/no | `yes`, `no`, `follow`, `unfollow`, `ignore` | YSimulator `llm_utils/response_parser.parse_boolean_response` |
 
-Not yet done: the complete list per parser, with synonyms, still has to be extracted from the 100+ comparison sites flagged below.
+JSON answers (the code reads fields, not tokens): the stress/reward annotation (`tone`, `directness`, `support_strength`, with tone values `positive|neutral|critical|hostile|supportive` or `hostile|supportive`), the Reddit memory social card (`summary_text`), and the other `handler_memory_*` prompts, community digest and thread card (field names in the prompt text), the GoEmotions emotion list and topic lists (`content_annotation.py`, `extract_emotions`, `extract_article_topics`). Their parsers are not in the candidate list below because they do not compare strings; their field names must still be treated as protocol and live in the shared token module (step 2).
+
+Triage notes: a match is **not** a protocol token when it is an internal action name stored in the database (`follow`, `comment`, `share`, `post` in the stress/reward, memory, server and plugin code), a configuration value (`NULL`, `EMPTY`, `INT`, `CUDA_VISIBLE_DEVICES`, `ALIVE`, the `yes` flags of `moderator.py` and `stress_attacker.py`), or an internal event type of `y_agents_plugins/runtime/executor.py` (`CREATE_POST`, `APPLY_MODERATION`, ...). `y_agents_plugins` contains no parser of model answers in this scan; its plugins write prompts (propaganda, comic relief, stress attacker, moderator) that are in the literal counts.
+
+Still to confirm in step 2: the exact synonyms each parser accepts (for example whether `DISLIKE` or `OFFENSIVE` are real model answers or only mapped values), and whether the YWeb interview and annotation code parses JSON from the model (`y_web/src/llm/content_annotation.py`).
 
 ## Generated tables
 
@@ -158,4 +168,215 @@ Not yet done: the complete list per parser, with synonyms, still has to be extra
 | `external/reactive_agents/src/reactive_agents/photo_events.py` | 244, 304, 304 |
 | `external/reactive_agents/src/reactive_agents/secondary_dynamics.py` | 125, 125 |
 | `external/reactive_agents/src/reactive_agents/writer.py` | 308, 717, 717, 1013 |
+
+### Parser candidates (function and the protocol-looking words it compares)
+
+- `external/YClient/y_client/classes/base_agent.py`
+  - `_apply_stress_reward_comment`: `neutral`
+  - `reaction`: `NO`, `YES`, `follow`
+  - `__evaluate_follow`: `YES`, `follow`
+  - `_should_reciprocate_follow_event`: `YES`, `follow`
+  - `cast`: `LEFT`, `NONE`, `RIGHT`
+  - `select_action`: `CAST`, `COMMENT`, `FOLLOW`, `IMAGE`, `POST`, `READ`, `SEARCH`, `SHARE`
+  - `select_action_lite`: `CAST`, `COMMENT`, `FOLLOW`, `IMAGE`, `POST`, `READ`, `SEARCH`, `SHARE`
+  - `_has_usable_llm_config`: `none`, `null`
+  - `_memory_after_vote`: `like`
+  - `_extract_report_type`: `OFFENSIVE`, `REPORT`, `REPORT_OFFENSIVE`, `REPORT_TOXIC`, `TOXIC`
+  - `handle_reciprocal_follow_event`: `follow`, `unfollow`
+- `external/YClient/y_client/classes/fake_base_agent.py`
+  - `reaction`: `NO`, `YES`, `follow`
+  - `__evaluate_follow`: `YES`, `follow`
+  - `cast`: `LEFT`, `NONE`, `RIGHT`
+  - `select_action`: `CAST`, `COMMENT`, `FOLLOW`, `IMAGE`, `POST`, `READ`, `SEARCH`, `SHARE`
+- `external/YClient/y_client/llm/autogen_compat.py`
+  - `_normalize_llm_config`: `NULL`
+  - `_looks_like_ollama`: `EMPTY`, `NULL`
+- `external/YClient/y_client/opinion_dynamics/confidence_bound.py`
+  - `bounded_confidence`: `neutral`
+- `external/YClient/y_client/opinion_dynamics/llm_evaluation.py`
+  - `llm_evaluation`: `AGREE`, `DISAGREE`, `neutral`
+- `external/YClient/y_client/stress_reward/update_system.py`
+  - `_compute_delta`: `comment`, `share`
+- `external/YClientReddit/y_client/classes/base_agent.py`
+  - `_apply_stress_reward_comment`: `neutral`
+  - `_memory_is_low_toxicity_profile`: `no`
+  - `_enforce_text_limits`: `comment`, `post`
+  - `_select_comment_target_via_thread_browse`: `comment`, `none`
+  - `comment`: `SKIP`
+  - `reaction`: `NEUTRAL`, `NO`, `YES`, `follow`
+  - `vote`: `like`
+  - `__evaluate_follow`: `YES`, `follow`
+  - `_should_reciprocate_follow_event`: `YES`, `follow`
+  - `cast`: `LEFT`, `NONE`, `RIGHT`
+  - `select_action`: `CAST`, `COMMENT`, `FOLLOW`, `IMAGE`, `NEWS`, `POST`, `READ`, `SEARCH`, `SHARE`, `SHARE_IMAGE`, `SHARE_LINK`
+  - `reply`: `reply`
+  - `_to_bool`: `yes`
+  - `_memory_extract_behavior_labels`: `angry`, `disagree`
+  - `_memory_format_conversation_cues`: `none`
+  - `_memory_after_vote_legacy`: `like`
+  - `_extract_report_type`: `OFFENSIVE`, `REPORT`, `REPORT_OFFENSIVE`, `REPORT_TOXIC`, `TOXIC`
+  - `handle_reciprocal_follow_event`: `follow`, `unfollow`
+  - `select_image`: `NEWS`
+  - `_memory_get_relationship_signal_for_user`: `angry`, `disagree`
+- `external/YClientReddit/y_client/classes/fake_base_agent.py`
+  - `reaction`: `NO`, `YES`, `follow`
+  - `__evaluate_follow`: `YES`, `follow`
+  - `cast`: `LEFT`, `NONE`, `RIGHT`
+  - `select_action`: `CAST`, `COMMENT`, `FOLLOW`, `IMAGE`, `NEWS`, `POST`, `READ`, `SEARCH`, `SHARE`, `SHARE_IMAGE`, `SHARE_LINK`
+  - `select_image`: `NEWS`
+- `external/YClientReddit/y_client/clients/client_base.py`
+  - `__init__`: `SHARE`
+- `external/YClientReddit/y_client/clients/client_web.py`
+  - `__init__`: `SHARE`
+- `external/YClientReddit/y_client/llm/autogen_compat.py`
+  - `_normalize_llm_config`: `NULL`
+  - `_looks_like_ollama`: `EMPTY`, `NULL`
+- `external/YClientReddit/y_client/opinion_dynamics/confidence_bound.py`
+  - `bounded_confidence`: `neutral`
+- `external/YClientReddit/y_client/opinion_dynamics/llm_evaluation.py`
+  - `llm_evaluation`: `AGREE`, `DISAGREE`, `neutral`
+- `external/YClientReddit/y_client/stress_reward/update_system.py`
+  - `_compute_delta`: `comment`, `share`
+- `external/YSimulator/YSimulator/YClient/LLM_interactions/llm_service.py`
+  - `decide_reaction`: `COMMENT`, `LIKE`
+  - `generate_read_reaction`: `ANGRY`, `DISLIKE`, `IGNORE`, `LAUGH`, `LIKE`, `LOVE`, `OFFENSIVE`, `REPORT`, `REPORT_OFFENSIVE`, `REPORT_TOXIC`, `SAD`, `TOXIC`
+  - `decide_search_action`: `ANGRY`, `COMMENT`, `IGNORE`, `LAUGH`, `LIKE`, `LOVE`, `SAD`, `SHARE`
+  - `generate_reciprocal_follow_decision`: `follow`, `unfollow`
+  - `evaluate_opinion`: `AGREE`, `DISAGREE`, `NEUTRAL`
+- `external/YSimulator/YSimulator/YClient/LLM_interactions/remote_batch_service.py`
+  - `_headers`: `NULL`
+  - `_probe_openai_batch_support`: `NULL`
+- `external/YSimulator/YSimulator/YClient/LLM_interactions/vllm_service.py`
+  - `decide_reaction`: `COMMENT`, `LIKE`
+  - `generate_read_reaction`: `ANGRY`, `DISLIKE`, `IGNORE`, `LAUGH`, `LIKE`, `LOVE`, `OFFENSIVE`, `REPORT`, `REPORT_OFFENSIVE`, `REPORT_TOXIC`, `SAD`, `TOXIC`
+  - `decide_search_action`: `ANGRY`, `COMMENT`, `IGNORE`, `LAUGH`, `LIKE`, `LOVE`, `SAD`, `SHARE`
+  - `generate_reciprocal_follow_decision`: `follow`, `unfollow`
+  - `evaluate_opinion`: `AGREE`, `DISAGREE`, `NEUTRAL`
+  - `decide_reaction_batch`: `COMMENT`, `LIKE`
+  - `generate_read_reaction_batch`: `ANGRY`, `COMMENT`, `LAUGH`, `LIKE`, `LOVE`, `SAD`, `SHARE`
+  - `evaluate_opinion_batch`: `AGREE`, `DISAGREE`, `NEUTRAL`
+- `external/YSimulator/YSimulator/YClient/action_generators/read_generator.py`
+  - `generate`: `IGNORE`
+- `external/YSimulator/YSimulator/YClient/action_generators/search_generator.py`
+  - `generate`: `comment`, `share`
+- `external/YSimulator/YSimulator/YClient/actions/rule_based_actions.py`
+  - `generate_rule_based_read`: `IGNORE`
+- `external/YSimulator/YSimulator/YClient/activity_selector.py`
+  - `select_action`: `follow`
+- `external/YSimulator/YSimulator/YClient/client.py`
+  - `_attach_stress_reward_payload`: `ANGRY`, `COMMENT`, `FOLLOW`, `LAUGH`, `LIKE`, `LOVE`, `POST`, `REPORT`, `SAD`, `SHARE`, `UNFOLLOW`, `neutral`
+- `external/YSimulator/YSimulator/YClient/llm_utils/gpu_utils.py`
+  - `get_all_gpu_memory_info`: `CUDA_VISIBLE_DEVICES`
+- `external/YSimulator/YSimulator/YClient/llm_utils/load_balancer.py`
+  - `_discover_existing_vllm_pool`: `ALIVE`
+- `external/YSimulator/YSimulator/YClient/llm_utils/response_parser.py`
+  - `parse_boolean_response`: `follow`, `ignore`, `no`, `unfollow`, `yes`
+- `external/YSimulator/YSimulator/YClient/memory_runtime.py`
+  - `_record_single_action`: `ANGRY`, `COMMENT`, `LAUGH`, `LIKE`, `LOVE`, `POST`, `SAD`, `SHARE`
+- `external/YSimulator/YSimulator/YClient/opinion_dynamics/llm_evaluation.py`
+  - `llm_evaluation`: `AGREE`, `DISAGREE`, `neutral`
+- `external/YSimulator/YSimulator/YClient/simulation/batch_processor.py`
+  - `_process_vllm_search_batch`: `ANGRY`, `COMMENT`, `LAUGH`, `LIKE`, `LOVE`, `SAD`, `SHARE`
+  - `_gather_reactions_with_vllm_batch`: `comment`, `read`, `share`
+  - `_process_vllm_read_batch`: `IGNORE`, `REPORT_TOXIC`, `SHARE`
+  - `_batch_evaluate_and_update_opinions`: `AGREE`, `DISAGREE`
+  - `_gather_reactions_standard`: `IGNORE`, `REPORT_TOXIC`, `SHARE`
+- `external/YSimulator/YSimulator/YClient/simulation/round_executor.py`
+  - `execute_round`: `comment`, `follow`, `post`, `read`, `search`, `share`
+- `external/YSimulator/YSimulator/YClient/simulation/secondary_follow_processor.py`
+  - `process_reciprocal_follows`: `FOLLOW`, `UNFOLLOW`
+  - `process_secondary_follows`: `follow`, `unfollow`
+- `external/YSimulator/YSimulator/YClient/simulation/simulator.py`
+  - `run`: `WAIT`
+- `external/YSimulator/YSimulator/YClient/stress_reward/update_system.py`
+  - `_compute_delta`: `comment`, `share`
+- `external/YSimulator/YSimulator/YServer/opinion_dynamics/opinion_handler.py`
+  - `_get_neighbors_opinions_sql`: `follow`
+- `external/YSimulator/YSimulator/YServer/schema_migrations.py`
+  - `ensure_moderation_schema`: `post`
+- `external/YSimulator/YSimulator/YServer/server.py`
+  - `check_follow_relationship`: `follow`
+- `external/YSimulator/YSimulator/YServer/services/memory_service.py`
+  - `record_event`: `comment`, `post`, `share`
+- `external/YPhotoSharing/YPhotoSharing/YClient/LLM_interactions/llm_service.py`
+  - `extract_sentiment`: `NEGATIVE`, `POSITIVE`
+  - `decide_follow`: `FOLLOW`
+  - `decide_follow_request`: `ACCEPT`
+- `external/YPhotoSharing/YPhotoSharing/YClient/LLM_interactions/remote_batch_service.py`
+  - `generate`: `NULL`
+  - `_probe_openai_batch`: `NULL`
+  - `decide_follow`: `FOLLOW`
+- `external/YPhotoSharing/YPhotoSharing/YClient/LLM_interactions/vllm_service.py`
+  - `decide_follow`: `FOLLOW`
+- `external/YPhotoSharing/YPhotoSharing/YClient/actions/follow.py`
+  - `follow_user`: `FOLLOW`
+- `external/YPhotoSharing/YPhotoSharing/YClient/actions/react.py`
+  - `react_to_photo`: `IGNORE`, `LAUGH`, `LIKE`, `LOVE`
+- `external/YPhotoSharing/YPhotoSharing/YClient/actions/review_follow_requests.py`
+  - `review_follow_requests`: `ACCEPT`
+- `external/YPhotoSharing/YPhotoSharing/YClient/agent_management/agent.py`
+  - `_execute_action`: `comment`, `follow`, `react`, `share`, `unfollow`
+  - `run_round`: `FOLLOW`
+- `external/YPhotoSharing/YPhotoSharing/YClient/opinion_dynamics/llm_evaluation.py`
+  - `llm_evaluation`: `AGREE`, `DISAGREE`, `neutral`
+- `external/YPhotoSharing/YPhotoSharing/YClient/simulation/round_planner.py`
+  - `build_action_weights`: `post`, `read`
+- `external/YPhotoSharing/YPhotoSharing/YClient/stress_reward/update_system.py`
+  - `_compute_delta`: `comment`, `share`
+- `external/YPhotoSharing/YPhotoSharing/YServer/classes/db_middleware.py`
+  - `review_follow_request`: `accept`
+  - `get_home_feed`: `follow`
+- `external/YPhotoSharing/YPhotoSharing/YServer/opinion_dynamics/opinion_handler.py`
+  - `_get_neighbors_opinions_sql`: `follow`
+- `external/YPhotoSharing/YPhotoSharing/YServer/services/moderation_service.py`
+  - `_evaluate_content`: `comment`
+  - `_take_action`: `comment`
+- `external/y_agents_plugins/src/y_agents_plugins/db/experiment.py`
+  - `_with_generated_id`: `INT`
+  - `_coerce_for_column`: `INT`
+  - `_missing_reference_value`: `INT`
+  - `create_follow`: `unfollow`
+  - `get_followed_user_ids`: `follow`, `unfollow`
+  - `_topic_id_sql_type`: `INT`
+  - `_with_required_user_defaults`: `INT`, `NUM`, `REAL`
+- `external/y_agents_plugins/src/y_agents_plugins/llm/langchain.py`
+  - `_normalize_api_key`: `EMPTY`, `NULL`
+- `external/y_agents_plugins/src/y_agents_plugins/plugins/comic_relief.py`
+  - `on_tick`: `comment`
+- `external/y_agents_plugins/src/y_agents_plugins/plugins/master_of_puppets.py`
+  - `_build_schedule_payload`: `post`
+  - `_materialize_scheduled_action`: `post`
+  - `_recent_campaign_target_stats`: `post`
+- `external/y_agents_plugins/src/y_agents_plugins/plugins/moderator.py`
+  - `_shadow_ban_enabled`: `yes`
+  - `_ban_enabled`: `yes`
+- `external/y_agents_plugins/src/y_agents_plugins/plugins/stress_attacker.py`
+  - `_enabled`: `yes`
+- `external/y_agents_plugins/src/y_agents_plugins/runtime/executor.py`
+  - `execute`: `APPLY_MODERATION`, `APPLY_STRESS_EVENT`, `CREATE_COMMENT`, `CREATE_POST`, `FOLLOW_USER`, `REACT_POST`, `REPORT_POST`, `SHARE_POST`
+  - `_apply_stress_reward_create_post`: `neutral`
+  - `_apply_stress_reward_comment`: `neutral`
+  - `_apply_stress_reward_reaction`: `laugh`, `like`, `love`
+  - `_apply_synthetic_stress_event`: `comment`
+  - `_persist_mop_activity`: `CREATE_COMMENT`, `CREATE_POST`, `SHARE_POST`
+- `external/y_agents_plugins/src/y_agents_plugins/stress_reward/update_system.py`
+  - `_compute_delta`: `comment`, `share`
+- `external/reactive_agents/src/reactive_agents/adapter.py`
+  - `generate_photo_comment`: `reply`
+  - `decide_photo_reaction`: `COMMENT`, `LIKE`
+- `external/reactive_agents/src/reactive_agents/continuity.py`
+  - `run_continuity_pass`: `follow`
+- `external/reactive_agents/src/reactive_agents/opinion_dynamics.py`
+  - `_evaluate_opinion_llm`: `AGREE`, `DISAGREE`
+  - `calculate_and_write_opinion_updates`: `AGREE`, `DISAGREE`, `neutral`
+- `external/reactive_agents/src/reactive_agents/photo_events.py`
+  - `_react`: `COMMENT`, `LIKE`
+  - `_followers_of`: `follow`
+- `external/reactive_agents/src/reactive_agents/secondary_dynamics.py`
+  - `decide_thread_reaction`: `COMMENT`, `LIKE`
+- `external/reactive_agents/src/reactive_agents/writer.py`
+  - `_process_secondary_follow`: `follow`
+  - `_process_thread_reaction`: `LIKE`
+  - `_process_agent_reaction_event`: `COMMENT`, `LIKE`
+  - `process_followed_post_event`: `follow`
 

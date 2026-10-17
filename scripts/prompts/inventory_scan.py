@@ -136,6 +136,63 @@ def prompt_file_rows():
     return rows
 
 
+TOKEN = re.compile(r"^[A-Z][A-Z_]{1,}$")
+WORDS = {
+    "yes", "no", "none", "null", "neutral", "agree", "disagree", "like", "love", "laugh",
+    "angry", "skip", "ignore", "accept", "follow", "unfollow", "comment", "post", "read",
+    "search", "share", "react", "reply",
+}
+
+
+def answer_parsers():
+    """Functions that compare something with a protocol-looking word, per LLM-facing file.
+
+    Candidates only: internal action names (``follow``, ``comment``) and configuration values
+    (``NULL``, ``INT``) also match and are triaged by hand in docs/prompt-inventory.md.
+    """
+    found = {}
+    for repo, base in REPOS.items():
+        if not base.exists() or repo == "YWeb":
+            continue
+        for path in py_files(base):
+            src = path.read_text(encoding="utf-8", errors="replace")
+            if not LLM_HINT.search(src):
+                continue
+            try:
+                tree = ast.parse(src)
+            except SyntaxError:
+                continue
+            parents = {}
+            for n in ast.walk(tree):
+                for c in ast.iter_child_nodes(n):
+                    parents[c] = n
+
+            def enclosing(n):
+                while n in parents:
+                    n = parents[n]
+                    if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                        return n.name
+                return "<module>"
+
+            hits = {}
+            for n in ast.walk(tree):
+                if not isinstance(n, ast.Compare):
+                    continue
+                for c in [n.left] + n.comparators:
+                    if isinstance(c, ast.Constant) and isinstance(c.value, str):
+                        vals = [c.value]
+                    elif isinstance(c, (ast.Tuple, ast.List, ast.Set)):
+                        vals = [e.value for e in c.elts if isinstance(e, ast.Constant) and isinstance(e.value, str)]
+                    else:
+                        continue
+                    for v in vals:
+                        if TOKEN.match(v) or v.strip().lower() in WORDS:
+                            hits.setdefault(enclosing(n), set()).add(v)
+            if hits:
+                found[str(path.relative_to(ROOT))] = {k: sorted(v) for k, v in hits.items()}
+    return found
+
+
 def markdown(report):
     out = ["## Generated tables", "", "### Prompt files", ""]
     out += ["| File | Keys | Nested groups | sha256 (12) |", "| --- | --- | --- | --- |"]
@@ -166,6 +223,11 @@ def markdown(report):
             text = (ROOT / path).read_text(encoding="utf-8", errors="replace")
             if LLM_HINT.search(text):
                 out.append(f"| `{path}` | {', '.join(str(ln) for ln, _ in r['parsers'][:25])} |")
+    out += ["", "### Parser candidates (function and the protocol-looking words it compares)", ""]
+    for path, funcs in answer_parsers().items():
+        out.append(f"- `{path}`")
+        for func, vals in funcs.items():
+            out.append(f"  - `{func}`: " + ", ".join(f"`{v}`" for v in vals))
     return "\n".join(out) + "\n"
 
 
