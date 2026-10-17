@@ -88,3 +88,17 @@ def test_hpc_monitor_schema_guard_creates_a_missing_table(core_app):  # noqa: F8
         assert {"max_hpc_per_group", "max_hpc_simulations_per_vllm_worker"} <= _columns(
             engine, "hpc_monitor_settings"
         )
+
+
+def test_empty_database_gets_the_schedule_row_even_without_column_defaults(tmp_path):
+    """Tables made from the models carry no server-side defaults: the seed row must set every NOT NULL column."""
+    engine = sa.create_engine(f"sqlite:///{tmp_path / 'empty.db'}")
+    _upgrade(engine)
+    with engine.connect() as conn:
+        row = conn.execute(
+            sa.text(
+                "SELECT is_running, dynamic_filling_enabled, launch_in_progress "
+                "FROM experiment_schedule_status"
+            )
+        ).fetchall()
+    assert row == [(0, 0, 0)]

@@ -69,7 +69,9 @@ def upgrade() -> None:
         ).first()
         if has_row is None:
             bind.exec_driver_sql(
-                "INSERT INTO experiment_schedule_status (is_running) VALUES (0)"
+                "INSERT INTO experiment_schedule_status "
+                "(is_running, dynamic_filling_enabled, launch_in_progress) "
+                "VALUES (0, 0, 0)"
             )
 
 
