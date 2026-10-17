@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 09:01+0000\n"
+"POT-Creation-Date: 2026-10-17 09:09+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -1022,9 +1022,8 @@ msgstr ""
 "distribuita tra post, autori e configurazioni dei sistemi di "
 "raccomandazione."
 
-#, python-format
-msgid "Annotated %(content_label_plural)s"
-msgstr "%(content_label_plural)s annotati"
+msgid "Annotated Photos"
+msgstr "Foto annotate"
 
 msgid "Annotated Posts"
 msgstr "Post annotati"
@@ -2762,35 +2761,51 @@ msgstr "Sistema di raccomandazione attuale"
 msgid "Current Researcher Visibility"
 msgstr "Visibilità attuale dei ricercatori"
 
-#, python-format
-msgid "Current distribution of annotated %(lower)s."
-msgstr "Distribuzione attuale di %(lower)s annotati."
+msgid "Current distribution of annotated photos."
+msgstr "Distribuzione attuale delle foto annotate."
+
+msgid "Current distribution of annotated posts."
+msgstr "Distribuzione attuale dei post annotati."
 
 msgid "Current execution progress"
 msgstr "Avanzamento dell'esecuzione in corso"
 
-#, python-format
 msgid ""
 "Current in-degree complementary cumulative distribution in log-log scale "
-"for the %(network_label)s network."
+"for the follow network."
 msgstr ""
 "Distribuzione cumulativa complementare attuale del grado entrante, in "
-"scala log-log, per la rete %(network_label)s."
+"scala log-log, per la rete dei follow."
+
+msgid ""
+"Current in-degree complementary cumulative distribution in log-log scale "
+"for the mention network."
+msgstr ""
+"Distribuzione cumulativa complementare attuale del grado entrante, in "
+"scala log-log, per la rete delle menzioni."
 
 msgid "Current local time"
 msgstr "Ora locale attuale"
 
-#, python-format
 msgid ""
 "Current out-degree complementary cumulative distribution in log-log scale"
-" for the %(network_label)s network."
+" for the follow network."
 msgstr ""
 "Distribuzione cumulativa complementare attuale del grado uscente, in "
-"scala log-log, per la rete %(network_label)s."
+"scala log-log, per la rete dei follow."
 
-#, python-format
-msgid "Current polarity breakdown across annotated %(lower)s."
-msgstr "Ripartizione attuale della polarità tra %(lower)s annotati."
+msgid ""
+"Current out-degree complementary cumulative distribution in log-log scale"
+" for the mention network."
+msgstr ""
+"Distribuzione cumulativa complementare attuale del grado uscente, in "
+"scala log-log, per la rete delle menzioni."
+
+msgid "Current polarity breakdown across annotated photos."
+msgstr "Ripartizione attuale della polarità tra le foto annotate."
+
+msgid "Current polarity breakdown across annotated posts."
+msgstr "Ripartizione attuale della polarità tra i post annotati."
 
 msgid "Current reward level"
 msgstr "Livello di ricompensa attuale"
@@ -5999,9 +6014,11 @@ msgstr ""
 msgid "Most Commented"
 msgstr "Più commentati"
 
-#, python-format
-msgid "Most Polarized %(content_label_plural)s"
-msgstr "%(content_label_plural)s più polarizzati"
+msgid "Most Polarized Photos"
+msgstr "Foto più polarizzate"
+
+msgid "Most Polarized Posts"
+msgstr "Post più polarizzati"
 
 msgid "Most Reached Authors"
 msgstr "Autori più raggiunti"
@@ -7068,9 +7085,6 @@ msgstr "Dottorato"
 msgid "PhD Student in AI"
 msgstr "Dottorando in IA"
 
-msgid "Photo"
-msgstr "Foto"
-
 msgid "Photo Sharing"
 msgstr "Condivisione di foto"
 
@@ -7362,9 +7376,11 @@ msgstr "Punteggio positivo / neutro / negativo"
 msgid "Positive Posts"
 msgstr "Post positivi"
 
-#, python-format
-msgid "Positive, neutral, and negative %(lower)s counts by day."
-msgstr "Conteggi giornalieri di %(lower)s positivi, neutri e negativi."
+msgid "Positive, neutral, and negative photo counts by day."
+msgstr "Numero giornaliero di foto positive, neutre e negative."
+
+msgid "Positive, neutral, and negative post counts by day."
+msgstr "Numero giornaliero di post positivi, neutri e negativi."
 
 msgid "Post"
 msgstr "Post"
@@ -10171,11 +10187,11 @@ msgstr "Volume totale"
 msgid "Total configurations:"
 msgstr "Configurazioni totali:"
 
-#, python-format
-msgid "Total emotion tags versus distinct annotated %(lower)s per day."
-msgstr ""
-"Tag di emozione totali rispetto ai %(lower)s annotati distinti, per "
-"giorno."
+msgid "Total emotion tags versus distinct annotated photos per day."
+msgstr "Totale dei tag emotivi rispetto alle foto annotate distinte per giorno."
+
+msgid "Total emotion tags versus distinct annotated posts per day."
+msgstr "Totale dei tag emotivi rispetto ai post annotati distinti per giorno."
 
 #, python-format
 msgid "Total must equal 100%%"
@@ -10229,9 +10245,11 @@ msgstr ""
 "Segui diffusione, comparsa e scomparsa degli hashtag attraverso "
 "l'attività di contenuti e interazioni."
 
-#, python-format
-msgid "Track how the %(network_label)s network evolves across the experiment."
-msgstr "Segui come evolve la rete %(network_label)s nel corso dell'esperimento."
+msgid "Track how the follow network evolves across the experiment."
+msgstr "Segui l'evoluzione della rete dei follow nel corso dell'esperimento."
+
+msgid "Track how the mention network evolves across the experiment."
+msgstr "Segui l'evoluzione della rete delle menzioni nel corso dell'esperimento."
 
 msgid "Track how toxic content annotations accumulate over time."
 msgstr "Segui come si accumulano nel tempo le annotazioni di contenuti tossici."
@@ -11668,6 +11686,9 @@ msgstr "✔️ Usa"
 #~ "the application"
 #~ msgstr ""
 
+#~ msgid "Annotated %(content_label_plural)s"
+#~ msgstr "%(content_label_plural)s annotati"
+
 #~ msgid "Archetype Distribution (%)"
 #~ msgstr "Distribuzione degli archetipi (%)"
 
@@ -11720,6 +11741,30 @@ msgstr "✔️ Usa"
 
 #~ msgid "Creator Tier %"
 #~ msgstr "Livello creatore %"
+
+#~ msgid "Current distribution of annotated %(lower)s."
+#~ msgstr "Distribuzione attuale di %(lower)s annotati."
+
+#~ msgid ""
+#~ "Current in-degree complementary cumulative "
+#~ "distribution in log-log scale for "
+#~ "the %(network_label)s network."
+#~ msgstr ""
+#~ "Distribuzione cumulativa complementare attuale "
+#~ "del grado entrante, in scala log-"
+#~ "log, per la rete %(network_label)s."
+
+#~ msgid ""
+#~ "Current out-degree complementary cumulative"
+#~ " distribution in log-log scale for"
+#~ " the %(network_label)s network."
+#~ msgstr ""
+#~ "Distribuzione cumulativa complementare attuale "
+#~ "del grado uscente, in scala log-"
+#~ "log, per la rete %(network_label)s."
+
+#~ msgid "Current polarity breakdown across annotated %(lower)s."
+#~ msgstr "Ripartizione attuale della polarità tra %(lower)s annotati."
 
 #~ msgid "Database error: %(str_e)s"
 #~ msgstr ""
@@ -11906,6 +11951,9 @@ msgstr "✔️ Usa"
 #~ msgid "Is Verified %"
 #~ msgstr "Verificato %"
 
+#~ msgid "Most Polarized %(content_label_plural)s"
+#~ msgstr "%(content_label_plural)s più polarizzati"
+
 #~ msgid ""
 #~ "New version available: %(release_info_get_release)s"
 #~ " (v%(release_info_get_latest_)s)"
@@ -11918,11 +11966,17 @@ msgstr "✔️ Usa"
 #~ "overlap."
 #~ msgstr ""
 
+#~ msgid "Photo"
+#~ msgstr "Foto"
+
 #~ msgid "Political %"
 #~ msgstr "Politica %"
 
 #~ msgid "Population generation failed: %(exc)s. No partial population was kept."
 #~ msgstr ""
+
+#~ msgid "Positive, neutral, and negative %(lower)s counts by day."
+#~ msgstr "Conteggi giornalieri di %(lower)s positivi, neutri e negativi."
 
 #~ msgid ""
 #~ "Probability that an agent transitions "
@@ -11989,6 +12043,11 @@ msgstr "✔️ Usa"
 #~ msgid "There was an error loading the experiment files: %(str_e)s"
 #~ msgstr ""
 
+#~ msgid "Total emotion tags versus distinct annotated %(lower)s per day."
+#~ msgstr ""
+#~ "Tag di emozione totali rispetto ai "
+#~ "%(lower)s annotati distinti, per giorno."
+
 #~ msgid "Total must equal 100%"
 #~ msgstr "Il totale deve essere 100%"
 
@@ -11997,6 +12056,9 @@ msgstr "✔️ Usa"
 
 #~ msgid "Toxicity %"
 #~ msgstr "Tossicità %"
+
+#~ msgid "Track how the %(network_label)s network evolves across the experiment."
+#~ msgstr "Segui come evolve la rete %(network_label)s nel corso dell'esperimento."
 
 #~ msgid "Transition Probabilities (%)"
 #~ msgstr "Probabilità di transizione (%)"

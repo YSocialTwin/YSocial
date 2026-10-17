@@ -4628,7 +4628,6 @@ def _build_network_analytics_payload(
     ]
     trend_metrics = [metric for _, metric in snapshots]
 
-    network_label = "follow" if network_type == "follow" else "mention"
     network_title = _("Follow Network") if network_type == "follow" else _("Mention Network")
     edge_label = _("Edges") if network_type == "follow" else _("Mention Edges")
     structure_description = (
@@ -4695,7 +4694,7 @@ def _build_network_analytics_payload(
     return {
         "page_title": _("Network Analysis"),
         "title": _("Network Analysis"),
-        "description": _("Track how the %(network_label)s network evolves across the experiment.", network_label=network_label),
+        "description": (_("Track how the follow network evolves across the experiment.") if network_type == "follow" else _("Track how the mention network evolves across the experiment.")),
         "network_type": network_type,
         "granularity": granularity,
         "network_type_options": [
@@ -4709,7 +4708,7 @@ def _build_network_analytics_payload(
         "stats": stats,
         "distribution": {
             "title": _("In-Degree CCDF"),
-            "description": _("Current in-degree complementary cumulative distribution in log-log scale for the %(network_label)s network.", network_label=network_label),
+            "description": (_("Current in-degree complementary cumulative distribution in log-log scale for the follow network.") if network_type == "follow" else _("Current in-degree complementary cumulative distribution in log-log scale for the mention network.")),
             "type": "line",
             "labels": [str(value) for value in degree_x_values],
             "datasets": [
@@ -4731,7 +4730,7 @@ def _build_network_analytics_payload(
         },
         "trend": {
             "title": _("Out-Degree CCDF"),
-            "description": _("Current out-degree complementary cumulative distribution in log-log scale for the %(network_label)s network.", network_label=network_label),
+            "description": (_("Current out-degree complementary cumulative distribution in log-log scale for the follow network.") if network_type == "follow" else _("Current out-degree complementary cumulative distribution in log-log scale for the mention network.")),
             "type": "line",
             "labels": [str(value) for value in degree_x_values],
             "datasets": [
@@ -6353,8 +6352,6 @@ def _build_sentiment_analytics_payload(db_path, filter_day, filter_hour):
         conn.row_factory = sqlite3.Row
         schema = _analytics_content_schema(conn)
         time_condition = _build_annotation_time_condition("r")
-        content_label = _("Photo") if schema["is_photo_sharing"] else _("Post")
-        content_label_plural = _("Photos") if schema["is_photo_sharing"] else _("Posts")
 
         snapshot = conn.execute(
             f"""
@@ -6441,7 +6438,7 @@ def _build_sentiment_analytics_payload(db_path, filter_day, filter_hour):
     stats = [
         {
             "key": "annotated_posts",
-            "label": _("Annotated %(content_label_plural)s", content_label_plural=content_label_plural),
+            "label": (_("Annotated Photos") if schema["is_photo_sharing"] else _("Annotated Posts")),
             "value": _safe_int(snapshot["annotated_posts"]),
             "color": "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
         },
@@ -6478,7 +6475,7 @@ def _build_sentiment_analytics_payload(db_path, filter_day, filter_hour):
         "stats": stats,
         "distribution": {
             "title": _("Sentiment Distribution"),
-            "description": _("Current polarity breakdown across annotated %(lower)s.", lower=content_label_plural.lower()),
+            "description": (_("Current polarity breakdown across annotated photos.") if schema["is_photo_sharing"] else _("Current polarity breakdown across annotated posts.")),
             "type": "doughnut",
             "labels": [_("Positive"), _("Neutral"), _("Negative")],
             "datasets": [
@@ -6515,7 +6512,7 @@ def _build_sentiment_analytics_payload(db_path, filter_day, filter_hour):
         },
         "secondary": {
             "title": _("Sentiment Mix Over Time"),
-            "description": _("Positive, neutral, and negative %(lower)s counts by day.", lower=content_label.lower()),
+            "description": (_("Positive, neutral, and negative photo counts by day.") if schema["is_photo_sharing"] else _("Positive, neutral, and negative post counts by day.")),
             "type": "bar",
             "labels": [_("Day %(day)s", day=int(row['day'])) for row in trend_rows],
             "datasets": [
@@ -6538,7 +6535,7 @@ def _build_sentiment_analytics_payload(db_path, filter_day, filter_hour):
             "options": {"beginAtZero": True, "stacked": True},
         },
         "summary": {
-            "title": _("Most Polarized %(content_label_plural)s", content_label_plural=content_label_plural),
+            "title": (_("Most Polarized Photos") if schema["is_photo_sharing"] else _("Most Polarized Posts")),
             "columns": [_("Author"), _("Compound"), _("When"), _("Content")],
             "rows": [
                 [
@@ -6560,8 +6557,6 @@ def _build_emotion_analytics_payload(db_path, filter_day, filter_hour):
         conn.row_factory = sqlite3.Row
         schema = _analytics_content_schema(conn)
         time_condition = _build_annotation_time_condition("r")
-        content_label = _("Photo") if schema["is_photo_sharing"] else _("Post")
-        content_label_plural = _("Photos") if schema["is_photo_sharing"] else _("Posts")
 
         distribution_rows = conn.execute(
             f"""
@@ -6644,7 +6639,7 @@ def _build_emotion_analytics_payload(db_path, filter_day, filter_hour):
     stats = [
         {
             "key": "annotated_posts",
-            "label": _("Annotated %(content_label_plural)s", content_label_plural=content_label_plural),
+            "label": (_("Annotated Photos") if schema["is_photo_sharing"] else _("Annotated Posts")),
             "value": _safe_int(stats_row["annotated_posts"]),
             "color": "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
         },
@@ -6681,7 +6676,7 @@ def _build_emotion_analytics_payload(db_path, filter_day, filter_hour):
         "stats": stats,
         "distribution": {
             "title": _("Emotion Distribution"),
-            "description": _("Current distribution of annotated %(lower)s.", lower=content_label_plural.lower()),
+            "description": (_("Current distribution of annotated photos.") if schema["is_photo_sharing"] else _("Current distribution of annotated posts.")),
             "type": "bar",
             "labels": [row["emotion"] for row in distribution_rows[:10]],
             "datasets": [
@@ -6712,7 +6707,7 @@ def _build_emotion_analytics_payload(db_path, filter_day, filter_hour):
         },
         "secondary": {
             "title": _("Annotation Volume"),
-            "description": _("Total emotion tags versus distinct annotated %(lower)s per day.", lower=content_label_plural.lower()),
+            "description": (_("Total emotion tags versus distinct annotated photos per day.") if schema["is_photo_sharing"] else _("Total emotion tags versus distinct annotated posts per day.")),
             "type": "bar",
             "labels": [_("Day %(day)s", day=int(row['day'])) for row in secondary_rows],
             "datasets": [
@@ -6722,7 +6717,7 @@ def _build_emotion_analytics_payload(db_path, filter_day, filter_hour):
                     "backgroundColor": "#c084fc",
                 },
                 {
-                    "label": _("Annotated %(content_label_plural)s", content_label_plural=content_label_plural),
+                    "label": (_("Annotated Photos") if schema["is_photo_sharing"] else _("Annotated Posts")),
                     "data": [
                         _safe_int(row["annotated_posts"]) for row in secondary_rows
                     ],

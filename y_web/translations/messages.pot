@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 09:01+0000\n"
+"POT-Creation-Date: 2026-10-17 09:09+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -936,8 +936,7 @@ msgid ""
 "authors, and recommender configurations."
 msgstr ""
 
-#, python-format
-msgid "Annotated %(content_label_plural)s"
+msgid "Annotated Photos"
 msgstr ""
 
 msgid "Annotated Posts"
@@ -2444,30 +2443,42 @@ msgstr ""
 msgid "Current Researcher Visibility"
 msgstr ""
 
-#, python-format
-msgid "Current distribution of annotated %(lower)s."
+msgid "Current distribution of annotated photos."
+msgstr ""
+
+msgid "Current distribution of annotated posts."
 msgstr ""
 
 msgid "Current execution progress"
 msgstr ""
 
-#, python-format
 msgid ""
 "Current in-degree complementary cumulative distribution in log-log scale "
-"for the %(network_label)s network."
+"for the follow network."
+msgstr ""
+
+msgid ""
+"Current in-degree complementary cumulative distribution in log-log scale "
+"for the mention network."
 msgstr ""
 
 msgid "Current local time"
 msgstr ""
 
-#, python-format
 msgid ""
 "Current out-degree complementary cumulative distribution in log-log scale"
-" for the %(network_label)s network."
+" for the follow network."
 msgstr ""
 
-#, python-format
-msgid "Current polarity breakdown across annotated %(lower)s."
+msgid ""
+"Current out-degree complementary cumulative distribution in log-log scale"
+" for the mention network."
+msgstr ""
+
+msgid "Current polarity breakdown across annotated photos."
+msgstr ""
+
+msgid "Current polarity breakdown across annotated posts."
 msgstr ""
 
 msgid "Current reward level"
@@ -5411,8 +5422,10 @@ msgstr ""
 msgid "Most Commented"
 msgstr ""
 
-#, python-format
-msgid "Most Polarized %(content_label_plural)s"
+msgid "Most Polarized Photos"
+msgstr ""
+
+msgid "Most Polarized Posts"
 msgstr ""
 
 msgid "Most Reached Authors"
@@ -6413,9 +6426,6 @@ msgstr ""
 msgid "PhD Student in AI"
 msgstr ""
 
-msgid "Photo"
-msgstr ""
-
 msgid "Photo Sharing"
 msgstr ""
 
@@ -6689,8 +6699,10 @@ msgstr ""
 msgid "Positive Posts"
 msgstr ""
 
-#, python-format
-msgid "Positive, neutral, and negative %(lower)s counts by day."
+msgid "Positive, neutral, and negative photo counts by day."
+msgstr ""
+
+msgid "Positive, neutral, and negative post counts by day."
 msgstr ""
 
 msgid "Post"
@@ -9235,8 +9247,10 @@ msgstr ""
 msgid "Total configurations:"
 msgstr ""
 
-#, python-format
-msgid "Total emotion tags versus distinct annotated %(lower)s per day."
+msgid "Total emotion tags versus distinct annotated photos per day."
+msgstr ""
+
+msgid "Total emotion tags versus distinct annotated posts per day."
 msgstr ""
 
 #, python-format
@@ -9289,8 +9303,10 @@ msgid ""
 " interaction activity."
 msgstr ""
 
-#, python-format
-msgid "Track how the %(network_label)s network evolves across the experiment."
+msgid "Track how the follow network evolves across the experiment."
+msgstr ""
+
+msgid "Track how the mention network evolves across the experiment."
 msgstr ""
 
 msgid "Track how toxic content annotations accumulate over time."
