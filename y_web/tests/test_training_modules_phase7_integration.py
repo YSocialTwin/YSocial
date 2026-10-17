@@ -279,10 +279,8 @@ def test_component_path_through_the_real_core(core_app):
     )["launch_id"]
     fake.finished[second] = True
     page = me.get(f"/training/runs/{rid}").get_data(as_text=True)
-    assert (
-        len(re.findall(r'data-step="[^"]+" data-status="completed"', page)) == 2
-        and "completed all the required steps" in page
-    )
+    # a finished training shows only the completion card (no step list any more)
+    assert "completed this training" in page
 
     # the identity map learnt the component's own id; staff see pseudonyms only
     from sqlalchemy import text
