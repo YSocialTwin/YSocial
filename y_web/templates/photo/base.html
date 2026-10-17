@@ -1970,8 +1970,9 @@
                         </section>
                     </div>
                     <aside class="photo-profile-edit-overlay__panel">
-                        {% with ys_lang_wrap_class='photo-profile-edit-overlay__field' %}{% include "shared/profile_language_field.html" %}{% endwith %}
+                        {% with ys_lang_part='form' %}{% include "shared/profile_language_field.html" %}{% endwith %}
                         <form class="photo-profile-edit-overlay__form" data-photo-profile-edit-form>
+                            {% with ys_lang_part='field', ys_lang_plain=true, ys_lang_wrap_class='photo-profile-edit-overlay__field', ys_lang_hint_class='photo-profile-edit-overlay__helper' %}{% include "shared/profile_language_field.html" %}{% endwith %}
                             <div class="photo-profile-edit-overlay__field">
                                 <label for="photo-profile-edit-email">{{ _('Email') }}</label>
                                 <input id="photo-profile-edit-email" type="text" name="email" data-photo-profile-edit-input-email />
