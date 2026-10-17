@@ -72,3 +72,34 @@
 .misc-app .gridjs-search-input { border:1px solid var(--tm-border); border-radius:8px; padding:6px 10px; }
 .misc-app .gridjs-pagination .gridjs-pages button { border-radius:6px; }
 .misc-app .gridjs-pagination .gridjs-pages button.gridjs-currentPage { background:rgba(61,112,178,.12); color:var(--tm-primary); font-weight:600; }
+
+/* ---- Tidy layout: grouped sections, even cards, compact "New ..." forms ---- */
+.misc-app .misc-group-head { display:flex; align-items:center; gap:10px; margin:26px 0 12px; padding-bottom:8px; border-bottom:1px solid var(--tm-border); }
+.misc-app .misc-section-description + .misc-group-head { margin-top:6px; }
+.misc-app .misc-group-icon { display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:7px; background:var(--tm-soft); color:var(--tm-primary); font-size:1rem; }
+.misc-app .misc-group-title { margin:0; font-size:.78rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--tm-ink); }
+.misc-app .misc-group-sub { margin:1px 0 0; font-size:.78rem; color:var(--tm-muted); }
+
+/* every card in a row has the same height; the "New ..." panel sits at the bottom */
+.misc-app .misc-grid { align-items:stretch; margin-bottom:0; }
+.misc-app .misc-compact-box { min-width:0; box-shadow:none; }
+.misc-app .misc-compact-box:hover { box-shadow:none; border-color:var(--tm-border); }
+.misc-app .misc-compact-box h3 { font-size:.95rem; }
+.misc-app .misc-box-icon { width:28px; height:28px; font-size:1.05rem; border-radius:8px; }
+.misc-app .misc-compact-box > .box-content.ys-mt-30 { margin-top:auto; }
+.misc-app .misc-compact-box > .box-content:not(.ys-mt-30) { margin-bottom:14px; }
+
+/* new-item forms: fields side by side, button on the right, no full-width block */
+.misc-app .box-content.ys-mt-30 form { display:flex; flex-wrap:wrap; align-items:flex-end; gap:10px; }
+.misc-app .box-content.ys-mt-30 .box-lines { display:flex; flex-wrap:wrap; gap:10px; flex:1 1 220px; margin:0; }
+.misc-app .box-content.ys-mt-30 .box-line { display:flex; flex-direction:column; align-items:stretch; gap:3px; flex:1 1 120px; margin:0; }
+.misc-app .box-content.ys-mt-30 .box-line .left { min-width:0; font-size:.7rem; text-transform:uppercase; letter-spacing:.03em; }
+.misc-app .box-content.ys-mt-30 .box-line .right { flex:none; }
+.misc-app .box-content.ys-mt-30 .box-line .right .input, .misc-app .box-content.ys-mt-30 .box-line .right input, .misc-app .box-content.ys-mt-30 .box-line .right select { width:100%; }
+.misc-app .box-content.ys-mt-30 .button-wrap { margin:0; flex:0 0 auto; }
+.misc-app .box-content.ys-mt-30 .button.is-fullwidth { width:auto; }
+.misc-app .box-content.ys-mt-30 .ys-section-label { margin:0 0 8px; }
+
+/* keep long tables inside the card */
+.misc-app .gridjs-wrapper { max-width:100%; overflow-x:auto; }
+.misc-app .misc-box-full { grid-column:1 / -1; }

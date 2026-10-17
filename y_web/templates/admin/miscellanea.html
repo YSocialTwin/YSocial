@@ -33,6 +33,7 @@
                     <strong>{{ _('Demographics & Attributes:') }}</strong> {{ _('Configure demographic characteristics (languages, nationalities) and social attributes (political leanings, education levels, professions) that define the agents in your simulations.') }}</div>
                 </div>
 
+                <div class="misc-group-head"><span class="misc-group-icon"><i class="mdi mdi-account-star-outline"></i></span><div><h3 class="misc-group-title">{{ _('Social attributes') }}</h3><p class="misc-group-sub">{{ _('Political leanings, education and professions of the agents.') }}</p></div></div>
                 <div class="misc-grid">
                     <div class="misc-compact-box" id="box-political-leanings">
                         <h3><span class="misc-box-icon"><i class="mdi mdi-scale-balance"></i></span>{{ _('Political Leanings') }}</h3>
@@ -131,6 +132,10 @@
                         </div>
                     </div>
 
+                </div>
+
+                <div class="misc-group-head"><span class="misc-group-icon"><i class="mdi mdi-account-group-outline"></i></span><div><h3 class="misc-group-title">{{ _('Demographics') }}</h3><p class="misc-group-sub">{{ _('Languages, nationalities and age classes.') }}</p></div></div>
+                <div class="misc-grid">
                     <div class="misc-compact-box" id="box-languages">
                         <h3><span class="misc-box-icon"><i class="mdi mdi-translate"></i></span>{{ _('Languages') }}</h3>
 
@@ -228,7 +233,8 @@
                     <strong>{{ _('Content & Behavior:') }}</strong> {{ _('Define content topics, toxicity levels, and activity patterns to create realistic agent behaviors and content interactions within your simulations.') }}</div>
                 </div>
 
-                <div class="misc-grid">
+                <div class="misc-group-head"><span class="misc-group-icon"><i class="mdi mdi-text-box-outline"></i></span><div><h3 class="misc-group-title">{{ _('Content') }}</h3><p class="misc-group-sub">{{ _('Topics and toxicity levels of generated content.') }}</p></div></div>
+                <div class="misc-grid misc-grid-2col">
                     <div class="misc-compact-box" id="box-topics">
                         <h3><span class="misc-box-icon"><i class="mdi mdi-pound"></i></span>{{ _('Topics') }}</h3>
 
@@ -286,7 +292,7 @@
                     </div>
                 </div>
 
-                <!-- Activity Profiles in its own row spanning 2 columns -->
+                <div class="misc-group-head"><span class="misc-group-icon"><i class="mdi mdi-pulse"></i></span><div><h3 class="misc-group-title">{{ _('Behavior') }}</h3><p class="misc-group-sub">{{ _('How often and when agents are active.') }}</p></div></div>
                 <div class="misc-grid misc-grid-2col">
                     <div class="misc-compact-box misc-box-full" id="box-activity-profiles">
                         <h3><span class="misc-box-icon"><i class="mdi mdi-pulse"></i></span>{{ _('Activity Profiles') }}</h3>
@@ -361,7 +367,7 @@
                     <strong>{{ _('System Settings:') }}</strong> {{ _('Configure system-level settings for the YSocial platform, including telemetry, HPC client monitoring, process monitoring, and system updates.') }}</div>
                 </div>
 
-                <!-- Row 1: System Updates & Telemetry Settings -->
+                <div class="misc-group-head"><span class="misc-group-icon"><i class="mdi mdi-update"></i></span><div><h3 class="misc-group-title">{{ _('Updates & privacy') }}</h3><p class="misc-group-sub">{{ _('Platform releases and anonymous usage data.') }}</p></div></div>
                 <div class="misc-grid misc-grid-2col">
                     <!-- System Updates -->
                     <div class="misc-compact-box" id="box-system-updates">
@@ -407,7 +413,8 @@
                 </div>
 
                 <!-- Row 2: HPC Monitor, Process Watchdog, About System Settings -->
- <div class="misc-grid ys-mt-20">
+                <div class="misc-group-head"><span class="misc-group-icon"><i class="mdi mdi-server-network"></i></span><div><h3 class="misc-group-title">{{ _('Services & monitoring') }}</h3><p class="misc-group-sub">{{ _('HPC clients and process health.') }}</p></div></div>
+                <div class="misc-grid misc-grid-2col">
                     <!-- HPC Monitor -->
                     <!-- HPC Monitor -->
                     <div class="misc-compact-box" id="box-hpc-monitor">
@@ -511,6 +518,10 @@
 
                     </div>
 
+                </div>
+
+                <div class="misc-group-head"><span class="misc-group-icon"><i class="mdi mdi-brain"></i></span><div><h3 class="misc-group-title">{{ _('Models & information') }}</h3><p class="misc-group-sub">{{ _('Local models and notes on these settings.') }}</p></div></div>
+                <div class="misc-grid misc-grid-2col">
                     <div class="misc-compact-box" id="box-detoxify-model">
                         <h3><span class="misc-box-icon"><i class="mdi mdi-brain"></i></span>{{ _('Local Toxicity Model') }}</h3>
                         <div class="help-block ys-mb-15">
@@ -726,7 +737,7 @@
                 {% if llm_backend["status"] and llm_backend["installed"] %}
                 {% if len(models) > 0 %}
                 <!-- Available LLMs Table (full width) -->
- <div class="misc-grid misc-grid-1col ys-mt-20">
+ <div class="misc-grid misc-grid-1col">
                     <div class="misc-compact-box" id="box-available-llms">
                         <h3><span class="misc-box-icon"><i class="mdi mdi-view-list-outline"></i></span>{{ _('Available LLMs') }}</h3>
 

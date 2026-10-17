@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 09:47+0000\n"
+"POT-Creation-Date: 2026-10-17 09:59+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1296,6 +1296,9 @@ msgstr ""
 msgid ""
 "Before entering your feed, personalise your profile and share your "
 "interest level and opinion for each active discussion topic."
+msgstr ""
+
+msgid "Behavior"
 msgstr ""
 
 msgid "Behavioral Homophily"
@@ -4245,6 +4248,9 @@ msgstr ""
 msgid "HPC client configuration file not found."
 msgstr ""
 
+msgid "HPC clients and process health."
+msgstr ""
+
 #, python-format
 msgid ""
 "HPC experiment reset completed. Restored %(restored_count)s population "
@@ -4433,6 +4439,9 @@ msgid ""
 msgstr ""
 
 msgid "How much conversation history agents see"
+msgstr ""
+
+msgid "How often and when agents are active."
 msgstr ""
 
 msgid "How often memory reflections are generated."
@@ -4993,6 +5002,9 @@ msgstr ""
 msgid "Languages"
 msgstr ""
 
+msgid "Languages, nationalities and age classes."
+msgstr ""
+
 msgid "Large Language Models"
 msgstr ""
 
@@ -5141,6 +5153,9 @@ msgid "Local Toxicity Model"
 msgstr ""
 
 msgid "Local Triadic Closure"
+msgstr ""
+
+msgid "Local models and notes on these settings."
 msgstr ""
 
 msgid "Log"
@@ -5457,6 +5472,9 @@ msgid "Model discovery is enabled only after an Ollama host is provided."
 msgstr ""
 
 msgid "Model selection"
+msgstr ""
+
+msgid "Models & information"
 msgstr ""
 
 msgid "Moderated Target"
@@ -6556,6 +6574,9 @@ msgstr ""
 msgid "Platform Type"
 msgstr ""
 
+msgid "Platform releases and anonymous usage data."
+msgstr ""
+
 #, python-format
 msgid "Platform: %(platform)s"
 msgstr ""
@@ -6642,6 +6663,9 @@ msgid "Political Leanings"
 msgstr ""
 
 msgid "Political leaning"
+msgstr ""
+
+msgid "Political leanings, education and professions of the agents."
 msgstr ""
 
 msgid "Popularity & Activity Bias"
@@ -8137,6 +8161,9 @@ msgstr ""
 msgid "Server, Clients, and Analytics"
 msgstr ""
 
+msgid "Services & monitoring"
+msgstr ""
+
 msgid "Set LLM"
 msgstr ""
 
@@ -8387,6 +8414,9 @@ msgid "Social Resummarize Every (events)"
 msgstr ""
 
 msgid "Social Timeline"
+msgstr ""
+
+msgid "Social attributes"
 msgstr ""
 
 msgid "Solitary/Reserved"
@@ -9344,6 +9374,9 @@ msgstr ""
 msgid "Topics (select to visualize)"
 msgstr ""
 
+msgid "Topics and toxicity levels of generated content."
+msgstr ""
+
 msgid "Topics covered and population assignments."
 msgstr ""
 
@@ -9732,6 +9765,9 @@ msgstr ""
 msgid ""
 "Updated database values, but failed to sync population config "
 "'%(basename)s': %(error)s"
+msgstr ""
+
+msgid "Updates & privacy"
 msgstr ""
 
 msgid "Updating ad hoc client..."
