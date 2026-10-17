@@ -71,7 +71,7 @@ jobs:
         # Sign with ad-hoc signature and entitlements
         # This is required for the app to work on other macOS machines
         codesign --force --sign - \
-          --entitlements entitlements.plist \
+          --entitlements packaging/entitlements.plist \
           --timestamp \
           --options runtime \
           dist/YSocial
@@ -107,8 +107,8 @@ jobs:
            (default behavior - no browser chrome!)
         
         4. Default admin credentials:
-           Email: admin@ysocial.com
-           Password: test
+           Email: admin@y-not.social
+           Password: admin
         
         IMPORTANT NOTES:
         ----------------

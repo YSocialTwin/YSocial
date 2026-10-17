@@ -20,6 +20,7 @@ services:
             - ../../..:/app/
         environment:
             - FLASK_APP=/app/y_social.py
+            - YSOCIAL_SECRET_KEY=${YSOCIAL_SECRET_KEY:-}
             # - LLM_BACKEND=ollama  # Default: None. Options: ollama, vllm
         networks:
             my-network:
