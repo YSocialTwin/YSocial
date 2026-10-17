@@ -201,8 +201,6 @@ for submodule in [
     "YClientReddit",
     "YSimulator",
     "YPhotoSharing",
-    "y_agents_plugins",
-    "y_memory_subsystem",
 ]:
     submodule_path = os.path.join(basedir, "external", submodule)
     if os.path.exists(submodule_path) and os.listdir(submodule_path):
