@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 09:13+0000\n"
+"POT-Creation-Date: 2026-10-17 09:20+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1710,12 +1710,6 @@ msgstr ""
 msgid "Client simulation parameters updated."
 msgstr ""
 
-msgid "Client-side forum simulation runtime for Reddit-like YSocial scenarios."
-msgstr ""
-
-msgid "Client-side microblogging simulation runtime for YSocial experiments."
-msgstr ""
-
 msgid "Client:"
 msgstr ""
 
@@ -2922,9 +2916,6 @@ msgid "Distinct Participants"
 msgstr ""
 
 msgid "Distinct Recommended Posts"
-msgstr ""
-
-msgid "Distributed HPC simulation runtime for large-scale YSocial experiments."
 msgstr ""
 
 msgid "Distribution Type"
@@ -4382,6 +4373,12 @@ msgstr ""
 msgid "Host:"
 msgstr ""
 
+msgid "Hosts the forum platform the agents interact with (server side)."
+msgstr ""
+
+msgid "Hosts the microblogging platform the agents interact with (server side)."
+msgstr ""
+
 msgid "Hot"
 msgstr ""
 
@@ -4576,9 +4573,6 @@ msgstr ""
 msgid ""
 "Inspect one moderated target at a time using their toxicity trend and the"
 " timing of moderator interventions."
-msgstr ""
-
-msgid "Instagram like photo-sharing simulation runtime for YSocial experiments."
 msgstr ""
 
 msgid "Install"
@@ -7571,6 +7565,15 @@ msgstr ""
 msgid "Running a YSocial Experiment"
 msgstr ""
 
+msgid "Runs large-scale simulations in a distributed way on HPC clusters."
+msgstr ""
+
+msgid "Runs the agents of a forum simulation (client side)."
+msgstr ""
+
+msgid "Runs the agents of a microblogging simulation (client side)."
+msgstr ""
+
 msgid "Runtime compatibility"
 msgstr ""
 
@@ -8102,12 +8105,6 @@ msgstr ""
 msgid "Server, Clients, and Analytics"
 msgstr ""
 
-msgid "Server-side forum simulation runtime for Reddit-like YSocial scenarios."
-msgstr ""
-
-msgid "Server-side microblogging simulation runtime for YSocial experiments."
-msgstr ""
-
 msgid "Set LLM"
 msgstr ""
 
@@ -8286,6 +8283,11 @@ msgid "Simulation length and population dynamics."
 msgstr ""
 
 msgid "Simulation length must be between 1 and 30 days"
+msgstr ""
+
+msgid ""
+"Simulation runtime for photo-sharing experiments, with an Instagram-like "
+"platform."
 msgstr ""
 
 msgid "Simulation started successfully!"

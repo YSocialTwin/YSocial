@@ -21,12 +21,12 @@ RUNTIME_TEXTS = (
     N_("Agent Extensions"),
     N_("Frontend Extensions"),
     N_("Backend Extensions"),
-    N_("Client-side microblogging simulation runtime for YSocial experiments."),
-    N_("Server-side microblogging simulation runtime for YSocial experiments."),
-    N_("Client-side forum simulation runtime for Reddit-like YSocial scenarios."),
-    N_("Server-side forum simulation runtime for Reddit-like YSocial scenarios."),
-    N_("Instagram like photo-sharing simulation runtime for YSocial experiments."),
-    N_("Distributed HPC simulation runtime for large-scale YSocial experiments."),
+    N_("Runs the agents of a microblogging simulation (client side)."),
+    N_("Hosts the microblogging platform the agents interact with (server side)."),
+    N_("Runs the agents of a forum simulation (client side)."),
+    N_("Hosts the forum platform the agents interact with (server side)."),
+    N_("Simulation runtime for photo-sharing experiments, with an Instagram-like platform."),
+    N_("Runs large-scale simulations in a distributed way on HPC clusters."),
 )
 
 ROOT = Path(get_writable_path())
@@ -420,7 +420,7 @@ def scan_plugin_info_files() -> list[dict]:
                         "plugin_name": "y_agents_plugins",
                         "category": "Agent Extensions",
                         "group": "Agent Plugins",
-                        "description": "Plugin-defined ad hoc agent families for YSocial experiments.",
+                        "description": "Ready-made special-purpose agents (moderator, propaganda, comic relief, stress testing and more) to add to an experiment.",
                         "authors": ["YSocialTwin"],
                         "repository_url": "https://github.com/YSocialTwin/y_agents_plugins",
                     },

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 09:13+0000\n"
+"POT-Creation-Date: 2026-10-17 09:20+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -1876,16 +1876,6 @@ msgstr "Client non trovato."
 msgid "Client simulation parameters updated."
 msgstr "Parametri di simulazione del client aggiornati."
 
-msgid "Client-side forum simulation runtime for Reddit-like YSocial scenarios."
-msgstr ""
-"Runtime lato client per la simulazione di forum, per scenari YSocial di "
-"tipo Reddit."
-
-msgid "Client-side microblogging simulation runtime for YSocial experiments."
-msgstr ""
-"Runtime lato client per la simulazione di microblogging negli esperimenti"
-" YSocial."
-
 msgid "Client:"
 msgstr "Client:"
 
@@ -3292,11 +3282,6 @@ msgstr "Partecipanti distinti"
 
 msgid "Distinct Recommended Posts"
 msgstr "Post raccomandati distinti"
-
-msgid "Distributed HPC simulation runtime for large-scale YSocial experiments."
-msgstr ""
-"Runtime di simulazione HPC distribuito per esperimenti YSocial su larga "
-"scala."
 
 msgid "Distribution Type"
 msgstr "Tipo di distribuzione"
@@ -4871,6 +4856,16 @@ msgstr "Formato dell'host"
 msgid "Host:"
 msgstr "Host:"
 
+msgid "Hosts the forum platform the agents interact with (server side)."
+msgstr ""
+"Ospita la piattaforma forum con cui interagiscono gli agenti (lato "
+"server)."
+
+msgid "Hosts the microblogging platform the agents interact with (server side)."
+msgstr ""
+"Ospita la piattaforma di microblogging con cui interagiscono gli agenti "
+"(lato server)."
+
 msgid "Hot"
 msgstr "Di tendenza"
 
@@ -5091,11 +5086,6 @@ msgid ""
 msgstr ""
 "Esamina un bersaglio moderato alla volta usando l'andamento della sua "
 "tossicità e i tempi degli interventi dei moderatori."
-
-msgid "Instagram like photo-sharing simulation runtime for YSocial experiments."
-msgstr ""
-"Runtime di simulazione di photo-sharing in stile Instagram per gli "
-"esperimenti YSocial."
 
 msgid "Install"
 msgstr "Installa"
@@ -8306,6 +8296,15 @@ msgstr "In esecuzione"
 msgid "Running a YSocial Experiment"
 msgstr "Eseguire un esperimento YSocial"
 
+msgid "Runs large-scale simulations in a distributed way on HPC clusters."
+msgstr "Esegue simulazioni su larga scala in modo distribuito su cluster HPC."
+
+msgid "Runs the agents of a forum simulation (client side)."
+msgstr "Esegue gli agenti di una simulazione forum (lato client)."
+
+msgid "Runs the agents of a microblogging simulation (client side)."
+msgstr "Esegue gli agenti di una simulazione microblogging (lato client)."
+
 msgid "Runtime compatibility"
 msgstr "Compatibilità del runtime"
 
@@ -8896,16 +8895,6 @@ msgstr "Impostazioni del server aggiornate con successo"
 msgid "Server, Clients, and Analytics"
 msgstr "Server, client e analisi"
 
-msgid "Server-side forum simulation runtime for Reddit-like YSocial scenarios."
-msgstr ""
-"Runtime lato server per la simulazione di forum, per scenari YSocial di "
-"tipo Reddit."
-
-msgid "Server-side microblogging simulation runtime for YSocial experiments."
-msgstr ""
-"Runtime lato server per la simulazione di microblogging negli esperimenti"
-" YSocial."
-
 msgid "Set LLM"
 msgstr "Imposta l'LLM"
 
@@ -9105,6 +9094,13 @@ msgstr "Durata della simulazione e dinamiche della popolazione."
 
 msgid "Simulation length must be between 1 and 30 days"
 msgstr "La durata della simulazione deve essere compresa tra 1 e 30 giorni"
+
+msgid ""
+"Simulation runtime for photo-sharing experiments, with an Instagram-like "
+"platform."
+msgstr ""
+"Motore di simulazione per esperimenti di photo sharing, con una "
+"piattaforma in stile Instagram."
 
 msgid "Simulation started successfully!"
 msgstr "Simulazione avviata con successo!"
@@ -11822,6 +11818,18 @@ msgstr "✔️ Usa"
 #~ "extended duration (%(client_days)s days)."
 #~ msgstr ""
 
+#~ msgid "Client-side forum simulation runtime for Reddit-like YSocial scenarios."
+#~ msgstr ""
+#~ "Runtime lato client per la simulazione"
+#~ " di forum, per scenari YSocial di "
+#~ "tipo Reddit."
+
+#~ msgid "Client-side microblogging simulation runtime for YSocial experiments."
+#~ msgstr ""
+#~ "Runtime lato client per la simulazione"
+#~ " di microblogging negli esperimenti "
+#~ "YSocial."
+
 #~ msgid "Cloned %(spec_label)s on branch %(branch)s."
 #~ msgstr ""
 
@@ -11894,6 +11902,11 @@ msgstr "✔️ Usa"
 
 #~ msgid "Describe your simulation with an"
 #~ msgstr ""
+
+#~ msgid "Distributed HPC simulation runtime for large-scale YSocial experiments."
+#~ msgstr ""
+#~ "Runtime di simulazione HPC distribuito "
+#~ "per esperimenti YSocial su larga scala."
 
 #~ msgid ""
 #~ "Drag activity profiles from available to"
@@ -12037,6 +12050,14 @@ msgstr "✔️ Usa"
 #~ msgstr ""
 
 #~ msgid ""
+#~ "Instagram like photo-sharing simulation "
+#~ "runtime for YSocial experiments."
+#~ msgstr ""
+#~ "Runtime di simulazione di photo-sharing"
+#~ " in stile Instagram per gli "
+#~ "esperimenti YSocial."
+
+#~ msgid ""
 #~ "Installed %(spec_label)s from GitHub release"
 #~ " %(release_tag_or_latest_av)s."
 #~ msgstr ""
@@ -12106,6 +12127,18 @@ msgstr "✔️ Usa"
 
 #~ msgid "Schema migration failed: %(outcome_error)s"
 #~ msgstr ""
+
+#~ msgid "Server-side forum simulation runtime for Reddit-like YSocial scenarios."
+#~ msgstr ""
+#~ "Runtime lato server per la simulazione"
+#~ " di forum, per scenari YSocial di "
+#~ "tipo Reddit."
+
+#~ msgid "Server-side microblogging simulation runtime for YSocial experiments."
+#~ msgstr ""
+#~ "Runtime lato server per la simulazione"
+#~ " di microblogging negli esperimenti "
+#~ "YSocial."
 
 #~ msgid "Share weight (w"
 #~ msgstr ""
