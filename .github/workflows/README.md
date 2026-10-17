@@ -6,10 +6,11 @@ This directory contains automated workflows for the YSocial project.
 
 ### 1. CI - Run Tests (`ci-tests.yml`)
 
-**Trigger:** Push or pull request to `main` or `develop` branches
+**Trigger:** every push and pull request
 
 This workflow:
-- Checks out the code with submodules
+- Checks out the code (the repository has no submodules)
+- Checks the i18n catalogs, the prompt packs and the English prompt hashes
 - Sets up Python 3.10
 - Caches pip dependencies for faster builds
 - Installs all project dependencies from `requirements.txt`

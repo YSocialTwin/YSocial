@@ -85,13 +85,13 @@ To build executables manually for testing:
 1. Python 3.11 (recommended)
 2. All dependencies from `requirements.txt`
 3. PyInstaller: `pip install pyinstaller`
-4. Git submodules initialized: `git submodule update --init --recursive`
+4. (Optional) the simulation runtimes you want inside the executable cloned into `external/` (`YServer`, `YClient`, `YServerReddit`, `YClientReddit`, `YSimulator`, `YPhotoSharing`). The repository has no git submodules; `external/` is git-ignored and the spec bundles whatever it finds there. Every other plugin is installed later from the plugin page.
 
 ### Build Steps
 
 ```bash
-# 1. Clone repository with submodules
-git clone --recursive https://github.com/YSocialTwin/YSocial.git
+# 1. Clone the repository (and, optionally, the runtimes into external/)
+git clone https://github.com/YSocialTwin/YSocial.git
 cd YSocial
 
 # 2. Create and activate virtual environment (recommended)
@@ -114,7 +114,7 @@ pyinstaller y_social.spec --clean --noconfirm
 # 7. (macOS only) Sign the executable for distribution
 # This step is CRITICAL for macOS - without it, the app will hang on other machines
 codesign --force --sign - \
-  --entitlements entitlements.plist \
+  --entitlements packaging/entitlements.plist \
   --timestamp \
   --options runtime \
   dist/YSocial
@@ -215,7 +215,7 @@ Custom PyInstaller hooks:
 
 ### Build Fails with Import Errors
 - Ensure all dependencies are installed: `pip install -r requirements.txt`
-- Check that submodules are initialized: `git submodule status`
+- Check that the runtimes you expect are in `external/` (there are no git submodules)
 
 ### Executable Fails to Start
 - Check console output for error messages
@@ -233,7 +233,7 @@ The executable is large (~500MB-1GB) because it includes:
 - All dependencies (Flask, SQLAlchemy, NLTK, scikit-learn, scipy, etc.)
 - Static assets (CSS, JS, images)
 - Database schemas
-- Submodules (YServer, YClient)
+- The simulation runtimes found in `external/` at build time, the Alembic migration scripts, the interface translations and the prompt packs
 
 This is normal for PyInstaller-built applications with many dependencies.
 
@@ -250,7 +250,7 @@ This is normal for PyInstaller-built applications with many dependencies.
 - **IMPORTANT**: The executable must be properly signed to work on other machines
 - Without proper signing, the app will hang at the splash screen on other macOS devices
 - See [MACOS_CODE_SIGNING.md](../MACOS_CODE_SIGNING.md) for detailed signing instructions
-- Quick signing for testing: `codesign --force --sign - --entitlements entitlements.plist --timestamp --options runtime dist/YSocial`
+- Quick signing for testing: `codesign --force --sign - --entitlements packaging/entitlements.plist --timestamp --options runtime dist/YSocial`
 - For production releases, use a Developer ID certificate and notarize the app
 
 ### Windows
