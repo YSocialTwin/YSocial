@@ -42,6 +42,13 @@ jobs:
         python scripts/i18n/check_glossary.py
         python scripts/i18n/coverage_report.py --min 98
 
+    - name: Check prompt packs and English prompt hashes
+      # English prompts must stay byte for byte what they were; every other
+      # language pack must carry the same keys, fields and protocol tokens.
+      run: |
+        python scripts/prompts/snapshot_hashes.py --check
+        python scripts/prompts/validate_pack.py
+
     - name: Run tests with coverage
       # The deselected tests below pass in isolation and in every local
       # batched run (the full suite split across a few pytest invocations),
