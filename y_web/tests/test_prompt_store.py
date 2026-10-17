@@ -1,7 +1,6 @@
 """Prompts moved out of the code (step 1 of the multilingual prompts task): store behaviour and call-site contract."""
 
 import ast
-import re
 from pathlib import Path
 
 import pytest
@@ -9,7 +8,6 @@ import pytest
 from y_web import prompt_store as ps
 
 PKG = Path(ps.__file__).parent
-FIELD = re.compile(r"\{([A-Za-z_][A-Za-z0-9_]*)\}")
 
 
 def test_render_replaces_only_named_fields_and_keeps_other_braces():
@@ -59,5 +57,25 @@ def test_every_call_site_uses_an_existing_key_and_matching_fields():
         seen += 1
         if node.func.attr == "prompt":
             passed = {k.arg for k in node.keywords if k.arg}
-            assert passed == set(FIELD.findall(template)), f"{fname}: {key}"
+            assert passed == ps.fields_of(template), f"{fname}: {key}"
     assert seen > 0
+
+
+def test_render_follows_paths_items_joins_and_formats_without_evaluating():
+    class Agent:
+        age = 30
+        _secret = "x"
+
+    out = ps.render(
+        "{self.age} {article['title']} {', '.join(tags)} {score:.2f} {\"a\": 1}",
+        self=Agent(),
+        article={"title": "T"},
+        tags=["a", "b"],
+        score=0.5,
+    )
+    assert out == '30 T a, b 0.50 {"a": 1}'
+    with pytest.raises(ps.PromptError):
+        ps.render("{self._secret}", self=Agent())
+    with pytest.raises(ps.PromptError):
+        ps.render("{missing.name}")
+    assert ps.render("{self.upper()}", self="x") == "{self.upper()}"
