@@ -12,11 +12,13 @@ It only reads files. Run from the YWeb root: ``python scripts/prompts/inventory_
 import argparse
 import ast
 import json
+import os
 import re
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+# PROMPTS_ROOT lets the scan run on a copy of the repositories (for example a checkout of the baseline).
+ROOT = Path(os.environ.get("PROMPTS_ROOT") or Path(__file__).resolve().parents[2])
 REPOS = {
     "YWeb": ROOT / "y_web",
     "YClient": ROOT / "external" / "YClient" / "y_client",
@@ -65,6 +67,7 @@ def scan_file(path):
         if isinstance(n, (ast.Module, ast.FunctionDef, ast.ClassDef, ast.AsyncFunctionDef)):
             if n.body and isinstance(n.body[0], ast.Expr):
                 doc_ids.add(id(n.body[0].value))
+    doc_ids |= {id(v) for n in ast.walk(tree) if isinstance(n, ast.JoinedStr) for v in n.values}
     for n in ast.walk(tree):
         t = text_of(n)
         if t and id(n) not in doc_ids and len(t.split()) >= 8 and CUES.search(t):
