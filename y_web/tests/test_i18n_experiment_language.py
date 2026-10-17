@@ -159,3 +159,34 @@ def test_participant_language_selector_follows_the_experiment_switch():
         assert 'name="scope" value="sim"' in html and '<option value="it" selected>Italiano (beta)</option>' in html
     finally:
         i18n.experiment_language_resolver = None
+
+
+def test_language_is_chosen_in_the_profile_not_in_the_feed_header():
+    """The participant language lives in the profile pages; the feed headers carry no selector."""
+    from flask import Blueprint, Flask, render_template
+
+    for name in ("microblogging/header.html", "forum/header.html", "photo/base.html"):
+        assert "language_switcher" not in (ROOT / "y_web" / "templates" / name).read_text(encoding="utf-8")
+    for name in ("microblogging/edit_profile.html", "photo/base.html", "forum/profile.html"):
+        assert "shared/profile_language_field.html" in (ROOT / "y_web" / "templates" / name).read_text(encoding="utf-8")
+
+    app = Flask("y_web")
+    app.config.update(SECRET_KEY="t", SUPPORTED_LANGUAGES=("en", "it"), TESTING=True)
+    sim = Blueprint("main", __name__)
+
+    @sim.route("/<int:exp_id>/p")
+    def p(exp_id):
+        return render_template("shared/profile_language_field.html")
+
+    app.register_blueprint(sim)
+    app.template_folder = str(ROOT / "y_web" / "templates")
+    i18n.init_i18n(app)
+    try:
+        i18n.experiment_language_resolver = lambda: ("it", False)
+        assert 'name="lang"' not in app.test_client().get("/1/p").get_data(as_text=True)
+        i18n.experiment_language_resolver = lambda: ("it", True)
+        html = app.test_client().get("/1/p").get_data(as_text=True)
+        assert 'form="ys-profile-language-form"' in html and 'action="/set-language"' in html
+        assert '<option value="it" selected>Italiano (beta)</option>' in html
+    finally:
+        i18n.experiment_language_resolver = None

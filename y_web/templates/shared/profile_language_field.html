@@ -1,0 +1,21 @@
+{#- Interface-language field for the profile pages of the participant frontends. Rendered only when the
+    experiment lets participants change the language. It submits its own tiny form (the select refers to it
+    through the HTML ``form`` attribute), so it works inside or next to the profile forms.
+    Variables: ``ys_lang_wrap_class`` / ``ys_lang_select_class`` (optional styling hooks of the host page). -#}
+{% set _ys_langs = simulation_language_options() %}
+{% if _ys_langs %}
+<form id="ys-profile-language-form" method="POST" action="/set-language" hidden>
+  <input type="hidden" name="scope" value="sim">
+  <input type="hidden" name="next" value="{{ request.full_path.rstrip('?') }}">
+</form>
+<div class="{{ ys_lang_wrap_class|default('ys-profile-language') }}">
+  <label for="ys-profile-language-select">{{ _('Interface language') }}</label>
+  <div class="select is-fullwidth">
+    <select id="ys-profile-language-select" name="lang" form="ys-profile-language-form" class="{{ ys_lang_select_class|default('') }}"
+            onchange="this.form.submit()">
+      {% for code, name in _ys_langs %}<option value="{{ code }}"{% if get_locale()|string == code %} selected{% endif %}>{{ name }}</option>{% endfor %}
+    </select>
+  </div>
+  <small>{{ _('The language of the menus and labels of this site. Posts and comments are never translated.') }}</small>
+</div>
+{% endif %}

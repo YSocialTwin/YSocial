@@ -1970,6 +1970,7 @@
                         </section>
                     </div>
                     <aside class="photo-profile-edit-overlay__panel">
+                        {% with ys_lang_wrap_class='photo-profile-edit-overlay__field' %}{% include "shared/profile_language_field.html" %}{% endwith %}
                         <form class="photo-profile-edit-overlay__form" data-photo-profile-edit-form>
                             <div class="photo-profile-edit-overlay__field">
                                 <label for="photo-profile-edit-email">{{ _('Email') }}</label>
@@ -2024,6 +2025,5 @@
     </div>
 {% block photo_bootstrap_data %}{% endblock %}
 {% include "shared/plugin_loader.html" %}
-{% include "shared/language_switcher.html" %}
 </body>
 </html>

@@ -252,6 +252,20 @@
                 </form>
             </section>
 
+            {% if simulation_language_options() %}
+            <section class="ys-edit-profile-section">
+                <div class="ys-profile-panel-head">
+                    <div>
+                        <h4 class="ys-heading-tight">{{ _('Language') }}</h4>
+                        <p class="ys-profile-section-heading__subtitle">{{ _('Choose the language of the interface.') }}</p>
+                    </div>
+                </div>
+                <div class="ys-edit-profile-form">
+                    {% with ys_lang_wrap_class='ys-edit-profile-field' %}{% include "shared/profile_language_field.html" %}{% endwith %}
+                </div>
+            </section>
+            {% endif %}
+
             <section class="ys-edit-profile-section">
                 <div class="ys-profile-panel-head">
                     <div>

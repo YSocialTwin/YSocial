@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 08:31+0000\n"
+"POT-Creation-Date: 2026-10-17 08:49+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1457,6 +1457,9 @@ msgid ""
 msgstr ""
 
 msgid "Choose the language of the dashboard for this user."
+msgstr ""
+
+msgid "Choose the language of the interface."
 msgstr ""
 
 msgid ""
@@ -8340,6 +8343,11 @@ msgid "The feelings surfacing most in the feed"
 msgstr ""
 
 msgid "The image textual description."
+msgstr ""
+
+msgid ""
+"The language of the menus and labels of this site. Posts and comments are"
+" never translated."
 msgstr ""
 
 msgid ""
