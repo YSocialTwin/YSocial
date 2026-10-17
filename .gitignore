@@ -211,3 +211,8 @@ cython_debug/
 
 # pseudo-locale catalog (generated, development only)
 y_web/translations/en_US_POSIX/
+
+# local database backups
+y_web/db/*.bak
+y_web/db/*.bak-journal
+y_web/db/backup-*
