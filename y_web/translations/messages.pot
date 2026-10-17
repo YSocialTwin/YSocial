@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 11:25+0000\n"
+"POT-Creation-Date: 2026-10-17 14:41+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -7088,6 +7088,9 @@ msgstr ""
 msgid "Prompt Max Chars"
 msgstr ""
 
+msgid "Prompt language"
+msgstr ""
+
 msgid "Prompts"
 msgstr ""
 
@@ -7684,6 +7687,9 @@ msgid "SA Interactions"
 msgstr ""
 
 msgid "SHOW"
+msgstr ""
+
+msgid "Same as the experiment"
 msgstr ""
 
 msgid "Sample Images"

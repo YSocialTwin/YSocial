@@ -3369,6 +3369,7 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
     }.get(exp.platform_type)
     if pack_name:
         prompt_packs.write_pack(pack_name, prompts_dest, prompt_language)
+    prompt_packs.record_language(exp_dir, client=name, client_language=prompt_language)
 
     # Create population assignment if not exists
     pop_exp = db.session.scalars(
@@ -4544,6 +4545,7 @@ def _create_standard_client_internal():
     # copy prompts.json into the experiment folder
 
     prompt_packs.write_pack("prompts.json", f"{data_base_path}prompts.json", prompt_language)
+    prompt_packs.record_language(data_base_path, client=name, client_language=prompt_language)
 
     # Create agent population file
     writable_base = get_writable_path()
@@ -5888,6 +5890,7 @@ def _create_forum_client_internal():
     # copy prompts.json into the experiment folder
 
     prompt_packs.write_pack("prompts_forum.json", f"{data_base_path}prompts.json", prompt_language)
+    prompt_packs.record_language(data_base_path, client=name, client_language=prompt_language)
 
     # Create agent population file
     writable_base = get_writable_path()

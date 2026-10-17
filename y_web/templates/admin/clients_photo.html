@@ -40,6 +40,7 @@
                                         <span class="left">{{ _('Name') }}</span>
                                         <span class="right ys-w-70"><input type="text" name="name" class="input" required></span>
                                     </div>
+{% set prompt_scope = 'client' %}{% include 'admin/_prompt_language.html' %}
                                     <div class="box-line">
                                         <span class="left">{{ _('Description') }}</span>
                                         <span class="right ys-w-70"><input type="text" name="descr" class="input"></span>

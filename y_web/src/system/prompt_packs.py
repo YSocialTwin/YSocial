@@ -115,3 +115,25 @@ def resolve(requested, default=None) -> str:
     if code and normalize(code) == code:
         return code
     return normalize(default)
+
+
+RECORD_FILE = "prompt_language.json"
+
+
+def record_language(experiment_dir, experiment=None, client=None, client_language=None) -> None:
+    """Note in the experiment folder which language its prompts started from (a variable of the experiment).
+
+    ``experiment`` sets the experiment's language; ``client``/``client_language`` add one client's.
+    """
+    path = Path(experiment_dir) / RECORD_FILE
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        data = {}
+    if experiment:
+        data["experiment"] = normalize(experiment)
+    if client:
+        data.setdefault("clients", {})[str(client)] = normalize(client_language)
+    data.setdefault("experiment", DEFAULT_LANGUAGE)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")

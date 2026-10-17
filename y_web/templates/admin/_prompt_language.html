@@ -1,0 +1,17 @@
+{# Language of the LLM prompts an experiment (prompt_scope == 'experiment') or a client starts from.
+   Shown only when more than one language pack is installed. #}
+{% if prompt_languages and prompt_languages|length > 1 %}
+<div class="box-line">
+    <span class="left">{{ _('Prompt language') }}</span>
+    <span class="right ys-w-70">
+        <div class="select">
+            <select name="prompt_language" class="w-100">
+                {% if prompt_scope == 'client' %}<option value="">{{ _('Same as the experiment') }}</option>{% endif %}
+                {% for lang in prompt_languages %}
+                <option value="{{ lang.code }}">{{ lang.native_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </span>
+</div>
+{% endif %}

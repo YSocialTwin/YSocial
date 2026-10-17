@@ -19,6 +19,7 @@ PARTIALS = {
     "footer",
     "dash_head",
     "_flash_messages",
+    "_prompt_language",
     "prompts_forum",
     "experiment_details_photo",
     "select_experiment_unused",

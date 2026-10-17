@@ -2339,6 +2339,9 @@ def create_experiment():
             "w",
         ) as f:
             json.dump(config, f, indent=4)
+    prompt_packs.record_language(
+        f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}", experiment=prompt_language
+    )
     # add the experiment to the database
 
     annotations = ""

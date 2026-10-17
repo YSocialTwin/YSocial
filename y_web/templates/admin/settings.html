@@ -129,6 +129,7 @@
  <span class="right ys-w-70"><input type="text" name="exp_name"
                                                                                        class="input"></span>
                                     </div>
+{% set prompt_scope = 'experiment' %}{% include 'admin/_prompt_language.html' %}
 
                                     <div class="box-line">
                                         <span class="left">{{ _('Enable LLM Agents') }}</span>

@@ -61,3 +61,32 @@ def test_the_shipped_english_pack_matches_its_manifest():
     manifest = json.loads((root / "manifest.json").read_text())
     assert set(manifest["files"]) == set(pp.PACK_FILES)
     assert all((root / name).exists() for name in manifest["files"])
+
+
+def test_the_language_is_recorded_in_the_experiment_folder(packs, tmp_path):
+    folder = tmp_path / "exp"
+    pp.record_language(folder, experiment="xx")
+    pp.record_language(folder, client="c1", client_language="zz")
+    data = json.loads((folder / "prompt_language.json").read_text())
+    assert data == {"experiment": "xx", "clients": {"c1": "en"}}
+
+
+def _render_selector(languages, scope):
+    from jinja2 import Environment, FileSystemLoader
+
+    root = Path(__file__).resolve().parents[1] / "templates"
+    env = Environment(loader=FileSystemLoader(str(root)))
+    env.globals["_"] = lambda text: text
+    return env.get_template("admin/_prompt_language.html").render(
+        prompt_languages=languages, prompt_scope=scope
+    )
+
+
+def test_the_selector_appears_only_with_more_than_one_language():
+    one = [{"code": "en", "native_name": "English"}]
+    two = one + [{"code": "it", "native_name": "Italiano"}]
+    assert "prompt_language" not in _render_selector(one, "experiment")
+    html = _render_selector(two, "experiment")
+    assert 'name="prompt_language"' in html and 'value="it"' in html
+    assert 'value=""' not in html
+    assert 'value=""' in _render_selector(two, "client")
