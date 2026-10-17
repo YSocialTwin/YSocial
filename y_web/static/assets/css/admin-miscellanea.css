@@ -50,3 +50,25 @@
 .misc-app .gridjs-footer { border:0; box-shadow:none; background:transparent; }
 
 @media (max-width:700px) { .misc-app .misc-compact-box { padding:1rem; } }
+
+/* ---- Visual refinements ---- */
+.misc-app .misc-tabs { gap:6px; }
+.misc-app .misc-tab { border-radius:8px 8px 0 0; padding:10px 16px; }
+.misc-app .misc-tab .mdi { font-size:1.1rem; }
+.misc-app .misc-tab.active { background:linear-gradient(to top, rgba(61,112,178,.08), transparent); }
+
+.misc-app .misc-section-description { display:flex; gap:10px; align-items:flex-start; border-left:3px solid var(--tm-primary); background:#f3f7fc; }
+.misc-app .misc-section-description .misc-desc-icon { color:var(--tm-primary); font-size:1.25rem; line-height:1.3; }
+
+.misc-app .misc-compact-box { display:flex; flex-direction:column; transition:box-shadow .15s, border-color .15s; }
+.misc-app .misc-compact-box:hover { border-color:#cfd8e6; box-shadow:0 4px 14px rgba(15,23,42,.06); }
+.misc-app .misc-compact-box h3 { display:flex; align-items:center; gap:10px; padding-bottom:12px; margin-bottom:12px; border-bottom:1px solid #eef0f3; }
+.misc-app .misc-box-icon { display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:9px;
+  background:rgba(61,112,178,.1); color:var(--tm-primary); font-size:1.15rem; flex:0 0 auto; }
+/* the "New ..." forms become a tinted panel under the table */
+.misc-app .misc-compact-box .box-content.ys-mt-30 { margin-top:16px; padding:12px 14px; background:var(--tm-soft); border:1px solid #eef0f3; border-radius:10px; }
+.misc-app .misc-compact-box .box-content.ys-mt-30 .button-wrap { margin-top:10px; }
+.misc-app .misc-grid { align-items:start; }
+.misc-app .gridjs-search-input { border:1px solid var(--tm-border); border-radius:8px; padding:6px 10px; }
+.misc-app .gridjs-pagination .gridjs-pages button { border-radius:6px; }
+.misc-app .gridjs-pagination .gridjs-pages button.gridjs-currentPage { background:rgba(61,112,178,.12); color:var(--tm-primary); font-weight:600; }

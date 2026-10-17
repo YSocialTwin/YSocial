@@ -61,7 +61,7 @@ var AdminMiscellanea = (function() {
                                   });
                               }
                           },
-                          'Delete'
+                          YI18n.t('Delete')
                       )
                   );
               }
@@ -187,7 +187,7 @@ var AdminMiscellanea = (function() {
                                   });
                               }
                           },
-                          'Delete'
+                          YI18n.t('Delete')
                       )
                   );
               }
@@ -319,7 +319,7 @@ var AdminMiscellanea = (function() {
                                   });
                               }
                           },
-                          'Delete'
+                          YI18n.t('Delete')
                       )
                   );
               }
@@ -445,7 +445,7 @@ var AdminMiscellanea = (function() {
                                   });
                               }
                           },
-                          'Delete'
+                          YI18n.t('Delete')
                       )
                   );
               }
@@ -572,7 +572,7 @@ var AdminMiscellanea = (function() {
                                   });
                               }
                           },
-                          'Delete'
+                          YI18n.t('Delete')
                       )
                   );
               }
@@ -709,7 +709,7 @@ var AdminMiscellanea = (function() {
                                   });
                               }
                           },
-                          'Delete'
+                          YI18n.t('Delete')
                       )
                   );
               }
@@ -835,7 +835,7 @@ var AdminMiscellanea = (function() {
                                   });
                               }
                           },
-                          'Delete'
+                          YI18n.t('Delete')
                       )
                   );
               }
@@ -962,7 +962,7 @@ var AdminMiscellanea = (function() {
                                   });
                               }
                           },
-                          'Delete'
+                          YI18n.t('Delete')
                       )
                   );
               }
@@ -1104,7 +1104,7 @@ var AdminMiscellanea = (function() {
                                   });
                               }
                           },
-                          'Delete'
+                          YI18n.t('Delete')
                       )
                   );
               }
@@ -1446,7 +1446,7 @@ var AdminMiscellanea = (function() {
           if (data.success) {
               statusDiv.innerHTML = '<span style="color: #22c55e;">' + YI18n.t('✓ Watchdog {value}', {value: enabled ? 'enabled' : 'disabled'}) + '</span>';
           } else {
-              statusDiv.innerHTML = '<span style="color: #dc3545;">✗ ' + (data.message || 'Failed to update') + '</span>';
+              statusDiv.innerHTML = '<span style="color: #dc3545;">✗ ' + (data.message || YI18n.t('Failed to update')) + '</span>';
           }
           setTimeout(() => {
               statusDiv.innerHTML = YI18n.t('Monitors server/client processes for hangs and auto-restarts them.');
@@ -1591,7 +1591,7 @@ var AdminMiscellanea = (function() {
                                   });
                               }
                           },
-                          'Delete'
+                          YI18n.t('Delete')
                       )
                   );
               }
@@ -1735,7 +1735,7 @@ var AdminMiscellanea = (function() {
                                   });
                               }
                           },
-                          'Delete'
+                          YI18n.t('Delete')
                       )
                   );
               }

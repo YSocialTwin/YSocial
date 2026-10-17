@@ -29,19 +29,19 @@
 
             <!-- Demographics & Attributes Tab (merged Agent Attributes + Demographics) -->
             <div id="tab-demographics" class="misc-tab-content">
-                <div class="misc-section-description">
-                    <strong>{{ _('Demographics & Attributes:') }}</strong> {{ _('Configure demographic characteristics (languages, nationalities) and social attributes (political leanings, education levels, professions) that define the agents in your simulations.') }}
+                <div class="misc-section-description"><i class="mdi mdi-information-outline misc-desc-icon"></i><div>
+                    <strong>{{ _('Demographics & Attributes:') }}</strong> {{ _('Configure demographic characteristics (languages, nationalities) and social attributes (political leanings, education levels, professions) that define the agents in your simulations.') }}</div>
                 </div>
 
                 <div class="misc-grid">
                     <div class="misc-compact-box" id="box-political-leanings">
-                        <h3>{{ _('Political Leanings') }}</h3>
+                        <h3><span class="misc-box-icon"><i class="mdi mdi-scale-balance"></i></span>{{ _('Political Leanings') }}</h3>
 
                         <div class="box-content">
 
                             <div id="leaning_table"></div>
 
-                            <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
+                            <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script><script src="{{ url_for('static', filename='assets/js/admin-gridjs-i18n.js') }}"></script>
 
 
                         </div>
@@ -66,13 +66,13 @@
                     </div>
 
                     <div class="misc-compact-box" id="box-education-levels">
-                        <h3>{{ _('Education Levels') }}</h3>
+                        <h3><span class="misc-box-icon"><i class="mdi mdi-school-outline"></i></span>{{ _('Education Levels') }}</h3>
 
                         <div class="box-content">
 
                             <div id="edu_table"></div>
 
-                            <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
+                            <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script><script src="{{ url_for('static', filename='assets/js/admin-gridjs-i18n.js') }}"></script>
 
 
                         </div>
@@ -97,12 +97,12 @@
                     </div>
 
                     <div class="misc-compact-box" id="box-professions">
-                        <h3>{{ _('Professions') }}</h3>
+                        <h3><span class="misc-box-icon"><i class="mdi mdi-briefcase-outline"></i></span>{{ _('Professions') }}</h3>
 
                         <div class="box-content">
                             <div id="profession_table"></div>
 
-                            <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
+                            <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script><script src="{{ url_for('static', filename='assets/js/admin-gridjs-i18n.js') }}"></script>
 
 
                         </div>
@@ -132,7 +132,7 @@
                     </div>
 
                     <div class="misc-compact-box" id="box-languages">
-                        <h3>{{ _('Languages') }}</h3>
+                        <h3><span class="misc-box-icon"><i class="mdi mdi-translate"></i></span>{{ _('Languages') }}</h3>
 
                         <div class="box-content">
                             <div id="language_table"></div>
@@ -158,7 +158,7 @@
                     </div>
 
                     <div class="misc-compact-box" id="box-nationalities">
-                        <h3>{{ _('Nationalities') }}</h3>
+                        <h3><span class="misc-box-icon"><i class="mdi mdi-flag-outline"></i></span>{{ _('Nationalities') }}</h3>
 
                         <div class="box-content">
                             <div id="nationality_table"></div>
@@ -184,12 +184,12 @@
                     </div>
 
                     <div class="misc-compact-box" id="box-age-classes">
-                        <h3>{{ _('Age Classes') }}</h3>
+                        <h3><span class="misc-box-icon"><i class="mdi mdi-calendar-range"></i></span>{{ _('Age Classes') }}</h3>
 
                         <div class="box-content">
                             <div id="age_classes_table"></div>
 
-                            <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
+                            <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script><script src="{{ url_for('static', filename='assets/js/admin-gridjs-i18n.js') }}"></script>
 
                         </div>
 
@@ -224,18 +224,18 @@
 
             <!-- Content & Behavior Tab -->
             <div id="tab-content-behavior" class="misc-tab-content">
-                <div class="misc-section-description">
-                    <strong>{{ _('Content & Behavior:') }}</strong> {{ _('Define content topics, toxicity levels, and activity patterns to create realistic agent behaviors and content interactions within your simulations.') }}
+                <div class="misc-section-description"><i class="mdi mdi-information-outline misc-desc-icon"></i><div>
+                    <strong>{{ _('Content & Behavior:') }}</strong> {{ _('Define content topics, toxicity levels, and activity patterns to create realistic agent behaviors and content interactions within your simulations.') }}</div>
                 </div>
 
                 <div class="misc-grid">
                     <div class="misc-compact-box" id="box-topics">
-                        <h3>{{ _('Topics') }}</h3>
+                        <h3><span class="misc-box-icon"><i class="mdi mdi-pound"></i></span>{{ _('Topics') }}</h3>
 
                         <div class="box-content">
                             <div id="topics_table"></div>
 
-                            <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
+                            <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script><script src="{{ url_for('static', filename='assets/js/admin-gridjs-i18n.js') }}"></script>
 
                         </div>
 
@@ -258,7 +258,7 @@
                     </div>
 
                     <div class="misc-compact-box" id="box-toxicity-levels">
-                        <h3>{{ _('Toxicity Levels') }}</h3>
+                        <h3><span class="misc-box-icon"><i class="mdi mdi-emoticon-angry-outline"></i></span>{{ _('Toxicity Levels') }}</h3>
 
                         <div class="box-content">
                             <div id="toxicity_table"></div>
@@ -289,7 +289,7 @@
                 <!-- Activity Profiles in its own row spanning 2 columns -->
                 <div class="misc-grid misc-grid-2col">
                     <div class="misc-compact-box misc-box-full" id="box-activity-profiles">
-                        <h3>{{ _('Activity Profiles') }}</h3>
+                        <h3><span class="misc-box-icon"><i class="mdi mdi-pulse"></i></span>{{ _('Activity Profiles') }}</h3>
 
                         <div class="box-content">
                             <div id="activity_profiles_table"></div>
@@ -357,15 +357,15 @@
 
             <!-- System Settings Tab -->
             <div id="tab-system-settings" class="misc-tab-content active">
-                <div class="misc-section-description">
-                    <strong>{{ _('System Settings:') }}</strong> {{ _('Configure system-level settings for the YSocial platform, including telemetry, HPC client monitoring, process monitoring, and system updates.') }}
+                <div class="misc-section-description"><i class="mdi mdi-information-outline misc-desc-icon"></i><div>
+                    <strong>{{ _('System Settings:') }}</strong> {{ _('Configure system-level settings for the YSocial platform, including telemetry, HPC client monitoring, process monitoring, and system updates.') }}</div>
                 </div>
 
                 <!-- Row 1: System Updates & Telemetry Settings -->
                 <div class="misc-grid misc-grid-2col">
                     <!-- System Updates -->
                     <div class="misc-compact-box" id="box-system-updates">
-                        <h3>{{ _('System Updates') }}</h3>
+                        <h3><span class="misc-box-icon"><i class="mdi mdi-update"></i></span>{{ _('System Updates') }}</h3>
  <div class="help-block ys-mb-15">
                             <p>{{ _('Check for new YSocial releases and stay up to date.') }}</p>
                         </div>
@@ -382,7 +382,7 @@
 
                     <!-- Telemetry Settings -->
                     <div class="misc-compact-box" id="box-telemetry-settings">
-                        <h3>{{ _('Telemetry Settings') }}</h3>
+                        <h3><span class="misc-box-icon"><i class="mdi mdi-chart-line"></i></span>{{ _('Telemetry Settings') }}</h3>
  <div class="help-block ys-mb-15">
                             <p>{{ _('Control anonymous usage data collection to help improve YSocial.') }}</p>
                         </div>
@@ -411,7 +411,7 @@
                     <!-- HPC Monitor -->
                     <!-- HPC Monitor -->
                     <div class="misc-compact-box" id="box-hpc-monitor">
-                        <h3>{{ _('HPC Monitor') }}</h3>
+                        <h3><span class="misc-box-icon"><i class="mdi mdi-server-network"></i></span>{{ _('HPC Monitor') }}</h3>
  <div class="help-block ys-mb-15">
                             <p>{{ _('Automatic monitoring of HPC client execution status and completion detection.') }}</p>
                         </div>
@@ -467,7 +467,7 @@
                     </div>
 
                     <div class="misc-compact-box" id="box-watchdog">
-                        <h3>{{ _('Process Watchdog') }}</h3>
+                        <h3><span class="misc-box-icon"><i class="mdi mdi-shield-check-outline"></i></span>{{ _('Process Watchdog') }}</h3>
  <div class="help-block ys-mb-15">
                             <p>{{ _('Monitor and auto-restart hung server/client processes.') }}</p>
                         </div>
@@ -512,7 +512,7 @@
                     </div>
 
                     <div class="misc-compact-box" id="box-detoxify-model">
-                        <h3>{{ _('Local Toxicity Model') }}</h3>
+                        <h3><span class="misc-box-icon"><i class="mdi mdi-brain"></i></span>{{ _('Local Toxicity Model') }}</h3>
                         <div class="help-block ys-mb-15">
                             <p>{{ _('Download the Detoxify model once and keep it available offline for future simulations.') }}</p>
                         </div>
@@ -590,7 +590,7 @@
 
                     <!-- About System Settings -->
                     <div class="misc-compact-box" id="box-about-system">
-                        <h3>{{ _('About System Settings') }}</h3>
+                        <h3><span class="misc-box-icon"><i class="mdi mdi-information-outline"></i></span>{{ _('About System Settings') }}</h3>
                         <div class="help-block">
                             <p><strong>{{ _('Telemetry:') }}</strong> {{ _('Anonymous usage data helps improve YSocial. No personal data is collected.') }}</p>
                             <br>
@@ -608,14 +608,14 @@
             {% if llm_backend['backend'] is not none %}
             <!-- LLM Management Tab -->
             <div id="tab-llm-management" class="misc-tab-content">
-                <div class="misc-section-description">
-                    <strong>{{ _('LLM Management:') }}</strong> {{ _('Manage your self-hosted Large Language Model server, view available models, and pull new models from the repository.') }}
+                <div class="misc-section-description"><i class="mdi mdi-information-outline misc-desc-icon"></i><div>
+                    <strong>{{ _('LLM Management:') }}</strong> {{ _('Manage your self-hosted Large Language Model server, view available models, and pull new models from the repository.') }}</div>
                 </div>
 
                 <div class="misc-grid misc-grid-2col">
                     <!-- LLM Server Status -->
                     <div class="misc-compact-box" id="box-llm-server">
-                        <h3>{{ _('Self-hosted LLM Server (%(backend)s)', backend=llm_backend['backend']|upper) }}</h3>
+                        <h3><span class="misc-box-icon"><i class="mdi mdi-server"></i></span>{{ _('Self-hosted LLM Server (%(backend)s)', backend=llm_backend['backend']|upper) }}</h3>
                         <div class="box-content">
                             <div class="box-lines">
                                 {% if llm_backend.get('url') %}
@@ -656,7 +656,7 @@
                     {% if llm_backend['backend'] == 'ollama' %}
                     <!-- Add LLM Model (Ollama only) -->
                     <div class="misc-compact-box" id="box-add-llm-model">
-                        <h3>{{ _('Add LLM Model') }}</h3>
+                        <h3><span class="misc-box-icon"><i class="mdi mdi-plus-box-outline"></i></span>{{ _('Add LLM Model') }}</h3>
                          <div class="box-content">
                             <div class="box-lines">
                                  <div class="box-line">
@@ -728,12 +728,12 @@
                 <!-- Available LLMs Table (full width) -->
  <div class="misc-grid misc-grid-1col ys-mt-20">
                     <div class="misc-compact-box" id="box-available-llms">
-                        <h3>{{ _('Available LLMs') }}</h3>
+                        <h3><span class="misc-box-icon"><i class="mdi mdi-view-list-outline"></i></span>{{ _('Available LLMs') }}</h3>
 
                         <div class="box-content">
                             <div id="llm-models-table"></div>
 
-                            <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
+                            <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script><script src="{{ url_for('static', filename='assets/js/admin-gridjs-i18n.js') }}"></script>
 
 
                         </div>
@@ -747,19 +747,19 @@
 
             <!-- Opinion Dynamics Tab -->
             <div id="tab-opinion-dynamics" class="misc-tab-content">
-                <div class="misc-section-description">
-                    <strong>{{ _('Opinion Dynamics:') }}</strong> {{ _('Configure opinion groups and distributions for opinion dynamics simulations. Define opinion ranges and statistical distributions to model agent opinions.') }}
+                <div class="misc-section-description"><i class="mdi mdi-information-outline misc-desc-icon"></i><div>
+                    <strong>{{ _('Opinion Dynamics:') }}</strong> {{ _('Configure opinion groups and distributions for opinion dynamics simulations. Define opinion ranges and statistical distributions to model agent opinions.') }}</div>
                 </div>
 
                 <div class="misc-grid misc-grid-2col">
                     <!-- Opinion Groups Box -->
                     <div class="misc-compact-box" id="box-opinion-groups">
-                        <h3>{{ _('Opinion Groups') }}</h3>
+                        <h3><span class="misc-box-icon"><i class="mdi mdi-account-group-outline"></i></span>{{ _('Opinion Groups') }}</h3>
 
                         <div class="box-content">
                             <div id="opinion_groups_table"></div>
 
-                            <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
+                            <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script><script src="{{ url_for('static', filename='assets/js/admin-gridjs-i18n.js') }}"></script>
 
                         </div>
 
@@ -791,12 +791,12 @@
 
                     <!-- Opinion Distributions Box -->
                     <div class="misc-compact-box" id="box-opinion-distributions">
-                        <h3>{{ _('Opinion Distributions') }}</h3>
+                        <h3><span class="misc-box-icon"><i class="mdi mdi-chart-bell-curve"></i></span>{{ _('Opinion Distributions') }}</h3>
 
                         <div class="box-content">
                             <div id="opinion_distributions_table"></div>
 
-                            <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
+                            <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script><script src="{{ url_for('static', filename='assets/js/admin-gridjs-i18n.js') }}"></script>
 
                         </div>
 

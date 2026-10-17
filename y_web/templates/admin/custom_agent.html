@@ -15,7 +15,7 @@
                                 id="custom-populations-table"
                                 data-populations='{{ custom_populations|tojson }}'
                             ></div>
-                            <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
+                            <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script><script src="{{ url_for('static', filename='assets/js/admin-gridjs-i18n.js') }}"></script>
                         </div>
                     </div>
 
@@ -27,7 +27,7 @@
                                 data-agents='{{ custom_agents|tojson }}'
                                 data-columns='{{ custom_agent_columns|tojson }}'
                             ></div>
-                            <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
+                            <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script><script src="{{ url_for('static', filename='assets/js/admin-gridjs-i18n.js') }}"></script>
                         </div>
                     </div>
                 </div>

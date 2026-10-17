@@ -325,7 +325,7 @@ var AdminOpinion = (function() {
     }
 
     function generateSegments(dimensions, segmentValues) {
-        if (!dimensions.length) return ['All Population'];
+        if (!dimensions.length) return [YI18n.t('All Population')];
         var segments = [''];
         dimensions.forEach(function(dim) {
             var values = (segmentValues || {})[dim] || [];

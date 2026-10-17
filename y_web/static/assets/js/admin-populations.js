@@ -365,7 +365,7 @@ var AdminPopulations = (function() {
           4: 'High',
           5: 'Very High'
       };
-      return labelMap[level] || `Level ${level}`;
+      return YI18n.t(labelMap[level] || `Level ${level}`);
   });
 
   createChartIfPresent("activity", {

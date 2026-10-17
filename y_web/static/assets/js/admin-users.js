@@ -149,7 +149,7 @@ var AdminUsers = (function() {
                     });
                     statusDiv.innerHTML = '<span style="color: #28a745;">' + YI18n.t('✓ Loaded {length} models from {url}', {length: data.models.length, url: data.url || llmUrl}) + '</span>';
                 } else {
-                    statusDiv.innerHTML = '<span style="color: #ff6b6b;">\u2717 ' + (data.message || 'No models found') + '</span>';
+                    statusDiv.innerHTML = '<span style="color: #ff6b6b;">\u2717 ' + (data.message || YI18n.t('No models found')) + '</span>';
                 }
             })
             .catch(function(error) {
@@ -188,7 +188,7 @@ var AdminUsers = (function() {
                     });
                     statusDiv.innerHTML = '<span style="color: #28a745;">' + YI18n.t('✓ Loaded {length} models', {length: data.models.length}) + '</span>';
                 } else {
-                    statusDiv.innerHTML = '<span style="color: #ff6b6b;">\u2717 ' + (data.message || 'No models found') + '</span>';
+                    statusDiv.innerHTML = '<span style="color: #ff6b6b;">\u2717 ' + (data.message || YI18n.t('No models found')) + '</span>';
                 }
             })
             .catch(function(error) {

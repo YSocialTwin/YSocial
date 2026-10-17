@@ -119,6 +119,7 @@ var AdminFeeds = (function() {
         var thead = document.createElement('thead');
         var headerRow = document.createElement('tr');
         ['Subreddit', 'Interests', ''].forEach(function(label, index) {
+            label = label ? YI18n.t(label) : label;
             var th = document.createElement('th');
             if (index === 2) th.style.width = '50px';
             else th.textContent = label;
@@ -226,6 +227,7 @@ var AdminFeeds = (function() {
         var thead = document.createElement('thead');
         var headerRow = document.createElement('tr');
         ['Name', 'Site', 'Feed URL', ''].forEach(function(label, index) {
+            label = label ? YI18n.t(label) : label;
             var th = document.createElement('th');
             if (index === 3) th.style.width = '50px';
             else th.textContent = label;

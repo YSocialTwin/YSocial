@@ -1253,7 +1253,7 @@ var AdminSettings = (function() {
       const logDiv = document.getElementById('schedule-log');
       if (logDiv) {
           logDiv.innerHTML = '';
-          addLogMessage('Starting schedule...');
+          addLogMessage(YI18n.t('Starting schedule...'));
       }
 
       fetch('/admin/schedule/start', {
@@ -1283,7 +1283,7 @@ var AdminSettings = (function() {
   function stopSchedule() {
       if (!confirm(YI18n.t('Stop the schedule? This will stop all running experiments.'))) return;
 
-      addLogMessage('Stopping schedule...');
+      addLogMessage(YI18n.t('Stopping schedule...'));
 
       fetch('/admin/schedule/stop', { method: 'POST' })
           .then(response => response.json())
@@ -1821,7 +1821,7 @@ function initializeMatrixExperimentSelector() {
         const groupName = String(groupSelect.value || '').trim();
         if (!groupName) {
             sourceSelect.disabled = true;
-            setPlaceholder('Select a group first...');
+            setPlaceholder(YI18n.t('Select a group first...'));
             return;
         }
 
@@ -1830,7 +1830,7 @@ function initializeMatrixExperimentSelector() {
             .sort((left, right) => String(left.name || '').localeCompare(String(right.name || '')));
 
         sourceSelect.disabled = false;
-        setPlaceholder(experiments.length ? 'Select experiment...' : 'No experiments in this group');
+        setPlaceholder(experiments.length ? YI18n.t('Select experiment...') : YI18n.t('No experiments in this group'));
 
         experiments.forEach((exp) => {
             const option = document.createElement('option');

@@ -389,14 +389,14 @@
 
     stressChart = buildBarChart(
       'stressDistributionChart',
-      'Stress',
+      YI18n.t('Stress'),
       snapshot.stress_labels || [],
       snapshot.stress_values || [],
       { background: 'rgba(239, 68, 68, 0.72)', border: 'rgba(220, 38, 38, 1)' }
     );
     rewardChart = buildBarChart(
       'rewardDistributionChart',
-      'Reward',
+      YI18n.t('Reward'),
       snapshot.reward_labels || [],
       snapshot.reward_values || [],
       { background: 'rgba(34, 197, 94, 0.72)', border: 'rgba(22, 163, 74, 1)' }

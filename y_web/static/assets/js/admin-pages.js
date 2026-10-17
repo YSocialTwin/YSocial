@@ -15,7 +15,7 @@ var AdminPages = (function() {
 
     function buildDeleteLinkHtml(url, label, message) {
         var escapedMessage = (message || 'Are you sure?').replace(/'/g, '&#39;');
-        return '<a href="'+url+'" onclick="return confirm(YI18n.t(\''+escapedMessage+'\'))" style="background-color: #dc3545; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">'+label+'</a>';
+        return '<a href="'+url+'" onclick="return confirm(YI18n.t(\''+escapedMessage+'\'))" style="background-color: #dc3545; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">'+YI18n.t(label)+'</a>';
     }
 
     function buildActivityProfileFormatter(cell) {
@@ -297,7 +297,7 @@ var AdminPages = (function() {
                     agent.id,
                     agent.name,
                     agent.ag_type || 'standard',
-                    agent.activity_profile || 'Not assigned',
+                    agent.activity_profile || YI18n.t('Not assigned'),
                     agent.daily_activity_level == null ? 'N/A' : agent.daily_activity_level,
                     agent.ext_fields || {}
                 ];
