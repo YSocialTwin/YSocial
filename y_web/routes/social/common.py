@@ -801,25 +801,28 @@ def update_profile_data(exp_id, user_id):
     if request.form.get("frecsys_type") is not None:
         user.frecsys_type = request.form.get("frecsys_type")
     user.age = int(request.form.get("age"))
+    # Forums have no picture/header fields: leave those untouched when absent.
     profile_pic = request.form.get("profile_pic")
-    cover_image = request.form.get("cover_image") or random_cover_image_url()
+    cover_image = request.form.get("cover_image")
+    if "profile_pic" in request.form:
+        if user.is_page == 1:
+            page = db.session.scalars(select(Page).filter_by(name=user.username)).first()
+            if page is not None:
+                page.logo = profile_pic
+        else:
+            agent = db.session.scalars(select(Agent).filter_by(name=user.username)).first()
+            if agent is not None:
+                agent.profile_pic = profile_pic
 
-    if user.is_page == 1:
-        page = db.session.scalars(select(Page).filter_by(name=user.username)).first()
-        if page is not None:
-            page.logo = profile_pic
-    else:
-        agent = db.session.scalars(select(Agent).filter_by(name=user.username)).first()
-        if agent is not None:
-            agent.profile_pic = profile_pic
+        admin_user = db.session.scalars(
+            select(Admin_users).filter_by(username=user.username)
+        ).first()
+        if admin_user is not None:
+            admin_user.profile_pic = profile_pic
 
-    admin_user = db.session.scalars(
-        select(Admin_users).filter_by(username=user.username)
-    ).first()
-    if admin_user is not None:
-        admin_user.profile_pic = profile_pic
-
-    _set_user_cover_image(user.id, cover_image)
+    if "cover_image" in request.form:
+        cover_image = cover_image or random_cover_image_url()
+        _set_user_cover_image(user.id, cover_image)
 
     db.session.commit()
 

@@ -45,7 +45,7 @@ def _render(app, lang):
 
 def test_forum_edit_profile_has_no_topics_or_recommenders():
     html = _render(_app(), "en")
-    assert 'name="profile_pic"' in html
+    assert 'name="profile_pic"' not in html and 'name="cover_image"' not in html
     assert 'name="new_password"' in html
     assert "update_topic_preferences" not in html
     assert 'name="frecsys_type"' not in html
