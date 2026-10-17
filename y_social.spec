@@ -145,8 +145,16 @@ datas += [
     (os.path.join(basedir, "y_web", "static"), "y_web/static"),
     (os.path.join(basedir, "y_web", "templates"), "y_web/templates"),
     (os.path.join(basedir, "data_schema"), "data_schema"),
+    # Gettext (.po/.mo) and browser (.json) catalogs of the interface languages
+    (os.path.join(basedir, "y_web", "translations"), "y_web/translations"),
     (os.path.join(basedir, "config_files"), "config_files"),
 ]
+
+# LLM prompt texts kept as data next to prompt_store.py (English and every language pack)
+import glob
+
+for prompts_file in sorted(glob.glob(os.path.join(basedir, "y_web", "prompts_internal*.json"))):
+    datas += [(prompts_file, "y_web")]
 
 # Add images directory for splash screen
 if os.path.exists(os.path.join(basedir, "images")):
