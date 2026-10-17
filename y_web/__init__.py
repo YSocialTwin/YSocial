@@ -271,16 +271,7 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
         """Inject exp_id into all templates."""
         return dict(exp_id=get_current_experiment_id())
 
-    @app.context_processor
-    def inject_prompt_languages():
-        """Language packs available for the LLM prompts (experiment and client forms)."""
-        from y_web.src.system import prompt_packs
-
-        try:
-            return dict(prompt_languages=prompt_packs.languages())
-        except Exception:
-            return dict(prompt_languages=[])
-
+    __import__("y_web.src.system.prompt_packs", fromlist=["x"]).register_context(app)
     @app.context_processor
     def inject_feed_home_url():
         """Inject the canonical home URL for the active experiment feed."""

@@ -143,3 +143,14 @@ def record_language(experiment_dir, experiment=None, client=None, client_languag
     data.setdefault("experiment", DEFAULT_LANGUAGE)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+
+
+def register_context(app):
+    """Expose the available language packs to every template (experiment and client forms)."""
+
+    @app.context_processor
+    def inject_prompt_languages():
+        try:
+            return dict(prompt_languages=languages())
+        except Exception:
+            return dict(prompt_languages=[])
