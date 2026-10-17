@@ -28,7 +28,11 @@ def _walk(obj, path, out):
             if isinstance(value, str):
                 if key == "name" and is_parameter:
                     continue
-                if key in MANIFEST_KEYS and any(ch.isalpha() for ch in value):
+                # a sidebar item's ``section`` is the heading it is listed under
+                is_sidebar_section = key == "section" and "endpoint" in obj
+                if (key in MANIFEST_KEYS or is_sidebar_section) and any(
+                    ch.isalpha() for ch in value
+                ):
                     out.append((value.strip(), f"{path}/{key}"))
             else:
                 _walk(value, f"{path}/{key}", out)

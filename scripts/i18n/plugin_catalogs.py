@@ -16,6 +16,7 @@ cannot be found by scanning (data-driven labels such as ``emotion.joy``).
 
 import argparse
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -93,7 +94,7 @@ def cmd_update(plugin_dir, domain, langs):
             catalog = Catalog(locale=lang, project=domain, charset="utf-8")
         catalog.update(template, no_fuzzy_matching=True)
         with po_path.open("wb") as fh:
-            write_po(fh, catalog, width=100, sort_output=True)
+            write_po(fh, catalog, width=int(os.environ.get("PO_WIDTH", "100")), sort_output=True)
         missing = sum(1 for m in catalog if m.id and not m.string)
         print(f"{lang}: {len(catalog)} strings, {missing} untranslated")
 

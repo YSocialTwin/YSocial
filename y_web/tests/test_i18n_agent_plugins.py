@@ -69,3 +69,21 @@ def test_recommender_descriptions_follow_the_interface_language(agents_app):
     with agents_app.test_request_context("/", headers={"Accept-Language": "it"}):
         italian = i18n.gettext(english)
     assert italian != english and italian.startswith("Post di altri utenti")
+
+
+def test_plugin_sidebar_texts_are_translated(agents_app):
+    """Sidebar group, items and section headings come from the plugin's own catalog."""
+    from y_web.src.external_runtime.plugin_i18n import domain_for_repo, localize_text
+
+    if not domain_for_repo("training_modules"):
+        pytest.skip("training plugin not installed")
+    with agents_app.test_request_context("/", headers={"Accept-Language": "it"}):
+        assert localize_text("training_modules", "Training") == "Formazione"
+        assert localize_text("training_modules", "Modules") == "Moduli"
+        assert localize_text("training_modules", "Design") == "Progettazione"
+        assert localize_text("training_modules", "Results") == "Risultati"
+
+
+def test_admin_sidebar_label_is_short_in_italian(agents_app):
+    with agents_app.test_request_context("/", headers={"Accept-Language": "it"}):
+        assert i18n.gettext("Admin") == "Admin"

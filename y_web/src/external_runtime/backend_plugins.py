@@ -32,6 +32,7 @@ import sys
 import types
 from pathlib import Path
 
+from y_web.src.external_runtime.plugin_i18n import localize_text
 from y_web.src.external_runtime.registry import (
     ROOT,
     SUPPORTED_EXTERNAL_REPOS,
@@ -850,7 +851,7 @@ def backend_suite_sidebar_entries() -> list[dict]:
         entries.append(
             {
                 "repo_key": repo_key,
-                "label": sidebar.get("label") or repo_key,
+                "label": localize_text(repo_key, sidebar.get("label") or repo_key),
                 "icon": sidebar.get("icon") or "box",
                 "url": url,
             }
@@ -901,18 +902,21 @@ def backend_suite_sidebar_groups(role: str | None = None) -> list[dict]:
                 continue
             items.append(
                 {
-                    "label": item["label"],
+                    "label": localize_text(repo_key, item["label"]),
                     "icon": item.get("icon") or "circle",
                     "url": url,
                     # optional heading the item is listed under (consecutive items with the same one share it)
-                    "section": str(item.get("section") or "").strip() or None,
+                    "section": localize_text(
+                        repo_key, str(item.get("section") or "").strip()
+                    )
+                    or None,
                 }
             )
         if items:
             groups.append(
                 {
                     "repo_key": repo_key,
-                    "label": group["label"],
+                    "label": localize_text(repo_key, group["label"]),
                     "icon": group.get("icon") or "box",
                     "items": items,
                 }
