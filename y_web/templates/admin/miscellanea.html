@@ -1,7 +1,8 @@
 {% include "admin/head.html" %}
 <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-components.css') }}"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-miscellanea.css') }}"/>
 
-<div class="view-wrapper is-dashboard">
+<div class="view-wrapper is-dashboard misc-app">
     <!--Dashboard container-->
     <div id="creator-dashboard" class="dashboard-container">
         <!--Toolbar-->
@@ -9,14 +10,21 @@
 
         <div class="dashboard-body">
 
+            <div class="misc-page-head">
+                <div>
+                    <h2>{{ _('Miscellanea') }}</h2>
+                    <p>{{ _('System settings, the LLM server and the vocabularies used to describe agents and content.') }}</p>
+                </div>
+            </div>
+
             <div class="misc-tabs">
-                <button class="misc-tab active" onclick="switchMiscTab('system-settings')">{{ _('System Settings') }}</button>
+                <button class="misc-tab active" onclick="switchMiscTab('system-settings')"><i class="mdi mdi-cog-outline"></i>{{ _('System Settings') }}</button>
                 {% if llm_backend['backend'] is not none %}
-                <button class="misc-tab" onclick="switchMiscTab('llm-management')">{{ _('LLM Management') }}</button>
+                <button class="misc-tab" onclick="switchMiscTab('llm-management')"><i class="mdi mdi-robot-outline"></i>{{ _('LLM Management') }}</button>
                 {% endif %}
-                <button class="misc-tab" onclick="switchMiscTab('demographics')">{{ _('Demographics & Attributes') }}</button>
-                <button class="misc-tab" onclick="switchMiscTab('content-behavior')">{{ _('Content & Behavior') }}</button>
-                <button class="misc-tab" onclick="switchMiscTab('opinion-dynamics')">{{ _('Opinion Dynamics') }}</button>
+                <button class="misc-tab" onclick="switchMiscTab('demographics')"><i class="mdi mdi-account-group-outline"></i>{{ _('Demographics & Attributes') }}</button>
+                <button class="misc-tab" onclick="switchMiscTab('content-behavior')"><i class="mdi mdi-tune-variant"></i>{{ _('Content & Behavior') }}</button>
+                <button class="misc-tab" onclick="switchMiscTab('opinion-dynamics')"><i class="mdi mdi-chart-bell-curve"></i>{{ _('Opinion Dynamics') }}</button>
             </div>
 
             <!-- Demographics & Attributes Tab (merged Agent Attributes + Demographics) -->
