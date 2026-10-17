@@ -11,6 +11,7 @@ value-less labels (``title="Close"``). Text mixed with Jinja expressions, fragme
 split by inline tags and anything else are left alone and reported, so they can be
 handled by hand (named placeholders, ``{% trans %}`` blocks...).
 """
+
 import re
 import sys
 from pathlib import Path
@@ -22,7 +23,15 @@ from scan_unmarked import load_exceptions  # noqa: E402
 INLINE = r"(?:a|b|strong|em|code|u|kbd)"
 INLINE_CLOSE = re.compile(r"^</%s\s*>$" % INLINE, re.I)
 INLINE_OPEN = re.compile(r"<%s[\s>]" % INLINE, re.I)
-ATTRS = ("title", "placeholder", "aria-label", "alt", "label", "data-tooltip", "data-title")
+ATTRS = (
+    "title",
+    "placeholder",
+    "aria-label",
+    "alt",
+    "label",
+    "data-tooltip",
+    "data-title",
+)
 
 
 def word_pattern(word):
@@ -75,7 +84,7 @@ def mark(path, exceptions):
 
         def repl(m, text=text, snapshot=out):
             before = m.group(1)
-            after = snapshot[m.end():m.end() + 40]
+            after = snapshot[m.end() : m.end() + 40]
             if re.match(r"<(?:code|pre|kbd|script|style)[\s>]", before, re.I):
                 return m.group(0)  # literal code, never translated
             continues = not text[0].isupper()  # sentence goes on after the tag
@@ -86,7 +95,18 @@ def mark(path, exceptions):
         out, n = pat_text.subn(repl, out)
         for attr in ATTRS:
             pat = re.compile(r'(\s%s=)"%s"' % (attr, esc))
-            out, k = pat.subn(lambda m: '%s"{{ %s }}"' % (m.group(1), quote(text).replace('"', "'") if "'" not in text else quote(text).replace('"', "&quot;")), out)
+            out, k = pat.subn(
+                lambda m: '%s"{{ %s }}"'
+                % (
+                    m.group(1),
+                    (
+                        quote(text).replace('"', "'")
+                        if "'" not in text
+                        else quote(text).replace('"', "&quot;")
+                    ),
+                ),
+                out,
+            )
             n += k
         if n:
             done.add(text)

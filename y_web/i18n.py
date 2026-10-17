@@ -28,8 +28,8 @@ from flask_babel import (
     format_time,
     get_locale,
     get_translations,
-    gettext as _babel_gettext,
 )
+from flask_babel import gettext as _babel_gettext
 from flask_login import current_user
 from jinja2 import pass_eval_context
 from markupsafe import Markup, escape
@@ -85,10 +85,13 @@ def language_status(code):
 def available_languages():
     """Return ``[(code, native name), ...]`` for the supported languages (beta ones are labelled)."""
     return [
-        (code, LANGUAGE_NAMES.get(code, code) + (" (beta)" if language_status(code) == "beta" else ""))
+        (
+            code,
+            LANGUAGE_NAMES.get(code, code)
+            + (" (beta)" if language_status(code) == "beta" else ""),
+        )
         for code in supported_languages()
     ]
-
 
 
 def N_(message):

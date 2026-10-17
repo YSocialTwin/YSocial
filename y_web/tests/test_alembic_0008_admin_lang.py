@@ -35,7 +35,10 @@ def _run(engine, filename):
 def test_the_revision_chain_is_linear_and_ends_with_the_language_column():
     script = _script_dir()
     assert script.get_heads() == ["0009_add_signup_tables"]
-    assert script.get_revision("0009_add_signup_tables").down_revision == "0008_add_admin_users_lang"
+    assert (
+        script.get_revision("0009_add_signup_tables").down_revision
+        == "0008_add_admin_users_lang"
+    )
     assert script.get_revision("0008_add_admin_users_lang").down_revision == (
         "0007_sync_legacy_dashboard_schema"
     )
@@ -55,7 +58,12 @@ def test_upgrade_adds_the_column_once_and_keeps_existing_rows(tmp_path):
     names = [c["name"] for c in sa.inspect(engine).get_columns("admin_users")]
     assert names.count("lang") == 1
     with engine.connect() as conn:
-        assert conn.execute(sa.text("SELECT COUNT(*) FROM admin_users WHERE lang IS NOT NULL")).scalar() == 0
+        assert (
+            conn.execute(
+                sa.text("SELECT COUNT(*) FROM admin_users WHERE lang IS NOT NULL")
+            ).scalar()
+            == 0
+        )
 
 
 def test_application_start_applies_the_migration(core_app):  # noqa: F811
@@ -63,9 +71,15 @@ def test_application_start_applies_the_migration(core_app):  # noqa: F811
 
     with core_app.app_context():
         engine = db.engines["db_admin"]
-        assert "lang" in {c["name"] for c in sa.inspect(engine).get_columns("admin_users")}
+        assert "lang" in {
+            c["name"] for c in sa.inspect(engine).get_columns("admin_users")
+        }
         with engine.connect() as conn:
-            head = conn.execute(sa.text("SELECT version_num FROM alembic_version")).scalars().all()
+            head = (
+                conn.execute(sa.text("SELECT version_num FROM alembic_version"))
+                .scalars()
+                .all()
+            )
         assert "0009_add_signup_tables" in head
 
 

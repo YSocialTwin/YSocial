@@ -8,6 +8,7 @@ For every message whose English text contains a glossary term, the translation m
 variant listed in ``forbid_it`` (a regular expression) unless it also uses the approved word.
 Messages whose English text is a code-like token (``agent_ids``) are skipped.
 """
+
 import csv
 import glob
 import re
@@ -26,7 +27,10 @@ def load_glossary():
 
 def catalogs():
     files = [ROOT / "y_web/translations/it/LC_MESSAGES/messages.po"]
-    files += sorted(Path(p) for p in glob.glob(str(ROOT / "external/*/translations/it/LC_MESSAGES/*.po")))
+    files += sorted(
+        Path(p)
+        for p in glob.glob(str(ROOT / "external/*/translations/it/LC_MESSAGES/*.po"))
+    )
     return [f for f in files if f.is_file()]
 
 
@@ -34,7 +38,14 @@ def check():
     terms = []
     for row in load_glossary():
         if row["forbid_it"]:
-            terms.append((row, re.compile(r"\b%ss?\b" % re.escape(row["en"]), re.I), re.compile(row["forbid_it"], re.I), re.compile(re.escape(row["it"]), re.I)))
+            terms.append(
+                (
+                    row,
+                    re.compile(r"\b%ss?\b" % re.escape(row["en"]), re.I),
+                    re.compile(row["forbid_it"], re.I),
+                    re.compile(re.escape(row["it"]), re.I),
+                )
+            )
     problems = []
     for path in catalogs():
         with path.open("rb") as fh:
@@ -43,13 +54,28 @@ def check():
             if not message.id:
                 continue
             ids = message.id if isinstance(message.id, tuple) else (message.id,)
-            strings = message.string if isinstance(message.string, tuple) else (message.string,)
+            strings = (
+                message.string
+                if isinstance(message.string, tuple)
+                else (message.string,)
+            )
             source, target = " ".join(ids), " ".join(s for s in strings if s)
             if not target or re.fullmatch(r"[\w.\-]+", source):
                 continue
             for row, in_source, forbidden, approved in terms:
-                if in_source.search(source) and forbidden.search(target) and not approved.search(target):
-                    problems.append((path.parent.parent.parent.parent.name, row["en"], source[:80], target[:80]))
+                if (
+                    in_source.search(source)
+                    and forbidden.search(target)
+                    and not approved.search(target)
+                ):
+                    problems.append(
+                        (
+                            path.parent.parent.parent.parent.name,
+                            row["en"],
+                            source[:80],
+                            target[:80],
+                        )
+                    )
     return problems
 
 

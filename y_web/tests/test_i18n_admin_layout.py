@@ -14,7 +14,10 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 @pytest.fixture
 def i18n_app():
     flask_app = Flask(__name__, template_folder=str(ROOT / "templates"))
-    flask_app.config.update(TESTING=True, SECRET_KEY="t", SUPPORTED_LANGUAGES=("en", "it"),
+    flask_app.config.update(
+        TESTING=True,
+        SECRET_KEY="t",
+        SUPPORTED_LANGUAGES=("en", "it"),
         BABEL_TRANSLATION_DIRECTORIES=str(ROOT / "translations"),
     )
     manager = LoginManager(flask_app)
@@ -41,12 +44,20 @@ def test_error_pages_default_to_english(i18n_app):
 def test_admin_menu_templates_have_no_unmarked_labels():
     for name in ("head.html", "dash_head.html"):
         text = (ROOT / "templates" / "admin" / name).read_text(encoding="utf-8")
-        for label in (">Home<", ">Users<", ">Populations<", ">Plugin Manager<", ">Account<"):
+        for label in (
+            ">Home<",
+            ">Users<",
+            ">Populations<",
+            ">Plugin Manager<",
+            ">Account<",
+        ):
             assert label not in text, (name, label)
 
 
 def test_onboarding_labels_are_json_encoded():
-    text = (ROOT / "templates" / "login" / "onboarding.html").read_text(encoding="utf-8")
+    text = (ROOT / "templates" / "login" / "onboarding.html").read_text(
+        encoding="utf-8"
+    )
     assert "'Not Interested', 'Low Interest'" not in text
     assert "|tojson" in text
 
@@ -60,7 +71,10 @@ def test_sentence_with_link_placeholder_keeps_markup(i18n_app):
     )
     with i18n_app.test_request_context("/", headers={"Accept-Language": "it"}):
         html = render_template_string(tpl)
-    assert html == 'Definisci una o più <a href="/admin/populations">Popolazioni di agenti</a>.'
+    assert (
+        html
+        == 'Definisci una o più <a href="/admin/populations">Popolazioni di agenti</a>.'
+    )
 
 
 def test_wrap_helper_escapes_and_keeps_markup(i18n_app):

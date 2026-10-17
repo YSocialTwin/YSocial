@@ -18,6 +18,7 @@ from flask_login import current_user, login_required
 from sqlalchemy import func, select
 
 from y_web import db
+from y_web.i18n import gettext as _
 from y_web.src.agents.custom_features import (
     delete_agent_custom_features,
     encode_opinion_feature,
@@ -60,7 +61,6 @@ from y_web.src.system.miscellanea import (
     llm_backend_status,
     ollama_status,
 )
-from y_web.i18n import gettext as _
 
 agents = Blueprint("agents", __name__)
 
@@ -112,17 +112,23 @@ def _group_agent_resource_cards(cards: list[dict]) -> list[dict]:
         {
             "key": "all",
             "label": _("All Experiments"),
-            "description": _("Agent types that can be deployed in both microblogging and forum simulations."),
+            "description": _(
+                "Agent types that can be deployed in both microblogging and forum simulations."
+            ),
         },
         {
             "key": "microblogging",
             "label": _("Microblogging Only"),
-            "description": _("Agent types that currently target microblogging experiments only."),
+            "description": _(
+                "Agent types that currently target microblogging experiments only."
+            ),
         },
         {
             "key": "forum",
             "label": _("Forum Only"),
-            "description": _("Agent types that currently target forum experiments only."),
+            "description": _(
+                "Agent types that currently target forum experiments only."
+            ),
         },
     ]
 
@@ -194,7 +200,9 @@ def _plugin_agent_specs() -> list[dict]:
             if not agent_type:
                 continue
             display_name_en = str(entry.get("display_name") or agent_type)
-            slug = _custom_agent_slug(display_name_en)  # identity: never from translated text
+            slug = _custom_agent_slug(
+                display_name_en
+            )  # identity: never from translated text
             entry = _localize_agent_entry(repo_name, entry)
             display_name = str(entry.get("display_name") or agent_type)
             accepted_slugs = {slug, agent_type}
@@ -291,7 +299,10 @@ def _discover_plugin_agent_types() -> list[dict]:
                     _("Type id: %(id)s", id=spec["agent_type"]),
                     _("%(count)s required parameters", count=len(required_parameters)),
                     (
-                        _("Optional parameters: %(names)s", names=", ".join(optional_parameters[:3]))
+                        _(
+                            "Optional parameters: %(names)s",
+                            names=", ".join(optional_parameters[:3]),
+                        )
                         if optional_parameters
                         else _("No optional parameters declared")
                     ),
@@ -303,9 +314,14 @@ def _discover_plugin_agent_types() -> list[dict]:
                     "repo_name": spec["repo_name"],
                     "slug": spec["slug"],
                 },
-                "cta_label": _("Open %(name)s Builder", name=spec["display_name"].replace(" Agent", "")),
+                "cta_label": _(
+                    "Open %(name)s Builder",
+                    name=spec["display_name"].replace(" Agent", ""),
+                ),
                 "cta_href": f"/admin/custom_agent/{spec['slug']}",
-                "secondary_label": _("Configure this plugin agent from a manifest-driven custom agent page."),
+                "secondary_label": _(
+                    "Configure this plugin agent from a manifest-driven custom agent page."
+                ),
                 "deployment_tags": ["microblogging", "forum"],
                 "is_plugin": True,
             }
@@ -377,11 +393,15 @@ def _agent_builder_context(**overrides):
         "builder_intro_lines": [
             {
                 "title": _("Synthetic Agents"),
-                "body": _("Virtual entities that represent social media users in simulations. They can be configured with different demographic information, interests, and personality traits."),
+                "body": _(
+                    "Virtual entities that represent social media users in simulations. They can be configured with different demographic information, interests, and personality traits."
+                ),
             },
             {
                 "title": _("Profiles vs. Advanced Roleplay"),
-                "body": _("The agent profile is a set of predefined characteristics that can be used to specify its behavior (through LLM pre-prompts). The advanced roleplay allows to specify a custom pre-prompt that overrides the other configuration variables."),
+                "body": _(
+                    "The agent profile is a set of predefined characteristics that can be used to specify its behavior (through LLM pre-prompts). The advanced roleplay allows to specify a custom pre-prompt that overrides the other configuration variables."
+                ),
             },
         ],
         "hello_populations": [],
@@ -510,14 +530,23 @@ def _resolve_custom_population_assignment(spec: dict):
     new_population_descr = (request.form.get("new_population_descr") or "").strip()
     if population == "__new__":
         if not new_population_name:
-            flash(_("A new %(display_name)s population name is required.", display_name=spec['display_name']), "error")
+            flash(
+                _(
+                    "A new %(display_name)s population name is required.",
+                    display_name=spec["display_name"],
+                ),
+                "error",
+            )
             return None
         existing = db.session.scalars(
             select(Population).filter_by(name=new_population_name)
         ).first()
         if existing:
             flash(
-                _("Population name '%(new_population_name)s' already exists. Please choose a different name.", new_population_name=new_population_name),
+                _(
+                    "Population name '%(new_population_name)s' already exists. Please choose a different name.",
+                    new_population_name=new_population_name,
+                ),
                 "error",
             )
             return None
@@ -534,7 +563,10 @@ def _resolve_custom_population_assignment(spec: dict):
 
     if not population or population == "none":
         flash(
-            _("%(display_name)s agents must be assigned to at least one matching custom population.", display_name=spec['display_name']),
+            _(
+                "%(display_name)s agents must be assigned to at least one matching custom population.",
+                display_name=spec["display_name"],
+            ),
             "error",
         )
         return None
@@ -542,7 +574,10 @@ def _resolve_custom_population_assignment(spec: dict):
     pop = db.session.scalars(select(Population).filter_by(id=population)).first()
     if pop is None or pop.pop_type not in spec["accepted_slugs"]:
         flash(
-            _("%(display_name)s agents can only be assigned to matching custom populations.", display_name=spec['display_name']),
+            _(
+                "%(display_name)s agents can only be assigned to matching custom populations.",
+                display_name=spec["display_name"],
+            ),
             "error",
         )
         return None
@@ -855,15 +890,25 @@ def agents_dashboard():
             "accent": "#0f766e",
             "surface": "linear-gradient(135deg, #ecfeff 0%, #f0fdfa 55%, #ffffff 100%)",
             "border": "#99f6e4",
-            "description": _("Design individual user personas with demographics, political leaning, personality traits, activity profiles, and role-play directives."),
+            "description": _(
+                "Design individual user personas with demographics, political leaning, personality traits, activity profiles, and role-play directives."
+            ),
             "highlights": [
                 _("%(count)s agents currently defined", count=synthetic_agent_count),
-                _("%(count)s populations already contain custom agents", count=populations_with_agents),
-                _("%(count)s reusable activity profiles available", count=activity_profile_count),
+                _(
+                    "%(count)s populations already contain custom agents",
+                    count=populations_with_agents,
+                ),
+                _(
+                    "%(count)s reusable activity profiles available",
+                    count=activity_profile_count,
+                ),
             ],
             "cta_label": _("Open Agent Builder"),
             "cta_href": "/admin/agents",
-            "secondary_label": _("Manage existing agents, remove orphaned entries, and create fully custom profiles."),
+            "secondary_label": _(
+                "Manage existing agents, remove orphaned entries, and create fully custom profiles."
+            ),
             "meta": {},
             "deployment_tags": ["microblogging", "forum"],
             "is_plugin": False,
@@ -879,15 +924,25 @@ def agents_dashboard():
                 "accent": "#1d4ed8",
                 "surface": "linear-gradient(135deg, #eff6ff 0%, #eef2ff 55%, #ffffff 100%)",
                 "border": "#bfdbfe",
-                "description": _("Create institutional and media pages that publish content, expose RSS feeds, and shape the information environment seen by agents."),
+                "description": _(
+                    "Create institutional and media pages that publish content, expose RSS feeds, and shape the information environment seen by agents."
+                ),
                 "highlights": [
                     _("%(count)s pages currently defined", count=page_count),
-                    _("%(count)s media pages with news-oriented behavior", count=media_page_count),
-                    _("%(count)s populations already include pages", count=populations_with_pages),
+                    _(
+                        "%(count)s media pages with news-oriented behavior",
+                        count=media_page_count,
+                    ),
+                    _(
+                        "%(count)s populations already include pages",
+                        count=populations_with_pages,
+                    ),
                 ],
                 "cta_label": _("Open Page Builder"),
                 "cta_href": "/admin/pages",
-                "secondary_label": _("Configure page identity, leaning, feed sources, and upload page collections in bulk."),
+                "secondary_label": _(
+                    "Configure page identity, leaning, feed sources, and upload page collections in bulk."
+                ),
                 "meta": {},
                 "deployment_tags": ["microblogging"],
                 "is_plugin": False,
@@ -903,15 +958,22 @@ def agents_dashboard():
                 "accent": "#c2410c",
                 "surface": "linear-gradient(135deg, #fff7ed 0%, #fffbeb 55%, #ffffff 100%)",
                 "border": "#fdba74",
-                "description": _("Validate and register reusable RSS sources for forum simulations. Once saved, the same feed can be assigned across multiple experiments."),
+                "description": _(
+                    "Validate and register reusable RSS sources for forum simulations. Once saved, the same feed can be assigned across multiple experiments."
+                ),
                 "highlights": [
-                    _("%(count)s reusable RSS feeds available", count=forum_rss_feed_count),
+                    _(
+                        "%(count)s reusable RSS feeds available",
+                        count=forum_rss_feed_count,
+                    ),
                     _("Validation happens once in the dashboard workspace"),
                     _("Forum experiments assign from the shared registry"),
                 ],
                 "cta_label": _("Manage RSS Resources"),
                 "cta_href": "/admin/forum_rss_resources",
-                "secondary_label": _("Create feed entries centrally, then reuse them across forum simulations without revalidating the same source each time."),
+                "secondary_label": _(
+                    "Create feed entries centrally, then reuse them across forum simulations without revalidating the same source each time."
+                ),
                 "meta": {},
                 "deployment_tags": ["forum"],
                 "is_plugin": False,
@@ -923,15 +985,22 @@ def agents_dashboard():
                 "accent": "#7c3aed",
                 "surface": "linear-gradient(135deg, #f5f3ff 0%, #faf5ff 55%, #ffffff 100%)",
                 "border": "#c4b5fd",
-                "description": _("Register reusable subreddit-based image feeds for forum experiments, including interest tags used during image ingestion."),
+                "description": _(
+                    "Register reusable subreddit-based image feeds for forum experiments, including interest tags used during image ingestion."
+                ),
                 "highlights": [
-                    _("%(count)s reusable image feeds available", count=forum_image_feed_count),
+                    _(
+                        "%(count)s reusable image feeds available",
+                        count=forum_image_feed_count,
+                    ),
                     _("Subreddit validation is done before assignment"),
                     _("The same subreddit definition can be reused safely"),
                 ],
                 "cta_label": _("Manage Image Resources"),
                 "cta_href": "/admin/forum_image_resources",
-                "secondary_label": _("Maintain the canonical image-feed catalog here and assign only the feeds needed by each forum simulation."),
+                "secondary_label": _(
+                    "Maintain the canonical image-feed catalog here and assign only the feeds needed by each forum simulation."
+                ),
                 "meta": {},
                 "deployment_tags": ["forum"],
                 "is_plugin": False,
@@ -1056,7 +1125,12 @@ def create_agent():
     # Validate that agent name is unique
     existing_agent = db.session.scalars(select(Agent).filter_by(name=name)).first()
     if existing_agent:
-        flash(_("Agent name '%(name)s' already exists. Please choose a different name.", name=name))
+        flash(
+            _(
+                "Agent name '%(name)s' already exists. Please choose a different name.",
+                name=name,
+            )
+        )
         return _agent_builder_for_type(user_type)
 
     if population not in (None, "", "none"):
@@ -1067,7 +1141,8 @@ def create_agent():
             user_type, assigned_population.pop_type
         ):
             flash(
-                _("Standard agents can only be assigned to standard populations."), "error"
+                _("Standard agents can only be assigned to standard populations."),
+                "error",
             )
             return _agent_builder_for_type(user_type)
 
@@ -1131,7 +1206,12 @@ def create_custom_agent(agent_slug):
 
     existing_agent = db.session.scalars(select(Agent).filter_by(name=name)).first()
     if existing_agent:
-        flash(_("Agent name '%(name)s' already exists. Please choose a different name.", name=name))
+        flash(
+            _(
+                "Agent name '%(name)s' already exists. Please choose a different name.",
+                name=name,
+            )
+        )
         return _render_custom_agent_builder(spec)
 
     agent = Agent(
@@ -1162,7 +1242,10 @@ def create_custom_agent(agent_slug):
             value = _normalize_custom_agent_parameter_value(parameter, raw_value)
         except ValueError:
             flash(
-                _("Field '%(replace)s' contains an invalid value.", replace=param_name.replace('_', ' ')),
+                _(
+                    "Field '%(replace)s' contains an invalid value.",
+                    replace=param_name.replace("_", " "),
+                ),
                 "error",
             )
             db.session.delete(agent)
@@ -1296,12 +1379,16 @@ def add_to_population():
         custom_spec = _find_custom_agent_spec(agent.ag_type) if agent.ag_type else None
         if custom_spec:
             flash(
-                _("%(display_name)s agents can only be assigned to matching custom populations.", display_name=custom_spec['display_name']),
+                _(
+                    "%(display_name)s agents can only be assigned to matching custom populations.",
+                    display_name=custom_spec["display_name"],
+                ),
                 "error",
             )
         else:
             flash(
-                _("Standard agents can only be assigned to standard populations."), "error"
+                _("Standard agents can only be assigned to standard populations."),
+                "error",
             )
         return agent_details(agent_id)
 
@@ -1394,5 +1481,10 @@ def delete_orphaned_agents():
 
     db.session.commit()
 
-    flash(_("Successfully deleted %(deleted_count)s orphaned agent(s).", deleted_count=deleted_count))
+    flash(
+        _(
+            "Successfully deleted %(deleted_count)s orphaned agent(s).",
+            deleted_count=deleted_count,
+        )
+    )
     return agent_data()

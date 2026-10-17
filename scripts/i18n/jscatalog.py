@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """Maintain browser-side catalogs whose keys are the English texts.
 
-    jscatalog.py sync    <domain> <js files...>   # write en.json from YI18n.t('...') calls
-    jscatalog.py missing <domain> <lang>          # list keys without a translation
-    jscatalog.py check   <domain> <lang>          # placeholder consistency + missing count
+jscatalog.py sync    <domain> <js files...>   # write en.json from YI18n.t('...') calls
+jscatalog.py missing <domain> <lang>          # list keys without a translation
+jscatalog.py check   <domain> <lang>          # placeholder consistency + missing count
 """
-import json, re, sys
+
+import json
+import re
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -26,7 +29,10 @@ def load(domain, lang):
 def dump(domain, lang, data):
     p = CAT / domain / f"{lang}.json"
     p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(json.dumps(dict(sorted(data.items())), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    p.write_text(
+        json.dumps(dict(sorted(data.items())), ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
 
 
 def main(argv):
@@ -34,14 +40,26 @@ def main(argv):
     if cmd == "sync":
         keys = set()
         for f in argv[2:]:
-            keys |= {unescape(k) for k in CALL.findall(Path(f).read_text(encoding="utf-8"))}
+            keys |= {
+                unescape(k) for k in CALL.findall(Path(f).read_text(encoding="utf-8"))
+            }
         dump(domain, "en", {k: k for k in keys})
         print(len(keys), "keys")
     elif cmd in ("missing", "check"):
         lang = argv[2]
         en, tr = load(domain, "en"), load(domain, lang)
-        miss = [k for k in en if k not in tr or (not isinstance(tr[k], dict) and tr[k] == "" )]
-        bad = [k for k in en if k in tr and isinstance(tr[k], str) and set(PH.findall(k)) != set(PH.findall(tr[k]))]
+        miss = [
+            k
+            for k in en
+            if k not in tr or (not isinstance(tr[k], dict) and tr[k] == "")
+        ]
+        bad = [
+            k
+            for k in en
+            if k in tr
+            and isinstance(tr[k], str)
+            and set(PH.findall(k)) != set(PH.findall(tr[k]))
+        ]
         if cmd == "missing":
             for k in miss:
                 print(json.dumps(k, ensure_ascii=False))

@@ -116,11 +116,14 @@ def check():
         if not mo.is_file():
             problems.append(f"{lang}: messages.mo missing (run `compile`)")
             continue
-        mo_translated = {_key(m): _norm(m.string) for m in read_mo(mo.open("rb")) if m.id}
+        mo_translated = {
+            _key(m): _norm(m.string) for m in read_mo(mo.open("rb")) if m.id
+        }
         po_translated = {
             _key(m): _norm(m.string)
             for m in po_cat
-            if m.id and any(m.string if isinstance(m.string, (list, tuple)) else [m.string])
+            if m.id
+            and any(m.string if isinstance(m.string, (list, tuple)) else [m.string])
             and not m.fuzzy
         }
         if mo_translated != po_translated:

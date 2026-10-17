@@ -4,12 +4,12 @@ from flask_login import login_required
 from sqlalchemy import select
 
 from y_web import db
+from y_web.i18n import gettext as _
 from y_web.routes.admin.sub.experiments import experiment_details
 from y_web.src.experiment.helpers import get_experiment_dir
 from y_web.src.models import Exps, Jupyter_instances
 from y_web.src.system.jupyter_utils import *
 from y_web.src.system.miscellanea import ollama_status
-from y_web.i18n import gettext as _
 
 lab = Blueprint("lab", __name__)
 
@@ -66,7 +66,13 @@ def api_start_jupyter(experiment_id):
     except (ValueError, TypeError):
         return (
             jsonify(
-                {"success": False, "message": _("Invalid experiment ID: %(experiment_id)s", experiment_id=experiment_id)}
+                {
+                    "success": False,
+                    "message": _(
+                        "Invalid experiment ID: %(experiment_id)s",
+                        experiment_id=experiment_id,
+                    ),
+                }
             ),
             400,
         )
@@ -74,7 +80,12 @@ def api_start_jupyter(experiment_id):
     exp = db.session.query(Exps).filter_by(idexp=exp_id).first()
     if not exp:
         return (
-            jsonify({"success": False, "message": _("Experiment not found: %(exp_id)s", exp_id=exp_id)}),
+            jsonify(
+                {
+                    "success": False,
+                    "message": _("Experiment not found: %(exp_id)s", exp_id=exp_id),
+                }
+            ),
             404,
         )
 
@@ -84,7 +95,10 @@ def api_start_jupyter(experiment_id):
             jsonify(
                 {
                     "success": False,
-                    "message": _("Could not resolve notebook directory for experiment ID: %(experiment_id)s", experiment_id=experiment_id),
+                    "message": _(
+                        "Could not resolve notebook directory for experiment ID: %(experiment_id)s",
+                        experiment_id=experiment_id,
+                    ),
                 }
             ),
             400,
@@ -116,7 +130,12 @@ def api_stop_jupyter(instance_id):
     except (ValueError, TypeError):
         return (
             jsonify(
-                {"success": False, "message": _("Invalid instance ID: %(instance_id)s", instance_id=instance_id)}
+                {
+                    "success": False,
+                    "message": _(
+                        "Invalid instance ID: %(instance_id)s", instance_id=instance_id
+                    ),
+                }
             ),
             400,
         )
@@ -148,7 +167,12 @@ def api_create_notebook(expid):
     exp = db.session.query(Exps).filter_by(idexp=int(expid)).first()
     if not exp:
         return (
-            jsonify({"success": False, "message": _("Experiment not found: %(expid)s", expid=expid)}),
+            jsonify(
+                {
+                    "success": False,
+                    "message": _("Experiment not found: %(expid)s", expid=expid),
+                }
+            ),
             404,
         )
 
@@ -164,7 +188,10 @@ def api_create_notebook(expid):
         )
     except Exception as e:
         return jsonify(
-            {"success": False, "message": _("Error creating notebook: %(error)s", error=str(e))}
+            {
+                "success": False,
+                "message": _("Error creating notebook: %(error)s", error=str(e)),
+            }
         )
 
 

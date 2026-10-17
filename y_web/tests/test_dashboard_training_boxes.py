@@ -9,8 +9,12 @@ TEMPLATE = (ROOT / "templates/admin/dashboard.html").read_text(encoding="utf-8")
 def test_sections_are_separated():
     assert 'id="section-simulations"' in TEMPLATE
     assert 'id="section-training"' in TEMPLATE
-    assert TEMPLATE.index("section-simulations") < TEMPLATE.index("box-running-experiments")
-    assert TEMPLATE.index("end Simulations section") < TEMPLATE.index("section-training")
+    assert TEMPLATE.index("section-simulations") < TEMPLATE.index(
+        "box-running-experiments"
+    )
+    assert TEMPLATE.index("end Simulations section") < TEMPLATE.index(
+        "section-training"
+    )
 
 
 def test_training_section_only_when_plugin_active():
@@ -33,5 +37,11 @@ def test_italian_labels():
     import babel.messages.pofile as pofile
 
     cat = pofile.read_po(open(ROOT / "translations/it/LC_MESSAGES/messages.po", "rb"))
-    for msgid in ("Active modules", "Inactive modules", "Activate", "Deactivate", "Simulations"):
+    for msgid in (
+        "Active modules",
+        "Inactive modules",
+        "Activate",
+        "Deactivate",
+        "Simulations",
+    ):
         assert cat.get(msgid).string, msgid

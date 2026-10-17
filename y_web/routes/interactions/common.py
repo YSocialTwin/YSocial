@@ -12,6 +12,7 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import OperationalError
 
 from y_web import db
+from y_web.i18n import gettext as _
 from y_web.routes.interactions._blueprint import user
 from y_web.src.experiment.helpers import open_experiment_session
 from y_web.src.models import (
@@ -28,7 +29,6 @@ from y_web.src.recsys.content_recsys import (
     _normalize_content_recsys_mode,
     _update_filter_bubble_interests,
 )
-from y_web.i18n import gettext as _
 
 
 def _maybe_update_fb_interests(exp_id, exp_user, post_id, interaction_type):
@@ -445,7 +445,10 @@ def report_content(exp_id):
 
     if report_type not in {"offensive", "toxic"}:
         if is_ajax:
-            return jsonify({"message": _("Unsupported report type."), "status": 400}), 400
+            return (
+                jsonify({"message": _("Unsupported report type."), "status": 400}),
+                400,
+            )
         flash(_("Unsupported report type."), "error")
         return redirect(request.referrer or url_for("main.index"))
 

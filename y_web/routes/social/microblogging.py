@@ -20,6 +20,7 @@ from flask_login import current_user, login_required
 from sqlalchemy import select
 
 from y_web import db
+from y_web.i18n import gettext as _
 from y_web.routes.social._blueprint import main
 from y_web.routes.social.helpers import (
     _content_recsys_info,
@@ -65,7 +66,6 @@ from y_web.src.models import (
     User_mgmt,
 )
 from y_web.src.recsys import get_suggested_posts, get_suggested_users
-from y_web.i18n import gettext as _
 
 
 def _build_friends_view_model(user_id, page, active_tab):
@@ -212,7 +212,9 @@ def feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
                 ).first()
                 if not user:
                     flash(
-                        _("User not found in experiment. Please contact administrator."),
+                        _(
+                            "User not found in experiment. Please contact administrator."
+                        ),
                         "error",
                     )
                     return redirect(f"/admin/experiments")

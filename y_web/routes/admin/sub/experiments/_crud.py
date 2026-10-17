@@ -36,6 +36,7 @@ from flask import (
 from flask_login import current_user, login_required, login_user
 
 from y_web import db  # , app
+from y_web.i18n import gettext as _
 from y_web.src.content.avatars import normalize_forum_avatar_mode
 from y_web.src.content.cover_images import random_cover_image_url
 from y_web.src.experiment.access import (
@@ -129,7 +130,6 @@ from ._helpers import (
     _get_experiment_folder,
     default_stress_reward_config,
 )
-from y_web.i18n import gettext as _
 
 
 def _external_repo_availability():
@@ -465,7 +465,11 @@ def visibility_settings_add_experiment():
                 status="ready",
                 related_exp_ids=[experiment.idexp],
             )
-        success_msg = _("Granted access to %(count)s researcher(s) for experiment '%(name)s'.", count=changed, name=experiment.exp_name)
+        success_msg = _(
+            "Granted access to %(count)s researcher(s) for experiment '%(name)s'.",
+            count=changed,
+            name=experiment.exp_name,
+        )
     else:
         deleted_count = (
             User_Experiment.query.filter(User_Experiment.exp_id == experiment.idexp)
@@ -473,7 +477,11 @@ def visibility_settings_add_experiment():
             .delete(synchronize_session=False)
         )
         changed = int(deleted_count or 0)
-        success_msg = _("Revoked access for %(count)s researcher(s) from experiment '%(name)s'.", count=changed, name=experiment.exp_name)
+        success_msg = _(
+            "Revoked access for %(count)s researcher(s) from experiment '%(name)s'.",
+            count=changed,
+            name=experiment.exp_name,
+        )
 
     db.session.commit()
     flash(success_msg, "success")
@@ -540,7 +548,11 @@ def visibility_settings_add_group():
                 message=f"{user.username} granted you visibility to group '{group_name}'.",
                 status="ready",
             )
-        success_msg = _("Granted group '%(group)s' visibility to selected researchers (%(count)s new assignment(s)).", group=group_name, count=changed)
+        success_msg = _(
+            "Granted group '%(group)s' visibility to selected researchers (%(count)s new assignment(s)).",
+            group=group_name,
+            count=changed,
+        )
     else:
         group_exp_ids = [exp.idexp for exp in group_experiments]
         deleted_count = (
@@ -549,7 +561,11 @@ def visibility_settings_add_group():
             .delete(synchronize_session=False)
         )
         changed = int(deleted_count or 0)
-        success_msg = _("Revoked group '%(group)s' visibility from selected researchers (%(count)s assignment(s) removed).", group=group_name, count=changed)
+        success_msg = _(
+            "Revoked group '%(group)s' visibility from selected researchers (%(count)s assignment(s) removed).",
+            group=group_name,
+            count=changed,
+        )
 
     db.session.commit()
     flash(success_msg, "success")
@@ -861,7 +877,9 @@ def upload_experiment():
     suggested_port = get_suggested_port()
     if not suggested_port:
         flash(
-            _("Error: No available port found in range 5000-6000. Cannot upload experiment.")
+            _(
+                "Error: No available port found in range 5000-6000. Cannot upload experiment."
+            )
         )
         shutil.rmtree(
             f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}",
@@ -902,7 +920,9 @@ def upload_experiment():
 
         if exp:
             flash(
-                _("The experiment already exists. Please check the experiment name and try again.")
+                _(
+                    "The experiment already exists. Please check the experiment name and try again."
+                )
             )
             shutil.rmtree(
                 f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}",
@@ -1083,10 +1103,22 @@ def upload_experiment():
                     with open(client_config_path, "r") as f:
                         client_config = json.load(f)
                 except json.JSONDecodeError as e:
-                    flash(_("Warning: Failed to parse client config %(item)s: %(error)s", item=item, error=str(e)))
+                    flash(
+                        _(
+                            "Warning: Failed to parse client config %(item)s: %(error)s",
+                            item=item,
+                            error=str(e),
+                        )
+                    )
                     continue
                 except IOError as e:
-                    flash(_("Warning: Failed to read client config %(item)s: %(error)s", item=item, error=str(e)))
+                    flash(
+                        _(
+                            "Warning: Failed to read client config %(item)s: %(error)s",
+                            item=item,
+                            error=str(e),
+                        )
+                    )
                     continue
 
                 # Update the API endpoint in servers section
@@ -1107,11 +1139,19 @@ def upload_experiment():
                             json.dump(client_config, f, indent=4)
                     except IOError as e:
                         flash(
-                            _("Warning: Failed to write updated client config %(item)s: %(error)s", item=item, error=str(e))
+                            _(
+                                "Warning: Failed to write updated client config %(item)s: %(error)s",
+                                item=item,
+                                error=str(e),
+                            )
                         )
                     except Exception as e:
                         flash(
-                            _("Warning: Failed to update port in client config %(item)s: %(error)s", item=item, error=str(e))
+                            _(
+                                "Warning: Failed to update port in client config %(item)s: %(error)s",
+                                item=item,
+                                error=str(e),
+                            )
                         )
 
         exp = Exps(
@@ -1168,7 +1208,12 @@ def upload_experiment():
                 db.session.commit()
 
     except Exception as e:
-        flash(_("There was an error loading the experiment files: %(error)s", error=str(e)))
+        flash(
+            _(
+                "There was an error loading the experiment files: %(error)s",
+                error=str(e),
+            )
+        )
         # remove the directory containing the files
         shutil.rmtree(
             f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}",
@@ -1641,7 +1686,9 @@ def upload_database():
 
         if exp:
             flash(
-                _("The experiment already exists. Please check the experiment name and try again.")
+                _(
+                    "The experiment already exists. Please check the experiment name and try again."
+                )
             )
             shutil.rmtree(
                 f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}",
@@ -1671,7 +1718,9 @@ def upload_database():
 
     except:
         flash(
-            _("There was an error loading the experiment files. Please check the files and try again.")
+            _(
+                "There was an error loading the experiment files. Please check the files and try again."
+            )
         )
         # remove the directory containing the files
         shutil.rmtree(
@@ -1920,14 +1969,18 @@ def create_experiment():
 
     if platform_type == "forum" and not repo_availability["forum"]:
         flash(
-            _("Forum experiments are unavailable because YServerReddit and YClientReddit are not both present."),
+            _(
+                "Forum experiments are unavailable because YServerReddit and YClientReddit are not both present."
+            ),
             "error",
         )
         return redirect(url_for("experiments.settings"))
 
     if platform_type == "photo_sharing" and not repo_availability["photo_sharing"]:
         flash(
-            _("Photo Sharing experiments are unavailable because YPhotoSharing is not present."),
+            _(
+                "Photo Sharing experiments are unavailable because YPhotoSharing is not present."
+            ),
             "error",
         )
         return redirect(url_for("experiments.settings"))
@@ -1939,7 +1992,9 @@ def create_experiment():
                     simulator_type = "Standard"
                 else:
                     flash(
-                        _("HPC microblogging experiments are unavailable because YSimulator is not present."),
+                        _(
+                            "HPC microblogging experiments are unavailable because YSimulator is not present."
+                        ),
                         "error",
                     )
                     return redirect(url_for("experiments.settings"))
@@ -1949,7 +2004,9 @@ def create_experiment():
                     simulator_type = "HPC"
                 else:
                     flash(
-                        _("Microblogging experiments are unavailable because neither YServer/YClient nor YSimulator is present."),
+                        _(
+                            "Microblogging experiments are unavailable because neither YServer/YClient nor YSimulator is present."
+                        ),
                         "error",
                     )
                     return redirect(url_for("experiments.settings"))
@@ -2559,10 +2616,17 @@ def delete_simulations_bulk():
             failed_ids.append(eid)
 
     if deleted_count:
-        flash(_("Deleted %(deleted_count)s experiment(s).", deleted_count=deleted_count), "success")
+        flash(
+            _("Deleted %(deleted_count)s experiment(s).", deleted_count=deleted_count),
+            "success",
+        )
     if failed_ids:
         flash(
-            _("Failed to delete %(failed_ids)s experiment(s): %(join)s", failed_ids=len(failed_ids), join=', '.join(map(str, failed_ids[:10]))),
+            _(
+                "Failed to delete %(failed_ids)s experiment(s): %(join)s",
+                failed_ids=len(failed_ids),
+                join=", ".join(map(str, failed_ids[:10])),
+            ),
             "warning",
         )
 
@@ -2584,7 +2648,9 @@ def start_experiment(uid):
 
     if _experiment_configuration_update_required(exp):
         flash(
-            _("Update Experiment Configuration before starting the server or creating clients."),
+            _(
+                "Update Experiment Configuration before starting the server or creating clients."
+            ),
             "warning",
         )
         return experiment_details(uid)
@@ -2631,7 +2697,9 @@ def stop_experiment(uid):
 
     if _experiment_configuration_update_required(exp):
         flash(
-            _("Update Experiment Configuration before changing server or client execution state."),
+            _(
+                "Update Experiment Configuration before changing server or client execution state."
+            ),
             "warning",
         )
         return experiment_details(uid)
@@ -2667,7 +2735,9 @@ def stop_experiment(uid):
 
     if not all_clients_stopped:
         flash(
-            _("Unable to confirm stop for one or more HPC clients. Experiment remains active."),
+            _(
+                "Unable to confirm stop for one or more HPC clients. Experiment remains active."
+            ),
             "warning",
         )
         return experiment_details(uid)
@@ -2799,7 +2869,9 @@ def prompts_hpc(uid):
     # Ensure this is an HPC experiment
     if experiment.simulator_type != "HPC":
         flash(
-            _("This page is only for HPC experiments. Redirecting to standard prompts page."),
+            _(
+                "This page is only for HPC experiments. Redirecting to standard prompts page."
+            ),
             "warning",
         )
         return redirect(url_for("experiments.prompts", uid=uid))
@@ -3014,16 +3086,30 @@ def copy_experiment():
             current_app.logger.error(
                 f"Error copying experiment to '{copy_name}': {str(e)}", exc_info=True
             )
-            flash(_("Error creating copy '%(copy_name)s': %(error)s", copy_name=copy_name, error=str(e)))
+            flash(
+                _(
+                    "Error creating copy '%(copy_name)s': %(error)s",
+                    copy_name=copy_name,
+                    error=str(e),
+                )
+            )
 
     if created_count > 0:
         if created_count == 1:
             flash(
-                _("Experiment '%(exp_names_to_create)s' successfully created as a copy of '%(exp_name)s'.", exp_names_to_create=exp_names_to_create[0], exp_name=source_exp.exp_name)
+                _(
+                    "Experiment '%(exp_names_to_create)s' successfully created as a copy of '%(exp_name)s'.",
+                    exp_names_to_create=exp_names_to_create[0],
+                    exp_name=source_exp.exp_name,
+                )
             )
         else:
             flash(
-                _("%(created_count)s experiment copies successfully created from '%(exp_name)s'.", created_count=created_count, exp_name=source_exp.exp_name)
+                _(
+                    "%(created_count)s experiment copies successfully created from '%(exp_name)s'.",
+                    created_count=created_count,
+                    exp_name=source_exp.exp_name,
+                )
             )
 
     return redirect(url_for("experiments.settings"))
@@ -3195,11 +3281,19 @@ def copy_experiment_group():
 
     if created_count == 1:
         flash(
-            _("Experiment '%(created_names)s' successfully created as part of copied group '%(target_group)s'.", created_names=created_names[0], target_group=target_group)
+            _(
+                "Experiment '%(created_names)s' successfully created as part of copied group '%(target_group)s'.",
+                created_names=created_names[0],
+                target_group=target_group,
+            )
         )
     else:
         flash(
-            _("%(created_count)s experiment copies successfully created in group '%(target_group)s'.", created_count=created_count, target_group=target_group)
+            _(
+                "%(created_count)s experiment copies successfully created in group '%(target_group)s'.",
+                created_count=created_count,
+                target_group=target_group,
+            )
         )
 
     return redirect(url_for("experiments.settings"))
@@ -3428,7 +3522,11 @@ def experiment_matrix():
                 )
             else:
                 flash(
-                    _("Created %(created)s matrix experiment(s) in group '%(target_group)s'.", created=created, target_group=target_group or '-'),
+                    _(
+                        "Created %(created)s matrix experiment(s) in group '%(target_group)s'.",
+                        created=created,
+                        target_group=target_group or "-",
+                    ),
                     "success",
                 )
         else:

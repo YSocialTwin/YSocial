@@ -20,6 +20,7 @@ from flask_login import current_user, login_required
 from sqlalchemy import delete, func, select
 
 from y_web import db
+from y_web.i18n import gettext as _
 from y_web.src.agents.custom_features import (
     agent_ext_entries_from_population_agent_payload,
     feature_entries_from_population_agent_payload,
@@ -64,7 +65,6 @@ from y_web.src.system.miscellanea import (
     llm_backend_status,
     ollama_status,
 )
-from y_web.i18n import gettext as _
 
 population = Blueprint("population", __name__)
 
@@ -335,7 +335,9 @@ def create_population():
             flash(_("Select at least one %(label)s.", label=label), "error")
             return redirect(request.referrer)
         if not _distribution_total_is_valid(distribution):
-            flash(_("The %(label)s percentages must sum to 100%%.", label=label), "error")
+            flash(
+                _("The %(label)s percentages must sum to 100%%.", label=label), "error"
+            )
             return redirect(request.referrer)
 
     nationalities = request.form.get("nationalities")
@@ -432,7 +434,9 @@ def create_population():
             return redirect(request.referrer)
         if photo_min <= 0 or photo_max <= 0 or photo_min > photo_max:
             flash(
-                _("Photo attention budget must use positive min/max values with min <= max."),
+                _(
+                    "Photo attention budget must use positive min/max values with min <= max."
+                ),
                 "error",
             )
             return redirect(request.referrer)
@@ -487,7 +491,10 @@ def create_population():
         db.session.delete(population)
         db.session.commit()
         flash(
-            _("Population generation failed: %(error)s. No partial population was kept.", error=exc),
+            _(
+                "Population generation failed: %(error)s. No partial population was kept.",
+                error=exc,
+            ),
             "error",
         )
         return redirect(request.referrer)
@@ -1014,7 +1021,9 @@ def delete_population(uid):
             ).first()
             if agent and agent.ag_type == population.pop_type and assigned_count <= 1:
                 flash(
-                    _("Cannot delete this custom population because at least one custom agent would be left without a population."),
+                    _(
+                        "Cannot delete this custom population because at least one custom agent would be left without a population."
+                    ),
                     "error",
                 )
                 return redirect(f"/admin/custom_agent/{population.pop_type}")
@@ -1432,7 +1441,9 @@ def merge_populations():
 
     if not merged_name or not selected_ids:
         flash(
-            _("Please provide a population name and select at least 2 populations to merge.")
+            _(
+                "Please provide a population name and select at least 2 populations to merge."
+            )
         )
         return redirect(request.referrer)
 
@@ -1454,7 +1465,12 @@ def merge_populations():
         select(Population).filter_by(name=merged_name)
     ).first()
     if existing_pop:
-        flash(_("Population with name '%(merged_name)s' already exists.", merged_name=merged_name))
+        flash(
+            _(
+                "Population with name '%(merged_name)s' already exists.",
+                merged_name=merged_name,
+            )
+        )
         return redirect(request.referrer)
 
     # Verify all selected populations exist
@@ -1473,12 +1489,16 @@ def merge_populations():
     }
     if len(source_types) > 1:
         flash(
-            _("Selected populations have incompatible platform types and cannot be merged.")
+            _(
+                "Selected populations have incompatible platform types and cannot be merged."
+            )
         )
         return redirect(request.referrer)
     if source_types and merged_population_type not in source_types:
         flash(
-            _("Merged population type must match the selected population platform type.")
+            _(
+                "Merged population type must match the selected population platform type."
+            )
         )
         return redirect(request.referrer)
 
@@ -1591,6 +1611,11 @@ def merge_populations():
     db.session.commit()
 
     flash(
-        _("Successfully created merged population '%(merged_name)s' with %(unique_agent_ids)s agents and %(unique_page_ids)s pages.", merged_name=merged_name, unique_agent_ids=len(unique_agent_ids), unique_page_ids=len(unique_page_ids))
+        _(
+            "Successfully created merged population '%(merged_name)s' with %(unique_agent_ids)s agents and %(unique_page_ids)s pages.",
+            merged_name=merged_name,
+            unique_agent_ids=len(unique_agent_ids),
+            unique_page_ids=len(unique_page_ids),
+        )
     )
     return populations()

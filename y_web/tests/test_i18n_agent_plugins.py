@@ -1,4 +1,5 @@
 """Ad hoc agent pages: manifest text comes from the agent plugin's catalog (phase 5 follow-up)."""
+
 import pytest
 from flask import Flask
 
@@ -10,7 +11,9 @@ from y_web.routes.admin.sub.clients._crud import _adhoc_agent_specs
 @pytest.fixture
 def agents_app():
     flask_app = Flask("y_web")
-    flask_app.config.update(TESTING=True, SECRET_KEY="t", SUPPORTED_LANGUAGES=("en", "it"))
+    flask_app.config.update(
+        TESTING=True, SECRET_KEY="t", SUPPORTED_LANGUAGES=("en", "it")
+    )
     i18n.init_i18n(flask_app)
     return flask_app
 
@@ -31,7 +34,9 @@ def test_agent_specs_follow_the_interface_language(agents_app, loader):
     # identity never depends on the language
     assert en["slug"] == it["slug"] and en["accepted_slugs"] == it["accepted_slugs"]
     assert it["display_name_en"] == "Stress Attacker"
-    assert it["description"] != en["description"] and it["description"].startswith("Iniettore")
+    assert it["description"] != en["description"] and it["description"].startswith(
+        "Iniettore"
+    )
 
 
 def test_adhoc_parameter_labels_and_prompt_keys(agents_app):
@@ -40,10 +45,16 @@ def test_adhoc_parameter_labels_and_prompt_keys(agents_app):
     if spec is None or spec.get("repo_name") == "builtin":
         pytest.skip("agent plugin not installed (built-in fallback specs have no catalog)")
     labels = {p.get("label") for p in spec["client_parameters"]}
-    assert "Budget giornaliero" in labels or "Numero massimo di bersagli simultanei" in labels
+    assert (
+        "Budget giornaliero" in labels
+        or "Numero massimo di bersagli simultanei" in labels
+    )
     # prompt text is an LLM prompt: it is never translated; the page matches on the English title
     for template in spec["prompt_templates"]:
-        assert template["title_key"] in {"Opening Propaganda System Prompt", "Reply Propaganda System Prompt"}
+        assert template["title_key"] in {
+            "Opening Propaganda System Prompt",
+            "Reply Propaganda System Prompt",
+        }
         assert template["body"].startswith("You ")
 
 

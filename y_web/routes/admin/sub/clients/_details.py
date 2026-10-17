@@ -8,6 +8,7 @@ from flask_login import current_user, login_required
 from sqlalchemy import select
 
 from y_web import db
+from y_web.i18n import gettext as _
 from y_web.src.hpc.client import resolve_hpc_client_log_path
 from y_web.src.hpc.log_metrics import update_client_execution_from_log
 from y_web.src.llm.vllm_manager import get_llm_models
@@ -44,7 +45,6 @@ from ._crud import (
     _read_json_if_exists,
 )
 from ._helpers import _forum_effective_link_share
-from y_web.i18n import gettext as _
 
 
 @clientsr.route("/admin/client_details/<int:uid>")
@@ -738,13 +738,18 @@ def upload_network(uid):
                     if not error and not error2:
                         o.write(f"{l[0]},{l[1]}\n")
                     else:
-                        flash(_("Agent %(l)s or %(l2)s not found.", l=l[0], l2=l[1]), "error")
+                        flash(
+                            _("Agent %(l)s or %(l2)s not found.", l=l[0], l2=l[1]),
+                            "error",
+                        )
                         os.remove(f"{path}_network_temp.csv")
                         os.remove(f"{path}_network.csv")
                         return redirect(request.referrer)
     except:
         flash(
-            _("File format error: provide a csv file containing two columns with agent names. No header required."),
+            _(
+                "File format error: provide a csv file containing two columns with agent names. No header required."
+            ),
             "error",
         )
         os.remove(f"{path}_network_temp.csv")

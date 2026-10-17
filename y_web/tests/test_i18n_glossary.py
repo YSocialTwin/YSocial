@@ -1,4 +1,5 @@
 """The Italian catalogs must follow the approved glossary (docs/i18n/glossary.csv)."""
+
 import importlib.util
 from pathlib import Path
 

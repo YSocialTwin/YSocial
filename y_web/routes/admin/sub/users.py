@@ -20,13 +20,14 @@ from flask import (
     request,
     url_for,
 )
-from y_web.i18n import gettext as _
 from flask_login import current_user, login_required
 from sqlalchemy import delete, select
 from werkzeug.security import generate_password_hash
 
 from y_web import db  # , app
-from y_web.i18n import ADMIN_COOKIE, normalize_language
+from y_web.i18n import ADMIN_COOKIE
+from y_web.i18n import gettext as _
+from y_web.i18n import normalize_language
 from y_web.src.content.cover_images import random_cover_image_url
 from y_web.src.experiment.helpers import ensure_experiment_user
 from y_web.src.llm.vllm_manager import get_llm_models
@@ -59,7 +60,9 @@ def user_data():
     ).first()
     if user.role not in ["admin", "researcher"]:
         flash(
-            _("Access denied. This page is only accessible to administrators and researchers."),
+            _(
+                "Access denied. This page is only accessible to administrators and researchers."
+            ),
             "error",
         )
         return redirect(url_for("admin.dashboard"))
@@ -311,7 +314,9 @@ def add_user():
         "teacher",
     ]:
         flash(
-            _("You do not have permission to create admin, researcher or teacher users. Only 'user' role is allowed."),
+            _(
+                "You do not have permission to create admin, researcher or teacher users. Only 'user' role is allowed."
+            ),
             "error",
         )
         return redirect(url_for("users.user_data"))
@@ -428,12 +433,20 @@ def add_user_to_experiment():
         db.session.add(user_exp_record)
         db.session.commit()
         flash(
-            _("User '%(username)s' successfully added to experiment '%(exp_name)s'.", username=user.username, exp_name=exp.exp_name),
+            _(
+                "User '%(username)s' successfully added to experiment '%(exp_name)s'.",
+                username=user.username,
+                exp_name=exp.exp_name,
+            ),
             "success",
         )
     else:
         flash(
-            _("User '%(username)s' is already assigned to experiment '%(exp_name)s'.", username=user.username, exp_name=exp.exp_name),
+            _(
+                "User '%(username)s' is already assigned to experiment '%(exp_name)s'.",
+                username=user.username,
+                exp_name=exp.exp_name,
+            ),
             "info",
         )
 
@@ -839,7 +852,10 @@ def bulk_create_users():
     try:
         db.session.commit()
         if created > 0:
-            flash(_("Successfully created %(created)s user(s).", created=created), "success")
+            flash(
+                _("Successfully created %(created)s user(s).", created=created),
+                "success",
+            )
         if errors:
             flash(
                 f"Errors: {'; '.join(errors[:5])}"
@@ -934,7 +950,11 @@ def bulk_assign_users():
 
         if assigned > 0:
             flash(
-                _("Successfully assigned %(assigned)s user(s) to experiment '%(exp_name)s'.", assigned=assigned, exp_name=exp.exp_name),
+                _(
+                    "Successfully assigned %(assigned)s user(s) to experiment '%(exp_name)s'.",
+                    assigned=assigned,
+                    exp_name=exp.exp_name,
+                ),
                 "success",
             )
         if errors:
@@ -975,7 +995,8 @@ def update_telemetry_preference():
 
     if not current_admin_user or current_admin_user.role != "admin":
         flash(
-            _("Access denied. Only administrators can modify telemetry settings."), "error"
+            _("Access denied. Only administrators can modify telemetry settings."),
+            "error",
         )
         return redirect(url_for("admin.dashboard"))
 
@@ -997,7 +1018,10 @@ def update_telemetry_preference():
     db.session.commit()
 
     flash(
-        _("Telemetry %(value)s successfully.", value='enabled' if telemetry_enabled else 'disabled'),
+        _(
+            "Telemetry %(value)s successfully.",
+            value="enabled" if telemetry_enabled else "disabled",
+        ),
         "success",
     )
     return redirect(url_for("users.user_details", uid=user_id_int))
@@ -1058,7 +1082,11 @@ def check_for_updates_route():
 
         if has_update:
             flash(
-                _("New version available: %(get)s (v%(get2)s)", get=release_info.get('release_name'), get2=release_info.get('latest_version')),
+                _(
+                    "New version available: %(get)s (v%(get2)s)",
+                    get=release_info.get("release_name"),
+                    get2=release_info.get("latest_version"),
+                ),
                 "success",
             )
         else:
@@ -1208,7 +1236,11 @@ def watchdog_run_now():
 
         results = run_watchdog_once()
         flash(
-            _("Watchdog check complete: %(processes_checked)s checked, %(processes_restarted)s restarted", processes_checked=results['processes_checked'], processes_restarted=results['processes_restarted']),
+            _(
+                "Watchdog check complete: %(processes_checked)s checked, %(processes_restarted)s restarted",
+                processes_checked=results["processes_checked"],
+                processes_restarted=results["processes_restarted"],
+            ),
             "success",
         )
         return jsonify(results), 200
@@ -1239,7 +1271,8 @@ def watchdog_set_interval():
         if is_ajax:
             return jsonify({"success": False, "message": _("Access denied")}), 403
         flash(
-            _("Access denied. Only administrators can modify watchdog settings."), "error"
+            _("Access denied. Only administrators can modify watchdog settings."),
+            "error",
         )
         return redirect(url_for("admin.dashboard"))
 
@@ -1263,7 +1296,13 @@ def watchdog_set_interval():
         if is_ajax:
             return jsonify({"success": True, "interval_minutes": interval_minutes}), 200
 
-        flash(_("Watchdog interval set to %(interval_minutes)s minutes.", interval_minutes=interval_minutes), "success")
+        flash(
+            _(
+                "Watchdog interval set to %(interval_minutes)s minutes.",
+                interval_minutes=interval_minutes,
+            ),
+            "success",
+        )
     except Exception as e:
         if is_ajax:
             return jsonify({"success": False, "message": str(e)}), 500
@@ -1317,7 +1356,9 @@ def watchdog_toggle():
                 {
                     "success": True,
                     "enabled": watchdog.is_running,
-                    "message": _("Watchdog %(value)s", value='enabled' if enabled else 'disabled'),
+                    "message": _(
+                        "Watchdog %(value)s", value="enabled" if enabled else "disabled"
+                    ),
                 }
             ),
             200,

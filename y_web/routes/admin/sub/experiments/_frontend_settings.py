@@ -21,12 +21,13 @@ from flask_login import current_user, login_required
 from sqlalchemy import select
 
 from y_web import db
+from y_web.i18n import N_, available_languages
+from y_web.i18n import gettext as _
 from y_web.src.models import ExpFrontendSettings, Exps
 from y_web.src.models.config import Content_Recsys, Follow_Recsys
 from y_web.src.system.miscellanea import check_privileges
 
 from ._blueprint import experiments
-from y_web.i18n import N_, available_languages, gettext as _
 
 # ------------------------------------------------------------------
 # Supported platforms and what each one's templates actually offer
@@ -701,7 +702,9 @@ def frontend_plugin_suite_settings_save(repo_key):
             jsonify(
                 {
                     "ok": False,
-                    "error": _("This module is not available for this experiment type."),
+                    "error": _(
+                        "This module is not available for this experiment type."
+                    ),
                 }
             ),
             409,
@@ -721,7 +724,9 @@ def frontend_plugin_suite_settings_save(repo_key):
                 jsonify(
                     {
                         "ok": False,
-                        "error": _("Could not prepare the experiment database for this module."),
+                        "error": _(
+                            "Could not prepare the experiment database for this module."
+                        ),
                     }
                 ),
                 500,

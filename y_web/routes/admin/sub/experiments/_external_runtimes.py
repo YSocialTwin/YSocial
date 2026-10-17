@@ -10,6 +10,8 @@ from flask_login import current_user, login_required
 from sqlalchemy import select
 
 from y_web import db
+from y_web.i18n import N_
+from y_web.i18n import gettext as _
 from y_web.src.external_runtime import (
     ExternalRuntimeError,
     clone_runtime_repo,
@@ -35,7 +37,6 @@ from y_web.src.models import Admin_users, Exps
 from y_web.src.system.miscellanea import check_privileges
 
 from ._blueprint import experiments
-from y_web.i18n import N_, gettext as _
 
 _MUTATING_ACTIONS = {
     "acquire",
@@ -57,12 +58,16 @@ _PAIRED_ENTRIES = {
     "microblogging": {
         "label": N_("Microblogging"),
         "members": ("microblogging_server", "microblogging_client"),
-        "description": N_("Microblogging simulator (timeline, posts, follows). Server and client are installed and updated independently from its page."),
+        "description": N_(
+            "Microblogging simulator (timeline, posts, follows). Server and client are installed and updated independently from its page."
+        ),
     },
     "forum": {
         "label": N_("Forum"),
         "members": ("forum_server", "forum_client"),
-        "description": N_("Forum simulator (threads and replies). Server and client are installed and updated independently from its page."),
+        "description": N_(
+            "Forum simulator (threads and replies). Server and client are installed and updated independently from its page."
+        ),
     },
 }
 _PAIR_OF_MEMBER = {m: k for k, v in _PAIRED_ENTRIES.items() for m in v["members"]}
@@ -75,7 +80,9 @@ def _require_admin_user():
         select(Admin_users).filter_by(username=current_user.username)
     ).first()
     if admin_user is None or admin_user.role != "admin":
-        flash(_("Only administrators can manage external runtime repositories."), "error")
+        flash(
+            _("Only administrators can manage external runtime repositories."), "error"
+        )
         return None
     return admin_user
 
@@ -116,7 +123,7 @@ def _run_suite_schema_migration(repo_key: str) -> None:
         repo_key
     )
     if outcome and outcome.get("error"):
-        flash(_("Schema migration failed: %(error)s", error=outcome['error']), "error")
+        flash(_("Schema migration failed: %(error)s", error=outcome["error"]), "error")
 
 
 def _toggle_plugin(repo_key: str, spec, admin_user, enabled: bool):
@@ -134,7 +141,10 @@ def _toggle_plugin(repo_key: str, spec, admin_user, enabled: bool):
     set_plugin_enabled(repo_key, enabled, admin_user.username)
     if enabled and suite_restart_required(repo_key):
         flash(
-            _("%(label)s enabled. Restart required: its routes are loaded at startup.", label=spec.label),
+            _(
+                "%(label)s enabled. Restart required: its routes are loaded at startup.",
+                label=spec.label,
+            ),
             "warning",
         )
     else:
@@ -211,7 +221,10 @@ def _decorate_repo(repo: dict, spec, plugins_index) -> dict:
             if report and report.get("modules"):
                 from y_web.src.external_runtime.plugin_i18n import localize_manifest
 
-                report = {**report, "modules": localize_manifest(repo["key"], report["modules"])}
+                report = {
+                    **report,
+                    "modules": localize_manifest(repo["key"], report["modules"]),
+                }
             repo["frontend_modules_report"] = report
         except Exception:
             repo["frontend_modules_report"] = None
@@ -277,7 +290,9 @@ def _make_entry(key: str, repos: list[dict]) -> dict:
     category_text = first.get("plugin_category_label") or first.get("category_label")
     return {
         "key": key,
-        "label": _(paired_label) if paired else localize_text(first["key"], first["label"]),
+        "label": (
+            _(paired_label) if paired else localize_text(first["key"], first["label"])
+        ),
         "description": description,
         "category": _(category_text) if category_text else "",
         "paired": bool(paired),
@@ -497,7 +512,13 @@ def _external_runtime_action_single(repo_key: str, action: str):
                 else f" and {len(active_experiments) - 3} more"
             )
             flash(
-                _("Stop active %(lower)s experiments before modifying %(label)s: %(names)s%(extra)s.", lower=spec.group_label.lower(), label=spec.label, names=names, extra=extra),
+                _(
+                    "Stop active %(lower)s experiments before modifying %(label)s: %(names)s%(extra)s.",
+                    lower=spec.group_label.lower(),
+                    label=spec.label,
+                    names=names,
+                    extra=extra,
+                ),
                 "error",
             )
             return _external_runtimes_response(
@@ -512,7 +533,10 @@ def _external_runtime_action_single(repo_key: str, action: str):
         exists = spec.path.exists() or spec.path.is_symlink()
         if exists and spec.path.is_symlink():
             flash(
-                _("%(label)s is a symlinked development checkout: update it from its own repository.", label=spec.label),
+                _(
+                    "%(label)s is a symlinked development checkout: update it from its own repository.",
+                    label=spec.label,
+                ),
                 "error",
             )
             return _external_runtimes_response(
@@ -527,7 +551,10 @@ def _external_runtime_action_single(repo_key: str, action: str):
             action = "reinstall"
         if (wants_git or action == "update") and not git_available:
             flash(
-                _("Git is not available on this host. Use the release source for %(label)s.", label=spec.label),
+                _(
+                    "Git is not available on this host. Use the release source for %(label)s.",
+                    label=spec.label,
+                ),
                 "error",
             )
             return _external_runtimes_response(
@@ -535,7 +562,10 @@ def _external_runtime_action_single(repo_key: str, action: str):
             )
     if action in {"clone", "fetch", "update"} and not git_available:
         flash(
-            _("Git is not available on this host. Use the release install flow for %(label)s.", label=spec.label),
+            _(
+                "Git is not available on this host. Use the release install flow for %(label)s.",
+                label=spec.label,
+            ),
             "error",
         )
         return _external_runtimes_response(
@@ -545,7 +575,10 @@ def _external_runtime_action_single(repo_key: str, action: str):
         )
     if action == "install" and not git_available and not spec.path.exists():
         flash(
-            _("Git is not available on this host. Install %(label)s from a GitHub release first.", label=spec.label),
+            _(
+                "Git is not available on this host. Install %(label)s from a GitHub release first.",
+                label=spec.label,
+            ),
             "error",
         )
         return _external_runtimes_response(
@@ -565,7 +598,14 @@ def _external_runtime_action_single(repo_key: str, action: str):
                 clone_runtime_repo(
                     repo_key, branch, admin_user.username, github_token=github_token
                 )
-                flash(_("Cloned %(label)s on branch %(branch)s.", label=spec.label, branch=branch), "success")
+                flash(
+                    _(
+                        "Cloned %(label)s on branch %(branch)s.",
+                        label=spec.label,
+                        branch=branch,
+                    ),
+                    "success",
+                )
                 installed_now = True
             else:
                 download_runtime_release(
@@ -575,7 +615,11 @@ def _external_runtime_action_single(repo_key: str, action: str):
                     github_token=github_token,
                 )
                 flash(
-                    _("Installed %(label)s from GitHub release %(release_tag)s.", label=spec.label, release_tag=release_tag or 'latest available release'),
+                    _(
+                        "Installed %(label)s from GitHub release %(release_tag)s.",
+                        label=spec.label,
+                        release_tag=release_tag or "latest available release",
+                    ),
                     "success",
                 )
                 installed_now = True
@@ -587,7 +631,11 @@ def _external_runtime_action_single(repo_key: str, action: str):
                 github_token=github_token,
             )
             flash(
-                _("Installed %(label)s from GitHub release %(release_tag)s.", label=spec.label, release_tag=release_tag or 'latest available release'),
+                _(
+                    "Installed %(label)s from GitHub release %(release_tag)s.",
+                    label=spec.label,
+                    release_tag=release_tag or "latest available release",
+                ),
                 "success",
             )
             installed_now = True
@@ -595,25 +643,48 @@ def _external_runtime_action_single(repo_key: str, action: str):
             clone_runtime_repo(
                 repo_key, branch, admin_user.username, github_token=github_token
             )
-            flash(_("Cloned %(label)s on branch %(branch)s.", label=spec.label, branch=branch), "success")
+            flash(
+                _(
+                    "Cloned %(label)s on branch %(branch)s.",
+                    label=spec.label,
+                    branch=branch,
+                ),
+                "success",
+            )
             installed_now = True
         elif action == "fetch":
             fetch_runtime_repo(
                 repo_key, branch, admin_user.username, github_token=github_token
             )
-            flash(_("Fetched %(label)s from branch %(branch)s.", label=spec.label, branch=branch), "success")
+            flash(
+                _(
+                    "Fetched %(label)s from branch %(branch)s.",
+                    label=spec.label,
+                    branch=branch,
+                ),
+                "success",
+            )
         elif action == "update":
             update_runtime_repo(
                 repo_key, branch, admin_user.username, github_token=github_token
             )
-            flash(_("Updated %(label)s to branch %(branch)s.", label=spec.label, branch=branch), "success")
+            flash(
+                _(
+                    "Updated %(label)s to branch %(branch)s.",
+                    label=spec.label,
+                    branch=branch,
+                ),
+                "success",
+            )
             if sync:
                 installed_now = (
                     True  # an update also refreshes dependencies, validation and schema
                 )
         elif action == "install":
             install_runtime_dependencies(repo_key, admin_user.username)
-            flash(_("Installed dependencies for %(label)s.", label=spec.label), "success")
+            flash(
+                _("Installed dependencies for %(label)s.", label=spec.label), "success"
+            )
         elif action == "validate":
             validate_runtime_repo(repo_key, admin_user.username)
             flash(_("Validated %(label)s.", label=spec.label), "success")
@@ -623,7 +694,9 @@ def _external_runtime_action_single(repo_key: str, action: str):
 
         if installed_now:
             install_runtime_dependencies(repo_key, admin_user.username)
-            flash(_("Installed dependencies for %(label)s.", label=spec.label), "success")
+            flash(
+                _("Installed dependencies for %(label)s.", label=spec.label), "success"
+            )
             validate_runtime_repo(repo_key, admin_user.username)
             flash(_("Validated %(label)s.", label=spec.label), "success")
             _run_suite_schema_migration(repo_key)
@@ -633,7 +706,10 @@ def _external_runtime_action_single(repo_key: str, action: str):
 
             if suite_restart_required(repo_key):
                 flash(
-                    _("Restart required: %(label)s routes are loaded at startup.", label=spec.label),
+                    _(
+                        "Restart required: %(label)s routes are loaded at startup.",
+                        label=spec.label,
+                    ),
                     "warning",
                 )
     except ExternalRuntimeError as exc:

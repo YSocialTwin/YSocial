@@ -14,6 +14,7 @@ from sqlalchemy import select
 from werkzeug.security import generate_password_hash
 
 from y_web import db
+from y_web.i18n import gettext as _
 from y_web.src.models import (
     Admin_users,
     Exps,
@@ -21,7 +22,6 @@ from y_web.src.models import (
     SignupTarget,
     User_Experiment,
 )
-from y_web.i18n import gettext as _
 
 EXPERIMENT = "experiment"
 TRAINING = "training"
@@ -85,7 +85,10 @@ def candidates() -> dict:
     ]
     modules = training_candidates()
     if modules is not None:
-        modules = [dict(m, selected=m["uid"] in chosen[TRAINING], active=not m["archived"]) for m in modules]
+        modules = [
+            dict(m, selected=m["uid"] in chosen[TRAINING], active=not m["archived"])
+            for m in modules
+        ]
     return {"enabled": is_enabled(), "experiments": experiments, "modules": modules}
 
 
@@ -96,13 +99,33 @@ def offers() -> list[dict]:
     if chosen[EXPERIMENT]:
         ids = [int(r) for r in chosen[EXPERIMENT]]
         for exp in db.session.scalars(
-            select(Exps).where(Exps.idexp.in_(ids), Exps.status == 1).order_by(Exps.exp_name)
+            select(Exps)
+            .where(Exps.idexp.in_(ids), Exps.status == 1)
+            .order_by(Exps.exp_name)
         ).all():
-            out.append({"kind": EXPERIMENT, "ref": str(exp.idexp), "label": exp.exp_name, "detail": exp.platform_type})
+            out.append(
+                {
+                    "kind": EXPERIMENT,
+                    "ref": str(exp.idexp),
+                    "label": exp.exp_name,
+                    "detail": exp.platform_type,
+                }
+            )
     if chosen[TRAINING]:
         for module in training_candidates() or []:
-            if module["uid"] in chosen[TRAINING] and not module["archived"] and module["open_run"]:
-                out.append({"kind": TRAINING, "ref": module["uid"], "label": module["title"], "detail": ""})
+            if (
+                module["uid"] in chosen[TRAINING]
+                and not module["archived"]
+                and module["open_run"]
+            ):
+                out.append(
+                    {
+                        "kind": TRAINING,
+                        "ref": module["uid"],
+                        "label": module["title"],
+                        "detail": "",
+                    }
+                )
     return out
 
 
@@ -124,20 +147,27 @@ def create_account(username: str, email: str, password: str, picks: list[str]) -
     username = (username or "").strip()
     email = (email or "").strip().lower()
     if not USERNAME_RE.match(username):
-        raise SignupError(_("The username must have 3 to 15 characters: letters, digits, dots, dashes or underscores."))
+        raise SignupError(
+            _(
+                "The username must have 3 to 15 characters: letters, digits, dots, dashes or underscores."
+            )
+        )
     if not EMAIL_RE.match(email) or len(email) > 50:
         raise SignupError(_("Please enter a valid email address."))
     if len(password or "") < MIN_PASSWORD:
-        raise SignupError(_("The password must have at least %(n)s characters.", n=MIN_PASSWORD))
+        raise SignupError(
+            _("The password must have at least %(n)s characters.", n=MIN_PASSWORD)
+        )
 
     available = {f"{o['kind']}:{o['ref']}": o for o in offers()}
     chosen = [available[p] for p in dict.fromkeys(picks or []) if p in available]
     if not chosen:
         raise SignupError(_("Choose at least one of the available activities."))
 
-    if db.session.scalars(select(Admin_users).filter_by(email=email)).first() or db.session.scalars(
-        select(Admin_users).filter_by(username=username)
-    ).first():
+    if (
+        db.session.scalars(select(Admin_users).filter_by(email=email)).first()
+        or db.session.scalars(select(Admin_users).filter_by(username=username)).first()
+    ):
         raise SignupError(_("An account with this username or email already exists."))
 
     user = Admin_users(
@@ -165,5 +195,7 @@ def create_account(username: str, email: str, password: str, picks: list[str]) -
             api = None
         for offer in modules:
             outcome = api.enroll(offer["ref"], user.id) if api else "unavailable"
-            (joined if outcome in ("enrolled", "duplicate") else failed).append(offer["label"])
+            (joined if outcome in ("enrolled", "duplicate") else failed).append(
+                offer["label"]
+            )
     return {"user_id": user.id, "joined": joined, "failed": failed}

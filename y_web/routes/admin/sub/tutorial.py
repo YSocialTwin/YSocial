@@ -30,6 +30,7 @@ from sqlalchemy import create_engine, select, text
 from werkzeug.security import generate_password_hash
 
 from y_web import db
+from y_web.i18n import gettext as _
 from y_web.routes.admin.sub.experiments import get_suggested_port
 from y_web.src.agents.platform import ensure_population_username_type_column
 from y_web.src.agents.population import generate_population
@@ -58,7 +59,6 @@ from y_web.src.models import (
 )
 from y_web.src.system.miscellanea import check_privileges
 from y_web.src.system.path_utils import get_resource_path, get_writable_path
-from y_web.i18n import gettext as _
 
 tutorial = Blueprint("tutorial", __name__)
 
@@ -242,12 +242,16 @@ def create_tutorial_experiment():
         # Validate required fields
         if not population_name:
             return (
-                jsonify({"success": False, "message": _("Population name is required")}),
+                jsonify(
+                    {"success": False, "message": _("Population name is required")}
+                ),
                 400,
             )
         if not experiment_name:
             return (
-                jsonify({"success": False, "message": _("Experiment name is required")}),
+                jsonify(
+                    {"success": False, "message": _("Experiment name is required")}
+                ),
                 400,
             )
         if not client_name:
@@ -286,7 +290,10 @@ def create_tutorial_experiment():
                 jsonify(
                     {
                         "success": False,
-                        "message": _("Population '%(population_name)s' already exists", population_name=population_name),
+                        "message": _(
+                            "Population '%(population_name)s' already exists",
+                            population_name=population_name,
+                        ),
                     }
                 ),
                 400,
@@ -296,7 +303,10 @@ def create_tutorial_experiment():
                 jsonify(
                     {
                         "success": False,
-                        "message": _("Experiment '%(experiment_name)s' already exists", experiment_name=experiment_name),
+                        "message": _(
+                            "Experiment '%(experiment_name)s' already exists",
+                            experiment_name=experiment_name,
+                        ),
                     }
                 ),
                 400,
@@ -926,7 +936,10 @@ def create_tutorial_experiment():
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Tutorial wizard error: {str(e)}", exc_info=True)
-        return jsonify({"success": False, "message": _("Error: %(error)s", error=str(e))}), 500
+        return (
+            jsonify({"success": False, "message": _("Error: %(error)s", error=str(e))}),
+            500,
+        )
 
 
 @tutorial.route("/admin/tutorial/run_simulation", methods=["POST"])
@@ -970,7 +983,10 @@ def run_tutorial_simulation():
         # Get the experiment
         exp = db.session.scalars(select(Exps).filter_by(idexp=experiment_id)).first()
         if not exp:
-            return jsonify({"success": False, "message": _("Experiment not found")}), 404
+            return (
+                jsonify({"success": False, "message": _("Experiment not found")}),
+                404,
+            )
 
         # Get the client
         client = db.session.scalars(select(Client).filter_by(id=client_id)).first()
@@ -982,7 +998,10 @@ def run_tutorial_simulation():
             select(Population).filter_by(id=client.population_id)
         ).first()
         if not population:
-            return jsonify({"success": False, "message": _("Population not found")}), 404
+            return (
+                jsonify({"success": False, "message": _("Population not found")}),
+                404,
+            )
 
         # Start the experiment server if not already running
         if exp.running == 0:
@@ -1012,13 +1031,18 @@ def run_tutorial_simulation():
         db.session.query(Client).filter_by(id=client_id).update({Client.status: 1})
         db.session.commit()
 
-        return jsonify({"success": True, "message": _("Simulation started successfully!")})
+        return jsonify(
+            {"success": True, "message": _("Simulation started successfully!")}
+        )
 
     except Exception as e:
         current_app.logger.error(
             f"Error starting tutorial simulation: {str(e)}", exc_info=True
         )
-        return jsonify({"success": False, "message": _("Error: %(error)s", error=str(e))}), 500
+        return (
+            jsonify({"success": False, "message": _("Error: %(error)s", error=str(e))}),
+            500,
+        )
 
 
 # =====================================================

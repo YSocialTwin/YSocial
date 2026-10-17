@@ -22,6 +22,7 @@ from flask_login import current_user, login_required
 from sqlalchemy import select
 
 from y_web import db
+from y_web.i18n import gettext as _
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
     user_can_manage_experiment,
@@ -49,7 +50,6 @@ from y_web.src.system.miscellanea import (
 )
 
 from .sub.experiments._helpers import _experiment_has_started_once
-from y_web.i18n import gettext as _
 
 admin = Blueprint("admin", __name__)
 
@@ -111,7 +111,12 @@ def fetch_models():
             return jsonify({"success": True, "models": models, "url": llm_url})
         else:
             return (
-                jsonify({"success": False, "message": _("No models found at %(llm_url)s", llm_url=llm_url)}),
+                jsonify(
+                    {
+                        "success": False,
+                        "message": _("No models found at %(llm_url)s", llm_url=llm_url),
+                    }
+                ),
                 404,
             )
     except Exception as e:
@@ -119,7 +124,11 @@ def fetch_models():
             jsonify(
                 {
                     "success": False,
-                    "message": _("Failed to connect to %(llm_url)s: %(error)s", llm_url=llm_url, error=str(e)),
+                    "message": _(
+                        "Failed to connect to %(llm_url)s: %(error)s",
+                        llm_url=llm_url,
+                        error=str(e),
+                    ),
                 }
             ),
             500,
@@ -146,7 +155,11 @@ def fetch_embedding_models():
             jsonify(
                 {
                     "success": False,
-                    "message": _("Failed to connect to %(llm_url)s: %(error)s", llm_url=llm_url, error=str(e)),
+                    "message": _(
+                        "Failed to connect to %(llm_url)s: %(error)s",
+                        llm_url=llm_url,
+                        error=str(e),
+                    ),
                 }
             ),
             500,

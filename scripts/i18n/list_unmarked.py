@@ -1,7 +1,8 @@
 """List the unmarked user-visible strings of the given templates.
 
-    python scripts/i18n/list_unmarked.py y_web/templates/admin/foo.html ...
+python scripts/i18n/list_unmarked.py y_web/templates/admin/foo.html ...
 """
+
 import sys
 from pathlib import Path
 

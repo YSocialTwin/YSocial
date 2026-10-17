@@ -28,7 +28,9 @@ def upgrade() -> None:
         op.create_table(
             "signup_settings",
             sa.Column("id", sa.Integer(), primary_key=True),
-            sa.Column("enabled", sa.Boolean(), nullable=False, server_default=sa.false()),
+            sa.Column(
+                "enabled", sa.Boolean(), nullable=False, server_default=sa.false()
+            ),
         )
     if "signup_target" not in tables:
         op.create_table(
