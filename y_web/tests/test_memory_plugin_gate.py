@@ -37,3 +37,16 @@ def test_templates_gate_memory_sections():
         text = (root / name).read_text()
         i = text.index('id="box-memory-config"')
         assert "{% if memory_plugin_installed %}" in text[max(0, i - 120) : i]
+
+
+def test_experiment_details_memory_texts_are_conditional():
+    import pathlib
+
+    root = pathlib.Path(__file__).resolve().parents[1] / "templates" / "admin"
+    for name in ("experiment_details.html", "experiment_details_forum.html"):
+        text = (root / name).read_text()
+        assert (
+            "{% if memory_plugin_installed %}{{ _('Enable or disable runtime annotations and memory"
+            in text
+        )
+        assert "{{ _('Enable or disable runtime annotations" in text

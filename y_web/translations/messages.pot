@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 14:41+0000\n"
+"POT-Creation-Date: 2026-10-17 20:09+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -667,6 +667,9 @@ msgid "Additional settings exposed by the selected plugin agent type."
 msgstr ""
 
 msgid "Adjust experiment prompts and supporting configuration."
+msgstr ""
+
+msgid "Adjust forum prompts, feeds, limits, and avatar behavior."
 msgstr ""
 
 msgid "Adjust forum prompts, feeds, limits, embeddings, and avatar behavior."
@@ -3267,6 +3270,14 @@ msgid ""
 "clients."
 msgstr ""
 
+msgid "Enable or disable runtime annotations."
+msgstr ""
+
+msgid ""
+"Enable or disable runtime annotations. Update this configuration before "
+"starting or stopping the server and before managing clients."
+msgstr ""
+
 msgid "Enable run-scoped memory"
 msgstr ""
 
@@ -4174,6 +4185,11 @@ msgstr ""
 msgid "GitHub:"
 msgstr ""
 
+msgid ""
+"Gives simulated agents a memory of past interactions: relationship "
+"history, thread continuity and conversation cues used when they reply."
+msgstr ""
+
 msgid "Global"
 msgstr ""
 
@@ -4990,6 +5006,11 @@ msgstr ""
 
 msgid ""
 "LLM annotations (toxicity, sentiment, emotion) are unavailable for rule-"
+"based forum experiments. Opinion dynamics remains available."
+msgstr ""
+
+msgid ""
+"LLM annotations (toxicity, sentiment, emotion) are unavailable for rule-"
 "based forum experiments. Opinion dynamics remains available; memory is "
 "available only for LLM forum experiments."
 msgstr ""
@@ -5018,6 +5039,11 @@ msgstr ""
 msgid ""
 "Language of the participant pages in this experiment. Post, comment and "
 "agent texts are never translated."
+msgstr ""
+
+msgid ""
+"Language of the prompts used by the agents of this simulation. Loading a "
+"language replaces the prompts below with that language's version."
 msgstr ""
 
 msgid "Languages"
@@ -5147,6 +5173,9 @@ msgid "Load Pages Collection"
 msgstr ""
 
 msgid "Load Population from file"
+msgstr ""
+
+msgid "Load prompts"
 msgstr ""
 
 msgid "Loaded articles"
@@ -6290,6 +6319,13 @@ msgstr ""
 msgid "Open prompt and embedding settings from the same panel"
 msgstr ""
 
+#, python-format
+msgid "Open prompt settings from %(b)s"
+msgstr ""
+
+msgid "Open prompt settings from the same panel"
+msgstr ""
+
 msgid "Open the active experiment dashboards from a single compact panel."
 msgstr ""
 
@@ -7136,6 +7172,14 @@ msgstr ""
 msgid "Prompts for resharing posts with commentary."
 msgstr ""
 
+msgid ""
+"Prompts in the selected language work only if the language model chosen "
+"for the simulation supports that language."
+msgstr ""
+
+msgid "Prompts loaded in the selected language."
+msgstr ""
+
 msgid "Prompts support template variables using curly braces:"
 msgstr ""
 
@@ -7462,6 +7506,11 @@ msgstr ""
 msgid "Repeat Password"
 msgstr ""
 
+msgid ""
+"Replace the prompts of this experiment with the ones of the selected "
+"language? Changes you made to them will be lost."
+msgstr ""
+
 msgid "Replay Tutorial"
 msgstr ""
 
@@ -7666,9 +7715,6 @@ msgid "Running"
 msgstr ""
 
 msgid "Running a YSocial Experiment"
-msgstr ""
-
-msgid "Gives simulated agents a memory of past interactions: relationship history, thread continuity and conversation cues used when they reply."
 msgstr ""
 
 msgid "Runs large-scale simulations in a distributed way on HPC clusters."
@@ -8937,6 +8983,9 @@ msgstr ""
 msgid "The %(label)s percentages must sum to 100%%."
 msgstr ""
 
+msgid "The Agent Memory plugin is not installed."
+msgstr ""
+
 msgid "The Agent:"
 msgstr ""
 
@@ -9827,6 +9876,10 @@ msgstr ""
 msgid "Update runtime annotations and memory in %(b)s"
 msgstr ""
 
+#, python-format
+msgid "Update runtime annotations in %(b)s"
+msgstr ""
+
 msgid "Update your interest and opinion for each topic."
 msgstr ""
 
@@ -9931,8 +9984,20 @@ msgstr ""
 
 msgid ""
 "Use the left column to inspect metadata, update topics, toggle "
+"annotations, and open advanced configuration such as prompts and "
+"stress/reward settings."
+msgstr ""
+
+msgid ""
+"Use the left column to inspect metadata, update topics, toggle "
 "annotations, and open advanced configuration such as prompts, embeddings,"
 " and stress/reward settings."
+msgstr ""
+
+msgid ""
+"Use the left column to inspect metadata, update topics, toggle "
+"annotations, and open forum-specific configuration such as prompts, "
+"feeds, limits, and stress/reward settings."
 msgstr ""
 
 msgid ""
@@ -10823,25 +10888,5 @@ msgid "✔️ Play with"
 msgstr ""
 
 msgid "✔️ Use"
-msgstr ""
-
-#: y_web/templates/admin/_prompt_language_switch.html:14
-msgid "Load prompts"
-msgstr ""
-
-#: y_web/templates/admin/_prompt_language_switch.html:4
-msgid "Replace the prompts of this experiment with the ones of the selected language? Changes you made to them will be lost."
-msgstr ""
-
-#: y_web/routes/admin/sub/experiments/_crud.py
-msgid "Prompts loaded in the selected language."
-msgstr ""
-
-#: y_web/templates/admin/_prompt_language_switch.html
-msgid "Language of the prompts used by the agents of this simulation. Loading a language replaces the prompts below with that language's version."
-msgstr ""
-
-#: y_web/templates/admin/_prompt_language_switch.html
-msgid "Prompts in the selected language work only if the language model chosen for the simulation supports that language."
 msgstr ""
 

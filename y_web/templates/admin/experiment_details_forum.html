@@ -87,7 +87,7 @@
                         {% if can_manage_experiment %}
                                 <hr>
                                 <b>{{ _('Experiment Configuration') }}</b>
-                            <p style="font-size: 0.82em; color: #777; margin-bottom: 0.45em;">{{ _('Enable or disable runtime annotations and memory. Update this configuration before starting or stopping the server and before managing clients.') }}</p>
+                            <p style="font-size: 0.82em; color: #777; margin-bottom: 0.45em;">{% if memory_plugin_installed %}{{ _('Enable or disable runtime annotations and memory. Update this configuration before starting or stopping the server and before managing clients.') }}{% else %}{{ _('Enable or disable runtime annotations. Update this configuration before starting or stopping the server and before managing clients.') }}{% endif %}</p>
                             <form method="POST" action="/admin/update_experiment_config/{{ experiment.idexp }}">
                                 <div class="exp-config-card">
                                     <div class="exp-config-grid">
@@ -149,7 +149,7 @@
                                     </div>
                                     {% else %}
                                     <div style="margin-top: 8px; font-size: 0.76rem; color: #6b7280;">
-                                        {{ _('LLM annotations (toxicity, sentiment, emotion) are unavailable for rule-based forum experiments. Opinion dynamics remains available; memory is available only for LLM forum experiments.') }}
+                                        {% if memory_plugin_installed %}{{ _('LLM annotations (toxicity, sentiment, emotion) are unavailable for rule-based forum experiments. Opinion dynamics remains available; memory is available only for LLM forum experiments.') }}{% else %}{{ _('LLM annotations (toxicity, sentiment, emotion) are unavailable for rule-based forum experiments. Opinion dynamics remains available.') }}{% endif %}
                                     </div>
                                     {% endif %}
                                 </div>
@@ -168,7 +168,7 @@
                                         </span>
                                     </summary>
  <div class="ys-content-panel">
- <p class="ys-label-hint">{{ _('Adjust forum prompts, feeds, limits, embeddings, and avatar behavior.') }}</p>
+ <p class="ys-label-hint">{% if memory_plugin_installed %}{{ _('Adjust forum prompts, feeds, limits, embeddings, and avatar behavior.') }}{% else %}{{ _('Adjust forum prompts, feeds, limits, and avatar behavior.') }}{% endif %}</p>
 
                                 {% if len(clients)>0 %}
                                 <div class="box-line">
@@ -736,11 +736,11 @@
 
                             <p>
                                 <b>{{ _('Experiment Overview') }}</b><br>
-                                {{ _('Use the left column to inspect metadata, update topics, toggle annotations, and open forum-specific configuration such as prompts, feeds, limits, embeddings, and stress/reward settings.') }}<br><br>
- <i class="mdi mdi-tune ys-icon-md"></i> {{ _('Update runtime annotations and memory in %(b)s', b=wrap('b', _('Experiment Configuration'))) }}<br>
+                                {% if memory_plugin_installed %}{{ _('Use the left column to inspect metadata, update topics, toggle annotations, and open forum-specific configuration such as prompts, feeds, limits, embeddings, and stress/reward settings.') }}{% else %}{{ _('Use the left column to inspect metadata, update topics, toggle annotations, and open forum-specific configuration such as prompts, feeds, limits, and stress/reward settings.') }}{% endif %}<br><br>
+ <i class="mdi mdi-tune ys-icon-md"></i> {% if memory_plugin_installed %}{{ _('Update runtime annotations and memory in %(b)s', b=wrap('b', _('Experiment Configuration'))) }}{% else %}{{ _('Update runtime annotations in %(b)s', b=wrap('b', _('Experiment Configuration'))) }}{% endif %}<br>
  <i class="mdi mdi-shape-outline ys-icon-md"></i> {{ _('Maintain the active simulation topics from the overview card') }}<br>
  <i class="mdi mdi-rss-box ys-icon-md"></i> {{ _('Configure RSS/image feeds and retrieval limits from %(b)s', b=wrap('b', _('Additional Configuration'))) }}<br>
- <i class="mdi mdi-credit-card ys-icon-md"></i> {{ _('Open prompt and embedding settings from the same panel') }}
+ <i class="mdi mdi-credit-card ys-icon-md"></i> {% if memory_plugin_installed %}{{ _('Open prompt and embedding settings from the same panel') }}{% else %}{{ _('Open prompt settings from the same panel') }}{% endif %}
                             </p>
                             <hr>
                             <p>
