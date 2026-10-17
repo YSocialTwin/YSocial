@@ -20,7 +20,13 @@ from typing import Dict, List
 from y_web.src.system.path_utils import get_resource_path
 
 DEFAULT_LANGUAGE = "en"
-PACK_FILES = ("prompts.json", "prompts_forum.json", "prompts_hpc.json", "prompts_ygram.json")
+PACK_FILES = (
+    "prompts.json",
+    "prompts_forum.json",
+    "prompts_hpc.json",
+    "prompts_ygram.json",
+    "profile_values.json",
+)
 _LANG = re.compile(r"^[a-z]{2,3}(?:-[a-z0-9]{2,8})?$")
 log = logging.getLogger(__name__)
 

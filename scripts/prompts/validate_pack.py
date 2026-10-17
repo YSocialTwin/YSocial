@@ -75,6 +75,21 @@ def _texts(node, where=""):
             yield from _texts(value, f"{where}[{index}]")
 
 
+def _answer_tokens(text, tokens):
+    """Protocol tokens the English text asks the model to write.
+
+    A token used as plain emphasis (an upper-case word right after another upper-case word that is not a token,
+    as in "STRONGLY DISAGREE") is not an answer token.
+    """
+    found = set()
+    previous = ""
+    for word in re.findall(r"[A-Za-z_]+", text):
+        if word in tokens and not (previous.isupper() and len(previous) > 1 and previous not in tokens):
+            found.add(word)
+        previous = word
+    return found
+
+
 def compare(english, other, field_re, tokens, label, allow_partial=False):
     """Problems found when ``other`` is held against ``english`` (both parsed JSON)."""
     problems = []
@@ -98,8 +113,7 @@ def compare(english, other, field_re, tokens, label, allow_partial=False):
         others_en = Counter(m for m in BRACES.findall(source))
         if others != others_en:
             problems.append(f"{label}{path}: braces differ from English")
-        words = set(re.findall(r"[A-Za-z_]+", source))
-        for token in sorted(tokens & words):
+        for token in sorted(_answer_tokens(source, tokens)):
             if token not in set(re.findall(r"[A-Za-z_]+", text)):
                 problems.append(f"{label}{path}: protocol token {token} is missing or translated")
     return problems
