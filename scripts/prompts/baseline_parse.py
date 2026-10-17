@@ -23,7 +23,7 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-PROMPTS = ROOT / "data_schema" / "prompts.json"
+PROMPTS = ROOT / "data_schema" / "prompts" / "en" / "prompts.json"
 
 POSTS = [
     "The city council approved the new bike lanes today, finally some good news for commuters.",

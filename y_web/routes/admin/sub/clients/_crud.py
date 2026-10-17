@@ -70,6 +70,7 @@ from y_web.src.simulation.adhoc_client import read_json as read_adhoc_json
 from y_web.src.simulation.adhoc_client import write_json as write_adhoc_json
 from y_web.src.system.miscellanea import check_privileges, get_db_type
 from y_web.src.system.path_utils import get_resource_path
+from y_web.src.system import prompt_packs
 
 from ._blueprint import clientsr
 from ._helpers import _forum_effective_link_share, allocate_topics_by_percentage
@@ -3361,19 +3362,13 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
         else f"{exp_dir}{os.sep}prompts.json"
     )
 
-    if exp.platform_type == "photo_sharing":
-        prompts_src = get_resource_path(
-            os.path.join("data_schema", "prompts_ygram.json")
-        )
-        shutil.copyfile(prompts_src, prompts_dest)
-    elif exp.platform_type == "microblogging":
-        prompts_src = get_resource_path(os.path.join("data_schema", "prompts_hpc.json"))
-        shutil.copyfile(prompts_src, prompts_dest)
-    elif exp.platform_type == "forum":
-        prompts_src = get_resource_path(
-            os.path.join("data_schema", "prompts_forum.json")
-        )
-        shutil.copyfile(prompts_src, prompts_dest)
+    pack_name = {
+        "photo_sharing": "prompts_ygram.json",
+        "microblogging": "prompts_hpc.json",
+        "forum": "prompts_forum.json",
+    }.get(exp.platform_type)
+    if pack_name:
+        prompt_packs.write_pack(pack_name, prompts_dest, prompt_language)
 
     # Create population assignment if not exists
     pop_exp = db.session.scalars(
@@ -3387,8 +3382,12 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
         db.session.commit()
 
     # Create client record in database
+    prompt_language = prompt_packs.resolve(
+        request.form.get("prompt_language"), exp.prompt_language
+    )
     client = Client(
         name=name,
+        prompt_language=prompt_language,
         descr=descr,
         id_exp=exp.idexp,
         population_id=population_id,
@@ -4178,8 +4177,12 @@ def _create_standard_client_internal():
         db.session.commit()
 
     # create the Client object
+    prompt_language = prompt_packs.resolve(
+        request.form.get("prompt_language"), exp.prompt_language
+    )
     client = Client(
         name=name,
+        prompt_language=prompt_language,
         descr=descr,
         id_exp=exp_id,
         population_id=population_id,
@@ -4540,11 +4543,7 @@ def _create_standard_client_internal():
     data_base_path = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}"
     # copy prompts.json into the experiment folder
 
-    prompts_src = get_resource_path(os.path.join("data_schema", "prompts.json"))
-    shutil.copyfile(
-        prompts_src,
-        f"{data_base_path}prompts.json",
-    )
+    prompt_packs.write_pack("prompts.json", f"{data_base_path}prompts.json", prompt_language)
 
     # Create agent population file
     writable_base = get_writable_path()
@@ -5516,8 +5515,12 @@ def _create_forum_client_internal():
         db.session.commit()
 
     # create the Client object
+    prompt_language = prompt_packs.resolve(
+        request.form.get("prompt_language"), exp.prompt_language
+    )
     client = Client(
         name=name,
+        prompt_language=prompt_language,
         descr=descr,
         id_exp=exp_id,
         population_id=population_id,
@@ -5884,11 +5887,7 @@ def _create_forum_client_internal():
     data_base_path = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}"
     # copy prompts.json into the experiment folder
 
-    prompts_src = get_resource_path(os.path.join("data_schema", "prompts_forum.json"))
-    shutil.copyfile(
-        prompts_src,
-        f"{data_base_path}prompts.json",
-    )
+    prompt_packs.write_pack("prompts_forum.json", f"{data_base_path}prompts.json", prompt_language)
 
     # Create agent population file
     writable_base = get_writable_path()

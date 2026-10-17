@@ -108,6 +108,7 @@ from y_web.src.system.miscellanea import (
     reload_current_user,
 )
 from y_web.src.system.path_utils import get_resource_path
+from y_web.src.system import prompt_packs
 
 from ._blueprint import (
     _EXP_IDS_MARKER_RE,
@@ -1157,6 +1158,7 @@ def upload_experiment():
         exp = Exps(
             exp_name=name,
             db_name=db_name,
+            prompt_language=prompt_packs.resolve(experiment_config.get("prompt_language")),
             owner=current_user.username,
             exp_descr="",
             status=0,
@@ -1485,6 +1487,7 @@ def upload_experiment():
                 default_client_name = f"client_{original_name}"
                 cl = Client(
                     id_exp=exp.idexp,
+                    prompt_language=exp.prompt_language,
                     population_id=population.id,
                     status=0,
                     name=default_client_name,
@@ -1552,6 +1555,7 @@ def upload_experiment():
             # Many fields will use defaults since HPC config is simpler
             cl = Client(
                 id_exp=exp.idexp,
+                prompt_language=exp.prompt_language,
                 population_id=population.id,
                 status=0,
                 name=client_name,
@@ -1586,6 +1590,7 @@ def upload_experiment():
             # Standard client config - use existing parsing logic
             cl = Client(
                 id_exp=exp.idexp,
+                prompt_language=exp.prompt_language,
                 population_id=population.id,
                 status=0,
                 name=client_config["simulation"]["name"],
@@ -2067,6 +2072,7 @@ def create_experiment():
             return redirect(url_for("experiments.settings"))
 
     # Redis configuration parameters for HPC simulator
+    prompt_language = prompt_packs.resolve(request.form.get("prompt_language"))
     redis_enabled = request.form.get("redis_enabled") == "true"
     redis_host = request.form.get("redis_host", "localhost")
     redis_port = (
@@ -2322,9 +2328,10 @@ def create_experiment():
         ) as f:
             json.dump(config, f, indent=4)
         if platform_type == "photo_sharing":
-            shutil.copyfile(
-                get_resource_path(os.path.join("data_schema", "prompts_ygram.json")),
+            prompt_packs.write_pack(
+                "prompts_ygram.json",
                 f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}prompts_ygram.json",
+                prompt_language,
             )
     else:
         with open(
@@ -2349,6 +2356,7 @@ def create_experiment():
     exp = Exps(
         exp_name=exp_name,
         platform_type=platform_type,
+        prompt_language=prompt_language,
         db_name=(
             f"experiments{os.sep}{uid}{os.sep}database_server.db"
             if db_type == "sqlite"
@@ -5476,6 +5484,7 @@ def _create_single_experiment_copy(
     # Create new experiment record in admin database
     new_exp = Exps(
         exp_name=new_exp_name,
+        prompt_language=source_exp.prompt_language,
         platform_type=source_exp.platform_type,
         db_name=new_db_name,
         owner=current_user.username,
@@ -5574,6 +5583,7 @@ def _create_single_experiment_copy(
         )
         new_client = Client(
             name=source_client.name,
+            prompt_language=source_client.prompt_language,
             descr=source_client.descr,
             days=source_client.days,
             percentage_new_agents_iteration=source_client.percentage_new_agents_iteration,

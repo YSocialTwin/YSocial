@@ -123,6 +123,10 @@ class Exps(db.Model):
     idexp = db.Column(db.Integer, primary_key=True, autoincrement=True)
     platform_type = db.Column(db.String(50), nullable=False, default="microblogging")
     exp_name = db.Column(db.String(50), nullable=False)
+    # language of the LLM prompts the experiment starts from ("en" or another pack in data_schema/prompts)
+    prompt_language = db.Column(
+        db.String(10), nullable=False, default="en", server_default="en"
+    )
     db_name = db.Column(db.String(50), nullable=False)
     owner = db.Column(db.String(50), nullable=False)
     exp_descr = db.Column(db.String(200), nullable=False)
@@ -456,6 +460,10 @@ class Client(db.Model):
     __tablename__ = "client"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
+    # language of the prompt file this client was created with (defaults to the experiment's)
+    prompt_language = db.Column(
+        db.String(10), nullable=False, default="en", server_default="en"
+    )
     descr = db.Column(db.String(200))
     days = db.Column(db.Integer)
     percentage_new_agents_iteration = db.Column(db.REAL)

@@ -96,10 +96,10 @@ def scan_file(path):
 
 
 PROMPT_FILES = [
-    "data_schema/prompts.json",
-    "data_schema/prompts_forum.json",
-    "data_schema/prompts_hpc.json",
-    "data_schema/prompts_ygram.json",
+    "data_schema/prompts/en/prompts.json",
+    "data_schema/prompts/en/prompts_forum.json",
+    "data_schema/prompts/en/prompts_hpc.json",
+    "data_schema/prompts/en/prompts_ygram.json",
     "external/YClient/config_files/prompts.json",
     "external/YClientReddit/config_files/prompts.json",
     "external/YPhotoSharing/example/prompts_ygram.json",

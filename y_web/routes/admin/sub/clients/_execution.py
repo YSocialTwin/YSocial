@@ -27,6 +27,7 @@ from y_web.src.simulation.execution_backend import (
 )
 from y_web.src.system.miscellanea import check_privileges, get_db_type
 from y_web.src.system.path_utils import get_resource_path
+from y_web.src.system import prompt_packs
 
 from ._blueprint import clientsr
 
@@ -121,30 +122,14 @@ def reset_client(uid):
             if state_path.exists():
                 state_path.unlink()
 
-    # copy the original prompts.json file
-    if exp.platform_type in {"microblogging", "photo_sharing"}:
-        prompts_src = get_resource_path(os.path.join("data_schema", "prompts.json"))
-        if exp.platform_type == "photo_sharing":
-            prompts_src = get_resource_path(
-                os.path.join("data_schema", "prompts_ygram.json")
-            )
-        prompts_dest = (
-            exp_dir / "prompts_ygram.json"
-            if exp.platform_type == "photo_sharing"
-            else exp_dir / "prompts.json"
-        )
-        shutil.copy(
-            prompts_src,
-            prompts_dest,
-        )
+    # copy the original prompts.json file, in the language the client was created with
+    language = prompt_packs.resolve(getattr(client, "prompt_language", None), exp.prompt_language)
+    if exp.platform_type == "photo_sharing":
+        prompt_packs.write_pack("prompts_ygram.json", exp_dir / "prompts_ygram.json", language)
+    elif exp.platform_type == "microblogging":
+        prompt_packs.write_pack("prompts.json", exp_dir / "prompts.json", language)
     elif exp.platform_type == "forum":
-        prompts_src = get_resource_path(
-            os.path.join("data_schema", "prompts_forum.json")
-        )
-        shutil.copy(
-            prompts_src,
-            exp_dir / "prompts.json",
-        )
+        prompt_packs.write_pack("prompts_forum.json", exp_dir / "prompts.json", language)
     else:
         raise Exception(f"unsupported platform: {exp.platform_type}")
 

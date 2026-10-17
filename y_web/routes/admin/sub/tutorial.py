@@ -59,6 +59,7 @@ from y_web.src.models import (
 )
 from y_web.src.system.miscellanea import check_privileges
 from y_web.src.system.path_utils import get_resource_path, get_writable_path
+from y_web.src.system import prompt_packs
 
 tutorial = Blueprint("tutorial", __name__)
 
@@ -888,9 +889,8 @@ def create_tutorial_experiment():
             json.dump(client_config, f, indent=4)
 
         # Copy prompts file
-        prompts_src = get_resource_path(os.path.join("data_schema", "prompts.json"))
-        shutil.copy(
-            prompts_src,
+        prompt_packs.write_pack(
+            "prompts.json",
             f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}prompts.json",
         )
 
