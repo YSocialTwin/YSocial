@@ -779,14 +779,16 @@ input:checked + .slider-small:before { transform: translateX(16px); }
 
   function applyPlatform(platform, caps, data) {
     const allowed = caps ? new Set(caps) : null;      // null = everything (microblogging)
+    // controls of other platforms that a "show everything" platform must not offer
+    const excluded = new Set((data && data.excluded_capabilities) || []);
     document.querySelectorAll('[data-cap]').forEach(el => {
       const key = el.getAttribute('data-cap');
       // keys that exist only in microblogging are not in any other platform's list
-      el.style.display = (!allowed || allowed.has(key)) ? '' : 'none';
+      el.style.display = ((!allowed || allowed.has(key)) && !excluded.has(key)) ? '' : 'none';
     });
     document.querySelectorAll('[data-cap-any]').forEach(el => {
       const keys = el.getAttribute('data-cap-any').split(/\s+/);
-      el.style.display = (!allowed || keys.some(k => allowed.has(k))) ? '' : 'none';
+      el.style.display = ((!allowed && keys.some(k => !excluded.has(k))) || (allowed && keys.some(k => allowed.has(k)))) ? '' : 'none';
     });
     // labels
     const overrides = PLATFORM_LABEL_OVERRIDES[platform] || {};

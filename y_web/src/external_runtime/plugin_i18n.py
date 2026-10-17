@@ -216,9 +216,15 @@ def repo_key_for_dir(dir_name: str) -> str | None:
 
 def localize_text(repo_key: str, text):
     """Translate one manifest string of plugin *repo_key* (unchanged without a catalog)."""
-    domain = domain_for_repo(repo_key)
-    if not domain or not isinstance(text, str) or not text.strip():
+    if not isinstance(text, str) or not text.strip():
         return text
+    domain = domain_for_repo(repo_key)
+    if not domain:
+        # Repositories without a catalog of their own (the simulation runtimes) are
+        # described by core strings, declared in ``external_runtime.registry``.
+        from y_web.i18n import gettext as core_gettext
+
+        return core_gettext(text.strip())
     return plugin_gettext(domain, text.strip())
 
 

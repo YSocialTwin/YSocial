@@ -35,7 +35,7 @@ from y_web.src.models import Admin_users, Exps
 from y_web.src.system.miscellanea import check_privileges
 
 from ._blueprint import experiments
-from y_web.i18n import gettext as _
+from y_web.i18n import N_, gettext as _
 
 _MUTATING_ACTIONS = {
     "acquire",
@@ -55,14 +55,14 @@ _MUTATING_ACTIONS = {
 # from the entry's page. Acting on the entry key itself (the list's Remove) applies to both (server first).
 _PAIRED_ENTRIES = {
     "microblogging": {
-        "label": "Microblogging",
+        "label": N_("Microblogging"),
         "members": ("microblogging_server", "microblogging_client"),
-        "description": "Microblogging simulator (timeline, posts, follows). Server and client are installed and updated independently from its page.",
+        "description": N_("Microblogging simulator (timeline, posts, follows). Server and client are installed and updated independently from its page."),
     },
     "forum": {
-        "label": "Forum",
+        "label": N_("Forum"),
         "members": ("forum_server", "forum_client"),
-        "description": "Forum simulator (threads and replies). Server and client are installed and updated independently from its page.",
+        "description": N_("Forum simulator (threads and replies). Server and client are installed and updated independently from its page."),
     },
 }
 _PAIR_OF_MEMBER = {m: k for k, v in _PAIRED_ENTRIES.items() for m in v["members"]}
@@ -266,18 +266,20 @@ def _make_entry(key: str, repos: list[dict]) -> dict:
     togglable = [r for r in repos if r.get("plugin_togglable")]
     from y_web.src.external_runtime.plugin_i18n import localize_text
 
+    # the paired texts are declared with N_() above; translate them when shown
+    paired_label = paired["label"] if paired else ""
+    paired_description = paired["description"] if paired else ""
     description = (
-        paired["description"] if paired else (first.get("plugin_description") or "")
+        _(paired_description) if paired else (first.get("plugin_description") or "")
     )
     if not paired:
         description = localize_text(first["key"], description)
+    category_text = first.get("plugin_category_label") or first.get("category_label")
     return {
         "key": key,
-        "label": paired["label"] if paired else localize_text(first["key"], first["label"]),
+        "label": _(paired_label) if paired else localize_text(first["key"], first["label"]),
         "description": description,
-        "category": first.get("plugin_category_label")
-        or first.get("category_label")
-        or "",
+        "category": _(category_text) if category_text else "",
         "paired": bool(paired),
         "members": repos,
         "state": state,

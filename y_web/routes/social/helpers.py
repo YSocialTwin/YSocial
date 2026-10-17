@@ -50,7 +50,7 @@ def _root_post_filter(column):
     return or_(column.is_(None), column == -1)
 
 
-from y_web.i18n import N_
+from y_web.i18n import N_, gettext
 from y_web.src.system.path_utils import get_writable_path
 
 _ADHOC_AGENT_BADGE_LABELS = {
@@ -747,27 +747,27 @@ def _load_ui_settings(exp_id: int) -> dict:
 # Plain-language explanations of the content recommender systems, keyed by canonical mode name
 # (see y_web.src.recsys.content_recsys._normalize_content_recsys_mode). Shown to participants.
 _RECSYS_DESCRIPTIONS = {
-    "Random": "Posts from other users in random order, regardless of you or the posts.",
-    "ReverseChrono": "All posts from other users, newest first. No personalisation.",
-    "ReverseChronoPopularity": "Posts from other users, the most reacted first.",
-    "ReverseChronoFollowers": "Mostly posts from the people you follow, newest first, completed with the newest posts from everybody.",
-    "ReverseChronoFollowersPopularity": "Mostly posts from the people you follow, the most reacted first, completed with the newest posts from everybody.",
-    "ReverseChronoComments": "Newest posts first; within the same hour, the most commented come first.",
-    "CommonInterests": "Posts about the topics you are interested in, newest first.",
-    "CommonUserInterests": "Posts from users who share your interests, newest first, completed with the newest posts from everybody.",
-    "SimilarUsersReactions": "Posts reacted to by users with your same political leaning, completed with the newest posts from everybody.",
-    "SimilarUsersPosts": "Posts written by users with your same political leaning, completed with the newest posts from everybody.",
-    "CollaborativeUserUser": "Posts liked by users who reacted to the same posts as you, newest first.",
-    "CollaborativeItemItem": "Posts reacted to by the people who reacted to the same posts as you, newest first.",
-    "ContentBasedFeatures": "Posts about your topics of interest, newest first, then the most reacted.",
-    "ContentBasedVector": "Posts ranked by how many of your topics of interest they cover.",
-    "HybridLinearRanker": "Posts ranked by how well they match your topics of interest, with a bonus for popular ones.",
-    "FilterBubble": (
+    "Random": N_("Posts from other users in random order, regardless of you or the posts."),
+    "ReverseChrono": N_("All posts from other users, newest first. No personalisation."),
+    "ReverseChronoPopularity": N_("Posts from other users, the most reacted first."),
+    "ReverseChronoFollowers": N_("Mostly posts from the people you follow, newest first, completed with the newest posts from everybody."),
+    "ReverseChronoFollowersPopularity": N_("Mostly posts from the people you follow, the most reacted first, completed with the newest posts from everybody."),
+    "ReverseChronoComments": N_("Newest posts first; within the same hour, the most commented come first."),
+    "CommonInterests": N_("Posts about the topics you are interested in, newest first."),
+    "CommonUserInterests": N_("Posts from users who share your interests, newest first, completed with the newest posts from everybody."),
+    "SimilarUsersReactions": N_("Posts reacted to by users with your same political leaning, completed with the newest posts from everybody."),
+    "SimilarUsersPosts": N_("Posts written by users with your same political leaning, completed with the newest posts from everybody."),
+    "CollaborativeUserUser": N_("Posts liked by users who reacted to the same posts as you, newest first."),
+    "CollaborativeItemItem": N_("Posts reacted to by the people who reacted to the same posts as you, newest first."),
+    "ContentBasedFeatures": N_("Posts about your topics of interest, newest first, then the most reacted."),
+    "ContentBasedVector": N_("Posts ranked by how many of your topics of interest they cover."),
+    "HybridLinearRanker": N_("Posts ranked by how well they match your topics of interest, with a bonus for popular ones."),
+    "FilterBubble": N_(
         "Posts are scored by your topics of interest and by how close the author's opinion is to yours. "
         "Your interests adapt to what you like, share and comment, so over time the feed can narrow to like-minded content."
     ),
 }
-_RECSYS_FALLBACK = "This is the algorithm that decides which posts appear in your feed and in what order."
+_RECSYS_FALLBACK = N_("This is the algorithm that decides which posts appear in your feed and in what order.")
 
 
 def _content_recsys_info(recsys_type, ui=None):
@@ -795,7 +795,7 @@ def _content_recsys_info(recsys_type, ui=None):
         return {
             "name": mode,
             "label": label,
-            "description": _RECSYS_DESCRIPTIONS.get(mode, _RECSYS_FALLBACK),
+            "description": gettext(_RECSYS_DESCRIPTIONS.get(mode, _RECSYS_FALLBACK)),
         }
     except Exception:
         return None

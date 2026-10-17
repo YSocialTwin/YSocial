@@ -90,7 +90,7 @@
                                 </div>
                                 <div class="box-line">
                                     <span class="left">{{ _('LLM Server URL') }}</span>
- <span class="right ys-word-break">{{ user.llm_url if user.llm_url else (llm_backend['url'] if llm_backend else 'Not configured') }}</span>
+ <span class="right ys-word-break">{{ user.llm_url if user.llm_url else (llm_backend['url'] if llm_backend else _('Not configured')) }}</span>
                                 </div>
                             </div>
 

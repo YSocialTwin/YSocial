@@ -26,16 +26,16 @@ from y_web.src.models.config import Content_Recsys, Follow_Recsys
 from y_web.src.system.miscellanea import check_privileges
 
 from ._blueprint import experiments
-from y_web.i18n import available_languages, gettext as _
+from y_web.i18n import N_, available_languages, gettext as _
 
 # ------------------------------------------------------------------
 # Supported platforms and what each one's templates actually offer
 # ------------------------------------------------------------------
 SUPPORTED_PLATFORMS = ("microblogging", "forum", "photo_sharing")
 PLATFORM_LABELS = {
-    "microblogging": "Microblogging",
-    "forum": "Forum",
-    "photo_sharing": "Photo sharing",
+    "microblogging": N_("Microblogging"),
+    "forum": N_("Forum"),
+    "photo_sharing": N_("Photo sharing"),
 }
 
 _COMMON_CAPABILITIES = {
@@ -44,6 +44,16 @@ _COMMON_CAPABILITIES = {
     "interaction_like",
     "show_post_time",
     "posts_per_page",
+    # the interface language is resolved for every platform (y_web.i18n)
+    "language",
+    "language_switch_allowed",
+}
+
+# Controls that only exist on one platform: microblogging ("everything" otherwise)
+# must not offer them, because nothing in its templates reads them.
+MICROBLOGGING_EXCLUDED_CAPABILITIES = {
+    "default_forum_feed_type",  # forum feed ordering
+    "default_photo_feed_tab",  # photo-sharing home tab
 }
 
 # Settings each platform's templates honour. Anything not listed is hidden
@@ -72,21 +82,42 @@ PLATFORM_CAPABILITIES = {
 
 # Platform-specific feed orderings that replace the microblogging recommenders.
 FORUM_FEED_TYPES = [
-    {"name": "new", "label": "New"},
-    {"name": "hot", "label": "Hot"},
-    {"name": "top", "label": "Top"},
-    {"name": "most_commented", "label": "Most commented"},
+    {"name": "new", "label": N_("New")},
+    {"name": "hot", "label": N_("Hot")},
+    {"name": "top", "label": N_("Top")},
+    {"name": "most_commented", "label": N_("Most commented")},
 ]
 PHOTO_FEED_TABS = [
-    {"name": "for_you", "label": "For you (recommended)"},
-    {"name": "follower", "label": "Following"},
+    {"name": "for_you", "label": N_("For you (recommended)")},
+    {"name": "follower", "label": N_("Following")},
 ]
+
+
+def _localized_options(items):
+    """Copy of ``[{"name", "label"}]`` with the labels translated for this request."""
+    options = []
+    for item in items:
+        text = item["label"]  # declared with N_ above
+        options.append({**item, "label": _(text)})
+    return options
+
+
+def _localized_platform_label(value):
+    text = PLATFORM_LABELS[value]  # declared with N_ above
+    return _(text)
 
 
 def capabilities_for(platform_type: str):
     """Sorted list of setting keys the platform supports, or ``None`` for all."""
     caps = PLATFORM_CAPABILITIES.get(platform_type)
     return None if caps is None else sorted(caps)
+
+
+def excluded_capabilities_for(platform_type: str):
+    """Setting keys to hide for a platform that otherwise offers everything."""
+    if PLATFORM_CAPABILITIES.get(platform_type, 0) is None:
+        return sorted(MICROBLOGGING_EXCLUDED_CAPABILITIES)
+    return []
 
 
 # ------------------------------------------------------------------
@@ -166,6 +197,54 @@ def _load_settings(exp_id: int) -> dict:
     return merged
 
 
+# Labels and categories of the recommender systems come from the database seed
+# (``content_recsys`` / ``follow_recsys``). They are declared here so they can be
+# translated; the algorithm names stay the stable identifiers.
+_RECSYS_TEXTS = (
+    N_("Random"),
+    N_("(RC) Reverse Chrono"),
+    N_("(RCP) Popularity"),
+    N_("(RCF) Followers"),
+    N_("(FP) Followers-Popularity"),
+    N_("(RCC) Reverse Chrono Comments"),
+    N_("(CI) Common Interests"),
+    N_("(CUI) Common User Interests"),
+    N_("(SIR) Similar Users Reactions"),
+    N_("(SIP) Similar Users Posts"),
+    N_("(HLR) Hybrid Linear Ranker"),
+    N_("Personalized Feed"),
+    N_("Common Neighbors"),
+    N_("Preferential Attachment"),
+    N_("Activity"),
+    N_("Global"),
+    N_("Social Timeline"),
+    N_("Content-Based Filtering"),
+    N_("Profile-Based User Similarity"),
+    N_("Behavioral User Modeling"),
+    N_("Demographic-Based"),
+    N_("Collaborative Filtering"),
+    N_("Hybrid Models"),
+    N_("Ensemble"),
+    N_("Personalization"),
+    N_("Baseline & Exploration"),
+    N_("Local Triadic Closure"),
+    N_("Popularity & Activity Bias"),
+    N_("Profile & Attribute Homophily"),
+    N_("Behavioral Homophily"),
+    N_("Graph Proximity"),
+    N_("Community Approximation"),
+    N_("Other"),
+)
+
+
+def _recsys_text(text):
+    """Translate a recommender label/category (unchanged when it has no translation)."""
+    return _(text) if text in _RECSYS_TEXT_SET else text
+
+
+_RECSYS_TEXT_SET = frozenset(_RECSYS_TEXTS)
+
+
 def _load_recsys_options(
     simulator_type: str = "Standard",
     all_algorithms: bool = False,
@@ -203,8 +282,8 @@ def _load_recsys_options(
                 result.append(
                     {
                         "name": r.name,
-                        "label": r.value,
-                        "category": r.category or "Other",
+                        "label": _recsys_text(r.value),
+                        "category": _recsys_text(r.category or "Other"),
                     }
                 )
         return result
@@ -242,7 +321,7 @@ def frontend_settings():
     )
     platforms_json = json.dumps(
         [
-            {"value": value, "label": PLATFORM_LABELS[value]}
+            {"value": value, "label": _localized_platform_label(value)}
             for value in SUPPORTED_PLATFORMS
         ]
     )
@@ -268,7 +347,11 @@ def frontend_settings():
         # --development).
         if not runtime_installed_and_visible(repo_key, current_user):
             continue
-        frontend_plugin_suites.append({"repo_key": repo_key, "label": spec.label})
+        from y_web.src.external_runtime.plugin_i18n import localize_text
+
+        frontend_plugin_suites.append(
+            {"repo_key": repo_key, "label": localize_text(repo_key, spec.label)}
+        )
 
     return render_template(
         "admin/frontend_settings.html",
@@ -316,14 +399,15 @@ def frontend_settings_get():
             "exp_name": exp.exp_name,
             "platform_type": exp.platform_type,
             "capabilities": capabilities_for(exp.platform_type),
+            "excluded_capabilities": excluded_capabilities_for(exp.platform_type),
             "simulator_type": exp.simulator_type or "Standard",
             "settings": _load_settings(exp_id),
             "annotation_module_enabled": annotation_module_enabled(exp_id),
             "recsys_options": _load_recsys_options(
                 exp.simulator_type or "Standard", all_algorithms=True
             ),
-            "forum_feed_types": FORUM_FEED_TYPES,
-            "photo_feed_tabs": PHOTO_FEED_TABS,
+            "forum_feed_types": _localized_options(FORUM_FEED_TYPES),
+            "photo_feed_tabs": _localized_options(PHOTO_FEED_TABS),
         }
     )
 

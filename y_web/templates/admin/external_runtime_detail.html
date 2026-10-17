@@ -53,7 +53,7 @@
                             {% endif %}
 
                             <div class="ext-section">
-                                <div class="ext-section-title">{{ 'Components (independent)' if entry.paired else 'Source' }}</div>
+                                <div class="ext-section-title">{{ _('Components (independent)') if entry.paired else _('Source') }}</div>
                                 <table class="ext-members">
                                     <thead><tr><th>{{ _('Repository') }}</th><th>{{ _('State') }}</th><th>{{ _('Version') }}</th><th>{{ _('Latest release') }}</th><th>{{ _('Checks') }}</th></tr></thead>
                                     <tbody>
@@ -74,7 +74,7 @@
                             <div class="ext-component" data-repo-key="{{ repo.key }}">
                             {% if entry.paired %}<div class="ext-component-title">{{ repo.label }} <span class="ext-hint">{{ _('— installed and updated independently') }}</span></div>{% endif %}
                             <form class="ext-section ext-sync-form" method="POST" action="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='sync') }}">
-                                <div class="ext-section-title">{{ 'Install' if not repo.installed else 'Update' }}{% if entry.paired %} {{ repo.label }}{% endif %}</div>
+                                <div class="ext-section-title">{{ _('Install') if not repo.installed else _('Update') }}{% if entry.paired %} {{ repo.label }}{% endif %}</div>
                                 {% set has_releases = repo.available_releases|length > 0 %}
                                 <div class="ext-options">
                                     <label class="ext-option">
@@ -83,7 +83,7 @@
                                         <select name="release_tag" class="input w-100" {% if not has_releases %}disabled{% endif %}>
                                             {% if has_releases %}{% for release in repo.available_releases %}
                                             <option value="{{ release.tag }}">{{ release.tag }}{% if release.prerelease %} &middot; {{ _('prerelease') }}{% endif %}{% if release.name and release.name != release.tag %} &middot; {{ release.name }}{% endif %}</option>
-                                            {% endfor %}{% else %}<option value="">{{ repo.release_error or 'No releases available' }}</option>{% endif %}
+                                            {% endfor %}{% else %}<option value="">{{ repo.release_error or _('No releases available') }}</option>{% endif %}
                                         </select>
                                     </label>
                                     {% if host_git_available %}
@@ -99,12 +99,12 @@
                                     {% endif %}
                                 </div>
                                 <div class="ext-actions">
-                                    <button type="submit" class="button is-solid primary-button" {% if active_experiments %}disabled{% endif %}>{{ 'Install' if not repo.installed else 'Update' }}</button>
+                                    <button type="submit" class="button is-solid primary-button" {% if active_experiments %}disabled{% endif %}>{{ _('Install') if not repo.installed else _('Update') }}</button>
                                     {% if repo.installed %}
                                     <button type="button" class="button is-light" data-run-action="install" data-repo-key="{{ repo.key }}">{{ _('Dependencies') }}</button>
                                     <button type="button" class="button is-light" data-run-action="validate" data-repo-key="{{ repo.key }}">{{ _('Validate') }}</button>
                                     {% if repo.plugin_togglable %}
-                                    <button type="button" class="button is-light" data-run-action="{{ 'disable' if repo.plugin_enabled else 'enable' }}" data-repo-key="{{ repo.key }}">{{ 'Disable' if repo.plugin_enabled else 'Enable' }}</button>
+                                    <button type="button" class="button is-light" data-run-action="{{ 'disable' if repo.plugin_enabled else 'enable' }}" data-repo-key="{{ repo.key }}">{{ _('Disable') if repo.plugin_enabled else _('Enable') }}</button>
                                     {% endif %}
                                     {% endif %}
                                     {% if repo.exists %}
@@ -150,7 +150,7 @@
                                 {% for log in runtime_logs %}
                                 <details class="ext-log-entry" {% if loop.index <= 3 %}open{% endif %}>
                                     <summary>{{ log.repo_key }} &middot; {{ log.action }}
-                                        <span class="badge {% if log.success %}badge-success{% else %}badge-danger{% endif %}">{{ 'success' if log.success else 'failure' }}</span>
+                                        <span class="badge {% if log.success %}badge-success{% else %}badge-danger{% endif %}">{{ _('success') if log.success else _('failure') }}</span>
                                         <span class="ext-hint">{{ log.timestamp }}</span></summary>
                                     <div style="padding:0 10px 10px;">
                                         <div class="ext-hint" style="margin-bottom:4px;">{{ log.actor }}{% if log.branch %} &middot; {{ log.branch }}{% endif %}</div>
@@ -186,12 +186,12 @@
     document.querySelectorAll('.ext-sync-form').forEach(function (form) {
         form.addEventListener('submit', function (ev) {
             ev.preventDefault();
-            run(form.action, new FormData(form), 'Running the operation... this can take a few minutes.');
+            run(form.action, new FormData(form), YI18n.t('Running the operation... this can take a few minutes.'));
         });
     });
     document.querySelectorAll('[data-run-action]').forEach(function (btn) {
         btn.addEventListener('click', function () {
-            run(url(btn.dataset.repoKey, btn.dataset.runAction), new FormData(), 'Running ' + btn.dataset.runAction + '...');
+            run(url(btn.dataset.repoKey, btn.dataset.runAction), new FormData(), YI18n.t('Running {action}...', {action: btn.textContent.trim().toLowerCase()}));
         });
     });
     var entryKey = {{ entry.key|tojson }}, entryPaired = {{ entry.paired|tojson }};

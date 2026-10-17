@@ -34,7 +34,7 @@
                                         <div class="ext-plugin-name">{{ entry.label }}</div>
                                         <div class="ext-plugin-sub">{{ entry.category }}{% if entry.paired %} &middot; {{ _('server + client') }}{% endif %}</div>
                                     </td>
-                                    <td class="ext-plugin-desc">{{ entry.description or 'No description available.' }}</td>
+                                    <td class="ext-plugin-desc">{{ entry.description or _('No description available.') }}</td>
                                     <td>
                                         {% if entry.state == 'installed' %}<span class="badge badge-success">{{ _('Installed') }}</span>
                                         {% elif entry.state == 'partial' %}<span class="badge badge-warning">{{ _('Partially installed') }}</span>
@@ -46,7 +46,7 @@
                                     </td>
                                     <td>
                                         <div class="ext-row-actions">
-                                            <a class="button is-solid primary-button" href="{{ url_for('experiments.external_runtime_detail', entry_key=entry.key) }}">{{ 'Install' if entry.state == 'missing' else 'Update' }}</a>
+                                            <a class="button is-solid primary-button" href="{{ url_for('experiments.external_runtime_detail', entry_key=entry.key) }}">{{ _('Install') if entry.state == 'missing' else _('Update') }}</a>
                                             {% if entry.any_exists %}
                                             <button type="button" class="button is-light ext-danger-text" data-external-runtime-remove data-remove-url="{{ url_for('experiments.external_runtime_action', repo_key=entry.key, action='delete') }}" data-label="{{ entry.label }}">{{ _('Remove') }}</button>
                                             {% endif %}

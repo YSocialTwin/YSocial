@@ -589,7 +589,7 @@
                                     </div>
                                     <div class="select is-fullwidth">
                                         <select id="matrix-source-exp" name="source_exp_id" {% if not selected_source_group %}disabled{% endif %} required>
-                                            <option value="">{{ 'Select source experiment...' if selected_source_group else 'Select a source group first...' }}</option>
+                                            <option value="">{{ _('Select source experiment...') if selected_source_group else _('Select a source group first...') }}</option>
                                             {% for exp in grouped_experiments or [] %}
                                             <option value="{{ exp.idexp }}" {% if selected_experiment and selected_experiment.idexp == exp.idexp %}selected{% endif %}>{{ exp.exp_name }}</option>
                                             {% endfor %}

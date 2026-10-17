@@ -11,6 +11,23 @@ from pathlib import Path
 from typing import Sequence
 
 from y_web.src.system.path_utils import get_resource_path, get_writable_path
+from y_web.i18n import N_
+
+# Texts of the plugin list that live in this module or in repositories without a
+# translation catalog of their own. They are only declared here (for extraction);
+# the plugin pages translate them when they are shown.
+RUNTIME_TEXTS = (
+    N_("Simulation Runtime Stack"),
+    N_("Agent Extensions"),
+    N_("Frontend Extensions"),
+    N_("Backend Extensions"),
+    N_("Client-side microblogging simulation runtime for YSocial experiments."),
+    N_("Server-side microblogging simulation runtime for YSocial experiments."),
+    N_("Client-side forum simulation runtime for Reddit-like YSocial scenarios."),
+    N_("Server-side forum simulation runtime for Reddit-like YSocial scenarios."),
+    N_("Instagram like photo-sharing simulation runtime for YSocial experiments."),
+    N_("Distributed HPC simulation runtime for large-scale YSocial experiments."),
+)
 
 ROOT = Path(get_writable_path())
 EXTERNAL_DIR = ROOT / "external"

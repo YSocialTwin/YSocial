@@ -17,9 +17,9 @@
             <div class="columns">
                 <div class="column is-8">
                     <div class="dashboard-box" id="box-new-client">
-                        <h3 class="title is-5 is-thin">{{ adhoc_form_title or 'New AdHoc Agent Client' }}</h3>
+                        <h3 class="title is-5 is-thin">{{ adhoc_form_title or _('New AdHoc Agent Client') }}</h3>
                         <div class="box-content">
-                            <form action="{{ adhoc_form_action or '/admin/create_adhoc_client' }}" method="POST" onsubmit="showLoading('{{ 'Updating' if adhoc_form_mode == 'edit' else 'Creating' }} ad hoc client...');">
+                            <form action="{{ adhoc_form_action or '/admin/create_adhoc_client' }}" method="POST" onsubmit="showLoading('{{ _('Updating ad hoc client...') if adhoc_form_mode == 'edit' else _('Creating ad hoc client...') }}');">
                                 <div class="box-lines">
                                     <input type="hidden" name="id_exp" value="{{ experiment.idexp }}">
 
@@ -179,7 +179,7 @@
                                 </div>
                                 <div class="button-wrap">
                                     <button id="create_client_button" class="button is-solid primary-button is-fullwidth" disabled>
-                                        {{ adhoc_submit_label or 'Create' }}
+                                        {{ adhoc_submit_label or _('Create') }}
                                     </button>
                                 </div>
                             </form>

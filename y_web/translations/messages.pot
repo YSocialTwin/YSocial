@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 08:15+0000\n"
+"POT-Creation-Date: 2026-10-17 08:31+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -200,6 +200,18 @@ msgstr ""
 msgid "(%(count)s total)"
 msgstr ""
 
+msgid "(CI) Common Interests"
+msgstr ""
+
+msgid "(CUI) Common User Interests"
+msgstr ""
+
+msgid "(FP) Followers-Popularity"
+msgstr ""
+
+msgid "(HLR) Hybrid Linear Ranker"
+msgstr ""
+
 msgid "(Only for Photo Sharing populations)"
 msgstr ""
 
@@ -207,6 +219,24 @@ msgid "(Optional - Click to expand)"
 msgstr ""
 
 msgid "(Optional)"
+msgstr ""
+
+msgid "(RC) Reverse Chrono"
+msgstr ""
+
+msgid "(RCC) Reverse Chrono Comments"
+msgstr ""
+
+msgid "(RCF) Followers"
+msgstr ""
+
+msgid "(RCP) Popularity"
+msgstr ""
+
+msgid "(SIP) Similar Users Posts"
+msgstr ""
+
+msgid "(SIR) Similar Users Reactions"
 msgstr ""
 
 msgid "(at least 2)"
@@ -474,6 +504,9 @@ msgstr ""
 msgid "Active propaganda topics in this experiment:"
 msgstr ""
 
+msgid "Activity"
+msgstr ""
+
 msgid "Activity & Engagement Configuration"
 msgstr ""
 
@@ -658,6 +691,9 @@ msgstr ""
 msgid "Agent Archetypes and Transitions (Optional)"
 msgstr ""
 
+msgid "Agent Extensions"
+msgstr ""
+
 msgid "Agent Features"
 msgstr ""
 
@@ -824,6 +860,9 @@ msgid "All annotations"
 msgstr ""
 
 msgid "All interactions"
+msgstr ""
+
+msgid "All posts from other users, newest first. No personalisation."
 msgstr ""
 
 #, python-format
@@ -1118,6 +1157,9 @@ msgstr ""
 msgid "Backend"
 msgstr ""
 
+msgid "Backend Extensions"
+msgstr ""
+
 msgid "Background and profile attributes shaping this account."
 msgstr ""
 
@@ -1145,6 +1187,9 @@ msgstr ""
 msgid "Bangladeshi"
 msgstr ""
 
+msgid "Baseline & Exploration"
+msgstr ""
+
 msgid "Basic Fields"
 msgstr ""
 
@@ -1165,7 +1210,13 @@ msgid ""
 "interest level and opinion for each active discussion topic."
 msgstr ""
 
+msgid "Behavioral Homophily"
+msgstr ""
+
 msgid "Behavioral Settings"
+msgstr ""
+
+msgid "Behavioral User Modeling"
 msgstr ""
 
 msgid "Behavioral patterns and activity characteristics."
@@ -1576,6 +1627,12 @@ msgstr ""
 msgid "Client simulation parameters updated."
 msgstr ""
 
+msgid "Client-side forum simulation runtime for Reddit-like YSocial scenarios."
+msgstr ""
+
+msgid "Client-side microblogging simulation runtime for YSocial experiments."
+msgstr ""
+
 msgid "Client:"
 msgstr ""
 
@@ -1605,6 +1662,9 @@ msgid "Cold Start Window"
 msgstr ""
 
 msgid "Cold-Start Window"
+msgstr ""
+
+msgid "Collaborative Filtering"
 msgstr ""
 
 msgid "Collapse"
@@ -1643,6 +1703,9 @@ msgstr ""
 msgid "Comments"
 msgstr ""
 
+msgid "Common Neighbors"
+msgstr ""
+
 msgid "Communities"
 msgstr ""
 
@@ -1650,6 +1713,9 @@ msgid "Communities where you have recently posted or commented."
 msgstr ""
 
 msgid "Community"
+msgstr ""
+
+msgid "Community Approximation"
 msgstr ""
 
 msgid "Community Models"
@@ -1665,6 +1731,9 @@ msgid "Complete Graph"
 msgstr ""
 
 msgid "Completed"
+msgstr ""
+
+msgid "Components (independent)"
 msgstr ""
 
 msgid "Compose and publish new posts"
@@ -1974,6 +2043,9 @@ msgstr ""
 msgid "Content reported."
 msgstr ""
 
+msgid "Content-Based Filtering"
+msgstr ""
+
 msgid "Content:"
 msgstr ""
 
@@ -2181,6 +2253,9 @@ msgid "Created using predefined parameters. Agents are automatically generated."
 msgstr ""
 
 msgid "Creates fresh copies of every experiment in the selected group."
+msgstr ""
+
+msgid "Creating ad hoc client..."
 msgstr ""
 
 msgid "Creating agent..."
@@ -2463,6 +2538,9 @@ msgstr ""
 msgid "Demographic Information"
 msgstr ""
 
+msgid "Demographic-Based"
+msgstr ""
+
 msgid "Demographics"
 msgstr ""
 
@@ -2571,6 +2649,9 @@ msgid ""
 "are typically campaign- or run-specific."
 msgstr ""
 
+msgid "Disable"
+msgstr ""
+
 msgid "Disabled"
 msgstr ""
 
@@ -2590,6 +2671,9 @@ msgid "Dislike"
 msgstr ""
 
 msgid "Dislikes"
+msgstr ""
+
+msgid "Distributed HPC simulation runtime for large-scale YSocial experiments."
 msgstr ""
 
 msgid "Distribution Type"
@@ -2885,6 +2969,9 @@ msgid "Engagement weights"
 msgstr ""
 
 msgid "English"
+msgstr ""
+
+msgid "Ensemble"
 msgstr ""
 
 msgid ""
@@ -3478,6 +3565,9 @@ msgstr ""
 msgid "Followers:"
 msgstr ""
 
+msgid "Following"
+msgstr ""
+
 msgid "Following the"
 msgstr ""
 
@@ -3504,6 +3594,9 @@ msgid ""
 msgstr ""
 
 msgid "For you"
+msgstr ""
+
+msgid "For you (recommended)"
 msgstr ""
 
 msgid "Forbidden"
@@ -3557,6 +3650,11 @@ msgid "Forum participant"
 msgstr ""
 
 msgid ""
+"Forum simulator (threads and replies). Server and client are installed "
+"and updated independently from its page."
+msgstr ""
+
+msgid ""
 "Forum uses link-sharing to publish content imported from RSS and feed "
 "sources."
 msgstr ""
@@ -3577,6 +3675,9 @@ msgid "Friendship RecSys"
 msgstr ""
 
 msgid "From / To"
+msgstr ""
+
+msgid "Frontend Extensions"
 msgstr ""
 
 msgid "Frontend Settings"
@@ -3720,6 +3821,9 @@ msgstr ""
 msgid "GitHub:"
 msgstr ""
 
+msgid "Global"
+msgstr ""
+
 msgid "Global Actions Likelihood"
 msgstr ""
 
@@ -3751,6 +3855,9 @@ msgid ""
 msgstr ""
 
 msgid "Grant this user access to participate in an experiment."
+msgstr ""
+
+msgid "Graph Proximity"
 msgstr ""
 
 msgid "Greek"
@@ -3974,6 +4081,9 @@ msgstr ""
 msgid "Hybrid Human-LLM"
 msgstr ""
 
+msgid "Hybrid Models"
+msgstr ""
+
 msgid "ISTI-CNR"
 msgstr ""
 
@@ -4102,6 +4212,12 @@ msgstr ""
 msgid ""
 "Inspect one moderated target at a time using their toxicity trend and the"
 " timing of moderator interventions."
+msgstr ""
+
+msgid "Instagram like photo-sharing simulation runtime for YSocial experiments."
+msgstr ""
+
+msgid "Install"
 msgstr ""
 
 #, python-format
@@ -4623,6 +4739,9 @@ msgstr ""
 msgid "Local Toxicity Model"
 msgstr ""
 
+msgid "Local Triadic Closure"
+msgstr ""
+
 msgid "Log"
 msgstr ""
 
@@ -4880,6 +4999,11 @@ msgid ""
 " nor YSimulator is present."
 msgstr ""
 
+msgid ""
+"Microblogging simulator (timeline, posts, follows). Server and client are"
+" installed and updated independently from its page."
+msgstr ""
+
 msgid "Min Probability Ratio"
 msgstr ""
 
@@ -4962,7 +5086,20 @@ msgstr ""
 msgid "Most Commented"
 msgstr ""
 
+msgid "Most commented"
+msgstr ""
+
 msgid "Most recently active communities across posts and discussions."
+msgstr ""
+
+msgid ""
+"Mostly posts from the people you follow, newest first, completed with the"
+" newest posts from everybody."
+msgstr ""
+
+msgid ""
+"Mostly posts from the people you follow, the most reacted first, "
+"completed with the newest posts from everybody."
 msgstr ""
 
 msgid "Mu (Averaging Weight)"
@@ -5062,6 +5199,9 @@ msgstr ""
 msgid "New Activity Profile"
 msgstr ""
 
+msgid "New AdHoc Agent Client"
+msgstr ""
+
 msgid "New Age Class"
 msgstr ""
 
@@ -5148,6 +5288,9 @@ msgid "New version available: %(get)s (v%(get2)s)"
 msgstr ""
 
 msgid "Newer"
+msgstr ""
+
+msgid "Newest posts first; within the same hour, the most commented come first."
 msgstr ""
 
 msgid "News"
@@ -5247,6 +5390,9 @@ msgid "No configuration files were found for this experiment."
 msgstr ""
 
 msgid "No data provided"
+msgstr ""
+
+msgid "No description available."
 msgstr ""
 
 msgid "No emotions are trending yet."
@@ -5359,6 +5505,9 @@ msgstr ""
 msgid "No recommended photos are available yet."
 msgstr ""
 
+msgid "No releases available"
+msgstr ""
+
 #, python-format
 msgid ""
 "No reusable RSS resources are available yet. Create them first in "
@@ -5425,6 +5574,9 @@ msgstr ""
 msgid "Not assigned to any population"
 msgstr ""
 
+msgid "Not configured"
+msgstr ""
+
 msgid "Not configured. Semantic memory falls back to lexical retrieval."
 msgstr ""
 
@@ -5448,6 +5600,9 @@ msgstr ""
 
 #, python-format
 msgid "Notebook created at %(filepath)s"
+msgstr ""
+
+msgid "Notice"
 msgstr ""
 
 msgid "Notice:"
@@ -5847,6 +6002,12 @@ msgstr ""
 msgid "Personalise your account details."
 msgstr ""
 
+msgid "Personalization"
+msgstr ""
+
+msgid "Personalized Feed"
+msgstr ""
+
 msgid "Personalized Feed parameters"
 msgstr ""
 
@@ -5880,6 +6041,9 @@ msgid "Photo creator tier percentages must sum to 100%."
 msgstr ""
 
 msgid "Photo details"
+msgstr ""
+
+msgid "Photo sharing"
 msgstr ""
 
 msgid "Photo story visibility percentages must sum to 100%."
@@ -5983,6 +6147,9 @@ msgid "Political Leanings"
 msgstr ""
 
 msgid "Political leaning"
+msgstr ""
+
+msgid "Popularity & Activity Bias"
 msgstr ""
 
 msgid "Population"
@@ -6135,15 +6302,67 @@ msgstr ""
 msgid "Posts"
 msgstr ""
 
+msgid "Posts about the topics you are interested in, newest first."
+msgstr ""
+
+msgid "Posts about your topics of interest, newest first, then the most reacted."
+msgstr ""
+
+msgid ""
+"Posts are scored by your topics of interest and by how close the author's"
+" opinion is to yours. Your interests adapt to what you like, share and "
+"comment, so over time the feed can narrow to like-minded content."
+msgstr ""
+
 msgid ""
 "Posts associated with this community, sorted with the same feed modes as "
 "/rfeed."
 msgstr ""
 
+msgid "Posts from other users in random order, regardless of you or the posts."
+msgstr ""
+
+msgid "Posts from other users, the most reacted first."
+msgstr ""
+
+msgid ""
+"Posts from users who share your interests, newest first, completed with "
+"the newest posts from everybody."
+msgstr ""
+
+msgid "Posts liked by users who reacted to the same posts as you, newest first."
+msgstr ""
+
 msgid "Posts per page"
 msgstr ""
 
+msgid "Posts ranked by how many of your topics of interest they cover."
+msgstr ""
+
+msgid ""
+"Posts ranked by how well they match your topics of interest, with a bonus"
+" for popular ones."
+msgstr ""
+
+msgid ""
+"Posts reacted to by the people who reacted to the same posts as you, "
+"newest first."
+msgstr ""
+
+msgid ""
+"Posts reacted to by users with your same political leaning, completed "
+"with the newest posts from everybody."
+msgstr ""
+
+msgid ""
+"Posts written by users with your same political leaning, completed with "
+"the newest posts from everybody."
+msgstr ""
+
 msgid "Powerlaw Cluster"
+msgstr ""
+
+msgid "Preferential Attachment"
 msgstr ""
 
 msgid ""
@@ -6239,6 +6458,9 @@ msgstr ""
 msgid "Profile"
 msgstr ""
 
+msgid "Profile & Attribute Homophily"
+msgstr ""
+
 msgid "Profile Header"
 msgstr ""
 
@@ -6258,6 +6480,9 @@ msgid "Profile activity filters"
 msgstr ""
 
 msgid "Profile picture"
+msgstr ""
+
+msgid "Profile-Based User Similarity"
 msgstr ""
 
 msgid "Profiles and pages matching your search."
@@ -6378,6 +6603,9 @@ msgid "RSS feed resource not found."
 msgstr ""
 
 msgid "RSS-derived posts emitted"
+msgstr ""
+
+msgid "Random"
 msgstr ""
 
 msgid "Random Network (Erdős-Rényi)"
@@ -7073,6 +7301,9 @@ msgstr ""
 msgid "Select a population compatible with the chosen ad hoc agent type."
 msgstr ""
 
+msgid "Select a source group first..."
+msgstr ""
+
 msgid "Select a valid ad hoc agent type."
 msgstr ""
 
@@ -7147,6 +7378,9 @@ msgstr ""
 msgid ""
 "Select profession categories to be used during agent generation. By "
 "default, all categories are available."
+msgstr ""
+
+msgid "Select source experiment..."
 msgstr ""
 
 msgid "Select source group..."
@@ -7294,6 +7528,12 @@ msgid "Server settings updated successfully"
 msgstr ""
 
 msgid "Server, Clients, and Analytics"
+msgstr ""
+
+msgid "Server-side forum simulation runtime for Reddit-like YSocial scenarios."
+msgstr ""
+
+msgid "Server-side microblogging simulation runtime for YSocial experiments."
 msgstr ""
 
 msgid "Set LLM"
@@ -7452,6 +7692,9 @@ msgstr ""
 msgid "Simulation Parameters"
 msgstr ""
 
+msgid "Simulation Runtime Stack"
+msgstr ""
+
 msgid "Simulation Time Trend"
 msgstr ""
 
@@ -7528,6 +7771,9 @@ msgstr ""
 msgid "Social Resummarize Every (events)"
 msgstr ""
 
+msgid "Social Timeline"
+msgstr ""
+
 msgid "Solitary/Reserved"
 msgstr ""
 
@@ -7535,6 +7781,9 @@ msgid "Something went wrong on our end."
 msgstr ""
 
 msgid "Something went wrong?"
+msgstr ""
+
+msgid "Source"
 msgstr ""
 
 msgid "Source Experiment"
@@ -8253,6 +8502,11 @@ msgstr ""
 msgid "This is not a remote experiment"
 msgstr ""
 
+msgid ""
+"This is the algorithm that decides which posts appear in your feed and in"
+" what order."
+msgstr ""
+
 msgid "This module is not available for this experiment type."
 msgstr ""
 
@@ -8422,6 +8676,9 @@ msgid "Topics (select to visualize)"
 msgstr ""
 
 msgid "Topics covered and population assignments."
+msgstr ""
+
+msgid "Topics to Visualize"
 msgstr ""
 
 msgid "Total Max Chars"
@@ -8747,6 +9004,9 @@ msgstr ""
 msgid ""
 "Updated database values, but failed to sync population config "
 "'%(basename)s': %(error)s"
+msgstr ""
+
+msgid "Updating ad hoc client..."
 msgstr ""
 
 msgid "Upload"
@@ -9473,6 +9733,9 @@ msgstr ""
 msgid "experiments_per_group is required"
 msgstr ""
 
+msgid "failure"
+msgstr ""
+
 msgid "full discussion thread"
 msgstr ""
 
@@ -9571,6 +9834,9 @@ msgid "settings"
 msgstr ""
 
 msgid "signals"
+msgstr ""
+
+msgid "success"
 msgstr ""
 
 msgid "symlink"

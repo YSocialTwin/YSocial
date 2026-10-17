@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 08:15+0000\n"
+"POT-Creation-Date: 2026-10-17 08:31+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -221,6 +221,18 @@ msgstr "Avatar di %(username)s"
 msgid "(%(count)s total)"
 msgstr "(%(count)s in totale)"
 
+msgid "(CI) Common Interests"
+msgstr "(CI) Interessi in comune"
+
+msgid "(CUI) Common User Interests"
+msgstr "(CUI) Interessi in comune tra utenti"
+
+msgid "(FP) Followers-Popularity"
+msgstr "(FP) Seguiti e popolarità"
+
+msgid "(HLR) Hybrid Linear Ranker"
+msgstr "(HLR) Ranker lineare ibrido"
+
 msgid "(Only for Photo Sharing populations)"
 msgstr "(Solo per le popolazioni di condivisione di foto)"
 
@@ -229,6 +241,24 @@ msgstr "(Facoltativo: clicca per espandere)"
 
 msgid "(Optional)"
 msgstr "(Facoltativo)"
+
+msgid "(RC) Reverse Chrono"
+msgstr "(RC) Ordine cronologico inverso"
+
+msgid "(RCC) Reverse Chrono Comments"
+msgstr "(RCC) Cronologico inverso per commenti"
+
+msgid "(RCF) Followers"
+msgstr "(RCF) Seguiti"
+
+msgid "(RCP) Popularity"
+msgstr "(RCP) Popolarità"
+
+msgid "(SIP) Similar Users Posts"
+msgstr "(SIP) Post di utenti simili"
+
+msgid "(SIR) Similar Users Reactions"
+msgstr "(SIR) Reazioni di utenti simili"
 
 msgid "(at least 2)"
 msgstr "(almeno 2)"
@@ -517,6 +547,9 @@ msgstr "Argomento generato attivo"
 msgid "Active propaganda topics in this experiment:"
 msgstr "Argomenti di propaganda attivi in questo esperimento:"
 
+msgid "Activity"
+msgstr "Attività"
+
 msgid "Activity & Engagement Configuration"
 msgstr "Configurazione di attività e coinvolgimento"
 
@@ -716,6 +749,9 @@ msgstr "Archetipi degli agenti e transizioni"
 msgid "Agent Archetypes and Transitions (Optional)"
 msgstr "Archetipi degli agenti e transizioni (facoltativo)"
 
+msgid "Agent Extensions"
+msgstr "Estensioni per agenti"
+
 msgid "Agent Features"
 msgstr "Caratteristiche degli agenti"
 
@@ -898,6 +934,11 @@ msgstr "Tutte le annotazioni"
 
 msgid "All interactions"
 msgstr "Tutte le interazioni"
+
+msgid "All posts from other users, newest first. No personalisation."
+msgstr ""
+"Tutti i post degli altri utenti, dal più recente. Nessuna "
+"personalizzazione."
 
 #, python-format
 msgid ""
@@ -1217,6 +1258,9 @@ msgstr "Torna al profilo"
 msgid "Backend"
 msgstr "Backend"
 
+msgid "Backend Extensions"
+msgstr "Estensioni del backend"
+
 msgid "Background and profile attributes shaping this account."
 msgstr "Contesto e attributi del profilo che caratterizzano questo account."
 
@@ -1246,6 +1290,9 @@ msgstr "Bilanciato (consigliato)"
 msgid "Bangladeshi"
 msgstr "Bangladese"
 
+msgid "Baseline & Exploration"
+msgstr "Riferimento ed esplorazione"
+
 msgid "Basic Fields"
 msgstr "Campi di base"
 
@@ -1269,8 +1316,14 @@ msgstr ""
 "livello di interesse e la tua opinione per ogni argomento di discussione "
 "attivo."
 
+msgid "Behavioral Homophily"
+msgstr "Omofilia comportamentale"
+
 msgid "Behavioral Settings"
 msgstr "Impostazioni comportamentali"
+
+msgid "Behavioral User Modeling"
+msgstr "Modellazione comportamentale degli utenti"
 
 msgid "Behavioral patterns and activity characteristics."
 msgstr "Schemi comportamentali e caratteristiche di attività."
@@ -1737,6 +1790,16 @@ msgstr "Client non trovato."
 msgid "Client simulation parameters updated."
 msgstr "Parametri di simulazione del client aggiornati."
 
+msgid "Client-side forum simulation runtime for Reddit-like YSocial scenarios."
+msgstr ""
+"Runtime lato client per la simulazione di forum, per scenari YSocial di "
+"tipo Reddit."
+
+msgid "Client-side microblogging simulation runtime for YSocial experiments."
+msgstr ""
+"Runtime lato client per la simulazione di microblogging negli esperimenti"
+" YSocial."
+
 msgid "Client:"
 msgstr "Client:"
 
@@ -1767,6 +1830,9 @@ msgstr "Finestra di avvio a freddo"
 
 msgid "Cold-Start Window"
 msgstr "Finestra di avvio a freddo"
+
+msgid "Collaborative Filtering"
+msgstr "Filtraggio collaborativo"
 
 msgid "Collapse"
 msgstr "Comprimi"
@@ -1804,6 +1870,9 @@ msgstr "Peso dei commenti"
 msgid "Comments"
 msgstr "Commenti"
 
+msgid "Common Neighbors"
+msgstr "Vicini in comune"
+
 msgid "Communities"
 msgstr "Community"
 
@@ -1812,6 +1881,9 @@ msgstr "Community in cui hai pubblicato o commentato di recente."
 
 msgid "Community"
 msgstr "Community"
+
+msgid "Community Approximation"
+msgstr "Approssimazione delle comunità"
 
 msgid "Community Models"
 msgstr "Modelli a comunità"
@@ -1827,6 +1899,9 @@ msgstr "Grafo completo"
 
 msgid "Completed"
 msgstr "Completati"
+
+msgid "Components (independent)"
+msgstr "Componenti (indipendenti)"
 
 msgid "Compose and publish new posts"
 msgstr "Scrivere e pubblicare nuovi post"
@@ -2228,6 +2303,9 @@ msgstr "Contenuto di un post"
 msgid "Content reported."
 msgstr "Contenuto segnalato."
 
+msgid "Content-Based Filtering"
+msgstr "Filtraggio basato sui contenuti"
+
 msgid "Content:"
 msgstr "Contenuti:"
 
@@ -2472,6 +2550,9 @@ msgstr ""
 
 msgid "Creates fresh copies of every experiment in the selected group."
 msgstr "Crea copie nuove di ogni esperimento del gruppo selezionato."
+
+msgid "Creating ad hoc client..."
+msgstr "Creazione del client ad hoc in corso..."
 
 msgid "Creating agent..."
 msgstr "Creazione dell'agente in corso..."
@@ -2771,6 +2852,9 @@ msgstr "Democratico"
 msgid "Demographic Information"
 msgstr "Informazioni demografiche"
 
+msgid "Demographic-Based"
+msgstr "Basato su dati demografici"
+
 msgid "Demographics"
 msgstr "Dati demografici"
 
@@ -2892,6 +2976,9 @@ msgstr ""
 "Gli URL diretti degli articoli restano locali all'esperimento corrente "
 "perché di solito sono specifici di una campagna o di un'esecuzione."
 
+msgid "Disable"
+msgstr "Disattiva"
+
 msgid "Disabled"
 msgstr "Disattivato"
 
@@ -2912,6 +2999,11 @@ msgstr "Non mi piace"
 
 msgid "Dislikes"
 msgstr "Non mi piace"
+
+msgid "Distributed HPC simulation runtime for large-scale YSocial experiments."
+msgstr ""
+"Runtime di simulazione HPC distribuito per esperimenti YSocial su larga "
+"scala."
 
 msgid "Distribution Type"
 msgstr "Tipo di distribuzione"
@@ -3231,6 +3323,9 @@ msgstr "Pesi del coinvolgimento"
 
 msgid "English"
 msgstr "Inglese"
+
+msgid "Ensemble"
+msgstr "Ensemble"
 
 msgid ""
 "Ensure that the experiment is loaded before applying changes to avoid "
@@ -3859,6 +3954,9 @@ msgstr "Follower"
 msgid "Followers:"
 msgstr "Follower:"
 
+msgid "Following"
+msgstr "Seguiti"
+
 msgid "Following the"
 msgstr "Seguiamo"
 
@@ -3896,6 +3994,9 @@ msgstr ""
 
 msgid "For you"
 msgstr "Per te"
+
+msgid "For you (recommended)"
+msgstr "Per te (consigliati)"
 
 msgid "Forbidden"
 msgstr "Vietato"
@@ -3950,6 +4051,13 @@ msgid "Forum participant"
 msgstr "Partecipante al forum"
 
 msgid ""
+"Forum simulator (threads and replies). Server and client are installed "
+"and updated independently from its page."
+msgstr ""
+"Simulatore di forum (thread e risposte). Server e client si installano e "
+"si aggiornano separatamente dalla sua pagina."
+
+msgid ""
 "Forum uses link-sharing to publish content imported from RSS and feed "
 "sources."
 msgstr ""
@@ -3973,6 +4081,9 @@ msgstr "Sistema di raccomandazione delle amicizie"
 
 msgid "From / To"
 msgstr "Da / A"
+
+msgid "Frontend Extensions"
+msgstr "Estensioni del frontend"
 
 msgid "Frontend Settings"
 msgstr "Impostazioni del frontend"
@@ -4129,6 +4240,9 @@ msgstr "Sessione GitHub attivata per l'accesso alle release dei plugin."
 msgid "GitHub:"
 msgstr "GitHub:"
 
+msgid "Global"
+msgstr "Globale"
+
 msgid "Global Actions Likelihood"
 msgstr "Probabilità globale delle azioni"
 
@@ -4164,6 +4278,9 @@ msgstr ""
 
 msgid "Grant this user access to participate in an experiment."
 msgstr "Consenti a questo utente di partecipare a un esperimento."
+
+msgid "Graph Proximity"
+msgstr "Prossimità nel grafo"
 
 msgid "Greek"
 msgstr "Greca"
@@ -4397,6 +4514,9 @@ msgstr "Ibrido (punteggio × recenza)"
 msgid "Hybrid Human-LLM"
 msgstr "Ibrido umano-LLM"
 
+msgid "Hybrid Models"
+msgstr "Modelli ibridi"
+
 msgid "ISTI-CNR"
 msgstr "ISTI-CNR"
 
@@ -4547,6 +4667,14 @@ msgid ""
 msgstr ""
 "Esamina un bersaglio moderato alla volta usando l'andamento della sua "
 "tossicità e i tempi degli interventi dei moderatori."
+
+msgid "Instagram like photo-sharing simulation runtime for YSocial experiments."
+msgstr ""
+"Runtime di simulazione di photo-sharing in stile Instagram per gli "
+"esperimenti YSocial."
+
+msgid "Install"
+msgstr "Installa"
 
 #, python-format
 msgid "Install Detoxify first from %(link)s to enable toxicity annotation."
@@ -5101,6 +5229,9 @@ msgstr "Modello di diffusione locale"
 msgid "Local Toxicity Model"
 msgstr "Modello di tossicità locale"
 
+msgid "Local Triadic Closure"
+msgstr "Chiusura triadica locale"
+
 msgid "Log"
 msgstr "Log"
 
@@ -5394,6 +5525,13 @@ msgstr ""
 "Gli esperimenti di microblogging non sono disponibili perché non sono "
 "presenti né YServer/YClient né YSimulator."
 
+msgid ""
+"Microblogging simulator (timeline, posts, follows). Server and client are"
+" installed and updated independently from its page."
+msgstr ""
+"Simulatore di microblogging (timeline, post, follow). Server e client si "
+"installano e si aggiornano separatamente dalla sua pagina."
+
 msgid "Min Probability Ratio"
 msgstr "Rapporto minimo di probabilità"
 
@@ -5482,8 +5620,25 @@ msgstr ""
 msgid "Most Commented"
 msgstr "Più commentati"
 
+msgid "Most commented"
+msgstr "Più commentati"
+
 msgid "Most recently active communities across posts and discussions."
 msgstr "Community più attive di recente tra post e discussioni."
+
+msgid ""
+"Mostly posts from the people you follow, newest first, completed with the"
+" newest posts from everybody."
+msgstr ""
+"Soprattutto post delle persone che segui, dal più recente, completati con"
+" i post più recenti di tutti."
+
+msgid ""
+"Mostly posts from the people you follow, the most reacted first, "
+"completed with the newest posts from everybody."
+msgstr ""
+"Soprattutto post delle persone che segui, prima quelli con più reazioni, "
+"completati con i post più recenti di tutti."
 
 msgid "Mu (Averaging Weight)"
 msgstr "Mu (peso della media)"
@@ -5586,6 +5741,9 @@ msgstr "Nuovi"
 msgid "New Activity Profile"
 msgstr "Nuovo profilo di attività"
 
+msgid "New AdHoc Agent Client"
+msgstr "Nuovo client di agenti ad hoc"
+
 msgid "New Age Class"
 msgstr "Nuova fascia di età"
 
@@ -5673,6 +5831,9 @@ msgstr "Nuova versione disponibile: %(get)s (v%(get2)s)"
 
 msgid "Newer"
 msgstr "Più recenti"
+
+msgid "Newest posts first; within the same hour, the most commented come first."
+msgstr "Prima i post più recenti; nella stessa ora, prima i più commentati."
 
 msgid "News"
 msgstr "Notizie"
@@ -5776,6 +5937,9 @@ msgstr "Non sono stati trovati file di configurazione per questo esperimento."
 
 msgid "No data provided"
 msgstr "Nessun dato fornito"
+
+msgid "No description available."
+msgstr "Nessuna descrizione disponibile."
 
 msgid "No emotions are trending yet."
 msgstr "Nessuna emozione è ancora di tendenza."
@@ -5887,6 +6051,9 @@ msgstr "Nessun interesse recente disponibile."
 msgid "No recommended photos are available yet."
 msgstr "Non ci sono ancora foto consigliate."
 
+msgid "No releases available"
+msgstr "Nessuna release disponibile"
+
 #, python-format
 msgid ""
 "No reusable RSS resources are available yet. Create them first in "
@@ -5957,6 +6124,9 @@ msgstr "Non assegnato"
 msgid "Not assigned to any population"
 msgstr "Non assegnato a nessuna popolazione"
 
+msgid "Not configured"
+msgstr "Non configurato"
+
 msgid "Not configured. Semantic memory falls back to lexical retrieval."
 msgstr "Non configurato. La memoria semantica ripiega sul recupero lessicale."
 
@@ -5981,6 +6151,9 @@ msgstr "Nota:"
 #, python-format
 msgid "Notebook created at %(filepath)s"
 msgstr "Notebook creato in %(filepath)s"
+
+msgid "Notice"
+msgstr "Avviso"
 
 msgid "Notice:"
 msgstr "Avviso:"
@@ -6426,6 +6599,12 @@ msgstr "Modello di persona"
 msgid "Personalise your account details."
 msgstr "Personalizza i dati del tuo account."
 
+msgid "Personalization"
+msgstr "Personalizzazione"
+
+msgid "Personalized Feed"
+msgstr "Feed personalizzato"
+
 msgid "Personalized Feed parameters"
 msgstr "Parametri del feed personalizzato"
 
@@ -6466,6 +6645,9 @@ msgstr "Le percentuali dei livelli dei creatori di foto devono sommare a 100%."
 
 msgid "Photo details"
 msgstr "Dettagli della foto"
+
+msgid "Photo sharing"
+msgstr "Condivisione di foto"
 
 msgid "Photo story visibility percentages must sum to 100%."
 msgstr ""
@@ -6573,6 +6755,9 @@ msgstr "Orientamenti politici"
 
 msgid "Political leaning"
 msgstr "Orientamento politico"
+
+msgid "Popularity & Activity Bias"
+msgstr "Bias di popolarità e attività"
 
 msgid "Population"
 msgstr "Popolazione"
@@ -6732,6 +6917,24 @@ msgstr "Ricercatore postdoc"
 msgid "Posts"
 msgstr "Post"
 
+msgid "Posts about the topics you are interested in, newest first."
+msgstr "Post sugli argomenti che ti interessano, dal più recente."
+
+msgid "Posts about your topics of interest, newest first, then the most reacted."
+msgstr ""
+"Post sui tuoi argomenti di interesse, prima i più recenti, poi i più "
+"reagiti."
+
+msgid ""
+"Posts are scored by your topics of interest and by how close the author's"
+" opinion is to yours. Your interests adapt to what you like, share and "
+"comment, so over time the feed can narrow to like-minded content."
+msgstr ""
+"I post ricevono un punteggio in base ai tuoi argomenti di interesse e "
+"alla vicinanza tra l'opinione dell'autore e la tua. I tuoi interessi si "
+"adattano a ciò che apprezzi, condividi e commenti: col tempo il feed può "
+"restringersi a contenuti affini."
+
 msgid ""
 "Posts associated with this community, sorted with the same feed modes as "
 "/rfeed."
@@ -6739,11 +6942,65 @@ msgstr ""
 "Post associati a questa community, ordinati con le stesse modalità di "
 "feed di /rfeed."
 
+msgid "Posts from other users in random order, regardless of you or the posts."
+msgstr ""
+"Post di altri utenti in ordine casuale, indipendentemente da te e dai "
+"post."
+
+msgid "Posts from other users, the most reacted first."
+msgstr "Post di altri utenti, prima quelli con più reazioni."
+
+msgid ""
+"Posts from users who share your interests, newest first, completed with "
+"the newest posts from everybody."
+msgstr ""
+"Post di utenti che condividono i tuoi interessi, dal più recente, "
+"completati con i post più recenti di tutti."
+
+msgid "Posts liked by users who reacted to the same posts as you, newest first."
+msgstr ""
+"Post apprezzati da utenti che hanno reagito agli stessi post tuoi, dal "
+"più recente."
+
 msgid "Posts per page"
 msgstr "Post per pagina"
 
+msgid "Posts ranked by how many of your topics of interest they cover."
+msgstr "Post ordinati in base a quanti dei tuoi argomenti di interesse trattano."
+
+msgid ""
+"Posts ranked by how well they match your topics of interest, with a bonus"
+" for popular ones."
+msgstr ""
+"Post ordinati in base a quanto corrispondono ai tuoi argomenti di "
+"interesse, con un bonus per i più popolari."
+
+msgid ""
+"Posts reacted to by the people who reacted to the same posts as you, "
+"newest first."
+msgstr ""
+"Post con cui hanno interagito le persone che hanno reagito agli stessi "
+"post tuoi, dal più recente."
+
+msgid ""
+"Posts reacted to by users with your same political leaning, completed "
+"with the newest posts from everybody."
+msgstr ""
+"Post con cui hanno interagito utenti con il tuo stesso orientamento "
+"politico, completati con i post più recenti di tutti."
+
+msgid ""
+"Posts written by users with your same political leaning, completed with "
+"the newest posts from everybody."
+msgstr ""
+"Post scritti da utenti con il tuo stesso orientamento politico, "
+"completati con i post più recenti di tutti."
+
 msgid "Powerlaw Cluster"
 msgstr "Cluster a legge di potenza"
+
+msgid "Preferential Attachment"
+msgstr "Attaccamento preferenziale"
 
 msgid ""
 "Prevents data loss during log rotation by periodically reading logs from "
@@ -6846,6 +7103,9 @@ msgstr "Professioni"
 msgid "Profile"
 msgstr "Profilo"
 
+msgid "Profile & Attribute Homophily"
+msgstr "Omofilia di profilo e attributi"
+
 msgid "Profile Header"
 msgstr "Immagine di copertina"
 
@@ -6866,6 +7126,9 @@ msgstr "Filtri dell'attività del profilo"
 
 msgid "Profile picture"
 msgstr "Immagine del profilo"
+
+msgid "Profile-Based User Similarity"
+msgstr "Similarità tra utenti basata sul profilo"
 
 msgid "Profiles and pages matching your search."
 msgstr "Profili e pagine corrispondenti alla ricerca."
@@ -6995,6 +7258,9 @@ msgstr "Risorsa feed RSS non trovata."
 
 msgid "RSS-derived posts emitted"
 msgstr "Post derivati da RSS pubblicati"
+
+msgid "Random"
+msgstr "Casuale"
 
 msgid "Random Network (Erdős-Rényi)"
 msgstr "Rete casuale (Erdős-Rényi)"
@@ -7718,6 +7984,9 @@ msgstr ""
 msgid "Select a population compatible with the chosen ad hoc agent type."
 msgstr "Seleziona una popolazione compatibile con il tipo di agente ad hoc scelto."
 
+msgid "Select a source group first..."
+msgstr "Seleziona prima un gruppo di origine..."
+
 msgid "Select a valid ad hoc agent type."
 msgstr "Seleziona un tipo di agente ad hoc valido."
 
@@ -7804,6 +8073,9 @@ msgid ""
 msgstr ""
 "Seleziona le categorie professionali da usare nella generazione degli "
 "agenti. Per impostazione predefinita sono disponibili tutte."
+
+msgid "Select source experiment..."
+msgstr "Seleziona l'esperimento di origine..."
 
 msgid "Select source group..."
 msgstr "Seleziona il gruppo di origine..."
@@ -7975,6 +8247,16 @@ msgstr "Impostazioni del server aggiornate con successo"
 
 msgid "Server, Clients, and Analytics"
 msgstr "Server, client e analisi"
+
+msgid "Server-side forum simulation runtime for Reddit-like YSocial scenarios."
+msgstr ""
+"Runtime lato server per la simulazione di forum, per scenari YSocial di "
+"tipo Reddit."
+
+msgid "Server-side microblogging simulation runtime for YSocial experiments."
+msgstr ""
+"Runtime lato server per la simulazione di microblogging negli esperimenti"
+" YSocial."
 
 msgid "Set LLM"
 msgstr "Imposta l'LLM"
@@ -8150,6 +8432,9 @@ msgstr "Durata della simulazione:"
 msgid "Simulation Parameters"
 msgstr "Parametri della simulazione"
 
+msgid "Simulation Runtime Stack"
+msgstr "Stack di runtime della simulazione"
+
 msgid "Simulation Time Trend"
 msgstr "Andamento del tempo di simulazione"
 
@@ -8226,6 +8511,9 @@ msgstr "Struttura della rete sociale (facoltativo)"
 msgid "Social Resummarize Every (events)"
 msgstr "Riassumi il contesto sociale ogni (eventi)"
 
+msgid "Social Timeline"
+msgstr "Timeline sociale"
+
 msgid "Solitary/Reserved"
 msgstr "Solitario/Riservato"
 
@@ -8234,6 +8522,9 @@ msgstr "Qualcosa è andato storto da parte nostra."
 
 msgid "Something went wrong?"
 msgstr "Qualcosa è andato storto?"
+
+msgid "Source"
+msgstr "Origine"
 
 msgid "Source Experiment"
 msgstr "Esperimento di origine"
@@ -9058,6 +9349,13 @@ msgstr ""
 msgid "This is not a remote experiment"
 msgstr "Questo non è un esperimento remoto"
 
+msgid ""
+"This is the algorithm that decides which posts appear in your feed and in"
+" what order."
+msgstr ""
+"È l’algoritmo che decide quali post compaiono nel tuo feed e in che "
+"ordine."
+
 msgid "This module is not available for this experiment type."
 msgstr "Questo modulo non è disponibile per questo tipo di esperimento."
 
@@ -9245,6 +9543,9 @@ msgstr "Argomenti (seleziona per visualizzare)"
 
 msgid "Topics covered and population assignments."
 msgstr "Argomenti trattati e assegnazioni alle popolazioni."
+
+msgid "Topics to Visualize"
+msgstr "Argomenti da visualizzare"
 
 msgid "Total Max Chars"
 msgstr "Caratteri massimi totali"
@@ -9601,6 +9902,9 @@ msgid ""
 msgstr ""
 "Valori del database aggiornati, ma sincronizzazione della configurazione "
 "della popolazione '%(basename)s' non riuscita: %(error)s"
+
+msgid "Updating ad hoc client..."
+msgstr "Aggiornamento del client ad hoc in corso..."
 
 msgid "Upload"
 msgstr "Carica"
@@ -10428,6 +10732,9 @@ msgstr "experiment_id è obbligatorio"
 msgid "experiments_per_group is required"
 msgstr "experiments_per_group è obbligatorio"
 
+msgid "failure"
+msgstr "fallita"
+
 msgid "full discussion thread"
 msgstr "l'intera discussione"
 
@@ -10529,6 +10836,9 @@ msgstr "impostazioni"
 
 msgid "signals"
 msgstr "segnali"
+
+msgid "success"
+msgstr "riuscita"
 
 msgid "symlink"
 msgstr "collegamento simbolico"
@@ -11118,6 +11428,12 @@ msgstr "✔️ Usa"
 #~ msgstr ""
 
 #~ msgid "and"
+#~ msgstr ""
+
+#~ msgid "description"
+#~ msgstr ""
+
+#~ msgid "label"
 #~ msgstr ""
 
 #~ msgid "vllm serve <model> --host 0.0.0.0 --port 8000"

@@ -60,3 +60,12 @@ def test_adhoc_parameter_labels_and_prompt_keys(agents_app):
 def test_agents_dashboard_strings_are_translated(agents_app, msgid, expected):
     with agents_app.test_request_context("/", headers={"Accept-Language": "it"}):
         assert i18n.gettext(msgid) == expected
+
+
+def test_recommender_descriptions_follow_the_interface_language(agents_app):
+    from y_web.routes.social.helpers import _RECSYS_DESCRIPTIONS
+
+    english = _RECSYS_DESCRIPTIONS["ReverseChronoPopularity"]
+    with agents_app.test_request_context("/", headers={"Accept-Language": "it"}):
+        italian = i18n.gettext(english)
+    assert italian != english and italian.startswith("Post di altri utenti")
