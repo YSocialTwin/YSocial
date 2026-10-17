@@ -443,6 +443,7 @@ Confronto affiancato inglese / italiano per la revisione da parte di un madrelin
 | opinion_eval_question | `⏎ Answer with a single word among the options: AGREE\|DISAGREE\|NEUTRAL.` | `⏎ Rispondi con una sola parola tra le opzioni: AGREE\|DISAGREE\|NEUTRAL.` |
 | follow_back_request_follow | `follow them back` | `ricambiare il follow` |
 | follow_back_request_unfollow | `unfollow them back` | `ricambiare l'unfollow` |
+| custom_features_persona | `Additional personal details: {details}.` | `Ulteriori dettagli personali: {details}.` |
 
 ## external/YClientReddit/y_client/prompts_internal.it.json
 
@@ -487,6 +488,7 @@ Confronto affiancato inglese / italiano per la revisione da parte di un madrelin
 | base_agent__memory_build_conversation_cues__7 | `Use only soft continuity (e.g., recurring disagreement) and avoid specific claims.` | `Usa solo una continuità lieve (ad es. un disaccordo ricorrente) ed evita affermazioni specifiche.` |
 | fake_page_agent__effify__1 | `{v1}⏎ ⏎ STYLE RULE: Do not use any dash characters. This includes U+2014 em dash, U+2013 en dash, and ASCII minus sign. Use commas, periods, or parentheses instead.` | `{v1}⏎ ⏎ REGOLA DI STILE: Non usare alcun carattere trattino. Questo include il trattino lungo U+2014, il trattino medio U+2013 e il segno meno ASCII. Usa invece virgole, punti o parentesi.` |
 | llm_evaluation__llm_evaluation__1 | `⏎ Answer with a single word among the options: AGREE\|DISAGREE\|NEUTRAL.` | `⏎ Rispondi con una sola parola tra le opzioni: AGREE\|DISAGREE\|NEUTRAL.` |
+| custom_features_persona | `Additional personal details: {details}.` | `Ulteriori dettagli personali: {details}.` |
 
 ## external/YPhotoSharing/YPhotoSharing/prompts_internal.it.json
 
@@ -503,6 +505,33 @@ Confronto affiancato inglese / italiano per la revisione da parte di un madrelin
 | remote_batch_service__batch_decide_reactions__1 | `Read this Instagram caption and reply ONLY with one word: LIKE, LOVE, LAUGH, WOW, SAD, ANGRY, or IGNORE.⏎ ⏎ Caption: {v1}` | `Leggi questa didascalia Instagram e rispondi SOLO con una parola: LIKE, LOVE, LAUGH, WOW, SAD, ANGRY oppure IGNORE.⏎ ⏎ Didascalia: {v1}` |
 | remote_batch_service__batch_generate_comments__1 | `{v1} posted: "{v2}"⏎ ⏎ Write a brief Instagram comment (under 100 characters).` | `{v1} ha pubblicato: "{v2}"⏎ ⏎ Scrivi un breve commento Instagram (meno di 100 caratteri).` |
 | vllm_service__generate_comment__1 | `{author} posted: "{caption}"⏎ ⏎ Write a brief Instagram comment (under 100 characters). You may @mention the author.` | `{author} ha pubblicato: "{caption}"⏎ ⏎ Scrivi un breve commento Instagram (meno di 100 caratteri). Puoi @menzionare l'autore.` |
+| custom_features_persona | `Additional personal details: {details}.` | `Ulteriori dettagli personali: {details}.` |
+| persona_age | `{age}-year-old` | `{age} anni` |
+| persona_from | `from {nationality}` | `di nazionalità {nationality}` |
+| persona_education | `educated to {education_level} level` | `con livello di istruzione {education_level}` |
+| persona_profession | `working as a {profession}` | `di professione {profession}` |
+| persona_politics | `politically {leaning}` | `con orientamento politico {leaning}` |
+| persona_activity | `activity profile {activity_profile}` | `profilo di attività {activity_profile}` |
+| persona_archetype | `archetype {archetype}` | `archetipo {archetype}` |
+| persona_language | `speaks {spoken}` | `parla {spoken}` |
+| persona_profile | `Profile: {bits}.` | `Profilo: {bits}.` |
+| persona_trait_oe | `openness` | `apertura` |
+| persona_trait_co | `conscientiousness` | `coscienziosità` |
+| persona_trait_ex | `extraversion` | `estroversione` |
+| persona_trait_ag | `agreeableness` | `amicalità` |
+| persona_trait_ne | `neuroticism` | `nevroticismo` |
+| persona_traits | `Personality traits: {bits}.` | `Tratti di personalità: {bits}.` |
+| persona_verified | `verified account` | `account verificato` |
+| persona_private | `private account` | `account privato` |
+| persona_page | `page account` | `account di pagina` |
+| persona_toxicity | `toxicity preference {toxicity}` | `preferenza di tossicità {toxicity}` |
+| persona_status | `Account status: {bits}.` | `Stato dell'account: {bits}.` |
+| persona_interests | `Interests: {interests}.` | `Interessi: {interests}.` |
+| persona_bio | `Bio: {bio}.` | `Bio: {bio}.` |
+| persona_filters | `favorite filters: {filters}` | `filtri preferiti: {filters}` |
+| persona_story | `story visibility: {visibility}` | `visibilità delle storie: {visibility}` |
+| persona_tier | `creator tier: {tier}` | `livello creator: {tier}` |
+| persona_photo | `Photo-sharing profile: {bits}.` | `Profilo di condivisione foto: {bits}.` |
 
 ## external/YSimulator/YSimulator/prompts_internal.it.json
 
@@ -542,6 +571,7 @@ Confronto affiancato inglese / italiano per la revisione da parte di un madrelin
 | vllm_service__generate_news_commentary__2 | `Article: "{article_title}"⏎ ⏎ Summary: {article_text}⏎ ⏎ Write a brief engaging social media post about this article (max 280 characters).` | `Articolo: "{article_title}"⏎ ⏎ Riassunto: {article_text}⏎ ⏎ Scrivi un breve post coinvolgente sui social media su questo articolo (massimo 280 caratteri).` |
 | vllm_service__generate_search_action_batch__1 | `You are deciding how to engage with a post found via search.` | `Stai decidendo come interagire con un post trovato tramite ricerca.` |
 | vllm_service__generate_search_action_batch__2 | `Post content: {post_content}⏎ ⏎ How should you engage? Reply with COMMENT, SHARE, LIKE, LOVE, LAUGH, ANGRY, SAD, or IGNORE.` | `Contenuto del post: {post_content}⏎ ⏎ Come dovresti interagire? Rispondi con COMMENT, SHARE, LIKE, LOVE, LAUGH, ANGRY, SAD oppure IGNORE.` |
+| custom_features_persona | `Additional personal details: {details}.` | `Ulteriori dettagli personali: {details}.` |
 
 ## external/reactive_agents/src/reactive_agents/prompts_internal.it.json
 
