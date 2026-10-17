@@ -740,6 +740,9 @@ def edit_profile(exp_id, user_id):
     _recsys_opts = _load_recsys_options(_sim_type, include_human_only=_is_human_profile)
     return render_template(
         "microblogging/edit_profile.html",
+        profile_topics_box=bool(
+            _load_ui_settings(exp_id).get("profile_topics_box", True)
+        ),
         user=user,
         profile_pic=profile_pic,
         available_profile_pics=available_profile_pics,
@@ -1082,7 +1085,10 @@ def onboarding(exp_id, user_id):
         except Exception:
             return False
 
-    if _already_onboarded(user_id):
+    # The admin can switch onboarding off per experiment (Frontend Settings)
+    if _already_onboarded(user_id) or not _load_ui_settings(exp_id).get(
+        "onboarding_enabled", True
+    ):
         exp_obj = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
         if exp_obj is not None:
             if exp_obj.platform_type == "microblogging":

@@ -304,7 +304,7 @@
 
             <!-- RIGHT: Topics & Opinions -->
             <div>
-            {% if topics and opinion_groups %}
+            {% if profile_topics_box|default(true) and topics and opinion_groups %}
             {% set n_op = opinion_groups|length %}
             {% set mid_op = (n_op - 1) // 2 %}
             <form action="/{{ exp_id }}/update_topic_preferences/{{ user_id }}" method="POST" id="ep-topics-form">

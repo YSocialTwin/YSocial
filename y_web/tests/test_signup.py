@@ -122,3 +122,11 @@ def test_italian_strings():
     cat = pofile.read_po(open(ROOT / "translations/it/LC_MESSAGES/messages.po", "rb"))
     for msgid in ("Self-registration", "Create an account", "Sign-up page", "Choose at least one of the available activities."):
         assert cat.get(msgid) and cat.get(msgid).string, msgid
+
+
+def test_profile_topics_and_onboarding_flags_are_honoured():
+    common = (ROOT / "routes/social/common.py").read_text(encoding="utf-8")
+    assert '"onboarding_enabled", True' in common
+    assert 'get("profile_topics_box", True)' in common
+    tpl = (ROOT / "templates/microblogging/edit_profile.html").read_text(encoding="utf-8")
+    assert "profile_topics_box|default(true) and topics and opinion_groups" in tpl
