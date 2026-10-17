@@ -66,7 +66,7 @@
         },
         {
             id: 'join-simulation-btn',
-            selector: '.live-button',
+            selector: 'a.live-button[href^="/admin/join_experiment"], button.live-button[aria-controls="join-simulation-menu"]',
             title: '🎬 Join Simulation',
             description: `<p>When experiments are running, click to <b>join the live simulation</b>:</p>
                 <ul style="margin: 10px 0 0 18px; padding: 0; list-style: disc;">
@@ -74,13 +74,6 @@
                     <li>Monitor social interactions</li>
                     <li>Watch content generation</li>
                 </ul>`,
-            position: 'bottom'
-        },
-        {
-            id: 'logout-btn',
-            selector: 'a[href="/logout"]',
-            title: '🚪 Log Out',
-            description: `<p>Click to <b>log out</b> of your YSocial session.</p>`,
             position: 'bottom'
         },
         // Dashboard Content
@@ -148,18 +141,9 @@
         }
     ];
     
-    // Filter steps to only include elements that exist
-    const filteredSteps = dashboardSteps.filter(step => {
-        // Handle multiple selectors separated by comma
-        const selectors = step.selector.split(',').map(s => s.trim());
-        return selectors.some(sel => document.querySelector(sel) !== null);
-    });
-    
-    // Mark last step
-    if (filteredSteps.length > 0) {
-        filteredSteps.forEach(s => s.isLast = false);
-        filteredSteps[filteredSteps.length - 1].isLast = true;
-    }
+    // The engine keeps, at start time, only the steps whose target is
+    // actually visible (it also marks the last one).
+    const filteredSteps = dashboardSteps;
     
     // Initialize tutorial when DOM is ready
     document.addEventListener('DOMContentLoaded', function() {

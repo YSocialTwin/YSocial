@@ -8,6 +8,7 @@
         
         const state = {
             id: tutorialId,
+            allSteps: steps,
             steps: steps,
             currentStep: 0,
             active: false,
@@ -27,17 +28,58 @@
             closeBtn: overlay.querySelector('.tutorial-close')
         };
         
+        function isVisible(el) {
+            if (!el || !el.getClientRects || el.getClientRects().length === 0) return false;
+            const rect = el.getBoundingClientRect();
+            if (rect.width === 0 && rect.height === 0) return false;
+            const style = window.getComputedStyle(el);
+            return style.display !== 'none' && style.visibility !== 'hidden';
+        }
+
+        // First *visible* match: a hidden element (collapsed menu, closed
+        // dropdown, duplicated id in another layout) is never a tutorial target.
         function findElement(step) {
             if (step.selector) {
                 try {
-                    return document.querySelector(step.selector);
+                    const matches = document.querySelectorAll(step.selector);
+                    for (let i = 0; i < matches.length; i++) {
+                        if (isVisible(matches[i])) return matches[i];
+                    }
                 } catch (e) {
                     console.warn('Invalid selector:', step.selector, e);
                 }
             }
             return null;
         }
-        
+
+        // Inline styles are restored exactly as they were before the step,
+        // so elements that carry their own inline position/z-index/background
+        // (e.g. fixed status boxes) are left untouched once the tutorial ends.
+        function rememberStyle(el) {
+            return { el: el, style: el.getAttribute('style') };
+        }
+
+        function restoreStyle(saved) {
+            if (!saved || !saved.el) return;
+            if (saved.style === null) {
+                saved.el.removeAttribute('style');
+            } else {
+                saved.el.setAttribute('style', saved.style);
+            }
+        }
+
+        function clearHighlight() {
+            const current = state.currentHighlightedElement;
+            if (current) {
+                current.classList.remove('tutorial-highlighted');
+            }
+            restoreStyle(state.savedElementStyle);
+            restoreStyle(state.savedSidebarStyle);
+            state.savedElementStyle = null;
+            state.savedSidebarStyle = null;
+            state.currentHighlightedElement = null;
+        }
+
         function positionElements(element, position) {
             const rect = element.getBoundingClientRect();
             const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
@@ -156,18 +198,11 @@
             }
             
             // Clean up previous highlight
-            if (state.currentHighlightedElement) {
-                state.currentHighlightedElement.style.position = '';
-                state.currentHighlightedElement.style.zIndex = '';
-                state.currentHighlightedElement.style.background = '';
-                state.currentHighlightedElement.style.borderRadius = '';
-                state.currentHighlightedElement.style.padding = '';
-                state.currentHighlightedElement.style.boxShadow = '';
-                state.currentHighlightedElement.classList.remove('tutorial-highlighted');
-            }
-            
+            clearHighlight();
+
             // Highlight current element - elevate above backdrop with solid background
             state.currentHighlightedElement = element;
+            state.savedElementStyle = rememberStyle(element);
             const originalPosition = window.getComputedStyle(element).position;
             if (originalPosition === 'static') {
                 element.style.position = 'relative';
@@ -182,6 +217,7 @@
                 // Also elevate the sidebar itself during tutorial
                 const sidebar = element.closest('.dashboard-aside');
                 if (sidebar) {
+                    if (!state.savedSidebarStyle) state.savedSidebarStyle = rememberStyle(sidebar);
                     sidebar.style.zIndex = '9999';
                     sidebar.style.background = '#fff';
                 }
@@ -222,29 +258,20 @@
         function hideTutorial() {
             state.active = false;
             
-            if (state.currentHighlightedElement) {
-                state.currentHighlightedElement.style.position = '';
-                state.currentHighlightedElement.style.zIndex = '';
-                state.currentHighlightedElement.style.background = '';
-                state.currentHighlightedElement.style.borderRadius = '';
-                state.currentHighlightedElement.style.padding = '';
-                state.currentHighlightedElement.style.boxShadow = '';
-                state.currentHighlightedElement.classList.remove('tutorial-highlighted');
-                
-                // Reset sidebar z-index if element was in sidebar
-                const sidebar = state.currentHighlightedElement.closest('.dashboard-aside');
-                if (sidebar) {
-                    sidebar.style.zIndex = '';
-                }
-                
-                state.currentHighlightedElement = null;
-            }
+            clearHighlight();
+            elements.highlight.classList.remove('pulse');
             
             elements.overlay.classList.add('d-none');
             elements.overlay.style.display = 'none';
         }
         
         function startTutorial() {
+            // Only the steps whose target is visible right now take part.
+            state.steps = state.allSteps
+                .filter(function (step) { return findElement(step) !== null; })
+                .map(function (step) { return Object.assign({}, step, { isLast: false }); });
+            if (state.steps.length === 0) return;
+            state.steps[state.steps.length - 1].isLast = true;
             state.active = true;
             state.currentStep = 0;
             elements.overlay.classList.remove('d-none');
