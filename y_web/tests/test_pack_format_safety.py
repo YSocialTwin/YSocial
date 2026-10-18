@@ -35,9 +35,13 @@ def test_templates_parse_with_str_format(file):
     data = json.loads(file.read_text(encoding="utf-8"))
     for path, text in _templates(data):
         try:
-            fields = [f for _, f, _, _ in string.Formatter().parse(text) if f is not None]
+            fields = [
+                f for _, f, _, _ in string.Formatter().parse(text) if f is not None
+            ]
         except ValueError as error:
             pytest.fail(f"{file.parent.name}/{file.name} {path}: {error}")
         for field in fields:
             root = field.replace("[", ".").split(".")[0]
-            assert root.isidentifier(), f"{file.parent.name}/{file.name} {path}: unsupported field {{{field}}}"
+            assert (
+                root.isidentifier()
+            ), f"{file.parent.name}/{file.name} {path}: unsupported field {{{field}}}"
