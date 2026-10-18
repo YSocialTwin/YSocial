@@ -23,7 +23,9 @@ if not (YSIMULATOR / "YSimulator" / "YServer" / "service_factory.py").exists():
 @pytest.fixture()
 def server_side(monkeypatch):
     monkeypatch.syspath_prepend(str(YSIMULATOR))
-    for name in [m for m in sys.modules if m == "YSimulator" or m.startswith("YSimulator.")]:
+    for name in [
+        m for m in sys.modules if m == "YSimulator" or m.startswith("YSimulator.")
+    ]:
         monkeypatch.delitem(sys.modules, name)
     logging.disable(logging.CRITICAL)
     yield
@@ -32,7 +34,9 @@ def server_side(monkeypatch):
 
 def _columns(path):
     conn = sqlite3.connect(path)
-    tables = [r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")]
+    tables = [
+        r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
+    ]
     found = {t: {r[1] for r in conn.execute(f"PRAGMA table_info({t})")} for t in tables}
     conn.close()
     return found
@@ -49,7 +53,9 @@ def _missing(path):
         expected.setdefault(table.name, set()).update(c.name for c in table.columns)
     for mapper in db.Model.registry.mappers:
         if getattr(mapper.class_, "__bind_key__", None) == "db_exp":
-            expected.setdefault(mapper.local_table.name, set()).update(c.name for c in mapper.local_table.columns)
+            expected.setdefault(mapper.local_table.name, set()).update(
+                c.name for c in mapper.local_table.columns
+            )
     have = _columns(path)
     problems = []
     for table, columns in expected.items():
@@ -63,7 +69,9 @@ def _missing(path):
 def _create_server_tables(directory):
     from YSimulator.YServer.service_factory import create_database_engine
 
-    create_database_engine({"type": "sqlite", "path": "database_server.db"}, config_path=str(directory)).dispose()
+    create_database_engine(
+        {"type": "sqlite", "path": "database_server.db"}, config_path=str(directory)
+    ).dispose()
 
 
 @pytest.mark.parametrize(

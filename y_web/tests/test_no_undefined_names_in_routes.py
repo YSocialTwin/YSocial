@@ -1,10 +1,12 @@
 """pyflakes-style guard: the forum interaction routes must not reference undefined names."""
+
 import pytest
 
 pyflakes = pytest.importorskip("pyflakes.api")
-from pyflakes.reporter import Reporter  # noqa: E402
 import io  # noqa: E402
 import pathlib  # noqa: E402
+
+from pyflakes.reporter import Reporter  # noqa: E402
 
 pytestmark = pytest.mark.unit
 

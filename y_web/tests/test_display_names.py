@@ -44,7 +44,9 @@ def test_mention_prefilled_replies_keep_the_username():
     for path in TEMPLATES.rglob("*.html"):
         for line in path.read_text(encoding="utf-8").splitlines():
             if "reply_comment" in line and "@{{" in line:
-                assert "display_name" not in line, f"{path.name}: mention uses display_name"
+                assert (
+                    "display_name" not in line
+                ), f"{path.name}: mention uses display_name"
 
 
 def test_displayed_author_names_use_the_filter():

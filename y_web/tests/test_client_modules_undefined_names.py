@@ -1,4 +1,5 @@
 """Client modules must not use names they never import (pyflakes 'undefined name')."""
+
 import ast
 import pathlib
 
@@ -24,8 +25,10 @@ def test_prompt_store_is_imported_when_used(rel):
         isinstance(n, ast.Name) and n.id == "prompt_store" for n in ast.walk(tree)
     )
     imported = any(
-        isinstance(n, ast.ImportFrom) and any(a.name == "prompt_store" for a in n.names)
-        or isinstance(n, ast.Import) and any(a.name.endswith("prompt_store") for a in n.names)
+        isinstance(n, ast.ImportFrom)
+        and any(a.name == "prompt_store" for a in n.names)
+        or isinstance(n, ast.Import)
+        and any(a.name.endswith("prompt_store") for a in n.names)
         for n in ast.walk(tree)
     )
     assert not used or imported, f"{rel} uses prompt_store without importing it"
