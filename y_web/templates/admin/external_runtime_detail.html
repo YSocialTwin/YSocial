@@ -61,7 +61,7 @@
                                     <tr data-repo-key="{{ repo.key }}">
                                         <td><strong>{{ repo.label }}</strong><div class="ext-hint">{{ repo.github_repo }}</div></td>
                                         <td>{{ _('Installed') if repo.installed else _('Not installed') }}{% if repo.is_symlink %} &middot; {{ _('symlink') }}{% endif %}{% if repo.dirty %} &middot; {{ _('local changes') }}{% endif %}</td>
-                                        <td>{% if not repo.installed %}&mdash;{% elif repo.git_managed %}git &middot; {{ repo.current_branch or '?' }}{% if repo.current_commit %} &middot; {{ repo.current_commit }}{% endif %}{% if repo.ahead is not none and repo.behind is not none %}<div class="ext-hint">{{ _('ahead %(ahead)s / behind %(behind)s', ahead=repo.ahead, behind=repo.behind) }}</div>{% endif %}{% else %}{{ _('release archive') }}{% endif %}</td>
+                                        <td>{% if not repo.installed %}&mdash;{% elif repo.git_managed %}git &middot; {{ repo.current_branch or '?' }}{% if repo.current_commit %} &middot; {{ repo.current_commit }}{% endif %}{% if repo.ahead is not none and repo.behind is not none %}<div class="ext-hint">{{ _('ahead %(ahead)s / behind %(behind)s', ahead=repo.ahead, behind=repo.behind) }}</div>{% endif %}{% elif repo.archive_managed %}{{ _('branch archive') }} &middot; {{ repo.current_branch or '?' }}{% if repo.current_commit %} &middot; {{ repo.current_commit }}{% endif %}{% else %}{{ _('release archive') }}{% endif %}</td>
                                         <td>{% if repo.latest_release_tag %}{{ repo.latest_release_tag }}{% elif repo.release_error %}<span class="ext-hint" style="color:#b45309;">{{ repo.release_error }}</span>{% else %}{{ _('none published') }}{% endif %}</td>
                                         <td>{% if repo.installed %}{{ _('dependencies %(deps)s, validation %(validation)s', deps=_('ok') if repo.dependency_files_ready else _('missing'), validation=_('ok') if repo.validation_ready else _('missing')) }}{% else %}&mdash;{% endif %}</td>
                                     </tr>
@@ -78,7 +78,7 @@
                                 {% set has_releases = repo.available_releases|length > 0 %}
                                 <div class="ext-options">
                                     <label class="ext-option">
-                                        <span class="ext-radio-row"><input type="radio" name="install_source" value="release" {% if has_releases %}checked{% endif %}><strong>{{ _('GitHub release') }}</strong></span>
+                                        <span class="ext-radio-row"><input type="radio" name="install_source" value="release" {% if has_releases and not repo.archive_managed %}checked{% endif %}><strong>{{ _('GitHub release') }}</strong></span>
                                         <span class="ext-hint">{{ _('Standard option; works without git.') }}</span>
                                         <select name="release_tag" class="input w-100" {% if not has_releases %}disabled{% endif %}>
                                             {% if has_releases %}{% for release in repo.available_releases %}
@@ -95,7 +95,13 @@
                                         </select>
                                     </label>
                                     {% else %}
-                                    <div class="ext-option is-muted"><strong>{{ _('Git checkout unavailable') }}</strong><span class="ext-hint">{{ _('This host has no %(cmd)s command: only release installation is offered.', cmd=wrap('code', 'git')) }}</span></div>
+                                    <label class="ext-option">
+                                        <span class="ext-radio-row"><input type="radio" name="install_source" value="archive" {% if not has_releases or repo.archive_managed %}checked{% endif %}><strong>{{ _('Branch archive') }}</strong></span>
+                                        <span class="ext-hint">{{ _('Follow a branch without git: updates re-download the branch and replace local changes.') }}</span>
+                                        <select name="branch" class="input w-100">
+                                            {% for b in repo.available_branches %}<option value="{{ b }}" {% if b == (repo.current_branch or repo.default_branch) %}selected{% endif %}>{{ b }}</option>{% endfor %}
+                                        </select>
+                                    </label>
                                     {% endif %}
                                 </div>
                                 <div class="ext-actions">

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import sys
+from pathlib import Path
 
 from flask import flash, jsonify, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_required
@@ -21,6 +22,8 @@ from y_web.src.external_runtime import (
     get_grouped_runtime_status,
     get_runtime_status,
     host_git_available,
+    install_runtime_branch_archive,
+    is_archive_install,
     install_runtime_dependencies,
     load_plugins_index,
     log_external_runtime_action,
@@ -457,6 +460,14 @@ def _flashed_errors() -> int:
     return sum(1 for category, _ in session.get("_flashes", []) if category == "error")
 
 
+def _is_archive_runtime(spec) -> bool:
+    """True when ``spec`` is installed from a branch archive (never raises)."""
+    try:
+        return is_archive_install(Path(spec.path))
+    except Exception:
+        return False
+
+
 def _external_runtime_action_single(repo_key: str, action: str):
     admin_user = _require_admin_user()
     if admin_user is None:
@@ -494,6 +505,7 @@ def _external_runtime_action_single(repo_key: str, action: str):
     release_tag = (request.form.get("release_tag") or "").strip() or None
     install_source = (request.form.get("install_source") or "release").strip().lower()
     git_available = host_git_available()
+    archive_flow = install_source == "archive" or _is_archive_runtime(spec)
     if action in {
         "acquire",
         "download_release",
@@ -543,13 +555,16 @@ def _external_runtime_action_single(repo_key: str, action: str):
                 repo_key=repo_key, status="error", message="Symlinked checkout."
             )
         is_git = exists and (spec.path / ".git").exists()
+        wants_archive = install_source == "archive"
         if not exists:
             action = "acquire"
         elif is_git and wants_git:
             action = "update"
+        elif wants_archive and _is_archive_runtime(spec):
+            action = "update"  # re-downloads the branch when its head moved
         else:
             action = "reinstall"
-        if (wants_git or action == "update") and not git_available:
+        if (wants_git or (action == "update" and not wants_archive)) and not git_available:
             flash(
                 _(
                     "Git is not available on this host. Use the release source for %(label)s.",
@@ -560,7 +575,7 @@ def _external_runtime_action_single(repo_key: str, action: str):
             return _external_runtimes_response(
                 repo_key=repo_key, status="error", message="Git is not available."
             )
-    if action in {"clone", "fetch", "update"} and not git_available:
+    if action in {"clone", "fetch", "update"} and not git_available and not archive_flow:
         flash(
             _(
                 "Git is not available on this host. Use the release install flow for %(label)s.",
@@ -601,6 +616,19 @@ def _external_runtime_action_single(repo_key: str, action: str):
                 flash(
                     _(
                         "Cloned %(label)s on branch %(branch)s.",
+                        label=spec.label,
+                        branch=branch,
+                    ),
+                    "success",
+                )
+                installed_now = True
+            elif install_source == "archive":
+                install_runtime_branch_archive(
+                    repo_key, branch, admin_user.username, github_token=github_token
+                )
+                flash(
+                    _(
+                        "Installed %(label)s from the archive of branch %(branch)s.",
                         label=spec.label,
                         branch=branch,
                     ),

@@ -34,7 +34,31 @@ class ExternalRuntimeError(RuntimeError):
 
 
 def host_git_available() -> bool:
-    return shutil.which("git") is not None
+    """True when a *working* ``git`` is on PATH.
+
+    On macOS without the Command Line Tools, ``/usr/bin/git`` is only a shim that
+    opens an install dialog; it must not count as git.
+    """
+    git = shutil.which("git")
+    if git is None:
+        return False
+    if sys.platform == "darwin" and git == "/usr/bin/git":
+        try:
+            if subprocess.run(
+                ["xcode-select", "-p"], capture_output=True, timeout=5, check=False
+            ).returncode != 0:
+                return False
+        except (OSError, subprocess.SubprocessError):
+            return False
+    try:
+        return (
+            subprocess.run(
+                [git, "--version"], capture_output=True, timeout=10, check=False
+            ).returncode
+            == 0
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
 
 
 def resolve_python_executable() -> str:
@@ -93,6 +117,8 @@ class RuntimeStatus:
     path_kind: str
     python_executable: str
     is_private: bool
+    archive_managed: bool = False
+    update_available: bool | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -607,6 +633,172 @@ def _download_release_archive(
     return response.content
 
 
+ARCHIVE_MARKER = ".ysocial-source.json"
+
+
+def _read_archive_marker(path: Path) -> dict[str, Any] | None:
+    try:
+        data = json.loads((path / ARCHIVE_MARKER).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return data if isinstance(data, dict) and data.get("source") == "archive" else None
+
+
+def _remote_branch_head(
+    spec, branch: str, github_token: str | None = None
+) -> tuple[str | None, str | None]:
+    """Latest commit SHA of ``branch`` on GitHub, as ``(sha, error)``."""
+    url = f"https://api.github.com/repos/{spec.github_repo}/commits/{branch}"
+    try:
+        response = _github_api_request(url, github_token=github_token)
+    except ExternalRuntimeError as exc:
+        return None, str(exc)
+    if response.status_code >= 400:
+        return None, f"GitHub branch lookup failed ({response.status_code})."
+    try:
+        sha = str(response.json().get("sha") or "").strip()
+    except (ValueError, AttributeError):
+        return None, "GitHub commit response was not valid JSON."
+    return (sha or None), (None if sha else "GitHub returned no commit.")
+
+
+def _download_branch_archive(
+    spec, branch: str, github_token: str | None = None
+) -> bytes:
+    url = f"https://api.github.com/repos/{spec.github_repo}/zipball/{branch}"
+    try:
+        response = requests.get(
+            url,
+            headers=_github_download_headers(github_token),
+            timeout=120,
+            allow_redirects=True,
+        )
+    except requests.RequestException as exc:
+        raise ExternalRuntimeError(f"Branch download failed: {exc}") from exc
+    if response.status_code == 404:
+        raise ExternalRuntimeError(
+            f"Branch {branch} of {spec.github_repo} was not found or is not accessible "
+            "(private repository? provide a GitHub token)."
+        )
+    if response.status_code == 403:
+        raise ExternalRuntimeError("GitHub denied access to the branch archive.")
+    if response.status_code >= 400:
+        raise ExternalRuntimeError(f"Branch download failed ({response.status_code}).")
+    return response.content
+
+
+def _write_archive_marker(path: Path, branch: str, sha: str | None) -> None:
+    (path / ARCHIVE_MARKER).write_text(
+        json.dumps(
+            {
+                "source": "archive",
+                "branch": branch,
+                "commit": sha,
+                "installed_at": datetime.now(timezone.utc).isoformat(),
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+
+def is_archive_install(repo: "str | Path") -> bool:
+    """True when the plugin was installed from a branch archive (no git checkout).
+
+    ``repo`` is a repository key or the plugin's directory.
+    """
+    path = repo if isinstance(repo, Path) else runtime_spec(repo).path
+    return _read_archive_marker(path) is not None and not (path / ".git").exists()
+
+
+def install_runtime_branch_archive(
+    repo_key: str,
+    branch: str | None,
+    actor: str,
+    github_token: str | None = None,
+) -> None:
+    """Install a branch from its GitHub archive: no git needed, updates re-download."""
+    spec = runtime_spec(repo_key)
+    branch_name = _resolve_branch(spec, branch)
+    if spec.path.exists():
+        raise ExternalRuntimeError(f"{spec.label} already exists at {spec.path}")
+    spec.path.parent.mkdir(parents=True, exist_ok=True)
+    sha, _error = _remote_branch_head(spec, branch_name, github_token)
+    archive = _download_branch_archive(spec, branch_name, github_token)
+    try:
+        _extract_archive_bytes(archive, spec.path)
+        _write_archive_marker(spec.path, branch_name, sha)
+    except Exception as exc:
+        shutil.rmtree(spec.path, ignore_errors=True)
+        raise ExternalRuntimeError(f"Branch extraction failed: {exc}") from exc
+    output = "\n".join(
+        [
+            f"Installed {spec.label} from the archive of branch {branch_name}"
+            + (f" at {sha[:7]}." if sha else "."),
+            f"Repository: {spec.github_repo}",
+            f"Destination: {spec.path}",
+        ]
+    )
+    log_external_runtime_action(
+        repo_key, "install_branch_archive", actor, branch_name, True, output
+    )
+
+
+def update_runtime_branch_archive(
+    repo_key: str,
+    branch: str | None,
+    actor: str,
+    github_token: str | None = None,
+) -> bool:
+    """Re-download the branch if its head moved. Returns True when replaced.
+
+    Archive installs are not meant to be edited: the directory is replaced as a whole.
+    """
+    spec = runtime_spec(repo_key)
+    marker = _read_archive_marker(spec.path)
+    if marker is None:
+        raise ExternalRuntimeError(f"{spec.label} was not installed from a branch archive")
+    branch_name = _resolve_branch(spec, branch or marker.get("branch"))
+    sha, error = _remote_branch_head(spec, branch_name, github_token)
+    if sha and sha == marker.get("commit") and branch_name == marker.get("branch"):
+        log_external_runtime_action(
+            repo_key,
+            "update",
+            actor,
+            branch_name,
+            True,
+            f"{spec.label} is already at the latest commit of {branch_name} ({sha[:7]}).",
+        )
+        return False
+    archive = _download_branch_archive(spec, branch_name, github_token)
+    staging = spec.path.with_name(spec.path.name + ".new")
+    previous = spec.path.with_name(spec.path.name + ".old")
+    for leftover in (staging, previous):
+        shutil.rmtree(leftover, ignore_errors=True)
+    try:
+        _extract_archive_bytes(archive, staging)
+        _write_archive_marker(staging, branch_name, sha)
+        spec.path.rename(previous)
+        staging.rename(spec.path)
+    except Exception as exc:
+        if previous.exists() and not spec.path.exists():
+            previous.rename(spec.path)  # roll back
+        shutil.rmtree(staging, ignore_errors=True)
+        raise ExternalRuntimeError(f"Branch update failed: {exc}") from exc
+    shutil.rmtree(previous, ignore_errors=True)
+    log_external_runtime_action(
+        repo_key,
+        "update",
+        actor,
+        branch_name,
+        True,
+        f"Updated {spec.label} to {branch_name}"
+        + (f" at {sha[:7]}." if sha else ".")
+        + (f" (head lookup: {error})" if error else ""),
+    )
+    return True
+
+
 def get_runtime_status(
     repo_key: str,
     github_token: str | None = None,
@@ -645,6 +837,18 @@ def get_runtime_status(
             dirty = False
         ahead, behind, tracking_branch = _ahead_behind(path)
 
+    archive_marker = (
+        _read_archive_marker(path) if exists and not git_managed else None
+    )
+    update_available = None
+    if archive_marker:
+        current_branch = archive_marker.get("branch")
+        current_commit = (archive_marker.get("commit") or "")[:7] or None
+        if include_remote_metadata and current_branch:
+            head, _err = _remote_branch_head(spec, current_branch, github_token)
+            if head:
+                update_available = head != archive_marker.get("commit")
+
     releases: list[dict[str, Any]] = []
     release_error: str | None = None
     branch_error: str | None = None
@@ -653,7 +857,7 @@ def get_runtime_status(
         branches, branch_error = _branch_list_for_repo(
             spec, git_managed, github_token=github_token
         )
-    elif git_managed:
+    elif git_managed or archive_marker:
         # Git-managed runtimes need remote branch discovery even in fast view so
         # branch selectors can expose remote-only branches such as feature or
         # hotfix branches that are not yet present locally.
@@ -703,6 +907,8 @@ def get_runtime_status(
         path_kind=path_kind,
         python_executable=resolve_python_executable(),
         is_private=spec.is_private,
+        archive_managed=archive_marker is not None,
+        update_available=update_available,
     )
 
 
@@ -792,6 +998,22 @@ def fetch_runtime_repo(
     github_token: str | None = None,
 ) -> None:
     spec = runtime_spec(repo_key)
+    marker = _read_archive_marker(spec.path)
+    if marker is not None and not (spec.path / ".git").exists():
+        branch_name = _resolve_branch(spec, branch or marker.get("branch"))
+        sha, error = _remote_branch_head(spec, branch_name, github_token)
+        if not sha:
+            raise ExternalRuntimeError(error or "Could not read the branch head")
+        log_external_runtime_action(
+            repo_key,
+            "fetch",
+            actor,
+            branch_name,
+            True,
+            f"Latest commit of {branch_name}: {sha[:7]} "
+            f"(installed: {(marker.get('commit') or '?')[:7]}).",
+        )
+        return
     status = get_runtime_status(repo_key)
     if not host_git_available():
         raise ExternalRuntimeError(
@@ -888,6 +1110,9 @@ def update_runtime_repo(
     github_token: str | None = None,
 ) -> None:
     spec = runtime_spec(repo_key)
+    if _read_archive_marker(spec.path) is not None and not (spec.path / ".git").exists():
+        update_runtime_branch_archive(repo_key, branch, actor, github_token)
+        return
     status = get_runtime_status(repo_key)
     if not host_git_available():
         raise ExternalRuntimeError(

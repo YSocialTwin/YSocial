@@ -272,3 +272,23 @@ def test_the_plugin_pages_load_their_guided_tours(core_app, monkeypatch):  # noq
         assert selector in js
     nav = (_STATIC / "admin-nav.js").open().read()
     assert "startPluginTutorial" in nav and "startExternalRuntimeDetailTutorial" in nav
+
+
+def test_sync_branch_archive_without_git_installs_then_updates_in_place(
+    app, monkeypatch
+):
+    done = _single_env(monkeypatch, exists=False, git=False)
+    monkeypatch.setattr(route_mod, "host_git_available", lambda: False)
+    monkeypatch.setattr(
+        route_mod,
+        "install_runtime_branch_archive",
+        lambda *a, **k: done.append("install_archive"),
+    )
+    _sync(app, "archive")
+    assert done == ["install_archive", "deps", "validate"]
+
+    done = _single_env(monkeypatch, exists=True, git=False)
+    monkeypatch.setattr(route_mod, "host_git_available", lambda: False)
+    monkeypatch.setattr(route_mod, "_is_archive_runtime", lambda spec: True)
+    _sync(app, "archive")
+    assert done == ["update_runtime_repo", "deps", "validate"]

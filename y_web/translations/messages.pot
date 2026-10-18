@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 20:09+0000\n"
+"POT-Creation-Date: 2026-10-18 17:45+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1368,6 +1368,9 @@ msgid "Bounded Confidence Parameters"
 msgstr ""
 
 msgid "Bounds must be in the range [0, 1]."
+msgstr ""
+
+msgid "Branch archive"
 msgstr ""
 
 msgid "Brazilian"
@@ -3908,6 +3911,11 @@ msgstr ""
 msgid "Follow Recommender"
 msgstr ""
 
+msgid ""
+"Follow a branch without git: updates re-download the branch and replace "
+"local changes."
+msgstr ""
+
 msgid "Follow accounts to update your feed and social graph."
 msgstr ""
 
@@ -4143,9 +4151,6 @@ msgid "Get in Touch!"
 msgstr ""
 
 msgid "Git checkout"
-msgstr ""
-
-msgid "Git checkout unavailable"
 msgstr ""
 
 #, python-format
@@ -4653,6 +4658,10 @@ msgstr ""
 
 #, python-format
 msgid "Installed %(label)s from GitHub release %(release_tag)s."
+msgstr ""
+
+#, python-format
+msgid "Installed %(label)s from the archive of branch %(branch)s."
 msgstr ""
 
 #, python-format
@@ -9290,10 +9299,6 @@ msgid ""
 " until a client is created."
 msgstr ""
 
-#, python-format
-msgid "This host has no %(cmd)s command: only release installation is offered."
-msgstr ""
-
 msgid ""
 "This is an experimental simulator that guarantees higher simulation "
 "scalability at the cost of more fine-grained configuration and setting "
@@ -10641,6 +10646,9 @@ msgstr ""
 
 #, python-format
 msgid "branch %(name)s"
+msgstr ""
+
+msgid "branch archive"
 msgstr ""
 
 msgid "cancelled"

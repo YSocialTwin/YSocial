@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 20:09+0000\n"
+"POT-Creation-Date: 2026-10-18 17:45+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -1478,6 +1478,9 @@ msgstr "Parametri della fiducia limitata"
 
 msgid "Bounds must be in the range [0, 1]."
 msgstr "I limiti devono essere nell'intervallo [0, 1]."
+
+msgid "Branch archive"
+msgstr "Archivio di un branch"
 
 msgid "Brazilian"
 msgstr "Brasiliana"
@@ -4350,6 +4353,13 @@ msgstr "Raccomandazione dei follow"
 msgid "Follow Recommender"
 msgstr "Sistema di raccomandazione dei follow"
 
+msgid ""
+"Follow a branch without git: updates re-download the branch and replace "
+"local changes."
+msgstr ""
+"Segui un branch senza git: gli aggiornamenti riscaricano il branch e "
+"sostituiscono le modifiche locali."
+
 msgid "Follow accounts to update your feed and social graph."
 msgstr "Segui degli account per aggiornare il tuo feed e il tuo grafo sociale."
 
@@ -4610,9 +4620,6 @@ msgstr "Contattaci!"
 
 msgid "Git checkout"
 msgstr "Checkout git"
-
-msgid "Git checkout unavailable"
-msgstr "Checkout git non disponibile"
 
 #, python-format
 msgid ""
@@ -5176,6 +5183,10 @@ msgstr "Installato"
 #, python-format
 msgid "Installed %(label)s from GitHub release %(release_tag)s."
 msgstr "%(label)s installato dalla release GitHub %(release_tag)s."
+
+#, python-format
+msgid "Installed %(label)s from the archive of branch %(branch)s."
+msgstr "%(label)s installato dall'archivio del branch %(branch)s."
 
 #, python-format
 msgid "Installed dependencies for %(label)s."
@@ -10229,12 +10240,6 @@ msgstr ""
 "Questo esperimento non ha ancora client, quindi l'analisi dei log dei "
 "client non è disponibile finché non ne viene creato uno."
 
-#, python-format
-msgid "This host has no %(cmd)s command: only release installation is offered."
-msgstr ""
-"Questo host non ha il comando %(cmd)s: è offerta solo l'installazione da "
-"release."
-
 msgid ""
 "This is an experimental simulator that guarantees higher simulation "
 "scalability at the cost of more fine-grained configuration and setting "
@@ -11757,6 +11762,9 @@ msgstr "rilevamento automatico dai log"
 msgid "branch %(name)s"
 msgstr "branch %(name)s"
 
+msgid "branch archive"
+msgstr "archivio branch"
+
 msgid "cancelled"
 msgstr "annullata"
 
@@ -12645,4 +12653,13 @@ msgstr "✔️ Usa"
 
 #~ msgid "Training modules"
 #~ msgstr "Moduli di training"
+
+#~ msgid "Git checkout unavailable"
+#~ msgstr "Checkout git non disponibile"
+
+#~ msgid "This host has no %(cmd)s command: only release installation is offered."
+#~ msgstr ""
+#~ "Questo host non ha il comando "
+#~ "%(cmd)s: è offerta solo l'installazione "
+#~ "da release."
 
