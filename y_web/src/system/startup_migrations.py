@@ -11,6 +11,55 @@ import y_web
 from y_web import db
 
 
+def sync_missing_model_columns(engine, metadata):
+    """Add model columns that a legacy table lacks (idempotent, every startup).
+
+    Databases created by older releases may already be stamped at an Alembic head
+    while missing columns later added to the models (e.g. ``exps.simulator_type``),
+    so a revision file cannot repair them. Columns that need a default to be
+    NOT NULL are added as nullable. Returns the list of ``(table, column)`` added.
+    """
+    from sqlalchemy import inspect, text
+
+    added = []
+    with engine.begin() as conn:
+        inspector = inspect(conn)
+        existing = set(inspector.get_table_names())
+        for table in metadata.sorted_tables:
+            if table.name not in existing:
+                continue
+            have = {c["name"] for c in inspector.get_columns(table.name)}
+            for col in table.columns:
+                if col.name in have or col.primary_key:
+                    continue
+                ddl = col.type.compile(dialect=conn.dialect)
+                if col.server_default is not None:
+                    arg = col.server_default.arg
+                    ddl += f" DEFAULT {getattr(arg, 'text', arg)}"
+                    if not col.nullable:
+                        ddl += " NOT NULL"
+                conn.execute(
+                    text(f'ALTER TABLE "{table.name}" ADD COLUMN "{col.name}" {ddl}')
+                )
+                added.append((table.name, col.name))
+    return added
+
+
+def _repair_legacy_columns(app):
+    try:
+        import y_web.src.models  # noqa: F401  (registers every model)
+
+        engine = db.engines["db_admin"]
+        added = sync_missing_model_columns(engine, db.metadatas["db_admin"])
+        if added:
+            print(
+                "✓ Added missing columns to legacy tables: "
+                + ", ".join(f"{t}.{c}" for t, c in added)
+            )
+    except Exception as exc:  # never block startup on a repair attempt
+        print(f"⚠ Warning: legacy column sync failed: {exc}")
+
+
 def run_startup_migrations(app, db_type):
     """Migrate the databases of ``app`` at startup."""
     # ------------------------------------------------------------------ #
@@ -61,6 +110,7 @@ def run_startup_migrations(app, db_type):
             print("✦ Alembic: upgrading primary schema (db_admin) to HEAD…")
             alembic_upgrade()
             print("✓ Alembic: primary schema up to date")
+            _repair_legacy_columns(app)
 
             # Bring every active experiment database up to date.
             # Experiment DBs (experiments/<UUID>/database_server.db) are NOT
@@ -118,6 +168,7 @@ def run_startup_migrations(app, db_type):
                 print("✦ Alembic (standalone): upgrading primary schema to HEAD…")
                 _alembic_cmd.upgrade(_sa_cfg, "head")
                 print("✓ Alembic (standalone): primary schema up to date")
+                _repair_legacy_columns(app)
 
                 try:
                     from y_web.src.experiment.context import (
