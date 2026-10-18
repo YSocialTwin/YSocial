@@ -19,7 +19,7 @@
         </a>
         <div class="ys-sidebar-user-card__meta">
             <div class="ys-sidebar-user-card__eyebrow">{{ _('Your Profile') }}</div>
-            <div class="ys-sidebar-user-card__name">{{ username }}</div>
+            <div class="ys-sidebar-user-card__name">{{ username|display_name }}</div>
             <a href="/{{exp_id}}/profile/{{ sidebar_target_id }}/recent/1" class="ys-sidebar-user-card__cta">{{ _('Open profile') }}</a>
         </div>
         <div class="ys-sidebar-user-card__time">

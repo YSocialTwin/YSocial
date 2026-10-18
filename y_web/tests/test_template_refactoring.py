@@ -428,6 +428,11 @@ def flask_app():
 
     init_i18n(app)
 
+    # The microblogging templates use the display_name filter registered by the full app.
+    from y_web.src.system.display_names import display_name
+
+    app.add_template_filter(display_name, "display_name")
+
     # Minimal route that renders login/login.html
     @app.route("/login")
     def login():

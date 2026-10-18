@@ -44,7 +44,7 @@
         </a>
         <div class="ys-friends-profile-card__body">
             <a class="ys-friends-profile-card__name" href="/{{exp_id}}/profile/{{ card['id'] }}/recent/1">
-                {{ card['username'] }}
+                {{ card['username']|display_name }}
             </a>
             <div class="ys-friends-profile-card__stats">
                 <span>{{ ngettext('<strong>%(num)s</strong> follower', '<strong>%(num)s</strong> followers', card['number_followers']|int) }}</span>

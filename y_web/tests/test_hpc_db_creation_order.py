@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = pytest.mark.external_repo
+pytestmark = [pytest.mark.integration, pytest.mark.external_repo]
 
 YSIMULATOR = Path(__file__).resolve().parents[2] / "external" / "YSimulator"
 if not (YSIMULATOR / "YSimulator" / "YServer" / "service_factory.py").exists():

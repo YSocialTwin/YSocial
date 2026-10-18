@@ -210,7 +210,7 @@
                     <div class="nav-drop is-account-dropdown">
                         <div class="inner">
                             <div class="nav-drop-header">
-                                <span class="username">{{ logged_username }}</span>
+                                <span class="username">{{ logged_username|display_name }}</span>
                                 <label class="theme-toggle">
                                     <input type="checkbox"/>
                                     <span class="toggler">
@@ -240,7 +240,7 @@
                                             </div>
                                         </div>
                                         <div class="media-content">
-                                            <h3>{{ logged_username }} </h3>
+                                            <h3>{{ logged_username|display_name }} </h3>
                                         </div>
                                         <div class="media-right">
                                             <i data-feather="check"></i>
@@ -376,7 +376,7 @@
                                     {% endif %}
                         alt=""
                 />
-                <span class="is-heading">{{ logged_username }}</span>
+                <span class="is-heading">{{ logged_username|display_name }}</span>
             </a>
 
             <!-- Mobile Dropdown -->

@@ -22,7 +22,7 @@
                 <div class="media-content">
                     <div class="post-comment-heading">
                         <div>
-                            <a href="/{{exp_id}}/profile/{{ thread['author_id'] }}/recent/1">{{ thread["author"] }}</a>
+                            <a href="/{{exp_id}}/profile/{{ thread['author_id'] }}/recent/1">{{ thread["author"]|display_name }}</a>
                             {% if ui.show_post_time %}<span class="time">{{ _('Day %(day)s - %(hour)s:00', day=thread["day"], hour=thread["hour"]) }}</span>{% endif %}
                         </div>
                         {% if (thread.get('author_type_badge') and ui.annotation_author_type) or (thread.get('adhoc_agent_badge') and ui.annotation_agent_type) %}

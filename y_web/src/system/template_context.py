@@ -191,6 +191,10 @@ def register_template_context(app: Flask) -> None:
 
     # Add custom Jinja filter for user ID to image mapping
     # This supports both int IDs (Standard experiments) and UUID IDs (HPC experiments)
+    from y_web.src.system.display_names import display_name
+
+    app.add_template_filter(display_name, "display_name")
+
     @app.template_filter("user_image_id")
     def user_image_id_filter(user_id):
         """

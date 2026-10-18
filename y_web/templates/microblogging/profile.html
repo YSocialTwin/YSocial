@@ -91,7 +91,7 @@
 
                             <div class="subheader-middle ys-profile-hero-center">
                                 <div class="ys-profile-header-row">
-                                    <h2>{{ user["user_data"]["username"] }}</h2>
+                                    <h2>{{ user["user_data"]["username"]|display_name }}</h2>
                                 </div>
                             </div>
 
@@ -302,7 +302,7 @@
                                         data-user-popover="1"
                                 />
                                 <div class="text-content ys-suggestion-copy">
-                                    <a class="ys-suggestion-name" href="/{{exp_id}}/profile/{{ suser['id'] }}/recent/1">{{ suser['username'] }}</a>
+                                    <a class="ys-suggestion-name" href="/{{exp_id}}/profile/{{ suser['id'] }}/recent/1">{{ suser['username']|display_name }}</a>
                                     <span class="ys-suggestion-meta">{{ _('Mutual contact') }}</span>
                                 </div>
                             </div>

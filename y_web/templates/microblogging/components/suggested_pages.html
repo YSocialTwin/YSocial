@@ -25,7 +25,7 @@
  class="ys-avatar-md ys-suggestion-avatar"
             />
  <div class="page-meta ys-flex-1-mr ys-suggestion-copy">
- <span><a href="/{{exp_id}}/profile/{{ page['id'] }}/recent/1" class="ys-link-dark ys-suggestion-name">{{ page['username']|safe }}</a></span>
+ <span><a href="/{{exp_id}}/profile/{{ page['id'] }}/recent/1" class="ys-link-dark ys-suggestion-name">{{ page['username']|display_name|safe }}</a></span>
  <span class="ys-suggestion-meta">{{ _('Suggested page') }}</span>
             </div>
             <div class="add-friend add-transition">

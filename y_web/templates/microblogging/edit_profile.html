@@ -22,7 +22,7 @@
                     </div>
                     <div class="ys-edit-profile-hero__copy">
                         <span class="ys-friends-hero-kicker">{{ _('Profile Settings') }}</span>
-                        <h1>{{ _('Edit %(username)s', username=user.username) }}</h1>
+                        <h1>{{ _('Edit %(username)s', username=user.username|display_name) }}</h1>
                         <p>{{ _('Update profile details, recommendations, and account security from one place.') }}</p>
                     </div>
                 </div>

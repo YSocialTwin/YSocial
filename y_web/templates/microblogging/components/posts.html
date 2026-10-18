@@ -20,7 +20,7 @@
 
                 </div>
                 <div class="user-info">
-                    <a href="/{{exp_id}}/profile/{{ item['author_id'] }}/recent/1">{{ item["author"] }}</a>
+                    <a href="/{{exp_id}}/profile/{{ item['author_id'] }}/recent/1">{{ item["author"]|display_name }}</a>
                     {% if ui.show_post_time %}<span class="time">{{ _('Day %(day)s - %(hour)s:00', day=item["day"], hour=item["hour"]) }}</span>{% endif %}
                 </div>
             </div>
@@ -253,7 +253,7 @@
             <!-- Comment -->
             <div class="original-post{% if item.get('is_moderation_comment') %} moderation-comment{% endif %}">
                 <div class="media-content">
-                    <a href="/{{exp_id}}/profile/{{ item['author_id'] }}/recent/1">{{ item["author"] }}</a><br/>
+                    <a href="/{{exp_id}}/profile/{{ item['author_id'] }}/recent/1">{{ item["author"]|display_name }}</a><br/>
                     {% if ui.show_post_time %}<span class="time">{{ _('Day %(day)s - %(hour)s:00', day=item["day"], hour=item["hour"]) }}</span>{% endif %}
                     <div class="post-text post-content-section is-threaded">
                         <p> {{ item["post"]|safe }}</p>
@@ -393,7 +393,7 @@
                 <div class="media-content" style="position: relative;">
                     <div class="post-comment-heading">
                         <div>
-                            <a href="/{{exp_id}}/profile/{{ cm['author_id'] }}/recent/1">{{ cm["author"] }}</a>
+                            <a href="/{{exp_id}}/profile/{{ cm['author_id'] }}/recent/1">{{ cm["author"]|display_name }}</a>
                             {% if ui.show_post_time %}<span class="time">{{ _('Day %(day)s - %(hour)s:00', day=cm["day"], hour=cm["hour"]) }}</span>{% endif %}
                         </div>
                         {% if (cm.get('author_type_badge') and ui.annotation_author_type) or (cm.get('adhoc_agent_badge') and ui.annotation_agent_type) %}
