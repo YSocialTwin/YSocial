@@ -9,8 +9,8 @@ Uses the shared LangChain-compatible adapter for agent-style interaction with LL
 import os
 import re
 
-from y_web.src.llm.autogen_compat import AssistantAgent
 from y_web import prompt_store
+from y_web.src.llm.autogen_compat import AssistantAgent
 
 
 class ContentAnnotator(object):

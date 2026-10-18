@@ -27,7 +27,9 @@ def test_spec_ships_files_loaded_from_disk():
 
 
 def test_spec_data_sources_exist():
-    for source in re.findall(r'os\.path\.join\(basedir, ((?:"[^"]+"(?:, )?)+)\), "', SPEC):
+    for source in re.findall(
+        r'os\.path\.join\(basedir, ((?:"[^"]+"(?:, )?)+)\), "', SPEC
+    ):
         parts = re.findall(r'"([^"]+)"', source)
         if parts[0] in {"config_files", "images", "db"}:  # created or optional
             continue
@@ -35,20 +37,26 @@ def test_spec_data_sources_exist():
 
 
 def test_spec_names_real_modules():
-    hidden = ast.literal_eval(re.search(r"hidden_imports = (\[.*?\n\])", SPEC, re.S).group(1))
+    hidden = ast.literal_eval(
+        re.search(r"hidden_imports = (\[.*?\n\])", SPEC, re.S).group(1)
+    )
     assert "PIL" in hidden and "pillow" not in hidden
     assert "pyautogen" not in hidden  # not a dependency
 
 
 def test_workflows_reference_existing_files():
-    text = (ROOT / ".github" / "workflows" / "build-executables.yml").read_text(encoding="utf-8")
+    text = (ROOT / ".github" / "workflows" / "build-executables.yml").read_text(
+        encoding="utf-8"
+    )
     for path in re.findall(r"--entitlements (\S+)", text):
         assert (ROOT / path).exists(), path
     assert "admin@ysocial.com" not in text  # default account is admin@y-not.social
 
 
 def test_release_upload_only_on_release_events():
-    text = (ROOT / ".github" / "workflows" / "release_package.yml").read_text(encoding="utf-8")
+    text = (ROOT / ".github" / "workflows" / "release_package.yml").read_text(
+        encoding="utf-8"
+    )
     assert "github.event_name == 'release'" in text
 
 
@@ -58,13 +66,22 @@ def test_compose_files_parse(name):
     assert "services" in data and "ysocial" in data["services"]
 
 
-@pytest.mark.parametrize("name", ["docker-compose-postgresql.yml", "docker-compose-postgresql_gpu.yml"])
+@pytest.mark.parametrize(
+    "name", ["docker-compose-postgresql.yml", "docker-compose-postgresql_gpu.yml"]
+)
 def test_postgres_compose_is_consistent(name):
     services = yaml.safe_load((COMPOSE / name).read_text(encoding="utf-8"))["services"]
     db_env = services["db"]["environment"]
-    assert db_env.get("POSTGRES_PASSWORD"), "the postgres image refuses to start without it"
+    assert db_env.get(
+        "POSTGRES_PASSWORD"
+    ), "the postgres image refuses to start without it"
     app_env = {e.split("=", 1)[0] for e in services["ysocial"]["environment"]}
-    assert {"PG_HOST", "PG_USER", "PG_PASSWORD", "PG_DBNAME"} <= app_env  # read by y_web/db_init/postgresql.py
+    assert {
+        "PG_HOST",
+        "PG_USER",
+        "PG_PASSWORD",
+        "PG_DBNAME",
+    } <= app_env  # read by y_web/db_init/postgresql.py
     assert "ysocial" in services and services["ysocial"]["depends_on"]
 
 

@@ -41,7 +41,9 @@ _warned = set()
 _LANG = re.compile(r"^[a-z]{2,3}(?:-[a-z0-9]{2,8})?$")
 log = logging.getLogger(__name__)
 _NAME = r"[A-Za-z_][A-Za-z0-9_]*"
-_PATH = rf"(?P<root>{_NAME})(?P<steps>(?:\.{_NAME}|\[(?:'[^'\n]*'|\"[^\"\n]*\"|\d+)\])*)"
+_PATH = (
+    rf"(?P<root>{_NAME})(?P<steps>(?:\.{_NAME}|\[(?:'[^'\n]*'|\"[^\"\n]*\"|\d+)\])*)"
+)
 _JOIN = rf"(?:'(?P<sq>[^'\n]*)'|\"(?P<dq>[^\"\n]*)\")\.join\((?P<jroot>{_NAME})\)"
 _SPEC = r"(?::(?P<spec>[<>^]?\d*(?:\.\d+)?[sdf]?))?"
 _FIELD = re.compile(rf"\{{(?:{_PATH}|{_JOIN}){_SPEC}\}}")
@@ -91,7 +93,11 @@ def use_language_from_folder(folder, client=None):
     The folder is also remembered (``YSOCIAL_PROMPT_FOLDER``) so that worker processes started afterwards, which
     inherit the environment, find the profile values too. Returns the language.
     """
-    language = _clean(os.environ[ENV_VAR]) if os.environ.get(ENV_VAR) else language_from_folder(folder, client)
+    language = (
+        _clean(os.environ[ENV_VAR])
+        if os.environ.get(ENV_VAR)
+        else language_from_folder(folder, client)
+    )
     set_language(language)
     os.environ[FOLDER_VAR] = str(folder)
     _values.pop(language, None)
@@ -114,10 +120,16 @@ def _values_for(language):
         folder = os.environ.get(FOLDER_VAR)
         if language != DEFAULT_LANGUAGE and folder:
             try:
-                with open(Path(folder) / f"profile_values.{language}.json", encoding="utf-8") as handle:
+                with open(
+                    Path(folder) / f"profile_values.{language}.json", encoding="utf-8"
+                ) as handle:
                     table = json.load(handle)
             except (OSError, ValueError):
-                log.warning("no profile values for %r in %s; profile values stay in English", language, folder)
+                log.warning(
+                    "no profile values for %r in %s; profile values stay in English",
+                    language,
+                    folder,
+                )
         _values[language] = table
     return _values[language]
 

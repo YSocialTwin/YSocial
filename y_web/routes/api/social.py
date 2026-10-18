@@ -8,9 +8,7 @@ from flask import Blueprint, jsonify, request, session
 from flask_login import current_user, login_required
 from sqlalchemy import select
 
-from y_web.src.system import prompt_packs
-from y_web import prompt_store
-from y_web import db
+from y_web import db, prompt_store
 from y_web.routes.api.interview._facts import (
     _build_facts_snapshot,
     _format_facts_pack,
@@ -46,6 +44,7 @@ from y_web.src.models import (
     ForumChatSession,
     User_mgmt,
 )
+from y_web.src.system import prompt_packs
 
 api_social = Blueprint("api_social", __name__, url_prefix="/api/social")
 

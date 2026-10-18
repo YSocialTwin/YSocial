@@ -50,7 +50,11 @@ def _strings(node, where=""):
 
 def _pack_files(language):
     base = ROOT / "data_schema" / "prompts" / language
-    for name in vp.PACK_FILES if hasattr(vp, "PACK_FILES") else sorted(p.name for p in base.glob("prompts*.json")):
+    for name in (
+        vp.PACK_FILES
+        if hasattr(vp, "PACK_FILES")
+        else sorted(p.name for p in base.glob("prompts*.json"))
+    ):
         if name.startswith("prompts") and (base / name).exists():
             yield base / name
 
@@ -74,9 +78,14 @@ def test_every_text_renders_with_the_fields_it_names(language):
 
 @pytest.mark.skipif(not TOKENS_FILE.exists(), reason="YClient is not checked out")
 @pytest.mark.parametrize("language", [l for l in LANGUAGES if l != "en"])
-def test_a_reply_in_the_protocol_is_understood_for_every_choice_a_prompt_offers(language):
+def test_a_reply_in_the_protocol_is_understood_for_every_choice_a_prompt_offers(
+    language,
+):
     tokens = _load("protocol_tokens_copy", TOKENS_FILE)
-    english = {p.name: dict(_strings(json.loads(p.read_text(encoding="utf-8")))) for p in _pack_files("en")}
+    english = {
+        p.name: dict(_strings(json.loads(p.read_text(encoding="utf-8"))))
+        for p in _pack_files("en")
+    }
     checked = 0
     for path in _pack_files(language):
         other = dict(_strings(json.loads(path.read_text(encoding="utf-8"))))
@@ -84,9 +93,14 @@ def test_a_reply_in_the_protocol_is_understood_for_every_choice_a_prompt_offers(
             offered = vp._answer_tokens(text, set(vp._tokens(ROOT)))
             if len(offered) < 2:
                 continue
-            assert offered <= vp._answer_tokens(other[where], offered | set(vp._tokens(ROOT))), (path.name, where)
+            assert offered <= vp._answer_tokens(
+                other[where], offered | set(vp._tokens(ROOT))
+            ), (path.name, where)
             for token in offered:
                 reply = f"Sure, my answer is {token}."
-                assert tokens.first_token(reply, sorted(offered)) == token, (where, token)
+                assert tokens.first_token(reply, sorted(offered)) == token, (
+                    where,
+                    token,
+                )
                 checked += 1
     assert checked > 20

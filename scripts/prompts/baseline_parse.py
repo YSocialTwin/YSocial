@@ -75,9 +75,15 @@ def cases(prompts, rng, n):
         post = rng.choice(POSTS)
         acts = ACTIONS[:]
         rng.shuffle(acts)
-        yield "action", prompts["handler_action"].format(actions=",".join(acts)), parse_action
-        yield "follow", prompts["handler_follow"].format(action="following", post_text=post), parse_follow
-        yield "reaction", prompts["handler_reactions"].format(post_text=post), parse_reaction
+        yield "action", prompts["handler_action"].format(
+            actions=",".join(acts)
+        ), parse_action
+        yield "follow", prompts["handler_follow"].format(
+            action="following", post_text=post
+        ), parse_follow
+        yield "reaction", prompts["handler_reactions"].format(
+            post_text=post
+        ), parse_reaction
         yield "vote", prompts["handler_cast"].format(post_text=post), parse_vote
 
 
@@ -114,7 +120,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--endpoint")
     ap.add_argument("--model")
-    ap.add_argument("--n", type=int, default=50, help="rounds; each round asks four questions")
+    ap.add_argument(
+        "--n", type=int, default=50, help="rounds; each round asks four questions"
+    )
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--timeout", type=float, default=120)
     ap.add_argument("--prompts", default=str(PROMPTS))
@@ -129,13 +137,22 @@ def main():
     stats = {}
     errors = 0
     for kind, user, parser in cases(prompts, rng, args.n):
-        row = stats.setdefault(kind, {"ok": 0, "bad": 0, "empty": 0, "ptok": [], "ctok": [], "secs": []})
+        row = stats.setdefault(
+            kind, {"ok": 0, "bad": 0, "empty": 0, "ptok": [], "ctok": [], "secs": []}
+        )
         try:
             if args.simulate:
-                answer = {"action": "comment!", "follow": "YES", "reaction": "NEUTRAL", "vote": "none"}[kind]
+                answer = {
+                    "action": "comment!",
+                    "follow": "YES",
+                    "reaction": "NEUTRAL",
+                    "vote": "none",
+                }[kind]
                 ptok = ctok = secs = None
             else:
-                answer, ptok, ctok, secs = ask(args.endpoint, args.model, user, args.timeout)
+                answer, ptok, ctok, secs = ask(
+                    args.endpoint, args.model, user, args.timeout
+                )
         except Exception as exc:  # network or server problem: not a parsing failure
             errors += 1
             print(f"request failed: {exc}", file=sys.stderr)
@@ -160,10 +177,20 @@ def main():
                 "ok": r["ok"],
                 "bad": r["bad"],
                 "empty": r["empty"],
-                "success": round(r["ok"] / (r["ok"] + r["bad"]), 4) if r["ok"] + r["bad"] else None,
-                "mean_prompt_tokens": round(statistics.mean(r["ptok"]), 1) if r["ptok"] else None,
-                "mean_completion_tokens": round(statistics.mean(r["ctok"]), 1) if r["ctok"] else None,
-                "mean_seconds": round(statistics.mean(r["secs"]), 2) if r["secs"] else None,
+                "success": (
+                    round(r["ok"] / (r["ok"] + r["bad"]), 4)
+                    if r["ok"] + r["bad"]
+                    else None
+                ),
+                "mean_prompt_tokens": (
+                    round(statistics.mean(r["ptok"]), 1) if r["ptok"] else None
+                ),
+                "mean_completion_tokens": (
+                    round(statistics.mean(r["ctok"]), 1) if r["ctok"] else None
+                ),
+                "mean_seconds": (
+                    round(statistics.mean(r["secs"]), 2) if r["secs"] else None
+                ),
             }
             for k, r in stats.items()
         },

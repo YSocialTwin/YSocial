@@ -317,9 +317,9 @@ def test_participant_path_through_the_real_core(core_app, platform, simulator):
         ).status_code
         == 303
     )
-    assert "completed this training" in me.get(
-        f"/training/runs/{rid}"
-    ).get_data(as_text=True)
+    assert "completed this training" in me.get(f"/training/runs/{rid}").get_data(
+        as_text=True
+    )
 
     # staff view: progress by pseudonym only
     body = admin.get(f"{API}/runs/{rid}/progress").get_data(as_text=True)

@@ -28,13 +28,31 @@ REPOS = {
     "y_agents_plugins": ROOT / "external" / "y_agents_plugins" / "src",
     "reactive_agents": ROOT / "external" / "reactive_agents" / "src",
 }
-SKIP = ("/tests/", "/test_", "/example", "/__pycache__/", "/migrations/", "/translations/")
+SKIP = (
+    "/tests/",
+    "/test_",
+    "/example",
+    "/__pycache__/",
+    "/migrations/",
+    "/translations/",
+)
 CUES = re.compile(
     r"\b(you are|you will|respond|reply|return|output|answer|write|classify|choose|"
     r"do not|only|json|format|summar|generate|decide|identify)\b",
     re.I,
 )
-TOKENS = ("COMMENT", "FOLLOW", "NONE", "IGNORE", "REACT", "SHARE", "POST", "SEARCH", "CAST", "UNFOLLOW")
+TOKENS = (
+    "COMMENT",
+    "FOLLOW",
+    "NONE",
+    "IGNORE",
+    "REACT",
+    "SHARE",
+    "POST",
+    "SEARCH",
+    "CAST",
+    "UNFOLLOW",
+)
 
 
 def py_files(base):
@@ -64,10 +82,14 @@ def scan_file(path):
     out = {"literals": [], "eval": [], "format": [], "parsers": []}
     doc_ids = set()
     for n in ast.walk(tree):
-        if isinstance(n, (ast.Module, ast.FunctionDef, ast.ClassDef, ast.AsyncFunctionDef)):
+        if isinstance(
+            n, (ast.Module, ast.FunctionDef, ast.ClassDef, ast.AsyncFunctionDef)
+        ):
             if n.body and isinstance(n.body[0], ast.Expr):
                 doc_ids.add(id(n.body[0].value))
-    doc_ids |= {id(v) for n in ast.walk(tree) if isinstance(n, ast.JoinedStr) for v in n.values}
+    doc_ids |= {
+        id(v) for n in ast.walk(tree) if isinstance(n, ast.JoinedStr) for v in n.values
+    }
     for n in ast.walk(tree):
         t = text_of(n)
         if t and id(n) not in doc_ids and len(t.split()) >= 8 and CUES.search(t):
@@ -141,9 +163,29 @@ def prompt_file_rows():
 
 TOKEN = re.compile(r"^[A-Z][A-Z_]{1,}$")
 WORDS = {
-    "yes", "no", "none", "null", "neutral", "agree", "disagree", "like", "love", "laugh",
-    "angry", "skip", "ignore", "accept", "follow", "unfollow", "comment", "post", "read",
-    "search", "share", "react", "reply",
+    "yes",
+    "no",
+    "none",
+    "null",
+    "neutral",
+    "agree",
+    "disagree",
+    "like",
+    "love",
+    "laugh",
+    "angry",
+    "skip",
+    "ignore",
+    "accept",
+    "follow",
+    "unfollow",
+    "comment",
+    "post",
+    "read",
+    "search",
+    "share",
+    "react",
+    "reply",
 }
 
 
@@ -185,48 +227,91 @@ def answer_parsers():
                     if isinstance(c, ast.Constant) and isinstance(c.value, str):
                         vals = [c.value]
                     elif isinstance(c, (ast.Tuple, ast.List, ast.Set)):
-                        vals = [e.value for e in c.elts if isinstance(e, ast.Constant) and isinstance(e.value, str)]
+                        vals = [
+                            e.value
+                            for e in c.elts
+                            if isinstance(e, ast.Constant) and isinstance(e.value, str)
+                        ]
                     else:
                         continue
                     for v in vals:
                         if TOKEN.match(v) or v.strip().lower() in WORDS:
                             hits.setdefault(enclosing(n), set()).add(v)
             if hits:
-                found[str(path.relative_to(ROOT))] = {k: sorted(v) for k, v in hits.items()}
+                found[str(path.relative_to(ROOT))] = {
+                    k: sorted(v) for k, v in hits.items()
+                }
     return found
 
 
 def markdown(report):
     out = ["## Generated tables", "", "### Prompt files", ""]
-    out += ["| File | Keys | Nested groups | sha256 (12) |", "| --- | --- | --- | --- |"]
+    out += [
+        "| File | Keys | Nested groups | sha256 (12) |",
+        "| --- | --- | --- | --- |",
+    ]
     fields = set()
     for rel, n, nested, digest, holders in prompt_file_rows():
         out.append(f"| `{rel}` | {n} | {nested} | `{digest}` |")
         fields.update(holders)
-    out += ["", "### Template fields found in the prompt files", "", ", ".join(f"`{f}`" for f in sorted(fields)), ""]
-    out += ["### Code scan per repository", "", "| Repository | Prompt-like literals | eval/exec | str.format | Answer comparisons |", "| --- | --- | --- | --- | --- |"]
+    out += [
+        "",
+        "### Template fields found in the prompt files",
+        "",
+        ", ".join(f"`{f}`" for f in sorted(fields)),
+        "",
+    ]
+    out += [
+        "### Code scan per repository",
+        "",
+        "| Repository | Prompt-like literals | eval/exec | str.format | Answer comparisons |",
+        "| --- | --- | --- | --- | --- |",
+    ]
     for repo, files in report.items():
-        tot = {k: sum(len(f[k]) for f in files.values()) for k in ("literals", "eval", "format", "parsers")}
-        out.append(f"| {repo} | {tot['literals']} | {tot['eval']} | {tot['format']} | {tot['parsers']} |")
+        tot = {
+            k: sum(len(f[k]) for f in files.values())
+            for k in ("literals", "eval", "format", "parsers")
+        }
+        out.append(
+            f"| {repo} | {tot['literals']} | {tot['eval']} | {tot['format']} | {tot['parsers']} |"
+        )
     out += ["", "### eval / exec sites", ""]
     for repo, files in report.items():
         for path, r in files.items():
             for ln, name in r["eval"]:
                 out.append(f"- `{path}:{ln}` {name}")
-    out += ["", "### Files with prompt-like literals", "", "| File | Literals |", "| --- | --- |"]
+    out += [
+        "",
+        "### Files with prompt-like literals",
+        "",
+        "| File | Literals |",
+        "| --- | --- |",
+    ]
     for repo, files in report.items():
         for path, r in files.items():
             if len(r["literals"]) >= 3:
                 out.append(f"| `{path}` | {len(r['literals'])} |")
-    out += ["", "### Answer comparisons in LLM-facing files", "", "| File | Lines |", "| --- | --- |"]
+    out += [
+        "",
+        "### Answer comparisons in LLM-facing files",
+        "",
+        "| File | Lines |",
+        "| --- | --- |",
+    ]
     for repo, files in report.items():
         for path, r in files.items():
             if not r["parsers"]:
                 continue
             text = (ROOT / path).read_text(encoding="utf-8", errors="replace")
             if LLM_HINT.search(text):
-                out.append(f"| `{path}` | {', '.join(str(ln) for ln, _ in r['parsers'][:25])} |")
-    out += ["", "### Parser candidates (function and the protocol-looking words it compares)", ""]
+                out.append(
+                    f"| `{path}` | {', '.join(str(ln) for ln, _ in r['parsers'][:25])} |"
+                )
+    out += [
+        "",
+        "### Parser candidates (function and the protocol-looking words it compares)",
+        "",
+    ]
     for path, funcs in answer_parsers().items():
         out.append(f"- `{path}`")
         for func, vals in funcs.items():
@@ -256,7 +341,10 @@ def main():
         print(markdown(report))
         return
     for repo, files in report.items():
-        tot = {k: sum(len(f[k]) for f in files.values()) for k in ("literals", "eval", "format", "parsers")}
+        tot = {
+            k: sum(len(f[k]) for f in files.values())
+            for k in ("literals", "eval", "format", "parsers")
+        }
         print(f"## {repo}: {tot}")
         for path, r in files.items():
             print(f"  {path}: " + ", ".join(f"{k}={len(v)}" for k, v in r.items() if v))

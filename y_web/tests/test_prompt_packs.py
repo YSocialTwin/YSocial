@@ -14,10 +14,18 @@ def packs(tmp_path, monkeypatch):
     root = tmp_path / "prompts"
     (root / "en").mkdir(parents=True)
     (root / "xx").mkdir()
-    (root / "en/manifest.json").write_text(json.dumps({"language": "en", "name": "English"}))
-    (root / "xx/manifest.json").write_text(json.dumps({"language": "xx", "name": "Xish", "native_name": "Xx"}))
-    (root / "en/prompts.json").write_text(json.dumps({"a": "Hello {who}", "n": {"b": "B", "c": "C"}}))
-    (root / "xx/prompts.json").write_text(json.dumps({"a": "Ciao {who}", "n": {"b": "BB"}}))
+    (root / "en/manifest.json").write_text(
+        json.dumps({"language": "en", "name": "English"})
+    )
+    (root / "xx/manifest.json").write_text(
+        json.dumps({"language": "xx", "name": "Xish", "native_name": "Xx"})
+    )
+    (root / "en/prompts.json").write_text(
+        json.dumps({"a": "Hello {who}", "n": {"b": "B", "c": "C"}})
+    )
+    (root / "xx/prompts.json").write_text(
+        json.dumps({"a": "Ciao {who}", "n": {"b": "BB"}})
+    )
     monkeypatch.setattr(pp, "packs_root", lambda: root)
     return root
 
@@ -94,7 +102,9 @@ def test_the_selector_appears_only_with_more_than_one_language():
 
 def test_profile_values_are_written_per_language_in_the_run_folder(tmp_path):
     pp.record_language(tmp_path, experiment="it", client="c1", client_language="en")
-    values = json.loads((tmp_path / "profile_values.it.json").read_text(encoding="utf-8"))
+    values = json.loads(
+        (tmp_path / "profile_values.it.json").read_text(encoding="utf-8")
+    )
     assert values["nationality"]["American"] == "statunitense"
     assert not (tmp_path / "profile_values.en.json").exists()
 
@@ -110,7 +120,9 @@ def test_launch_env_names_the_language_only_when_it_is_not_english():
     assert pp.launch_env(Obj("zz"), Obj(None)) == {}
 
 
-def test_a_run_folder_in_italian_makes_the_client_prompt_in_italian(tmp_path, monkeypatch):
+def test_a_run_folder_in_italian_makes_the_client_prompt_in_italian(
+    tmp_path, monkeypatch
+):
     from y_web import prompt_store as ps
 
     for name in (ps.ENV_VAR, ps.FOLDER_VAR):
@@ -123,14 +135,36 @@ def test_a_run_folder_in_italian_makes_the_client_prompt_in_italian(tmp_path, mo
     assert ps.use_language_from_folder(tmp_path) == "it"
 
     class Agent:
-        name, age, gender, nationality, profession = "Ann", 31, "female", "American", "Doctor"
-        leaning, oe, co, ex, ag, ne = "centrist", "inventive/curious", "organized", "outgoing", "friendly", "calm"
+        name, age, gender, nationality, profession = (
+            "Ann",
+            31,
+            "female",
+            "American",
+            "Doctor",
+        )
+        leaning, oe, co, ex, ag, ne = (
+            "centrist",
+            "inventive/curious",
+            "organized",
+            "outgoing",
+            "friendly",
+            "calm",
+        )
         education_level, toxicity, language = "master", "low", "English"
         topics_opinions = topics_sentiment = ""
 
-    template = json.loads((tmp_path / "prompts.json").read_text(encoding="utf-8"))["agent_roleplay"]
-    text = ps.render(template, self=ps.localize(Agent()), interest=["music"], interests=["music"])
-    assert "donna" in text and "statunitense" in text and "female" not in text and "American" not in text
+    template = json.loads((tmp_path / "prompts.json").read_text(encoding="utf-8"))[
+        "agent_roleplay"
+    ]
+    text = ps.render(
+        template, self=ps.localize(Agent()), interest=["music"], interests=["music"]
+    )
+    assert (
+        "donna" in text
+        and "statunitense" in text
+        and "female" not in text
+        and "American" not in text
+    )
 
 
 def test_the_language_switch_appears_only_with_more_than_one_language():
@@ -143,9 +177,9 @@ def test_the_language_switch_appears_only_with_more_than_one_language():
     class Exp:
         idexp, prompt_language = 7, "it"
 
-    render = lambda langs: env.get_template("admin/_prompt_language_switch.html").render(
-        prompt_languages=langs, experiment=Exp()
-    )
+    render = lambda langs: env.get_template(
+        "admin/_prompt_language_switch.html"
+    ).render(prompt_languages=langs, experiment=Exp())
     one = [{"code": "en", "native_name": "English"}]
     two = one + [{"code": "it", "native_name": "Italiano"}]
     assert "prompts_language" not in render(one)

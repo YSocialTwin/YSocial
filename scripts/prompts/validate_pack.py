@@ -51,7 +51,9 @@ def _load_module(path, name):
 
 def _tokens(root):
     path = root / "external" / "YClient" / "y_client" / "protocol_tokens.py"
-    module = _load_module(path if path.exists() else TOKENS_FILE, "protocol_tokens_for_validation")
+    module = _load_module(
+        path if path.exists() else TOKENS_FILE, "protocol_tokens_for_validation"
+    )
     return {
         value
         for name, value in vars(module).items()
@@ -61,7 +63,9 @@ def _tokens(root):
 
 def _field_regex(root):
     path = root / "y_web" / "prompt_store.py"
-    return _load_module(path if path.exists() else STORE_FILE, "prompt_store_for_validation")._FIELD
+    return _load_module(
+        path if path.exists() else STORE_FILE, "prompt_store_for_validation"
+    )._FIELD
 
 
 def _texts(node, where=""):
@@ -84,7 +88,9 @@ def _answer_tokens(text, tokens):
     found = set()
     previous = ""
     for word in re.findall(r"[A-Za-z_]+", text):
-        if word in tokens and not (previous.isupper() and len(previous) > 1 and previous not in tokens):
+        if word in tokens and not (
+            previous.isupper() and len(previous) > 1 and previous not in tokens
+        ):
             found.add(word)
         previous = word
     return found
@@ -121,7 +127,9 @@ def compare(english, other, field_re, tokens, label, allow_partial=False):
             if (path.rsplit("/", 1)[-1], token) in HEADING_LABELS:
                 continue
             if token not in set(re.findall(r"[A-Za-z_]+", text)):
-                problems.append(f"{label}{path}: protocol token {token} is missing or translated")
+                problems.append(
+                    f"{label}{path}: protocol token {token} is missing or translated"
+                )
     return problems
 
 
@@ -138,8 +146,12 @@ def check_english(root, field_re):
             continue
         for where, text in _texts(json.loads(path.read_text(encoding="utf-8"))):
             for braces in BRACES.findall(text):
-                if not field_re.fullmatch(braces) and re.fullmatch(r"\{[A-Za-z_][^{}\"]*\}", braces):
-                    problems.append(f"en/{name}{where}: {braces} is not a field the renderer understands")
+                if not field_re.fullmatch(braces) and re.fullmatch(
+                    r"\{[A-Za-z_][^{}\"]*\}", braces
+                ):
+                    problems.append(
+                        f"en/{name}{where}: {braces} is not a field the renderer understands"
+                    )
     return problems
 
 
@@ -152,8 +164,12 @@ def check_language(root, language, field_re, tokens, allow_partial=False):
         return [f"{language}/manifest.json: missing"]
     data = json.loads(manifest.read_text(encoding="utf-8"))
     if data.get("language") != language:
-        problems.append(f"{language}/manifest.json: language is {data.get('language')!r}")
-    english_files = json.loads((en_folder / "manifest.json").read_text(encoding="utf-8"))["files"]
+        problems.append(
+            f"{language}/manifest.json: language is {data.get('language')!r}"
+        )
+    english_files = json.loads(
+        (en_folder / "manifest.json").read_text(encoding="utf-8")
+    )["files"]
     if not allow_partial and sorted(data.get("files", [])) != sorted(english_files):
         problems.append(f"{language}/manifest.json: files differ from English")
     for name in english_files:
@@ -197,7 +213,11 @@ def check_internal(root, language, field_re, tokens, allow_partial=False):
 
 def languages(root):
     base = root / "data_schema" / "prompts"
-    found = {p.name for p in base.iterdir() if p.is_dir() and LANG.match(p.name)} if base.exists() else set()
+    found = (
+        {p.name for p in base.iterdir() if p.is_dir() and LANG.match(p.name)}
+        if base.exists()
+        else set()
+    )
     for relative in INTERNAL_PACKS:
         english = root / relative
         for path in english.parent.glob(f"{english.stem}.*{english.suffix}"):
@@ -228,7 +248,9 @@ def main(argv=None):
     for line in problems:
         print(line)
     checked = [args.language] if args.language else languages(Path(args.root))
-    print(f"prompt packs: {'OK' if not problems else str(len(problems)) + ' problem(s)'} (en + {', '.join(checked) or 'no other language'})")
+    print(
+        f"prompt packs: {'OK' if not problems else str(len(problems)) + ' problem(s)'} (en + {', '.join(checked) or 'no other language'})"
+    )
     return 1 if problems else 0
 
 

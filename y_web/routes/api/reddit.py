@@ -14,10 +14,9 @@ from PIL import Image
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import safe_join
 
-from y_web.src.system import prompt_packs
-from y_web import prompt_store
-from y_web import db
+from y_web import db, prompt_store
 from y_web.src.data_access import get_elicited_emotions, get_topics
+from y_web.src.system import prompt_packs
 
 try:
     from y_web.src.llm import Annotator

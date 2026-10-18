@@ -10,7 +10,6 @@ from flask import flash, redirect, request
 from flask_login import current_user, login_required
 from sqlalchemy import select
 
-from y_web.src.system import prompt_packs
 from y_web import db
 from y_web.i18n import gettext as _
 from y_web.routes.interactions._blueprint import user
@@ -32,6 +31,7 @@ from y_web.src.models import (
     User_interest,
     User_mgmt,
 )
+from y_web.src.system import prompt_packs
 
 
 @user.route("/<int:exp_id>/publish")

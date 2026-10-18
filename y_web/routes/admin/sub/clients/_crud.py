@@ -22,7 +22,6 @@ from sqlalchemy import delete, select
 
 from y_web import db
 from y_web.i18n import gettext as _
-from y_web.src.system.memory_plugin import agent_memory_plugin_installed
 from y_web.routes.admin.sub.experiments._helpers import (
     _experiment_configuration_update_required,
     _experiment_uses_llm_agents,
@@ -69,9 +68,10 @@ from y_web.src.simulation.adhoc_client import (
 )
 from y_web.src.simulation.adhoc_client import read_json as read_adhoc_json
 from y_web.src.simulation.adhoc_client import write_json as write_adhoc_json
+from y_web.src.system import prompt_packs
+from y_web.src.system.memory_plugin import agent_memory_plugin_installed
 from y_web.src.system.miscellanea import check_privileges, get_db_type
 from y_web.src.system.path_utils import get_resource_path
-from y_web.src.system import prompt_packs
 
 from ._blueprint import clientsr
 from ._helpers import _forum_effective_link_share, allocate_topics_by_percentage
@@ -4547,8 +4547,12 @@ def _create_standard_client_internal():
     data_base_path = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}"
     # copy prompts.json into the experiment folder
 
-    prompt_packs.write_pack("prompts.json", f"{data_base_path}prompts.json", prompt_language)
-    prompt_packs.record_language(data_base_path, client=name, client_language=prompt_language)
+    prompt_packs.write_pack(
+        "prompts.json", f"{data_base_path}prompts.json", prompt_language
+    )
+    prompt_packs.record_language(
+        data_base_path, client=name, client_language=prompt_language
+    )
 
     # Create agent population file
     writable_base = get_writable_path()
@@ -5892,8 +5896,12 @@ def _create_forum_client_internal():
     data_base_path = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}"
     # copy prompts.json into the experiment folder
 
-    prompt_packs.write_pack("prompts_forum.json", f"{data_base_path}prompts.json", prompt_language)
-    prompt_packs.record_language(data_base_path, client=name, client_language=prompt_language)
+    prompt_packs.write_pack(
+        "prompts_forum.json", f"{data_base_path}prompts.json", prompt_language
+    )
+    prompt_packs.record_language(
+        data_base_path, client=name, client_language=prompt_language
+    )
 
     # Create agent population file
     writable_base = get_writable_path()

@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional
 from flask import current_app
 from sqlalchemy import desc, func, select, text
 
-from y_web import db
+from y_web import db, prompt_store
 from y_web.src.content.avatars import resolve_forum_profile_pic
 from y_web.src.models import (
     Admin_users,
@@ -47,7 +47,6 @@ from ._server import (
     _post_server_json,
     _post_server_json_with_retries,
 )
-from y_web import prompt_store
 
 
 def _resolve_interview_profile_pic(user: User_mgmt, exp: Exps) -> str:
@@ -364,15 +363,13 @@ def _list_experiment_agents_sqlite(exp: Exps) -> List[Any]:
         conn = sqlite3.connect(str(db_path))
         conn.row_factory = sqlite3.Row
         try:
-            rows = conn.execute(
-                """
+            rows = conn.execute("""
                 select *
                 from user_mgmt
                 where coalesce(is_page, 0) = 0
                   and coalesce(user_type, 'user') != 'user'
                 order by username asc, id asc
-                """
-            ).fetchall()
+                """).fetchall()
         finally:
             conn.close()
     except Exception:
@@ -1014,15 +1011,13 @@ def _build_memory_snapshot_local_db(
                 return str(usernames_by_id.get(str(uid), "") or "")
 
             post_rows = db.session.execute(
-                text(
-                    """
+                text("""
                     SELECT id, round, thread_id, tweet
                     FROM post
                     WHERE CAST(user_id AS TEXT) = :uid
                     ORDER BY id DESC
                     LIMIT 20
-                    """
-                ),
+                    """),
                 {"uid": normalized_agent_user_id_text},
             ).fetchall()
             for row in reversed(post_rows):
@@ -1058,8 +1053,7 @@ def _build_memory_snapshot_local_db(
                     )
 
             mention_rows = db.session.execute(
-                text(
-                    """
+                text("""
                     SELECT
                       m.post_id,
                       p.id AS source_post_id,
@@ -1072,8 +1066,7 @@ def _build_memory_snapshot_local_db(
                     WHERE CAST(m.user_id AS TEXT) = :uid
                     ORDER BY m.id DESC
                     LIMIT 20
-                    """
-                ),
+                    """),
                 {"uid": normalized_agent_user_id_text},
             ).fetchall()
             for row in reversed(mention_rows):
@@ -1097,8 +1090,7 @@ def _build_memory_snapshot_local_db(
                 )
 
             reaction_rows = db.session.execute(
-                text(
-                    """
+                text("""
                     SELECT
                       r.post_id,
                       r.round AS round_id,
@@ -1110,8 +1102,7 @@ def _build_memory_snapshot_local_db(
                     WHERE CAST(r.user_id AS TEXT) = :uid
                     ORDER BY r.id DESC
                     LIMIT 20
-                    """
-                ),
+                    """),
                 {"uid": normalized_agent_user_id_text},
             ).fetchall()
             for row in reversed(reaction_rows):

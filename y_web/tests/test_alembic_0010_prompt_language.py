@@ -23,7 +23,9 @@ def _run(engine, filename):
 def test_columns_are_added_once_with_english_default(tmp_path):
     engine = sa.create_engine(f"sqlite:///{tmp_path / 'legacy.db'}")
     with engine.begin() as conn:  # tables as they were before the column existed
-        conn.exec_driver_sql("CREATE TABLE exps (idexp INTEGER PRIMARY KEY, exp_name TEXT)")
+        conn.exec_driver_sql(
+            "CREATE TABLE exps (idexp INTEGER PRIMARY KEY, exp_name TEXT)"
+        )
         conn.exec_driver_sql("CREATE TABLE client (id INTEGER PRIMARY KEY, name TEXT)")
         conn.exec_driver_sql("INSERT INTO exps (exp_name) VALUES ('legacy-exp')")
         conn.exec_driver_sql("INSERT INTO client (name) VALUES ('legacy-client')")
@@ -34,7 +36,10 @@ def test_columns_are_added_once_with_english_default(tmp_path):
         assert names.count("prompt_language") == 1
     with engine.connect() as conn:
         for table in ("exps", "client"):
-            assert conn.exec_driver_sql(f"SELECT prompt_language FROM {table}").scalar() == "en"
+            assert (
+                conn.exec_driver_sql(f"SELECT prompt_language FROM {table}").scalar()
+                == "en"
+            )
 
 
 def test_a_database_without_the_tables_is_left_alone(tmp_path):

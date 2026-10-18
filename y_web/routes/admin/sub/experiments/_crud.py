@@ -99,6 +99,7 @@ from y_web.src.simulation.execution_backend import (
     stop_client_for_experiment,
     stop_server_for_experiment,
 )
+from y_web.src.system import prompt_packs
 from y_web.src.system.desktop_file_handler import send_file_desktop
 from y_web.src.system.jupyter_utils import stop_process
 from y_web.src.system.miscellanea import (
@@ -108,7 +109,6 @@ from y_web.src.system.miscellanea import (
     reload_current_user,
 )
 from y_web.src.system.path_utils import get_resource_path
-from y_web.src.system import prompt_packs
 
 from ._blueprint import (
     _EXP_IDS_MARKER_RE,
@@ -1158,7 +1158,9 @@ def upload_experiment():
         exp = Exps(
             exp_name=name,
             db_name=db_name,
-            prompt_language=prompt_packs.resolve(experiment_config.get("prompt_language")),
+            prompt_language=prompt_packs.resolve(
+                experiment_config.get("prompt_language")
+            ),
             owner=current_user.username,
             exp_descr="",
             status=0,
@@ -2340,7 +2342,8 @@ def create_experiment():
         ) as f:
             json.dump(config, f, indent=4)
     prompt_packs.record_language(
-        f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}", experiment=prompt_language
+        f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}",
+        experiment=prompt_language,
     )
     # add the experiment to the database
 
@@ -2931,7 +2934,9 @@ def set_prompt_language(uid):
         get_writable_path(), "y_web", "experiments", experiment.db_name.split(os.sep)[1]
     )
     pack, target = _experiment_prompt_pack(experiment)
-    if os.path.exists(os.path.join(exp_dir, target)):  # HPC clients write theirs when they are created
+    if os.path.exists(
+        os.path.join(exp_dir, target)
+    ):  # HPC clients write theirs when they are created
         prompt_packs.write_pack(pack, os.path.join(exp_dir, target), language)
     prompt_packs.record_language(exp_dir, experiment=language)
     experiment.prompt_language = language

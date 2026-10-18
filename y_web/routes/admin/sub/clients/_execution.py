@@ -25,9 +25,9 @@ from y_web.src.simulation.execution_backend import (
     start_client_for_experiment,
     stop_client_for_experiment,
 )
+from y_web.src.system import prompt_packs
 from y_web.src.system.miscellanea import check_privileges, get_db_type
 from y_web.src.system.path_utils import get_resource_path
-from y_web.src.system import prompt_packs
 
 from ._blueprint import clientsr
 
@@ -123,13 +123,19 @@ def reset_client(uid):
                 state_path.unlink()
 
     # copy the original prompts.json file, in the language the client was created with
-    language = prompt_packs.resolve(getattr(client, "prompt_language", None), exp.prompt_language)
+    language = prompt_packs.resolve(
+        getattr(client, "prompt_language", None), exp.prompt_language
+    )
     if exp.platform_type == "photo_sharing":
-        prompt_packs.write_pack("prompts_ygram.json", exp_dir / "prompts_ygram.json", language)
+        prompt_packs.write_pack(
+            "prompts_ygram.json", exp_dir / "prompts_ygram.json", language
+        )
     elif exp.platform_type == "microblogging":
         prompt_packs.write_pack("prompts.json", exp_dir / "prompts.json", language)
     elif exp.platform_type == "forum":
-        prompt_packs.write_pack("prompts_forum.json", exp_dir / "prompts.json", language)
+        prompt_packs.write_pack(
+            "prompts_forum.json", exp_dir / "prompts.json", language
+        )
     else:
         raise Exception(f"unsupported platform: {exp.platform_type}")
 
