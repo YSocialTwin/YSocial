@@ -50,3 +50,16 @@ def test_servers_return_count_and_window_is_moving():
         src = (EXT / rel / "y_server/routes/user_managment.py").read_text()
         assert '"count": int(interest[2])' in src
         assert "base_rounds = max(0, round_id - time_window)" in src
+
+
+def test_servers_do_not_truncate_to_n_interests():
+    for rel in ("YServer", "YServerReddit"):
+        src = (EXT / rel / "y_server/routes/user_managment.py").read_text()
+        assert ".limit(n_interests)" not in src
+
+
+def test_hpc_selectors_use_count_plus_one():
+    base = EXT / "YSimulator/YSimulator/YClient"
+    for rel in ("agent_management/agent_selector.py", "agent_manager.py"):
+        src = (base / rel).read_text()
+        assert "weights=[c + 1 for c in counts]" in src
