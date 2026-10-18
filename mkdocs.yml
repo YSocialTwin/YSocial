@@ -22,6 +22,7 @@ nav:
       - Usage Examples: USAGE_EXAMPLES.md
   - Internationalisation:
       - Adding a Language: i18n/adding-a-language.md
+      - Localization closure checklist: i18n/closure-checklist.md
       - Conventions: i18n/conventions.md
   - Packaging:
       - PyInstaller Builds: packaging.md
