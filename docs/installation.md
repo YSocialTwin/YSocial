@@ -35,7 +35,7 @@ Notes:
 
 ### Prerequisites
 
-- Python 3.11 recommended
+- Python 3.12 recommended
 - Git
 - required external runtime repositories cloned under `external/`
 - a writable working directory
@@ -43,7 +43,7 @@ Notes:
 Recommended environment setup:
 
 ```bash
-conda create --name YSocial python=3.11
+conda create --name YSocial python=3.12
 conda activate YSocial
 ```
 

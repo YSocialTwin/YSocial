@@ -194,7 +194,7 @@ For comprehensive documentation, visit:
 - **macOS:** 10.13 (High Sierra) or later
 - **RAM:** 4GB minimum, 8GB+ recommended
 - **Storage:** 2GB+ for application and data
-- **Python:** 3.11+ (included in app bundle)
+- **Python:** 3.12 (included in app bundle)
 
 ## Troubleshooting
 

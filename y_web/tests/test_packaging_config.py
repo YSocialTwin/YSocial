@@ -88,3 +88,21 @@ def test_postgres_compose_is_consistent(name):
 def test_dockerignore_keeps_context_small():
     ignored = (ROOT / ".dockerignore").read_text(encoding="utf-8").split()
     assert ".git" in ignored
+
+
+def test_one_python_version_in_ci_build_and_docker():
+    """E0: CI, executable build, formatter and Docker base agree on Python 3.12 / Ubuntu 24.04."""
+    import re
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[2]
+    for name in ("ci-tests.yml", "build-executables.yml", "format-code.yml"):
+        text = (root / ".github" / "workflows" / name).read_text()
+        versions = set(re.findall(r"python-version:\s*\[?'([\d.]+)'", text))
+        assert versions == {"3.12"}, (name, versions)
+    froms = [
+        line
+        for line in (root / "Dockerfile").read_text().splitlines()
+        if line.startswith("FROM ")
+    ]
+    assert froms and all(line.startswith("FROM ubuntu:24.04") for line in froms)

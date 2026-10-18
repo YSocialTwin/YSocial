@@ -82,7 +82,7 @@ To build executables manually for testing:
 
 ### Prerequisites
 
-1. Python 3.11 (recommended)
+1. Python 3.12 (recommended)
 2. All dependencies from `requirements.txt`
 3. PyInstaller: `pip install pyinstaller`
 4. (Optional) the simulation runtimes you want inside the executable cloned into `external/` (`YServer`, `YClient`, `YServerReddit`, `YClientReddit`, `YSimulator`, `YPhotoSharing`). The repository has no git submodules; `external/` is git-ignored and the spec bundles whatever it finds there. Every other plugin is installed later from the plugin page.

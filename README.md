@@ -170,7 +170,7 @@ To avoid conflicts with the Python environment, we recommend using a virtual env
 Assuming you have [Anaconda](https://www.anaconda.com/) installed, you can create a new environment with the following command:
 
   ```bash
-  conda create --name Y python=3.12   # Python >= 3.10 is supported
+  conda create --name Y python=3.12   # 3.12 is the reference version (CI, builds, Docker)
   conda activate Y
   ```
 
