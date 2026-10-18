@@ -44,7 +44,9 @@ def test_copies_are_identical():
     text = TOKENS.read_text(encoding="utf-8")
     for copy in COPIES:
         if copy.exists():
-            assert copy.read_text(encoding="utf-8") == text, f"{copy} differs from {TOKENS}"
+            assert (
+                copy.read_text(encoding="utf-8") == text
+            ), f"{copy} differs from {TOKENS}"
 
 
 def test_every_token_used_in_code_is_defined():
@@ -55,7 +57,10 @@ def test_every_token_used_in_code_is_defined():
         if not base.exists():
             continue
         for path in base.rglob("*.py"):
-            if any(part in {".venv", "node_modules", "tests", "test"} for part in path.parts):
+            if any(
+                part in {".venv", "node_modules", "tests", "test"}
+                for part in path.parts
+            ):
                 continue
             for line in path.read_text(encoding="utf-8", errors="ignore").splitlines():
                 if line.lstrip().startswith("#"):
