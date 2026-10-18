@@ -26,7 +26,7 @@ def run(cmd, env=None):
 TORCH_CPU_INDEX = "https://download.pytorch.org/whl/cpu"
 
 
-def bootstrap(home, wheel, uv="uv", wheelhouse=None, torch_cpu=True, toxicity=False):
+def bootstrap(home, wheel, uv="uv", wheelhouse=None, torch_cpu=True, toxicity=False, constraints=None):
     home = Path(home)
     runtime = home / "runtime"
     venv = runtime / "venv"
@@ -39,6 +39,10 @@ def bootstrap(home, wheel, uv="uv", wheelhouse=None, torch_cpu=True, toxicity=Fa
     run([uv, "venv", "--seed", "--python", PYTHON_VERSION, venv], env)
     py = venv / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
     cmd = [uv, "pip", "install", "--python", py]
+    if constraints:
+        # Same pins the project is tested with; kept for later plugin installs.
+        shutil.copyfile(constraints, runtime / "constraints.txt")
+        cmd += ["--constraint", runtime / "constraints.txt"]
     if wheelhouse:
         cmd += ["--no-index", "--find-links", wheelhouse]
     elif torch_cpu and toxicity:
@@ -58,6 +62,7 @@ if __name__ == "__main__":
     ap.add_argument("--uv", default=shutil.which("uv") or "uv")
     ap.add_argument("--wheelhouse")
     ap.add_argument("--no-torch-cpu", action="store_true")
+    ap.add_argument("--constraints", help="pinned versions (requirements.lock)")
     ap.add_argument("--with-toxicity", action="store_true", help="install the optional toxicity extra (detoxify + torch)")
     a = ap.parse_args()
-    bootstrap(a.home, a.wheel, a.uv, a.wheelhouse, not a.no_torch_cpu, a.with_toxicity)
+    bootstrap(a.home, a.wheel, a.uv, a.wheelhouse, not a.no_torch_cpu, a.with_toxicity, a.constraints)

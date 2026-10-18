@@ -389,6 +389,24 @@ def _validate_prereqs(spec) -> bool:
     return all((spec.path / entry).exists() for entry in spec.validate_entrypoints)
 
 
+def core_constraints_file() -> Path | None:
+    """Pinned versions of the core's dependencies (installed by the launcher).
+
+    Plugins are installed with ``PIP_CONSTRAINT`` pointing here so a plugin
+    requirement can never upgrade/downgrade a package the core depends on
+    (pip reports a conflict instead of silently breaking YSocial).
+    """
+    explicit = os.environ.get("YSOCIAL_CONSTRAINTS")
+    candidates = [Path(explicit)] if explicit else []
+    try:
+        from y_web.src.system.path_utils import get_home_path
+
+        candidates.append(Path(get_home_path()) / "runtime" / "constraints.txt")
+    except Exception:
+        pass
+    return next((c for c in candidates if c.is_file()), None)
+
+
 def _ensure_pip(python_executable: str) -> str:
     """Make sure ``python -m pip`` works (uv venvs may be created without pip)."""
     probe = subprocess.run(
@@ -889,8 +907,13 @@ def install_runtime_dependencies(repo_key: str, actor: str) -> None:
     env = os.environ.copy()
     env.setdefault("PIP_DISABLE_PIP_VERSION_CHECK", "1")
     env.setdefault("PYTHONUNBUFFERED", "1")
+    constraints = core_constraints_file()
+    if constraints is not None:
+        env["PIP_CONSTRAINT"] = str(constraints)
     python_executable = resolve_python_executable()
     output_parts.append(f"Using interpreter: {python_executable}")
+    if constraints is not None:
+        output_parts.append(f"Constraining core packages with: {constraints}")
     output_parts.append(_ensure_pip(python_executable))
     for command in install_commands:
         resolved = [

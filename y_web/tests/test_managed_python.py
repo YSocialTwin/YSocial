@@ -57,3 +57,19 @@ def test_venv_symlink_is_not_resolved(tmp_path, monkeypatch):
     monkeypatch.setenv("YSOCIAL_PYTHON", str(venv_python))
     monkeypatch.delenv("CONDA_PREFIX", raising=False)
     assert manager.resolve_python_executable() == str(venv_python)
+
+
+def test_core_constraints_file_found_via_env(tmp_path, monkeypatch):
+    c = tmp_path / "constraints.txt"
+    c.write_text("flask-login==0.6.3\n")
+    monkeypatch.setenv("YSOCIAL_CONSTRAINTS", str(c))
+    assert manager.core_constraints_file() == c
+
+
+def test_core_constraints_file_from_home(tmp_path, monkeypatch):
+    monkeypatch.delenv("YSOCIAL_CONSTRAINTS", raising=False)
+    monkeypatch.setenv("YSOCIAL_HOME", str(tmp_path))
+    assert manager.core_constraints_file() is None
+    (tmp_path / "runtime").mkdir()
+    (tmp_path / "runtime" / "constraints.txt").write_text("x==1\n")
+    assert manager.core_constraints_file() == tmp_path / "runtime" / "constraints.txt"

@@ -159,6 +159,13 @@ async fn install(app: AppHandle, home: String, toxicity: bool) -> Result<(), Str
 
         let mut c = Command::new(&uv);
         c.args(["pip", "install", "--python"]).arg(venv_python(&home));
+        // Pinned versions (requirements.lock, bundled as constraints.txt): keep them
+        // next to the runtime so plugin installs are constrained to the same pins.
+        if let Ok(bundled) = resource_file(&app, "constraints.txt") {
+            let target = runtime.join("constraints.txt");
+            std::fs::copy(&bundled, &target).map_err(|e| e.to_string())?;
+            c.arg("--constraint").arg(&target);
+        }
         let target = if toxicity {
             c.args(["--extra-index-url", TORCH_CPU_INDEX, "--index-strategy", "unsafe-best-match"]);
             format!("ysocial[toxicity] @ {}", file_uri(&wheel))

@@ -12,6 +12,7 @@ Build (needs Rust + Tauri prerequisites):
 
 ```bash
 python -m build --wheel --outdir installer/src-tauri/resources .
+cp requirements.lock installer/src-tauri/resources/constraints.txt
 cp "$(which uv)" installer/src-tauri/resources/uv      # uv.exe on Windows
 cd installer/src-tauri && cargo install tauri-cli --version "^2" --locked
 cargo tauri icon path/to/logo.png                         # generates icons/
