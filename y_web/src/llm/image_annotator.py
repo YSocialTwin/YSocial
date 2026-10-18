@@ -7,11 +7,11 @@ using vision-capable Large Language Models through the shared LangChain adapter.
 
 import os
 
+from y_web import prompt_store
 from y_web.src.llm.autogen_compat import (
     AssistantAgent,
     MultimodalConversableAgent,
 )
-from y_web import prompt_store
 
 
 class Annotator(object):

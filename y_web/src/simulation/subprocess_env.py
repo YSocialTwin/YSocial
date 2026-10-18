@@ -25,9 +25,7 @@ def agent_memory_source_dir() -> Optional[str]:
     ``yclient_memory`` from the plugin, with or without an editable install.
     """
 
-    src = os.path.join(
-        get_writable_path(), "external", "y_memory_subsystem", "src"
-    )
+    src = os.path.join(get_writable_path(), "external", "y_memory_subsystem", "src")
     if os.path.isdir(os.path.join(src, "yclient_memory")):
         return src
     return None

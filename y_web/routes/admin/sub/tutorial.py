@@ -57,9 +57,9 @@ from y_web.src.models import (
     Topic_List,
     Toxicity_Levels,
 )
+from y_web.src.system import prompt_packs
 from y_web.src.system.miscellanea import check_privileges
 from y_web.src.system.path_utils import get_resource_path, get_writable_path
-from y_web.src.system import prompt_packs
 
 tutorial = Blueprint("tutorial", __name__)
 

@@ -44,14 +44,18 @@ def normalize(language) -> str:
 
 
 def manifest(language: str) -> Dict:
-    with open(packs_root() / normalize(language) / "manifest.json", encoding="utf-8") as handle:
+    with open(
+        packs_root() / normalize(language) / "manifest.json", encoding="utf-8"
+    ) as handle:
         return json.load(handle)
 
 
 def languages() -> List[Dict]:
     """The available packs as ``{"code", "name", "native_name"}``, English first."""
     found = []
-    for folder in sorted(p for p in packs_root().iterdir() if (p / "manifest.json").exists()):
+    for folder in sorted(
+        p for p in packs_root().iterdir() if (p / "manifest.json").exists()
+    ):
         data = json.loads((folder / "manifest.json").read_text(encoding="utf-8"))
         found.append(
             {
@@ -96,7 +100,9 @@ def load_pack(name: str, language=None) -> Dict:
     missing: List[str] = []
     merged = _merge(english, translated, code, name, missing)
     if missing:
-        log.warning("%s (%s): %d prompt keys fall back to English", name, code, len(missing))
+        log.warning(
+            "%s (%s): %d prompt keys fall back to English", name, code, len(missing)
+        )
     return merged
 
 
@@ -126,7 +132,9 @@ def resolve(requested, default=None) -> str:
 RECORD_FILE = "prompt_language.json"
 
 
-def record_language(experiment_dir, experiment=None, client=None, client_language=None) -> None:
+def record_language(
+    experiment_dir, experiment=None, client=None, client_language=None
+) -> None:
     """Note in the experiment folder which language its prompts started from (a variable of the experiment).
 
     ``experiment`` sets the experiment's language; ``client``/``client_language`` add one client's.
@@ -150,14 +158,21 @@ def record_language(experiment_dir, experiment=None, client=None, client_languag
 def write_profile_values(directory, language) -> None:
     """Put ``profile_values.<language>.json`` in a run folder: how the clients read profile values in that language."""
     code = normalize(language)
-    if code == DEFAULT_LANGUAGE or not (packs_root() / code / "profile_values.json").exists():
+    if (
+        code == DEFAULT_LANGUAGE
+        or not (packs_root() / code / "profile_values.json").exists()
+    ):
         return
-    write_pack("profile_values.json", Path(directory) / f"profile_values.{code}.json", code)
+    write_pack(
+        "profile_values.json", Path(directory) / f"profile_values.{code}.json", code
+    )
 
 
 def launch_env(exp, client=None) -> Dict[str, str]:
     """Environment that tells a client process which language its prompts are in (nothing for English)."""
-    language = resolve(getattr(client, "prompt_language", None), getattr(exp, "prompt_language", None))
+    language = resolve(
+        getattr(client, "prompt_language", None), getattr(exp, "prompt_language", None)
+    )
     return {} if language == DEFAULT_LANGUAGE else {"YSOCIAL_PROMPT_LANGUAGE": language}
 
 

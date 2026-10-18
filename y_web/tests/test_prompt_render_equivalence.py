@@ -7,7 +7,15 @@ import pytest
 
 from y_web import prompt_store as ps
 
-FILES = [Path(__file__).resolve().parents[2] / p for p in ["data_schema/prompts/en/prompts.json","data_schema/prompts/en/prompts_forum.json","data_schema/prompts/en/prompts_hpc.json","data_schema/prompts/en/prompts_ygram.json"]]
+FILES = [
+    Path(__file__).resolve().parents[2] / p
+    for p in [
+        "data_schema/prompts/en/prompts.json",
+        "data_schema/prompts/en/prompts_forum.json",
+        "data_schema/prompts/en/prompts_hpc.json",
+        "data_schema/prompts/en/prompts_ygram.json",
+    ]
+]
 
 
 class Probe:
@@ -44,5 +52,7 @@ def test_render_matches_fstring_evaluation(where, text):
     try:
         expected = eval(f'f"""{text}"""', dict(scope))
     except Exception:
-        pytest.skip("template is not evaluable on its own (fields supplied by the call site)")
+        pytest.skip(
+            "template is not evaluable on its own (fields supplied by the call site)"
+        )
     assert ps.render(text, **scope) == expected

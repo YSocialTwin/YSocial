@@ -272,6 +272,7 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
         return dict(exp_id=get_current_experiment_id())
 
     __import__("y_web.src.system.prompt_packs", fromlist=["x"]).register_context(app)
+
     @app.context_processor
     def inject_feed_home_url():
         """Inject the canonical home URL for the active experiment feed."""

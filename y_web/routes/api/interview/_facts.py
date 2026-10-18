@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy import case, desc, func, or_, select
 
-from y_web import db
+from y_web import db, prompt_store
 from y_web.src.models import (
     AdminInterviewMessage,
     Exps,
@@ -26,7 +26,6 @@ from ._memory import (
     _INTERVIEW_WEAK_QUERY_TERMS,
     _experiment_sqlite_db_path,
 )
-from y_web import prompt_store
 
 
 def _extract_query_terms(admin_text: str, *, max_terms: int = 8) -> List[str]:
