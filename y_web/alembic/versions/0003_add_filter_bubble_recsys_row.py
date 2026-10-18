@@ -34,6 +34,13 @@ def upgrade() -> None:
         # Nothing to seed yet (a database whose tables are created later by
         # ``create_all``): the legacy seed runs again once the table exists.
         return
+    # Legacy databases (created by older releases, then stamped at the baseline)
+    # may lack the ``category``/``enabled`` columns that the seed below writes.
+    existing = {c["name"] for c in sa.inspect(bind).get_columns("content_recsys")}
+    for column in ("category", "enabled"):
+        if column not in existing:
+            op.add_column("content_recsys", sa.Column(column, sa.Text(), nullable=True))
+
     # Check whether the row already exists (migration may have been applied
     # via the legacy run_migrations() path or a manual SQL seed).
     exists = bind.execute(
