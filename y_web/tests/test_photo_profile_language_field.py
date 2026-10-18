@@ -1,4 +1,5 @@
 """The photo profile editor offers the spoken language as a list (like microblogging/forum), not free text."""
+
 import pathlib
 import re
 
@@ -19,5 +20,7 @@ def test_photo_profile_language_is_a_select_of_known_languages():
 
 
 def test_overlay_script_keeps_a_value_the_list_does_not_offer():
-    js = (ROOT / "static" / "assets" / "js" / "photo-overlays.js").read_text(encoding="utf-8")
+    js = (ROOT / "static" / "assets" / "js" / "photo-overlays.js").read_text(
+        encoding="utf-8"
+    )
     assert "tagName === 'SELECT'" in js and "createElement('option')" in js
