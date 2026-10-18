@@ -15,7 +15,12 @@ REQUIRED = [
     "y_web/translations/it/LC_MESSAGES/messages.mo",
     "y_web/prompts_internal.json",
 ]
-FORBIDDEN_PREFIXES = ("y_web/tests/", "y_web/experiments/", "external/")
+FORBIDDEN_PREFIXES = (
+    "y_web/tests/",
+    "y_web/experiments/",
+    "external/",
+    "y_web/static/assets/img/users/",
+)
 
 
 def check(path):

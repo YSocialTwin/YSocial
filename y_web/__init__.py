@@ -276,6 +276,11 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
 
     register_blueprints(app)
 
+    from y_web.src.system.avatars_store import ensure_avatars, register_avatar_route
+
+    register_avatar_route(app)
+    ensure_avatars()
+
     # ------------------------------------------------------------------
     # Frontend plugin suites (e.g. Frontend Adds-on) — registered ONLY for suites
     # that are installed under external/<repo> AND pass manifest validation.

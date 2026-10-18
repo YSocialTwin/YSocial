@@ -33,11 +33,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ysocial"
-dynamic = ["version", "dependencies"]
+dynamic = ["version", "dependencies", "optional-dependencies"]
 description = "YSocial: a digital twin of social media platforms populated by LLM agents"
 readme = "README.md"
 license = { file = "LICENSE" }
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 authors = [{ name = "Giulio Rossetti" }]
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -55,6 +55,7 @@ include-package-data = false
 [tool.setuptools.dynamic]
 version = { file = ["VERSION"] }
 dependencies = { file = ["requirements/base.in"] }
+optional-dependencies.toxicity = { file = ["requirements/toxicity.in"] }
 
 [tool.setuptools.packages.find]
 include = ["y_web*", "data_schema*"]
@@ -68,6 +69,10 @@ exclude = [
     "y_web.translations*",
 ]
 namespaces = true
+
+[tool.setuptools.exclude-package-data]
+# ~10k profile pictures (~490 MB): downloaded on first run (avatars_store.py)
+y_web = ["static/assets/img/users/*"]
 
 [tool.setuptools.package-data]
 y_web = [

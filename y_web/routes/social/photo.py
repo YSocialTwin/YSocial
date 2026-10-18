@@ -11,6 +11,8 @@ import html
 import json
 import mimetypes
 import os
+
+from y_web.src.system.avatars_store import get_avatars_dir
 import re
 import sqlite3
 import uuid
@@ -2241,13 +2243,7 @@ def photo_profile(exp_id, user_id, mode="recent", page=1):
     }
     if is_self_profile:
         try:
-            users_img_dir = os.path.join(
-                os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-                "static",
-                "assets",
-                "img",
-                "users",
-            )
+            users_img_dir = get_avatars_dir()
             available_profile_pics = [
                 url_for("static", filename="assets/img/users/" + filename)
                 for filename in sorted(

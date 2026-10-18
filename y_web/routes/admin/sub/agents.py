@@ -8,6 +8,8 @@ settings.
 
 import json
 import os
+
+from y_web.src.system.avatars_store import get_avatars_dir
 import random
 import re
 from pathlib import Path
@@ -334,15 +336,7 @@ def _agent_builder_context(**overrides):
     available_profile_pics = []
     available_cover_images = []
     try:
-        users_img_dir = os.path.join(
-            os.path.dirname(
-                os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-            ),
-            "static",
-            "assets",
-            "img",
-            "users",
-        )
+        users_img_dir = get_avatars_dir()
         available_profile_pics = sorted(
             [
                 filename

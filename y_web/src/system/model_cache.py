@@ -239,10 +239,36 @@ def refresh_detoxify_download_state() -> Dict[str, object]:
     return state
 
 
+DETOXIFY_MISSING_MESSAGE = (
+    "The optional toxicity package (detoxify + torch) is not installed. "
+    "Install it with: pip install 'ysocial[toxicity]' "
+    "(or enable 'Toxicity detection' in the YSocial installer)."
+)
+
+
+def detoxify_installed() -> bool:
+    """True when the optional ``toxicity`` extra (detoxify + torch) is present."""
+    import importlib.util
+
+    return importlib.util.find_spec("detoxify") is not None
+
+
 def start_detoxify_download(
     target_dir: str | Path, notification_id: Optional[int] = None
 ) -> Dict[str, object]:
     root = save_model_cache_path(target_dir)
+    if not detoxify_installed():
+        return _persist_download_state(
+            {
+                "status": "error",
+                "progress": 0,
+                "path": str(root),
+                "pid": None,
+                "notification_id": notification_id,
+                "message": DETOXIFY_MISSING_MESSAGE,
+                "finished_at": _utc_now(),
+            }
+        )
     current = refresh_detoxify_download_state()
     if current.get("status") == "running" and _pid_is_running(current.get("pid")):
         return current

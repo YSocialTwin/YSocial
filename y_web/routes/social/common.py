@@ -8,6 +8,8 @@ Routes: index, profile, profile_logged, edit_profile, update_profile_data,
 import json
 import math
 import os
+
+from y_web.src.system.avatars_store import get_avatars_dir
 import uuid as _uuid
 
 from flask import (
@@ -591,13 +593,7 @@ def edit_profile(exp_id, user_id):
 
     available_profile_pics = []
     try:
-        users_img_dir = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-            "static",
-            "assets",
-            "img",
-            "users",
-        )
+        users_img_dir = get_avatars_dir()
         available_profile_pics = sorted(
             [
                 filename
@@ -1129,13 +1125,7 @@ def onboarding(exp_id, user_id):
     # Available images
     available_profile_pics = []
     try:
-        users_img_dir = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-            "static",
-            "assets",
-            "img",
-            "users",
-        )
+        users_img_dir = get_avatars_dir()
         available_profile_pics = sorted(
             f
             for f in os.listdir(users_img_dir)
