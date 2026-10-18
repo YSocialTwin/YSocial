@@ -32,7 +32,7 @@ plugin texts. Procedure for a new language: [adding-a-language.md](adding-a-lang
 - [ ] **[you]** Gates G-M2, G-M4, G-M7 (memory programme) and G3: sign or reject.
 - [ ] **[you]** G4: one real experiment per platform (ad hoc agent, social chat, forum, memory on) with a real LLM and `it` selected. Check: no English leakage in agent text, protocol tokens parsed, memory blocks non-empty, language recorded for the experiment.
 - [ ] **[you]** Install-from-UI check: install the Agent Memory plugin with the plugin button on a clean install and confirm the memory settings appear.
-- [ ] **[you]** Visual regression with the pseudo-locale `en-XA` (needs a browser) and acceptance of the template-render overhead noted in `phase5-report.md`.
+- [ ] **[you]** Visual regression with the pseudo-locale `en-XA` (needs a browser) and acceptance of the template-render overhead measured in `docs/i18n/performance.md`.
 
 ### 2.3 Release (nothing has been pushed)
 

@@ -77,8 +77,8 @@ YSocial also uses internal subprocess entry points for simulation execution. The
 
 Files:
 
-- `/Users/rossetti/PycharmProjects/YWeb/y_web/src/simulation/process_runner.py`
-- `/Users/rossetti/PycharmProjects/YWeb/y_web/src/simulation/client_runner.py`
-- `/Users/rossetti/PycharmProjects/YWeb/y_web/src/simulation/server_runner.py`
+- `y_web/src/simulation/process_runner.py`
+- `y_web/src/simulation/client_runner.py`
+- `y_web/src/simulation/server_runner.py`
 
 These subprocesses carry experiment and client identifiers, resume flags, and DB-type parameters. In ordinary usage they are launched from the admin UI, not manually.

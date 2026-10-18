@@ -6,27 +6,27 @@ Important top-level directories and files:
 
 | Path | Role |
 |---|---|
-| `/Users/rossetti/PycharmProjects/YWeb/y_web/` | main application package |
-| `/Users/rossetti/PycharmProjects/YWeb/external/` | external runtime repositories and backends |
-| `/Users/rossetti/PycharmProjects/YWeb/packaging/` | packaging and distribution scripts |
-| `/Users/rossetti/PycharmProjects/YWeb/docs/` | documentation |
-| `/Users/rossetti/PycharmProjects/YWeb/data_schema/` | schema and migrations |
-| `/Users/rossetti/PycharmProjects/YWeb/config_files/` | runtime configuration assets |
-| `/Users/rossetti/PycharmProjects/YWeb/y_social.py` | main browser-mode entry point |
-| `/Users/rossetti/PycharmProjects/YWeb/y_social_launcher.py` | desktop-first launcher and PyInstaller entry |
-| `/Users/rossetti/PycharmProjects/YWeb/y_social.spec` | PyInstaller spec |
+| `y_web/` | main application package |
+| `external/` | external runtime repositories and backends |
+| `packaging/` | packaging and distribution scripts |
+| `docs/` | documentation |
+| `data_schema/` | schema and migrations |
+| `config_files/` | runtime configuration assets |
+| `y_social.py` | main browser-mode entry point |
+| `y_social_launcher.py` | desktop-first launcher and PyInstaller entry |
+| `y_social.spec` | PyInstaller spec |
 
 ## Inside `y_web/`
 
 ### Routes
 
-- `/Users/rossetti/PycharmProjects/YWeb/y_web/routes/`
+- `y_web/routes/`
 
 Contains admin, public, API, and integration route modules.
 
 ### Source services
 
-- `/Users/rossetti/PycharmProjects/YWeb/y_web/src/`
+- `y_web/src/`
 
 Contains service-layer and domain logic such as:
 
@@ -39,7 +39,7 @@ Contains service-layer and domain logic such as:
 
 ### Templates
 
-- `/Users/rossetti/PycharmProjects/YWeb/y_web/templates/`
+- `y_web/templates/`
 
 Contains the Jinja templates for:
 
@@ -52,7 +52,7 @@ Contains the Jinja templates for:
 
 ### Static assets
 
-- `/Users/rossetti/PycharmProjects/YWeb/y_web/static/`
+- `y_web/static/`
 
 Contains CSS, JavaScript, vendor assets, images, and runtime UI dependencies.
 
@@ -60,8 +60,8 @@ Contains CSS, JavaScript, vendor assets, images, and runtime UI dependencies.
 
 Typical runtime paths include:
 
-- `/Users/rossetti/PycharmProjects/YWeb/y_web/db/`
-- `/Users/rossetti/PycharmProjects/YWeb/y_web/experiments/`
+- `y_web/db/`
+- `y_web/experiments/`
 
 The dashboard DB and per-experiment directories serve different roles:
 
@@ -70,13 +70,13 @@ The dashboard DB and per-experiment directories serve different roles:
 
 ## External directory
 
-- `/Users/rossetti/PycharmProjects/YWeb/external/`
+- `external/`
 
 This directory holds backend/runtime repositories used by YSocial when present. Operationally, YSocial adapts available experiment options based on which required external runtimes are installed.
 
 ## Packaging directory
 
-- `/Users/rossetti/PycharmProjects/YWeb/packaging/`
+- `packaging/`
 
 Contains:
 
@@ -88,7 +88,7 @@ Contains:
 
 ## Tests
 
-- `/Users/rossetti/PycharmProjects/YWeb/y_web/tests/`
+- `y_web/tests/`
 
 The test suite is extensive and covers runtime behavior, packaging, template contracts, admin workflows, and execution helpers.
 

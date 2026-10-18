@@ -81,16 +81,17 @@ The repository includes Docker and docker-compose assets.
 
 Relevant files:
 
-- `/Users/rossetti/PycharmProjects/YWeb/Dockerfile`
-- `/Users/rossetti/PycharmProjects/YWeb/deployment/docker/compose/docker-compose.yml`
-- `/Users/rossetti/PycharmProjects/YWeb/deployment/docker/compose/docker-compose-postgresql.yml`
-- `/Users/rossetti/PycharmProjects/YWeb/deployment/docker/compose/docker-compose_gpu.yml`
-- `/Users/rossetti/PycharmProjects/YWeb/deployment/docker/compose/docker-compose-postgresql_gpu.yml`
+- `Dockerfile`
+- `deployment/docker/compose/docker-compose.yml`
+- `deployment/docker/compose/docker-compose-postgresql.yml`
+- `deployment/docker/compose/docker-compose_gpu.yml`
+- `deployment/docker/compose/docker-compose-postgresql_gpu.yml`
+- `deployment/docker/compose/docker-compose_reverse.yml`
 
 Use containers when you want:
 
-- deployment guidance organized under `/Users/rossetti/PycharmProjects/YWeb/deployment/docker/README.md`
-- advanced reverse-proxy and GPU assets documented under `/Users/rossetti/PycharmProjects/YWeb/deployment/docker/advanced/README.md`
+- deployment guidance organized under `deployment/docker/README.md`
+- advanced reverse-proxy and GPU assets documented under `deployment/docker/advanced/README.md`
 
 - repeatable local deployment
 - isolated dependency management
@@ -103,7 +104,7 @@ Use containers when you want:
 
 Core dependencies are listed in:
 
-- `/Users/rossetti/PycharmProjects/YWeb/requirements.txt`
+- `requirements.txt`
 
 They include:
 
@@ -131,10 +132,10 @@ YSocial writes runtime data into the working directory or application data folde
 
 Important locations include:
 
-- `/Users/rossetti/PycharmProjects/YWeb/y_web/db/`
-- `/Users/rossetti/PycharmProjects/YWeb/y_web/experiments/`
-- `/Users/rossetti/PycharmProjects/YWeb/config_files/`
-- `/Users/rossetti/PycharmProjects/YWeb/logs/` when created by runtime scripts
+- `y_web/db/`
+- `y_web/experiments/`
+- `config_files/`
+- `logs/` when created by runtime scripts
 - notebook and export directories created during execution
 
 If you want clean separation between code and runtime state, launch the application from a dedicated data directory when using packaged executables.

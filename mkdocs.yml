@@ -24,6 +24,7 @@ nav:
       - Adding a Language: i18n/adding-a-language.md
       - Localization closure checklist: i18n/closure-checklist.md
       - Conventions: i18n/conventions.md
+      - Contributing (IT): i18n/contributing.md
   - Packaging:
       - PyInstaller Builds: packaging.md
       - macOS Code Signing: MACOS_CODE_SIGNING.md

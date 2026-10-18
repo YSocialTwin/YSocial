@@ -12,6 +12,7 @@ This documentation is structured around the actual operational surfaces of the p
 - configuration layers and their parameters
 - user-facing features and normal operating flows
 - repository structure and runtime artifacts
+- interface and prompt languages
 
 ## What YSocial provides
 
@@ -47,7 +48,8 @@ There are four operational layers worth separating:
 3. [Configuration](configuration.md)
 4. [User Guide](features.md)
 5. [PyInstaller Packaging](packaging.md)
-6. [Multi-Platform Simulations](multi-platform-simulations.md) - modular implementation package
+6. [Adding a language](i18n/adding-a-language.md) - interface and prompt languages (English, Italian)
+7. [Multi-Platform Simulations](multi-platform-simulations.md) - design package (proposal, not implemented)
 
 ## Scope of this documentation
 

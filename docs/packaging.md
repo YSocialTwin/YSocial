@@ -4,9 +4,9 @@
 
 YSocial supports PyInstaller-based packaging for desktop distribution. The packaged application uses:
 
-- `/Users/rossetti/PycharmProjects/YWeb/y_social.spec`
-- `/Users/rossetti/PycharmProjects/YWeb/y_social_launcher.py`
-- helper modules under `/Users/rossetti/PycharmProjects/YWeb/y_web/pyinstaller_utils/`
+- `y_social.spec`
+- `y_social_launcher.py`
+- helper modules under `y_web/pyinstaller_utils/`
 
 The packaging flow bundles:
 
@@ -83,7 +83,7 @@ For broader distribution, replace ad-hoc signing with a Developer ID workflow an
 
 Reference:
 
-- `/Users/rossetti/PycharmProjects/YWeb/docs/MACOS_CODE_SIGNING.md`
+- `docs/MACOS_CODE_SIGNING.md`
 
 ### Linux
 
@@ -121,12 +121,12 @@ Typical notes:
 
 The current spec file bundles:
 
-- `/Users/rossetti/PycharmProjects/YWeb/y_web/static`
-- `/Users/rossetti/PycharmProjects/YWeb/y_web/templates`
-- `/Users/rossetti/PycharmProjects/YWeb/data_schema`
-- `/Users/rossetti/PycharmProjects/YWeb/config_files`
-- `/Users/rossetti/PycharmProjects/YWeb/images`
-- `/Users/rossetti/PycharmProjects/YWeb/VERSION`
+- `y_web/static`
+- `y_web/templates`
+- `data_schema`
+- `config_files`
+- `images`
+- `VERSION`
 - selected runner scripts and notebook assets
 - selected external runtime repositories when present
 
@@ -158,6 +158,6 @@ The build is single-file oriented. Resources are extracted at runtime to tempora
 
 Packaging is tied to the top-level version file:
 
-- `/Users/rossetti/PycharmProjects/YWeb/VERSION`
+- `VERSION`
 
 Update it before release builds.

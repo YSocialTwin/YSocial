@@ -8,7 +8,7 @@ YSocial can manage external runtime repositories directly from the admin interfa
 
 This panel manages the runtime repositories installed under:
 
-- `/Users/rossetti/PycharmProjects/YWeb/external`
+- `external`
 
 The panel is intentionally limited to a fixed whitelist of supported plugins. It does not expose arbitrary shell access or arbitrary repository URLs.
 
@@ -126,7 +126,7 @@ Rules:
 Current implementation uses:
 
 - runtime metadata in:
-  - `/Users/rossetti/PycharmProjects/YWeb/y_web/src/external_runtime/registry.py`
+  - `y_web/src/external_runtime/registry.py`
 - optional environment override:
   - `YSOCIAL_PLUGIN_VISIBILITY`
 
@@ -228,11 +228,11 @@ The plugin panel is working correctly when:
 
 ## Relevant Source Files
 
-- `/Users/rossetti/PycharmProjects/YWeb/y_web/src/external_runtime/registry.py`
-- `/Users/rossetti/PycharmProjects/YWeb/y_web/src/external_runtime/manager.py`
-- `/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_external_runtimes.py`
-- `/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/external_runtimes.html`
-- `/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/external_runtime_logs.html`
+- `y_web/src/external_runtime/registry.py`
+- `y_web/src/external_runtime/manager.py`
+- `y_web/routes/admin/sub/experiments/_external_runtimes.py`
+- `y_web/templates/admin/external_runtimes.html`
+- `y_web/templates/admin/external_runtime_logs.html`
 
 ## Backend plugin extension points
 

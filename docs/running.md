@@ -8,14 +8,14 @@ YSocial has two primary application entry points.
 
 Use this for direct browser-oriented execution.
 
-- file: `/Users/rossetti/PycharmProjects/YWeb/y_social.py`
+- file: `y_social.py`
 - typical use: source-based execution, explicit host/port control
 
 ### `y_social_launcher.py`
 
 Use this for the desktop-first workflow and PyInstaller entry.
 
-- file: `/Users/rossetti/PycharmProjects/YWeb/y_social_launcher.py`
+- file: `y_social_launcher.py`
 - typical use: native window by default, browser fallback optional
 
 ## Execution modalities
