@@ -35,7 +35,8 @@ def bootstrap(home, wheel, uv="uv", wheelhouse=None, torch_cpu=True, toxicity=Fa
         env["UV_PYTHON_DOWNLOADS"] = "manual"
     t0 = time.time()
     run([uv, "python", "install", PYTHON_VERSION], env)
-    run([uv, "venv", "--python", PYTHON_VERSION, venv], env)
+    # --seed: plugins are installed with `python -m pip` (see external_runtime)
+    run([uv, "venv", "--seed", "--python", PYTHON_VERSION, venv], env)
     py = venv / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
     cmd = [uv, "pip", "install", "--python", py]
     if wheelhouse:

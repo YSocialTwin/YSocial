@@ -1,4 +1,5 @@
 import os
+import sys
 from argparse import ArgumentParser
 
 
@@ -133,6 +134,11 @@ def start_app(
 
 def main(argv=None):
     """Command line entry point (the ``ysocial`` console script)."""
+    # Installed (wheel) runs: plugins and child tools must use this interpreter.
+    from y_web.src.system.path_utils import _is_source_checkout, get_base_path
+
+    if not getattr(sys, "frozen", False) and not _is_source_checkout(get_base_path()):
+        os.environ.setdefault("YSOCIAL_PYTHON", sys.executable)
     parser = ArgumentParser()
 
     parser.add_argument(

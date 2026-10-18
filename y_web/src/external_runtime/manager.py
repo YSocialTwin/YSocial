@@ -42,6 +42,13 @@ def resolve_python_executable() -> str:
     if getattr(sys, "frozen", False):
         return str(Path(sys.executable).resolve())
 
+    # Managed runtime (uv-built venv set up by the installer): the launcher
+    # exports YSOCIAL_PYTHON so plugins install into the interpreter that runs
+    # YSocial, never into a system Python.
+    managed = os.environ.get("YSOCIAL_PYTHON")
+    if managed and Path(managed).exists():
+        return str(Path(managed).resolve())
+
     conda_prefix = os.environ.get("CONDA_PREFIX") or os.environ.get("MAMBA_PREFIX")
     if conda_prefix:
         candidate = Path(conda_prefix).resolve() / "bin" / "python"
@@ -377,6 +384,23 @@ def _validate_prereqs(spec) -> bool:
     if not spec.validate_entrypoints:
         return True
     return all((spec.path / entry).exists() for entry in spec.validate_entrypoints)
+
+
+def _ensure_pip(python_executable: str) -> str:
+    """Make sure ``python -m pip`` works (uv venvs may be created without pip)."""
+    probe = subprocess.run(
+        [python_executable, "-m", "pip", "--version"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if probe.returncode == 0:
+        return ""
+    return _run_command(
+        [python_executable, "-m", "ensurepip", "--upgrade"],
+        cwd=Path.cwd(),
+        timeout=300,
+    )
 
 
 def _effective_install_commands(spec) -> tuple[tuple[str, ...], ...]:
@@ -864,6 +888,7 @@ def install_runtime_dependencies(repo_key: str, actor: str) -> None:
     env.setdefault("PYTHONUNBUFFERED", "1")
     python_executable = resolve_python_executable()
     output_parts.append(f"Using interpreter: {python_executable}")
+    output_parts.append(_ensure_pip(python_executable))
     for command in install_commands:
         resolved = [
             python_executable if token == "python" else token for token in command
