@@ -7,7 +7,12 @@ import sys
 import tempfile
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[2]
+if not (ROOT / "external" / "YClient" / "y_client" / "protocol_tokens.py").exists():
+    # the pilot reads the client's protocol tokens; external repositories are absent in CI
+    pytest.skip("external/YClient not checked out", allow_module_level=True)
 spec = importlib.util.spec_from_file_location(
     "pilot", ROOT / "scripts" / "prompts" / "pilot.py"
 )
