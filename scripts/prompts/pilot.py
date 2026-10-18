@@ -534,7 +534,10 @@ def analyze(args):
         # Keep a Decision section that someone already filled in.
         old = target.read_text(encoding="utf-8")
         marker = "## Decision\n"
-        if marker in old and "_To fill in after the runs" not in old.split(marker, 1)[1]:
+        if (
+            marker in old
+            and "_To fill in after the runs" not in old.split(marker, 1)[1]
+        ):
             text = text.split(marker, 1)[0] + marker + old.split(marker, 1)[1]
     target.write_text(text, encoding="utf-8")
     print(f"{args.report}: {len(rows)} calls analysed")
