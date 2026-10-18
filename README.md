@@ -13,7 +13,7 @@ Interact with AI-driven agents, analyze social dynamics, and explore the impact 
 
 As a plus, YSocial allows you to analyze simulation data with an embedded **Jupyter Lab** environment powered by **[ySights](https://ysocialtwin.github.io/ysights)** - a custom library for designed to support in-depth insights.
 
-For more information, visit the [project website](https://y-not.social/) or read our [research paper](https://arxiv.org/abs/2408.00818).
+For more information, visit the [project website](https://y-not.social/) or read our [research paper](https://journals.sagepub.com/doi/full/10.1177/20539517261431576) (Big Data & Society, 2026).
 
 ![Logo](./y_web/static/assets/images/platform/header.png)
 
