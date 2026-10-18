@@ -12,7 +12,7 @@
     },
     "generate_caption": {
         "system_template": "{persona}",
-        "user_template": "Scrivi una didascalia Instagram per una foto su: {topic}.\nGiorno {day}, fascia {slot}. Massimo 30 parole. Aggiungi 2-3 hashtag pertinenti.\n{mention_instruction}"
+        "user_template": "Scrivi una didascalia Instagram per una foto su: {topic}.\nMassimo 30 parole. Aggiungi 2-3 hashtag pertinenti.\n{mention_instruction}"
     },
     "decide_reaction": {
         "system_template": "{persona} Leggi la didascalia della foto e rispondi SOLO con: LIKE, LOVE, LAUGH, WOW, SAD, ANGRY oppure IGNORE.",

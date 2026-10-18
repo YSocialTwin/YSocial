@@ -12,7 +12,7 @@
   },
   "generate_caption": {
     "system_template": "{persona}",
-    "user_template": "Write an Instagram caption for a photo about: {topic}.\nDay {day}, slot {slot}. Max 30 words. Add 2-3 relevant hashtags.\n{mention_instruction}"
+    "user_template": "Write an Instagram caption for a photo about: {topic}.\nMax 30 words. Add 2-3 relevant hashtags.\n{mention_instruction}"
   },
   "decide_reaction": {
     "system_template": "{persona} Read the photo caption and reply ONLY with: LIKE, LOVE, LAUGH, WOW, SAD, ANGRY, or IGNORE.",

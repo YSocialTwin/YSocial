@@ -296,8 +296,8 @@
     "66b1efc964880aa10ff0b2446fc18e75eaae0ea7462fe74896f2a50adf5b83e4"
    ],
    [
-    "c3842c148532074c21bf651b47b48c7b33a933db1b6ffd9c3192772a96af9ca2",
-    "c3842c148532074c21bf651b47b48c7b33a933db1b6ffd9c3192772a96af9ca2"
+    "91f405670dae152d9508f72b5dbe5a6aba111258f5c0f412e2d94c83dba312d5",
+    "8d87420a2c32ee68fc77db8936e7b55bc011d9d8f7e5f58c2cc45745705cc38a"
    ]
   ],
   "external/YPhotoSharing/YPhotoSharing/YClient/LLM_interactions/vllm_service.py": [
@@ -322,8 +322,8 @@
     "66b1efc964880aa10ff0b2446fc18e75eaae0ea7462fe74896f2a50adf5b83e4"
    ],
    [
-    "c3842c148532074c21bf651b47b48c7b33a933db1b6ffd9c3192772a96af9ca2",
-    "c3842c148532074c21bf651b47b48c7b33a933db1b6ffd9c3192772a96af9ca2"
+    "91f405670dae152d9508f72b5dbe5a6aba111258f5c0f412e2d94c83dba312d5",
+    "8d87420a2c32ee68fc77db8936e7b55bc011d9d8f7e5f58c2cc45745705cc38a"
    ]
   ],
   "external/YPhotoSharing/YPhotoSharing/YClient/actions/reply_comment.py": [
@@ -1062,7 +1062,7 @@
    "extract_sentiment/system_template": "c2d085cbbbc8bbd6e0fd18c5b6b3e122dab3ea0b972a7fbd17e6e7705747940d",
    "extract_sentiment/user_template": "a81b7d6253f7b6a66d4548241073ef9362787bfd426bd35c19730fc09493946f",
    "generate_caption/system_template": "6671b644b94474a9d36a093df7e9b2cdc121782a20dbce65fcdc659a97801fd8",
-   "generate_caption/user_template": "191c95f7985d53f1c9b1190c1d9823540beb38af930ef679df93724e97426c06",
+   "generate_caption/user_template": "21aaa3187d03ab80bb84ff77026eb29d8952321866e0d6a2194d15a16fa1c918",
    "generate_comment/system_template": "bb7bf09fd121ef11dd1f199c4ce2be52f44eb7706646958f57c2622c17b00a24",
    "generate_comment/user_template": "d0dee783e691dc0af2af7c56d934351a947d5c3c54e9ffb472bbb1763cda06e8",
    "generate_follow_decision/note": "90afd91e900956d538fd1f9c2251c10f0bdfb7148294181ed8f7433d2bb4fa1e",
@@ -1180,7 +1180,7 @@
    "extract_sentiment/system_template": "c2d085cbbbc8bbd6e0fd18c5b6b3e122dab3ea0b972a7fbd17e6e7705747940d",
    "extract_sentiment/user_template": "a81b7d6253f7b6a66d4548241073ef9362787bfd426bd35c19730fc09493946f",
    "generate_caption/system_template": "6671b644b94474a9d36a093df7e9b2cdc121782a20dbce65fcdc659a97801fd8",
-   "generate_caption/user_template": "191c95f7985d53f1c9b1190c1d9823540beb38af930ef679df93724e97426c06",
+   "generate_caption/user_template": "21aaa3187d03ab80bb84ff77026eb29d8952321866e0d6a2194d15a16fa1c918",
    "generate_comment/system_template": "bb7bf09fd121ef11dd1f199c4ce2be52f44eb7706646958f57c2622c17b00a24",
    "generate_comment/user_template": "d0dee783e691dc0af2af7c56d934351a947d5c3c54e9ffb472bbb1763cda06e8",
    "infer_article_opinion/system_template": "328ad1061c1a130ccc025f406310ff812e8d8179e74fc13b0b7a34d3a66e2a94",
