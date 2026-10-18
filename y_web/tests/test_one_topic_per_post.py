@@ -1,4 +1,5 @@
 """Posts are generated and tagged with exactly one topic (clients)."""
+
 import re
 from pathlib import Path
 
