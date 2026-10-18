@@ -1166,7 +1166,15 @@
             elements.nationality.value = data.nationality || '';
         }
         if (elements.language) {
-            elements.language.value = data.language || '';
+            var spoken = data.language || '';
+            if (elements.language.tagName === 'SELECT' && spoken && !Array.prototype.some.call(elements.language.options, function (o) { return o.value === spoken; })) {
+                // keep a value the list does not offer (e.g. set by the population) instead of blanking it
+                var extra = document.createElement('option');
+                extra.value = spoken;
+                extra.textContent = spoken;
+                elements.language.appendChild(extra);
+            }
+            elements.language.value = spoken;
         }
         if (elements.leaning) {
             elements.leaning.value = data.leaning || '';

@@ -1994,8 +1994,12 @@
                                 <input id="photo-profile-edit-nationality" type="text" name="nationality" data-photo-profile-edit-input-nationality />
                             </div>
                             <div class="photo-profile-edit-overlay__field">
-                                <label for="photo-profile-edit-language">{{ _('Language') }}</label>
-                                <input id="photo-profile-edit-language" type="text" name="language" data-photo-profile-edit-input-language />
+                                <label for="photo-profile-edit-language">{{ _('Spoken Language') }}</label>
+                                <select id="photo-profile-edit-language" name="language" data-photo-profile-edit-input-language>
+                                    <option value=""></option>
+                                    <option value="English">{{ _('English') }}</option>
+                                    <option value="Italian">{{ _('Italian') }}</option>
+                                </select>
                             </div>
                             <div class="photo-profile-edit-overlay__field">
                                 <label for="photo-profile-edit-leaning">{{ _('Political leaning') }}</label>
