@@ -47,7 +47,9 @@ def resolve_python_executable() -> str:
     # YSocial, never into a system Python.
     managed = os.environ.get("YSOCIAL_PYTHON")
     if managed and Path(managed).exists():
-        return str(Path(managed).resolve())
+        # No .resolve(): a venv's python is a symlink to the base interpreter, and
+        # following it would install plugins into the (externally managed) base.
+        return os.path.abspath(managed)
 
     conda_prefix = os.environ.get("CONDA_PREFIX") or os.environ.get("MAMBA_PREFIX")
     if conda_prefix:
@@ -55,7 +57,8 @@ def resolve_python_executable() -> str:
         if candidate.exists():
             return str(candidate)
 
-    return str(Path(sys.executable).resolve())
+    # Keep the venv path: resolving the symlink would point at the base interpreter.
+    return os.path.abspath(sys.executable)
 
 
 @dataclass

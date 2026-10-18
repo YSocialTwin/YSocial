@@ -13,14 +13,14 @@ def test_managed_python_env_wins(tmp_path, monkeypatch):
     fake.write_text("")
     monkeypatch.setenv("YSOCIAL_PYTHON", str(fake))
     monkeypatch.delenv("CONDA_PREFIX", raising=False)
-    assert manager.resolve_python_executable() == str(fake.resolve())
+    assert manager.resolve_python_executable() == str(fake)
 
 
 def test_missing_managed_python_is_ignored(monkeypatch):
     monkeypatch.setenv("YSOCIAL_PYTHON", "/nonexistent/python")
     monkeypatch.delenv("CONDA_PREFIX", raising=False)
     monkeypatch.delenv("MAMBA_PREFIX", raising=False)
-    assert manager.resolve_python_executable() == str(Path(sys.executable).resolve())
+    assert manager.resolve_python_executable() == __import__("os").path.abspath(sys.executable)
 
 
 def test_ensure_pip_runs_ensurepip_when_missing(monkeypatch):
@@ -45,3 +45,15 @@ def test_ensure_pip_noop_when_present(monkeypatch):
 
     monkeypatch.setattr(manager.subprocess, "run", lambda *a, **k: R())
     assert manager._ensure_pip("/x/python") == ""
+
+
+def test_venv_symlink_is_not_resolved(tmp_path, monkeypatch):
+    base = tmp_path / "base" / "python3.12"
+    base.parent.mkdir()
+    base.write_text("")
+    venv_python = tmp_path / "venv" / "bin" / "python"
+    venv_python.parent.mkdir(parents=True)
+    venv_python.symlink_to(base)
+    monkeypatch.setenv("YSOCIAL_PYTHON", str(venv_python))
+    monkeypatch.delenv("CONDA_PREFIX", raising=False)
+    assert manager.resolve_python_executable() == str(venv_python)
