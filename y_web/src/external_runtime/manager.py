@@ -280,33 +280,69 @@ def _resolve_branch(spec, selected_branch: str | None) -> str:
 def _list_remote_branches(
     spec, github_token: str | None = None
 ) -> tuple[list[str], str | None]:
-    url = f"https://api.github.com/repos/{spec.github_repo}/branches?per_page=100"
+    branches: list[str] = []
+    for page in range(1, 11):  # up to 1000 branches
+        url = (
+            f"https://api.github.com/repos/{spec.github_repo}/branches"
+            f"?per_page=100&page={page}"
+        )
+        try:
+            response = _github_api_request(url, github_token=github_token)
+        except ExternalRuntimeError as exc:
+            return sorted(set(branches)), str(exc)
+        if response.status_code == 404:
+            # Unknown repository, or a private one queried without a token.
+            return sorted(set(branches)), (
+                None if branches else "GitHub does not list this repository's branches "
+                "(private repository? provide a GitHub token)."
+            )
+        if response.status_code == 403:
+            return sorted(set(branches)), "GitHub branch lookup denied or rate limited."
+        if response.status_code >= 400:
+            return (
+                sorted(set(branches)),
+                f"GitHub branch lookup failed ({response.status_code}).",
+            )
+
+        try:
+            payload = response.json()
+        except ValueError:
+            return sorted(set(branches)), "GitHub branch response was not valid JSON."
+        if not isinstance(payload, list):
+            return sorted(set(branches)), "GitHub branch response was not a list."
+
+        for item in payload:
+            if not isinstance(item, dict):
+                continue
+            name = str(item.get("name") or "").strip()
+            if name:
+                branches.append(name)
+        if len(payload) < 100:
+            break
+    return sorted(set(branches)), None
+
+
+def _list_remote_branches_git(
+    spec, github_token: str | None = None
+) -> tuple[list[str], str | None]:
+    """Branches via ``git ls-remote``: no API rate limit, uses the user's git credentials."""
+    if not host_git_available():
+        return [], None
+    cwd = spec.path.parent if spec.path.parent.exists() else Path.cwd()
     try:
-        response = _github_api_request(url, github_token=github_token)
+        output = _git_remote(
+            ["git", "ls-remote", "--heads", spec.repo_url],
+            cwd=cwd,
+            github_token=github_token,
+        )
     except ExternalRuntimeError as exc:
         return [], str(exc)
-    if response.status_code == 404:
-        return [], None
-    if response.status_code == 403:
-        return [], "GitHub branch lookup denied or rate limited."
-    if response.status_code >= 400:
-        return [], f"GitHub branch lookup failed ({response.status_code})."
-
-    try:
-        payload = response.json()
-    except ValueError:
-        return [], "GitHub branch response was not valid JSON."
-    if not isinstance(payload, list):
-        return [], "GitHub branch response was not a list."
-
-    branches: list[str] = []
-    for item in payload:
-        if not isinstance(item, dict):
-            continue
-        name = str(item.get("name") or "").strip()
-        if name:
-            branches.append(name)
-    return sorted(set(branches)), None
+    names = []
+    for line in output.splitlines():
+        ref = line.split("\t")[-1].strip()
+        if ref.startswith("refs/heads/"):
+            names.append(ref.removeprefix("refs/heads/"))
+    return sorted(set(names)), None
 
 
 def _branch_list_for_repo(
@@ -320,8 +356,15 @@ def _branch_list_for_repo(
     )
     if remote_branches:
         branches.update(remote_branches)
-    elif remote_error:
-        branch_error = remote_error
+    else:
+        # GitHub API unavailable (rate limit, private repo, proxy): ask git directly.
+        git_branches, git_error = _list_remote_branches_git(
+            spec, github_token=github_token
+        )
+        if git_branches:
+            branches.update(git_branches)
+        elif remote_error or git_error:
+            branch_error = remote_error or git_error
 
     try:
         if git_managed:
