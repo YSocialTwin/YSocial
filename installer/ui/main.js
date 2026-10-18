@@ -5,12 +5,13 @@ const log = (line) => { $("log").textContent += line + "\n"; $("log").scrollTop 
 
 // ---- friendly UI state -------------------------------------------------
 let installing = false;   // an install is in progress
+let confirmingUninstall = false; // uninstall confirmation is open
 let forceSetup = false;   // user asked to reinstall / pick another folder
 const STEPS = { "Installing Python": "python", "Creating environment": "env", "Installing YSocial": "app" };
 const ORDER = ["python", "env", "app"];
 
 const show = (name) => {
-  for (const v of ["setup", "installing", "ready"]) $("v-" + v).classList.toggle("on", v === name);
+  for (const v of ["setup", "installing", "ready", "uninstall"]) $("v-" + v).classList.toggle("on", v === name);
 };
 const setError = (msg) => { const e = $("err"); e.textContent = msg || ""; e.classList.toggle("on", !!msg); };
 const busy = (btn, on) => { btn.classList.toggle("loading", on); btn.disabled = on; };
@@ -80,6 +81,7 @@ async function loadOptions() {
 
 async function refresh() {
   if (installing) { show("installing"); return; }
+  if (confirmingUninstall) { show("uninstall"); return; }
   const home = $("home").value;
   const o = readOptions();
   const installed = await invoke("is_installed", { home });
@@ -106,6 +108,21 @@ async function init() {
       const label = e.payload.slice(3);
       if (label === "Done") finishSteps(); else markStep(label);
     }
+  });
+  $("uninstall").addEventListener("click", async () => { setError(""); confirmingUninstall = true; $("deletedata").checked = false; await refresh(); });
+  $("cancel-uninstall").addEventListener("click", async () => { confirmingUninstall = false; await refresh(); });
+  $("confirm-uninstall").addEventListener("click", async () => {
+    const o = readOptions();
+    busy($("confirm-uninstall"), true);
+    $("cancel-uninstall").disabled = true;
+    try {
+      await invoke("uninstall", { home: $("home").value, host: o.host, port: o.port, deleteData: $("deletedata").checked });
+      forceSetup = false;
+    } catch (err) { log("ERROR: " + err); setError(friendly(err)); }
+    busy($("confirm-uninstall"), false);
+    $("cancel-uninstall").disabled = false;
+    confirmingUninstall = false;
+    await refresh();
   });
   $("reinstall").addEventListener("click", async () => { forceSetup = true; setError(""); await refresh(); });
   $("home").addEventListener("change", async () => { forceSetup = false; await loadOptions(); await refresh(); });

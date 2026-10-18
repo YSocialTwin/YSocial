@@ -237,45 +237,81 @@ fn is_running(home: String, host: String, port: u16) -> bool {
 
 /// Stop YSocial: SIGTERM (clean shutdown: experiments and Jupyter are stopped by
 /// YSocial itself), then SIGKILL after 15 s. Windows: taskkill of the process tree.
-#[tauri::command]
-async fn stop(app: AppHandle, home: String, host: String, port: u16) -> Result<(), String> {
-    tauri::async_runtime::spawn_blocking(move || {
-        let home = PathBuf::from(&home);
-        let Some(pid) = read_pid(&home) else {
-            return if port_open(&host, port) {
-                Err(format!(
-                    "Something is listening on port {port}, but it was not started by this installer"
-                ))
-            } else {
-                Ok(())
-            };
-        };
-        let _ = app.emit("progress", format!("Stopping YSocial (pid {pid})..."));
-        if cfg!(target_os = "windows") {
-            let _ = Command::new("taskkill").args(["/PID", &pid.to_string(), "/T", "/F"]).status();
+/// Unix: YSocial runs in its own process group, so leftovers (YServer/YClient,
+/// Jupyter) are killed with the group once the main process is gone.
+fn stop_service(app: &AppHandle, home: &Path, host: &str, port: u16, close_window: bool) -> Result<(), String> {
+    let Some(pid) = read_pid(home) else {
+        return if port_open(host, port) {
+            Err(format!(
+                "Something is listening on port {port}, but it was not started by this installer"
+            ))
         } else {
-            let _ = Command::new("kill").args(["-TERM", &pid.to_string()]).status();
+            Ok(())
+        };
+    };
+    let _ = app.emit("progress", format!("Stopping YSocial (pid {pid})..."));
+    if cfg!(target_os = "windows") {
+        let _ = Command::new("taskkill").args(["/PID", &pid.to_string(), "/T", "/F"]).status();
+    } else {
+        let _ = Command::new("kill").args(["-TERM", &pid.to_string()]).status();
+    }
+    let start = Instant::now();
+    while start.elapsed() < Duration::from_secs(15) {
+        if !pid_alive(pid) {
+            break;
         }
-        let start = Instant::now();
-        while start.elapsed() < Duration::from_secs(15) {
-            if !pid_alive(pid) {
-                break;
-            }
-            std::thread::sleep(Duration::from_millis(300));
-        }
-        if pid_alive(pid) && !cfg!(target_os = "windows") {
-            let _ = app.emit("progress", "Forcing stop...");
-            let _ = Command::new("kill").args(["-KILL", &pid.to_string()]).status();
-            std::thread::sleep(Duration::from_millis(500));
-        }
-        let _ = std::fs::remove_file(pid_file(&home));
-        if pid_alive(pid) {
-            return Err("Could not stop YSocial".into());
-        }
+        std::thread::sleep(Duration::from_millis(300));
+    }
+    if pid_alive(pid) && !cfg!(target_os = "windows") {
+        let _ = app.emit("progress", "Forcing stop...");
+        let _ = Command::new("kill").args(["-KILL", &pid.to_string()]).status();
+        std::thread::sleep(Duration::from_millis(500));
+    }
+    if !cfg!(target_os = "windows") {
+        // Anything still in the process group (started by YSocial) goes too.
+        let _ = Command::new("kill").args(["-KILL", &format!("-{pid}")]).stderr(Stdio::null()).status();
+    }
+    let _ = std::fs::remove_file(pid_file(home));
+    if pid_alive(pid) {
+        return Err("Could not stop YSocial".into());
+    }
+    if close_window {
         if let Some(w) = app.get_webview_window(APP_WINDOW) {
             let _ = w.close();
         }
-        let _ = app.emit("progress", "YSocial stopped.");
+    }
+    let _ = app.emit("progress", "YSocial stopped.");
+    Ok(())
+}
+
+#[tauri::command]
+async fn stop(app: AppHandle, home: String, host: String, port: u16) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || stop_service(&app, Path::new(&home), &host, port, true))
+        .await
+        .map_err(|e| e.to_string())?
+}
+
+/// Remove YSocial from this computer. The program (managed Python, packages) is
+/// always removed; the data folder content (experiments, databases, settings) only
+/// when `delete_data` is set. A running instance is stopped first.
+#[tauri::command]
+async fn uninstall(app: AppHandle, home: String, host: String, port: u16, delete_data: bool) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let home = PathBuf::from(&home);
+        let runtime = home.join("runtime");
+        // Safety: only touch a folder that really is a YSocial home.
+        if !runtime.join("venv").exists() || home.components().count() < 3 {
+            return Err("This folder does not look like a YSocial installation".into());
+        }
+        stop_service(&app, &home, &host, port, true)?;
+        let _ = app.emit("progress", "== Removing YSocial");
+        if delete_data {
+            std::fs::remove_dir_all(&home).map_err(|e| e.to_string())?;
+        } else {
+            std::fs::remove_dir_all(&runtime).map_err(|e| e.to_string())?;
+            let _ = std::fs::remove_file(pid_file(&home));
+        }
+        let _ = app.emit("progress", "YSocial removed.");
         Ok(())
     })
     .await
@@ -379,14 +415,14 @@ const LINK_SCRIPT: &str = r#"
 /// Open YSocial in a native window without browser chrome (address bar, tabs).
 /// Embedded third-party frames (e.g. payment widgets) load normally; clicks to other
 /// sites and new-window requests open in the system browser.
-fn open_app_window(app: &AppHandle, url: &str) -> Result<(), String> {
+fn open_app_window(app: &AppHandle, url: &str, home: PathBuf, host: String, port: u16) -> Result<(), String> {
     if let Some(w) = app.get_webview_window(APP_WINDOW) {
         let _ = w.set_focus();
         return Ok(());
     }
     let parsed: tauri::Url = url.parse().map_err(|e| format!("{e}"))?;
     let local = parsed.host_str().unwrap_or("").to_string();
-    WebviewWindowBuilder::new(app, APP_WINDOW, WebviewUrl::External(parsed))
+    let window = WebviewWindowBuilder::new(app, APP_WINDOW, WebviewUrl::External(parsed))
         .title("YSocial")
         .inner_size(1360.0, 880.0)
         .min_inner_size(900.0, 600.0)
@@ -400,8 +436,21 @@ fn open_app_window(app: &AppHandle, url: &str) -> Result<(), String> {
             tauri::webview::NewWindowResponse::Deny
         })
         .build()
-        .map(|_| ())
-        .map_err(|e| e.to_string())
+        .map_err(|e| e.to_string())?;
+    // Closing the application window ends YSocial and everything it started
+    // (only if this launcher started it: it needs the pid file).
+    let handle = app.clone();
+    window.on_window_event(move |event| {
+        if let tauri::WindowEvent::CloseRequested { .. } = event {
+            let (app, home, host) = (handle.clone(), home.clone(), host.clone());
+            std::thread::spawn(move || {
+                if read_pid(&home).is_some() {
+                    let _ = stop_service(&app, &home, &host, port, false);
+                }
+            });
+        }
+    });
+    Ok(())
 }
 
 #[tauri::command]
@@ -423,7 +472,13 @@ async fn launch(app: AppHandle, home: String, opts: LaunchOptions) -> Result<Str
             // Child output goes to <home>/logs/launch.log so failures are diagnosable.
             let out = std::fs::File::create(&log_path).map_err(|e| e.to_string())?;
             let err = out.try_clone().map_err(|e| e.to_string())?;
-            let spawned = Command::new(&exe)
+            let mut cmd = Command::new(&exe);
+            #[cfg(unix)]
+            {
+                use std::os::unix::process::CommandExt;
+                cmd.process_group(0); // own group: lets stop kill every child
+            }
+            let spawned = cmd
                 .args(&args)
                 .env("YSOCIAL_HOME", &home)
                 .env("PYTHONUNBUFFERED", "1")
@@ -444,7 +499,7 @@ async fn launch(app: AppHandle, home: String, opts: LaunchOptions) -> Result<Str
         while start.elapsed() < Duration::from_secs(180) {
             if port_open(&opts.host, opts.port) {
                 if opts.app_window {
-                    open_app_window(&app, &url)?;
+                    open_app_window(&app, &url, home.clone(), opts.host.clone(), opts.port)?;
                 } else {
                     open_in_browser(&url);
                 }
@@ -492,6 +547,7 @@ fn main() {
             launch,
             is_running,
             stop,
+            uninstall,
             load_settings,
             save_settings
         ])

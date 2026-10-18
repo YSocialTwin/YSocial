@@ -96,3 +96,15 @@ def test_launcher_reuses_login_look_and_assets_are_in_sync():
     # every local resource referenced by the page exists
     for ref in re.findall(r'(?:src|href)="([^":]+)"', html):
         assert (I / "ui" / ref).exists(), ref
+
+
+def test_uninstall_and_stop_on_window_close_wiring():
+    rs = (I / "src-tauri/src/main.rs").read_text()
+    html = (I / "ui/index.html").read_text()
+    js = (I / "ui/main.js").read_text()
+    assert "fn uninstall" in rs and "            uninstall,\n" in rs and '"uninstall"' in js
+    assert 'id="uninstall"' in html and 'id="deletedata"' in html
+    # the program is removed, data only on explicit request, and only for a real YSocial home
+    assert "delete_data" in rs and 'runtime.join("venv").exists()' in rs
+    # closing the application window stops YSocial (and its process group)
+    assert "CloseRequested" in rs and "process_group(0)" in rs

@@ -68,7 +68,19 @@
     <button class="yl-btn" id="launch" type="button" disabled><span class="yl-spin"></span><span id="launch-t">Start YSocial</span></button>
     <button class="yl-btn ghost" id="stop" type="button" disabled>Stop YSocial</button>
 
-    <div class="yl-where"><span>Data: <code id="where"></code></span><button class="yl-link" id="reinstall" type="button">Reinstall</button></div>
+    <div class="yl-where"><span>Data: <code id="where"></code></span><span><button class="yl-link" id="reinstall" type="button">Reinstall</button> · <button class="yl-link" id="uninstall" type="button">Uninstall</button></span></div>
+  </section>
+
+  <!-- 4. Uninstall confirmation -->
+  <section class="view" id="v-uninstall">
+    <h2>Uninstall YSocial?</h2>
+    <p class="yl-sub">This removes the program from this computer. Your experiments and data are kept unless you tick the box below.</p>
+    <label class="yl-opt">
+      <input id="deletedata" type="checkbox">
+      <span><b>Also delete my data</b><small>Experiments, databases and settings in the data folder. This cannot be undone.</small></span>
+    </label>
+    <button class="yl-btn" id="confirm-uninstall" type="button"><span class="yl-spin"></span><span>Uninstall</span></button>
+    <button class="yl-btn ghost" id="cancel-uninstall" type="button">Cancel</button>
   </section>
 
   <!-- Shared options -->
