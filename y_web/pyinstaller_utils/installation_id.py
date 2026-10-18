@@ -274,6 +274,13 @@ def get_version():
         str: Version string (e.g., "2.0.0") or "Unknown" if not available
     """
     try:
+        try:
+            from importlib.metadata import version as _dist_version
+
+            # installed package (wheel): the version of the distribution
+            return _dist_version("ysocial")
+        except Exception:
+            pass
         # Try to get resource path (works for both dev and PyInstaller)
         try:
             # PyInstaller creates a temp folder and stores path in _MEIPASS

@@ -46,6 +46,7 @@ from y_web.src.system.path_utils import (
     get_base_path,
     get_resource_path,
     get_writable_path,
+    resolve_external_repo,
 )
 
 # Internal alias for the double-underscore name used in terminate_server_process
@@ -55,9 +56,9 @@ _local_terminate_process = _terminate_process
 def _resolve_server_runtime_paths(base_path, platform_type):
     """Resolve the server package directory and entry script for a platform."""
     if platform_type == "microblogging":
-        server_dir = os.path.join(base_path, "external", "YServer")
+        server_dir = resolve_external_repo(base_path, "YServer")
     elif platform_type == "forum":
-        server_dir = os.path.join(base_path, "external", "YServerReddit")
+        server_dir = resolve_external_repo(base_path, "YServerReddit")
     else:
         raise NotImplementedError(f"Unsupported platform {platform_type}")
     return server_dir, os.path.join(server_dir, "y_server_run.py")

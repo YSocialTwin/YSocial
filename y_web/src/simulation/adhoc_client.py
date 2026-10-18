@@ -372,7 +372,9 @@ def start_adhoc_client(experiment, client_key: str):
 
     if not getattr(sys, "frozen", False):
         workspace_root = str(Path(__file__).resolve().parents[3])
-        plugin_src = str(Path(workspace_root) / "external" / "y_agents_plugins" / "src")
+        from y_web.src.system.path_utils import get_external_path
+
+        plugin_src = str(Path(get_external_path("y_agents_plugins")) / "src")
         existing_path = env.get("PYTHONPATH", "")
         env["PYTHONPATH"] = os.pathsep.join(
             part for part in [workspace_root, plugin_src, existing_path] if part

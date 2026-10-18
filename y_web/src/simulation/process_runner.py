@@ -46,17 +46,17 @@ def run_server_main():
     # Determine the correct server module based on platform
     if args.platform == "microblogging":
         # Add YServer to sys.path for imports
-        from y_web.src.system.path_utils import get_base_path
+        from y_web.src.system.path_utils import get_base_path, resolve_external_repo
 
         base_path = get_base_path()
-        yserver_path = os.path.join(base_path, "external", "YServer")
+        yserver_path = resolve_external_repo(base_path, "YServer")
         sys.path.insert(0, yserver_path)
     elif args.platform == "forum":
         # Add YServerReddit to sys.path for imports
-        from y_web.src.system.path_utils import get_base_path
+        from y_web.src.system.path_utils import get_base_path, resolve_external_repo
 
         base_path = get_base_path()
-        yserver_path = os.path.join(base_path, "external", "YServerReddit")
+        yserver_path = resolve_external_repo(base_path, "YServerReddit")
         sys.path.insert(0, yserver_path)
     else:
         raise NotImplementedError(f"Unsupported platform {args.platform}")
@@ -172,10 +172,12 @@ def _get_client_archetypes(client):
 
 def _resolve_client_package_dir(base_path, platform_type):
     """Resolve the external client package directory for a platform."""
+    from y_web.src.system.path_utils import resolve_external_repo
+
     if platform_type == "microblogging":
-        return os.path.join(base_path, "external", "YClient")
+        return resolve_external_repo(base_path, "YClient")
     if platform_type == "forum":
-        return os.path.join(base_path, "external", "YClientReddit")
+        return resolve_external_repo(base_path, "YClientReddit")
     raise NotImplementedError(f"Unsupported platform {platform_type}")
 
 
@@ -671,15 +673,15 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
 
     from y_web import create_app  # only to reuse URI config
     from y_web.src.models import Client_Execution
-    from y_web.src.system.path_utils import get_base_path
+    from y_web.src.system.path_utils import get_base_path, resolve_external_repo
 
     base_path = get_base_path()
     FakeAgent = None
     if exp.platform_type == "microblogging":
-        sys.path.append(os.path.join(base_path, "external", "YClient"))
+        sys.path.append(resolve_external_repo(base_path, "YClient"))
         from y_client.classes import FakeAgent
     elif exp.platform_type == "forum":
-        sys.path.append(os.path.join(base_path, "external", "YClientReddit"))
+        sys.path.append(resolve_external_repo(base_path, "YClientReddit"))
         from y_client.classes.fake_base_agent import FakeAgent
 
     # Create app only to get DB URI, but don't push its context

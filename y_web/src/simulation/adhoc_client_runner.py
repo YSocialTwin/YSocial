@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import os
 import signal
 import sys
 import time
@@ -16,7 +17,13 @@ from pathlib import Path
 from sqlalchemy.exc import OperationalError
 
 ROOT = Path(__file__).resolve().parents[3]
-PLUGIN_SRC = ROOT / "external" / "y_agents_plugins" / "src"
+# the plugin is installed under the data folder (the repository root from a checkout)
+PLUGIN_SRC = (
+    Path(os.environ.get("YSOCIAL_HOME") or ROOT)
+    / "external"
+    / "y_agents_plugins"
+    / "src"
+)
 for candidate in (ROOT, PLUGIN_SRC):
     candidate_str = str(candidate)
     if candidate.exists() and candidate_str not in sys.path:

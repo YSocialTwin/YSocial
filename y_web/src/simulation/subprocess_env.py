@@ -46,6 +46,8 @@ def build_subprocess_env(extra: Optional[Dict[str, str]] = None) -> Dict[str, st
         env.pop(key, None)
 
     env.update(get_model_cache_env())
+    # every child process resolves the same data folder as the parent
+    env["YSOCIAL_HOME"] = get_writable_path()
 
     if extra:
         env.update(extra)
