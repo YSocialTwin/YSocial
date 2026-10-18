@@ -23,6 +23,7 @@ Rules that hold for both layers (they are part of the program's contract; do not
 6. **Do not "improve" the English text** while translating. A change to English is a separate change with its own hash update.
 7. **Plugins are optional.** With a plugin absent or disabled the core behaves as before; a language added to a plugin never makes the core depend on it.
 8. Git hygiene used by this program: work on a branch, commit incrementally, do not push or tag on behalf of the maintainers.
+9. **The prompt language does not set the language of the generated text.** `prompt_language` (experiment or client) chooses the language of the instructions sent to the model. The language agents write in is the `language` attribute of the population (rendered into prompts such as "Write in {self.language}", localised, e.g. "inglese"). An Italian experiment with an English population produces English posts by design; to get Italian posts, create the population with language Italian.
 
 ## 1. Prerequisites and decisions
 
@@ -270,6 +271,7 @@ When a new plugin is added later, it must follow the same pattern: UI catalog th
 | `validate_pack.py`: field mismatch | a `{field}` was translated, dropped or duplicated |
 | `validate_pack.py`: protocol token missing | a token such as `COMMENT` was translated |
 | `snapshot_hashes.py --check` fails | an English file was edited; revert |
+| Generated posts in English although prompts are `fr` | the population language is English (agents' `language` attribute), not a prompt problem: create the population with the wanted language |
 | Experiment prompts in English though `fr` selected | `prompt_language.json` not written for the experiment (client created before the language was set), pack missing, or model-side fallback warning in the logs |
 | Memory blocks English in a French run | `memory_language` not passed (package older than 0.2.0) or `fr.json` missing a key (see the single warning in the log) |
 | CI `coverage_report.py` fails | the new language is below 98% in some area (core, a plugin, or a JS domain) |
