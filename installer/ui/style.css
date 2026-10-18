@@ -1,0 +1,13 @@
+:root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+body { margin: 0; background: Canvas; color: CanvasText; }
+main { max-width: 36rem; margin: 0 auto; padding: 1.25rem 1rem 2rem; }
+h1 { margin: 0 0 .25rem; }
+.muted { opacity: .7; font-size: .9rem; }
+label { display: block; margin-top: 1rem; font-weight: 600; }
+input[type=text] { width: 100%; box-sizing: border-box; padding: .5rem; font-size: 1rem; }
+fieldset { margin: 1rem 0; padding: .5rem .75rem; border: 1px solid #8884; border-radius: 6px; }
+.check { display: flex; gap: .6rem; font-weight: 400; margin: .25rem 0; }
+.row { display: flex; gap: .75rem; margin: 1rem 0; }
+button { padding: .55rem 1.1rem; font-size: 1rem; cursor: pointer; }
+button:disabled { opacity: .5; cursor: default; }
+pre { height: 12rem; overflow: auto; background: #8881; padding: .6rem; font-size: .8rem; white-space: pre-wrap; }

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>YSocial</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <h1>YSocial</h1>
+  <p class="muted">Installs an isolated Python environment and YSocial. Your data stays in the folder below.</p>
+
+  <label for="home">Data folder</label>
+  <input id="home" type="text" spellcheck="false">
+
+  <fieldset>
+    <legend>Optional components</legend>
+    <label class="check">
+      <input id="toxicity" type="checkbox">
+      <span><strong>Toxicity detection (Detoxify)</strong><br>
+      Installs PyTorch and downloads a language model: a large download and
+      several GB of disk space. Skip it unless your experiments use toxicity scoring;
+      you can add it later with <code>pip install "ysocial[toxicity]"</code>.</span>
+    </label>
+  </fieldset>
+
+  <p class="muted">Not included: LLM servers (Ollama, vLLM, OpenAI-compatible endpoints) and PostgreSQL are external;
+  SQLite is the default database. Profile pictures are downloaded on first start.</p>
+
+  <div class="row">
+    <button id="install">Install</button>
+    <button id="launch" disabled>Start YSocial</button>
+  </div>
+  <pre id="log" aria-live="polite"></pre>
+</main>
+<script src="main.js"></script>
+</body>
+</html>
