@@ -184,6 +184,12 @@ fn open_in_browser(url: &str) {
     };
 }
 
+fn log_tail(path: &Path, n: usize) -> String {
+    let text = std::fs::read_to_string(path).unwrap_or_default();
+    let lines: Vec<&str> = text.lines().collect();
+    lines[lines.len().saturating_sub(n)..].join("\n")
+}
+
 #[tauri::command]
 async fn launch(app: AppHandle, home: String, port: u16) -> Result<String, String> {
     tauri::async_runtime::spawn_blocking(move || {
@@ -193,25 +199,48 @@ async fn launch(app: AppHandle, home: String, port: u16) -> Result<String, Strin
             return Err("YSocial is not installed in this folder".into());
         }
         let url = format!("http://localhost:{port}");
+        let log_dir = home.join("logs");
+        std::fs::create_dir_all(&log_dir).map_err(|e| e.to_string())?;
+        let log_path = log_dir.join("launch.log");
+        let mut child = None;
         if TcpStream::connect(("127.0.0.1", port)).is_err() {
-            Command::new(&exe)
-                .args(["--host", "127.0.0.1", "--port", &port.to_string()])
-                .env("YSOCIAL_HOME", &home)
-                .current_dir(&home)
-                .stdin(Stdio::null())
-                .spawn()
-                .map_err(|e| e.to_string())?;
+            // Child output goes to <home>/logs/launch.log so failures are diagnosable.
+            let out = std::fs::File::create(&log_path).map_err(|e| e.to_string())?;
+            let err = out.try_clone().map_err(|e| e.to_string())?;
+            child = Some(
+                Command::new(&exe)
+                    .args(["--host", "127.0.0.1", "--port", &port.to_string()])
+                    .env("YSOCIAL_HOME", &home)
+                    .env("PYTHONUNBUFFERED", "1")
+                    .current_dir(&home)
+                    .stdin(Stdio::null())
+                    .stdout(Stdio::from(out))
+                    .stderr(Stdio::from(err))
+                    .spawn()
+                    .map_err(|e| e.to_string())?,
+            );
         }
-        let _ = app.emit("progress", "Starting YSocial...");
+        let _ = app.emit("progress", format!("Starting YSocial... (log: {})", log_path.display()));
         let start = Instant::now();
         while start.elapsed() < Duration::from_secs(180) {
             if TcpStream::connect(("127.0.0.1", port)).is_ok() {
                 open_in_browser(&url);
                 return Ok(url);
             }
+            if let Some(c) = child.as_mut() {
+                if let Ok(Some(status)) = c.try_wait() {
+                    return Err(format!(
+                        "YSocial exited immediately ({status}). Last log lines:\n{}",
+                        log_tail(&log_path, 25)
+                    ));
+                }
+            }
             std::thread::sleep(Duration::from_millis(500));
         }
-        Err("YSocial did not start within 3 minutes".into())
+        Err(format!(
+            "YSocial did not start within 3 minutes. Last log lines:\n{}",
+            log_tail(&log_path, 25)
+        ))
     })
     .await
     .map_err(|e| e.to_string())?
