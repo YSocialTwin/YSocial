@@ -188,7 +188,8 @@ def detect_env_handler():
     Returns:
         String: Python executable path or command prefix (e.g., 'pipenv run python')
     """
-    python_exe = Path(sys.executable).resolve()
+    # Keep the venv path (no .resolve()): the symlink would lead to the base interpreter.
+    python_exe = Path(os.path.abspath(sys.executable))
 
     # Determine platform-specific directory and executable names
     is_windows = sys.platform.startswith("win")
