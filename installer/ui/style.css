@@ -11,3 +11,8 @@ fieldset { margin: 1rem 0; padding: .5rem .75rem; border: 1px solid #8884; borde
 button { padding: .55rem 1.1rem; font-size: 1rem; cursor: pointer; }
 button:disabled { opacity: .5; cursor: default; }
 pre { height: 12rem; overflow: auto; background: #8881; padding: .6rem; font-size: .8rem; white-space: pre-wrap; }
+details { margin: 1rem 0; padding: .5rem .75rem; border: 1px solid #8884; border-radius: 6px; }
+summary { cursor: pointer; font-weight: 600; }
+.grid { display: grid; grid-template-columns: 9rem 1fr; gap: .4rem .75rem; align-items: center; }
+.grid label { margin: 0; font-weight: 400; }
+select, input[type=number] { padding: .45rem; font-size: 1rem; box-sizing: border-box; width: 100%; }

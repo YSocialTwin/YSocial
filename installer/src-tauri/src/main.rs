@@ -13,7 +13,8 @@ use std::net::TcpStream;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
-use tauri::{AppHandle, Emitter, Manager};
+use serde::Deserialize;
+use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder};
 
 const PYTHON_VERSION: &str = "3.12";
 const TORCH_CPU_INDEX: &str = "https://download.pytorch.org/whl/cpu";
@@ -209,24 +210,32 @@ fn pid_alive(pid: u32) -> bool {
     }
 }
 
-fn port_open(port: u16) -> bool {
-    TcpStream::connect(("127.0.0.1", port)).is_ok()
+/// Address to probe/open for a bind host (wildcards are reached through loopback).
+fn probe_host(host: &str) -> String {
+    match host.trim() {
+        "" | "0.0.0.0" | "::" | "[::]" => "127.0.0.1".to_string(),
+        h => h.to_string(),
+    }
+}
+
+fn port_open(host: &str, port: u16) -> bool {
+    TcpStream::connect((probe_host(host).as_str(), port)).is_ok()
 }
 
 #[tauri::command]
-fn is_running(home: String, port: u16) -> bool {
+fn is_running(home: String, host: String, port: u16) -> bool {
     let home = PathBuf::from(home);
-    read_pid(&home).map(pid_alive).unwrap_or(false) || port_open(port)
+    read_pid(&home).map(pid_alive).unwrap_or(false) || port_open(&host, port)
 }
 
 /// Stop YSocial: SIGTERM (clean shutdown: experiments and Jupyter are stopped by
 /// YSocial itself), then SIGKILL after 15 s. Windows: taskkill of the process tree.
 #[tauri::command]
-async fn stop(app: AppHandle, home: String, port: u16) -> Result<(), String> {
+async fn stop(app: AppHandle, home: String, host: String, port: u16) -> Result<(), String> {
     tauri::async_runtime::spawn_blocking(move || {
         let home = PathBuf::from(&home);
         let Some(pid) = read_pid(&home) else {
-            return if port_open(port) {
+            return if port_open(&host, port) {
                 Err(format!(
                     "Something is listening on port {port}, but it was not started by this installer"
                 ))
@@ -256,6 +265,9 @@ async fn stop(app: AppHandle, home: String, port: u16) -> Result<(), String> {
         if pid_alive(pid) {
             return Err("Could not stop YSocial".into());
         }
+        if let Some(w) = app.get_webview_window(APP_WINDOW) {
+            let _ = w.close();
+        }
         let _ = app.emit("progress", "YSocial stopped.");
         Ok(())
     })
@@ -269,46 +281,140 @@ fn log_tail(path: &Path, n: usize) -> String {
     lines[lines.len().saturating_sub(n)..].join("\n")
 }
 
+const APP_WINDOW: &str = "ysocial-app";
+
+/// Advanced launch options: the same flags as the `ysocial` command line.
+#[derive(Deserialize, Default)]
+#[serde(default)]
+struct LaunchOptions {
+    host: String,
+    port: u16,
+    debug: bool,
+    /// "sqlite" | "postgresql"
+    db: String,
+    /// "", "ollama", "vllm" or host:port
+    llm_backend: String,
+    /// `-n`: do not launch the Jupyter notebook server
+    no_notebook: bool,
+    /// `-e`: development mode (private plugin repositories)
+    development: bool,
+    /// Extra raw arguments (whitespace separated, no quoting)
+    extra_args: String,
+    /// Open in a borderless application window instead of the system browser
+    app_window: bool,
+}
+
+fn build_args(o: &LaunchOptions) -> Result<Vec<String>, String> {
+    if o.port == 0 {
+        return Err("Invalid port".into());
+    }
+    let host = if o.host.trim().is_empty() { "127.0.0.1" } else { o.host.trim() };
+    if host.chars().any(|c| c.is_whitespace()) {
+        return Err("Invalid host".into());
+    }
+    let mut args = vec![
+        "--host".to_string(),
+        host.to_string(),
+        "--port".to_string(),
+        o.port.to_string(),
+    ];
+    match o.db.as_str() {
+        "" | "sqlite" => {}
+        "postgresql" => args.extend(["--db".to_string(), "postgresql".to_string()]),
+        other => return Err(format!("Unsupported database: {other}")),
+    }
+    if !o.llm_backend.trim().is_empty() {
+        args.extend(["--llm-backend".to_string(), o.llm_backend.trim().to_string()]);
+    }
+    if o.debug {
+        args.push("--debug".into());
+    }
+    if o.no_notebook {
+        args.push("--no_notebook".into());
+    }
+    if o.development {
+        args.push("--development".into());
+    }
+    args.extend(o.extra_args.split_whitespace().map(String::from));
+    Ok(args)
+}
+
+/// Open YSocial in a native window without browser chrome (address bar, tabs).
+/// Links to other sites are handed to the system browser.
+fn open_app_window(app: &AppHandle, url: &str) -> Result<(), String> {
+    if let Some(w) = app.get_webview_window(APP_WINDOW) {
+        let _ = w.set_focus();
+        return Ok(());
+    }
+    let parsed: tauri::Url = url.parse().map_err(|e| format!("{e}"))?;
+    let local = parsed.host_str().unwrap_or("").to_string();
+    WebviewWindowBuilder::new(app, APP_WINDOW, WebviewUrl::External(parsed))
+        .title("YSocial")
+        .inner_size(1360.0, 880.0)
+        .min_inner_size(900.0, 600.0)
+        .on_navigation(move |target| {
+            let same_site = target.host_str().map(|h| h == local).unwrap_or(false);
+            if same_site || target.scheme() == "about" || target.scheme() == "blob" {
+                true
+            } else {
+                open_in_browser(target.as_str());
+                false
+            }
+        })
+        .build()
+        .map(|_| ())
+        .map_err(|e| e.to_string())
+}
+
 #[tauri::command]
-async fn launch(app: AppHandle, home: String, port: u16) -> Result<String, String> {
+async fn launch(app: AppHandle, home: String, opts: LaunchOptions) -> Result<String, String> {
     tauri::async_runtime::spawn_blocking(move || {
         let home = PathBuf::from(&home);
         let exe = venv_ysocial(&home);
         if !exe.exists() {
             return Err("YSocial is not installed in this folder".into());
         }
-        let url = format!("http://localhost:{port}");
+        let args = build_args(&opts)?;
+        let shown = probe_host(&opts.host);
+        let url = format!("http://{}:{}", if shown == "127.0.0.1" { "localhost".to_string() } else { shown }, opts.port);
         let log_dir = home.join("logs");
         std::fs::create_dir_all(&log_dir).map_err(|e| e.to_string())?;
         let log_path = log_dir.join("launch.log");
         let mut child = None;
-        if !port_open(port) {
+        if !port_open(&opts.host, opts.port) {
             // Child output goes to <home>/logs/launch.log so failures are diagnosable.
             let out = std::fs::File::create(&log_path).map_err(|e| e.to_string())?;
             let err = out.try_clone().map_err(|e| e.to_string())?;
-            let spawned =
-                Command::new(&exe)
-                    .args(["--host", "127.0.0.1", "--port", &port.to_string()])
-                    .env("YSOCIAL_HOME", &home)
-                    .env("PYTHONUNBUFFERED", "1")
-                    .current_dir(&home)
-                    .stdin(Stdio::null())
-                    .stdout(Stdio::from(out))
-                    .stderr(Stdio::from(err))
-                    .spawn()
-                    .map_err(|e| e.to_string())?;
+            let spawned = Command::new(&exe)
+                .args(&args)
+                .env("YSOCIAL_HOME", &home)
+                .env("PYTHONUNBUFFERED", "1")
+                .current_dir(&home)
+                .stdin(Stdio::null())
+                .stdout(Stdio::from(out))
+                .stderr(Stdio::from(err))
+                .spawn()
+                .map_err(|e| e.to_string())?;
             let _ = std::fs::write(pid_file(&home), spawned.id().to_string());
             child = Some(spawned);
         }
-        let _ = app.emit("progress", format!("Starting YSocial... (log: {})", log_path.display()));
+        let _ = app.emit(
+            "progress",
+            format!("Starting YSocial: ysocial {} (log: {})", args.join(" "), log_path.display()),
+        );
         let start = Instant::now();
         while start.elapsed() < Duration::from_secs(180) {
-            if TcpStream::connect(("127.0.0.1", port)).is_ok() {
-                open_in_browser(&url);
+            if port_open(&opts.host, opts.port) {
+                if opts.app_window {
+                    open_app_window(&app, &url)?;
+                } else {
+                    open_in_browser(&url);
+                }
                 return Ok(url);
             }
             if let Some(c) = child.as_mut() {
                 if let Ok(Some(status)) = c.try_wait() {
+                    let _ = std::fs::remove_file(pid_file(&home));
                     return Err(format!(
                         "YSocial exited immediately ({status}). Last log lines:\n{}",
                         log_tail(&log_path, 25)
@@ -326,9 +432,31 @@ async fn launch(app: AppHandle, home: String, port: u16) -> Result<String, Strin
     .map_err(|e| e.to_string())?
 }
 
+/// Launcher settings (advanced options) are stored as JSON next to the data.
+#[tauri::command]
+fn load_settings(home: String) -> String {
+    std::fs::read_to_string(PathBuf::from(home).join("launcher.json")).unwrap_or_default()
+}
+
+#[tauri::command]
+fn save_settings(home: String, json: String) -> Result<(), String> {
+    let home = PathBuf::from(home);
+    std::fs::create_dir_all(&home).map_err(|e| e.to_string())?;
+    std::fs::write(home.join("launcher.json"), json).map_err(|e| e.to_string())
+}
+
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![default_home, is_installed, install, launch, is_running, stop])
+        .invoke_handler(tauri::generate_handler![
+            default_home,
+            is_installed,
+            install,
+            launch,
+            is_running,
+            stop,
+            load_settings,
+            save_settings
+        ])
         .run(tauri::generate_context!())
         .expect("error while running the YSocial installer");
 }

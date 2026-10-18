@@ -28,6 +28,32 @@
   <p class="muted">Not included: LLM servers (Ollama, vLLM, OpenAI-compatible endpoints) and PostgreSQL are external;
   SQLite is the default database. Profile pictures are downloaded on first start.</p>
 
+  <details id="advanced">
+    <summary>Advanced options</summary>
+    <p class="muted">Same flags as the <code>ysocial</code> command line.</p>
+    <div class="grid">
+      <label for="host">Host (bind address)</label>
+      <input id="host" type="text" value="127.0.0.1" spellcheck="false">
+      <label for="port">Port</label>
+      <input id="port" type="number" min="1" max="65535" value="8080">
+      <label for="db">Database</label>
+      <select id="db"><option value="sqlite">SQLite (default)</option><option value="postgresql">PostgreSQL</option></select>
+      <label for="llm">LLM backend</label>
+      <input id="llm" type="text" placeholder="empty = disabled; ollama, vllm or host:port" spellcheck="false">
+      <label for="extra">Extra arguments</label>
+      <input id="extra" type="text" placeholder="space-separated, no quoting" spellcheck="false">
+    </div>
+    <label class="check"><input id="debug" type="checkbox"><span>Debug mode (<code>--debug</code>)</span></label>
+    <label class="check"><input id="nonotebook" type="checkbox"><span>Do not start the Jupyter notebook server (<code>--no_notebook</code>)</span></label>
+    <label class="check"><input id="development" type="checkbox"><span>Development mode: show private plugin repositories (<code>--development</code>)</span></label>
+    <p class="muted">Binding to <code>0.0.0.0</code> exposes YSocial to your network.</p>
+  </details>
+
+  <label class="check">
+    <input id="appwindow" type="checkbox" checked>
+    <span>Open in an application window (no browser toolbar). Untick to use your default browser.</span>
+  </label>
+
   <div class="row">
     <button id="install">Install</button>
     <button id="launch" disabled>Start YSocial</button>

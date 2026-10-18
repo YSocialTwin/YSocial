@@ -38,7 +38,7 @@ def test_ui_exposes_toxicity_choice_with_clear_text():
     assert 'id="toxicity"' in html
     assert re.search(r"large download", html)
     js = (I / "ui/main.js").read_text()
-    for cmd in ("default_home", "is_installed", "install", "launch", "is_running", "stop"):
+    for cmd in ("default_home", "is_installed", "install", "launch", "is_running", "stop", "load_settings", "save_settings"):
         assert f'"{cmd}"' in js
         assert f"fn {cmd}" in (I / "src-tauri/src/main.rs").read_text()
 
@@ -47,9 +47,31 @@ def test_stop_button_and_pid_file_wiring():
     html = (I / "ui/index.html").read_text()
     assert 'id="stop"' in html
     rs = (I / "src-tauri/src/main.rs").read_text()
-    assert "ysocial.pid" in rs and "is_running, stop" in rs
+    assert "ysocial.pid" in rs and "            stop,\n" in rs
 
 
 def test_ysocial_exits_cleanly_on_sigterm():
     main = (I.parent / "y_social.py").read_text()
     assert "signal.SIGTERM" in main
+
+
+def test_advanced_options_cover_cli_flags():
+    import re
+
+    main = (I.parent / "y_social.py").read_text()
+    cli = set(re.findall(r'"--([a-z_-]+)"', main))
+    rs = (I / "src-tauri/src/main.rs").read_text()
+    # every flag of the command line (except help) is reachable from the launcher
+    for flag in cli - {"help"}:
+        assert f'"--{flag}"' in rs, flag
+    html = (I / "ui/index.html").read_text()
+    for field in ("host", "port", "db", "llm", "extra", "debug", "nonotebook", "development", "appwindow"):
+        assert f'id="{field}"' in html
+
+
+def test_app_window_blocks_external_navigation():
+    rs = (I / "src-tauri/src/main.rs").read_text()
+    assert "WebviewWindowBuilder" in rs and "on_navigation" in rs
+    # the remote page gets no IPC: capabilities stay limited to the installer window
+    cap = json.loads((I / "src-tauri/capabilities/default.json").read_text())
+    assert cap["windows"] == ["main"]
