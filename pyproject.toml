@@ -28,7 +28,7 @@ ensure_newline_before_comments = true
 skip_glob = ["external/*"]
 
 [build-system]
-requires = ["setuptools>=69", "wheel"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -36,7 +36,8 @@ name = "ysocial"
 dynamic = ["version", "dependencies", "optional-dependencies"]
 description = "YSocial: a digital twin of social media platforms populated by LLM agents"
 readme = "README.md"
-license = { file = "LICENSE" }
+license = "GPL-3.0-only"
+license-files = ["LICENSE"]
 requires-python = ">=3.12"
 authors = [{ name = "Giulio Rossetti" }]
 classifiers = [
