@@ -498,4 +498,20 @@ def ensure_experiment_schema_for_uri(db_uri: str) -> bool:
     if ensured and _post_table_exists(db_uri):
         with _SCHEMA_LOCK:
             _ENSURED_SCHEMAS.add(db_uri)
+        _normalize_hashtags_once(db_uri)
     return ensured
+
+
+_HASHTAGS_DONE = set()
+
+
+def _normalize_hashtags_once(db_uri):
+    """Bring the hashtags of an experiment to their canonical form, once per process and database."""
+    with _SCHEMA_LOCK:
+        if db_uri in _HASHTAGS_DONE:
+            return
+    from y_web.src.experiment.hashtag_migration import merge_duplicate_hashtags_for_uri
+
+    if merge_duplicate_hashtags_for_uri(db_uri) is not None:
+        with _SCHEMA_LOCK:
+            _HASHTAGS_DONE.add(db_uri)

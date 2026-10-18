@@ -9,11 +9,12 @@ import uuid
 
 from flask import flash, redirect, request, url_for
 from flask_login import current_user, login_required
-from sqlalchemy import select
+from sqlalchemy import select, func
 
 from y_web import db
 from y_web.i18n import gettext as _
 from y_web.routes.interactions._blueprint import user
+from y_web.hashtag_text import normalize_hashtag
 from y_web.routes.interactions.common import _maybe_update_fb_interests
 from y_web.src.content.article_extractor import extract_article_info
 from y_web.src.content.text_utils import toxicity, vader_sentiment
@@ -326,10 +327,11 @@ def publish_post_reddit(exp_id):
                 db.session.commit()
 
     for tag in hashtags:
-        if len(tag) < 4:
+        tag = normalize_hashtag(tag)
+        if len(tag) < 3:
             continue
 
-        ht = db.session.scalars(select(Hashtags).filter_by(hashtag=tag)).first()
+        ht = db.session.scalars(select(Hashtags).filter(func.lower(Hashtags.hashtag) == tag.lower())).first()
         if ht is None:
             try:
                 ht = Hashtags(hashtag=tag)
@@ -340,7 +342,7 @@ def publish_post_reddit(exp_id):
                 ht = Hashtags(id=str(uuid.uuid4()), hashtag=tag)
                 db.session.add(ht)
                 db.session.commit()
-            ht = db.session.scalars(select(Hashtags).filter_by(hashtag=tag)).first()
+            ht = db.session.scalars(select(Hashtags).filter(func.lower(Hashtags.hashtag) == tag.lower())).first()
 
         try:
             post_tag = Post_hashtags(post_id=post.id, hashtag_id=ht.id)
@@ -590,10 +592,11 @@ def publish_comment(exp_id):
                 db.session.commit()
 
     for tag in hashtags:
-        if len(tag) < 4:
+        tag = normalize_hashtag(tag)
+        if len(tag) < 3:
             continue
 
-        ht = db.session.scalars(select(Hashtags).filter_by(hashtag=tag)).first()
+        ht = db.session.scalars(select(Hashtags).filter(func.lower(Hashtags.hashtag) == tag.lower())).first()
         if ht is None:
             try:
                 ht = Hashtags(hashtag=tag)
@@ -604,7 +607,7 @@ def publish_comment(exp_id):
                 ht = Hashtags(id=str(uuid.uuid4()), hashtag=tag)
                 db.session.add(ht)
                 db.session.commit()
-            ht = db.session.scalars(select(Hashtags).filter_by(hashtag=tag)).first()
+            ht = db.session.scalars(select(Hashtags).filter(func.lower(Hashtags.hashtag) == tag.lower())).first()
 
         try:
             post_tag = Post_hashtags(post_id=post.id, hashtag_id=ht.id)

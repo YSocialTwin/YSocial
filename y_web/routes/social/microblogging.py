@@ -7,6 +7,7 @@ Routes: feeed_logged, feed, get_post_hashtags, get_post_interest,
         api_profile_posts.
 """
 
+from y_web.hashtag_text import normalize_hashtag
 from flask import (
     current_app,
     flash,
@@ -794,7 +795,7 @@ def api_header_search(exp_id):
     results.extend(
         {
             "type": "hashtag",
-            "title": f"#{match.hashtag}",
+            "title": f"#{normalize_hashtag(match.hashtag)}",
             "subtitle": "Hashtag",
             "url": f"/{exp_id}/hashtag_posts/{match.id}/1",
         }

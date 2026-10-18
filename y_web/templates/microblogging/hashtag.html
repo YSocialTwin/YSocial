@@ -293,7 +293,7 @@
                     <!-- POST #1 -->
                     {% set hero_eyebrow = _('Hashtag Focus') %}
                     {% set hero_prefix = _("Let's see what we are saying about") %}
-                    {% set hero_focus = current_hashtag %}
+                    {% set hero_focus = '#' ~ (current_hashtag|string|trim('#')) %}
                     {% set hero_suffix = _('today.') %}
                     {% include "microblogging/components/context_hero_card.html" %}
 
