@@ -63,3 +63,26 @@ def test_schema_is_not_cached_before_the_post_table_exists(tmp_path):
     conn.close()
     assert {"image_post_id", "dedupe_key", "client_action_id", "created_at"} <= columns
     assert uri in schema._ENSURED_SCHEMAS
+
+
+def test_user_mgmt_has_the_columns_the_hpc_server_inserts(tmp_path):
+    """The HPC server registers agents with ``last_active_day``. If the web app creates ``user_mgmt`` first
+    (or finds an older one), that column must exist, otherwise no agent is stored and the feed stays empty."""
+    from y_web.src.experiment import schema
+
+    schema._ENSURED_SCHEMAS.clear()
+    fresh = tmp_path / "fresh.db"
+    assert schema.ensure_sqlite_experiment_schema(str(fresh)) is True
+    conn = sqlite3.connect(fresh)
+    assert "last_active_day" in {r[1] for r in conn.execute("PRAGMA table_info(user_mgmt)")}
+    conn.close()
+
+    old = tmp_path / "old.db"
+    conn = sqlite3.connect(old)
+    conn.execute("CREATE TABLE user_mgmt (id TEXT PRIMARY KEY, username TEXT NOT NULL UNIQUE, password TEXT NOT NULL)")
+    conn.commit()
+    conn.close()
+    assert schema.ensure_sqlite_experiment_schema(str(old)) is True
+    conn = sqlite3.connect(old)
+    assert "last_active_day" in {r[1] for r in conn.execute("PRAGMA table_info(user_mgmt)")}
+    conn.close()

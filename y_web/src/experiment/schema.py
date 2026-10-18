@@ -40,7 +40,8 @@ _SQLITE_TABLES = {
             archetype TEXT,
             profile_picture TEXT,
             bio TEXT,
-            cover_image VARCHAR(400) DEFAULT ''
+            cover_image VARCHAR(400) DEFAULT '',
+            last_active_day INTEGER
         )
     """,
     "rounds": """
@@ -190,6 +191,7 @@ _SQLITE_COLUMNS = {
     },
     "user_mgmt": {
         "cover_image": "VARCHAR(400) DEFAULT ''",
+        "last_active_day": "INTEGER",
     },
     "post": {
         "image_post_id": "INTEGER",
@@ -311,6 +313,7 @@ _POSTGRES_COLUMNS = {
     },
     "user_mgmt": {
         "cover_image": "VARCHAR(400) DEFAULT ''",
+        "last_active_day": "INTEGER",
     },
     "post": {
         "image_post_id": "INTEGER",
