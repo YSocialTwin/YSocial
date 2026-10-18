@@ -1,0 +1,59 @@
+"""Create the managed YSocial runtime (E3): uv-managed Python 3.12 + venv + wheel.
+
+Usage:
+    python scripts/packaging/bootstrap_env.py --home DIR --wheel ysocial.whl \
+        [--uv PATH] [--wheelhouse DIR]
+
+With --wheelhouse the install is fully offline (--no-index --find-links).
+Layout: <home>/runtime/{python,venv}; the venv provides `bin/ysocial`.
+"""
+import argparse
+import os
+import shutil
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+PYTHON_VERSION = "3.12"
+
+
+def run(cmd, env=None):
+    print("+", " ".join(map(str, cmd)), flush=True)
+    subprocess.run(list(map(str, cmd)), check=True, env=env)
+
+
+TORCH_CPU_INDEX = "https://download.pytorch.org/whl/cpu"
+
+
+def bootstrap(home, wheel, uv="uv", wheelhouse=None, torch_cpu=True):
+    home = Path(home)
+    runtime = home / "runtime"
+    venv = runtime / "venv"
+    env = dict(os.environ, UV_PYTHON_INSTALL_DIR=str(runtime / "python"))
+    if wheelhouse:
+        env["UV_PYTHON_DOWNLOADS"] = "manual"
+    t0 = time.time()
+    run([uv, "python", "install", PYTHON_VERSION], env)
+    run([uv, "venv", "--python", PYTHON_VERSION, venv], env)
+    py = venv / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+    cmd = [uv, "pip", "install", "--python", py]
+    if wheelhouse:
+        cmd += ["--no-index", "--find-links", wheelhouse]
+    elif torch_cpu:
+        # detoxify -> torch: the default Linux/Windows wheels bundle CUDA (GBs)
+        cmd += ["--extra-index-url", TORCH_CPU_INDEX, "--index-strategy", "unsafe-best-match"]
+    run(cmd + [wheel], env)
+    print(f"bootstrap done in {time.time() - t0:.1f}s")
+    return py
+
+
+if __name__ == "__main__":
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--home", required=True)
+    ap.add_argument("--wheel", required=True)
+    ap.add_argument("--uv", default=shutil.which("uv") or "uv")
+    ap.add_argument("--wheelhouse")
+    ap.add_argument("--no-torch-cpu", action="store_true")
+    a = ap.parse_args()
+    bootstrap(a.home, a.wheel, a.uv, a.wheelhouse, not a.no_torch_cpu)
