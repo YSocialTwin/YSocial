@@ -4,6 +4,7 @@ Upload the result as the release asset referenced by DEFAULT_AVATARS_URL
 (release tag ``avatars-v1``).
 Usage: python scripts/packaging/make_avatars_archive.py [OUT.tar.gz]
 """
+
 import sys
 import tarfile
 from pathlib import Path

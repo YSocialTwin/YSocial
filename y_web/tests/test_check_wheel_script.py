@@ -6,7 +6,9 @@ import pytest
 
 pytestmark = pytest.mark.unit
 
-_SCRIPT = Path(__file__).resolve().parents[2] / "scripts" / "packaging" / "check_wheel.py"
+_SCRIPT = (
+    Path(__file__).resolve().parents[2] / "scripts" / "packaging" / "check_wheel.py"
+)
 
 
 def _load():

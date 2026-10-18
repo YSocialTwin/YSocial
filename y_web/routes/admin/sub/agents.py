@@ -8,8 +8,6 @@ settings.
 
 import json
 import os
-
-from y_web.src.system.avatars_store import get_avatars_dir
 import random
 import re
 from pathlib import Path
@@ -58,6 +56,7 @@ from y_web.src.models import (
     Topic_List,
     Toxicity_Levels,
 )
+from y_web.src.system.avatars_store import get_avatars_dir
 from y_web.src.system.miscellanea import (
     check_privileges,
     llm_backend_status,

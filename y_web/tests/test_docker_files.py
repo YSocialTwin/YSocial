@@ -32,4 +32,4 @@ def test_release_workflow_is_draft_only_and_tag_triggered():
     wf = (D.parent / ".github/workflows/release-packaging.yml").read_text()
     assert 'tags: ["v*"]' in wf
     assert "--draft" in wf
-    assert "python-version: \"3.12\"" in wf
+    assert 'python-version: "3.12"' in wf
