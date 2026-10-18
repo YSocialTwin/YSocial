@@ -459,6 +459,25 @@ def ensure_postgresql_experiment_schema(db_uri: str) -> bool:
     return True
 
 
+def _post_table_exists(db_uri: str) -> bool:
+    """True when the experiment database already has its ``post`` table (False if it cannot be told)."""
+    try:
+        if db_uri.startswith("sqlite:///"):
+            conn = sqlite3.connect(db_uri.replace("sqlite:///", "", 1), timeout=30.0)
+            try:
+                return bool(_sqlite_existing_columns(conn, "post"))
+            finally:
+                conn.close()
+        engine = create_engine(db_uri)
+        try:
+            with engine.connect() as conn:
+                return bool(_postgres_existing_columns(conn, "post"))
+        finally:
+            engine.dispose()
+    except Exception:
+        return False
+
+
 def ensure_experiment_schema_for_uri(db_uri: str) -> bool:
     if not db_uri:
         return False
@@ -470,7 +489,10 @@ def ensure_experiment_schema_for_uri(db_uri: str) -> bool:
         ensured = ensure_sqlite_experiment_schema(db_uri.replace("sqlite:///", "", 1))
     elif db_uri.startswith("postgresql"):
         ensured = ensure_postgresql_experiment_schema(db_uri)
-    if ensured:
+    # Remember the database only once its ``post`` table exists. An HPC server creates its own tables on first
+    # start, possibly after the web app first looked at the (still empty) file; caching that early visit would
+    # leave the server's older tables without the columns added here until the app restarts.
+    if ensured and _post_table_exists(db_uri):
         with _SCHEMA_LOCK:
             _ENSURED_SCHEMAS.add(db_uri)
     return ensured
