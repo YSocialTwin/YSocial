@@ -131,7 +131,8 @@ def start_app(
         app.run(debug=debug, host=host, port=port)
 
 
-if __name__ == "__main__":
+def main(argv=None):
+    """Command line entry point (the ``ysocial`` console script)."""
     parser = ArgumentParser()
 
     parser.add_argument(
@@ -173,7 +174,7 @@ if __name__ == "__main__":
         ),
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         from y_web.pyinstaller_utils.installation_id import (
@@ -194,3 +195,7 @@ if __name__ == "__main__":
         notebook=args.no_notebook,
         development=args.development,
     )
+
+
+if __name__ == "__main__":
+    main()
