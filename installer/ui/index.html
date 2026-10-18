@@ -4,63 +4,114 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>YSocial</title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="assets/login-scene.css">
+<link rel="stylesheet" href="launcher.css">
 </head>
-<body>
-<main>
-  <h1>YSocial</h1>
-  <p class="muted">Installs an isolated Python environment and YSocial. Your data stays in the folder below.</p>
+<body class="yl" data-cascade="off">
+<div id="yl-aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+<canvas id="yl-net" aria-hidden="true"></canvas>
+<div id="yl-layer" aria-hidden="true"></div>
+<div id="yl-halo" aria-hidden="true"></div>
+<div id="yl-casc" aria-hidden="true"></div>
 
-  <label for="home">Data folder</label>
-  <input id="home" type="text" spellcheck="false">
+<main class="yl-stage">
+<section class="yl-card" id="yl-card">
+  <div class="yl-brand">
+    <img src="assets/Ysocial.png" alt="YSocial">
+    <p>Where the Digital World comes to life.</p>
+  </div>
 
-  <fieldset>
-    <legend>Optional components</legend>
-    <label class="check">
-      <input id="toxicity" type="checkbox">
-      <span><strong>Toxicity detection (Detoxify)</strong><br>
-      Installs PyTorch and downloads a language model: a large download and
-      several GB of disk space. Skip it unless your experiments use toxicity scoring;
-      you can add it later with <code>pip install "ysocial[toxicity]"</code>.</span>
-    </label>
-  </fieldset>
+  <div id="err" class="yl-error" role="alert"></div>
 
-  <p class="muted">Not included: LLM servers (Ollama, vLLM, OpenAI-compatible endpoints) and PostgreSQL are external;
-  SQLite is the default database. Profile pictures are downloaded on first start.</p>
+  <!-- 1. First start: set up -->
+  <section class="view" id="v-setup">
+    <h2>Let's get you set up</h2>
+    <p class="yl-sub">One click installs everything YSocial needs. Your data stays in the folder below.</p>
 
-  <details id="advanced">
-    <summary>Advanced options</summary>
-    <p class="muted">Same flags as the <code>ysocial</code> command line.</p>
-    <div class="grid">
-      <label for="host">Host (bind address)</label>
-      <input id="host" type="text" value="127.0.0.1" spellcheck="false">
-      <label for="port">Port</label>
-      <input id="port" type="number" min="1" max="65535" value="8080">
-      <label for="db">Database</label>
-      <select id="db"><option value="sqlite">SQLite (default)</option><option value="postgresql">PostgreSQL</option></select>
-      <label for="llm">LLM backend</label>
-      <input id="llm" type="text" placeholder="empty = disabled; ollama, vllm or host:port" spellcheck="false">
-      <label for="extra">Extra arguments</label>
-      <input id="extra" type="text" placeholder="space-separated, no quoting" spellcheck="false">
+    <div class="yl-field sel">
+      <input id="home" type="text" placeholder=" " spellcheck="false">
+      <label for="home">Where to keep your data</label>
     </div>
-    <label class="check"><input id="debug" type="checkbox"><span>Debug mode (<code>--debug</code>)</span></label>
-    <label class="check"><input id="nonotebook" type="checkbox"><span>Do not start the Jupyter notebook server (<code>--no_notebook</code>)</span></label>
-    <label class="check"><input id="development" type="checkbox"><span>Development mode: show private plugin repositories (<code>--development</code>)</span></label>
-    <p class="muted">Binding to <code>0.0.0.0</code> exposes YSocial to your network.</p>
+
+    <label class="yl-opt">
+      <input id="toxicity" type="checkbox">
+      <span>
+        <b>Toxicity detection <small style="display:inline">(optional)</small></b>
+        <small>Only needed if your experiments score toxic content. This is a large download
+        (PyTorch and a language model, several GB of disk space). You can skip it and add it later.</small>
+      </span>
+    </label>
+
+    <button class="yl-btn" id="install" type="button"><span class="yl-spin"></span><span>Install YSocial</span></button>
+    <p class="yl-foot">LLM servers and PostgreSQL are not included; SQLite is used by default.<br>
+    Profile pictures are downloaded the first time you start.</p>
+  </section>
+
+  <!-- 2. Installing -->
+  <section class="view" id="v-installing">
+    <h2>Setting things up…</h2>
+    <p class="yl-sub">This takes a few minutes the first time. You can leave this window open.</p>
+    <div class="yl-bar"><i id="bar"></i></div>
+    <ol class="yl-steps">
+      <li data-step="python"><span class="dot"></span>Getting Python ready</li>
+      <li data-step="env"><span class="dot"></span>Creating a private environment</li>
+      <li data-step="app"><span class="dot"></span>Installing YSocial</li>
+    </ol>
+  </section>
+
+  <!-- 3. Installed: start / stop -->
+  <section class="view" id="v-ready">
+    <h2 id="ready-title">Ready when you are</h2>
+    <p class="yl-sub" id="ready-sub">YSocial is installed. Start it whenever you like.</p>
+    <div class="yl-status" id="status">Stopped</div>
+
+    <button class="yl-btn" id="launch" type="button" disabled><span class="yl-spin"></span><span id="launch-t">Start YSocial</span></button>
+    <button class="yl-btn ghost" id="stop" type="button" disabled>Stop YSocial</button>
+
+    <div class="yl-where"><span>Data: <code id="where"></code></span><button class="yl-link" id="reinstall" type="button">Reinstall</button></div>
+  </section>
+
+  <!-- Shared options -->
+  <details class="yl-adv" id="advanced">
+    <summary>More options</summary>
+    <label class="yl-chk"><input id="appwindow" type="checkbox" checked>
+      <span>Open in its own window<small>Untick to use your default browser instead.</small></span></label>
+
+    <div class="yl-field">
+      <input id="host" type="text" value="127.0.0.1" placeholder=" " spellcheck="false">
+      <label for="host">Address</label>
+    </div>
+    <div class="yl-field">
+      <input id="port" type="number" min="1" max="65535" value="8080" placeholder=" ">
+      <label for="port">Port</label>
+    </div>
+    <p class="yl-note">Use <code>0.0.0.0</code> as address only if you want other computers on your network to reach YSocial.</p>
+    <div class="yl-field sel">
+      <select id="db"><option value="sqlite">SQLite (default)</option><option value="postgresql">PostgreSQL</option></select>
+      <label for="db">Database</label>
+    </div>
+    <div class="yl-field">
+      <input id="llm" type="text" placeholder=" " spellcheck="false">
+      <label for="llm">LLM server (ollama, vllm or host:port; empty = off)</label>
+    </div>
+    <label class="yl-chk"><input id="nonotebook" type="checkbox"><span>Skip the Jupyter notebook server</span></label>
+    <label class="yl-chk"><input id="development" type="checkbox"><span>Developer mode<small>Also lists private plugin repositories.</small></span></label>
+    <label class="yl-chk"><input id="debug" type="checkbox"><span>Debug mode</span></label>
+    <div class="yl-field">
+      <input id="extra" type="text" placeholder=" " spellcheck="false">
+      <label for="extra">Extra command-line arguments</label>
+    </div>
   </details>
 
-  <label class="check">
-    <input id="appwindow" type="checkbox" checked>
-    <span>Open in an application window (no browser toolbar). Untick to use your default browser.</span>
-  </label>
-
-  <div class="row">
-    <button id="install">Install</button>
-    <button id="launch" disabled>Start YSocial</button>
-    <button id="stop" disabled>Stop YSocial</button>
-  </div>
-  <pre id="log" aria-live="polite"></pre>
+  <details class="yl-details">
+    <summary>Technical details</summary>
+    <pre id="log" aria-live="polite"></pre>
+  </details>
+</section>
 </main>
+
+<script src="assets/yi18n-stub.js"></script>
+<script src="assets/login-scene.js" defer></script>
 <script src="main.js"></script>
 </body>
 </html>

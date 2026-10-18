@@ -1,0 +1,82 @@
+/* Launcher additions on top of the application's login-scene.css */
+body.yl { overflow-y: auto; }
+.yl-stage { padding: 24px 16px 40px; }
+.yl-card { animation: none; }
+.yl-brand { margin-bottom: 16px; }
+.yl-brand img { width: min(210px, 70%); }
+
+.view { display: none; }
+.view.on { display: block; animation: yl-in .35s ease both; }
+@keyframes yl-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+.yl-opt { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: start; padding: 12px 14px; margin: 0 0 14px;
+  border: 1.5px solid var(--line); border-radius: 14px; background: rgba(255, 255, 255, .04); cursor: pointer;
+  transition: border-color .18s, background .18s; }
+.yl-opt:hover { border-color: var(--teal); }
+.yl-opt:has(input:checked) { border-color: var(--teal); background: rgba(109, 195, 208, .14); }
+.yl-opt input { accent-color: var(--teal); width: 18px; height: 18px; margin-top: 2px; }
+.yl-opt b { display: block; font-size: .95rem; }
+.yl-opt small { display: block; margin-top: 3px; color: var(--muted); font-size: .8rem; line-height: 1.4; }
+
+.yl-where { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 0 0 14px;
+  color: var(--muted); font-size: .84rem; }
+.yl-where code { color: var(--text); word-break: break-all; }
+.yl-link { background: none; border: 0; color: var(--teal); font: inherit; font-size: .84rem; cursor: pointer; padding: 4px 0;
+  white-space: nowrap; }
+.yl-link:hover { text-decoration: underline; }
+.yl-link:disabled { opacity: .4; cursor: default; text-decoration: none; }
+
+.yl-steps { list-style: none; margin: 4px 0 18px; padding: 0; display: grid; gap: 10px; }
+.yl-steps li { display: grid; grid-template-columns: 26px 1fr; gap: 12px; align-items: center; color: var(--muted); font-size: .95rem; }
+.yl-steps .dot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center;
+  font-size: .72rem; color: var(--ink); }
+.yl-steps li.active { color: var(--text); }
+.yl-steps li.active .dot { border-color: var(--teal); border-top-color: transparent; animation: yl-sp .8s linear infinite; }
+.yl-steps li.done { color: var(--text); }
+.yl-steps li.done .dot { background: linear-gradient(135deg, var(--teal), var(--violet)); border-color: transparent; }
+.yl-steps li.done .dot::after { content: "\2713"; }
+.yl-bar { height: 6px; border-radius: 999px; background: rgba(255, 255, 255, .1); overflow: hidden; margin: 0 0 14px; }
+.yl-bar i { display: block; height: 100%; width: 0; border-radius: inherit; transition: width .6s ease;
+  background: linear-gradient(90deg, var(--teal), var(--violet), var(--orange)); background-size: 200% 100%;
+  animation: yl-flow 2.2s linear infinite; }
+@keyframes yl-flow { to { background-position: -200% 0; } }
+
+.yl-status { display: inline-flex; align-items: center; gap: 8px; margin: 0 0 18px; padding: 6px 12px; border-radius: 999px;
+  border: 1px solid var(--line); background: rgba(255, 255, 255, .05); font-size: .85rem; }
+.yl-status::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
+.yl-status.on::before { background: #5fd68a; box-shadow: 0 0 10px #5fd68a; }
+.yl-status.wait::before { background: var(--orange); animation: yl-pulse 1s ease-in-out infinite; }
+@keyframes yl-pulse { 50% { opacity: .3; } }
+
+.yl-btn + .yl-btn { margin-top: 10px; }
+.yl-btn.ghost { background: rgba(255, 255, 255, .06); color: var(--text); box-shadow: none; border: 1.5px solid var(--line); }
+.yl-btn.ghost:hover:not(:disabled) { border-color: var(--teal); }
+.yl-btn[hidden], .yl-link[hidden] { display: none; }
+
+.yl-adv { margin: 16px 0 0; border-top: 1px solid var(--line); padding-top: 12px; }
+.yl-adv > summary { cursor: pointer; color: var(--muted); font-size: .88rem; list-style: none; display: flex; justify-content: space-between; }
+.yl-adv > summary::-webkit-details-marker { display: none; }
+.yl-adv > summary::after { content: "\25BE"; transition: transform .2s; }
+.yl-adv[open] > summary::after { transform: rotate(180deg); }
+.yl-adv[open] > summary { color: var(--text); margin-bottom: 14px; }
+.yl-adv .yl-field { margin-bottom: 12px; }
+.yl-adv .yl-field input, .yl-adv .yl-field select { padding-right: 14px; }
+.yl-field select { width: 100%; padding: 22px 14px 8px; font: inherit; font-size: 1rem; color: var(--text);
+  background: rgba(255, 255, 255, .05); border: 1.5px solid var(--line); border-radius: 12px; outline: none; appearance: none;
+  transition: border-color .2s, box-shadow .2s; }
+.yl-field select:focus { border-color: var(--teal); box-shadow: 0 0 0 4px rgba(109, 195, 208, .2); }
+.yl-field select option { color: #08202a; }
+.yl-field.sel label { top: 7px; font-size: .72rem; color: var(--teal); }
+.yl-note { color: var(--muted); font-size: .78rem; line-height: 1.45; margin: 0 0 12px; }
+.yl-chk { display: flex; gap: 10px; align-items: flex-start; margin: 0 0 10px; font-size: .86rem; cursor: pointer; }
+.yl-chk input { accent-color: var(--teal); width: 16px; height: 16px; margin-top: 2px; }
+.yl-chk small { display: block; color: var(--muted); font-size: .76rem; margin-top: 1px; }
+
+.yl-details { margin-top: 14px; }
+.yl-details > summary { cursor: pointer; color: var(--muted); font-size: .8rem; }
+#log { margin: 8px 0 0; max-height: 170px; overflow: auto; padding: 10px 12px; border-radius: 12px; background: rgba(0, 0, 0, .28);
+  border: 1px solid var(--line); font: .72rem/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--muted);
+  white-space: pre-wrap; word-break: break-word; }
+#err { display: none; white-space: pre-wrap; }
+#err.on { display: block; }
+.yl-foot a, .yl-foot button { color: var(--teal); }

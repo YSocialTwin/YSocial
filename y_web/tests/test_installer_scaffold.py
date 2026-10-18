@@ -77,3 +77,22 @@ def test_app_window_blocks_external_navigation():
     # the remote page gets no IPC: capabilities stay limited to the installer window
     cap = json.loads((I / "src-tauri/capabilities/default.json").read_text())
     assert cap["windows"] == ["main"]
+
+
+def test_launcher_reuses_login_look_and_assets_are_in_sync():
+    import sys
+
+    root = I.parent
+    sys.path.insert(0, str(root / "scripts/packaging"))
+    try:
+        import sync_installer_assets as sia
+    finally:
+        sys.path.pop(0)
+    for src, name in sia.FILES.items():
+        assert (root / src).read_bytes() == (I / "ui/assets" / name).read_bytes(), f"run sync_installer_assets.py ({name})"
+    html = (I / "ui/index.html").read_text()
+    for needle in ("login-scene.css", "yl-card", "yl-aurora", "yl-net", 'id="v-setup"', 'id="v-installing"', 'id="v-ready"'):
+        assert needle in html
+    # every local resource referenced by the page exists
+    for ref in re.findall(r'(?:src|href)="([^":]+)"', html):
+        assert (I / "ui" / ref).exists(), ref
