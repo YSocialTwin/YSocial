@@ -90,4 +90,12 @@ A difference is flagged when the 95% intervals of the parsed rate do not overlap
 
 ## Decision
 
-_To fill in after the runs: keep, adjust the Italian pack, or change the protocol instructions._
+**Outcome: keep.** The Italian pack and the protocol instructions stay as they are.
+
+Rationale:
+
+- The model is a simulation parameter; no model is expected to give optimal answers. What matters is that the Italian prompts do not change how the instructions are interpreted.
+- Protocol compliance and language adherence are preserved. With qwen3:4b-instruct every task parses in 100% of replies in both languages, Italian replies are in Italian, and meta text is close to zero.
+- The deviations seen with the 3B Q2_K model (action and vote parsing, choice distributions, a near 50/50 follow) come from a weak model producing noisy output. Several replies are not valid tokens at all (for example "NON", "NOME"), so they say little about how the prompt is read.
+
+Caveat: choice distributions differ between English and Italian (for example vote and action shares, and the exact-token rate for reactions on qwen). Results from runs in different languages should not be compared directly as if the languages were interchangeable. This pilot is a protocol check, not evidence about behaviour.
