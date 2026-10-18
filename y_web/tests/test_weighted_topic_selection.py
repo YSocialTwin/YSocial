@@ -10,7 +10,10 @@ EXT = Path(__file__).resolve().parents[2] / "external"
 A = EXT / "YClient/y_client/topic_sampling.py"
 B = EXT / "YClientReddit/y_client/topic_sampling.py"
 
-pytestmark = pytest.mark.skipif(not A.exists(), reason="external repos absent")
+pytestmark = pytest.mark.unit
+
+if not A.exists():
+    pytest.skip("external repos absent", allow_module_level=True)
 
 
 def _load():
