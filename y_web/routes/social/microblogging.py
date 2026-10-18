@@ -7,7 +7,6 @@ Routes: feeed_logged, feed, get_post_hashtags, get_post_interest,
         api_profile_posts.
 """
 
-from y_web.hashtag_text import normalize_hashtag
 from flask import (
     current_app,
     flash,
@@ -21,6 +20,7 @@ from flask_login import current_user, login_required
 from sqlalchemy import select
 
 from y_web import db
+from y_web.hashtag_text import normalize_hashtag
 from y_web.i18n import gettext as _
 from y_web.routes.social._blueprint import main
 from y_web.routes.social.helpers import (

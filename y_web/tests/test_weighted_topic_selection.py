@@ -1,4 +1,5 @@
 """Topic of a post: one topic, probability ~ count over a moving window (count > 0 only)."""
+
 import importlib.util
 from pathlib import Path
 

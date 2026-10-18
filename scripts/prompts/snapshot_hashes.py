@@ -166,7 +166,8 @@ def absent_repos(saved):
 def check(saved, now, skip_repos=frozenset()):
     """A prompt may move inside its own repository (code to pack, pack to pack), never change or vanish.
 
-    Repositories in ``skip_repos`` are not checked (they are not present in this checkout)."""
+    Repositories in ``skip_repos`` are not checked (they are not present in this checkout).
+    """
     problems = []
     packs = en_pack_hashes()
     code_by_repo = {}

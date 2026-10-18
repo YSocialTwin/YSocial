@@ -1,4 +1,5 @@
 """Hashtags: canonical form, apostrophes/accents kept in the tag, duplicates merged, copies in sync."""
+
 import importlib.util
 import pathlib
 
@@ -32,12 +33,21 @@ def test_normalize(raw, expected):
 
 
 def test_identity_ignores_hash_and_case():
-    assert hashtag_key("#Sustainability") == hashtag_key("sustainability") == hashtag_key("##SUSTAINABILITY")
+    assert (
+        hashtag_key("#Sustainability")
+        == hashtag_key("sustainability")
+        == hashtag_key("##SUSTAINABILITY")
+    )
 
 
 def test_extraction_keeps_apostrophes_and_accents_inside_the_tag():
     text_ = "Ciao #c’èdavverounveroitaliano e #quant'altro! #Roma #roma #città"
-    assert extract_hashtags(text_) == ["c’èdavverounveroitaliano", "quant'altro", "Roma", "città"]
+    assert extract_hashtags(text_) == [
+        "c’èdavverounveroitaliano",
+        "quant'altro",
+        "Roma",
+        "città",
+    ]
 
 
 def _db(tmp_path, ids):
@@ -45,7 +55,11 @@ def _db(tmp_path, ids):
     with engine.begin() as c:
         idtype = "INTEGER PRIMARY KEY" if ids == "int" else "TEXT PRIMARY KEY"
         c.execute(text(f"CREATE TABLE hashtags (id {idtype}, hashtag TEXT)"))
-        c.execute(text("CREATE TABLE post_hashtags (id INTEGER PRIMARY KEY AUTOINCREMENT, post_id TEXT, hashtag_id TEXT)"))
+        c.execute(
+            text(
+                "CREATE TABLE post_hashtags (id INTEGER PRIMARY KEY AUTOINCREMENT, post_id TEXT, hashtag_id TEXT)"
+            )
+        )
     return engine
 
 
@@ -54,18 +68,41 @@ def test_merge_duplicates_and_relink(tmp_path, ids):
     engine = _db(tmp_path, ids)
     a, b, c_, d = ("1", "2", "3", "4") if ids == "int" else ("ua", "ub", "uc", "ud")
     with engine.begin() as c:
-        for i, h in [(a, "#Sustainability"), (b, "sustainability"), (c_, "Sustainability"), (d, "#solo")]:
-            c.execute(text("INSERT INTO hashtags (id, hashtag) VALUES (:i, :h)"), {"i": i, "h": h})
+        for i, h in [
+            (a, "#Sustainability"),
+            (b, "sustainability"),
+            (c_, "Sustainability"),
+            (d, "#solo"),
+        ]:
+            c.execute(
+                text("INSERT INTO hashtags (id, hashtag) VALUES (:i, :h)"),
+                {"i": i, "h": h},
+            )
         for post, tag in [("p1", a), ("p2", b), ("p3", c_), ("p1", b), ("p4", d)]:
-            c.execute(text("INSERT INTO post_hashtags (post_id, hashtag_id) VALUES (:p, :t)"), {"p": post, "t": tag})
+            c.execute(
+                text("INSERT INTO post_hashtags (post_id, hashtag_id) VALUES (:p, :t)"),
+                {"p": post, "t": tag},
+            )
     res = merge_duplicate_hashtags(engine)
     assert res == {"merged": 2, "renamed": 2}
     with engine.connect() as c:
         tags = dict(c.execute(text("SELECT id, hashtag FROM hashtags")).fetchall())
         assert sorted(tags.values()) == ["Sustainability", "solo"]
-        per_post = c.execute(text("SELECT post_id, COUNT(*) FROM post_hashtags WHERE hashtag_id = :k GROUP BY post_id"), {"k": a}).fetchall()
+        per_post = c.execute(
+            text(
+                "SELECT post_id, COUNT(*) FROM post_hashtags WHERE hashtag_id = :k GROUP BY post_id"
+            ),
+            {"k": a},
+        ).fetchall()
         assert sorted(per_post) == [("p1", 1), ("p2", 1), ("p3", 1)]
-        assert c.execute(text("SELECT COUNT(*) FROM post_hashtags WHERE hashtag_id NOT IN (SELECT id FROM hashtags)")).scalar() == 0
+        assert (
+            c.execute(
+                text(
+                    "SELECT COUNT(*) FROM post_hashtags WHERE hashtag_id NOT IN (SELECT id FROM hashtags)"
+                )
+            ).scalar()
+            == 0
+        )
     assert merge_duplicate_hashtags(engine) == {"merged": 0, "renamed": 0}
 
 

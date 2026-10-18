@@ -1,4 +1,5 @@
 from y_web.hashtag_text import normalize_hashtag
+
 """
 Microblogging interaction routes.
 
@@ -9,7 +10,7 @@ import uuid
 
 from flask import flash, redirect, request
 from flask_login import current_user, login_required
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 
 from y_web import db
 from y_web.i18n import gettext as _
@@ -222,7 +223,9 @@ def publish_post(exp_id):
         if len(tag) < 3:
             continue
 
-        ht = db.session.scalars(select(Hashtags).filter(func.lower(Hashtags.hashtag) == tag.lower())).first()
+        ht = db.session.scalars(
+            select(Hashtags).filter(func.lower(Hashtags.hashtag) == tag.lower())
+        ).first()
         if ht is None:
             try:
                 ht = Hashtags(hashtag=tag)
@@ -233,7 +236,9 @@ def publish_post(exp_id):
                 ht = Hashtags(id=str(uuid.uuid4()), hashtag=tag)
                 db.session.add(ht)
                 db.session.commit()
-            ht = db.session.scalars(select(Hashtags).filter(func.lower(Hashtags.hashtag) == tag.lower())).first()
+            ht = db.session.scalars(
+                select(Hashtags).filter(func.lower(Hashtags.hashtag) == tag.lower())
+            ).first()
 
         try:
             post_tag = Post_hashtags(post_id=post.id, hashtag_id=ht.id)

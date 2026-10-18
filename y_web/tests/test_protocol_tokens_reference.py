@@ -1,4 +1,5 @@
 """data_schema/prompts/protocol_tokens.json mirrors the clients' protocol_tokens.py (CI has no external repos)."""
+
 import importlib.util
 import json
 import pathlib
@@ -15,7 +16,8 @@ def _tokens(path):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return {
-        v for n, v in vars(module).items()
+        v
+        for n, v in vars(module).items()
         if n.isupper() and isinstance(v, str) and re.fullmatch(r"[A-Z_]+", v)
     }
 
@@ -30,7 +32,11 @@ def test_reference_list_is_well_formed():
 @pytest.mark.external_repo
 @pytest.mark.parametrize("repo", ["YClient", "YClientReddit", "YSimulator"])
 def test_reference_matches_each_client_copy(repo):
-    sub = {"YClient": "y_client", "YClientReddit": "y_client", "YSimulator": "YSimulator"}[repo]
+    sub = {
+        "YClient": "y_client",
+        "YClientReddit": "y_client",
+        "YSimulator": "YSimulator",
+    }[repo]
     path = ROOT / "external" / repo / sub / "protocol_tokens.py"
     if not path.exists():
         pytest.skip("external repo not present")

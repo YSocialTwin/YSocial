@@ -31,10 +31,13 @@ def merge_duplicate_hashtags(engine):
         table: owner
         for table, owner in _LINK_TABLES.items()
         if table in tables
-        and {"hashtag_id", owner} <= {c["name"] for c in inspect(engine).get_columns(table)}
+        and {"hashtag_id", owner}
+        <= {c["name"] for c in inspect(engine).get_columns(table)}
     }
     with engine.begin() as conn:
-        rows = conn.execute(text("SELECT id, hashtag FROM hashtags ORDER BY id")).fetchall()
+        rows = conn.execute(
+            text("SELECT id, hashtag FROM hashtags ORDER BY id")
+        ).fetchall()
         groups = OrderedDict()
         for row in rows:
             key = hashtag_key(row[1])
@@ -59,7 +62,10 @@ def merge_duplicate_hashtags(engine):
                         ),
                         {"k": keeper[0], "d": dup[0]},
                     )
-                    conn.execute(text(f"DELETE FROM {table} WHERE hashtag_id = :d"), {"d": dup[0]})
+                    conn.execute(
+                        text(f"DELETE FROM {table} WHERE hashtag_id = :d"),
+                        {"d": dup[0]},
+                    )
                 conn.execute(text("DELETE FROM hashtags WHERE id = :d"), {"d": dup[0]})
                 result["merged"] += 1
     return result
@@ -76,6 +82,8 @@ def merge_duplicate_hashtags_for_uri(db_uri):
         if result["merged"] or result["renamed"]:
             logger.info("hashtags normalized in %s: %s", db_uri, result)
         return result
-    except Exception as exc:  # pragma: no cover - best effort, retried at the next start
+    except (
+        Exception
+    ) as exc:  # pragma: no cover - best effort, retried at the next start
         logger.warning("hashtag normalization skipped for %s: %s", db_uri, exc)
         return None
