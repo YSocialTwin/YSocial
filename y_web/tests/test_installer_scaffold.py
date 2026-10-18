@@ -71,7 +71,9 @@ def test_advanced_options_cover_cli_flags():
 
 def test_app_window_blocks_external_navigation():
     rs = (I / "src-tauri/src/main.rs").read_text()
-    assert "WebviewWindowBuilder" in rs and "on_navigation" in rs
+    assert "WebviewWindowBuilder" in rs and "on_new_window" in rs
+    # no on_navigation: it also fires for iframes (e.g. js.stripe.com) and broke pages
+    assert ".on_navigation(" not in rs
     # the remote page gets no IPC: capabilities stay limited to the installer window
     cap = json.loads((I / "src-tauri/capabilities/default.json").read_text())
     assert cap["windows"] == ["main"]

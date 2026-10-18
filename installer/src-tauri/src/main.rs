@@ -339,8 +339,39 @@ fn build_args(o: &LaunchOptions) -> Result<Vec<String>, String> {
     Ok(args)
 }
 
+/// Runs in the top frame only: links inside YSocial stay in the window (also those
+/// with target=_blank), links to other sites become `window.open`, which the
+/// native side hands to the system browser (see `on_new_window`).
+const LINK_SCRIPT: &str = r#"
+(function () {
+  if (window.top !== window) return;
+  var origin = location.origin;
+  var nativeOpen = window.open.bind(window);
+  function sameOrigin(href) {
+    try { return new URL(href, location.href).origin === origin; } catch (e) { return false; }
+  }
+  window.open = function (url, target, features) {
+    if (url && sameOrigin(url)) { location.href = new URL(url, location.href).href; return null; }
+    return nativeOpen(url, target, features);
+  };
+  document.addEventListener('click', function (e) {
+    var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+    if (!a || e.defaultPrevented) return;
+    var href = a.getAttribute('href') || '';
+    if (/^(javascript:|#|mailto:|tel:)/i.test(href)) return;
+    if (sameOrigin(a.href)) {
+      if (a.target === '_blank') { e.preventDefault(); location.href = a.href; }
+    } else if (/^https?:/i.test(a.href)) {
+      e.preventDefault();
+      nativeOpen(a.href, '_blank');
+    }
+  }, true);
+})();
+"#;
+
 /// Open YSocial in a native window without browser chrome (address bar, tabs).
-/// Links to other sites are handed to the system browser.
+/// Embedded third-party frames (e.g. payment widgets) load normally; clicks to other
+/// sites and new-window requests open in the system browser.
 fn open_app_window(app: &AppHandle, url: &str) -> Result<(), String> {
     if let Some(w) = app.get_webview_window(APP_WINDOW) {
         let _ = w.set_focus();
@@ -352,14 +383,14 @@ fn open_app_window(app: &AppHandle, url: &str) -> Result<(), String> {
         .title("YSocial")
         .inner_size(1360.0, 880.0)
         .min_inner_size(900.0, 600.0)
-        .on_navigation(move |target| {
-            let same_site = target.host_str().map(|h| h == local).unwrap_or(false);
-            if same_site || target.scheme() == "about" || target.scheme() == "blob" {
-                true
-            } else {
+        .initialization_script(LINK_SCRIPT)
+        .on_new_window(move |target, _features| {
+            if target.host_str().map(|h| h != local).unwrap_or(true)
+                && matches!(target.scheme(), "http" | "https")
+            {
                 open_in_browser(target.as_str());
-                false
             }
+            tauri::webview::NewWindowResponse::Deny
         })
         .build()
         .map(|_| ())
