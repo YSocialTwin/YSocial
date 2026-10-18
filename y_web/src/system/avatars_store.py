@@ -6,12 +6,9 @@ that takes precedence over the Flask static handler for
 ``/static/assets/img/users/<file>``.
 """
 
-import io
-import json
 import os
 import tarfile
 import threading
-import time
 import urllib.request
 
 from y_web.src.system.path_utils import get_base_path, get_home_path
@@ -69,18 +66,18 @@ def get_state() -> dict:
 
 
 def _download(url: str, dest: str) -> None:
+    """Stream the archive and extract images one by one (no full-size buffer)."""
     os.makedirs(dest, exist_ok=True)
     with urllib.request.urlopen(url, timeout=60) as resp:  # noqa: S310
-        data = io.BytesIO(resp.read())
-    with tarfile.open(fileobj=data, mode="r:*") as tar:
-        for member in tar.getmembers():
-            name = os.path.basename(member.name)
-            if not member.isfile() or not name.lower().endswith(_EXT):
-                continue
-            tmp = os.path.join(dest, name + ".part")
-            with open(tmp, "wb") as fh:
-                fh.write(tar.extractfile(member).read())
-            os.replace(tmp, os.path.join(dest, name))
+        with tarfile.open(fileobj=resp, mode="r|*") as tar:
+            for member in tar:
+                name = os.path.basename(member.name)
+                if not member.isfile() or not name.lower().endswith(_EXT):
+                    continue
+                tmp = os.path.join(dest, name + ".part")
+                with open(tmp, "wb") as fh:
+                    fh.write(tar.extractfile(member).read())
+                os.replace(tmp, os.path.join(dest, name))
 
 
 def ensure_avatars(url: str | None = None, background: bool = True) -> bool:
