@@ -3365,6 +3365,9 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
         else f"{exp_dir}{os.sep}prompts.json"
     )
 
+    prompt_language = prompt_packs.resolve(
+        request.form.get("prompt_language"), exp.prompt_language
+    )
     pack_name = {
         "photo_sharing": "prompts_ygram.json",
         "microblogging": "prompts_hpc.json",
@@ -3386,9 +3389,6 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
         db.session.commit()
 
     # Create client record in database
-    prompt_language = prompt_packs.resolve(
-        request.form.get("prompt_language"), exp.prompt_language
-    )
     client = Client(
         name=name,
         prompt_language=prompt_language,
