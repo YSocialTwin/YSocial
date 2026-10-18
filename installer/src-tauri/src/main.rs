@@ -184,6 +184,85 @@ fn open_in_browser(url: &str) {
     };
 }
 
+fn pid_file(home: &Path) -> PathBuf {
+    home.join("ysocial.pid")
+}
+
+fn read_pid(home: &Path) -> Option<u32> {
+    std::fs::read_to_string(pid_file(home)).ok()?.trim().parse().ok()
+}
+
+fn pid_alive(pid: u32) -> bool {
+    if cfg!(target_os = "windows") {
+        Command::new("tasklist")
+            .args(["/FI", &format!("PID eq {pid}"), "/NH"])
+            .output()
+            .map(|o| String::from_utf8_lossy(&o.stdout).contains(&pid.to_string()))
+            .unwrap_or(false)
+    } else {
+        Command::new("kill")
+            .args(["-0", &pid.to_string()])
+            .stderr(Stdio::null())
+            .status()
+            .map(|s| s.success())
+            .unwrap_or(false)
+    }
+}
+
+fn port_open(port: u16) -> bool {
+    TcpStream::connect(("127.0.0.1", port)).is_ok()
+}
+
+#[tauri::command]
+fn is_running(home: String, port: u16) -> bool {
+    let home = PathBuf::from(home);
+    read_pid(&home).map(pid_alive).unwrap_or(false) || port_open(port)
+}
+
+/// Stop YSocial: SIGTERM (clean shutdown: experiments and Jupyter are stopped by
+/// YSocial itself), then SIGKILL after 15 s. Windows: taskkill of the process tree.
+#[tauri::command]
+async fn stop(app: AppHandle, home: String, port: u16) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let home = PathBuf::from(&home);
+        let Some(pid) = read_pid(&home) else {
+            return if port_open(port) {
+                Err(format!(
+                    "Something is listening on port {port}, but it was not started by this installer"
+                ))
+            } else {
+                Ok(())
+            };
+        };
+        let _ = app.emit("progress", format!("Stopping YSocial (pid {pid})..."));
+        if cfg!(target_os = "windows") {
+            let _ = Command::new("taskkill").args(["/PID", &pid.to_string(), "/T", "/F"]).status();
+        } else {
+            let _ = Command::new("kill").args(["-TERM", &pid.to_string()]).status();
+        }
+        let start = Instant::now();
+        while start.elapsed() < Duration::from_secs(15) {
+            if !pid_alive(pid) {
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(300));
+        }
+        if pid_alive(pid) && !cfg!(target_os = "windows") {
+            let _ = app.emit("progress", "Forcing stop...");
+            let _ = Command::new("kill").args(["-KILL", &pid.to_string()]).status();
+            std::thread::sleep(Duration::from_millis(500));
+        }
+        let _ = std::fs::remove_file(pid_file(&home));
+        if pid_alive(pid) {
+            return Err("Could not stop YSocial".into());
+        }
+        let _ = app.emit("progress", "YSocial stopped.");
+        Ok(())
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
 fn log_tail(path: &Path, n: usize) -> String {
     let text = std::fs::read_to_string(path).unwrap_or_default();
     let lines: Vec<&str> = text.lines().collect();
@@ -203,11 +282,11 @@ async fn launch(app: AppHandle, home: String, port: u16) -> Result<String, Strin
         std::fs::create_dir_all(&log_dir).map_err(|e| e.to_string())?;
         let log_path = log_dir.join("launch.log");
         let mut child = None;
-        if TcpStream::connect(("127.0.0.1", port)).is_err() {
+        if !port_open(port) {
             // Child output goes to <home>/logs/launch.log so failures are diagnosable.
             let out = std::fs::File::create(&log_path).map_err(|e| e.to_string())?;
             let err = out.try_clone().map_err(|e| e.to_string())?;
-            child = Some(
+            let spawned =
                 Command::new(&exe)
                     .args(["--host", "127.0.0.1", "--port", &port.to_string()])
                     .env("YSOCIAL_HOME", &home)
@@ -217,8 +296,9 @@ async fn launch(app: AppHandle, home: String, port: u16) -> Result<String, Strin
                     .stdout(Stdio::from(out))
                     .stderr(Stdio::from(err))
                     .spawn()
-                    .map_err(|e| e.to_string())?,
-            );
+                    .map_err(|e| e.to_string())?;
+            let _ = std::fs::write(pid_file(&home), spawned.id().to_string());
+            child = Some(spawned);
         }
         let _ = app.emit("progress", format!("Starting YSocial... (log: {})", log_path.display()));
         let start = Instant::now();
@@ -248,7 +328,7 @@ async fn launch(app: AppHandle, home: String, port: u16) -> Result<String, Strin
 
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![default_home, is_installed, install, launch])
+        .invoke_handler(tauri::generate_handler![default_home, is_installed, install, launch, is_running, stop])
         .run(tauri::generate_context!())
         .expect("error while running the YSocial installer");
 }

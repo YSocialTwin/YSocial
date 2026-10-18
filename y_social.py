@@ -139,6 +139,12 @@ def main(argv=None):
 
     if not getattr(sys, "frozen", False) and not _is_source_checkout(get_base_path()):
         os.environ.setdefault("YSOCIAL_PYTHON", sys.executable)
+    # `kill <pid>` / the installer's Stop button send SIGTERM: exit through
+    # SystemExit so the atexit cleanup (running experiments, Jupyter) runs.
+    import signal
+
+    signal.signal(signal.SIGTERM, lambda signum, frame: sys.exit(0))
+
     parser = ArgumentParser()
 
     parser.add_argument(

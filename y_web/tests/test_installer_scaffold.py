@@ -38,6 +38,18 @@ def test_ui_exposes_toxicity_choice_with_clear_text():
     assert 'id="toxicity"' in html
     assert re.search(r"large download", html)
     js = (I / "ui/main.js").read_text()
-    for cmd in ("default_home", "is_installed", "install", "launch"):
+    for cmd in ("default_home", "is_installed", "install", "launch", "is_running", "stop"):
         assert f'"{cmd}"' in js
         assert f"fn {cmd}" in (I / "src-tauri/src/main.rs").read_text()
+
+
+def test_stop_button_and_pid_file_wiring():
+    html = (I / "ui/index.html").read_text()
+    assert 'id="stop"' in html
+    rs = (I / "src-tauri/src/main.rs").read_text()
+    assert "ysocial.pid" in rs and "is_running, stop" in rs
+
+
+def test_ysocial_exits_cleanly_on_sigterm():
+    main = (I.parent / "y_social.py").read_text()
+    assert "signal.SIGTERM" in main

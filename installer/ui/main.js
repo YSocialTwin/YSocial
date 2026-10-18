@@ -3,8 +3,14 @@ const { listen } = window.__TAURI__.event;
 const $ = (id) => document.getElementById(id);
 const log = (line) => { $("log").textContent += line + "\n"; $("log").scrollTop = 1e9; };
 
+const PORT = 8080;
+
 async function refresh() {
-  $("launch").disabled = !(await invoke("is_installed", { home: $("home").value }));
+  const home = $("home").value;
+  const installed = await invoke("is_installed", { home });
+  const running = installed && (await invoke("is_running", { home, port: PORT }));
+  $("launch").disabled = !installed || running;
+  $("stop").disabled = !running;
 }
 
 async function init() {
@@ -21,10 +27,17 @@ async function init() {
   });
   $("launch").addEventListener("click", async () => {
     $("launch").disabled = true;
-    try { log("Opened " + (await invoke("launch", { home: $("home").value, port: 8080 }))); }
+    try { log("Opened " + (await invoke("launch", { home: $("home").value, port: PORT }))); }
     catch (err) { log("ERROR: " + err); }
     await refresh();
   });
+  $("stop").addEventListener("click", async () => {
+    $("stop").disabled = true;
+    try { await invoke("stop", { home: $("home").value, port: PORT }); }
+    catch (err) { log("ERROR: " + err); }
+    await refresh();
+  });
+  setInterval(refresh, 3000);
   await refresh();
 }
 init();
