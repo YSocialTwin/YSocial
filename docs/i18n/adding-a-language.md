@@ -228,7 +228,7 @@ Acceptance rule for a new language's heuristics: recall at least 80% of English 
 | `frontend_adds-on`, `ScenarioDesign`, `TrainingModules` | UI catalogs (gettext, JS where listed) | section 2.4 |
 | `y_memory_subsystem` | `prompts/<lang>.json` | section 4 |
 | `YServer`, `YServerReddit` | no prompt files (they do not build prompts); API error messages stay English | n/a |
-| Not covered yet (decide before promising full coverage) | data-block labels in interview/chat, the ScenarioDesign module's own texts, API error messages, ~48 `str.format` calls in YSimulator that bypass the renderer | tracked as open items in the program status |
+| Out of scope by decision (do not translate) | data-block labels in interview/chat (protocol markers, kept English); API error messages of `YServer`/`YServerReddit`; the ScenarioDesign draft-generation prompt (`prompt_builder.py`, English instructions, output language set by its `agent_language` parameter); the ~49 `str.format` calls in YSimulator, which fill the user-editable `system_template`/`user_template` and keep `str.format` semantics for custom prompts (`y_web/tests/test_pack_format_safety.py` guards the shipped packs) | decided with the maintainer; revisit only with a new decision |
 
 When a new plugin is added later, it must follow the same pattern: UI catalog through its `meta/registry.json` `i18n` key, prompts through a pack and `prompt_store`, and a new-language section in its own docs.
 
