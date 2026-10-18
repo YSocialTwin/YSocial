@@ -156,8 +156,17 @@ def en_pack_hashes():
     return out
 
 
-def check(saved, now):
-    """A prompt may move inside its own repository (code to pack, pack to pack), never change or vanish."""
+def absent_repos(saved):
+    """External repositories the snapshot knows about but that are not checked out here (e.g. in CI, where
+    ``external/`` is not part of the clone)."""
+    names = {repo_of(rel) for part in ("json", "code") for rel in saved[part]}
+    return {n for n in names if n != "YWeb" and not (ROOT / "external" / n).is_dir()}
+
+
+def check(saved, now, skip_repos=frozenset()):
+    """A prompt may move inside its own repository (code to pack, pack to pack), never change or vanish.
+
+    Repositories in ``skip_repos`` are not checked (they are not present in this checkout)."""
     problems = []
     packs = en_pack_hashes()
     code_by_repo = {}
@@ -168,6 +177,8 @@ def check(saved, now):
         json_by_repo.setdefault(repo_of(rel), set()).update(keys.values())
     for rel, keys in saved["json"].items():
         repo = repo_of(rel)
+        if repo in skip_repos:
+            continue
         exact = (
             packs.get(repo, (set(), set()))[0]
             | code_by_repo.get(repo, set())
@@ -179,6 +190,8 @@ def check(saved, now):
             problems.append(f"changed or removed template: {rel} :: {key}")
     for rel, records in saved["code"].items():
         repo = repo_of(rel)
+        if repo in skip_repos:
+            continue
         pack_exact, pack_norm = packs.get(repo, (set(), set()))
         exact = (
             pack_exact | code_by_repo.get(repo, set()) | json_by_repo.get(repo, set())
@@ -199,6 +212,11 @@ def main():
     ap.add_argument(
         "--out", help="write the snapshot here instead of docs/prompt-hashes.json"
     )
+    ap.add_argument(
+        "--require-external",
+        action="store_true",
+        help="with --check: fail instead of skipping external repositories that are not checked out",
+    )
     args = ap.parse_args()
     now = current_state()
     if args.write:
@@ -211,7 +229,14 @@ def main():
         print(f"wrote {target}: {n_json} template hashes, {n_code} code literal hashes")
         return 0
     saved = json.loads(OUT.read_text(encoding="utf-8"))
-    problems = check(saved, now)
+    skipped = set() if args.require_external else absent_repos(saved)
+    if skipped:
+        print(
+            "skipped (not checked out here): "
+            + ", ".join(sorted(skipped))
+            + "; run with the repositories under external/ for the full check"
+        )
+    problems = check(saved, now, skipped)
     for p in problems:
         print(p)
     print(

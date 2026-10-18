@@ -29,6 +29,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 TOKENS_FILE = ROOT / "external" / "YClient" / "y_client" / "protocol_tokens.py"
 STORE_FILE = ROOT / "y_web" / "prompt_store.py"
+TOKENS_REFERENCE = ROOT / "data_schema" / "prompts" / "protocol_tokens.json"
 INTERNAL_PACKS = [
     "y_web/prompts_internal.json",
     "external/YClient/y_client/prompts_internal.json",
@@ -51,6 +52,12 @@ def _load_module(path, name):
 
 def _tokens(root):
     path = root / "external" / "YClient" / "y_client" / "protocol_tokens.py"
+    if not path.exists() and not TOKENS_FILE.exists():
+        # external repositories not checked out (CI): use the reference list tracked in YWeb
+        ref = root / "data_schema" / "prompts" / "protocol_tokens.json"
+        if not ref.exists():
+            ref = TOKENS_REFERENCE
+        return set(json.loads(ref.read_text(encoding="utf-8"))["tokens"])
     module = _load_module(
         path if path.exists() else TOKENS_FILE, "protocol_tokens_for_validation"
     )
