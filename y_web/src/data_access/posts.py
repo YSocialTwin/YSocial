@@ -62,12 +62,9 @@ def _adhoc_agent_badge(user) -> Optional[str]:
 
 
 def _author_type_badge(user) -> str:
-    user_type = str(getattr(user, "user_type", "") or "").strip().lower()
-    return (
-        "AI Agent"
-        if user_type == "agent" or user_type in _ADHOC_AGENT_BADGE_LABELS
-        else "Human"
-    )
+    raw = getattr(user, "user_type", None)
+    user_type = str(raw if raw is not None else "").strip().lower()
+    return "AI Agent" if raw is not None and user_type != "user" else "Human"
 
 
 def _is_root_reference(column):

@@ -71,8 +71,11 @@ def get_adhoc_agent_badge(user) -> Optional[str]:
 
 def get_author_type_badge(user) -> str:
     """Return a badge label identifying whether the author is an AI agent or a human."""
-    user_type = str(getattr(user, "user_type", "") or "").strip().lower()
-    if user_type == "agent" or user_type in _ADHOC_AGENT_BADGE_LABELS:
+    raw = getattr(user, "user_type", None)
+    user_type = str(raw if raw is not None else "").strip().lower()
+    # Standard agents store the LLM model name in user_type (and some store
+    # ""), so anything other than None / "user" is an agent.
+    if raw is not None and user_type != "user":
         return N_("AI Agent")  # shown through _(); templates compare the English token
     return N_("Human")
 
