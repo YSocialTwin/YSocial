@@ -401,7 +401,7 @@
                         {% if search_hashtags %}
                             {% for tag in search_hashtags %}
                             <a class="photo-search-page__chip" href="/{{ exp_id }}/photo/search?q=%23{{ tag['hashtag'] }}&kind=hashtags">
-                                #{{ tag['hashtag'] }}
+                                #{{ tag['hashtag']|string|trim('#') }}
                                 <span class="photo-search-page__badge">{{ tag['photo_count'] }}</span>
                             </a>
                             {% endfor %}
