@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import sys
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from flask import flash, jsonify, redirect, render_template, request, session, url_for
@@ -36,6 +37,7 @@ from y_web.src.external_runtime import (
     validate_runtime_repo,
 )
 from y_web.src.external_runtime.frontend_plugins import validate_frontend_suite
+from y_web.src.external_runtime.manager import clear_remote_cache
 from y_web.src.models import Admin_users, Exps
 from y_web.src.system.miscellanea import check_privileges
 
@@ -363,6 +365,7 @@ def external_runtime_detail(entry_key: str):
     github_token = _session_github_token()
     plugins_index = load_plugins_index(refresh=True)
     repos = []
+    specs = {}
     for key in member_keys:
         try:
             spec = runtime_spec(key)
@@ -372,10 +375,22 @@ def external_runtime_detail(entry_key: str):
         if not runtime_visible_to_user(spec, admin_user):
             flash(_("You do not have visibility on this plugin repository."), "error")
             return redirect(url_for("experiments.external_runtimes"))
-        status = get_runtime_status(
-            key, github_token=github_token, include_remote_metadata=True
-        )
-        repos.append(_decorate_repo(status.to_dict(), spec, plugins_index))
+        specs[key] = spec
+    # server and client of a pair are independent: query GitHub for both at once
+    with ThreadPoolExecutor(max_workers=max(1, len(specs))) as pool:
+        futures = {
+            key: pool.submit(
+                get_runtime_status,
+                key,
+                github_token=github_token,
+                include_remote_metadata=True,
+            )
+            for key in specs
+        }
+        for key, future in futures.items():
+            repos.append(
+                _decorate_repo(future.result().to_dict(), specs[key], plugins_index)
+            )
 
     entry = _make_entry(entry_key, repos)
     branch_sets = [set(r.get("available_branches") or []) for r in repos]
@@ -751,6 +766,7 @@ def _external_runtime_action_single(repo_key: str, action: str):
         )
         flash(str(exc), "error")
 
+    clear_remote_cache()  # heads/releases may have changed after an install or update
     return _external_runtimes_response(
         repo_key=repo_key,
         message=f"{spec.label} action completed.",

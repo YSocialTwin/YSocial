@@ -12,7 +12,10 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import threading
+import time
 import zipfile
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -27,6 +30,34 @@ from .registry import grouped_runtime_specs, runtime_spec
 LOG_DIR = Path(get_writable_path()) / "logs"
 LOG_FILE = LOG_DIR / "external_runtime_operations.log"
 _GITHUB_TIMEOUT = 6
+
+# Short-lived cache of the remote lookups (releases, branches, branch head): the
+# plugin pages ask for them on every open and every lookup is a network round trip.
+_REMOTE_CACHE: dict[tuple, tuple[float, Any]] = {}
+_REMOTE_CACHE_LOCK = threading.Lock()
+_REMOTE_TTL_OK = 120.0  # seconds, successful lookup
+_REMOTE_TTL_ERR = 30.0  # seconds, failed lookup (avoid repeating slow timeouts)
+
+
+def clear_remote_cache() -> None:
+    """Forget cached remote lookups (call after install/update/delete)."""
+    with _REMOTE_CACHE_LOCK:
+        _REMOTE_CACHE.clear()
+
+
+def _remote_cached(kind: str, spec, extra: str, github_token, fn):
+    """Return ``fn()`` ((value, error) tuple) cached per repo/token for a short time."""
+    key = (kind, spec.github_repo, extra, bool(github_token), hash(github_token or ""))
+    now = time.monotonic()
+    with _REMOTE_CACHE_LOCK:
+        hit = _REMOTE_CACHE.get(key)
+        if hit and hit[0] > now:
+            return hit[1]
+    result = fn()
+    ttl = _REMOTE_TTL_ERR if result[1] else _REMOTE_TTL_OK
+    with _REMOTE_CACHE_LOCK:
+        _REMOTE_CACHE[key] = (now + ttl, result)
+    return result
 
 
 class ExternalRuntimeError(RuntimeError):
@@ -303,7 +334,7 @@ def _resolve_branch(spec, selected_branch: str | None) -> str:
     return branch or spec.default_branch
 
 
-def _list_remote_branches(
+def _list_remote_branches_uncached(
     spec, github_token: str | None = None
 ) -> tuple[list[str], str | None]:
     branches: list[str] = []
@@ -369,6 +400,16 @@ def _list_remote_branches_git(
         if ref.startswith("refs/heads/"):
             names.append(ref.removeprefix("refs/heads/"))
     return sorted(set(names)), None
+
+
+def _list_remote_branches(spec, github_token: str | None = None):
+    return _remote_cached(
+        "branches",
+        spec,
+        "",
+        github_token,
+        lambda: _list_remote_branches_uncached(spec, github_token=github_token),
+    )
 
 
 def _branch_list_for_repo(
@@ -537,7 +578,7 @@ def _release_summary(payload: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _list_releases(
+def _list_releases_uncached(
     spec, github_token: str | None = None
 ) -> tuple[list[dict[str, Any]], str | None]:
     url = f"https://api.github.com/repos/{spec.github_repo}/releases?per_page=10"
@@ -562,6 +603,16 @@ def _list_releases(
     releases = [_release_summary(item) for item in payload if isinstance(item, dict)]
     releases = [item for item in releases if item.get("tag") and not item.get("draft")]
     return releases, None
+
+
+def _list_releases(spec, github_token: str | None = None):
+    return _remote_cached(
+        "releases",
+        spec,
+        "",
+        github_token,
+        lambda: _list_releases_uncached(spec, github_token=github_token),
+    )
 
 
 def _find_release(
@@ -644,7 +695,7 @@ def _read_archive_marker(path: Path) -> dict[str, Any] | None:
     return data if isinstance(data, dict) and data.get("source") == "archive" else None
 
 
-def _remote_branch_head(
+def _remote_branch_head_uncached(
     spec, branch: str, github_token: str | None = None
 ) -> tuple[str | None, str | None]:
     """Latest commit SHA of ``branch`` on GitHub, as ``(sha, error)``."""
@@ -660,6 +711,16 @@ def _remote_branch_head(
     except (ValueError, AttributeError):
         return None, "GitHub commit response was not valid JSON."
     return (sha or None), (None if sha else "GitHub returned no commit.")
+
+
+def _remote_branch_head(spec, branch: str, github_token: str | None = None):
+    return _remote_cached(
+        "head",
+        spec,
+        branch,
+        github_token,
+        lambda: _remote_branch_head_uncached(spec, branch, github_token=github_token),
+    )
 
 
 def _download_branch_archive(
@@ -853,10 +914,16 @@ def get_runtime_status(
     release_error: str | None = None
     branch_error: str | None = None
     if include_remote_metadata:
-        releases, release_error = _list_releases(spec, github_token=github_token)
-        branches, branch_error = _branch_list_for_repo(
-            spec, git_managed, github_token=github_token
-        )
+        # the releases and branches lookups are independent network calls
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            releases_future = pool.submit(
+                _list_releases, spec, github_token=github_token
+            )
+            branches_future = pool.submit(
+                _branch_list_for_repo, spec, git_managed, github_token=github_token
+            )
+            releases, release_error = releases_future.result()
+            branches, branch_error = branches_future.result()
     elif git_managed or archive_marker:
         # Git-managed runtimes need remote branch discovery even in fast view so
         # branch selectors can expose remote-only branches such as feature or
