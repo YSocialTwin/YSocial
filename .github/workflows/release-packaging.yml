@@ -2,8 +2,8 @@ name: Release packaging
 
 # Tag v* -> wheel + checksums + Docker image (GHCR) + DRAFT GitHub release.
 # Nothing is published automatically: the release stays a draft until a human
-# reviews and publishes it. Desktop installers (E5/E6) will be added as a
-# further matrix job once the installer prototype exists.
+# reviews and publishes it. The desktop launcher/installer (Tauri) is built for
+# macOS (arm64 + Intel), Windows and Linux; unsigned, as decided.
 on:
   push:
     tags: ["v*"]
@@ -36,6 +36,66 @@ jobs:
           name: wheel
           path: dist/*
 
+  installers:
+    name: installer (${{ matrix.label }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-14,        label: macos-arm64, bundles: dmg }
+          - { os: macos-15-intel,  label: macos-x64,   bundles: dmg }
+          - { os: windows-latest,  label: windows-x64, bundles: nsis }
+          - { os: ubuntu-24.04,    label: linux-x64,   bundles: "appimage,deb" }
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Linux build dependencies (WebKitGTK)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev \
+            libayatana-appindicator3-dev patchelf xdg-utils
+      - name: Bundled payload (wheel, constraints, uv)
+        run: |
+          python -m pip install build uv
+          res=installer/src-tauri/resources
+          python -m build --wheel --outdir "$res" .
+          cp requirements.lock "$res/constraints.txt"
+          uvbin="$(python -c 'import shutil;print(shutil.which("uv"))')"
+          if [ "$RUNNER_OS" = "Windows" ]; then cp "$uvbin" "$res/uv.exe"; else cp "$uvbin" "$res/uv"; chmod +x "$res/uv"; fi
+          ls -la "$res"
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: installer/src-tauri
+      - name: Tauri CLI
+        run: cargo install tauri-cli --version "^2" --locked
+      - name: Build the installer
+        working-directory: installer/src-tauri
+        run: cargo tauri build --bundles ${{ matrix.bundles }}
+      - name: Collect installers
+        run: |
+          version="$(cat VERSION)"
+          mkdir -p out
+          find installer/src-tauri/target -path '*/release/bundle/*' -type f \
+            \( -name '*.dmg' -o -name '*.exe' -o -name '*.AppImage' -o -name '*.deb' \) \
+            ! -path '*/nsis/*/*' -print | while read -r f; do
+              ext="${f##*.}"
+              cp "$f" "out/YSocial-${version}-${{ matrix.label }}.${ext}"
+            done
+          ls -la out
+          test -n "$(ls out)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installer-${{ matrix.label }}
+          path: out/*
+
   docker:
     runs-on: ubuntu-24.04
     steps:
@@ -63,13 +123,23 @@ jobs:
 
   release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [wheel, docker]
+    needs: [wheel, installers, docker]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: wheel
           path: dist
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: installer-*
+          merge-multiple: true
+          path: dist
+      - name: Checksums for everything attached
+        run: |
+          cd dist
+          rm -f SHA256SUMS.txt
+          sha256sum $(ls) > SHA256SUMS.txt
       - name: Draft release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

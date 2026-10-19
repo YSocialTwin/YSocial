@@ -208,3 +208,21 @@ def test_close_shows_feedback_and_ignores_repeated_clicks():
     assert "CLOSING.swap(true" in rs
     # the overlay goes up before the services are stopped
     assert rs.index("w.eval(CLOSING_OVERLAY)") < rs.index("stop_service(&app, &home, &host, port, false)")
+
+
+def test_child_processes_use_the_windows_safe_wrapper():
+    rs = (I / "src-tauri/src/main.rs").read_text()
+    assert rs.count("Command::new(") == 1  # only inside new_cmd
+    assert "CREATE_NO_WINDOW" in rs and "new_cmd(" in rs
+
+
+def test_release_workflow_builds_installers_for_every_platform():
+    yaml = pytest.importorskip("yaml")
+
+    wf = yaml.safe_load((I.parent / ".github/workflows/release-packaging.yml").read_text())
+    job = wf["jobs"]["installers"]
+    labels = {m["label"] for m in job["strategy"]["matrix"]["include"]}
+    assert labels == {"macos-arm64", "macos-x64", "windows-x64", "linux-x64"}
+    assert "installers" in wf["jobs"]["release"]["needs"]
+    text = (I.parent / ".github/workflows/release-packaging.yml").read_text()
+    assert "constraints.txt" in text and "libwebkit2gtk-4.1-dev" in text

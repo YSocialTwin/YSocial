@@ -161,3 +161,14 @@ Packaging is tied to the top-level version file:
 - `VERSION`
 
 Update it before release builds.
+
+
+## Desktop launcher (Tauri)
+
+The graphical launcher/installer lives in `installer/` and is built for macOS (arm64 and
+Intel), Windows and Linux by the `installers` job of `.github/workflows/release-packaging.yml`
+(tag `v*`; the release stays a draft). Artifacts are named
+`YSocial-<version>-<macos-arm64|macos-x64|windows-x64|linux-x64>.<dmg|exe|AppImage|deb>`.
+Builds are unsigned: macOS shows the Gatekeeper warning (right-click > Open, or
+`xattr -dr com.apple.quarantine`), Windows shows SmartScreen ("More info" > "Run anyway").
+See `installer/README.md` for the build steps and platform requirements.

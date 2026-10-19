@@ -38,6 +38,19 @@ fn default_home_path() -> PathBuf {
     }
 }
 
+/// Every child process goes through here: on Windows the app has no console, so without
+/// CREATE_NO_WINDOW each `curl`, `uv` or `taskkill` would flash a console window.
+fn new_cmd<S: AsRef<std::ffi::OsStr>>(program: S) -> Command {
+    #[allow(unused_mut)]
+    let mut c = Command::new(program);
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        c.creation_flags(0x0800_0000); // CREATE_NO_WINDOW
+    }
+    c
+}
+
 fn venv_python(home: &Path) -> PathBuf {
     let venv = home.join("runtime").join("venv");
     if cfg!(target_os = "windows") {
@@ -152,7 +165,7 @@ fn installed_info(home: String) -> Option<String> {
     }
     let code = "import importlib.metadata as m, importlib.util as u; \
                 print(m.version('ysocial'), int(u.find_spec('detoxify') is not None))";
-    let out = Command::new(py).args(["-c", code]).stderr(Stdio::null()).output().ok()?;
+    let out = new_cmd(py).args(["-c", code]).stderr(Stdio::null()).output().ok()?;
     if !out.status.success() {
         return None;
     }
@@ -164,7 +177,7 @@ fn installed_info(home: String) -> Option<String> {
 #[tauri::command]
 async fn fetch_latest_release() -> Result<String, String> {
     tauri::async_runtime::spawn_blocking(|| {
-        let out = Command::new("curl")
+        let out = new_cmd("curl")
             .args(["-fsSL", "--max-time", "8", "-H", "Accept: application/vnd.github+json",
                    "-H", "User-Agent: ysocial-launcher", RELEASES_API])
             .output()
@@ -183,7 +196,7 @@ fn download(app: &AppHandle, url: &str, dest: &Path) -> Result<(), String> {
     if !url.starts_with(RELEASE_DOWNLOAD_PREFIX) {
         return Err("Refusing to download from an unexpected address".into());
     }
-    let mut c = Command::new("curl");
+    let mut c = new_cmd("curl");
     c.args(["-fL", "--retry", "3", "--max-time", "900", "-o"]).arg(dest).arg(url);
     run_step(app, "Downloading update", &mut c)
 }
@@ -214,7 +227,7 @@ async fn update(
         download(&app, &wheel_url, &wheel)?;
         download(&app, &constraints_url, &constraints)?;
         let uv = resource_file(&app, if cfg!(windows) { "uv.exe" } else { "uv" })?;
-        let mut c = Command::new(&uv);
+        let mut c = new_cmd(&uv);
         c.args(["pip", "install", "--upgrade", "--python"]).arg(venv_python(&home));
         c.arg("--constraint").arg(&constraints);
         let target = if toxicity {
@@ -248,17 +261,17 @@ async fn install(app: AppHandle, home: String, toxicity: bool) -> Result<(), Str
             c.env("UV_PYTHON_INSTALL_DIR", &py_dir).env("YSOCIAL_HOME", &home);
         };
 
-        let mut c = Command::new(&uv);
+        let mut c = new_cmd(&uv);
         c.args(["python", "install", PYTHON_VERSION]);
         base(&mut c);
         run_step(&app, "Installing Python", &mut c)?;
 
-        let mut c = Command::new(&uv);
+        let mut c = new_cmd(&uv);
         c.args(["venv", "--seed", "--python", PYTHON_VERSION]).arg(&venv);
         base(&mut c);
         run_step(&app, "Creating environment", &mut c)?;
 
-        let mut c = Command::new(&uv);
+        let mut c = new_cmd(&uv);
         c.args(["pip", "install", "--python"]).arg(venv_python(&home));
         // Pinned versions (requirements.lock, bundled as constraints.txt): keep them
         // next to the runtime so plugin installs are constrained to the same pins.
@@ -285,11 +298,11 @@ async fn install(app: AppHandle, home: String, toxicity: bool) -> Result<(), Str
 
 fn open_in_browser(url: &str) {
     let _ = if cfg!(target_os = "macos") {
-        Command::new("open").arg(url).spawn()
+        new_cmd("open").arg(url).spawn()
     } else if cfg!(target_os = "windows") {
-        Command::new("cmd").args(["/C", "start", "", url]).spawn()
+        new_cmd("cmd").args(["/C", "start", "", url]).spawn()
     } else {
-        Command::new("xdg-open").arg(url).spawn()
+        new_cmd("xdg-open").arg(url).spawn()
     };
 }
 
@@ -303,13 +316,13 @@ fn read_pid(home: &Path) -> Option<u32> {
 
 fn pid_alive(pid: u32) -> bool {
     if cfg!(target_os = "windows") {
-        Command::new("tasklist")
+        new_cmd("tasklist")
             .args(["/FI", &format!("PID eq {pid}"), "/NH"])
             .output()
             .map(|o| String::from_utf8_lossy(&o.stdout).contains(&pid.to_string()))
             .unwrap_or(false)
     } else {
-        Command::new("kill")
+        new_cmd("kill")
             .args(["-0", &pid.to_string()])
             .stderr(Stdio::null())
             .status()
@@ -352,9 +365,9 @@ fn stop_service(app: &AppHandle, home: &Path, host: &str, port: u16, close_windo
     };
     let _ = app.emit("progress", format!("Stopping YSocial (pid {pid})..."));
     if cfg!(target_os = "windows") {
-        let _ = Command::new("taskkill").args(["/PID", &pid.to_string(), "/T", "/F"]).status();
+        let _ = new_cmd("taskkill").args(["/PID", &pid.to_string(), "/T", "/F"]).status();
     } else {
-        let _ = Command::new("kill").args(["-TERM", &pid.to_string()]).status();
+        let _ = new_cmd("kill").args(["-TERM", &pid.to_string()]).status();
     }
     let start = Instant::now();
     while start.elapsed() < Duration::from_secs(15) {
@@ -365,12 +378,12 @@ fn stop_service(app: &AppHandle, home: &Path, host: &str, port: u16, close_windo
     }
     if pid_alive(pid) && !cfg!(target_os = "windows") {
         let _ = app.emit("progress", "Forcing stop...");
-        let _ = Command::new("kill").args(["-KILL", &pid.to_string()]).status();
+        let _ = new_cmd("kill").args(["-KILL", &pid.to_string()]).status();
         std::thread::sleep(Duration::from_millis(500));
     }
     if !cfg!(target_os = "windows") {
         // Anything still in the process group (started by YSocial) goes too.
-        let _ = Command::new("kill").args(["-KILL", &format!("-{pid}")]).stderr(Stdio::null()).status();
+        let _ = new_cmd("kill").args(["-KILL", &format!("-{pid}")]).stderr(Stdio::null()).status();
     }
     let _ = std::fs::remove_file(pid_file(home));
     if pid_alive(pid) {
@@ -477,14 +490,14 @@ for r in (m.requires('ysocial') or []):
     spec, _, marker = r.partition(';')
     if 'toxicity' in marker:
         print(spec.strip())"#;
-        let out = Command::new(&py).args(["-c", code]).output().map_err(|e| e.to_string())?;
+        let out = new_cmd(&py).args(["-c", code]).output().map_err(|e| e.to_string())?;
         let reqs: Vec<String> = String::from_utf8_lossy(&out.stdout)
             .lines().map(|l| l.trim().to_string()).filter(|l| !l.is_empty()).collect();
         if reqs.is_empty() {
             return Err("This YSocial version has no toxicity component".into());
         }
         let uv = resource_file(&app, if cfg!(windows) { "uv.exe" } else { "uv" })?;
-        let mut c = Command::new(&uv);
+        let mut c = new_cmd(&uv);
         c.args(["pip", "install", "--python"]).arg(&py);
         let cons = runtime.join("constraints.txt");
         if cons.exists() {
@@ -759,7 +772,7 @@ async fn launch(app: AppHandle, home: String, opts: LaunchOptions) -> Result<Str
             // Child output goes to <home>/logs/launch.log so failures are diagnosable.
             let out = std::fs::File::create(&log_path).map_err(|e| e.to_string())?;
             let err = out.try_clone().map_err(|e| e.to_string())?;
-            let mut cmd = Command::new(&exe);
+            let mut cmd = new_cmd(&exe);
             #[cfg(unix)]
             {
                 use std::os::unix::process::CommandExt;
