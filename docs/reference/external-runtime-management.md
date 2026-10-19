@@ -55,10 +55,20 @@ The experiment creation flow already uses these plugin states to determine which
 
 ## Public plugin registry
 
-The plugins that ship with YSocial are described in `y_web/src/external_runtime/builtin_plugins.json`
-(key, group, directory, repository, install commands, files to validate, visibility). The file is part of the
-release, so it is the trusted base: the keys it defines are used by the rest of the application and cannot be
-redefined by the registry below. To add or change a built-in plugin edit that file and release YSocial.
+Every plugin is described in one place, the plugin registry repository
+([`YSocialTwin/plugin-registry`](https://github.com/YSocialTwin/plugin-registry)):
+
+- `builtin.json`: the plugins that ship with YSocial (key, group, directory, repository, install commands, files to
+  validate, visibility). It is released *with* YSocial and never fetched at run time: its keys are used by the rest
+  of the application, so it is the trusted base that the second file can add to but never redefine.
+- `registry.json`: every other plugin, described below.
+
+YSocial packages a **generated** copy of `builtin.json` in
+`y_web/src/external_runtime/builtin_plugins.json`, which records the registry commit and a hash of the list. Do not
+edit it: change `builtin.json` in the registry, then run
+`python scripts/packaging/sync_builtin_plugins.py --source <checkout of the registry>` (or `--ref <commit>`) and
+release. A test (`--verify`, offline) fails if the copy was edited by hand, and the release workflow fails if the
+copy is not the registry's latest (`--check-latest`).
 
 New plugins appear in an already installed YSocial through the public registry
 [`YSocialTwin/plugin-registry`](https://github.com/YSocialTwin/plugin-registry), a JSON list of
@@ -155,7 +165,7 @@ Rules:
 Current implementation uses:
 
 - runtime metadata in:
-  - `y_web/src/external_runtime/builtin_plugins.json` (plugins shipped with YSocial), read by `registry.py`
+  - `y_web/src/external_runtime/builtin_plugins.json` (generated copy of the registry's `builtin.json`), read by `registry.py`
 - optional environment override:
   - `YSOCIAL_PLUGIN_VISIBILITY`
 
@@ -257,7 +267,8 @@ The plugin panel is working correctly when:
 
 ## Relevant Source Files
 
-- `y_web/src/external_runtime/builtin_plugins.json`
+- `y_web/src/external_runtime/builtin_plugins.json` (generated)
+- `scripts/packaging/sync_builtin_plugins.py`
 - `y_web/src/external_runtime/registry.py`
 - `y_web/src/external_runtime/catalog.py`
 - `y_web/src/external_runtime/manager.py`

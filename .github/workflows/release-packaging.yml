@@ -35,6 +35,12 @@ jobs:
       prerelease: ${{ steps.v.outputs.prerelease }}
     steps:
       - uses: actions/checkout@v4
+      # one source of truth: the built-in plugin list lives in the plugin registry and
+      # the copy packaged here is generated; a release must carry the registry's latest
+      - name: Built-in plugins are in sync with the plugin registry
+        run: |
+          python3 scripts/packaging/sync_builtin_plugins.py --verify
+          python3 scripts/packaging/sync_builtin_plugins.py --check-latest
       - id: v
         env:
           INPUT_TAG: ${{ github.event.inputs.tag }}
