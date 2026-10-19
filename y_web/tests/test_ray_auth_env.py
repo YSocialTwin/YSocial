@@ -1,3 +1,13 @@
+import os
+
+import pytest
+
+# local-only checks (Ray env / symlink alias): not run on GitHub Actions
+pytestmark = pytest.mark.skipif(
+    os.environ.get("GITHUB_ACTIONS") == "true",
+    reason="local-only test, excluded from GitHub CI",
+)
+
 from y_web.src.simulation.subprocess_env import (
     apply_ray_auth_defaults,
     build_subprocess_env,
