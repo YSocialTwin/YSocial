@@ -53,9 +53,7 @@ def test_valid_entry_becomes_a_spec():
     assert spec.repo_url == "https://github.com/someone/sentiment-lab.git"
     assert spec.github_repo == "someone/sentiment-lab"
     assert spec.group == "backend_settings" and spec.source == "registry"
-    assert spec.install_commands == (
-        ("python", "-m", "pip", "install", "-e", "."),
-    )
+    assert spec.install_commands == (("python", "-m", "pip", "install", "-e", "."),)
     assert spec.path.name == "sentiment-lab"
     assert spec.trust == "community" and spec.is_private is False
 
