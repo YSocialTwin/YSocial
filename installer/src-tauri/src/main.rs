@@ -349,8 +349,36 @@ fn is_running(home: String, host: String, port: u16) -> bool {
     read_pid(&home).map(pid_alive).unwrap_or(false) || port_open(&host, port)
 }
 
+/// All descendants of `root` (children, grandchildren, ...), also those in other
+/// sessions/process groups (simulators are started detached). Unix only.
+fn descendant_pids(root: u32) -> Vec<u32> {
+    let Ok(out) = new_cmd("ps").args(["-A", "-o", "pid=,ppid="]).output() else {
+        return Vec::new();
+    };
+    let table: Vec<(u32, u32)> = String::from_utf8_lossy(&out.stdout)
+        .lines()
+        .filter_map(|l| {
+            let mut it = l.split_whitespace();
+            Some((it.next()?.parse().ok()?, it.next()?.parse().ok()?))
+        })
+        .collect();
+    let mut found = vec![root];
+    let mut i = 0;
+    while i < found.len() {
+        let parent = found[i];
+        for (pid, ppid) in &table {
+            if *ppid == parent && !found.contains(pid) {
+                found.push(*pid);
+            }
+        }
+        i += 1;
+    }
+    found.remove(0);
+    found
+}
+
 /// Stop YSocial: SIGTERM (clean shutdown: experiments and Jupyter are stopped by
-/// YSocial itself), then SIGKILL after 15 s. Windows: taskkill of the process tree.
+/// YSocial itself), then SIGKILL after 40 s. Windows: taskkill of the process tree.
 /// Unix: YSocial runs in its own process group, so leftovers (YServer/YClient,
 /// Jupyter) are killed with the group once the main process is gone.
 fn stop_service(app: &AppHandle, home: &Path, host: &str, port: u16, close_window: bool) -> Result<(), String> {
@@ -364,13 +392,16 @@ fn stop_service(app: &AppHandle, home: &Path, host: &str, port: u16, close_windo
         };
     };
     let _ = app.emit("progress", format!("Stopping YSocial (pid {pid})..."));
+    // Snapshot the descendants now: they are reparented once YSocial exits.
+    let descendants = if cfg!(target_os = "windows") { Vec::new() } else { descendant_pids(pid) };
     if cfg!(target_os = "windows") {
         let _ = new_cmd("taskkill").args(["/PID", &pid.to_string(), "/T", "/F"]).status();
     } else {
         let _ = new_cmd("kill").args(["-TERM", &pid.to_string()]).status();
     }
     let start = Instant::now();
-    while start.elapsed() < Duration::from_secs(15) {
+    // YSocial stops every simulator (and their Ray helpers) before exiting.
+    while start.elapsed() < Duration::from_secs(40) {
         if !pid_alive(pid) {
             break;
         }
@@ -384,6 +415,10 @@ fn stop_service(app: &AppHandle, home: &Path, host: &str, port: u16, close_windo
     if !cfg!(target_os = "windows") {
         // Anything still in the process group (started by YSocial) goes too.
         let _ = new_cmd("kill").args(["-KILL", &format!("-{pid}")]).stderr(Stdio::null()).status();
+        // Simulators in their own session (and their helpers) that survived.
+        for d in descendants {
+            let _ = new_cmd("kill").args(["-KILL", &d.to_string()]).stderr(Stdio::null()).status();
+        }
     }
     let _ = std::fs::remove_file(pid_file(home));
     if pid_alive(pid) {
