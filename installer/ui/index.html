@@ -49,7 +49,8 @@
 
   <!-- 2. Installing -->
   <section class="view" id="v-installing">
-    <h2 data-i18n="inst.title">Setting things up…</h2>
+    <h2 id="inst-title" data-i18n="inst.title">Setting things up…</h2>
+    <p class="yl-sub yl-only-update" data-i18n="upd.sub">Updating YSocial. Your data is not touched.</p>
     <p class="yl-sub" data-i18n="inst.sub">This takes a few minutes the first time. You can leave this window open.</p>
     <div class="yl-bar"><i id="bar"></i></div>
     <ol class="yl-steps">
@@ -64,6 +65,12 @@
     <h2 id="ready-title" data-i18n="ready.title">Ready when you are</h2>
     <p class="yl-sub" id="ready-sub" data-i18n="ready.sub">YSocial is installed. Start it whenever you like.</p>
     <div class="yl-status" id="status">Stopped</div>
+    <span class="yl-ver"><span data-i18n="ver.label">Version</span> <b id="ver"></b></span>
+    <div class="yl-upd" id="upd" hidden>
+      <div><b id="upd-t"></b><small id="upd-launcher" hidden></small></div>
+      <button class="yl-btn" id="doupdate" type="button"><span data-i18n="upd.btn">Update</span></button>
+    </div>
+    <div class="yl-ok" id="upd-done" hidden></div>
 
     <button class="yl-btn" id="launch" type="button" disabled><span class="yl-spin"></span><span id="launch-t">Start YSocial</span></button>
     <button class="yl-btn ghost" id="stop" type="button" disabled data-i18n="btn.stop">Stop YSocial</button>
@@ -90,6 +97,8 @@
       <select id="lang"><option value="auto">Auto</option><option value="en">English</option><option value="it">Italiano</option></select>
       <label for="lang" data-i18n="opt.lang">Language</label>
     </div>
+    <label class="yl-chk"><input id="checkupdates" type="checkbox" checked>
+      <span><span data-i18n="opt.updates">Check for updates</span><small data-i18n="opt.updates.desc">Looks for new YSocial releases when the launcher opens.</small></span></label>
     <label class="yl-chk"><input id="appwindow" type="checkbox" checked>
       <span><span data-i18n="opt.window">Open in its own window</span><small data-i18n="opt.window.desc">Untick to use your default browser instead.</small></span></label>
 
@@ -118,6 +127,8 @@
       <label for="extra" data-i18n="opt.extra">Extra command-line arguments</label>
     </div>
   </details>
+
+  <p class="yl-foot"><span data-i18n="launcher.ver">Launcher</span> <span id="launcher-ver"></span></p>
 
   <details class="yl-details">
     <summary data-i18n="tech">Technical details</summary>

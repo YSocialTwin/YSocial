@@ -7,7 +7,42 @@ const log = (line) => { $("log").textContent += line + "\n"; $("log").scrollTop 
 // ---- friendly UI state -------------------------------------------------
 let installing = false;   // an install is in progress
 let confirmingUninstall = false; // uninstall confirmation is open
-let forceSetup = false;   // user asked to reinstall / pick another folder
+let forceSetup = false;
+let info = { version: null, toxicity: false };  // installed YSocial (read after install/update, not polled)
+let latest = null;                               // newer release found on GitHub, if any
+let updating = false;
+
+const parseVer = (v) => String(v).replace(/^v/i, "").split("-")[0].split(".").map((x) => parseInt(x, 10) || 0);
+const isNewer = (a, b) => {
+  const x = parseVer(a), y = parseVer(b);
+  for (let i = 0; i < Math.max(x.length, y.length); i++) {
+    if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0);
+  }
+  return false;
+};
+async function readInstalled() {
+  try {
+    const raw = await invoke("installed_info", { home: $("home").value });
+    if (raw) { const [v, tox] = raw.split(" "); info = { version: v, toxicity: tox === "1" }; return; }
+  } catch (_) {}
+  info = { version: null, toxicity: false };
+}
+async function checkForUpdate() {
+  latest = null;
+  if (!$("checkupdates").checked || !info.version) return;
+  try {
+    const rel = JSON.parse(await invoke("fetch_latest_release"));
+    if (rel.draft || rel.prerelease || !rel.tag_name || !isNewer(rel.tag_name, info.version)) return;
+    const assets = rel.assets || [];
+    const wheel = assets.find((a) => /^ysocial-.*\.whl$/.test(a.name));
+    const cons = assets.find((a) => a.name === "constraints.txt");
+    if (!wheel || !cons) return;  // not updatable in place
+    latest = {
+      version: rel.tag_name.replace(/^v/i, ""), wheel: wheel.browser_download_url, constraints: cons.browser_download_url,
+      installer: assets.some((a) => /\.(dmg|msi|exe|AppImage|deb)$/i.test(a.name)), page: rel.html_url,
+    };
+  } catch (_) { /* offline or rate-limited: stay silent */ }
+}   // user asked to reinstall / pick another folder
 const STEPS = { "Installing Python": "python", "Creating environment": "env", "Installing YSocial": "app" };
 const ORDER = ["python", "env", "app"];
 
@@ -42,7 +77,7 @@ function finishSteps() {
 // UI field -> setting key (persisted in <data folder>/launcher.json)
 const FIELDS = {
   host: "host", port: "port", db: "db", llm: "llm_backend", extra: "extra_args",
-  debug: "debug", nonotebook: "no_notebook", development: "development", appwindow: "app_window",
+  debug: "debug", nonotebook: "no_notebook", development: "development", appwindow: "app_window", checkupdates: "check_updates",
 };
 
 function readOptions() {
@@ -56,6 +91,7 @@ function readOptions() {
     no_notebook: $("nonotebook").checked,
     development: $("development").checked,
     app_window: $("appwindow").checked,
+    check_updates: $("checkupdates").checked,
   };
   return o;
 }
@@ -81,7 +117,7 @@ async function loadOptions() {
 }
 
 async function refresh() {
-  if (installing) { show("installing"); return; }
+  if (installing || updating) { show("installing"); return; }
   if (confirmingUninstall) { show("uninstall"); return; }
   const home = $("home").value;
   const o = readOptions();
@@ -89,6 +125,14 @@ async function refresh() {
   if (!installed || forceSetup) { show("setup"); return; }
   const running = await invoke("is_running", { home, host: o.host, port: o.port });
   $("where").textContent = home;
+  $("ver").textContent = info.version || "?";
+  const showUpd = !!latest && !running;
+  $("upd").hidden = !showUpd;
+  if (showUpd) {
+    $("upd-t").textContent = I("upd.avail", "YSocial {v} is available", { v: latest.version });
+    $("upd-launcher").hidden = !latest.installer;
+    $("upd-launcher").textContent = I("upd.launcher", "A new launcher is also available: {url}", { url: latest.page });
+  }
   $("launch").disabled = running;
   $("stop").disabled = !running;
   $("status").className = "yl-status" + (running ? " on" : "");
@@ -111,7 +155,10 @@ async function init() {
     log(e.payload);
     if (e.payload.startsWith("== ")) {
       const label = e.payload.slice(3);
-      if (label === "Done") finishSteps(); else markStep(label);
+      if (label === "Done") finishSteps();
+      else if (label === "Downloading update") $("bar").style.width = "35%";
+      else if (label === "Updating YSocial") $("bar").style.width = "70%";
+      else markStep(label);
     }
   });
   $("uninstall").addEventListener("click", async () => { setError(""); confirmingUninstall = true; $("deletedata").checked = false; await refresh(); });
@@ -130,7 +177,31 @@ async function init() {
     await refresh();
   });
   $("reinstall").addEventListener("click", async () => { forceSetup = true; setError(""); await refresh(); });
-  $("home").addEventListener("change", async () => { forceSetup = false; await loadOptions(); await refresh(); });
+  $("home").addEventListener("change", async () => { forceSetup = false; await loadOptions(); await readInstalled(); await refresh(); });
+  $("doupdate").addEventListener("click", async () => {
+    if (!latest) return;
+    setError("");
+    updating = true;
+    $("v-installing").dataset.mode = "update";
+    $("inst-title").textContent = I("upd.title", "Updating YSocial…");
+    $("bar").style.width = "10%";
+    show("installing");
+    const o = readOptions();
+    try {
+      await invoke("update", { home: $("home").value, host: o.host, port: o.port, wheelUrl: latest.wheel,
+                               constraintsUrl: latest.constraints, toxicity: info.toxicity });
+      await readInstalled();   // the new version number is shown right away
+      latest = null;
+      setError("");
+      $("upd-done").textContent = I("upd.done", "Updated to version {v}", { v: info.version });
+      $("upd-done").hidden = false;
+      setTimeout(() => { $("upd-done").hidden = true; }, 15000);
+    } catch (err) { log("ERROR: " + err); setError(friendly(err)); }
+    delete $("v-installing").dataset.mode;
+    $("inst-title").textContent = I("inst.title", "Setting things up…");
+    updating = false;
+    await refresh();
+  });
   document.querySelectorAll("#advanced input, #advanced select, #appwindow").forEach((el) =>
     el.addEventListener("change", async () => { await saveOptions(); await refresh(); }));
   $("install").addEventListener("click", async () => {
@@ -142,6 +213,8 @@ async function init() {
       await invoke("install", { home: $("home").value, toxicity: $("toxicity").checked });
       forceSetup = false;
       await saveOptions();
+      await readInstalled();
+      checkForUpdate().then(refresh);
     } catch (err) { log("ERROR: " + err); setError(friendly(err)); }
     installing = false;
     await refresh();
@@ -165,6 +238,9 @@ async function init() {
     await refresh();
   });
   setInterval(() => { if (!$("launch").classList.contains("loading")) refresh(); }, 3000);
+  try { $("launcher-ver").textContent = await invoke("app_version"); } catch (_) {}
+  await readInstalled();
   await refresh();
+  checkForUpdate().then(refresh);
 }
 init();

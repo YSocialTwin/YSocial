@@ -133,6 +133,106 @@ fn is_installed(home: String) -> bool {
     venv_ysocial(Path::new(&home)).exists()
 }
 
+const RELEASES_API: &str = "https://api.github.com/repos/YSocialTwin/YSocial/releases/latest";
+const RELEASE_DOWNLOAD_PREFIX: &str = "https://github.com/YSocialTwin/YSocial/releases/download/";
+
+/// Version of the launcher itself (kept equal to YSocial's by CI/tests).
+#[tauri::command]
+fn app_version(app: AppHandle) -> String {
+    app.package_info().version.to_string()
+}
+
+/// Installed YSocial version and whether the optional toxicity extra is present.
+#[tauri::command]
+fn installed_info(home: String) -> Option<String> {
+    let py = venv_python(Path::new(&home));
+    if !py.exists() {
+        return None;
+    }
+    let code = "import importlib.metadata as m, importlib.util as u; \
+                print(m.version('ysocial'), int(u.find_spec('detoxify') is not None))";
+    let out = Command::new(py).args(["-c", code]).stderr(Stdio::null()).output().ok()?;
+    if !out.status.success() {
+        return None;
+    }
+    Some(String::from_utf8_lossy(&out.stdout).trim().to_string())
+}
+
+/// Latest published GitHub release (JSON text), fetched with curl (present on
+/// macOS, Windows 10+ and Linux). Errors are returned so the UI can stay silent.
+#[tauri::command]
+async fn fetch_latest_release() -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(|| {
+        let out = Command::new("curl")
+            .args(["-fsSL", "--max-time", "8", "-H", "Accept: application/vnd.github+json",
+                   "-H", "User-Agent: ysocial-launcher", RELEASES_API])
+            .output()
+            .map_err(|e| e.to_string())?;
+        if out.status.success() {
+            Ok(String::from_utf8_lossy(&out.stdout).into_owned())
+        } else {
+            Err("release information not available".into())
+        }
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+fn download(app: &AppHandle, url: &str, dest: &Path) -> Result<(), String> {
+    if !url.starts_with(RELEASE_DOWNLOAD_PREFIX) {
+        return Err("Refusing to download from an unexpected address".into());
+    }
+    let mut c = Command::new("curl");
+    c.args(["-fL", "--retry", "3", "--max-time", "900", "-o"]).arg(dest).arg(url);
+    run_step(app, "Downloading update", &mut c)
+}
+
+/// Update an existing installation in place from a release: the data folder is untouched,
+/// the environment keeps its optional extras, database migrations run at next start.
+#[tauri::command]
+async fn update(
+    app: AppHandle, home: String, host: String, port: u16,
+    wheel_url: String, constraints_url: String, toxicity: bool,
+) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let home = PathBuf::from(&home);
+        let runtime = home.join("runtime");
+        if !venv_python(&home).exists() {
+            return Err("YSocial is not installed in this folder".into());
+        }
+        let name = wheel_url.rsplit('/').next().unwrap_or("");
+        if !name.starts_with("ysocial-") || !name.ends_with(".whl") || name.contains("..") {
+            return Err("Unexpected release asset".into());
+        }
+        stop_service(&app, &home, &host, port, true)?;
+        let tmp = runtime.join("update");
+        let _ = std::fs::remove_dir_all(&tmp);
+        std::fs::create_dir_all(&tmp).map_err(|e| e.to_string())?;
+        let wheel = tmp.join(name);
+        let constraints = tmp.join("constraints.txt");
+        download(&app, &wheel_url, &wheel)?;
+        download(&app, &constraints_url, &constraints)?;
+        let uv = resource_file(&app, if cfg!(windows) { "uv.exe" } else { "uv" })?;
+        let mut c = Command::new(&uv);
+        c.args(["pip", "install", "--upgrade", "--python"]).arg(venv_python(&home));
+        c.arg("--constraint").arg(&constraints);
+        let target = if toxicity {
+            c.args(["--extra-index-url", TORCH_CPU_INDEX, "--index-strategy", "unsafe-best-match"]);
+            format!("ysocial[toxicity] @ {}", file_uri(&wheel))
+        } else {
+            wheel.to_string_lossy().into_owned()
+        };
+        c.arg(target).env("UV_PYTHON_INSTALL_DIR", runtime.join("python")).env("YSOCIAL_HOME", &home);
+        run_step(&app, "Updating YSocial", &mut c)?;
+        std::fs::copy(&constraints, runtime.join("constraints.txt")).map_err(|e| e.to_string())?;
+        let _ = std::fs::remove_dir_all(&tmp);
+        let _ = app.emit("progress", "== Done");
+        Ok(())
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
 #[tauri::command]
 async fn install(app: AppHandle, home: String, toxicity: bool) -> Result<(), String> {
     tauri::async_runtime::spawn_blocking(move || {
@@ -561,6 +661,10 @@ fn main() {
             is_running,
             stop,
             uninstall,
+            app_version,
+            installed_info,
+            fetch_latest_release,
+            update,
             load_settings,
             save_settings
         ])

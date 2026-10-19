@@ -136,3 +136,25 @@ def test_launcher_is_translated_and_every_key_is_used():
     assert used and used <= keys, used - keys
     assert keys <= used, keys - used
     assert 'id="lang"' in html and "i18n.js" in html
+
+
+def test_update_flow_wiring():
+    rs = (I / "src-tauri/src/main.rs").read_text()
+    js = (I / "ui/main.js").read_text()
+    html = (I / "ui/index.html").read_text()
+    for fn in ("app_version", "installed_info", "fetch_latest_release", "update"):
+        assert f"fn {fn}" in rs and f"            {fn},\n" in rs
+    for cmd in ("app_version", "installed_info", "fetch_latest_release", "update"):
+        assert f'"{cmd}"' in js
+    # only assets of the project's own releases are downloaded; only drafts/pre-releases are skipped
+    assert "releases/download/" in rs and "RELEASE_DOWNLOAD_PREFIX" in rs
+    assert "rel.draft || rel.prerelease" in js
+    # the installed version is displayed and re-read after an update
+    assert 'id="ver"' in html and 'id="launcher-ver"' in html and 'id="doupdate"' in html
+    assert js.count("await readInstalled()") >= 3
+    assert 'id="checkupdates"' in html and 'checkupdates: "check_updates"' in js
+
+
+def test_release_workflow_ships_constraints_for_updates():
+    wf = (I.parent / ".github/workflows/release-packaging.yml").read_text()
+    assert "cp requirements.lock dist/constraints.txt" in wf

@@ -80,3 +80,16 @@ body.yl { overflow-y: auto; }
 #err { display: none; white-space: pre-wrap; }
 #err.on { display: block; }
 .yl-foot a, .yl-foot button { color: var(--teal); }
+
+.yl-ver { display: inline-block; margin: 0 0 18px 10px; color: var(--muted); font-size: .85rem; }
+.yl-ver b { color: var(--text); }
+.yl-upd { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; margin: 0 0 16px; padding: 12px 14px;
+  border: 1.5px solid var(--teal); border-radius: 14px; background: rgba(109, 195, 208, .12); }
+.yl-upd[hidden], .yl-ok[hidden], .yl-upd small[hidden] { display: none; }
+.yl-upd small { display: block; margin-top: 4px; color: var(--muted); font-size: .74rem; word-break: break-all; }
+.yl-upd .yl-btn { width: auto; padding: 10px 18px; margin: 0; }
+.yl-ok { margin: 0 0 16px; padding: 10px 14px; border-radius: 12px; font-size: .88rem; color: #5fd68a; background: rgba(95, 214, 138, .1);
+  border: 1px solid rgba(95, 214, 138, .4); }
+.yl-only-update { display: none; }
+#v-installing[data-mode="update"] .yl-only-update { display: block; }
+#v-installing[data-mode="update"] .yl-steps, #v-installing[data-mode="update"] h2 + .yl-sub:not(.yl-only-update) { display: none; }
