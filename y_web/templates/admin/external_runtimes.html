@@ -43,6 +43,7 @@
                                             {% if entry.enabled %}<span class="badge badge-info">{{ _('Enabled') }}</span>{% else %}<span class="badge badge-warning">{{ _('Disabled') }}</span>{% endif %}
                                         {% endif %}
                                         {% if entry.restart_required %}<span class="badge badge-warning">{{ _('Restart required') }}</span>{% endif %}
+                                        {% for v in entry.versions %}<div class="ext-hint">{% if v.label %}{{ v.label }} &middot; {% endif %}{{ _('Version') }} {{ v.installed }}{% if v.update and v.latest %} &middot; <span style="color:#b45309;">{{ _('update available: %(tag)s', tag=v.latest) }}</span>{% endif %}</div>{% endfor %}
                                     </td>
                                     <td>
                                         <div class="ext-row-actions">

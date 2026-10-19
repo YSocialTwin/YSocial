@@ -12663,3 +12663,13 @@ msgstr "✔️ Usa"
 #~ "%(cmd)s: è offerta solo l'installazione "
 #~ "da release."
 
+
+#: y_web/templates/admin/external_runtimes.html
+#, python-format
+msgid "update available: %(tag)s"
+msgstr "aggiornamento disponibile: %(tag)s"
+
+#: y_web/templates/admin/external_runtimes.html
+#, python-format
+msgid "Update available: %(tag)s"
+msgstr "Aggiornamento disponibile: %(tag)s"

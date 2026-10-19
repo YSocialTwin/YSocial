@@ -36,6 +36,7 @@ _GITHUB_TIMEOUT = 6
 _REMOTE_CACHE: dict[tuple, tuple[float, Any]] = {}
 _REMOTE_CACHE_LOCK = threading.Lock()
 _REMOTE_TTL_OK = 120.0  # seconds, successful lookup
+_RELEASES_TTL_OK = 600.0  # releases change rarely
 _REMOTE_TTL_ERR = 30.0  # seconds, failed lookup (avoid repeating slow timeouts)
 
 
@@ -45,7 +46,7 @@ def clear_remote_cache() -> None:
         _REMOTE_CACHE.clear()
 
 
-def _remote_cached(kind: str, spec, extra: str, github_token, fn):
+def _remote_cached(kind: str, spec, extra: str, github_token, fn, ttl_ok=None):
     """Return ``fn()`` ((value, error) tuple) cached per repo/token for a short time."""
     key = (kind, spec.github_repo, extra, bool(github_token), hash(github_token or ""))
     now = time.monotonic()
@@ -54,7 +55,7 @@ def _remote_cached(kind: str, spec, extra: str, github_token, fn):
         if hit and hit[0] > now:
             return hit[1]
     result = fn()
-    ttl = _REMOTE_TTL_ERR if result[1] else _REMOTE_TTL_OK
+    ttl = _REMOTE_TTL_ERR if result[1] else (ttl_ok or _REMOTE_TTL_OK)
     with _REMOTE_CACHE_LOCK:
         _REMOTE_CACHE[key] = (now + ttl, result)
     return result
@@ -150,6 +151,10 @@ class RuntimeStatus:
     is_private: bool
     archive_managed: bool = False
     update_available: bool | None = None
+    # release-managed installs only (not git, not branch archive)
+    release_managed: bool = False
+    installed_release_tag: str | None = None
+    release_update_available: bool | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -612,6 +617,7 @@ def _list_releases(spec, github_token: str | None = None):
         "",
         github_token,
         lambda: _list_releases_uncached(spec, github_token=github_token),
+        ttl_ok=_RELEASES_TTL_OK,
     )
 
 
@@ -748,6 +754,44 @@ def _download_branch_archive(
     return response.content
 
 
+RELEASE_MARKER = ".ysocial-release.json"
+
+
+def _write_release_marker(path: Path, tag: str) -> None:
+    try:
+        (path / RELEASE_MARKER).write_text(
+            json.dumps(
+                {
+                    "source": "release",
+                    "tag": tag,
+                    "installed_at": datetime.now(timezone.utc).isoformat(),
+                },
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+    except OSError:
+        pass
+
+
+def _installed_release_tag(repo_key: str, path: Path) -> str | None:
+    """Release tag of a release-archive install: marker first, then the action log
+    (installs made before the marker existed)."""
+    try:
+        data = json.loads((path / RELEASE_MARKER).read_text(encoding="utf-8"))
+        tag = str(data.get("tag") or "").strip()
+        if tag:
+            return tag
+    except (OSError, ValueError, AttributeError):
+        pass
+    for record in read_external_runtime_logs(limit=2000, repo_key=repo_key):
+        if record.get("success") and record.get("action") == "download_release":
+            tag = str(record.get("branch") or "").strip()
+            if tag:
+                return tag
+    return None
+
+
 def _write_archive_marker(path: Path, branch: str, sha: str | None) -> None:
     (path / ARCHIVE_MARKER).write_text(
         json.dumps(
@@ -865,6 +909,7 @@ def get_runtime_status(
     github_token: str | None = None,
     *,
     include_remote_metadata: bool = True,
+    check_release_update: bool = False,
 ) -> RuntimeStatus:
     spec = runtime_spec(repo_key)
     path = spec.path
@@ -939,6 +984,22 @@ def get_runtime_status(
             }
             - {""}
         )
+    release_managed = (
+        exists
+        and not git_managed
+        and archive_marker is None
+        and not path.is_symlink()
+    )
+    installed_release_tag = None
+    release_update_available = None
+    if release_managed:
+        installed_release_tag = _installed_release_tag(spec.key, path)
+        if not include_remote_metadata and check_release_update:
+            # cheap list view: only the (cached) release list, no branch lookups
+            releases, release_error = _list_releases(spec, github_token=github_token)
+        latest_tag = releases[0]["tag"] if releases else None
+        if installed_release_tag and latest_tag:
+            release_update_available = installed_release_tag != latest_tag
     path_kind = "missing"
     if exists:
         path_kind = "symlink" if path.is_symlink() else "directory"
@@ -976,6 +1037,9 @@ def get_runtime_status(
         is_private=spec.is_private and not repo_is_public(spec),
         archive_managed=archive_marker is not None,
         update_available=update_available,
+        release_managed=release_managed,
+        installed_release_tag=installed_release_tag,
+        release_update_available=release_update_available,
     )
 
 
@@ -983,6 +1047,7 @@ def get_grouped_runtime_status(
     github_token: str | None = None,
     *,
     include_remote_metadata: bool = True,
+    check_release_update: bool = False,
 ) -> list[dict[str, Any]]:
     groups: list[dict[str, Any]] = []
     for group_key, group_label, specs in grouped_runtime_specs():
@@ -995,6 +1060,7 @@ def get_grouped_runtime_status(
                         spec.key,
                         github_token=github_token,
                         include_remote_metadata=include_remote_metadata,
+                        check_release_update=check_release_update,
                     ).to_dict()
                     for spec in specs
                 ],
@@ -1022,6 +1088,7 @@ def download_runtime_release(
         if spec.path.exists():
             shutil.rmtree(spec.path, ignore_errors=True)
         raise ExternalRuntimeError(f"Release extraction failed: {exc}") from exc
+    _write_release_marker(spec.path, release["tag"])
 
     output = "\n".join(
         [

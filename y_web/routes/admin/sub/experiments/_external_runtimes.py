@@ -250,7 +250,9 @@ def _visible_runtime_groups(
 ):
     plugins_index = load_plugins_index(refresh=True)
     all_groups = get_grouped_runtime_status(
-        github_token=github_token, include_remote_metadata=include_remote_metadata
+        github_token=github_token,
+        include_remote_metadata=include_remote_metadata,
+        check_release_update=True,
     )
     visible_groups = []
     for group_info in all_groups:
@@ -308,6 +310,16 @@ def _make_entry(key: str, repos: list[dict]) -> dict:
         "enabled": bool(togglable) and all(r.get("plugin_enabled") for r in togglable),
         "togglable": bool(togglable),
         "restart_required": any(r.get("restart_required") for r in repos),
+        "versions": [
+            {
+                "label": r.get("label") if paired else "",
+                "installed": r.get("installed_release_tag"),
+                "latest": r.get("latest_release_tag"),
+                "update": bool(r.get("release_update_available")),
+            }
+            for r in repos
+            if r.get("release_managed") and r.get("installed_release_tag")
+        ],
     }
 
 

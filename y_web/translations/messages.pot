@@ -10898,3 +10898,13 @@ msgstr ""
 msgid "✔️ Use"
 msgstr ""
 
+
+#: y_web/templates/admin/external_runtimes.html
+#, python-format
+msgid "update available: %(tag)s"
+msgstr ""
+
+#: y_web/templates/admin/external_runtimes.html
+#, python-format
+msgid "Update available: %(tag)s"
+msgstr ""
