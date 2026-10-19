@@ -6,7 +6,7 @@ installs the bundled `ysocial` wheel (optionally with the `toxicity` extra) and
 launches `ysocial`, opening the browser once the port answers.
 
 **Platforms.** macOS (Apple silicon and Intel, `.dmg`), Windows (`.exe`, NSIS) and
-Linux (`.AppImage`, `.deb`). All four are built by the `installers` job of
+Linux x64 and arm64 (`.AppImage`, `.deb`). All four are built by the `installers` job of
 `.github/workflows/release-packaging.yml` on every `v*` tag and attached to the draft
 release together with the wheel, `constraints.txt` and `SHA256SUMS.txt`. The builds are
 **unsigned** (decision): expect the Gatekeeper / SmartScreen warning on first launch.

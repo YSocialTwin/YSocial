@@ -46,6 +46,7 @@ jobs:
           - { os: macos-15-intel,  label: macos-x64,   bundles: dmg }
           - { os: windows-latest,  label: windows-x64, bundles: nsis }
           - { os: ubuntu-24.04,    label: linux-x64,   bundles: "appimage,deb" }
+          - { os: ubuntu-24.04-arm, label: linux-arm64, bundles: "appimage,deb" }
     runs-on: ${{ matrix.os }}
     defaults:
       run:

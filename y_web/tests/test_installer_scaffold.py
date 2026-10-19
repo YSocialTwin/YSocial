@@ -222,7 +222,7 @@ def test_release_workflow_builds_installers_for_every_platform():
     wf = yaml.safe_load((I.parent / ".github/workflows/release-packaging.yml").read_text())
     job = wf["jobs"]["installers"]
     labels = {m["label"] for m in job["strategy"]["matrix"]["include"]}
-    assert labels == {"macos-arm64", "macos-x64", "windows-x64", "linux-x64"}
+    assert labels == {"macos-arm64", "macos-x64", "windows-x64", "linux-x64", "linux-arm64"}
     assert "installers" in wf["jobs"]["release"]["needs"]
     text = (I.parent / ".github/workflows/release-packaging.yml").read_text()
     assert "constraints.txt" in text and "libwebkit2gtk-4.1-dev" in text
