@@ -69,7 +69,7 @@ var AdminDashboard = (function() {
   }
 
   const experimentProgressRequests = {};
-  const PROGRESS_REFRESH_INTERVAL = 5000;
+  const PROGRESS_REFRESH_INTERVAL = 30000;
 
   function getRunningExperimentIds() {
       const container = document.getElementById('running-experiments-container');

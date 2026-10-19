@@ -268,7 +268,7 @@ async function refreshDownloadNotifications() {
 
 document.addEventListener('DOMContentLoaded', function() {
     refreshDownloadNotifications();
-    setInterval(refreshDownloadNotifications, 15000);
+    setInterval(refreshDownloadNotifications, 30000);
     document.addEventListener('ys-notifications-refresh', function() {
         refreshDownloadNotifications();
     });
