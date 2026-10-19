@@ -6,6 +6,9 @@ import json
 import os
 import re
 import shutil
+import threading
+import time
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Sequence
@@ -505,6 +508,119 @@ def plugin_metadata_for_runtime(
     return None
 
 
+# --- repositories that were private and became public -----------------------
+# ``is_private`` in the specs below is only the *initial* classification. A
+# repository that GitHub reports as public (anonymous request) is treated as
+# public everywhere, so it shows up for every admin without editing the
+# registry, the installer or the visibility configuration.
+_PUBLIC_RECHECK_SECONDS = 900.0
+_PUBLIC_STATE: dict[str, tuple[float, bool]] = {}  # key -> (checked_at, is_public)
+_PUBLIC_LOCK = threading.Lock()
+_PUBLIC_LOADED = False
+
+
+def _public_state_path() -> Path:
+    return EXTERNAL_DIR / "repo_visibility.json"
+
+
+def _load_public_state() -> None:
+    """Read the last known state from disk once (survives restarts)."""
+    global _PUBLIC_LOADED
+    with _PUBLIC_LOCK:
+        if _PUBLIC_LOADED:
+            return
+        _PUBLIC_LOADED = True
+        try:
+            payload = json.loads(_public_state_path().read_text(encoding="utf-8"))
+            for key, item in payload.items():
+                _PUBLIC_STATE.setdefault(
+                    str(key), (float(item["checked_at"]), bool(item["public"]))
+                )
+        except (OSError, ValueError, KeyError, TypeError, AttributeError):
+            pass
+
+
+def _save_public_state() -> None:
+    try:
+        path = _public_state_path()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        data = {
+            key: {"checked_at": at, "public": public}
+            for key, (at, public) in _PUBLIC_STATE.items()
+        }
+        path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    except OSError:
+        pass
+
+
+def repo_is_public(spec: "ExternalRuntimeSpec") -> bool:
+    """Last known answer to "is this repository public on GitHub?" (no network)."""
+    _load_public_state()
+    with _PUBLIC_LOCK:
+        item = _PUBLIC_STATE.get(spec.key)
+    return bool(item and item[1])
+
+
+def _probe_public(github_repo: str, timeout: float) -> bool | None:
+    """True/False when GitHub answers clearly, None when unknown (offline, rate limit)."""
+    import requests
+
+    try:
+        response = requests.get(
+            f"https://api.github.com/repos/{github_repo}",
+            headers={"Accept": "application/vnd.github+json"},
+            timeout=timeout,
+        )
+    except requests.RequestException:
+        return None
+    if response.status_code == 200:
+        try:
+            return response.json().get("private") is False
+        except ValueError:
+            return None
+    if response.status_code == 404:
+        return False  # private (anonymous request) or not existing
+    return None
+
+
+def refresh_public_repos(*, force: bool = False, timeout: float = 3.0) -> None:
+    """Re-check, in parallel, the repositories still classified as private.
+
+    Anonymous requests only, so a repository the user can reach with a token
+    is not mistaken for a public one. Failures keep the previous answer.
+    """
+    try:
+        from flask import current_app, has_app_context
+
+        if has_app_context() and current_app.config.get("TESTING"):
+            return
+    except RuntimeError:
+        pass
+    _load_public_state()
+    now = time.time()
+    due = []
+    for spec in SUPPORTED_EXTERNAL_REPOS.values():
+        if not spec.is_private:
+            continue
+        with _PUBLIC_LOCK:
+            item = _PUBLIC_STATE.get(spec.key)
+        if force or item is None or now - item[0] > _PUBLIC_RECHECK_SECONDS:
+            due.append(spec)
+    if not due:
+        return
+    with ThreadPoolExecutor(max_workers=len(due)) as pool:
+        answers = list(pool.map(lambda sp: _probe_public(sp.github_repo, timeout), due))
+    changed = False
+    with _PUBLIC_LOCK:
+        for spec, answer in zip(due, answers):
+            if answer is None:
+                continue
+            _PUBLIC_STATE[spec.key] = (now, answer)
+            changed = True
+    if changed:
+        _save_public_state()
+
+
 def _visibility_overrides() -> dict[str, tuple[str, ...] | str]:
     raw = os.getenv("YSOCIAL_PLUGIN_VISIBILITY", "").strip()
     if not raw:
@@ -553,6 +669,8 @@ def runtime_visible_to_user(spec: ExternalRuntimeSpec, admin_user) -> bool:
         return False
     if not spec.is_private:
         return True
+    if repo_is_public(spec):
+        return True  # was private, GitHub now reports it public
     if _development_mode_enabled():
         # User-reported requirement: a "development" startup flag should
         # unlock every plugin repository marked private in this registry

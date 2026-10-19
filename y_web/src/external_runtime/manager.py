@@ -25,7 +25,7 @@ import requests
 
 from y_web.src.system.path_utils import get_writable_path
 
-from .registry import grouped_runtime_specs, runtime_spec
+from .registry import grouped_runtime_specs, repo_is_public, runtime_spec
 
 LOG_DIR = Path(get_writable_path()) / "logs"
 LOG_FILE = LOG_DIR / "external_runtime_operations.log"
@@ -973,7 +973,7 @@ def get_runtime_status(
         release_error=release_error or branch_error,
         path_kind=path_kind,
         python_executable=resolve_python_executable(),
-        is_private=spec.is_private,
+        is_private=spec.is_private and not repo_is_public(spec),
         archive_managed=archive_marker is not None,
         update_available=update_available,
     )
