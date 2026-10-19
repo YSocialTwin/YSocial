@@ -292,3 +292,20 @@ def test_sync_branch_archive_without_git_installs_then_updates_in_place(
     monkeypatch.setattr(route_mod, "_is_archive_runtime", lambda spec: True)
     _sync(app, "archive")
     assert done == ["update_runtime_repo", "deps", "validate"]
+
+
+def test_opening_a_plugin_shows_a_loading_message_right_away():
+    """The detail page asks GitHub for releases: the list shows feedback on click."""
+    templates = Path(__file__).resolve().parents[1] / "templates" / "admin"
+    page = (templates / "external_runtimes.html").read_text(encoding="utf-8")
+    assert "data-ext-open" in page and "window.showLoading" in page
+    assert "pageshow" in page  # no overlay left behind when coming back
+    for lang in ("en", "it"):
+        catalog = (
+            Path(__file__).resolve().parents[1]
+            / "translations"
+            / "js"
+            / "admin"
+            / f"{lang}.json"
+        ).read_text(encoding="utf-8")
+        assert "Opening {label}... checking GitHub" in catalog

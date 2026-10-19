@@ -47,7 +47,7 @@
                                     </td>
                                     <td>
                                         <div class="ext-row-actions">
-                                            <a class="button is-solid primary-button" href="{{ url_for('experiments.external_runtime_detail', entry_key=entry.key) }}">{{ _('Install') if entry.state == 'missing' else _('Update') }}</a>
+                                            <a class="button is-solid primary-button" data-ext-open data-label="{{ entry.label }}" href="{{ url_for('experiments.external_runtime_detail', entry_key=entry.key) }}">{{ _('Install') if entry.state == 'missing' else _('Update') }}</a>
                                             {% if entry.any_exists %}
                                             <button type="button" class="button is-light ext-danger-text" data-external-runtime-remove data-remove-url="{{ url_for('experiments.external_runtime_action', repo_key=entry.key, action='delete') }}" data-label="{{ entry.label }}">{{ _('Remove') }}</button>
                                             {% endif %}
@@ -70,6 +70,24 @@
 
 {% include "admin/tutorials/external_runtimes_tutorial.html" %}
 <script>
+// The plugin page asks GitHub for releases and branches, which can take a few seconds:
+// show a message right away so the page does not look frozen.
+(function () {
+    var pending = 0;
+    document.addEventListener('click', function (event) {
+        var link = event.target.closest('a[data-ext-open]');
+        if (!link || event.defaultPrevented || event.button !== 0 ||
+            event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+        if (!window.showLoading) return;
+        pending += 1;
+        window.showLoading(YI18n.t('Opening {label}... checking GitHub for releases can take a few seconds.', {label: link.dataset.label || ''}));
+    });
+    // coming back with the browser's back button must not leave the overlay on screen
+    window.addEventListener('pageshow', function (event) {
+        if (!event.persisted || !window.hideLoading) return;
+        while (pending > 0) { pending -= 1; window.hideLoading(); }
+    });
+})();
 document.addEventListener('click', async function (event) {
     var button = event.target.closest('[data-external-runtime-remove]');
     if (!button) return;

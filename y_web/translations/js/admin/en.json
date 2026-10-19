@@ -264,6 +264,7 @@
   "Number of posts shown per page when infinite scrolling is disabled": "Number of posts shown per page when infinite scrolling is disabled",
   "Ollama is not running. Start Ollama to enable LLM agents.": "Ollama is not running. Start Ollama to enable LLM agents.",
   "On, but nothing is available to join yet": "On, but nothing is available to join yet",
+  "Opening {label}... checking GitHub for releases can take a few seconds.": "Opening {label}... checking GitHub for releases can take a few seconds.",
   "Opinion Goal (optional)": "Opinion Goal (optional)",
   "Opinion Group": "Opinion Group",
   "Opinion Propaganda": "Opinion Propaganda",

@@ -264,6 +264,7 @@
   "Number of posts shown per page when infinite scrolling is disabled": "Numero di post mostrati per pagina quando lo scorrimento infinito è disattivato",
   "Ollama is not running. Start Ollama to enable LLM agents.": "Ollama non è in esecuzione. Avvia Ollama per attivare gli agenti LLM.",
   "On, but nothing is available to join yet": "Attiva, ma non c'è ancora nulla a cui unirsi",
+  "Opening {label}... checking GitHub for releases can take a few seconds.": "Apertura di {label}... il controllo delle release su GitHub può richiedere qualche secondo.",
   "Opinion Goal (optional)": "Obiettivo di opinione (facoltativo)",
   "Opinion Group": "Gruppo di opinione",
   "Opinion Propaganda": "Propaganda di opinione",
