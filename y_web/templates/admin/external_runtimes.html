@@ -32,7 +32,7 @@
                                 <tr data-runtime-repo data-entry-key="{{ entry.key }}">
                                     <td>
                                         <div class="ext-plugin-name">{{ entry.label }}</div>
-                                        <div class="ext-plugin-sub">{{ entry.category }}{% if entry.paired %} &middot; {{ _('server + client') }}{% endif %}</div>
+                                        <div class="ext-plugin-sub">{{ entry.category }}{% if entry.paired %} &middot; {{ _('server + client') }}{% endif %}{% if entry.community %} &middot; <span class="badge badge-warning">{{ _('Community') }}</span>{% endif %}</div>
                                     </td>
                                     <td class="ext-plugin-desc">{{ entry.description or _('No description available.') }}</td>
                                     <td>

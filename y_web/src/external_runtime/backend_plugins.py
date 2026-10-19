@@ -35,8 +35,8 @@ from pathlib import Path
 from y_web.src.external_runtime.plugin_i18n import localize_text
 from y_web.src.external_runtime.registry import (
     ROOT,
-    SUPPORTED_EXTERNAL_REPOS,
     runtime_spec,
+    supported_repos,
 )
 
 REGISTRY_RELATIVE_PATH = Path("meta") / "registry.json"
@@ -84,7 +84,7 @@ def backend_plugin_repo_keys() -> list[str]:
     """All registry keys belonging to the 'backend_settings' group."""
     return [
         key
-        for key, spec in SUPPORTED_EXTERNAL_REPOS.items()
+        for key, spec in supported_repos().items()
         if spec.group == "backend_settings"
     ]
 
@@ -279,7 +279,7 @@ def validate_training_component(descriptor) -> tuple[dict | None, list[str]]:
 def read_training_components(repo_key: str) -> dict:
     """Read the ``training_components`` key of an installed plugin's manifest.
 
-    Works for any key of ``SUPPORTED_EXTERNAL_REPOS`` (not only backend suites)
+    Works for any key of ``supported_repos()`` (not only backend suites)
     and never raises. Returns ``{"components": [...], "problems": [...]}`` where
     every component carries ``repo_key`` and ``component_ref`` (``repo:type``).
     """
@@ -317,7 +317,7 @@ def read_training_components(repo_key: str) -> dict:
 def training_component_catalog() -> list[dict]:
     """Valid third-party step types offered by every installed, enabled plugin."""
     catalog: list[dict] = []
-    for repo_key in SUPPORTED_EXTERNAL_REPOS:
+    for repo_key in supported_repos():
         if not plugin_enabled(repo_key):
             continue
         catalog.extend(read_training_components(repo_key)["components"])

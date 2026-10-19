@@ -76,6 +76,10 @@ _PAIRED_ENTRIES = {
     },
 }
 _PAIR_OF_MEMBER = {m: k for k, v in _PAIRED_ENTRIES.items() for m in v["members"]}
+# actions that fetch or run a community plugin's code (need ``confirm_community=1``)
+_COMMUNITY_CONFIRM_ACTIONS = frozenset(
+    {"acquire", "download_release", "clone", "update", "install", "sync"}
+)
 _GITHUB_TOKEN_SESSION_KEY = "external_runtime_github_token"
 
 
@@ -217,8 +221,8 @@ def _decorate_repo(repo: dict, spec, plugins_index) -> dict:
         repo["plugin_name"] = repo["label"]
         repo["plugin_category_label"] = repo["category_label"]
         repo["plugin_group_label"] = repo["group_label"]
-        repo["plugin_description"] = ""
-        repo["plugin_authors"] = []
+        repo["plugin_description"] = repo.get("description") or ""
+        repo["plugin_authors"] = list(getattr(spec, "authors", ()) or ())
         repo["plugin_repository_url"] = repo["repo_url"]
     if repo.get("group") == "frontend_plugins" and repo.get("installed"):
         try:
@@ -310,6 +314,9 @@ def _make_entry(key: str, repos: list[dict]) -> dict:
         "enabled": bool(togglable) and all(r.get("plugin_enabled") for r in togglable),
         "togglable": bool(togglable),
         "restart_required": any(r.get("restart_required") for r in repos),
+        "trust": first.get("trust") or "official",
+        "community": all((r.get("trust") or "official") == "community" for r in repos),
+        "repo_url": (first.get("repo_url") or "").removesuffix(".git"),
         "versions": [
             {
                 "label": r.get("label") if paired else "",
@@ -526,6 +533,19 @@ def _external_runtime_action_single(repo_key: str, action: str):
 
     if action in {"enable", "disable"}:
         return _toggle_plugin(repo_key, spec, admin_user, action == "enable")
+
+    if (
+        getattr(spec, "trust", "official") == "community"
+        and action in _COMMUNITY_CONFIRM_ACTIONS
+        and request.form.get("confirm_community") != "1"
+    ):
+        message = _(
+            "Plugins from the community registry need an explicit confirmation before they are installed or updated."
+        )
+        flash(message, "error")
+        return _external_runtimes_response(
+            repo_key=repo_key, status="error", message=message
+        )
 
     github_token = _session_github_token()
     branch = (request.form.get("branch") or spec.default_branch).strip()

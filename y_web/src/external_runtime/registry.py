@@ -132,6 +132,13 @@ class ExternalRuntimeSpec:
     validate_import: str | None = None
     is_private: bool = True
     visible_to_usernames: tuple[str, ...] = ()
+    # Plugins listed in the public plugin registry (``catalog.py``) carry these;
+    # the repositories hard-coded below keep the defaults.
+    trust: str = "official"  # "official" | "community"
+    source: str = "builtin"  # "builtin" | "registry"
+    description: str = ""
+    authors: tuple[str, ...] = ()
+    min_ysocial_version: str | None = None
 
 
 SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
@@ -341,14 +348,39 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
 }
 
 
+# --- plugins listed in the public plugin registry ----------------------------
+# ``SUPPORTED_EXTERNAL_REPOS`` stays the built-in whitelist. The registry client
+# (``catalog.py``) only ever adds *validated* entries here, never overrides a
+# built-in key, and callers read the merged view through ``supported_repos()``.
+_CATALOG_SPECS: dict[str, ExternalRuntimeSpec] = {}
+_CATALOG_LOCK = threading.Lock()
+
+
+def set_catalog_specs(specs: dict[str, ExternalRuntimeSpec]) -> None:
+    """Replace the registry-provided specs (built-in keys are never shadowed)."""
+    clean = {k: v for k, v in specs.items() if k not in SUPPORTED_EXTERNAL_REPOS}
+    with _CATALOG_LOCK:
+        _CATALOG_SPECS.clear()
+        _CATALOG_SPECS.update(clean)
+
+
+def supported_repos() -> dict[str, ExternalRuntimeSpec]:
+    """Snapshot of the built-in repositories plus the registry-provided ones."""
+    with _CATALOG_LOCK:
+        extra = dict(_CATALOG_SPECS)
+    merged = dict(SUPPORTED_EXTERNAL_REPOS)
+    merged.update(extra)
+    return merged
+
+
 def runtime_spec(repo_key: str) -> ExternalRuntimeSpec:
-    return SUPPORTED_EXTERNAL_REPOS[repo_key]
+    return supported_repos()[repo_key]
 
 
 def grouped_runtime_specs() -> list[tuple[str, str, Sequence[ExternalRuntimeSpec]]]:
     groups: dict[str, list[ExternalRuntimeSpec]] = {}
     labels: dict[str, str] = {}
-    for spec in SUPPORTED_EXTERNAL_REPOS.values():
+    for spec in supported_repos().values():
         groups.setdefault(spec.group, []).append(spec)
         labels[spec.group] = spec.group_label
 
@@ -599,7 +631,7 @@ def refresh_public_repos(*, force: bool = False, timeout: float = 3.0) -> None:
     _load_public_state()
     now = time.time()
     due = []
-    for spec in SUPPORTED_EXTERNAL_REPOS.values():
+    for spec in supported_repos().values():
         if not spec.is_private:
             continue
         with _PUBLIC_LOCK:

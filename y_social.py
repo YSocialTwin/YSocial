@@ -126,6 +126,15 @@ def start_app(
             "Development mode enabled: private plugin repositories are listable/installable."
         )
 
+    # Once per start: plugins listed in the public plugin registry (cached copy
+    # right away, fresh copy in the background; offline keeps the cache).
+    try:
+        from y_web.src.external_runtime.catalog import start_catalog_refresh
+
+        start_catalog_refresh()
+    except Exception:
+        pass
+
     # Once per start: find out which "private" plugin repositories became public
     # (background, never delays start-up; offline keeps the last known state).
     try:

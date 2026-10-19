@@ -186,9 +186,9 @@ def _autoregister(repo_key: str) -> None:
     try:
         import json
 
-        from y_web.src.external_runtime.registry import SUPPORTED_EXTERNAL_REPOS
+        from y_web.src.external_runtime.registry import supported_repos
 
-        spec = SUPPORTED_EXTERNAL_REPOS.get(repo_key)
+        spec = supported_repos().get(repo_key)
         if spec is None:
             return
         payload = json.loads(
@@ -217,9 +217,9 @@ def domain_for_repo(repo_key: str) -> str | None:
 
 def repo_key_for_dir(dir_name: str) -> str | None:
     """Map a directory under ``external/`` (``y_agents_plugins``) to its repo key."""
-    from y_web.src.external_runtime.registry import SUPPORTED_EXTERNAL_REPOS
+    from y_web.src.external_runtime.registry import supported_repos
 
-    for key, spec in SUPPORTED_EXTERNAL_REPOS.items():
+    for key, spec in supported_repos().items():
         if Path(spec.path).name == dir_name:
             return key
     return None

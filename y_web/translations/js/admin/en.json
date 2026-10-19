@@ -412,6 +412,7 @@
   "The minicpm-v:latest model is not available on the specified server. Image sharing/commenting functionality will remain disabled.": "The minicpm-v:latest model is not available on the specified server. Image sharing/commenting functionality will remain disabled.",
   "This RSS feed is already configured": "This RSS feed is already configured",
   "This experiment has at least one client set to run until manually stopped": "This experiment has at least one client set to run until manually stopped",
+  "This plugin is from the community registry and runs its own code on this computer when installed or updated. Only continue if you trust {repo}.": "This plugin is from the community registry and runs its own code on this computer when installed or updated. Only continue if you trust {repo}.",
   "This subreddit is already added": "This subreddit is already added",
   "Time: {tofixed}s": "Time: {tofixed}s",
   "Top Professions": "Top Professions",

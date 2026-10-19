@@ -31,6 +31,7 @@ from .registry import (
     runtime_spec,
     runtime_visible_to_user,
     scan_plugin_info_files,
+    supported_repos,
     sync_plugins_index,
 )
 
@@ -39,6 +40,7 @@ __all__ = [
     "PLUGIN_REGISTRY_RELATIVE_PATH",
     "PLUGINS_INDEX_PATH",
     "SUPPORTED_EXTERNAL_REPOS",
+    "supported_repos",
     "external_runtime_bootstrap_report",
     "ExternalRuntimeError",
     "clone_runtime_repo",

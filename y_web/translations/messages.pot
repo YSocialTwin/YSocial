@@ -10908,3 +10908,11 @@ msgstr ""
 #, python-format
 msgid "Update available: %(tag)s"
 msgstr ""
+
+#: y_web/templates/admin/external_runtime_detail.html
+msgid "This plugin comes from the community plugin registry and is not maintained by the YSocial team. Its code runs on this computer when it is installed or updated: review the repository first."
+msgstr ""
+
+#: y_web/routes/admin/sub/experiments/_external_runtimes.py
+msgid "Plugins from the community registry need an explicit confirmation before they are installed or updated."
+msgstr ""

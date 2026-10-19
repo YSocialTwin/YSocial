@@ -8,7 +8,7 @@ database, so editing/updating an installed suite's repo takes effect on the
 next request without any migration or restart.
 
 A "frontend plugin suite" is any repo registered in
-``SUPPORTED_EXTERNAL_REPOS`` whose ``group`` is ``"frontend_plugins"`` and
+``supported_repos()`` whose ``group`` is ``"frontend_plugins"`` and
 whose ``meta/registry.json`` declares a top-level ``"frontend_plugins"``
 list. Frontend Adds-on is the first (and, today, only) such suite.
 """
@@ -20,8 +20,8 @@ from pathlib import Path
 
 from y_web.src.external_runtime.registry import (
     ROOT,
-    SUPPORTED_EXTERNAL_REPOS,
     runtime_spec,
+    supported_repos,
 )
 
 REGISTRY_RELATIVE_PATH = Path("meta") / "registry.json"
@@ -65,7 +65,7 @@ def frontend_plugin_repo_keys() -> list[str]:
     """All registry keys belonging to the 'frontend_plugins' group."""
     return [
         key
-        for key, spec in SUPPORTED_EXTERNAL_REPOS.items()
+        for key, spec in supported_repos().items()
         if spec.group == "frontend_plugins"
     ]
 

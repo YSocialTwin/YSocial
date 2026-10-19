@@ -10,7 +10,7 @@ This panel manages the runtime repositories installed under:
 
 - `external`
 
-The panel is intentionally limited to a fixed whitelist of supported plugins. It does not expose arbitrary shell access or arbitrary repository URLs.
+The panel is intentionally limited to a closed list of plugins: the ones built into YSocial plus the ones listed in the [public plugin registry](#public-plugin-registry). It does not expose arbitrary shell access or arbitrary repository URLs.
 
 Installed plugins expose metadata through:
 
@@ -52,6 +52,30 @@ library older than 0.2.0 ignore the language and stay in English, with one warni
 client log. See the library's `docs/languages.md` to add a language.
 
 The experiment creation flow already uses these plugin states to determine which experiment types are available.
+
+## Public plugin registry
+
+New plugins appear in an already installed YSocial through the public registry
+[`YSocialTwin/plugin-registry`](https://github.com/YSocialTwin/plugin-registry), a JSON list of
+plugins with their GitHub repository. YSocial reads it once at start-up (in the background, so it never
+delays the launch), keeps a copy in `external/plugin_registry_cache.json` for offline use and merges it
+with the built-in list; a built-in plugin always wins on a clash. Plugins whose `min_ysocial_version`
+is newer than the running YSocial are not listed.
+
+An entry names a repository, a branch and an install **recipe** (`auto`, `requirements`, `pip-editable`),
+never commands: the clone URL is built by YSocial and the recipes are fixed in the code
+(`y_web/src/external_runtime/catalog.py`). Malformed entries are skipped.
+
+Two trust levels:
+
+- `official`: repositories of the `YSocialTwin` organisation; they install like the built-in plugins. The level is
+  honoured only for those repositories.
+- `community`: any other repository. The list shows a **Community** badge, the plugin page shows a warning with the
+  repository link, and install/update/dependency actions need an explicit confirmation (also enforced by the
+  server). A plugin runs its own code when installed, so review the repository first.
+
+Configuration: `YSOCIAL_PLUGIN_REGISTRY_URL` sets another registry (an `https://` URL or a local file path, useful when
+developing a plugin) and `off` disables the lookup. To publish a plugin see [Publishing a plugin](publishing-a-plugin.md).
 
 ## Acquisition Model
 
@@ -229,6 +253,7 @@ The plugin panel is working correctly when:
 ## Relevant Source Files
 
 - `y_web/src/external_runtime/registry.py`
+- `y_web/src/external_runtime/catalog.py`
 - `y_web/src/external_runtime/manager.py`
 - `y_web/routes/admin/sub/experiments/_external_runtimes.py`
 - `y_web/templates/admin/external_runtimes.html`

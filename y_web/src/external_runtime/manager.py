@@ -158,6 +158,10 @@ class RuntimeStatus:
     release_managed: bool = False
     installed_release_tag: str | None = None
     release_update_available: bool | None = None
+    # plugin registry (see catalog.py): who vouches for the plugin
+    trust: str = "official"
+    source: str = "builtin"
+    description: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -1042,6 +1046,9 @@ def get_runtime_status(
         release_managed=release_managed,
         installed_release_tag=installed_release_tag,
         release_update_available=release_update_available,
+        trust=getattr(spec, "trust", "official"),
+        source=getattr(spec, "source", "builtin"),
+        description=getattr(spec, "description", ""),
     )
 
 
