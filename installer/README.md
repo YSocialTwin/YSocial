@@ -17,17 +17,7 @@ Platform notes: Windows needs the WebView2 runtime (present on Windows 10/11); L
 WebKitGTK 4.1 (`libwebkit2gtk-4.1`) and `xdg-open`; every platform uses `curl`
 (update check / downloads), which ships with macOS, Windows 10+ and most Linux distributions.
 
-Build (needs Rust + Tauri prerequisites):
-
-```bash
-python -m build --wheel --outdir installer/src-tauri/resources .
-cp requirements.lock installer/src-tauri/resources/constraints.txt
-cp "$(which uv)" installer/src-tauri/resources/uv      # uv.exe on Windows
-# Linux only, once: sudo apt install libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libayatana-appindicator3-dev patchelf
-cd installer/src-tauri && cargo install tauri-cli --version "^2" --locked
-cargo tauri icon path/to/logo.png                         # generates icons/
-cargo tauri build
-```
+Build: the complete, step-by-step guide (system prerequisites per platform, Rust, Tauri CLI, the files the installer carries and the final `cargo tauri build`) is in [docs/packaging.md](../docs/packaging.md#desktop-installer-from-a-clean-machine).
 
 Defaults for the data folder match `y_web/src/system/path_utils.py`.
 No code signing or notarization (macOS ad-hoc only), as decided.
