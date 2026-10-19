@@ -76,9 +76,12 @@ def host_git_available() -> bool:
         return False
     if sys.platform == "darwin" and git == "/usr/bin/git":
         try:
-            if subprocess.run(
-                ["xcode-select", "-p"], capture_output=True, timeout=5, check=False
-            ).returncode != 0:
+            if (
+                subprocess.run(
+                    ["xcode-select", "-p"], capture_output=True, timeout=5, check=False
+                ).returncode
+                != 0
+            ):
                 return False
         except (OSError, subprocess.SubprocessError):
             return False
@@ -355,7 +358,9 @@ def _list_remote_branches_uncached(
         if response.status_code == 404:
             # Unknown repository, or a private one queried without a token.
             return sorted(set(branches)), (
-                None if branches else "GitHub does not list this repository's branches "
+                None
+                if branches
+                else "GitHub does not list this repository's branches "
                 "(private repository? provide a GitHub token)."
             )
         if response.status_code == 403:
@@ -862,7 +867,9 @@ def update_runtime_branch_archive(
     spec = runtime_spec(repo_key)
     marker = _read_archive_marker(spec.path)
     if marker is None:
-        raise ExternalRuntimeError(f"{spec.label} was not installed from a branch archive")
+        raise ExternalRuntimeError(
+            f"{spec.label} was not installed from a branch archive"
+        )
     branch_name = _resolve_branch(spec, branch or marker.get("branch"))
     sha, error = _remote_branch_head(spec, branch_name, github_token)
     if sha and sha == marker.get("commit") and branch_name == marker.get("branch"):
@@ -943,9 +950,7 @@ def get_runtime_status(
             dirty = False
         ahead, behind, tracking_branch = _ahead_behind(path)
 
-    archive_marker = (
-        _read_archive_marker(path) if exists and not git_managed else None
-    )
+    archive_marker = _read_archive_marker(path) if exists and not git_managed else None
     update_available = None
     if archive_marker:
         current_branch = archive_marker.get("branch")
@@ -1244,7 +1249,10 @@ def update_runtime_repo(
     github_token: str | None = None,
 ) -> None:
     spec = runtime_spec(repo_key)
-    if _read_archive_marker(spec.path) is not None and not (spec.path / ".git").exists():
+    if (
+        _read_archive_marker(spec.path) is not None
+        and not (spec.path / ".git").exists()
+    ):
         update_runtime_branch_archive(repo_key, branch, actor, github_token)
         return
     status = get_runtime_status(repo_key)

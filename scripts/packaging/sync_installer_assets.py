@@ -4,6 +4,7 @@ The launcher reuses the look of the application's login page. The installer
 cannot reference ``y_web/static`` at runtime, so the files are copied here;
 ``y_web/tests/test_installer_scaffold.py`` fails if the copies drift.
 """
+
 import shutil
 from pathlib import Path
 

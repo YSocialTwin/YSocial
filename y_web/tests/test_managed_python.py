@@ -20,7 +20,9 @@ def test_missing_managed_python_is_ignored(monkeypatch):
     monkeypatch.setenv("YSOCIAL_PYTHON", "/nonexistent/python")
     monkeypatch.delenv("CONDA_PREFIX", raising=False)
     monkeypatch.delenv("MAMBA_PREFIX", raising=False)
-    assert manager.resolve_python_executable() == __import__("os").path.abspath(sys.executable)
+    assert manager.resolve_python_executable() == __import__("os").path.abspath(
+        sys.executable
+    )
 
 
 def test_ensure_pip_runs_ensurepip_when_missing(monkeypatch):

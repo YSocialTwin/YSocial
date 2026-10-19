@@ -24,8 +24,8 @@ from y_web.src.external_runtime import (
     get_runtime_status,
     host_git_available,
     install_runtime_branch_archive,
-    is_archive_install,
     install_runtime_dependencies,
+    is_archive_install,
     load_plugins_index,
     log_external_runtime_action,
     plugin_metadata_for_runtime,
@@ -591,7 +591,9 @@ def _external_runtime_action_single(repo_key: str, action: str):
             action = "update"  # re-downloads the branch when its head moved
         else:
             action = "reinstall"
-        if (wants_git or (action == "update" and not wants_archive)) and not git_available:
+        if (
+            wants_git or (action == "update" and not wants_archive)
+        ) and not git_available:
             flash(
                 _(
                     "Git is not available on this host. Use the release source for %(label)s.",
@@ -602,7 +604,11 @@ def _external_runtime_action_single(repo_key: str, action: str):
             return _external_runtimes_response(
                 repo_key=repo_key, status="error", message="Git is not available."
             )
-    if action in {"clone", "fetch", "update"} and not git_available and not archive_flow:
+    if (
+        action in {"clone", "fetch", "update"}
+        and not git_available
+        and not archive_flow
+    ):
         flash(
             _(
                 "Git is not available on this host. Use the release install flow for %(label)s.",
