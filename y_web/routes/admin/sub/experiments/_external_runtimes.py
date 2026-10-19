@@ -212,7 +212,9 @@ def _decorate_repo(repo: dict, spec, plugins_index) -> dict:
             plugin_metadata.get("category") or repo["category_label"]
         )
         repo["plugin_group_label"] = plugin_metadata.get("group") or repo["group_label"]
-        repo["plugin_description"] = plugin_metadata.get("description") or ""
+        repo["plugin_description"] = (
+            plugin_metadata.get("description") or repo.get("description") or ""
+        )
         repo["plugin_authors"] = plugin_metadata.get("authors") or []
         repo["plugin_repository_url"] = (
             plugin_metadata.get("repository_url") or repo["repo_url"]

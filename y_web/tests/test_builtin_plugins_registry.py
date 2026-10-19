@@ -41,6 +41,13 @@ def test_built_in_specs_are_identical_to_the_previous_hard_coded_ones():
         assert _normalise(SUPPORTED_EXTERNAL_REPOS[expected["key"]]) == expected
 
 
+def test_every_built_in_plugin_has_a_real_description():
+    """Not-installed plugins have no meta/info.json: the list page shows this text."""
+    for spec in SUPPORTED_EXTERNAL_REPOS.values():
+        assert 20 <= len(spec.description) <= 400, spec.key
+        assert not spec.description.lower().startswith(("todo", "tbd", "placeholder"))
+
+
 def test_built_in_specs_are_official_and_not_from_the_registry():
     for spec in SUPPORTED_EXTERNAL_REPOS.values():
         assert spec.trust == "official" and spec.source == "builtin"

@@ -172,6 +172,7 @@ def _builtin_spec(entry: dict) -> ExternalRuntimeSpec:
         validate_import=entry.get("validate_import"),
         is_private=bool(entry.get("private", True)),
         visible_to_usernames=tuple(entry.get("visible_to_usernames", ())),
+        description=str(entry.get("description") or "").strip(),
     )
 
 
