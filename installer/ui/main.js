@@ -2,12 +2,14 @@ const { invoke } = window.__TAURI__.core;
 const { listen } = window.__TAURI__.event;
 const $ = (id) => document.getElementById(id);
 const I = (k, fb, v) => window.LAUNCHER_I18N.t(k, fb, v);
-const log = (line) => { $("log").textContent += line + "\n"; $("log").scrollTop = 1e9; };
+const log = (line) => console.log(line);  // raw output goes to <data folder>/logs, not to the UI
 
 // ---- friendly UI state -------------------------------------------------
 let installing = false;   // an install is in progress
 let confirmingUninstall = false; // uninstall confirmation is open
-let forceSetup = false;
+let forceSetup = false;   // user asked to reinstall / pick another folder
+let addingTox = false;
+let models = null;        // existing toxicity models: { path, bytes }
 let info = { version: null, toxicity: false };  // installed YSocial (read after install/update, not polled)
 let latest = null;                               // newer release found on GitHub, if any
 let updating = false;
@@ -27,6 +29,14 @@ async function readInstalled() {
   } catch (_) {}
   info = { version: null, toxicity: false };
 }
+async function readModels() {
+  models = null;
+  try {
+    const raw = await invoke("toxicity_models", { home: $("home").value });
+    if (raw) { const [path, bytes] = raw.split("\t"); models = { path, bytes: Number(bytes) || 0 };
+               $("um-path").textContent = path; $("um-size").textContent = fmtSize(models.bytes); }
+  } catch (_) {}
+}
 async function checkForUpdate() {
   latest = null;
   if (!$("checkupdates").checked || !info.version) return;
@@ -42,9 +52,10 @@ async function checkForUpdate() {
       installer: assets.some((a) => /\.(dmg|msi|exe|AppImage|deb)$/i.test(a.name)), page: rel.html_url,
     };
   } catch (_) { /* offline or rate-limited: stay silent */ }
-}   // user asked to reinstall / pick another folder
+}
 const STEPS = { "Installing Python": "python", "Creating environment": "env", "Installing YSocial": "app" };
 const ORDER = ["python", "env", "app"];
+const fmtSize = (b) => (b >= 1e9 ? (b / 1e9).toFixed(1) + " GB" : Math.max(1, Math.round(b / 1e6)) + " MB");
 
 const show = (name) => {
   for (const v of ["setup", "installing", "ready", "uninstall"]) $("v-" + v).classList.toggle("on", v === name);
@@ -56,7 +67,7 @@ const friendly = (err) => {
   if (/ENOSPC|No space/i.test(m)) return I("err.space","There is not enough free disk space. Free some space and try again.");
   if (/network|resolve|connect|timed out|dns/i.test(m)) return I("err.net","Could not download what is needed. Check your internet connection and try again.");
   if (/EADDRINUSE|address already in use|port/i.test(m)) return I("err.port","That port is already in use. Pick another one under More options.");
-  return I("err.other", "Something went wrong: {msg} (see Technical details below).", { msg: m });
+  return I("err.other", "Something went wrong: {msg}", { msg: m });
 };
 function markStep(label) {
   const key = STEPS[label];
@@ -76,20 +87,15 @@ function finishSteps() {
 
 // UI field -> setting key (persisted in <data folder>/launcher.json)
 const FIELDS = {
-  host: "host", port: "port", db: "db", llm: "llm_backend", extra: "extra_args",
-  debug: "debug", nonotebook: "no_notebook", development: "development", appwindow: "app_window", checkupdates: "check_updates",
+  host: "host", port: "port", jupyter: "jupyter", appwindow: "app_window", checkupdates: "check_updates",
 };
 
 function readOptions() {
   const o = {
     host: $("host").value.trim() || "127.0.0.1",
     port: parseInt($("port").value, 10) || 8080,
-    db: $("db").value,
-    llm_backend: $("llm").value.trim(),
-    extra_args: $("extra").value.trim(),
-    debug: $("debug").checked,
-    no_notebook: $("nonotebook").checked,
-    development: $("development").checked,
+    jupyter: $("jupyter").checked,
+    no_notebook: !$("jupyter").checked,   // Jupyter is off unless asked for
     app_window: $("appwindow").checked,
     check_updates: $("checkupdates").checked,
   };
@@ -117,12 +123,12 @@ async function loadOptions() {
 }
 
 async function refresh() {
-  if (installing || updating) { show("installing"); return; }
+  if (installing || updating || addingTox) { show("installing"); return; }
   if (confirmingUninstall) { show("uninstall"); return; }
   const home = $("home").value;
   const o = readOptions();
   const installed = await invoke("is_installed", { home });
-  if (!installed || forceSetup) { show("setup"); return; }
+  if (!installed || forceSetup) { $("tox-opt").hidden = !!info.toxicity; show("setup"); return; }
   const running = await invoke("is_running", { home, host: o.host, port: o.port });
   $("where").textContent = home;
   $("ver").textContent = info.version || "?";
@@ -131,8 +137,9 @@ async function refresh() {
   if (showUpd) {
     $("upd-t").textContent = I("upd.avail", "YSocial {v} is available", { v: latest.version });
     $("upd-launcher").hidden = !latest.installer;
-    $("upd-launcher").textContent = I("upd.launcher", "A new launcher is also available: {url}", { url: latest.page });
+    $("upd-launcher").dataset.href = latest.page;
   }
+  $("tox-add").hidden = info.toxicity || running;
   $("launch").disabled = running;
   $("stop").disabled = !running;
   $("status").className = "yl-status" + (running ? " on" : "");
@@ -157,18 +164,20 @@ async function init() {
       const label = e.payload.slice(3);
       if (label === "Done") finishSteps();
       else if (label === "Downloading update") $("bar").style.width = "35%";
-      else if (label === "Updating YSocial") $("bar").style.width = "70%";
+      else if (label === "Updating YSocial" || label === "Installing toxicity detection") $("bar").style.width = "70%";
       else markStep(label);
     }
   });
-  $("uninstall").addEventListener("click", async () => { setError(""); confirmingUninstall = true; $("deletedata").checked = false; await refresh(); });
+  $("uninstall").addEventListener("click", async () => { setError(""); confirmingUninstall = true; $("deletedata").checked = false; $("deletemodels").checked = false;
+    await readModels(); $("um-wrap").hidden = !models; await refresh(); });
   $("cancel-uninstall").addEventListener("click", async () => { confirmingUninstall = false; await refresh(); });
   $("confirm-uninstall").addEventListener("click", async () => {
     const o = readOptions();
     busy($("confirm-uninstall"), true);
     $("cancel-uninstall").disabled = true;
     try {
-      await invoke("uninstall", { home: $("home").value, host: o.host, port: o.port, deleteData: $("deletedata").checked });
+      await invoke("uninstall", { home: $("home").value, host: o.host, port: o.port, deleteData: $("deletedata").checked, deleteModels: $("deletemodels").checked });
+      await readInstalled(); models = null;
       forceSetup = false;
     } catch (err) { log("ERROR: " + err); setError(friendly(err)); }
     busy($("confirm-uninstall"), false);
@@ -183,6 +192,7 @@ async function init() {
     setError("");
     updating = true;
     $("v-installing").dataset.mode = "update";
+    $("inst-sub").textContent = I("upd.sub", "Updating YSocial. Your data is not touched.");
     $("inst-title").textContent = I("upd.title", "Updating YSocial…");
     $("bar").style.width = "10%";
     show("installing");
@@ -199,18 +209,43 @@ async function init() {
     } catch (err) { log("ERROR: " + err); setError(friendly(err)); }
     delete $("v-installing").dataset.mode;
     $("inst-title").textContent = I("inst.title", "Setting things up…");
+    $("inst-sub").textContent = I("inst.sub", "This takes a few minutes the first time. You can leave this window open.");
     updating = false;
     await refresh();
   });
   document.querySelectorAll("#advanced input, #advanced select, #appwindow").forEach((el) =>
     el.addEventListener("change", async () => { await saveOptions(); await refresh(); }));
+  $("addtox").addEventListener("click", async () => {
+    setError("");
+    addingTox = true;
+    $("v-installing").dataset.mode = "update";
+    $("inst-title").textContent = I("tox.adding", "Adding toxicity detection…");
+    $("inst-sub").textContent = I("tox.adding.sub", "Large download: this can take several minutes.");
+    $("bar").style.width = "30%";
+    show("installing");
+    try {
+      await invoke("install_toxicity", { home: $("home").value });
+      await readInstalled();
+    } catch (err) { log("ERROR: " + err); setError(friendly(err)); }
+    delete $("v-installing").dataset.mode;
+    $("inst-title").textContent = I("inst.title", "Setting things up…");
+    $("inst-sub").textContent = I("inst.sub", "This takes a few minutes the first time. You can leave this window open.");
+    addingTox = false;
+    await refresh();
+  });
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest && e.target.closest("a[data-ext]");
+    if (!a) return;
+    e.preventDefault();
+    invoke("open_url", { url: a.dataset.href || a.getAttribute("href") }).catch(() => {});
+  });
   $("install").addEventListener("click", async () => {
     setError("");
     installing = true;
     markStep("Installing Python");
     show("installing");
     try {
-      await invoke("install", { home: $("home").value, toxicity: $("toxicity").checked });
+      await invoke("install", { home: $("home").value, toxicity: $("toxicity").checked || info.toxicity });
       forceSetup = false;
       await saveOptions();
       await readInstalled();

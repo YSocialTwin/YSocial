@@ -391,11 +391,121 @@ async fn stop(app: AppHandle, home: String, host: String, port: u16) -> Result<(
         .map_err(|e| e.to_string())?
 }
 
+fn user_home() -> PathBuf {
+    PathBuf::from(std::env::var(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).unwrap_or_default())
+}
+
+/// Where YSocial keeps the toxicity models (mirrors y_web/src/system/model_cache.py):
+/// $YSOCIAL_MODEL_CACHE_DIR, else `model_cache_dir` in <home>/y_web/system/model_cache_settings.json,
+/// else ~/.cache/ysocial_models.
+fn models_root(home: &Path) -> PathBuf {
+    if let Ok(v) = std::env::var("YSOCIAL_MODEL_CACHE_DIR") {
+        if !v.is_empty() {
+            return PathBuf::from(v);
+        }
+    }
+    let settings = home.join("y_web").join("system").join("model_cache_settings.json");
+    if let Ok(text) = std::fs::read_to_string(settings) {
+        if let Ok(v) = serde_json::from_str::<serde_json::Value>(&text) {
+            if let Some(p) = v.get("model_cache_dir").and_then(|x| x.as_str()) {
+                if let Some(rest) = p.strip_prefix("~/") {
+                    return user_home().join(rest);
+                }
+                if !p.is_empty() {
+                    return PathBuf::from(p);
+                }
+            }
+        }
+    }
+    user_home().join(".cache").join("ysocial_models")
+}
+
+/// Only the folders YSocial's model download creates are ever removed.
+fn model_dirs(root: &Path) -> Vec<PathBuf> {
+    ["torch", "huggingface"].iter().map(|d| root.join(d)).filter(|p| p.is_dir()).collect()
+}
+
+fn dir_size(p: &Path) -> u64 {
+    let Ok(rd) = std::fs::read_dir(p) else { return 0 };
+    rd.flatten()
+        .map(|e| match e.metadata() {
+            Ok(m) if m.is_dir() => dir_size(&e.path()),
+            Ok(m) => m.len(),
+            Err(_) => 0,
+        })
+        .sum()
+}
+
+/// "<path>\t<bytes>" when toxicity models are present on disk, else "".
+#[tauri::command]
+fn toxicity_models(home: String) -> String {
+    let root = models_root(Path::new(&home));
+    let dirs = model_dirs(&root);
+    if dirs.is_empty() {
+        return String::new();
+    }
+    format!("{}\t{}", root.display(), dirs.iter().map(|d| dir_size(d)).sum::<u64>())
+}
+
+/// Open a project link in the system browser (allow-listed addresses only).
+#[tauri::command]
+fn open_url(url: String) -> Result<(), String> {
+    let ok = url == "https://y-not.social"
+        || url.starts_with("https://y-not.social/")
+        || url.starts_with("https://github.com/YSocialTwin/");
+    if !ok {
+        return Err("address not allowed".into());
+    }
+    open_in_browser(&url);
+    Ok(())
+}
+
+/// Add the optional toxicity extra to an existing installation. The requirement list
+/// is read from the installed package, so it always matches the installed version.
+#[tauri::command]
+async fn install_toxicity(app: AppHandle, home: String) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let home = PathBuf::from(&home);
+        let runtime = home.join("runtime");
+        let py = venv_python(&home);
+        if !py.exists() {
+            return Err("YSocial is not installed in this folder".into());
+        }
+        let code = r#"import importlib.metadata as m
+for r in (m.requires('ysocial') or []):
+    spec, _, marker = r.partition(';')
+    if 'toxicity' in marker:
+        print(spec.strip())"#;
+        let out = Command::new(&py).args(["-c", code]).output().map_err(|e| e.to_string())?;
+        let reqs: Vec<String> = String::from_utf8_lossy(&out.stdout)
+            .lines().map(|l| l.trim().to_string()).filter(|l| !l.is_empty()).collect();
+        if reqs.is_empty() {
+            return Err("This YSocial version has no toxicity component".into());
+        }
+        let uv = resource_file(&app, if cfg!(windows) { "uv.exe" } else { "uv" })?;
+        let mut c = Command::new(&uv);
+        c.args(["pip", "install", "--python"]).arg(&py);
+        let cons = runtime.join("constraints.txt");
+        if cons.exists() {
+            c.arg("--constraint").arg(&cons);
+        }
+        c.args(["--extra-index-url", TORCH_CPU_INDEX, "--index-strategy", "unsafe-best-match"]);
+        c.args(&reqs).env("UV_PYTHON_INSTALL_DIR", runtime.join("python")).env("YSOCIAL_HOME", &home);
+        run_step(&app, "Installing toxicity detection", &mut c)?;
+        let _ = app.emit("progress", "== Done");
+        Ok(())
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
 /// Remove YSocial from this computer. The program (managed Python, packages) is
 /// always removed; the data folder content (experiments, databases, settings) only
 /// when `delete_data` is set. A running instance is stopped first.
 #[tauri::command]
-async fn uninstall(app: AppHandle, home: String, host: String, port: u16, delete_data: bool) -> Result<(), String> {
+async fn uninstall(
+    app: AppHandle, home: String, host: String, port: u16, delete_data: bool, delete_models: bool,
+) -> Result<(), String> {
     tauri::async_runtime::spawn_blocking(move || {
         let home = PathBuf::from(&home);
         let runtime = home.join("runtime");
@@ -405,6 +515,14 @@ async fn uninstall(app: AppHandle, home: String, host: String, port: u16, delete
         }
         stop_service(&app, &home, &host, port, true)?;
         let _ = app.emit("progress", "== Removing YSocial");
+        // Models first: their location may be recorded in the data folder's settings.
+        if delete_models {
+            let root = models_root(&home);
+            for d in model_dirs(&root) {
+                std::fs::remove_dir_all(&d).map_err(|e| e.to_string())?;
+            }
+            let _ = std::fs::remove_dir(&root); // only if empty
+        }
         if delete_data {
             std::fs::remove_dir_all(&home).map_err(|e| e.to_string())?;
         } else {
@@ -662,6 +780,9 @@ fn main() {
             stop,
             uninstall,
             app_version,
+            toxicity_models,
+            open_url,
+            install_toxicity,
             installed_info,
             fetch_latest_release,
             update,

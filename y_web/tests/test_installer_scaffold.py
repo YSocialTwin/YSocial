@@ -65,8 +65,14 @@ def test_advanced_options_cover_cli_flags():
     for flag in cli - {"help"}:
         assert f'"--{flag}"' in rs, flag
     html = (I / "ui/index.html").read_text()
-    for field in ("host", "port", "db", "llm", "extra", "debug", "nonotebook", "development", "appwindow"):
+    # the launcher exposes only the everyday options; Jupyter is opt-in (off by default)
+    for field in ("host", "port", "jupyter", "appwindow", "checkupdates", "lang"):
         assert f'id="{field}"' in html
+    for gone in ("db", "llm", "extra", "debug", "development", "nonotebook", "log"):
+        assert f'id="{gone}"' not in html, gone
+    assert 'id="jupyter" type="checkbox">' in html and 'id="jupyter" type="checkbox" checked' not in html
+    js = (I / "ui/main.js").read_text()
+    assert "no_notebook: !$(\"jupyter\").checked" in js
 
 
 def test_app_window_blocks_external_navigation():
@@ -94,7 +100,7 @@ def test_launcher_reuses_login_look_and_assets_are_in_sync():
     for needle in ("login-scene.css", "yl-card", "yl-aurora", "yl-net", 'id="v-setup"', 'id="v-installing"', 'id="v-ready"'):
         assert needle in html
     # every local resource referenced by the page exists
-    for ref in re.findall(r'(?:src|href)="([^":]+)"', html):
+    for ref in re.findall(r'(?:src|href)="([^":#]+)"', html):
         assert (I / "ui" / ref).exists(), ref
 
 
@@ -158,3 +164,19 @@ def test_update_flow_wiring():
 def test_release_workflow_ships_constraints_for_updates():
     wf = (I.parent / ".github/workflows/release-packaging.yml").read_text()
     assert "cp requirements.lock dist/constraints.txt" in wf
+
+
+def test_launcher_toxicity_box_models_and_links():
+    html = (I / "ui/index.html").read_text()
+    js = (I / "ui/main.js").read_text()
+    rs = (I / "src-tauri/src/main.rs").read_text()
+    # toxicity offers appear only while the library is missing (setup box + "Add" card)
+    assert "$(\"tox-opt\").hidden = !!info.toxicity" in js
+    assert "$(\"tox-add\").hidden = info.toxicity || running" in js
+    for fn in ("toxicity_models", "install_toxicity", "open_url"):
+        assert f"fn {fn}" in rs and f"            {fn},\n" in rs and f'"{fn}"' in js
+    # uninstall can also remove the models; only the folders created by the model download
+    assert 'id="deletemodels"' in html and "delete_models" in rs and "deleteModels" in js
+    assert '["torch", "huggingface"]' in rs
+    # footer: release number and project site (opened in the system browser, allow-listed)
+    assert "Release" in html and "https://y-not.social" in html and "https://y-not.social" in rs
