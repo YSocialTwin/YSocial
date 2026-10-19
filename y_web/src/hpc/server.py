@@ -22,7 +22,7 @@ from sklearn.utils import deprecated
 
 from y_web import db
 from y_web.src.models import Exps
-from y_web.src.simulation.subprocess_env import build_subprocess_env
+from y_web.src.simulation.subprocess_env import build_subprocess_env, ray_safe_cmd
 from y_web.src.system.path_utils import get_base_path, get_writable_path
 
 
@@ -423,6 +423,10 @@ def start_hpc_server(exp):
         else:
             # Simple python executable path (may contain spaces on Windows)
             cmd = [python_cmd, script_path, "--config", config]
+
+        # Ray workers are started through an unquoted ``bash -c``: keep every
+        # path free of spaces (see ray_safe_cmd).
+        cmd = ray_safe_cmd(cmd)
 
         try:
             # Start the process with Popen

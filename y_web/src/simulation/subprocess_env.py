@@ -37,6 +37,58 @@ def apply_ray_auth_defaults(env=None):
 apply_ray_auth_defaults()
 
 
+def _space_free_alias(home: str) -> Optional[str]:
+    """Return a whitespace-free symlink to ``home`` (POSIX only), or None."""
+    if os.name == "nt":
+        return None
+    import hashlib
+    import tempfile
+
+    digest = hashlib.sha1(home.encode("utf-8")).hexdigest()[:10]
+    for root in ("/tmp", tempfile.gettempdir()):
+        if not root or " " in root or not os.path.isdir(root):
+            continue
+        alias = os.path.join(root, f"ysocial-{os.getuid()}-{digest}")
+        try:
+            if os.path.islink(alias):
+                if os.path.realpath(alias) == os.path.realpath(home):
+                    return alias
+                os.remove(alias)
+            elif os.path.exists(alias):
+                continue
+            os.symlink(home, alias)
+            return alias
+        except OSError:
+            continue
+    return None
+
+
+def ray_safe_cmd(cmd):
+    """Rewrite paths under the data folder so they contain no whitespace.
+
+    Ray starts its workers through ``bash -c exec <python> <default_worker.py>``
+    without quoting, so an interpreter or package path with a space (the macOS
+    default, ``~/Library/Application Support/YSocial``) kills every worker at
+    start and simulations never progress. Running the HPC processes through a
+    whitespace-free symlink to the data folder keeps ``sys.executable`` and
+    ``site-packages`` free of spaces.
+    """
+
+    home = os.path.abspath(get_writable_path())
+    if " " not in home and "\t" not in home:
+        return list(cmd)
+    alias = _space_free_alias(home)
+    if not alias:
+        return list(cmd)
+    out = []
+    for arg in cmd:
+        arg = str(arg)
+        if arg == home or arg.startswith(home + os.sep):
+            arg = alias + arg[len(home):]
+        out.append(arg)
+    return out
+
+
 def agent_memory_source_dir() -> Optional[str]:
     """Return the ``src`` folder of the Agent Memory plugin when it is installed.
 
