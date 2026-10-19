@@ -51,9 +51,7 @@ TRUST_LEVELS = ("official", "community")
 # pyproject.toml / setup.py (and install nothing when there is none).
 RECIPES: dict[str, tuple[tuple[str, ...], ...]] = {
     "auto": (),
-    "requirements": (
-        ("python", "-m", "pip", "install", "-r", "requirements.txt"),
-    ),
+    "requirements": (("python", "-m", "pip", "install", "-r", "requirements.txt"),),
     "pip-editable": (("python", "-m", "pip", "install", "-e", "."),),
 }
 RECIPE_ENTRYPOINTS: dict[str, tuple[str, ...]] = {
@@ -150,7 +148,9 @@ def parse_registry(
 
     specs: dict[str, ExternalRuntimeSpec] = {}
     used_dirs = {spec.path.name.lower() for spec in SUPPORTED_EXTERNAL_REPOS.values()}
-    used_repos = {spec.github_repo.lower() for spec in SUPPORTED_EXTERNAL_REPOS.values()}
+    used_repos = {
+        spec.github_repo.lower() for spec in SUPPORTED_EXTERNAL_REPOS.values()
+    }
     for index, entry in enumerate(entries[:MAX_PLUGINS]):
         where = f"entry #{index}"
         if not isinstance(entry, dict):

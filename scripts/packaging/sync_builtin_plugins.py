@@ -71,7 +71,9 @@ def from_checkout(path: Path) -> tuple[dict, str]:
         return result.stdout.strip()
 
     if git("status", "--porcelain", "--", SOURCE_FILE):
-        raise SyncError(f"{SOURCE_FILE} has uncommitted changes in {path}: commit it first")
+        raise SyncError(
+            f"{SOURCE_FILE} has uncommitted changes in {path}: commit it first"
+        )
     return json.loads(source.read_text(encoding="utf-8")), git("rev-parse", "HEAD")
 
 
@@ -84,7 +86,9 @@ def from_github(ref: str) -> tuple[dict, str]:
 
 
 def check_source(payload: dict) -> None:
-    if payload.get("schema_version") != 1 or not isinstance(payload.get("plugins"), list):
+    if payload.get("schema_version") != 1 or not isinstance(
+        payload.get("plugins"), list
+    ):
         raise SyncError(f"unsupported {SOURCE_FILE} format")
     keys = [p.get("key") for p in payload["plugins"]]
     if len(keys) != len(set(keys)) or not all(keys):
@@ -156,7 +160,11 @@ def main(argv=None) -> int:
             payload, commit = from_github("main" if args.check_latest else recorded)
             check_source(payload)
             if render(payload, commit) != TARGET.read_text(encoding="utf-8"):
-                what = "the registry main" if args.check_latest else f"commit {recorded[:7]}"
+                what = (
+                    "the registry main"
+                    if args.check_latest
+                    else f"commit {recorded[:7]}"
+                )
                 print(
                     f"ERROR: builtin_plugins.json differs from {what}; run "
                     "'python scripts/packaging/sync_builtin_plugins.py --ref <commit>'"
