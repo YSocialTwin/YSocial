@@ -190,3 +190,8 @@ def test_start_options_are_shown_only_after_install():
     assert '$("advanced").hidden = name !== "ready"' in js
     setup = html[html.index('id="v-setup"'):html.index('id="v-installing"')]
     assert 'id="advanced"' in html and 'id="advanced"' not in setup
+
+
+def test_app_window_takes_focus_after_launcher_closes():
+    rs = (I / "src-tauri/src/main.rs").read_text()
+    assert ".focused(true)" in rs and rs.count("set_focus()") >= 3

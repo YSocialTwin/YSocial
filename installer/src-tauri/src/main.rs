@@ -644,6 +644,7 @@ fn open_app_window(app: &AppHandle, url: &str, home: PathBuf, host: String, port
         .title("YSocial")
         .inner_size(1360.0, 880.0)
         .min_inner_size(900.0, 600.0)
+        .focused(true)
         .initialization_script(LINK_SCRIPT)
         .on_new_window(move |target, _features| {
             if target.host_str().map(|h| h != local).unwrap_or(true)
@@ -655,6 +656,7 @@ fn open_app_window(app: &AppHandle, url: &str, home: PathBuf, host: String, port
         })
         .build()
         .map_err(|e| e.to_string())?;
+    let _ = window.set_focus();
     // Closing the application window ends YSocial and everything it started
     // (only if this launcher started it: it needs the pid file).
     let handle = app.clone();
@@ -730,6 +732,11 @@ async fn launch(app: AppHandle, home: String, opts: LaunchOptions) -> Result<Str
                     // The app window now owns YSocial's lifetime: the launcher is no longer needed.
                     if let Some(w) = app.get_webview_window("main") {
                         let _ = w.close();
+                    }
+                    // Hand the focus to the app window: otherwise on macOS the first click
+                    // only activates the window and every link needs a second click.
+                    if let Some(w) = app.get_webview_window(APP_WINDOW) {
+                        let _ = w.set_focus();
                     }
                 } else {
                     open_in_browser(&url);
