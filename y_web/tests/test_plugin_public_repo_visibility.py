@@ -35,7 +35,9 @@ def test_unknown_answer_keeps_previous_state(isolated, monkeypatch):
     spec = _private_spec()
     monkeypatch.setattr(registry, "_probe_public", lambda repo, timeout: True)
     registry.refresh_public_repos(force=True)
-    monkeypatch.setattr(registry, "_probe_public", lambda repo, timeout: None)  # offline
+    monkeypatch.setattr(
+        registry, "_probe_public", lambda repo, timeout: None
+    )  # offline
     registry.refresh_public_repos(force=True)
     assert registry.repo_is_public(spec)
 
@@ -62,6 +64,8 @@ def test_public_check_runs_at_startup_only():
     import pathlib
 
     root = pathlib.Path(__file__).resolve().parents[2]
-    routes = (root / "y_web/routes/admin/sub/experiments/_external_runtimes.py").read_text()
+    routes = (
+        root / "y_web/routes/admin/sub/experiments/_external_runtimes.py"
+    ).read_text()
     assert "refresh_public_repos" not in routes
     assert "refresh_public_repos(force=True)" in (root / "y_social.py").read_text()

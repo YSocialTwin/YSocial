@@ -48,12 +48,18 @@ def test_releases_and_branches_queried_once_per_status(monkeypatch):
     monkeypatch.setattr(
         manager,
         "_list_releases_uncached",
-        lambda spec, github_token=None: (hits.__setitem__("rel", hits["rel"] + 1) or [], None),
+        lambda spec, github_token=None: (
+            hits.__setitem__("rel", hits["rel"] + 1) or [],
+            None,
+        ),
     )
     monkeypatch.setattr(
         manager,
         "_list_remote_branches_uncached",
-        lambda spec, github_token=None: (hits.__setitem__("br", hits["br"] + 1) or ["main"], None),
+        lambda spec, github_token=None: (
+            hits.__setitem__("br", hits["br"] + 1) or ["main"],
+            None,
+        ),
     )
     key = manager.grouped_runtime_specs()[0][2][0].key
     manager.get_runtime_status(key)
