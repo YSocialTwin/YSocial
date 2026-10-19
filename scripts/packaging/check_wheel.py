@@ -15,6 +15,7 @@ REQUIRED = [
     "y_web/src/system/path_utils.py",
     "y_web/translations/it/LC_MESSAGES/messages.mo",
     "y_web/prompts_internal.json",
+    "y_web/src/external_runtime/builtin_plugins.json",
 ]
 FORBIDDEN_PREFIXES = (
     "y_web/tests/",

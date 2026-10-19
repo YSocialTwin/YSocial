@@ -83,6 +83,7 @@ y_web = [
     "alembic/script.py.mako",
     "alembic/README",
     "prompts_internal*.json",
+    "src/external_runtime/builtin_plugins.json",
     "src/system/sample_notebook/*",
     "migrations/README.md",
 ]

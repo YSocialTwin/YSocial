@@ -1,0 +1,247 @@
+{
+  "schema_version": 1,
+  "plugins": [
+    {
+      "key": "microblogging_client",
+      "label": "YClient",
+      "group": "microblogging",
+      "group_label": "Microblogging",
+      "category": "simulation_runtimes",
+      "category_label": "Simulation Runtime Stack",
+      "directory": "YClient",
+      "repo": "YSocialTwin/YClient",
+      "branch": "main",
+      "install_commands": [
+        [
+          "python",
+          "-m",
+          "pip",
+          "install",
+          "-r",
+          "requirements_client.txt"
+        ]
+      ],
+      "validate_entrypoints": [
+        "y_client",
+        "requirements_client.txt"
+      ],
+      "validate_import": "y_client",
+      "private": false,
+      "seed": true
+    },
+    {
+      "key": "microblogging_server",
+      "label": "YServer",
+      "group": "microblogging",
+      "group_label": "Microblogging",
+      "category": "simulation_runtimes",
+      "category_label": "Simulation Runtime Stack",
+      "directory": "YServer",
+      "repo": "YSocialTwin/YServer",
+      "branch": "main",
+      "install_commands": [
+        [
+          "python",
+          "-m",
+          "pip",
+          "install",
+          "-r",
+          "requirements_server.txt"
+        ]
+      ],
+      "validate_entrypoints": [
+        "y_server",
+        "requirements_server.txt"
+      ],
+      "validate_import": "y_server",
+      "private": false,
+      "seed": true
+    },
+    {
+      "key": "forum_client",
+      "label": "YClientReddit",
+      "group": "forum",
+      "group_label": "Forum",
+      "category": "simulation_runtimes",
+      "category_label": "Simulation Runtime Stack",
+      "directory": "YClientReddit",
+      "repo": "YSocialTwin/YClientReddit",
+      "branch": "main",
+      "install_commands": [
+        [
+          "python",
+          "-m",
+          "pip",
+          "install",
+          "-r",
+          "requirements_client.txt"
+        ]
+      ],
+      "validate_entrypoints": [
+        "y_client",
+        "requirements_client.txt"
+      ],
+      "validate_import": "y_client",
+      "private": false,
+      "seed": true
+    },
+    {
+      "key": "forum_server",
+      "label": "YServerReddit",
+      "group": "forum",
+      "group_label": "Forum",
+      "category": "simulation_runtimes",
+      "category_label": "Simulation Runtime Stack",
+      "directory": "YServerReddit",
+      "repo": "YSocialTwin/YServerReddit",
+      "branch": "main",
+      "install_commands": [
+        [
+          "python",
+          "-m",
+          "pip",
+          "install",
+          "-r",
+          "requirements_server.txt"
+        ]
+      ],
+      "validate_entrypoints": [
+        "y_server",
+        "requirements_server.txt"
+      ],
+      "validate_import": "y_server",
+      "private": false,
+      "seed": true
+    },
+    {
+      "key": "hpc_simulator",
+      "label": "YSimulator",
+      "group": "hpc",
+      "group_label": "HPC",
+      "category": "simulation_runtimes",
+      "category_label": "Simulation Runtime Stack",
+      "directory": "YSimulator",
+      "repo": "YSocialTwin/YSimulator",
+      "branch": "main",
+      "install_commands": [
+        [
+          "python",
+          "-m",
+          "pip",
+          "install",
+          "-r",
+          "requirements.txt"
+        ]
+      ],
+      "validate_entrypoints": [
+        "run_server.py",
+        "run_client.py"
+      ],
+      "validate_import": "YSimulator",
+      "private": false,
+      "seed": true
+    },
+    {
+      "key": "photo_sharing",
+      "label": "YPhotoSharing",
+      "group": "photo_sharing",
+      "group_label": "Photo Sharing",
+      "category": "simulation_runtimes",
+      "category_label": "Simulation Runtime Stack",
+      "directory": "YPhotoSharing",
+      "repo": "YSocialTwin/YPhotoSharing",
+      "branch": "main",
+      "install_commands": [
+        [
+          "python",
+          "-m",
+          "pip",
+          "install",
+          "-r",
+          "requirements.txt"
+        ]
+      ],
+      "validate_entrypoints": [
+        "run_server.py",
+        "run_client.py",
+        "requirements.txt"
+      ],
+      "validate_import": "YPhotoSharing",
+      "private": true,
+      "seed": true
+    },
+    {
+      "key": "agent_plugins",
+      "label": "y_agents_plugins",
+      "group": "agent_plugins",
+      "group_label": "Agent Plugins",
+      "category": "agent_extensions",
+      "category_label": "Agent Extensions",
+      "directory": "y_agents_plugins",
+      "repo": "YSocialTwin/y_agents_plugins",
+      "branch": "main",
+      "private": false
+    },
+    {
+      "key": "agent_memory",
+      "label": "Agent Memory",
+      "group": "agent_plugins",
+      "group_label": "Agent Plugins",
+      "category": "agent_extensions",
+      "category_label": "Agent Extensions",
+      "directory": "y_memory_subsystem",
+      "repo": "YSocialTwin/y_memory_subsystem",
+      "branch": "main",
+      "validate_import": "yclient_memory",
+      "private": false
+    },
+    {
+      "key": "reactive_agents",
+      "label": "Reactive Agents",
+      "group": "frontend_plugins",
+      "group_label": "Frontend Plugins",
+      "category": "agent_extensions",
+      "category_label": "Agent Extensions",
+      "directory": "reactive_agents",
+      "repo": "YSocialTwin/reactive_agents",
+      "branch": "main",
+      "private": true
+    },
+    {
+      "key": "frontend_adds_on",
+      "label": "Frontend Adds-on",
+      "group": "frontend_plugins",
+      "group_label": "Frontend Plugins",
+      "category": "frontend_extensions",
+      "category_label": "Frontend Extensions",
+      "directory": "frontend_adds-on",
+      "repo": "YSocialTwin/frontend_adds-on",
+      "branch": "main",
+      "private": true
+    },
+    {
+      "key": "scenario_design",
+      "label": "Scenario Design",
+      "group": "backend_settings",
+      "group_label": "Backend Settings",
+      "category": "backend_extensions",
+      "category_label": "Backend Extensions",
+      "directory": "ScenarioDesign",
+      "repo": "YSocialTwin/ScenarioDesign",
+      "branch": "main",
+      "private": true
+    },
+    {
+      "key": "training_modules",
+      "label": "Training Modules",
+      "group": "backend_settings",
+      "group_label": "Backend Settings",
+      "category": "backend_extensions",
+      "category_label": "Backend Extensions",
+      "directory": "TrainingModules",
+      "repo": "YSocialTwin/TrainingModules",
+      "branch": "main",
+      "private": true
+    }
+  ]
+}

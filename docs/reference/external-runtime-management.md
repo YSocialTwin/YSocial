@@ -55,6 +55,11 @@ The experiment creation flow already uses these plugin states to determine which
 
 ## Public plugin registry
 
+The plugins that ship with YSocial are described in `y_web/src/external_runtime/builtin_plugins.json`
+(key, group, directory, repository, install commands, files to validate, visibility). The file is part of the
+release, so it is the trusted base: the keys it defines are used by the rest of the application and cannot be
+redefined by the registry below. To add or change a built-in plugin edit that file and release YSocial.
+
 New plugins appear in an already installed YSocial through the public registry
 [`YSocialTwin/plugin-registry`](https://github.com/YSocialTwin/plugin-registry), a JSON list of
 plugins with their GitHub repository. YSocial reads it once at start-up (in the background, so it never
@@ -150,7 +155,7 @@ Rules:
 Current implementation uses:
 
 - runtime metadata in:
-  - `y_web/src/external_runtime/registry.py`
+  - `y_web/src/external_runtime/builtin_plugins.json` (plugins shipped with YSocial), read by `registry.py`
 - optional environment override:
   - `YSOCIAL_PLUGIN_VISIBILITY`
 
@@ -252,6 +257,7 @@ The plugin panel is working correctly when:
 
 ## Relevant Source Files
 
+- `y_web/src/external_runtime/builtin_plugins.json`
 - `y_web/src/external_runtime/registry.py`
 - `y_web/src/external_runtime/catalog.py`
 - `y_web/src/external_runtime/manager.py`

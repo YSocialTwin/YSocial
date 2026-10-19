@@ -57,6 +57,26 @@ _BOOTSTRAP_REPORT = {
 }
 
 
+BUILTIN_PLUGINS_FILE = Path(__file__).with_name("builtin_plugins.json")
+
+
+def _read_builtin_payload() -> list[dict]:
+    """The plugins that ship with YSocial (``builtin_plugins.json``, in the package).
+
+    This file is part of the release, not downloaded: it is the trusted base that
+    the public plugin registry (``catalog.py``) can add to but never override.
+    """
+    payload = json.loads(BUILTIN_PLUGINS_FILE.read_text(encoding="utf-8"))
+    if payload.get("schema_version") != 1 or not isinstance(
+        payload.get("plugins"), list
+    ):
+        raise ValueError(f"unsupported format: {BUILTIN_PLUGINS_FILE.name}")
+    return payload["plugins"]
+
+
+_BUILTIN_PAYLOAD = _read_builtin_payload()
+
+
 def _seed_external_runtime_repo(repo_name: str) -> str:
     """Copy bundled external runtime repo into writable storage on first run."""
     target_dir = EXTERNAL_DIR / repo_name
@@ -79,14 +99,7 @@ def ensure_external_runtime_layout() -> None:
     resources when running a frozen build for the first time.
     """
     EXTERNAL_DIR.mkdir(parents=True, exist_ok=True)
-    for repo_name in (
-        "YClient",
-        "YServer",
-        "YClientReddit",
-        "YServerReddit",
-        "YSimulator",
-        "YPhotoSharing",
-    ):
+    for repo_name in [e["directory"] for e in _BUILTIN_PAYLOAD if e.get("seed")]:
         try:
             result = _seed_external_runtime_repo(repo_name)
             if result == "seeded":
@@ -141,210 +154,32 @@ class ExternalRuntimeSpec:
     min_ysocial_version: str | None = None
 
 
+def _builtin_spec(entry: dict) -> ExternalRuntimeSpec:
+    repo = entry["repo"]
+    return ExternalRuntimeSpec(
+        key=entry["key"],
+        group=entry["group"],
+        group_label=entry["group_label"],
+        category=entry["category"],
+        category_label=entry["category_label"],
+        label=entry["label"],
+        path=EXTERNAL_DIR / entry["directory"],
+        github_repo=repo,
+        repo_url=f"https://github.com/{repo}.git",
+        default_branch=entry.get("branch", "main"),
+        install_commands=tuple(tuple(c) for c in entry.get("install_commands", ())),
+        validate_entrypoints=tuple(entry.get("validate_entrypoints", ())),
+        validate_import=entry.get("validate_import"),
+        is_private=bool(entry.get("private", True)),
+        visible_to_usernames=tuple(entry.get("visible_to_usernames", ())),
+    )
+
+
+# Built-in plugins: the data lives in ``builtin_plugins.json``; the keys are
+# referenced from the rest of the code (experiment types, locks, ...), so they
+# are stable and never come from the network.
 SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
-    "microblogging_client": ExternalRuntimeSpec(
-        key="microblogging_client",
-        group="microblogging",
-        group_label="Microblogging",
-        category="simulation_runtimes",
-        category_label="Simulation Runtime Stack",
-        label="YClient",
-        path=EXTERNAL_DIR / "YClient",
-        github_repo="YSocialTwin/YClient",
-        repo_url="https://github.com/YSocialTwin/YClient.git",
-        default_branch="main",
-        install_commands=(
-            ("python", "-m", "pip", "install", "-r", "requirements_client.txt"),
-        ),
-        validate_entrypoints=("y_client", "requirements_client.txt"),
-        validate_import="y_client",
-        is_private=False,
-    ),
-    "microblogging_server": ExternalRuntimeSpec(
-        key="microblogging_server",
-        group="microblogging",
-        group_label="Microblogging",
-        category="simulation_runtimes",
-        category_label="Simulation Runtime Stack",
-        label="YServer",
-        path=EXTERNAL_DIR / "YServer",
-        github_repo="YSocialTwin/YServer",
-        repo_url="https://github.com/YSocialTwin/YServer.git",
-        default_branch="main",
-        install_commands=(
-            ("python", "-m", "pip", "install", "-r", "requirements_server.txt"),
-        ),
-        validate_entrypoints=("y_server", "requirements_server.txt"),
-        validate_import="y_server",
-        is_private=False,
-    ),
-    "forum_client": ExternalRuntimeSpec(
-        key="forum_client",
-        group="forum",
-        group_label="Forum",
-        category="simulation_runtimes",
-        category_label="Simulation Runtime Stack",
-        label="YClientReddit",
-        path=EXTERNAL_DIR / "YClientReddit",
-        github_repo="YSocialTwin/YClientReddit",
-        repo_url="https://github.com/YSocialTwin/YClientReddit.git",
-        default_branch="main",
-        install_commands=(
-            ("python", "-m", "pip", "install", "-r", "requirements_client.txt"),
-        ),
-        validate_entrypoints=("y_client", "requirements_client.txt"),
-        validate_import="y_client",
-        is_private=False,
-    ),
-    "forum_server": ExternalRuntimeSpec(
-        key="forum_server",
-        group="forum",
-        group_label="Forum",
-        category="simulation_runtimes",
-        category_label="Simulation Runtime Stack",
-        label="YServerReddit",
-        path=EXTERNAL_DIR / "YServerReddit",
-        github_repo="YSocialTwin/YServerReddit",
-        repo_url="https://github.com/YSocialTwin/YServerReddit.git",
-        default_branch="main",
-        install_commands=(
-            ("python", "-m", "pip", "install", "-r", "requirements_server.txt"),
-        ),
-        validate_entrypoints=("y_server", "requirements_server.txt"),
-        validate_import="y_server",
-        is_private=False,
-    ),
-    "hpc_simulator": ExternalRuntimeSpec(
-        key="hpc_simulator",
-        group="hpc",
-        group_label="HPC",
-        category="simulation_runtimes",
-        category_label="Simulation Runtime Stack",
-        label="YSimulator",
-        path=EXTERNAL_DIR / "YSimulator",
-        github_repo="YSocialTwin/YSimulator",
-        repo_url="https://github.com/YSocialTwin/YSimulator.git",
-        default_branch="main",
-        install_commands=(
-            ("python", "-m", "pip", "install", "-r", "requirements.txt"),
-        ),
-        validate_entrypoints=("run_server.py", "run_client.py"),
-        validate_import="YSimulator",
-        is_private=False,
-    ),
-    "photo_sharing": ExternalRuntimeSpec(
-        key="photo_sharing",
-        group="photo_sharing",
-        group_label="Photo Sharing",
-        category="simulation_runtimes",
-        category_label="Simulation Runtime Stack",
-        label="YPhotoSharing",
-        path=EXTERNAL_DIR / "YPhotoSharing",
-        github_repo="YSocialTwin/YPhotoSharing",
-        repo_url="https://github.com/YSocialTwin/YPhotoSharing.git",
-        default_branch="main",
-        install_commands=(
-            ("python", "-m", "pip", "install", "-r", "requirements.txt"),
-        ),
-        validate_entrypoints=("run_server.py", "run_client.py", "requirements.txt"),
-        validate_import="YPhotoSharing",
-    ),
-    "agent_plugins": ExternalRuntimeSpec(
-        key="agent_plugins",
-        group="agent_plugins",
-        group_label="Agent Plugins",
-        category="agent_extensions",
-        category_label="Agent Extensions",
-        label="y_agents_plugins",
-        path=EXTERNAL_DIR / "y_agents_plugins",
-        github_repo="YSocialTwin/y_agents_plugins",
-        repo_url="https://github.com/YSocialTwin/y_agents_plugins.git",
-        default_branch="main",
-        install_commands=(),
-        validate_entrypoints=(),
-        validate_import=None,
-        is_private=False,
-    ),
-    "agent_memory": ExternalRuntimeSpec(
-        key="agent_memory",
-        group="agent_plugins",
-        group_label="Agent Plugins",
-        category="agent_extensions",
-        category_label="Agent Extensions",
-        label="Agent Memory",
-        path=EXTERNAL_DIR / "y_memory_subsystem",
-        github_repo="YSocialTwin/y_memory_subsystem",
-        repo_url="https://github.com/YSocialTwin/y_memory_subsystem.git",
-        default_branch="main",
-        install_commands=(),
-        validate_entrypoints=(),
-        validate_import="yclient_memory",
-        is_private=False,
-    ),
-    "reactive_agents": ExternalRuntimeSpec(
-        key="reactive_agents",
-        group="frontend_plugins",
-        group_label="Frontend Plugins",
-        category="agent_extensions",
-        category_label="Agent Extensions",
-        label="Reactive Agents",
-        path=EXTERNAL_DIR / "reactive_agents",
-        github_repo="YSocialTwin/reactive_agents",
-        repo_url="https://github.com/YSocialTwin/reactive_agents.git",
-        default_branch="main",
-        install_commands=(),
-        validate_entrypoints=(),
-        validate_import=None,
-        is_private=True,
-    ),
-    "frontend_adds_on": ExternalRuntimeSpec(
-        key="frontend_adds_on",
-        group="frontend_plugins",
-        group_label="Frontend Plugins",
-        category="frontend_extensions",
-        category_label="Frontend Extensions",
-        label="Frontend Adds-on",
-        path=EXTERNAL_DIR / "frontend_adds-on",
-        github_repo="YSocialTwin/frontend_adds-on",
-        repo_url="https://github.com/YSocialTwin/frontend_adds-on.git",
-        default_branch="main",
-        install_commands=(),
-        validate_entrypoints=(),
-        validate_import=None,
-        is_private=True,
-    ),
-    "scenario_design": ExternalRuntimeSpec(
-        key="scenario_design",
-        group="backend_settings",
-        group_label="Backend Settings",
-        category="backend_extensions",
-        category_label="Backend Extensions",
-        label="Scenario Design",
-        path=EXTERNAL_DIR / "ScenarioDesign",
-        github_repo="YSocialTwin/ScenarioDesign",
-        repo_url="https://github.com/YSocialTwin/ScenarioDesign.git",
-        default_branch="main",
-        install_commands=(),
-        validate_entrypoints=(),
-        validate_import=None,
-        is_private=True,
-    ),
-    "training_modules": ExternalRuntimeSpec(
-        key="training_modules",
-        group="backend_settings",
-        group_label="Backend Settings",
-        category="backend_extensions",
-        category_label="Backend Extensions",
-        label="Training Modules",
-        path=EXTERNAL_DIR / "TrainingModules",
-        github_repo="YSocialTwin/TrainingModules",
-        repo_url="https://github.com/YSocialTwin/TrainingModules.git",
-        default_branch="main",
-        install_commands=(),
-        validate_entrypoints=(),
-        validate_import=None,
-        is_private=True,
-    ),
+    entry["key"]: _builtin_spec(entry) for entry in _BUILTIN_PAYLOAD
 }
 
 
