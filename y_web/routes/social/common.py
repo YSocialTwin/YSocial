@@ -8,8 +8,6 @@ Routes: index, profile, profile_logged, edit_profile, update_profile_data,
 import json
 import math
 import os
-
-from y_web.src.system.avatars_store import get_avatars_dir
 import uuid as _uuid
 
 from flask import (
@@ -86,6 +84,7 @@ from y_web.src.recsys.content_recsys import (
     _normalize_content_recsys_mode,
     is_supported_content_recsys_mode,
 )
+from y_web.src.system.avatars_store import get_avatars_dir
 from y_web.src.system.path_utils import get_writable_path
 
 

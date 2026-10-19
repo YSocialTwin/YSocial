@@ -16,7 +16,9 @@ def _clean_env(monkeypatch):
 
 
 def test_source_checkout_uses_the_repository_root():
-    root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(path_utils.__file__))))
+    root = os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.abspath(path_utils.__file__)))
+    )
     root = os.path.dirname(root)
     assert path_utils.get_writable_path() == root
     assert path_utils.get_writable_path("external") == os.path.join(root, "external")
@@ -48,9 +50,15 @@ def test_default_folder_per_system(monkeypatch):
     import platform
 
     monkeypatch.setattr(platform, "system", lambda: "Darwin")
-    assert str(path_utils._default_home_dir()).endswith("Library/Application Support/YSocial")
+    assert str(path_utils._default_home_dir()).endswith(
+        "Library/Application Support/YSocial"
+    )
     monkeypatch.setattr(platform, "system", lambda: "Windows")
-    assert str(path_utils._default_home_dir()).replace("\\", "/").endswith("AppData/Local/YSocial")
+    assert (
+        str(path_utils._default_home_dir())
+        .replace("\\", "/")
+        .endswith("AppData/Local/YSocial")
+    )
     monkeypatch.setattr(platform, "system", lambda: "Linux")
     assert str(path_utils._default_home_dir()).endswith(".ysocial")
 
@@ -86,7 +94,9 @@ def test_sqlite_databases_are_created_in_the_data_folder(tmp_path, monkeypatch):
     # the suite's conftest redirects y_web.db_init.sqlite.create_sqlite_db: load the real module
     import y_web.db_init.sqlite as redirected
 
-    spec = importlib.util.spec_from_file_location("real_sqlite_init", redirected.__file__)
+    spec = importlib.util.spec_from_file_location(
+        "real_sqlite_init", redirected.__file__
+    )
     real = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(real)
     create_sqlite_db = real.create_sqlite_db

@@ -11,8 +11,6 @@ import html
 import json
 import mimetypes
 import os
-
-from y_web.src.system.avatars_store import get_avatars_dir
 import re
 import sqlite3
 import uuid
@@ -55,6 +53,7 @@ from y_web.src.models import Exps, User_mgmt
 from y_web.src.models.admin import Admin_users, Agent, Page
 from y_web.src.models.experiment import Rounds
 from y_web.src.recsys.follow_recsys import get_suggested_users
+from y_web.src.system.avatars_store import get_avatars_dir
 
 
 def _photo_page_size(ui_settings) -> int:

@@ -2,6 +2,7 @@
 
 Usage: python scripts/packaging/check_wheel.py dist/ysocial-*.whl
 """
+
 import sys
 import zipfile
 
@@ -26,9 +27,7 @@ FORBIDDEN_PREFIXES = (
 def check(path):
     names = zipfile.ZipFile(path).namelist()
     problems = [f"missing: {r}" for r in REQUIRED if r not in names]
-    problems += [
-        f"forbidden: {n}" for n in names if n.startswith(FORBIDDEN_PREFIXES)
-    ]
+    problems += [f"forbidden: {n}" for n in names if n.startswith(FORBIDDEN_PREFIXES)]
     if not any(n.startswith("y_web/templates/") for n in names):
         problems.append("missing: y_web/templates/*")
     if not any(n.startswith("data_schema/migrations/") for n in names):

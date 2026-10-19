@@ -31,9 +31,7 @@ _PLACEHOLDER_SVG = (
 
 
 def bundled_avatars_dir() -> str:
-    return os.path.join(
-        get_base_path(), "y_web", "static", "assets", "img", "users"
-    )
+    return os.path.join(get_base_path(), "y_web", "static", "assets", "img", "users")
 
 
 def downloaded_avatars_dir() -> str:
@@ -113,7 +111,8 @@ def register_avatar_route(app) -> None:
         if os.path.isfile(os.path.join(directory, filename)):
             return send_from_directory(directory, filename, max_age=86400)
         return Response(
-            _PLACEHOLDER_SVG, mimetype="image/svg+xml",
+            _PLACEHOLDER_SVG,
+            mimetype="image/svg+xml",
             headers={"Cache-Control": "no-cache"},
         )
 
