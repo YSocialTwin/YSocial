@@ -1,5 +1,5 @@
-"""The photo sidebar links back to the admin panel for admins and researchers,
-like the microblogging and forum menus."""
+"""The photo sidebar links back to the admin panel for admins (``is_admin``),
+the same condition as the microblogging and forum menus."""
 
 from pathlib import Path
 
@@ -26,17 +26,14 @@ def _render(**context) -> str:
     return env.get_template("photo/components/sidebar.html").render(**base)
 
 
-@pytest.mark.parametrize("role", ["admin", "researcher"])
-def test_admin_and_researcher_get_the_admin_dashboard_link(role):
-    html = _render(current_user_role=role)
+def test_admin_gets_the_admin_dashboard_link():
+    html = _render(is_admin=True)
     assert 'href="/admin/dashboard"' in html
     assert "Admin Dashboard" in html
 
 
-def test_admin_flag_also_shows_it():
-    assert "/admin/dashboard" in _render(is_admin=True, current_user_role=None)
-
-
-@pytest.mark.parametrize("role", ["user", "student", None])
-def test_participants_do_not_see_it(role):
+@pytest.mark.parametrize("role", ["researcher", "user", "student", None])
+def test_everybody_else_does_not_see_it(role):
+    """Same rule as microblogging and forum: only ``is_admin``."""
+    assert "/admin/dashboard" not in _render(is_admin=False, current_user_role=role)
     assert "/admin/dashboard" not in _render(current_user_role=role)

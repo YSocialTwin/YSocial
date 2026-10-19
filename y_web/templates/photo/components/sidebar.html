@@ -37,8 +37,8 @@
             <i class="mdi mdi-account-circle-outline"></i>
             <span>{{ _('Profile') }}</span>
         </a>
-        {# Same shortcut as the microblogging and forum menus: back to the admin panel. #}
-        {% if current_user_role in ['admin', 'researcher'] or is_admin %}
+        {# Same shortcut, with the same condition, as the microblogging and forum menus. #}
+        {% if is_admin == True %}
         <a class="photo-sidebar__item" href="/admin/dashboard" data-photo-admin-dashboard>
             <i class="mdi mdi-cog-outline"></i>
             <span>{{ _('Admin Dashboard') }}</span>
