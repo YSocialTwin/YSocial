@@ -84,7 +84,7 @@ def ray_safe_cmd(cmd):
     for arg in cmd:
         arg = str(arg)
         if arg == home or arg.startswith(home + os.sep):
-            arg = alias + arg[len(home):]
+            arg = alias + arg[len(home) :]
         out.append(arg)
     return out
 

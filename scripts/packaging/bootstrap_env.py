@@ -7,6 +7,7 @@ Usage:
 With --wheelhouse the install is fully offline (--no-index --find-links).
 Layout: <home>/runtime/{python,venv}; the venv provides `bin/ysocial`.
 """
+
 import argparse
 import os
 import shutil
@@ -26,7 +27,15 @@ def run(cmd, env=None):
 TORCH_CPU_INDEX = "https://download.pytorch.org/whl/cpu"
 
 
-def bootstrap(home, wheel, uv="uv", wheelhouse=None, torch_cpu=True, toxicity=False, constraints=None):
+def bootstrap(
+    home,
+    wheel,
+    uv="uv",
+    wheelhouse=None,
+    torch_cpu=True,
+    toxicity=False,
+    constraints=None,
+):
     home = Path(home)
     runtime = home / "runtime"
     venv = runtime / "venv"
@@ -47,9 +56,16 @@ def bootstrap(home, wheel, uv="uv", wheelhouse=None, torch_cpu=True, toxicity=Fa
         cmd += ["--no-index", "--find-links", wheelhouse]
     elif torch_cpu and toxicity:
         # detoxify -> torch: the default Linux/Windows wheels bundle CUDA (GBs)
-        cmd += ["--extra-index-url", TORCH_CPU_INDEX, "--index-strategy", "unsafe-best-match"]
+        cmd += [
+            "--extra-index-url",
+            TORCH_CPU_INDEX,
+            "--index-strategy",
+            "unsafe-best-match",
+        ]
     # optional extra: Detoxify (+ torch). Off by default, chosen in the installer.
-    target = f"ysocial[toxicity] @ {Path(wheel).resolve().as_uri()}" if toxicity else wheel
+    target = (
+        f"ysocial[toxicity] @ {Path(wheel).resolve().as_uri()}" if toxicity else wheel
+    )
     run(cmd + [target], env)
     print(f"bootstrap done in {time.time() - t0:.1f}s")
     return py
@@ -63,6 +79,18 @@ if __name__ == "__main__":
     ap.add_argument("--wheelhouse")
     ap.add_argument("--no-torch-cpu", action="store_true")
     ap.add_argument("--constraints", help="pinned versions (requirements.lock)")
-    ap.add_argument("--with-toxicity", action="store_true", help="install the optional toxicity extra (detoxify + torch)")
+    ap.add_argument(
+        "--with-toxicity",
+        action="store_true",
+        help="install the optional toxicity extra (detoxify + torch)",
+    )
     a = ap.parse_args()
-    bootstrap(a.home, a.wheel, a.uv, a.wheelhouse, not a.no_torch_cpu, a.with_toxicity, a.constraints)
+    bootstrap(
+        a.home,
+        a.wheel,
+        a.uv,
+        a.wheelhouse,
+        not a.no_torch_cpu,
+        a.with_toxicity,
+        a.constraints,
+    )

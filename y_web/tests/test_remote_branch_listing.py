@@ -34,7 +34,9 @@ def test_api_pagination_collects_all_branches(tmp_path, monkeypatch):
     monkeypatch.setattr(
         manager,
         "_github_api_request",
-        lambda url, github_token=None: _Resp(200, pages[int(url.rsplit("&page=", 1)[1])]),
+        lambda url, github_token=None: _Resp(
+            200, pages[int(url.rsplit("&page=", 1)[1])]
+        ),
     )
     names, err = manager._list_remote_branches(_spec(tmp_path))
     assert err is None and len(names) == 101 and "last" in names

@@ -36,7 +36,9 @@ def test_upgrade_adds_missing_columns_on_legacy_table():
     _run_upgrade(engine)
     with engine.connect() as conn:
         row = conn.execute(
-            sa.text("SELECT value, category, enabled FROM content_recsys WHERE name='FilterBubble'")
+            sa.text(
+                "SELECT value, category, enabled FROM content_recsys WHERE name='FilterBubble'"
+            )
         ).fetchone()
     assert tuple(row) == ("Personalized Feed", "Personalization", "HumanOnly")
 
