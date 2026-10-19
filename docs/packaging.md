@@ -20,11 +20,16 @@ Installers are **not code-signed** (decision): macOS shows the Gatekeeper warnin
 
 ## Making a release
 
-1. Set the version in `VERSION`, `installer/src-tauri/tauri.conf.json` and `installer/src-tauri/Cargo.toml` (they must match; `test_installer_scaffold.py` checks it).
-2. Regenerate the lock file if dependencies changed (`requirements.lock`) and make sure CI is green.
-3. Tag and push: `git tag v<version> && git push origin v<version>`. To test the build without releasing, run the workflow by hand (*Actions > Release packaging > Run workflow*): it produces the artifacts but creates no release.
-4. Open the draft release, check the files and the generated notes, then publish. The launcher's update check reads the *latest published* release.
-5. First time only (or when avatars change): build `ysocial-avatars.tar.gz` with `python scripts/packaging/make_avatars_archive.py` and attach it to the release `avatars-v1`; YSocial downloads it at first run.
+The version of every package comes from the **tag**: `scripts/packaging/set_version.py` stamps `v4.1.0` as `4.1.0` into `VERSION` (the wheel), `tauri.conf.json`, `Cargo.toml` and `Cargo.lock` inside each build job, so the wheel, the installers (`YSocial-4.1.0-<platform>.<ext>`) and the Docker image (`:v4.1.0`, plus `:latest` unless the version has a suffix such as `-rc1`) always match the release. Suffixed tags (`v4.1.0-rc1`) are attached to a pre-release.
+
+1. Bump `VERSION` (and, to keep the repository consistent, the two installer files) in the commit you tag; the workflow warns if the tag and `VERSION` disagree, because the source archive GitHub adds to the release ("Source code (tar.gz / zip)") contains the files as committed. Regenerate `requirements.lock` if dependencies changed and make sure CI is green.
+2. Create the release in either way:
+   - push the tag: `git tag v4.1.0 && git push origin v4.1.0`. The workflow builds everything and creates a **draft** release with all the files; or
+   - create the release from the GitHub page (new tag `v4.1.0`): the tag push starts the workflow, which **adds the files to that release** (replacing files with the same name).
+3. When the workflow ends, open the release, check the files and notes, and publish. The launcher's update check reads the *latest published* release.
+4. First time only (or when avatars change): build `ysocial-avatars.tar.gz` with `python scripts/packaging/make_avatars_archive.py` and attach it to the release `avatars-v1`; YSocial downloads it at first run.
+
+**On demand.** *Actions > Release packaging > Run workflow* with the tag field empty builds all the packages from the chosen branch with the version in the repository and keeps them as workflow artifacts: nothing is released or pushed. Filling the tag field (e.g. `v4.1.0`) does the same as pushing that tag (stamping, release and image push) for a tag you want to re-package.
 
 ## Building locally
 

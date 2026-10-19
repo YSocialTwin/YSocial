@@ -226,3 +226,18 @@ def test_release_workflow_builds_installers_for_every_platform():
     assert "installers" in wf["jobs"]["release"]["needs"]
     text = (I.parent / ".github/workflows/release-packaging.yml").read_text()
     assert "constraints.txt" in text and "libwebkit2gtk-4.1-dev" in text
+
+
+def test_release_workflow_stamps_the_tag_version_everywhere():
+    yaml = pytest.importorskip("yaml")
+    text = (I.parent / ".github/workflows/release-packaging.yml").read_text()
+    wf = yaml.safe_load(text)
+    assert wf["jobs"]["version"]
+    for job in ("wheel", "installers", "docker"):
+        assert "version" in wf["jobs"][job]["needs"] or wf["jobs"][job]["needs"] == "version"
+        steps = " ".join(str(s.get("run", "")) for s in wf["jobs"][job]["steps"])
+        assert "set_version.py" in steps, job
+    # installer files are named after the stamped version, not after the repository file
+    assert 'version="${{ needs.version.outputs.version }}"' in text
+    assert "gh release upload" in text and "--draft" in text  # attach, or draft if missing
+    assert "workflow_dispatch" in text and "tag:" in text
