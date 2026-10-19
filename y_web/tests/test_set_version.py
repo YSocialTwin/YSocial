@@ -35,7 +35,9 @@ def test_tag_is_stamped_everywhere(tmp_path):
     assert (tmp_path / "VERSION").read_text().strip() == "9.8.7"
     conf = json.loads((tmp_path / "installer/src-tauri/tauri.conf.json").read_text())
     assert conf["version"] == "9.8.7"
-    assert 'version = "9.8.7"' in (tmp_path / "installer/src-tauri/Cargo.toml").read_text()
+    assert (
+        'version = "9.8.7"' in (tmp_path / "installer/src-tauri/Cargo.toml").read_text()
+    )
     lock = (tmp_path / "installer/src-tauri/Cargo.lock").read_text()
     assert 'name = "ysocial-installer"\nversion = "9.8.7"' in lock
 
@@ -59,9 +61,12 @@ def test_prerelease_and_bad_versions(tmp_path):
 
 def test_other_cargo_versions_untouched(tmp_path):
     _copy_repo_bits(tmp_path)
-    before = (tmp_path / "installer/src-tauri/Cargo.lock").read_text().count('version = "')
+    before = (
+        (tmp_path / "installer/src-tauri/Cargo.lock").read_text().count('version = "')
+    )
     subprocess.run(
-        [sys.executable, str(SCRIPT), "5.0.0", "--root", str(tmp_path)], check=True,
+        [sys.executable, str(SCRIPT), "5.0.0", "--root", str(tmp_path)],
+        check=True,
         capture_output=True,
     )
     after = (tmp_path / "installer/src-tauri/Cargo.lock").read_text()
