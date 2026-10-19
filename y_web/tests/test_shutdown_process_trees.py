@@ -108,7 +108,9 @@ def test_stop_all_exps_terminates_everything_then_closes_the_db(monkeypatch):
     monkeypatch.setattr(pr, "db", fake_db)
     monkeypatch.setattr(pr, "WATCHDOG_ENABLED", False)
     seen = []
-    monkeypatch.setattr(pr, "terminate_process_trees", lambda pids, **k: seen.append(set(pids)))
+    monkeypatch.setattr(
+        pr, "terminate_process_trees", lambda pids, **k: seen.append(set(pids))
+    )
 
     pr.stop_all_exps()
 
