@@ -18,105 +18,109 @@
 <section class="yl-card" id="yl-card">
   <div class="yl-brand">
     <img src="assets/Ysocial.png" alt="YSocial">
-    <p>Where the Digital World comes to life.</p>
+    <p data-i18n="tagline">Where the Digital World comes to life.</p>
   </div>
 
   <div id="err" class="yl-error" role="alert"></div>
 
   <!-- 1. First start: set up -->
   <section class="view" id="v-setup">
-    <h2>Let's get you set up</h2>
-    <p class="yl-sub">One click installs everything YSocial needs. Your data stays in the folder below.</p>
+    <h2 data-i18n="setup.title">Let's get you set up</h2>
+    <p class="yl-sub" data-i18n="setup.sub">One click installs everything YSocial needs. Your data stays in the folder below.</p>
 
     <div class="yl-field sel">
       <input id="home" type="text" placeholder=" " spellcheck="false">
-      <label for="home">Where to keep your data</label>
+      <label for="home" data-i18n="setup.home">Where to keep your data</label>
     </div>
 
     <label class="yl-opt">
       <input id="toxicity" type="checkbox">
       <span>
-        <b>Toxicity detection <small style="display:inline">(optional)</small></b>
-        <small>Only needed if your experiments score toxic content. This is a large download
+        <b><span data-i18n="setup.tox.title">Toxicity detection</span> <small style="display:inline" data-i18n="setup.tox.opt">(optional)</small></b>
+        <small data-i18n="setup.tox.desc">Only needed if your experiments score toxic content. This is a large download
         (PyTorch and a language model, several GB of disk space). You can skip it and add it later.</small>
       </span>
     </label>
 
-    <button class="yl-btn" id="install" type="button"><span class="yl-spin"></span><span>Install YSocial</span></button>
-    <p class="yl-foot">LLM servers and PostgreSQL are not included; SQLite is used by default.<br>
+    <button class="yl-btn" id="install" type="button"><span class="yl-spin"></span><span data-i18n="setup.install">Install YSocial</span></button>
+    <p class="yl-foot" data-i18n="setup.foot">LLM servers and PostgreSQL are not included; SQLite is used by default.<br>
     Profile pictures are downloaded the first time you start.</p>
   </section>
 
   <!-- 2. Installing -->
   <section class="view" id="v-installing">
-    <h2>Setting things up…</h2>
-    <p class="yl-sub">This takes a few minutes the first time. You can leave this window open.</p>
+    <h2 data-i18n="inst.title">Setting things up…</h2>
+    <p class="yl-sub" data-i18n="inst.sub">This takes a few minutes the first time. You can leave this window open.</p>
     <div class="yl-bar"><i id="bar"></i></div>
     <ol class="yl-steps">
-      <li data-step="python"><span class="dot"></span>Getting Python ready</li>
-      <li data-step="env"><span class="dot"></span>Creating a private environment</li>
-      <li data-step="app"><span class="dot"></span>Installing YSocial</li>
+      <li data-step="python"><span class="dot"></span><span data-i18n="inst.python">Getting Python ready</span></li>
+      <li data-step="env"><span class="dot"></span><span data-i18n="inst.env">Creating a private environment</span></li>
+      <li data-step="app"><span class="dot"></span><span data-i18n="inst.app">Installing YSocial</span></li>
     </ol>
   </section>
 
   <!-- 3. Installed: start / stop -->
   <section class="view" id="v-ready">
-    <h2 id="ready-title">Ready when you are</h2>
-    <p class="yl-sub" id="ready-sub">YSocial is installed. Start it whenever you like.</p>
+    <h2 id="ready-title" data-i18n="ready.title">Ready when you are</h2>
+    <p class="yl-sub" id="ready-sub" data-i18n="ready.sub">YSocial is installed. Start it whenever you like.</p>
     <div class="yl-status" id="status">Stopped</div>
 
     <button class="yl-btn" id="launch" type="button" disabled><span class="yl-spin"></span><span id="launch-t">Start YSocial</span></button>
-    <button class="yl-btn ghost" id="stop" type="button" disabled>Stop YSocial</button>
+    <button class="yl-btn ghost" id="stop" type="button" disabled data-i18n="btn.stop">Stop YSocial</button>
 
-    <div class="yl-where"><span>Data: <code id="where"></code></span><span><button class="yl-link" id="reinstall" type="button">Reinstall</button> · <button class="yl-link" id="uninstall" type="button">Uninstall</button></span></div>
+    <div class="yl-where"><span><span data-i18n="ready.data">Data:</span> <code id="where"></code></span><span><button class="yl-link" id="reinstall" type="button" data-i18n="ready.reinstall">Reinstall</button> · <button class="yl-link" id="uninstall" type="button" data-i18n="ready.uninstall">Uninstall</button></span></div>
   </section>
 
   <!-- 4. Uninstall confirmation -->
   <section class="view" id="v-uninstall">
-    <h2>Uninstall YSocial?</h2>
-    <p class="yl-sub">This removes the program from this computer. Your experiments and data are kept unless you tick the box below.</p>
+    <h2 data-i18n="un.title">Uninstall YSocial?</h2>
+    <p class="yl-sub" data-i18n="un.sub">This removes the program from this computer. Your experiments and data are kept unless you tick the box below.</p>
     <label class="yl-opt">
       <input id="deletedata" type="checkbox">
-      <span><b>Also delete my data</b><small>Experiments, databases and settings in the data folder. This cannot be undone.</small></span>
+      <span><b data-i18n="un.data">Also delete my data</b><small data-i18n="un.data.desc">Experiments, databases and settings in the data folder. This cannot be undone.</small></span>
     </label>
-    <button class="yl-btn" id="confirm-uninstall" type="button"><span class="yl-spin"></span><span>Uninstall</span></button>
-    <button class="yl-btn ghost" id="cancel-uninstall" type="button">Cancel</button>
+    <button class="yl-btn" id="confirm-uninstall" type="button"><span class="yl-spin"></span><span data-i18n="un.confirm">Uninstall</span></button>
+    <button class="yl-btn ghost" id="cancel-uninstall" type="button" data-i18n="un.cancel">Cancel</button>
   </section>
 
   <!-- Shared options -->
   <details class="yl-adv" id="advanced">
-    <summary>More options</summary>
+    <summary data-i18n="more">More options</summary>
+    <div class="yl-field sel">
+      <select id="lang"><option value="auto">Auto</option><option value="en">English</option><option value="it">Italiano</option></select>
+      <label for="lang" data-i18n="opt.lang">Language</label>
+    </div>
     <label class="yl-chk"><input id="appwindow" type="checkbox" checked>
-      <span>Open in its own window<small>Untick to use your default browser instead.</small></span></label>
+      <span><span data-i18n="opt.window">Open in its own window</span><small data-i18n="opt.window.desc">Untick to use your default browser instead.</small></span></label>
 
     <div class="yl-field">
       <input id="host" type="text" value="127.0.0.1" placeholder=" " spellcheck="false">
-      <label for="host">Address</label>
+      <label for="host" data-i18n="opt.host">Address</label>
     </div>
     <div class="yl-field">
       <input id="port" type="number" min="1" max="65535" value="8080" placeholder=" ">
-      <label for="port">Port</label>
+      <label for="port" data-i18n="opt.port">Port</label>
     </div>
-    <p class="yl-note">Use <code>0.0.0.0</code> as address only if you want other computers on your network to reach YSocial.</p>
+    <p class="yl-note" data-i18n="opt.hostnote">Use <code>0.0.0.0</code> as address only if you want other computers on your network to reach YSocial.</p>
     <div class="yl-field sel">
-      <select id="db"><option value="sqlite">SQLite (default)</option><option value="postgresql">PostgreSQL</option></select>
-      <label for="db">Database</label>
+      <select id="db"><option value="sqlite" data-i18n="opt.db.sqlite">SQLite (default)</option><option value="postgresql">PostgreSQL</option></select>
+      <label for="db" data-i18n="opt.db">Database</label>
     </div>
     <div class="yl-field">
       <input id="llm" type="text" placeholder=" " spellcheck="false">
-      <label for="llm">LLM server (ollama, vllm or host:port; empty = off)</label>
+      <label for="llm" data-i18n="opt.llm">LLM server (ollama, vllm or host:port; empty = off)</label>
     </div>
-    <label class="yl-chk"><input id="nonotebook" type="checkbox"><span>Skip the Jupyter notebook server</span></label>
-    <label class="yl-chk"><input id="development" type="checkbox"><span>Developer mode<small>Also lists private plugin repositories.</small></span></label>
-    <label class="yl-chk"><input id="debug" type="checkbox"><span>Debug mode</span></label>
+    <label class="yl-chk"><input id="nonotebook" type="checkbox"><span data-i18n="opt.nonotebook">Skip the Jupyter notebook server</span></label>
+    <label class="yl-chk"><input id="development" type="checkbox"><span><span data-i18n="opt.dev">Developer mode</span><small data-i18n="opt.dev.desc">Also lists private plugin repositories.</small></span></label>
+    <label class="yl-chk"><input id="debug" type="checkbox"><span data-i18n="opt.debug">Debug mode</span></label>
     <div class="yl-field">
       <input id="extra" type="text" placeholder=" " spellcheck="false">
-      <label for="extra">Extra command-line arguments</label>
+      <label for="extra" data-i18n="opt.extra">Extra command-line arguments</label>
     </div>
   </details>
 
   <details class="yl-details">
-    <summary>Technical details</summary>
+    <summary data-i18n="tech">Technical details</summary>
     <pre id="log" aria-live="polite"></pre>
   </details>
 </section>
@@ -124,6 +128,7 @@
 
 <script src="assets/yi18n-stub.js"></script>
 <script src="assets/login-scene.js" defer></script>
+<script src="i18n.js"></script>
 <script src="main.js"></script>
 </body>
 </html>

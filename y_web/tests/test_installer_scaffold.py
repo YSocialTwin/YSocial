@@ -108,3 +108,31 @@ def test_uninstall_and_stop_on_window_close_wiring():
     assert "delete_data" in rs and 'runtime.join("venv").exists()' in rs
     # closing the application window stops YSocial (and its process group)
     assert "CloseRequested" in rs and "process_group(0)" in rs
+
+
+def test_installer_version_matches_ysocial_version():
+    version = (I.parent / "VERSION").read_text().strip()
+    assert version == "4.0.0"
+    cfg = json.loads((I / "src-tauri/tauri.conf.json").read_text())
+    assert cfg["version"] == version
+    cargo = (I / "src-tauri/Cargo.toml").read_text()
+    assert re.search(r'^version = "%s"' % re.escape(version), cargo, re.M)
+
+
+def test_launcher_closes_itself_after_app_window_and_keeps_process_alive():
+    rs = (I / "src-tauri/src/main.rs").read_text()
+    assert 'get_webview_window("main")' in rs
+    # the close handler must hold the process until YSocial is stopped
+    assert "api.prevent_close()" in rs and "app.exit(0)" in rs
+
+
+def test_launcher_is_translated_and_every_key_is_used():
+    js = (I / "ui/i18n.js").read_text()
+    html = (I / "ui/index.html").read_text()
+    main = (I / "ui/main.js").read_text()
+    it_block = js[js.index("it: {"):]
+    keys = set(re.findall(r'^\s+"([a-z.]+)":', it_block, re.M))
+    used = set(re.findall(r'data-i18n="([a-z.]+)"', html)) | set(re.findall(r'I\("([a-z.]+)"', main))
+    assert used and used <= keys, used - keys
+    assert keys <= used, keys - used
+    assert 'id="lang"' in html and "i18n.js" in html

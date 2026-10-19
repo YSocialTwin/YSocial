@@ -1,0 +1,90 @@
+// Launcher translations (English is the source language; Italian mirrors the app's it catalog tone).
+// Add a language: add a key to DICT, then to the <select id="lang"> in index.html.
+window.LAUNCHER_I18N = (function () {
+  const DICT = {
+    en: {},
+    it: {
+      "tagline": "Dove il mondo digitale prende vita.",
+      "setup.title": "Prepariamo tutto",
+      "setup.sub": "Un clic installa tutto ciò che serve a YSocial. I tuoi dati restano nella cartella qui sotto.",
+      "setup.home": "Dove conservare i dati",
+      "setup.tox.title": "Rilevamento della tossicità",
+      "setup.tox.opt": "(facoltativo)",
+      "setup.tox.desc": "Serve solo se i tuoi esperimenti valutano contenuti tossici. È un download molto grande (PyTorch e un modello linguistico, diversi GB di spazio su disco). Puoi saltarlo e aggiungerlo più tardi.",
+      "setup.install": "Installa YSocial",
+      "setup.foot": "Server LLM e PostgreSQL non sono inclusi; per impostazione predefinita si usa SQLite.<br>Le immagini del profilo vengono scaricate al primo avvio.",
+      "inst.title": "Preparazione in corso…",
+      "inst.sub": "La prima volta richiede qualche minuto. Puoi lasciare aperta questa finestra.",
+      "inst.python": "Preparazione di Python",
+      "inst.env": "Creazione di un ambiente privato",
+      "inst.app": "Installazione di YSocial",
+      "ready.title": "Pronto quando vuoi",
+      "ready.sub": "YSocial è installato. Avvialo quando vuoi.",
+      "ready.title.run": "YSocial è in esecuzione",
+      "ready.sub.run": "Puoi chiudere questa finestra: YSocial resta attivo finché non lo fermi.",
+      "status.stopped": "Fermo",
+      "status.running": "In esecuzione su http://{host}:{port}",
+      "btn.start": "Avvia YSocial",
+      "btn.starting": "Avvio in corso… può richiedere un minuto",
+      "btn.running": "YSocial è in esecuzione",
+      "btn.stop": "Ferma YSocial",
+      "ready.data": "Dati:",
+      "ready.reinstall": "Reinstalla",
+      "ready.uninstall": "Disinstalla",
+      "un.title": "Disinstallare YSocial?",
+      "un.sub": "Il programma viene rimosso da questo computer. Esperimenti e dati restano, a meno che tu non spunti la casella qui sotto.",
+      "un.data": "Elimina anche i miei dati",
+      "un.data.desc": "Esperimenti, database e impostazioni nella cartella dei dati. L'operazione non è reversibile.",
+      "un.confirm": "Disinstalla",
+      "un.cancel": "Annulla",
+      "more": "Altre opzioni",
+      "opt.window": "Apri in una finestra dedicata",
+      "opt.window.desc": "Deseleziona per usare il browser predefinito.",
+      "opt.host": "Indirizzo",
+      "opt.port": "Porta",
+      "opt.hostnote": "Usa <code>0.0.0.0</code> come indirizzo solo se vuoi che altri computer della rete raggiungano YSocial.",
+      "opt.db": "Database",
+      "opt.db.sqlite": "SQLite (predefinito)",
+      "opt.llm": "Server LLM (ollama, vllm o host:porta; vuoto = disattivato)",
+      "opt.nonotebook": "Non avviare il server Jupyter notebook",
+      "opt.dev": "Modalità sviluppatore",
+      "opt.dev.desc": "Mostra anche i repository di plugin privati.",
+      "opt.debug": "Modalità debug",
+      "opt.extra": "Argomenti extra da riga di comando",
+      "opt.lang": "Lingua",
+      "tech": "Dettagli tecnici",
+      "err.space": "Spazio su disco insufficiente. Libera spazio e riprova.",
+      "err.net": "Impossibile scaricare quanto necessario. Controlla la connessione a internet e riprova.",
+      "err.port": "Quella porta è già in uso. Sceglierne un'altra in Altre opzioni.",
+      "err.other": "Qualcosa è andato storto: {msg} (vedi Dettagli tecnici qui sotto)."
+    }
+  };
+  const pick = () => {
+    let saved = null;
+    try { saved = localStorage.getItem("ysocial.lang"); } catch (_) {}
+    const l = saved && saved !== "auto" ? saved : (navigator.language || "en").slice(0, 2).toLowerCase();
+    return DICT[l] ? l : "en";
+  };
+  let lang = pick();
+  const t = (key, fallback, vars) => {
+    let s = (DICT[lang] && DICT[lang][key]) || fallback;
+    if (vars) for (const k in vars) s = s.replace("{" + k + "}", vars[k]);
+    return s;
+  };
+  const apply = () => {
+    document.documentElement.lang = lang;
+    document.querySelectorAll("[data-i18n]").forEach((el) => {
+      if (!el.dataset.en) el.dataset.en = el.innerHTML;
+      el.innerHTML = t(el.dataset.i18n, el.dataset.en);
+    });
+  };
+  return {
+    t, apply,
+    get lang() { return lang; },
+    set: (l) => {
+      try { localStorage.setItem("ysocial.lang", l); } catch (_) {}
+      lang = pick(); apply();
+    },
+    saved: () => { try { return localStorage.getItem("ysocial.lang") || "auto"; } catch (_) { return "auto"; } },
+  };
+})();

@@ -1,6 +1,7 @@
 const { invoke } = window.__TAURI__.core;
 const { listen } = window.__TAURI__.event;
 const $ = (id) => document.getElementById(id);
+const I = (k, fb, v) => window.LAUNCHER_I18N.t(k, fb, v);
 const log = (line) => { $("log").textContent += line + "\n"; $("log").scrollTop = 1e9; };
 
 // ---- friendly UI state -------------------------------------------------
@@ -17,10 +18,10 @@ const setError = (msg) => { const e = $("err"); e.textContent = msg || ""; e.cla
 const busy = (btn, on) => { btn.classList.toggle("loading", on); btn.disabled = on; };
 const friendly = (err) => {
   const m = String(err);
-  if (/ENOSPC|No space/i.test(m)) return "There is not enough free disk space. Free some space and try again.";
-  if (/network|resolve|connect|timed out|dns/i.test(m)) return "Could not download what is needed. Check your internet connection and try again.";
-  if (/EADDRINUSE|address already in use|port/i.test(m)) return "That port is already in use. Pick another one under More options.";
-  return "Something went wrong: " + m + " (see Technical details below).";
+  if (/ENOSPC|No space/i.test(m)) return I("err.space","There is not enough free disk space. Free some space and try again.");
+  if (/network|resolve|connect|timed out|dns/i.test(m)) return I("err.net","Could not download what is needed. Check your internet connection and try again.");
+  if (/EADDRINUSE|address already in use|port/i.test(m)) return I("err.port","That port is already in use. Pick another one under More options.");
+  return I("err.other", "Something went wrong: {msg} (see Technical details below).", { msg: m });
 };
 function markStep(label) {
   const key = STEPS[label];
@@ -91,15 +92,19 @@ async function refresh() {
   $("launch").disabled = running;
   $("stop").disabled = !running;
   $("status").className = "yl-status" + (running ? " on" : "");
-  $("status").textContent = running ? "Running at http://" + o.host + ":" + o.port : "Stopped";
-  $("launch-t").textContent = running ? "YSocial is running" : "Start YSocial";
-  $("ready-title").textContent = running ? "YSocial is running" : "Ready when you are";
-  $("ready-sub").textContent = running ? "Close this window any time; YSocial keeps running until you stop it."
-                                       : "YSocial is installed. Start it whenever you like.";
+  $("status").textContent = running ? I("status.running", "Running at http://{host}:{port}", { host: o.host, port: o.port }) : I("status.stopped", "Stopped");
+  $("launch-t").textContent = running ? I("btn.running", "YSocial is running") : I("btn.start", "Start YSocial");
+  $("ready-title").textContent = running ? I("ready.title.run", "YSocial is running") : I("ready.title", "Ready when you are");
+  $("ready-sub").textContent = running ? I("ready.sub.run", "Close this window any time; YSocial keeps running until you stop it.")
+                                       : I("ready.sub", "YSocial is installed. Start it whenever you like.");
   show("ready");
 }
 
 async function init() {
+  const L = window.LAUNCHER_I18N;
+  $("lang").value = L.saved();
+  L.apply();
+  $("lang").addEventListener("change", async () => { L.set($("lang").value); await refresh(); });
   $("home").value = await invoke("default_home");
   await loadOptions();
   await listen("progress", (e) => {
@@ -144,7 +149,7 @@ async function init() {
   $("launch").addEventListener("click", async () => {
     setError("");
     busy($("launch"), true);
-    $("launch-t").textContent = "Starting… this can take a minute";
+    $("launch-t").textContent = I("btn.starting", "Starting… this can take a minute");
     await saveOptions();
     try { log("Opened " + (await invoke("launch", { home: $("home").value, opts: readOptions() }))); }
     catch (err) { log("ERROR: " + err); setError(friendly(err)); }
