@@ -5,10 +5,10 @@ window.LAUNCHER_I18N = (function () {
     en: {},
     it: {
       "setup.title": "Prepariamo tutto",
-      "setup.sub": "Un clic installa tutto ciò che serve a YSocial. I tuoi dati restano nella cartella qui sotto. Il rilevamento della tossicità si può aggiungere dopo.",
+      "setup.sub": "Un social network digitale popolato da agenti intelligenti: osserva, sperimenta e scopri come nascono le conversazioni.",
       "setup.home": "Dove conservare i dati",
       "setup.install": "Installa YSocial",
-      "setup.foot": "Server LLM e PostgreSQL non sono inclusi; si usa SQLite. Le immagini del profilo vengono scaricate al primo avvio.",
+      "setup.adv": "Opzioni avanzate",
       "inst.title": "Preparazione in corso…",
       "inst.sub": "La prima volta richiede qualche minuto. Puoi lasciare aperta questa finestra.",
       "inst.python": "Preparazione di Python",

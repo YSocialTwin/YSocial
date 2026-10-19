@@ -23,15 +23,17 @@
   <!-- 1. First start: set up -->
   <section class="view" id="v-setup">
     <h2 data-i18n="setup.title">Let's get you set up</h2>
-    <p class="yl-sub" data-i18n="setup.sub">One click installs everything YSocial needs. Your data stays in the folder below. Toxicity detection can be added afterwards.</p>
-
-    <div class="yl-field">
-      <input id="home" type="text" placeholder=" " spellcheck="false">
-      <label for="home" data-i18n="setup.home">Where to keep your data</label>
-    </div>
+    <p class="yl-sub" data-i18n="setup.sub">A digital social network populated by intelligent agents: observe, experiment, and see how conversations take shape.</p>
 
     <button class="yl-btn" id="install" type="button"><span class="yl-spin"></span><span data-i18n="setup.install">Install YSocial</span></button>
-    <p class="yl-foot" data-i18n="setup.foot">LLM servers and PostgreSQL are not included; SQLite is used by default. Profile pictures are downloaded the first time you start.</p>
+
+    <details class="yl-adv" id="setup-advanced">
+      <summary data-i18n="setup.adv">Advanced options</summary>
+      <div class="yl-field">
+        <input id="home" type="text" placeholder=" " spellcheck="false">
+        <label for="home" data-i18n="setup.home">Where to keep your data</label>
+      </div>
+    </details>
   </section>
 
   <!-- 2. Installing / updating -->
