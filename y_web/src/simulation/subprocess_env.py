@@ -17,6 +17,26 @@ _STRIP_ENV_KEYS = (
 )
 
 
+# Ray >= 2.5x enables token authentication by default and keeps the token in
+# ``~/.ray/auth_token``. YSocial runs the Ray cluster, the HPC server/client and
+# the web process on the same machine (loopback only), so every process must
+# agree on one mode; a mismatch ends in ``InvalidAuthToken`` and idle agents.
+RAY_AUTH_ENV = {"RAY_AUTH_MODE": "disabled"}
+
+
+def apply_ray_auth_defaults(env=None):
+    """Disable Ray token auth unless the user chose a mode explicitly."""
+    target = os.environ if env is None else env
+    for key, value in RAY_AUTH_ENV.items():
+        if not target.get("RAY_AUTH_MODE") and not target.get("RAY_AUTH_TOKEN"):
+            target[key] = value
+    return target
+
+
+# the web process itself talks to Ray too (stop/interview endpoints)
+apply_ray_auth_defaults()
+
+
 def agent_memory_source_dir() -> Optional[str]:
     """Return the ``src`` folder of the Agent Memory plugin when it is installed.
 
@@ -45,6 +65,7 @@ def build_subprocess_env(extra: Optional[Dict[str, str]] = None) -> Dict[str, st
     for key in _STRIP_ENV_KEYS:
         env.pop(key, None)
 
+    apply_ray_auth_defaults(env)
     env.update(get_model_cache_env())
     # every child process resolves the same data folder as the parent
     env["YSOCIAL_HOME"] = get_writable_path()
