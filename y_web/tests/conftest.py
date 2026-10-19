@@ -288,3 +288,13 @@ def auth(client):
             return self._client.get("/logout")
 
     return AuthActions(client)
+
+
+@pytest.fixture(autouse=True)
+def _clear_external_runtime_remote_cache():
+    """The plugin pages cache GitHub lookups for a few minutes; tests must not share them."""
+    from y_web.src.external_runtime import manager
+
+    manager.clear_remote_cache()
+    yield
+    manager.clear_remote_cache()
