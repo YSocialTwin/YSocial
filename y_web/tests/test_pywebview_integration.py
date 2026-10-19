@@ -94,6 +94,8 @@ class TestDesktopModeFunction(unittest.TestCase):
         self.assertIn("window_title", params)
         self.assertIn("window_width", params)
         self.assertIn("window_height", params)
+
+
 class TestRequirementsTxt(unittest.TestCase):
     """Test that requirements include pywebview."""
 

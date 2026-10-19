@@ -990,10 +990,7 @@ def get_runtime_status(
             - {""}
         )
     release_managed = (
-        exists
-        and not git_managed
-        and archive_marker is None
-        and not path.is_symlink()
+        exists and not git_managed and archive_marker is None and not path.is_symlink()
     )
     installed_release_tag = None
     release_update_available = None
