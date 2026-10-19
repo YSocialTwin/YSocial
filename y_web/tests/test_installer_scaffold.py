@@ -242,13 +242,11 @@ def test_app_window_takes_focus_after_launcher_closes():
     assert ".focused(true)" in rs and rs.count("set_focus()") >= 3
 
 
-def test_app_window_nudges_page_on_resize():
+def test_app_window_handles_close_without_resize_nudge():
     rs = (I / "src-tauri/src/main.rs").read_text()
-    assert (
-        "tauri::WindowEvent::Resized" in rs
-        and "RESIZE_NUDGE" in rs
-        and "CloseRequested" in rs
-    )
+    assert "CloseRequested" in rs
+    # the resize nudge was removed on purpose (1e2c4a3e)
+    assert "RESIZE_NUDGE" not in rs and "WindowEvent::Resized" not in rs
 
 
 def test_close_shows_feedback_and_ignores_repeated_clicks():
