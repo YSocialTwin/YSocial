@@ -195,3 +195,8 @@ def test_start_options_are_shown_only_after_install():
 def test_app_window_takes_focus_after_launcher_closes():
     rs = (I / "src-tauri/src/main.rs").read_text()
     assert ".focused(true)" in rs and rs.count("set_focus()") >= 3
+
+
+def test_app_window_nudges_page_on_resize():
+    rs = (I / "src-tauri/src/main.rs").read_text()
+    assert "tauri::WindowEvent::Resized" in rs and "RESIZE_NUDGE" in rs and "CloseRequested" in rs

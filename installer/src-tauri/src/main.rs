@@ -630,6 +630,21 @@ const LINK_SCRIPT: &str = r#"
 })();
 "#;
 
+/// Sent to the page after every window resize: fires `resize` and forces a layout pass.
+const RESIZE_NUDGE: &str = r#"
+(function () {
+  if (window.__ysResizeTimer) return;
+  window.__ysResizeTimer = setTimeout(function () {
+    window.__ysResizeTimer = null;
+    window.dispatchEvent(new Event('resize'));
+    var d = document.documentElement;
+    d.style.transform = 'translateZ(0)';
+    void d.offsetHeight;
+    d.style.transform = '';
+  }, 50);
+})();
+"#;
+
 /// Open YSocial in a native window without browser chrome (address bar, tabs).
 /// Embedded third-party frames (e.g. payment widgets) load normally; clicks to other
 /// sites and new-window requests open in the system browser.
@@ -660,8 +675,15 @@ fn open_app_window(app: &AppHandle, url: &str, home: PathBuf, host: String, port
     // Closing the application window ends YSocial and everything it started
     // (only if this launcher started it: it needs the pid file).
     let handle = app.clone();
-    window.on_window_event(move |event| {
-        if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+    window.on_window_event(move |event| match event {
+        // Best effort for a macOS WebKit quirk: after the window is resized the page can keep its
+        // old layout until the next navigation. Tell the page its viewport changed.
+        tauri::WindowEvent::Resized(_) => {
+            if let Some(w) = handle.get_webview_window(APP_WINDOW) {
+                let _ = w.eval(RESIZE_NUDGE);
+            }
+        }
+        tauri::WindowEvent::CloseRequested { api, .. } => {
             // Keep the window (and the process) alive until YSocial has stopped:
             // the launcher window may already be gone, so this process must not exit early.
             api.prevent_close();
@@ -678,6 +700,7 @@ fn open_app_window(app: &AppHandle, url: &str, home: PathBuf, host: String, port
                 }
             });
         }
+        _ => {}
     });
     Ok(())
 }
