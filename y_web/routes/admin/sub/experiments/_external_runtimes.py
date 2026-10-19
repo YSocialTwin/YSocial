@@ -38,7 +38,6 @@ from y_web.src.external_runtime import (
 )
 from y_web.src.external_runtime.frontend_plugins import validate_frontend_suite
 from y_web.src.external_runtime.manager import clear_remote_cache
-from y_web.src.external_runtime.registry import refresh_public_repos
 from y_web.src.models import Admin_users, Exps
 from y_web.src.system.miscellanea import check_privileges
 
@@ -250,7 +249,6 @@ def _visible_runtime_groups(
     admin_user, github_token: str | None, *, include_remote_metadata: bool
 ):
     plugins_index = load_plugins_index(refresh=True)
-    refresh_public_repos()  # repositories that turned public become visible
     all_groups = get_grouped_runtime_status(
         github_token=github_token, include_remote_metadata=include_remote_metadata
     )
@@ -366,7 +364,6 @@ def external_runtime_detail(entry_key: str):
     )
     github_token = _session_github_token()
     plugins_index = load_plugins_index(refresh=True)
-    refresh_public_repos()
     repos = []
     specs = {}
     for key in member_keys:

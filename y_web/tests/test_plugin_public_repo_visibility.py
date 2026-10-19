@@ -56,3 +56,12 @@ def test_repo_made_private_again_is_hidden(isolated, monkeypatch):
     monkeypatch.setattr(registry, "_probe_public", lambda repo, timeout: False)
     registry.refresh_public_repos(force=True)
     assert not registry.runtime_visible_to_user(spec, _Admin())
+
+
+def test_public_check_runs_at_startup_only():
+    import pathlib
+
+    root = pathlib.Path(__file__).resolve().parents[2]
+    routes = (root / "y_web/routes/admin/sub/experiments/_external_runtimes.py").read_text()
+    assert "refresh_public_repos" not in routes
+    assert "refresh_public_repos(force=True)" in (root / "y_social.py").read_text()

@@ -12,6 +12,7 @@ use std::io::{BufRead, BufReader};
 use std::net::TcpStream;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 use serde::Deserialize;
 use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder};
@@ -645,6 +646,34 @@ const RESIZE_NUDGE: &str = r#"
 })();
 "#;
 
+/// Shown over the page as soon as the app window is asked to close: stopping the
+/// services takes a while and the window must not look frozen meanwhile.
+const CLOSING_OVERLAY: &str = r#"
+(function () {
+  if (document.getElementById('ys-closing')) return;
+  var it = /^it/i.test(document.documentElement.lang || navigator.language || '');
+  var title = it ? 'Chiusura di YSocial in corso…' : 'Closing YSocial…';
+  var sub = it ? 'Sto arrestando i servizi in modo ordinato. La finestra si chiuderà da sola, non serve fare nulla.'
+               : 'Shutting the services down cleanly. This window will close by itself, no action needed.';
+  var st = document.createElement('style');
+  st.textContent = '@keyframes ys-spin{to{transform:rotate(360deg)}}' +
+    '#ys-closing{position:fixed;inset:0;z-index:2147483647;display:flex;flex-direction:column;align-items:center;' +
+    'justify-content:center;gap:14px;padding:24px;text-align:center;background:rgba(14,20,34,.88);color:#fff;' +
+    'font:500 17px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;backdrop-filter:blur(6px);' +
+    'cursor:progress}#ys-closing small{display:block;max-width:420px;font:400 13px/1.5 inherit;opacity:.75}' +
+    '#ys-closing i{width:34px;height:34px;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;' +
+    'border-radius:50%;animation:ys-spin .9s linear infinite}';
+  var d = document.createElement('div');
+  d.id = 'ys-closing';
+  d.innerHTML = '<i></i><div>' + title + '<small>' + sub + '</small></div>';
+  (document.head || document.documentElement).appendChild(st);
+  (document.body || document.documentElement).appendChild(d);
+})();
+"#;
+
+/// Set while the app window is shutting down, so repeated close clicks do nothing.
+static CLOSING: AtomicBool = AtomicBool::new(false);
+
 /// Open YSocial in a native window without browser chrome (address bar, tabs).
 /// Embedded third-party frames (e.g. payment widgets) load normally; clicks to other
 /// sites and new-window requests open in the system browser.
@@ -687,6 +716,12 @@ fn open_app_window(app: &AppHandle, url: &str, home: PathBuf, host: String, port
             // Keep the window (and the process) alive until YSocial has stopped:
             // the launcher window may already be gone, so this process must not exit early.
             api.prevent_close();
+            if CLOSING.swap(true, Ordering::SeqCst) {
+                return; // already shutting down
+            }
+            if let Some(w) = handle.get_webview_window(APP_WINDOW) {
+                let _ = w.eval(CLOSING_OVERLAY);
+            }
             let (app, home, host) = (handle.clone(), home.clone(), host.clone());
             std::thread::spawn(move || {
                 if read_pid(&home).is_some() {

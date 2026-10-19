@@ -126,6 +126,21 @@ def start_app(
             "Development mode enabled: private plugin repositories are listable/installable."
         )
 
+    # Once per start: find out which "private" plugin repositories became public
+    # (background, never delays start-up; offline keeps the last known state).
+    try:
+        import threading
+
+        from y_web.src.external_runtime.registry import refresh_public_repos
+
+        threading.Thread(
+            target=lambda: refresh_public_repos(force=True),
+            name="plugin-visibility-check",
+            daemon=True,
+        ).start()
+    except Exception:
+        pass
+
     if db_type.lower() == "sqlite":
         app.run(debug=debug, host=host, port=port, threaded=False)
     else:

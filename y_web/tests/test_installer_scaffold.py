@@ -200,3 +200,11 @@ def test_app_window_takes_focus_after_launcher_closes():
 def test_app_window_nudges_page_on_resize():
     rs = (I / "src-tauri/src/main.rs").read_text()
     assert "tauri::WindowEvent::Resized" in rs and "RESIZE_NUDGE" in rs and "CloseRequested" in rs
+
+
+def test_close_shows_feedback_and_ignores_repeated_clicks():
+    rs = (I / "src-tauri/src/main.rs").read_text()
+    assert "CLOSING_OVERLAY" in rs and "ys-closing" in rs
+    assert "CLOSING.swap(true" in rs
+    # the overlay goes up before the services are stopped
+    assert rs.index("w.eval(CLOSING_OVERLAY)") < rs.index("stop_service(&app, &home, &host, port, false)")
