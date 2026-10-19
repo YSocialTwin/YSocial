@@ -316,25 +316,24 @@ Each experiment gets its own isolated Jupyter Lab instance with:
 
 Docker is a platform for developing, shipping, and running applications in containers.
 
-Don't want to deal with dependencies? `Y Social` provides a **Dockerized setup** that includes:
-- **[Ollama](https://ollama.com/)** for running LLMs
-- **Y Server / Y Client** for managing simulations
-- **Y Social** for the web interface
+Don't want to deal with dependencies? `Y Social` provides a **Dockerized setup** with the web interface, the admin panel and the simulation runtimes already configured. The LLM server runs outside the container.
 
-### 📦 **Building & Running the Docker Container**
+### 📦 **Running the Docker image**
+
+A ready image is published for every release on the GitHub Container Registry:
 ```bash
-docker compose -f deployment/docker/compose/docker-compose.yml build
-docker compose -f deployment/docker/compose/docker-compose.yml up
+docker run -d --name ysocial -p 5000:5000 -v ysocial-data:/data ghcr.io/ysocialtwin/ysocial:latest
+```
+Then open `http://localhost:5000`. The volume keeps the data folder (`/data`) across restarts and upgrades.
+
+To build from the repository instead (SQLite, or with PostgreSQL):
+```bash
+docker compose -f docker/compose.yml up                       # YSocial + SQLite
+docker compose -f docker/compose.yml --profile postgres up    # + PostgreSQL
+WITH_TOXICITY=1 docker compose -f docker/compose.yml build    # image with toxicity detection
 ```
 
-#### ⚡ **Enable GPU Support (NVIDIA Only)**
-```bash
-docker compose -f deployment/docker/compose/docker-compose.yml -f deployment/docker/compose/docker-compose_gpu.yml build
-docker compose -f deployment/docker/compose/docker-compose.yml -f deployment/docker/compose/docker-compose_gpu.yml up --gpus all
-```
-💡 **Ensure you have the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) installed.**
-
-🔴 **Note:** MacOS does not support GPU pass-through in Docker.
+🔴 **Note:** LLM servers (Ollama, vLLM, any OpenAI-compatible service) are not part of the image: run them outside and set the endpoint in the admin UI (from the container, the host is `http://host.docker.internal:11434` for Ollama). The older compose variants (GPU, reverse proxy) are described in `deployment/docker/README.md`.
 
 ---
 
