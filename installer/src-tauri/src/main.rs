@@ -441,11 +441,20 @@ fn open_app_window(app: &AppHandle, url: &str, home: PathBuf, host: String, port
     // (only if this launcher started it: it needs the pid file).
     let handle = app.clone();
     window.on_window_event(move |event| {
-        if let tauri::WindowEvent::CloseRequested { .. } = event {
+        if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+            // Keep the window (and the process) alive until YSocial has stopped:
+            // the launcher window may already be gone, so this process must not exit early.
+            api.prevent_close();
             let (app, home, host) = (handle.clone(), home.clone(), host.clone());
             std::thread::spawn(move || {
                 if read_pid(&home).is_some() {
                     let _ = stop_service(&app, &home, &host, port, false);
+                }
+                if let Some(w) = app.get_webview_window(APP_WINDOW) {
+                    let _ = w.destroy();
+                }
+                if app.webview_windows().keys().all(|k| k == APP_WINDOW) {
+                    app.exit(0);
                 }
             });
         }
@@ -500,6 +509,10 @@ async fn launch(app: AppHandle, home: String, opts: LaunchOptions) -> Result<Str
             if port_open(&opts.host, opts.port) {
                 if opts.app_window {
                     open_app_window(&app, &url, home.clone(), opts.host.clone(), opts.port)?;
+                    // The app window now owns YSocial's lifetime: the launcher is no longer needed.
+                    if let Some(w) = app.get_webview_window("main") {
+                        let _ = w.close();
+                    }
                 } else {
                     open_in_browser(&url);
                 }
