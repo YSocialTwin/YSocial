@@ -70,7 +70,9 @@ def set_version(root: Path, version: str) -> list[str]:
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("version", help="release version or tag, e.g. v4.1.0")
-    parser.add_argument("--root", default=Path(__file__).resolve().parents[2], type=Path)
+    parser.add_argument(
+        "--root", default=Path(__file__).resolve().parents[2], type=Path
+    )
     args = parser.parse_args(argv)
     try:
         version = normalize(args.version)
