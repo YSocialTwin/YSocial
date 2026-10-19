@@ -11,6 +11,7 @@ nav:
   - Features: features.md
   - Getting Started:
       - Installation Modalities: installation.md
+      - Desktop Installer and Launcher: launcher.md
       - Execution Modalities: running.md
   - Configuration:
       - Configuration Layers: configuration.md
@@ -26,8 +27,7 @@ nav:
       - Conventions: i18n/conventions.md
       - Contributing (IT): i18n/contributing.md
   - Packaging:
-      - PyInstaller Builds: packaging.md
-      - macOS Code Signing: MACOS_CODE_SIGNING.md
+      - Release and Distribution: packaging.md
 
 theme:
   name: material

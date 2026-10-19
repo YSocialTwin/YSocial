@@ -142,24 +142,21 @@ The **Y Social** supports a wide range of simulation configurations and automate
 
 [![os](./y_web/static/assets/images/platform/os_support.png)](https://y-not.social/download)
 
-### 🎯 **Quick Start - Standalone Executable** *(Recommended for non-developers)*
+### 🎯 **Quick Start - Desktop installer** *(Recommended for non-developers)*
 
-If you prefer a click-and-run experience without setting up Python, download our pre-built executables:
+No terminal, no Python needed:
 
-1. **Download** the appropriate package for your OS from the official [download](https://y-not.social/download) page:
+1. **Download** the installer for your system from the [latest release](https://github.com/YSocialTwin/YSocial/releases/latest) or the official [download](https://y-not.social/download) page: macOS (Apple silicon / Intel, `.dmg`), Windows (`.exe`), Linux x64 / arm64 (`.AppImage`, `.deb`).
 
-2. **Install** the application and run the executable:
-   - **Linux:** `./YSocial`
-   - **MacOS**: Install the `.dmg` file, then double-click to run.
-   - **Windows**: Double-click `YSocial.exe`
+2. **Open it and press _Install YSocial_.** The first time it prepares a private Python environment (a few minutes, internet required). Then press **Start**: YSocial opens in its own window. Closing the window stops YSocial.
 
-3. The application will **automatically open** 
+   The installers are not code-signed: on macOS right-click > *Open*; on Windows choose *More info* > *Run anyway*.
 
-4. **Login** with default credentials:
+3. **Login** with the default credentials (change the password afterwards):
    - **Email:** `admin@y-not.social`
    - **Password:** `admin`
 
-📘 The executables include all dependencies and support command-line options (run with `--help` for details).
+📘 Updates, uninstall, toxicity detection and troubleshooting: [docs/launcher.md](docs/launcher.md). Prefer `pip`? `pip install ysocial-<version>-py3-none-any.whl -c constraints.txt` (from the release page), then run `ysocial`. Docker: `docker run -p 5000:5000 -v ysocial-data:/data ghcr.io/ysocialtwin/ysocial:latest`.
 
 ---
 
@@ -360,7 +357,7 @@ docker compose -f deployment/docker/compose/docker-compose.yml -f deployment/doc
 
 ## 📄 Further Information
 - **Project Website:** [y-not.social](https://ysocialtwin.github.io/)
-- **Documentation:** [docs/](docs/index.md) (installation, running, configuration, user guide, external runtime management, packaging, [adding a language](docs/i18n/adding-a-language.md)); build the site with `mkdocs serve`
+- **Documentation:** [docs/](docs/index.md) (installation, desktop installer, running, configuration, user guide, external runtime management, release and distribution, [adding a language](docs/i18n/adding-a-language.md)); build the site with `mkdocs serve`
 - **Research Paper:** [Y Social: A Digital Twin for Social Simulations](https://journals.sagepub.com/doi/full/10.1177/20539517261431576)
 
 ---

@@ -8,13 +8,15 @@ Important top-level directories and files:
 |---|---|
 | `y_web/` | main application package |
 | `external/` | external runtime repositories and backends |
-| `packaging/` | packaging and distribution scripts |
+| `installer/` | desktop installer/launcher (Tauri app, UI, Rust backend) |
+| `scripts/packaging/` | packaging helpers (wheel check, asset sync, avatars archive) |
+| `docker/` | Dockerfile, compose file, entrypoint |
 | `docs/` | documentation |
 | `data_schema/` | schema and migrations |
 | `config_files/` | runtime configuration assets |
 | `y_social.py` | main browser-mode entry point |
-| `y_social_launcher.py` | desktop-first launcher and PyInstaller entry |
-| `y_social.spec` | PyInstaller spec |
+| `y_social_launcher.py` | optional desktop window (pywebview) when running from a checkout |
+| `pyproject.toml` | package definition; installs the `ysocial` command |
 
 ## Inside `y_web/`
 
@@ -74,17 +76,12 @@ The dashboard DB and per-experiment directories serve different roles:
 
 This directory holds backend/runtime repositories used by YSocial when present. Operationally, YSocial adapts available experiment options based on which required external runtimes are installed.
 
-## Packaging directory
+## Packaging
 
-- `packaging/`
-
-Contains:
-
-- executable build docs
-- macOS DMG packaging scripts
-- entitlements
-- uninstall scripts
-- user-facing packaged-app readme
+- `installer/`: the desktop installer/launcher (static UI in `ui/`, Rust backend in `src-tauri/`)
+- `scripts/packaging/`: wheel content check, installer asset sync, avatars archive
+- `docker/`: image and compose file
+- `.github/workflows/release-packaging.yml`: builds wheel, installers and image on a `v*` tag
 
 ## Tests
 
@@ -97,7 +94,7 @@ The test suite is extensive and covers runtime behavior, packaging, template con
 If you are trying to answer a project question, use this order:
 
 1. check `README.md`
-2. check `docs/` and `packaging/`
+2. check `docs/` and `installer/`
 3. inspect `y_social.py` and `y_social_launcher.py`
 4. inspect route handlers under `y_web/routes/`
 5. inspect service logic under `y_web/src/`

@@ -12,7 +12,7 @@ YSocial configuration is layered. That is the most important thing to understand
 
 ## 1. Application launch parameters
 
-These are the flags passed to `y_social.py` or `y_social_launcher.py`.
+These are the flags passed to `ysocial` (or `y_social.py` / `y_social_launcher.py` from a checkout).
 
 ### Core parameters
 

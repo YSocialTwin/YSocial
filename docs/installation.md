@@ -2,36 +2,50 @@
 
 ## Installation modalities
 
-YSocial supports three practical installation paths:
+YSocial can be installed in four ways. Pick the first one unless you have a reason not to.
 
-1. Standalone executable
-   Best for end users who do not want to manage Python dependencies.
+1. **Desktop installer** (macOS, Windows, Linux): a small graphical app that sets everything up for you and starts YSocial in its own window. No terminal, no Python knowledge. See [Desktop installer and launcher](launcher.md).
+2. **Python package** (`pip`/`uv`): the same `ysocial` command the installer uses, for people who manage their own environments or servers.
+3. **From source**: for development and local customization.
+4. **Docker**: for controlled, server-style deployments.
 
-2. Installation from source
-   Best for development, local customization, and notebook-enabled workflows.
+In every case YSocial keeps its data in one folder (`YSOCIAL_HOME`, see [Where the data lives](#where-the-data-lives)) and plugins are installed later from the admin panel, not bundled.
 
-3. Container-based deployment
-   Best for controlled server-style environments.
+## Option 1: Desktop installer
 
-## Option 1: Standalone executable
+Download the installer for your system from the [latest release](https://github.com/YSocialTwin/YSocial/releases/latest) (or from [y-not.social/download](https://y-not.social/download)):
 
-Pre-built executables are the simplest distribution form.
+| System | File |
+|---|---|
+| macOS, Apple silicon | `YSocial-<version>-macos-arm64.dmg` |
+| macOS, Intel | `YSocial-<version>-macos-x64.dmg` |
+| Windows 10/11 | `YSocial-<version>-windows-x64.exe` |
+| Linux x86-64 | `YSocial-<version>-linux-x64.AppImage` or `.deb` |
+| Linux arm64 | `YSocial-<version>-linux-arm64.AppImage` or `.deb` |
 
-Typical flow:
+Open it, press **Install YSocial** and wait a few minutes (the first time it downloads and prepares a private Python 3.12 environment). Then press **Start**. The installers are **not code-signed**, so the first launch shows a security warning: on macOS right-click the app and choose *Open* (or run `xattr -dr com.apple.quarantine /Applications/YSocial.app`), on Windows choose *More info* and then *Run anyway*. Windows needs the WebView2 runtime (already present on Windows 10/11); Linux needs WebKitGTK 4.1.
 
-1. Download the package for your operating system.
-2. Install or unpack it.
-3. Start YSocial.
-4. Log in with your configured credentials.
+Everything about using, updating and removing it is in [Desktop installer and launcher](launcher.md).
 
-Notes:
+## Option 2: Python package
 
-- Desktop mode is the normal default in packaged builds.
-- Browser mode remains available through command-line flags.
-- Packaged builds bundle most Python dependencies and static assets.
-- Notebook support is intentionally constrained in PyInstaller builds.
+Requires Python 3.12 or newer. Download `ysocial-<version>-py3-none-any.whl` and `constraints.txt` from the same [release](https://github.com/YSocialTwin/YSocial/releases/latest), then:
 
-## Option 2: Installation from source
+```bash
+python3.12 -m venv ysocial-env && source ysocial-env/bin/activate     # Windows: ysocial-env\Scripts\activate
+pip install ysocial-<version>-py3-none-any.whl -c constraints.txt
+ysocial --host localhost --port 8080
+```
+
+`constraints.txt` pins the dependency versions the release was tested with; leave it out only if you want newer ones. Useful extras:
+
+```bash
+pip install "ysocial-<version>-py3-none-any.whl[toxicity]" -c constraints.txt   # toxicity detection (downloads PyTorch, large)
+```
+
+Open `http://localhost:8080` and log in with the default administrator (`admin@y-not.social` / `admin`; change it after the first login). To update, install the newer wheel over the old one: the data folder is kept and the database is migrated at the next start.
+
+## Option 3: Installation from source
 
 ### Prerequisites
 
@@ -75,28 +89,23 @@ Desktop mode via launcher:
 python y_social_launcher.py --llm-backend ollama
 ```
 
-## Option 3: Container-based deployment
+## Option 4: Docker
 
-The repository includes Docker and docker-compose assets.
+A ready image is published for every release on the GitHub Container Registry:
 
-Relevant files:
+```bash
+docker run -d --name ysocial -p 5000:5000 -v ysocial-data:/data ghcr.io/ysocialtwin/ysocial:latest
+```
 
-- `Dockerfile`
-- `deployment/docker/compose/docker-compose.yml`
-- `deployment/docker/compose/docker-compose-postgresql.yml`
-- `deployment/docker/compose/docker-compose_gpu.yml`
-- `deployment/docker/compose/docker-compose-postgresql_gpu.yml`
-- `deployment/docker/compose/docker-compose_reverse.yml`
+Then open `http://localhost:5000`. The volume keeps the data folder (`/data`) across restarts and upgrades. To start from the repository instead (SQLite, or with PostgreSQL):
 
-Use containers when you want:
+```bash
+docker compose -f docker/compose.yml up                       # YSocial + SQLite
+docker compose -f docker/compose.yml --profile postgres up    # + PostgreSQL
+WITH_TOXICITY=1 docker compose -f docker/compose.yml build    # image with toxicity detection
+```
 
-- deployment guidance organized under `deployment/docker/README.md`
-- advanced reverse-proxy and GPU assets documented under `deployment/docker/advanced/README.md`
-
-- repeatable local deployment
-- isolated dependency management
-- a PostgreSQL-backed runtime
-- a server-style installation instead of a desktop workflow
+LLM servers (Ollama, vLLM, any OpenAI-compatible service) are **not** part of the image: run them outside and set the endpoint in the admin UI (from the container, the host is `http://host.docker.internal:11434` for Ollama). Extra arguments after the image name go to `ysocial` (for example `--db postgresql`). The older compose variants (GPU, reverse proxy) are still described in `deployment/docker/README.md`.
 
 ## Runtime dependencies by concern
 
@@ -126,16 +135,22 @@ Some features depend on optional external services or packages:
 | HPC execution | Ray, Redis, backend-specific runtime stack |
 | PostgreSQL | a running PostgreSQL server and connection settings |
 
-## Persistence and working directory
+## Where the data lives
 
-YSocial writes runtime data into the working directory or application data folders depending on execution mode.
+All state (databases, experiments, installed plugins, logs) is stored under one folder, `YSOCIAL_HOME`. It defaults to:
 
-Important locations include:
+| System | Default folder |
+|---|---|
+| macOS | `~/Library/Application Support/YSocial` |
+| Windows | `%USERPROFILE%\AppData\Local\YSocial` |
+| Linux | `~/.ysocial` |
+| Docker | `/data` |
 
-- `y_web/db/`
-- `y_web/experiments/`
-- `config_files/`
-- `logs/` when created by runtime scripts
-- notebook and export directories created during execution
+Set the `YSOCIAL_HOME` environment variable (or, in the desktop installer, *Advanced options > Where to keep your data*) to use another place. Inside it:
 
-If you want clean separation between code and runtime state, launch the application from a dedicated data directory when using packaged executables.
+- `y_web/db/` and `y_web/experiments/`: dashboard database and one folder per experiment
+- `external/`: installed plugins
+- `runtime/`: the private Python environment (desktop installer only)
+- `logs/launch.log` and `launcher.json`: launcher log and settings (desktop installer only)
+
+Downloaded toxicity models are cached outside it, in `~/.cache/ysocial_models` (change with `YSOCIAL_MODEL_CACHE_DIR`). Back up the data folder to back up YSocial; deleting it resets the installation.

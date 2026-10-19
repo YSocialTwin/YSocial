@@ -2,12 +2,13 @@
 
 ## Main entry points
 
-YSocial exposes two operator-facing entry points.
+YSocial exposes three operator-facing entry points.
 
 | Entry point | Purpose |
 |---|---|
-| `python y_social.py` | direct browser-oriented application start |
-| `python y_social_launcher.py` | desktop-first launcher and packaged-app entry |
+| `ysocial` | command installed by the Python package, desktop installer and Docker; same options as `y_social.py` |
+| `python y_social.py` | direct browser-oriented application start from a checkout |
+| `python y_social_launcher.py` | optional pywebview desktop window from a checkout |
 
 ## `y_social.py`
 

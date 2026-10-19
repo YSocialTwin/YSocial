@@ -1,6 +1,5 @@
 """Static guards for the packaging and distribution files (no build is run)."""
 
-import ast
 import pathlib
 import re
 
@@ -10,47 +9,7 @@ import yaml
 pytestmark = pytest.mark.unit
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-SPEC = (ROOT / "y_social.spec").read_text(encoding="utf-8")
 COMPOSE = ROOT / "deployment" / "docker" / "compose"
-
-
-def test_spec_is_valid_python():
-    ast.parse(SPEC)
-
-
-def test_spec_ships_files_loaded_from_disk():
-    # Alembic lists the revision files of versions/ on disk; translations and prompt files are read as files.
-    assert '"y_web", "alembic"' in SPEC
-    assert '"y_web", "translations"' in SPEC
-    assert "prompts_internal" in SPEC
-    assert '"data_schema"' in SPEC
-
-
-def test_spec_data_sources_exist():
-    for source in re.findall(
-        r'os\.path\.join\(basedir, ((?:"[^"]+"(?:, )?)+)\), "', SPEC
-    ):
-        parts = re.findall(r'"([^"]+)"', source)
-        if parts[0] in {"config_files", "images", "db"}:  # created or optional
-            continue
-        assert (ROOT.joinpath(*parts)).exists(), "/".join(parts)
-
-
-def test_spec_names_real_modules():
-    hidden = ast.literal_eval(
-        re.search(r"hidden_imports = (\[.*?\n\])", SPEC, re.S).group(1)
-    )
-    assert "PIL" in hidden and "pillow" not in hidden
-    assert "pyautogen" not in hidden  # not a dependency
-
-
-def test_workflows_reference_existing_files():
-    text = (ROOT / ".github" / "workflows" / "build-executables.yml").read_text(
-        encoding="utf-8"
-    )
-    for path in re.findall(r"--entitlements (\S+)", text):
-        assert (ROOT / path).exists(), path
-    assert "admin@ysocial.com" not in text  # default account is admin@y-not.social
 
 
 def test_release_upload_only_on_release_events():
@@ -91,14 +50,14 @@ def test_dockerignore_keeps_context_small():
 
 
 def test_one_python_version_in_ci_build_and_docker():
-    """E0: CI, executable build, formatter and Docker base agree on Python 3.12 / Ubuntu 24.04."""
+    """E0: CI, release packaging, formatter and Docker base agree on Python 3.12 / Ubuntu 24.04."""
     import re
     from pathlib import Path
 
     root = Path(__file__).resolve().parents[2]
-    for name in ("ci-tests.yml", "build-executables.yml", "format-code.yml"):
+    for name in ("ci-tests.yml", "format-code.yml", "release-packaging.yml"):
         text = (root / ".github" / "workflows" / name).read_text()
-        versions = set(re.findall(r"python-version:\s*\[?'([\d.]+)'", text))
+        versions = set(re.findall(r"python-version:\s*\[?.([\d.]+).", text))
         assert versions == {"3.12"}, (name, versions)
     froms = [
         line

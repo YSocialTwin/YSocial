@@ -2,18 +2,26 @@
 
 ## Main entry points
 
-YSocial has two primary application entry points.
+YSocial has three ways to start. Most people use the [desktop installer](launcher.md) and never touch these.
+
+### `ysocial`
+
+The command installed with the Python package (and used by the desktop installer and Docker). It takes the same options as `y_social.py`.
+
+```bash
+ysocial --host localhost --port 8080
+```
 
 ### `y_social.py`
 
 Use this for direct browser-oriented execution.
 
 - file: `y_social.py`
-- typical use: source-based execution, explicit host/port control
+- typical use: source-based execution, explicit host/port control (same as the `ysocial` command)
 
 ### `y_social_launcher.py`
 
-Use this for the desktop-first workflow and PyInstaller entry.
+Optional desktop window (pywebview) for people who run YSocial from a source checkout. The packaged desktop experience is the [installer/launcher](launcher.md).
 
 - file: `y_social_launcher.py`
 - typical use: native window by default, browser fallback optional
@@ -99,7 +107,7 @@ Notebook support is intended primarily for source-based execution.
 Important distinction:
 
 - source mode: notebook support can be enabled
-- PyInstaller mode: notebook support is intentionally disabled by design
+- desktop installer: the Jupyter Notebook server is opt-in (off by default, see *More options*)
 
 ## Typical operating sequences
 

@@ -94,35 +94,6 @@ class TestDesktopModeFunction(unittest.TestCase):
         self.assertIn("window_title", params)
         self.assertIn("window_width", params)
         self.assertIn("window_height", params)
-
-
-class TestPyInstallerSpecUpdated(unittest.TestCase):
-    """Test that PyInstaller spec file includes webview."""
-
-    def test_spec_includes_webview(self):
-        """Test that y_social.spec includes webview in hidden imports."""
-        from pathlib import Path
-
-        project_root = Path(__file__).parent.parent.parent
-        spec_path = project_root / "y_social.spec"
-
-        with open(spec_path, "r") as f:
-            content = f.read()
-            self.assertIn("webview", content)
-            self.assertIn('collect_submodules("webview")', content)
-
-    def test_spec_includes_pywebview_metadata(self):
-        """Test that y_social.spec includes pywebview metadata."""
-        from pathlib import Path
-
-        project_root = Path(__file__).parent.parent.parent
-        spec_path = project_root / "y_social.spec"
-
-        with open(spec_path, "r") as f:
-            content = f.read()
-            self.assertIn("pywebview", content)
-
-
 class TestRequirementsTxt(unittest.TestCase):
     """Test that requirements include pywebview."""
 
