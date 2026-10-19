@@ -59,6 +59,7 @@ const fmtSize = (b) => (b >= 1e9 ? (b / 1e9).toFixed(1) + " GB" : Math.max(1, Ma
 
 const show = (name) => {
   for (const v of ["setup", "installing", "ready", "uninstall"]) $("v-" + v).classList.toggle("on", v === name);
+  $("advanced").hidden = name !== "ready";   // start-up options only make sense once installed
 };
 const setError = (msg) => { const e = $("err"); e.textContent = msg || ""; e.classList.toggle("on", !!msg); };
 const busy = (btn, on) => { btn.classList.toggle("loading", on); btn.disabled = on; };
@@ -128,7 +129,7 @@ async function refresh() {
   const home = $("home").value;
   const o = readOptions();
   const installed = await invoke("is_installed", { home });
-  if (!installed || forceSetup) { $("tox-opt").hidden = !!info.toxicity; show("setup"); return; }
+  if (!installed || forceSetup) { show("setup"); return; }
   const running = await invoke("is_running", { home, host: o.host, port: o.port });
   $("where").textContent = home;
   $("ver").textContent = info.version || "?";
@@ -245,7 +246,7 @@ async function init() {
     markStep("Installing Python");
     show("installing");
     try {
-      await invoke("install", { home: $("home").value, toxicity: $("toxicity").checked || info.toxicity });
+      await invoke("install", { home: $("home").value, toxicity: info.toxicity });
       forceSetup = false;
       await saveOptions();
       await readInstalled();

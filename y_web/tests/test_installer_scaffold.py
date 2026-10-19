@@ -35,8 +35,10 @@ def test_default_home_matches_path_utils():
 
 def test_ui_exposes_toxicity_choice_with_clear_text():
     html = (I / "ui/index.html").read_text()
-    assert 'id="toxicity"' in html
-    assert re.search(r"large download", html)
+    # toxicity is offered only after the base install (never in the setup view), with a clear warning
+    setup = html[html.index('id="v-setup"'):html.index('id="v-installing"')]
+    assert "toxicity" not in setup.lower().replace("toxicity detection can be added afterwards", "")
+    assert 'id="tox-add"' in html and re.search(r"large download", html)
     js = (I / "ui/main.js").read_text()
     for cmd in ("default_home", "is_installed", "install", "launch", "is_running", "stop", "load_settings", "save_settings"):
         assert f'"{cmd}"' in js
@@ -66,7 +68,7 @@ def test_advanced_options_cover_cli_flags():
         assert f'"--{flag}"' in rs, flag
     html = (I / "ui/index.html").read_text()
     # the launcher exposes only the everyday options; Jupyter is opt-in (off by default)
-    for field in ("host", "port", "jupyter", "appwindow", "checkupdates", "lang"):
+    for field in ("host", "port", "jupyter", "appwindow", "checkupdates", "lang"):  # options live in #advanced (ready view only)
         assert f'id="{field}"' in html
     for gone in ("db", "llm", "extra", "debug", "development", "nonotebook", "log"):
         assert f'id="{gone}"' not in html, gone
@@ -171,7 +173,7 @@ def test_launcher_toxicity_box_models_and_links():
     js = (I / "ui/main.js").read_text()
     rs = (I / "src-tauri/src/main.rs").read_text()
     # toxicity offers appear only while the library is missing (setup box + "Add" card)
-    assert "$(\"tox-opt\").hidden = !!info.toxicity" in js
+    assert "tox-opt" not in html and "tox-opt" not in js
     assert "$(\"tox-add\").hidden = info.toxicity || running" in js
     for fn in ("toxicity_models", "install_toxicity", "open_url"):
         assert f"fn {fn}" in rs and f"            {fn},\n" in rs and f'"{fn}"' in js
@@ -180,3 +182,11 @@ def test_launcher_toxicity_box_models_and_links():
     assert '["torch", "huggingface"]' in rs
     # footer: release number and project site (opened in the system browser, allow-listed)
     assert "Release" in html and "https://y-not.social" in html and "https://y-not.social" in rs
+
+
+def test_start_options_are_shown_only_after_install():
+    js = (I / "ui/main.js").read_text()
+    html = (I / "ui/index.html").read_text()
+    assert '$("advanced").hidden = name !== "ready"' in js
+    setup = html[html.index('id="v-setup"'):html.index('id="v-installing"')]
+    assert 'id="advanced"' in html and 'id="advanced"' not in setup

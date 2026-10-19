@@ -127,3 +127,7 @@ body.yl { font-size: 15px; }
 .yl-field.sel label { top: 5px; }
 #err { margin-bottom: 10px; padding: 8px 12px; font-size: .82rem; }
 #v-installing[data-mode="update"] .yl-steps { display: none; }
+
+.yl-mini { background: transparent; border: 0; color: var(--teal); font: inherit; font-size: .72rem; cursor: pointer; appearance: none; padding: 0; }
+.yl-mini option { color: #08202a; }
+.yl-adv[hidden] { display: none; }

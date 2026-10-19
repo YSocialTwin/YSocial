@@ -23,20 +23,12 @@
   <!-- 1. First start: set up -->
   <section class="view" id="v-setup">
     <h2 data-i18n="setup.title">Let's get you set up</h2>
-    <p class="yl-sub" data-i18n="setup.sub">One click installs everything YSocial needs. Your data stays in the folder below.</p>
+    <p class="yl-sub" data-i18n="setup.sub">One click installs everything YSocial needs. Your data stays in the folder below. Toxicity detection can be added afterwards.</p>
 
     <div class="yl-field">
       <input id="home" type="text" placeholder=" " spellcheck="false">
       <label for="home" data-i18n="setup.home">Where to keep your data</label>
     </div>
-
-    <label class="yl-opt" id="tox-opt">
-      <input id="toxicity" type="checkbox">
-      <span>
-        <b><span data-i18n="setup.tox.title">Toxicity detection</span> <small style="display:inline" data-i18n="setup.tox.opt">(optional)</small></b>
-        <small data-i18n="setup.tox.desc">Only needed if your experiments score toxic content. This is a large download (PyTorch and a language model, several GB of disk space). You can skip it and add it later.</small>
-      </span>
-    </label>
 
     <button class="yl-btn" id="install" type="button"><span class="yl-spin"></span><span data-i18n="setup.install">Install YSocial</span></button>
     <p class="yl-foot" data-i18n="setup.foot">LLM servers and PostgreSQL are not included; SQLite is used by default. Profile pictures are downloaded the first time you start.</p>
@@ -75,7 +67,7 @@
     </div>
 
     <div class="yl-upd" id="tox-add" hidden>
-      <div><b data-i18n="tox.add.title">Toxicity detection</b><small data-i18n="tox.add.desc">Optional. Large download (PyTorch, several GB of disk space).</small></div>
+      <div><b data-i18n="tox.add.title">Toxicity detection</b><small data-i18n="tox.add.desc">Optional: only needed if your experiments score toxic content. This is a large download (PyTorch, several GB of disk space).</small></div>
       <button class="yl-btn ghost" id="addtox" type="button"><span class="yl-spin"></span><span data-i18n="tox.add.btn">Add</span></button>
     </div>
 
@@ -121,13 +113,10 @@
       </div>
     </div>
     <p class="yl-note" data-i18n="opt.hostnote">Use <code>0.0.0.0</code> as address only if you want other computers on your network to reach YSocial.</p>
-    <div class="yl-field sel">
-      <select id="lang"><option value="auto">Auto</option><option value="en">English</option><option value="it">Italiano</option></select>
-      <label for="lang" data-i18n="opt.lang">Language</label>
-    </div>
   </details>
 
-  <p class="yl-foot yl-links"><span><span data-i18n="release">Release</span> v<span id="launcher-ver"></span></span> · <a href="https://y-not.social" data-ext>y-not.social</a></p>
+  <p class="yl-foot yl-links"><span><span data-i18n="release">Release</span> v<span id="launcher-ver"></span></span> · <a href="https://y-not.social" data-ext>y-not.social</a> ·
+    <select id="lang" class="yl-mini" aria-label="Language"><option value="auto">Auto</option><option value="en">English</option><option value="it">Italiano</option></select></p>
 </section>
 </main>
 
