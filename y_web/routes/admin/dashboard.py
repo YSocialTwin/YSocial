@@ -170,6 +170,28 @@ def fetch_embedding_models():
         )
 
 
+DASHBOARD_GROUPS_PER_PAGE = 5
+
+
+def _group_name(exp):
+    """Group an experiment belongs to ("No group" when empty)."""
+    group = getattr(exp, "exp_group", None)
+    return group if group and group.strip() else "No group"
+
+
+def _sorted_group_names(names):
+    """Group order used by the dashboard (same as the Jinja ``sort`` filter)."""
+    return sorted(names, key=lambda n: n.lower())
+
+
+def _page_of_groups(group_names, page, per_page):
+    """Names of the groups on 1-based *page* and the number of pages."""
+    names = _sorted_group_names(group_names)
+    pages = ((len(names) - 1) // per_page) + 1 if names else 1
+    page = min(max(page, 1), pages)
+    return names[(page - 1) * per_page : page * per_page], pages
+
+
 def _dashboard_news(limit=4):
     """Latest blog posts for the "News from the Agents" box (read from the admin DB)."""
     try:
@@ -338,6 +360,16 @@ def dashboard():
         group: build_experiment_data(exps) for group, exps in stopped_groups.items()
     }
 
+    # Completed / stopped boxes are paginated by group (not by experiment)
+    first_completed, completed_group_pages = _page_of_groups(
+        completed_exps_by_group.keys(), 1, DASHBOARD_GROUPS_PER_PAGE
+    )
+    first_stopped, stopped_group_pages = _page_of_groups(
+        stopped_exps_by_group.keys(), 1, DASHBOARD_GROUPS_PER_PAGE
+    )
+    completed_exps_by_group = {g: completed_exps_by_group[g] for g in first_completed}
+    stopped_exps_by_group = {g: stopped_exps_by_group[g] for g in first_stopped}
+
     # Keep the old format for backward compatibility (flatten all groups)
     active_exps = build_experiment_data(active_experiments)
     completed_exps = build_experiment_data(completed_experiments)
@@ -415,6 +447,8 @@ def dashboard():
         total_running=total_running,
         total_completed=total_completed,
         total_stopped=total_stopped,
+        completed_group_pages=completed_group_pages,
+        stopped_group_pages=stopped_group_pages,
         llm_backend=llm_backend,
         models=models,
         active_pulls=ollama_pulls,
@@ -445,7 +479,7 @@ def dashboard_experiments_by_status(status):
 
     Query params:
         page: Page number (1-based, default 1)
-        per_page: Items per page (default 5)
+        per_page: Groups per page (default 5)
 
     Returns:
         JSON with experiments data and pagination info
@@ -484,10 +518,13 @@ def dashboard_experiments_by_status(status):
 
     total = len(experiments)
 
-    # Apply pagination
-    start = (page - 1) * per_page
-    end = start + per_page
-    paginated_experiments = experiments[start:end]
+    # Pagination is by group: a page holds `per_page` groups with all their experiments
+    exps_by_group = defaultdict(list)
+    for exp in experiments:
+        exps_by_group[_group_name(exp)].append(exp)
+    page_groups, total_pages = _page_of_groups(exps_by_group.keys(), page, per_page)
+    page = min(max(page, 1), total_pages)
+    paginated_experiments = [e for g in page_groups for e in exps_by_group[g]]
 
     paginated_exp_ids = [exp.idexp for exp in paginated_experiments]
     clients_by_exp = defaultdict(list)
@@ -558,13 +595,24 @@ def dashboard_experiments_by_status(status):
             }
         )
 
+    by_id = {item["idexp"]: item for item in result}
+    groups = [
+        {
+            "name": g,
+            "experiments": [by_id[e.idexp] for e in exps_by_group[g]],
+        }
+        for g in page_groups
+    ]
+
     return jsonify(
         {
             "experiments": result,
+            "groups": groups,
             "total": total,
+            "total_groups": len(exps_by_group),
             "page": page,
             "per_page": per_page,
-            "total_pages": ((total - 1) // per_page) + 1 if total > 0 else 1,
+            "total_pages": total_pages,
         }
     )
 

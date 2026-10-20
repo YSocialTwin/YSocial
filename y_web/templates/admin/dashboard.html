@@ -309,17 +309,15 @@
  <div id="completed-experiments-container" class="ys-flex-1">
                                     {{ render_grouped_experiments(completed_experiments_by_group, '#17a2b8', 'completed', true, true) }}
                                 </div>
-                                {% if total_completed > 5 %}
-                                <div class="ys-flex-gap-8 ys-mt-10 ys-flex-ai-center ys-flex-jc-between" id="completed-pagination">
-                                    <button type="button" class="button is-small is-light" id="completed-prev" onclick="paginateCompleted(-1); return false;" {% if total_completed <= 5 %}disabled{% endif %}>
+                                                                <div class="ys-flex-gap-8 ys-mt-10 ys-flex-ai-center ys-flex-jc-between{% if completed_group_pages <= 1 %} is-hidden{% endif %}" id="completed-pagination">
+                                    <button type="button" class="button is-small is-light" id="completed-prev" onclick="paginateCompleted(-1); return false;" {% if completed_group_pages <= 1 %}disabled{% endif %}>
                                         {{ _('Previous') }}
                                     </button>
-                                    <span class="ys-text-xs-dark" id="completed-page-info">1/{{ ((total_completed - 1) // 5) + 1 }}</span>
-                                    <button type="button" class="button is-small is-light" id="completed-next" onclick="paginateCompleted(1); return false;" {% if total_completed <= 5 %}disabled{% endif %}>
+                                    <span class="ys-text-xs-dark" id="completed-page-info">1/{{ completed_group_pages }}</span>
+                                    <button type="button" class="button is-small is-light" id="completed-next" onclick="paginateCompleted(1); return false;" {% if completed_group_pages <= 1 %}disabled{% endif %}>
                                         {{ _('Next') }}
                                     </button>
                                 </div>
-                                {% endif %}
                             </div>
                         </div>
                         {% endif %}
@@ -339,17 +337,15 @@
  <div id="stopped-experiments-container" class="ys-flex-1">
                                     {{ render_grouped_experiments(stopped_experiments_by_group, '#6c757d', 'stopped', true, true) }}
                                 </div>
-                                {% if total_stopped > 5 %}
-                                <div class="ys-flex-gap-8 ys-mt-10 ys-flex-ai-center ys-flex-jc-between" id="stopped-pagination">
-                                    <button type="button" class="button is-small is-light" id="stopped-prev" onclick="paginateStopped(-1); return false;" {% if total_stopped <= 5 %}disabled{% endif %}>
+                                                                <div class="ys-flex-gap-8 ys-mt-10 ys-flex-ai-center ys-flex-jc-between{% if stopped_group_pages <= 1 %} is-hidden{% endif %}" id="stopped-pagination">
+                                    <button type="button" class="button is-small is-light" id="stopped-prev" onclick="paginateStopped(-1); return false;" {% if stopped_group_pages <= 1 %}disabled{% endif %}>
                                         {{ _('Previous') }}
                                     </button>
-                                    <span class="ys-text-xs-dark" id="stopped-page-info">1/{{ ((total_stopped - 1) // 5) + 1 }}</span>
-                                    <button type="button" class="button is-small is-light" id="stopped-next" onclick="paginateStopped(1); return false;" {% if total_stopped <= 5 %}disabled{% endif %}>
+                                    <span class="ys-text-xs-dark" id="stopped-page-info">1/{{ stopped_group_pages }}</span>
+                                    <button type="button" class="button is-small is-light" id="stopped-next" onclick="paginateStopped(1); return false;" {% if stopped_group_pages <= 1 %}disabled{% endif %}>
                                         {{ _('Next') }}
                                     </button>
                                 </div>
-                                {% endif %}
                             </div>
                         </div>
                         {% endif %}
@@ -577,7 +573,9 @@ var YS_DATA_DASHBOARD = {
     clientId: null,
     totalRunning: {{ total_running | tojson }},
     totalCompleted: {{ total_completed | tojson }},
-    totalStopped: {{ total_stopped | tojson }}
+    totalStopped: {{ total_stopped | tojson }},
+    completedPages: {{ completed_group_pages | tojson }},
+    stoppedPages: {{ stopped_group_pages | tojson }}
 };
 </script>
 <script src="{{ url_for('static', filename='assets/js/admin-dashboard.js') }}"></script>

@@ -213,46 +213,86 @@ var AdminDashboard = (function() {
       }
   }
 
-  async function refreshExperimentSection(status, sectionColor, page) {
+  const SECTION_COLORS = { running: '#28a745', completed: '#17a2b8', stopped: '#6c757d' };
+  // Groups per page (the running box is not paginated: it shows every group)
+  const GROUPS_PER_PAGE = { running: 1000, completed: 5, stopped: 5 };
+
+  function escapeHtmlText(value) {
+      return String(value === null || value === undefined ? '' : value)
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  // Render the groups of one page, each with its header and its experiments
+  // (same markup as render_grouped_experiments in dashboard.html)
+  function renderGroupsFromData(groups, status, sectionColor, openGroups) {
+      const compact = status !== 'running';
+      const collapsedByDefault = status !== 'running';
+      return groups.map(function (group) {
+          const groupId = status + '_' + group.name.replace(/ /g, '_').replace(/\//g, '_');
+          const collapsed = openGroups ? !openGroups.has(groupId) : collapsedByDefault;
+          const renderFunc = compact
+              ? (exp) => renderCompactExperimentBoxFromData(exp, sectionColor)
+              : (exp) => renderExperimentBoxFromData(exp, sectionColor, {}, false, false);
+          const inner = group.experiments.map(renderFunc).join('');
+          return '<div class="experiment-group ys-mb-15">' +
+              '<div class="group-header" style="background: #f8f9fa; border: 1px solid #e0e0e0; border-left: 3px solid ' + sectionColor + '; border-radius: 6px; padding: 10px 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s;" onclick="toggleGroup(\'' + escapeHtmlText(groupId) + '\')">' +
+              '<div class="group-header-main">' +
+              '<i class="mdi mdi-chevron-down" id="icon-' + escapeHtmlText(groupId) + '" style="font-size: 18px; color: #666; transition: transform 0.2s;' + (collapsed ? ' transform: rotate(-90deg);' : '') + '"></i> ' +
+              '<span class="group-header-title">' + escapeHtmlText(group.name) + '</span> ' +
+              '<span style="background: ' + sectionColor + '; color: white; font-size: 0.7em; padding: 2px 8px; border-radius: 12px; font-weight: 600;">' + group.experiments.length + '</span>' +
+              '</div>' +
+              '<span class="group-header-hint">' + YI18n.t('Click to expand/collapse') + '</span>' +
+              '</div>' +
+              '<div id="' + escapeHtmlText(groupId) + '" class="group-content" style="margin-top: 8px; display: ' + (collapsed ? 'none' : 'block') + ';">' + inner + '</div>' +
+              '</div>';
+      }).join('');
+  }
+
+  // Load one page of groups of a box (completed / stopped / running)
+  async function loadExperimentPage(status, page) {
+      const sectionColor = SECTION_COLORS[status];
+      const container = document.getElementById(`${status}-experiments-container`);
+      if (!container) return;
+      const requested = Math.max(1, page || 1);
       try {
-          const currentPage = Math.max(
-              1,
-              page || paginationState[status].page || 1
-          );
           const response = await fetch(
-              `/admin/dashboard/experiments/${status}?page=${currentPage}&per_page=5`
+              `/admin/dashboard/experiments/${status}?page=${requested}&per_page=${GROUPS_PER_PAGE[status]}`
           );
           const data = await response.json();
-        
-          const containerId = `${status === 'running' ? 'running' : status}-experiments-container`;
-          const container = document.getElementById(containerId);
-        
-          if (container && data.experiments) {
-              const totalPages = data.total_pages || 1;
-              paginationState[status].page = Math.min(currentPage, totalPages);
-              paginationState[status].totalPages = totalPages;
+          if (!data.groups) return;
 
-              // Use compact rendering for completed/stopped, full for running
-              const renderFunc = status === 'running' 
-                  ? (exp) => renderExperimentBoxFromData(exp, sectionColor, {}, false, false)
-                  : (exp) => renderCompactExperimentBoxFromData(exp, sectionColor);
-              const html = data.experiments.map(renderFunc).join('');
-              container.innerHTML = html || '<p style="color: #666; text-align: center;">' + YI18n.t('No experiments in this category') + '</p>';
+          const totalPages = data.total_pages || 1;
+          paginationState[status].page = data.page || Math.min(requested, totalPages);
+          paginationState[status].totalPages = totalPages;
 
-              const prevBtn = document.getElementById(`${status}-prev`);
-              const nextBtn = document.getElementById(`${status}-next`);
-              const pageInfo = document.getElementById(`${status}-page-info`);
-              if (prevBtn) prevBtn.disabled = paginationState[status].page <= 1;
-              if (nextBtn) nextBtn.disabled = paginationState[status].page >= totalPages;
-              if (pageInfo) {
-                  pageInfo.textContent = status === 'running'
-                      ? YI18n.t('Page {page} of {totalpages}', {page: paginationState[status].page, totalpages: totalPages})
-                      : `${paginationState[status].page}/${totalPages}`;
-              }
+          // keep the groups the user has opened while the content is replaced
+          const openGroups = new Set();
+          container.querySelectorAll('.group-content').forEach(function (el) {
+              if (el.style.display !== 'none') openGroups.add(el.id);
+          });
+          const html = renderGroupsFromData(data.groups, status, sectionColor, openGroups);
+          container.innerHTML = html || '<p style="color: #666; text-align: center;">' + YI18n.t('No experiments in this category') + '</p>';
+
+          const prevBtn = document.getElementById(`${status}-prev`);
+          const nextBtn = document.getElementById(`${status}-next`);
+          const pageInfo = document.getElementById(`${status}-page-info`);
+          const pagination = document.getElementById(`${status}-pagination`);
+          if (prevBtn) prevBtn.disabled = paginationState[status].page <= 1;
+          if (nextBtn) nextBtn.disabled = paginationState[status].page >= totalPages;
+          if (pageInfo) {
+              pageInfo.textContent = status === 'running'
+                  ? YI18n.t('Page {page} of {totalpages}', {page: paginationState[status].page, totalpages: totalPages})
+                  : `${paginationState[status].page}/${totalPages}`;
           }
+          if (pagination) pagination.classList.toggle('is-hidden', totalPages <= 1);
       } catch (error) {
-          console.error(`Error refreshing ${status} experiments:`, error);
+          console.error(`Error loading ${status} experiments:`, error);
       }
+  }
+
+  async function refreshExperimentSection(status, sectionColor, page) {
+      await loadExperimentPage(status, page || paginationState[status].page || 1);
   }
 
   // Start periodic async refresh
@@ -376,108 +416,22 @@ var AdminDashboard = (function() {
       return '\n      <div class="box-content" style="background: #fafafa; border: 1px solid #e6e6e6; border-left: 4px solid ' + sectionColor + '; border-radius: 8px; padding-left: 15px; padding-right: 15px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">\n          <div class="box-lines">\n              <div class="box-line" style="padding-bottom: 5px; margin-bottom: 5px;">\n                  <span class="left" style="display: flex; align-items: center; gap: 10px;">\n                      ' + YI18n.t('Experiment:') + ' <strong style="color: #0d95e8">' + exp.exp_name + '</strong>\n                      ' + ownerBadgeFull + '\n                      ' + platformBadgeFull + '\n                      ' + hpcBadgeFull + '\n                      ' + remoteBadgeFull + '\n                      ' + infiniteBadge + '\n                      <a href="/admin/experiment_details/' + exp.idexp + '" class="link-tooltip" title="' + YI18n.t('View Experiment Details') + '">\n                          <i class="mdi mdi-open-in-new" style="font-size: 16px; color: #039be5;"></i>\n                      </a>\n                  </span>\n                  <span class="right" style="display: flex; gap: 8px; align-items: center;">\n                      <div style="display: flex; gap: 3px; padding-right: 8px; border-right: 1px solid #ddd;">\n                          ' + runButton + '\n                          <a class="link-tooltip" href="#" onclick="selectExperiment(\'' + exp.idexp + '\'); return false;" title="' + YI18n.t('Load Experiment') + '">\n                              <i class="mdi mdi-select-all ' + (exp.status === 1 ? 'active' : '') + '" style="font-size: 24px;"></i>\n                          </a>\n                          ' + joinButton + '\n                          ' + deleteExpButton + '\n                      </div>\n                  </span>\n              </div>\n              ' + clientsSeparator + '\n              ' + clientsHtml + '\n          </div>\n      </div>';
   }
 
-  // Pagination state - will be initialized when experiments exist
+  // Pagination state (the pages are pages of groups)
   let paginationState = {
-      running: { page: 1, totalPages: YS_DATA_DASHBOARD.totalRunning > 0 ? Math.floor((YS_DATA_DASHBOARD.totalRunning - 1) / 5) + 1 : 1 },
-      completed: { page: 1, totalPages: YS_DATA_DASHBOARD.totalCompleted > 0 ? Math.floor((YS_DATA_DASHBOARD.totalCompleted - 1) / 5) + 1 : 1 },
-      stopped: { page: 1, totalPages: YS_DATA_DASHBOARD.totalStopped > 0 ? Math.floor((YS_DATA_DASHBOARD.totalStopped - 1) / 5) + 1 : 1 }
+      running: { page: 1, totalPages: 1 },
+      completed: { page: 1, totalPages: YS_DATA_DASHBOARD.completedPages || 1 },
+      stopped: { page: 1, totalPages: YS_DATA_DASHBOARD.stoppedPages || 1 }
   };
 
-  // Async pagination for running experiments
-  async function paginateRunning(direction) {
-      const newPage = paginationState.running.page + direction;
-      if (newPage < 1 || newPage > paginationState.running.totalPages) return;
-    
-      try {
-          const response = await fetch(`/admin/dashboard/experiments/running?page=${newPage}&per_page=5`);
-          const data = await response.json();
-        
-          if (data.experiments) {
-              paginationState.running.page = newPage;
-              paginationState.running.totalPages = data.total_pages;
-            
-              const container = document.getElementById('running-experiments-container');
-              if (container) {
-                  const html = data.experiments.map(exp => renderExperimentBoxFromData(exp, '#28a745', {}, false, false)).join('');
-                  container.innerHTML = html || '<p style="color: #666; text-align: center;">' + YI18n.t('No experiments') + '</p>';
-              }
-            
-              // Update pagination buttons
-              const prevBtn = document.getElementById('running-prev');
-              const nextBtn = document.getElementById('running-next');
-              const pageInfo = document.getElementById('running-page-info');
-              if (prevBtn) prevBtn.disabled = newPage <= 1;
-              if (nextBtn) nextBtn.disabled = newPage >= data.total_pages;
-              if (pageInfo) pageInfo.textContent = YI18n.t('Page {newpage} of {total_pages}', {newpage: newPage, total_pages: data.total_pages});
-          }
-      } catch (error) {
-          console.error('Error paginating running experiments:', error);
-      }
+  async function paginateStatus(status, direction) {
+      const newPage = paginationState[status].page + direction;
+      if (newPage < 1 || newPage > paginationState[status].totalPages) return;
+      await loadExperimentPage(status, newPage);
   }
 
-  // Async pagination for completed experiments
-  async function paginateCompleted(direction) {
-      const newPage = paginationState.completed.page + direction;
-      if (newPage < 1 || newPage > paginationState.completed.totalPages) return;
-    
-      try {
-          const response = await fetch(`/admin/dashboard/experiments/completed?page=${newPage}&per_page=5`);
-          const data = await response.json();
-        
-          if (data.experiments) {
-              paginationState.completed.page = newPage;
-              paginationState.completed.totalPages = data.total_pages;
-            
-              const container = document.getElementById('completed-experiments-container');
-              if (container) {
-                  const html = data.experiments.map(exp => renderCompactExperimentBoxFromData(exp, '#17a2b8')).join('');
-                  container.innerHTML = html || '<p style="color: #666; text-align: center;">' + YI18n.t('No experiments') + '</p>';
-              }
-            
-              // Update pagination buttons
-              const prevBtn = document.getElementById('completed-prev');
-              const nextBtn = document.getElementById('completed-next');
-              const pageInfo = document.getElementById('completed-page-info');
-              if (prevBtn) prevBtn.disabled = newPage <= 1;
-              if (nextBtn) nextBtn.disabled = newPage >= data.total_pages;
-              if (pageInfo) pageInfo.textContent = `${newPage}/${data.total_pages}`;
-          }
-      } catch (error) {
-          console.error('Error paginating completed experiments:', error);
-      }
-  }
-
-  // Async pagination for stopped experiments
-  async function paginateStopped(direction) {
-      const newPage = paginationState.stopped.page + direction;
-      if (newPage < 1 || newPage > paginationState.stopped.totalPages) return;
-    
-      try {
-          const response = await fetch(`/admin/dashboard/experiments/stopped?page=${newPage}&per_page=5`);
-          const data = await response.json();
-        
-          if (data.experiments) {
-              paginationState.stopped.page = newPage;
-              paginationState.stopped.totalPages = data.total_pages;
-            
-              const container = document.getElementById('stopped-experiments-container');
-              if (container) {
-                  const html = data.experiments.map(exp => renderCompactExperimentBoxFromData(exp, '#6c757d')).join('');
-                  container.innerHTML = html || '<p style="color: #666; text-align: center;">' + YI18n.t('No experiments') + '</p>';
-              }
-            
-              // Update pagination buttons
-              const prevBtn = document.getElementById('stopped-prev');
-              const nextBtn = document.getElementById('stopped-next');
-              const pageInfo = document.getElementById('stopped-page-info');
-              if (prevBtn) prevBtn.disabled = newPage <= 1;
-              if (nextBtn) nextBtn.disabled = newPage >= data.total_pages;
-              if (pageInfo) pageInfo.textContent = `${newPage}/${data.total_pages}`;
-          }
-      } catch (error) {
-          console.error('Error paginating stopped experiments:', error);
-      }
-  }
+  function paginateRunning(direction) { return paginateStatus('running', direction); }
+  function paginateCompleted(direction) { return paginateStatus('completed', direction); }
+  function paginateStopped(direction) { return paginateStatus('stopped', direction); }
 
 
 async function markRead(id) {

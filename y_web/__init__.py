@@ -180,6 +180,16 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
 
     app.config.from_object(config_class)
 
+    # Without YSOCIAL_SECRET_KEY the development key was random at every start, which
+    # logged everybody out (and voided "Remember me") on each restart: keep it on disk.
+    if not os.environ.get("YSOCIAL_SECRET_KEY") and not app.config.get("TESTING"):
+        from y_web.config import SECRET_KEY_FILE, load_or_create_secret_key
+        from y_web.src.system.path_utils import get_writable_path
+
+        stored_key = load_or_create_secret_key(get_writable_path(SECRET_KEY_FILE))
+        if stored_key:
+            app.config["SECRET_KEY"] = stored_key
+
     # Runtime-only settings (not part of static config classes)
     app.config["DESKTOP_MODE"] = desktop_mode
 

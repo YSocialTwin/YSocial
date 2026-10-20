@@ -217,3 +217,6 @@ y_web/db/*.bak
 y_web/db/*.bak-journal
 y_web/db/backup-*
 pilot_runs/
+
+# local Flask secret key (keeps logins and "Remember me" valid across restarts)
+.ysocial_secret_key

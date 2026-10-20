@@ -74,6 +74,30 @@ class BaseConfig:
             )
 
 
+SECRET_KEY_FILE = ".ysocial_secret_key"
+
+
+def load_or_create_secret_key(path):
+    """Return the secret key stored in *path*, creating it on first use.
+
+    A key regenerated at every start invalidates every signed cookie when the
+    server restarts, "Remember me" (the remember cookie) included.
+    """
+    try:
+        if os.path.isfile(path):
+            with open(path, encoding="utf-8") as fh:
+                key = fh.read().strip()
+            if key:
+                return key
+        key = secrets.token_hex(32)
+        fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write(key)
+        return key
+    except OSError:
+        return None
+
+
 class DevelopmentConfig(BaseConfig):
     """Local development — permissive, auto-generates secret key when missing."""
 
