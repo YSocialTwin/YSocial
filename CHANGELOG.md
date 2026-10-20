@@ -5,7 +5,6 @@ All notable changes to YSocial (YWeb) are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
 
 ## [4.0.0] - 2026-10-20
 
@@ -101,7 +100,7 @@ a fully localized interface (English and Italian) and prompt packs per language.
 - On Windows, stopping a simulation terminates processes with `taskkill /F`
   (forced, no graceful shutdown).
 
-### Bundled plugin versions
+### Aligned plugin versions
 
 | Plugin | Version |
 | --- | --- |
