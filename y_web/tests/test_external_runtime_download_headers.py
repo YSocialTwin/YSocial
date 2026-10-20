@@ -40,7 +40,10 @@ def test_archive_download_retries_once_on_415(monkeypatch):
 
     ns = {
         "requests": types.SimpleNamespace(get=fake_get),
-        "_github_download_headers": lambda token=None: {"Accept": "*/*", "User-Agent": "x"},
+        "_github_download_headers": lambda token=None: {
+            "Accept": "*/*",
+            "User-Agent": "x",
+        },
     }
     exec(fn_src, ns)
     assert ns["_get_archive"]("https://x", None, 5).status_code == 200
