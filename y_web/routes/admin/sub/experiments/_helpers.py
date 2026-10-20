@@ -43,6 +43,11 @@ from y_web import db  # , app
 from y_web.i18n import N_
 from y_web.i18n import gettext as _
 from y_web.src.content.avatars import normalize_forum_avatar_mode
+from y_web.src.content.feeds import (
+    REDDIT_FEED_USER_AGENT,
+    feed_request_variants,
+    is_reddit_feed_url,
+)
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
     user_can_manage_experiment,
@@ -483,49 +488,15 @@ def _normalize_subreddit_input(value):
     return lowered
 
 
-REDDIT_FEED_USER_AGENT = "YSocial/1.0 RSS Feed Reader"
-
-
-def _is_reddit_feed_url(feed_url):
-    host = (urlparse(feed_url).hostname or "").lower()
-    return host == "reddit.com" or host.endswith(".reddit.com")
-
-
-def _feed_request_variants(feed_url):
-    """(url, headers) attempts for a feed.
-
-    Reddit answers 403 to browser-like User-Agents sent by scripts, so its feeds
-    are asked with the same descriptive User-Agent the simulation client uses
-    (and, as a fallback, through old.reddit.com); other sites keep the
-    browser-like headers that avoid generic blocks.
-    """
-    if not _is_reddit_feed_url(feed_url):
-        return [(feed_url, FORUM_FEED_REQUEST_HEADERS)]
-
-    accept = (
-        "application/json, application/rss+xml;q=0.9, application/xml;q=0.8, */*;q=0.5"
-        if urlparse(feed_url).path.lower().endswith(".json")
-        else "application/rss+xml, application/xml;q=0.9, text/xml;q=0.8, */*;q=0.5"
-    )
-    descriptive = {"User-Agent": REDDIT_FEED_USER_AGENT, "Accept": accept}
-    parsed = urlparse(feed_url)
-    old_url = parsed._replace(netloc="old.reddit.com").geturl()
-    variants = [(feed_url, descriptive)]
-    if old_url != feed_url:
-        variants.append((old_url, descriptive))
-    variants.append((feed_url, {**FORUM_FEED_REQUEST_HEADERS, "Accept": accept}))
-    return variants
-
-
 def _read_feed_with_headers(feed_url):
     """Fetch a forum feed with explicit headers to avoid upstream blocks."""
     last_http_error = None
-    for url, headers in _feed_request_variants(feed_url):
+    for url, headers in feed_request_variants(feed_url, FORUM_FEED_REQUEST_HEADERS):
         try:
             response = requests.get(
                 url, headers=headers, timeout=15, allow_redirects=True
             )
-            if response.status_code in (403, 429) and _is_reddit_feed_url(feed_url):
+            if response.status_code in (403, 429) and is_reddit_feed_url(feed_url):
                 last_http_error = response
                 continue  # try the next variant
             response.raise_for_status()

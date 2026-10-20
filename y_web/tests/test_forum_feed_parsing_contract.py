@@ -130,3 +130,25 @@ def test_reddit_feed_fetch_uses_descriptive_user_agent_and_falls_back(monkeypatc
     monkeypatch.setattr(_helpers.requests, "get", lambda u, headers=None, **k: (calls.append(headers["User-Agent"]), Resp(200))[1])
     _helpers._read_feed_with_headers(other)
     assert calls and "Mozilla" in calls[0]
+
+
+def test_page_feed_fetch_uses_variants_and_parses_content(monkeypatch):
+    from y_web.src.content import feeds
+
+    seen = []
+    rss = b"""<?xml version="1.0"?><rss version="2.0"><channel><title>t</title>
+    <item><title>A</title><link>http://x/a</link><description>S</description></item>
+    </channel></rss>"""
+
+    class Resp:
+        def __init__(self, status, content=b""):
+            self.status_code, self.content = status, content
+
+    def fake_get(url, headers=None, **kwargs):
+        seen.append(headers["User-Agent"])
+        return Resp(403) if len(seen) == 1 else Resp(200, rss)
+
+    monkeypatch.setattr(feeds.requests, "get", fake_get)
+    items = feeds.get_feed("https://www.reddit.com/r/politics/new.rss")
+    assert items == [{"title": "A", "summary": "S", "link": "http://x/a"}]
+    assert seen[0] == feeds.REDDIT_FEED_USER_AGENT and len(seen) == 2
