@@ -86,3 +86,21 @@ def test_release_is_newer_compares_numbers_not_text():
     assert not release_is_newer("v2.0.0", "v2.1.0")
     assert not release_is_newer(None, "v1.0.0") and not release_is_newer("v1.0.0", None)
     assert release_is_newer("nightly-2", "nightly-1")
+
+
+def test_list_entry_ignores_a_stale_update_flag_for_equal_versions():
+    from y_web.routes.admin.sub.experiments._external_runtimes import _make_entry
+
+    repo = {
+        "key": "ysimulator_test",
+        "label": "X",
+        "installed": True,
+        "release_managed": True,
+        "installed_release_tag": "v2.1.0",
+        "latest_release_tag": "v2.1.0",
+        "release_update_available": True,  # what an older build would have reported
+    }
+    versions = _make_entry("ysimulator_test", [repo])["versions"]
+    assert versions and versions[0]["update"] is False
+    repo.update(latest_release_tag="v2.2.0")
+    assert _make_entry("ysimulator_test", [repo])["versions"][0]["update"] is True

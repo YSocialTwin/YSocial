@@ -37,7 +37,7 @@ from y_web.src.external_runtime import (
     validate_runtime_repo,
 )
 from y_web.src.external_runtime.frontend_plugins import validate_frontend_suite
-from y_web.src.external_runtime.manager import clear_remote_cache
+from y_web.src.external_runtime.manager import clear_remote_cache, release_is_newer
 from y_web.src.models import Admin_users, Exps
 from y_web.src.system.miscellanea import check_privileges
 
@@ -324,7 +324,9 @@ def _make_entry(key: str, repos: list[dict]) -> dict:
                 "label": r.get("label") if paired else "",
                 "installed": r.get("installed_release_tag"),
                 "latest": r.get("latest_release_tag"),
-                "update": bool(r.get("release_update_available")),
+                "update": release_is_newer(
+                    r.get("latest_release_tag"), r.get("installed_release_tag")
+                ),
             }
             for r in repos
             if r.get("release_managed") and r.get("installed_release_tag")

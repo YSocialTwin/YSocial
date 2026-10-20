@@ -47,7 +47,7 @@
                                             {% if entry.enabled %}<span class="badge badge-info">{{ _('Enabled') }}</span>{% else %}<span class="badge badge-warning">{{ _('Disabled') }}</span>{% endif %}
                                         {% endif %}
                                         {% if entry.restart_required %}<span class="badge badge-warning">{{ _('Restart required') }}</span>{% endif %}
-                                        {% for v in entry.versions %}<div class="ext-ver">{% if v.label %}<span class="ext-hint">{{ v.label }}</span> {% endif %}<span class="ext-tag">{{ v.installed }}</span>{% if v.update and v.latest %} <span class="ext-ver-arrow" aria-hidden="true">&rarr;</span> <span class="ext-tag is-new" title="{{ _('update available: %(tag)s', tag=v.latest) }}">{{ v.latest }}</span>{% endif %}</div>{% endfor %}
+                                        {% for v in entry.versions %}<div class="ext-ver">{% if v.label %}<span class="ext-hint">{{ v.label }}</span> {% endif %}<span class="ext-tag">{{ v.installed }}</span>{% if v.update and v.latest and (v.latest|trim|lower|replace('v','')) != (v.installed|trim|lower|replace('v','')) %} <span class="ext-ver-arrow" aria-hidden="true">&rarr;</span> <span class="ext-tag is-new" title="{{ _('update available: %(tag)s', tag=v.latest) }}">{{ v.latest }}</span>{% endif %}</div>{% endfor %}
                                     </td>
                                     <td>
                                         <div class="ext-row-actions">
