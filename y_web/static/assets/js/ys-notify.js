@@ -176,6 +176,13 @@
                 JSON.parse(data.textContent || '[]').forEach(function (m) { show(m.category, m.message); });
             } catch (e) { /* malformed flash payload: ignore */ }
         }
+        // Server-rendered notices can opt in with data-ys-notify="error|success|info|warning":
+        // the element stays hidden (see ys-notify.css) and its text is shown as a card instead.
+        [].slice.call(document.querySelectorAll('[data-ys-notify]')).forEach(function (e) {
+            if (e._ysDone) return;
+            e._ysDone = true;
+            show(e.getAttribute('data-ys-notify'), (e.textContent || '').replace(/\s+/g, ' ').trim());
+        });
         pending.splice(0).forEach(function (a) { show(a[0], a[1], a[2]); });
     }
 
