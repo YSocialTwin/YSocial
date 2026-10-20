@@ -74,7 +74,8 @@ def pseudo_enabled():
 
 # Gate G5: a language is "stable" only with >=98% coverage AND a completed native review
 # (docs/i18n/review-checklist.md); until then the selectors label it "beta".
-LANGUAGE_STATUS = {"it": "beta"}
+# Italian was validated by a native speaker, so no language is currently beta.
+LANGUAGE_STATUS = {}
 
 
 def language_status(code):

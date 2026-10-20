@@ -68,7 +68,7 @@ def test_admin_page_offers_the_supported_languages(suites_app, logged):
     html = logged.get("/admin/frontend_settings").get_data(as_text=True)
     assert (
         'id="language"' in html
-        and '<option value="it">Italiano (beta)</option>' in html
+        and '<option value="it">Italiano</option>' in html
     )
 
 
@@ -196,7 +196,7 @@ def test_participant_language_selector_follows_the_experiment_switch():
         html = app.test_client().get("/1/x").get_data(as_text=True)
         assert (
             'name="scope" value="sim"' in html
-            and '<option value="it" selected>Italiano (beta)</option>' in html
+            and '<option value="it" selected>Italiano</option>' in html
         )
     finally:
         i18n.experiment_language_resolver = None
@@ -245,6 +245,6 @@ def test_language_is_chosen_in_the_profile_not_in_the_feed_header():
             'form="ys-profile-language-form"' in html
             and 'action="/set-language"' in html
         )
-        assert '<option value="it" selected>Italiano (beta)</option>' in html
+        assert '<option value="it" selected>Italiano</option>' in html
     finally:
         i18n.experiment_language_resolver = None
