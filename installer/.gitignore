@@ -2,4 +2,6 @@ src-tauri/target/
 src-tauri/gen/
 src-tauri/resources/*
 !src-tauri/resources/.gitkeep
-src-tauri/icons/
+# icons are committed (CI cannot generate them); only the mobile sets are ignored
+src-tauri/icons/android/
+src-tauri/icons/ios/
