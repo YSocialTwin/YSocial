@@ -236,7 +236,14 @@ def localize_text(repo_key: str, text):
         from y_web.i18n import gettext as core_gettext
 
         return core_gettext(text.strip())
-    return plugin_gettext(domain, text.strip())
+    translated = plugin_gettext(domain, text.strip())
+    if translated == text.strip():
+        # not in the plugin's own catalog (an older release, a catalog not loaded yet):
+        # the core catalog also carries the plugin descriptions of the plugin list
+        from y_web.i18n import gettext as core_gettext
+
+        return core_gettext(text.strip())
+    return translated
 
 
 def localize_manifest(repo_key: str, data):
