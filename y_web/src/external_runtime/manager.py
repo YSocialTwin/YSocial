@@ -233,8 +233,10 @@ def _github_api_headers(explicit_token: str | None = None) -> dict[str, str]:
 
 
 def _github_download_headers(explicit_token: str | None = None) -> dict[str, str]:
+    # "*/*" like curl/browsers: a zipball/tarball request is redirected to
+    # codeload.github.com, which answers 415 to "Accept: application/octet-stream".
     headers = {
-        "Accept": "application/octet-stream",
+        "Accept": "*/*",
         "User-Agent": "YSocial-External-Runtime-Manager",
     }
     token = _github_token(explicit_token)
@@ -671,6 +673,18 @@ def _extract_archive_bytes(archive_bytes: bytes, destination: Path) -> None:
             shutil.move(str(item), str(destination / item.name))
 
 
+def _get_archive(url: str, github_token: str | None, timeout: int):
+    """GET an archive; on 415 retry once without any Accept preference."""
+    headers = _github_download_headers(github_token)
+    response = requests.get(url, headers=headers, timeout=timeout, allow_redirects=True)
+    if response.status_code == 415:
+        headers.pop("Accept", None)
+        response = requests.get(
+            url, headers=headers, timeout=timeout, allow_redirects=True
+        )
+    return response
+
+
 def _download_release_archive(
     spec, release: dict[str, Any], github_token: str | None = None
 ) -> bytes:
@@ -681,12 +695,7 @@ def _download_release_archive(
         )
 
     try:
-        response = requests.get(
-            url,
-            headers=_github_download_headers(github_token),
-            timeout=60,
-            allow_redirects=True,
-        )
+        response = _get_archive(url, github_token, 60)
     except requests.RequestException as exc:
         raise ExternalRuntimeError(f"Release download failed: {exc}") from exc
 
@@ -743,12 +752,7 @@ def _download_branch_archive(
 ) -> bytes:
     url = f"https://api.github.com/repos/{spec.github_repo}/zipball/{branch}"
     try:
-        response = requests.get(
-            url,
-            headers=_github_download_headers(github_token),
-            timeout=120,
-            allow_redirects=True,
-        )
+        response = _get_archive(url, github_token, 120)
     except requests.RequestException as exc:
         raise ExternalRuntimeError(f"Branch download failed: {exc}") from exc
     if response.status_code == 404:
