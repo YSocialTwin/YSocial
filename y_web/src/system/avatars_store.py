@@ -20,8 +20,12 @@ DEFAULT_AVATARS_URL = (
 )
 _MIN_BUNDLED = 100
 _EXT = (".png", ".jpg", ".jpeg", ".webp")
-_FULL_SET = 9500  # a download with at least this many images is complete (legacy installs)
-_CACHE_TTL = 300.0  # seconds a folder scan stays valid: listing ~10k files per image is too slow
+_FULL_SET = (
+    9500  # a download with at least this many images is complete (legacy installs)
+)
+_CACHE_TTL = (
+    300.0  # seconds a folder scan stays valid: listing ~10k files per image is too slow
+)
 _START_DELAY = 20.0  # let the app finish starting before the download begins
 _PAUSE_EVERY, _PAUSE = 25, 0.04  # breathe every N files so requests are never starved
 _lock = threading.Lock()
