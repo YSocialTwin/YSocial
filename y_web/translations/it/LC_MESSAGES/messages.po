@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-18 17:45+0000\n"
+"POT-Creation-Date: 2026-10-20 11:26+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -975,6 +975,9 @@ msgstr "Tutte le annotazioni"
 
 msgid "All interactions"
 msgstr "Tutte le interazioni"
+
+msgid "All posts"
+msgstr "Tutti gli articoli"
 
 msgid "All posts from other users, newest first. No personalisation."
 msgstr ""
@@ -6438,6 +6441,9 @@ msgstr "Pagine di notizie"
 msgid "News article content"
 msgstr "Contenuto di un articolo di notizie"
 
+msgid "News from the Agents"
+msgstr "News from the Agents"
+
 msgid "News source name"
 msgstr "Nome della fonte di notizie"
 
@@ -6502,6 +6508,9 @@ msgstr "Nessun client di agenti ad hoc registrato"
 
 msgid "No agent selected"
 msgstr "Nessun agente selezionato"
+
+msgid "No articles available yet."
+msgstr "Nessun articolo disponibile al momento."
 
 msgid "No available experiments to assign"
 msgstr "Nessun esperimento disponibile da assegnare"
@@ -6781,9 +6790,6 @@ msgstr "Notebook creato in %(filepath)s"
 
 msgid "Nothing matches your search."
 msgstr "Nessun risultato per la ricerca."
-
-msgid "Notice"
-msgstr "Avviso"
 
 msgid "Notice:"
 msgstr "Avviso:"
@@ -7412,6 +7418,13 @@ msgstr "Tipo di agente definito da un plugin."
 
 msgid "Plugins"
 msgstr "Plugin"
+
+msgid ""
+"Plugins from the community registry need an explicit confirmation before "
+"they are installed or updated."
+msgstr ""
+"I plugin del registry della community richiedono una conferma esplicita "
+"prima di essere installati o aggiornati."
 
 msgid "Poisson"
 msgstr "Poisson"
@@ -8214,9 +8227,6 @@ msgstr "Slot rimanenti:"
 msgid "Remember me"
 msgstr "Ricordami"
 
-msgid "Remember:"
-msgstr "Ricorda:"
-
 msgid "Remote"
 msgstr "Remoto"
 
@@ -8472,9 +8482,6 @@ msgstr "Esegui finché non viene fermato"
 
 msgid "Running"
 msgstr "In esecuzione"
-
-msgid "Running a YSocial Experiment"
-msgstr "Eseguire un esperimento YSocial"
 
 msgid "Runs large-scale simulations in a distributed way on HPC clusters."
 msgstr "Esegue simulazioni su larga scala in modo distribuito su cluster HPC."
@@ -10276,6 +10283,16 @@ msgid "This page represents a forum community page."
 msgstr "Questa pagina rappresenta la pagina di una community del forum."
 
 msgid ""
+"This plugin comes from the community plugin registry and is not "
+"maintained by the YSocial team. Its code runs on this computer when it is"
+" installed or updated: review the repository first."
+msgstr ""
+"Questo plugin proviene dal registry dei plugin della community e non è "
+"mantenuto dal team di YSocial. Il suo codice viene eseguito su questo "
+"computer quando viene installato o aggiornato: controlla prima il "
+"repository."
+
+msgid ""
 "This profile does not have visible incoming follow ties in the current "
 "simulation state."
 msgstr ""
@@ -10854,6 +10871,10 @@ msgstr "Aggiorna la configurazione LLM"
 
 msgid "Update Password"
 msgstr "Aggiorna la password"
+
+#, python-format
+msgid "Update available: %(tag)s"
+msgstr "Aggiornamento disponibile: %(tag)s"
 
 msgid "Update configuration first"
 msgstr "Prima aggiorna la configurazione"
@@ -11934,6 +11955,10 @@ msgstr "oggi."
 msgid "unread"
 msgstr "non letti"
 
+#, python-format
+msgid "update available: %(tag)s"
+msgstr "aggiornamento disponibile: %(tag)s"
+
 msgid "uses"
 msgstr "usi"
 
@@ -12663,21 +12688,12 @@ msgstr "✔️ Usa"
 #~ "%(cmd)s: è offerta solo l'installazione "
 #~ "da release."
 
+#~ msgid "Notice"
+#~ msgstr "Avviso"
 
-#: y_web/templates/admin/external_runtimes.html
-#, python-format
-msgid "update available: %(tag)s"
-msgstr "aggiornamento disponibile: %(tag)s"
+#~ msgid "Remember:"
+#~ msgstr "Ricorda:"
 
-#: y_web/templates/admin/external_runtimes.html
-#, python-format
-msgid "Update available: %(tag)s"
-msgstr "Aggiornamento disponibile: %(tag)s"
+#~ msgid "Running a YSocial Experiment"
+#~ msgstr "Eseguire un esperimento YSocial"
 
-#: y_web/templates/admin/external_runtime_detail.html
-msgid "This plugin comes from the community plugin registry and is not maintained by the YSocial team. Its code runs on this computer when it is installed or updated: review the repository first."
-msgstr "Questo plugin proviene dal registry dei plugin della community e non è mantenuto dal team di YSocial. Il suo codice viene eseguito su questo computer quando viene installato o aggiornato: controlla prima il repository."
-
-#: y_web/routes/admin/sub/experiments/_external_runtimes.py
-msgid "Plugins from the community registry need an explicit confirmation before they are installed or updated."
-msgstr "I plugin del registry della community richiedono una conferma esplicita prima di essere installati o aggiornati."

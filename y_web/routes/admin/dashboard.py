@@ -38,6 +38,10 @@ from y_web.src.models import (
     Ollama_Pull,
     User_Experiment,
 )
+from y_web.src.system.check_blog import (
+    get_recent_blog_posts,
+    refresh_blog_posts_if_stale,
+)
 from y_web.src.system.jupyter_utils import get_jupyter_instances
 from y_web.src.system.miscellanea import (
     check_connection,
@@ -164,6 +168,16 @@ def fetch_embedding_models():
             ),
             500,
         )
+
+
+def _dashboard_news(limit=4):
+    """Latest blog posts for the "News from the Agents" box (read from the admin DB)."""
+    try:
+        # the stored posts are refreshed in the background when they are old
+        refresh_blog_posts_if_stale(current_app._get_current_object())
+        return get_recent_blog_posts(limit)
+    except Exception:
+        return []
 
 
 @admin.route("/admin/dashboard")
@@ -416,6 +430,7 @@ def dashboard():
         # Telemetry notice
         show_telemetry_notice=show_telemetry_notice,
         can_manage_experiment=can_manage_experiment_for_current_user,
+        news_posts=_dashboard_news(),
     )
 
 

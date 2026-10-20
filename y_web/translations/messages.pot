@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-18 17:45+0000\n"
+"POT-Creation-Date: 2026-10-20 11:26+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -901,6 +901,9 @@ msgid "All annotations"
 msgstr ""
 
 msgid "All interactions"
+msgstr ""
+
+msgid "All posts"
 msgstr ""
 
 msgid "All posts from other users, newest first. No personalisation."
@@ -5825,6 +5828,9 @@ msgstr ""
 msgid "News article content"
 msgstr ""
 
+msgid "News from the Agents"
+msgstr ""
+
 msgid "News source name"
 msgstr ""
 
@@ -5886,6 +5892,9 @@ msgid "No ad hoc agents' clients registered yet"
 msgstr ""
 
 msgid "No agent selected"
+msgstr ""
+
+msgid "No articles available yet."
 msgstr ""
 
 msgid "No available experiments to assign"
@@ -6159,9 +6168,6 @@ msgid "Notebook created at %(filepath)s"
 msgstr ""
 
 msgid "Nothing matches your search."
-msgstr ""
-
-msgid "Notice"
 msgstr ""
 
 msgid "Notice:"
@@ -6727,6 +6733,11 @@ msgid "Plugin-defined agent type."
 msgstr ""
 
 msgid "Plugins"
+msgstr ""
+
+msgid ""
+"Plugins from the community registry need an explicit confirmation before "
+"they are installed or updated."
 msgstr ""
 
 msgid "Poisson"
@@ -7476,9 +7487,6 @@ msgstr ""
 msgid "Remember me"
 msgstr ""
 
-msgid "Remember:"
-msgstr ""
-
 msgid "Remote"
 msgstr ""
 
@@ -7721,9 +7729,6 @@ msgid "Run until stopped"
 msgstr ""
 
 msgid "Running"
-msgstr ""
-
-msgid "Running a YSocial Experiment"
 msgstr ""
 
 msgid "Runs large-scale simulations in a distributed way on HPC clusters."
@@ -9328,6 +9333,12 @@ msgid "This page represents a forum community page."
 msgstr ""
 
 msgid ""
+"This plugin comes from the community plugin registry and is not "
+"maintained by the YSocial team. Its code runs on this computer when it is"
+" installed or updated: review the repository first."
+msgstr ""
+
+msgid ""
 "This profile does not have visible incoming follow ties in the current "
 "simulation state."
 msgstr ""
@@ -9859,6 +9870,10 @@ msgid "Update LLM Configuration"
 msgstr ""
 
 msgid "Update Password"
+msgstr ""
+
+#, python-format
+msgid "Update available: %(tag)s"
 msgstr ""
 
 msgid "Update configuration first"
@@ -10818,6 +10833,10 @@ msgstr ""
 msgid "unread"
 msgstr ""
 
+#, python-format
+msgid "update available: %(tag)s"
+msgstr ""
+
 msgid "uses"
 msgstr ""
 
@@ -10898,21 +10917,3 @@ msgstr ""
 msgid "✔️ Use"
 msgstr ""
 
-
-#: y_web/templates/admin/external_runtimes.html
-#, python-format
-msgid "update available: %(tag)s"
-msgstr ""
-
-#: y_web/templates/admin/external_runtimes.html
-#, python-format
-msgid "Update available: %(tag)s"
-msgstr ""
-
-#: y_web/templates/admin/external_runtime_detail.html
-msgid "This plugin comes from the community plugin registry and is not maintained by the YSocial team. Its code runs on this computer when it is installed or updated: review the repository first."
-msgstr ""
-
-#: y_web/routes/admin/sub/experiments/_external_runtimes.py
-msgid "Plugins from the community registry need an explicit confirmation before they are installed or updated."
-msgstr ""
