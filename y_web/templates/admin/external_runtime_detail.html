@@ -6,16 +6,21 @@
     .ext-back { font-size:.8rem; margin-bottom:10px; display:inline-block; }
     .ext-head { display:flex; gap:8px 12px; align-items:center; flex-wrap:wrap; margin-bottom:4px; }
     .ext-head h3 { margin:0; }
-    .ext-section { border:1px solid var(--ext-border); border-radius:10px; padding:14px; margin-bottom:14px; background:#fff; }
+    .ext-section { border:1px solid var(--ext-border); border-radius:10px; padding:10px 12px; margin-bottom:10px; background:#fff; }
     .ext-section-title { font-weight:700; font-size:.86rem; color:var(--ext-text-dark); margin-bottom:8px; }
     .ext-members { width:100%; border-collapse:collapse; font-size:.8rem; }
     .ext-members th { text-align:left; font-size:.68rem; text-transform:uppercase; letter-spacing:.05em; color:#6b7280; padding:6px 8px; border-bottom:1px solid var(--ext-border); }
     .ext-members td { padding:8px; border-bottom:1px solid var(--ext-border); vertical-align:top; }
-    .ext-options { display:grid; grid-template-columns:repeat(auto-fit, minmax(240px,1fr)); gap:10px; margin-bottom:12px; }
-    .ext-option { border:1px solid var(--ext-border); border-radius:8px; padding:10px; background:var(--ext-bg-subtle); display:grid; gap:6px; font-size:.8rem; }
-    .ext-option.is-muted { background:#fff7ed; }
+    .ext-options { display:grid; gap:8px; margin-bottom:8px; }
+    .ext-install-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .ext-install-row .ext-select { flex:1 1 180px; min-width:150px; height:2.2rem; }
+    .ext-install-row .button { height:2.2rem; padding:0 1.1em; }
+    .ext-alt { font-size:.78rem; }
+    .ext-alt > summary { cursor:pointer; color:#6b7280; font-size:.76rem; list-style:revert; }
+    .ext-alt[open] { border:1px dashed var(--ext-border); border-radius:8px; padding:8px 10px; background:var(--ext-bg-subtle); display:grid; gap:6px; }
+    .ext-alt .ext-select { height:2rem; max-width:260px; }
     .ext-radio-row { display:flex; gap:8px; align-items:center; }
-    .ext-component-title { font-weight:700; font-size:.95rem; margin:6px 0 8px; }
+    .ext-component-title { font-weight:700; font-size:.9rem; margin:4px 0 6px; }
     .ext-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
     .ext-danger-text { color:#b91c1c; }
     .ext-warn { border:1px solid #fcd34d; background:#fffbeb; color:#92400e; border-radius:8px; padding:8px 12px; font-size:.8rem; margin-bottom:12px; }
@@ -78,38 +83,35 @@
                             <div class="ext-component" data-repo-key="{{ repo.key }}">
                             {% if entry.paired %}<div class="ext-component-title">{{ repo.label }} <span class="ext-hint">{{ _('— installed and updated independently') }}</span></div>{% endif %}
                             <form class="ext-section ext-sync-form" method="POST" action="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='sync') }}">
-                                <div class="ext-section-title">{{ _('Install') if not repo.installed else _('Update') }}{% if entry.paired %} {{ repo.label }}{% endif %}</div>
                                 {% set has_releases = repo.available_releases|length > 0 %}
+                                {% set use_release = has_releases and not repo.archive_managed and not repo.git_managed %}
                                 <div class="ext-options">
-                                    <label class="ext-option">
-                                        <span class="ext-radio-row"><input type="radio" name="install_source" value="release" {% if has_releases and not repo.archive_managed %}checked{% endif %}><strong>{{ _('GitHub release') }}</strong></span>
-                                        <span class="ext-hint">{{ _('Standard option; works without git.') }}</span>
-                                        <select name="release_tag" class="input w-100" {% if not has_releases %}disabled{% endif %}>
+                                    <div class="ext-install-row">
+                                        <label class="ext-radio-row ext-source-release"><input type="radio" name="install_source" value="release" {% if use_release %}checked{% endif %} {% if not has_releases %}disabled{% endif %}><strong>{{ _('GitHub release') }}</strong></label>
+                                        <select name="release_tag" class="input ext-select" {% if not has_releases %}disabled{% endif %}>
                                             {% if has_releases %}{% for release in repo.available_releases %}
                                             <option value="{{ release.tag }}">{{ release.tag }}{% if release.prerelease %} &middot; {{ _('prerelease') }}{% endif %}{% if release.name and release.name != release.tag %} &middot; {{ release.name }}{% endif %}</option>
                                             {% endfor %}{% else %}<option value="">{{ repo.release_error or _('No releases available') }}</option>{% endif %}
                                         </select>
-                                    </label>
-                                    {% if host_git_available %}
-                                    <label class="ext-option">
-                                        <span class="ext-radio-row"><input type="radio" name="install_source" value="git" {% if not has_releases %}checked{% endif %}><strong>{{ _('Git checkout') }}</strong></span>
-                                        <span class="ext-hint">{{ _('Advanced: follow a branch (an installed git checkout is updated in place).') }}</span>
-                                        <select name="branch" class="input w-100">
+                                        <button type="submit" class="button is-solid primary-button" {% if active_experiments %}disabled{% endif %}>{{ _('Install') if not repo.installed else _('Update') }}</button>
+                                    </div>
+                                    <details class="ext-alt" {% if not use_release %}open{% endif %}>
+                                        <summary>{{ _('Alternative installation') }}</summary>
+                                        <label class="ext-radio-row">
+                                            {% if host_git_available %}
+                                            <input type="radio" name="install_source" value="git" {% if not use_release %}checked{% endif %}><strong>{{ _('Git checkout') }}</strong>
+                                            <span class="ext-hint">{{ _('follows a branch; an installed checkout is updated in place') }}</span>
+                                            {% else %}
+                                            <input type="radio" name="install_source" value="archive" {% if not use_release %}checked{% endif %}><strong>{{ _('Branch archive') }}</strong>
+                                            <span class="ext-hint">{{ _('follows a branch without git; updates replace local changes') }}</span>
+                                            {% endif %}
+                                        </label>
+                                        <select name="branch" class="input ext-select">
                                             {% for b in repo.available_branches %}<option value="{{ b }}" {% if b == (repo.current_branch or repo.default_branch) %}selected{% endif %}>{{ b }}</option>{% endfor %}
                                         </select>
-                                    </label>
-                                    {% else %}
-                                    <label class="ext-option">
-                                        <span class="ext-radio-row"><input type="radio" name="install_source" value="archive" {% if not has_releases or repo.archive_managed %}checked{% endif %}><strong>{{ _('Branch archive') }}</strong></span>
-                                        <span class="ext-hint">{{ _('Follow a branch without git: updates re-download the branch and replace local changes.') }}</span>
-                                        <select name="branch" class="input w-100">
-                                            {% for b in repo.available_branches %}<option value="{{ b }}" {% if b == (repo.current_branch or repo.default_branch) %}selected{% endif %}>{{ b }}</option>{% endfor %}
-                                        </select>
-                                    </label>
-                                    {% endif %}
+                                    </details>
                                 </div>
                                 <div class="ext-actions">
-                                    <button type="submit" class="button is-solid primary-button" {% if active_experiments %}disabled{% endif %}>{{ _('Install') if not repo.installed else _('Update') }}</button>
                                     {% if repo.installed %}
                                     <button type="button" class="button is-light" data-run-action="install" data-repo-key="{{ repo.key }}">{{ _('Dependencies') }}</button>
                                     <button type="button" class="button is-light" data-run-action="validate" data-repo-key="{{ repo.key }}">{{ _('Validate') }}</button>
@@ -121,7 +123,6 @@
                                     <button type="button" class="button is-light ext-danger-text" data-remove-repo="{{ repo.key }}" data-label="{{ repo.label }}">{{ _('Remove') }}</button>
                                     {% endif %}
                                 </div>
-                                <div class="ext-hint" style="margin-top:8px;">{{ _('Dependencies are installed and the plugin validated afterwards, using %(python)s. The output appears on the right.', python=wrap('code', current_python_executable)) }}</div>
                             </form>
                             </div>
                             {% endfor %}
@@ -193,6 +194,14 @@
             window.location.reload();   // shows the flash messages and the new output
         }
     }
+    // closing "Alternative installation" goes back to the GitHub release
+    document.querySelectorAll('.ext-alt').forEach(function (d) {
+        d.addEventListener('toggle', function () {
+            var release = d.closest('form').querySelector('input[value="release"]:not(:disabled)');
+            if (!d.open && release) release.checked = true;
+            else if (d.open) { var alt = d.querySelector('input[type="radio"]'); if (alt) alt.checked = true; }
+        });
+    });
     var communityRepo = {{ (entry.repo_url if entry.community else '')|tojson }};
     // community plugins run their own code on install: ask once, and tell the server
     function confirmCommunity(data) {

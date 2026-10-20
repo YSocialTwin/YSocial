@@ -6,6 +6,7 @@ import base64
 import io
 import json
 import os
+import re
 import shlex
 import shutil
 import subprocess
@@ -673,6 +674,28 @@ def _extract_archive_bytes(archive_bytes: bytes, destination: Path) -> None:
             shutil.move(str(item), str(destination / item.name))
 
 
+def _version_numbers(tag: str | None) -> tuple[int, ...] | None:
+    """Numeric part of a release tag ("v2.1.0" -> (2, 1, 0)), None when it has none."""
+    match = re.match(r"^\s*[vV]?(\d+(?:\.\d+)*)", str(tag or ""))
+    return tuple(int(part) for part in match.group(1).split(".")) if match else None
+
+
+def release_is_newer(latest: str | None, installed: str | None) -> bool:
+    """True only when ``latest`` is a higher version than ``installed``.
+
+    Tags are compared as numbers (v2.10.0 > v2.9.0), not as text, and equal
+    versions are never an update; tags without numbers fall back to inequality.
+    """
+    if not latest or not installed:
+        return False
+    new, old = _version_numbers(latest), _version_numbers(installed)
+    if new is None or old is None:
+        return str(latest).strip() != str(installed).strip()
+    width = max(len(new), len(old))
+    pad = lambda parts: parts + (0,) * (width - len(parts))  # noqa: E731
+    return pad(new) > pad(old)
+
+
 def _get_archive(url: str, github_token: str | None, timeout: int):
     """GET an archive; on 415 retry once without any Accept preference."""
     headers = _github_download_headers(github_token)
@@ -1009,7 +1032,9 @@ def get_runtime_status(
             releases, release_error = _list_releases(spec, github_token=github_token)
         latest_tag = releases[0]["tag"] if releases else None
         if installed_release_tag and latest_tag:
-            release_update_available = installed_release_tag != latest_tag
+            release_update_available = release_is_newer(
+                latest_tag, installed_release_tag
+            )
     path_kind = "missing"
     if exists:
         path_kind = "symlink" if path.is_symlink() else "directory"

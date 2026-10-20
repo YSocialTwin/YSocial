@@ -12,6 +12,10 @@
     .ext-row-actions { display:flex; gap:6px; justify-content:flex-end; flex-wrap:wrap; }
     .ext-row-actions .button { font-size:.76rem; height:auto; min-height:2rem; padding:.35em .9em; }
     .ext-danger-text { color:#b91c1c; }
+    .ext-ver { margin-top:4px; display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
+    .ext-tag { display:inline-block; font-size:.7rem; font-weight:600; line-height:1.4; padding:1px 8px; border-radius:999px; background:#eef2f7; color:#374151; border:1px solid #dbe2ea; }
+    .ext-tag.is-new { background:#fff1e0; color:#b45309; border-color:#f5b971; }
+    .ext-ver-arrow { color:#9ca3af; font-size:.8rem; }
 </style>
 
 <div class="view-wrapper is-dashboard ext-runtimes">
@@ -43,7 +47,7 @@
                                             {% if entry.enabled %}<span class="badge badge-info">{{ _('Enabled') }}</span>{% else %}<span class="badge badge-warning">{{ _('Disabled') }}</span>{% endif %}
                                         {% endif %}
                                         {% if entry.restart_required %}<span class="badge badge-warning">{{ _('Restart required') }}</span>{% endif %}
-                                        {% for v in entry.versions %}<div class="ext-hint">{% if v.label %}{{ v.label }} &middot; {% endif %}{{ _('Version') }} {{ v.installed }}{% if v.update and v.latest %} &middot; <span style="color:#b45309;">{{ _('update available: %(tag)s', tag=v.latest) }}</span>{% endif %}</div>{% endfor %}
+                                        {% for v in entry.versions %}<div class="ext-ver">{% if v.label %}<span class="ext-hint">{{ v.label }}</span> {% endif %}<span class="ext-tag">{{ v.installed }}</span>{% if v.update and v.latest %} <span class="ext-ver-arrow" aria-hidden="true">&rarr;</span> <span class="ext-tag is-new" title="{{ _('update available: %(tag)s', tag=v.latest) }}">{{ v.latest }}</span>{% endif %}</div>{% endfor %}
                                     </td>
                                     <td>
                                         <div class="ext-row-actions">

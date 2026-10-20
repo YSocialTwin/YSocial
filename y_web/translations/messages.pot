@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-20 11:26+0000\n"
+"POT-Creation-Date: 2026-10-20 13:05+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -690,9 +690,6 @@ msgstr ""
 msgid "Advanced Settings"
 msgstr ""
 
-msgid "Advanced: follow a branch (an installed git checkout is updated in place)."
-msgstr ""
-
 msgid "Age"
 msgstr ""
 
@@ -916,6 +913,9 @@ msgid ""
 msgstr ""
 
 msgid "Already registered?"
+msgstr ""
+
+msgid "Alternative installation"
 msgstr ""
 
 msgid "Alternative profile"
@@ -2821,12 +2821,6 @@ msgstr ""
 msgid "Dependencies"
 msgstr ""
 
-#, python-format
-msgid ""
-"Dependencies are installed and the plugin validated afterwards, using "
-"%(python)s. The output appears on the right."
-msgstr ""
-
 msgid ""
 "Deploy this page to agent populations so they can interact with its "
 "content."
@@ -3912,11 +3906,6 @@ msgid "Follow Recommendation"
 msgstr ""
 
 msgid "Follow Recommender"
-msgstr ""
-
-msgid ""
-"Follow a branch without git: updates re-download the branch and replace "
-"local changes."
 msgstr ""
 
 msgid "Follow accounts to update your feed and social graph."
@@ -8602,9 +8591,6 @@ msgstr ""
 msgid "Standard agents can only be assigned to standard populations."
 msgstr ""
 
-msgid "Standard option; works without git."
-msgstr ""
-
 msgid "Standard:"
 msgstr ""
 
@@ -10707,6 +10693,12 @@ msgid "failed"
 msgstr ""
 
 msgid "failure"
+msgstr ""
+
+msgid "follows a branch without git; updates replace local changes"
+msgstr ""
+
+msgid "follows a branch; an installed checkout is updated in place"
 msgstr ""
 
 msgid "full discussion thread"

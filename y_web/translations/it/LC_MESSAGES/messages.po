@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-20 11:26+0000\n"
+"POT-Creation-Date: 2026-10-20 13:05+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -746,11 +746,6 @@ msgstr "Profilo di gioco di ruolo avanzato"
 msgid "Advanced Settings"
 msgstr "Impostazioni avanzate"
 
-msgid "Advanced: follow a branch (an installed git checkout is updated in place)."
-msgstr ""
-"Avanzato: segui un branch (un checkout git installato viene aggiornato "
-"sul posto)."
-
 msgid "Age"
 msgstr "Età"
 
@@ -994,6 +989,9 @@ msgstr ""
 
 msgid "Already registered?"
 msgstr "Già registrato?"
+
+msgid "Alternative installation"
+msgstr "Installazione alternativa"
 
 msgid "Alternative profile"
 msgstr "Profilo alternativo"
@@ -3171,14 +3169,6 @@ msgstr "Densità"
 msgid "Dependencies"
 msgstr "Dipendenze"
 
-#, python-format
-msgid ""
-"Dependencies are installed and the plugin validated afterwards, using "
-"%(python)s. The output appears on the right."
-msgstr ""
-"Le dipendenze vengono installate e poi il plugin viene convalidato, "
-"usando %(python)s. L'output compare a destra."
-
 msgid ""
 "Deploy this page to agent populations so they can interact with its "
 "content."
@@ -4355,13 +4345,6 @@ msgstr "Raccomandazione dei follow"
 
 msgid "Follow Recommender"
 msgstr "Sistema di raccomandazione dei follow"
-
-msgid ""
-"Follow a branch without git: updates re-download the branch and replace "
-"local changes."
-msgstr ""
-"Segui un branch senza git: gli aggiornamenti riscaricano il branch e "
-"sostituiscono le modifiche locali."
 
 msgid "Follow accounts to update your feed and social graph."
 msgstr "Segui degli account per aggiornare il tuo feed e il tuo grafo sociale."
@@ -9441,9 +9424,6 @@ msgstr "Lingue parlate"
 msgid "Standard agents can only be assigned to standard populations."
 msgstr "Gli agenti standard possono essere assegnati solo a popolazioni standard."
 
-msgid "Standard option; works without git."
-msgstr "Opzione standard; funziona senza git."
-
 msgid "Standard:"
 msgstr "Standard:"
 
@@ -11829,6 +11809,12 @@ msgstr "non riuscita"
 msgid "failure"
 msgstr "fallita"
 
+msgid "follows a branch without git; updates replace local changes"
+msgstr "segue un branch senza git; gli aggiornamenti sostituiscono le modifiche locali"
+
+msgid "follows a branch; an installed checkout is updated in place"
+msgstr "segue un branch; un checkout già installato viene aggiornato sul posto"
+
 msgid "full discussion thread"
 msgstr "l'intera discussione"
 
@@ -12696,4 +12682,33 @@ msgstr "✔️ Usa"
 
 #~ msgid "Running a YSocial Experiment"
 #~ msgstr "Eseguire un esperimento YSocial"
+
+#~ msgid ""
+#~ "Advanced: follow a branch (an installed"
+#~ " git checkout is updated in place)."
+#~ msgstr ""
+#~ "Avanzato: segui un branch (un checkout"
+#~ " git installato viene aggiornato sul "
+#~ "posto)."
+
+#~ msgid ""
+#~ "Dependencies are installed and the "
+#~ "plugin validated afterwards, using %(python)s."
+#~ " The output appears on the right."
+#~ msgstr ""
+#~ "Le dipendenze vengono installate e poi"
+#~ " il plugin viene convalidato, usando "
+#~ "%(python)s. L'output compare a destra."
+
+#~ msgid ""
+#~ "Follow a branch without git: updates "
+#~ "re-download the branch and replace "
+#~ "local changes."
+#~ msgstr ""
+#~ "Segui un branch senza git: gli "
+#~ "aggiornamenti riscaricano il branch e "
+#~ "sostituiscono le modifiche locali."
+
+#~ msgid "Standard option; works without git."
+#~ msgstr "Opzione standard; funziona senza git."
 

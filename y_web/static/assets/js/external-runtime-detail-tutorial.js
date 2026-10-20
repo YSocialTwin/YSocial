@@ -24,8 +24,8 @@
         {
             id: 'detail-source',
             selector: '.ext-options',
-            title: 'Choose the source',
-            description: '<strong>GitHub release</strong> is the standard option and works without git. <strong>Git checkout</strong> follows a branch and is meant for development: an installed checkout is updated in place.',
+            title: 'Choose the release',
+            description: 'Pick a <strong>GitHub release</strong> and press Install or Update; it works without git. <strong>Alternative installation</strong> (collapsed) follows a branch instead and is meant for development.',
             position: 'top'
         },
         {
