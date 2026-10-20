@@ -97,3 +97,36 @@ def test_parse_admin_feed_metadata_accepts_reddit_listing_json():
         "description": "Reddit subreddit JSON listing for r/politics",
         "entries_count": 2,
     }
+
+
+def test_reddit_feed_fetch_uses_descriptive_user_agent_and_falls_back(monkeypatch):
+    from y_web.routes.admin.sub.experiments import _helpers
+
+    calls = []
+
+    class Resp:
+        def __init__(self, status):
+            self.status_code = status
+            self.reason = "x"
+            self.headers = {}
+            self.content = b"{}"
+
+        def raise_for_status(self):
+            if self.status_code >= 400:
+                raise AssertionError("must not be called for handled statuses")
+
+    def fake_get(url, headers=None, **kwargs):
+        calls.append((url, headers["User-Agent"]))
+        return Resp(403 if len(calls) < 2 else 200)
+
+    monkeypatch.setattr(_helpers.requests, "get", fake_get)
+    url = "https://www.reddit.com/r/politics/new.json?limit=100"
+    assert _helpers._read_feed_with_headers(url) == b"{}"
+    assert calls[0] == (url, _helpers.REDDIT_FEED_USER_AGENT)
+    assert calls[1][0].startswith("https://old.reddit.com/r/politics/")
+
+    calls.clear()
+    other = "https://example.com/feed.xml"
+    monkeypatch.setattr(_helpers.requests, "get", lambda u, headers=None, **k: (calls.append(headers["User-Agent"]), Resp(200))[1])
+    _helpers._read_feed_with_headers(other)
+    assert calls and "Mozilla" in calls[0]

@@ -483,30 +483,70 @@ def _normalize_subreddit_input(value):
     return lowered
 
 
+REDDIT_FEED_USER_AGENT = "YSocial/1.0 RSS Feed Reader"
+
+
+def _is_reddit_feed_url(feed_url):
+    host = (urlparse(feed_url).hostname or "").lower()
+    return host == "reddit.com" or host.endswith(".reddit.com")
+
+
+def _feed_request_variants(feed_url):
+    """(url, headers) attempts for a feed.
+
+    Reddit answers 403 to browser-like User-Agents sent by scripts, so its feeds
+    are asked with the same descriptive User-Agent the simulation client uses
+    (and, as a fallback, through old.reddit.com); other sites keep the
+    browser-like headers that avoid generic blocks.
+    """
+    if not _is_reddit_feed_url(feed_url):
+        return [(feed_url, FORUM_FEED_REQUEST_HEADERS)]
+
+    accept = (
+        "application/json, application/rss+xml;q=0.9, application/xml;q=0.8, */*;q=0.5"
+        if urlparse(feed_url).path.lower().endswith(".json")
+        else "application/rss+xml, application/xml;q=0.9, text/xml;q=0.8, */*;q=0.5"
+    )
+    descriptive = {"User-Agent": REDDIT_FEED_USER_AGENT, "Accept": accept}
+    parsed = urlparse(feed_url)
+    old_url = parsed._replace(netloc="old.reddit.com").geturl()
+    variants = [(feed_url, descriptive)]
+    if old_url != feed_url:
+        variants.append((old_url, descriptive))
+    variants.append((feed_url, {**FORUM_FEED_REQUEST_HEADERS, "Accept": accept}))
+    return variants
+
+
 def _read_feed_with_headers(feed_url):
     """Fetch a forum feed with explicit headers to avoid upstream blocks."""
-    try:
-        response = requests.get(
-            feed_url,
-            headers=FORUM_FEED_REQUEST_HEADERS,
-            timeout=15,
-            allow_redirects=True,
-        )
-        response.raise_for_status()
-        return response.content
-    except requests.HTTPError as exc:
-        response = exc.response
-        if response is not None:
-            raise HTTPError(
-                feed_url,
-                response.status_code,
-                response.reason,
-                response.headers,
-                None,
-            ) from exc
-        raise
-    except requests.RequestException as exc:
-        raise URLError(str(exc)) from exc
+    last_http_error = None
+    for url, headers in _feed_request_variants(feed_url):
+        try:
+            response = requests.get(
+                url, headers=headers, timeout=15, allow_redirects=True
+            )
+            if response.status_code in (403, 429) and _is_reddit_feed_url(feed_url):
+                last_http_error = response
+                continue  # try the next variant
+            response.raise_for_status()
+            return response.content
+        except requests.HTTPError as exc:
+            response = exc.response
+            if response is not None:
+                raise HTTPError(
+                    feed_url,
+                    response.status_code,
+                    response.reason,
+                    response.headers,
+                    None,
+                ) from exc
+            raise
+        except requests.RequestException as exc:
+            raise URLError(str(exc)) from exc
+    response = last_http_error
+    raise HTTPError(
+        feed_url, response.status_code, response.reason, response.headers, None
+    )
 
 
 def _parse_required_feed_limit(form_key, cast, label, minimum=None):
