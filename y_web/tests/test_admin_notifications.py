@@ -50,7 +50,14 @@ def test_flash_template_emits_json_and_no_layout_markup():
     env = jinja2.Environment(loader=jinja2.FileSystemLoader(str(TEMPLATES)))
     flashes = [
         ("success", "Saved </script><b>x</b>"),
-        ("error", {"title": "T", "summary": "S", "failures": [{"source": "a", "reason": "r"}]}),
+        (
+            "error",
+            {
+                "title": "T",
+                "summary": "S",
+                "failures": [{"source": "a", "reason": "r"}],
+            },
+        ),
     ]
     env.globals["get_flashed_messages"] = lambda with_categories=False: flashes
     env.policies["json.dumps_function"] = json.dumps

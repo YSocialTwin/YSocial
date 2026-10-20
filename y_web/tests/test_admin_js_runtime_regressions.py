@@ -123,7 +123,9 @@ def test_admin_dashboard_exposes_experiment_pagination_controls():
     assert "window.paginateStopped = paginateStopped;" in admin_dashboard_js
     assert "paginationState.completed.page" in admin_dashboard_js
     assert "paginationState.stopped.page" in admin_dashboard_js
-    assert "?page=${requested}&per_page=${GROUPS_PER_PAGE[status]}" in admin_dashboard_js
+    assert (
+        "?page=${requested}&per_page=${GROUPS_PER_PAGE[status]}" in admin_dashboard_js
+    )
 
 
 def test_admin_clients_network_parameter_rows_toggle_bootstrap_visibility():
