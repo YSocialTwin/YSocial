@@ -180,6 +180,16 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
 
     app.config.from_object(config_class)
 
+    # Without YSOCIAL_SECRET_KEY the development key was random at every start, which
+    # logged everybody out (and voided "Remember me") on each restart: keep it on disk.
+    if not os.environ.get("YSOCIAL_SECRET_KEY") and not app.config.get("TESTING"):
+        from y_web.config import SECRET_KEY_FILE, load_or_create_secret_key
+        from y_web.src.system.path_utils import get_writable_path
+
+        stored_key = load_or_create_secret_key(get_writable_path(SECRET_KEY_FILE))
+        if stored_key:
+            app.config["SECRET_KEY"] = stored_key
+
     # Runtime-only settings (not part of static config classes)
     app.config["DESKTOP_MODE"] = desktop_mode
 
@@ -198,6 +208,7 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
     db.init_app(app)
     login_manager.init_app(app)
 
+    __import__("y_web.i18n", fromlist=["init_i18n"]).init_i18n(app)
     from y_web.src.agents.platform import ensure_population_username_type_column
     from y_web.src.models import Admin_users, User_mgmt
 
@@ -238,7 +249,13 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
     @app.before_request
     def before_request_handler():
         """Setup experiment context and desktop mode for each request."""
-        setup_experiment_context()
+        from y_web.src.system.role_gate import teacher_gate
+
+        denied = (
+            setup_experiment_context() or teacher_gate()
+        )  # the gate runs after the context (see role_gate)
+        if denied is not None:
+            return denied
 
         # If in desktop mode, ensure webview window is accessible
         if app.config.get("DESKTOP_MODE"):
@@ -259,207 +276,20 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
         db.session.remove()
         teardown_experiment_context(exception)
 
-    @app.context_processor
-    def inject_exp_id():
-        """Inject exp_id into all templates."""
-        return dict(exp_id=get_current_experiment_id())
+    __import__("y_web.src.system.prompt_packs", fromlist=["x"]).register_context(app)
 
-    @app.context_processor
-    def inject_feed_home_url():
-        """Inject the canonical home URL for the active experiment feed."""
-        from flask_login import current_user
+    from y_web.src.system.template_context import register_template_context
 
-        from y_web.src.models import Exps, User_mgmt
-
-        try:
-            if not current_user.is_authenticated:
-                return dict(feed_home_url="/")
-
-            exp = None
-            exp_id = get_current_experiment_id()
-            if exp_id is not None:
-                exp = db.session.scalars(
-                    select(Exps).filter_by(idexp=int(exp_id))
-                ).first()
-
-            if exp is None:
-                active_exps = db.session.scalars(
-                    select(Exps).filter(Exps.status != 0)
-                ).all()
-                if not active_exps:
-                    return dict(feed_home_url="/")
-                if len(active_exps) > 1:
-                    return dict(feed_home_url="/admin/join_simulation")
-                exp = active_exps[0]
-
-            if exp.platform_type == "forum":
-                return dict(
-                    feed_home_url=f"/{exp.idexp}/rfeed/all/feed/rf/1?feed_type=new"
-                )
-
-            feed_user_id = None
-            user_id_str = str(current_user.get_id() or "")
-            if user_id_str.isdigit():
-                feed_user_id = int(user_id_str)
-            else:
-                exp_user = db.session.scalars(
-                    select(User_mgmt).filter_by(
-                        username=getattr(current_user, "username", None)
-                    )
-                ).first()
-                if exp_user is not None:
-                    feed_user_id = int(exp_user.id)
-
-            if feed_user_id is None:
-                return dict(feed_home_url=f"/{exp.idexp}/feed/all/feed/rf/1")
-            return dict(feed_home_url=f"/{exp.idexp}/feed/{feed_user_id}/feed/rf/1")
-        except Exception:
-            return dict(feed_home_url="/feed")
-
-    @app.context_processor
-    def inject_experiment_memory_enabled():
-        """Inject whether the active experiment has memory-enabled chat."""
-        from y_web.routes.social.helpers import _experiment_memory_enabled
-
-        try:
-            exp_id = get_current_experiment_id()
-            if exp_id is None:
-                return dict(experiment_memory_enabled=False)
-
-            return dict(
-                experiment_memory_enabled=bool(_experiment_memory_enabled(exp_id))
-            )
-        except Exception:
-            return dict(experiment_memory_enabled=False)
-
-    @app.context_processor
-    def inject_active_experiments():
-        """Inject active experiments into all admin templates."""
-        from flask_login import current_user
-
-        from y_web.src.experiment.access import get_visible_experiment_query
-        from y_web.src.models import Admin_users, Exps
-
-        try:
-            if not current_user.is_authenticated:
-                return dict(active_experiments=[])
-            admin_user = db.session.scalars(
-                select(Admin_users).filter_by(username=current_user.username)
-            ).first()
-            if not admin_user:
-                return dict(active_experiments=[])
-            if admin_user.role in ("admin", "researcher"):
-                active_exps = (
-                    get_visible_experiment_query(admin_user).filter_by(status=1).all()
-                )
-            else:
-                active_exps = db.session.scalars(select(Exps).filter_by(status=1)).all()
-            return dict(active_experiments=active_exps)
-        except Exception:
-            return dict(active_experiments=[])
-
-    @app.context_processor
-    def inject_user_info():
-        """Inject current user role information into templates."""
-        from flask_login import current_user
-
-        from y_web.src.models import Admin_users
-
-        if current_user.is_authenticated:
-            try:
-                admin_user = db.session.scalars(
-                    select(Admin_users).filter_by(username=current_user.username)
-                ).first()
-                if admin_user:
-                    return dict(
-                        current_user_role=admin_user.role, current_user_id=admin_user.id
-                    )
-            except Exception:
-                pass
-        return dict(current_user_role=None, current_user_id=None)
-
-    @app.context_processor
-    def inject_release_info():
-        """Inject release update information for admin users."""
-        from flask_login import current_user
-
-        from y_web.src.models import Admin_users, ReleaseInfo
-
-        if current_user.is_authenticated:
-            try:
-                admin_user = db.session.scalars(
-                    select(Admin_users).filter_by(username=current_user.username)
-                ).first()
-                if admin_user and admin_user.role == "admin":
-                    # Get release info
-                    release_info = db.session.scalars(select(ReleaseInfo)).first()
-                    if release_info and release_info.latest_version_tag:
-                        return dict(
-                            new_release_available=True, release_info=release_info
-                        )
-            except Exception:
-                pass
-        return dict(new_release_available=False, release_info=None)
-
-    @app.context_processor
-    def inject_blog_post_info():
-        """Inject latest blog post information for admin users."""
-        from flask_login import current_user
-
-        from y_web.src.models import Admin_users, BlogPost
-
-        if current_user.is_authenticated:
-            try:
-                admin_user = db.session.scalars(
-                    select(Admin_users).filter_by(username=current_user.username)
-                ).first()
-                if admin_user and admin_user.role == "admin":
-                    # Get unread blog posts
-                    latest_post = (
-                        BlogPost.query.filter(BlogPost.is_read == False)
-                        .order_by(BlogPost.id.desc())
-                        .first()
-                    )
-                    if latest_post:
-                        return dict(new_blog_post_available=True, blog_post=latest_post)
-            except Exception as e:
-                print(f"Error injecting blog post info: {e}")
-        return dict(new_blog_post_available=False, blog_post=None)
-
-    # Add custom Jinja filter for user ID to image mapping
-    # This supports both int IDs (Standard experiments) and UUID IDs (HPC experiments)
-    @app.template_filter("user_image_id")
-    def user_image_id_filter(user_id):
-        """
-        Convert user ID to a consistent image ID for profile pictures.
-
-        For integer IDs (Standard experiments): returns the ID as string
-        For UUID strings (HPC experiments): returns a hash-based consistent numeric ID as string
-
-        Args:
-            user_id: User ID (int or UUID string)
-
-        Returns:
-            String numeric ID for image filename (1-1000 range for UUIDs)
-        """
-        if user_id is None:
-            return "1"  # Default fallback
-
-        # Try to use as integer (Standard experiments)
-        try:
-            return str(int(user_id))
-        except (ValueError, TypeError):
-            # UUID string (HPC experiments) - create consistent hash
-            import hashlib
-
-            # Use MD5 hash for consistent mapping
-            hash_value = int(hashlib.md5(str(user_id).encode()).hexdigest(), 16)
-            # Map to range 1-1000 for available profile images
-            return str((hash_value % 1000) + 1)
+    register_template_context(app)
 
     from y_web.routes import register_blueprints
 
     register_blueprints(app)
+
+    from y_web.src.system.avatars_store import ensure_avatars, register_avatar_route
+
+    register_avatar_route(app)
+    ensure_avatars()
 
     # ------------------------------------------------------------------
     # Frontend plugin suites (e.g. Frontend Adds-on) — registered ONLY for suites
@@ -501,34 +331,13 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
     # ------------------------------------------------------------------
     try:
         from y_web.src.external_runtime.backend_plugins import (
+            print_backend_plugin_report,
             register_backend_plugin_suites,
         )
 
-        _backend_plugin_report = register_backend_plugin_suites(app)
-        for _repo_key, _suite_report in _backend_plugin_report.get(
-            "suites", {}
-        ).items():
-            if _suite_report.get("installed"):
-                if _suite_report.get("valid"):
-                    print(
-                        f"✓ Backend settings suite '{_repo_key}': "
-                        f"{len(_suite_report.get('registered_modules', []))} module(s) registered"
-                    )
-                else:
-                    print(
-                        f"⚠ Backend settings suite '{_repo_key}' is installed but failed validation: "
-                        f"{_suite_report.get('errors')}"
-                    )
+        print_backend_plugin_report(register_backend_plugin_suites(app))
     except Exception as e:
         print(f"Failed to load backend settings plugin suites: {e}")
-
-    # Add context processor to detect PyInstaller mode
-    @app.context_processor
-    def inject_pyinstaller_mode():
-        """Inject PyInstaller mode detection into all templates."""
-        import sys
-
-        return dict(is_pyinstaller=getattr(sys, "frozen", False))
 
     # Backend settings suite sidebar visibility (e.g. Scenario Design):
     # body lives in src/external_runtime/backend_plugins.py, not inline
@@ -541,131 +350,17 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
 
     app.context_processor(inject_backend_plugin_visibility)
 
-    # ------------------------------------------------------------------ #
-    # Database migrations + startup checks                                 #
-    # ------------------------------------------------------------------ #
-    _alembic_dir = os.path.join(os.path.dirname(__file__), "alembic")
-    try:
-        from alembic.config import Config as AlembicConfig
-        from alembic.runtime.migration import MigrationContext
-        from alembic.script import ScriptDirectory
-        from flask_migrate import Migrate
-        from flask_migrate import upgrade as alembic_upgrade
+    from y_web.src.system.startup_migrations import run_startup_migrations
 
-        migrate_ext = Migrate(app, db, directory=_alembic_dir)
-        with app.app_context():
-            # Build a minimal Alembic config pointing at our script directory.
-            # This lets us stamp arbitrary engines directly — not just the default
-            # bind that flask_migrate.stamp() targets.
-            _alembic_cfg = AlembicConfig()
-            _alembic_cfg.set_main_option("script_location", _alembic_dir)
-            _alembic_script = ScriptDirectory.from_config(_alembic_cfg)
+    run_startup_migrations(app, db_type)
 
-            def _stamp_engine_if_needed(engine, bind_key):
-                """Stamp *engine* with 0001_baseline if it has no alembic_version row."""
-                with engine.begin() as conn:
-                    ctx = MigrationContext.configure(conn)
-                    if not ctx.get_current_heads():
-                        print(
-                            f"  ↳ [{bind_key}] no alembic_version found — stamping 0001_baseline"
-                        )
-                        ctx.stamp(_alembic_script, "0001_baseline")
-                    else:
-                        print(
-                            f"  ↳ [{bind_key}] alembic_version OK ({', '.join(ctx.get_current_heads())})"
-                        )
+    # Optional per-suite schema migrations (manifest key "schema_module"),
+    # run after the core Alembic upgrade. Never raises.
+    from y_web.src.external_runtime.backend_plugins import (
+        run_backend_plugin_schema_migrations,
+    )
 
-            # Check every bound engine at startup (db_admin = dashboard.db,
-            # db_exp = dummy.db placeholder).  De-duplicate by engine identity
-            # because the default URI and "db_admin" can resolve to the same file.
-            print("✦ Alembic: checking bound databases…")
-            _seen_engine_ids: set = set()
-            for _bind_key, _engine in db.engines.items():
-                if id(_engine) not in _seen_engine_ids:
-                    _seen_engine_ids.add(id(_engine))
-                    _stamp_engine_if_needed(_engine, _bind_key)
-
-            # Upgrade the primary (db_admin) schema to HEAD.
-            print("✦ Alembic: upgrading primary schema (db_admin) to HEAD…")
-            alembic_upgrade()
-            print("✓ Alembic: primary schema up to date")
-
-            # Bring every active experiment database up to date.
-            # Experiment DBs (experiments/<UUID>/database_server.db) are NOT
-            # managed through Alembic revision files — their schema is kept
-            # current by ensure_experiment_schema_for_uri(), which creates
-            # missing tables and adds new columns via ALTER TABLE ADD COLUMN.
-            # initialize_active_experiment_databases() iterates the Exps table,
-            # re-registers each active experiment's DB URI and runs that function
-            # against it, exactly as the old manual migration runner did.
-            print("✦ Alembic: migrating active experiment databases…")
-            try:
-                from y_web.src.experiment.context import (
-                    initialize_active_experiment_databases,
-                )
-
-                initialize_active_experiment_databases(app)
-                print("✓ Alembic: experiment databases up to date")
-            except Exception as _exp_err:
-                print(f"⚠ Warning: failed to migrate experiment databases: {_exp_err}")
-    except ImportError:
-        # Flask-Migrate not installed — try standalone Alembic, then legacy runner.
-        try:
-            from alembic import command as _alembic_cmd
-            from alembic.config import Config as _AlembicConfig
-            from alembic.runtime.migration import MigrationContext as _MigCtx
-            from alembic.script import ScriptDirectory as _AlembicScript
-
-            with app.app_context():
-                _sa_url = app.config.get("SQLALCHEMY_DATABASE_URI", "")
-                _sa_cfg = _AlembicConfig()
-                _sa_cfg.set_main_option("script_location", _alembic_dir)
-                _sa_cfg.set_main_option("sqlalchemy.url", _sa_url)
-                _sa_script = _AlembicScript.from_config(_sa_cfg)
-
-                def _stamp_if_needed(engine, bind_key):
-                    with engine.begin() as _conn:
-                        _ctx = _MigCtx.configure(_conn)
-                        if not _ctx.get_current_heads():
-                            print(
-                                f"  ↳ [{bind_key}] no alembic_version — stamping 0001_baseline"
-                            )
-                            _ctx.stamp(_sa_script, "0001_baseline")
-                        else:
-                            print(
-                                f"  ↳ [{bind_key}] alembic_version OK ({', '.join(_ctx.get_current_heads())})"
-                            )
-
-                print("✦ Alembic (standalone): checking bound databases…")
-                _seen: set = set()
-                for _bk, _eng in db.engines.items():
-                    if id(_eng) not in _seen:
-                        _seen.add(id(_eng))
-                        _stamp_if_needed(_eng, _bk)
-
-                print("✦ Alembic (standalone): upgrading primary schema to HEAD…")
-                _alembic_cmd.upgrade(_sa_cfg, "head")
-                print("✓ Alembic (standalone): primary schema up to date")
-
-                try:
-                    from y_web.src.experiment.context import (
-                        initialize_active_experiment_databases,
-                    )
-
-                    initialize_active_experiment_databases(app)
-                    print("✓ Alembic (standalone): experiment databases up to date")
-                except Exception as _exp_err:
-                    print(
-                        f"⚠ Warning: failed to migrate experiment databases: {_exp_err}"
-                    )
-
-        except ImportError:
-            # Neither Flask-Migrate nor standalone Alembic available.
-            # Fall back to manual migration runner.
-            # Install with: pip install Flask-Migrate>=4.0.0
-            from y_web.db_init.migrations import run_migrations
-
-            run_migrations(app, db_type, db)
+    run_backend_plugin_schema_migrations(app)
 
     # Log service start event
     try:

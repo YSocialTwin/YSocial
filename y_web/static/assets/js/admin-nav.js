@@ -111,6 +111,8 @@ document.addEventListener('DOMContentLoaded', function() {
             'startUserDetailsTutorial',
             'startMiscellaneaTutorial',
             'startExternalRuntimesTutorial',
+            'startExternalRuntimeDetailTutorial',
+            'startPluginTutorial',
             'startClientsAdhocTutorial',
             'startAgentsDashboardTutorial',
             'startGenericAdminTutorial'
@@ -161,6 +163,11 @@ function replayPageTutorial() {
         window.startMiscellaneaTutorial();
     } else if (typeof window.startExternalRuntimesTutorial === 'function') {
         window.startExternalRuntimesTutorial();
+    } else if (typeof window.startExternalRuntimeDetailTutorial === 'function') {
+        window.startExternalRuntimeDetailTutorial();
+    } else if (typeof window.startPluginTutorial === 'function') {
+        // tutorial supplied by a plugin page (Training, Scenario Design, ...)
+        window.startPluginTutorial();
     } else if (typeof window.startClientsAdhocTutorial === 'function') {
         window.startClientsAdhocTutorial();
     } else if (typeof window.startAgentsDashboardTutorial === 'function') {
@@ -204,7 +211,7 @@ function renderDownloadNotifications(items, unreadCount) {
 
     var rows = [];
     if (!items || items.length === 0) {
-        rows.push('<div class="dropdown-item">No notifications yet.</div>');
+        rows.push('<div class="dropdown-item">' + YI18n.t('No notifications yet.') + '</div>');
     } else {
         items.slice(0, 5).forEach(function(item) {
             var statusTagClass =
@@ -213,7 +220,7 @@ function renderDownloadNotifications(items, unreadCount) {
                     : (item.status === 'failed' ? 'is-danger' : (item.status === 'processing' ? 'is-info' : 'is-light'));
             var unreadClass = item.is_read ? '' : ' download-item-unread';
             var action = item.action_url
-                ? '<a class="download-notification-link" href="' + item.action_url + '">Download</a>'
+                ? '<a class="download-notification-link" href="' + item.action_url + '">' + YI18n.t('Download') + '</a>'
                 : '';
             var relatedHtml = '';
             if (item.related_experiments && item.related_experiments.length > 0) {
@@ -229,7 +236,7 @@ function renderDownloadNotifications(items, unreadCount) {
                 '<div class="dropdown-item download-notification-item' + unreadClass + '">' +
                 '<div class="download-notification-title">' + escapeHtml(item.title) + '</div>' +
                 '<div class="download-notification-meta">' +
-                '<span class="tag ' + statusTagClass + '">' + escapeHtml(item.status) + '</span>' +
+                '<span class="tag ' + statusTagClass + '">' + escapeHtml(item.status_label || item.status) + '</span>' +
                 action +
                 '</div>' +
                 '<div class="download-notification-message">' + escapeHtml(item.message) + '</div>' +
@@ -240,7 +247,7 @@ function renderDownloadNotifications(items, unreadCount) {
     }
 
     rows.push('<hr class="dropdown-divider">');
-    rows.push('<a class="dropdown-item has-text-weight-semibold" href="/admin/notifications">See all</a>');
+    rows.push('<a class="dropdown-item has-text-weight-semibold" href="/admin/notifications">' + YI18n.t('See all') + '</a>');
     list.innerHTML = rows.join('');
 }
 
@@ -261,7 +268,7 @@ async function refreshDownloadNotifications() {
 
 document.addEventListener('DOMContentLoaded', function() {
     refreshDownloadNotifications();
-    setInterval(refreshDownloadNotifications, 15000);
+    setInterval(refreshDownloadNotifications, 30000);
     document.addEventListener('ys-notifications-refresh', function() {
         refreshDownloadNotifications();
     });

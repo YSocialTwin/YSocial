@@ -6,7 +6,7 @@
             <section class="ys-edit-profile-hero">
                 <a class="ys-friends-back-link" href="/{{exp_id}}/profile/{{ user.id }}/recent/1">
                     <i class="mdi mdi-arrow-left"></i>
-                    <span>Back to profile</span>
+                    <span>{{ _('Back to profile') }}</span>
                 </a>
                 <div class="ys-edit-profile-hero__main">
                     <div class="ys-edit-profile-hero__avatar">
@@ -21,9 +21,9 @@
                         />
                     </div>
                     <div class="ys-edit-profile-hero__copy">
-                        <span class="ys-friends-hero-kicker">Profile Settings</span>
-                        <h1>Edit {{ user.username }}</h1>
-                        <p>Update profile details, recommendations, and account security from one place.</p>
+                        <span class="ys-friends-hero-kicker">{{ _('Profile Settings') }}</span>
+                        <h1>{{ _('Edit %(username)s', username=user.username|display_name) }}</h1>
+                        <p>{{ _('Update profile details, recommendations, and account security from one place.') }}</p>
                     </div>
                 </div>
             </section>
@@ -33,138 +33,138 @@
             <section class="ys-edit-profile-section">
                 <div class="ys-profile-panel-head">
                     <div>
-                        <h4 class="ys-heading-tight">General Settings</h4>
-                        <p class="ys-profile-section-heading__subtitle">Public profile attributes and recommendation preferences.</p>
+                        <h4 class="ys-heading-tight">{{ _('General Settings') }}</h4>
+                        <p class="ys-profile-section-heading__subtitle">{{ _('Public profile attributes and recommendation preferences.') }}</p>
                     </div>
                 </div>
                 <form action="/{{exp_id}}/update_profile_data/{{ user.id }}" enctype="multipart/form-data" method="POST" class="ys-edit-profile-form">
                     <div class="ys-edit-profile-grid">
                         <div class="ys-edit-profile-field">
-                            <label>Username</label>
+                            <label>{{ _('Username') }}</label>
                             <input name="username" type="text" class="input is-fade" value="{{ user.username }}" disabled>
                         </div>
                         <div class="ys-edit-profile-field">
-                            <label>Email</label>
+                            <label>{{ _('Email') }}</label>
                             <input name="email" type="text" class="input is-fade" value="{{ user.email }}">
                         </div>
                         <div class="ys-edit-profile-field">
-                            <label>Age</label>
+                            <label>{{ _('Age') }}</label>
                             <input name="age" type="text" class="input is-fade" value="{{ user.age }}">
                         </div>
                         <div class="ys-edit-profile-field">
-                            <label>Gender</label>
+                            <label>{{ _('Gender') }}</label>
                             <div class="select is-fullwidth">
                                 <select name="gender">
                                     <option value="" {{ 'selected' if user.gender == "" else '' }}></option>
-                                    <option value="male" {{ 'selected' if user.gender == "male" else '' }}>Male</option>
-                                    <option value="female" {{ 'selected' if user.gender == "female" else '' }}>Female</option>
+                                    <option value="male" {{ 'selected' if user.gender == "male" else '' }}>{{ _('Male') }}</option>
+                                    <option value="female" {{ 'selected' if user.gender == "female" else '' }}>{{ _('Female') }}</option>
                                 </select>
                             </div>
                         </div>
                         <div class="ys-edit-profile-field">
-                            <label>Nationality</label>
+                            <label>{{ _('Nationality') }}</label>
                             <div class="select is-fullwidth">
                                 <select name="nationality">
                                     <option value=""></option>
-                                    <option value="American" {{ 'selected' if user.nationality == "American" else '' }}>American</option>
-                                    <option value="Argentine" {{ 'selected' if user.nationality == "Argentine" else '' }}>Argentine</option>
-                                    <option value="Armenian" {{ 'selected' if user.nationality == "Armenian" else '' }}>Armenian</option>
-                                    <option value="Austrian" {{ 'selected' if user.nationality == "Austrian" else '' }}>Austrian</option>
-                                    <option value="Azerbaijani" {{ 'selected' if user.nationality == "Azerbaijani" else '' }}>Azerbaijani</option>
-                                    <option value="Bangladeshi" {{ 'selected' if user.nationality == "Bangladeshi" else '' }}>Bangladeshi</option>
-                                    <option value="Belgian" {{ 'selected' if user.nationality == "Belgian" else '' }}>Belgian</option>
-                                    <option value="Brazilian" {{ 'selected' if user.nationality == "Brazilian" else '' }}>Brazilian</option>
-                                    <option value="British" {{ 'selected' if user.nationality == "British" else '' }}>British</option>
-                                    <option value="Bulgarian" {{ 'selected' if user.nationality == "Bulgarian" else '' }}>Bulgarian</option>
-                                    <option value="Chilean" {{ 'selected' if user.nationality == "Chilean" else '' }}>Chilean</option>
-                                    <option value="Chinese" {{ 'selected' if user.nationality == "Chinese" else '' }}>Chinese</option>
-                                    <option value="Colombian" {{ 'selected' if user.nationality == "Colombian" else '' }}>Colombian</option>
-                                    <option value="Croatian" {{ 'selected' if user.nationality == "Croatian" else '' }}>Croatian</option>
-                                    <option value="Czech" {{ 'selected' if user.nationality == "Czech" else '' }}>Czech</option>
-                                    <option value="Danish" {{ 'selected' if user.nationality == "Danish" else '' }}>Danish</option>
-                                    <option value="Dutch" {{ 'selected' if user.nationality == "Dutch" else '' }}>Dutch</option>
-                                    <option value="Estonian" {{ 'selected' if user.nationality == "Estonian" else '' }}>Estonian</option>
-                                    <option value="Finnish" {{ 'selected' if user.nationality == "Finnish" else '' }}>Finnish</option>
-                                    <option value="French" {{ 'selected' if user.nationality == "French" else '' }}>French</option>
-                                    <option value="Georgian" {{ 'selected' if user.nationality == "Georgian" else '' }}>Georgian</option>
-                                    <option value="German" {{ 'selected' if user.nationality == "German" else '' }}>German</option>
-                                    <option value="Greek" {{ 'selected' if user.nationality == "Greek" else '' }}>Greek</option>
-                                    <option value="Hungarian" {{ 'selected' if user.nationality == "Hungarian" else '' }}>Hungarian</option>
-                                    <option value="Indian" {{ 'selected' if user.nationality == "Indian" else '' }}>Indian</option>
-                                    <option value="Indonesian" {{ 'selected' if user.nationality == "Indonesian" else '' }}>Indonesian</option>
-                                    <option value="Iranian" {{ 'selected' if user.nationality == "Iranian" else '' }}>Iranian</option>
-                                    <option value="Irish" {{ 'selected' if user.nationality == "Irish" else '' }}>Irish</option>
-                                    <option value="Israeli" {{ 'selected' if user.nationality == "Israeli" else '' }}>Israeli</option>
-                                    <option value="Italian" {{ 'selected' if user.nationality == "Italian" else '' }}>Italian</option>
-                                    <option value="Japanese" {{ 'selected' if user.nationality == "Japanese" else '' }}>Japanese</option>
-                                    <option value="Latvian" {{ 'selected' if user.nationality == "Latvian" else '' }}>Latvian</option>
-                                    <option value="Lithuanian" {{ 'selected' if user.nationality == "Lithuanian" else '' }}>Lithuanian</option>
-                                    <option value="Mexican" {{ 'selected' if user.nationality == "Mexican" else '' }}>Mexican</option>
-                                    <option value="Nepalese" {{ 'selected' if user.nationality == "Nepalese" else '' }}>Nepalese</option>
-                                    <option value="New Zealander" {{ 'selected' if user.nationality == "New Zealander" else '' }}>New Zealander</option>
-                                    <option value="Norwegian" {{ 'selected' if user.nationality == "Norwegian" else '' }}>Norwegian</option>
-                                    <option value="Palestinian" {{ 'selected' if user.nationality == "Palestinian" else '' }}>Palestinian</option>
-                                    <option value="Polish" {{ 'selected' if user.nationality == "Polish" else '' }}>Polish</option>
-                                    <option value="Portuguese" {{ 'selected' if user.nationality == "Portuguese" else '' }}>Portuguese</option>
-                                    <option value="Romanian" {{ 'selected' if user.nationality == "Romanian" else '' }}>Romanian</option>
-                                    <option value="Russian" {{ 'selected' if user.nationality == "Russian" else '' }}>Russian</option>
-                                    <option value="Saudi" {{ 'selected' if user.nationality == "Saudi" else '' }}>Saudi</option>
-                                    <option value="Slovak" {{ 'selected' if user.nationality == "Slovak" else '' }}>Slovak</option>
-                                    <option value="Slovenian" {{ 'selected' if user.nationality == "Slovenian" else '' }}>Slovenian</option>
-                                    <option value="South African" {{ 'selected' if user.nationality == "South African" else '' }}>South African</option>
-                                    <option value="South Korean" {{ 'selected' if user.nationality == "South Korean" else '' }}>South Korean</option>
-                                    <option value="Spanish" {{ 'selected' if user.nationality == "Spanish" else '' }}>Spanish</option>
-                                    <option value="Swedish" {{ 'selected' if user.nationality == "Swedish" else '' }}>Swedish</option>
-                                    <option value="Swiss" {{ 'selected' if user.nationality == "Swiss" else '' }}>Swiss</option>
-                                    <option value="Taiwanese" {{ 'selected' if user.nationality == "Taiwanese" else '' }}>Taiwanese</option>
-                                    <option value="Thai" {{ 'selected' if user.nationality == "Thai" else '' }}>Thai</option>
-                                    <option value="Turkish" {{ 'selected' if user.nationality == "Turkish" else '' }}>Turkish</option>
-                                    <option value="Ukrainian" {{ 'selected' if user.nationality == "Ukrainian" else '' }}>Ukrainian</option>
+                                    <option value="American" {{ 'selected' if user.nationality == "American" else '' }}>{{ _('American') }}</option>
+                                    <option value="Argentine" {{ 'selected' if user.nationality == "Argentine" else '' }}>{{ _('Argentine') }}</option>
+                                    <option value="Armenian" {{ 'selected' if user.nationality == "Armenian" else '' }}>{{ _('Armenian') }}</option>
+                                    <option value="Austrian" {{ 'selected' if user.nationality == "Austrian" else '' }}>{{ _('Austrian') }}</option>
+                                    <option value="Azerbaijani" {{ 'selected' if user.nationality == "Azerbaijani" else '' }}>{{ _('Azerbaijani') }}</option>
+                                    <option value="Bangladeshi" {{ 'selected' if user.nationality == "Bangladeshi" else '' }}>{{ _('Bangladeshi') }}</option>
+                                    <option value="Belgian" {{ 'selected' if user.nationality == "Belgian" else '' }}>{{ _('Belgian') }}</option>
+                                    <option value="Brazilian" {{ 'selected' if user.nationality == "Brazilian" else '' }}>{{ _('Brazilian') }}</option>
+                                    <option value="British" {{ 'selected' if user.nationality == "British" else '' }}>{{ _('British') }}</option>
+                                    <option value="Bulgarian" {{ 'selected' if user.nationality == "Bulgarian" else '' }}>{{ _('Bulgarian') }}</option>
+                                    <option value="Chilean" {{ 'selected' if user.nationality == "Chilean" else '' }}>{{ _('Chilean') }}</option>
+                                    <option value="Chinese" {{ 'selected' if user.nationality == "Chinese" else '' }}>{{ _('Chinese') }}</option>
+                                    <option value="Colombian" {{ 'selected' if user.nationality == "Colombian" else '' }}>{{ _('Colombian') }}</option>
+                                    <option value="Croatian" {{ 'selected' if user.nationality == "Croatian" else '' }}>{{ _('Croatian') }}</option>
+                                    <option value="Czech" {{ 'selected' if user.nationality == "Czech" else '' }}>{{ _('Czech') }}</option>
+                                    <option value="Danish" {{ 'selected' if user.nationality == "Danish" else '' }}>{{ _('Danish') }}</option>
+                                    <option value="Dutch" {{ 'selected' if user.nationality == "Dutch" else '' }}>{{ _('Dutch') }}</option>
+                                    <option value="Estonian" {{ 'selected' if user.nationality == "Estonian" else '' }}>{{ _('Estonian') }}</option>
+                                    <option value="Finnish" {{ 'selected' if user.nationality == "Finnish" else '' }}>{{ _('Finnish') }}</option>
+                                    <option value="French" {{ 'selected' if user.nationality == "French" else '' }}>{{ _('French') }}</option>
+                                    <option value="Georgian" {{ 'selected' if user.nationality == "Georgian" else '' }}>{{ _('Georgian') }}</option>
+                                    <option value="German" {{ 'selected' if user.nationality == "German" else '' }}>{{ _('German') }}</option>
+                                    <option value="Greek" {{ 'selected' if user.nationality == "Greek" else '' }}>{{ _('Greek') }}</option>
+                                    <option value="Hungarian" {{ 'selected' if user.nationality == "Hungarian" else '' }}>{{ _('Hungarian') }}</option>
+                                    <option value="Indian" {{ 'selected' if user.nationality == "Indian" else '' }}>{{ _('Indian') }}</option>
+                                    <option value="Indonesian" {{ 'selected' if user.nationality == "Indonesian" else '' }}>{{ _('Indonesian') }}</option>
+                                    <option value="Iranian" {{ 'selected' if user.nationality == "Iranian" else '' }}>{{ _('Iranian') }}</option>
+                                    <option value="Irish" {{ 'selected' if user.nationality == "Irish" else '' }}>{{ _('Irish') }}</option>
+                                    <option value="Israeli" {{ 'selected' if user.nationality == "Israeli" else '' }}>{{ _('Israeli') }}</option>
+                                    <option value="Italian" {{ 'selected' if user.nationality == "Italian" else '' }}>{{ _('Italian') }}</option>
+                                    <option value="Japanese" {{ 'selected' if user.nationality == "Japanese" else '' }}>{{ _('Japanese') }}</option>
+                                    <option value="Latvian" {{ 'selected' if user.nationality == "Latvian" else '' }}>{{ _('Latvian') }}</option>
+                                    <option value="Lithuanian" {{ 'selected' if user.nationality == "Lithuanian" else '' }}>{{ _('Lithuanian') }}</option>
+                                    <option value="Mexican" {{ 'selected' if user.nationality == "Mexican" else '' }}>{{ _('Mexican') }}</option>
+                                    <option value="Nepalese" {{ 'selected' if user.nationality == "Nepalese" else '' }}>{{ _('Nepalese') }}</option>
+                                    <option value="New Zealander" {{ 'selected' if user.nationality == "New Zealander" else '' }}>{{ _('New Zealander') }}</option>
+                                    <option value="Norwegian" {{ 'selected' if user.nationality == "Norwegian" else '' }}>{{ _('Norwegian') }}</option>
+                                    <option value="Palestinian" {{ 'selected' if user.nationality == "Palestinian" else '' }}>{{ _('Palestinian') }}</option>
+                                    <option value="Polish" {{ 'selected' if user.nationality == "Polish" else '' }}>{{ _('Polish') }}</option>
+                                    <option value="Portuguese" {{ 'selected' if user.nationality == "Portuguese" else '' }}>{{ _('Portuguese') }}</option>
+                                    <option value="Romanian" {{ 'selected' if user.nationality == "Romanian" else '' }}>{{ _('Romanian') }}</option>
+                                    <option value="Russian" {{ 'selected' if user.nationality == "Russian" else '' }}>{{ _('Russian') }}</option>
+                                    <option value="Saudi" {{ 'selected' if user.nationality == "Saudi" else '' }}>{{ _('Saudi') }}</option>
+                                    <option value="Slovak" {{ 'selected' if user.nationality == "Slovak" else '' }}>{{ _('Slovak') }}</option>
+                                    <option value="Slovenian" {{ 'selected' if user.nationality == "Slovenian" else '' }}>{{ _('Slovenian') }}</option>
+                                    <option value="South African" {{ 'selected' if user.nationality == "South African" else '' }}>{{ _('South African') }}</option>
+                                    <option value="South Korean" {{ 'selected' if user.nationality == "South Korean" else '' }}>{{ _('South Korean') }}</option>
+                                    <option value="Spanish" {{ 'selected' if user.nationality == "Spanish" else '' }}>{{ _('Spanish') }}</option>
+                                    <option value="Swedish" {{ 'selected' if user.nationality == "Swedish" else '' }}>{{ _('Swedish') }}</option>
+                                    <option value="Swiss" {{ 'selected' if user.nationality == "Swiss" else '' }}>{{ _('Swiss') }}</option>
+                                    <option value="Taiwanese" {{ 'selected' if user.nationality == "Taiwanese" else '' }}>{{ _('Taiwanese') }}</option>
+                                    <option value="Thai" {{ 'selected' if user.nationality == "Thai" else '' }}>{{ _('Thai') }}</option>
+                                    <option value="Turkish" {{ 'selected' if user.nationality == "Turkish" else '' }}>{{ _('Turkish') }}</option>
+                                    <option value="Ukrainian" {{ 'selected' if user.nationality == "Ukrainian" else '' }}>{{ _('Ukrainian') }}</option>
                                 </select>
                             </div>
                         </div>
                         <div class="ys-edit-profile-field">
-                            <label>Spoken Language</label>
+                            <label>{{ _('Spoken Language') }}</label>
                             <div class="select is-fullwidth">
                                 <select name="language">
                                     <option value=""></option>
-                                    <option value="English" {{ 'selected' if user.language == "English" else '' }}>English</option>
-                                    <option value="Italian" {{ 'selected' if user.language == "Italian" else '' }}>Italian</option>
+                                    <option value="English" {{ 'selected' if user.language == "English" else '' }}>{{ _('English') }}</option>
+                                    <option value="Italian" {{ 'selected' if user.language == "Italian" else '' }}>{{ _('Italian') }}</option>
                                 </select>
                             </div>
                         </div>
                         <div class="ys-edit-profile-field">
-                            <label>Political Leaning</label>
+                            <label>{{ _('Political Leaning') }}</label>
                             <div class="select is-fullwidth">
                                 <select name="leaning">
                                     <option value="none" {{ 'selected' if user.leaning == "none" else '' }}></option>
-                                    <option value="democrat" {{ 'selected' if user.leaning == "democrat" else '' }}>Democrat</option>
-                                    <option value="republican" {{ 'selected' if user.leaning == "republican" else '' }}>Republican</option>
-                                    <option value="centrist" {{ 'selected' if user.leaning == "centrist" else '' }}>Centrist</option>
+                                    <option value="democrat" {{ 'selected' if user.leaning == "democrat" else '' }}>{{ _('Democrat') }}</option>
+                                    <option value="republican" {{ 'selected' if user.leaning == "republican" else '' }}>{{ _('Republican') }}</option>
+                                    <option value="centrist" {{ 'selected' if user.leaning == "centrist" else '' }}>{{ _('Centrist') }}</option>
                                 </select>
                             </div>
                         </div>
                         <div class="ys-edit-profile-field">
-                            <label>Education Level</label>
+                            <label>{{ _('Education Level') }}</label>
                             <div class="select is-fullwidth">
                                 <select name="education_level">
                                     <option value=""></option>
-                                    <option value="high school" {{ 'selected' if user.education_level == "high school" else '' }}>High School</option>
-                                    <option value=" bachelor" {{ 'selected' if user.education_level == " bachelor" else '' }}>Bachelor</option>
-                                    <option value=" master" {{ 'selected' if user.education_level == " master" else '' }}>Master</option>
-                                    <option value=" phd" {{ 'selected' if user.education_level == " phd" else '' }}>PhD</option>
+                                    <option value="high school" {{ 'selected' if user.education_level == "high school" else '' }}>{{ _('High School') }}</option>
+                                    <option value=" bachelor" {{ 'selected' if user.education_level == " bachelor" else '' }}>{{ _('Bachelor') }}</option>
+                                    <option value=" master" {{ 'selected' if user.education_level == " master" else '' }}>{{ _('Master') }}</option>
+                                    <option value=" phd" {{ 'selected' if user.education_level == " phd" else '' }}>{{ _('PhD') }}</option>
                                 </select>
                             </div>
                         </div>
                         <div class="ys-edit-profile-field ys-edit-profile-field--full">
-                            <label>Profile Picture <small>(url)</small></label>
+                            <label>{{ _('Profile Picture') }} <small>{{ _('(url)') }}</small></label>
                             <input name="profile_pic" type="text" class="input is-fade" value="{{ profile_pic }}">
                         </div>
                         {% if available_profile_pics %}
                         <div class="ys-edit-profile-field ys-edit-profile-field--full">
                             <div class="ys-edit-profile-picker-head">
-                                <label>Available Profile Pictures</label>
-                                <span>Browse previews in small batches.</span>
+                                <label>{{ _('Available Profile Pictures') }}</label>
+                                <span>{{ _('Browse previews in small batches.') }}</span>
                             </div>
                             <div class="ys-edit-profile-avatar-selector">
                                 <div class="ys-edit-profile-avatar-preview">
@@ -186,7 +186,7 @@
                         </div>
                         {% endif %}
                         <div class="ys-edit-profile-field ys-edit-profile-field--full">
-                            <label>Profile Header <small>(url)</small></label>
+                            <label>{{ _('Profile Header') }} <small>{{ _('(url)') }}</small></label>
                             <input
                                 name="cover_image"
                                 type="text"
@@ -197,8 +197,8 @@
                         {% if available_cover_images %}
                         <div class="ys-edit-profile-field ys-edit-profile-field--full">
                             <div class="ys-edit-profile-picker-head">
-                                <label>Available Header Images</label>
-                                <span>Browse banner previews in small batches.</span>
+                                <label>{{ _('Available Header Images') }}</label>
+                                <span>{{ _('Browse banner previews in small batches.') }}</span>
                             </div>
                             <div class="ys-edit-profile-cover-selector">
                                 <div class="ys-edit-profile-cover-preview">
@@ -219,12 +219,12 @@
 
                     <div class="ys-edit-profile-subsection">
                         <div class="ys-edit-profile-subsection__head">
-                            <h5>Recommendation Preferences</h5>
-                            <p>Choose how follow suggestions and content ranking are personalized for this account.</p>
+                            <h5>{{ _('Recommendation Preferences') }}</h5>
+                            <p>{{ _('Choose how follow suggestions and content ranking are personalized for this account.') }}</p>
                         </div>
                         <div class="ys-edit-profile-grid">
                             <div class="ys-edit-profile-field">
-                                <label>Follow Recommender</label>
+                                <label>{{ _('Follow Recommender') }}</label>
                                 <div class="select is-fullwidth">
                                     <select name="frecsys_type">
                                         {% for opt in recsys_options.follow %}
@@ -234,7 +234,7 @@
                                 </div>
                             </div>
                             <div class="ys-edit-profile-field">
-                                <label>Content Recommender</label>
+                                <label>{{ _('Content Recommender') }}</label>
                                 <div class="select is-fullwidth">
                                     <select name="recsys_type">
                                         {% for opt in recsys_options.content %}
@@ -247,16 +247,30 @@
                     </div>
 
                     <div class="ys-edit-profile-actions">
-                        <button class="button is-solid accent-button form-button">Save Changes</button>
+                        <button class="button is-solid accent-button form-button">{{ _('Save Changes') }}</button>
                     </div>
                 </form>
             </section>
 
+            {% if simulation_language_options() %}
             <section class="ys-edit-profile-section">
                 <div class="ys-profile-panel-head">
                     <div>
-                        <h4 class="ys-heading-tight">Security</h4>
-                        <p class="ys-profile-section-heading__subtitle">Update your password while keeping the rest of the profile unchanged.</p>
+                        <h4 class="ys-heading-tight">{{ _('Language') }}</h4>
+                        <p class="ys-profile-section-heading__subtitle">{{ _('Choose the language of the interface.') }}</p>
+                    </div>
+                </div>
+                <div class="ys-edit-profile-form">
+                    {% with ys_lang_wrap_class='ys-edit-profile-field', ys_lang_hint_class='ys-profile-section-heading__subtitle' %}{% include "shared/profile_language_field.html" %}{% endwith %}
+                </div>
+            </section>
+            {% endif %}
+
+            <section class="ys-edit-profile-section">
+                <div class="ys-profile-panel-head">
+                    <div>
+                        <h4 class="ys-heading-tight">{{ _('Security') }}</h4>
+                        <p class="ys-profile-section-heading__subtitle">{{ _('Update your password while keeping the rest of the profile unchanged.') }}</p>
                     </div>
                 </div>
                 <form action="/{{exp_id}}/update_password/{{ user.id }}" enctype="multipart/form-data" method="POST" class="ys-edit-profile-form">
@@ -268,21 +282,21 @@
 
                     <div class="ys-edit-profile-grid">
                         <div class="ys-edit-profile-field ys-edit-profile-field--full">
-                            <label>Current Password</label>
+                            <label>{{ _('Current Password') }}</label>
                             <input name="current_password" type="password" class="input is-fade" value="{{ user.password }}">
                         </div>
                         <div class="ys-edit-profile-field">
-                            <label>New Password</label>
+                            <label>{{ _('New Password') }}</label>
                             <input name="new_password" type="password" class="input is-fade" value="">
                         </div>
                         <div class="ys-edit-profile-field">
-                            <label>Repeat Password</label>
+                            <label>{{ _('Repeat Password') }}</label>
                             <input name="new_password2" type="password" class="input is-fade" value="">
                         </div>
                     </div>
 
                     <div class="ys-edit-profile-actions">
-                        <button class="button is-solid accent-button form-button">Save Changes</button>
+                        <button class="button is-solid accent-button form-button">{{ _('Save Changes') }}</button>
                     </div>
                 </form>
             </section>
@@ -290,7 +304,7 @@
 
             <!-- RIGHT: Topics & Opinions -->
             <div>
-            {% if topics and opinion_groups %}
+            {% if profile_topics_box|default(true) and topics and opinion_groups %}
             {% set n_op = opinion_groups|length %}
             {% set mid_op = (n_op - 1) // 2 %}
             <form action="/{{ exp_id }}/update_topic_preferences/{{ user_id }}" method="POST" id="ep-topics-form">
@@ -298,8 +312,8 @@
                 <div class="ys-ep-topic-card__head">
                     <div class="ys-ep-topic-card__icon"><i class="mdi mdi-pound"></i></div>
                     <div>
-                        <p class="ys-ep-topic-card__title">Topics &amp; Opinions</p>
-                        <p class="ys-ep-topic-card__sub">Update your interest and opinion for each topic.</p>
+                        <p class="ys-ep-topic-card__title">{{ _('Topics & Opinions') }}</p>
+                        <p class="ys-ep-topic-card__sub">{{ _('Update your interest and opinion for each topic.') }}</p>
                     </div>
                 </div>
 
@@ -310,7 +324,7 @@
                     <div class="ys-ep-topic__name"><i class="mdi mdi-pound"></i>{{ topic.name }}</div>
 
                     <div class="ys-ep-topic__q">
-                        Interest level
+                        {{ _('Interest level') }}
                         <span class="ys-ep-topic__q-val" id="ep-int-val-{{ topic.id }}">{{ ['Not Interested','Low Interest','High Interest','Extreme Interest'][i_idx] }}</span>
                     </div>
                     <div class="ys-ep-slider-wrap">
@@ -320,17 +334,17 @@
                                data-topic="{{ topic.id }}" data-type="interest"
                                id="ep-int-slider-{{ topic.id }}">
                         <div class="ys-ep-ticks">
-                            <span {% if i_idx == 0 %}class="active"{% endif %}>Not<br>Interested</span>
-                            <span {% if i_idx == 1 %}class="active"{% endif %}>Low<br>Interest</span>
-                            <span {% if i_idx == 2 %}class="active"{% endif %}>High<br>Interest</span>
-                            <span {% if i_idx == 3 %}class="active"{% endif %}>Extreme<br>Interest</span>
+                            <span {% if i_idx == 0 %}class="active"{% endif %}>{{ _('Not') }}<br>{{ _('Interested') }}</span>
+                            <span {% if i_idx == 1 %}class="active"{% endif %}>{{ _('Low') }}<br>{{ _('Interest') }}</span>
+                            <span {% if i_idx == 2 %}class="active"{% endif %}>{{ _('High') }}<br>{{ _('Interest') }}</span>
+                            <span {% if i_idx == 3 %}class="active"{% endif %}>{{ _('Extreme') }}<br>{{ _('Interest') }}</span>
                         </div>
                     </div>
 
                     <div class="ys-ep-spacer"></div>
 
                     <div class="ys-ep-topic__q">
-                        Opinion
+                        {{ _('Opinion') }}
                         <span class="ys-ep-topic__q-val" id="ep-op-val-{{ topic.id }}" style="color:#949494;">{{ opinion_groups[o_idx].name.strip() }}</span>
                     </div>
                     <div class="ys-ep-slider-wrap">
@@ -349,13 +363,13 @@
                 {% endfor %}
             </div><!-- /topic-card -->
             <div style="margin-top:12px;text-align:right;">
-                <button type="submit" class="button is-solid accent-button form-button">Save Topic Preferences</button>
+                <button type="submit" class="button is-solid accent-button form-button">{{ _('Save Topic Preferences') }}</button>
             </div>
             </form>
             {% elif topics %}
-            <p style="color:#bbb;font-size:.85rem;padding:16px 0;">Opinion scale not yet configured.</p>
+            <p style="color:#bbb;font-size:.85rem;padding:16px 0;">{{ _('Opinion scale not yet configured.') }}</p>
             {% else %}
-            <p style="color:#bbb;font-size:.85rem;padding:16px 0;">No active topics for this experiment.</p>
+            <p style="color:#bbb;font-size:.85rem;padding:16px 0;">{{ _('No active topics for this experiment.') }}</p>
             {% endif %}
             </div><!-- /right column -->
             </div><!-- /two-col -->
@@ -490,7 +504,7 @@
             gallery: document.querySelector('[data-profile-pic-gallery]'),
             optionAttribute: 'data-profile-pic-option',
             availableImages: availableProfilePics,
-            ariaLabel: 'Use selected profile picture',
+            ariaLabel: {{ _('Use selected profile picture')|tojson }},
             minCellWidth: 64
         });
 
@@ -500,7 +514,7 @@
             gallery: document.querySelector('[data-cover-image-gallery]'),
             optionAttribute: 'data-cover-image-option',
             availableImages: availableCoverImages,
-            ariaLabel: 'Use selected header image',
+            ariaLabel: {{ _('Use selected header image')|tojson }},
             minCellWidth: 120
         });
     });
@@ -509,7 +523,7 @@
 
 <script>
 (function () {
-    var EP_INT_LABELS = ['Not Interested', 'Low Interest', 'High Interest', 'Extreme Interest'];
+    var EP_INT_LABELS = [{{ _('Not Interested')|tojson }}, {{ _('Low Interest')|tojson }}, {{ _('High Interest')|tojson }}, {{ _('Extreme Interest')|tojson }}];
     var EP_INT_VALUES = ['0.0', '0.33', '0.67', '1.0'];
     var EP_INT_COLORS = ['#a0b8e0', '#5596e6', '#3a74c7', '#1a4fa0'];
     var EP_OP_GROUPS  = [{% for og in opinion_groups %}{ id: {{ og.id }}, name: "{{ og.name.strip() }}" }{% if not loop.last %},{% endif %}{% endfor %}];

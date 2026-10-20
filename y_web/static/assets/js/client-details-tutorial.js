@@ -92,6 +92,20 @@
                 </ul>`,
             position: 'overlay',
             isLast: true
+        },
+        {
+            id: 'memory-config',
+            selector: '#box-memory-config',
+            title: '🧠 Client Memory',
+            description: `<p>Choose how the agents of this client <b>remember</b> past interactions and how much of it they recall.</p>`,
+            position: 'top'
+        },
+        {
+            id: 'archetype-config',
+            selector: '#box-archetype-config',
+            title: '🎭 Agent Archetypes',
+            description: `<p>Assign <b>archetypes</b> to the agents of this client to shape their behaviour in the simulation.</p>`,
+            position: 'top'
         }
     ];
     

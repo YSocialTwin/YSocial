@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional
 from flask import current_app
 from sqlalchemy import desc, func, select, text
 
-from y_web import db
+from y_web import db, prompt_store
 from y_web.src.content.avatars import resolve_forum_profile_pic
 from y_web.src.models import (
     Admin_users,
@@ -1437,7 +1437,9 @@ def _build_memory_snapshot(
         return local
 
 
-def _format_memory_pack(snapshot: Dict[str, Any], *, max_chars: int = 4500) -> str:
+def _format_memory_pack(
+    snapshot: Dict[str, Any], *, max_chars: int = 4500, language: Optional[str] = None
+) -> str:
     if not isinstance(snapshot, dict):
         return ""
 
@@ -1538,7 +1540,7 @@ def _format_memory_pack(snapshot: Dict[str, Any], *, max_chars: int = 4500) -> s
                 "- Reliability warning: memory retrieval is weak for this query."
             )
             parts.append(
-                "- Do not infer specific prior interactions from memory alone."
+                prompt_store.get("_memory__format_memory_pack__1", language=language)
             )
 
     # Keep legacy rendering for backward compatibility and semantic fallback mode.

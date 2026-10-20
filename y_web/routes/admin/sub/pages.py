@@ -14,6 +14,7 @@ from flask_login import current_user, login_required
 from sqlalchemy import select
 
 from y_web import db
+from y_web.i18n import gettext as _
 from y_web.src.content.feeds import get_feed
 from y_web.src.llm.ollama_manager import get_ollama_models
 from y_web.src.llm.vllm_manager import get_llm_models
@@ -80,7 +81,12 @@ def create_page():
     # Validate that page name is unique
     existing_page = db.session.scalars(select(Page).filter_by(name=name)).first()
     if existing_page:
-        flash(f"Page name '{name}' already exists. Please choose a different name.")
+        flash(
+            _(
+                "Page name '%(name)s' already exists. Please choose a different name.",
+                name=name,
+            )
+        )
         return page_data()
 
     page = Page(
@@ -212,7 +218,7 @@ def delete_page(uid):
     ).first()
     if page_pop:
         # show an error message
-        flash("Page is assigned to a population. Cannot delete.")
+        flash(_("Page is assigned to a population. Cannot delete."))
         return page_data()
 
     db.session.delete(page)

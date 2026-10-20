@@ -76,7 +76,7 @@ var MB_PROFILE = (function() {
                 })
                     .then(function(response) {
                         if (!response.ok) {
-                            throw new Error('Unable to load profile activity.');
+                            throw new Error(YI18n.t('Unable to load profile activity.'));
                         }
                         return response.json();
                     })

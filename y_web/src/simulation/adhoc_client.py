@@ -18,6 +18,7 @@ from flask import current_app
 from y_web.src.simulation.process_registry import _register_process, _unregister_process
 from y_web.src.simulation.server import detect_env_handler
 from y_web.src.simulation.subprocess_env import build_subprocess_env
+from y_web.src.system import prompt_packs
 from y_web.src.system.path_utils import get_resource_path, get_writable_path
 
 
@@ -365,12 +366,15 @@ def start_adhoc_client(experiment, client_key: str):
             "Y_ADHOC_CLIENT_SUBPROCESS": "1",
             "PYTHONUNBUFFERED": "1",
             "YAGENTS_CLIENT_LOG_FILE": str(client_log_path),
+            **prompt_packs.launch_env(experiment),
         }
     )
 
     if not getattr(sys, "frozen", False):
         workspace_root = str(Path(__file__).resolve().parents[3])
-        plugin_src = str(Path(workspace_root) / "external" / "y_agents_plugins" / "src")
+        from y_web.src.system.path_utils import get_external_path
+
+        plugin_src = str(Path(get_external_path("y_agents_plugins")) / "src")
         existing_path = env.get("PYTHONPATH", "")
         env["PYTHONPATH"] = os.pathsep.join(
             part for part in [workspace_root, plugin_src, existing_path] if part

@@ -151,7 +151,7 @@ def test_profile_template_uses_shared_ranked_card_and_profile_panels():
         '{% include "microblogging/components/sidebar_ranked_list_card.html" %}'
         in template
     )
-    assert 'ranked_card_title = "Frequently Used Hashtags"' in template
+    assert "ranked_card_title = _('Frequently Used Hashtags')" in template
     assert "ys-profile-section-heading__subtitle" in template
     assert "{% if username != logged_username and is_page!=1 and mutual %}" in template
     assert ".ys-profile-section-heading" in css
@@ -227,8 +227,8 @@ def test_microblog_helper_wires_adhoc_agent_badges():
     )
 
     assert "_ADHOC_AGENT_BADGE_LABELS" in source
-    assert '"stress_attacker": "Stress Attacker"' in source
-    assert '"comic_relief": "Comic Relief Agent"' in source
+    assert '"stress_attacker": N_("Stress Attacker")' in source
+    assert '"comic_relief": N_("Comic Relief Agent")' in source
     assert '"adhoc_agent_badge": get_adhoc_agent_badge(user)' in source
     assert '"adhoc_agent_badge": get_adhoc_agent_badge(aa)' in source
     assert '"adhoc_agent_badge": get_adhoc_agent_badge(user)' in thread_source

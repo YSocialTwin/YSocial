@@ -309,6 +309,9 @@ def start_client(exp, cli, population, resume=True):
             # Mark this as a client subprocess so the atexit handler doesn't run cleanup
             # This prevents the subprocess from killing all other experiments when it exits
             "Y_CLIENT_SUBPROCESS": "1",
+            **__import__("y_web.src.system.prompt_packs", fromlist=["x"]).launch_env(
+                exp, cli
+            ),
         }
     )
 

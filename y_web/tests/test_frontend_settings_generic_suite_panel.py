@@ -126,6 +126,11 @@ def suites_app(app):
     templates_dir = _os.path.join(_os.path.dirname(_y_web_pkg.__file__), "templates")
     app.jinja_loader = FileSystemLoader(templates_dir)
 
+    # The admin templates call gettext (_) and html_lang(), registered by Flask-Babel.
+    from y_web.i18n import init_i18n
+
+    init_i18n(app)
+
     # Both registered suites here (frontend_adds_on, reactive_agents) are
     # marked is_private=True in SUPPORTED_EXTERNAL_REPOS with no explicit
     # visible_to_usernames allow-list, so since the admin-role-alone

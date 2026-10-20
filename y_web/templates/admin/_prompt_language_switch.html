@@ -1,0 +1,21 @@
+{# Language of this experiment's prompts, in a box of its own above the prompts form. Stored per experiment; loading a language
+   reloads the prompt file from that language's pack. Shown only when more than one language pack is installed. #}
+{% if prompt_languages and prompt_languages|length > 1 %}
+<div class="dashboard-box ys-prompt-language">
+    <form action="/admin/prompts_language/{{ experiment.idexp }}" method="POST"
+          onsubmit='return confirm({{ _('Replace the prompts of this experiment with the ones of the selected language? Changes you made to them will be lost.')|tojson }});'>
+        <div class="ys-prompt-language-row">
+            <h4 class="title is-6 is-thin ys-prompt-language-title">{{ _('Prompt language') }}</h4>
+            <div class="select ys-prompt-language-select">
+                <select name="prompt_language" class="w-100" aria-label="{{ _('Prompt language') }}">
+                    {% for lang in prompt_languages %}
+                    <option value="{{ lang.code }}" {% if lang.code == (experiment.prompt_language or 'en') %}selected{% endif %}>{{ lang.native_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="button is-solid primary-button">{{ _('Load prompts') }}</button>
+        </div>
+        <p class="ys-label-hint ys-prompt-language-note">{{ _('Language of the prompts used by the agents of this simulation. Loading a language replaces the prompts below with that language\'s version.') }} {{ _('Prompts in the selected language work only if the language model chosen for the simulation supports that language.') }}</p>
+    </form>
+</div>
+{% endif %}

@@ -54,7 +54,9 @@ cover/
 
 # Translations
 *.mo
+!y_web/translations/**/*.mo
 *.pot
+!y_web/translations/messages.pot
 
 # Django stuff:
 *.log
@@ -206,3 +208,15 @@ cython_debug/
 /STRATA_OpenAI_Teen_Development_Grant_Draft.md
 /STRATA_OpenAI_Teen_Development_Grant_Full_Proposal_Draft.md
 /YSocial_analisi_codebase.md
+
+# pseudo-locale catalog (generated, development only)
+y_web/translations/en_US_POSIX/
+
+# local database backups
+y_web/db/*.bak
+y_web/db/*.bak-journal
+y_web/db/backup-*
+pilot_runs/
+
+# local Flask secret key (keeps logins and "Remember me" valid across restarts)
+.ysocial_secret_key

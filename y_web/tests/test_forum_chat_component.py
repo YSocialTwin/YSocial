@@ -116,8 +116,11 @@ def test_forum_chat_routes_are_exposed():
     assert "_forum_chat_followed_agent_ids" in route_source
     assert "_build_facts_snapshot" in route_source
     assert "_format_facts_pack" in route_source
-    assert "FACTS CONTEXT" in route_source
-    assert "Do not use hashtags in your replies." in route_source
+    # the chat prompt lives in the prompt packs now, one per language
+    assert "reddit__forum_chat_generate_reply__3" in route_source
+    internal = (_REPO_ROOT / "y_web/prompts_internal.json").read_text()
+    assert "FACTS CONTEXT" in internal
+    assert "Do not use hashtags in your replies." in internal
     assert '"facts_snapshot_present"' in route_source
     assert "session.last_message_at =" in route_source
     assert "memory_query_text" in route_source

@@ -27,6 +27,7 @@ from sqlalchemy.sql.expression import func
 from werkzeug.security import generate_password_hash
 
 from y_web import db
+from y_web.i18n import gettext as _
 from y_web.routes.admin.sub.experiments._frontend_settings import _load_recsys_options
 from y_web.routes.social._blueprint import main
 from y_web.routes.social.helpers import (
@@ -83,6 +84,7 @@ from y_web.src.recsys.content_recsys import (
     _normalize_content_recsys_mode,
     is_supported_content_recsys_mode,
 )
+from y_web.src.system.avatars_store import get_avatars_dir
 from y_web.src.system.path_utils import get_writable_path
 
 
@@ -299,7 +301,7 @@ def profile():
     # Get active experiments
     exps = db.session.scalars(select(Exps).filter(Exps.status != 0)).all()
     if not exps:
-        flash("No active experiment. Please activate an experiment first.")
+        flash(_("No active experiment. Please activate an experiment first."))
         return redirect("/admin/experiments")
 
     if len(exps) > 1:
@@ -316,7 +318,7 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
     """Handle profile logged operation."""
     exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if not exp:
-        flash("Experiment not found", "error")
+        flash(_("Experiment not found"), "error")
         return redirect(url_for("main.index"))
 
     # Get experiment user (not admin user) for logged_id
@@ -327,7 +329,7 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
         if getattr(exp, "platform_type", "") == "forum":
             logged_id = current_user.id
         else:
-            flash("User not found in experiment", "error")
+            flash(_("User not found in experiment"), "error")
             return redirect(url_for("main.index"))
     else:
         logged_id = logged_user.id
@@ -345,7 +347,7 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
 
     # If user still not found, redirect with error message
     if not user:
-        flash("User not found in experiment", "error")
+        flash(_("User not found in experiment"), "error")
         return redirect(url_for("main.index"))
 
     if getattr(exp, "platform_type", "") == "photo_sharing":
@@ -584,19 +586,13 @@ def edit_profile(exp_id, user_id):
         select(User_mgmt).filter_by(username=current_user.username)
     ).first()
     if not logged_user:
-        flash("User not found in experiment", "error")
+        flash(_("User not found in experiment"), "error")
         return redirect(url_for("main.index"))
     logged_id = logged_user.id
 
     available_profile_pics = []
     try:
-        users_img_dir = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-            "static",
-            "assets",
-            "img",
-            "users",
-        )
+        users_img_dir = get_avatars_dir()
         available_profile_pics = sorted(
             [
                 filename
@@ -609,6 +605,37 @@ def edit_profile(exp_id, user_id):
     available_cover_images = [
         os.path.basename(path) for path in available_cover_image_urls()
     ]
+
+    _exp_for_page = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
+    if getattr(_exp_for_page, "platform_type", "") == "forum":
+        # Forum: a user may only edit their own profile; no topics/opinions
+        # and no recommender selection on this platform.
+        if str(logged_id) != str(user_id):
+            return redirect(
+                url_for(
+                    "main.profile_logged",
+                    exp_id=exp_id,
+                    user_id=logged_id,
+                    mode="recent",
+                    page=1,
+                )
+            )
+        return render_template(
+            "forum/edit_profile.html",
+            user=user,
+            profile_pic=profile_pic,
+            available_profile_pics=available_profile_pics,
+            cover_image=_get_user_cover_image(user.id),
+            available_cover_images=available_cover_images,
+            is_page=user.is_page,
+            username=user.username,
+            user_id=user_id,
+            logged_username=current_user.username,
+            logged_id=logged_id,
+            is_admin=is_admin(current_user.username),
+            exp_id=exp_id,
+            forum_memory_enabled=_forum_memory_enabled(exp_id),
+        )
 
     # ── Topic/opinion data (same logic as onboarding GET) ─────────────────
     def _get_exp_engine_ep():
@@ -716,6 +743,9 @@ def edit_profile(exp_id, user_id):
     _recsys_opts = _load_recsys_options(_sim_type, include_human_only=_is_human_profile)
     return render_template(
         "microblogging/edit_profile.html",
+        profile_topics_box=bool(
+            _load_ui_settings(exp_id).get("profile_topics_box", True)
+        ),
         user=user,
         profile_pic=profile_pic,
         available_profile_pics=available_profile_pics,
@@ -774,27 +804,35 @@ def update_profile_data(exp_id, user_id):
                 or url_for("main.edit_profile", exp_id=exp_id, user_id=user_id)
             )
         user.recsys_type = canonical_recsys
-    user.frecsys_type = request.form.get("frecsys_type")
+    if request.form.get("frecsys_type") is not None:
+        user.frecsys_type = request.form.get("frecsys_type")
     user.age = int(request.form.get("age"))
+    # Forums have no picture/header fields: leave those untouched when absent.
     profile_pic = request.form.get("profile_pic")
-    cover_image = request.form.get("cover_image") or random_cover_image_url()
+    cover_image = request.form.get("cover_image")
+    if "profile_pic" in request.form:
+        if user.is_page == 1:
+            page = db.session.scalars(
+                select(Page).filter_by(name=user.username)
+            ).first()
+            if page is not None:
+                page.logo = profile_pic
+        else:
+            agent = db.session.scalars(
+                select(Agent).filter_by(name=user.username)
+            ).first()
+            if agent is not None:
+                agent.profile_pic = profile_pic
 
-    if user.is_page == 1:
-        page = db.session.scalars(select(Page).filter_by(name=user.username)).first()
-        if page is not None:
-            page.logo = profile_pic
-    else:
-        agent = db.session.scalars(select(Agent).filter_by(name=user.username)).first()
-        if agent is not None:
-            agent.profile_pic = profile_pic
+        admin_user = db.session.scalars(
+            select(Admin_users).filter_by(username=user.username)
+        ).first()
+        if admin_user is not None:
+            admin_user.profile_pic = profile_pic
 
-    admin_user = db.session.scalars(
-        select(Admin_users).filter_by(username=user.username)
-    ).first()
-    if admin_user is not None:
-        admin_user.profile_pic = profile_pic
-
-    _set_user_cover_image(user.id, cover_image)
+    if "cover_image" in request.form:
+        cover_image = cover_image or random_cover_image_url()
+        _set_user_cover_image(user.id, cover_image)
 
     db.session.commit()
 
@@ -992,7 +1030,7 @@ def update_password(exp_id, user_id):
 
     if npassword != npassword2:
         # return an error message
-        flash("The provided passwords do not match.")
+        flash(_("The provided passwords do not match."))
         return redirect(request.referrer)
 
     pwd = generate_password_hash(npassword, method="pbkdf2:sha256")
@@ -1027,7 +1065,7 @@ def onboarding(exp_id, user_id):
 
     user = db.session.scalars(select(User_mgmt).filter_by(id=user_id)).first()
     if not user:
-        flash("User not found.", "error")
+        flash(_("User not found."), "error")
         return redirect(url_for("auth.login"))
 
     # ── Skip onboarding if already completed ──────────────────────────────
@@ -1054,7 +1092,10 @@ def onboarding(exp_id, user_id):
         except Exception:
             return False
 
-    if _already_onboarded(user_id):
+    # The admin can switch onboarding off per experiment (Frontend Settings)
+    if _already_onboarded(user_id) or not _load_ui_settings(exp_id).get(
+        "onboarding_enabled", True
+    ):
         exp_obj = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
         if exp_obj is not None:
             if exp_obj.platform_type == "microblogging":
@@ -1083,13 +1124,7 @@ def onboarding(exp_id, user_id):
     # Available images
     available_profile_pics = []
     try:
-        users_img_dir = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-            "static",
-            "assets",
-            "img",
-            "users",
-        )
+        users_img_dir = get_avatars_dir()
         available_profile_pics = sorted(
             f
             for f in os.listdir(users_img_dir)
@@ -1305,7 +1340,7 @@ def save_onboarding(exp_id, user_id):
     # ── 0. Load user ───────────────────────────────────────────────────────
     user = db.session.scalars(select(User_mgmt).filter_by(id=user_id_val)).first()
     if not user:
-        flash("User not found.", "error")
+        flash(_("User not found."), "error")
         return redirect(url_for("auth.login"))
 
     # ── 1. Save profile fields ─────────────────────────────────────────────

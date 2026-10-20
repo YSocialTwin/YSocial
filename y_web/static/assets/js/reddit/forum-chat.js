@@ -38,7 +38,7 @@
     return fetch(url, { credentials: 'same-origin' }).then(async (res) => {
       const payload = await res.json().catch(() => ({}))
       if (!res.ok || payload.success === false) {
-        throw new Error(payload.error || 'Request failed')
+        throw new Error(payload.error || YI18n.t('Request failed'))
       }
       return payload.data
     })
@@ -53,7 +53,7 @@
     }).then(async (res) => {
       const payload = await res.json().catch(() => ({}))
       if (!res.ok || payload.success === false) {
-        throw new Error(payload.error || 'Request failed')
+        throw new Error(payload.error || YI18n.t('Request failed'))
       }
       return payload.data
     })
@@ -159,7 +159,7 @@
       })
 
     if (!items.length) {
-      listEl.innerHTML = '<div class="forum-chat-empty">No agents match this search.</div>'
+      listEl.innerHTML = '<div class="forum-chat-empty">' + YI18n.t('No agents match this search.') + '</div>'
       renderCollapsedBadge()
       return
     }
@@ -167,7 +167,7 @@
     listEl.innerHTML = items.map(agent => {
       const session = sessionsByTarget.get(Number(agent.user_id))
       const preview = session?.last_message_preview || agent.preview || agent.profession || 'Start a conversation'
-      const stamp = session?.last_message_at ? new Date(session.last_message_at).toLocaleDateString() : ''
+      const stamp = session?.last_message_at ? new Date(session.last_message_at).toLocaleDateString(document.documentElement.lang || undefined) : ''
       return `
         <button class="forum-chat-list-item" type="button" data-agent-id="${agent.user_id}">
           <div class="forum-chat-list-avatar">${avatarMarkup(agent.username, agent.profile_pic)}</div>
@@ -195,7 +195,7 @@
   function renderMessages () {
     const messages = state.currentSession?.messages || []
     if (!messages.length) {
-      messagesEl.innerHTML = '<div class="forum-chat-empty forum-chat-empty-thread">No messages yet. Start the conversation.</div>'
+      messagesEl.innerHTML = '<div class="forum-chat-empty forum-chat-empty-thread">' + YI18n.t('No messages yet. Start the conversation.') + '</div>'
       return
     }
     messagesEl.innerHTML = messages.map(msg => (
@@ -218,7 +218,7 @@
     threadEl.classList.remove('is-hidden')
     targetAvatarEl.innerHTML = avatarMarkup(session.target_username, session.target_profile_pic)
     targetNameEl.textContent = session.target_username
-    targetSubtitleEl.textContent = 'Private chat'
+    targetSubtitleEl.textContent = YI18n.t('Private chat')
     markSessionRead(session)
     renderMessages()
     renderCollapsedBadge()

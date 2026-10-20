@@ -6,11 +6,36 @@ import json
 import os
 import re
 import shutil
+import threading
+import time
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Sequence
 
+from y_web.i18n import N_
 from y_web.src.system.path_utils import get_resource_path, get_writable_path
+
+# Texts of the plugin list that live in this module or in repositories without a
+# translation catalog of their own. They are only declared here (for extraction);
+# the plugin pages translate them when they are shown.
+RUNTIME_TEXTS = (
+    N_("Simulation Runtime Stack"),
+    N_("Agent Extensions"),
+    N_("Frontend Extensions"),
+    N_("Backend Extensions"),
+    N_("Runs the agents of a microblogging simulation (client side)."),
+    N_("Hosts the microblogging platform the agents interact with (server side)."),
+    N_("Runs the agents of a forum simulation (client side)."),
+    N_("Hosts the forum platform the agents interact with (server side)."),
+    N_(
+        "Simulation runtime for photo-sharing experiments, with an Instagram-like platform."
+    ),
+    N_("Runs large-scale simulations in a distributed way on HPC clusters."),
+    N_(
+        "Gives simulated agents a memory of past interactions: relationship history, thread continuity and conversation cues used when they reply."
+    ),
+)
 
 ROOT = Path(get_writable_path())
 EXTERNAL_DIR = ROOT / "external"
@@ -30,6 +55,26 @@ _BOOTSTRAP_REPORT = {
     "missing_resource_repos": [],
     "seed_errors": {},
 }
+
+
+BUILTIN_PLUGINS_FILE = Path(__file__).with_name("builtin_plugins.json")
+
+
+def _read_builtin_payload() -> list[dict]:
+    """The plugins that ship with YSocial (``builtin_plugins.json``, in the package).
+
+    This file is part of the release, not downloaded: it is the trusted base that
+    the public plugin registry (``catalog.py``) can add to but never override.
+    """
+    payload = json.loads(BUILTIN_PLUGINS_FILE.read_text(encoding="utf-8"))
+    if payload.get("schema_version") != 1 or not isinstance(
+        payload.get("plugins"), list
+    ):
+        raise ValueError(f"unsupported format: {BUILTIN_PLUGINS_FILE.name}")
+    return payload["plugins"]
+
+
+_BUILTIN_PAYLOAD = _read_builtin_payload()
 
 
 def _seed_external_runtime_repo(repo_name: str) -> str:
@@ -54,15 +99,7 @@ def ensure_external_runtime_layout() -> None:
     resources when running a frozen build for the first time.
     """
     EXTERNAL_DIR.mkdir(parents=True, exist_ok=True)
-    for repo_name in (
-        "YClient",
-        "YServer",
-        "YClientReddit",
-        "YServerReddit",
-        "YSimulator",
-        "YPhotoSharing",
-        "y_agents_plugins",
-    ):
+    for repo_name in [e["directory"] for e in _BUILTIN_PAYLOAD if e.get("seed")]:
         try:
             result = _seed_external_runtime_repo(repo_name)
             if result == "seeded":
@@ -108,191 +145,78 @@ class ExternalRuntimeSpec:
     validate_import: str | None = None
     is_private: bool = True
     visible_to_usernames: tuple[str, ...] = ()
+    # Plugins listed in the public plugin registry (``catalog.py``) carry these;
+    # the repositories hard-coded below keep the defaults.
+    trust: str = "official"  # "official" | "community"
+    source: str = "builtin"  # "builtin" | "registry"
+    description: str = ""
+    authors: tuple[str, ...] = ()
+    min_ysocial_version: str | None = None
 
 
+def _builtin_spec(entry: dict) -> ExternalRuntimeSpec:
+    repo = entry["repo"]
+    return ExternalRuntimeSpec(
+        key=entry["key"],
+        group=entry["group"],
+        group_label=entry["group_label"],
+        category=entry["category"],
+        category_label=entry["category_label"],
+        label=entry["label"],
+        path=EXTERNAL_DIR / entry["directory"],
+        github_repo=repo,
+        repo_url=f"https://github.com/{repo}.git",
+        default_branch=entry.get("branch", "main"),
+        install_commands=tuple(tuple(c) for c in entry.get("install_commands", ())),
+        validate_entrypoints=tuple(entry.get("validate_entrypoints", ())),
+        validate_import=entry.get("validate_import"),
+        is_private=bool(entry.get("private", True)),
+        visible_to_usernames=tuple(entry.get("visible_to_usernames", ())),
+        description=str(entry.get("description") or "").strip(),
+    )
+
+
+# Built-in plugins: the data lives in ``builtin_plugins.json``; the keys are
+# referenced from the rest of the code (experiment types, locks, ...), so they
+# are stable and never come from the network.
 SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
-    "microblogging_client": ExternalRuntimeSpec(
-        key="microblogging_client",
-        group="microblogging",
-        group_label="Microblogging",
-        category="simulation_runtimes",
-        category_label="Simulation Runtime Stack",
-        label="YClient",
-        path=EXTERNAL_DIR / "YClient",
-        github_repo="YSocialTwin/YClient",
-        repo_url="https://github.com/YSocialTwin/YClient.git",
-        default_branch="main",
-        install_commands=(
-            ("python", "-m", "pip", "install", "-r", "requirements_client.txt"),
-        ),
-        validate_entrypoints=("y_client", "requirements_client.txt"),
-        validate_import="y_client",
-        is_private=False,
-    ),
-    "microblogging_server": ExternalRuntimeSpec(
-        key="microblogging_server",
-        group="microblogging",
-        group_label="Microblogging",
-        category="simulation_runtimes",
-        category_label="Simulation Runtime Stack",
-        label="YServer",
-        path=EXTERNAL_DIR / "YServer",
-        github_repo="YSocialTwin/YServer",
-        repo_url="https://github.com/YSocialTwin/YServer.git",
-        default_branch="main",
-        install_commands=(
-            ("python", "-m", "pip", "install", "-r", "requirements_server.txt"),
-        ),
-        validate_entrypoints=("y_server", "requirements_server.txt"),
-        validate_import="y_server",
-        is_private=False,
-    ),
-    "forum_client": ExternalRuntimeSpec(
-        key="forum_client",
-        group="forum",
-        group_label="Forum",
-        category="simulation_runtimes",
-        category_label="Simulation Runtime Stack",
-        label="YClientReddit",
-        path=EXTERNAL_DIR / "YClientReddit",
-        github_repo="YSocialTwin/YClientReddit",
-        repo_url="https://github.com/YSocialTwin/YClientReddit.git",
-        default_branch="main",
-        install_commands=(
-            ("python", "-m", "pip", "install", "-r", "requirements_client.txt"),
-        ),
-        validate_entrypoints=("y_client", "requirements_client.txt"),
-        validate_import="y_client",
-        is_private=False,
-    ),
-    "forum_server": ExternalRuntimeSpec(
-        key="forum_server",
-        group="forum",
-        group_label="Forum",
-        category="simulation_runtimes",
-        category_label="Simulation Runtime Stack",
-        label="YServerReddit",
-        path=EXTERNAL_DIR / "YServerReddit",
-        github_repo="YSocialTwin/YServerReddit",
-        repo_url="https://github.com/YSocialTwin/YServerReddit.git",
-        default_branch="main",
-        install_commands=(
-            ("python", "-m", "pip", "install", "-r", "requirements_server.txt"),
-        ),
-        validate_entrypoints=("y_server", "requirements_server.txt"),
-        validate_import="y_server",
-        is_private=False,
-    ),
-    "hpc_simulator": ExternalRuntimeSpec(
-        key="hpc_simulator",
-        group="hpc",
-        group_label="HPC",
-        category="simulation_runtimes",
-        category_label="Simulation Runtime Stack",
-        label="YSimulator",
-        path=EXTERNAL_DIR / "YSimulator",
-        github_repo="YSocialTwin/YSimulator",
-        repo_url="https://github.com/YSocialTwin/YSimulator.git",
-        default_branch="main",
-        install_commands=(
-            ("python", "-m", "pip", "install", "-r", "requirements.txt"),
-        ),
-        validate_entrypoints=("run_server.py", "run_client.py"),
-        validate_import="YSimulator",
-        is_private=False,
-    ),
-    "photo_sharing": ExternalRuntimeSpec(
-        key="photo_sharing",
-        group="photo_sharing",
-        group_label="Photo Sharing",
-        category="simulation_runtimes",
-        category_label="Simulation Runtime Stack",
-        label="YPhotoSharing",
-        path=EXTERNAL_DIR / "YPhotoSharing",
-        github_repo="YSocialTwin/YPhotoSharing",
-        repo_url="https://github.com/YSocialTwin/YPhotoSharing.git",
-        default_branch="main",
-        install_commands=(
-            ("python", "-m", "pip", "install", "-r", "requirements.txt"),
-        ),
-        validate_entrypoints=("run_server.py", "run_client.py", "requirements.txt"),
-        validate_import="YPhotoSharing",
-    ),
-    "agent_plugins": ExternalRuntimeSpec(
-        key="agent_plugins",
-        group="agent_plugins",
-        group_label="Agent Plugins",
-        category="agent_extensions",
-        category_label="Agent Extensions",
-        label="y_agents_plugins",
-        path=EXTERNAL_DIR / "y_agents_plugins",
-        github_repo="YSocialTwin/y_agents_plugins",
-        repo_url="https://github.com/YSocialTwin/y_agents_plugins.git",
-        default_branch="main",
-        install_commands=(),
-        validate_entrypoints=(),
-        validate_import=None,
-        is_private=False,
-    ),
-    "reactive_agents": ExternalRuntimeSpec(
-        key="reactive_agents",
-        group="frontend_plugins",
-        group_label="Frontend Plugins",
-        category="agent_extensions",
-        category_label="Agent Extensions",
-        label="Reactive Agents",
-        path=EXTERNAL_DIR / "reactive_agents",
-        github_repo="YSocialTwin/reactive_agents",
-        repo_url="https://github.com/YSocialTwin/reactive_agents.git",
-        default_branch="main",
-        install_commands=(),
-        validate_entrypoints=(),
-        validate_import=None,
-        is_private=True,
-    ),
-    "frontend_adds_on": ExternalRuntimeSpec(
-        key="frontend_adds_on",
-        group="frontend_plugins",
-        group_label="Frontend Plugins",
-        category="frontend_extensions",
-        category_label="Frontend Extensions",
-        label="Frontend Adds-on",
-        path=EXTERNAL_DIR / "frontend_adds-on",
-        github_repo="YSocialTwin/frontend_adds-on",
-        repo_url="https://github.com/YSocialTwin/frontend_adds-on.git",
-        default_branch="main",
-        install_commands=(),
-        validate_entrypoints=(),
-        validate_import=None,
-        is_private=True,
-    ),
-    "scenario_design": ExternalRuntimeSpec(
-        key="scenario_design",
-        group="backend_settings",
-        group_label="Backend Settings",
-        category="backend_extensions",
-        category_label="Backend Extensions",
-        label="Scenario Design",
-        path=EXTERNAL_DIR / "ScenarioDesign",
-        github_repo="YSocialTwin/ScenarioDesign",
-        repo_url="https://github.com/YSocialTwin/ScenarioDesign.git",
-        default_branch="main",
-        install_commands=(),
-        validate_entrypoints=(),
-        validate_import=None,
-        is_private=True,
-    ),
+    entry["key"]: _builtin_spec(entry) for entry in _BUILTIN_PAYLOAD
 }
 
 
+# --- plugins listed in the public plugin registry ----------------------------
+# ``SUPPORTED_EXTERNAL_REPOS`` stays the built-in whitelist. The registry client
+# (``catalog.py``) only ever adds *validated* entries here, never overrides a
+# built-in key, and callers read the merged view through ``supported_repos()``.
+_CATALOG_SPECS: dict[str, ExternalRuntimeSpec] = {}
+_CATALOG_LOCK = threading.Lock()
+
+
+def set_catalog_specs(specs: dict[str, ExternalRuntimeSpec]) -> None:
+    """Replace the registry-provided specs (built-in keys are never shadowed)."""
+    clean = {k: v for k, v in specs.items() if k not in SUPPORTED_EXTERNAL_REPOS}
+    with _CATALOG_LOCK:
+        _CATALOG_SPECS.clear()
+        _CATALOG_SPECS.update(clean)
+
+
+def supported_repos() -> dict[str, ExternalRuntimeSpec]:
+    """Snapshot of the built-in repositories plus the registry-provided ones."""
+    with _CATALOG_LOCK:
+        extra = dict(_CATALOG_SPECS)
+    merged = dict(SUPPORTED_EXTERNAL_REPOS)
+    merged.update(extra)
+    return merged
+
+
 def runtime_spec(repo_key: str) -> ExternalRuntimeSpec:
-    return SUPPORTED_EXTERNAL_REPOS[repo_key]
+    return supported_repos()[repo_key]
 
 
 def grouped_runtime_specs() -> list[tuple[str, str, Sequence[ExternalRuntimeSpec]]]:
     groups: dict[str, list[ExternalRuntimeSpec]] = {}
     labels: dict[str, str] = {}
-    for spec in SUPPORTED_EXTERNAL_REPOS.values():
+    for spec in supported_repos().values():
         groups.setdefault(spec.group, []).append(spec)
         labels[spec.group] = spec.group_label
 
@@ -387,7 +311,7 @@ def scan_plugin_info_files() -> list[dict]:
                         "plugin_name": "y_agents_plugins",
                         "category": "Agent Extensions",
                         "group": "Agent Plugins",
-                        "description": "Plugin-defined ad hoc agent families for YSocial experiments.",
+                        "description": "Ready-made special-purpose agents (moderator, propaganda, comic relief, stress testing and more) to add to an experiment.",
                         "authors": ["YSocialTwin"],
                         "repository_url": "https://github.com/YSocialTwin/y_agents_plugins",
                     },
@@ -452,6 +376,119 @@ def plugin_metadata_for_runtime(
     return None
 
 
+# --- repositories that were private and became public -----------------------
+# ``is_private`` in the specs below is only the *initial* classification. A
+# repository that GitHub reports as public (anonymous request) is treated as
+# public everywhere, so it shows up for every admin without editing the
+# registry, the installer or the visibility configuration.
+_PUBLIC_RECHECK_SECONDS = 900.0
+_PUBLIC_STATE: dict[str, tuple[float, bool]] = {}  # key -> (checked_at, is_public)
+_PUBLIC_LOCK = threading.Lock()
+_PUBLIC_LOADED = False
+
+
+def _public_state_path() -> Path:
+    return EXTERNAL_DIR / "repo_visibility.json"
+
+
+def _load_public_state() -> None:
+    """Read the last known state from disk once (survives restarts)."""
+    global _PUBLIC_LOADED
+    with _PUBLIC_LOCK:
+        if _PUBLIC_LOADED:
+            return
+        _PUBLIC_LOADED = True
+        try:
+            payload = json.loads(_public_state_path().read_text(encoding="utf-8"))
+            for key, item in payload.items():
+                _PUBLIC_STATE.setdefault(
+                    str(key), (float(item["checked_at"]), bool(item["public"]))
+                )
+        except (OSError, ValueError, KeyError, TypeError, AttributeError):
+            pass
+
+
+def _save_public_state() -> None:
+    try:
+        path = _public_state_path()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        data = {
+            key: {"checked_at": at, "public": public}
+            for key, (at, public) in _PUBLIC_STATE.items()
+        }
+        path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    except OSError:
+        pass
+
+
+def repo_is_public(spec: "ExternalRuntimeSpec") -> bool:
+    """Last known answer to "is this repository public on GitHub?" (no network)."""
+    _load_public_state()
+    with _PUBLIC_LOCK:
+        item = _PUBLIC_STATE.get(spec.key)
+    return bool(item and item[1])
+
+
+def _probe_public(github_repo: str, timeout: float) -> bool | None:
+    """True/False when GitHub answers clearly, None when unknown (offline, rate limit)."""
+    import requests
+
+    try:
+        response = requests.get(
+            f"https://api.github.com/repos/{github_repo}",
+            headers={"Accept": "application/vnd.github+json"},
+            timeout=timeout,
+        )
+    except requests.RequestException:
+        return None
+    if response.status_code == 200:
+        try:
+            return response.json().get("private") is False
+        except ValueError:
+            return None
+    if response.status_code == 404:
+        return False  # private (anonymous request) or not existing
+    return None
+
+
+def refresh_public_repos(*, force: bool = False, timeout: float = 3.0) -> None:
+    """Re-check, in parallel, the repositories still classified as private.
+
+    Anonymous requests only, so a repository the user can reach with a token
+    is not mistaken for a public one. Failures keep the previous answer.
+    """
+    try:
+        from flask import current_app, has_app_context
+
+        if has_app_context() and current_app.config.get("TESTING"):
+            return
+    except RuntimeError:
+        pass
+    _load_public_state()
+    now = time.time()
+    due = []
+    for spec in supported_repos().values():
+        if not spec.is_private:
+            continue
+        with _PUBLIC_LOCK:
+            item = _PUBLIC_STATE.get(spec.key)
+        if force or item is None or now - item[0] > _PUBLIC_RECHECK_SECONDS:
+            due.append(spec)
+    if not due:
+        return
+    with ThreadPoolExecutor(max_workers=len(due)) as pool:
+        answers = list(pool.map(lambda sp: _probe_public(sp.github_repo, timeout), due))
+    changed = False
+    with _PUBLIC_LOCK:
+        for spec, answer in zip(due, answers):
+            if answer is None:
+                continue
+            _PUBLIC_STATE[spec.key] = (now, answer)
+            changed = True
+    if changed:
+        _save_public_state()
+
+
 def _visibility_overrides() -> dict[str, tuple[str, ...] | str]:
     raw = os.getenv("YSOCIAL_PLUGIN_VISIBILITY", "").strip()
     if not raw:
@@ -500,6 +537,8 @@ def runtime_visible_to_user(spec: ExternalRuntimeSpec, admin_user) -> bool:
         return False
     if not spec.is_private:
         return True
+    if repo_is_public(spec):
+        return True  # was private, GitHub now reports it public
     if _development_mode_enabled():
         # User-reported requirement: a "development" startup flag should
         # unlock every plugin repository marked private in this registry

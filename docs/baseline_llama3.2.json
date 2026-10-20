@@ -1,0 +1,45 @@
+{
+ "model": "llama3.2",
+ "seed": 1,
+ "rounds": 50,
+ "request_errors": 0,
+ "parsing_success": 1.0,
+ "by_prompt": {
+  "action": {
+   "ok": 50,
+   "bad": 0,
+   "empty": 0,
+   "success": 1.0,
+   "mean_prompt_tokens": 98,
+   "mean_completion_tokens": 2.1,
+   "mean_seconds": 0.24
+  },
+  "follow": {
+   "ok": 50,
+   "bad": 0,
+   "empty": 0,
+   "success": 1.0,
+   "mean_prompt_tokens": 105.2,
+   "mean_completion_tokens": 2,
+   "mean_seconds": 0.07
+  },
+  "reaction": {
+   "ok": 50,
+   "bad": 0,
+   "empty": 0,
+   "success": 1.0,
+   "mean_prompt_tokens": 98.2,
+   "mean_completion_tokens": 2,
+   "mean_seconds": 0.07
+  },
+  "vote": {
+   "ok": 50,
+   "bad": 0,
+   "empty": 0,
+   "success": 1.0,
+   "mean_prompt_tokens": 114.2,
+   "mean_completion_tokens": 2,
+   "mean_seconds": 0.07
+  }
+ }
+}

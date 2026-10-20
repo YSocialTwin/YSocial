@@ -4,17 +4,27 @@
       "plugin_name": "Scenario Design",
       "category": "Backend Extensions",
       "group": "Backend Settings",
-      "description": "Admin-only authoring tool for designing multi-round interaction scenarios (threads, posts, round scheduling) ahead of an experiment run. Drafts live alongside the experiment they belong to and are promoted/published into the experiment's own data once validated.",
+      "description": "Design multi-round interaction scenarios \u2014 threads, posts and their timing \u2014 before running an experiment.",
       "authors": [
         "YSocialTwin"
       ],
       "repository_url": "https://github.com/YSocialTwin/ScenarioDesign"
     },
     {
+      "plugin_name": "Training Modules",
+      "category": "Backend Extensions",
+      "group": "Backend Settings",
+      "description": "Build training courses from ordered steps \u2014 YSocial scenarios, questionnaires or external pages \u2014 assign them to students and export their activity.",
+      "authors": [
+        "YSocialTwin"
+      ],
+      "repository_url": "https://github.com/YSocialTwin/TrainingModules"
+    },
+    {
       "plugin_name": "YClient",
       "category": "Simulation Runtime Stack",
       "group": "Microblogging",
-      "description": "Client-side microblogging simulation runtime for YSocial experiments.",
+      "description": "Runs the agents of a microblogging simulation (client side).",
       "authors": [
         "YSocialTwin"
       ],
@@ -24,7 +34,7 @@
       "plugin_name": "YClientReddit",
       "category": "Simulation Runtime Stack",
       "group": "Forum",
-      "description": "Client-side forum simulation runtime for Reddit-like YSocial scenarios.",
+      "description": "Runs the agents of a forum simulation (client side).",
       "authors": [
         "YSocialTwin"
       ],
@@ -34,7 +44,7 @@
       "plugin_name": "YPhotoSharing",
       "category": "Simulation Runtime Stack",
       "group": "HPC",
-      "description": "Instagram like photo-sharing simulation runtime for YSocial experiments.",
+      "description": "Simulation runtime for photo-sharing experiments, with an Instagram-like platform.",
       "authors": [
         "YSocialTwin"
       ],
@@ -44,7 +54,7 @@
       "plugin_name": "YServer",
       "category": "Simulation Runtime Stack",
       "group": "Microblogging",
-      "description": "Server-side microblogging simulation runtime for YSocial experiments.",
+      "description": "Hosts the microblogging platform the agents interact with (server side).",
       "authors": [
         "YSocialTwin"
       ],
@@ -54,7 +64,7 @@
       "plugin_name": "YServerReddit",
       "category": "Simulation Runtime Stack",
       "group": "Forum",
-      "description": "Server-side forum simulation runtime for Reddit-like YSocial scenarios.",
+      "description": "Hosts the forum platform the agents interact with (server side).",
       "authors": [
         "YSocialTwin"
       ],
@@ -64,7 +74,7 @@
       "plugin_name": "YSimulator",
       "category": "Simulation Runtime Stack",
       "group": "HPC",
-      "description": "Distributed HPC simulation runtime for large-scale YSocial experiments.",
+      "description": "Runs large-scale simulations in a distributed way on HPC clusters.",
       "authors": [
         "YSocialTwin"
       ],
@@ -74,7 +84,7 @@
       "plugin_name": "Frontend Adds-on",
       "category": "Frontend Extensions",
       "group": "Frontend Plugins",
-      "description": "Suite of opt-in frontend plugins for YSocial microblogging experiments (annotation tools, educational overlays). Modules are enabled and configured independently, per experiment, from the YWeb admin dashboard.",
+      "description": "Optional add-ons for the participant interface, such as annotation tools and educational overlays, enabled per experiment.",
       "authors": [
         "YSocialTwin"
       ],
@@ -84,7 +94,7 @@
       "plugin_name": "Reactive Agents",
       "category": "Agent Extensions",
       "group": "Agent Extensions",
-      "description": "Makes simulation agents react to human activity between simulation rounds \u2014 mention replies, follow/unfollow, reactions, multi-agent thread continuation, annotation/opinion-dynamics parity, selective per-viewer visibility, ad-hoc agents, and more \u2014 without requiring the simulation to be running, plus a virtual round clock (Phase 7) letting ad-hoc agent clients run against a stopped experiment. Phase 8 adds low-frequency contact continuity: a responsive agent checks in on a followed human who has gone quiet for a configured length of time.",
+      "description": "Lets simulated agents react to human participants even when the simulation is not running: they answer mentions, react to posts of the people they follow and join ongoing threads. Optional extras include per-viewer content hiding, a virtual round clock for ad hoc agents, and check-ins with followed users who go quiet.",
       "authors": [
         "YSocialTwin"
       ],
@@ -94,11 +104,21 @@
       "plugin_name": "y_agents_plugins",
       "category": "Agent Extensions",
       "group": "Agent Plugins",
-      "description": "Plugin-defined ad hoc agent families for YSocial experiments.",
+      "description": "Ready-made special-purpose agents (moderator, propaganda, comic relief, stress testing and more) to add to an experiment.",
       "authors": [
         "YSocialTwin"
       ],
       "repository_url": "https://github.com/YSocialTwin/y_agents_plugins"
+    },
+    {
+      "plugin_name": "Agent Memory",
+      "category": "Agent Extensions",
+      "group": "Agent Plugins",
+      "description": "Gives simulated agents a memory of past interactions: relationship history, thread continuity and conversation cues used when they reply.",
+      "authors": [
+        "YSocialTwin"
+      ],
+      "repository_url": "https://github.com/YSocialTwin/y_memory_subsystem"
     }
   ]
 }

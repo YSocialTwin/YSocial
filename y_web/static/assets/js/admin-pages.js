@@ -10,28 +10,28 @@ var AdminPages = (function() {
     }
 
     function buildAgentActionsHtml(id, config) {
-        return '<div style="display: flex; gap: 8px; justify-content: center;"><a href="'+config.detailsUrlPrefix+id+'" style="background-color: #28a745; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">Details</a><a href="'+config.deleteUrlPrefix+id+'" style="background-color: #dc3545; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">Delete</a></div>';
+        return '<div style="display: flex; gap: 8px; justify-content: center;"><a href="' + config.detailsUrlPrefix + id + '" style="background-color: #28a745; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">' + YI18n.t('Details') + '</a><a href="' + config.deleteUrlPrefix + id + '" style="background-color: #dc3545; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">' + YI18n.t('Delete') + '</a></div>';
     }
 
     function buildDeleteLinkHtml(url, label, message) {
         var escapedMessage = (message || 'Are you sure?').replace(/'/g, '&#39;');
-        return '<a href="'+url+'" onclick="return confirm(\''+escapedMessage+'\')" style="background-color: #dc3545; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">'+label+'</a>';
+        return '<a href="'+url+'" onclick="return confirm(YI18n.t(\''+escapedMessage+'\'))" style="background-color: #dc3545; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">'+YI18n.t(label)+'</a>';
     }
 
     function buildActivityProfileFormatter(cell) {
-        if (!cell || !cell.hours) return gridjs.html('<span style="color: #999; font-size: 0.85em;">Not assigned</span>');
+        if (!cell || !cell.hours) return gridjs.html('<span style="color: #999; font-size: 0.85em;">' + YI18n.t('Not assigned') + '</span>');
         var hours = cell.hours.split(',').map(function(h) { return parseInt(h.trim()); });
         var barHtml = Array.from({length: 24}, function(_, i) {
             var isActive = hours.includes(i);
             var bgColor = isActive ? 'rgba(34, 197, 94, 0.8)' : 'rgba(229, 231, 235, 0.5)';
-            return '<div style="display: inline-block; width: 3.5%; height: 12px; background-color: '+bgColor+'; border: 0.5px solid #e5e7eb; margin: 0;" title="Hour '+i+'"></div>';
+            return '<div style="display: inline-block; width: 3.5%; height: 12px; background-color: ' + bgColor + '; border: 0.5px solid #e5e7eb; margin: 0;" title="' + YI18n.t('Hour {i}', {i}) + '"></div>';
         }).join('');
         return gridjs.html('<div style="display: flex; flex-direction: column; gap: 3px;"><div style="font-size: 0.8em; font-weight: 500;">'+cell.name+'</div><div style="display: flex; width: 100%; gap: 0;">'+barHtml+'</div></div>');
     }
 
     function buildActivityProfileTagsHtml(values) {
         if (!values || values.length === 0) {
-            return '<span style="color: #999; font-size: 0.85em;">Not assigned</span>';
+            return '<span style="color: #999; font-size: 0.85em;">' + YI18n.t('Not assigned') + '</span>';
         }
         var tags = values.map(function(value) {
             return '<span style="display: inline-block; background-color: #039be5; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; margin: 2px;">'+value+'</span>';
@@ -78,10 +78,10 @@ var AdminPages = (function() {
         if (config.kind === 'hello') {
             columns = [
                 { id: 'id', hidden: true },
-                { id: 'name', name: 'Name', attributes: editableCellAttributes },
-                { id: 'daily_budget', name: 'Daily Budget', sort: true },
-                { id: 'activity_profile', name: 'Activity Profile', sort: true, width: '250px', formatter: function(cell) { return buildActivityProfileTagFormatter(cell); } },
-                { id: 'actions', name: 'Actions', sort: false, formatter: function(cell, row) {
+                { id: 'name', name: YI18n.t('Name'), attributes: editableCellAttributes },
+                { id: 'daily_budget', name: YI18n.t('Daily Budget'), sort: true },
+                { id: 'activity_profile', name: YI18n.t('Activity Profile'), sort: true, width: '250px', formatter: function(cell) { return buildActivityProfileTagFormatter(cell); } },
+                { id: 'actions', name: YI18n.t('Actions'), sort: false, formatter: function(cell, row) {
                     var id = row.cells[0].data;
                     return gridjs.html(buildAgentActionsHtml(id, config));
                 }}
@@ -90,12 +90,12 @@ var AdminPages = (function() {
         } else {
             columns = [
                 { id: 'id', hidden: true },
-                { id: 'name', name: 'Name', attributes: editableCellAttributes },
-                { id: 'age', name: 'Age', sort: true },
-                { id: 'profession', name: 'Profession', sort: true },
-                { id: 'daily_activity_level', name: 'Activity Level', sort: true, formatter: function(cell) { return gridjs.html(getStarRatingHtml(cell)); } },
-                { id: 'activity_profile', name: 'Activity Profile', sort: true, width: '250px', formatter: function(cell) { return buildActivityProfileFormatter(cell); } },
-                { id: 'actions', name: 'Actions', sort: false, formatter: function(cell, row) {
+                { id: 'name', name: YI18n.t('Name'), attributes: editableCellAttributes },
+                { id: 'age', name: YI18n.t('Age'), sort: true },
+                { id: 'profession', name: YI18n.t('Profession'), sort: true },
+                { id: 'daily_activity_level', name: YI18n.t('Activity Level'), sort: true, formatter: function(cell) { return gridjs.html(getStarRatingHtml(cell)); } },
+                { id: 'activity_profile', name: YI18n.t('Activity Profile'), sort: true, width: '250px', formatter: function(cell) { return buildActivityProfileFormatter(cell); } },
+                { id: 'actions', name: YI18n.t('Actions'), sort: false, formatter: function(cell, row) {
                     var id = row.cells[0].data;
                     return gridjs.html(buildAgentActionsHtml(id, config));
                 }}
@@ -135,10 +135,10 @@ var AdminPages = (function() {
             var target = event.target;
             if (target.classList.contains('delete-button')) {
                 var id = target.getAttribute('data-id');
-                if (confirm('Are you sure you want to delete this agent?')) {
+                if (confirm(YI18n.t('Are you sure you want to delete this agent?'))) {
                     fetch(config.deleteUrlPrefix + id, { method: 'DELETE' })
-                        .then(function(r) { if (!r.ok) throw new Error('Failed to delete'); location.reload(); })
-                        .catch(function(err) { alert('Error deleting agent.'); console.error(err); });
+                        .then(function(r) { if (!r.ok) throw new Error(YI18n.t('Failed to delete')); location.reload(); })
+                        .catch(function(err) { YNotify.error(YI18n.t('Error deleting agent.')); console.error(err); });
                 }
             }
         });
@@ -157,18 +157,18 @@ var AdminPages = (function() {
         new gridjs.Grid({
             columns: [
                 { id: 'logo', name: '', formatter: function(cell) {
-                    return gridjs.html('<div style="display: flex; justify-content: center; align-items: center; height: 100%; width: 100%;"><img src="'+cell+'" alt="logo" style="height: 25px; object-fit: contain; margin: 0; padding: 0; display: block;"></div>');
+                    return gridjs.html('<div style="display: flex; justify-content: center; align-items: center; height: 100%; width: 100%;"><img src="' + cell + '" alt="logo" style="height: 25px; object-fit: contain; margin: 0; padding: 0; display: block;"></div>');
                 }, sort: false, searchable: false, width: '60px' },
                 { id: 'id', hidden: true },
-                { id: 'name', name: 'Name', attributes: editableCellAttributes },
-                { id: 'page_type', name: 'Type' },
-                { id: 'leaning', name: 'Political Leaning' },
-                { id: 'activity_profile', name: 'Activity Profile', sort: false, formatter: function(cell) {
+                { id: 'name', name: YI18n.t('Name'), attributes: editableCellAttributes },
+                { id: 'page_type', name: YI18n.t('Type') },
+                { id: 'leaning', name: YI18n.t('Political Leaning') },
+                { id: 'activity_profile', name: YI18n.t('Activity Profile'), sort: false, formatter: function(cell) {
                     return gridjs.html(buildActivityProfileTagsHtml(cell || []));
                 }},
-                { id: 'actions', name: 'Actions', formatter: function(cell, row) {
+                { id: 'actions', name: YI18n.t('Actions'), formatter: function(cell, row) {
                     var id = row.cells[1].data;
-                    return gridjs.html('<div style="display: flex; gap: 8px; justify-content: center;"><a href="/admin/page_details/'+id+'" style="background-color: #28a745; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">Details</a><a href="/admin/delete_page/'+id+'" style="background-color: #dc3545; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">Delete</a></div>');
+                    return gridjs.html('<div style="display: flex; gap: 8px; justify-content: center;"><a href="/admin/page_details/' + id + '" style="background-color: #28a745; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">' + YI18n.t('Details') + '</a><a href="/admin/delete_page/' + id + '" style="background-color: #dc3545; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">' + YI18n.t('Delete') + '</a></div>');
                 }}
             ],
             server: { url: '/admin/pages_data', then: function(r) { return r.data; }, total: function(r) { return r.total; } },
@@ -202,10 +202,10 @@ var AdminPages = (function() {
             var target = event.target;
             if (target.classList.contains('delete-button')) {
                 var id = target.getAttribute('data-id');
-                if (confirm('Are you sure you want to delete this page?')) {
+                if (confirm(YI18n.t('Are you sure you want to delete this page?'))) {
                     fetch('/admin/delete_page/' + id, { method: 'DELETE' })
-                        .then(function(r) { if (!r.ok) throw new Error('Failed to delete'); location.reload(); })
-                        .catch(function(err) { alert('Error deleting page.'); console.error(err); });
+                        .then(function(r) { if (!r.ok) throw new Error(YI18n.t('Failed to delete')); location.reload(); })
+                        .catch(function(err) { YNotify.error(YI18n.t('Error deleting page.')); console.error(err); });
                 }
             }
         });
@@ -244,16 +244,16 @@ var AdminPages = (function() {
         new gridjs.Grid({
             columns: [
                 { id: 'id', hidden: true },
-                { id: 'name', name: 'Name' },
-                { id: 'descr', name: 'Description' },
-                { id: 'agent_count', name: 'Size' },
+                { id: 'name', name: YI18n.t('Name') },
+                { id: 'descr', name: YI18n.t('Description') },
+                { id: 'agent_count', name: YI18n.t('Size') },
                 {
                     id: 'actions',
-                    name: 'Actions',
+                    name: YI18n.t('Actions'),
                     sort: false,
                     formatter: function(cell, row) {
                         var id = row.cells[0].data;
-                        return gridjs.html('<div style="display: flex; gap: 8px; justify-content: center;"><a href="/admin/population_details/'+id+'" style="background-color: #28a745; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">Details</a>'+buildDeleteLinkHtml('/admin/delete_population/'+id, 'Delete', 'Are you sure you want to delete this population?')+'</div>');
+                        return gridjs.html('<div style="display: flex; gap: 8px; justify-content: center;"><a href="/admin/population_details/' + id + '" style="background-color: #28a745; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">' + YI18n.t('Details') + '</a>' + buildDeleteLinkHtml('/admin/delete_population/'+id, 'Delete', 'Are you sure you want to delete this population?') + '</div>');
                     }
                 }
             ],
@@ -274,22 +274,22 @@ var AdminPages = (function() {
         new gridjs.Grid({
             columns: [
                 { id: 'id', hidden: true },
-                { id: 'name', name: 'Name' },
-                { id: 'ag_type', name: 'Agent Type' },
-                { id: 'activity_profile', name: 'Activity Profile', formatter: function(cell) { return buildActivityProfileTagFormatter(cell); } },
-                { id: 'daily_activity_level', name: 'Activity Level' },
-                { id: 'ext_fields', name: 'Extension Fields', formatter: function(cell) {
+                { id: 'name', name: YI18n.t('Name') },
+                { id: 'ag_type', name: YI18n.t('Agent Type') },
+                { id: 'activity_profile', name: YI18n.t('Activity Profile'), formatter: function(cell) { return buildActivityProfileTagFormatter(cell); } },
+                { id: 'daily_activity_level', name: YI18n.t('Activity Level') },
+                { id: 'ext_fields', name: YI18n.t('Extension Fields'), formatter: function(cell) {
                     if (!cell || Object.keys(cell).length === 0) {
-                        return gridjs.html('<span style="color: #999; font-size: 0.85em;">None</span>');
+                        return gridjs.html('<span style="color: #999; font-size: 0.85em;">' + YI18n.t('None') + '</span>');
                     }
                     var items = Object.entries(cell).map(function(entry) {
                         return '<div><b>'+entry[0]+'</b>: '+entry[1]+'</div>';
                     }).join('');
                     return gridjs.html(items);
                 }},
-                { id: 'actions', name: 'Actions', sort: false, formatter: function(cell, row) {
+                { id: 'actions', name: YI18n.t('Actions'), sort: false, formatter: function(cell, row) {
                     var id = row.cells[0].data;
-                    return gridjs.html('<div style="display: flex; gap: 8px; justify-content: center;"><a href="/admin/agent_details/'+id+'" style="background-color: #28a745; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">Details</a></div>');
+                    return gridjs.html('<div style="display: flex; gap: 8px; justify-content: center;"><a href="/admin/agent_details/' + id + '" style="background-color: #28a745; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">' + YI18n.t('Details') + '</a></div>');
                 }}
             ],
             data: agents.map(function(agent) {
@@ -297,7 +297,7 @@ var AdminPages = (function() {
                     agent.id,
                     agent.name,
                     agent.ag_type || 'standard',
-                    agent.activity_profile || 'Not assigned',
+                    agent.activity_profile || YI18n.t('Not assigned'),
                     agent.daily_activity_level == null ? 'N/A' : agent.daily_activity_level,
                     agent.ext_fields || {}
                 ];
@@ -323,12 +323,12 @@ var AdminPages = (function() {
         new gridjs.Grid({
             columns: [
                 { id: 'id', hidden: true },
-                { id: 'name', name: 'Name' },
-                { id: 'descr', name: 'Description' },
-                { id: 'agent_count', name: 'Size' },
-                { id: 'actions', name: 'Actions', sort: false, formatter: function(cell, row) {
+                { id: 'name', name: YI18n.t('Name') },
+                { id: 'descr', name: YI18n.t('Description') },
+                { id: 'agent_count', name: YI18n.t('Size') },
+                { id: 'actions', name: YI18n.t('Actions'), sort: false, formatter: function(cell, row) {
                     var id = row.cells[0].data;
-                    return gridjs.html('<div style="display: flex; gap: 8px; justify-content: center;"><a href="/admin/population_details/'+id+'" style="background-color: #28a745; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">Details</a></div>');
+                    return gridjs.html('<div style="display: flex; gap: 8px; justify-content: center;"><a href="/admin/population_details/' + id + '" style="background-color: #28a745; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">' + YI18n.t('Details') + '</a></div>');
                 }}
             ],
             data: populations.map(function(pop) {
@@ -369,11 +369,11 @@ var AdminPages = (function() {
         });
         gridColumns.push({
             id: 'actions',
-            name: 'Actions',
+            name: YI18n.t('Actions'),
             sort: false,
             formatter: function(cell, row) {
                 var id = row.cells[0].data;
-                return gridjs.html('<div style="display: flex; gap: 8px; justify-content: center;"><a href="/admin/agent_details/'+id+'" style="background-color: #28a745; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">Details</a>'+buildDeleteLinkHtml('/admin/delete_agent/'+id, 'Delete', 'Are you sure you want to delete this agent?')+'</div>');
+                return gridjs.html('<div style="display: flex; gap: 8px; justify-content: center;"><a href="/admin/agent_details/' + id + '" style="background-color: #28a745; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">' + YI18n.t('Details') + '</a>' + buildDeleteLinkHtml('/admin/delete_agent/'+id, 'Delete', 'Are you sure you want to delete this agent?') + '</div>');
             }
         });
 

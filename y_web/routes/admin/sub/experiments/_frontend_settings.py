@@ -1,8 +1,10 @@
 """
 Frontend Settings admin route.
 
-Allows administrators to configure UI parameters per experiment
-(filtered to microblogging experiments).
+Allows administrators to configure UI parameters per experiment of any
+supported platform (microblogging, forum, photo sharing); the panel shows only
+the settings that exist in the chosen platform's templates (see
+``PLATFORM_CAPABILITIES``).
 Settings are stored in ExpFrontendSettings (one JSON row per experiment).
 
 Also serves the generic, repo_key-parameterized "frontend plugin suite"
@@ -19,11 +21,105 @@ from flask_login import current_user, login_required
 from sqlalchemy import select
 
 from y_web import db
+from y_web.i18n import N_, available_languages
+from y_web.i18n import gettext as _
 from y_web.src.models import ExpFrontendSettings, Exps
 from y_web.src.models.config import Content_Recsys, Follow_Recsys
 from y_web.src.system.miscellanea import check_privileges
 
 from ._blueprint import experiments
+
+# ------------------------------------------------------------------
+# Supported platforms and what each one's templates actually offer
+# ------------------------------------------------------------------
+SUPPORTED_PLATFORMS = ("microblogging", "forum", "photo_sharing")
+PLATFORM_LABELS = {
+    "microblogging": N_("Microblogging"),
+    "forum": N_("Forum"),
+    "photo_sharing": N_("Photo sharing"),
+}
+
+_COMMON_CAPABILITIES = {
+    "interaction_post",
+    "interaction_comment",
+    "interaction_like",
+    "show_post_time",
+    "posts_per_page",
+    # the interface language is resolved for every platform (y_web.i18n)
+    "language",
+    "language_switch_allowed",
+}
+
+# Controls that only exist on one platform: microblogging ("everything" otherwise)
+# must not offer them, because nothing in its templates reads them.
+MICROBLOGGING_EXCLUDED_CAPABILITIES = {
+    "default_forum_feed_type",  # forum feed ordering
+    "default_photo_feed_tab",  # photo-sharing home tab
+}
+
+# Settings each platform's templates honour. Anything not listed is hidden
+# in the admin panel for that platform (it would be a switch wired to nothing).
+PLATFORM_CAPABILITIES = {
+    "microblogging": None,  # everything
+    "forum": _COMMON_CAPABILITIES
+    | {
+        "interaction_dislike",  # downvote
+        "notifications_menu",
+        "annotations_enabled",
+        "annotation_emotions",
+        "annotation_topics",
+        "default_forum_feed_type",
+    },
+    "photo_sharing": _COMMON_CAPABILITIES
+    | {
+        "show_suggested_friends",  # "Suggestions for you" rail
+        "show_recsys_info",
+        "show_annotation_stats",
+        "interaction_share",
+        "annotation_agent_type",
+        "default_photo_feed_tab",
+    },
+}
+
+# Platform-specific feed orderings that replace the microblogging recommenders.
+FORUM_FEED_TYPES = [
+    {"name": "new", "label": N_("New")},
+    {"name": "hot", "label": N_("Hot")},
+    {"name": "top", "label": N_("Top")},
+    {"name": "most_commented", "label": N_("Most commented")},
+]
+PHOTO_FEED_TABS = [
+    {"name": "for_you", "label": N_("For you (recommended)")},
+    {"name": "follower", "label": N_("Following")},
+]
+
+
+def _localized_options(items):
+    """Copy of ``[{"name", "label"}]`` with the labels translated for this request."""
+    options = []
+    for item in items:
+        text = item["label"]  # declared with N_ above
+        options.append({**item, "label": _(text)})
+    return options
+
+
+def _localized_platform_label(value):
+    text = PLATFORM_LABELS[value]  # declared with N_ above
+    return _(text)
+
+
+def capabilities_for(platform_type: str):
+    """Sorted list of setting keys the platform supports, or ``None`` for all."""
+    caps = PLATFORM_CAPABILITIES.get(platform_type)
+    return None if caps is None else sorted(caps)
+
+
+def excluded_capabilities_for(platform_type: str):
+    """Setting keys to hide for a platform that otherwise offers everything."""
+    if PLATFORM_CAPABILITIES.get(platform_type, 0) is None:
+        return sorted(MICROBLOGGING_EXCLUDED_CAPABILITIES)
+    return []
+
 
 # ------------------------------------------------------------------
 # Default settings — all interactions shown/enabled
@@ -46,6 +142,13 @@ DEFAULT_SETTINGS = {
     "annotation_agent_type": True,
     "annotation_author_type": True,
     "show_post_time": True,  # show "Day X - HH:00" below each post/comment
+    "show_trending_hashtags": True,  # show the "Trending Hashtags" box (microblogging only)
+    "show_suggested_friends": True,  # show the "Suggested Friends" box (microblogging / photo)
+    "show_recsys_info": False,  # box: the user's content recommender system, explained (microblogging / photo)
+    # Interface language of the participant pages (decision D4: set per experiment)
+    "language": "",  # empty = the default language (English); otherwise a supported code
+    "language_switch_allowed": False,  # let participants pick another language (cookie ys_lang_sim)
+    "show_annotation_stats": False,  # box: live distributions of the user's annotations (needs the annotation add-on)
     # Feed & Profile
     "default_content_recsys": "",  # empty = system default
     "default_follow_recsys": "",  # empty = system default
@@ -54,6 +157,9 @@ DEFAULT_SETTINGS = {
     # Infinite scroll & pagination
     "infinite_scroll_enabled": True,  # enable infinite scroll (False = paginate)
     "posts_per_page": 10,  # posts per page when infinite scroll is disabled
+    # Platform-specific feed defaults (forum / photo sharing)
+    "default_forum_feed_type": "new",  # new | hot | top | most_commented
+    "default_photo_feed_tab": "for_you",  # for_you | follower
     # FilterBubble (Personalized Feed) recommender parameters
     "filter_bubble_alpha": 2.0,  # opinion similarity width (Gaussian)
     "filter_bubble_beta": 0.0,  # recency decay (0 = disabled)
@@ -64,6 +170,19 @@ DEFAULT_SETTINGS = {
     "filter_bubble_wc": 1.5,  # weight for comments in engagement score
     "filter_bubble_ws": 2.0,  # weight for shares in engagement score
 }
+
+
+_ENUM_SETTINGS = {
+    "default_forum_feed_type": {item["name"] for item in FORUM_FEED_TYPES},
+    "default_photo_feed_tab": {item["name"] for item in PHOTO_FEED_TABS},
+}
+
+
+def _language_choices() -> set:
+    """Values accepted for the ``language`` setting: empty (default) or a supported language."""
+    from y_web.i18n import supported_languages
+
+    return {""} | set(supported_languages())
 
 
 def _load_settings(exp_id: int) -> dict:
@@ -77,6 +196,54 @@ def _load_settings(exp_id: int) -> dict:
     merged = dict(DEFAULT_SETTINGS)
     merged.update(loaded)
     return merged
+
+
+# Labels and categories of the recommender systems come from the database seed
+# (``content_recsys`` / ``follow_recsys``). They are declared here so they can be
+# translated; the algorithm names stay the stable identifiers.
+_RECSYS_TEXTS = (
+    N_("Random"),
+    N_("(RC) Reverse Chrono"),
+    N_("(RCP) Popularity"),
+    N_("(RCF) Followers"),
+    N_("(FP) Followers-Popularity"),
+    N_("(RCC) Reverse Chrono Comments"),
+    N_("(CI) Common Interests"),
+    N_("(CUI) Common User Interests"),
+    N_("(SIR) Similar Users Reactions"),
+    N_("(SIP) Similar Users Posts"),
+    N_("(HLR) Hybrid Linear Ranker"),
+    N_("Personalized Feed"),
+    N_("Common Neighbors"),
+    N_("Preferential Attachment"),
+    N_("Activity"),
+    N_("Global"),
+    N_("Social Timeline"),
+    N_("Content-Based Filtering"),
+    N_("Profile-Based User Similarity"),
+    N_("Behavioral User Modeling"),
+    N_("Demographic-Based"),
+    N_("Collaborative Filtering"),
+    N_("Hybrid Models"),
+    N_("Ensemble"),
+    N_("Personalization"),
+    N_("Baseline & Exploration"),
+    N_("Local Triadic Closure"),
+    N_("Popularity & Activity Bias"),
+    N_("Profile & Attribute Homophily"),
+    N_("Behavioral Homophily"),
+    N_("Graph Proximity"),
+    N_("Community Approximation"),
+    N_("Other"),
+)
+
+
+def _recsys_text(text):
+    """Translate a recommender label/category (unchanged when it has no translation)."""
+    return _(text) if text in _RECSYS_TEXT_SET else text
+
+
+_RECSYS_TEXT_SET = frozenset(_RECSYS_TEXTS)
 
 
 def _load_recsys_options(
@@ -116,8 +283,8 @@ def _load_recsys_options(
                 result.append(
                     {
                         "name": r.name,
-                        "label": r.value,
-                        "category": r.category or "Other",
+                        "label": _recsys_text(r.value),
+                        "category": _recsys_text(r.category or "Other"),
                     }
                 )
         return result
@@ -136,16 +303,27 @@ def _load_recsys_options(
 def frontend_settings():
     check_privileges(current_user.username)
 
-    micro_exps = db.session.scalars(
+    exps = db.session.scalars(
         select(Exps)
-        .filter(Exps.platform_type == "microblogging")
+        .filter(Exps.platform_type.in_(SUPPORTED_PLATFORMS))
         .order_by(Exps.exp_name.asc())
     ).all()
 
     exps_json = json.dumps(
         [
-            {"id": e.idexp, "name": e.exp_name, "type": "microblogging"}
-            for e in micro_exps
+            {
+                "id": e.idexp,
+                "name": e.exp_name,
+                "type": e.platform_type,
+                "group": (e.exp_group or "").strip(),
+            }
+            for e in exps
+        ]
+    )
+    platforms_json = json.dumps(
+        [
+            {"value": value, "label": _localized_platform_label(value)}
+            for value in SUPPORTED_PLATFORMS
         ]
     )
 
@@ -170,14 +348,33 @@ def frontend_settings():
         # --development).
         if not runtime_installed_and_visible(repo_key, current_user):
             continue
-        frontend_plugin_suites.append({"repo_key": repo_key, "label": spec.label})
+        from y_web.src.external_runtime.plugin_i18n import localize_text
+
+        frontend_plugin_suites.append(
+            {"repo_key": repo_key, "label": localize_text(repo_key, spec.label)}
+        )
 
     return render_template(
         "admin/frontend_settings.html",
         exps_json=exps_json,
+        platforms_json=platforms_json,
         recsys_json=recsys_json,
+        language_options=available_languages(),
         frontend_plugin_suites=frontend_plugin_suites,
     )
+
+
+def annotation_module_enabled(exp_id) -> bool:
+    """Whether the "Post & Comment Annotation" add-on module is enabled for *exp_id*."""
+    try:
+        from y_web.src.models import FrontendAddsOnExpModuleSettings
+
+        row = db.session.get(
+            FrontendAddsOnExpModuleSettings, (exp_id, "post_annotation")
+        )
+        return bool(row is not None and row.enabled)
+    except Exception:
+        return False
 
 
 # ------------------------------------------------------------------
@@ -190,22 +387,28 @@ def frontend_settings_get():
 
     exp_id = request.args.get("exp_id", type=int)
     if not exp_id:
-        return jsonify({"ok": False, "error": "Missing exp_id"}), 400
+        return jsonify({"ok": False, "error": _("Missing exp_id")}), 400
 
     exp = db.session.get(Exps, exp_id)
-    if exp is None or exp.platform_type != "microblogging":
-        return jsonify({"ok": False, "error": "Experiment not found"}), 404
+    if exp is None or exp.platform_type not in SUPPORTED_PLATFORMS:
+        return jsonify({"ok": False, "error": _("Experiment not found")}), 404
 
     return jsonify(
         {
             "ok": True,
             "exp_id": exp_id,
             "exp_name": exp.exp_name,
+            "platform_type": exp.platform_type,
+            "capabilities": capabilities_for(exp.platform_type),
+            "excluded_capabilities": excluded_capabilities_for(exp.platform_type),
             "simulator_type": exp.simulator_type or "Standard",
             "settings": _load_settings(exp_id),
+            "annotation_module_enabled": annotation_module_enabled(exp_id),
             "recsys_options": _load_recsys_options(
                 exp.simulator_type or "Standard", all_algorithms=True
             ),
+            "forum_feed_types": _localized_options(FORUM_FEED_TYPES),
+            "photo_feed_tabs": _localized_options(PHOTO_FEED_TABS),
         }
     )
 
@@ -223,11 +426,11 @@ def frontend_settings_save():
     new_settings = data.get("settings", {})
 
     if not exp_id:
-        return jsonify({"ok": False, "error": "Missing exp_id"}), 400
+        return jsonify({"ok": False, "error": _("Missing exp_id")}), 400
 
     exp = db.session.get(Exps, exp_id)
-    if exp is None or exp.platform_type != "microblogging":
-        return jsonify({"ok": False, "error": "Experiment not found"}), 404
+    if exp is None or exp.platform_type not in SUPPORTED_PLATFORMS:
+        return jsonify({"ok": False, "error": _("Experiment not found")}), 404
 
     safe = {}
     for k, default in DEFAULT_SETTINGS.items():
@@ -247,7 +450,14 @@ def frontend_settings_save():
                 safe[k] = default
         else:
             # string settings (recsys names, sort mode…)
-            safe[k] = str(new_settings[k])
+            value = str(new_settings[k])
+            allowed = _language_choices() if k == "language" else _ENUM_SETTINGS.get(k)
+            safe[k] = value if allowed is None or value in allowed else default
+
+    if safe.get("show_annotation_stats") and not annotation_module_enabled(exp_id):
+        safe["show_annotation_stats"] = (
+            False  # nothing to show without the annotation add-on
+        )
 
     row = db.session.get(ExpFrontendSettings, exp_id)
     if row is None:
@@ -309,6 +519,28 @@ def _frontend_plugin_module_config(manifest: dict, row) -> dict:
     return merged
 
 
+def _manifest_for_platform(manifest: dict, platform: str):
+    """Parameters and sections of *manifest* that apply to *platform*.
+
+    A parameter or section may carry its own ``platforms`` list; one that
+    does not applies everywhere the module itself does. Sections left with
+    no parameter are dropped, so a platform never sees an empty heading.
+    """
+
+    def applies(item):
+        scoped = item.get("platforms")
+        return not scoped or platform in scoped
+
+    params = [p for p in manifest.get("parameters") or [] if applies(p)]
+    used = {p.get("section") for p in params}
+    sections = [
+        sec
+        for sec in manifest.get("parameter_sections") or []
+        if applies(sec) and sec.get("key") in used
+    ]
+    return sections, params
+
+
 @experiments.route("/admin/frontend_settings/suite/<repo_key>/get", methods=["GET"])
 @login_required
 def frontend_plugin_suite_settings_get(repo_key):
@@ -316,11 +548,11 @@ def frontend_plugin_suite_settings_get(repo_key):
 
     exp_id = request.args.get("exp_id", type=int)
     if not exp_id:
-        return jsonify({"ok": False, "error": "Missing exp_id"}), 400
+        return jsonify({"ok": False, "error": _("Missing exp_id")}), 400
 
     exp = db.session.get(Exps, exp_id)
-    if exp is None or exp.platform_type != "microblogging":
-        return jsonify({"ok": False, "error": "Experiment not found"}), 404
+    if exp is None or exp.platform_type not in SUPPORTED_PLATFORMS:
+        return jsonify({"ok": False, "error": _("Experiment not found")}), 404
 
     from y_web.src.external_runtime.frontend_plugins import (
         frontend_plugin_repo_keys,
@@ -329,7 +561,7 @@ def frontend_plugin_suite_settings_get(repo_key):
     from y_web.src.models import FrontendAddsOnExpModuleSettings
 
     if repo_key not in frontend_plugin_repo_keys():
-        return jsonify({"ok": False, "error": "Unknown suite"}), 404
+        return jsonify({"ok": False, "error": _("Unknown suite")}), 404
 
     from y_web.src.external_runtime.registry import (
         runtime_installed_and_visible,
@@ -340,7 +572,7 @@ def frontend_plugin_suite_settings_get(repo_key):
     # it out must not be the ONLY thing stopping a direct call to this
     # endpoint from reaching a private, not-yet-visible suite.
     if not runtime_installed_and_visible(repo_key, current_user):
-        return jsonify({"ok": False, "error": "Unknown suite"}), 404
+        return jsonify({"ok": False, "error": _("Unknown suite")}), 404
 
     report = validate_frontend_suite(repo_key)
     if not report["installed"]:
@@ -353,22 +585,36 @@ def frontend_plugin_suite_settings_get(repo_key):
         .all()
     }
 
+    from y_web.src.external_runtime.plugin_i18n import (
+        localize_manifest,
+        localize_text,
+    )
+
     modules = []
     for manifest in report["modules"]:
+        manifest = localize_manifest(repo_key, manifest)
         module_id = manifest.get("module_id")
         row = rows.get(module_id)
+        shown_sections, shown_params = _manifest_for_platform(
+            manifest, exp.platform_type
+        )
         modules.append(
             {
                 "module_id": module_id,
                 "display_name": manifest.get("display_name") or module_id,
                 "version": manifest.get("version"),
                 "description": manifest.get("description") or "",
-                "parameter_sections": manifest.get("parameter_sections") or [],
-                "parameters": manifest.get("parameters") or [],
+                "parameter_sections": shown_sections,
+                "parameters": shown_params,
                 "enabled": bool(row is not None and row.enabled),
                 "config": _frontend_plugin_module_config(manifest, row),
                 "status": _frontend_plugin_module_status(manifest, row),
                 "manifest_errors": manifest.get("errors") or [],
+                # Modules declare the platforms they work on; one that says
+                # nothing is a microblogging-only module (its original scope).
+                "platforms": manifest.get("platforms") or ["microblogging"],
+                "supported": exp.platform_type
+                in (manifest.get("platforms") or ["microblogging"]),
             }
         )
 
@@ -377,7 +623,8 @@ def frontend_plugin_suite_settings_get(repo_key):
             "ok": True,
             "installed": True,
             "valid": report["valid"],
-            "suite": report.get("suite"),
+            "platform_type": exp.platform_type,
+            "suite": localize_manifest(repo_key, report.get("suite")),
             "suite_errors": report.get("errors") or [],
             "modules": modules,
         }
@@ -420,11 +667,11 @@ def frontend_plugin_suite_settings_save(repo_key):
     raw_config = data.get("config") or {}
 
     if not exp_id or not module_id:
-        return jsonify({"ok": False, "error": "Missing exp_id or module_id"}), 400
+        return jsonify({"ok": False, "error": _("Missing exp_id or module_id")}), 400
 
     exp = db.session.get(Exps, exp_id)
-    if exp is None or exp.platform_type != "microblogging":
-        return jsonify({"ok": False, "error": "Experiment not found"}), 404
+    if exp is None or exp.platform_type not in SUPPORTED_PLATFORMS:
+        return jsonify({"ok": False, "error": _("Experiment not found")}), 404
 
     from y_web.src.external_runtime.frontend_plugins import (
         discover_frontend_modules,
@@ -434,14 +681,14 @@ def frontend_plugin_suite_settings_save(repo_key):
     from y_web.src.models import FrontendAddsOnExpModuleSettings
 
     if repo_key not in frontend_plugin_repo_keys():
-        return jsonify({"ok": False, "error": "Unknown suite"}), 404
+        return jsonify({"ok": False, "error": _("Unknown suite")}), 404
 
     from y_web.src.external_runtime.registry import (
         runtime_installed_and_visible,
     )
 
     if not runtime_installed_and_visible(repo_key, current_user):
-        return jsonify({"ok": False, "error": "Unknown suite"}), 404
+        return jsonify({"ok": False, "error": _("Unknown suite")}), 404
 
     manifest = None
     for entry in discover_frontend_modules(repo_key):
@@ -449,10 +696,23 @@ def frontend_plugin_suite_settings_save(repo_key):
             manifest = entry
             break
     if manifest is None:
-        return jsonify({"ok": False, "error": "Unknown module"}), 404
+        return jsonify({"ok": False, "error": _("Unknown module")}), 404
+    if exp.platform_type not in (manifest.get("platforms") or ["microblogging"]):
+        return (
+            jsonify(
+                {
+                    "ok": False,
+                    "error": _(
+                        "This module is not available for this experiment type."
+                    ),
+                }
+            ),
+            409,
+        )
 
     safe_config = {}
-    for param in manifest.get("parameters", []):
+    _unused, applicable_params = _manifest_for_platform(manifest, exp.platform_type)
+    for param in applicable_params:
         name = param["name"]
         if name in raw_config:
             safe_config[name] = _coerce_frontend_plugin_param(raw_config[name], param)
@@ -464,7 +724,9 @@ def frontend_plugin_suite_settings_save(repo_key):
                 jsonify(
                     {
                         "ok": False,
-                        "error": "Could not prepare the experiment database for this module.",
+                        "error": _(
+                            "Could not prepare the experiment database for this module."
+                        ),
                     }
                 ),
                 500,

@@ -1,14 +1,14 @@
 {% include "admin/head.html" %}
 
 <div class="view-wrapper is-dashboard">
-    <div id="creator-dashboard" class="dashboard-container">
+    <div id="creator-dashboard" data-tutorial-page="rss_feeds" class="dashboard-container">
         {% include "admin/dash_head.html" %}
 
         <div class="dashboard-body">
             <div class="columns">
                 <div class="column is-12">
-                    <div class="dashboard-box">
-                        <a href="/admin/experiments">Experiments</a> > Simulation: <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }}</a> > RSS Feeds
+                    <div class="dashboard-box" data-tut="forum-rss-feed-assignment">
+                        <a href="/admin/experiments">{{ _('Experiments') }}</a> &gt; {{ _('Simulation:') }} <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }}</a> &gt; {{ _('RSS Feeds') }}
                     </div>
                 </div>
             </div>
@@ -16,16 +16,16 @@
             <div class="columns">
                 <div class="column is-8">
                     <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Forum RSS Feed Assignment</h3>
+                        <h3 class="title is-5 is-thin">{{ _('Forum RSS Feed Assignment') }}</h3>
                         <p class="ys-text-small">
-                            Select which reusable RSS resources should be assigned to this forum experiment. Feed validation and creation now live in the shared forum resource workspace.
+                            {{ _('Select which reusable RSS resources should be assigned to this forum experiment. Feed validation and creation now live in the shared forum resource workspace.') }}
                         </p>
 
                         <form action="/admin/update_rss_feeds/{{ experiment.idexp }}" method="POST" class="box-content">
                             <div class="box-line">
-                                <span class="left">Reusable RSS Resources</span>
+                                <span class="left">{{ _('Reusable RSS Resources') }}</span>
                                 <span class="right ys-w-70">
-                                    <a href="/admin/forum_rss_resources" class="button is-small">Manage Shared RSS Resources</a>
+                                    <a href="/admin/forum_rss_resources" class="button is-small">{{ _('Manage Shared RSS Resources') }}</a>
                                 </span>
                             </div>
 
@@ -62,7 +62,7 @@
                                         {% if feed.description %}
                                         <span class="ys-text-xs-hint" style="line-height: 1.45;">{{ feed.description }}</span>
                                         {% else %}
-                                        <span class="ys-text-xs-hint">No feed description available.</span>
+                                        <span class="ys-text-xs-hint">{{ _('No feed description available.') }}</span>
                                         {% endif %}
                                     </label>
                                     {% endfor %}
@@ -70,43 +70,42 @@
                             </div>
                             {% else %}
                             <div class="notification is-light" style="margin-bottom: 1rem;">
-                                No reusable RSS resources are available yet. Create them first in
-                                <a href="/admin/forum_rss_resources">Forum RSS Resources</a>.
+                                {{ _('No reusable RSS resources are available yet. Create them first in %(link)s.', link=wrap('a', _('Forum RSS Resources'), href='/admin/forum_rss_resources')) }}
                             </div>
                             {% endif %}
 
                             <hr>
 
-                            <h4 class="title is-6 is-thin">Direct Article URLs</h4>
+                            <h4 class="title is-6 is-thin">{{ _('Direct Article URLs') }}</h4>
                             <p class="ys-label-hint">
-                                These remain experiment-specific. Provide one URL per line for sources that should be pinned directly into this forum simulation.
+                                {{ _('These remain experiment-specific. Provide one URL per line for sources that should be pinned directly into this forum simulation.') }}
                             </p>
                             <textarea name="url_feeds_text" id="url_feeds_text" class="textarea" rows="8" placeholder="https://example.com/article-1&#10;https://example.com/article-2">{{ url_feeds | join('\n') }}</textarea>
 
                             <div class="button-wrap ys-mt-1em">
-                                <button type="submit" class="button is-solid primary-button is-fullwidth">Save Forum Feed Assignment</button>
+                                <button type="submit" class="button is-solid primary-button is-fullwidth">{{ _('Save Forum Feed Assignment') }}</button>
                             </div>
                         </form>
                     </div>
                 </div>
 
                 <div class="column is-4">
-                    <div class="dashboard-box is-compact">
-                        <h3 class="title is-5 is-thin">Assignment Notes</h3>
+                    <div class="dashboard-box is-compact" data-tut="assignment-notes">
+                        <h3 class="title is-5 is-thin">{{ _('Assignment Notes') }}</h3>
                         <div class="help-block">
                             <p>
-                                <b>Reusable RSS feeds</b><br>
-                                RSS and Reddit JSON feed sources are now stored in the dashboard database and can be reused across multiple forum experiments.
+                                <b>{{ _('Reusable RSS feeds') }}</b><br>
+                                {{ _('RSS and Reddit JSON feed sources are now stored in the dashboard database and can be reused across multiple forum experiments.') }}
                             </p>
                             <hr>
                             <p>
-                                <b>Experiment compatibility</b><br>
-                                Saving this page still writes the standard <code>rss_feeds.json</code> experiment file, so the existing forum runtime remains unchanged.
+                                <b>{{ _('Experiment compatibility') }}</b><br>
+                                {{ _('Saving this page still writes the standard %(file)s experiment file, so the existing forum runtime remains unchanged.', file=wrap('code', 'rss_feeds.json')) }}
                             </p>
                             <hr>
                             <p>
-                                <b>Direct URLs</b><br>
-                                Direct article URLs remain local to the current experiment because they are typically campaign- or run-specific.
+                                <b>{{ _('Direct URLs') }}</b><br>
+                                {{ _('Direct article URLs remain local to the current experiment because they are typically campaign- or run-specific.') }}
                             </p>
                         </div>
                     </div>

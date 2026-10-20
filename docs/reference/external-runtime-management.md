@@ -8,9 +8,9 @@ YSocial can manage external runtime repositories directly from the admin interfa
 
 This panel manages the runtime repositories installed under:
 
-- `/Users/rossetti/PycharmProjects/YWeb/external`
+- `external`
 
-The panel is intentionally limited to a fixed whitelist of supported plugins. It does not expose arbitrary shell access or arbitrary repository URLs.
+The panel is intentionally limited to a closed list of plugins: the ones built into YSocial plus the ones listed in the [public plugin registry](#public-plugin-registry). It does not expose arbitrary shell access or arbitrary repository URLs.
 
 Installed plugins expose metadata through:
 
@@ -35,8 +35,62 @@ Plugins are organized into two top-level categories:
     - `YSimulator`
   - `Agent Plugins`
     - `y_agents_plugins`
+    - `Agent Memory` (`y_memory_subsystem`)
+
+### Agent Memory
+
+`Agent Memory` (`external/y_memory_subsystem`) provides the `yclient_memory` library the
+clients use for agent memory. YWeb adds its `src` folder to the `PYTHONPATH` of every
+process it launches (clients, HPC clients, ad hoc agents), so installing the plugin is
+enough: `yclient-memory` is no longer a YWeb requirement. The clients keep it in their own
+requirements for standalone use; if neither is present, enabling memory fails with a message
+that names the plugin.
+
+The memory texts follow the prompt language of the experiment (`en` or `it`). A run keeps
+the language it started with; memories already stored are not translated. Versions of the
+library older than 0.2.0 ignore the language and stay in English, with one warning in the
+client log. See the library's `docs/languages.md` to add a language.
 
 The experiment creation flow already uses these plugin states to determine which experiment types are available.
+
+## Public plugin registry
+
+Every plugin is described in one place, the plugin registry repository
+([`YSocialTwin/plugin-registry`](https://github.com/YSocialTwin/plugin-registry)):
+
+- `builtin.json`: the plugins that ship with YSocial (key, group, directory, repository, install commands, files to
+  validate, visibility). It is released *with* YSocial and never fetched at run time: its keys are used by the rest
+  of the application, so it is the trusted base that the second file can add to but never redefine.
+- `registry.json`: every other plugin, described below.
+
+YSocial packages a **generated** copy of `builtin.json` in
+`y_web/src/external_runtime/builtin_plugins.json`, which records the registry commit and a hash of the list. Do not
+edit it: change `builtin.json` in the registry, then run
+`python scripts/packaging/sync_builtin_plugins.py --source <checkout of the registry>` (or `--ref <commit>`) and
+release. A test (`--verify`, offline) fails if the copy was edited by hand, and the release workflow fails if the
+copy is not the registry's latest (`--check-latest`).
+
+New plugins appear in an already installed YSocial through the public registry
+[`YSocialTwin/plugin-registry`](https://github.com/YSocialTwin/plugin-registry), a JSON list of
+plugins with their GitHub repository. YSocial reads it once at start-up (in the background, so it never
+delays the launch), keeps a copy in `external/plugin_registry_cache.json` for offline use and merges it
+with the built-in list; a built-in plugin always wins on a clash. Plugins whose `min_ysocial_version`
+is newer than the running YSocial are not listed.
+
+An entry names a repository, a branch and an install **recipe** (`auto`, `requirements`, `pip-editable`),
+never commands: the clone URL is built by YSocial and the recipes are fixed in the code
+(`y_web/src/external_runtime/catalog.py`). Malformed entries are skipped.
+
+Two trust levels:
+
+- `official`: repositories of the `YSocialTwin` organisation; they install like the built-in plugins. The level is
+  honoured only for those repositories.
+- `community`: any other repository. The list shows a **Community** badge, the plugin page shows a warning with the
+  repository link, and install/update/dependency actions need an explicit confirmation (also enforced by the
+  server). A plugin runs its own code when installed, so review the repository first.
+
+Configuration: `YSOCIAL_PLUGIN_REGISTRY_URL` sets another registry (an `https://` URL or a local file path, useful when
+developing a plugin) and `off` disables the lookup. To publish a plugin see [Publishing a plugin](publishing-a-plugin.md).
 
 ## Acquisition Model
 
@@ -111,7 +165,7 @@ Rules:
 Current implementation uses:
 
 - runtime metadata in:
-  - `/Users/rossetti/PycharmProjects/YWeb/y_web/src/external_runtime/registry.py`
+  - `y_web/src/external_runtime/builtin_plugins.json` (generated copy of the registry's `builtin.json`), read by `registry.py`
 - optional environment override:
   - `YSOCIAL_PLUGIN_VISIBILITY`
 
@@ -213,8 +267,60 @@ The plugin panel is working correctly when:
 
 ## Relevant Source Files
 
-- `/Users/rossetti/PycharmProjects/YWeb/y_web/src/external_runtime/registry.py`
-- `/Users/rossetti/PycharmProjects/YWeb/y_web/src/external_runtime/manager.py`
-- `/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_external_runtimes.py`
-- `/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/external_runtimes.html`
-- `/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/external_runtime_logs.html`
+- `y_web/src/external_runtime/builtin_plugins.json` (generated)
+- `scripts/packaging/sync_builtin_plugins.py`
+- `y_web/src/external_runtime/registry.py`
+- `y_web/src/external_runtime/catalog.py`
+- `y_web/src/external_runtime/manager.py`
+- `y_web/routes/admin/sub/experiments/_external_runtimes.py`
+- `y_web/templates/admin/external_runtimes.html`
+- `y_web/templates/admin/external_runtime_logs.html`
+
+## Backend plugin extension points
+
+Backend plugin suites (group `backend_settings`) can opt in to a few generic
+extension points through their own `meta/registry.json`. Every key is optional;
+with none declared, YSocial behaves exactly as before. Errors raised by a plugin
+hook are logged and never interrupt the core flow.
+
+```json
+{
+  "suite": {
+    "suite_id": "my_suite",
+    "sidebar": {
+      "label": "My suite", "icon": "box", "endpoint": "my_bp.index",
+      "group": {
+        "label": "Training", "icon": "book-open",
+        "items": [{"label": "Modules", "icon": "layers",
+                   "endpoint": "my_bp.modules", "roles": ["admin", "researcher"]}]
+      }
+    }
+  },
+  "schema_module": "modules.my.backend.schema:migrate",
+  "hooks": {
+    "post_login": "modules.my.backend.hooks:post_login",
+    "experiment_access_guard": "modules.my.backend.hooks:guard",
+    "experiment_user_provisioned": "modules.my.backend.hooks:provisioned"
+  },
+  "permissions": "modules.my.backend.perms:PERMISSIONS",
+  "training_components": []
+}
+```
+
+| Key | Contract |
+| --- | --- |
+| `schema_module` | `migrate(engine_admin) -> bool`, idempotent. Called after the core Alembic upgrade at startup and after an install from the Plugin Manager. |
+| `hooks.post_login` | `post_login(admin_user) -> url | None`. Called for participant roles (`user`, `student`) before the experiment selection; a returned local path (starting with `/`) redirects the participant. The session also carries `platform_account_id`. |
+| `hooks.experiment_access_guard` | `guard(account_id, exp_id) -> None | url | response`. Called for participant sessions on every request whose URL has an `exp_id`; `None` allows. |
+| `hooks.experiment_user_provisioned` | `fn(exp, account_id, exp_user_id, created)`. Emitted by `ensure_experiment_user` when the caller passes `account_id`. |
+| `permissions` | `dotted.module:attr` descriptor of the permissions the plugin declares (validated, reserved for the plugin). |
+| `sidebar.group` | Optional top-level sidebar group; items are shown only to the listed `roles` (default admin and researcher). The flat `sidebar` entry still adds one item under *Extensions*. |
+| `training_components` | Third-party step types for the TrainingModules editor (`type_key`, `label`, `contract_version`, flat `config_schema`, local-path `launch`/`instance_picker`/`activity_export`/`health`, `signals`). Read from any installed plugin; invalid descriptors are skipped and reported. |
+
+All `dotted.module:attr` references must exist on disk inside the plugin
+repository; an invalid declared key marks the suite invalid with an error in the
+suite report. Installed backend suites can be **disabled** from the Plugin
+Manager (state in the `plugin_state` table): their routes answer 404, they
+disappear from the menu and receive no hook calls, while their data is kept.
+Routes are registered at startup, so a newly installed suite needs an
+application restart before its routes exist.

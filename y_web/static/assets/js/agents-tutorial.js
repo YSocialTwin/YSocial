@@ -86,6 +86,20 @@
                 </ul>`,
             position: 'top',
             isLast: true
+        },
+        {
+            id: 'hello-populations',
+            selector: '#box-hello-populations',
+            title: '🧩 Plugin Populations',
+            description: `<p>Populations of the agent types provided by <b>plugins</b>. They behave like the other populations and appear only while the plugin is active.</p>`,
+            position: 'top'
+        },
+        {
+            id: 'agents-help',
+            selector: '#box-agents-help',
+            title: '❓ Quick Help',
+            description: `<p>A short reminder of how <b>agents, populations and pages</b> relate to each other.</p>`,
+            position: 'left'
         }
     ];
     

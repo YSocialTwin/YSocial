@@ -12,7 +12,7 @@ YSocial configuration is layered. That is the most important thing to understand
 
 ## 1. Application launch parameters
 
-These are the flags passed to `y_social.py` or `y_social_launcher.py`.
+These are the flags passed to `ysocial` (or `y_social.py` / `y_social_launcher.py` from a checkout).
 
 ### Core parameters
 
@@ -136,6 +136,28 @@ The interview flow can use different memory retrieval modes and depends on:
 - experiment memory enablement
 - client-level memory enablement
 - memory server availability when semantic retrieval is used
+
+## Languages
+
+YSocial separates three language settings; they are independent.
+
+| Setting | What it controls | Where it is set |
+|---|---|---|
+| Interface language | admin panel, participant frontend, messages (English, Italian) | the admin user's language; per experiment, the simulation language (`language`, `language_switch_allowed`) |
+| Prompt language | the instructions sent to the LLM (agent prompts, annotators, interviews, memory) | experiment `prompt_language`, optionally per client |
+| Population language | the language agents write in (`language` attribute of each agent, e.g. "Write in {self.language}") | population creation |
+
+An Italian experiment with an English population therefore produces English posts; create the population with language Italian to get Italian posts.
+
+Environment variables:
+
+| Variable | Effect |
+|---|---|
+| `YSOCIAL_LANGUAGES` | enabled interface languages, default `en,it`; `en` withdraws every other language |
+| `YSOCIAL_PSEUDO_LOCALE` | `1` enables the `en-XA` pseudo-locale for interface checks |
+| `YSOCIAL_PROMPT_LANGUAGE`, `YSOCIAL_PROMPT_FOLDER` | set by YSocial for the simulation subprocesses (prompt language and run folder); not meant to be set by hand |
+
+English output is the reference and never changes when another language is added. See [Adding a language](i18n/adding-a-language.md).
 
 ## Configuration storage guidance
 

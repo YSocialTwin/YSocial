@@ -1,6 +1,6 @@
 {% extends "photo/base.html" %}
 
-{% block photo_title %}Y Social | Search{% endblock %}
+{% block photo_title %}Y Social | {{ _('Search') }}{% endblock %}
 {% block photo_body_class %}photo-search-body{% endblock %}
 
 {% block photo_extra_head %}
@@ -321,15 +321,15 @@
                     type="search"
                     name="q"
                     value="{{ search_query }}"
-                    placeholder="Search photos, people, hashtags"
+                    placeholder="{{ _('Search photos, people, hashtags') }}"
                     data-photo-search-input
                     autocomplete="off"
                 />
             </form>
         </div>
 
-        <div class="photo-search-page__tabs" role="tablist" aria-label="Search filters">
-            {% for item in [('all', 'All'), ('photos', 'Photos'), ('users', 'People'), ('hashtags', 'Hashtags')] %}
+        <div class="photo-search-page__tabs" role="tablist" aria-label="{{ _('Search filters') }}">
+            {% for item in [('all', _('All')), ('photos', _('Photos')), ('users', _('People')), ('hashtags', _('Hashtags'))] %}
             <button
                 type="button"
                 class="photo-search-page__tab{% if search_kind == item[0] %} is-active{% endif %}"
@@ -342,12 +342,12 @@
             <section class="photo-search-page__gallery">
                 <div class="photo-search-page__gallery-head">
                     <div>
-                        <h1>Search results</h1>
+                        <h1>{{ _('Search results') }}</h1>
                         <p data-photo-search-summary>
                             {% if search_query %}
-                                Showing {{ search_counts.photos }} photos, {{ search_counts.users }} people and {{ search_counts.hashtags }} hashtags for "{{ search_query }}".
+                                {{ _('Showing %(photos)s photos, %(users)s people and %(hashtags)s hashtags for "%(query)s".', photos=search_counts.photos, users=search_counts.users, hashtags=search_counts.hashtags, query=search_query) }}
                             {% else %}
-                                Browse recent photos, people and hashtags in this experiment.
+                                {{ _('Browse recent photos, people and hashtags in this experiment.') }}
                             {% endif %}
                         </p>
                     </div>
@@ -365,15 +365,15 @@
                         </button>
                         {% endfor %}
                     {% else %}
-                        <div class="photo-search-page__empty">No photos matched your search yet.</div>
+                        <div class="photo-search-page__empty">{{ _('No photos matched your search yet.') }}</div>
                     {% endif %}
                 </div>
             </section>
 
             <aside class="photo-search-page__sidebar">
                 <div class="photo-search-page__card">
-                    <h2>People</h2>
-                    <p>Profiles and pages matching your search.</p>
+                    <h2>{{ _('People') }}</h2>
+                    <p>{{ _('Profiles and pages matching your search.') }}</p>
                     <div class="photo-search-page__list" data-photo-search-users>
                         {% if search_users %}
                             {% for user in search_users %}
@@ -382,31 +382,31 @@
                                     <img src="{{ user['profile_pic'] }}" data-demo-src="{{ user['profile_pic'] }}" alt=""/>
                                     <div class="photo-search-page__user-copy">
                                         <strong>{{ user['username'] }}</strong>
-                                        <small>{{ user['photo_count'] }} photos</small>
+                                        <small>{{ ngettext('%(num)s photo', '%(num)s photos', user['photo_count']|int) }}</small>
                                     </div>
                                 </a>
-                                <span class="photo-search-page__badge">{{ 'Page' if user.get('kind') == 'page' else 'User' }}</span>
+                                <span class="photo-search-page__badge">{{ _('Page') if user.get('kind') == 'page' else _('User') }}</span>
                             </div>
                             {% endfor %}
                         {% else %}
-                            <div class="photo-search-page__empty">No people matched yet.</div>
+                            <div class="photo-search-page__empty">{{ _('No people matched yet.') }}</div>
                         {% endif %}
                     </div>
                 </div>
 
                 <div class="photo-search-page__card">
-                    <h2>Hashtags</h2>
-                    <p>Search topics and photo tags.</p>
+                    <h2>{{ _('Hashtags') }}</h2>
+                    <p>{{ _('Search topics and photo tags.') }}</p>
                     <div class="photo-search-page__chips" data-photo-search-hashtags>
                         {% if search_hashtags %}
                             {% for tag in search_hashtags %}
                             <a class="photo-search-page__chip" href="/{{ exp_id }}/photo/search?q=%23{{ tag['hashtag'] }}&kind=hashtags">
-                                #{{ tag['hashtag'] }}
+                                #{{ tag['hashtag']|string|trim('#') }}
                                 <span class="photo-search-page__badge">{{ tag['photo_count'] }}</span>
                             </a>
                             {% endfor %}
                         {% else %}
-                            <div class="photo-search-page__empty">No hashtags matched yet.</div>
+                            <div class="photo-search-page__empty">{{ _('No hashtags matched yet.') }}</div>
                         {% endif %}
                     </div>
                 </div>

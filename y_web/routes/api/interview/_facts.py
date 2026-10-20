@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy import case, desc, func, or_, select
 
-from y_web import db
+from y_web import db, prompt_store
 from y_web.src.models import (
     AdminInterviewMessage,
     Exps,
@@ -1263,6 +1263,7 @@ def _build_evidence_guard(
     *,
     facts_snapshot: Dict[str, Any],
     memory_snapshot: Dict[str, Any],
+    language: Optional[str] = None,
 ) -> Tuple[str, Dict[str, Any]]:
     facts = facts_snapshot if isinstance(facts_snapshot, dict) else {}
     mem = memory_snapshot if isinstance(memory_snapshot, dict) else {}
@@ -1319,10 +1320,10 @@ def _build_evidence_guard(
     lines.append(f"- strict_no_inference={strict_no_inference}")
     if strict_no_inference:
         lines.append(
-            '- For activity-specific questions, answer "can\'t confirm" unless exact evidence is present.'
+            prompt_store.get("_facts__build_evidence_guard__1", language=language)
         )
         lines.append(
-            "- Do not introduce new movie/book titles, usernames, or thread narratives not in evidence."
+            prompt_store.get("_facts__build_evidence_guard__2", language=language)
         )
 
     meta = {

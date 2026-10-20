@@ -203,7 +203,7 @@ def coordinate_group_barrier(local_round_num):
 
 ## 6. Integration Plan
 
-To achieve this goal, the existing implementation phases (defined in [05-implementation-plan.md](file:///Users/rossetti/PycharmProjects/YWeb/docs/multi-platform-simulations/05-implementation-plan.md)) must be integrated with the following changes:
+To achieve this goal, the existing implementation phases (defined in [05-implementation-plan.md](05-implementation-plan.md)) must be integrated with the following changes:
 
 ### Phase 1: Configuration And Discovery Scaffolding
 * **Configuration Expansion**: Add the following fields to `server_config.json`:

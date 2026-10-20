@@ -423,6 +423,16 @@ def flask_app():
         WTF_CSRF_ENABLED=False,
     )
 
+    # Templates use gettext (_), so the minimal app needs Flask-Babel too.
+    from y_web.i18n import init_i18n
+
+    init_i18n(app)
+
+    # The microblogging templates use the display_name filter registered by the full app.
+    from y_web.src.system.display_names import display_name
+
+    app.add_template_filter(display_name, "display_name")
+
     # Minimal route that renders login/login.html
     @app.route("/login")
     def login():

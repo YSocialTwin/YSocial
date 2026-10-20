@@ -67,87 +67,126 @@ def _unregister_process(process_id):
                     pass
 
 
-def cleanup_server_processes_from_db():
-    """
-    Cleanup server processes based on PIDs stored in the database.
+def terminate_process_trees(pids, grace=6.0):
+    """Terminate several processes *and all their descendants*, in parallel.
 
-    This function is useful when the application restarts and there are
-    still running server processes from previous sessions. It reads PIDs
-    from the database and attempts to terminate them.
+    Simulators spawn helpers (Ray raylet/GCS/workers, gunicorn workers, ...) that
+    must not outlive them. The trees are collected first (a child is reparented the
+    moment its parent dies), everything gets SIGTERM at once, and whatever is still
+    alive after ``grace`` seconds in total is killed. Total time is bounded by
+    ``grace`` + ~2 s however many processes there are.
+
+    Returns the set of PIDs that were found alive and are now gone.
+    """
+    pids = {int(p) for p in pids if p}
+    pids.discard(os.getpid())
+    if not pids:
+        return set()
+    try:
+        import psutil
+    except ImportError:  # no tree support: best effort on the listed PIDs
+        for pid in pids:
+            try:
+                os.kill(pid, signal.SIGTERM)
+            except OSError:
+                pass
+        time.sleep(min(grace, 2.0))
+        for pid in pids:
+            try:
+                os.kill(pid, signal.SIGKILL)
+            except (OSError, AttributeError):
+                pass
+        return set(pids)
+
+    me = os.getpid()
+    procs = {}
+    for pid in pids:
+        try:
+            root = psutil.Process(pid)
+            for proc in [root] + root.children(recursive=True):
+                if proc.pid != me:
+                    procs[proc.pid] = proc
+        except psutil.NoSuchProcess:
+            continue
+        except Exception as e:
+            print(f"Cannot inspect process {pid}: {e}")
+    if not procs:
+        return set()
+
+    def _signal(proc, kill=False):
+        try:
+            proc.kill() if kill else proc.terminate()
+        except psutil.NoSuchProcess:
+            pass
+        except Exception as e:
+            print(f"Cannot signal process {proc.pid}: {e}")
+
+    for proc in procs.values():
+        _signal(proc)
+    _, alive = psutil.wait_procs(list(procs.values()), timeout=grace)
+    for proc in alive:
+        print(f"Process {proc.pid} did not stop in {grace:g}s, killing it")
+        _signal(proc, kill=True)
+    if alive:
+        psutil.wait_procs(alive, timeout=2)
+    return set(procs)
+
+
+def _tracked_pids():
+    """PIDs of simulator servers and clients recorded in the database."""
+    pids = {}
+    try:
+        for exp in db.session.query(Exps).filter(Exps.server_pid.isnot(None)).all():
+            pids[int(exp.server_pid)] = f"server of experiment {exp.idexp}"
+        for client in db.session.query(Client).filter(Client.pid.isnot(None)).all():
+            pids[int(client.pid)] = f"client {client.id}"
+    except Exception as e:
+        print(f"Error reading tracked processes: {e}")
+    return pids
+
+
+def _registered_pids():
+    """PIDs of processes started by this app instance (in-memory registry)."""
+    pids = set()
+    for entry in list(_process_registry.values()):
+        proc = entry.get("process")
+        try:
+            if proc is not None and proc.poll() is None:
+                pids.add(proc.pid)
+        except Exception:
+            pass
+    return pids
+
+
+def cleanup_server_processes_from_db():
+    """Terminate the server process trees recorded in the database.
+
+    Useful on shutdown and on start-up, when processes of a previous session may
+    still be running. The PID of each experiment is cleared afterwards.
     """
     try:
         exps = db.session.query(Exps).filter(Exps.server_pid.isnot(None)).all()
         for exp in exps:
-            try:
-                print(
-                    f"Attempting to terminate server process PID {exp.server_pid} for experiment {exp.idexp}"
-                )
-                os.kill(exp.server_pid, signal.SIGTERM)
-                time.sleep(1)
-                # Check if process is still running
-                try:
-                    os.kill(exp.server_pid, 0)  # Check if process exists
-                    # If we get here, process is still running, force kill
-                    print(f"Process server {exp.server_pid} still running, terminating")
-                    from y_web.src.simulation.port_manager import _terminate_process
-
-                    _terminate_process(exp.server_pid)
-                    # os.kill(exp.server_pid, signal.SIGKILL)
-                except OSError:
-                    # Process doesn't exist anymore
-                    pass
-                # Clear the PID from database
-                exp.server_pid = None
-            except OSError as e:
-                # Process doesn't exist
-                print(f"Process {exp.server_pid} no longer exists: {e}")
-                exp.server_pid = None
-            except Exception as e:
-                print(f"Error terminating server process {exp.server_pid}: {e}")
-        # Commit all changes at once
+            print(
+                f"Terminating server process PID {exp.server_pid} for experiment {exp.idexp}"
+            )
+        terminate_process_trees([exp.server_pid for exp in exps])
+        for exp in exps:
+            exp.server_pid = None
         db.session.commit()
     except Exception as e:
         print(f"Error during server process cleanup: {e}")
 
 
 def cleanup_client_processes_from_db():
-    """
-    Cleanup client processes based on PIDs stored in the database.
-
-    This function is useful when the application restarts and there are
-    still running client processes from previous sessions. It reads PIDs
-    from the database and attempts to terminate them.
-    """
+    """Terminate the client process trees recorded in the database."""
     try:
         clients = db.session.query(Client).filter(Client.pid.isnot(None)).all()
         for client in clients:
-            try:
-                print(
-                    f"Attempting to terminate client process PID {client.pid} for client {client.id}"
-                )
-                os.kill(client.pid, signal.SIGTERM)
-                time.sleep(1)
-                # Check if process is still running
-                try:
-                    os.kill(client.pid, 0)  # Check if process exists
-                    # If we get here, process is still running, force kill
-                    print(f"Process {client.pid} still running, terminating")
-                    from y_web.src.simulation.port_manager import _terminate_process
-
-                    _terminate_process(client.pid)
-                    # os.kill(client.pid, signal.SIGKILL)
-                except OSError:
-                    # Process doesn't exist anymore
-                    pass
-                # Clear the PID from database
-                client.pid = None
-            except OSError as e:
-                # Process doesn't exist
-                print(f"Process {client.pid} no longer exists: {e}")
-                client.pid = None
-            except Exception as e:
-                print(f"Error terminating client process {client.pid}: {e}")
-        # Commit all changes at once
+            print(f"Terminating client process PID {client.pid} for client {client.id}")
+        terminate_process_trees([client.pid for client in clients])
+        for client in clients:
+            client.pid = None
         db.session.commit()
     except Exception as e:
         print(f"Error during client process cleanup: {e}")
@@ -165,11 +204,12 @@ def stop_all_exps():
             except Exception as e:
                 print(f"Warning: Could not stop watchdog: {e}")
 
-        # Terminate all running server processes
-        cleanup_server_processes_from_db()
-
-        # Terminate all running client processes
-        cleanup_client_processes_from_db()
+        # Terminate servers and clients together (whole process trees, in
+        # parallel) so shutdown time does not grow with the number of simulators.
+        tracked = _tracked_pids()
+        for pid, what in tracked.items():
+            print(f"Terminating {what} (PID {pid})")
+        terminate_process_trees(set(tracked) | _registered_pids())
 
         # set to 0 all Exps.running and set exp_status to "stopped"
         exps = db.session.query(Exps).all()
@@ -184,6 +224,16 @@ def stop_all_exps():
         for cli in clis:
             cli.status = 0
             cli.pid = None
+
+        # Executions interrupted by the shutdown get a terminal state too
+        try:
+            from y_web.src.models import Client_Execution
+
+            db.session.query(Client_Execution).filter(
+                Client_Execution.terminal_state == "running"
+            ).update({Client_Execution.terminal_state: "manual_stop"})
+        except Exception as e:
+            print(f"Could not update client executions: {e}")
 
         # Commit all changes at once
         db.session.commit()

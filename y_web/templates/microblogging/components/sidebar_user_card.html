@@ -18,12 +18,12 @@
             </div>
         </a>
         <div class="ys-sidebar-user-card__meta">
-            <div class="ys-sidebar-user-card__eyebrow">Your Profile</div>
-            <div class="ys-sidebar-user-card__name">{{ username }}</div>
-            <a href="/{{exp_id}}/profile/{{ sidebar_target_id }}/recent/1" class="ys-sidebar-user-card__cta">Open profile</a>
+            <div class="ys-sidebar-user-card__eyebrow">{{ _('Your Profile') }}</div>
+            <div class="ys-sidebar-user-card__name">{{ username|display_name }}</div>
+            <a href="/{{exp_id}}/profile/{{ sidebar_target_id }}/recent/1" class="ys-sidebar-user-card__cta">{{ _('Open profile') }}</a>
         </div>
         <div class="ys-sidebar-user-card__time">
-            <span class="ys-sidebar-user-card__time-label">Current local time</span>
+            <span class="ys-sidebar-user-card__time-label">{{ _('Current local time') }}</span>
             <span class="ys-sidebar-user-card__time-value" id="sidebar-current-date"></span>
         </div>
         <script src="{{ url_for('static', filename='assets/js/sidebar-user-card.js') }}"></script>

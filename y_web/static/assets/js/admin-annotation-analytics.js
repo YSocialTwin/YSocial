@@ -313,7 +313,7 @@
         datasets: [
           {
             type: 'line',
-            label: 'Average Target Toxicity',
+            label: YI18n.t('Average Target Toxicity'),
             data: ((definition.datasets || [])[0] || {}).data || [],
             borderColor: 'rgba(14, 165, 233, 1)',
             backgroundColor: 'rgba(14, 165, 233, 0.16)',
@@ -323,7 +323,7 @@
           },
           {
             type: 'line',
-            label: 'Peak Target Toxicity',
+            label: YI18n.t('Peak Target Toxicity'),
             data: ((definition.datasets || [])[1] || {}).data || [],
             borderColor: 'rgba(239, 68, 68, 1)',
             backgroundColor: 'rgba(239, 68, 68, 0.16)',
@@ -334,7 +334,7 @@
           },
           {
             type: 'bar',
-            label: 'Moderator Actions',
+            label: YI18n.t('Moderator Actions'),
             data: ((definition.datasets || [])[2] || {}).data || [],
             borderColor: 'rgba(16, 185, 129, 1)',
             backgroundColor: 'rgba(16, 185, 129, 0.35)',
@@ -354,11 +354,11 @@
               title: function (context) {
                 var key = context[0].label;
                 var mapping = (definition.timestamp_mapping || {})[key];
-                if (mapping) return 'Day ' + mapping.day + ', Hour ' + mapping.hour;
-                return 'Step ' + key;
+                if (mapping) return YI18n.t('Day {day}, Hour {hour}', {day: mapping.day, hour: mapping.hour});
+                return YI18n.t('Step {key}', {key});
               },
               label: function (context) {
-                if (context.dataset.label === 'Moderator Actions') {
+                if (context.dataset.label === YI18n.t('Moderator Actions')) {
                   return context.dataset.label + ': ' + Number(context.parsed.y || 0).toFixed(0);
                 }
                 return context.dataset.label + ': ' + Number(context.parsed.y || 0).toFixed(3);
@@ -370,17 +370,17 @@
           y: {
             beginAtZero: true,
             max: 1,
-            title: { display: true, text: 'Toxicity' }
+            title: { display: true, text: YI18n.t('Toxicity') }
           },
           y1: {
             beginAtZero: true,
             position: 'right',
             grid: { drawOnChartArea: false },
             ticks: { precision: 0 },
-            title: { display: true, text: 'Moderator Actions' }
+            title: { display: true, text: YI18n.t('Moderator Actions') }
           },
           x: {
-            title: { display: true, text: 'Simulation Days' }
+            title: { display: true, text: YI18n.t('Simulation Days') }
           }
         }
       }
@@ -392,12 +392,10 @@
     var select = document.getElementById('annotation-recsys-author-select');
     if (select) {
       var selected = panel.selected_uid || '';
-      var placeholderHtml = '<option value=""' + (selected ? '' : ' selected') + '>Choose an author…</option>';
+      var placeholderHtml = '<option value=""' + (selected ? '' : ' selected') + '>' + YI18n.t('Choose an author…') + '</option>';
       select.innerHTML = placeholderHtml + (panel.options || []).map(function (option) {
         var sel = option.uid === selected ? ' selected' : '';
-        return '<option value="' + option.uid + '"' + sel + '>' +
-          option.username + ' (' + option.recommendation_count + ' recs)' +
-          '</option>';
+        return '<option value="' + option.uid + '"' + sel + '>' + YI18n.t('{username} ({recommendation_count} recs)', {username: option.username, recommendation_count: option.recommendation_count}) + '</option>';
       }).join('');
     }
 
@@ -552,9 +550,9 @@
               label: function (context) {
                 var raw = context.raw || {};
                 if (options.tooltipMode === 'reach') {
-                  return 'Reached: ' + String(raw.actual || 0) + ' agents (' + Number(raw.percent || 0).toFixed(2) + '%)';
+                  return YI18n.t('Reached: {actual} agents ({tofixed}%)', {actual: String(raw.actual || 0), tofixed: Number(raw.percent || 0).toFixed(2)});
                 }
-                return 'Volume: ' + String(raw.actual || 0);
+                return YI18n.t('Volume: {actual}', {actual: String(raw.actual || 0)});
               }
             }
           }
@@ -632,7 +630,7 @@
       data: {
         datasets: [
           {
-            label: 'Neighbors',
+            label: YI18n.t('Neighbors'),
             data: others.map(function (node) {
               return {
                 id: node.id,
@@ -654,7 +652,7 @@
             pointHoverRadius: 8
           },
           {
-            label: 'Selected Agent',
+            label: YI18n.t('Selected Agent'),
             data: ego.map(function (node) {
               return {
                 id: node.id,
@@ -760,8 +758,7 @@
     var currentSelection = targets.selected_uid || '';
     select.innerHTML = options.map(function (option) {
       var selected = option.uid === currentSelection ? ' selected' : '';
-      return '<option value="' + option.uid + '"' + selected + '>' +
-        option.username + ' (' + option.moderation_count + ' interventions)</option>';
+      return '<option value="' + option.uid + '"' + selected + '>' + YI18n.t('{username} ({moderation_count} interventions)', {username: option.username, moderation_count: option.moderation_count}) + '</option>';
     }).join('');
 
     var targetName = document.getElementById('tox-moderator-target-name');
@@ -776,14 +773,9 @@
       var events = targets.interaction_events || [];
       eventTable.innerHTML = events.length
         ? events.map(function (event) {
-            return '<tr>' +
-              '<td>Day ' + event.day + ', Hour ' + event.hour + '</td>' +
-              '<td>' + String(event.moderation_type || '').replace(/_/g, ' ').replace(/\b\w/g, function (ch) { return ch.toUpperCase(); }) + '</td>' +
-              '<td>' + event.moderation_count + '</td>' +
-              '<td>' + (((event.moderator_usernames || []).join(', ')) || '—') + '</td>' +
-              '</tr>';
+            return '<tr><td>' + YI18n.t('Day {day}, Hour {hour}', {day: event.day, hour: event.hour}) + '</td><td>' + String(event.moderation_type || '').replace(/_/g, ' ').replace(/\b\w/g, function (ch) { return ch.toUpperCase(); }) + '</td><td>' + event.moderation_count + '</td><td>' + (((event.moderator_usernames || []).join(', ')) || '—') + '</td></tr>';
           }).join('')
-        : '<tr><td colspan="4" class="has-text-centered has-text-grey">No moderation actions recorded.</td></tr>';
+        : '<tr><td colspan="4" class="has-text-centered has-text-grey">' + YI18n.t('No moderation actions recorded.') + '</td></tr>';
     }
 
     if (hasOptions) {
@@ -849,12 +841,10 @@
       var egoSelect = document.getElementById('annotation-network-ego-select');
       if (egoSelect && analytics.ego_network) {
         var selected = analytics.ego_network.selected_uid || '';
-        var placeholderHtml = '<option value=""' + (selected ? '' : ' selected') + '>Choose an account…</option>';
+        var placeholderHtml = '<option value=""' + (selected ? '' : ' selected') + '>' + YI18n.t('Choose an account…') + '</option>';
         egoSelect.innerHTML = placeholderHtml + (analytics.ego_network.options || []).map(function (option) {
           var sel = option.uid === selected ? ' selected' : '';
-          return '<option value="' + option.uid + '"' + sel + '>' +
-            option.username + ' (deg ' + option.degree + ')' +
-            '</option>';
+          return '<option value="' + option.uid + '"' + sel + '>' + YI18n.t('{username} (deg {degree})', {username: option.username, degree: option.degree}) + '</option>';
         }).join('');
       }
       var componentTitle = document.getElementById('annotation-component-title');
@@ -917,8 +907,8 @@
   function updateTimeLabels() {
     var day = document.getElementById('annotation-stat-current_day');
     var hour = document.getElementById('annotation-stat-current_hour');
-    if (day) day.textContent = 'Day ' + state.currentDay;
-    if (hour) hour.textContent = 'Hour ' + state.currentHour;
+    if (day) day.textContent = YI18n.t('Day {currentday}', {currentday: state.currentDay});
+    if (hour) hour.textContent = YI18n.t('Hour {currenthour}', {currenthour: state.currentHour});
   }
 
   function updateSpeedDisplay() {

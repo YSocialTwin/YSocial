@@ -19,6 +19,7 @@ services:
             - ../../..:/app/
         environment:
             - FLASK_APP=/app/y_social.py
+            - YSOCIAL_SECRET_KEY=${YSOCIAL_SECRET_KEY:-}
             - NVIDIA_VISIBLE_DEVICES=all
             # - LLM_BACKEND=ollama  # Default: None. Options: ollama, vllm
         networks:

@@ -21,6 +21,7 @@ from flask_login import current_user, login_required
 from sqlalchemy import delete, select
 
 from y_web import db
+from y_web.i18n import gettext as _
 from y_web.routes.admin.sub.experiments._helpers import (
     _experiment_configuration_update_required,
     _experiment_uses_llm_agents,
@@ -67,6 +68,8 @@ from y_web.src.simulation.adhoc_client import (
 )
 from y_web.src.simulation.adhoc_client import read_json as read_adhoc_json
 from y_web.src.simulation.adhoc_client import write_json as write_adhoc_json
+from y_web.src.system import prompt_packs
+from y_web.src.system.memory_plugin import agent_memory_plugin_installed
 from y_web.src.system.miscellanea import check_privileges, get_db_type
 from y_web.src.system.path_utils import get_resource_path
 
@@ -206,8 +209,22 @@ def _adhoc_agent_specs() -> list[dict]:
             agent_type = str(entry.get("agent_type") or "").strip()
             if not agent_type:
                 continue
+            display_name_en = str(entry.get("display_name") or agent_type).strip()
+            slug = _custom_agent_slug(
+                display_name_en
+            )  # identity: never from translated text
+            from y_web.src.external_runtime.plugin_i18n import (
+                localize_manifest,
+                repo_key_for_dir,
+            )
+
+            _repo_key = repo_key_for_dir(repo_dir.name)
+            _titles_en = [
+                (t or {}).get("title") for t in (entry.get("prompt_templates") or [])
+            ]
+            if _repo_key:
+                entry = localize_manifest(_repo_key, entry)
             display_name = str(entry.get("display_name") or agent_type).strip()
-            slug = _custom_agent_slug(display_name)
             accepted_slugs = {slug, agent_type}
             if slug == "hworld":
                 accepted_slugs.add("hword")
@@ -234,6 +251,7 @@ def _adhoc_agent_specs() -> list[dict]:
                     "accepted_slugs": sorted(accepted_slugs),
                     "agent_type": agent_type,
                     "display_name": display_name,
+                    "display_name_en": display_name_en,
                     "description": str(entry.get("description") or "").strip(),
                     "requires_llm": bool(
                         entry.get("requires_llm", entry.get("llm_required", False))
@@ -248,7 +266,16 @@ def _adhoc_agent_specs() -> list[dict]:
                     ),
                     "client_parameter_sections": client_parameter_sections,
                     "client_parameters": client_parameters,
-                    "prompt_templates": list(entry.get("prompt_templates") or []),
+                    # ``title_key`` is the English title the page logic matches on.
+                    "prompt_templates": [
+                        {
+                            **t,
+                            "title_key": (
+                                _titles_en[i] if i < len(_titles_en) else t.get("title")
+                            ),
+                        }
+                        for i, t in enumerate(entry.get("prompt_templates") or [])
+                    ],
                     "repo_name": repo_dir.name,
                 }
             )
@@ -440,6 +467,8 @@ def _adhoc_agent_specs() -> list[dict]:
                 }
             parameters.append(prompt_override)
         spec["client_parameters"] = parameters
+    for spec in specs:  # identity never depends on the interface language
+        spec.setdefault("display_name_en", spec["display_name"])
     return specs
 
 
@@ -1623,7 +1652,9 @@ def _build_client_creation_context(idexp, recsys_mode):
         experiment_opinion_dynamics_enabled = (
             _opinion_dynamics_enabled_for_client_creation(exp)
         )
-        memory_configuration_supported = bool(llm_agents_enabled)
+        memory_configuration_supported = bool(llm_agents_enabled) and (
+            agent_memory_plugin_installed()
+        )
 
     if exp is not None and getattr(exp, "platform_type", "microblogging") == "forum":
         latest_client = db.session.scalars(
@@ -1691,7 +1722,7 @@ def clients(idexp):
 
     exp = db.session.scalars(select(Exps).filter_by(idexp=idexp)).first()
     if exp is None:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
 
     experiment_mode = _get_experiment_mode(exp)
@@ -1713,7 +1744,7 @@ def clients_standard(idexp):
     context = _build_client_creation_context(idexp, "Standard")
     exp = context["experiment"]
     if exp is None:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
     if getattr(exp, "simulator_type", "Standard") == "HPC":
         return redirect(url_for("clientsr.clients_hpc", idexp=idexp))
@@ -1721,7 +1752,9 @@ def clients_standard(idexp):
         return redirect(url_for("clientsr.clients_forum", idexp=idexp))
     if _experiment_configuration_update_required(exp):
         flash(
-            "Update Experiment Configuration before creating clients for this experiment.",
+            _(
+                "Update Experiment Configuration before creating clients for this experiment."
+            ),
             "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
@@ -1738,7 +1771,7 @@ def clients_forum(idexp):
     context = _build_client_creation_context(idexp, "Standard")
     exp = context["experiment"]
     if exp is None:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
     if getattr(exp, "simulator_type", "Standard") == "HPC":
         return redirect(url_for("clientsr.clients_hpc", idexp=idexp))
@@ -1746,7 +1779,9 @@ def clients_forum(idexp):
         return redirect(url_for("clientsr.clients_standard", idexp=idexp))
     if _experiment_configuration_update_required(exp):
         flash(
-            "Update Experiment Configuration before creating clients for this experiment.",
+            _(
+                "Update Experiment Configuration before creating clients for this experiment."
+            ),
             "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
@@ -1763,7 +1798,7 @@ def clients_hpc(idexp):
     context = _build_client_creation_context(idexp, "HPC")
     exp = context["experiment"]
     if exp is None:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
     if exp.platform_type == "photo_sharing":
         return redirect(url_for("clientsr.clients_photo", idexp=idexp))
@@ -1773,7 +1808,9 @@ def clients_hpc(idexp):
         return redirect(url_for("clientsr.clients_standard", idexp=idexp))
     if _experiment_configuration_update_required(exp):
         flash(
-            "Update Experiment Configuration before creating clients for this experiment.",
+            _(
+                "Update Experiment Configuration before creating clients for this experiment."
+            ),
             "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
@@ -1791,7 +1828,7 @@ def clients_photo(idexp):
     context = _build_client_creation_context(idexp, "HPC")
     exp = context["experiment"]
     if exp is None:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
     if getattr(exp, "simulator_type", "Standard") != "HPC":
         if exp.platform_type == "forum":
@@ -1801,7 +1838,9 @@ def clients_photo(idexp):
         return redirect(url_for("clientsr.clients_hpc", idexp=idexp))
     if _experiment_configuration_update_required(exp):
         flash(
-            "Update Experiment Configuration before creating clients for this experiment.",
+            _(
+                "Update Experiment Configuration before creating clients for this experiment."
+            ),
             "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
@@ -1819,29 +1858,32 @@ def clients_adhoc(idexp):
     context = _build_client_creation_context(idexp, "Standard")
     exp = context["experiment"]
     if exp is None:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
     if exp.is_remote == 1:
         flash(
-            "Ad hoc agent clients are not available for remote experiments.", "warning"
+            _("Ad hoc agent clients are not available for remote experiments."),
+            "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
     if not _experiment_uses_llm_agents(exp):
         flash(
-            "Ad hoc agent clients are not available for rule-based experiments.",
+            _("Ad hoc agent clients are not available for rule-based experiments."),
             "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
     if _experiment_configuration_update_required(exp):
         flash(
-            "Update Experiment Configuration before creating clients for this experiment.",
+            _(
+                "Update Experiment Configuration before creating clients for this experiment."
+            ),
             "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
 
     agent_specs = _filter_adhoc_agent_specs_for_experiment(exp, _adhoc_agent_specs())
     if not agent_specs:
-        flash("No ad hoc agent plugins are currently installed.", "warning")
+        flash(_("No ad hoc agent plugins are currently installed."), "warning")
         return redirect(url_for("experiments.experiment_details", uid=idexp))
 
     context.update(
@@ -1902,22 +1944,25 @@ def edit_adhoc_client(idexp, client_key):
     context = _build_client_creation_context(idexp, "Standard")
     exp = context["experiment"]
     if exp is None:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
     if exp.is_remote == 1:
         flash(
-            "Ad hoc agent clients are not available for remote experiments.", "warning"
+            _("Ad hoc agent clients are not available for remote experiments."),
+            "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
     if not _experiment_uses_llm_agents(exp):
         flash(
-            "Ad hoc agent clients are not available for rule-based experiments.",
+            _("Ad hoc agent clients are not available for rule-based experiments."),
             "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
     if _experiment_configuration_update_required(exp):
         flash(
-            "Update Experiment Configuration before modifying clients for this experiment.",
+            _(
+                "Update Experiment Configuration before modifying clients for this experiment."
+            ),
             "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
@@ -1925,12 +1970,12 @@ def edit_adhoc_client(idexp, client_key):
     try:
         config_path = config_path_for_client(exp, client_key)
     except FileNotFoundError:
-        flash("Ad hoc client configuration not found.", "error")
+        flash(_("Ad hoc client configuration not found."), "error")
         return redirect(url_for("experiments.experiment_details", uid=idexp))
 
     config = read_adhoc_json(config_path)
     if not isinstance(config, dict):
-        flash("Ad hoc client configuration is invalid.", "error")
+        flash(_("Ad hoc client configuration is invalid."), "error")
         return redirect(url_for("experiments.experiment_details", uid=idexp))
 
     initial_client = _build_adhoc_client_initial_values(config)
@@ -1939,13 +1984,15 @@ def edit_adhoc_client(idexp, client_key):
     agent_specs = _filter_adhoc_agent_specs_for_experiment(exp, _adhoc_agent_specs())
     spec = _find_adhoc_agent_spec(selected_agent_type)
     if spec is None:
-        flash("The referenced ad hoc agent type is no longer available.", "error")
+        flash(_("The referenced ad hoc agent type is no longer available."), "error")
         return redirect(url_for("experiments.experiment_details", uid=idexp))
     if spec.get(
         "agent_type"
     ) == "stress_attacker" and not _stress_reward_enabled_for_adhoc(exp):
         flash(
-            "Stress Attacker requires stress/reward to be enabled for this experiment.",
+            _(
+                "Stress Attacker requires stress/reward to be enabled for this experiment."
+            ),
             "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
@@ -2026,12 +2073,14 @@ def create_adhoc_client():
     exp_id = request.form.get("id_exp")
     exp = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
     if exp is None:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
 
     if _experiment_configuration_update_required(exp):
         flash(
-            "Update Experiment Configuration before creating clients for this experiment.",
+            _(
+                "Update Experiment Configuration before creating clients for this experiment."
+            ),
             "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=exp_id))
@@ -2043,16 +2092,18 @@ def create_adhoc_client():
     spec = _find_adhoc_agent_spec(agent_type_slug)
 
     if not name:
-        flash("Client name is required.", "error")
+        flash(_("Client name is required."), "error")
         return redirect(url_for("clientsr.clients_adhoc", idexp=exp_id))
     if spec is None:
-        flash("Select a valid ad hoc agent type.", "error")
+        flash(_("Select a valid ad hoc agent type."), "error")
         return redirect(url_for("clientsr.clients_adhoc", idexp=exp_id))
     if spec.get(
         "agent_type"
     ) == "stress_attacker" and not _stress_reward_enabled_for_adhoc(exp):
         flash(
-            "Stress Attacker requires stress/reward to be enabled for this experiment.",
+            _(
+                "Stress Attacker requires stress/reward to be enabled for this experiment."
+            ),
             "error",
         )
         return redirect(url_for("clientsr.clients_adhoc", idexp=exp_id))
@@ -2060,7 +2111,9 @@ def create_adhoc_client():
         "requires_opinion_dynamics"
     ) and not _opinion_dynamics_enabled_for_client_creation(exp):
         flash(
-            "The selected ad hoc agent type requires opinion dynamics to be enabled for this experiment.",
+            _(
+                "The selected ad hoc agent type requires opinion dynamics to be enabled for this experiment."
+            ),
             "error",
         )
         return redirect(url_for("clientsr.clients_adhoc", idexp=exp_id))
@@ -2070,7 +2123,8 @@ def create_adhoc_client():
     ).first()
     if population is None or population.pop_type not in spec["accepted_slugs"]:
         flash(
-            "Select a population compatible with the chosen ad hoc agent type.", "error"
+            _("Select a population compatible with the chosen ad hoc agent type."),
+            "error",
         )
         return redirect(url_for("clientsr.clients_adhoc", idexp=exp_id))
 
@@ -2078,7 +2132,7 @@ def create_adhoc_client():
         select(Agent_Population).filter_by(population_id=population.id)
     ).all()
     if not agent_links:
-        flash("The selected population does not contain any agents.", "error")
+        flash(_("The selected population does not contain any agents."), "error")
         return redirect(url_for("clientsr.clients_adhoc", idexp=exp_id))
 
     from y_web.src.system.path_utils import get_writable_path
@@ -2098,7 +2152,10 @@ def create_adhoc_client():
 
     if os.path.exists(config_filename):
         flash(
-            f"An ad hoc client config named '{safe_client_name}' already exists.",
+            _(
+                "An ad hoc client config named '%(safe_client_name)s' already exists.",
+                safe_client_name=safe_client_name,
+            ),
             "error",
         )
         return redirect(url_for("clientsr.clients_adhoc", idexp=exp_id))
@@ -2145,7 +2202,9 @@ def create_adhoc_client():
     )
     if llm_required and not llm_model:
         flash(
-            "This ad hoc client requires an LLM model because at least one managed agent uses an LLM-backed behavior.",
+            _(
+                "This ad hoc client requires an LLM model because at least one managed agent uses an LLM-backed behavior."
+            ),
             "error",
         )
         return redirect(url_for("clientsr.clients_adhoc", idexp=exp_id))
@@ -2217,7 +2276,8 @@ def create_adhoc_client():
                 "population_id": population.id,
                 "population_name": population.name,
                 "agent_type_slug": spec["slug"],
-                "agent_type_display": spec["display_name"],
+                "agent_type_display": spec.get("display_name_en")
+                or spec["display_name"],
                 "plugin_repository": spec["repo_name"],
             },
         },
@@ -2229,7 +2289,7 @@ def create_adhoc_client():
         json.dump(client_payload, handle, indent=2)
     initialize_state_for_config(config_filename)
 
-    flash(f"Ad hoc client configuration '{name}' saved.", "success")
+    flash(_("Ad hoc client configuration '%(name)s' saved.", name=name), "success")
     return redirect(url_for("experiments.experiment_details", uid=exp_id))
 
 
@@ -2243,11 +2303,13 @@ def update_adhoc_client(idexp, client_key):
 
     exp = db.session.scalars(select(Exps).filter_by(idexp=idexp)).first()
     if exp is None:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
     if _experiment_configuration_update_required(exp):
         flash(
-            "Update Experiment Configuration before modifying clients for this experiment.",
+            _(
+                "Update Experiment Configuration before modifying clients for this experiment."
+            ),
             "warning",
         )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
@@ -2255,12 +2317,12 @@ def update_adhoc_client(idexp, client_key):
     try:
         config_path = config_path_for_client(exp, client_key)
     except FileNotFoundError:
-        flash("Ad hoc client configuration not found.", "error")
+        flash(_("Ad hoc client configuration not found."), "error")
         return redirect(url_for("experiments.experiment_details", uid=idexp))
 
     config = read_adhoc_json(config_path)
     if not isinstance(config, dict):
-        flash("Ad hoc client configuration is invalid.", "error")
+        flash(_("Ad hoc client configuration is invalid."), "error")
         return redirect(url_for("experiments.experiment_details", uid=idexp))
 
     metadata = (config.get("client", {}) or {}).get("metadata", {}) or {}
@@ -2271,13 +2333,15 @@ def update_adhoc_client(idexp, client_key):
     ).strip()
     spec = _find_adhoc_agent_spec(agent_type_slug)
     if spec is None:
-        flash("The ad hoc agent type is no longer available.", "error")
+        flash(_("The ad hoc agent type is no longer available."), "error")
         return redirect(url_for("experiments.experiment_details", uid=idexp))
     if spec.get(
         "agent_type"
     ) == "stress_attacker" and not _stress_reward_enabled_for_adhoc(exp):
         flash(
-            "Stress Attacker requires stress/reward to remain enabled for this experiment.",
+            _(
+                "Stress Attacker requires stress/reward to remain enabled for this experiment."
+            ),
             "error",
         )
         return redirect(
@@ -2287,7 +2351,9 @@ def update_adhoc_client(idexp, client_key):
         "requires_opinion_dynamics"
     ) and not _opinion_dynamics_enabled_for_client_creation(exp):
         flash(
-            "The selected ad hoc agent type requires opinion dynamics to remain enabled for this experiment.",
+            _(
+                "The selected ad hoc agent type requires opinion dynamics to remain enabled for this experiment."
+            ),
             "error",
         )
         return redirect(
@@ -2305,7 +2371,9 @@ def update_adhoc_client(idexp, client_key):
     write_adhoc_json(config_path, updated)
     initialize_state_for_config(config_path)
     flash(
-        "Ad hoc client settings updated. Running clients will pick up the changes on the next round.",
+        _(
+            "Ad hoc client settings updated. Running clients will pick up the changes on the next round."
+        ),
         "success",
     )
     return redirect(url_for("experiments.experiment_details", uid=idexp))
@@ -2371,12 +2439,12 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
         select(Population).filter_by(id=population_id)
     ).first()
     if not population:
-        flash("Population not found")
+        flash(_("Population not found"))
         return redirect(request.referrer)
 
     # Check if client name already exists
     if db.session.scalars(select(Client).filter_by(name=name)).first():
-        flash("Client name already exists.", "error")
+        flash(_("Client name already exists."), "error")
         return redirect(request.referrer)
 
     # Extract all form data
@@ -3297,19 +3365,17 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
         else f"{exp_dir}{os.sep}prompts.json"
     )
 
-    if exp.platform_type == "photo_sharing":
-        prompts_src = get_resource_path(
-            os.path.join("data_schema", "prompts_ygram.json")
-        )
-        shutil.copyfile(prompts_src, prompts_dest)
-    elif exp.platform_type == "microblogging":
-        prompts_src = get_resource_path(os.path.join("data_schema", "prompts_hpc.json"))
-        shutil.copyfile(prompts_src, prompts_dest)
-    elif exp.platform_type == "forum":
-        prompts_src = get_resource_path(
-            os.path.join("data_schema", "prompts_forum.json")
-        )
-        shutil.copyfile(prompts_src, prompts_dest)
+    prompt_language = prompt_packs.resolve(
+        request.form.get("prompt_language"), exp.prompt_language
+    )
+    pack_name = {
+        "photo_sharing": "prompts_ygram.json",
+        "microblogging": "prompts_hpc.json",
+        "forum": "prompts_forum.json",
+    }.get(exp.platform_type)
+    if pack_name:
+        prompt_packs.write_pack(pack_name, prompts_dest, prompt_language)
+    prompt_packs.record_language(exp_dir, client=name, client_language=prompt_language)
 
     # Create population assignment if not exists
     pop_exp = db.session.scalars(
@@ -3325,6 +3391,7 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
     # Create client record in database
     client = Client(
         name=name,
+        prompt_language=prompt_language,
         descr=descr,
         id_exp=exp.idexp,
         population_id=population_id,
@@ -3504,7 +3571,11 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
                                 o.write(f"{l[0]},{l[1]}\n")
                             else:
                                 flash(
-                                    f"Agent {l[0]} or {l[1]} not found in network file.",
+                                    _(
+                                        "Agent %(l)s or %(l2)s not found in network file.",
+                                        l=l[0],
+                                        l2=l[1],
+                                    ),
                                     "warning",
                                 )
 
@@ -3518,7 +3589,9 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
                 if os.path.exists(network_path):
                     os.remove(network_path)
                 flash(
-                    "Network file format error: provide a csv file containing two columns with agent names. No header required.",
+                    _(
+                        "Network file format error: provide a csv file containing two columns with agent names. No header required."
+                    ),
                     "error",
                 )
 
@@ -3633,7 +3706,7 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
                     f"HPC client synthetic network created: {network_path}, type: {network_model}"
                 )
 
-    flash(f"HPC client '{name}' created successfully")
+    flash(_("HPC client '%(name)s' created successfully", name=name))
 
     if bool(opinions_enabled):
         return redirect(
@@ -3658,16 +3731,17 @@ def _create_standard_client_internal():
 
     exp = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
     if not exp:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
     if getattr(exp, "simulator_type", "Standard") == "HPC":
         flash(
-            "Use the dedicated HPC client creation route for this experiment.", "error"
+            _("Use the dedicated HPC client creation route for this experiment."),
+            "error",
         )
         return redirect(url_for("clientsr.clients_hpc", idexp=exp_id))
     if exp.platform_type != "microblogging":
         flash(
-            "Use the dedicated forum client creation route for this experiment.",
+            _("Use the dedicated forum client creation route for this experiment."),
             "error",
         )
         if exp.platform_type == "forum":
@@ -3847,7 +3921,7 @@ def _create_standard_client_internal():
         trans_expl_val = float(request.form.get("trans_expl_val", "36.4")) / 100.0
         trans_expl_broad = float(request.form.get("trans_expl_broad", "14.6")) / 100.0
     except (ValueError, TypeError) as e:
-        flash(f"Invalid archetype values: {str(e)}", "error")
+        flash(_("Invalid archetype values: %(error)s", error=str(e)), "error")
         return redirect(request.referrer)
 
     # Validate simulation parameters
@@ -4060,7 +4134,7 @@ def _create_standard_client_internal():
 
     # if name already exists, return to the previous page
     if db.session.scalars(select(Client).filter_by(name=name)).first():
-        flash("Client name already exists.", "error")
+        flash(_("Client name already exists."), "error")
         return redirect(request.referrer)
 
     exp = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
@@ -4071,13 +4145,16 @@ def _create_standard_client_internal():
     ).first()
 
     if population is None:
-        flash("Population not found.", "error")
+        flash(_("Population not found."), "error")
         return redirect(request.referrer)
 
     pop_type = infer_population_username_type(population)
     if pop_type not in {None, "microblogging"}:
         flash(
-            f"Population Username Type '{pop_type}' is incompatible with experiment platform 'microblogging'.",
+            _(
+                "Population Username Type '%(pop_type)s' is incompatible with experiment platform 'microblogging'.",
+                pop_type=pop_type,
+            ),
             "error",
         )
         return redirect(request.referrer)
@@ -4104,8 +4181,12 @@ def _create_standard_client_internal():
         db.session.commit()
 
     # create the Client object
+    prompt_language = prompt_packs.resolve(
+        request.form.get("prompt_language"), exp.prompt_language
+    )
     client = Client(
         name=name,
+        prompt_language=prompt_language,
         descr=descr,
         id_exp=exp_id,
         population_id=population_id,
@@ -4450,7 +4531,9 @@ def _create_standard_client_internal():
 
     if not _apply_population_attributes_to_client_config(config, population_id):
         flash(
-            "The selected population has no usable agents or is missing age data. Rebuild or re-upload the population before creating a client.",
+            _(
+                "The selected population has no usable agents or is missing age data. Rebuild or re-upload the population before creating a client."
+            ),
             "error",
         )
         return redirect(request.referrer)
@@ -4464,10 +4547,11 @@ def _create_standard_client_internal():
     data_base_path = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}"
     # copy prompts.json into the experiment folder
 
-    prompts_src = get_resource_path(os.path.join("data_schema", "prompts.json"))
-    shutil.copyfile(
-        prompts_src,
-        f"{data_base_path}prompts.json",
+    prompt_packs.write_pack(
+        "prompts.json", f"{data_base_path}prompts.json", prompt_language
+    )
+    prompt_packs.record_language(
+        data_base_path, client=name, client_language=prompt_language
     )
 
     # Create agent population file
@@ -4788,7 +4872,11 @@ def _create_standard_client_internal():
                                 o.write(f"{l[0]},{l[1]}\n")
                             else:
                                 flash(
-                                    f"Agent {l[0]} or {l[1]} not found in network file.",
+                                    _(
+                                        "Agent %(l)s or %(l2)s not found in network file.",
+                                        l=l[0],
+                                        l2=l[1],
+                                    ),
                                     "warning",
                                 )
 
@@ -4801,7 +4889,9 @@ def _create_standard_client_internal():
                 if os.path.exists(network_path):
                     os.remove(network_path)
                 flash(
-                    "Network file format error: provide a csv file containing two columns with agent names. No header required.",
+                    _(
+                        "Network file format error: provide a csv file containing two columns with agent names. No header required."
+                    ),
                     "error",
                 )
 
@@ -4978,16 +5068,17 @@ def _create_forum_client_internal():
 
     exp = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
     if not exp:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
     if getattr(exp, "simulator_type", "Standard") == "HPC":
         flash(
-            "Use the dedicated HPC client creation route for this experiment.", "error"
+            _("Use the dedicated HPC client creation route for this experiment."),
+            "error",
         )
         return redirect(url_for("clientsr.clients_hpc", idexp=exp_id))
     if exp.platform_type != "forum":
         flash(
-            "Use the dedicated standard client creation route for this experiment.",
+            _("Use the dedicated standard client creation route for this experiment."),
             "error",
         )
         return redirect(url_for("clientsr.clients_standard", idexp=exp_id))
@@ -5165,7 +5256,7 @@ def _create_forum_client_internal():
         trans_expl_val = float(request.form.get("trans_expl_val", "36.4")) / 100.0
         trans_expl_broad = float(request.form.get("trans_expl_broad", "14.6")) / 100.0
     except (ValueError, TypeError) as e:
-        flash(f"Invalid archetype values: {str(e)}", "error")
+        flash(_("Invalid archetype values: %(error)s", error=str(e)), "error")
         return redirect(request.referrer)
 
     # Validate simulation parameters
@@ -5386,7 +5477,7 @@ def _create_forum_client_internal():
 
     # if name already exists, return to the previous page
     if db.session.scalars(select(Client).filter_by(name=name)).first():
-        flash("Client name already exists.", "error")
+        flash(_("Client name already exists."), "error")
         return redirect(request.referrer)
 
     exp = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
@@ -5397,13 +5488,16 @@ def _create_forum_client_internal():
     ).first()
 
     if population is None:
-        flash("Population not found.", "error")
+        flash(_("Population not found."), "error")
         return redirect(request.referrer)
 
     pop_type = infer_population_username_type(population)
     if pop_type not in {None, "forum"}:
         flash(
-            f"Population Username Type '{pop_type}' is incompatible with experiment platform 'forum'.",
+            _(
+                "Population Username Type '%(pop_type)s' is incompatible with experiment platform 'forum'.",
+                pop_type=pop_type,
+            ),
             "error",
         )
         return redirect(request.referrer)
@@ -5430,8 +5524,12 @@ def _create_forum_client_internal():
         db.session.commit()
 
     # create the Client object
+    prompt_language = prompt_packs.resolve(
+        request.form.get("prompt_language"), exp.prompt_language
+    )
     client = Client(
         name=name,
+        prompt_language=prompt_language,
         descr=descr,
         id_exp=exp_id,
         population_id=population_id,
@@ -5743,7 +5841,9 @@ def _create_forum_client_internal():
 
     if not _apply_population_attributes_to_client_config(config, population_id):
         flash(
-            "The selected population has no usable agents or is missing age data. Rebuild or re-upload the population before creating a client.",
+            _(
+                "The selected population has no usable agents or is missing age data. Rebuild or re-upload the population before creating a client."
+            ),
             "error",
         )
         return redirect(request.referrer)
@@ -5796,10 +5896,11 @@ def _create_forum_client_internal():
     data_base_path = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}"
     # copy prompts.json into the experiment folder
 
-    prompts_src = get_resource_path(os.path.join("data_schema", "prompts_forum.json"))
-    shutil.copyfile(
-        prompts_src,
-        f"{data_base_path}prompts.json",
+    prompt_packs.write_pack(
+        "prompts_forum.json", f"{data_base_path}prompts.json", prompt_language
+    )
+    prompt_packs.record_language(
+        data_base_path, client=name, client_language=prompt_language
     )
 
     # Create agent population file
@@ -6104,7 +6205,11 @@ def _create_forum_client_internal():
                                 o.write(f"{l[0]},{l[1]}\n")
                             else:
                                 flash(
-                                    f"Agent {l[0]} or {l[1]} not found in network file.",
+                                    _(
+                                        "Agent %(l)s or %(l2)s not found in network file.",
+                                        l=l[0],
+                                        l2=l[1],
+                                    ),
                                     "warning",
                                 )
 
@@ -6117,7 +6222,9 @@ def _create_forum_client_internal():
                 if os.path.exists(network_path):
                     os.remove(network_path)
                 flash(
-                    "Network file format error: provide a csv file containing two columns with agent names. No header required.",
+                    _(
+                        "Network file format error: provide a csv file containing two columns with agent names. No header required."
+                    ),
                     "error",
                 )
 
@@ -6309,18 +6416,20 @@ def create_hpc_client_route():
     exp = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
 
     if not exp:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
     if getattr(exp, "simulator_type", "Standard") != "HPC":
         flash(
-            "Use the dedicated standard or forum client creation route for this experiment.",
+            _(
+                "Use the dedicated standard or forum client creation route for this experiment."
+            ),
             "error",
         )
         if exp.platform_type == "forum":
             return redirect(url_for("clientsr.clients_forum", idexp=exp_id))
         return redirect(url_for("clientsr.clients_standard", idexp=exp_id))
     if exp.platform_type == "photo_sharing" and not population_id:
-        flash("Select a valid population.", "error")
+        flash(_("Select a valid population."), "error")
         return redirect(url_for("clientsr.clients_photo", idexp=exp_id))
 
     return create_hpc_client(exp, name, descr, population_id, request.form)
@@ -6335,7 +6444,7 @@ def create_client():
     exp_id = request.form.get("id_exp")
     exp = db.session.scalars(select(Exps).filter_by(idexp=exp_id)).first()
     if not exp:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
 
     if getattr(exp, "simulator_type", "Standard") == "HPC":
@@ -6402,16 +6511,16 @@ def delete_adhoc_client_route(idexp, client_key):
 
     exp = db.session.scalars(select(Exps).filter_by(idexp=idexp)).first()
     if exp is None:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
 
     try:
         delete_adhoc_client(exp, client_key)
-        flash("Ad hoc client deleted.", "success")
+        flash(_("Ad hoc client deleted."), "success")
     except FileNotFoundError:
-        flash("Ad hoc client configuration not found.", "error")
+        flash(_("Ad hoc client configuration not found."), "error")
     except Exception as exc:
-        flash(f"Could not delete ad hoc client: {exc}", "error")
+        flash(_("Could not delete ad hoc client: %(error)s", error=exc), "error")
 
     from ..experiments import experiment_details
 
@@ -6487,6 +6596,9 @@ def _opinion_dynamics_enabled_for_client_creation(experiment):
 def _memory_enabled_for_client_creation(experiment):
     """Resolve whether experiment-level memory is enabled for client creation flows."""
     if experiment is None:
+        return False
+
+    if not agent_memory_plugin_installed():
         return False
 
     supported = bool(bool(_experiment_uses_llm_agents(experiment)))

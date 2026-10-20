@@ -1,0 +1,92 @@
+{# Optional side-column boxes switched on in /admin/frontend_settings ("Annotations" box):
+   - recsys_info: name and plain-language description of the user's content recommender system (setting show_recsys_info;
+     `recsys_info` is None when it is off);
+   - annotation statistics: live distributions of the user's own annotations (setting show_annotation_stats; needs the
+     "Post & Comment Annotation" add-on module enabled for the experiment).
+   Include inside the right-hand column of the feed. `side_variant` is "photo" or anything else (microblogging). #}
+{% set _pa = [] %}
+{% if frontend_adds_on_modules %}
+  {% for _m in frontend_adds_on_modules if _m.module_id == 'post_annotation' %}{% set _ = _pa.append(_m) %}{% endfor %}
+{% endif %}
+{% set _show_stats = ui is defined and ui and ui.show_annotation_stats and _pa %}
+{% set _photo = side_variant is defined and side_variant == 'photo' %}
+{% set _cls = 'photo-right-rail__card' if _photo else 'card ys-card-mb' %}
+{% if recsys_info or _show_stats %}
+<style>
+  .ys-sidebox.ys-sidebox {   /* doubled selector: wins over the host theme's own .card / rail-card rules, background excepted */
+    --ys-accent: #6d28d9;
+    --ys-accent-soft: rgba(109, 40, 217, .10);
+    --ys-line: rgba(128, 128, 128, .22);
+    --ys-track: rgba(128, 128, 128, .16);
+    position: relative; overflow: hidden;
+    margin: 0 0 16px; padding: 16px 16px 14px;
+    border: 1px solid var(--ys-line); border-radius: 14px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .05), 0 6px 18px rgba(15, 23, 42, .04);
+  }
+  .ys-sidebox::before {   /* thin accent line along the top edge */
+    content: ""; position: absolute; inset: 0 0 auto 0; height: 3px;
+    background: linear-gradient(90deg, var(--ys-accent), #3d70b2);
+  }
+  .ys-sidebox__head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .ys-sidebox__icon {
+    flex: 0 0 auto; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center;
+    background: var(--ys-accent-soft); color: var(--ys-accent);
+  }
+  .ys-sidebox__icon svg { width: 18px; height: 18px; }
+  .ys-sidebox h4 { margin: 0; font-size: .95rem; font-weight: 700; line-height: 1.25; }
+  .ys-sidebox__sub { margin: 1px 0 0; font-size: .76rem; opacity: .62; line-height: 1.3; }
+  .ys-recsys-pill {
+    display: inline-block; padding: 4px 12px; border-radius: 999px; font-weight: 700; font-size: .85rem;
+    color: var(--ys-accent); background: var(--ys-accent-soft); border: 1px solid rgba(109, 40, 217, .25);
+  }
+  .ys-recsys-how { margin: 12px 0 0; padding-top: 10px; border-top: 1px dashed var(--ys-line); }
+  .ys-recsys-how small { display: block; font-size: .68rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; opacity: .55; margin-bottom: 4px; }
+  .ys-recsys-how p { margin: 0; font-size: .84rem; line-height: 1.5; opacity: .88; }
+  .ys-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 4px; }
+  .ys-kpi { padding: 8px 6px; border-radius: 10px; text-align: center; background: var(--ys-accent-soft); }
+  .ys-kpi strong { display: block; font-size: 1.25rem; line-height: 1.1; color: var(--ys-accent); font-variant-numeric: tabular-nums; }
+  .ys-kpi span { font-size: .68rem; text-transform: uppercase; letter-spacing: .05em; opacity: .65; }
+  .ys-stat-group { margin-top: 14px; }
+  .ys-stat-group h5 { margin: 0 0 7px; font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; opacity: .55; }
+  .ys-stat-row { display: grid; grid-template-columns: minmax(64px, 36%) 1fr 26px; gap: 8px; align-items: center; font-size: .8rem; margin-bottom: 5px; }
+  .ys-stat-row .l { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ys-stat-bar { height: 9px; border-radius: 999px; background: var(--ys-track); overflow: hidden; }
+  .ys-stat-bar > i { display: block; height: 100%; min-width: 4px; border-radius: 999px; background: var(--ys-accent); transition: width .45s cubic-bezier(.2, .8, .2, 1); }
+  .ys-stat-row .n { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .ys-stat-empty { padding: 14px 8px 6px; text-align: center; font-size: .84rem; opacity: .7; line-height: 1.45; }
+  .ys-stat-empty svg { display: block; margin: 0 auto 6px; width: 30px; height: 30px; color: var(--ys-accent); opacity: .8; }
+</style>
+{% endif %}
+{% if recsys_info %}
+<div class="ys-sidebox {{ _cls }}" id="ys-recsys-box" data-recsys="{{ recsys_info.name }}">
+  <div class="ys-sidebox__head">
+    <span class="ys-sidebox__icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h6"/><circle cx="18" cy="17" r="3"/><path d="m20.2 19.2 1.8 1.8"/></svg>
+    </span>
+    <div>
+      <h4>{{ _('Your recommender system') }}</h4>
+      <p class="ys-sidebox__sub">{{ _('The algorithm that picks the posts in your feed') }}</p>
+    </div>
+  </div>
+  <span class="ys-recsys-pill">{{ recsys_info.label }}</span>
+  <div class="ys-recsys-how">
+    <small>{{ _('How it works') }}</small>
+    <p>{{ recsys_info.description }}</p>
+  </div>
+</div>
+{% endif %}
+{% if _show_stats %}
+<div class="ys-sidebox {{ _cls }}" id="ys-annostats-box" data-api="{{ _pa[0].api_base }}/my_stats">
+  <div class="ys-sidebox__head">
+    <span class="ys-sidebox__icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+    </span>
+    <div>
+      <h4>{{ _('Your annotations') }}</h4>
+      <p class="ys-sidebox__sub">{{ _('What you assigned to posts and comments') }}</p>
+    </div>
+  </div>
+  <div id="ys-annostats-body"><div class="ys-stat-empty">{{ _('Loading…') }}</div></div>
+</div>
+<script src="{{ url_for('static', filename='assets/js/ys-annotation-stats.js') }}" defer></script>
+{% endif %}

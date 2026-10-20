@@ -27,6 +27,64 @@ use_parentheses = true
 ensure_newline_before_comments = true
 skip_glob = ["external/*"]
 
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "ysocial"
-requires-python = ">=3.10"
+dynamic = ["version", "dependencies", "optional-dependencies"]
+description = "YSocial: a digital twin of social media platforms populated by LLM agents"
+readme = "README.md"
+license = "GPL-3.0-only"
+license-files = ["LICENSE"]
+requires-python = ">=3.12"
+authors = [{ name = "Giulio Rossetti" }]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Framework :: Flask",
+]
+
+[project.scripts]
+ysocial = "y_social:main"
+
+[tool.setuptools]
+py-modules = ["y_social"]
+include-package-data = false
+
+[tool.setuptools.dynamic]
+version = { file = ["VERSION"] }
+dependencies = { file = ["requirements/base.in"] }
+optional-dependencies.toxicity = { file = ["requirements/toxicity.in"] }
+
+[tool.setuptools.packages.find]
+include = ["y_web*", "data_schema*"]
+exclude = [
+    "y_web.tests*",
+    "y_web.experiments*",
+    "y_web.db",
+    "y_web.db.*",
+    "y_web.static*",
+    "y_web.templates*",
+    "y_web.translations*",
+]
+namespaces = true
+
+[tool.setuptools.exclude-package-data]
+# ~10k profile pictures (~490 MB): downloaded on first run (avatars_store.py)
+y_web = ["static/assets/img/users/*"]
+
+[tool.setuptools.package-data]
+y_web = [
+    "templates/**/*",
+    "static/**/*",
+    "translations/**/*",
+    "alembic/script.py.mako",
+    "alembic/README",
+    "prompts_internal*.json",
+    "src/external_runtime/builtin_plugins.json",
+    "src/system/sample_notebook/*",
+    "migrations/README.md",
+]
+data_schema = ["*.db", "*.sql", "prompts/**/*", "migrations/**/*"]

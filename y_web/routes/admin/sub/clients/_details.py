@@ -8,6 +8,7 @@ from flask_login import current_user, login_required
 from sqlalchemy import select
 
 from y_web import db
+from y_web.i18n import gettext as _
 from y_web.src.hpc.client import resolve_hpc_client_log_path
 from y_web.src.hpc.log_metrics import update_client_execution_from_log
 from y_web.src.llm.vllm_manager import get_llm_models
@@ -135,12 +136,12 @@ def client_details_forum(uid):
 
     client = db.session.scalars(select(Client).filter_by(id=uid)).first()
     if not client:
-        flash("Client not found.", "error")
+        flash(_("Client not found."), "error")
         return redirect(url_for("experiments.settings"))
 
     experiment = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()
     if not experiment:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
 
     if experiment.simulator_type == "HPC":
@@ -226,12 +227,12 @@ def client_details_hpc(uid):
     # get client details
     client = db.session.scalars(select(Client).filter_by(id=uid)).first()
     if not client:
-        flash("Client not found.", "error")
+        flash(_("Client not found."), "error")
         return redirect(url_for("experiments.settings"))
 
     experiment = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()
     if not experiment:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
 
     population = db.session.scalars(
@@ -259,7 +260,7 @@ def client_details_hpc(uid):
 
     config = _read_json_if_exists(config_path)
     if config is None:
-        flash("HPC client configuration file not found.", "warning")
+        flash(_("HPC client configuration file not found."), "warning")
 
     agents = _read_json_if_exists(population_path)
     llms = _extract_llm_names_from_population_payload(agents)
@@ -737,13 +738,18 @@ def upload_network(uid):
                     if not error and not error2:
                         o.write(f"{l[0]},{l[1]}\n")
                     else:
-                        flash(f"Agent {l[0]} or {l[1]} not found.", "error")
+                        flash(
+                            _("Agent %(l)s or %(l2)s not found.", l=l[0], l2=l[1]),
+                            "error",
+                        )
                         os.remove(f"{path}_network_temp.csv")
                         os.remove(f"{path}_network.csv")
                         return redirect(request.referrer)
     except:
         flash(
-            "File format error: provide a csv file containing two columns with agent names. No header required.",
+            _(
+                "File format error: provide a csv file containing two columns with agent names. No header required."
+            ),
             "error",
         )
         os.remove(f"{path}_network_temp.csv")

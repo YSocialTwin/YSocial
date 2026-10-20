@@ -1,0 +1,8 @@
+{
+  "login.show": "MOSTRA",
+  "login.hide": "NASCONDI",
+  "login.show_password": "Mostra password",
+  "login.hide_password": "Nascondi password",
+  "login.continue_to": "Continua su {name}",
+  "login.continue_default": "Continua all'esperimento"
+}

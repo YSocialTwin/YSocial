@@ -40,7 +40,7 @@ var AdminSettings = (function() {
 
   // Functions to start/stop experiment servers
   function startExperimentServer(expId) {
-      if (!confirm('Start the experiment server?')) return;
+      if (!confirm(YI18n.t('Start the experiment server?'))) return;
     
       // Show loading
       const btn = event.target.closest('a');
@@ -51,7 +51,7 @@ var AdminSettings = (function() {
   }
 
   function stopExperimentServer(expId) {
-      if (!confirm('Stop the experiment server?')) return;
+      if (!confirm(YI18n.t('Stop the experiment server?'))) return;
     
       // Show loading
       const btn = event.target.closest('a');
@@ -68,20 +68,20 @@ var AdminSettings = (function() {
           { id: 'has_infinite_client', hidden: true },
           { 
               id: 'exp_name', 
-              name: 'Name', 
+              name: YI18n.t('Name'), 
               attributes: editableCellAttributes, 
               width: '100px',
               formatter: (cell, row) => {
                   const hasInfinite = row.cells[1].data;
                   const infiniteTag = hasInfinite ? 
-                      '<span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.65em; padding: 1px 4px; border-radius: 8px; font-weight: 600; margin-left: 5px;" title="This experiment has at least one client set to run until manually stopped">∞</span>' : '';
+                      '<span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.65em; padding: 1px 4px; border-radius: 8px; font-weight: 600; margin-left: 5px;" title="' + YI18n.t('This experiment has at least one client set to run until manually stopped') + '">∞</span>' : '';
                   return gridjs.html(`<span>${cell}${infiniteTag}</span>`);
               }
           },
-          { id: 'owner', name: 'Owner', sort: false, width: '50px' },
+          { id: 'owner', name: YI18n.t('Owner'), sort: false, width: '50px' },
           {
               id: 'progress',
-              name: 'Progress',
+              name: YI18n.t('Progress'),
               sort: false,
               width: '100px',
               formatter: (cell, row) => {
@@ -109,7 +109,7 @@ var AdminSettings = (function() {
           },
           {
               id: 'status_combined',
-              name: 'Status',
+              name: YI18n.t('Status'),
               sort: false,
               width: '40px',
               formatter: (cell, row) => {
@@ -118,12 +118,7 @@ var AdminSettings = (function() {
                   const jupyter = YS_DATA_SETTINGS.enableNotebook ? row.cells[6].data : null;
                   const webColor = web === 'Loaded' ? '#28a745' : '#6c757d';
                   const jupyterColor = jupyter === 'Active' ? '#28a745' : '#6c757d';
-                  return gridjs.html(`
-                      <div class="status-indicators">
-                          <span class="status-dot" style="background-color: ${webColor};" title="Web: ${web}"></span>
-                          ${YS_DATA_SETTINGS.enableNotebook ? `<span class="status-dot" style="background-color: ${jupyterColor};" title="Lab: ${jupyter}"></span>` : ''}
-                      </div>
-                  `);
+                  return gridjs.html('\n                      <div class="status-indicators">\n                          <span class="status-dot" style="background-color: ' + webColor + ';" title="' + YI18n.t('Web: {web}', {web}) + '"></span>\n                          ' + (YS_DATA_SETTINGS.enableNotebook ? '<span class="status-dot" style="background-color: ' + jupyterColor + ';" title="' + YI18n.t('Lab: {jupyter}', {jupyter}) + '"></span>' : '') + '\n                      </div>\n                  ');
               }
           },
           { id: 'web', hidden: true },
@@ -135,18 +130,7 @@ var AdminSettings = (function() {
               width: '45px',
               formatter: (cell, row) => {
                   const id = row.cells[0].data;
-                  return gridjs.html(`
-                      <div style="display: flex; flex-direction: column; gap: 3px; align-items: center;">
-                          <a href="/admin/experiment_details/${id}" class="box-action-link"
-                             style="background-color: #28a745; color: white; padding: 3px 6px; border-radius: 3px; text-decoration: none; font-size: 0.7rem; width: 100%; text-align: center;">
-                              <i class="mdi mdi-open-in-new"></i><span class="action-text"> View</span>
-                          </a>
-                          <a href="/admin/delete_simulation/${id}" class="box-action-link"
-                             style="background-color: #dc3545; color: white; padding: 3px 6px; border-radius: 3px; text-decoration: none; font-size: 0.7rem; width: 100%; text-align: center;">
-                              <i class="mdi mdi-delete"></i><span class="action-text"> Delete</span>
-                          </a>
-                      </div>
-                  `);
+                  return gridjs.html('\n                      <div style="display: flex; flex-direction: column; gap: 3px; align-items: center;">\n                          <a href="/admin/experiment_details/' + id + '" class="box-action-link"\n                             style="background-color: #28a745; color: white; padding: 3px 6px; border-radius: 3px; text-decoration: none; font-size: 0.7rem; width: 100%; text-align: center;">\n                              <i class="mdi mdi-open-in-new"></i><span class="action-text"> ' + YI18n.t('View') + '</span>\n                          </a>\n                          <a href="/admin/delete_simulation/' + id + '" class="box-action-link"\n                             style="background-color: #dc3545; color: white; padding: 3px 6px; border-radius: 3px; text-decoration: none; font-size: 0.7rem; width: 100%; text-align: center;">\n                              <i class="mdi mdi-delete"></i><span class="action-text"> ' + YI18n.t('Delete') + '</span>\n                          </a>\n                      </div>\n                  ');
               }
           },
       ];
@@ -159,20 +143,20 @@ var AdminSettings = (function() {
           { id: 'has_infinite_client', hidden: true },
           { 
               id: 'exp_name', 
-              name: 'Name', 
+              name: YI18n.t('Name'), 
               attributes: editableCellAttributes, 
               width: '100px',
               formatter: (cell, row) => {
                   const hasInfinite = row.cells[1].data;
                   const infiniteTag = hasInfinite ? 
-                      '<span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.65em; padding: 1px 4px; border-radius: 8px; font-weight: 600; margin-left: 5px;" title="This experiment has at least one client set to run until manually stopped">∞</span>' : '';
+                      '<span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.65em; padding: 1px 4px; border-radius: 8px; font-weight: 600; margin-left: 5px;" title="' + YI18n.t('This experiment has at least one client set to run until manually stopped') + '">∞</span>' : '';
                   return gridjs.html(`<span>${cell}${infiniteTag}</span>`);
               }
           },
-          { id: 'owner', name: 'Owner', sort: false, width: '50px' },
+          { id: 'owner', name: YI18n.t('Owner'), sort: false, width: '50px' },
           {
               id: 'annotations',
-              name: 'Tags',
+              name: YI18n.t('Tags'),
               sort: false,
               width: '70px',
               formatter: (cell) => {
@@ -195,7 +179,7 @@ var AdminSettings = (function() {
           },
           {
               id: 'status_combined',
-              name: 'Status',
+              name: YI18n.t('Status'),
               sort: false,
               width: '40px',
               formatter: (cell, row) => {
@@ -204,12 +188,7 @@ var AdminSettings = (function() {
                   const jupyter = YS_DATA_SETTINGS.enableNotebook ? row.cells[6].data : null;
                   const webColor = web === 'Loaded' ? '#28a745' : '#6c757d';
                   const jupyterColor = jupyter === 'Active' ? '#28a745' : '#6c757d';
-                  return gridjs.html(`
-                      <div class="status-indicators">
-                          <span class="status-dot" style="background-color: ${webColor};" title="Web: ${web}"></span>
-                          ${YS_DATA_SETTINGS.enableNotebook ? `<span class="status-dot" style="background-color: ${jupyterColor};" title="Lab: ${jupyter}"></span>` : ''}
-                      </div>
-                  `);
+                  return gridjs.html('\n                      <div class="status-indicators">\n                          <span class="status-dot" style="background-color: ' + webColor + ';" title="' + YI18n.t('Web: {web}', {web}) + '"></span>\n                          ' + (YS_DATA_SETTINGS.enableNotebook ? '<span class="status-dot" style="background-color: ' + jupyterColor + ';" title="' + YI18n.t('Lab: {jupyter}', {jupyter}) + '"></span>' : '') + '\n                      </div>\n                  ');
               }
           },
           { id: 'web', hidden: true },
@@ -221,18 +200,7 @@ var AdminSettings = (function() {
               width: '45px',
               formatter: (cell, row) => {
                   const id = row.cells[0].data;
-                  return gridjs.html(`
-                      <div style="display: flex; flex-direction: column; gap: 3px; align-items: center;">
-                          <a href="/admin/experiment_details/${id}"
-                             style="background-color: #28a745; color: white; padding: 3px 6px; border-radius: 3px; text-decoration: none; font-size: 0.7rem; width: 100%; text-align: center;">
-                              View
-                          </a>
-                          <a href="/admin/delete_simulation/${id}"
-                             style="background-color: #dc3545; color: white; padding: 3px 6px; border-radius: 3px; text-decoration: none; font-size: 0.7rem; width: 100%; text-align: center;">
-                              Delete
-                          </a>
-                      </div>
-                  `);
+                  return gridjs.html('\n                      <div style="display: flex; flex-direction: column; gap: 3px; align-items: center;">\n                          <a href="/admin/experiment_details/' + id + '"\n                             style="background-color: #28a745; color: white; padding: 3px 6px; border-radius: 3px; text-decoration: none; font-size: 0.7rem; width: 100%; text-align: center;">\n                              ' + YI18n.t('View') + '\n                          </a>\n                          <a href="/admin/delete_simulation/' + id + '"\n                             style="background-color: #dc3545; color: white; padding: 3px 6px; border-radius: 3px; text-decoration: none; font-size: 0.7rem; width: 100%; text-align: center;">\n                              ' + YI18n.t('Delete') + '\n                          </a>\n                      </div>\n                  ');
               }
           },
       ];
@@ -247,7 +215,7 @@ var AdminSettings = (function() {
       if (btn) {
           if (selectedExperiments.size > 0) {
               btn.style.display = 'inline-block';
-              btn.innerHTML = `<i class="mdi mdi-download"></i><span class="exp-btn-label"> Download Selected (${selectedExperiments.size})</span>`;
+              btn.innerHTML = '<i class="mdi mdi-download"></i><span class="exp-btn-label"> ' + YI18n.t('Download Selected ({size})', {size: selectedExperiments.size}) + '</span>';
           } else {
               btn.style.display = 'none';
           }
@@ -295,7 +263,7 @@ var AdminSettings = (function() {
   // Function to download selected experiments
   function downloadSelectedExperiments() {
       if (selectedExperiments.size === 0) {
-          alert('Please select at least one experiment to download.');
+          YNotify.warning(YI18n.t('Please select at least one experiment to download.'));
           return;
       }
 
@@ -304,7 +272,7 @@ var AdminSettings = (function() {
       // Show loading indicator
       const btn = document.getElementById('download-selected-btn');
       const originalText = btn.innerHTML;
-      btn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i><span class="exp-btn-label"> Preparing...</span>';
+      btn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i><span class="exp-btn-label"> ' + YI18n.t('Preparing...') + '</span>';
       btn.disabled = true;
 
       // Submit a form to download (to properly handle file download)
@@ -334,7 +302,7 @@ var AdminSettings = (function() {
       // Show loading indicator
       const btn = document.getElementById('download-all-btn');
       const originalText = btn.innerHTML;
-      btn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i><span class="exp-btn-label"> Preparing...</span>';
+      btn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i><span class="exp-btn-label"> ' + YI18n.t('Preparing...') + '</span>';
       btn.disabled = true;
 
       // Submit a form to download all (empty array or 'all' signal to backend)
@@ -366,7 +334,7 @@ var AdminSettings = (function() {
           { id: 'has_infinite_client', hidden: true },
           {
               id: 'checkbox',
-              name: gridjs.html('<input type="checkbox" id="select-all-completed" onchange="toggleAllExperiments(this)" title="Select all"/>'),
+              name: gridjs.html('<input type="checkbox" id="select-all-completed" onchange="toggleAllExperiments(this)" title="' + YI18n.t('Select all') + '"/>'),
               sort: false,
               width: '30px',
               formatter: (cell, row) => {
@@ -381,20 +349,20 @@ var AdminSettings = (function() {
           },
           { 
               id: 'exp_name', 
-              name: 'Name', 
+              name: YI18n.t('Name'), 
               attributes: editableCellAttributes, 
               width: '100px',
               formatter: (cell, row) => {
                   const hasInfinite = row.cells[1].data;
                   const infiniteTag = hasInfinite ? 
-                      '<span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.65em; padding: 1px 4px; border-radius: 8px; font-weight: 600; margin-left: 5px;" title="This experiment has at least one client set to run until manually stopped">∞</span>' : '';
+                      '<span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.65em; padding: 1px 4px; border-radius: 8px; font-weight: 600; margin-left: 5px;" title="' + YI18n.t('This experiment has at least one client set to run until manually stopped') + '">∞</span>' : '';
                   return gridjs.html(`<span>${cell}${infiniteTag}</span>`);
               }
           },
-          { id: 'owner', name: 'Owner', sort: false, width: '50px' },
+          { id: 'owner', name: YI18n.t('Owner'), sort: false, width: '50px' },
           {
               id: 'annotations',
-              name: 'Tags',
+              name: YI18n.t('Tags'),
               sort: false,
               width: '70px',
               formatter: (cell) => {
@@ -417,7 +385,7 @@ var AdminSettings = (function() {
           },
           {
               id: 'status_combined',
-              name: 'Status',
+              name: YI18n.t('Status'),
               sort: false,
               width: '40px',
               formatter: (cell, row) => {
@@ -426,12 +394,7 @@ var AdminSettings = (function() {
                   const jupyter = YS_DATA_SETTINGS.enableNotebook ? row.cells[7].data : null;
                   const webColor = web === 'Loaded' ? '#28a745' : '#6c757d';
                   const jupyterColor = jupyter === 'Active' ? '#28a745' : '#6c757d';
-                  return gridjs.html(`
-                      <div class="status-indicators">
-                          <span class="status-dot" style="background-color: ${webColor};" title="Web: ${web}"></span>
-                          ${YS_DATA_SETTINGS.enableNotebook ? `<span class="status-dot" style="background-color: ${jupyterColor};" title="Lab: ${jupyter}"></span>` : ''}
-                      </div>
-                  `);
+                  return gridjs.html('\n                      <div class="status-indicators">\n                          <span class="status-dot" style="background-color: ' + webColor + ';" title="' + YI18n.t('Web: {web}', {web}) + '"></span>\n                          ' + (YS_DATA_SETTINGS.enableNotebook ? '<span class="status-dot" style="background-color: ' + jupyterColor + ';" title="' + YI18n.t('Lab: {jupyter}', {jupyter}) + '"></span>' : '') + '\n                      </div>\n                  ');
               }
           },
           { id: 'web', hidden: true },
@@ -443,18 +406,7 @@ var AdminSettings = (function() {
               width: '45px',
               formatter: (cell, row) => {
                   const id = row.cells[0].data;
-                  return gridjs.html(`
-                      <div style="display: flex; flex-direction: column; gap: 3px; align-items: center;">
-                          <a href="/admin/experiment_details/${id}"
-                             style="background-color: #28a745; color: white; padding: 3px 6px; border-radius: 3px; text-decoration: none; font-size: 0.7rem; width: 100%; text-align: center;">
-                              View
-                          </a>
-                          <a href="/admin/delete_simulation/${id}"
-                             style="background-color: #dc3545; color: white; padding: 3px 6px; border-radius: 3px; text-decoration: none; font-size: 0.7rem; width: 100%; text-align: center;">
-                              Delete
-                          </a>
-                      </div>
-                  `);
+                  return gridjs.html('\n                      <div style="display: flex; flex-direction: column; gap: 3px; align-items: center;">\n                          <a href="/admin/experiment_details/' + id + '"\n                             style="background-color: #28a745; color: white; padding: 3px 6px; border-radius: 3px; text-decoration: none; font-size: 0.7rem; width: 100%; text-align: center;">\n                              ' + YI18n.t('View') + '\n                          </a>\n                          <a href="/admin/delete_simulation/' + id + '"\n                             style="background-color: #dc3545; color: white; padding: 3px 6px; border-radius: 3px; text-decoration: none; font-size: 0.7rem; width: 100%; text-align: center;">\n                              ' + YI18n.t('Delete') + '\n                          </a>\n                      </div>\n                  ');
               }
           },
       ];
@@ -489,7 +441,7 @@ var AdminSettings = (function() {
               );
             
               if (groupExps.length === 0) {
-                  alert('No experiments found in this group.');
+                  YNotify.warning(YI18n.t('No experiments found in this group.'));
                   return;
               }
             
@@ -512,13 +464,13 @@ var AdminSettings = (function() {
           })
           .catch(error => {
               console.error('Error downloading group:', error);
-              alert('Error downloading group experiments.');
+              YNotify.error(YI18n.t('Error downloading group experiments.'));
           });
   }
 
   function submitBulkDelete(expIds, buttonId, loadingText) {
       if (!expIds || expIds.length === 0) {
-          alert('No experiments found to delete.');
+          YNotify.warning(YI18n.t('No experiments found to delete.'));
           return;
       }
 
@@ -558,11 +510,11 @@ var AdminSettings = (function() {
           .then(results => {
               const expIds = (results.data || []).map(exp => exp.idexp);
               if (expIds.length === 0) {
-                  alert(`No ${label} experiments found.`);
+                  YNotify.warning(YI18n.t('No {label} experiments found.', {label}));
                   return;
               }
 
-              if (!confirm(`Delete all ${expIds.length} ${label} experiments? This action cannot be undone.`)) {
+              if (!confirm(YI18n.t('Delete all {length} {label} experiments? This action cannot be undone.', {length: expIds.length, label}))) {
                   return;
               }
 
@@ -570,7 +522,7 @@ var AdminSettings = (function() {
           })
           .catch(error => {
               console.error('Error deleting all experiments:', error);
-              alert('Error deleting experiments.');
+              YNotify.error(YI18n.t('Error deleting experiments.'));
           });
   }
 
@@ -584,11 +536,11 @@ var AdminSettings = (function() {
               );
 
               if (groupExps.length === 0) {
-                  alert('No experiments found in this group.');
+                  YNotify.warning(YI18n.t('No experiments found in this group.'));
                   return;
               }
 
-              if (!confirm(`Delete all ${groupExps.length} experiments in group "${groupName}"? This action cannot be undone.`)) {
+              if (!confirm(YI18n.t('Delete all {length} experiments in group "{groupname}"? This action cannot be undone.', {length: groupExps.length, groupname: groupName}))) {
                   return;
               }
 
@@ -597,7 +549,7 @@ var AdminSettings = (function() {
           })
           .catch(error => {
               console.error('Error deleting group:', error);
-              alert('Error deleting group experiments.');
+              YNotify.error(YI18n.t('Error deleting group experiments.'));
           });
   }
 
@@ -691,75 +643,27 @@ var AdminSettings = (function() {
                 
                   // Group header controls
                   const downloadBtn = statusFilter === EXP_STATUS.COMPLETED ? 
-                      `<button onclick="event.stopPropagation(); downloadGroupExperiments('${group.replace(/'/g, "\\'")}', '${statusFilter}')" 
-                               class="download-group-btn ${iconOnlyCompletedGroupActions ? 'group-action-icononly' : ''}"
-                               title="Download all experiments in this group">
-                          <i class="mdi mdi-download"></i><span class="group-btn-label">${iconOnlyCompletedGroupActions ? '' : ' Download Group'}</span>
-                      </button>` : '';
+                      '<button onclick="event.stopPropagation(); downloadGroupExperiments(\'' + group.replace(/'/g, "\\'") + '\', \'' + statusFilter + '\')" \n                               class="download-group-btn ' + (iconOnlyCompletedGroupActions ? 'group-action-icononly' : '') + '"\n                               title="' + YI18n.t('Download all experiments in this group') + '">\n                          <i class="mdi mdi-download"></i><span class="group-btn-label">' + (iconOnlyCompletedGroupActions ? '' : ' Download Group') + '</span>\n                      </button>' : '';
                   const deleteBtn = statusFilter !== EXP_STATUS.ACTIVE ?
-                      `<button onclick="event.stopPropagation(); deleteGroupExperiments('${group.replace(/'/g, "\\'")}', '${statusFilter}')" 
-                               class="delete-group-btn ${iconOnlyCompletedGroupActions && statusFilter === EXP_STATUS.COMPLETED ? 'group-action-icononly' : ''}"
-                               title="Delete all experiments in this group">
-                          <i class="mdi mdi-delete"></i><span class="group-btn-label">${iconOnlyCompletedGroupActions && statusFilter === EXP_STATUS.COMPLETED ? '' : ' Delete Group'}</span>
-                      </button>` : '';
+                      '<button onclick="event.stopPropagation(); deleteGroupExperiments(\'' + group.replace(/'/g, "\\'") + '\', \'' + statusFilter + '\')" \n                               class="delete-group-btn ' + (iconOnlyCompletedGroupActions && statusFilter === EXP_STATUS.COMPLETED ? 'group-action-icononly' : '') + '"\n                               title="' + YI18n.t('Delete all experiments in this group') + '">\n                          <i class="mdi mdi-delete"></i><span class="group-btn-label">' + (iconOnlyCompletedGroupActions && statusFilter === EXP_STATUS.COMPLETED ? '' : ' Delete Group') + '</span>\n                      </button>' : '';
                 
                   // Determine if group should be collapsed by default (for completed and stopped)
                   const shouldCollapse = statusFilter !== EXP_STATUS.ACTIVE;
                   const collapsedClass = shouldCollapse ? ' collapsed' : '';
                 
-                  html += `
-                      <div class="experiment-group">
-                          <div class="group-header" onclick="toggleGroup('${groupId}')" 
-                               style="border-left: 3px solid ${statusFilter === EXP_STATUS.ACTIVE ? '#28a745' : statusFilter === EXP_STATUS.COMPLETED ? '#17a2b8' : '#6c757d'}">
-                              <div class="group-header-main">
-                                  <i class="mdi mdi-chevron-down chevron${collapsedClass}" id="chevron-${groupId}"></i>
-                                  <span class="group-header-title">${group}</span>
-                                  <span class="count-badge ${badgeClass}">${count}</span>
-                              </div>
-                              <div class="group-header-actions">${downloadBtn}${deleteBtn}</div>
-                              <span class="group-header-hint">Click to expand/collapse</span>
-                          </div>
-                          <div id="content-${groupId}" class="group-content${collapsedClass}">
-                  `;
+                  html += '\n                      <div class="experiment-group">\n                          <div class="group-header" onclick="toggleGroup(\'' + groupId + '\')" \n                               style="border-left: 3px solid ' + (statusFilter === EXP_STATUS.ACTIVE ? '#28a745' : statusFilter === EXP_STATUS.COMPLETED ? '#17a2b8' : '#6c757d') + '">\n                              <div class="group-header-main">\n                                  <i class="mdi mdi-chevron-down chevron' + collapsedClass + '" id="chevron-' + groupId + '"></i>\n                                  <span class="group-header-title">' + group + '</span>\n                                  <span class="count-badge ' + badgeClass + '">' + count + '</span>\n                              </div>\n                              <div class="group-header-actions">' + downloadBtn + deleteBtn + '</div>\n                              <span class="group-header-hint">' + YI18n.t('Click to expand/collapse') + '</span>\n                          </div>\n                          <div id="content-' + groupId + '" class="group-content' + collapsedClass + '">\n                  ';
                 
                   // Add experiments
                   experiments.forEach(exp => {
                       // Add checkbox for completed experiments
                       const checkbox = statusFilter === EXP_STATUS.COMPLETED ? 
-                          `<input type="checkbox" class="exp-checkbox" data-exp-id="${exp.idexp}" 
-                                  onchange="toggleExperimentSelection(${exp.idexp}, this)" 
-                                  ${selectedExperiments.has(exp.idexp) ? 'checked' : ''}
-                                  style="margin-right: 8px;" title="Select for download"/>` : '';
+                          '<input type="checkbox" class="exp-checkbox" data-exp-id="' + exp.idexp + '" \n                                  onchange="toggleExperimentSelection(' + exp.idexp + ', this)" \n                                  ' + (selectedExperiments.has(exp.idexp) ? 'checked' : '') + '\n                                  style="margin-right: 8px;" title="' + YI18n.t('Select for download') + '"/>' : '';
                     
-                      html += `
-                          <div class="exp-item" style="flex-direction: column; align-items: stretch;">
-                              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                                  <div class="exp-item-info">
-                                      ${checkbox}
-                                      <span class="exp-item-name">${exp.exp_name}</span>
-                                      <span class="exp-tag owner">${exp.owner}</span>
-                                      <span class="exp-tag platform">${exp.platform_type === 'forum' ? 'Forum' : exp.platform_type === 'photo_sharing' ? 'Photo Sharing' : 'Microblogging'}</span>
-                                      ${exp.simulator_type === 'HPC' ? '<span class="exp-tag hpc">HPC</span>' : ''}
-                                      ${exp.is_remote === 1 ? '<span class="exp-tag remote">Remote</span>' : ''}
-                                      ${exp.has_infinite_client ? '<span class="exp-tag infinite">∞</span>' : ''}
-                                      ${renderExperimentProgressBadge(exp, statusFilter)}
-                                  </div>
-                                  <div style="display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; flex-shrink: 0; max-width: 100%;">
-                                      ${exp.running === 'Running' ? 
-                                          (exp.can_manage ? `<a href="#" onclick="stopExperimentServer(${exp.idexp}); return false;" title="Stop Server"><i class="mdi mdi-stop" style="font-size: 18px; color: #dc3545;"></i></a>` : '') : 
-                                          `<a href="#" onclick="startExperimentServer(${exp.idexp}); return false;" title="Start Server"><i class="mdi mdi-play-box-outline" style="font-size: 18px; color: #28a745;"></i></a>`
-                                      }
-                                      ${exp.web === 'Loaded' ? 
-                                          `<a href="/admin/select_experiment/${exp.idexp}" title="Loaded (click to unload)"><i class="mdi mdi-select-all" style="font-size: 18px; color: #28a745;"></i></a>` : 
-                                          `<a href="/admin/select_experiment/${exp.idexp}" title="Load Web Interface"><i class="mdi mdi-select-all" style="font-size: 18px; color: #6c757d;"></i></a>`
-                                      }
-                                      <a href="/admin/experiment_details/${exp.idexp}" title="View Details"><i class="mdi mdi-open-in-new" style="font-size: 18px; color: #039be5;"></i></a>
-                                      ${exp.can_manage ? `<a href="/admin/delete_simulation/${exp.idexp}" onclick="return confirm('Delete this experiment?')" title="Delete"><i class="mdi mdi-delete" style="font-size: 18px; color: #dc3545;"></i></a>` : ''}
-                                  </div>
-                              </div>
-                              ${statusFilter === EXP_STATUS.ACTIVE ? `<div id="progress-section-${exp.idexp}" class="client-progress-section" style="display: none;"></div>` : ''}
-                          </div>
-                      `;
+                      html += '\n                          <div class="exp-item" style="flex-direction: column; align-items: stretch;">\n                              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">\n                                  <div class="exp-item-info">\n                                      ' + checkbox + '\n                                      <span class="exp-item-name">' + exp.exp_name + '</span>\n                                      <span class="exp-tag owner">' + exp.owner + '</span>\n                                      <span class="exp-tag platform">' + (exp.platform_type === 'forum' ? 'Forum' : exp.platform_type === 'photo_sharing' ? 'Photo Sharing' : 'Microblogging') + '</span>\n                                      ' + (exp.simulator_type === 'HPC' ? '<span class="exp-tag hpc">' + YI18n.t('HPC') + '</span>' : '') + '\n                                      ' + (exp.is_remote === 1 ? '<span class="exp-tag remote">' + YI18n.t('Remote') + '</span>' : '') + '\n                                      ' + (exp.has_infinite_client ? '<span class="exp-tag infinite">∞</span>' : '') + '\n                                      ' + renderExperimentProgressBadge(exp, statusFilter) + '\n                                  </div>\n                                  <div style="display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; flex-shrink: 0; max-width: 100%;">\n                                      ' + (exp.running === 'Running' ? 
+                                          (exp.can_manage ? '<a href="#" onclick="stopExperimentServer(' + exp.idexp + '); return false;" title="' + YI18n.t('Stop Server') + '"><i class="mdi mdi-stop" style="font-size: 18px; color: #dc3545;"></i></a>' : '') : 
+                                          '<a href="#" onclick="startExperimentServer(' + exp.idexp + '); return false;" title="' + YI18n.t('Start Server') + '"><i class="mdi mdi-play-box-outline" style="font-size: 18px; color: #28a745;"></i></a>') + '\n                                      ' + (exp.web === 'Loaded' ? 
+                                          '<a href="/admin/select_experiment/' + exp.idexp + '" title="' + YI18n.t('Loaded (click to unload)') + '"><i class="mdi mdi-select-all" style="font-size: 18px; color: #28a745;"></i></a>' : 
+                                          '<a href="/admin/select_experiment/' + exp.idexp + '" title="' + YI18n.t('Load Web Interface') + '"><i class="mdi mdi-select-all" style="font-size: 18px; color: #6c757d;"></i></a>') + '\n                                      <a href="/admin/experiment_details/' + exp.idexp + '" title="' + YI18n.t('View Details') + '"><i class="mdi mdi-open-in-new" style="font-size: 18px; color: #039be5;"></i></a>\n                                      ' + (exp.can_manage ? '<a href="/admin/delete_simulation/' + exp.idexp + '" onclick="return confirm(\'Delete this experiment?\')" title="' + YI18n.t('Delete') + '"><i class="mdi mdi-delete" style="font-size: 18px; color: #dc3545;"></i></a>' : '') + '\n                                  </div>\n                              </div>\n                              ' + (statusFilter === EXP_STATUS.ACTIVE ? `<div id="progress-section-${exp.idexp}" class="client-progress-section" style="display: none;"></div>` : '') + '\n                          </div>\n                      ';
                   });
                 
                   html += `
@@ -770,24 +674,7 @@ var AdminSettings = (function() {
             
               // Add pagination controls if there are multiple pages
               if (totalPages > 1) {
-                  html += `
-                      <div class="pagination-container">
-                          <div class="pagination-info">
-                              Showing groups ${startIdx + 1}-${endIdx} of ${totalGroups}
-                          </div>
-                          <div class="pagination-buttons">
-                              <button onclick="changePage('${containerId}', ${state.page - 1})" 
-                                      ${state.page === 0 ? 'disabled' : ''}>
-                                  <i class="mdi mdi-chevron-left"></i> Previous
-                              </button>
-                              <span style="padding: 4px 10px;">Page ${state.page + 1} of ${totalPages}</span>
-                              <button onclick="changePage('${containerId}', ${state.page + 1})" 
-                                      ${state.page >= totalPages - 1 ? 'disabled' : ''}>
-                                  Next <i class="mdi mdi-chevron-right"></i>
-                              </button>
-                          </div>
-                      </div>
-                  `;
+                  html += '\n                      <div class="pagination-container">\n                          <div class="pagination-info">\n                              ' + YI18n.t('Showing groups {startidx}-{endidx} of {totalgroups}', {startidx: startIdx + 1, endidx: endIdx, totalgroups: totalGroups}) + '\n                          </div>\n                          <div class="pagination-buttons">\n                              <button onclick="changePage(\'' + containerId + '\', ' + (state.page - 1) + ')" \n                                      ' + (state.page === 0 ? 'disabled' : '') + '>\n                                  <i class="mdi mdi-chevron-left"></i> ' + YI18n.t('Previous') + '\n                              </button>\n                              <span style="padding: 4px 10px;">' + YI18n.t('Page {page} of {totalpages}', {page: state.page + 1, totalpages: totalPages}) + '</span>\n                              <button onclick="changePage(\'' + containerId + '\', ' + (state.page + 1) + ')" \n                                      ' + (state.page >= totalPages - 1 ? 'disabled' : '') + '>\n                                  ' + YI18n.t('Next') + ' <i class="mdi mdi-chevron-right"></i>\n                              </button>\n                          </div>\n                      </div>\n                  ';
               }
             
               containerDiv.innerHTML = html;
@@ -1036,17 +923,17 @@ var AdminSettings = (function() {
       const target = event.target;
       if (target.classList.contains('delete-button')) {
           const id = target.getAttribute('data-id');
-          if (confirm('Are you sure you want to delete this experiment?')) {
+          if (confirm(YI18n.t('Are you sure you want to delete this experiment?'))) {
               fetch(`/admin/delete_simulation/${id}`, {
                   method: 'DELETE',
               })
               .then(response => {
-                  if (!response.ok) throw new Error('Failed to delete');
+                  if (!response.ok) throw new Error(YI18n.t('Failed to delete'));
                   // Refresh table after deletion
                   location.reload();
               })
               .catch(err => {
-                  alert('Error deleting experiment.');
+                  YNotify.error(YI18n.t('Error deleting experiment.'));
                   console.error(err);
               });
           }
@@ -1078,7 +965,7 @@ var AdminSettings = (function() {
               const logDiv = document.getElementById('schedule-log');
               if (logDiv && data.logs && data.logs.length > 0) {
                   logDiv.innerHTML = data.logs.map(log => {
-                      const timestamp = log.created_at ? new Date(log.created_at).toLocaleTimeString() : '';
+                      const timestamp = log.created_at ? new Date(log.created_at).toLocaleTimeString(document.documentElement.lang || undefined) : '';
                       const colorClass = log.log_type === 'success' ? 'color: #28a745;' : 
                                          log.log_type === 'error' ? 'color: #dc3545;' :
                                          log.log_type === 'warning' ? 'color: #ffc107;' : '';
@@ -1086,7 +973,7 @@ var AdminSettings = (function() {
                   }).join('');
                   logDiv.scrollTop = logDiv.scrollHeight;
               } else if (logDiv) {
-                  logDiv.innerHTML = '<p style="color: #999; text-align: center; margin: 0;">No logs yet</p>';
+                  logDiv.innerHTML = '<p style="color: #999; text-align: center; margin: 0;">' + YI18n.t('No logs yet') + '</p>';
               }
           })
           .catch(err => console.error('Error loading logs:', err));
@@ -1099,7 +986,7 @@ var AdminSettings = (function() {
               if (data.success) {
                   const logDiv = document.getElementById('schedule-log');
                   if (logDiv) {
-                      logDiv.innerHTML = '<p style="color: #999; text-align: center; margin: 0;">No logs yet</p>';
+                      logDiv.innerHTML = '<p style="color: #999; text-align: center; margin: 0;">' + YI18n.t('No logs yet') + '</p>';
                   }
               }
           })
@@ -1111,7 +998,7 @@ var AdminSettings = (function() {
       const experimentsPerGroup = parseInt(inputField ? inputField.value : 2);
     
       if (isNaN(experimentsPerGroup) || experimentsPerGroup < 1) {
-          alert('Please enter a valid number (1 or more)');
+          YNotify.warning(YI18n.t('Please enter a valid number (1 or more)'));
           return;
       }
 
@@ -1134,10 +1021,10 @@ var AdminSettings = (function() {
               loadAvailableExperiments();
               loadPersistentLogs();
           } else {
-              alert(data.message || 'Failed to create groups');
+              YNotify.error(data.message || YI18n.t('Failed to create groups'));
           }
       })
-      .catch(err => alert('Error creating groups'));
+      .catch(err => YNotify.error(YI18n.t('Error creating groups')));
   }
 
   function loadAvailableExperiments() {
@@ -1153,11 +1040,11 @@ var AdminSettings = (function() {
                                   border-radius: 4px; cursor: grab; font-size: 0.85em; display: flex; justify-content: space-between; align-items: center;"
                            ondragstart="handleDragStart(event)">
                            <span><strong>${exp.name}</strong> <span style="color: #6c757d;">(${exp.owner})</span></span>
-                           ${exp.has_infinite_client ? '<span style="margin-left: 8px; padding: 2px 6px; border-radius: 999px; background: #fff3cd; color: #856404; font-size: 0.72em;">∞ client</span>' : ''}
+                           ${exp.has_infinite_client ? '<span style="margin-left: 8px; padding: 2px 6px; border-radius: 999px; background: #fff3cd; color: #856404; font-size: 0.72em;">' + YI18n.t('∞ client') + '</span>' : ''}
                       </div>
                   `).join('');
               } else {
-                  container.innerHTML = '<p style="color: #999; font-size: 0.85em; text-align: center; padding: 20px;">No available experiments</p>';
+                  container.innerHTML = '<p style="color: #999; font-size: 0.85em; text-align: center; padding: 20px;">' + YI18n.t('No available experiments') + '</p>';
               }
           })
           .catch(err => console.error('Error loading experiments:', err));
@@ -1175,7 +1062,7 @@ var AdminSettings = (function() {
                       const headerBg = isRunning ? '#28a745' : '#e9ecef';
                       const headerColor = isRunning ? 'white' : 'inherit';
                       const borderColor = isRunning ? '#28a745' : '#dee2e6';
-                      const runningBadge = isRunning ? '<span style="background: white; color: #28a745; padding: 2px 8px; border-radius: 10px; font-size: 0.75em; margin-left: 8px;">RUNNING</span>' : '';
+                      const runningBadge = isRunning ? '<span style="background: white; color: #28a745; padding: 2px 8px; border-radius: 10px; font-size: 0.75em; margin-left: 8px;">' + YI18n.t('RUNNING') + '</span>' : '';
                     
                       // Filter out completed experiments from running group display
                       const activeExperiments = isRunning 
@@ -1187,7 +1074,7 @@ var AdminSettings = (function() {
                           ? group.experiments.filter(exp => exp.exp_status === 'completed').length
                           : 0;
                       const completedBadge = completedCount > 0 
-                          ? `<span style="background: #17a2b8; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75em; margin-left: 4px;">${completedCount} done</span>` 
+                          ? '<span style="background: #17a2b8; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75em; margin-left: 4px;">' + YI18n.t('{completedcount} done', {completedcount: completedCount}) + '</span>' 
                           : '';
                     
                       return `
@@ -1200,7 +1087,7 @@ var AdminSettings = (function() {
                                   ${runningBadge}
                                   ${completedBadge}
                               </span>
-                              <button onclick="deleteScheduleGroup(${group.id})" style="background: none; border: none; color: ${isRunning ? 'rgba(255,255,255,0.7)' : '#dc3545'}; cursor: ${isRunning ? 'not-allowed' : 'pointer'}; font-size: 1em;" ${isRunning ? 'disabled title="Cannot delete running group"' : ''}>
+                              <button onclick="deleteScheduleGroup(${group.id})" style="background: none; border: none; color: ${isRunning ? 'rgba(255,255,255,0.7)' : '#dc3545'}; cursor: ${isRunning ? 'not-allowed' : 'pointer'}; font-size: 1em;" ${isRunning ? 'disabled title="' + YI18n.t('Cannot delete running group') + '"' : ''}>
                                   <i class="mdi mdi-delete"></i>
                               </button>
                           </div>
@@ -1215,12 +1102,12 @@ var AdminSettings = (function() {
                                           <i class="mdi mdi-close-circle"></i>
                                       </button>` : ''}
                                   </span>
-                              `).join('') : (isRunning && completedCount > 0 ? '<p style="color: #28a745; font-size: 0.8em; text-align: center; margin: 0; width: 100%;"><i class="mdi mdi-check-circle"></i> All experiments completed!</p>' : '<p style="color: #999; font-size: 0.8em; text-align: center; margin: 0; width: 100%;">Drag experiments here</p>')}
+                              `).join('') : (isRunning && completedCount > 0 ? '<p style="color: #28a745; font-size: 0.8em; text-align: center; margin: 0; width: 100%;"><i class="mdi mdi-check-circle"></i> ' + YI18n.t('All experiments completed!') + '</p>' : '<p style="color: #999; font-size: 0.8em; text-align: center; margin: 0; width: 100%;">' + YI18n.t('Drag experiments here') + '</p>')}
                           </div>
                       </div>
                   `}).join('');
               } else {
-                  container.innerHTML = '<p style="color: #999; font-size: 0.85em; text-align: center; padding: 20px;">No groups created yet. Click "Add Group" to start.</p>';
+                  container.innerHTML = '<p style="color: #999; font-size: 0.85em; text-align: center; padding: 20px;">' + YI18n.t('No groups created yet. Click "Add Group" to start.') + '</p>';
               }
           })
           .catch(err => console.error('Error loading groups:', err));
@@ -1242,15 +1129,15 @@ var AdminSettings = (function() {
           if (data.success) {
               loadScheduleGroups();
           } else {
-              alert(data.message || 'Failed to create group');
+              YNotify.error(data.message || YI18n.t('Failed to create group'));
           }
       })
-      .catch(err => alert('Error creating group'));
+      .catch(err => YNotify.error(YI18n.t('Error creating group')));
   }
 
   function deleteScheduleGroup(groupId) {
       if (currentRunningGroupId === groupId) {
-          alert('Cannot delete a running group. Stop the schedule first.');
+          YNotify.error(YI18n.t('Cannot delete a running group. Stop the schedule first.'));
           return;
       }
 
@@ -1261,7 +1148,7 @@ var AdminSettings = (function() {
                   loadScheduleGroups();
                   loadAvailableExperiments();
               } else {
-                  alert(data.message || 'Failed to delete group');
+                  YNotify.error(data.message || YI18n.t('Failed to delete group'));
               }
           })
           .catch(err => console.error('Error deleting group:', err));
@@ -1295,10 +1182,10 @@ var AdminSettings = (function() {
               loadScheduleGroups();
               loadAvailableExperiments();
           } else {
-              alert(data.message || 'Failed to add experiment');
+              YNotify.error(data.message || YI18n.t('Failed to add experiment'));
           }
       })
-      .catch(err => alert('Error adding experiment to group'));
+      .catch(err => YNotify.error(YI18n.t('Error adding experiment to group')));
   }
 
   function removeExperimentFromGroup(itemId) {
@@ -1309,7 +1196,7 @@ var AdminSettings = (function() {
                   loadScheduleGroups();
                   loadAvailableExperiments();
               } else {
-                  alert(data.message || 'Cannot remove experiment');
+                  YNotify.error(data.message || YI18n.t('Cannot remove experiment'));
               }
           })
           .catch(err => console.error('Error removing experiment:', err));
@@ -1323,7 +1210,7 @@ var AdminSettings = (function() {
           logDiv.innerHTML = '';
       }
     
-      const timestamp = new Date().toLocaleTimeString();
+      const timestamp = new Date().toLocaleTimeString(document.documentElement.lang || undefined);
       const msgDiv = document.createElement('div');
       msgDiv.innerHTML = `<span style="color: #6c757d;">[${timestamp}]</span> ${message}`;
       logDiv.appendChild(msgDiv);
@@ -1366,7 +1253,7 @@ var AdminSettings = (function() {
       const logDiv = document.getElementById('schedule-log');
       if (logDiv) {
           logDiv.innerHTML = '';
-          addLogMessage('Starting schedule...');
+          addLogMessage(YI18n.t('Starting schedule...'));
       }
 
       fetch('/admin/schedule/start', {
@@ -1389,20 +1276,20 @@ var AdminSettings = (function() {
               }
           })
           .catch(err => {
-              addLogMessage(`<strong style="color: #dc3545;">✗ Error starting schedule</strong>`);
+              addLogMessage('<strong style="color: #dc3545;">' + YI18n.t('✗ Error starting schedule') + '</strong>');
           });
   }
 
   function stopSchedule() {
-      if (!confirm('Stop the schedule? This will stop all running experiments.')) return;
+      if (!confirm(YI18n.t('Stop the schedule? This will stop all running experiments.'))) return;
 
-      addLogMessage('Stopping schedule...');
+      addLogMessage(YI18n.t('Stopping schedule...'));
 
       fetch('/admin/schedule/stop', { method: 'POST' })
           .then(response => response.json())
           .then(data => {
               if (data.success) {
-                  addLogMessage(`<strong style="color: #dc3545;">Schedule stopped</strong>`);
+                  addLogMessage('<strong style="color: #dc3545;">' + YI18n.t('Schedule stopped') + '</strong>');
                   currentRunningGroupId = null;
                   checkScheduleStatus();
                   loadScheduleGroups();
@@ -1413,7 +1300,7 @@ var AdminSettings = (function() {
                   addLogMessage(`<strong style="color: #dc3545;">✗ ${data.message}</strong>`);
               }
           })
-          .catch(err => addLogMessage('<strong style="color: #dc3545;">✗ Error stopping schedule</strong>'));
+          .catch(err => addLogMessage('<strong style="color: #dc3545;">' + YI18n.t('✗ Error stopping schedule') + '</strong>'));
   }
 
   function checkScheduleStatus() {
@@ -1437,7 +1324,7 @@ var AdminSettings = (function() {
                       badge.style.display = 'inline-block';
                       badge.style.background = '#28a745';
                       badge.style.color = 'white';
-                      badge.textContent = 'Running';
+                      badge.textContent = YI18n.t('Running');
                   }
                   currentRunningGroupId = data.current_group_id;
                   // Start progress check if not already running
@@ -1569,7 +1456,7 @@ var AdminSettings = (function() {
               hiddenInput.value = '';
               inputTag.style.display = 'block';
               inputTag.disabled = false;
-              inputTag.placeholder = 'Enter topic name';
+              inputTag.placeholder = YI18n.t('Enter topic name');
               topicCountInput.style.display = 'none';
               updateButtonState();
           }
@@ -1674,14 +1561,14 @@ var AdminSettings = (function() {
           if (isPhotoSharing) {
               hpcToggle.checked = true;
               hpcToggle.disabled = true;
-              hpcToggleLabel.textContent = 'Required';
+              hpcToggleLabel.textContent = YI18n.t('Required');
               if (hpcToggleContainer) {
                   hpcToggleContainer.style.opacity = '0.8';
               }
           } else if (isForum) {
               hpcToggle.checked = false;
               hpcToggle.disabled = true;
-              hpcToggleLabel.textContent = 'Unavailable for Forum';
+              hpcToggleLabel.textContent = YI18n.t('Unavailable for Forum');
               if (hpcToggleContainer) {
                   hpcToggleContainer.style.opacity = '0.55';
               }
@@ -1689,20 +1576,20 @@ var AdminSettings = (function() {
               if (!hpcAvailable) {
                   hpcToggle.checked = false;
                   hpcToggle.disabled = true;
-                  hpcToggleLabel.textContent = 'Unavailable';
+                  hpcToggleLabel.textContent = YI18n.t('Unavailable');
                   if (hpcToggleContainer) {
                       hpcToggleContainer.style.opacity = '0.55';
                   }
               } else if (!microbloggingAvailable) {
                   hpcToggle.checked = true;
                   hpcToggle.disabled = true;
-                  hpcToggleLabel.textContent = 'Required';
+                  hpcToggleLabel.textContent = YI18n.t('Required');
                   if (hpcToggleContainer) {
                       hpcToggleContainer.style.opacity = '0.8';
                   }
               } else {
                   hpcToggle.disabled = false;
-                  hpcToggleLabel.textContent = hpcToggle.checked ? 'Enabled' : 'Disabled';
+                  hpcToggleLabel.textContent = hpcToggle.checked ? YI18n.t('Enabled') : YI18n.t('Disabled');
                   if (hpcToggleContainer) {
                       hpcToggleContainer.style.opacity = '1';
                   }
@@ -1713,11 +1600,11 @@ var AdminSettings = (function() {
           simulatorTypeInput.value = isHPC ? 'HPC' : 'Standard';
 
           if (!isForum && microbloggingAvailable && !hpcAvailable) {
-              hpcToggleLabel.textContent = 'Unavailable';
+              hpcToggleLabel.textContent = YI18n.t('Unavailable');
           } else if (!isForum && !microbloggingAvailable && hpcAvailable) {
-              hpcToggleLabel.textContent = 'Required';
+              hpcToggleLabel.textContent = YI18n.t('Required');
           } else if (!isForum && hpcAvailable && microbloggingAvailable) {
-              hpcToggleLabel.textContent = isHPC ? 'Enabled' : 'Disabled';
+              hpcToggleLabel.textContent = isHPC ? YI18n.t('Enabled') : YI18n.t('Disabled');
           }
 
           if (platformTypeSelect) {
@@ -1859,32 +1746,32 @@ function fetchEmbeddingModels() {
     const status = document.getElementById('embedding_fetch_status');
 
     if (!service || service.value !== 'ollama') {
-        status.textContent = 'Select Ollama first.';
+        status.textContent = YI18n.t('Select Ollama first.');
         status.style.color = '#d9822b';
         return;
     }
 
     const hostValue = host.value.trim();
     if (!hostValue) {
-        status.textContent = 'Enter an Ollama host first.';
+        status.textContent = YI18n.t('Enter an Ollama host first.');
         status.style.color = '#c62828';
         return;
     }
 
-    status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Fetching...';
+    status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> ' + YI18n.t('Fetching...');
     status.style.color = '#666';
 
     fetch(`/admin/api/fetch_embedding_models?llm_url=${encodeURIComponent(hostValue)}`)
         .then(async (response) => {
             const data = await response.json();
             if (!response.ok || data.error || data.success === false) {
-                throw new Error(data.error || data.message || 'Failed to fetch embedding models.');
+                throw new Error(data.error || data.message || YI18n.t('Failed to fetch embedding models.'));
             }
             return data;
         })
         .then((data) => {
             const currentValue = model.value;
-            model.innerHTML = '<option value="">Select an embedding model</option>';
+            model.innerHTML = '<option value="">' + YI18n.t('Select an embedding model') + '</option>';
             data.models.forEach((name) => {
                 const option = document.createElement('option');
                 option.value = name;
@@ -1895,10 +1782,10 @@ function fetchEmbeddingModels() {
                 model.appendChild(option);
             });
             if (data.models.length === 0) {
-                status.textContent = 'No embedding models found on this host.';
+                status.textContent = YI18n.t('No embedding models found on this host.');
                 status.style.color = '#d9822b';
             } else {
-                status.textContent = `${data.models.length} embedding model(s) loaded.`;
+                status.textContent = YI18n.t('{length} embedding model(s) loaded.', {length: data.models.length});
                 status.style.color = '#2e7d32';
                 if (!currentValue) {
                     model.selectedIndex = 1;
@@ -1906,7 +1793,7 @@ function fetchEmbeddingModels() {
             }
         })
         .catch((error) => {
-            status.textContent = error.message || 'Connection failed.';
+            status.textContent = error.message || YI18n.t('Connection failed.');
             status.style.color = '#c62828';
         });
 }
@@ -1934,7 +1821,7 @@ function initializeMatrixExperimentSelector() {
         const groupName = String(groupSelect.value || '').trim();
         if (!groupName) {
             sourceSelect.disabled = true;
-            setPlaceholder('Select a group first...');
+            setPlaceholder(YI18n.t('Select a group first...'));
             return;
         }
 
@@ -1943,7 +1830,7 @@ function initializeMatrixExperimentSelector() {
             .sort((left, right) => String(left.name || '').localeCompare(String(right.name || '')));
 
         sourceSelect.disabled = false;
-        setPlaceholder(experiments.length ? 'Select experiment...' : 'No experiments in this group');
+        setPlaceholder(experiments.length ? YI18n.t('Select experiment...') : YI18n.t('No experiments in this group'));
 
         experiments.forEach((exp) => {
             const option = document.createElement('option');

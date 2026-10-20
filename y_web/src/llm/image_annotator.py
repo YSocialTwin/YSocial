@@ -7,6 +7,7 @@ using vision-capable Large Language Models through the shared LangChain adapter.
 
 import os
 
+from y_web import prompt_store
 from y_web.src.llm.autogen_compat import (
     AssistantAgent,
     MultimodalConversableAgent,
@@ -21,7 +22,7 @@ class Annotator(object):
     of images for accessibility and content understanding.
     """
 
-    def __init__(self, llmv, llm_url=None):
+    def __init__(self, llmv, llm_url=None, language=None):
         """
         Initialize the image annotator with a vision LLM.
 
@@ -29,8 +30,10 @@ class Annotator(object):
             llmv: Vision-capable LLM model name/identifier
             llm_url: Optional custom LLM server URL. If None, uses
                      environment variable or defaults based on backend.
+            language: Prompt language (e.g. the experiment's); None = English.
         """
 
+        self.language = language
         if llm_url is not None:
             base_url = llm_url
         else:
@@ -90,8 +93,11 @@ class Annotator(object):
         self.user_proxy.initiate_chat(
             self.image_agent,
             silent=True,
-            message=f"""Describe the following image. 
-            Write in english. <img {image}>""",
+            message=prompt_store.prompt(
+                "image_annotator__annotate__1",
+                language=self.language,
+                image=image,
+            ),
         )
 
         payload = self.image_agent.chat_messages[self.user_proxy][-1]["content"]

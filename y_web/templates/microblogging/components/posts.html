@@ -20,17 +20,17 @@
 
                 </div>
                 <div class="user-info">
-                    <a href="/{{exp_id}}/profile/{{ item['author_id'] }}/recent/1">{{ item["author"] }}</a>
-                    {% if ui.show_post_time %}<span class="time">Day {{ item["day"] }} - {{item["hour"]}}:00</span>{% endif %}
+                    <a href="/{{exp_id}}/profile/{{ item['author_id'] }}/recent/1">{{ item["author"]|display_name }}</a>
+                    {% if ui.show_post_time %}<span class="time">{{ _('Day %(day)s - %(hour)s:00', day=item["day"], hour=item["hour"]) }}</span>{% endif %}
                 </div>
             </div>
             {% if (item.get('author_type_badge') and ui.annotation_author_type) or (item.get('adhoc_agent_badge') and ui.annotation_agent_type) %}
             <div class="post-author-badges">
                 {% if item.get('author_type_badge') and ui.annotation_author_type %}
-                <span class="post-author-badge {% if item['author_type_badge'] == 'AI Agent' %}is-ai{% else %}is-human{% endif %}">{{ item['author_type_badge'] }}</span>
+                <span class="post-author-badge {% if item['author_type_badge'] == 'AI Agent' %}is-ai{% else %}is-human{% endif %}">{{ _(item['author_type_badge']) }}</span>
                 {% endif %}
                 {% if item.get('adhoc_agent_badge') and ui.annotation_agent_type %}
-                <span class="post-author-badge is-adhoc">{{ item['adhoc_agent_badge'] }}</span>
+                <span class="post-author-badge is-adhoc">{{ _(item['adhoc_agent_badge']) }}</span>
                 {% endif %}
             </div>
             {% endif %}
@@ -48,8 +48,8 @@
                             <div class="media">
                                 <i data-feather="bookmark"></i>
                                 <div class="media-content">
-                                    <h3>Discussion</h3>
-                                    <small>See full discussion thread</small>
+                                    <h3>{{ _('Discussion') }}</h3>
+                                    <small>{{ _('See full discussion thread') }}</small>
                                 </div>
                             </div>
                         </a>
@@ -58,7 +58,7 @@
                             <div class="media">
                                 <i data-feather="bell"></i>
                                 <div class="media-content">
-                                    <h3 val="{{ item['post_id'] }}">Delete</h3>
+                                    <h3 val="{{ item['post_id'] }}">{{ _('Delete') }}</h3>
                                     <small></small>
                                 </div>
                             </div>
@@ -87,7 +87,7 @@
             <div class="post-text">
                 {% if item["shared_from"] != -1 and (item["shared_from"][1] != 'Unknown' and item["shared_from"][0] != -1) %}
  <div class="ys-text-right-border">
-                    <p><small>Shared from: <a href="/{{exp_id}}/thread/{{ item['shared_from'][0] }}">{{ item['shared_from'][1] }}</a></small></p>
+                    <p><small>{{ _('Shared from:') }} <a href="/{{exp_id}}/thread/{{ item['shared_from'][0] }}">{{ item['shared_from'][1] }}</a></small></p>
                 </div>
                 {% endif %}
                 <p>
@@ -125,7 +125,7 @@
  {% if ui.annotation_emotions %}
  <div class="post-meta-group">
                 {% if len(item['emotions']) > 0 %}
- <span class="post-meta-label">Emotions</span>
+ <span class="post-meta-label">{{ _('Emotions') }}</span>
                 {% for em in item['emotions'][:3] %}
  <a class="post-meta-chip emotion-chip" title="{{ em[0] }}" href="/{{exp_id}}/emotion/{{ em[2] }}/1">
  <i class="mdi {{ em[1] }}"></i>
@@ -141,7 +141,7 @@
  </a>
                     {% endfor %}
  </span>
- <button type="button" class="meta-chip-toggle" data-target="post-emotions-extra-{{ item['post_id'] }}" data-label-more="+{{ len(item['emotions']) - 3 }} more" data-label-less="Show less" aria-expanded="false">+{{ len(item['emotions']) - 3 }} more</button>
+ <button type="button" class="meta-chip-toggle" data-target="post-emotions-extra-{{ item['post_id'] }}" data-label-more="{{ _('+%(n)s more', n=(len(item['emotions']) - 3)) }}" data-label-less="{{ _('Show less') }}" aria-expanded="false">{{ _('+%(n)s more', n=(len(item['emotions']) - 3)) }}</button>
                 {% endif %}
                 {% endif %}
             </div>
@@ -149,7 +149,7 @@
  {% if ui.annotation_topics %}
  <div class="post-meta-group">
                 {% if len(item['topics']) > 0 %}
- <span class="post-meta-label">Topics</span>
+ <span class="post-meta-label">{{ _('Topics') }}</span>
                 {% for tp in item['topics'][:3] %}
                     {% if tp[2] == 'positive' %}
  <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="post-meta-chip topic-chip is-positive">{{ tp[1] }}</a>
@@ -171,7 +171,7 @@
                         {% endif %}
                     {% endfor %}
  </span>
- <button type="button" class="meta-chip-toggle" data-target="post-topics-extra-{{ item['post_id'] }}" data-label-more="+{{ len(item['topics']) - 3 }} more" data-label-less="Show less" aria-expanded="false">+{{ len(item['topics']) - 3 }} more</button>
+ <button type="button" class="meta-chip-toggle" data-target="post-topics-extra-{{ item['post_id'] }}" data-label-more="{{ _('+%(n)s more', n=(len(item['topics']) - 3)) }}" data-label-less="{{ _('Show less') }}" aria-expanded="false">{{ _('+%(n)s more', n=(len(item['topics']) - 3)) }}</button>
                 {% endif %}
                 {% endif %}
             </div>
@@ -221,8 +221,8 @@
                     <a
                         href="/{{exp_id}}/report_content?post_id={{ item['post_id'] }}&type=offensive"
                         class="small-fab report-fab"
-                        title="Report this post"
-                        aria-label="Report this post"
+                        title="{{ _('Report this post') }}"
+                        aria-label="{{ _('Report this post') }}"
                     >
                         <i data-feather="flag"></i>
                         <span>{{ item.get("report_count", 0) }}</span>
@@ -241,7 +241,7 @@
     <div class="comments-wrap is-hidden">
         <!-- Header -->
         <div class="comments-heading">
-            <h4>Comments <small>({{ item["t_comments"] }})</small></h4>
+            <h4>{{ _('Comments') }} <small>({{ item["t_comments"] }})</small></h4>
             <div class="close-comments">
                 <i data-feather="x"></i>
             </div>
@@ -253,8 +253,8 @@
             <!-- Comment -->
             <div class="original-post{% if item.get('is_moderation_comment') %} moderation-comment{% endif %}">
                 <div class="media-content">
-                    <a href="/{{exp_id}}/profile/{{ item['author_id'] }}/recent/1">{{ item["author"] }}</a><br/>
-                    {% if ui.show_post_time %}<span class="time">Day {{ item["day"] }} - {{item["hour"]}}:00</span>{% endif %}
+                    <a href="/{{exp_id}}/profile/{{ item['author_id'] }}/recent/1">{{ item["author"]|display_name }}</a><br/>
+                    {% if ui.show_post_time %}<span class="time">{{ _('Day %(day)s - %(hour)s:00', day=item["day"], hour=item["hour"]) }}</span>{% endif %}
                     <div class="post-text post-content-section is-threaded">
                         <p> {{ item["post"]|safe }}</p>
                     </div>
@@ -277,8 +277,8 @@
                         <a
                             href="/{{exp_id}}/report_content?post_id={{ item['post_id'] }}&type=offensive"
                             class="report-count"
-                            title="Report this post"
-                            aria-label="Report this post"
+                            title="{{ _('Report this post') }}"
+                            aria-label="{{ _('Report this post') }}"
                         >
                             <i data-feather="flag"></i>
                             <span>{{ item.get("report_count", 0) }}</span>
@@ -292,7 +292,7 @@
 {% if ui.annotation_emotions %}
  <div class="post-meta-group in-thread">
                             {% if len(item['emotions']) > 0 %}
- <span class="post-meta-label">Emotions</span>
+ <span class="post-meta-label">{{ _('Emotions') }}</span>
                             {% for em in item['emotions'][:3] %}
  <a class="post-meta-chip emotion-chip" title="{{ em[0] }}" href="/{{exp_id}}/emotion/{{ em[2] }}/1">
  <i class="mdi {{ em[1] }}"></i>
@@ -308,7 +308,7 @@
  </a>
                                 {% endfor %}
  </span>
- <button type="button" class="meta-chip-toggle" data-target="thread-emotions-extra-{{ item['post_id'] }}" data-label-more="+{{ len(item['emotions']) - 3 }} more" data-label-less="Show less" aria-expanded="false">+{{ len(item['emotions']) - 3 }} more</button>
+ <button type="button" class="meta-chip-toggle" data-target="thread-emotions-extra-{{ item['post_id'] }}" data-label-more="{{ _('+%(n)s more', n=(len(item['emotions']) - 3)) }}" data-label-less="{{ _('Show less') }}" aria-expanded="false">{{ _('+%(n)s more', n=(len(item['emotions']) - 3)) }}</button>
                             {% endif %}
                             {% endif %}
                         </div>
@@ -316,7 +316,7 @@
 {% if ui.annotation_topics %}
  <div class="post-meta-group in-thread">
                             {% if len(item['topics']) > 0 %}
- <span class="post-meta-label">Topics</span>
+ <span class="post-meta-label">{{ _('Topics') }}</span>
                             {% for tp in item['topics'][:3] %}
                                 {% if tp[2] == 'positive' %}
  <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="post-meta-chip topic-chip is-positive">{{ tp[1] }}</a>
@@ -338,7 +338,7 @@
                                     {% endif %}
                                 {% endfor %}
  </span>
- <button type="button" class="meta-chip-toggle" data-target="thread-topics-extra-{{ item['post_id'] }}" data-label-more="+{{ len(item['topics']) - 3 }} more" data-label-less="Show less" aria-expanded="false">+{{ len(item['topics']) - 3 }} more</button>
+ <button type="button" class="meta-chip-toggle" data-target="thread-topics-extra-{{ item['post_id'] }}" data-label-more="{{ _('+%(n)s more', n=(len(item['topics']) - 3)) }}" data-label-less="{{ _('Show less') }}" aria-expanded="false">{{ _('+%(n)s more', n=(len(item['topics']) - 3)) }}</button>
                             {% endif %}
                             {% endif %}
                         </div>
@@ -351,7 +351,7 @@
  <div class="post-thread-tools">
                         <button type="button" class="reply-toggle-button" id='{{ item["post_id"] }}' onClick="return editLink(this.id)">
  <i data-feather="corner-down-left" class="ys-icon-xs"></i>
- <span>Reply</span>
+ <span>{{ _('Reply') }}</span>
  </button>
                     </div>
                     <p id="message-{{ item['post_id']}}"></p>
@@ -363,7 +363,7 @@
                             class="button is-solid accent-button is-fullwidth add-comment-button ys-btn-rounded"
                             val="{{ item['post_id'] }}"
                     >
-                    Comment
+                    {{ _('Comment') }}
                     </button>
                     </form>
                     {% endif %}
@@ -393,16 +393,16 @@
                 <div class="media-content" style="position: relative;">
                     <div class="post-comment-heading">
                         <div>
-                            <a href="/{{exp_id}}/profile/{{ cm['author_id'] }}/recent/1">{{ cm["author"] }}</a>
-                            {% if ui.show_post_time %}<span class="time">Day {{ cm["day"] }} - {{cm["hour"]}}:00</span>{% endif %}
+                            <a href="/{{exp_id}}/profile/{{ cm['author_id'] }}/recent/1">{{ cm["author"]|display_name }}</a>
+                            {% if ui.show_post_time %}<span class="time">{{ _('Day %(day)s - %(hour)s:00', day=cm["day"], hour=cm["hour"]) }}</span>{% endif %}
                         </div>
                         {% if (cm.get('author_type_badge') and ui.annotation_author_type) or (cm.get('adhoc_agent_badge') and ui.annotation_agent_type) %}
                         <div class="post-author-badges">
                             {% if cm.get('author_type_badge') and ui.annotation_author_type %}
-                            <span class="post-author-badge {% if cm['author_type_badge'] == 'AI Agent' %}is-ai{% else %}is-human{% endif %}">{{ cm['author_type_badge'] }}</span>
+                            <span class="post-author-badge {% if cm['author_type_badge'] == 'AI Agent' %}is-ai{% else %}is-human{% endif %}">{{ _(cm['author_type_badge']) }}</span>
                             {% endif %}
                             {% if cm.get('adhoc_agent_badge') and ui.annotation_agent_type %}
-                            <span class="post-author-badge is-adhoc">{{ cm['adhoc_agent_badge'] }}</span>
+                            <span class="post-author-badge is-adhoc">{{ _(cm['adhoc_agent_badge']) }}</span>
                             {% endif %}
                         </div>
                         {% endif %}
@@ -420,7 +420,7 @@
 {% if ui.annotation_emotions %}
  <div class="post-meta-group in-thread">
                             {% if len(cm['emotions']) > 0 %}
- <span class="post-meta-label">Emotions</span>
+ <span class="post-meta-label">{{ _('Emotions') }}</span>
                             {% for em in cm['emotions'][:3] %}
  <a class="post-meta-chip emotion-chip" title="{{ em[0] }}" href="/{{exp_id}}/emotion/{{ em[2] }}/1">
  <i class="mdi {{ em[1] }}"></i>
@@ -436,7 +436,7 @@
  </a>
                                 {% endfor %}
  </span>
- <button type="button" class="meta-chip-toggle" data-target="comment-emotions-extra-{{ cm['post_id'] }}" data-label-more="+{{ len(cm['emotions']) - 3 }} more" data-label-less="Show less" aria-expanded="false">+{{ len(cm['emotions']) - 3 }} more</button>
+ <button type="button" class="meta-chip-toggle" data-target="comment-emotions-extra-{{ cm['post_id'] }}" data-label-more="{{ _('+%(n)s more', n=(len(cm['emotions']) - 3)) }}" data-label-less="{{ _('Show less') }}" aria-expanded="false">{{ _('+%(n)s more', n=(len(cm['emotions']) - 3)) }}</button>
                             {% endif %}
                             {% endif %}
                         </div>
@@ -444,7 +444,7 @@
 {% if ui.annotation_topics %}
  <div class="post-meta-group in-thread">
                             {% if len(cm['topics']) > 0 %}
- <span class="post-meta-label">Topics</span>
+ <span class="post-meta-label">{{ _('Topics') }}</span>
                             {% for tp in cm['topics'][:3] %}
                                 {% if tp[2] == 'positive' %}
  <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="post-meta-chip topic-chip is-positive">{{ tp[1] }}</a>
@@ -466,7 +466,7 @@
                                     {% endif %}
                                 {% endfor %}
  </span>
- <button type="button" class="meta-chip-toggle" data-target="comment-topics-extra-{{ cm['post_id'] }}" data-label-more="+{{ len(cm['topics']) - 3 }} more" data-label-less="Show less" aria-expanded="false">+{{ len(cm['topics']) - 3 }} more</button>
+ <button type="button" class="meta-chip-toggle" data-target="comment-topics-extra-{{ cm['post_id'] }}" data-label-more="{{ _('+%(n)s more', n=(len(cm['topics']) - 3)) }}" data-label-less="{{ _('Show less') }}" aria-expanded="false">{{ _('+%(n)s more', n=(len(cm['topics']) - 3)) }}</button>
                             {% endif %}
                             {% endif %}
                         </div>
@@ -495,8 +495,8 @@
                         <a
                             href="/{{exp_id}}/report_content?post_id={{ cm['post_id'] }}&type=offensive"
                             class="report-count report-fab"
-                            title="Report this comment"
-                            aria-label="Report this comment"
+                            title="{{ _('Report this comment') }}"
+                            aria-label="{{ _('Report this comment') }}"
                         >
                             <i data-feather="flag"></i>
                             <span>{{ cm.get("report_count", 0) }}</span>
@@ -508,7 +508,7 @@
  <div class="post-thread-tools">
                 <button type="button" class="reply-toggle-button" id='{{ cm["post_id"] }}' onClick="return editLink(this.id)">
  <i data-feather="corner-down-left" class="ys-icon-xs"></i>
- <span>Reply</span>
+ <span>{{ _('Reply') }}</span>
  </button>
             </div>
             <p id="message-{{ cm['post_id'] }}"></p>
@@ -520,7 +520,7 @@
                     class="button is-solid accent-button is-fullwidth add-comment-button ys-btn-rounded"
                     val="{{cm['post_id']}}"
             >
-            Comment
+            {{ _('Comment') }}
             </button>
             </form>
             {% endif %}
@@ -543,8 +543,8 @@
                             <div class="media">
                                 <i data-feather="trash-2"></i>
                                 <div class="media-content">
-                                    <h3 val="{{ cm['post_id'] }}">Delete</h3>
-                                    <small>Remove this comment</small>
+                                    <h3 val="{{ cm['post_id'] }}">{{ _('Delete') }}</h3>
+                                    <small>{{ _('Remove this comment') }}</small>
                                 </div>
                             </div>
                         </a>

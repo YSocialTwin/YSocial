@@ -1,14 +1,14 @@
 {% include "admin/head.html" %}
 
 <div class="view-wrapper is-dashboard">
-    <div id="creator-dashboard" class="dashboard-container">
+    <div id="creator-dashboard" data-tutorial-page="image_feeds" class="dashboard-container">
         {% include "admin/dash_head.html" %}
 
         <div class="dashboard-body">
             <div class="columns">
                 <div class="column is-12">
-                    <div class="dashboard-box">
-                        <a href="/admin/experiments">Experiments</a> > Simulation: <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }}</a> > Image Feeds
+                    <div class="dashboard-box" data-tut="forum-image-feed-assignment">
+                        <a href="/admin/experiments">{{ _('Experiments') }}</a> &gt; {{ _('Simulation:') }} <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }}</a> &gt; {{ _('Image Feeds') }}
                     </div>
                 </div>
             </div>
@@ -16,19 +16,19 @@
             <div class="columns">
                 <div class="column is-8">
                     <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Forum Image Feed Assignment</h3>
+                        <h3 class="title is-5 is-thin">{{ _('Forum Image Feed Assignment') }}</h3>
                         <p class="ys-text-small">
-                            Select which reusable subreddit image feeds should be assigned to this forum experiment. Validation and creation now live in the shared forum image resource workspace.
+                            {{ _('Select which reusable subreddit image feeds should be assigned to this forum experiment. Validation and creation now live in the shared forum image resource workspace.') }}
                         </p>
                         <p class="ys-label-hint">
-                            Shared image resources can still be created from a subreddit name, <code>r/name</code>, or a Reddit subreddit URL such as <code>https://www.reddit.com/r/memes/</code>.
+                            {{ _('Shared image resources can still be created from a subreddit name, %(name)s, or a Reddit subreddit URL such as %(url)s.', name=wrap('code', 'r/name'), url=wrap('code', 'https://www.reddit.com/r/memes/')) }}
                         </p>
 
                         <form action="/admin/update_image_feeds/{{ experiment.idexp }}" method="POST" class="box-content">
                             <div class="box-line">
-                                <span class="left">Reusable Image Resources</span>
+                                <span class="left">{{ _('Reusable Image Resources') }}</span>
                                 <span class="right ys-w-70">
-                                    <a href="/admin/forum_image_resources" class="button is-small">Manage Shared Image Resources</a>
+                                    <a href="/admin/forum_image_resources" class="button is-small">{{ _('Manage Shared Image Resources') }}</a>
                                 </span>
                             </div>
 
@@ -51,7 +51,7 @@
                                         <span style="display: flex; justify-content: space-between; gap: 10px; align-items: flex-start;">
                                             <span style="display: grid; gap: 4px;">
                                                 <span class="ys-text-sm-dark" style="font-weight: 700; line-height: 1.2;">r/{{ feed.subreddit }}</span>
-                                                <span class="ys-text-xs-hint">Reusable image source</span>
+                                                <span class="ys-text-xs-hint">{{ _('Reusable image source') }}</span>
                                             </span>
                                             <input
                                                 type="checkbox"
@@ -66,7 +66,7 @@
                                             <span class="tag is-info is-light" style="margin: 0;">{{ interest }}</span>
                                             {% endfor %}
                                             {% if not feed.interests %}
-                                            <span class="ys-text-xs-hint">No interests assigned</span>
+                                            <span class="ys-text-xs-hint">{{ _('No interests assigned') }}</span>
                                             {% endif %}
                                         </span>
                                     </label>
@@ -75,35 +75,34 @@
                             </div>
                             {% else %}
                             <div class="notification is-light" style="margin-bottom: 1rem;">
-                                No reusable image resources are available yet. Create them first in
-                                <a href="/admin/forum_image_resources">Forum Image Resources</a>.
+                                {{ _('No reusable image resources are available yet. Create them first in %(link)s.', link=wrap('a', _('Forum Image Resources'), href='/admin/forum_image_resources')) }}
                             </div>
                             {% endif %}
 
                             <div class="button-wrap ys-mt-1em">
-                                <button type="submit" class="button is-solid primary-button is-fullwidth">Save Image Feed Assignment</button>
+                                <button type="submit" class="button is-solid primary-button is-fullwidth">{{ _('Save Image Feed Assignment') }}</button>
                             </div>
                         </form>
                     </div>
                 </div>
 
                 <div class="column is-4">
-                    <div class="dashboard-box is-compact">
-                        <h3 class="title is-5 is-thin">Assignment Notes</h3>
+                    <div class="dashboard-box is-compact" data-tut="assignment-notes">
+                        <h3 class="title is-5 is-thin">{{ _('Assignment Notes') }}</h3>
                         <div class="help-block">
                             <p>
-                                <b>Reusable subreddit resources</b><br>
-                                The dashboard database stores the canonical subreddit definitions, including their mapped interests.
+                                <b>{{ _('Reusable subreddit resources') }}</b><br>
+                                {{ _('The dashboard database stores the canonical subreddit definitions, including their mapped interests.') }}
                             </p>
                             <hr>
                             <p>
-                                <b>Runtime compatibility</b><br>
-                                Saving this page still writes the standard <code>image_feeds.json</code> experiment file, so forum execution keeps the same contract.
+                                <b>{{ _('Runtime compatibility') }}</b><br>
+                                {{ _('Saving this page still writes the standard %(file)s experiment file, so forum execution keeps the same contract.', file=wrap('code', 'image_feeds.json')) }}
                             </p>
                             <hr>
                             <p>
-                                <b>Interest tagging</b><br>
-                                Interests remain part of the reusable resource so the same subreddit behaves consistently when reused across forum simulations.
+                                <b>{{ _('Interest tagging') }}</b><br>
+                                {{ _('Interests remain part of the reusable resource so the same subreddit behaves consistently when reused across forum simulations.') }}
                             </p>
                         </div>
                     </div>

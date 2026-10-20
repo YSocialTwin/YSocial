@@ -21,7 +21,7 @@ from sqlalchemy import select
 
 from y_web import db
 from y_web.src.models import Client_Execution
-from y_web.src.simulation.subprocess_env import build_subprocess_env
+from y_web.src.simulation.subprocess_env import build_subprocess_env, ray_safe_cmd
 from y_web.src.system.path_utils import get_base_path, get_writable_path
 
 
@@ -757,12 +757,17 @@ def start_hpc_client(exp, cli, population):
                 prompts_file,
             ]
 
+    cmd = ray_safe_cmd(cmd)
+
     print(f"Starting HPC client {cli.name} for experiment {exp.idexp}...")
     print(f"Config: {client_config}")
     print(f"Agents: {agents_file}")
     print(f"Prompts: {prompts_file}")
 
+    from y_web.src.system import prompt_packs
+
     env = build_subprocess_env()
+    env.update(prompt_packs.launch_env(exp, cli))
 
     try:
         # Start the process with Popen

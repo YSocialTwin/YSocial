@@ -1,0 +1,50 @@
+{# Shared shell for the "scene" pages (login, register, error pages): animated network behind a glass card.
+   Child templates fill: title, body_attrs, sync, card. Set data-cascade="off" in body_attrs for a calm network. #}
+<!doctype html>
+<html lang="{{ html_lang() }}" dir="{{ text_direction() }}">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+    <meta http-equiv="x-ua-compatible" content="ie=edge"/>
+
+    <title>{% block title %}Y Social{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='assets/img/favicon.png') }}"/>
+
+    <!-- Google Tag Manager -->
+    <script src="{{ url_for('static', filename='assets/js/gtm-snippet.js') }}"></script>
+    <!-- End Google Tag Manager -->
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/login-scene.css') }}"/>
+</head>
+
+<body class="yl" {% block body_attrs %}{% endblock %}>
+{% block sync %}{% include 'shared/browser_sync.html' %}{% endblock %}
+
+<!-- Google Tag Manager (noscript) -->
+<noscript>
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KQHJPZP" height="0" width="0" hidden></iframe>
+</noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- Animated background: network (decorative) -->
+<div id="yl-aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+<canvas id="yl-net" aria-hidden="true"></canvas>
+<div id="yl-layer" aria-hidden="true"></div>
+<div id="yl-halo" aria-hidden="true"></div>
+<div id="yl-casc" aria-hidden="true"></div>
+
+<main class="yl-stage">
+    <section class="yl-card" id="yl-card">
+        <div class="yl-brand">
+            <img src="{{ url_for('static', filename='assets/img/vector/logo/Ysocial.png') }}" alt="{{ _('YSocial') }}"/>
+            <p>{{ _('Where the Digital World comes to life.') }}</p>
+        </div>
+        {% block card %}{% endblock %}
+    </section>
+</main>
+
+<script src="{{ url_for('static', filename='assets/js/i18n.js') }}" data-domains="simulation" defer></script>
+<script src="{{ url_for('static', filename='assets/js/login-scene.js') }}" defer></script>
+{% include "shared/language_switcher.html" %}
+</body>
+</html>

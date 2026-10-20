@@ -1,0 +1,229 @@
+name: Release packaging
+
+# Tag v<X.Y.Z> -> wheel + constraints + desktop installers (macOS arm64/Intel, Windows,
+# Linux x64/arm64) + Docker image (GHCR), all stamped with the version of the tag, attached
+# to the GitHub release of that tag. If the release does not exist yet it is created as a
+# DRAFT (nothing is published automatically); if you created it from the GitHub UI the
+# assets are added to it. GitHub itself adds the "Source code (tar.gz / zip)" assets.
+#
+# On demand (Actions > Release packaging > Run workflow):
+#   - without input: builds everything from the selected branch with the version in the
+#     repository (VERSION) and keeps the files as workflow artifacts. No release, no push.
+#   - with "tag": same, but versioned as that tag and attached to its release (created as a
+#     draft if missing); the Docker image is pushed too.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Optional release tag (e.g. v4.1.0): stamp this version and attach the files to its release"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  version:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      tag: ${{ steps.v.outputs.tag }}
+      publish: ${{ steps.v.outputs.publish }}
+      prerelease: ${{ steps.v.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@v4
+      # one source of truth: the built-in plugin list lives in the plugin registry and
+      # the copy packaged here is generated; a release must carry the registry's latest
+      - name: Built-in plugins are in sync with the plugin registry
+        run: |
+          python3 scripts/packaging/sync_builtin_plugins.py --verify
+          python3 scripts/packaging/sync_builtin_plugins.py --check-latest
+      - id: v
+        env:
+          INPUT_TAG: ${{ github.event.inputs.tag }}
+        run: |
+          tag=""
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then tag="${GITHUB_REF_NAME}"; fi
+          if [ -n "${INPUT_TAG}" ]; then tag="${INPUT_TAG}"; fi
+          if [ -n "$tag" ]; then
+            # validation only: stamp a scratch copy (each job stamps its own checkout)
+            tmp="$(mktemp -d)"; mkdir -p "$tmp/installer/src-tauri"
+            cp VERSION "$tmp/"
+            cp installer/src-tauri/tauri.conf.json installer/src-tauri/Cargo.toml installer/src-tauri/Cargo.lock "$tmp/installer/src-tauri/"
+            version="$(python3 scripts/packaging/set_version.py "$tag" --root "$tmp" 2>/dev/null)" || { echo "::error::'$tag' is not a release tag like v4.1.0"; exit 1; }
+            publish=true
+            repo_version="$(cat VERSION)"
+            if [ "$repo_version" != "$version" ]; then
+              echo "::warning::VERSION in the repository is $repo_version but the tag says $version: packages are stamped $version, the source archive still contains $repo_version. Bump VERSION before tagging."
+            fi
+          else
+            version="$(cat VERSION)"; publish=false
+          fi
+          case "$version" in *-*) prerelease=true;; *) prerelease=false;; esac
+          {
+            echo "version=$version"
+            echo "tag=$tag"
+            echo "publish=$publish"
+            echo "prerelease=$prerelease"
+          } >> "$GITHUB_OUTPUT"
+          echo "Packaging version $version (publish=$publish)"
+
+  wheel:
+    needs: version
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Stamp the release version
+        if: needs.version.outputs.publish == 'true'
+        run: python scripts/packaging/set_version.py "${{ needs.version.outputs.version }}"
+      - name: Build wheel
+        run: |
+          python -m pip install build
+          python -m build --wheel --outdir dist .
+      - name: Check wheel contents
+        run: python scripts/packaging/check_wheel.py dist/ysocial-*.whl
+      - name: Constraints (used by the launcher to update an existing installation)
+        run: cp requirements.lock dist/constraints.txt
+      - name: Checksums
+        run: cd dist && sha256sum *.whl constraints.txt > SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheel
+          path: dist/*
+
+  installers:
+    name: installer (${{ matrix.label }})
+    needs: version
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-14,        label: macos-arm64, bundles: dmg }
+          - { os: macos-15-intel,  label: macos-x64,   bundles: dmg }
+          - { os: windows-latest,  label: windows-x64, bundles: nsis }
+          - { os: ubuntu-24.04,    label: linux-x64,   bundles: "appimage,deb" }
+          - { os: ubuntu-24.04-arm, label: linux-arm64, bundles: "appimage,deb" }
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Stamp the release version
+        if: needs.version.outputs.publish == 'true'
+        run: python scripts/packaging/set_version.py "${{ needs.version.outputs.version }}"
+      - name: Linux build dependencies (WebKitGTK)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev \
+            libayatana-appindicator3-dev patchelf xdg-utils
+      - name: Bundled payload (wheel, constraints, uv)
+        run: |
+          python -m pip install build uv
+          res=installer/src-tauri/resources
+          python -m build --wheel --outdir "$res" .
+          cp requirements.lock "$res/constraints.txt"
+          uvbin="$(python -c 'import shutil;print(shutil.which("uv"))')"
+          if [ "$RUNNER_OS" = "Windows" ]; then cp "$uvbin" "$res/uv.exe"; else cp "$uvbin" "$res/uv"; chmod +x "$res/uv"; fi
+          ls -la "$res"
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: installer/src-tauri
+      - name: Tauri CLI
+        run: cargo install tauri-cli --version "^2" --locked
+      - name: Build the installer
+        working-directory: installer/src-tauri
+        run: cargo tauri build --bundles ${{ matrix.bundles }}
+      - name: Collect installers
+        run: |
+          version="${{ needs.version.outputs.version }}"
+          mkdir -p out
+          find installer/src-tauri/target -path '*/release/bundle/*' -type f \
+            \( -name '*.dmg' -o -name '*.exe' -o -name '*.AppImage' -o -name '*.deb' \) \
+            -print | while read -r f; do
+              ext="${f##*.}"
+              cp "$f" "out/YSocial-${version}-${{ matrix.label }}.${ext}"
+            done
+          ls -la out
+          test -n "$(ls out)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installer-${{ matrix.label }}
+          path: out/*
+
+  docker:
+    needs: version
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Stamp the release version
+        if: needs.version.outputs.publish == 'true'
+        run: python3 scripts/packaging/set_version.py "${{ needs.version.outputs.version }}"
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        if: needs.version.outputs.publish == 'true'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ghcr.io/ysocialtwin/ysocial
+          tags: |
+            type=raw,value=v${{ needs.version.outputs.version }}
+            type=raw,value=latest,enable=${{ needs.version.outputs.publish == 'true' && needs.version.outputs.prerelease == 'false' }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          push: ${{ needs.version.outputs.publish == 'true' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  release:
+    if: needs.version.outputs.publish == 'true'
+    needs: [version, wheel, installers, docker]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: wheel
+          path: dist
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: installer-*
+          merge-multiple: true
+          path: dist
+      - name: Checksums for everything attached
+        run: |
+          cd dist
+          rm -f SHA256SUMS.txt
+          sha256sum $(ls) > SHA256SUMS.txt
+          ls -la
+      - name: Attach to the release (create a draft if there is none)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.version.outputs.tag }}
+          PRERELEASE: ${{ needs.version.outputs.prerelease }}
+        run: |
+          repo="${GITHUB_REPOSITORY}"
+          if gh release view "$TAG" --repo "$repo" >/dev/null 2>&1; then
+            gh release upload "$TAG" dist/* --repo "$repo" --clobber
+          else
+            flags=""
+            if [ "$PRERELEASE" = "true" ]; then flags="--prerelease"; fi
+            gh release create "$TAG" dist/* --repo "$repo" --draft --generate-notes \
+              --target "${GITHUB_SHA}" $flags
+          fi

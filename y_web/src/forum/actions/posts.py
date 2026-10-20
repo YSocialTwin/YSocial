@@ -18,6 +18,7 @@ from y_web.src.experiment.context import (
     get_db_bind_key_for_exp,
     register_experiment_database,
 )
+from y_web.src.system import prompt_packs
 
 try:
     from y_web.src.llm import Annotator, ContentAnnotator
@@ -286,7 +287,12 @@ def create_comment_reddit(
 
         # LLM-based annotations are optional in this stack.
         if ContentAnnotator is not None:
-            annotator = ContentAnnotator(llm=llm)
+            annotator = ContentAnnotator(
+                llm=llm,
+                language=prompt_packs.experiment_language(
+                    getattr(g, "current_exp_id", None)
+                ),
+            )
             emotions = annotator.annotate_emotions(content)
             hashtags = annotator.extract_components(content, c_type="hashtags")
             mentions = annotator.extract_components(content, c_type="mentions")
@@ -496,7 +502,13 @@ def create_post_reddit(
                     if Annotator is not None:
                         try:
                             llm_v = "minicpm-v"
-                            image_annotator = Annotator(llm_v, llm_url=llm_url)
+                            image_annotator = Annotator(
+                                llm_v,
+                                llm_url=llm_url,
+                                language=prompt_packs.experiment_language(
+                                    getattr(g, "current_exp_id", None)
+                                ),
+                            )
                             annotation = image_annotator.annotate(annotator_ref)
                         except Exception:
                             # Image annotation is optional; proceed without it.
@@ -596,7 +608,13 @@ def create_post_reddit(
 
         # LLM-based annotations are optional in this stack.
         if ContentAnnotator is not None:
-            annotator = ContentAnnotator(llm=llm, llm_url=llm_url)
+            annotator = ContentAnnotator(
+                llm=llm,
+                llm_url=llm_url,
+                language=prompt_packs.experiment_language(
+                    getattr(g, "current_exp_id", None)
+                ),
+            )
             emotions = annotator.annotate_emotions(content)
             hashtags = annotator.extract_components(content, c_type="hashtags")
             mentions = annotator.extract_components(content, c_type="mentions")

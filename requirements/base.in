@@ -6,6 +6,7 @@
 # --- Web & Database ---
 Flask>=3.0
 Flask-Login>=0.6.2
+Flask-Babel>=4.0
 Flask-SQLAlchemy>=3.0
 Flask-Migrate>=4.0.0
 SQLAlchemy>=2.0,<3.0
@@ -48,7 +49,6 @@ colorama>=0.4.4
 faker>=18.0.0
 feedparser>=6.0.0
 perspective>=1.0.0
-detoxify>=0.5.2
 pillow
 pyOpenSSL>=22.0.0
 pycparser>=2.21
@@ -57,4 +57,3 @@ pywebview
 ysights
 gunicorn
 gevent
-yclient-memory

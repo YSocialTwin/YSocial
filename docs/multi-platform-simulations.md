@@ -2,6 +2,8 @@
 
 This is the entry point for the multi-platform simulation design package.
 
+**Status:** design proposal. The feature is not implemented in the codebase; these documents describe the intended design.
+
 The detailed material has been split into focused documents so the feature can be implemented and reviewed in smaller pieces.
 
 ## Module Map

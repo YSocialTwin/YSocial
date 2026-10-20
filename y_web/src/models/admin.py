@@ -35,6 +35,9 @@ class Admin_users(UserMixin, db.Model):
     telemetry_notice_shown = db.Column(db.Boolean, default=False)
     tutorial_shown = db.Column(db.Boolean, default=False)
     exp_details_tutorial_shown = db.Column(db.Boolean, default=False)
+    lang = db.Column(
+        db.String(10), default=None
+    )  # dashboard language; NULL = automatic
 
     def get_id(self):
         """Return user ID with 'admin_' prefix for Flask-Login."""
@@ -120,6 +123,10 @@ class Exps(db.Model):
     idexp = db.Column(db.Integer, primary_key=True, autoincrement=True)
     platform_type = db.Column(db.String(50), nullable=False, default="microblogging")
     exp_name = db.Column(db.String(50), nullable=False)
+    # language of the LLM prompts the experiment starts from ("en" or another pack in data_schema/prompts)
+    prompt_language = db.Column(
+        db.String(10), nullable=False, default="en", server_default="en"
+    )
     db_name = db.Column(db.String(50), nullable=False)
     owner = db.Column(db.String(50), nullable=False)
     exp_descr = db.Column(db.String(200), nullable=False)
@@ -453,6 +460,10 @@ class Client(db.Model):
     __tablename__ = "client"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
+    # language of the prompt file this client was created with (defaults to the experiment's)
+    prompt_language = db.Column(
+        db.String(10), nullable=False, default="en", server_default="en"
+    )
     descr = db.Column(db.String(200))
     days = db.Column(db.Integer)
     percentage_new_agents_iteration = db.Column(db.REAL)
@@ -945,3 +956,54 @@ class FrontendAddsOnExpModuleSettings(db.Model):
         default=db.func.now(),
         onupdate=db.func.now(),
     )
+
+
+class PluginState(db.Model):
+    """Enabled/disabled switch of an installed external plugin suite.
+
+    One row per ``repo_key`` (e.g. ``"training_modules"``). A missing row means
+    enabled, so plugins installed before this table existed keep working.
+    A disabled suite answers 404 on its routes, contributes no menu entry and
+    receives no hook calls; its data is untouched.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "plugin_state"
+
+    repo_key = db.Column(db.String(64), primary_key=True, nullable=False)
+    enabled = db.Column(
+        db.Boolean, nullable=False, default=True, server_default=db.true()
+    )
+    updated_at = db.Column(
+        db.DateTime, nullable=False, default=db.func.now(), onupdate=db.func.now()
+    )
+    updated_by = db.Column(db.String(255), nullable=True)
+
+
+class SignupSettings(db.Model):
+    """Self-registration switch (single row, ``id`` = 1). A missing row means disabled."""
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "signup_settings"
+
+    id = db.Column(db.Integer, primary_key=True)
+    enabled = db.Column(
+        db.Boolean, nullable=False, default=False, server_default=db.false()
+    )
+
+
+class SignupTarget(db.Model):
+    """An experiment or training module a visitor may join when creating an account.
+
+    ``kind`` is ``"experiment"`` (``ref`` = ``Exps.idexp``) or ``"training"``
+    (``ref`` = module uid). A target is offered only while the experiment is
+    activated / the module is not archived and has an open run.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "signup_target"
+    __table_args__ = (db.UniqueConstraint("kind", "ref", name="uq_signup_target"),)
+
+    id = db.Column(db.Integer, primary_key=True)
+    kind = db.Column(db.String(16), nullable=False)
+    ref = db.Column(db.String(64), nullable=False)

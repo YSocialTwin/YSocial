@@ -2,12 +2,13 @@
 
 ## Main entry points
 
-YSocial exposes two operator-facing entry points.
+YSocial exposes three operator-facing entry points.
 
 | Entry point | Purpose |
 |---|---|
-| `python y_social.py` | direct browser-oriented application start |
-| `python y_social_launcher.py` | desktop-first launcher and packaged-app entry |
+| `ysocial` | command installed by the Python package, desktop installer and Docker; same options as `y_social.py` |
+| `python y_social.py` | direct browser-oriented application start from a checkout |
+| `python y_social_launcher.py` | optional pywebview desktop window from a checkout |
 
 ## `y_social.py`
 
@@ -77,8 +78,8 @@ YSocial also uses internal subprocess entry points for simulation execution. The
 
 Files:
 
-- `/Users/rossetti/PycharmProjects/YWeb/y_web/src/simulation/process_runner.py`
-- `/Users/rossetti/PycharmProjects/YWeb/y_web/src/simulation/client_runner.py`
-- `/Users/rossetti/PycharmProjects/YWeb/y_web/src/simulation/server_runner.py`
+- `y_web/src/simulation/process_runner.py`
+- `y_web/src/simulation/client_runner.py`
+- `y_web/src/simulation/server_runner.py`
 
 These subprocesses carry experiment and client identifiers, resume flags, and DB-type parameters. In ordinary usage they are launched from the admin UI, not manually.

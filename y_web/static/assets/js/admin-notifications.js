@@ -14,7 +14,7 @@
   }
 
   async function deleteNotification(id) {
-      if (!confirm('Delete this notification and remove attached file if present?')) {
+      if (!confirm(YI18n.t('Delete this notification and remove attached file if present?'))) {
           return;
       }
 

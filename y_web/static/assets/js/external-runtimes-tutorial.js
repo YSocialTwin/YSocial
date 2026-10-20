@@ -1,47 +1,32 @@
 (function() {
     const steps = [
         {
-            id: 'runtime-overview',
+            id: 'plugins-overview',
             selector: '#external-runtimes-main',
-            title: 'External Runtime Plugins',
-            description: 'Use this page to install, update, validate, and remove external runtime repositories used by experiments.',
+            title: 'Plugins',
+            description: 'The list of plugins available to this installation, with what each one does and whether it is installed. Microblogging and Forum each stand for a server and a client.',
             position: 'top'
         },
         {
-            id: 'github-session',
-            selector: '#external-runtimes-github-session',
-            title: 'GitHub Session',
-            description: 'Connect a token to avoid anonymous API rate limits and to access private release assets when needed.',
-            position: 'bottom'
-        },
-        {
-            id: 'runtime-categories',
-            selector: '[data-runtime-category]',
-            title: 'Runtime Categories',
-            description: 'Repositories are grouped by runtime families. Expand each group to inspect status, releases, branches, and maintenance actions.',
+            id: 'plugins-status',
+            selector: '#external-runtimes-list',
+            title: 'Description and status',
+            description: 'Each row shows the plugin, its description and its status: <strong>Installed</strong>, <strong>Not installed</strong> or <strong>Partially installed</strong> (only one of server and client). Plugins that can be switched on and off also show Enabled or Disabled.',
             position: 'top'
         },
         {
-            id: 'runtime-repo-card',
-            selector: '[data-runtime-repo]',
-            title: 'Repository Actions',
-            description: 'Inside each repository card you can choose installation source, install dependencies, validate entrypoints, or perform advanced git maintenance.',
+            id: 'plugins-install',
+            selector: '[data-runtime-repo] .ext-row-actions a',
+            title: 'Install or update',
+            description: 'Opens the page of the plugin, where you choose the source (GitHub release or git branch), install or update it and read the output of the operation.',
             position: 'left'
         },
         {
-            id: 'operation-output',
-            selector: '#external-runtimes-operation-output',
-            title: 'Operation Output',
-            description: 'Review command output and failures here when dependency installs or validation actions do not complete as expected.',
+            id: 'plugins-remove',
+            selector: '[data-external-runtime-remove]',
+            title: 'Remove',
+            description: 'Deletes the local files of the plugin after a confirmation. For Microblogging and Forum it removes both server and client; to remove only one, use the plugin page.',
             position: 'left'
-        },
-        {
-            id: 'recent-ops',
-            selector: '#external-runtimes-recent-ops',
-            title: 'Recent Runtime Operations',
-            description: 'This audit trail helps you quickly verify what was changed, by whom, and when.',
-            position: 'left',
-            isLast: true
         }
     ];
 

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="{{ html_lang() }}" dir="{{ text_direction() }}">
 <head>
     <!-- Required meta tags -->
     <meta charset="utf-8"/>
@@ -10,7 +10,7 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge"/>
 
 
-    <title>Y Social</title>
+    <title>{{ _('Y Social') }}</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='assets/img/favicon_orange.png') }}"/>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -34,6 +34,8 @@
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='assets/css/reddit/core.css') }}"/>
     <link href="{{ url_for('static', filename='assets/vendor/mdi/css/materialdesignicons.min.css') }}" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/reddit/forum-components.css') }}"/>
+    {% include 'shared/platform_ui_gating.html' %}
+    <script src="{{ url_for('static', filename='assets/js/i18n.js') }}" data-domains="simulation" defer></script>
 </head>
 <body>
 {% include 'shared/browser_sync.html' %}
@@ -67,12 +69,12 @@
                 <img
                         class="logo light-image"
                         src="{{ url_for('static', filename='assets/img/vector/logo/Ysocial_orange.png') }}"
-                        alt="YSocial Logo"
+                        alt="{{ _('YSocial Logo') }}"
                 />
                 <img
                         class="logo dark-image"
                         src="{{ url_for('static', filename='assets/img/vector/logo/Ysocial_orange.png') }}"
-                        alt="YSocial Logo"
+                        alt="{{ _('YSocial Logo') }}"
                 />
             </a>
         </div>
@@ -91,7 +93,7 @@
                 {% endif %}
 
                 {% if reply_notif_url %}
-                <a class="navbar-item reply-notif-bell" href="{{ reply_notif_url }}" aria-label="Notifications">
+                <a class="navbar-item reply-notif-bell" href="{{ reply_notif_url }}" aria-label="{{ _('Notifications') }}">
                     <i class="mdi mdi-bell-outline" style="{% if (reply_notif_unread_count|default(0))|int > 0 %} color: #ff4500;{% endif %}" {# dynamic #}></i>
                     {% if (reply_notif_unread_count|default(0))|int > 0 %}
                     <span class="reply-notif-badge">{{ reply_notif_unread_count }}</span>
@@ -130,7 +132,19 @@
                                 </label>
                             </div>
                             <div class="nav-drop-body account-items">
-                                <!-- Forum mode: user profiles are disabled -->
+                                {% if logged_id is defined and logged_id %}
+                                <a id="profile-link" href="/{{ exp_id }}/edit_profile/{{ logged_id }}" class="account-item">
+                                    <div class="media">
+                                        <div class="icon-wrap">
+                                            <i data-feather="user"></i>
+                                        </div>
+                                        <div class="media-content">
+                                            <h3>{{ _('My profile') }}</h3>
+                                            <small>{{ _('Edit your profile and your interface language.') }}</small>
+                                        </div>
+                                    </div>
+                                </a>
+                                {% endif %}
 
                                 {% if forum_memory_enabled and current_user_role in ['admin', 'researcher'] %}
                                 <a href="/{{ exp_id }}/interview" class="account-item">
@@ -139,8 +153,8 @@
                                             <i data-feather="message-square"></i>
                                         </div>
                                         <div class="media-content">
-                                            <h3>Interview</h3>
-                                            <small>Interview an LLM agent with memory context.</small>
+                                            <h3>{{ _('Interview') }}</h3>
+                                            <small>{{ _('Interview an LLM agent with memory context.') }}</small>
                                         </div>
                                     </div>
                                 </a>
@@ -154,8 +168,8 @@
                                             <i data-feather="settings"></i>
                                         </div>
                                         <div class="media-content">
-                                            <h3>Admin Dashboard</h3>
-                                            <small>You got the power!</small>
+                                            <h3>{{ _('Admin Dashboard') }}</h3>
+                                            <small>{{ _('You got the power!') }}</small>
                                         </div>
                                     </div>
                                 </a>
@@ -177,8 +191,8 @@
                                             <i data-feather="power"></i>
                                         </div>
                                         <div class="media-content">
-                                            <h3>Log out</h3>
-                                            <small>Log out from your account.</small>
+                                            <h3>{{ _('Log out') }}</h3>
+                                            <small>{{ _('Log out from your account.') }}</small>
                                         </div>
                                     </div>
                                 </a>
@@ -191,7 +205,7 @@
         </div>
     </div>
 </div>
-<nav class="navbar mobile-navbar is-hidden-desktop" aria-label="main navigation">
+<nav class="navbar mobile-navbar is-hidden-desktop" aria-label="{{ _('main navigation') }}">
     <!-- Brand -->
     <div class="navbar-brand">
         <a class="navbar-item js-feed-home-link" data-feed-home-link="1" href="{{ feed_home_url }}">
@@ -245,14 +259,14 @@
                         data-feed-home-link="1"
                         class="navbar-item is-flex is-mobile-icon"
                 >
-                    <span><i data-feather="activity"></i>Feed</span>
+                    <span><i data-feather="activity"></i>{{ _('Feed') }}</span>
                 </a>
                 {% if reply_notif_url %}
                 <a
                         href="{{ reply_notif_url }}"
                         class="navbar-item is-flex is-mobile-icon"
                 >
-                    <span><i class="mdi mdi-bell-outline"></i>Notifications</span>
+                    <span><i class="mdi mdi-bell-outline"></i>{{ _('Notifications') }}</span>
                     {% if (reply_notif_unread_count|default(0))|int > 0 %}
                     <span class="menu-badge">{{ reply_notif_unread_count }}</span>
                     {% endif %}
@@ -263,7 +277,7 @@
                         href="/{{ exp_id }}/interview"
                         class="navbar-item is-flex is-mobile-icon"
                 >
-                    <span><i class="mdi mdi-account-voice-outline"></i>Interview</span>
+                    <span><i class="mdi mdi-account-voice-outline"></i>{{ _('Interview') }}</span>
                 </a>
                 {% endif %}
                 {% if is_admin == True %}
@@ -271,10 +285,14 @@
                         href="/admin/dashboard"
                         class="navbar-item is-flex is-mobile-icon"
                 >
-                    <span><i data-feather="settings"></i>Admin Dashboard</span>
+                    <span><i data-feather="settings"></i>{{ _('Admin Dashboard') }}</span>
                 </a>
                 {% endif %}
-                <!-- Forum mode: user profiles are disabled -->
+                {% if logged_id is defined and logged_id %}
+                <a href="/{{ exp_id }}/edit_profile/{{ logged_id }}" class="navbar-item is-flex is-mobile-icon">
+                    <span><i data-feather="user"></i>{{ _('My profile') }}</span>
+                </a>
+                {% endif %}
 
             </div>
         </div>
@@ -283,7 +301,7 @@
         <div class="navbar-item has-dropdown">
             <a href="/navbar-v1-settings.html" class="navbar-link">
                 <i data-feather="user"></i>
-                <span class="is-heading">Account</span>
+                <span class="is-heading">{{ _('Account') }}</span>
             </a>
 
             <!-- Mobile Dropdown -->
@@ -298,7 +316,7 @@
                   <span><i data-feather="settings"></i>Settings</span>
                 </a> -->
                 <a href="{{ url_for('auth.logout') }}" class="navbar-item is-flex is-mobile-icon">
-                    <span><i data-feather="log-out"></i>Logout</span>
+                    <span><i data-feather="log-out"></i>{{ _('Logout') }}</span>
                 </a>
             </div>
         </div>
@@ -309,7 +327,7 @@
             <input
                     id="tipue_drop_input_mobile"
                     class="input"
-                    placeholder="Search..."
+                    placeholder="{{ _('Search...') }}"
             />
             <div class="form-icon">
                 <i data-feather="search"></i>

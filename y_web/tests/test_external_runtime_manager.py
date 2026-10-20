@@ -306,7 +306,9 @@ def test_external_runtime_action_returns_json_for_xhr(app, client, auth, monkeyp
         route_mod, "_runtime_group_active_experiments", lambda group: []
     )
     monkeypatch.setattr(
-        route_mod, "update_runtime_repo", lambda repo_key, branch, actor: None
+        route_mod,
+        "update_runtime_repo",
+        lambda repo_key, branch, actor, github_token=None: None,
     )
     monkeypatch.setattr(
         route_mod, "log_external_runtime_action", lambda *args, **kwargs: None
@@ -329,7 +331,7 @@ def test_external_runtime_action_returns_json_for_xhr(app, client, auth, monkeyp
     payload = response.get_json()
     assert payload["status"] == "ok"
     assert payload["repo_key"] == "test_runtime"
-    assert payload["redirect_url"] == "/admin/external_runtimes?repo_key=test_runtime"
+    assert payload["redirect_url"] == "/admin/external_runtimes/test_runtime"
 
 
 def test_external_runtime_delete_json_refreshes_base_page(
@@ -468,7 +470,7 @@ def test_external_runtime_acquire_json_uses_selected_source(
     monkeypatch.setattr(
         route_mod,
         "clone_runtime_repo",
-        lambda repo_key, branch, actor: called.update(
+        lambda repo_key, branch, actor, github_token=None: called.update(
             {"repo_key": repo_key, "branch": branch, "actor": actor}
         ),
     )
@@ -674,23 +676,8 @@ def test_external_runtimes_page_hides_git_controls_when_git_is_unavailable(
         ],
     )
     monkeypatch.setattr(
-        route_mod,
-        "_runtime_categories",
-        lambda grouped_status, active_group_usage: [
-            {
-                "label": "Simulation Runtime Stack",
-                "description": "Repositories classified under Simulation Runtime Stack.",
-                "repo_count": 1,
-                "installed_count": 0,
-                "active_experiment_count": 0,
-                "groups": [],
-            }
-        ],
-    )
-    monkeypatch.setattr(
         route_mod, "read_external_runtime_logs", lambda *args, **kwargs: []
     )
-    monkeypatch.setattr(route_mod, "external_runtime_bootstrap_report", lambda: None)
 
     def fake_render_template(template_name, **context):
         captured.update(context)
@@ -702,7 +689,8 @@ def test_external_runtimes_page_hides_git_controls_when_git_is_unavailable(
         response = route_mod.external_runtimes.__wrapped__()
 
     assert response == "rendered"
-    assert captured["host_git_available"] is False
+    (entry,) = captured["plugin_entries"]
+    assert entry["state"] == "missing" and entry["paired"] is False
 
 
 def test_external_runtime_action_rejects_git_operations_without_git(
@@ -1068,3 +1056,141 @@ def test_runtime_visibility_admin_role_alone_no_longer_bypasses_privacy(app):
 
         app.config["DEVELOPMENT_MODE"] = False
         assert registry.runtime_visible_to_user(spec, admin) is False
+
+
+def test_git_auth_env_uses_token_without_leaking_it_into_the_url(monkeypatch):
+    monkeypatch.delenv("GH_TOKEN", raising=False)
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+    assert manager._git_auth_env(None) == {}
+
+    env = manager._git_auth_env("  tok123  ")
+    assert env["GIT_CONFIG_KEY_0"] == "credential.helper"
+    assert env["GIT_CONFIG_VALUE_0"] == ""  # a broken helper (missing gh) is bypassed
+    assert env["GIT_CONFIG_KEY_1"] == "http.https://github.com/.extraheader"
+    import base64
+
+    expected = base64.b64encode(b"x-access-token:tok123").decode()
+    assert env["GIT_CONFIG_VALUE_1"] == f"AUTHORIZATION: basic {expected}"
+
+    monkeypatch.setenv("GH_TOKEN", "fromenv")
+    assert manager._git_auth_env(None)["GIT_CONFIG_COUNT"] == "2"
+
+
+def test_clone_passes_the_github_token_to_git(runtime_repo_spec, monkeypatch):
+    seen = {}
+    real = manager._run_command
+
+    def spy(command, cwd, env=None, timeout=300):
+        seen["env"] = env
+        return real(command, cwd=cwd, env=env, timeout=timeout)
+
+    monkeypatch.setattr(manager, "_run_command", spy)
+    manager.clone_runtime_repo(
+        runtime_repo_spec.key, "main", actor="tester", github_token="tok123"
+    )
+    assert "AUTHORIZATION: basic" in seen["env"]["GIT_CONFIG_VALUE_1"]
+    # the token must not end up in the stored remote URL
+    status_origin = manager._safe_git(
+        runtime_repo_spec.path, ["remote", "get-url", "origin"]
+    )
+    assert "tok123" not in status_origin
+
+
+def test_git_auth_failure_gets_an_actionable_hint(tmp_path, monkeypatch):
+    def failing(command, cwd, env=None, timeout=300):
+        raise manager.ExternalRuntimeError(
+            "Command failed (git clone x)\nremote: Invalid username or token."
+        )
+
+    monkeypatch.setattr(manager, "_run_command", failing)
+    with pytest.raises(manager.ExternalRuntimeError) as exc:
+        manager._git_remote(["git", "clone", "x"], cwd=tmp_path)
+    assert "private" in str(exc.value) and "GH_TOKEN" in str(exc.value)
+
+
+def test_install_dependencies_is_a_noop_without_a_manifest(
+    runtime_repo_spec, monkeypatch
+):
+    import dataclasses
+
+    manager.clone_runtime_repo(runtime_repo_spec.key, "main", actor="tester")
+    for name in ("requirements.txt", "pyproject.toml", "setup.py"):
+        (runtime_repo_spec.path / name).unlink(missing_ok=True)
+    # a pure-Python plugin (like Reactive Agents) declares no install commands and
+    # ships no manifest: the install flow must not fail
+    bare = dataclasses.replace(runtime_repo_spec, install_commands=())
+    monkeypatch.setitem(registry.SUPPORTED_EXTERNAL_REPOS, bare.key, bare)
+    assert manager._effective_install_commands(bare) == ()
+    manager.install_runtime_dependencies(bare.key, actor="tester")
+    assert manager.get_runtime_status(bare.key).dependency_files_ready is True
+
+
+def test_admin_engine_supports_flask_sqlalchemy_2_and_3():
+    from y_web.src.external_runtime import backend_plugins
+
+    class _New:
+        engines = {"db_admin": "admin-engine"}
+        engine = "default-engine"
+
+    class _Old:  # Flask-SQLAlchemy 2.x: no ``engines`` attribute
+        def get_engine(self, app, bind=None):
+            return f"old-engine:{bind}"
+
+    assert backend_plugins._admin_engine(_New(), None) == "admin-engine"
+    assert backend_plugins._admin_engine(_Old(), object()) == "old-engine:db_admin"
+
+
+def test_agent_memory_is_a_registered_plugin():
+    spec = registry.runtime_spec("agent_memory")
+    assert spec.github_repo == "YSocialTwin/y_memory_subsystem"
+    assert spec.path.name == "y_memory_subsystem"
+    assert spec.group == "agent_plugins"
+    assert spec.validate_import == "yclient_memory"
+
+
+def test_agent_memory_source_reaches_child_processes(tmp_path, monkeypatch):
+    from y_web.src.simulation import subprocess_env
+
+    src = tmp_path / "external" / "y_memory_subsystem" / "src" / "yclient_memory"
+    src.mkdir(parents=True)
+    monkeypatch.setattr(subprocess_env, "get_writable_path", lambda: str(tmp_path))
+    monkeypatch.setenv("PYTHONPATH", "/somewhere")
+    env = subprocess_env.build_subprocess_env()
+    import os
+
+    parts = env["PYTHONPATH"].split(os.pathsep)
+    assert parts[0] == "/somewhere"
+    assert str(src.parent) in parts
+
+
+def test_agent_memory_source_absent_leaves_env_alone(tmp_path, monkeypatch):
+    from y_web.src.simulation import subprocess_env
+
+    monkeypatch.setattr(subprocess_env, "get_writable_path", lambda: str(tmp_path))
+    monkeypatch.setenv("PYTHONPATH", "/somewhere")
+    assert subprocess_env.build_subprocess_env()["PYTHONPATH"] == "/somewhere"
+
+
+import os  # noqa: E402
+
+
+def test_child_process_imports_yclient_memory_from_the_plugin_checkout():
+    """Real subprocess: the child resolves ``yclient_memory`` from the plugin, not from pip."""
+    import subprocess
+    import sys
+
+    from y_web.src.simulation import subprocess_env
+
+    src = subprocess_env.agent_memory_source_dir()
+    if not src:
+        pytest.skip("Agent Memory plugin is not checked out in external/")
+    env = subprocess_env.build_subprocess_env()
+    code = "import yclient_memory, sys; print(yclient_memory.__file__)"
+    result = subprocess.run(
+        [sys.executable, "-c", code],
+        env={"PYTHONPATH": env["PYTHONPATH"], "PATH": os.environ.get("PATH", "")},
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    assert os.path.realpath(result.stdout.strip()).startswith(os.path.realpath(src))

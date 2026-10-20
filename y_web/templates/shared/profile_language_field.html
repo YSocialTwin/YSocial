@@ -1,0 +1,26 @@
+{#- Interface-language field for the profile pages of the participant frontends. Rendered only when the
+    experiment lets participants change the language. The select submits its own tiny form through the HTML
+    ``form`` attribute, so the field can sit inside another form (the form itself must then be rendered outside
+    it: ``ys_lang_part='form'`` renders only the form, ``'field'`` only the field, default both).
+    Optional: ``ys_lang_wrap_class`` (class of the field wrapper), ``ys_lang_plain`` (no Bulma select wrapper),
+    ``ys_lang_hint_class`` (class of the helper text). -#}
+{% set _ys_langs = simulation_language_options() %}
+{% set _part = ys_lang_part|default('all') %}
+{% if _ys_langs %}
+{% if _part in ('all', 'form') %}
+<form id="ys-profile-language-form" method="POST" action="/set-language" hidden>
+  <input type="hidden" name="scope" value="sim">
+  <input type="hidden" name="next" value="{{ request.full_path.rstrip('?') }}">
+</form>
+{% endif %}
+{% if _part in ('all', 'field') %}
+{% set _select %}<select id="ys-profile-language-select" name="lang" form="ys-profile-language-form" onchange="this.form.submit()">
+      {% for code, name in _ys_langs %}<option value="{{ code }}"{% if get_locale()|string == code %} selected{% endif %}>{{ name }}</option>{% endfor %}
+    </select>{% endset %}
+<div class="{{ ys_lang_wrap_class|default('ys-profile-language') }}">
+  <label for="ys-profile-language-select">{{ _('Interface language') }}</label>
+  {% if ys_lang_plain %}{{ _select }}{% else %}<div class="select is-fullwidth">{{ _select }}</div>{% endif %}
+  <div class="{{ ys_lang_hint_class|default('') }}">{{ _('The language of the menus and labels of this site. Posts and comments are never translated.') }}</div>
+</div>
+{% endif %}
+{% endif %}

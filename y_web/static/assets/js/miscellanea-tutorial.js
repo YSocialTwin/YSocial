@@ -138,6 +138,46 @@
             position: 'left',
             tab: 'content-behavior'
         },
+        'hpc-monitor': {
+            id: 'hpc-monitor',
+            selector: '#box-hpc-monitor',
+            title: '🖧 HPC Monitor',
+            description: `<p><b>Automatic monitoring</b> of HPC client execution: it detects when a remote run has completed.</p>`,
+            position: 'right',
+            tab: 'system-settings'
+        },
+        'detoxify-model': {
+            id: 'detoxify-model',
+            selector: '#box-detoxify-model',
+            title: '🧠 Local Toxicity Model',
+            description: `<p>Download and manage the <b>local toxicity model</b> used to annotate content without calling external services.</p>`,
+            position: 'left',
+            tab: 'system-settings'
+        },
+        'about-system': {
+            id: 'about-system',
+            selector: '#box-about-system',
+            title: 'ℹ️ About System Settings',
+            description: `<p>A short reference of what each system setting does.</p>`,
+            position: 'top',
+            tab: 'system-settings'
+        },
+        'opinion-groups': {
+            id: 'opinion-groups',
+            selector: '#box-opinion-groups',
+            title: '👥 Opinion Groups',
+            description: `<p>Define the <b>opinion groups</b> (for example supporters, opponents, neutrals) and the opinion range of each one.</p>`,
+            position: 'right',
+            tab: 'opinion-dynamics'
+        },
+        'opinion-distributions': {
+            id: 'opinion-distributions',
+            selector: '#box-opinion-distributions',
+            title: '📈 Opinion Distributions',
+            description: `<p>Create the <b>statistical distributions</b> that assign starting opinions to the agents of an experiment.</p>`,
+            position: 'left',
+            tab: 'opinion-dynamics'
+        },
         'activity-profiles': {
             id: 'activity-profiles',
             selector: '#box-activity-profiles',
@@ -204,39 +244,17 @@
         return steps;
     }
     
-    // Define the start function
-    function initMiscellaneaTutorial() {
-        window.startMiscellaneaTutorial = function() {
-            // Rebuild steps based on current tab when starting
-            const currentSteps = buildStepsForCurrentTab();
-            if (currentSteps.length > 0) {
-                const newTutorial = window.PageTutorialEngine.init('miscellanea', currentSteps);
-                if (newTutorial) {
-                    newTutorial.start();
-                }
-            }
-        };
-    }
-    
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize the tutorial function after a delay to ensure page is ready
-        setTimeout(initMiscellaneaTutorial, 500);
-        
-        // Add click listeners to tab buttons to reinitialize the tutorial function
-        const tabButtons = document.querySelectorAll('.misc-tab');
-        tabButtons.forEach(btn => {
-            btn.addEventListener('click', function() {
-                // Wait for tab to switch, then reinitialize tutorial function
-                setTimeout(function() {
-                    initMiscellaneaTutorial();
-                    
-                    // Show tutorial button if it exists
-                    const tutorialBtn = document.getElementById('header-tutorial-btn');
-                    if (tutorialBtn) {
-                        tutorialBtn.style.display = 'inline-block';
-                    }
-                }, 200);
-            });
-        });
+        if (!window.PageTutorialEngine) return;
+        // One engine and one set of listeners: the shared array is refilled at every start
+        // with the steps of the tab that is open at that moment.
+        const shared = [];
+        const tutorial = window.PageTutorialEngine.init('miscellanea', shared);
+        if (!tutorial) return;
+        window.startMiscellaneaTutorial = function() {
+            shared.length = 0;
+            buildStepsForCurrentTab().forEach(function(step) { shared.push(step); });
+            if (shared.length > 0) tutorial.start();
+        };
     });
 })();

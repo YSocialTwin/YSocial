@@ -36,6 +36,7 @@ from flask_login import current_user, login_required, login_user
 from sqlalchemy import func, select
 
 from y_web import db  # , app
+from y_web.i18n import gettext as _
 from y_web.src.content.avatars import normalize_forum_avatar_mode
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
@@ -454,15 +455,15 @@ def download_experiment_file(eid):
 
     experiment = db.session.scalars(select(Exps).filter_by(idexp=eid)).first()
     if not experiment:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
 
     admin_user = _current_admin_user()
     if not admin_user:
-        flash("Unable to resolve current admin user.", "error")
+        flash(_("Unable to resolve current admin user."), "error")
         return redirect(url_for("experiments.settings"))
     if not user_can_view_experiment(admin_user, experiment):
-        flash("You do not have access to this experiment.", "error")
+        flash(_("You do not have access to this experiment."), "error")
         return redirect(url_for("experiments.settings"))
 
     notification = _create_download_notification(
@@ -480,7 +481,7 @@ def download_experiment_file(eid):
     ).start()
 
     flash(
-        "Archive generation started. You will be notified when the file is ready.",
+        _("Archive generation started. You will be notified when the file is ready."),
         "info",
     )
     return redirect(
@@ -498,17 +499,17 @@ def download_experiments_bulk():
     try:
         exp_ids_payload = json.loads(exp_ids_json)
     except json.JSONDecodeError:
-        flash("Invalid experiment IDs provided.", "error")
+        flash(_("Invalid experiment IDs provided."), "error")
         return redirect(url_for("experiments.settings"))
 
     admin_user = _current_admin_user()
     if not admin_user:
-        flash("Unable to resolve current admin user.", "error")
+        flash(_("Unable to resolve current admin user."), "error")
         return redirect(url_for("experiments.settings"))
 
     exp_ids = _resolve_bulk_experiment_ids(exp_ids_payload, admin_user=admin_user)
     if not exp_ids:
-        flash("No experiments selected for download.", "warning")
+        flash(_("No experiments selected for download."), "warning")
         return redirect(url_for("experiments.settings"))
 
     notification = _create_download_notification(
@@ -527,7 +528,9 @@ def download_experiments_bulk():
     ).start()
 
     flash(
-        "Bulk archive generation started. You will be notified when the file is ready.",
+        _(
+            "Bulk archive generation started. You will be notified when the file is ready."
+        ),
         "info",
     )
     return redirect(request.referrer or url_for("experiments.settings"))
@@ -541,7 +544,7 @@ def download_notifications_page():
     check_privileges(current_user.username)
     admin_user = _current_admin_user()
     if not admin_user:
-        flash("Unable to resolve current admin user.", "error")
+        flash(_("Unable to resolve current admin user."), "error")
         return redirect(url_for("experiments.settings"))
 
     notifications = (
@@ -602,7 +605,7 @@ def mark_download_notification_read(notification_id):
     check_privileges(current_user.username)
     admin_user = _current_admin_user()
     if not admin_user:
-        return jsonify({"success": False, "error": "User not found"}), 404
+        return jsonify({"success": False, "error": _("User not found")}), 404
 
     notification = db.session.scalars(
         select(DownloadNotification).filter_by(
@@ -610,7 +613,7 @@ def mark_download_notification_read(notification_id):
         )
     ).first()
     if not notification:
-        return jsonify({"success": False, "error": "Notification not found"}), 404
+        return jsonify({"success": False, "error": _("Notification not found")}), 404
 
     notification.is_read = True
     db.session.commit()
@@ -629,7 +632,7 @@ def cancel_download_notification(notification_id):
     check_privileges(current_user.username)
     admin_user = _current_admin_user()
     if not admin_user:
-        return jsonify({"success": False, "error": "User not found"}), 404
+        return jsonify({"success": False, "error": _("User not found")}), 404
 
     notification = db.session.scalars(
         select(DownloadNotification).filter_by(
@@ -637,7 +640,7 @@ def cancel_download_notification(notification_id):
         )
     ).first()
     if not notification:
-        return jsonify({"success": False, "error": "Notification not found"}), 404
+        return jsonify({"success": False, "error": _("Notification not found")}), 404
 
     if (
         not notification.is_read
@@ -674,7 +677,7 @@ def delete_notification(notification_id):
     check_privileges(current_user.username)
     admin_user = _current_admin_user()
     if not admin_user:
-        return jsonify({"success": False, "error": "User not found"}), 404
+        return jsonify({"success": False, "error": _("User not found")}), 404
 
     notification = db.session.scalars(
         select(DownloadNotification).filter_by(
@@ -682,7 +685,7 @@ def delete_notification(notification_id):
         )
     ).first()
     if not notification:
-        return jsonify({"success": False, "error": "Notification not found"}), 404
+        return jsonify({"success": False, "error": _("Notification not found")}), 404
 
     file_path = notification.resource_path
     if file_path and _is_path_in_temp_data(file_path) and os.path.exists(file_path):
@@ -708,7 +711,7 @@ def download_notification_resource(notification_id):
     check_privileges(current_user.username)
     admin_user = _current_admin_user()
     if not admin_user:
-        flash("Unable to resolve current admin user.", "error")
+        flash(_("Unable to resolve current admin user."), "error")
         return redirect(url_for("experiments.download_notifications_page"))
 
     notification = db.session.scalars(
@@ -717,15 +720,15 @@ def download_notification_resource(notification_id):
         )
     ).first()
     if not notification:
-        flash("Notification not found.", "error")
+        flash(_("Notification not found."), "error")
         return redirect(url_for("experiments.download_notifications_page"))
 
     if notification.status != "ready" or not notification.resource_path:
-        flash("Requested file is not ready for download.", "warning")
+        flash(_("Requested file is not ready for download."), "warning")
         return redirect(url_for("experiments.download_notifications_page"))
 
     if not _is_path_in_temp_data(notification.resource_path):
-        flash("Invalid download path.", "error")
+        flash(_("Invalid download path."), "error")
         return redirect(url_for("experiments.download_notifications_page"))
 
     if not os.path.exists(notification.resource_path):
@@ -733,7 +736,7 @@ def download_notification_resource(notification_id):
         notification.message = "Download file is no longer available."
         notification.error_message = "Generated archive not found in temp_data."
         db.session.commit()
-        flash("Download file is no longer available.", "error")
+        flash(_("Download file is no longer available."), "error")
         return redirect(url_for("experiments.download_notifications_page"))
 
     notification.is_read = True

@@ -10,7 +10,7 @@
         <a href="/{{exp_id}}/{{ ranked_card_href_prefix }}/{{ entry['id'] }}/1" class="ys-trending-row">
             <span class="ys-trending-rank">{{ loop.index }}</span>
             <span class="ys-trending-copy">
-                <span class="ys-trending-tag">{% if ranked_card_prefix %}{{ ranked_card_prefix }}{% endif %}{{ entry[ranked_card_label_key] }}</span>
+                <span class="ys-trending-tag">{% if ranked_card_prefix %}{{ ranked_card_prefix }}{{ entry[ranked_card_label_key]|string|trim(ranked_card_prefix) }}{% else %}{{ entry[ranked_card_label_key] }}{% endif %}</span>
                 <span class="ys-trending-meta">{{ entry['count'] }} {{ ranked_card_meta_label }}</span>
             </span>
             <span class="ys-trending-count">{{ entry['count'] }}</span>

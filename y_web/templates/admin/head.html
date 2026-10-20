@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="{{ html_lang() }}" dir="{{ text_direction() }}">
 
 <head>
     <!-- Required meta tags -->
@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
     <meta http-equiv="x-ua-compatible" content="ie=edge"/>
 
-    <title>Y Social | Dashboard</title>
+    <title>{{ _('Y Social | Dashboard') }}</title>
     <link rel="icon" type="image/png') }}" href="{{ url_for('static', filename='assets/img/favicon.png') }}"/>
 
 
@@ -26,6 +26,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-layout.css') }}"/>
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-responsive.css') }}"/>
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-tutorials.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/ys-notify.css') }}"/>
 
     <link href="{{ url_for('static', filename='assets/vendor/css/gridjs-mermaid.min.css') }}" rel="stylesheet"/>
     <script src="{{ url_for('static', filename='assets/vendor/js/chart.min.js') }}"></script>
@@ -34,7 +35,11 @@
     
     <!-- Loading Indicator - Cache-busting version parameter ensures updates are loaded -->
     <script src="{{ url_for('static', filename='assets/js/loading-indicator.js') }}?v=1.2"></script>
+
+    <!-- Notifications: compact cards in the top-right corner (flash messages, alerts, toasts) -->
+    <script src="{{ url_for('static', filename='assets/js/ys-notify.js') }}?v=1"></script>
     
+    <script src="{{ url_for('static', filename='assets/js/i18n.js') }}" data-domains="admin"></script>
 </head>
 
 <body>
@@ -52,7 +57,7 @@
 <div class="pageloader"></div>
 <div class="infraloader is-active"></div>
 <!-- Mobile Sidebar Toggle Button -->
-<button id="sidebar-toggle" class="sidebar-toggle-btn" onclick="toggleSidebar()" aria-label="Toggle menu">
+<button id="sidebar-toggle" class="sidebar-toggle-btn" onclick="toggleSidebar()" aria-label="{{ _('Toggle menu') }}">
     <i data-feather="menu"></i>
 </button>
 
@@ -78,10 +83,11 @@
     </a>
 
     <div class="dashboard-aside-body">
+{% if current_user_role != "teacher" %}
         <a href="/admin/dashboard" class="dashboard-aside-link" id="sidebar-home">
             <div>
                 <i data-feather="home"></i>
-                <span>Home</span>
+                <span>{{ _('Home') }}</span>
             </div>
         </a>
 
@@ -90,26 +96,56 @@
             <button type="button" class="dashboard-aside-link dashboard-aside-group-toggle" id="sidebar-group-toggle-experiments" data-group="experiments" aria-expanded="false" aria-controls="sidebar-submenu-experiments">
                 <div>
                     <i data-feather="server"></i>
-                    <span>Experiments</span>
+                    <span>{{ _('Experiments') }}</span>
                     <i data-feather="chevron-right" class="dashboard-aside-group-chevron"></i>
                 </div>
             </button>
             <div class="dashboard-aside-submenu" id="sidebar-submenu-experiments">
-                <div class="dashboard-aside-submenu-title">Experiments</div>
+                <div class="dashboard-aside-submenu-title">{{ _('Experiments') }}</div>
                 <a href="/admin/experiments" class="dashboard-aside-link dashboard-aside-sublink" id="sidebar-experiments">
                     <i data-feather="server"></i>
-                    <span>Experiments</span>
+                    <span>{{ _('Experiments') }}</span>
                 </a>
                 <a href="/admin/populations" class="dashboard-aside-link dashboard-aside-sublink" id="sidebar-populations">
                     <i data-feather="codesandbox"></i>
-                    <span>Populations</span>
+                    <span>{{ _('Populations') }}</span>
                 </a>
                 <a href="/admin/agents_dashboard" class="dashboard-aside-link dashboard-aside-sublink" id="sidebar-agents-dashboard">
                     <i data-feather="cpu"></i>
-                    <span>Agent Resources</span>
+                    <span>{{ _('Agent Resources') }}</span>
                 </a>
             </div>
         </div>
+
+{% endif %}
+        <!-- Plugin-contributed top-level groups (manifest suite.sidebar.group,
+             see backend_plugins.backend_suite_sidebar_groups()); same markup
+             as the groups above. -->
+        {% for group in extension_sidebar_groups %}
+        <div class="dashboard-aside-group" id="sidebar-group-{{ group.repo_key }}">
+            <button type="button" class="dashboard-aside-link dashboard-aside-group-toggle" id="sidebar-group-toggle-{{ group.repo_key }}" data-group="{{ group.repo_key }}" aria-expanded="false" aria-controls="sidebar-submenu-{{ group.repo_key }}">
+                <div>
+                    <i data-feather="{{ group.icon }}"></i>
+                    <span>{{ group.label }}</span>
+                    <i data-feather="chevron-right" class="dashboard-aside-group-chevron"></i>
+                </div>
+            </button>
+            <div class="dashboard-aside-submenu" id="sidebar-submenu-{{ group.repo_key }}">
+                <div class="dashboard-aside-submenu-title">{{ group.label }}</div>
+                {% set ns = namespace(section=None) %}
+                {% for item in group['items'] %}
+                {% if item.section and item.section != ns.section %}{% set ns.section = item.section %}
+                <div class="dashboard-aside-submenu-title dashboard-aside-submenu-section">{{ item.section }}</div>
+                {% endif %}
+                <a href="{{ item.url }}" class="dashboard-aside-link dashboard-aside-sublink">
+                    <i data-feather="{{ item.icon }}"></i>
+                    <span>{{ item.label }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+{% if current_user_role != "teacher" %}
 
         <!-- Extensions: plugin-contributed configuration and pages. Any
              future backend settings suite that declares a "sidebar" block
@@ -120,15 +156,15 @@
             <button type="button" class="dashboard-aside-link dashboard-aside-group-toggle" id="sidebar-group-toggle-extensions" data-group="extensions" aria-expanded="false" aria-controls="sidebar-submenu-extensions">
                 <div>
                     <i data-feather="package"></i>
-                    <span>Extensions</span>
+                    <span>{{ _('Extensions') }}</span>
                     <i data-feather="chevron-right" class="dashboard-aside-group-chevron"></i>
                 </div>
             </button>
             <div class="dashboard-aside-submenu" id="sidebar-submenu-extensions">
-                <div class="dashboard-aside-submenu-title">Extensions</div>
+                <div class="dashboard-aside-submenu-title">{{ _('Extensions') }}</div>
                 <a href="{{ url_for('experiments.frontend_settings') }}" class="dashboard-aside-link dashboard-aside-sublink" id="sidebar-frontend-settings">
                     <i data-feather="sliders"></i>
-                    <span>Frontend Settings</span>
+                    <span>{{ _('Frontend Settings') }}</span>
                 </a>
                 {% for entry in extension_sidebar_entries %}
                 <a href="{{ entry.url }}" class="dashboard-aside-link dashboard-aside-sublink" id="sidebar-ext-{{ entry.repo_key }}">
@@ -138,6 +174,8 @@
                 {% endfor %}
             </div>
         </div>
+
+{% endif %}
     </div>
 
     <!-- Pinned to the bottom of the sidebar column (margin-top:auto in
@@ -151,48 +189,48 @@
             <button type="button" class="dashboard-aside-link dashboard-aside-group-toggle" id="sidebar-group-toggle-admin" data-group="admin" aria-expanded="false" aria-controls="sidebar-submenu-admin">
                 <div>
                     <i data-feather="shield"></i>
-                    <span>Admin</span>
+                    <span>{{ _('Admin') }}</span>
                     <i data-feather="chevron-right" class="dashboard-aside-group-chevron"></i>
                 </div>
             </button>
             <div class="dashboard-aside-submenu" id="sidebar-submenu-admin">
-                <div class="dashboard-aside-submenu-title">Admin</div>
+                <div class="dashboard-aside-submenu-title">{{ _('Admin') }}</div>
                 <a href="/admin/users" class="dashboard-aside-link dashboard-aside-sublink" id="sidebar-users">
                     <i data-feather="users"></i>
-                    <span>Users</span>
+                    <span>{{ _('Users') }}</span>
                 </a>
                 <a href="{{ url_for('experiments.miscellanea') }}" class="dashboard-aside-link dashboard-aside-sublink" id="sidebar-miscellanea">
                     <i data-feather="more-horizontal"></i>
-                    <span>Miscellanea</span>
+                    <span>{{ _('Miscellanea') }}</span>
                 </a>
                 <a href="{{ url_for('experiments.external_runtimes') }}" class="dashboard-aside-link dashboard-aside-sublink" id="sidebar-external-runtimes">
                     <i data-feather="package"></i>
-                    <span>Plugin Manager</span>
+                    <span>{{ _('Plugin Manager') }}</span>
                 </a>
             </div>
         </div>
         {% endif %}
 
-        <a href="/admin/about" class="dashboard-aside-link" id="sidebar-about">
+        {% if current_user_role != "teacher" %}<a href="/admin/about" class="dashboard-aside-link" id="sidebar-about">
             <div>
                 <i data-feather="compass"></i>
-                <span>About</span>
+                <span>{{ _('About') }}</span>
             </div>
-        </a>
+        </a>{% endif %}
     </div>
     <!--<<div class="dashboard-aside-end">
         {% if current_user_role == "admin" %}
         <a href="/admin/miscellanea" class="dashboard-aside-link sidebar-collapsible" id="sidebar-miscellanea">
             <div>
                 <i data-feather="more-horizontal"></i>
-                <span>Miscellanea</span>
+                <span>{{ _('Miscellanea') }}</span>
             </div>
         </a>
         {% endif %}
         <a href="/admin/about" class="dashboard-aside-link sidebar-collapsible" id="sidebar-about">
             <div>
                 <i data-feather="compass"></i>
-                <span>About</span>
+                <span>{{ _('About') }}</span>
             </div>
         </a>
         <a href="navbar-v1-profile-main.html" class="dashboard-aside-link">

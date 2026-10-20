@@ -1,16 +1,16 @@
 {% include "admin/head.html" %}
 
 <div class="view-wrapper is-dashboard">
-    <div id="creator-dashboard" class="dashboard-container">
+    <div id="creator-dashboard" data-tutorial-page="download_notifications" class="dashboard-container">
         {% include "admin/dash_head.html" %}
 
         <div class="dashboard-body">
             <div class="columns">
                 <div class="column is-12">
-                    <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Notifications</h3>
+                    <div class="dashboard-box" data-tut="notifications">
+                        <h3 class="title is-5 is-thin">{{ _('Notifications') }}</h3>
                         <p class="is-size-7" style="margin-top: 0.4rem; color: #666;">
-                            Background tasks and resource alerts appear here.
+                            {{ _('Background tasks and resource alerts appear here.') }}
                         </p>
                     </div>
                 </div>
@@ -25,11 +25,11 @@
                             <table class="table is-fullwidth is-striped">
                                 <thead>
                                     <tr>
-                                        <th>Title</th>
-                                        <th>Status</th>
-                                        <th>Created</th>
-                                        <th>Read</th>
-                                        <th>Actions</th>
+                                        <th>{{ _('Title') }}</th>
+                                        <th>{{ _('Status') }}</th>
+                                        <th>{{ _('Created') }}</th>
+                                        <th>{{ _('Read') }}</th>
+                                        <th>{{ _('Actions') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody id="notifications-table-body">
@@ -40,7 +40,7 @@
  <div class="is-size-7 ys-text-gray">{{ n.message }}</div>
                                             {% if n.related_experiments %}
                                             <div class="is-size-7" style="margin-top: 0.25rem;">
-                                                Related:
+                                                {{ _('Related:') }}
                                                 {% for exp in n.related_experiments %}
                                                 <a href="{{ exp.url }}">{{ exp.name }}</a>{% if not loop.last %}, {% endif %}
                                                 {% endfor %}
@@ -49,26 +49,26 @@
                                         </td>
                                         <td>
                                             <span class="tag {% if n.status == 'ready' %}is-success{% elif n.status == 'failed' %}is-danger{% elif n.status == 'processing' %}is-info{% else %}is-light{% endif %}">
-                                                {{ n.status }}
+                                                {{ n.status_label }}
                                             </span>
                                         </td>
-                                        <td>{{ n.created_at }}</td>
-                                        <td>{% if n.is_read %}Yes{% else %}No{% endif %}</td>
+                                        <td>{{ n.created_label or n.created_at }}</td>
+                                        <td>{% if n.is_read %}{{ _('Yes') }}{% else %}{{ _('No') }}{% endif %}</td>
                                         <td>
                                             <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
                                                 {% if n.status == 'ready' and n.download_url %}
                                                 <a href="{{ n.download_url }}" class="button is-small is-success">
-                                                    Download
+                                                    {{ _('Download') }}
                                                 </a>
                                                 {% endif %}
 
                                                 {% if not n.is_read %}
                                                 <button class="button is-small" onclick="markRead({{ n.id }})">
-                                                    Mark read
+                                                    {{ _('Mark read') }}
                                                 </button>
                                                 {% endif %}
                                                 <button class="button is-small is-danger is-light" onclick="deleteNotification({{ n.id }})">
-                                                    Delete
+                                                    {{ _('Delete') }}
                                                 </button>
                                             </div>
                                         </td>
@@ -78,7 +78,7 @@
                             </table>
                         </div>
                         {% else %}
-                        <p>No notifications yet.</p>
+                        <p>{{ _('No notifications yet.') }}</p>
                         {% endif %}
                     </div>
                 </div>

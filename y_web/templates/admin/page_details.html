@@ -2,7 +2,7 @@
 
 <div class="view-wrapper is-dashboard">
     <!--Dashboard container-->
-    <div id="creator-dashboard" class="dashboard-container">
+    <div id="creator-dashboard" data-tutorial-page="page_details" class="dashboard-container">
         <!--Toolbar-->
         {% include "admin/dash_head.html" %}
 
@@ -10,8 +10,8 @@
 
             <div class="columns">
                 <div class="column is-12">
-                    <div class="dashboard-box">
-                        <a href="/admin/pages">Pages</a> > Details: {{ page.name }}
+                    <div class="dashboard-box" data-tut="page-overview">
+                        <a href="/admin/pages">{{ _('Pages') }}</a> &gt; {{ _('Details:') }} {{ page.name }}
                     </div>
                 </div>
             </div>
@@ -22,39 +22,39 @@
 
                     <!--Dashboard box-->
                     <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Page Overview</h3>
+                        <h3 class="title is-5 is-thin">{{ _('Page Overview') }}</h3>
  <p class="ys-text-small">
-                            Information about this content source page, including topics and populations where it's deployed.
+                            {{ _("Information about this content source page, including topics and populations where it's deployed.") }}
                         </p>
 
                         <div class="box-content">
                             <div class="box-lines">
-                                <b>Basic Information</b>
- <p class="ys-label-hint">Page identification and RSS feed configuration.</p>
+                                <b>{{ _('Basic Information') }}</b>
+ <p class="ys-label-hint">{{ _('Page identification and RSS feed configuration.') }}</p>
 
                                 <div class="box-line">
-                                    <span class="left">Page Name</span>
+                                    <span class="left">{{ _('Page Name') }}</span>
                                     <span class="right">{{ page.name }}</span>
                                 </div>
                                 <div class="box-line">
-                                    <span class="left">Type</span>
+                                    <span class="left">{{ _('Type') }}</span>
                                     <span class="right">{{ page.page_type }}</span>
                                 </div>
                                 <div class="box-line">
-                                    <span class="left">Description</span>
+                                    <span class="left">{{ _('Description') }}</span>
                                     <span class="right">{{ page.descr }}</span>
                                 </div>
                                 <div class="box-line">
-                                    <span class="left">Feed URL</span>
+                                    <span class="left">{{ _('Feed URL') }}</span>
  <span class="right ys-word-break">{{ page.feed }}</span>
                                 </div>
 
                                 <hr>
-                                <b>Content & Deployment</b>
- <p class="ys-label-hint">Topics covered and population assignments.</p>
+                                <b>{{ _('Content & Deployment') }}</b>
+ <p class="ys-label-hint">{{ _('Topics covered and population assignments.') }}</p>
 
                                 <div class="box-line">
-                                    <span class="left">Topics</span>
+                                    <span class="left">{{ _('Topics') }}</span>
                                     <span class="right">
                                         {% if page_topics %}
                                         <ul>
@@ -63,13 +63,13 @@
                                         {% endfor %}
                                         </ul>
                                         {% else %}
-                                        No topics assigned
+                                        {{ _('No topics assigned') }}
                                         {% endif %}
                                     </span>
                                 </div>
 
                                  <div class="box-line">
-                                    <span class="left">Active Populations</span>
+                                    <span class="left">{{ _('Active Populations') }}</span>
                                     <span class="right">
                                         {% if page_populations %}
                                         <ul>
@@ -78,7 +78,7 @@
                                         {% endfor %}
                                         </ul>
                                         {% else %}
-                                        Not deployed to any population
+                                        {{ _('Not deployed to any population') }}
                                         {% endif %}
                                     </span>
                                 </div>
@@ -87,7 +87,7 @@
                             </div>
 
  <div class="buttons ys-flex-right">
-                                <a class="link-tooltip" href="/admin/delete_page/{{ page.id }}" title="Delete"><i
+                                <a class="link-tooltip" href="/admin/delete_page/{{ page.id }}" title="{{ _('Delete') }}"><i
  class="mdi mdi-delete ys-icon-lg"></i></a>
                             </div>
 
@@ -95,22 +95,22 @@
                     </div>
 
 
-                    <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Add to Population</h3>
+                    <div class="dashboard-box" data-tut="add-to-population">
+                        <h3 class="title is-5 is-thin">{{ _('Add to Population') }}</h3>
  <p class="ys-text-small">
-                            Deploy this page to agent populations so they can interact with its content.
+                            {{ _('Deploy this page to agent populations so they can interact with its content.') }}
                         </p>
                         <div class="box-content">
                             <form action="/admin/add_page_to_population" enctype="multipart/form-data" method="POST">
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <span class="left">
- <small class="ys-text-gray">ℹ️ A page can be added to multiple populations.</small>
+ <small class="ys-text-gray">{{ _('ℹ️ A page can be added to multiple populations.') }}</small>
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <input type="hidden" name="page_id" value="{{ page.id }}">
-                                        <span class="left">Population</span>
+                                        <span class="left">{{ _('Population') }}</span>
                                         <div class="select">
                                             <select name="population_id">
                                                 {% for population in populations %}
@@ -122,29 +122,29 @@
                                 </div>
                                 <div class="button-wrap">
                                     <button class="button is-solid primary-button is-fullwidth">
-                                        Update
+                                        {{ _('Update') }}
                                     </button>
                                 </div>
                             </form>
                         </div>
                     </div>
 
-                    <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Add Topic to Page</h3>
+                    <div class="dashboard-box" data-tut="add-topic-to-page">
+                        <h3 class="title is-5 is-thin">{{ _('Add Topic to Page') }}</h3>
  <p class="ys-text-small">
-                            Associate content topics with this page for better categorization.
+                            {{ _('Associate content topics with this page for better categorization.') }}
                         </p>
                         <div class="box-content">
                             <form action="/admin/add_topic_to_page" enctype="multipart/form-data" method="POST">
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <span class="left">
- <small class="ys-text-gray">ℹ️ Multiple topics can be associated with the same page.</small>
+ <small class="ys-text-gray">{{ _('ℹ️ Multiple topics can be associated with the same page.') }}</small>
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <input type="hidden" name="page_id" value="{{ page.id }}">
-                                        <span class="left">Topic</span>
+                                        <span class="left">{{ _('Topic') }}</span>
                                         <div class="select">
                                             <select name="topic_id">
                                                 {% for topic in topics %}
@@ -156,7 +156,7 @@
                                 </div>
                                 <div class="button-wrap">
                                     <button class="button is-solid primary-button is-fullwidth">
-                                        Update
+                                        {{ _('Update') }}
                                     </button>
                                 </div>
                             </form>
@@ -169,20 +169,20 @@
                 <!--Dashboard column-->
                 <div class="column is-6">
                     <!--Box-->
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" data-tut="recent-news">
 
                         <div class="box-content">
  <div class="box-lines ys-flex-center">
- <img src="{{ page.logo }}" alt="Logo" class="ys-w-50-auto">
+ <img src="{{ page.logo }}" alt="{{ _('Logo') }}" class="ys-w-50-auto">
                             </div>
 
                         </div>
                     </div>
 
                     <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Recent News</h3>
+                        <h3 class="title is-5 is-thin">{{ _('Recent News') }}</h3>
  <p class="ys-text-small">
-                            Latest articles from this page's RSS feed.
+                            {{ _("Latest articles from this page's RSS feed.") }}
                         </p>
 
                         <div class="box-content">

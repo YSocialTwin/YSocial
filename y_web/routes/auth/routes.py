@@ -6,15 +6,24 @@ researchers, and experiment participants. Manages session creation
 and validation for the YSocial platform.
 """
 
-from flask import flash, redirect, render_template, request, url_for
+from flask import flash, redirect, render_template, request, session, url_for
 from flask_login import login_required, login_user, logout_user
 from sqlalchemy import select
 from werkzeug.security import check_password_hash
 
 from y_web import db
+from y_web.i18n import gettext as _
 from y_web.routes.auth._blueprint import auth
 from y_web.src.experiment.helpers import ensure_experiment_user
+from y_web.src.external_runtime.plugin_hooks import (
+    call_first_non_null,
+    is_local_redirect,
+)
 from y_web.src.models import Admin_users, Exps, User_Experiment, User_mgmt
+
+# Roles that log in as experiment participants. "student" is an alias of
+# "user": it follows exactly the same flow (experiment selection, feed).
+PARTICIPANT_ROLES = ("user", "student")
 
 
 @auth.route("/login")
@@ -35,6 +44,7 @@ def login_post():
 
     Validates credentials and redirects based on role:
     - admin/researcher: admin dashboard
+    - teacher: the Training modules page
     - user: experiment selection page (if multiple) or direct to feed
 
     Returns:
@@ -52,7 +62,7 @@ def login_post():
     # check if the user actually exists
     # take the user-supplied password, hash it, and compare it to the hashed password in the database
     if not user or not check_password_hash(user.password, password):
-        flash("Please check your login details and try again.")
+        flash(_("Please check your login details and try again."))
         return redirect(url_for("auth.login"))
 
         # Log service start event
@@ -64,8 +74,20 @@ def login_post():
     except Exception as e:
         print(f"Failed to log start event: {e}")
 
+    # Never carry a platform account id over from an earlier login in this browser
+    session.pop("platform_account_id", None)
+
     # Handle different roles
-    if user.role == "user":
+    if user.role in PARTICIPANT_ROLES:
+        # Platform account id of the participant, available to plugins (the
+        # session may later hold an experiment-specific id instead).
+        session["platform_account_id"] = user.id
+        # Optional plugin hook: may redirect the participant (e.g. to a
+        # training area) before the experiment selection.
+        hook_url = call_first_non_null("post_login", user)
+        if is_local_redirect(hook_url):
+            return redirect(hook_url)
+
         # Regular users: need to select experiment
         # Do NOT log them in yet - just show experiment selection
         # Get experiments this user is assigned to
@@ -75,7 +97,9 @@ def login_post():
 
         if not user_experiments:
             flash(
-                "You are not assigned to any experiments. Please contact an administrator."
+                _(
+                    "You are not assigned to any experiments. Please contact an administrator."
+                )
             )
             return redirect(url_for("auth.login"))
 
@@ -86,13 +110,13 @@ def login_post():
         ).all()
 
         if not active_exps:
-            flash("No active experiments available. Please contact an administrator.")
+            flash(
+                _("No active experiments available. Please contact an administrator.")
+            )
             return redirect(url_for("auth.login"))
 
         # Store credentials in session for experiment selection
         import secrets
-
-        from flask import session
 
         auth_token = secrets.token_urlsafe(32)
         session["exp_select_token"] = auth_token
@@ -120,9 +144,92 @@ def login_post():
         login_user(user, remember=remember)
         return redirect(url_for("admin.dashboard"))
 
+    elif user.role == "teacher":
+        # A teacher works in the Training area only (see y_web.src.system.role_gate)
+        try:
+            home = url_for("training_modules.modules_page")
+        except Exception:
+            flash(
+                _(
+                    "The training area is not available. Please contact an administrator."
+                )
+            )
+            return redirect(url_for("auth.login"))
+        login_user(user, remember=remember)
+        return redirect(home)
+
     else:
-        flash("Invalid user role. Please contact an administrator.")
+        flash(_("Invalid user role. Please contact an administrator."))
         return redirect(url_for("auth.login"))
+
+
+def _signup_closed():
+    flash(_("Registration is not available at the moment."))
+    return redirect(url_for("auth.login"))
+
+
+@auth.route("/signup", methods=["GET"])
+def signup():
+    """Self-registration page (only while the administrator has switched it on)."""
+    from y_web.src import signup as signup_logic
+
+    if not signup_logic.is_open():
+        return _signup_closed()
+    import secrets
+
+    token = session["signup_token"] = secrets.token_urlsafe(24)
+    return render_template(
+        "login/register.html", offers=signup_logic.offers(), signup_token=token, form={}
+    )
+
+
+@auth.route("/signup", methods=["POST"])
+def signup_post():
+    """Create a participant account and join the chosen experiments / training modules."""
+    import hmac
+
+    from y_web.src import signup as signup_logic
+
+    if not signup_logic.is_open():
+        return _signup_closed()
+    expected = session.get("signup_token") or ""
+    supplied = request.form.get("signup_token") or ""
+    if not expected or not hmac.compare_digest(expected, supplied):
+        flash(_("Invalid or expired session. Please try again."))
+        return redirect(url_for("auth.signup"))
+
+    form = {
+        "username": request.form.get("name", ""),
+        "email": request.form.get("email", ""),
+        "picks": request.form.getlist("pick"),
+    }
+    try:
+        result = signup_logic.create_account(
+            form["username"],
+            form["email"],
+            request.form.get("password", ""),
+            form["picks"],
+        )
+    except signup_logic.SignupError as exc:
+        return render_template(
+            "login/register.html",
+            offers=signup_logic.offers(),
+            signup_token=expected,
+            form=form,
+            error=str(exc),
+        )
+
+    session.pop("signup_token", None)
+    if result["failed"]:
+        flash(
+            _(
+                "Your account has been created, but you could not be added to: %(names)s. Please contact an administrator.",
+                names=", ".join(result["failed"]),
+            )
+        )
+    else:
+        flash(_("Your account has been created. You can now sign in."))
+    return redirect(url_for("auth.login"))
 
 
 @auth.route("/select_experiment", methods=["POST"])
@@ -133,18 +240,16 @@ def select_experiment():
     Returns:
         Redirect to the selected experiment's feed
     """
-    from flask import session
-
     exp_id = request.form.get("experiment_id")
     auth_token = request.form.get("auth_token")
 
     if not exp_id or not auth_token:
-        flash("Invalid request.")
+        flash(_("Invalid request."))
         return redirect(url_for("auth.login"))
 
     # Verify session token
     if "exp_select_token" not in session or session["exp_select_token"] != auth_token:
-        flash("Invalid or expired session. Please log in again.")
+        flash(_("Invalid or expired session. Please log in again."))
         return redirect(url_for("auth.login"))
 
     user_id = session.get("exp_select_user_id")
@@ -158,7 +263,7 @@ def select_experiment():
     # Get user
     user = db.session.scalars(select(Admin_users).filter_by(id=user_id)).first()
     if not user:
-        flash("User not found.")
+        flash(_("User not found."))
         return redirect(url_for("auth.login"))
 
     username = str(getattr(user, "username", "") or "")
@@ -170,7 +275,7 @@ def select_experiment():
         select(User_Experiment).filter_by(user_id=user.id, exp_id=int(exp_id))
     ).first()
     if not user_exp:
-        flash("You do not have access to this experiment.")
+        flash(_("You do not have access to this experiment."))
         return redirect(url_for("auth.login"))
 
     # Get experiment
@@ -178,7 +283,7 @@ def select_experiment():
         select(Exps).filter_by(idexp=int(exp_id), status=1)
     ).first()
     if not exp:
-        flash("Experiment not found or not active.")
+        flash(_("Experiment not found or not active."))
         return redirect(url_for("auth.login"))
 
     try:
@@ -189,18 +294,20 @@ def select_experiment():
             email=email,
             password=password,
             joined_on=0,
+            account_id=user.id,
         )
         if not user_agent:
-            flash("User not found in experiment database.")
+            flash(_("User not found in experiment database."))
             return redirect(url_for("auth.login"))
 
         login_user(user_agent, remember=remember)
+        session["platform_account_id"] = user.id
 
         # Redirect to onboarding — it will skip to feed if already completed
         return redirect(f"/{exp.idexp}/onboarding/{user_agent.id}")
 
     except Exception as e:
-        flash(f"Error accessing experiment: {str(e)}")
+        flash(_("Error accessing experiment: %(error)s", error=str(e)))
         return redirect(url_for("auth.login"))
 
 
@@ -225,5 +332,6 @@ def logout():
         print(f"Failed to log start event: {e}")
 
     logout_user()
+    session.pop("platform_account_id", None)
 
     return render_template("login/login.html")

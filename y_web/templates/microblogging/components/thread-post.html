@@ -22,16 +22,16 @@
                 <div class="media-content">
                     <div class="post-comment-heading">
                         <div>
-                            <a href="/{{exp_id}}/profile/{{ thread['author_id'] }}/recent/1">{{ thread["author"] }}</a>
-                            {% if ui.show_post_time %}<span class="time">Day {{ thread["day"] }} - {{thread["hour"]}}:00</span>{% endif %}
+                            <a href="/{{exp_id}}/profile/{{ thread['author_id'] }}/recent/1">{{ thread["author"]|display_name }}</a>
+                            {% if ui.show_post_time %}<span class="time">{{ _('Day %(day)s - %(hour)s:00', day=thread["day"], hour=thread["hour"]) }}</span>{% endif %}
                         </div>
                         {% if (thread.get('author_type_badge') and ui.annotation_author_type) or (thread.get('adhoc_agent_badge') and ui.annotation_agent_type) %}
                         <div class="post-author-badges">
                             {% if thread.get('author_type_badge') and ui.annotation_author_type %}
-                            <span class="post-author-badge {% if thread['author_type_badge'] == 'AI Agent' %}is-ai{% else %}is-human{% endif %}">{{ thread['author_type_badge'] }}</span>
+                            <span class="post-author-badge {% if thread['author_type_badge'] == 'AI Agent' %}is-ai{% else %}is-human{% endif %}">{{ _(thread['author_type_badge']) }}</span>
                             {% endif %}
                             {% if thread.get('adhoc_agent_badge') and ui.annotation_agent_type %}
-                            <span class="post-author-badge is-adhoc">{{ thread['adhoc_agent_badge'] }}</span>
+                            <span class="post-author-badge is-adhoc">{{ _(thread['adhoc_agent_badge']) }}</span>
                             {% endif %}
                         </div>
                         {% endif %}
@@ -49,7 +49,7 @@
 {% if ui.annotation_emotions %}
  <div class="post-meta-group in-thread">
                             {% if len(thread['emotions']) > 0 %}
- <span class="post-meta-label">Emotions</span>
+ <span class="post-meta-label">{{ _('Emotions') }}</span>
                             {% for em in thread['emotions'][:3] %}
  <a class="post-meta-chip emotion-chip" title="{{ em[0] }}" href="/{{exp_id}}/emotion/{{ em[2] }}/1">
  <i class="mdi {{ em[1] }}"></i>
@@ -65,7 +65,7 @@
  </a>
                                 {% endfor %}
  </span>
- <button type="button" class="meta-chip-toggle" data-target="thread-root-emotions-extra-{{ thread['post_id'] }}" data-label-more="+{{ len(thread['emotions']) - 3 }} more" data-label-less="Show less" aria-expanded="false">+{{ len(thread['emotions']) - 3 }} more</button>
+ <button type="button" class="meta-chip-toggle" data-target="thread-root-emotions-extra-{{ thread['post_id'] }}" data-label-more="{{ _('+%(n)s more', n=(len(thread['emotions']) - 3)) }}" data-label-less="{{ _('Show less') }}" aria-expanded="false">{{ _('+%(n)s more', n=(len(thread['emotions']) - 3)) }}</button>
                             {% endif %}
                             {% endif %}
                         </div>
@@ -73,7 +73,7 @@
 {% if ui.annotation_topics %}
  <div class="post-meta-group in-thread">
                             {% if len(thread['topics']) > 0 %}
- <span class="post-meta-label">Topics</span>
+ <span class="post-meta-label">{{ _('Topics') }}</span>
                             {% for tp in thread['topics'][:3] %}
                                 {% if tp[2] == 'positive' %}
  <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="post-meta-chip topic-chip is-positive">{{ tp[1] }}</a>
@@ -95,7 +95,7 @@
                                     {% endif %}
                                 {% endfor %}
  </span>
- <button type="button" class="meta-chip-toggle" data-target="thread-root-topics-extra-{{ thread['post_id'] }}" data-label-more="+{{ len(thread['topics']) - 3 }} more" data-label-less="Show less" aria-expanded="false">+{{ len(thread['topics']) - 3 }} more</button>
+ <button type="button" class="meta-chip-toggle" data-target="thread-root-topics-extra-{{ thread['post_id'] }}" data-label-more="{{ _('+%(n)s more', n=(len(thread['topics']) - 3)) }}" data-label-less="{{ _('Show less') }}" aria-expanded="false">{{ _('+%(n)s more', n=(len(thread['topics']) - 3)) }}</button>
                             {% endif %}
                             {% endif %}
                         </div>
@@ -124,8 +124,8 @@
                 <a
                     href="/{{exp_id}}/report_content?post_id={{ thread['post_id'] }}&type=offensive"
                     class="report-count report-fab"
-                    title="Report this post"
-                    aria-label="Report this post"
+                    title="{{ _('Report this post') }}"
+                    aria-label="{{ _('Report this post') }}"
                 >
                     <i data-feather="flag"></i>
                     <span>{{ thread.get("report_count", 0) }}</span>
@@ -136,14 +136,14 @@
                     </div>
             {% if len(thread['children'])>0 %}
  <div class="post-thread-tools">
-                <button type="button" class="child_sub thread-toggle-button" val="{{ thread['post_id'] }}">Less</button>
+                <button type="button" class="child_sub thread-toggle-button" val="{{ thread['post_id'] }}">{{ _('Less') }}</button>
             {% else %}
  <div class="post-thread-tools post-thread-tools--reply-only">
             {% endif %}
                 {% if ui.interaction_comment %}
                 <button type="button" class="reply-toggle-button" id='{{ thread["post_id"] }}' onClick="return editLink(this.id)">
  <i data-feather="corner-down-left" class="ys-icon-xs"></i>
- <span>Reply</span>
+ <span>{{ _('Reply') }}</span>
  </button>
             </div>
             <p id="message-{{ thread['post_id'] }}"></p>
@@ -155,7 +155,7 @@
                     class="button is-solid accent-button is-fullwidth add-comment-button ys-btn-rounded"
                     val="{{ thread['post_id'] }}"
             >
-            Comment
+            {{ _('Comment') }}
             </button>
             </form>
                     {% endif %}
@@ -178,8 +178,8 @@
                             <div class="media">
                                 <i data-feather="trash-2"></i>
                                 <div class="media-content">
-                                    <h3 val="{{ thread['post_id'] }}">Delete</h3>
-                                    <small>Remove this post</small>
+                                    <h3 val="{{ thread['post_id'] }}">{{ _('Delete') }}</h3>
+                                    <small>{{ _('Remove this post') }}</small>
                                 </div>
                             </div>
                         </a>

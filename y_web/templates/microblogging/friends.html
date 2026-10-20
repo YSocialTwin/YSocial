@@ -7,7 +7,7 @@
                 <div class="ys-friends-hero-main">
                     <a class="ys-friends-back-link" href="/{{exp_id}}/profile/{{ user_id }}/recent/1">
                         <i class="mdi mdi-arrow-left"></i>
-                        <span>Back to profile</span>
+                        <span>{{ _('Back to profile') }}</span>
                     </a>
                     <div class="ys-friends-hero-identity">
                         <div class="ys-friends-hero-avatar">
@@ -22,20 +22,20 @@
                             />
                         </div>
                         <div class="ys-friends-hero-copy">
-                            <span class="ys-friends-hero-kicker">Connections</span>
-                            <h1>{{ viewed_username }}</h1>
-                            <p>Explore the active social graph around this profile.</p>
+                            <span class="ys-friends-hero-kicker">{{ _('Connections') }}</span>
+                            <h1>{{ viewed_username|display_name }}</h1>
+                            <p>{{ _('Explore the active social graph around this profile.') }}</p>
                         </div>
                     </div>
                 </div>
                 <div class="ys-friends-stats-row">
                     <div class="ys-friends-stat-card is-followers">
                         <span class="ys-friends-stat-card__value">{{ number_followers }}</span>
-                        <span class="ys-friends-stat-card__label">People Following Me</span>
+                        <span class="ys-friends-stat-card__label">{{ _('People Following Me') }}</span>
                     </div>
                     <div class="ys-friends-stat-card is-followees">
                         <span class="ys-friends-stat-card__value">{{ number_followees }}</span>
-                        <span class="ys-friends-stat-card__label">People I Follow</span>
+                        <span class="ys-friends-stat-card__label">{{ _('People I Follow') }}</span>
                     </div>
                 </div>
             </section>

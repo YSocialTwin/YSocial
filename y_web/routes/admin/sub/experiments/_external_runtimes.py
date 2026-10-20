@@ -4,22 +4,28 @@ from __future__ import annotations
 
 import re
 import sys
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 
 from flask import flash, jsonify, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_required
 from sqlalchemy import select
 
 from y_web import db
+from y_web.i18n import N_
+from y_web.i18n import gettext as _
 from y_web.src.external_runtime import (
     ExternalRuntimeError,
     clone_runtime_repo,
     delete_runtime_repo,
     download_runtime_release,
-    external_runtime_bootstrap_report,
     fetch_runtime_repo,
     get_grouped_runtime_status,
+    get_runtime_status,
     host_git_available,
+    install_runtime_branch_archive,
     install_runtime_dependencies,
+    is_archive_install,
     load_plugins_index,
     log_external_runtime_action,
     plugin_metadata_for_runtime,
@@ -31,6 +37,7 @@ from y_web.src.external_runtime import (
     validate_runtime_repo,
 )
 from y_web.src.external_runtime.frontend_plugins import validate_frontend_suite
+from y_web.src.external_runtime.manager import clear_remote_cache
 from y_web.src.models import Admin_users, Exps
 from y_web.src.system.miscellanea import check_privileges
 
@@ -45,7 +52,34 @@ _MUTATING_ACTIONS = {
     "install",
     "validate",
     "delete",
+    "enable",
+    "disable",
+    "sync",
 }
+
+# Plugins shown as ONE entry in the plugin list: a server and a client, each installed/updated/removed independently
+# from the entry's page. Acting on the entry key itself (the list's Remove) applies to both (server first).
+_PAIRED_ENTRIES = {
+    "microblogging": {
+        "label": N_("Microblogging"),
+        "members": ("microblogging_server", "microblogging_client"),
+        "description": N_(
+            "Microblogging simulator (timeline, posts, follows). Server and client are installed and updated independently from its page."
+        ),
+    },
+    "forum": {
+        "label": N_("Forum"),
+        "members": ("forum_server", "forum_client"),
+        "description": N_(
+            "Forum simulator (threads and replies). Server and client are installed and updated independently from its page."
+        ),
+    },
+}
+_PAIR_OF_MEMBER = {m: k for k, v in _PAIRED_ENTRIES.items() for m in v["members"]}
+# actions that fetch or run a community plugin's code (need ``confirm_community=1``)
+_COMMUNITY_CONFIRM_ACTIONS = frozenset(
+    {"acquire", "download_release", "clone", "update", "install", "sync"}
+)
 _GITHUB_TOKEN_SESSION_KEY = "external_runtime_github_token"
 
 
@@ -55,7 +89,9 @@ def _require_admin_user():
         select(Admin_users).filter_by(username=current_user.username)
     ).first()
     if admin_user is None or admin_user.role != "admin":
-        flash("Only administrators can manage external runtime repositories.", "error")
+        flash(
+            _("Only administrators can manage external runtime repositories."), "error"
+        )
         return None
     return admin_user
 
@@ -84,6 +120,50 @@ def _runtime_group_active_experiments(group_key: str) -> list[Exps]:
     return query.filter((Exps.running == 1) | (Exps.exp_status == "active")).all()
 
 
+def _run_suite_schema_migration(repo_key: str) -> None:
+    """After an installation, create the plugin's own tables (best effort)."""
+    from flask import current_app
+
+    from y_web.src.external_runtime.backend_plugins import (
+        run_backend_plugin_schema_migrations,
+    )
+
+    outcome = run_backend_plugin_schema_migrations(current_app, [repo_key]).get(
+        repo_key
+    )
+    if outcome and outcome.get("error"):
+        flash(_("Schema migration failed: %(error)s", error=outcome["error"]), "error")
+
+
+def _toggle_plugin(repo_key: str, spec, admin_user, enabled: bool):
+    """Enable/disable an installed backend-settings suite (E6)."""
+    from y_web.src.external_runtime.backend_plugins import (
+        set_plugin_enabled,
+        suite_restart_required,
+    )
+
+    if spec.group != "backend_settings" or not spec.path.exists():
+        flash(_("Only installed backend plugins can be enabled or disabled."), "error")
+        return _external_runtimes_response(
+            repo_key=repo_key, status="error", message="Not supported."
+        )
+    set_plugin_enabled(repo_key, enabled, admin_user.username)
+    if enabled and suite_restart_required(repo_key):
+        flash(
+            _(
+                "%(label)s enabled. Restart required: its routes are loaded at startup.",
+                label=spec.label,
+            ),
+            "warning",
+        )
+    else:
+        flash(f"{spec.label} {'enabled' if enabled else 'disabled'}.", "success")
+    return _external_runtimes_response(
+        repo_key=repo_key,
+        message=f"{spec.label} {'enabled' if enabled else 'disabled'}.",
+    )
+
+
 def _session_github_token() -> str | None:
     token = (session.get(_GITHUB_TOKEN_SESSION_KEY) or "").strip()
     return token or None
@@ -104,7 +184,7 @@ def _external_runtimes_response(
 ):
     refresh_url = "/admin/external_runtimes"
     if repo_key and preserve_repo_key:
-        refresh_url = f"{refresh_url}?repo_key={repo_key}"
+        refresh_url = f"{refresh_url}/{_PAIR_OF_MEMBER.get(repo_key, repo_key)}"
     if _wants_json_response():
         payload = {
             "status": status,
@@ -121,12 +201,64 @@ def _slugify(value: str) -> str:
     return slug or "group"
 
 
+def _decorate_repo(repo: dict, spec, plugins_index) -> dict:
+    repo = dict(repo)
+    plugin_metadata = plugin_metadata_for_runtime(spec, plugins_index)
+    if plugin_metadata:
+        repo["label"] = plugin_metadata.get("plugin_name") or repo["label"]
+        repo["plugin_metadata"] = plugin_metadata
+        repo["plugin_name"] = plugin_metadata.get("plugin_name") or repo["label"]
+        repo["plugin_category_label"] = (
+            plugin_metadata.get("category") or repo["category_label"]
+        )
+        repo["plugin_group_label"] = plugin_metadata.get("group") or repo["group_label"]
+        repo["plugin_description"] = (
+            plugin_metadata.get("description") or repo.get("description") or ""
+        )
+        repo["plugin_authors"] = plugin_metadata.get("authors") or []
+        repo["plugin_repository_url"] = (
+            plugin_metadata.get("repository_url") or repo["repo_url"]
+        )
+    else:
+        repo["plugin_name"] = repo["label"]
+        repo["plugin_category_label"] = repo["category_label"]
+        repo["plugin_group_label"] = repo["group_label"]
+        repo["plugin_description"] = repo.get("description") or ""
+        repo["plugin_authors"] = list(getattr(spec, "authors", ()) or ())
+        repo["plugin_repository_url"] = repo["repo_url"]
+    if repo.get("group") == "frontend_plugins" and repo.get("installed"):
+        try:
+            report = validate_frontend_suite(repo["key"])
+            if report and report.get("modules"):
+                from y_web.src.external_runtime.plugin_i18n import localize_manifest
+
+                report = {
+                    **report,
+                    "modules": localize_manifest(repo["key"], report["modules"]),
+                }
+            repo["frontend_modules_report"] = report
+        except Exception:
+            repo["frontend_modules_report"] = None
+    if repo.get("group") == "backend_settings":
+        from y_web.src.external_runtime.backend_plugins import (
+            plugin_enabled,
+            suite_restart_required,
+        )
+
+        repo["plugin_togglable"] = bool(repo.get("installed"))
+        repo["plugin_enabled"] = plugin_enabled(repo["key"])
+        repo["restart_required"] = suite_restart_required(repo["key"])
+    return repo
+
+
 def _visible_runtime_groups(
     admin_user, github_token: str | None, *, include_remote_metadata: bool
 ):
     plugins_index = load_plugins_index(refresh=True)
     all_groups = get_grouped_runtime_status(
-        github_token=github_token, include_remote_metadata=include_remote_metadata
+        github_token=github_token,
+        include_remote_metadata=include_remote_metadata,
+        check_release_update=True,
     )
     visible_groups = []
     for group_info in all_groups:
@@ -134,42 +266,7 @@ def _visible_runtime_groups(
         for repo in group_info["repos"]:
             spec = runtime_spec(repo["key"])
             if runtime_visible_to_user(spec, admin_user):
-                repo = dict(repo)
-                plugin_metadata = plugin_metadata_for_runtime(spec, plugins_index)
-                if plugin_metadata:
-                    repo["label"] = plugin_metadata.get("plugin_name") or repo["label"]
-                    repo["plugin_metadata"] = plugin_metadata
-                    repo["plugin_name"] = (
-                        plugin_metadata.get("plugin_name") or repo["label"]
-                    )
-                    repo["plugin_category_label"] = (
-                        plugin_metadata.get("category") or repo["category_label"]
-                    )
-                    repo["plugin_group_label"] = (
-                        plugin_metadata.get("group") or repo["group_label"]
-                    )
-                    repo["plugin_description"] = (
-                        plugin_metadata.get("description") or ""
-                    )
-                    repo["plugin_authors"] = plugin_metadata.get("authors") or []
-                    repo["plugin_repository_url"] = (
-                        plugin_metadata.get("repository_url") or repo["repo_url"]
-                    )
-                else:
-                    repo["plugin_name"] = repo["label"]
-                    repo["plugin_category_label"] = repo["category_label"]
-                    repo["plugin_group_label"] = repo["group_label"]
-                    repo["plugin_description"] = ""
-                    repo["plugin_authors"] = []
-                    repo["plugin_repository_url"] = repo["repo_url"]
-                if repo.get("group") == "frontend_plugins" and repo.get("installed"):
-                    try:
-                        repo["frontend_modules_report"] = validate_frontend_suite(
-                            repo["key"]
-                        )
-                    except Exception:
-                        repo["frontend_modules_report"] = None
-                repos.append(repo)
+                repos.append(_decorate_repo(repo, spec, plugins_index))
         if repos:
             visible_groups.append(
                 {
@@ -181,64 +278,80 @@ def _visible_runtime_groups(
     return visible_groups
 
 
-def _runtime_categories(grouped_status, active_group_usage):
-    all_repos = [repo for group_info in grouped_status for repo in group_info["repos"]]
-    categories = []
-    plugin_category_map: dict[str, dict] = {}
-    for repo in all_repos:
-        category_label = repo.get("plugin_category_label") or "Agent Extensions"
-        group_label = repo.get("plugin_group_label") or "Agent Plugins"
-        category_key = _slugify(str(category_label))
-        group_key = _slugify(str(group_label))
+def _make_entry(key: str, repos: list[dict]) -> dict:
+    """One row of the plugin list: a single repository, or a server+client pair."""
+    paired = _PAIRED_ENTRIES.get(key)
+    installed = [bool(r.get("installed")) for r in repos]
+    if all(installed):
+        state, state_label = "installed", "Installed"
+    elif any(installed):
+        state, state_label = "partial", "Partially installed"
+    else:
+        state, state_label = "missing", "Not installed"
+    first = repos[0]
+    togglable = [r for r in repos if r.get("plugin_togglable")]
+    from y_web.src.external_runtime.plugin_i18n import localize_text
 
-        category_entry = plugin_category_map.setdefault(
-            category_key,
+    # the paired texts are declared with N_() above; translate them when shown
+    paired_label = paired["label"] if paired else ""
+    paired_description = paired["description"] if paired else ""
+    description = (
+        _(paired_description) if paired else (first.get("plugin_description") or "")
+    )
+    if not paired:
+        description = localize_text(first["key"], description)
+    category_text = first.get("plugin_category_label") or first.get("category_label")
+    return {
+        "key": key,
+        "label": (
+            _(paired_label) if paired else localize_text(first["key"], first["label"])
+        ),
+        "description": description,
+        "category": _(category_text) if category_text else "",
+        "paired": bool(paired),
+        "members": repos,
+        "state": state,
+        "state_label": state_label,
+        "any_exists": any(r.get("exists") for r in repos),
+        "enabled": bool(togglable) and all(r.get("plugin_enabled") for r in togglable),
+        "togglable": bool(togglable),
+        "restart_required": any(r.get("restart_required") for r in repos),
+        "trust": first.get("trust") or "official",
+        "community": all((r.get("trust") or "official") == "community" for r in repos),
+        "repo_url": (first.get("repo_url") or "").removesuffix(".git"),
+        "versions": [
             {
-                "key": category_key,
-                "label": category_label,
-                "description": f"Repositories classified under {category_label}.",
-                "groups": {},
-            },
-        )
-        group_entry = category_entry["groups"].setdefault(
-            group_key,
-            {
-                "group": group_key,
-                "label": group_label,
-                "description": f"Repositories grouped as {group_label}.",
-                "repos": [],
-                "active_experiments": [],
-            },
-        )
-        group_entry["repos"].append(repo)
-        runtime_group = repo.get("group")
-        for experiment in active_group_usage.get(runtime_group, []):
-            if experiment not in group_entry["active_experiments"]:
-                group_entry["active_experiments"].append(experiment)
-
-    for category_entry in plugin_category_map.values():
-        groups = list(category_entry["groups"].values())
-        repo_count = sum(len(group_info["repos"]) for group_info in groups)
-        installed_count = sum(
-            1
-            for group_info in groups
-            for repo in group_info["repos"]
-            if repo.get("installed")
-        )
-        categories.append(
-            {
-                "key": category_entry["key"],
-                "label": category_entry["label"],
-                "description": category_entry["description"],
-                "groups": groups,
-                "repo_count": repo_count,
-                "installed_count": installed_count,
-                "active_experiment_count": sum(
-                    len(group_info["active_experiments"]) for group_info in groups
-                ),
+                "label": r.get("label") if paired else "",
+                "installed": r.get("installed_release_tag"),
+                "latest": r.get("latest_release_tag"),
+                "update": bool(r.get("release_update_available")),
             }
-        )
-    return categories
+            for r in repos
+            if r.get("release_managed") and r.get("installed_release_tag")
+        ],
+    }
+
+
+def _plugin_entries(grouped_status) -> list[dict]:
+    """Flatten the grouped status into list entries, merging the paired plugins into one row."""
+    by_key = {r["key"]: r for g in grouped_status for r in g["repos"]}
+    entries, seen = [], set()
+    for group_info in grouped_status:
+        for repo in group_info["repos"]:
+            pair_key = _PAIR_OF_MEMBER.get(repo["key"])
+            if pair_key:
+                if pair_key in seen:
+                    continue
+                seen.add(pair_key)
+                members = [
+                    by_key[m]
+                    for m in _PAIRED_ENTRIES[pair_key]["members"]
+                    if m in by_key
+                ]
+                entries.append(_make_entry(pair_key, members))
+            else:
+                entries.append(_make_entry(repo["key"], [repo]))
+    return entries
 
 
 @experiments.route("/admin/external_runtimes")
@@ -248,35 +361,86 @@ def external_runtimes():
     if admin_user is None:
         return _external_runtimes_response(status="error", message="Unauthorized")
 
-    github_token = _session_github_token()
-    include_remote_metadata = (
-        request.args.get("refresh_remote") or ""
-    ).strip().lower() == "1"
     grouped_status = _visible_runtime_groups(
-        admin_user, github_token, include_remote_metadata=include_remote_metadata
-    )
-    active_group_usage = {
-        group_info["group"]: _runtime_group_active_experiments(group_info["group"])
-        for group_info in grouped_status
-    }
-    runtime_categories = _runtime_categories(grouped_status, active_group_usage)
-    recent_logs = read_external_runtime_logs(limit=120)
-    selected_repo_key = (request.args.get("repo_key") or "").strip()
-    selected_repo_logs = read_external_runtime_logs(
-        limit=30, repo_key=selected_repo_key or None
+        admin_user, _session_github_token(), include_remote_metadata=False
     )
     return render_template(
         "admin/external_runtimes.html",
-        grouped_runtime_status=grouped_status,
-        runtime_categories=runtime_categories,
-        active_group_usage=active_group_usage,
-        current_python_executable=resolve_python_executable(),
-        recent_runtime_logs=recent_logs,
-        selected_repo_key=selected_repo_key,
-        selected_repo_logs=selected_repo_logs,
+        plugin_entries=_plugin_entries(grouped_status),
+    )
+
+
+@experiments.route("/admin/external_runtimes/<entry_key>")
+@login_required
+def external_runtime_detail(entry_key: str):
+    """Dedicated page to install, update or remove one plugin (or one server+client pair)."""
+    admin_user = _require_admin_user()
+    if admin_user is None:
+        return redirect(url_for("experiments.settings"))
+
+    member_keys = (
+        _PAIRED_ENTRIES[entry_key]["members"]
+        if entry_key in _PAIRED_ENTRIES
+        else (entry_key,)
+    )
+    github_token = _session_github_token()
+    plugins_index = load_plugins_index(refresh=True)
+    repos = []
+    specs = {}
+    for key in member_keys:
+        try:
+            spec = runtime_spec(key)
+        except KeyError:
+            flash(_("Unknown external runtime repository."), "error")
+            return redirect(url_for("experiments.external_runtimes"))
+        if not runtime_visible_to_user(spec, admin_user):
+            flash(_("You do not have visibility on this plugin repository."), "error")
+            return redirect(url_for("experiments.external_runtimes"))
+        specs[key] = spec
+    # server and client of a pair are independent: query GitHub for both at once
+    with ThreadPoolExecutor(max_workers=max(1, len(specs))) as pool:
+        futures = {
+            key: pool.submit(
+                get_runtime_status,
+                key,
+                github_token=github_token,
+                include_remote_metadata=True,
+            )
+            for key in specs
+        }
+        for key, future in futures.items():
+            repos.append(
+                _decorate_repo(future.result().to_dict(), specs[key], plugins_index)
+            )
+
+    entry = _make_entry(entry_key, repos)
+    branch_sets = [set(r.get("available_branches") or []) for r in repos]
+    common_branches = sorted(set.intersection(*branch_sets)) if branch_sets else []
+    default_branch = repos[0].get("current_branch") or repos[0].get("default_branch")
+    if repos[0].get("available_releases") and not entry["paired"]:
+        releases = repos[0]["available_releases"]
+    else:
+        releases = []
+    logs = []
+    for key in member_keys:
+        logs.extend(read_external_runtime_logs(limit=30, repo_key=key))
+    logs.sort(key=lambda e: str(e.get("timestamp") or ""), reverse=True)
+    active = _runtime_group_active_experiments(repos[0]["group"])
+    return render_template(
+        "admin/external_runtime_detail.html",
+        entry=entry,
+        common_branches=common_branches,
+        default_branch=default_branch,
+        releases=releases,
+        latest_release_tag=repos[0].get("latest_release_tag"),
+        releases_enabled=all(r.get("releases_enabled") for r in repos),
+        release_error=next(
+            (r.get("release_error") for r in repos if r.get("release_error")), None
+        ),
+        runtime_logs=logs[:40],
+        active_experiments=active,
         github_session_authenticated=bool(github_token),
-        external_runtime_bootstrap=external_runtime_bootstrap_report(),
-        remote_metadata_loaded=include_remote_metadata,
+        current_python_executable=resolve_python_executable(),
         host_git_available=host_git_available(),
     )
 
@@ -292,22 +456,55 @@ def external_runtime_github_session():
     if action == "connect":
         token = (request.form.get("github_token") or "").strip()
         if not token:
-            flash("Provide a GitHub token before connecting.", "error")
+            flash(_("Provide a GitHub token before connecting."), "error")
         else:
             session[_GITHUB_TOKEN_SESSION_KEY] = token
-            flash("GitHub session enabled for plugin release access.", "success")
+            flash(_("GitHub session enabled for plugin release access."), "success")
     elif action == "disconnect":
         session.pop(_GITHUB_TOKEN_SESSION_KEY, None)
-        flash("GitHub session cleared.", "success")
+        flash(_("GitHub session cleared."), "success")
     else:
-        flash("Unsupported GitHub session action.", "error")
+        flash(_("Unsupported GitHub session action."), "error")
 
+    target = (request.form.get("next") or "").strip()
+    if target.startswith("/admin/external_runtimes") and not target.startswith("//"):
+        return redirect(target)
     return _external_runtimes_response(message="GitHub session updated.")
 
 
 @experiments.route("/admin/external_runtimes/<repo_key>/<action>", methods=["POST"])
 @login_required
 def external_runtime_action(repo_key: str, action: str):
+    """Run an action on one repository, or on every member of a paired entry (server first)."""
+    pair = _PAIRED_ENTRIES.get(repo_key)
+    if not pair:
+        return _external_runtime_action_single(repo_key, action)
+    if action in {"enable", "disable"}:
+        return _external_runtime_action_single(pair["members"][0], action)
+    # removing goes client first, everything else server first
+    members = pair["members"][::-1] if action == "delete" else pair["members"]
+    response = None
+    for member in members:
+        before = _flashed_errors()
+        response = _external_runtime_action_single(member, action)
+        if _flashed_errors() > before:
+            break  # do not install a client next to a server that failed
+    return response
+
+
+def _flashed_errors() -> int:
+    return sum(1 for category, _ in session.get("_flashes", []) if category == "error")
+
+
+def _is_archive_runtime(spec) -> bool:
+    """True when ``spec`` is installed from a branch archive (never raises)."""
+    try:
+        return is_archive_install(Path(spec.path))
+    except Exception:
+        return False
+
+
+def _external_runtime_action_single(repo_key: str, action: str):
     admin_user = _require_admin_user()
     if admin_user is None:
         return _external_runtimes_response(
@@ -315,7 +512,7 @@ def external_runtime_action(repo_key: str, action: str):
         )
 
     if action not in _MUTATING_ACTIONS:
-        flash("Unsupported runtime action.", "error")
+        flash(_("Unsupported runtime action."), "error")
         return _external_runtimes_response(
             repo_key=repo_key, status="error", message="Unsupported runtime action."
         )
@@ -323,7 +520,7 @@ def external_runtime_action(repo_key: str, action: str):
     try:
         spec = runtime_spec(repo_key)
     except KeyError:
-        flash("Unknown external runtime repository.", "error")
+        flash(_("Unknown external runtime repository."), "error")
         return _external_runtimes_response(
             repo_key=repo_key,
             status="error",
@@ -331,9 +528,25 @@ def external_runtime_action(repo_key: str, action: str):
         )
 
     if not runtime_visible_to_user(spec, admin_user):
-        flash("You do not have visibility on this plugin repository.", "error")
+        flash(_("You do not have visibility on this plugin repository."), "error")
         return _external_runtimes_response(
             repo_key=repo_key, status="error", message="Not visible."
+        )
+
+    if action in {"enable", "disable"}:
+        return _toggle_plugin(repo_key, spec, admin_user, action == "enable")
+
+    if (
+        getattr(spec, "trust", "official") == "community"
+        and action in _COMMUNITY_CONFIRM_ACTIONS
+        and request.form.get("confirm_community") != "1"
+    ):
+        message = _(
+            "Plugins from the community registry need an explicit confirmation before they are installed or updated."
+        )
+        flash(message, "error")
+        return _external_runtimes_response(
+            repo_key=repo_key, status="error", message=message
         )
 
     github_token = _session_github_token()
@@ -341,6 +554,7 @@ def external_runtime_action(repo_key: str, action: str):
     release_tag = (request.form.get("release_tag") or "").strip() or None
     install_source = (request.form.get("install_source") or "release").strip().lower()
     git_available = host_git_available()
+    archive_flow = install_source == "archive" or _is_archive_runtime(spec)
     if action in {
         "acquire",
         "download_release",
@@ -348,6 +562,7 @@ def external_runtime_action(repo_key: str, action: str):
         "fetch",
         "update",
         "install",
+        "sync",
     }:
         active_experiments = _runtime_group_active_experiments(spec.group)
         if active_experiments:
@@ -358,7 +573,13 @@ def external_runtime_action(repo_key: str, action: str):
                 else f" and {len(active_experiments) - 3} more"
             )
             flash(
-                f"Stop active {spec.group_label.lower()} experiments before modifying {spec.label}: {names}{extra}.",
+                _(
+                    "Stop active %(lower)s experiments before modifying %(label)s: %(names)s%(extra)s.",
+                    lower=spec.group_label.lower(),
+                    label=spec.label,
+                    names=names,
+                    extra=extra,
+                ),
                 "error",
             )
             return _external_runtimes_response(
@@ -366,9 +587,55 @@ def external_runtime_action(repo_key: str, action: str):
                 status="error",
                 message=f"Stop active {spec.group_label.lower()} experiments before modifying {spec.label}.",
             )
-    if action in {"clone", "fetch", "update"} and not git_available:
+    sync = action == "sync"
+    if sync:
+        # "Install / Update" of the detail page: pick the concrete step for this repository.
+        wants_git = install_source == "git"
+        exists = spec.path.exists() or spec.path.is_symlink()
+        if exists and spec.path.is_symlink():
+            flash(
+                _(
+                    "%(label)s is a symlinked development checkout: update it from its own repository.",
+                    label=spec.label,
+                ),
+                "error",
+            )
+            return _external_runtimes_response(
+                repo_key=repo_key, status="error", message="Symlinked checkout."
+            )
+        is_git = exists and (spec.path / ".git").exists()
+        wants_archive = install_source == "archive"
+        if not exists:
+            action = "acquire"
+        elif is_git and wants_git:
+            action = "update"
+        elif wants_archive and _is_archive_runtime(spec):
+            action = "update"  # re-downloads the branch when its head moved
+        else:
+            action = "reinstall"
+        if (
+            wants_git or (action == "update" and not wants_archive)
+        ) and not git_available:
+            flash(
+                _(
+                    "Git is not available on this host. Use the release source for %(label)s.",
+                    label=spec.label,
+                ),
+                "error",
+            )
+            return _external_runtimes_response(
+                repo_key=repo_key, status="error", message="Git is not available."
+            )
+    if (
+        action in {"clone", "fetch", "update"}
+        and not git_available
+        and not archive_flow
+    ):
         flash(
-            f"Git is not available on this host. Use the release install flow for {spec.label}.",
+            _(
+                "Git is not available on this host. Use the release install flow for %(label)s.",
+                label=spec.label,
+            ),
             "error",
         )
         return _external_runtimes_response(
@@ -378,7 +645,10 @@ def external_runtime_action(repo_key: str, action: str):
         )
     if action == "install" and not git_available and not spec.path.exists():
         flash(
-            f"Git is not available on this host. Install {spec.label} from a GitHub release first.",
+            _(
+                "Git is not available on this host. Install %(label)s from a GitHub release first.",
+                label=spec.label,
+            ),
             "error",
         )
         return _external_runtimes_response(
@@ -389,10 +659,36 @@ def external_runtime_action(repo_key: str, action: str):
 
     try:
         installed_now = False
+        if action == "reinstall":
+            # the installed copy came from another source: replace it (dependencies and validation follow)
+            delete_runtime_repo(repo_key, admin_user.username)
+            action = "acquire"
         if action == "acquire":
             if install_source == "git":
-                clone_runtime_repo(repo_key, branch, admin_user.username)
-                flash(f"Cloned {spec.label} on branch {branch}.", "success")
+                clone_runtime_repo(
+                    repo_key, branch, admin_user.username, github_token=github_token
+                )
+                flash(
+                    _(
+                        "Cloned %(label)s on branch %(branch)s.",
+                        label=spec.label,
+                        branch=branch,
+                    ),
+                    "success",
+                )
+                installed_now = True
+            elif install_source == "archive":
+                install_runtime_branch_archive(
+                    repo_key, branch, admin_user.username, github_token=github_token
+                )
+                flash(
+                    _(
+                        "Installed %(label)s from the archive of branch %(branch)s.",
+                        label=spec.label,
+                        branch=branch,
+                    ),
+                    "success",
+                )
                 installed_now = True
             else:
                 download_runtime_release(
@@ -402,7 +698,11 @@ def external_runtime_action(repo_key: str, action: str):
                     github_token=github_token,
                 )
                 flash(
-                    f"Installed {spec.label} from GitHub release {release_tag or 'latest available release'}.",
+                    _(
+                        "Installed %(label)s from GitHub release %(release_tag)s.",
+                        label=spec.label,
+                        release_tag=release_tag or "latest available release",
+                    ),
                     "success",
                 )
                 installed_now = True
@@ -414,35 +714,87 @@ def external_runtime_action(repo_key: str, action: str):
                 github_token=github_token,
             )
             flash(
-                f"Installed {spec.label} from GitHub release {release_tag or 'latest available release'}.",
+                _(
+                    "Installed %(label)s from GitHub release %(release_tag)s.",
+                    label=spec.label,
+                    release_tag=release_tag or "latest available release",
+                ),
                 "success",
             )
             installed_now = True
         elif action == "clone":
-            clone_runtime_repo(repo_key, branch, admin_user.username)
-            flash(f"Cloned {spec.label} on branch {branch}.", "success")
+            clone_runtime_repo(
+                repo_key, branch, admin_user.username, github_token=github_token
+            )
+            flash(
+                _(
+                    "Cloned %(label)s on branch %(branch)s.",
+                    label=spec.label,
+                    branch=branch,
+                ),
+                "success",
+            )
             installed_now = True
         elif action == "fetch":
-            fetch_runtime_repo(repo_key, branch, admin_user.username)
-            flash(f"Fetched {spec.label} from branch {branch}.", "success")
+            fetch_runtime_repo(
+                repo_key, branch, admin_user.username, github_token=github_token
+            )
+            flash(
+                _(
+                    "Fetched %(label)s from branch %(branch)s.",
+                    label=spec.label,
+                    branch=branch,
+                ),
+                "success",
+            )
         elif action == "update":
-            update_runtime_repo(repo_key, branch, admin_user.username)
-            flash(f"Updated {spec.label} to branch {branch}.", "success")
+            update_runtime_repo(
+                repo_key, branch, admin_user.username, github_token=github_token
+            )
+            flash(
+                _(
+                    "Updated %(label)s to branch %(branch)s.",
+                    label=spec.label,
+                    branch=branch,
+                ),
+                "success",
+            )
+            if sync:
+                installed_now = (
+                    True  # an update also refreshes dependencies, validation and schema
+                )
         elif action == "install":
             install_runtime_dependencies(repo_key, admin_user.username)
-            flash(f"Installed dependencies for {spec.label}.", "success")
+            flash(
+                _("Installed dependencies for %(label)s.", label=spec.label), "success"
+            )
         elif action == "validate":
             validate_runtime_repo(repo_key, admin_user.username)
-            flash(f"Validated {spec.label}.", "success")
+            flash(_("Validated %(label)s.", label=spec.label), "success")
         elif action == "delete":
             delete_runtime_repo(repo_key, admin_user.username)
-            flash(f"Deleted {spec.label}.", "success")
+            flash(_("Deleted %(label)s.", label=spec.label), "success")
 
         if installed_now:
             install_runtime_dependencies(repo_key, admin_user.username)
-            flash(f"Installed dependencies for {spec.label}.", "success")
+            flash(
+                _("Installed dependencies for %(label)s.", label=spec.label), "success"
+            )
             validate_runtime_repo(repo_key, admin_user.username)
-            flash(f"Validated {spec.label}.", "success")
+            flash(_("Validated %(label)s.", label=spec.label), "success")
+            _run_suite_schema_migration(repo_key)
+            from y_web.src.external_runtime.backend_plugins import (
+                suite_restart_required,
+            )
+
+            if suite_restart_required(repo_key):
+                flash(
+                    _(
+                        "Restart required: %(label)s routes are loaded at startup.",
+                        label=spec.label,
+                    ),
+                    "warning",
+                )
     except ExternalRuntimeError as exc:
         log_external_runtime_action(
             repo_key,
@@ -454,6 +806,7 @@ def external_runtime_action(repo_key: str, action: str):
         )
         flash(str(exc), "error")
 
+    clear_remote_cache()  # heads/releases may have changed after an install or update
     return _external_runtimes_response(
         repo_key=repo_key,
         message=f"{spec.label} action completed.",
@@ -471,11 +824,11 @@ def external_runtime_logs(repo_key: str):
     try:
         spec = runtime_spec(repo_key)
     except KeyError:
-        flash("Unknown external runtime repository.", "error")
+        flash(_("Unknown external runtime repository."), "error")
         return redirect(url_for("experiments.external_runtimes"))
 
     if not runtime_visible_to_user(spec, admin_user):
-        flash("You do not have visibility on this plugin repository.", "error")
+        flash(_("You do not have visibility on this plugin repository."), "error")
         return redirect(url_for("experiments.external_runtimes"))
 
     return render_template(

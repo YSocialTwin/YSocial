@@ -21,18 +21,11 @@ def create_sqlite_db(app):
     Args:
         app: Flask application instance to configure
     """
-    # app.root_path is the y_web package directory (same as BASE_DIR in __init__.py)
-    BASE_DIR = app.root_path
+    # The databases live in the data folder (YSOCIAL_HOME, the repository root from a checkout),
+    # never inside the installed package.
+    from y_web.src.system.path_utils import get_writable_path
 
-    # Determine the database directory based on execution mode
-    if getattr(sys, "frozen", False):
-        # Running from PyInstaller - use writable location for database
-        from y_web.src.system.path_utils import get_writable_path
-
-        db_dir = os.path.join(get_writable_path(), "y_web", "db")
-    else:
-        # Running from source - use BASE_DIR
-        db_dir = os.path.join(BASE_DIR, "db")
+    db_dir = os.path.join(get_writable_path(), "y_web", "db")
 
     # Ensure db directory exists
     os.makedirs(db_dir, exist_ok=True)

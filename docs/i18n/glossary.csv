@@ -1,0 +1,23 @@
+en,it,forbid_it,note
+experiment,esperimento,,
+agent,agente,,"AI agent; never ""bot"""
+population,popolazione,,
+simulation,simulazione,,
+follower,follower,,"kept in English (also the verb ""seguire"")"
+recommender,raccomandazione,,recommender system = sistema di raccomandazione
+annotation,annotazione,,
+participant,partecipante,,
+run,esecuzione,,a delivery of a training module to a cohort; the verb 'to run' may be avviare
+toxicity,tossicità,,
+dashboard,dashboard,cruscotto,
+thread,thread,,"technical term, kept in English; ""discussion thread"" = discussione"
+topic,argomento,\btem[ai]\b,
+round,round,\bturn[oi]\b|\bcicl[oi]\b,simulation round
+teacher,docente,insegnant\w*,
+student,studente,alunn\w*,
+plugin,plugin,estension\w*,
+module,modulo,,
+scenario,scenario,,
+like,mi piace,,
+feed,feed,bacheca,
+client,client,,technical term

@@ -1,0 +1,22 @@
+# Keep the build context small: nothing here is needed to build the image.
+.git
+.github
+.idea
+.vscode
+**/__pycache__
+**/*.pyc
+.pytest_cache
+.coverage
+coverage.xml
+htmlcov
+site
+build
+dist
+logs
+pilot_runs
+"Claude outputs"
+# runtime data of local runs (experiments, databases, installed plugins)
+y_web/experiments
+y_web/db
+external
+.env

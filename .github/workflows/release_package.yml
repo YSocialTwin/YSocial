@@ -27,7 +27,15 @@ jobs:
             -x ".git/*" ".github/*" "*.gitignore" \
             -x "*/.git/*"
 
+      - name: Keep the ZIP as a workflow artifact
+        if: github.event_name != 'release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: YSocial-full
+          path: YSocial-full.zip
+
       - name: Upload release ZIP
+        if: github.event_name == 'release'
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

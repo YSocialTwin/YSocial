@@ -8,7 +8,7 @@
   }
 
   function revokeVisibilityAssignment(expId, researcherId) {
-      if (!confirm('Revoke this visibility assignment?')) {
+      if (!confirm(YI18n.t('Revoke this visibility assignment?'))) {
           return;
       }
 
@@ -47,7 +47,7 @@
           columns: [
               {
                   id: 'experiment_name',
-                  name: 'Experiment',
+                  name: YI18n.t('Experiment'),
                   sort: true,
                   formatter: function(_, row) {
                       const url = row.cells[4].data;
@@ -55,17 +55,17 @@
                       return gridjs.html(`<a href="${escapeAttr(url)}">${escapeAttr(name)}</a>`);
                   }
               },
-              { id: 'group_name', name: 'Group', sort: true },
-              { id: 'researcher_name', name: 'Researcher', sort: true },
+              { id: 'group_name', name: YI18n.t('Group'), sort: true },
+              { id: 'researcher_name', name: YI18n.t('Researcher'), sort: true },
               {
                   id: 'actions',
-                  name: 'Actions',
+                  name: YI18n.t('Actions'),
                   sort: false,
                   formatter: function(_, row) {
                       const expId = row.cells[3].data;
                       const researcherId = row.cells[5].data;
                       return gridjs.html(
-                          `<button class="button is-small is-danger is-light" onclick="revokeVisibilityAssignment(${Number(expId)}, ${Number(researcherId)})">Revoke</button>`
+                          '<button class="button is-small is-danger is-light" onclick="revokeVisibilityAssignment(' + Number(expId) + ', ' + Number(researcherId) + ')">' + YI18n.t('Revoke') + '</button>'
                       );
                   }
               },

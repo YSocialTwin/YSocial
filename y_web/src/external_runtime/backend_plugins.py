@@ -27,14 +27,16 @@ from __future__ import annotations
 
 import importlib
 import json
+import re
 import sys
 import types
 from pathlib import Path
 
+from y_web.src.external_runtime.plugin_i18n import localize_text
 from y_web.src.external_runtime.registry import (
     ROOT,
-    SUPPORTED_EXTERNAL_REPOS,
     runtime_spec,
+    supported_repos,
 )
 
 REGISTRY_RELATIVE_PATH = Path("meta") / "registry.json"
@@ -82,7 +84,7 @@ def backend_plugin_repo_keys() -> list[str]:
     """All registry keys belonging to the 'backend_settings' group."""
     return [
         key
-        for key, spec in SUPPORTED_EXTERNAL_REPOS.items()
+        for key, spec in supported_repos().items()
         if spec.group == "backend_settings"
     ]
 
@@ -94,6 +96,262 @@ def _load_json(path: Path) -> tuple[dict | list | None, str | None]:
         return json.loads(path.read_text(encoding="utf-8")), None
     except (OSError, json.JSONDecodeError) as exc:
         return None, f"invalid JSON in {path.name}: {exc}"
+
+
+# Optional top-level manifest keys (all opt-in; ignored when absent).
+#   "schema_module": "dotted.module:callable"      -> migrate(engine_admin) -> bool
+#   "hooks":         {"<hook_name>": "dotted.module:callable", ...}
+#   "permissions":   "dotted.module:attr"           -> permissions descriptor
+OPTIONAL_DOTTED_KEYS = ("schema_module", "permissions")
+
+
+def _check_dotted_ref(spec, value, label: str) -> str | None:
+    """Return an error message if *value* is not a usable 'dotted.module:attr'
+    reference inside the plugin repo, else None. Never raises."""
+    if not isinstance(value, str) or ":" not in value:
+        return f"{label} must be in 'dotted.module:attr' form, got {value!r}"
+    dotted, _, attr = value.partition(":")
+    if not dotted.strip() or not attr.strip():
+        return f"{label} must be in 'dotted.module:attr' form, got {value!r}"
+    if not all(part.isidentifier() for part in dotted.split(".")):
+        return f"{label} has an invalid module path: {dotted!r}"
+    path = spec.path / Path(*dotted.split("."))
+    if not (path.with_suffix(".py").exists() or (path / "__init__.py").exists()):
+        return f"{label} module not found on disk: {dotted}"
+    return None
+
+
+def _validate_optional_extension_keys(spec, registry_payload: dict, report: dict):
+    """Validate the optional ``schema_module``, ``hooks`` and ``permissions``
+    manifest keys, appending problems to ``report["errors"]``."""
+    for key in OPTIONAL_DOTTED_KEYS:
+        if key not in registry_payload:
+            continue
+        value = registry_payload[key]
+        err = _check_dotted_ref(spec, value, f"'{key}'")
+        if err:
+            report["errors"].append(f"meta/registry.json: {err}")
+        else:
+            report[key] = value
+
+    if "i18n" in registry_payload:
+        from y_web.src.external_runtime.plugin_i18n import normalize_i18n_manifest
+
+        i18n_config, i18n_problems = normalize_i18n_manifest(
+            spec.key, spec.path, registry_payload["i18n"]
+        )
+        for problem in i18n_problems:
+            report["errors"].append(f"meta/registry.json: {problem}")
+        if i18n_config:
+            report["i18n"] = i18n_config
+
+    if "hooks" in registry_payload:
+        hooks = registry_payload["hooks"]
+        if not isinstance(hooks, dict):
+            report["errors"].append(
+                "meta/registry.json: 'hooks' must be an object {name: 'dotted.module:attr'}"
+            )
+            return
+        valid_hooks = {}
+        for name, ref in hooks.items():
+            err = _check_dotted_ref(spec, ref, f"hook '{name}'")
+            if err:
+                report["errors"].append(f"meta/registry.json: {err}")
+            else:
+                valid_hooks[str(name)] = ref
+        report["hooks"] = valid_hooks
+
+
+# --------------------------------------------------------------------------
+# Optional manifest key ``training_components`` (any installed plugin).
+#
+# A plugin that provides third-party step types for the TrainingModules editor
+# (questionnaires, landing/result pages, ...) lists descriptors in its own
+# ``meta/registry.json``::
+#
+#   "training_components": [{
+#       "type_key": "questionnaire",            # [a-z][a-z0-9_]{1,63}, unique per plugin
+#       "label": "Questionnaire", "icon": "clipboard", "category": "Questionnaire",
+#       "contract_version": "1",
+#       "config_schema": {"type": "object", "required": ["title"],
+#                         "properties": {"title": {"type": "string"},
+#                                        "mode": {"type": "string", "enum": ["a", "b"]}}},
+#       "launch": {"endpoint": "/q/launch"},          # local path, required
+#       "instance_picker": {"endpoint": "/q/search"}, # optional
+#       "activity_export": {"endpoint": "/q/export"}, # optional
+#       "health": {"endpoint": "/q/health"},          # optional
+#       "signals": {"declared": true, "verified": false, "advance_button": true}
+#   }]
+#
+# Endpoints are local paths only (never URLs). An invalid descriptor is skipped
+# with a reported problem; it never blocks the loading of the plugin.
+# --------------------------------------------------------------------------
+TRAINING_COMPONENT_CONTRACT_VERSIONS = ("1",)
+_TYPE_KEY_RE = re.compile(r"^[a-z][a-z0-9_]{1,63}$")
+_SCHEMA_PROPERTY_TYPES = ("string", "number", "boolean")
+_ENDPOINT_FIELDS = ("launch", "instance_picker", "activity_export", "health")
+
+
+def _is_local_path(value) -> bool:
+    return (
+        isinstance(value, str)
+        and value.startswith("/")
+        and not value.startswith("//")
+        and "\\" not in value
+        and "://" not in value
+    )
+
+
+def _config_schema_problems(schema) -> list[str]:
+    if not isinstance(schema, dict) or schema.get("type") != "object":
+        return ["config_schema must be an object schema with type 'object'"]
+    props = schema.get("properties", {})
+    if not isinstance(props, dict):
+        return ["config_schema.properties must be an object"]
+    problems = []
+    for name, prop in props.items():
+        if not isinstance(prop, dict) or prop.get("type") not in _SCHEMA_PROPERTY_TYPES:
+            problems.append(
+                f"config_schema property '{name}' must have type "
+                f"{'/'.join(_SCHEMA_PROPERTY_TYPES)} (flat objects only)"
+            )
+        elif "enum" in prop and not (isinstance(prop["enum"], list) and prop["enum"]):
+            problems.append(f"config_schema property '{name}' has an invalid enum")
+    required = schema.get("required", [])
+    if not isinstance(required, list) or any(r not in props for r in required):
+        problems.append("config_schema.required must list declared properties")
+    return problems
+
+
+def validate_training_component(descriptor) -> tuple[dict | None, list[str]]:
+    """Return ``(normalized_descriptor | None, problems)`` for one descriptor."""
+    if not isinstance(descriptor, dict):
+        return None, ["descriptor must be an object"]
+    problems: list[str] = []
+    type_key = descriptor.get("type_key")
+    if not isinstance(type_key, str) or not _TYPE_KEY_RE.match(type_key):
+        problems.append("type_key must match [a-z][a-z0-9_]{1,63}")
+    if not str(descriptor.get("label") or "").strip():
+        problems.append("missing label")
+    contract = str(descriptor.get("contract_version") or "")
+    if contract not in TRAINING_COMPONENT_CONTRACT_VERSIONS:
+        problems.append(
+            f"unsupported contract_version {descriptor.get('contract_version')!r} "
+            f"(supported: {', '.join(TRAINING_COMPONENT_CONTRACT_VERSIONS)})"
+        )
+    schema = descriptor.get("config_schema", {"type": "object", "properties": {}})
+    problems.extend(_config_schema_problems(schema))
+    for field in _ENDPOINT_FIELDS:
+        if field not in descriptor:
+            if field == "launch":
+                problems.append("missing launch endpoint")
+            continue
+        spec = descriptor[field]
+        if not isinstance(spec, dict) or not _is_local_path(spec.get("endpoint")):
+            problems.append(f"{field}.endpoint must be a local path starting with '/'")
+    signals = descriptor.get("signals", {})
+    if not isinstance(signals, dict) or any(
+        not isinstance(v, bool) for v in signals.values()
+    ):
+        problems.append("signals must be an object of booleans")
+    if problems:
+        return None, problems
+    normalized = {
+        "type_key": type_key,
+        "label": str(descriptor["label"]).strip(),
+        "icon": str(descriptor.get("icon") or "box"),
+        "category": str(descriptor.get("category") or "Other"),
+        "contract_version": contract,
+        "config_schema": schema,
+        "signals": {
+            "declared": True,
+            "verified": False,
+            "advance_button": False,
+            **signals,
+        },
+    }
+    for field in _ENDPOINT_FIELDS:
+        if field in descriptor:
+            normalized[field] = {"endpoint": descriptor[field]["endpoint"]}
+    return normalized, []
+
+
+def read_training_components(repo_key: str) -> dict:
+    """Read the ``training_components`` key of an installed plugin's manifest.
+
+    Works for any key of ``supported_repos()`` (not only backend suites)
+    and never raises. Returns ``{"components": [...], "problems": [...]}`` where
+    every component carries ``repo_key`` and ``component_ref`` (``repo:type``).
+    """
+    result: dict = {"components": [], "problems": []}
+    try:
+        spec = runtime_spec(repo_key)
+        payload, err = _load_json(spec.path / REGISTRY_RELATIVE_PATH)
+        if err or not isinstance(payload, dict) or "training_components" not in payload:
+            return result
+        raw = payload["training_components"]
+        if not isinstance(raw, list):
+            result["problems"].append("training_components must be a list")
+            return result
+        seen: set[str] = set()
+        for index, descriptor in enumerate(raw, start=1):
+            component, problems = validate_training_component(descriptor)
+            if component is not None and component["type_key"] in seen:
+                component, problems = None, [
+                    f"duplicate type_key '{descriptor['type_key']}'"
+                ]
+            if component is None:
+                result["problems"].append(
+                    f"descriptor #{index}: " + "; ".join(problems)
+                )
+                continue
+            seen.add(component["type_key"])
+            component["repo_key"] = repo_key
+            component["component_ref"] = f"{repo_key}:{component['type_key']}"
+            result["components"].append(component)
+    except Exception as exc:
+        result["problems"].append(f"could not read training_components: {exc}")
+    return result
+
+
+def training_component_catalog() -> list[dict]:
+    """Valid third-party step types offered by every installed, enabled plugin."""
+    catalog: list[dict] = []
+    for repo_key in supported_repos():
+        if not plugin_enabled(repo_key):
+            continue
+        catalog.extend(read_training_components(repo_key)["components"])
+    return catalog
+
+
+DEFAULT_GROUP_ITEM_ROLES = ("admin", "researcher")
+
+
+def _sidebar_group_problems(sidebar) -> list[str]:
+    """Problems of the optional ``suite.sidebar.group`` declaration (warnings only:
+    a malformed group is simply not rendered)."""
+    if not isinstance(sidebar, dict) or "group" not in sidebar:
+        return []
+    group = sidebar["group"]
+    if not isinstance(group, dict) or not str(group.get("label") or "").strip():
+        return ["must be an object with a 'label'"]
+    items = group.get("items")
+    if not isinstance(items, list) or not items:
+        return ["must have a non-empty 'items' list"]
+    problems = []
+    for i, item in enumerate(items):
+        if (
+            not isinstance(item, dict)
+            or not item.get("label")
+            or not item.get("endpoint")
+        ):
+            problems.append(f"item #{i + 1} needs 'label' and 'endpoint'")
+        elif "roles" in item and not (
+            isinstance(item["roles"], list)
+            and all(isinstance(r, str) for r in item["roles"])
+        ):
+            problems.append(f"item #{i + 1} 'roles' must be a list of role names")
+    return problems
 
 
 def validate_backend_suite(repo_key: str) -> dict:
@@ -141,6 +399,8 @@ def validate_backend_suite(repo_key: str) -> dict:
         report["errors"].append("meta/registry.json: missing or invalid 'suite' object")
         return report
     report["suite"] = suite_meta
+    for problem in _sidebar_group_problems(suite_meta.get("sidebar")):
+        report["warnings"].append(f"meta/registry.json: suite.sidebar.group {problem}")
 
     if not _version_in_range(
         app_version,
@@ -208,6 +468,14 @@ def validate_backend_suite(repo_key: str) -> dict:
         module_report["errors"] = errors
         report["modules"].append(module_report)
 
+    _validate_optional_extension_keys(spec, registry_payload, report)
+    components = read_training_components(repo_key)
+    if components["components"]:
+        report["training_components"] = components["components"]
+    report["warnings"].extend(
+        f"meta/registry.json: training_components: {p}" for p in components["problems"]
+    )
+
     report["valid"] = not report["errors"] and all(
         m.get("valid") for m in report["modules"]
     )
@@ -245,6 +513,81 @@ def _import_blueprint(repo_key: str, backend_blueprint: str):
     return getattr(module, attr)
 
 
+# blueprint name -> repo_key, for the "disabled plugin" request guard
+_BLUEPRINT_OWNERS: dict[str, str] = {}
+
+
+def plugin_enabled(repo_key: str) -> bool:
+    """False only if an admin disabled *repo_key* (row in ``plugin_state``).
+
+    A missing row (or any error reading it) means enabled, so plugins installed
+    before the table existed keep working. Never raises.
+    """
+    try:
+        from y_web import db
+        from y_web.src.models import PluginState
+
+        row = db.session.get(PluginState, repo_key)
+        return True if row is None else bool(row.enabled)
+    except Exception:
+        try:
+            from y_web import db
+
+            db.session.rollback()
+        except Exception:
+            pass
+        return True
+
+
+def set_plugin_enabled(repo_key: str, enabled: bool, updated_by: str | None = None):
+    """Persist the enabled flag of *repo_key* (creates the row on first use)."""
+    from y_web import db
+    from y_web.src.models import PluginState
+
+    row = db.session.get(PluginState, repo_key)
+    if row is None:
+        row = PluginState(repo_key=repo_key)
+        db.session.add(row)
+    row.enabled = bool(enabled)
+    row.updated_by = updated_by
+    db.session.commit()
+    return row
+
+
+def registered_suite_keys() -> set[str]:
+    """Suites whose blueprints were registered at startup (routes are live)."""
+    return set(_REGISTERED_SUITES)
+
+
+def suite_restart_required(repo_key: str) -> bool:
+    """True when the suite is installed and valid but its routes are not live
+    yet: blueprints can only be registered at application startup."""
+    try:
+        report = validate_backend_suite(repo_key)
+    except Exception:
+        return False
+    return bool(
+        report.get("installed")
+        and report.get("valid")
+        and repo_key not in _REGISTERED_SUITES
+    )
+
+
+def _install_disabled_plugin_guard(app) -> None:
+    """Answer 404 on the routes of a disabled suite (once per app)."""
+    if app.extensions.get("backend_plugin_guard"):
+        return
+    app.extensions["backend_plugin_guard"] = True
+
+    from flask import abort, request
+
+    @app.before_request
+    def _disabled_plugin_guard():
+        owner = _BLUEPRINT_OWNERS.get(request.blueprint or "")
+        if owner and not plugin_enabled(owner):
+            abort(404)
+
+
 def register_backend_plugin_suites(app) -> dict:
     """Register blueprints for every installed+valid backend settings suite.
 
@@ -255,6 +598,7 @@ def register_backend_plugin_suites(app) -> dict:
     simply always registered.
     """
     report = {"suites": {}}
+    _install_disabled_plugin_guard(app)
 
     for repo_key in backend_plugin_repo_keys():
         suite_report = {
@@ -289,6 +633,7 @@ def register_backend_plugin_suites(app) -> dict:
             try:
                 bp = _import_blueprint(repo_key, backend_blueprint)
                 app.register_blueprint(bp)
+                _BLUEPRINT_OWNERS[bp.name] = repo_key
                 suite_report["registered_modules"].append(module_id)
             except Exception as exc:
                 app.logger.warning(
@@ -303,8 +648,17 @@ def register_backend_plugin_suites(app) -> dict:
 
         _REGISTERED_SUITES[repo_key] = {"modules": modules_by_id}
 
+        if validation.get("i18n"):
+            from y_web.src.external_runtime.plugin_i18n import register_plugin_i18n
+
+            if not register_plugin_i18n(repo_key, validation["i18n"]):
+                suite_report["errors"].append(
+                    f"i18n domain '{validation['i18n']['domain']}' is already used by another plugin"
+                )
+
         try:
             _register_static_blueprint(app, repo_key)
+            _BLUEPRINT_OWNERS[f"backend_settings_static_{repo_key}"] = repo_key
         except Exception as exc:
             app.logger.warning(
                 "[backend_settings] failed to register static assets route for '%s': %s",
@@ -314,6 +668,77 @@ def register_backend_plugin_suites(app) -> dict:
 
         report["suites"][repo_key] = suite_report
 
+    return report
+
+
+def print_backend_plugin_report(report: dict) -> None:
+    """Startup console summary of :func:`register_backend_plugin_suites`."""
+    for repo_key, suite_report in report.get("suites", {}).items():
+        if not suite_report.get("installed"):
+            continue
+        if suite_report.get("valid"):
+            print(
+                f"✓ Backend settings suite '{repo_key}': "
+                f"{len(suite_report.get('registered_modules', []))} module(s) registered"
+            )
+        else:
+            print(
+                f"⚠ Backend settings suite '{repo_key}' is installed but failed validation: "
+                f"{suite_report.get('errors')}"
+            )
+
+
+def _admin_engine(db, app):
+    """The ``db_admin`` engine, on Flask-SQLAlchemy 3.x and on older 2.x installs."""
+    engines = getattr(db, "engines", None)  # Flask-SQLAlchemy >= 3.0
+    if engines is not None:
+        return engines["db_admin"] if "db_admin" in engines else db.engine
+    try:  # Flask-SQLAlchemy 2.x
+        return db.get_engine(app, bind="db_admin")
+    except Exception:
+        return db.get_engine(app)
+
+
+def run_backend_plugin_schema_migrations(app, repo_keys=None) -> dict:
+    """Run the optional ``schema_module`` migration of installed+valid suites.
+
+    The manifest key ``schema_module`` ('dotted.module:callable') names a
+    function ``migrate(engine_admin) -> bool`` that must be idempotent. It is
+    called with the ``db_admin`` engine after the core Alembic upgrade and
+    after a suite is installed. Suites without the key are skipped. Never
+    raises: a failing migration is reported (and logged) but does not stop
+    the application or other suites.
+
+    Returns ``{repo_key: {"ran": bool, "ok": bool | None, "error": str | None}}``.
+    """
+    from y_web import db
+
+    report: dict[str, dict] = {}
+    for repo_key in repo_keys if repo_keys is not None else backend_plugin_repo_keys():
+        try:
+            validation = validate_backend_suite(repo_key)
+            ref = validation.get("schema_module")
+            if not (validation.get("installed") and validation.get("valid") and ref):
+                continue
+            entry = {"ran": False, "ok": None, "error": None}
+            report[repo_key] = entry
+            dotted, _, attr = ref.partition(":")
+            migrate = getattr(_import_from_suite(repo_key, dotted), attr)
+            with app.app_context():
+                engine = _admin_engine(db, app)
+                entry["ran"] = True
+                entry["ok"] = migrate(engine) is not False
+            if not entry["ok"]:
+                entry["error"] = "schema migration reported failure"
+        except Exception as exc:
+            report.setdefault(repo_key, {"ran": False, "ok": None, "error": None})
+            report[repo_key].update(ok=False, error=str(exc))
+        if report.get(repo_key, {}).get("error"):
+            app.logger.warning(
+                "[backend_settings] schema migration for '%s' failed: %s",
+                repo_key,
+                report[repo_key]["error"],
+            )
     return report
 
 
@@ -364,7 +789,9 @@ def backend_suite_availability() -> dict[str, bool]:
     availability: dict[str, bool] = {}
     for repo_key in backend_plugin_repo_keys():
         try:
-            availability[repo_key] = bool(validate_backend_suite(repo_key).get("valid"))
+            availability[repo_key] = bool(
+                validate_backend_suite(repo_key).get("valid")
+            ) and plugin_enabled(repo_key)
         except Exception:
             availability[repo_key] = False
     return availability
@@ -409,7 +836,7 @@ def backend_suite_sidebar_entries() -> list[dict]:
             report = validate_backend_suite(repo_key)
         except Exception:
             continue
-        if not report.get("valid"):
+        if not report.get("valid") or not plugin_enabled(repo_key):
             continue
         sidebar = (report.get("suite") or {}).get("sidebar")
         if not isinstance(sidebar, dict):
@@ -424,12 +851,89 @@ def backend_suite_sidebar_entries() -> list[dict]:
         entries.append(
             {
                 "repo_key": repo_key,
-                "label": sidebar.get("label") or repo_key,
+                "label": localize_text(repo_key, sidebar.get("label") or repo_key),
                 "icon": sidebar.get("icon") or "box",
                 "url": url,
             }
         )
     return entries
+
+
+def backend_suite_sidebar_groups(role: str | None = None) -> list[dict]:
+    """Top-level sidebar groups contributed by installed, valid and enabled suites.
+
+    A suite opts in with ``suite.sidebar.group`` in ``meta/registry.json``::
+
+        "sidebar": {"group": {"label": "Training", "icon": "book-open",
+                              "items": [{"label": "Modules", "icon": "layers",
+                                         "endpoint": "bp.modules",
+                                         "section": "Design",
+                                         "roles": ["admin", "researcher"]}]}}
+
+    Only the items allowed for *role* are returned (``roles`` defaults to admin
+    and researcher; with ``role=None`` nothing is allowed) and a group with no
+    allowed/resolvable item is omitted. Items whose endpoint cannot be built are
+    skipped, never raising. The flat single entry of
+    :func:`backend_suite_sidebar_entries` is independent and unchanged.
+    """
+    from flask import url_for
+    from werkzeug.routing import BuildError
+
+    groups: list[dict] = []
+    for repo_key in backend_plugin_repo_keys():
+        try:
+            report = validate_backend_suite(repo_key)
+            if not report.get("valid") or not plugin_enabled(repo_key):
+                continue
+            sidebar = (report.get("suite") or {}).get("sidebar")
+            if _sidebar_group_problems(sidebar) or "group" not in (sidebar or {}):
+                continue
+        except Exception:
+            continue
+        group = sidebar["group"]
+        items = []
+        for item in group["items"]:
+            allowed = item.get("roles") or DEFAULT_GROUP_ITEM_ROLES
+            if role is None or role not in allowed:
+                continue
+            try:
+                url = url_for(item["endpoint"])
+            except BuildError:
+                continue
+            items.append(
+                {
+                    "label": localize_text(repo_key, item["label"]),
+                    "icon": item.get("icon") or "circle",
+                    "url": url,
+                    # optional heading the item is listed under (consecutive items with the same one share it)
+                    "section": localize_text(
+                        repo_key, str(item.get("section") or "").strip()
+                    )
+                    or None,
+                }
+            )
+        if items:
+            groups.append(
+                {
+                    "repo_key": repo_key,
+                    "label": localize_text(repo_key, group["label"]),
+                    "icon": group.get("icon") or "box",
+                    "items": items,
+                }
+            )
+    return groups
+
+
+def _experiment_widgets(exp_id):
+    """Template helper: the ``experiment_page_widget`` hooks' HTML, marked safe (see plugin_hooks)."""
+    from markupsafe import Markup
+
+    try:
+        from y_web.src.external_runtime.plugin_hooks import experiment_page_widgets
+
+        return Markup(experiment_page_widgets(exp_id))
+    except Exception:
+        return Markup("")
 
 
 def inject_backend_plugin_visibility() -> dict:
@@ -458,8 +962,11 @@ def inject_backend_plugin_visibility() -> dict:
     function's body would otherwise have pushed over its threshold).
     """
     try:
+        from flask_login import current_user
+
         availability = backend_suite_availability()
         entries = backend_suite_sidebar_entries()
+        groups = backend_suite_sidebar_groups(getattr(current_user, "role", None))
         scenario_design_url = next(
             (e["url"] for e in entries if e["repo_key"] == "scenario_design"),
             None,
@@ -468,10 +975,65 @@ def inject_backend_plugin_visibility() -> dict:
             backend_suites_available=availability,
             scenario_design_sidebar_url=scenario_design_url,
             extension_sidebar_entries=entries,
+            extension_sidebar_groups=groups,
+            plugin_experiment_widgets=_experiment_widgets,
         )
     except Exception:
         return dict(
             backend_suites_available={},
             scenario_design_sidebar_url=None,
             extension_sidebar_entries=[],
+            extension_sidebar_groups=[],
+            plugin_experiment_widgets=_experiment_widgets,
         )
+
+
+TRAINING_REPO_KEY = "training_modules"
+
+
+def training_dashboard_overview(user) -> dict | None:
+    """Modules for the admin dashboard's Training boxes, or ``None``.
+
+    ``None`` unless the Training Modules suite is installed, valid and enabled
+    (so the dashboard shows no Training section at all). Otherwise a dict with
+    the ``active`` and ``inactive`` (archived) module lists visible to *user*
+    and the plugin's CSRF token for the toggle calls. Never raises.
+    """
+    try:
+        report = validate_backend_suite(TRAINING_REPO_KEY)
+        if not report.get("valid") or not plugin_enabled(TRAINING_REPO_KEY):
+            return None
+        base = "modules.training_editor.backend"
+        versions = _import_from_suite(TRAINING_REPO_KEY, f"{base}.versions")
+        csrf = _import_from_suite(TRAINING_REPO_KEY, f"{base}.csrf")
+        db_mod = _import_from_suite(TRAINING_REPO_KEY, f"{base}.db")
+        with db_mod.get_engine().connect() as conn:
+            modules = versions.list_modules(conn, user)
+        modules = [
+            {
+                "uid": m["module_uid"],
+                "title": m["title"],
+                "status": m["latest_status"],
+                "steps": m["step_count"],
+                "active_runs": m["active_runs"],
+                "archived": bool(m["archived"]),
+            }
+            for m in modules
+        ]
+        return {
+            "active": [m for m in modules if not m["archived"]],
+            "inactive": [m for m in modules if m["archived"]],
+            "csrf_token": csrf.get_token(),
+        }
+    except Exception:
+        return None
+
+
+def training_signup_api():
+    """The Training Modules self-registration helpers (``candidates()``, ``enroll()``), or ``None``."""
+    report = validate_backend_suite(TRAINING_REPO_KEY)
+    if not report.get("valid") or not plugin_enabled(TRAINING_REPO_KEY):
+        return None
+    return _import_from_suite(
+        TRAINING_REPO_KEY, "modules.training_editor.backend.self_registration"
+    )

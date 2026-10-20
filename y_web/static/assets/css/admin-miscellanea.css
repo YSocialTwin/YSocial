@@ -1,0 +1,105 @@
+/* Miscellanea - aligned with the Training Modules admin pages (page head, underlined tabs,
+   white section cards, soft table headers, rounded controls). Scoped to .misc-app. */
+.misc-app { --tm-primary:#3d70b2; --tm-primary-dark:#2f5a93; --tm-border:#e3e3e3; --tm-soft:#f6f8fb; --tm-ink:#363636; --tm-muted:#757a91; }
+
+.misc-app .misc-page-head { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; margin-bottom:14px; }
+.misc-app .misc-page-head h2 { margin:0; font-size:1.35rem; font-weight:600; color:var(--tm-ink); }
+.misc-app .misc-page-head p { margin:4px 0 0; color:var(--tm-muted); font-size:.85rem; max-width:62ch; }
+
+/* tabs -> same look as the Training navigation */
+.misc-app .misc-tabs { display:flex; gap:4px; flex-wrap:wrap; border-bottom:1px solid var(--tm-border); margin-bottom:18px; }
+.misc-app .misc-tab { display:inline-flex; align-items:center; gap:6px; padding:9px 14px; font-size:.85rem; font-weight:400; color:var(--tm-muted);
+  background:none; border:0; border-bottom:2px solid transparent; margin-bottom:-1px; border-radius:0; transition:color .15s; }
+.misc-app .misc-tab:hover { color:var(--tm-primary); background:none; }
+.misc-app .misc-tab.active { color:var(--tm-primary); border-bottom-color:var(--tm-primary); font-weight:600; background:none; }
+
+/* tab intro -> soft box */
+.misc-app .misc-section-description { background:var(--tm-soft); border:1px solid var(--tm-border); border-left:1px solid var(--tm-border);
+  border-radius:10px; padding:.7rem 1rem; margin:0 0 16px; font-size:.84rem; color:var(--tm-ink); line-height:1.5; }
+
+/* boxes -> section cards */
+.misc-app .misc-grid { gap:1.25rem; margin-bottom:1.25rem; }
+.misc-app .misc-compact-box { background:#fff; border:1px solid var(--tm-border); border-radius:.75rem; padding:1.25rem 1.5rem; box-shadow:none; }
+.misc-app .misc-compact-box:hover { box-shadow:none; }
+.misc-app .misc-compact-box h3 { margin:0 0 10px; padding:0; border:0; font-size:1rem; font-weight:600; color:var(--tm-ink); }
+.misc-app .misc-compact-box h4, .misc-app .misc-compact-box .ys-section-label { font-size:.72rem; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:var(--tm-muted); }
+.misc-app .misc-compact-box .box-line .left { font-size:.78rem; font-weight:600; color:var(--tm-muted); }
+.misc-app .misc-compact-box .help-block, .misc-app .misc-compact-box .help-block p { color:var(--tm-muted); font-size:.82rem; }
+
+/* controls */
+.misc-app .misc-compact-box .input, .misc-app .misc-compact-box input[type=text], .misc-app .misc-compact-box input[type=number],
+.misc-app .misc-compact-box input[type=password], .misc-app .misc-compact-box select, .misc-app .misc-compact-box textarea {
+  padding:7px 10px; border:1px solid var(--tm-border); border-radius:8px; font-size:.85rem; background:#fff; color:var(--tm-ink); box-shadow:none; height:auto; }
+.misc-app .misc-compact-box .input:focus, .misc-app .misc-compact-box input:focus, .misc-app .misc-compact-box select:focus, .misc-app .misc-compact-box textarea:focus {
+  outline:none; border-color:var(--tm-primary); box-shadow:0 0 0 3px rgba(61,112,178,.15); }
+.misc-app .misc-compact-box .button { display:inline-flex; align-items:center; justify-content:center; gap:6px; border:1px solid var(--tm-border); background:#fff; color:var(--tm-ink);
+  border-radius:8px; padding:6px 13px; font-size:.82rem; font-weight:500; box-shadow:none; height:auto; }
+.misc-app .misc-compact-box .button:hover { border-color:var(--tm-primary); color:var(--tm-primary); }
+.misc-app .misc-compact-box .button.is-solid.primary-button, .misc-app .misc-compact-box .button.is-solid.accent-button,
+.misc-app .misc-compact-box .button.primary-button { background:var(--tm-primary); border-color:var(--tm-primary); color:#fff; }
+.misc-app .misc-compact-box .button.is-solid.primary-button:hover, .misc-app .misc-compact-box .button.primary-button:hover { background:var(--tm-primary-dark); border-color:var(--tm-primary-dark); color:#fff; }
+
+/* tables (Grid.js and plain) -> soft headers, light rows */
+.misc-app .gridjs-container { color:var(--tm-ink); font-size:.85rem; }
+.misc-app .gridjs-wrapper { border:1px solid var(--tm-border); border-radius:.6rem; box-shadow:none; }
+.misc-app table.gridjs-table, .misc-app .misc-compact-box table { font-size:.85rem; }
+.misc-app th.gridjs-th, .misc-app .misc-compact-box table th { text-align:left; padding:9px 12px; font-size:.72rem; letter-spacing:.03em; text-transform:uppercase;
+  color:var(--tm-muted); background:var(--tm-soft); border:0; border-bottom:1px solid var(--tm-border); }
+.misc-app td.gridjs-td, .misc-app .misc-compact-box table td { padding:10px 12px; border:0; border-bottom:1px solid #eef0f3; vertical-align:middle; }
+.misc-app tr.gridjs-tr:hover td.gridjs-td { background:#fafbfd; }
+.misc-app .gridjs-footer { border:0; box-shadow:none; background:transparent; }
+
+@media (max-width:700px) { .misc-app .misc-compact-box { padding:1rem; } }
+
+/* ---- Visual refinements ---- */
+.misc-app .misc-tabs { gap:6px; }
+.misc-app .misc-tab { border-radius:8px 8px 0 0; padding:10px 16px; }
+.misc-app .misc-tab .mdi { font-size:1.1rem; }
+.misc-app .misc-tab.active { background:linear-gradient(to top, rgba(61,112,178,.08), transparent); }
+
+.misc-app .misc-section-description { display:flex; gap:10px; align-items:flex-start; border-left:3px solid var(--tm-primary); background:#f3f7fc; }
+.misc-app .misc-section-description .misc-desc-icon { color:var(--tm-primary); font-size:1.25rem; line-height:1.3; }
+
+.misc-app .misc-compact-box { display:flex; flex-direction:column; transition:box-shadow .15s, border-color .15s; }
+.misc-app .misc-compact-box:hover { border-color:#cfd8e6; box-shadow:0 4px 14px rgba(15,23,42,.06); }
+.misc-app .misc-compact-box h3 { display:flex; align-items:center; gap:10px; padding-bottom:12px; margin-bottom:12px; border-bottom:1px solid #eef0f3; }
+.misc-app .misc-box-icon { display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:9px;
+  background:rgba(61,112,178,.1); color:var(--tm-primary); font-size:1.15rem; flex:0 0 auto; }
+/* the "New ..." forms become a tinted panel under the table */
+.misc-app .misc-compact-box .box-content.ys-mt-30 { margin-top:16px; padding:12px 14px; background:var(--tm-soft); border:1px solid #eef0f3; border-radius:10px; }
+.misc-app .misc-compact-box .box-content.ys-mt-30 .button-wrap { margin-top:10px; }
+.misc-app .misc-grid { align-items:start; }
+.misc-app .gridjs-search-input { border:1px solid var(--tm-border); border-radius:8px; padding:6px 10px; }
+.misc-app .gridjs-pagination .gridjs-pages button { border-radius:6px; }
+.misc-app .gridjs-pagination .gridjs-pages button.gridjs-currentPage { background:rgba(61,112,178,.12); color:var(--tm-primary); font-weight:600; }
+
+/* ---- Tidy layout: grouped sections, even cards, compact "New ..." forms ---- */
+.misc-app .misc-group-head { display:flex; align-items:center; gap:10px; margin:26px 0 12px; padding-bottom:8px; border-bottom:1px solid var(--tm-border); }
+.misc-app .misc-section-description + .misc-group-head { margin-top:6px; }
+.misc-app .misc-group-icon { display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:7px; background:var(--tm-soft); color:var(--tm-primary); font-size:1rem; }
+.misc-app .misc-group-title { margin:0; font-size:.78rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--tm-ink); }
+.misc-app .misc-group-sub { margin:1px 0 0; font-size:.78rem; color:var(--tm-muted); }
+
+/* every card in a row has the same height; the "New ..." panel sits at the bottom */
+.misc-app .misc-grid { align-items:stretch; margin-bottom:0; }
+.misc-app .misc-compact-box { min-width:0; box-shadow:none; }
+.misc-app .misc-compact-box:hover { box-shadow:none; border-color:var(--tm-border); }
+.misc-app .misc-compact-box h3 { font-size:.95rem; }
+.misc-app .misc-box-icon { width:28px; height:28px; font-size:1.05rem; border-radius:8px; }
+.misc-app .misc-compact-box > .box-content.ys-mt-30 { margin-top:auto; }
+.misc-app .misc-compact-box > .box-content:not(.ys-mt-30) { margin-bottom:14px; }
+
+/* new-item forms: fields side by side, button on the right, no full-width block */
+.misc-app .box-content.ys-mt-30 form { display:flex; flex-wrap:wrap; align-items:flex-end; gap:10px; }
+.misc-app .box-content.ys-mt-30 .box-lines { display:flex; flex-wrap:wrap; gap:10px; flex:1 1 220px; margin:0; }
+.misc-app .box-content.ys-mt-30 .box-line { display:flex; flex-direction:column; align-items:stretch; gap:3px; flex:1 1 120px; margin:0; }
+.misc-app .box-content.ys-mt-30 .box-line .left { min-width:0; font-size:.7rem; text-transform:uppercase; letter-spacing:.03em; }
+.misc-app .box-content.ys-mt-30 .box-line .right { flex:none; }
+.misc-app .box-content.ys-mt-30 .box-line .right .input, .misc-app .box-content.ys-mt-30 .box-line .right input, .misc-app .box-content.ys-mt-30 .box-line .right select { width:100%; }
+.misc-app .box-content.ys-mt-30 .button-wrap { margin:0; flex:0 0 auto; }
+.misc-app .box-content.ys-mt-30 .button.is-fullwidth { width:auto; }
+.misc-app .box-content.ys-mt-30 .ys-section-label { margin:0 0 8px; }
+
+/* keep long tables inside the card */
+.misc-app .gridjs-wrapper { max-width:100%; overflow-x:auto; }
+.misc-app .misc-box-full { grid-column:1 / -1; }

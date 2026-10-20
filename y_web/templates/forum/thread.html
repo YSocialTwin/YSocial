@@ -122,7 +122,7 @@
                     <!-- Reddit-style navigation -->
                     <div class="reddit-thread-nav" style="margin-bottom: 20px; padding: 10px 0; border-bottom: 1px solid #e1e8ed;">
                         <a class="reddit-back-link" href="{{ back_url or ('/' ~ exp_id ~ '/rfeed') }}" style="color: #0079d3; text-decoration: none; font-size: 14px;">
-                            ← Back to feed
+                            {{ _('← Back to feed') }}
                         </a>
                     </div>
 
@@ -188,5 +188,6 @@ window.redditFeedConfig = Object.freeze({
 {% if forum_memory_enabled %}
 <script src="{{ url_for('static', filename='assets/js/reddit/forum-chat.js') }}"></script>
 {% endif %}
+{% include "shared/plugin_loader.html" %}
 </body>
 </html>

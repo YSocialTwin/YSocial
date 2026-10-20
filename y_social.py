@@ -1,4 +1,5 @@
 import os
+import sys
 from argparse import ArgumentParser
 
 
@@ -125,13 +126,49 @@ def start_app(
             "Development mode enabled: private plugin repositories are listable/installable."
         )
 
+    # Once per start: plugins listed in the public plugin registry (cached copy
+    # right away, fresh copy in the background; offline keeps the cache).
+    try:
+        from y_web.src.external_runtime.catalog import start_catalog_refresh
+
+        start_catalog_refresh()
+    except Exception:
+        pass
+
+    # Once per start: find out which "private" plugin repositories became public
+    # (background, never delays start-up; offline keeps the last known state).
+    try:
+        import threading
+
+        from y_web.src.external_runtime.registry import refresh_public_repos
+
+        threading.Thread(
+            target=lambda: refresh_public_repos(force=True),
+            name="plugin-visibility-check",
+            daemon=True,
+        ).start()
+    except Exception:
+        pass
+
     if db_type.lower() == "sqlite":
         app.run(debug=debug, host=host, port=port, threaded=False)
     else:
         app.run(debug=debug, host=host, port=port)
 
 
-if __name__ == "__main__":
+def main(argv=None):
+    """Command line entry point (the ``ysocial`` console script)."""
+    # Installed (wheel) runs: plugins and child tools must use this interpreter.
+    from y_web.src.system.path_utils import _is_source_checkout, get_base_path
+
+    if not getattr(sys, "frozen", False) and not _is_source_checkout(get_base_path()):
+        os.environ.setdefault("YSOCIAL_PYTHON", sys.executable)
+    # `kill <pid>` / the installer's Stop button send SIGTERM: exit through
+    # SystemExit so the atexit cleanup (running experiments, Jupyter) runs.
+    import signal
+
+    signal.signal(signal.SIGTERM, lambda signum, frame: sys.exit(0))
+
     parser = ArgumentParser()
 
     parser.add_argument(
@@ -173,7 +210,7 @@ if __name__ == "__main__":
         ),
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     try:
         from y_web.pyinstaller_utils.installation_id import (
@@ -194,3 +231,7 @@ if __name__ == "__main__":
         notebook=args.no_notebook,
         development=args.development,
     )
+
+
+if __name__ == "__main__":
+    main()

@@ -8,6 +8,7 @@ Usage:
 Environment variables (see .env.example at repository root):
     YSOCIAL_SECRET_KEY  — Flask secret key (required in production)
     FLASK_ENV           — "development" (default) | "production" | "testing"
+    YSOCIAL_LANGUAGES   — enabled UI languages, e.g. "en,it" (default); "en" switches translations off
     LLM_BACKEND         — LLM backend type (ollama, vllm, or custom host:port)
     LLM_URL             — Custom LLM endpoint URL
     REDIS_URL           — Redis connection URL
@@ -32,6 +33,25 @@ class BaseConfig:
     TEMPLATES_AUTO_RELOAD = True
     SESSION_COOKIE_NAME = "YSocial_session"
 
+    # Internationalisation (Flask-Babel). Catalogs live in y_web/translations.
+    BABEL_DEFAULT_LOCALE = "en"
+    BABEL_DEFAULT_TIMEZONE = "UTC"
+    BABEL_TRANSLATION_DIRECTORIES = "translations"
+    # Kill switch: YSOCIAL_LANGUAGES="en" (comma separated) withdraws a language without a
+    # deploy; English, the source language, is always available.
+    SUPPORTED_LANGUAGES = tuple(
+        dict.fromkeys(
+            ["en"]
+            + [
+                c.strip()
+                for c in os.environ.get("YSOCIAL_LANGUAGES", "en,it").split(",")
+                if c.strip()
+            ]
+        )
+    )
+    # Pseudo-locale "en-XA" (accented, padded text) to find unmarked strings.
+    PSEUDO_LOCALE_ENABLED = os.environ.get("YSOCIAL_PSEUDO_LOCALE", "") == "1"
+
     # LLM
     LLM_BACKEND: str | None = os.environ.get("LLM_BACKEND")
     LLM_URL: str | None = os.environ.get("LLM_URL")
@@ -52,6 +72,30 @@ class BaseConfig:
                 + "\n".join(f"  - {e}" for e in errors)
                 + "\n\nCopy .env.example to .env and fill in the required values."
             )
+
+
+SECRET_KEY_FILE = ".ysocial_secret_key"
+
+
+def load_or_create_secret_key(path):
+    """Return the secret key stored in *path*, creating it on first use.
+
+    A key regenerated at every start invalidates every signed cookie when the
+    server restarts, "Remember me" (the remember cookie) included.
+    """
+    try:
+        if os.path.isfile(path):
+            with open(path, encoding="utf-8") as fh:
+                key = fh.read().strip()
+            if key:
+                return key
+        key = secrets.token_hex(32)
+        fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write(key)
+        return key
+    except OSError:
+        return None
 
 
 class DevelopmentConfig(BaseConfig):

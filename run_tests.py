@@ -41,7 +41,6 @@ def run_tests():
         "y_web/tests/test_llm_agents_enabled.py",
         "y_web/tests/test_llm_annotations.py",
         "y_web/tests/test_llm_backend.py",
-        "y_web/tests/test_macos_code_signing.py",
         "y_web/tests/test_merge_populations.py",
         "y_web/tests/test_population_reuse.py",
         "y_web/tests/test_pyinstaller_console_suppression.py",

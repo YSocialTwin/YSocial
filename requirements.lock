@@ -109,6 +109,10 @@ flask==3.0.3
     #   flask-login
     #   flask-sqlalchemy
     #   flask-wtf
+babel==2.18.0
+    # via flask-babel
+flask-babel==4.0.0
+    # via -r requirements/base.txt
 flask-login==0.6.3
     # via -r requirements/base.txt
 flask-sqlalchemy==3.1.1
@@ -573,8 +577,6 @@ xxhash==4.0.1
     # via langsmith
 yarl==1.24.5
     # via aiohttp
-yclient-memory==0.1.0
-    # via -r requirements/base.txt
 ysights==0.2.0
     # via -r requirements/base.txt
 zipp==4.1.0

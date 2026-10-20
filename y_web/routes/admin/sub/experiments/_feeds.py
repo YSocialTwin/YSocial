@@ -36,6 +36,7 @@ from flask_login import current_user, login_required, login_user
 from sqlalchemy import select
 
 from y_web import db  # , app
+from y_web.i18n import gettext as _
 from y_web.src.content.avatars import normalize_forum_avatar_mode
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
@@ -407,10 +408,12 @@ def update_rss_feeds(uid):
         and int(getattr(experiment, "running", 0) or 0) == 1
     ):
         flash(
-            "The updated forum feed assignment has been saved. Running clients will use the new feeds after they are restarted.",
+            _(
+                "The updated forum feed assignment has been saved. Running clients will use the new feeds after they are restarted."
+            ),
             "info",
         )
-    flash("Forum feed assignments updated successfully.", "success")
+    flash(_("Forum feed assignments updated successfully."), "success")
     return redirect(url_for("experiments.experiment_details", uid=uid))
 
 
@@ -423,7 +426,7 @@ def parse_rss_feed():
     payload = request.get_json(silent=True) or {}
     feed_url = str(payload.get("feed_url", "")).strip()
     if not feed_url:
-        return jsonify({"error": "No URL provided"}), 400
+        return jsonify({"error": _("No URL provided")}), 400
 
     if "://" not in feed_url:
         feed_url = f"https://{feed_url}"
@@ -432,12 +435,15 @@ def parse_rss_feed():
         feed_content = _read_feed_with_headers(feed_url)
         parsed_feed = _parse_admin_feed_metadata(feed_url, feed_content)
         if parsed_feed is None:
-            return jsonify({"error": "Invalid RSS feed URL"}), 400
+            return jsonify({"error": _("Invalid RSS feed URL")}), 400
         return jsonify(parsed_feed)
     except HTTPError as exc:
-        return jsonify({"error": f"Feed source returned HTTP {exc.code}."}), 400
+        return (
+            jsonify({"error": _("Feed source returned HTTP %(code)s.", code=exc.code)}),
+            400,
+        )
     except URLError:
-        return jsonify({"error": "Feed source could not be reached."}), 400
+        return jsonify({"error": _("Feed source could not be reached.")}), 400
     except Exception as exc:
         return jsonify({"error": str(exc)}), 400
 
@@ -522,11 +528,11 @@ def upload_rss_feeds(uid):
 
     rss_feeds_path = os.path.join(experiment_dir, "rss_feeds.json")
     if "file" not in request.files:
-        return jsonify({"error": "No file provided"}), 400
+        return jsonify({"error": _("No file provided")}), 400
 
     upload = request.files["file"]
     if upload.filename == "":
-        return jsonify({"error": "No file selected"}), 400
+        return jsonify({"error": _("No file selected")}), 400
 
     try:
         content = upload.read().decode("utf-8")
@@ -542,7 +548,7 @@ def upload_rss_feeds(uid):
             json.dump(new_feeds, handle, indent=2)
         return jsonify({"success": True, "count": len(new_feeds)})
     except json.JSONDecodeError:
-        return jsonify({"error": "Invalid JSON format"}), 400
+        return jsonify({"error": _("Invalid JSON format")}), 400
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
     except Exception as exc:
@@ -559,11 +565,11 @@ def upload_url_feeds(uid):
 
     url_feeds_path = os.path.join(experiment_dir, "url_feeds.txt")
     if "file" not in request.files:
-        return jsonify({"error": "No file provided"}), 400
+        return jsonify({"error": _("No file provided")}), 400
 
     upload = request.files["file"]
     if upload.filename == "":
-        return jsonify({"error": "No file selected"}), 400
+        return jsonify({"error": _("No file selected")}), 400
 
     try:
         content = upload.read().decode("utf-8")
@@ -613,7 +619,7 @@ def create_forum_rss_resource():
 
     feed_url = str(request.form.get("feed_url", "")).strip()
     if not feed_url:
-        flash("RSS feed URL is required.", "error")
+        flash(_("RSS feed URL is required."), "error")
         return redirect("/admin/forum_rss_resources")
     if "://" not in feed_url:
         feed_url = f"https://{feed_url}"
@@ -625,10 +631,10 @@ def create_forum_rss_resource():
             raise ValueError("Invalid RSS feed URL")
         normalized = _normalize_rss_feed_item(parsed_feed)
     except HTTPError as exc:
-        flash(f"Feed source returned HTTP {exc.code}.", "error")
+        flash(_("Feed source returned HTTP %(code)s.", code=exc.code), "error")
         return redirect("/admin/forum_rss_resources")
     except URLError:
-        flash("Feed source could not be reached.", "error")
+        flash(_("Feed source could not be reached."), "error")
         return redirect("/admin/forum_rss_resources")
     except ValueError as exc:
         flash(str(exc), "error")
@@ -649,7 +655,7 @@ def create_forum_rss_resource():
     existing.description = normalized["description"]
     db.session.commit()
 
-    flash("Reusable forum RSS feed saved.", "success")
+    flash(_("Reusable forum RSS feed saved."), "success")
     return redirect("/admin/forum_rss_resources")
 
 
@@ -662,12 +668,12 @@ def delete_forum_rss_resource(resource_id):
     check_privileges(current_user.username)
     resource = db.session.get(ForumRssFeedResource, resource_id)
     if resource is None:
-        flash("RSS feed resource not found.", "error")
+        flash(_("RSS feed resource not found."), "error")
         return redirect("/admin/forum_rss_resources")
 
     db.session.delete(resource)
     db.session.commit()
-    flash("Reusable forum RSS feed deleted.", "success")
+    flash(_("Reusable forum RSS feed deleted."), "success")
     return redirect("/admin/forum_rss_resources")
 
 
@@ -737,10 +743,12 @@ def update_image_feeds(uid):
         and int(getattr(experiment, "running", 0) or 0) == 1
     ):
         flash(
-            "The updated image feed assignment has been saved. Running clients will use the new feeds after they are restarted.",
+            _(
+                "The updated image feed assignment has been saved. Running clients will use the new feeds after they are restarted."
+            ),
             "info",
         )
-    flash("Image feeds updated successfully.", "success")
+    flash(_("Image feeds updated successfully."), "success")
     return redirect(url_for("experiments.experiment_details", uid=uid))
 
 
@@ -754,11 +762,11 @@ def upload_image_feeds(uid):
 
     image_feeds_path = os.path.join(experiment_dir, "image_feeds.json")
     if "file" not in request.files:
-        return jsonify({"error": "No file provided"}), 400
+        return jsonify({"error": _("No file provided")}), 400
 
     upload = request.files["file"]
     if upload.filename == "":
-        return jsonify({"error": "No file selected"}), 400
+        return jsonify({"error": _("No file selected")}), 400
 
     try:
         content = upload.read().decode("utf-8")
@@ -807,7 +815,7 @@ def upload_image_feeds(uid):
             json.dump(normalized_feeds, handle, indent=2)
         return jsonify({"success": True, "count": len(normalized_feeds)})
     except json.JSONDecodeError:
-        return jsonify({"error": "Invalid JSON format"}), 400
+        return jsonify({"error": _("Invalid JSON format")}), 400
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
     except Exception as exc:
@@ -845,7 +853,7 @@ def create_forum_image_resource():
     ]
 
     if not selected_interests:
-        flash("Select at least one interest for the image feed.", "error")
+        flash(_("Select at least one interest for the image feed."), "error")
         return redirect("/admin/forum_image_resources")
 
     try:
@@ -858,12 +866,18 @@ def create_forum_image_resource():
         )
     except HTTPError as exc:
         if exc.code == 404:
-            flash(f"r/{subreddit_input} does not exist.", "error")
+            flash(
+                _(
+                    "r/%(subreddit_input)s does not exist.",
+                    subreddit_input=subreddit_input,
+                ),
+                "error",
+            )
         else:
-            flash(f"Reddit returned HTTP {exc.code}.", "error")
+            flash(_("Reddit returned HTTP %(code)s.", code=exc.code), "error")
         return redirect("/admin/forum_image_resources")
     except URLError:
-        flash("Reddit could not be reached. Retry later.", "error")
+        flash(_("Reddit could not be reached. Retry later."), "error")
         return redirect("/admin/forum_image_resources")
     except ValueError as exc:
         flash(str(exc), "error")
@@ -882,7 +896,7 @@ def create_forum_image_resource():
     existing.interests = json.dumps(normalized["interests"])
     db.session.commit()
 
-    flash("Reusable forum image feed saved.", "success")
+    flash(_("Reusable forum image feed saved."), "success")
     return redirect("/admin/forum_image_resources")
 
 
@@ -895,12 +909,12 @@ def delete_forum_image_resource(resource_id):
     check_privileges(current_user.username)
     resource = db.session.get(ForumImageFeedResource, resource_id)
     if resource is None:
-        flash("Image feed resource not found.", "error")
+        flash(_("Image feed resource not found."), "error")
         return redirect("/admin/forum_image_resources")
 
     db.session.delete(resource)
     db.session.commit()
-    flash("Reusable forum image feed deleted.", "success")
+    flash(_("Reusable forum image feed deleted."), "success")
     return redirect("/admin/forum_image_resources")
 
 
@@ -921,20 +935,28 @@ def parse_image_feed():
         return jsonify({"error": str(exc)}), 400
     except HTTPError as exc:
         if exc.code == 404:
-            return jsonify({"error": f"r/{subreddit} does not exist."}), 400
+            return (
+                jsonify(
+                    {"error": _("r/%(subreddit)s does not exist.", subreddit=subreddit)}
+                ),
+                400,
+            )
         return (
             jsonify(
                 {
                     "error": (
-                        f"Reddit returned HTTP {exc.code} while loading r/{subreddit}. "
-                        "Retry later."
+                        _(
+                            "Reddit returned HTTP %(code)s while loading r/%(subreddit)s. Retry later.",
+                            code=exc.code,
+                            subreddit=subreddit,
+                        )
                     )
                 }
             ),
             400,
         )
     except URLError:
-        return jsonify({"error": "Reddit could not be reached. Retry later."}), 400
+        return jsonify({"error": _("Reddit could not be reached. Retry later.")}), 400
     except Exception as exc:
         return jsonify({"error": str(exc)}), 400
 
@@ -1025,14 +1047,16 @@ def update_embedding_settings(uid):
     if service == "ollama":
         if not host:
             flash(
-                "An Ollama host is required when memory embeddings are enabled.",
+                _("An Ollama host is required when memory embeddings are enabled."),
                 "error",
             )
             return redirect(
                 request.referrer or url_for("experiments.embedding_settings", uid=uid)
             )
         if not model:
-            flash("Select an embedding model before saving the configuration.", "error")
+            flash(
+                _("Select an embedding model before saving the configuration."), "error"
+            )
             return redirect(
                 request.referrer or url_for("experiments.embedding_settings", uid=uid)
             )
@@ -1047,7 +1071,7 @@ def update_embedding_settings(uid):
     with open(config_path, "w") as handle:
         json.dump(config, handle, indent=2)
 
-    flash("Embedding settings updated successfully.", "success")
+    flash(_("Embedding settings updated successfully."), "success")
     return redirect(url_for("experiments.experiment_details", uid=uid))
 
 
@@ -1081,7 +1105,7 @@ def update_forum_avatar_mode(uid):
     with open(config_path, "w") as handle:
         json.dump(config, handle, indent=2)
 
-    flash("Forum avatar mode updated successfully.", "success")
+    flash(_("Forum avatar mode updated successfully."), "success")
     return redirect(
         request.referrer or url_for("experiments.experiment_details", uid=uid)
     )
@@ -1135,5 +1159,5 @@ def update_feed_limits(uid):
     with open(config_path, "w") as handle:
         json.dump(config, handle, indent=2)
 
-    flash("Feed limits updated successfully.", "success")
+    flash(_("Feed limits updated successfully."), "success")
     return redirect(request.referrer or url_for("experiments.feed_limits", uid=uid))

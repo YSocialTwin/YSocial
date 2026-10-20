@@ -11,6 +11,7 @@ nav:
   - Features: features.md
   - Getting Started:
       - Installation Modalities: installation.md
+      - Desktop Installer and Launcher: launcher.md
       - Execution Modalities: running.md
   - Configuration:
       - Configuration Layers: configuration.md
@@ -19,10 +20,15 @@ nav:
   - Reference:
       - CLI Reference: reference/cli.md
       - External Runtime Management: reference/external-runtime-management.md
+      - Publishing a Plugin: reference/publishing-a-plugin.md
       - Usage Examples: USAGE_EXAMPLES.md
+  - Internationalisation:
+      - Adding a Language: i18n/adding-a-language.md
+      - Localization closure checklist: i18n/closure-checklist.md
+      - Conventions: i18n/conventions.md
+      - Contributing (IT): i18n/contributing.md
   - Packaging:
-      - PyInstaller Builds: packaging.md
-      - macOS Code Signing: MACOS_CODE_SIGNING.md
+      - Release and Distribution: packaging.md
 
 theme:
   name: material

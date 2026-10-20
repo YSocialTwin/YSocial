@@ -34,9 +34,12 @@ from sqlalchemy import select
 from werkzeug.utils import secure_filename
 
 from y_web import db
+from y_web.i18n import gettext as _
 from y_web.routes.social._blueprint import main
 from y_web.routes.social.helpers import (
+    _content_recsys_info,
     _experiment_memory_enabled,
+    _load_ui_settings,
     get_safe_profile_pic,
     is_admin,
 )
@@ -50,6 +53,15 @@ from y_web.src.models import Exps, User_mgmt
 from y_web.src.models.admin import Admin_users, Agent, Page
 from y_web.src.models.experiment import Rounds
 from y_web.src.recsys.follow_recsys import get_suggested_users
+from y_web.src.system.avatars_store import get_avatars_dir
+
+
+def _photo_page_size(ui_settings) -> int:
+    """Photos loaded per feed request (``posts_per_page`` in the frontend settings)."""
+    try:
+        return max(1, min(100, int(ui_settings.get("posts_per_page", 10))))
+    except (TypeError, ValueError):
+        return 10
 
 
 def _photo_logged_user_id():
@@ -541,9 +553,9 @@ def _photo_sidebar_context(
         is_page=active_is_page,
     )
     sidebar_role_label = (
-        "Viewing as"
+        _("Viewing as")
         if is_admin(current_user.username) and active_username != current_user.username
-        else ("Admin" if is_admin(current_user.username) else "Participant")
+        else (_("Admin") if is_admin(current_user.username) else _("Participant"))
     )
     return {
         "logged_id": logged_id,
@@ -1988,6 +2000,20 @@ def _photo_search_payload(
     }
 
 
+def _photo_announce_event(exp: Exps, event: str, payload: dict) -> None:
+    """Tell installed plugins about a human action (never raises)."""
+    try:
+        from flask import current_app
+
+        from y_web.src.external_runtime.plugin_loader import dispatch_platform_event
+
+        dispatch_platform_event(
+            current_app._get_current_object(), int(exp.idexp), event, payload
+        )
+    except Exception:
+        pass
+
+
 @main.get("/photo/feed")
 @login_required
 def photo_feed_logged():
@@ -2001,7 +2027,7 @@ def photo_feed_logged():
         select(Exps).filter(Exps.status != 0, Exps.platform_type == "photo_sharing")
     ).all()
     if not exps:
-        flash("No active photo-sharing experiment. Please activate one first.")
+        flash(_("No active photo-sharing experiment. Please activate one first."))
         return redirect("/admin/experiments")
 
     if len(exps) > 1:
@@ -2216,13 +2242,7 @@ def photo_profile(exp_id, user_id, mode="recent", page=1):
     }
     if is_self_profile:
         try:
-            users_img_dir = os.path.join(
-                os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-                "static",
-                "assets",
-                "img",
-                "users",
-            )
+            users_img_dir = get_avatars_dir()
             available_profile_pics = [
                 url_for("static", filename="assets/img/users/" + filename)
                 for filename in sorted(
@@ -2474,6 +2494,11 @@ def api_photo_create_comment(exp_id, photo_id):
         return {"ok": False, "error": "comment_not_created"}, 500
 
     comment = _photo_comment_payload(exp, dict(row))
+    _photo_announce_event(
+        exp,
+        "photo_comment_created",
+        {"photo_id": str(photo_id), "comment_id": comment_id, "user_id": commenter_id},
+    )
     comments_count = _photo_db_rows(
         exp,
         """
@@ -3154,6 +3179,9 @@ def api_photo_share(exp_id):
         return {"ok": False, "error": "photo_not_created"}, 500
 
     item = _photo_build_item(exp, dict(row))
+    _photo_announce_event(
+        exp, "photo_created", {"photo_id": photo_id, "user_id": user_id}
+    )
     html = render_template(
         "photo/components/posts.html",
         items=[item],
@@ -3353,9 +3381,19 @@ def photo_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     if page < 1:
         page = 1
 
-    max_post_per_page = 10
+    ui_settings = _load_ui_settings(exp_id)
+    max_post_per_page = _photo_page_size(ui_settings)
     username = ""
-    active_tab = str(request.args.get("tab", "for_you") or "for_you").strip().lower()
+    active_tab = (
+        str(
+            request.args.get(
+                "tab", ui_settings.get("default_photo_feed_tab", "for_you")
+            )
+            or "for_you"
+        )
+        .strip()
+        .lower()
+    )
     if active_tab not in {"for_you", "follower"}:
         active_tab = "for_you"
 
@@ -3436,6 +3474,9 @@ def photo_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
         spages=spages,
         suggested_contacts=suggested_contacts,
         followed_contact_ids=followed_contact_ids,
+        recsys_info=_content_recsys_info(
+            getattr(logged_user, "recsys_type", None), _load_ui_settings(exp_id)
+        ),
         experiment_memory_enabled=_experiment_memory_enabled(exp_id),
         **_photo_sidebar_context(
             exp,
@@ -3459,8 +3500,18 @@ def api_photo_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1
     if page < 1:
         page = 1
 
-    max_post_per_page = 10
-    active_tab = str(request.args.get("tab", "for_you") or "for_you").strip().lower()
+    ui_settings = _load_ui_settings(exp_id)
+    max_post_per_page = _photo_page_size(ui_settings)
+    active_tab = (
+        str(
+            request.args.get(
+                "tab", ui_settings.get("default_photo_feed_tab", "for_you")
+            )
+            or "for_you"
+        )
+        .strip()
+        .lower()
+    )
     if active_tab not in {"for_you", "follower"}:
         active_tab = "for_you"
 

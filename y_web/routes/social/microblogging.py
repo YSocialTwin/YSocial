@@ -20,8 +20,11 @@ from flask_login import current_user, login_required
 from sqlalchemy import select
 
 from y_web import db
+from y_web.hashtag_text import normalize_hashtag
+from y_web.i18n import gettext as _
 from y_web.routes.social._blueprint import main
 from y_web.routes.social.helpers import (
+    _content_recsys_info,
     _forum_logged_user,
     _get_discussions,
     _load_ui_settings,
@@ -142,7 +145,7 @@ def feeed_logged():
     # Get active experiments
     exps = db.session.scalars(select(Exps).filter(Exps.status != 0)).all()
     if not exps:
-        flash("No active experiment. Please activate an experiment first.")
+        flash(_("No active experiment. Please activate an experiment first."))
         return redirect("/admin/experiments")
 
     if len(exps) > 1:
@@ -210,7 +213,9 @@ def feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
                 ).first()
                 if not user:
                     flash(
-                        "User not found in experiment. Please contact administrator.",
+                        _(
+                            "User not found in experiment. Please contact administrator."
+                        ),
                         "error",
                     )
                     return redirect(f"/admin/experiments")
@@ -345,7 +350,7 @@ def feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
             select(User_mgmt).filter_by(username=current_user.username)
         ).first()
         if not logged_user:
-            flash("User not found in experiment", "error")
+            flash(_("User not found in experiment"), "error")
             return redirect(url_for("main.index"))
         logged_id = logged_user.id
 
@@ -371,6 +376,9 @@ def feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
             sfollow=sfollow,
             spages=spages,
             ui=ui,
+            recsys_info=_content_recsys_info(
+                getattr(logged_user, "recsys_type", None), ui
+            ),
             frontend_adds_on_modules=active_modules_context(exp_id),
         )
 
@@ -787,7 +795,7 @@ def api_header_search(exp_id):
     results.extend(
         {
             "type": "hashtag",
-            "title": f"#{match.hashtag}",
+            "title": f"#{normalize_hashtag(match.hashtag)}",
             "subtitle": "Hashtag",
             "url": f"/{exp_id}/hashtag_posts/{match.id}/1",
         }
@@ -832,13 +840,13 @@ def get_thread(exp_id, post_id):
         select(User_mgmt).filter_by(username=current_user.username)
     ).first()
     if not logged_user:
-        flash("User not found in experiment", "error")
+        flash(_("User not found in experiment"), "error")
         return redirect(url_for("main.index"))
     exp_user_id = logged_user.id
 
     requested_post = db.session.scalars(select(Post).filter_by(id=post_id)).first()
     if not requested_post:
-        flash("Post not found", "error")
+        flash(_("Post not found"), "error")
         return redirect(url_for("main.index"))
 
     thread_root_id = getattr(requested_post, "thread_id", None) or requested_post.id
@@ -855,7 +863,7 @@ def get_thread(exp_id, post_id):
 
     hidden_ids = _hidden_author_ids_for_viewer(exp_id, exp_user_id)
     if hidden_ids and root_post.user_id in hidden_ids:
-        flash("Post not found", "error")
+        flash(_("Post not found"), "error")
         return redirect(url_for("main.index"))
 
     # Get all comments with this thread_id

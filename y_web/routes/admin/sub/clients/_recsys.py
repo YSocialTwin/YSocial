@@ -10,6 +10,7 @@ from flask_login import current_user, login_required
 from sqlalchemy import select
 
 from y_web import db
+from y_web.i18n import gettext as _
 from y_web.src.hpc.population_backup import _population_json_candidates
 from y_web.src.models import (
     Agent,
@@ -33,17 +34,17 @@ def _update_client_simulation_internal(uid, expected_mode):
 
     client = db.session.scalars(select(Client).filter_by(id=uid)).first()
     if not client:
-        flash("Client not found.", "error")
+        flash(_("Client not found."), "error")
         return redirect(url_for("experiments.settings"))
 
     exp = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()
     if not exp:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
 
     actual_mode = _get_experiment_mode(exp)
     if actual_mode != expected_mode:
-        flash("Update route does not match the experiment modality.", "error")
+        flash(_("Update route does not match the experiment modality."), "error")
         if actual_mode == "hpc":
             return redirect(url_for("clientsr.client_details_hpc", uid=uid))
         if actual_mode == "forum":
@@ -184,7 +185,7 @@ def _update_client_simulation_internal(uid, expected_mode):
         select(Population).filter_by(id=client.population_id)
     ).first()
     if not population:
-        flash("Population not found.", "warning")
+        flash(_("Population not found."), "warning")
         return redirect(request.referrer)
 
     config_path = (
@@ -303,9 +304,9 @@ def _update_client_simulation_internal(uid, expected_mode):
         with open(config_path, "w") as f:
             json.dump(config, f, indent=2)
     else:
-        flash("Configuration file not found.", "warning")
+        flash(_("Configuration file not found."), "warning")
 
-    flash("Client simulation parameters updated.", "success")
+    flash(_("Client simulation parameters updated."), "success")
     return redirect(request.referrer)
 
 
@@ -383,7 +384,11 @@ def _sync_population_recsys_fields(
                 updated_paths.append(candidate)
         except Exception as exc:
             flash(
-                f"Updated database values, but failed to sync population config '{os.path.basename(candidate)}': {exc}",
+                _(
+                    "Updated database values, but failed to sync population config '%(basename)s': %(error)s",
+                    basename=os.path.basename(candidate),
+                    error=exc,
+                ),
                 "warning",
             )
 
@@ -399,17 +404,17 @@ def _update_recsys_internal(uid, expected_mode):
 
     client = db.session.scalars(select(Client).filter_by(id=uid)).first()
     if not client:
-        flash("Client not found.", "error")
+        flash(_("Client not found."), "error")
         return redirect(url_for("experiments.settings"))
 
     exp = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()
     if not exp:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
 
     actual_mode = _get_experiment_mode(exp)
     if actual_mode != expected_mode:
-        flash("Update route does not match the experiment modality.", "error")
+        flash(_("Update route does not match the experiment modality."), "error")
         if actual_mode == "hpc":
             return redirect(url_for("clientsr.client_details_hpc", uid=uid))
         if actual_mode == "forum":
@@ -469,7 +474,10 @@ def _update_recsys_internal(uid, expected_mode):
                 json.dump(client_config, handle, indent=4)
         except Exception as exc:
             flash(
-                f"Updated database values, but failed to sync client config: {exc}",
+                _(
+                    "Updated database values, but failed to sync client config: %(error)s",
+                    error=exc,
+                ),
                 "warning",
             )
 
@@ -514,12 +522,12 @@ def update_recsys(uid):
 
     client = db.session.scalars(select(Client).filter_by(id=uid)).first()
     if not client:
-        flash("Client not found.", "error")
+        flash(_("Client not found."), "error")
         return redirect(url_for("experiments.settings"))
 
     exp = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()
     if not exp:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
 
     if getattr(exp, "simulator_type", "Standard") == "HPC":
@@ -535,12 +543,12 @@ def _update_client_llm_internal(uid, expected_mode):
 
     client = db.session.scalars(select(Client).filter_by(id=uid)).first()
     if not client:
-        flash("Client not found.", "error")
+        flash(_("Client not found."), "error")
         return redirect(url_for("experiments.settings"))
 
     exp = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()
     if not exp:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
 
     actual_mode = (
@@ -549,7 +557,7 @@ def _update_client_llm_internal(uid, expected_mode):
         else ("forum" if exp.platform_type == "forum" else "standard")
     )
     if actual_mode != expected_mode:
-        flash("Update route does not match the experiment modality.", "error")
+        flash(_("Update route does not match the experiment modality."), "error")
         if actual_mode == "hpc":
             return redirect(url_for("clientsr.client_details_hpc", uid=uid))
         if actual_mode == "forum":
@@ -574,7 +582,7 @@ def _update_client_llm_internal(uid, expected_mode):
             user.user_type = user_type
             db.session.commit()
         except:
-            flash("The experiment needs to be activated first.", "error")
+            flash(_("The experiment needs to be activated first."), "error")
             return redirect(request.referrer)
 
     population.llm = user_type
@@ -630,12 +638,12 @@ def update_llm(uid):
 
     client = db.session.scalars(select(Client).filter_by(id=uid)).first()
     if not client:
-        flash("Client not found.", "error")
+        flash(_("Client not found."), "error")
         return redirect(url_for("experiments.settings"))
 
     exp = db.session.scalars(select(Exps).filter_by(idexp=client.id_exp)).first()
     if not exp:
-        flash("Experiment not found.", "error")
+        flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
 
     if getattr(exp, "simulator_type", "Standard") == "HPC":

@@ -3562,3 +3562,104 @@ input:checked + .slider:before {
    Jinja2 expressions (e.g. style="border-left: 4px solid {{ section_color }}").
    These cannot be replaced by static classes and are an approved exception.
    ─────────────────────────────────────────────────────────────────────── */
+
+/* ---- Admin dashboard: Simulations / Training sections ---- */
+.dash-section { margin-bottom: 28px; padding: 18px 18px 6px; border-radius: 14px; border: 1px solid #e5e7eb; background: #f9fafb; }
+.dash-section-training { background: #f5f3ff; border-color: #ddd6fe; }
+.dash-section-simulations { background: #f0f9ff; border-color: #bae6fd; }
+.dash-section-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.dash-section-icon { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 10px; font-size: 22px; color: #fff; background: #0284c7; }
+.dash-section-training .dash-section-icon { background: #7c3aed; }
+.dash-section-title { font-size: 1.15rem; font-weight: 700; line-height: 1.2; margin: 0; color: #111827; }
+.dash-section-sub { font-size: 0.8rem; color: #6b7280; margin: 2px 0 0; }
+.ys-dot-running { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #28a745; }
+.dash-module-list { display: flex; flex-direction: column; gap: 6px; }
+.dash-module-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; border-radius: 8px; background: #fff; border: 1px solid #eef0f3; }
+.dash-module-main { min-width: 0; display: flex; flex-direction: column; }
+.dash-module-title { font-weight: 600; font-size: 0.9rem; color: #1f2937; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-module-meta { font-size: 0.75rem; color: #6b7280; }
+.dash-module-empty { color: #9ca3af; font-style: italic; }
+
+/* Users page: self-registration panel (compact) */
+#box-self-registration .sr-head { display:flex; align-items:center; gap:.6rem; margin-bottom:.35rem; }
+#box-self-registration .sr-title { font-weight:600; font-size:.9rem; }
+#box-self-registration .sr-note { margin-left:auto; font-size:.72rem; color:#b26a00; }
+#box-self-registration .sr-help { margin:.25rem 0 .6rem; font-size:.76rem; line-height:1.35; color:#7a8094; }
+#box-self-registration .sr-search { width:100%; margin-bottom:.5rem; }
+#box-self-registration .sr-filters { display:flex; flex-wrap:wrap; align-items:center; gap:.3rem; margin-bottom:.5rem; }
+#box-self-registration .sr-chip { border:1px solid #dfe3ec; background:#fff; color:#555b70; border-radius:999px; padding:.1rem .6rem; font-size:.72rem; cursor:pointer; }
+#box-self-registration .sr-chip.is-active { background:#3d70b2; border-color:#3d70b2; color:#fff; }
+#box-self-registration .sr-count { margin-left:auto; font-size:.72rem; color:#7a8094; }
+#box-self-registration .sr-list { max-height:15rem; overflow-y:auto; border:1px solid #e6e9f2; border-radius:.5rem; }
+#box-self-registration .sr-row { display:flex; align-items:center; gap:.5rem; padding:.35rem .6rem; font-size:.82rem; cursor:pointer; border-bottom:1px solid #eef0f6; }
+#box-self-registration .sr-row:last-of-type { border-bottom:0; }
+#box-self-registration .sr-row:hover { background:#f6f8fc; }
+#box-self-registration .sr-row[hidden] { display:none; }
+#box-self-registration .sr-name { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#box-self-registration .sr-tags { display:flex; align-items:center; gap:.25rem; flex:none; }
+#box-self-registration .sr-tag { font-size:.62rem; font-weight:600; letter-spacing:.02em; padding:.05rem .4rem; border-radius:999px; background:#eef0f6; color:#555b70; }
+#box-self-registration .sr-tag.is-sim { background:#e5f0fb; color:#245a99; }
+#box-self-registration .sr-tag.is-training { background:#ece9fb; color:#5a4fb0; }
+#box-self-registration .sr-dot { width:.5rem; height:.5rem; border-radius:50%; background:#c4c9d8; }
+#box-self-registration .sr-dot.is-on { background:#2fa66a; }
+#box-self-registration .sr-empty { margin:0; padding:.6rem; font-size:.78rem; color:#7a8094; text-align:center; }
+#box-self-registration .sr-message { min-height:1rem; font-size:.74rem; }
+#box-self-registration .sr-message.is-ok { color:#1a7f45; } #box-self-registration .sr-message.is-error { color:#c0392b; }
+#box-self-registration .sr-row .switch-small { flex:none; margin:0; }
+
+/* Prompt language selector: a compact box of its own above the prompts form */
+.dashboard-box.ys-prompt-language { padding: 0.875rem 1.25rem; }
+.ys-prompt-language .ys-prompt-language-row { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+.ys-prompt-language .ys-prompt-language-title { margin: 0; flex: 0 0 auto; font-size: 1rem; font-weight: 500; line-height: 2.5rem; }
+.ys-prompt-language .ys-prompt-language-select { flex: 0 1 220px; min-width: 150px; height: 2.5rem; }
+.ys-prompt-language .ys-prompt-language-select select { height: 2.5rem; font-size: 0.95rem; padding-top: 0; padding-bottom: 0; width: 100%; }
+.ys-prompt-language .button { height: 2.5rem; font-size: 0.95rem; padding: 0 1.25rem; margin: 0; }
+.ys-prompt-language .ys-prompt-language-note { margin: 0.5rem 0 0; font-size: 0.85rem; line-height: 1.4; }
+
+/* Dashboard side boxes: compact quick guide and "News from the Agents" */
+.dash-side-box { padding: 1.1rem 1.25rem !important; }
+.dash-side-box > .dash-side-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 .55rem; }
+.dash-side-box .dash-side-head .title { margin: 0 !important; font-size: 1.05rem; line-height: 1.3; }
+.dash-side-box .dash-side-intro { margin: 0 0 .5rem; font-size: .8rem; line-height: 1.35; opacity: .75; }
+.dash-tour-btn { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 4px; border: 0; border-radius: 999px; padding: 3px 11px; font-size: .75rem; font-weight: 500; line-height: 1.5; color: #fff; cursor: pointer; background: linear-gradient(135deg, #039be5 0%, #00bcd4 100%); box-shadow: 0 2px 6px rgba(3, 155, 229, .3); transition: transform .15s, box-shadow .15s; }
+.dash-tour-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(3, 155, 229, .4); }
+.dash-side-link { flex: 0 0 auto; font-size: .78rem; white-space: nowrap; }
+.dash-side-link .mdi { font-size: .85em; }
+.dash-steps .dash-step { padding: .4rem 0; border-top: 1px solid rgba(127, 127, 127, .22); font-size: .82rem; line-height: 1.35; }
+.dash-steps .dash-step:first-of-type { border-top: 0; padding-top: .1rem; }
+.dash-steps .dash-step b { display: block; font-size: .85rem; }
+.dash-steps .dash-step span { display: block; opacity: .8; }
+.dash-news { list-style: none; margin: 0; padding: 0; }
+.dash-news li { margin: 0; border-top: 1px solid rgba(127, 127, 127, .22); }
+.dash-news li:first-child { border-top: 0; }
+.dash-news a { display: block; padding: .45rem .4rem; margin: 0 -.4rem; border-radius: 8px; color: inherit; text-decoration: none; transition: background .15s; }
+.dash-news a:hover, .dash-news a:focus-visible { background: rgba(3, 155, 229, .1); outline: none; }
+.dash-news-date { display: flex; align-items: center; gap: 6px; min-height: 1em; font-size: .72rem; line-height: 1.2; opacity: .65; }
+.dash-news-new { font-style: normal; font-weight: 600; font-size: .66rem; letter-spacing: .04em; text-transform: uppercase; padding: 0 6px; border-radius: 999px; color: #fff; background: #039be5; opacity: 1; }
+.dash-news-title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-top: 1px; font-size: .84rem; font-weight: 500; line-height: 1.3; }
+.dash-news a:hover .dash-news-title { color: #039be5; }
+.is-dark .dash-side-box .dash-side-intro, .is-dark .dash-steps .dash-step span { opacity: .75; }
+
+/* Dashboard: more compact Simulations / Training sections */
+.dash-section { margin-bottom: 16px; padding: 12px 12px 2px; border-radius: 12px; }
+.dash-section .dash-section-head { gap: 10px; margin-bottom: 8px; }
+.dash-section .dash-section-icon { width: 30px; height: 30px; border-radius: 8px; font-size: 18px; }
+.dash-section .dash-section-title { font-size: 1rem; }
+.dash-section .dash-section-sub { font-size: .74rem; margin-top: 0; }
+.dash-section .dashboard-box { padding: .75rem .9rem; border-radius: .6rem; }
+.dash-section .dashboard-box:not(:last-child) { margin-bottom: .75rem; }
+.dash-section .dashboard-box > .title, .dash-section .dashboard-box .title.is-5, .dash-section .dashboard-box .title.is-6 { margin-bottom: .35rem !important; font-size: .95rem; }
+.dash-section .dashboard-box .ys-text-small, .dash-section .dashboard-box .group-helper-text { margin: 0 0 .45rem !important; font-size: .74rem; line-height: 1.3; }
+.dash-section .columns.is-multiline { margin: -.3rem; }
+.dash-section .columns.is-multiline > .column { padding: .3rem; }
+.dash-section .experiment-group { margin-bottom: 6px !important; }
+.dash-section .group-header { padding: 5px 10px !important; border-radius: 6px; }
+.dash-section .group-header-title { font-size: .85rem; }
+.dash-section .group-header-hint { font-size: .68rem; }
+.dash-section .group-content { margin-top: 4px !important; }
+.dash-section .dash-module-list { gap: 4px; }
+.dash-section .dash-module-row { padding: 4px 8px; border-radius: 6px; }
+.dash-section .dash-module-title { font-size: .84rem; }
+.dash-section .dash-module-meta { font-size: .7rem; }
+.dash-section .dash-module-toggle { height: 1.8em; padding: 0 .65em; font-size: .72rem; }
+.dash-section .dash-module-empty { margin: 0; font-size: .78rem; }

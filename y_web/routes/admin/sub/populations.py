@@ -20,6 +20,7 @@ from flask_login import current_user, login_required
 from sqlalchemy import delete, func, select
 
 from y_web import db
+from y_web.i18n import gettext as _
 from y_web.src.agents.custom_features import (
     agent_ext_entries_from_population_agent_payload,
     feature_entries_from_population_agent_payload,
@@ -306,21 +307,21 @@ def create_population():
     }
 
     if not name or not str(name).strip():
-        flash("Population name is required.", "error")
+        flash(_("Population name is required."), "error")
         return redirect(request.referrer)
 
     try:
         n_agents_value = int(n_agents)
     except (TypeError, ValueError):
-        flash("Population size must be a valid integer.", "error")
+        flash(_("Population size must be a valid integer."), "error")
         return redirect(request.referrer)
 
     if n_agents_value <= 0:
-        flash("Population size must be greater than zero.", "error")
+        flash(_("Population size must be greater than zero."), "error")
         return redirect(request.referrer)
 
     if male_percentage + female_percentage != 100:
-        flash("Gender distribution must total 100%.", "error")
+        flash(_("Gender distribution must total 100%."), "error")
         return redirect(request.referrer)
 
     required_distributions = {
@@ -331,10 +332,12 @@ def create_population():
     }
     for label, distribution in required_distributions.items():
         if not distribution:
-            flash(f"Select at least one {label}.", "error")
+            flash(_("Select at least one %(label)s.", label=label), "error")
             return redirect(request.referrer)
         if not _distribution_total_is_valid(distribution):
-            flash(f"The {label} percentages must sum to 100%.", "error")
+            flash(
+                _("The %(label)s percentages must sum to 100%%.", label=label), "error"
+            )
             return redirect(request.referrer)
 
     nationalities = request.form.get("nationalities")
@@ -417,21 +420,23 @@ def create_population():
         }
 
         if not _distribution_total_is_valid(photo_story_visibility):
-            flash("Photo story visibility percentages must sum to 100%.", "error")
+            flash(_("Photo story visibility percentages must sum to 100%."), "error")
             return redirect(request.referrer)
         if not _distribution_total_is_valid(photo_creator_tier):
-            flash("Photo creator tier percentages must sum to 100%.", "error")
+            flash(_("Photo creator tier percentages must sum to 100%."), "error")
             return redirect(request.referrer)
 
         try:
             photo_min = int(photo_sharing_config["attention_budget"]["min"])
             photo_max = int(photo_sharing_config["attention_budget"]["max"])
         except (TypeError, ValueError):
-            flash("Photo attention budget min/max must be valid integers.", "error")
+            flash(_("Photo attention budget min/max must be valid integers."), "error")
             return redirect(request.referrer)
         if photo_min <= 0 or photo_max <= 0 or photo_min > photo_max:
             flash(
-                "Photo attention budget must use positive min/max values with min <= max.",
+                _(
+                    "Photo attention budget must use positive min/max values with min <= max."
+                ),
                 "error",
             )
             return redirect(request.referrer)
@@ -486,7 +491,10 @@ def create_population():
         db.session.delete(population)
         db.session.commit()
         flash(
-            f"Population generation failed: {exc}. No partial population was kept.",
+            _(
+                "Population generation failed: %(error)s. No partial population was kept.",
+                error=exc,
+            ),
             "error",
         )
         return redirect(request.referrer)
@@ -995,7 +1003,7 @@ def delete_population(uid):
     ).first()
     if pop_exp:
         # if the population is assigned to any experiment, do not delete raise a warning
-        flash("Population is assigned to an experiment. Cannot delete.")
+        flash(_("Population is assigned to an experiment. Cannot delete."))
         return populations()
 
     if population.pop_type is not None:
@@ -1013,7 +1021,9 @@ def delete_population(uid):
             ).first()
             if agent and agent.ag_type == population.pop_type and assigned_count <= 1:
                 flash(
-                    "Cannot delete this custom population because at least one custom agent would be left without a population.",
+                    _(
+                        "Cannot delete this custom population because at least one custom agent would be left without a population."
+                    ),
                     "error",
                 )
                 return redirect(f"/admin/custom_agent/{population.pop_type}")
@@ -1431,7 +1441,9 @@ def merge_populations():
 
     if not merged_name or not selected_ids:
         flash(
-            "Please provide a population name and select at least 2 populations to merge."
+            _(
+                "Please provide a population name and select at least 2 populations to merge."
+            )
         )
         return redirect(request.referrer)
 
@@ -1441,11 +1453,11 @@ def merge_populations():
             int(pid.strip()) for pid in selected_ids.split(",") if pid.strip()
         ]
     except ValueError:
-        flash("Invalid population IDs provided.")
+        flash(_("Invalid population IDs provided."))
         return redirect(request.referrer)
 
     if len(population_ids) < 2:
-        flash("Please select at least 2 populations to merge.")
+        flash(_("Please select at least 2 populations to merge."))
         return redirect(request.referrer)
 
     # Check if merged population name already exists
@@ -1453,7 +1465,12 @@ def merge_populations():
         select(Population).filter_by(name=merged_name)
     ).first()
     if existing_pop:
-        flash(f"Population with name '{merged_name}' already exists.")
+        flash(
+            _(
+                "Population with name '%(merged_name)s' already exists.",
+                merged_name=merged_name,
+            )
+        )
         return redirect(request.referrer)
 
     # Verify all selected populations exist
@@ -1461,7 +1478,7 @@ def merge_populations():
     for pop_id in population_ids:
         pop = db.session.scalars(select(Population).filter_by(id=pop_id)).first()
         if not pop:
-            flash(f"Population with ID {pop_id} not found.")
+            flash(_("Population with ID %(pop_id)s not found.", pop_id=pop_id))
             return redirect(request.referrer)
         source_populations.append(pop)
 
@@ -1472,12 +1489,16 @@ def merge_populations():
     }
     if len(source_types) > 1:
         flash(
-            "Selected populations have incompatible platform types and cannot be merged."
+            _(
+                "Selected populations have incompatible platform types and cannot be merged."
+            )
         )
         return redirect(request.referrer)
     if source_types and merged_population_type not in source_types:
         flash(
-            "Merged population type must match the selected population platform type."
+            _(
+                "Merged population type must match the selected population platform type."
+            )
         )
         return redirect(request.referrer)
 
@@ -1590,6 +1611,11 @@ def merge_populations():
     db.session.commit()
 
     flash(
-        f"Successfully created merged population '{merged_name}' with {len(unique_agent_ids)} agents and {len(unique_page_ids)} pages."
+        _(
+            "Successfully created merged population '%(merged_name)s' with %(unique_agent_ids)s agents and %(unique_page_ids)s pages.",
+            merged_name=merged_name,
+            unique_agent_ids=len(unique_agent_ids),
+            unique_page_ids=len(unique_page_ids),
+        )
     )
     return populations()

@@ -178,7 +178,7 @@ var AdminClients = (function() {
           data: {
               labels: labels,
               datasets: [{
-                  label: 'Activity %',
+                  label: YI18n.t('Activity %'),
                   data: activityData,
                   backgroundColor: 'rgba(34, 197, 94, 0.6)',
                   borderColor: 'rgba(34, 197, 94, 1)',
@@ -200,7 +200,7 @@ var AdminClients = (function() {
                       bodyFont: { size: 11 },
                       callbacks: {
                           label: function(context) {
-                              return 'Active: ' + context.parsed.y.toFixed(2) + '%';
+                              return YI18n.t('Active: {tofixed}%', {tofixed: context.parsed.y.toFixed(2)});
                           }
                       }
                   }
@@ -310,11 +310,11 @@ var AdminClients = (function() {
       const llmUrl = urlInput.value.trim();
     
       if (!llmUrl) {
-          alert('Please enter an LLM server URL');
+          YNotify.warning(YI18n.t('Please enter an LLM server URL'));
           return;
       }
     
-      status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Fetching...';
+      status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> ' + YI18n.t('Fetching...');
     
       fetch(`/admin/api/fetch_models?llm_url=${encodeURIComponent(llmUrl)}`)
           .then(response => response.json())
@@ -325,14 +325,14 @@ var AdminClients = (function() {
                   updateFormButtonState();
                   setTimeout(() => { status.innerHTML = ''; }, 5000);
               } else {
-                  select.innerHTML = '<option value="">Select a model</option>';
+                  select.innerHTML = '<option value="">' + YI18n.t('Select a model') + '</option>';
                   data.models.forEach(model => {
                       const option = document.createElement('option');
                       option.value = model;
                       option.textContent = model;
                       select.appendChild(option);
                   });
-                  status.innerHTML = '<span style="color: green;"><i class="mdi mdi-check"></i> ' + data.models.length + ' models loaded</span>';
+                  status.innerHTML = '<span style="color: green;"><i class="mdi mdi-check"></i> ' + YI18n.t('{length} models loaded', {length: data.models.length}) + '</span>';
                   llmModelsFetched = true;
                   // Reset model selection since we just loaded new models
                   llmModelSelected = false;
@@ -341,7 +341,7 @@ var AdminClients = (function() {
               }
           })
           .catch(error => {
-              status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> Connection failed</span>';
+              status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> ' + YI18n.t('Connection failed') + '</span>';
               llmModelsFetched = false;
               updateFormButtonState();
               setTimeout(() => { status.innerHTML = ''; }, 5000);
@@ -357,11 +357,11 @@ var AdminClients = (function() {
       const modelName = 'minicpm-v:latest';
     
       if (!llmVUrl) {
-          alert('Please enter an LLM server URL for image transcription');
+          YNotify.warning(YI18n.t('Please enter an LLM server URL for image transcription'));
           return;
       }
     
-      status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Validating...';
+      status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> ' + YI18n.t('Validating...');
     
       fetch(`/admin/api/fetch_models?llm_url=${encodeURIComponent(llmVUrl)}`)
           .then(response => response.json())
@@ -370,30 +370,30 @@ var AdminClients = (function() {
                   status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> ' + data.error + '</span>';
                   validationStatus.value = 'false';
                   disableImageAction();
-                  alert('Unable to connect to the LLM server. Image sharing/commenting functionality will remain disabled.');
+                  YNotify.error(YI18n.t('Unable to connect to the LLM server. Image sharing/commenting functionality will remain disabled.'));
                   setTimeout(() => { status.innerHTML = ''; }, 5000);
               } else {
                   // Check if minicpm-v:latest model exists in fetched models
                   const modelExists = data.models.includes(modelName);
                 
                   if (modelExists) {
-                      status.innerHTML = '<span style="color: green;"><i class="mdi mdi-check"></i> Model "' + modelName + '" found and validated!</span>';
+                      status.innerHTML = '<span style="color: green;"><i class="mdi mdi-check"></i> ' + YI18n.t('Model "{modelname}" found and validated!', {modelname: modelName}) + '</span>';
                       validationStatus.value = 'true';
                       enableImageAction();
                       setTimeout(() => { status.innerHTML = ''; }, 3000);
                   } else {
-                      status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> Model "' + modelName + '" not found on this server!</span>';
+                      status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> ' + YI18n.t('Model "{modelname}" not found on this server!', {modelname: modelName}) + '</span>';
                       validationStatus.value = 'false';
                       disableImageAction();
-                      alert('The minicpm-v:latest model is not available on the specified server. Image sharing/commenting functionality will remain disabled.');
+                      YNotify.error(YI18n.t('The minicpm-v:latest model is not available on the specified server. Image sharing/commenting functionality will remain disabled.'));
                   }
               }
           })
           .catch(error => {
-              status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> Connection failed</span>';
+              status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> ' + YI18n.t('Connection failed') + '</span>';
               validationStatus.value = 'false';
               disableImageAction();
-              alert('Failed to connect to the LLM server. Image sharing/commenting functionality will remain disabled.');
+              YNotify.error(YI18n.t('Failed to connect to the LLM server. Image sharing/commenting functionality will remain disabled.'));
               setTimeout(() => { status.innerHTML = ''; }, 5000);
           });
   }
@@ -421,7 +421,8 @@ var AdminClients = (function() {
       }
     
       if (warning) {
-          warning.style.display = 'block';
+          // shown as a floating card, so the form layout does not move
+          YNotify.warning(warning.textContent.replace(/\s+/g, ' ').trim());
       }
   }
 
@@ -723,7 +724,7 @@ var AdminClients = (function() {
           data: {
               labels: labels,
               datasets: [{
-                  label: 'Activity %',
+                  label: YI18n.t('Activity %'),
                   data: activityData,
                   backgroundColor: 'rgba(34, 197, 94, 0.6)',
                   borderColor: 'rgba(34, 197, 94, 1)',
@@ -745,7 +746,7 @@ var AdminClients = (function() {
                       bodyFont: { size: 11 },
                       callbacks: {
                           label: function(context) {
-                              return 'Active: ' + context.parsed.y.toFixed(2) + '%';
+                              return YI18n.t('Active: {tofixed}%', {tofixed: context.parsed.y.toFixed(2)});
                           }
                       }
                   }
@@ -831,11 +832,11 @@ var AdminClients = (function() {
       const llmUrl = urlInput.value.trim();
     
       if (!llmUrl) {
-          alert('Please enter an LLM server URL');
+          YNotify.warning(YI18n.t('Please enter an LLM server URL'));
           return;
       }
     
-      status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Fetching...';
+      status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> ' + YI18n.t('Fetching...');
     
       fetch(`/admin/api/fetch_models?llm_url=${encodeURIComponent(llmUrl)}`)
           .then(response => response.json())
@@ -846,14 +847,14 @@ var AdminClients = (function() {
                   updateFormButtonState();
                   setTimeout(() => { status.innerHTML = ''; }, 5000);
               } else {
-                  select.innerHTML = '<option value="">Select a model</option>';
+                  select.innerHTML = '<option value="">' + YI18n.t('Select a model') + '</option>';
                   data.models.forEach(model => {
                       const option = document.createElement('option');
                       option.value = model;
                       option.textContent = model;
                       select.appendChild(option);
                   });
-                  status.innerHTML = '<span style="color: green;"><i class="mdi mdi-check"></i> ' + data.models.length + ' models loaded</span>';
+                  status.innerHTML = '<span style="color: green;"><i class="mdi mdi-check"></i> ' + YI18n.t('{length} models loaded', {length: data.models.length}) + '</span>';
                   llmModelsFetched = true;
                   // Reset model selection since we just loaded new models
                   llmModelSelected = false;
@@ -862,7 +863,7 @@ var AdminClients = (function() {
               }
           })
           .catch(error => {
-              status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> Connection failed</span>';
+              status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> ' + YI18n.t('Connection failed') + '</span>';
               llmModelsFetched = false;
               updateFormButtonState();
               setTimeout(() => { status.innerHTML = ''; }, 5000);
@@ -878,11 +879,11 @@ var AdminClients = (function() {
       const modelName = 'minicpm-v:latest';
     
       if (!llmVUrl) {
-          alert('Please enter an LLM server URL for image transcription');
+          YNotify.warning(YI18n.t('Please enter an LLM server URL for image transcription'));
           return;
       }
     
-      status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Validating...';
+      status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> ' + YI18n.t('Validating...');
     
       fetch(`/admin/api/fetch_models?llm_url=${encodeURIComponent(llmVUrl)}`)
           .then(response => response.json())
@@ -891,30 +892,30 @@ var AdminClients = (function() {
                   status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> ' + data.error + '</span>';
                   validationStatus.value = 'false';
                   disableImageAction();
-                  alert('Unable to connect to the LLM server. Image sharing/commenting functionality will remain disabled.');
+                  YNotify.error(YI18n.t('Unable to connect to the LLM server. Image sharing/commenting functionality will remain disabled.'));
                   setTimeout(() => { status.innerHTML = ''; }, 5000);
               } else {
                   // Check if minicpm-v:latest model exists in fetched models
                   const modelExists = data.models.includes(modelName);
                 
                   if (modelExists) {
-                      status.innerHTML = '<span style="color: green;"><i class="mdi mdi-check"></i> Model "' + modelName + '" found and validated!</span>';
+                      status.innerHTML = '<span style="color: green;"><i class="mdi mdi-check"></i> ' + YI18n.t('Model "{modelname}" found and validated!', {modelname: modelName}) + '</span>';
                       validationStatus.value = 'true';
                       enableImageAction();
                       setTimeout(() => { status.innerHTML = ''; }, 3000);
                   } else {
-                      status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> Model "' + modelName + '" not found on this server!</span>';
+                      status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> ' + YI18n.t('Model "{modelname}" not found on this server!', {modelname: modelName}) + '</span>';
                       validationStatus.value = 'false';
                       disableImageAction();
-                      alert('The minicpm-v:latest model is not available on the specified server. Image sharing/commenting functionality will remain disabled.');
+                      YNotify.error(YI18n.t('The minicpm-v:latest model is not available on the specified server. Image sharing/commenting functionality will remain disabled.'));
                   }
               }
           })
           .catch(error => {
-              status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> Connection failed</span>';
+              status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> ' + YI18n.t('Connection failed') + '</span>';
               validationStatus.value = 'false';
               disableImageAction();
-              alert('Failed to connect to the LLM server. Image sharing/commenting functionality will remain disabled.');
+              YNotify.error(YI18n.t('Failed to connect to the LLM server. Image sharing/commenting functionality will remain disabled.'));
               setTimeout(() => { status.innerHTML = ''; }, 5000);
           });
   }
@@ -942,7 +943,8 @@ var AdminClients = (function() {
       }
     
       if (warning) {
-          warning.style.display = 'block';
+          // shown as a floating card, so the form layout does not move
+          YNotify.warning(warning.textContent.replace(/\s+/g, ' ').trim());
       }
   }
 
@@ -1295,7 +1297,7 @@ var AdminClients = (function() {
           data: {
               labels: labels,
               datasets: [{
-                  label: 'Activity %',
+                  label: YI18n.t('Activity %'),
                   data: activityData,
                   backgroundColor: 'rgba(34, 197, 94, 0.6)',
                   borderColor: 'rgba(34, 197, 94, 1)',
@@ -1317,7 +1319,7 @@ var AdminClients = (function() {
                       bodyFont: { size: 11 },
                       callbacks: {
                           label: function(context) {
-                              return 'Active: ' + context.parsed.y.toFixed(2) + '%';
+                              return YI18n.t('Active: {tofixed}%', {tofixed: context.parsed.y.toFixed(2)});
                           }
                       }
                   }
@@ -1438,7 +1440,7 @@ var AdminClients = (function() {
 
       if (status) {
           const label = presetSelect.options[presetSelect.selectedIndex].text;
-          status.textContent = `Applied: ${label}`;
+          status.textContent = YI18n.t('Applied: {label}', {label});
           status.style.display = 'block';
           setTimeout(() => {
               status.style.display = 'none';
@@ -1454,11 +1456,11 @@ var AdminClients = (function() {
       const llmUrl = urlInput.value.trim();
     
       if (!llmUrl) {
-          alert('Please enter an LLM server URL');
+          YNotify.warning(YI18n.t('Please enter an LLM server URL'));
           return;
       }
     
-      status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Fetching...';
+      status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> ' + YI18n.t('Fetching...');
     
       fetch(`/admin/api/fetch_models?llm_url=${encodeURIComponent(llmUrl)}`)
           .then(response => response.json())
@@ -1469,14 +1471,14 @@ var AdminClients = (function() {
                   updateFormButtonState();
                   setTimeout(() => { status.innerHTML = ''; }, 5000);
               } else {
-                  select.innerHTML = '<option value="">Select a model</option>';
+                  select.innerHTML = '<option value="">' + YI18n.t('Select a model') + '</option>';
                   data.models.forEach(model => {
                       const option = document.createElement('option');
                       option.value = model;
                       option.textContent = model;
                       select.appendChild(option);
                   });
-                  status.innerHTML = '<span style="color: green;"><i class="mdi mdi-check"></i> ' + data.models.length + ' models loaded</span>';
+                  status.innerHTML = '<span style="color: green;"><i class="mdi mdi-check"></i> ' + YI18n.t('{length} models loaded', {length: data.models.length}) + '</span>';
                   llmModelsFetched = true;
                   // Reset model selection since we just loaded new models
                   llmModelSelected = false;
@@ -1485,7 +1487,7 @@ var AdminClients = (function() {
               }
           })
           .catch(error => {
-              status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> Connection failed</span>';
+              status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> ' + YI18n.t('Connection failed') + '</span>';
               llmModelsFetched = false;
               updateFormButtonState();
               setTimeout(() => { status.innerHTML = ''; }, 5000);
@@ -1535,11 +1537,11 @@ var AdminClients = (function() {
       const modelSelect = document.getElementById('llm_v_agent');
     
       if (!llmVUrl) {
-          alert('Please enter an LLM server URL for image transcription');
+          YNotify.warning(YI18n.t('Please enter an LLM server URL for image transcription'));
           return;
       }
     
-      status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Fetching...';
+      status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> ' + YI18n.t('Fetching...');
     
       fetch(`/admin/api/fetch_models?llm_url=${encodeURIComponent(llmVUrl)}`)
           .then(response => response.json())
@@ -1553,7 +1555,7 @@ var AdminClients = (function() {
                   const previousValue = modelSelect ? modelSelect.value : '';
 
                   if (modelSelect) {
-                      modelSelect.innerHTML = '<option value="">Select a vision model</option>';
+                      modelSelect.innerHTML = '<option value="">' + YI18n.t('Select a vision model') + '</option>';
                       availableVisionModels.forEach(model => {
                           const option = document.createElement('option');
                           option.value = model;
@@ -1569,20 +1571,20 @@ var AdminClients = (function() {
                   }
 
                   if (availableVisionModels.length) {
-                      status.innerHTML = '<span style="color: green;"><i class="mdi mdi-check"></i> ' + availableVisionModels.length + ' vision models loaded</span>';
+                      status.innerHTML = '<span style="color: green;"><i class="mdi mdi-check"></i> ' + YI18n.t('{length} vision models loaded', {length: availableVisionModels.length}) + '</span>';
                       syncVisionModelSelectionState();
                       setTimeout(() => { status.innerHTML = ''; }, 3000);
                   } else {
                       if (modelSelect) {
                           modelSelect.value = '';
                       }
-                      status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> No vision-capable models found on this server</span>';
+                      status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> ' + YI18n.t('No vision-capable models found on this server') + '</span>';
                       disableImageAction();
                   }
               }
           })
           .catch(error => {
-              status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> Connection failed</span>';
+              status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> ' + YI18n.t('Connection failed') + '</span>';
               disableImageAction();
               setTimeout(() => { status.innerHTML = ''; }, 5000);
           });
@@ -1611,7 +1613,8 @@ var AdminClients = (function() {
       }
     
       if (warning) {
-          warning.style.display = 'block';
+          // shown as a floating card, so the form layout does not move
+          YNotify.warning(warning.textContent.replace(/\s+/g, ' ').trim());
       }
   }
 

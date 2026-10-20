@@ -13,6 +13,13 @@ _REPO_ROOT = os.path.dirname(
 if _REPO_ROOT not in sys.path:
     sys.path.insert(0, _REPO_ROOT)
 
+from y_web.src.simulation.subprocess_env import agent_memory_source_dir
+
+# The Agent Memory plugin (external/y_memory_subsystem) provides ``yclient_memory``.
+_MEMORY_SRC = agent_memory_source_dir()
+if _MEMORY_SRC and _MEMORY_SRC not in sys.path:
+    sys.path.append(_MEMORY_SRC)
+
 from y_web.src.simulation.process_runner import run_client_main
 
 if __name__ == "__main__":

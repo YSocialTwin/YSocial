@@ -89,6 +89,11 @@ def _call_experiment_memory_enabled(
     mock_exp.db_name = f"experiments/{uid}"
 
     with (
+        # the Agent Memory plugin lives in external/ (absent in CI): these tests cover the config detection
+        patch(
+            "y_web.src.system.memory_plugin.agent_memory_plugin_installed",
+            return_value=True,
+        ),
         patch("y_web.routes.social.helpers.Exps") as mock_exps,
         patch(
             "y_web.routes.social.helpers.select",

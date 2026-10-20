@@ -1,163 +1,194 @@
-# PyInstaller Packaging
+# Release and distribution
 
-## Purpose
+For maintainers. End users: see [Installation](installation.md) and [Desktop installer and launcher](launcher.md).
 
-YSocial supports PyInstaller-based packaging for desktop distribution. The packaged application uses:
+PyInstaller executables are **retired**: YSocial is distributed as a Python package (wheel) plus a graphical installer that manages a private Python environment with [uv](https://docs.astral.sh/uv/), and as a Docker image. Plugins are never bundled; they are installed later from the admin panel.
 
-- `/Users/rossetti/PycharmProjects/YWeb/y_social.spec`
-- `/Users/rossetti/PycharmProjects/YWeb/y_social_launcher.py`
-- helper modules under `/Users/rossetti/PycharmProjects/YWeb/y_web/pyinstaller_utils/`
+## What a release contains
 
-The packaging flow bundles:
+A tag `v<version>` runs `.github/workflows/release-packaging.yml`, which builds everything and creates a **draft** GitHub release (nothing is published automatically):
 
-- application code
-- templates and static files
-- selected external runtime assets
-- database schemas and config files
-- platform-specific desktop launcher behavior
+| Artifact | Built by | Notes |
+|---|---|---|
+| `ysocial-<version>-py3-none-any.whl` | `wheel` job | `python -m build --wheel`; contents verified by `scripts/packaging/check_wheel.py` |
+| `constraints.txt` | `wheel` job | copy of `requirements.lock`; the launcher uses it to update an installation |
+| `YSocial-<version>-<platform>.<ext>` | `installers` job (matrix) | `macos-arm64` and `macos-x64` (`.dmg`), `windows-x64` (`.exe`), `linux-x64` and `linux-arm64` (`.AppImage`, `.deb`) |
+| `SHA256SUMS.txt` | `release` job | checksum of every file attached |
+| `ghcr.io/ysocialtwin/ysocial:<tag>` and `:latest` | `docker` job | image from `docker/Dockerfile` |
 
-## General prerequisites
+Installers are **not code-signed** (decision): macOS shows the Gatekeeper warning, Windows SmartScreen. Document this in the release notes.
 
-Before building on any platform:
+## Making a release
 
-```bash
-git clone https://github.com/YSocialTwin/YSocial.git
-cd YSocial
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-pip install pyinstaller
-```
+The version of every package comes from the **tag**: `scripts/packaging/set_version.py` stamps `v4.1.0` as `4.1.0` into `VERSION` (the wheel), `tauri.conf.json`, `Cargo.toml` and `Cargo.lock` inside each build job, so the wheel, the installers (`YSocial-4.1.0-<platform>.<ext>`) and the Docker image (`:v4.1.0`, plus `:latest` unless the version has a suffix such as `-rc1`) always match the release. Suffixed tags (`v4.1.0-rc1`) are attached to a pre-release.
 
-Also ensure the required runtime repositories are cloned under `external/`:
+1. Bump `VERSION` (and, to keep the repository consistent, the two installer files) in the commit you tag; the workflow warns if the tag and `VERSION` disagree, because the source archive GitHub adds to the release ("Source code (tar.gz / zip)") contains the files as committed. Regenerate `requirements.lock` if dependencies changed and make sure CI is green.
+   If the list of built-in plugins changed in the plugin registry (`builtin.json`), run `python scripts/packaging/sync_builtin_plugins.py --source <checkout of YSocialTwin/plugin-registry>` first and commit the result: the workflow starts with `--verify` and `--check-latest` and stops if the packaged copy is not the registry's latest.
+2. Create the release in either way:
+   - push the tag: `git tag v4.1.0 && git push origin v4.1.0`. The workflow builds everything and creates a **draft** release with all the files; or
+   - create the release from the GitHub page (new tag `v4.1.0`): the tag push starts the workflow, which **adds the files to that release** (replacing files with the same name).
+3. When the workflow ends, open the release, check the files and notes, and publish. The launcher's update check reads the *latest published* release.
+4. First time only (or when avatars change): build `ysocial-avatars.tar.gz` with `python scripts/packaging/make_avatars_archive.py` and attach it to the release `avatars-v1`; YSocial downloads it at first run.
 
-```bash
-python -c "import nltk; nltk.download('vader_lexicon')"
-```
+**On demand.** *Actions > Release packaging > Run workflow* with the tag field empty builds all the packages from the chosen branch with the version in the repository and keeps them as workflow artifacts: nothing is released or pushed. Filling the tag field (e.g. `v4.1.0`) does the same as pushing that tag (stamping, release and image push) for a tag you want to re-package.
 
-## Core build command
+## Building locally
 
-All platforms start from the same spec-based build:
+### Wheel and Docker image
 
 ```bash
-pyinstaller y_social.spec --clean --noconfirm
+python -m build --wheel --outdir dist .
+python scripts/packaging/check_wheel.py dist/ysocial-*.whl
+docker build -f docker/Dockerfile .         # build argument WITH_TOXICITY=1 adds toxicity detection
 ```
 
-Build output:
+### Desktop installer, from a clean machine
 
-- macOS/Linux: `dist/YSocial`
-- Windows: `dist/YSocial.exe`
+The installer is a [Tauri v2](https://tauri.app/) app: a Rust backend with a static HTML UI (no Node.js, no npm). A normal build needs four things: a C/C++ toolchain, the system web view libraries, Rust with the Tauri command-line tool, and the files the installer carries inside (the wheel, `constraints.txt` and the `uv` binary). Build on the platform you are targeting: there is no cross-compilation between macOS, Windows and Linux.
 
-## Platform-specific guidance
+#### Step 1: system prerequisites
 
-### macOS
-
-macOS requires the most explicit post-build handling.
-
-Recommended path:
+**macOS** (Apple silicon or Intel)
 
 ```bash
-./packaging/build_and_package_macos.sh
+xcode-select --install          # Command Line Tools (compiler, linker); skip if already installed
 ```
 
-This covers:
+Nothing else: the web view (WKWebView) is part of the system.
 
-1. PyInstaller build
-2. code signing
-3. DMG creation
-4. app bundle preparation
+**Windows 10/11**
 
-Manual path:
+1. Install the *Microsoft C++ Build Tools* ([download](https://visualstudio.microsoft.com/visual-cpp-build-tools/)) and tick the workload **Desktop development with C++** (it brings the MSVC compiler and a Windows SDK).
+2. The *WebView2* runtime is already part of Windows 10 (recent) and 11; if it is missing, install the "Evergreen" runtime from Microsoft.
+3. Use the MSVC Rust toolchain (step 2 shows how). Run the commands below in PowerShell, or in Git Bash if you prefer the Unix syntax.
+
+**Linux**
+
+Debian / Ubuntu (24.04 or newer):
 
 ```bash
-pyinstaller y_social.spec --clean --noconfirm
-codesign --force --sign - \
-  --entitlements packaging/entitlements.plist \
-  --timestamp \
-  --options runtime \
-  dist/YSocial
-./packaging/create_dmg.sh --codesign-identity "-" --entitlements packaging/entitlements.plist
+sudo apt update
+sudo apt install build-essential curl wget file patchelf xdg-utils \
+  libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libayatana-appindicator3-dev libssl-dev
 ```
 
-For broader distribution, replace ad-hoc signing with a Developer ID workflow and, if needed, notarization.
-
-Reference:
-
-- `/Users/rossetti/PycharmProjects/YWeb/docs/MACOS_CODE_SIGNING.md`
-
-### Linux
-
-Linux packaging is simpler operationally:
+Fedora:
 
 ```bash
-pyinstaller y_social.spec --clean --noconfirm
+sudo dnf install webkit2gtk4.1-devel openssl-devel curl wget file patchelf libxdo-devel \
+  libappindicator-gtk3-devel librsvg2-devel
+sudo dnf group install "c-development"
 ```
 
-Practical notes:
-
-- build on a reasonably common target environment for better compatibility
-- GUI dependencies may still matter if desktop mode is used
-- browser mode is often the safer default on headless or server-oriented Linux deployments
-
-Typical distribution artifact:
-
-- tarball containing `dist/YSocial`
-
-### Windows
-
-Windows also uses the same spec build:
+Arch / Manjaro:
 
 ```bash
-pyinstaller y_social.spec --clean --noconfirm
+sudo pacman -S --needed base-devel webkit2gtk-4.1 curl wget file openssl patchelf \
+  appmenu-gtk-module libappindicator-gtk3 librsvg xdotool
 ```
 
-Typical notes:
+Other distributions: see the [Tauri prerequisites](https://tauri.app/start/prerequisites/#linux) and install the equivalents of the packages above. arm64 machines use the same packages and produce an arm64 build.
 
-- output is `dist/YSocial.exe`
-- SmartScreen or antivirus false positives may occur for unsigned builds
-- test both desktop mode and browser mode after building
+#### Step 2: Rust
 
-## What the spec file includes
+Install the toolchain with `rustup` (it needs a few minutes and about 1.5 GB).
 
-The current spec file bundles:
+- macOS and Linux:
 
-- `/Users/rossetti/PycharmProjects/YWeb/y_web/static`
-- `/Users/rossetti/PycharmProjects/YWeb/y_web/templates`
-- `/Users/rossetti/PycharmProjects/YWeb/data_schema`
-- `/Users/rossetti/PycharmProjects/YWeb/config_files`
-- `/Users/rossetti/PycharmProjects/YWeb/images`
-- `/Users/rossetti/PycharmProjects/YWeb/VERSION`
-- selected runner scripts and notebook assets
-- selected external runtime repositories when present
+  ```bash
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+  ```
 
-## Packaging constraints to know
+- Windows: download and run `rustup-init.exe` from [rustup.rs](https://rustup.rs) and accept the defaults (host `x86_64-pc-windows-msvc`). If you already have Rust with another host, run `rustup default stable-msvc`.
 
-### Notebook support
+**Close and reopen the terminal** (so `cargo` is on the `PATH`) and check:
 
-PyInstaller mode disables the normal notebook workflow by design. Packaged builds should not be treated as full notebook-authoring environments.
+```bash
+rustc --version      # a recent stable release (rustup installs it)
+cargo --version
+```
 
-### Desktop mode
+#### Step 3: Python and the Tauri tool
 
-Desktop mode depends on `pywebview` and, on some platforms, additional GUI system libraries.
+You need Python 3.12 (the same version YSocial targets) to build the wheel, and the Tauri command-line tool to build the app:
 
-### Single-file behavior
+```bash
+python3.12 -m venv .venv-build && source .venv-build/bin/activate   # Windows: .venv-build\Scripts\activate
+python -m pip install --upgrade pip build uv
+cargo install tauri-cli --version "^2" --locked                     # about 5 minutes, once
+cargo tauri --version                                               # tauri-cli 2.x
+```
 
-The build is single-file oriented. Resources are extracted at runtime to temporary locations, but user data is still stored in runtime directories outside the extracted bundle.
+#### Step 4: the files the installer carries
 
-## Validation checklist after building
+The installer bundles everything in `installer/src-tauri/resources/`; the folder is git-ignored, so on a fresh checkout you fill it yourself. Run these from the repository root:
 
-1. run `--help`
-2. start in desktop mode
-3. start in browser mode
-4. log in to the admin panel
-5. create a minimal experiment
-6. verify static assets load correctly
-7. verify packaged runtime directories are writable
+```bash
+mkdir -p installer/src-tauri/resources
+cp requirements.lock installer/src-tauri/resources/constraints.txt
+cp "$(which uv)" installer/src-tauri/resources/uv        # Windows: copy the uv.exe found by `where uv` to resources\uv.exe
+```
 
-## Versioning
+(`uv` is the tool the installer uses to create the private Python 3.12 environment on the user's machine. It must be the binary of the platform you are building for.) The wheel is added in the last step.
 
-Packaging is tied to the top-level version file:
+#### Step 5: build
 
-- `/Users/rossetti/PycharmProjects/YWeb/VERSION`
+From the repository root, with the build environment active:
 
-Update it before release builds.
+```bash
+rm -f dist/ysocial-*.whl installer/src-tauri/resources/*.whl
+python -m build --wheel --outdir dist .
+cp dist/ysocial-*.whl installer/src-tauri/resources/
+cd installer/src-tauri
+cargo tauri build
+```
+
+PowerShell equivalent:
+
+```powershell
+Remove-Item dist\ysocial-*.whl, installer\src-tauri\resources\*.whl -ErrorAction SilentlyContinue
+python -m build --wheel --outdir dist .
+Copy-Item dist\ysocial-*.whl installer\src-tauri\resources\
+cd installer\src-tauri
+cargo tauri build
+```
+
+The first build compiles all Rust dependencies and takes 5-15 minutes; later builds take about a minute. Without options `cargo tauri build` produces every bundle the platform supports; to build one (as the release workflow does) add `--bundles`:
+
+| System | Command | Output (under `installer/src-tauri/target/release/bundle/`) |
+|---|---|---|
+| macOS | `cargo tauri build --bundles dmg` | `dmg/YSocial_<version>_<arch>.dmg` and `macos/YSocial.app` |
+| Windows | `cargo tauri build --bundles nsis` | `nsis/YSocial_<version>_x64-setup.exe` |
+| Linux | `cargo tauri build --bundles appimage,deb` | `appimage/*.AppImage`, `deb/*.deb` |
+
+The version of the files is the one in `installer/src-tauri/tauri.conf.json` (and `Cargo.toml`), which must equal `VERSION`; to stamp another version before building run `python scripts/packaging/set_version.py 4.1.0`.
+
+#### Step 6: check the result
+
+Install the file you built on a clean user account (or a virtual machine), press **Install YSocial**, **Start**, create an experiment, close the window and confirm that the services stop. A quick pre-check without installing: `cargo tauri dev` (from `installer/src-tauri`) runs the launcher straight from the sources.
+
+#### Troubleshooting the build
+
+| Message | Cause and fix |
+|---|---|
+| `linker 'cc' not found` / `link.exe not found` | The C toolchain is missing: step 1 (Command Line Tools, Build Tools, `build-essential`). |
+| `The system library 'webkit2gtk-4.1' ... was not found` (Linux) | Install `libwebkit2gtk-4.1-dev` (Debian/Ubuntu); older distributions that only ship 4.0 cannot build Tauri v2. |
+| `cargo: command not found` after installing Rust | Open a new terminal, or `source "$HOME/.cargo/env"`. |
+| `no such command: tauri` | Step 3: `cargo install tauri-cli --version "^2" --locked`. |
+| `resource path 'resources/...' doesn't exist` | Step 4 was skipped. The folder must contain the wheel, `constraints.txt` and `uv`. |
+| A `.deb`/`.AppImage` is built but the app has an old version | `installer/src-tauri/tauri.conf.json` still has the old version; stamp it with `set_version.py`. |
+| macOS: "cannot be opened because the developer cannot be verified" on your own build | Builds are not signed: right-click > *Open*, or `xattr -dr com.apple.quarantine YSocial.app`. |
+| Building for Intel on an Apple silicon Mac | `rustup target add x86_64-apple-darwin`, use an Intel `uv` binary and `cargo tauri build --target x86_64-apple-darwin`. The release workflow builds Intel natively instead. |
+
+`installer/ui/assets/` mirrors the application's login-page assets; after changing them run `python scripts/packaging/sync_installer_assets.py` (a test fails when they drift).
+
+## Conventions
+
+- One Python version everywhere: 3.12 (CI, release workflow, Docker, `requires-python`).
+- The wheel excludes avatars (downloaded at first run) and ships `data_schema`, prompts, translations and migrations as package data.
+- English prompt output must stay byte-identical: `python scripts/prompts/snapshot_hashes.py --check`.
+- Tests that need Ray or local-only resources are skipped on GitHub Actions (`GITHUB_ACTIONS=true`).
+
+## History
+
+Until 3.x the application was distributed as PyInstaller executables built from `y_social.spec` (with macOS DMG scripts and code-signing notes). That pipeline, its spec and its docs were removed in 4.0.0. The Python code still contains defensive branches for frozen executables and `y_social_launcher.py` still offers an optional pywebview window when running from a checkout; they are inert in the packaged distribution and can be removed in a later clean-up.

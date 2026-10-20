@@ -62,10 +62,10 @@
           y: {
             beginAtZero: true,
             ticks: { precision: 0 },
-            title: { display: true, text: 'Agents' }
+            title: { display: true, text: YI18n.t('Agents') }
           },
           x: {
-            title: { display: true, text: 'Aggregate Level' }
+            title: { display: true, text: YI18n.t('Aggregate Level') }
           }
         }
       }
@@ -80,7 +80,7 @@
         labels: trendData.timestamps || [],
         datasets: [
           {
-            label: 'Average Stress',
+            label: YI18n.t('Average Stress'),
             data: ((trendData.datasets || [])[0] || {}).data || [],
             borderColor: 'rgba(239, 68, 68, 1)',
             backgroundColor: 'rgba(239, 68, 68, 0.18)',
@@ -88,7 +88,7 @@
             tension: 0.25
           },
           {
-            label: 'Average Reward',
+            label: YI18n.t('Average Reward'),
             data: ((trendData.datasets || [])[1] || {}).data || [],
             borderColor: 'rgba(34, 197, 94, 1)',
             backgroundColor: 'rgba(34, 197, 94, 0.18)',
@@ -108,8 +108,8 @@
               title: function(context) {
                 const key = context[0].label;
                 const mapping = (trendData.timestamp_mapping || {})[key];
-                if (mapping) return 'Day ' + mapping.day + ', Hour ' + mapping.hour;
-                return 'Step ' + key;
+                if (mapping) return YI18n.t('Day {day}, Hour {hour}', {day: mapping.day, hour: mapping.hour});
+                return YI18n.t('Step {key}', {key});
               },
               label: function(context) {
                 return context.dataset.label + ': ' + Number(context.parsed.y || 0).toFixed(3);
@@ -121,10 +121,10 @@
           y: {
             beginAtZero: true,
             max: 1,
-            title: { display: true, text: 'Average Aggregate Value' }
+            title: { display: true, text: YI18n.t('Average Aggregate Value') }
           },
           x: {
-            title: { display: true, text: 'Simulation Days' }
+            title: { display: true, text: YI18n.t('Simulation Days') }
           }
         }
       }
@@ -139,7 +139,7 @@
         datasets: [
           {
             type: 'line',
-            label: 'Target Stress',
+            label: YI18n.t('Target Stress'),
             data: ((targetData.datasets || [])[0] || {}).data || [],
             borderColor: 'rgba(239, 68, 68, 1)',
             backgroundColor: 'rgba(239, 68, 68, 0.16)',
@@ -149,7 +149,7 @@
           },
           {
             type: 'line',
-            label: 'Target Reward',
+            label: YI18n.t('Target Reward'),
             data: ((targetData.datasets || [])[1] || {}).data || [],
             borderColor: 'rgba(34, 197, 94, 1)',
             backgroundColor: 'rgba(34, 197, 94, 0.16)',
@@ -159,7 +159,7 @@
           },
           {
             type: 'bar',
-            label: 'SA Interactions',
+            label: YI18n.t('SA Interactions'),
             data: ((targetData.datasets || [])[2] || {}).data || [],
             borderColor: 'rgba(245, 158, 11, 1)',
             backgroundColor: 'rgba(245, 158, 11, 0.4)',
@@ -179,11 +179,11 @@
               title: function(context) {
                 const key = context[0].label;
                 const mapping = (targetData.timestamp_mapping || {})[key];
-                if (mapping) return 'Day ' + mapping.day + ', Hour ' + mapping.hour;
-                return 'Step ' + key;
+                if (mapping) return YI18n.t('Day {day}, Hour {hour}', {day: mapping.day, hour: mapping.hour});
+                return YI18n.t('Step {key}', {key});
               },
               label: function(context) {
-                if (context.dataset.label === 'SA Interactions') {
+                if (context.dataset.label === YI18n.t('SA Interactions')) {
                   return context.dataset.label + ': ' + Number(context.parsed.y || 0).toFixed(0);
                 }
                 return context.dataset.label + ': ' + Number(context.parsed.y || 0).toFixed(3);
@@ -195,17 +195,17 @@
           y: {
             beginAtZero: true,
             max: 1,
-            title: { display: true, text: 'Aggregate Value' }
+            title: { display: true, text: YI18n.t('Aggregate Value') }
           },
           y1: {
             beginAtZero: true,
             position: 'right',
             grid: { drawOnChartArea: false },
             ticks: { precision: 0 },
-            title: { display: true, text: 'Interactions' }
+            title: { display: true, text: YI18n.t('Interactions') }
           },
           x: {
-            title: { display: true, text: 'Simulation Days' }
+            title: { display: true, text: YI18n.t('Simulation Days') }
           }
         }
       }
@@ -240,8 +240,7 @@
     const currentSelection = saTargets.selected_uid || '';
     select.innerHTML = options.map(function(option) {
       const selected = option.uid === currentSelection ? ' selected' : '';
-      return '<option value="' + option.uid + '"' + selected + '>' +
-        option.username + ' (' + option.interaction_count + ' interactions)</option>';
+      return '<option value="' + option.uid + '"' + selected + '>' + YI18n.t('{username} ({interaction_count} interactions)', {username: option.username, interaction_count: option.interaction_count}) + '</option>';
     }).join('');
 
     const targetName = document.getElementById('sr-sa-target-name');
@@ -256,14 +255,9 @@
       const events = saTargets.interaction_events || [];
       eventTable.innerHTML = events.length
         ? events.map(function(event) {
-            return '<tr>' +
-              '<td>Day ' + event.day + ', Hour ' + event.hour + '</td>' +
-              '<td>' + String(event.interaction_type || '').charAt(0).toUpperCase() + String(event.interaction_type || '').slice(1) + '</td>' +
-              '<td>' + (event.interaction_count || 0) + '</td>' +
-              '<td>' + ((event.attacker_usernames || []).join(', ') || '—') + '</td>' +
-              '</tr>';
+            return '<tr><td>' + YI18n.t('Day {day}, Hour {hour}', {day: event.day, hour: event.hour}) + '</td><td>' + String(event.interaction_type || '').charAt(0).toUpperCase() + String(event.interaction_type || '').slice(1) + '</td><td>' + (event.interaction_count || 0) + '</td><td>' + ((event.attacker_usernames || []).join(', ') || '—') + '</td></tr>';
           }).join('')
-        : '<tr><td colspan=\"4\">No SA interactions recorded up to the selected time.</td></tr>';
+        : '<tr><td colspan="4">' + YI18n.t('No SA interactions recorded up to the selected time.') + '</td></tr>';
     }
 
     const targetData = saTargets.trend_data || { timestamps: [], datasets: [], timestamp_mapping: {} };
@@ -292,8 +286,8 @@
     saTargetChart.options.plugins.tooltip.callbacks.title = function(context) {
       const key = context[0].label;
       const mapping = (targetData.timestamp_mapping || {})[key];
-      if (mapping) return 'Day ' + mapping.day + ', Hour ' + mapping.hour;
-      return 'Step ' + key;
+      if (mapping) return YI18n.t('Day {day}, Hour {hour}', {day: mapping.day, hour: mapping.hour});
+      return YI18n.t('Step {key}', {key});
     };
     saTargetChart.update('none');
   }
@@ -316,8 +310,8 @@
     trendChart.options.plugins.tooltip.callbacks.title = function(context) {
       const key = context[0].label;
       const mapping = (trendData.timestamp_mapping || {})[key];
-      if (mapping) return 'Day ' + mapping.day + ', Hour ' + mapping.hour;
-      return 'Step ' + key;
+      if (mapping) return YI18n.t('Day {day}, Hour {hour}', {day: mapping.day, hour: mapping.hour});
+      return YI18n.t('Step {key}', {key});
     };
     trendChart.update('none');
 
@@ -370,7 +364,7 @@
       playButton.classList.remove('playing');
       playIcon.classList.remove('mdi-pause');
       playIcon.classList.add('mdi-play');
-      playButton.title = 'Play';
+      playButton.title = YI18n.t('Play');
       return;
     }
     currentValue += step;
@@ -395,14 +389,14 @@
 
     stressChart = buildBarChart(
       'stressDistributionChart',
-      'Stress',
+      YI18n.t('Stress'),
       snapshot.stress_labels || [],
       snapshot.stress_values || [],
       { background: 'rgba(239, 68, 68, 0.72)', border: 'rgba(220, 38, 38, 1)' }
     );
     rewardChart = buildBarChart(
       'rewardDistributionChart',
-      'Reward',
+      YI18n.t('Reward'),
       snapshot.reward_labels || [],
       snapshot.reward_values || [],
       { background: 'rgba(34, 197, 94, 0.72)', border: 'rgba(22, 163, 74, 1)' }
@@ -441,13 +435,13 @@
         playButton.classList.remove('playing');
         playIcon.classList.remove('mdi-pause');
         playIcon.classList.add('mdi-play');
-        playButton.title = 'Play';
+        playButton.title = YI18n.t('Play');
       } else {
         isPlaying = true;
         playButton.classList.add('playing');
         playIcon.classList.remove('mdi-play');
         playIcon.classList.add('mdi-pause');
-        playButton.title = 'Pause';
+        playButton.title = YI18n.t('Pause');
         playStep(slider, playButton, playIcon);
         playInterval = setInterval(function() {
           playStep(slider, playButton, playIcon);

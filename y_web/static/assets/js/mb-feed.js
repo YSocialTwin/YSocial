@@ -64,7 +64,7 @@ var MB_FEED = (function() {
             existingNotice.innerHTML = [
                 '<button type="button" class="ys-feed-refresh-notice__button">',
                 '  <i data-feather="rotate-cw"></i>',
-                '  <span>New posts available</span>',
+                '  <span>' + YI18n.t('New posts available') + '</span>',
                 '</button>'
             ].join('');
             state.postsContainer.parentNode.insertBefore(existingNotice, state.postsContainer);
@@ -170,7 +170,7 @@ var MB_FEED = (function() {
             credentials: 'same-origin'
         }).then(function(response) {
             if (!response.ok) {
-                throw new Error('Unable to refresh feed.');
+                throw new Error(YI18n.t('Unable to refresh feed.'));
             }
             return response.json();
         });

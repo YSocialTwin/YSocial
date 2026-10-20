@@ -50,16 +50,17 @@ def _root_post_filter(column):
     return or_(column.is_(None), column == -1)
 
 
+from y_web.i18n import N_, gettext
 from y_web.src.system.path_utils import get_writable_path
 
 _ADHOC_AGENT_BADGE_LABELS = {
-    "hello_world": "Hello World",
-    "moderator": "Moderator Agent",
-    "propaganda": "Propaganda Agent",
-    "master_of_puppets": "Master of Puppets",
-    "mop_puppet": "MoP Puppet",
-    "stress_attacker": "Stress Attacker",
-    "comic_relief": "Comic Relief Agent",
+    "hello_world": N_("Hello World"),
+    "moderator": N_("Moderator Agent"),
+    "propaganda": N_("Propaganda Agent"),
+    "master_of_puppets": N_("Master of Puppets"),
+    "mop_puppet": N_("MoP Puppet"),
+    "stress_attacker": N_("Stress Attacker"),
+    "comic_relief": N_("Comic Relief Agent"),
 }
 
 
@@ -70,10 +71,13 @@ def get_adhoc_agent_badge(user) -> Optional[str]:
 
 def get_author_type_badge(user) -> str:
     """Return a badge label identifying whether the author is an AI agent or a human."""
-    user_type = str(getattr(user, "user_type", "") or "").strip().lower()
-    if user_type == "agent" or user_type in _ADHOC_AGENT_BADGE_LABELS:
-        return "AI Agent"
-    return "Human"
+    raw = getattr(user, "user_type", None)
+    user_type = str(raw if raw is not None else "").strip().lower()
+    # Standard agents store the LLM model name in user_type (and some store
+    # ""), so anything other than None / "user" is an agent.
+    if raw is not None and user_type != "user":
+        return N_("AI Agent")  # shown through _(); templates compare the English token
+    return N_("Human")
 
 
 def get_safe_profile_pic(username, is_page=0):
@@ -522,6 +526,10 @@ def _forum_current_profile_pic(exp_id, forum_user=None):
 
 
 def _experiment_memory_enabled(exp_id):
+    from y_web.src.system.memory_plugin import agent_memory_plugin_installed
+
+    if not agent_memory_plugin_installed():
+        return False
     exp = db.session.scalars(select(Exps).filter_by(idexp=int(exp_id))).first()
     if not exp or getattr(exp, "platform_type", "") not in {
         "forum",
@@ -695,6 +703,12 @@ _UI_DEFAULTS = {
     "annotation_agent_type": True,
     "annotation_author_type": True,
     "show_post_time": True,
+    "show_suggested_friends": True,
+    "show_trending_hashtags": True,
+    "show_recsys_info": False,
+    "show_annotation_stats": False,
+    "language": "",
+    "language_switch_allowed": False,
     "notifications_menu": True,
     "default_content_recsys": "",
     "default_follow_recsys": "",
@@ -702,6 +716,8 @@ _UI_DEFAULTS = {
     "onboarding_enabled": True,
     "infinite_scroll_enabled": True,
     "posts_per_page": 10,
+    "default_forum_feed_type": "new",
+    "default_photo_feed_tab": "for_you",
     # FilterBubble (Personalized Feed) parameters
     "filter_bubble_alpha": 2.0,
     "filter_bubble_beta": 0.0,
@@ -733,3 +749,134 @@ def _load_ui_settings(exp_id: int) -> dict:
         return merged
     except Exception:
         return dict(_UI_DEFAULTS)
+
+
+# Plain-language explanations of the content recommender systems, keyed by canonical mode name
+# (see y_web.src.recsys.content_recsys._normalize_content_recsys_mode). Shown to participants.
+_RECSYS_DESCRIPTIONS = {
+    "Random": N_(
+        "Posts from other users in random order, regardless of you or the posts."
+    ),
+    "ReverseChrono": N_(
+        "All posts from other users, newest first. No personalisation."
+    ),
+    "ReverseChronoPopularity": N_("Posts from other users, the most reacted first."),
+    "ReverseChronoFollowers": N_(
+        "Mostly posts from the people you follow, newest first, completed with the newest posts from everybody."
+    ),
+    "ReverseChronoFollowersPopularity": N_(
+        "Mostly posts from the people you follow, the most reacted first, completed with the newest posts from everybody."
+    ),
+    "ReverseChronoComments": N_(
+        "Newest posts first; within the same hour, the most commented come first."
+    ),
+    "CommonInterests": N_(
+        "Posts about the topics you are interested in, newest first."
+    ),
+    "CommonUserInterests": N_(
+        "Posts from users who share your interests, newest first, completed with the newest posts from everybody."
+    ),
+    "SimilarUsersReactions": N_(
+        "Posts reacted to by users with your same political leaning, completed with the newest posts from everybody."
+    ),
+    "SimilarUsersPosts": N_(
+        "Posts written by users with your same political leaning, completed with the newest posts from everybody."
+    ),
+    "CollaborativeUserUser": N_(
+        "Posts liked by users who reacted to the same posts as you, newest first."
+    ),
+    "CollaborativeItemItem": N_(
+        "Posts reacted to by the people who reacted to the same posts as you, newest first."
+    ),
+    "ContentBasedFeatures": N_(
+        "Posts about your topics of interest, newest first, then the most reacted."
+    ),
+    "ContentBasedVector": N_(
+        "Posts ranked by how many of your topics of interest they cover."
+    ),
+    "HybridLinearRanker": N_(
+        "Posts ranked by how well they match your topics of interest, with a bonus for popular ones."
+    ),
+    "FilterBubble": N_(
+        "Posts are scored by your topics of interest and by how close the author's opinion is to yours. "
+        "Your interests adapt to what you like, share and comment, so over time the feed can narrow to like-minded content."
+    ),
+}
+_RECSYS_FALLBACK = N_(
+    "This is the algorithm that decides which posts appear in your feed and in what order."
+)
+
+
+def _content_recsys_info(recsys_type, ui=None):
+    """``{"name", "label", "description"}`` of a user's content recommender system, or ``None``.
+
+    ``None`` when the experiment's ``show_recsys_info`` setting is off, so templates can test it directly.
+    """
+    if ui is not None and not ui.get("show_recsys_info"):
+        return None
+    try:
+        from y_web.src.models.config import Content_Recsys  # noqa: PLC0415
+        from y_web.src.recsys.content_recsys import (  # noqa: PLC0415
+            _normalize_content_recsys_mode,
+        )
+
+        raw = str(recsys_type or "").strip() or "default"
+        mode = _normalize_content_recsys_mode(raw)
+        label = None
+        for row in db.session.scalars(db.select(Content_Recsys)).all():
+            if _normalize_content_recsys_mode(row.name) == mode:
+                label = row.value
+                break
+        if label is None:
+            label = {"Random": "Random"}.get(mode, mode)
+        return {
+            "name": mode,
+            "label": label,
+            "description": gettext(_RECSYS_DESCRIPTIONS.get(mode, _RECSYS_FALLBACK)),
+        }
+    except Exception:
+        return None
+
+
+def _platform_ui_context():
+    """Template context for forum / photo-sharing pages.
+
+    Microblogging routes pass ``ui`` explicitly; the forum and photo routes
+    render many templates from many places, so they receive the same
+    per-experiment settings (``/admin/frontend_settings``) from here instead:
+    ``ui`` plus the two derived forum flags that gate the annotation chips.
+    Never touches pages of other blueprints or of microblogging experiments.
+    """
+    try:
+        if request.blueprint != "main":
+            return {}
+        raw = (request.view_args or {}).get("exp_id")
+        if raw is None:
+            return {}
+        from y_web.src.models import Exps  # noqa: PLC0415
+
+        exp = db.session.get(Exps, int(raw))
+        if exp is None or exp.platform_type not in ("forum", "photo_sharing"):
+            return {}
+        ui = _load_ui_settings(int(raw))
+        annotations = bool(ui.get("annotations_enabled", True))
+        modules = []
+        try:
+            from y_web.src.external_runtime.plugin_loader import (  # noqa: PLC0415
+                active_modules_context,
+            )
+
+            modules = active_modules_context(int(raw))
+        except Exception:
+            modules = []
+        return {
+            "frontend_adds_on_modules": modules,
+            "ui": ui,
+            "platform_ui": "forum" if exp.platform_type == "forum" else "photo",
+            "forum_show_emotions": annotations
+            and bool(ui.get("annotation_emotions", True)),
+            "forum_show_topics": annotations
+            and bool(ui.get("annotation_topics", True)),
+        }
+    except Exception:
+        return {}

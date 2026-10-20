@@ -1,14 +1,14 @@
 {% include "admin/head.html" %}
 
 <div class="view-wrapper is-dashboard">
-    <div id="creator-dashboard" class="dashboard-container">
+    <div id="creator-dashboard" data-tutorial-page="forum_image_resources" class="dashboard-container">
         {% include "admin/dash_head.html" %}
 
         <div class="dashboard-body">
             <div class="columns">
                 <div class="column is-12">
-                    <div class="dashboard-box">
-                        <a href="/admin/agents_dashboard">Agent Resources Dashboard</a> > Forum Image Resources
+                    <div class="dashboard-box" data-tut="reusable-forum-image-resources">
+                        <a href="/admin/agents_dashboard">{{ _('Agent Resources Dashboard') }}</a> &gt; {{ _('Forum Image Resources') }}
                     </div>
                 </div>
             </div>
@@ -16,66 +16,66 @@
             <div class="columns">
                 <div class="column is-7">
                     <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Reusable Forum Image Resources</h3>
+                        <h3 class="title is-5 is-thin">{{ _('Reusable Forum Image Resources') }}</h3>
                         <p class="ys-text-small">
-                            Validate subreddit-based image feeds once, store them centrally, and assign them to any forum experiment as needed.
+                            {{ _('Validate subreddit-based image feeds once, store them centrally, and assign them to any forum experiment as needed.') }}
                         </p>
                         <p class="ys-label-hint">
-                            Use a subreddit name, <code>r/name</code>, or a Reddit subreddit URL such as <code>https://www.reddit.com/r/memes/</code>. The parse step previews sample images before saving.
+                            {{ _('Use a subreddit name, %(name)s, or a Reddit subreddit URL such as %(url)s. The parse step previews sample images before saving.', name=wrap('code', 'r/name'), url=wrap('code', 'https://www.reddit.com/r/memes/')) }}
                         </p>
 
                         <form action="/admin/create_forum_image_resource" method="POST" class="box-content">
                             <div class="box-line">
-                                <span class="left">Subreddit</span>
+                                <span class="left">{{ _('Subreddit') }}</span>
                                 <span class="right ys-w-70">
                                     <div style="display: flex; gap: 10px;">
-                                        <input type="text" id="subreddit_name" name="subreddit" class="input ys-flex-1" placeholder="memes or https://www.reddit.com/r/memes/" required>
-                                        <button type="button" class="button is-solid primary-button" onclick="parseSubreddit()">Parse</button>
+                                        <input type="text" id="subreddit_name" name="subreddit" class="input ys-flex-1" placeholder="{{ _('memes or https://www.reddit.com/r/memes/') }}" required>
+                                        <button type="button" class="button is-solid primary-button" onclick="parseSubreddit()">{{ _('Parse') }}</button>
                                     </div>
                                 </span>
                             </div>
                             <div id="parse_result" style="margin-bottom: 1em; display: none;">
                                 <div class="box-line">
-                                    <span class="left">Status</span>
+                                    <span class="left">{{ _('Status') }}</span>
                                     <span class="right ys-w-70" id="parse_status"></span>
                                 </div>
                                 <div class="box-line">
-                                    <span class="left">Sample Images</span>
+                                    <span class="left">{{ _('Sample Images') }}</span>
                                     <span class="right ys-w-70">
                                         <div id="sample_images" style="display: flex; gap: 5px; flex-wrap: wrap;"></div>
                                     </span>
                                 </div>
                             </div>
                             <div class="box-line">
-                                <span class="left">Interests</span>
+                                <span class="left">{{ _('Interests') }}</span>
                                 <span class="right ys-w-70">
                                     <select name="interests" class="input" multiple size="8" style="min-height: 160px;">
                                         {% for interest in available_interests %}
                                         <option value="{{ interest }}">{{ interest }}</option>
                                         {% endfor %}
                                     </select>
-                                    <p class="ys-label-hint" style="margin-top: 6px;">Hold Ctrl/Cmd to select multiple interests.</p>
+                                    <p class="ys-label-hint" style="margin-top: 6px;">{{ _('Hold Ctrl/Cmd to select multiple interests.') }}</p>
                                 </span>
                             </div>
                             <div class="button-wrap ys-mt-1em">
-                                <button type="submit" class="button is-solid primary-button">Validate And Save Image Resource</button>
+                                <button type="submit" class="button is-solid primary-button">{{ _('Validate And Save Image Resource') }}</button>
                             </div>
                         </form>
                     </div>
                 </div>
 
                 <div class="column is-5">
-                    <div class="dashboard-box is-compact">
-                        <h3 class="title is-5 is-thin">Usage</h3>
+                    <div class="dashboard-box is-compact" data-tut="usage">
+                        <h3 class="title is-5 is-thin">{{ _('Usage') }}</h3>
                         <div class="help-block">
                             <p>
-                                <b>Central catalog</b><br>
-                                These subreddit definitions are stored in the dashboard DB and can be assigned from <code>admin/image_feeds</code>.
+                                <b>{{ _('Central catalog') }}</b><br>
+                                {{ _('These subreddit definitions are stored in the dashboard DB and can be assigned from %(page)s.', page=wrap('code', 'admin/image_feeds')) }}
                             </p>
                             <hr>
                             <p>
-                                <b>Validation</b><br>
-                                Saving here verifies the subreddit feed can be parsed before it becomes available to experiments.
+                                <b>{{ _('Validation') }}</b><br>
+                                {{ _('Saving here verifies the subreddit feed can be parsed before it becomes available to experiments.') }}
                             </p>
                         </div>
                     </div>
@@ -84,15 +84,15 @@
 
             <div class="columns">
                 <div class="column is-12">
-                    <div class="dashboard-box">
-                        <h4 class="title is-6 is-thin">Saved Image Resources ({{ resources|length }})</h4>
+                    <div class="dashboard-box" data-tut="saved-image-resources">
+                        <h4 class="title is-6 is-thin">{{ _('Saved Image Resources (%(n)s)', n=resources|length) }}</h4>
                         <div class="box-content">
                             {% if resources %}
                             <table class="table is-fullwidth is-striped ys-text-090">
                                 <thead>
                                     <tr>
-                                        <th>Subreddit</th>
-                                        <th>Interests</th>
+                                        <th>{{ _('Subreddit') }}</th>
+                                        <th>{{ _('Interests') }}</th>
                                         <th></th>
                                     </tr>
                                 </thead>
@@ -107,7 +107,7 @@
                                         </td>
                                         <td>
                                             <form action="/admin/delete_forum_image_resource/{{ resource.id }}" method="POST" onsubmit="return confirm('Delete this reusable image resource?');">
-                                                <button type="submit" class="button is-small is-danger is-light">Delete</button>
+                                                <button type="submit" class="button is-small is-danger is-light">{{ _('Delete') }}</button>
                                             </form>
                                         </td>
                                     </tr>
@@ -115,7 +115,7 @@
                                 </tbody>
                             </table>
                             {% else %}
-                            <p class="ys-text-light">No reusable image resources stored yet.</p>
+                            <p class="ys-text-light">{{ _('No reusable image resources stored yet.') }}</p>
                             {% endif %}
                         </div>
                     </div>

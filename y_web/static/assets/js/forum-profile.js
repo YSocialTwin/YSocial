@@ -25,7 +25,7 @@ window.redditProfileDeletePost = function(event, trigger) {
     if (!postId || !window.RedditApi) {
         return false;
     }
-    if (!window.confirm('Delete this post? This action cannot be undone.')) {
+    if (!window.confirm(YI18n.t('Delete this post? This action cannot be undone.'))) {
         return false;
     }
     window.RedditApi.deletePost(postId)
@@ -36,7 +36,7 @@ window.redditProfileDeletePost = function(event, trigger) {
             }
         })
         .fail(function(err) {
-            window.alert((err && err.message) || 'Unable to delete post right now.');
+            window.alert((err && err.message) || YI18n.t('Unable to delete post right now.'));
         });
     return false;
 };

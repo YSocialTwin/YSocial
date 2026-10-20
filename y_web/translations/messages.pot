@@ -1,0 +1,10911 @@
+# Translations template for YSocial.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the YSocial project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: YSocial VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-10-20 13:05+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+msgid "\"Who to follow\" algorithm shown to standard users by default"
+msgstr ""
+
+#, python-format
+msgid "%% Daily Churn"
+msgstr ""
+
+#, python-format
+msgid "%% New Agents (daily)"
+msgstr ""
+
+#, python-format
+msgid ""
+"%(articles)s topics are annotated by the LLM: such tagging allows to "
+"dynamically introduce novel topics among the interests of the agents that"
+" interact with the news source."
+msgstr ""
+
+#, python-format
+msgid "%(count)s agents currently defined"
+msgstr ""
+
+#, python-format
+msgid "%(count)s media pages with news-oriented behavior"
+msgstr ""
+
+#, python-format
+msgid "%(count)s new"
+msgstr ""
+
+#, python-format
+msgid "%(count)s pages currently defined"
+msgstr ""
+
+#, python-format
+msgid "%(count)s populations already contain custom agents"
+msgstr ""
+
+#, python-format
+msgid "%(count)s populations already include pages"
+msgstr ""
+
+#, python-format
+msgid "%(count)s required parameters"
+msgstr ""
+
+#, python-format
+msgid "%(count)s reusable RSS feeds available"
+msgstr ""
+
+#, python-format
+msgid "%(count)s reusable activity profiles available"
+msgstr ""
+
+#, python-format
+msgid "%(count)s reusable image feeds available"
+msgstr ""
+
+#, python-format
+msgid ""
+"%(created_count)s experiment copies successfully created from "
+"'%(exp_name)s'."
+msgstr ""
+
+#, python-format
+msgid ""
+"%(created_count)s experiment copies successfully created in group "
+"'%(target_group)s'."
+msgstr ""
+
+#, python-format
+msgid ""
+"%(display_name)s agents can only be assigned to matching custom "
+"populations."
+msgstr ""
+
+#, python-format
+msgid ""
+"%(display_name)s agents must be assigned to at least one matching custom "
+"population."
+msgstr ""
+
+#, python-format
+msgid "%(label)s Operation Log"
+msgstr ""
+
+#, python-format
+msgid "%(label)s enabled. Restart required: its routes are loaded at startup."
+msgstr ""
+
+#, python-format
+msgid ""
+"%(label)s is a symlinked development checkout: update it from its own "
+"repository."
+msgstr ""
+
+#, python-format
+msgid "%(n)s active runs"
+msgstr ""
+
+#, python-format
+msgid "%(n)s activity profiles"
+msgstr ""
+
+#, python-format
+msgid "%(n)s configurable values"
+msgstr ""
+
+#, python-format
+msgid "%(n)s plugin types"
+msgstr ""
+
+#, python-format
+msgid "%(n)s populations"
+msgstr ""
+
+#, python-format
+msgid "%(n)s resources"
+msgstr ""
+
+#, python-format
+msgid "%(n)s steps"
+msgstr ""
+
+#, python-format
+msgid "%(n)s visible resources"
+msgstr ""
+
+#, python-format
+msgid "%(name)s Parameters"
+msgstr ""
+
+#, python-format
+msgid "%(name)s agents"
+msgstr ""
+
+#, python-format
+msgid "%(network_title)s Ego Network Over Time"
+msgstr ""
+
+#, python-format
+msgid "%(num)d file"
+msgid_plural "%(num)d files"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-format
+msgid "%(num)s photo"
+msgid_plural "%(num)s photos"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-format
+msgid ""
+"%(pages)s are a particular type of synthetic agent that can be used to "
+"display information to users. Each page has a name, description, type, "
+"and keywords."
+msgstr ""
+
+#, python-format
+msgid "%(platform)s Memory Embeddings"
+msgstr ""
+
+#, python-format
+msgid "%(title)s not available"
+msgstr ""
+
+#, python-format
+msgid "%(title)s tables not available"
+msgstr ""
+
+#, python-format
+msgid "%(user)s (%(n)s interactions)"
+msgstr ""
+
+#, python-format
+msgid "%(user)s (%(n)s interventions)"
+msgstr ""
+
+#, python-format
+msgid "%(user)s (%(n)s recs)"
+msgstr ""
+
+#, python-format
+msgid "%(user)s (deg %(n)s)"
+msgstr ""
+
+#, python-format
+msgid "%(user)s granted you visibility to experiment '%(name)s'."
+msgstr ""
+
+#, python-format
+msgid "%(user)s granted you visibility to group '%(name)s'."
+msgstr ""
+
+#, python-format
+msgid "%(username)s avatar"
+msgstr ""
+
+#, python-format
+msgid "(%(count)s total)"
+msgstr ""
+
+msgid "(CI) Common Interests"
+msgstr ""
+
+msgid "(CUI) Common User Interests"
+msgstr ""
+
+msgid "(FP) Followers-Popularity"
+msgstr ""
+
+msgid "(HLR) Hybrid Linear Ranker"
+msgstr ""
+
+msgid "(Only for Photo Sharing populations)"
+msgstr ""
+
+msgid "(Optional - Click to expand)"
+msgstr ""
+
+msgid "(Optional)"
+msgstr ""
+
+msgid "(RC) Reverse Chrono"
+msgstr ""
+
+msgid "(RCC) Reverse Chrono Comments"
+msgstr ""
+
+msgid "(RCF) Followers"
+msgstr ""
+
+msgid "(RCP) Popularity"
+msgstr ""
+
+msgid "(SIP) Similar Users Posts"
+msgstr ""
+
+msgid "(SIR) Similar Users Reactions"
+msgstr ""
+
+msgid "(at least 2)"
+msgstr ""
+
+msgid "(available in developer/docker mode)"
+msgstr ""
+
+msgid "(e.g., personality traits & toxicity)"
+msgstr ""
+
+msgid "(for text annotation)"
+msgstr ""
+
+msgid "(initial agents)"
+msgstr ""
+
+msgid "(optional)"
+msgstr ""
+
+msgid "(public url)"
+msgstr ""
+
+msgid "(required)"
+msgstr ""
+
+msgid "(toxicity annotations)"
+msgstr ""
+
+msgid "(url)"
+msgstr ""
+
+msgid "(url, optional)"
+msgstr ""
+
+#, python-format
+msgid "+%(n)s more"
+msgstr ""
+
+msgid "-- Select Experiment --"
+msgstr ""
+
+msgid "-- Select a client --"
+msgstr ""
+
+msgid "/absolute/path/for/ysocial_models"
+msgstr ""
+
+msgid "0 / 5 photos selected"
+msgstr ""
+
+msgid "1. Create one or more Agent Populations"
+msgstr ""
+
+msgid "1. Select Population Segmentation Dimensions (Optional)"
+msgstr ""
+
+msgid "2. Configure Opinion Distributions for Each Topic"
+msgstr ""
+
+msgid "2. Create an Experiment"
+msgstr ""
+
+msgid "3. Configure one or more Clients"
+msgstr ""
+
+msgid "3. Select Opinion Update Rule"
+msgstr ""
+
+msgid "4. Run the Simulation"
+msgstr ""
+
+#, python-format
+msgid "<strong>%(num)s</strong> follower"
+msgid_plural "<strong>%(num)s</strong> followers"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-format
+msgid "<strong>%(num)s</strong> following"
+msgstr ""
+
+#, python-format
+msgid "<strong>%(num)s</strong> post"
+msgid_plural "<strong>%(num)s</strong> posts"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-format
+msgid "<strong>%(num)s</strong> reaction"
+msgid_plural "<strong>%(num)s</strong> reactions"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "@AndreaFailla4"
+msgstr ""
+
+msgid "@CauErica"
+msgstr ""
+
+msgid "@GiulioRossetti"
+msgstr ""
+
+msgid "@MassimoSt"
+msgstr ""
+
+msgid "@VPansanella"
+msgstr ""
+
+msgid "@Virgiiim"
+msgstr ""
+
+msgid "@Yquetzal"
+msgstr ""
+
+msgid "@atomasevic"
+msgstr ""
+
+msgid "@dsalvaz"
+msgstr ""
+
+msgid "@katie_abramski"
+msgstr ""
+
+msgid ""
+"A client manages a population of agents that interact within the "
+"simulation. Each client runs independently with its own configuration and"
+" LLM settings."
+msgstr ""
+
+msgid ""
+"A client runs the simulation with your population. For advanced settings,"
+" visit the client details page after creation."
+msgstr ""
+
+msgid "A discussion thread."
+msgstr ""
+
+#, python-format
+msgid "A new %(display_name)s population name is required."
+msgstr ""
+
+msgid "A population is a group of agents/pages that are used in a simulation."
+msgstr ""
+
+#, python-format
+msgid ""
+"A population is a group of synthetic agents that will participate in your"
+" simulation. For more advanced options, visit the %(link)s page."
+msgstr ""
+
+msgid "A subset of agent's interests."
+msgstr ""
+
+msgid "AI Agent"
+msgstr ""
+
+msgid "API Configuration"
+msgstr ""
+
+msgid "API Key"
+msgstr ""
+
+msgid "About"
+msgstr ""
+
+msgid "About Me"
+msgstr ""
+
+msgid "About System Settings"
+msgstr ""
+
+msgid "About Us"
+msgstr ""
+
+msgid "Access Denied"
+msgstr ""
+
+msgid "Access denied"
+msgstr ""
+
+msgid "Access denied."
+msgstr ""
+
+msgid "Access denied. Only administrators can check for updates."
+msgstr ""
+
+msgid "Access denied. Only administrators can modify telemetry settings."
+msgstr ""
+
+msgid "Access denied. Only administrators can modify watchdog settings."
+msgstr ""
+
+msgid "Access denied. Please use the experiment feed."
+msgstr ""
+
+msgid ""
+"Access denied. This page is only accessible to administrators and "
+"researchers."
+msgstr ""
+
+msgid "Access denied. This page is only accessible to administrators."
+msgstr ""
+
+msgid "Account"
+msgstr ""
+
+msgid "Account Details"
+msgstr ""
+
+msgid "Account information and API configurations for this user."
+msgstr ""
+
+msgid "Accounts"
+msgstr ""
+
+msgid "Action Selection"
+msgstr ""
+
+msgid "Actions"
+msgstr ""
+
+msgid "Actions Per User Once Active"
+msgstr ""
+
+msgid ""
+"Actions include posting, commenting, reading, searching, and platform-"
+"specific features."
+msgstr ""
+
+msgid "Activate"
+msgstr ""
+
+msgid "Activate run-scoped memory"
+msgstr ""
+
+msgid "Active"
+msgstr ""
+
+msgid "Active Alter"
+msgstr ""
+
+#, python-format
+msgid "Active Audience (~70%% validation activity)"
+msgstr ""
+
+#, python-format
+msgid "Active Audience - ~70%% of activity is validating others"
+msgstr ""
+
+msgid "Active Experiments"
+msgstr ""
+
+msgid "Active Hashtags"
+msgstr ""
+
+msgid "Active Nodes"
+msgstr ""
+
+msgid "Active Populations"
+msgstr ""
+
+msgid "Active Topics"
+msgstr ""
+
+msgid "Active experiments"
+msgstr ""
+
+msgid ""
+"Active experiments grouped by their project group. Click on a group "
+"header to expand/collapse."
+msgstr ""
+
+msgid "Active feed thread"
+msgstr ""
+
+msgid "Active generated topic"
+msgstr ""
+
+msgid "Active modules"
+msgstr ""
+
+msgid "Active propaganda topics in this experiment:"
+msgstr ""
+
+msgid "Activity"
+msgstr ""
+
+msgid "Activity & Engagement Configuration"
+msgstr ""
+
+msgid "Activity Level"
+msgstr ""
+
+msgid "Activity Pattern"
+msgstr ""
+
+msgid "Activity Patterns"
+msgstr ""
+
+msgid "Activity Profile"
+msgstr ""
+
+msgid "Activity Profiles"
+msgstr ""
+
+msgid "Activity Rates Configuration"
+msgstr ""
+
+msgid "Activity Rates Visualization"
+msgstr ""
+
+msgid "Activity profile not found."
+msgstr ""
+
+msgid "Actor Name Prefix"
+msgstr ""
+
+msgid "Actual Profile Pics"
+msgstr ""
+
+msgid "Actual profile pictures are enabled across the forum interface."
+msgstr ""
+
+#, python-format
+msgid "Ad hoc agent client workflows stay disabled until %(b)s is executed."
+msgstr ""
+
+msgid "Ad hoc agent clients are not available for remote experiments."
+msgstr ""
+
+msgid "Ad hoc agent clients are not available for rule-based experiments."
+msgstr ""
+
+#, python-format
+msgid "Ad hoc client configuration '%(name)s' saved."
+msgstr ""
+
+msgid "Ad hoc client configuration is invalid."
+msgstr ""
+
+msgid "Ad hoc client configuration not found."
+msgstr ""
+
+msgid "Ad hoc client deleted."
+msgstr ""
+
+msgid ""
+"Ad hoc client settings updated. Running clients will pick up the changes "
+"on the next round."
+msgstr ""
+
+msgid "AdHoc Agents' Clients"
+msgstr ""
+
+msgid "AdHoc Clients"
+msgstr ""
+
+msgid "Add"
+msgstr ""
+
+msgid "Add Client"
+msgstr ""
+
+msgid "Add Custom Field"
+msgstr ""
+
+msgid "Add Interest"
+msgstr ""
+
+msgid "Add LLM Model"
+msgstr ""
+
+msgid "Add Tag"
+msgstr ""
+
+msgid "Add Topic to Page"
+msgstr ""
+
+msgid "Add User"
+msgstr ""
+
+msgid "Add a comment..."
+msgstr ""
+
+msgid "Add a new filter tag"
+msgstr ""
+
+msgid ""
+"Add explicit interests for this agent. If an opinion group is selected, "
+"the related opinion value is stored too. Stubborn interests are exported "
+"with immutable opinion hints."
+msgstr ""
+
+msgid "Add to Experiment"
+msgstr ""
+
+msgid "Add to Population"
+msgstr ""
+
+msgid "Additional Configuration"
+msgstr ""
+
+msgid "Additional fields persisted outside the core agent schema."
+msgstr ""
+
+msgid "Additional settings exposed by the selected plugin agent type."
+msgstr ""
+
+msgid "Adjust experiment prompts and supporting configuration."
+msgstr ""
+
+msgid "Adjust forum prompts, feeds, limits, and avatar behavior."
+msgstr ""
+
+msgid "Adjust forum prompts, feeds, limits, embeddings, and avatar behavior."
+msgstr ""
+
+msgid "Admin"
+msgstr ""
+
+msgid "Admin Dashboard"
+msgstr ""
+
+msgid "Advanced Role-Playing"
+msgstr ""
+
+msgid "Advanced Role-Playing Profile"
+msgstr ""
+
+msgid "Advanced Settings"
+msgstr ""
+
+msgid "Age"
+msgstr ""
+
+msgid "Age Classes"
+msgstr ""
+
+#, python-format
+msgid "Age Classes %%"
+msgstr ""
+
+msgid "Age End"
+msgstr ""
+
+msgid "Age Start"
+msgstr ""
+
+msgid "Age class not found."
+msgstr ""
+
+msgid "Agent"
+msgstr ""
+
+#, python-format
+msgid "Agent %(l)s or %(l2)s not found in network file."
+msgstr ""
+
+#, python-format
+msgid "Agent %(l)s or %(l2)s not found."
+msgstr ""
+
+msgid "Agent Archetypes"
+msgstr ""
+
+msgid "Agent Archetypes and Transitions"
+msgstr ""
+
+msgid "Agent Archetypes and Transitions (Optional)"
+msgstr ""
+
+msgid "Agent Extensions"
+msgstr ""
+
+msgid "Agent Features"
+msgstr ""
+
+msgid "Agent Memory (Run-Scoped)"
+msgstr ""
+
+msgid "Agent Name"
+msgstr ""
+
+msgid "Agent Opinion Evolution"
+msgstr ""
+
+msgid "Agent Populations"
+msgstr ""
+
+msgid "Agent Profile"
+msgstr ""
+
+msgid "Agent Resources"
+msgstr ""
+
+msgid "Agent Resources Dashboard"
+msgstr ""
+
+msgid "Agent Type"
+msgstr ""
+
+msgid "Agent Type and Population"
+msgstr ""
+
+msgid "Agent Type:"
+msgstr ""
+
+msgid "Agent Workspace"
+msgstr ""
+
+msgid "Agent age"
+msgstr ""
+
+msgid "Agent archetype persona"
+msgstr ""
+
+msgid "Agent archetypes reset to default values."
+msgstr ""
+
+msgid "Agent archetypes updated successfully."
+msgstr ""
+
+msgid "Agent gender"
+msgstr ""
+
+msgid "Agent interaction and engagement parameters."
+msgstr ""
+
+msgid "Agent is assigned to a population. Cannot delete."
+msgstr ""
+
+msgid "Agent name"
+msgstr ""
+
+#, python-format
+msgid "Agent name '%(name)s' already exists. Please choose a different name."
+msgstr ""
+
+msgid "Agent nationality"
+msgstr ""
+
+msgid "Agent not found."
+msgstr ""
+
+msgid "Agent profession"
+msgstr ""
+
+msgid "Agent runtime"
+msgstr ""
+
+msgid "Agent type"
+msgstr ""
+
+msgid ""
+"Agent types that can be deployed in both microblogging and forum "
+"simulations."
+msgstr ""
+
+msgid "Agent types that currently target forum experiments only."
+msgstr ""
+
+msgid "Agent types that currently target microblogging experiments only."
+msgstr ""
+
+msgid "Agent's political leaning"
+msgstr ""
+
+msgid "Agent-Handler Dialogue"
+msgstr ""
+
+msgid "Agent-Specific Configuration"
+msgstr ""
+
+msgid "Agents"
+msgstr ""
+
+msgid "Agents Pre-prompts"
+msgstr ""
+
+msgid "Agents update opinions based on similarity with others"
+msgstr ""
+
+msgid "Agents use LLM to evaluate and update opinions"
+msgstr ""
+
+msgid "Agents' Actions Relevance"
+msgstr ""
+
+msgid "Agents' Memory (hours)"
+msgstr ""
+
+msgid "Agents' Memory (hours):"
+msgstr ""
+
+msgid "Aggregate state and attacker effects"
+msgstr ""
+
+msgid "Aggregation:"
+msgstr ""
+
+msgid "Agreeableness"
+msgstr ""
+
+msgid "Agreeableness."
+msgstr ""
+
+msgid "All"
+msgstr ""
+
+msgid "All Experiments"
+msgstr ""
+
+msgid "All Friends"
+msgstr ""
+
+msgid "All Groups"
+msgstr ""
+
+msgid ""
+"All actions are scored from 0 to 10, where 0 means that the action is "
+"never performed. Scores greater than 0 are relative to each other."
+msgstr ""
+
+msgid ""
+"All actions are scored from 0 to 10, where 0 means that the action is "
+"never performed. Scores greater than 0 are relative to each other. For "
+"example, if \"Post new content\" has a score of 3 and \"Comment a Post\" "
+"has a score of 6, then the agent will comment twice as much as posting "
+"new content."
+msgstr ""
+
+msgid ""
+"All actions are scored from 0 to 10, where 0 means the action is never "
+"performed. Scores greater than 0 are relative to each other."
+msgstr ""
+
+msgid "All annotations"
+msgstr ""
+
+msgid "All interactions"
+msgstr ""
+
+msgid "All posts"
+msgstr ""
+
+msgid "All posts from other users, newest first. No personalisation."
+msgstr ""
+
+#, python-format
+msgid ""
+"All telemetry data is GDPR compliant. You can disable it anytime from the"
+" application %(link)s."
+msgstr ""
+
+msgid "Already registered?"
+msgstr ""
+
+msgid "Alternative installation"
+msgstr ""
+
+msgid "Alternative profile"
+msgstr ""
+
+msgid "Alternative values"
+msgstr ""
+
+msgid "American"
+msgstr ""
+
+msgid "Amplification of popular posts. 0 = disabled."
+msgstr ""
+
+msgid "An Ollama host is required when memory embeddings are enabled."
+msgstr ""
+
+msgid "An account with this username or email already exists."
+msgstr ""
+
+msgid "An activity profile with this name already exists."
+msgstr ""
+
+#, python-format
+msgid "An ad hoc client config named '%(safe_client_name)s' already exists."
+msgstr ""
+
+#, python-format
+msgid ""
+"An experiment defines the simulation environment. For more options, visit"
+" the %(link)s page."
+msgstr ""
+
+#, python-format
+msgid "An experiment with name '%(name)s' already exists."
+msgstr ""
+
+msgid "An experiment with that name already exists."
+msgstr ""
+
+msgid "Analysis of client(s) execution."
+msgstr ""
+
+msgid "Analytical Environment"
+msgstr ""
+
+msgid "Analytics Pages"
+msgstr ""
+
+msgid ""
+"Analyze how content recommendation exposure is distributed across posts, "
+"authors, and recommender configurations."
+msgstr ""
+
+msgid "Annotated Photos"
+msgstr ""
+
+msgid "Annotated Posts"
+msgstr ""
+
+msgid "Annotation Volume"
+msgstr ""
+
+msgid "Annotation statistics"
+msgstr ""
+
+msgid "Annotations"
+msgstr ""
+
+msgid "Anonymous usage data helps improve YSocial. No personal data is collected."
+msgstr ""
+
+msgid "Applied when engagement boost (γ) > 0."
+msgstr ""
+
+msgid ""
+"Applies thread + memory + LLM token budgets. High profile stays within "
+"24B/Ollama-safe caps."
+msgstr ""
+
+msgid "Apply"
+msgstr ""
+
+msgid "Archetype Configuration"
+msgstr ""
+
+#, python-format
+msgid "Archetype Distribution (%%)"
+msgstr ""
+
+msgid "Archetype Personas"
+msgstr ""
+
+#, python-format
+msgid "Archetype percentages must sum to 100%% (current sum: %(archetype_sum)s%%)"
+msgstr ""
+
+msgid "Archive generation failed."
+msgstr ""
+
+msgid "Archive generation started. You will be notified when the file is ready."
+msgstr ""
+
+msgid "Archived"
+msgstr ""
+
+msgid "Are you using YSocial for your research? Please cite us!"
+msgstr ""
+
+msgid "Argentine"
+msgstr ""
+
+msgid "Armenian"
+msgstr ""
+
+msgid "Articles'"
+msgstr ""
+
+msgid "Ask the agent about their experiences, decisions, or relationships..."
+msgstr ""
+
+msgid "Ask the agent about their experiences, relationships, or the community..."
+msgstr ""
+
+msgid "Assign Users to Experiment"
+msgstr ""
+
+msgid "Assign this agent to additional populations for use in experiments."
+msgstr ""
+
+msgid "Assigned Agents"
+msgstr ""
+
+msgid "Assigned Profiles & Percentages"
+msgstr ""
+
+msgid "Assigned Resources"
+msgstr ""
+
+msgid "Assignment Notes"
+msgstr ""
+
+msgid "Associate Prof."
+msgstr ""
+
+msgid "Associate content topics with this page for better categorization."
+msgstr ""
+
+msgid "Async Embedding"
+msgstr ""
+
+msgid "At least one number"
+msgstr ""
+
+msgid "At least one special symbol"
+msgstr ""
+
+msgid "At least one uppercase letter"
+msgstr ""
+
+msgid "Attacker Agents"
+msgstr ""
+
+msgid "Attackers"
+msgstr ""
+
+msgid "Attention Budget"
+msgstr ""
+
+msgid "Audio call"
+msgstr ""
+
+msgid "Austrian"
+msgstr ""
+
+msgid "Author"
+msgstr ""
+
+msgid "Author Drill-down"
+msgstr ""
+
+msgid "Author Recommendation Drill-down"
+msgstr ""
+
+msgid "Author type"
+msgstr ""
+
+msgid "Authors Reached"
+msgstr ""
+
+msgid "Auto"
+msgstr ""
+
+msgid "Auto-refresh"
+msgstr ""
+
+msgid "Automatic (browser language)"
+msgstr ""
+
+msgid ""
+"Automatic monitoring of HPC client execution status and completion "
+"detection."
+msgstr ""
+
+msgid "Automatically load more posts as the user scrolls down the feed"
+msgstr ""
+
+msgid "Available"
+msgstr ""
+
+#, python-format
+msgid "Available %(name)s Populations"
+msgstr ""
+
+#, python-format
+msgid "Available %(name)ss"
+msgstr ""
+
+msgid "Available Agents"
+msgstr ""
+
+msgid "Available Categories"
+msgstr ""
+
+msgid "Available Distributions:"
+msgstr ""
+
+msgid "Available Header Images"
+msgstr ""
+
+msgid "Available Hello World Populations"
+msgstr ""
+
+msgid "Available LLMs"
+msgstr ""
+
+msgid "Available Models"
+msgstr ""
+
+msgid "Available Pages"
+msgstr ""
+
+msgid "Available Populations"
+msgstr ""
+
+msgid "Available Populations (Drag to select)"
+msgstr ""
+
+msgid "Available Profile Pictures"
+msgstr ""
+
+msgid "Available Profiles (Drag to assign)"
+msgstr ""
+
+msgid "Available Variables"
+msgstr ""
+
+msgid ""
+"Available and installed plugins. Open a plugin to install or update it "
+"and to follow the output of the operation. Microblogging and Forum each "
+"include a server and a client, which you install and update independently"
+" from the plugin page."
+msgstr ""
+
+msgid "Available emotions"
+msgstr ""
+
+msgid ""
+"Available only when the \"Post & Comment Annotation\" module is enabled "
+"for this experiment (Frontend Add-ons)."
+msgstr ""
+
+msgid "Average Aggregate Trends"
+msgstr ""
+
+msgid "Average Compound"
+msgstr ""
+
+msgid "Average Compound Trend"
+msgstr ""
+
+msgid "Average Reward"
+msgstr ""
+
+msgid "Average Stress"
+msgstr ""
+
+msgid "Average Target Toxicity"
+msgstr ""
+
+msgid "Average Toxicity"
+msgstr ""
+
+msgid "Average Toxicity Trend"
+msgstr ""
+
+msgid "Average degree"
+msgstr ""
+
+msgid "Average sentiment compound by day up to the selected time."
+msgstr ""
+
+msgid "Average time per slot:"
+msgstr ""
+
+msgid "Avg. Diversity of People Following This Author"
+msgstr ""
+
+msgid "Avg. Diversity of People This Author Follows"
+msgstr ""
+
+msgid "Avg. Reach of People Following This Author"
+msgstr ""
+
+msgid "Avg. Reach of People This Author Follows"
+msgstr ""
+
+msgid "Azerbaijani"
+msgstr ""
+
+msgid "Bachelor"
+msgstr ""
+
+msgid "Back"
+msgstr ""
+
+msgid "Back to Experiments"
+msgstr ""
+
+msgid "Back to Feed"
+msgstr ""
+
+msgid "Back to Plugins"
+msgstr ""
+
+msgid "Back to feed"
+msgstr ""
+
+msgid "Back to profile"
+msgstr ""
+
+msgid "Backend"
+msgstr ""
+
+msgid "Backend Extensions"
+msgstr ""
+
+msgid "Background and profile attributes shaping this account."
+msgstr ""
+
+msgid "Background indexing"
+msgstr ""
+
+msgid "Background tasks and resource alerts appear here."
+msgstr ""
+
+msgid "Bad Request"
+msgstr ""
+
+msgid "Badge identifying ad-hoc agents (moderator, propaganda…)"
+msgstr ""
+
+msgid "Badge showing whether content was produced by an AI agent or a Human"
+msgstr ""
+
+msgid "Balance between follower and general content"
+msgstr ""
+
+msgid "Balanced (Recommended)"
+msgstr ""
+
+msgid "Bangladeshi"
+msgstr ""
+
+msgid "Baseline & Exploration"
+msgstr ""
+
+msgid "Basic Fields"
+msgstr ""
+
+msgid "Basic Information"
+msgstr ""
+
+msgid "Basic Models"
+msgstr ""
+
+msgid "Basic demographic attributes and language preferences."
+msgstr ""
+
+msgid "Basic user information and role."
+msgstr ""
+
+msgid ""
+"Before entering your feed, personalise your profile and share your "
+"interest level and opinion for each active discussion topic."
+msgstr ""
+
+msgid "Behavior"
+msgstr ""
+
+msgid "Behavioral Homophily"
+msgstr ""
+
+msgid "Behavioral Settings"
+msgstr ""
+
+msgid "Behavioral User Modeling"
+msgstr ""
+
+msgid "Behavioral patterns and activity characteristics."
+msgstr ""
+
+msgid "Belgian"
+msgstr ""
+
+msgid "Bell / mentions icon in the top bar"
+msgstr ""
+
+msgid "Beta"
+msgstr ""
+
+msgid "Big Five Personality Profile"
+msgstr ""
+
+msgid "Big Five Personality profile"
+msgstr ""
+
+msgid "Big-5 Personality Traits"
+msgstr ""
+
+msgid "Big-5 personality traits"
+msgstr ""
+
+msgid "Binomial"
+msgstr ""
+
+msgid "Bio"
+msgstr ""
+
+msgid "Blog post not found"
+msgstr ""
+
+msgid "Bluesky Data"
+msgstr ""
+
+msgid "Both experiment name and source experiment are required."
+msgstr ""
+
+msgid "Bounded Confidence"
+msgstr ""
+
+msgid "Bounded Confidence Parameters"
+msgstr ""
+
+msgid "Bounds must be in the range [0, 1]."
+msgstr ""
+
+msgid "Branch archive"
+msgstr ""
+
+msgid "Brazilian"
+msgstr ""
+
+msgid "Brief explanation of the client's purpose"
+msgstr ""
+
+msgid "British"
+msgstr ""
+
+msgid "Broadcaster"
+msgstr ""
+
+#, python-format
+msgid "Broadcaster %%"
+msgstr ""
+
+msgid "Broadcaster Persona"
+msgstr ""
+
+#, python-format
+msgid ""
+"Broadcaster transition probabilities must sum to 100%% (current sum: "
+"%(broad_sum)s%%)"
+msgstr ""
+
+msgid "Broadcaster:"
+msgstr ""
+
+msgid "Browse banner previews in small batches."
+msgstr ""
+
+msgid "Browse previews in small batches."
+msgstr ""
+
+msgid "Browse recent photos, people and hashtags in this experiment."
+msgstr ""
+
+msgid "Built-in resource"
+msgstr ""
+
+msgid "Bulgarian"
+msgstr ""
+
+msgid "Bulk Assign Users to Experiment"
+msgstr ""
+
+msgid "Bulk Create Users"
+msgstr ""
+
+msgid "Bulk archive generation failed."
+msgstr ""
+
+msgid ""
+"Bulk archive generation started. You will be notified when the file is "
+"ready."
+msgstr ""
+
+msgid "Bulk export experiments"
+msgstr ""
+
+msgid "Business Hours (9-17)"
+msgstr ""
+
+msgid "Call Volume by Method"
+msgstr ""
+
+msgid "Call Volume by Path"
+msgstr ""
+
+msgid "Cancel"
+msgstr ""
+
+#, python-format
+msgid "Cannot connect to %(host)s:%(port)s - Connection refused"
+msgstr ""
+
+msgid "Cannot delete a running group"
+msgstr ""
+
+msgid ""
+"Cannot delete this custom population because at least one custom agent "
+"would be left without a population."
+msgstr ""
+
+msgid "Cannot mix HPC experiments with Standard experiments in the same group."
+msgstr ""
+
+msgid "Cannot mix Standard experiments with HPC experiments in the same group."
+msgstr ""
+
+msgid "Cannot remove experiments from a running group"
+msgstr ""
+
+msgid "Cartesian product"
+msgstr ""
+
+msgid "Cast Vote"
+msgstr ""
+
+msgid "Category"
+msgstr ""
+
+msgid "Category Threshold"
+msgstr ""
+
+msgid "Central catalog"
+msgstr ""
+
+msgid "Centrist"
+msgstr ""
+
+msgid "Change the user's email address."
+msgstr ""
+
+msgid "Change the user's password with secure validation."
+msgstr ""
+
+msgid "Character cap for injected memory context (24B/Ollama-safe default)."
+msgstr ""
+
+msgid "Character cap on thread text sent to the LLM (24B/Ollama-safe default)."
+msgstr ""
+
+msgid "Chat"
+msgstr ""
+
+msgid "Check for Updates"
+msgstr ""
+
+msgid "Check for new YSocial releases and stay up to date."
+msgstr ""
+
+msgid ""
+"Check for new YSocial releases to access the latest features and "
+"improvements."
+msgstr ""
+
+msgid "Check interval must be between 1 and 300 seconds"
+msgstr ""
+
+msgid "Checks"
+msgstr ""
+
+msgid "Chilean"
+msgstr ""
+
+msgid "Chinese"
+msgstr ""
+
+msgid "Choose JSON file..."
+msgstr ""
+
+msgid "Choose ZIP file..."
+msgstr ""
+
+msgid "Choose a source experiment from the selected group."
+msgstr ""
+
+msgid "Choose an account…"
+msgstr ""
+
+msgid "Choose an author…"
+msgstr ""
+
+msgid "Choose an existing group or type a new one"
+msgstr ""
+
+msgid "Choose an image from your gallery or upload a new one."
+msgstr ""
+
+msgid "Choose at least one of the available activities."
+msgstr ""
+
+msgid "Choose edge list file (CSV)..."
+msgstr ""
+
+msgid "Choose edge list file..."
+msgstr ""
+
+msgid "Choose from various network topologies with configurable parameters."
+msgstr ""
+
+msgid "Choose how agent opinions are updated during the simulation."
+msgstr ""
+
+msgid ""
+"Choose how follow suggestions and content ranking are personalized for "
+"this account."
+msgstr ""
+
+msgid "Choose one of the active experiments below to enter the simulation."
+msgstr ""
+
+msgid ""
+"Choose the construction flow below based on whether you are creating "
+"actors or information sources."
+msgstr ""
+
+msgid "Choose the language of the dashboard for this user."
+msgstr ""
+
+msgid "Choose the language of the interface."
+msgstr ""
+
+msgid ""
+"Choose up to 5 photos from your gallery. The selected images will be "
+"stored in the story record as a carousel."
+msgstr ""
+
+msgid ""
+"Choose whether to consider only the interlocutor's opinion or also first-"
+"order friends' opinions"
+msgstr ""
+
+msgid "Choose which metadata chips are displayed below each post."
+msgstr ""
+
+msgid "Choose your experiment"
+msgstr ""
+
+msgid "Churn"
+msgstr ""
+
+msgid "Clear"
+msgstr ""
+
+msgid "Clear All"
+msgstr ""
+
+msgid "Clear Logs"
+msgstr ""
+
+#, python-format
+msgid "Cleared %(deleted_count)s log file(s) from the experiment folder."
+msgstr ""
+
+msgid "Click \"Fetch Models\" to load available models from your LLM server"
+msgstr ""
+
+msgid ""
+"Click \"Fetch Vision Models\" to load the available vision-capable "
+"models, then select one to enable image-related actions."
+msgstr ""
+
+msgid ""
+"Click \"Run Simulation\" to start both the experiment server and your "
+"client!"
+msgstr ""
+
+msgid ""
+"Click \"Validate Model\" to verify minicpm-v:latest is available. This "
+"enables image-related actions."
+msgstr ""
+
+msgid ""
+"Click on dimensions to add or remove them from segmentation. Active "
+"dimensions are shown in blue. Without selection, a global \"All "
+"Population\" segment is used."
+msgstr ""
+
+msgid ""
+"Click tags to toggle them. Selected tags are used as the available "
+"favorite filter pool."
+msgstr ""
+
+msgid ""
+"Click to activate/deactivate categories. Active categories are "
+"highlighted in green."
+msgstr ""
+
+msgid "Click to check if a newer version of YSocial is available."
+msgstr ""
+
+msgid "Click to expand"
+msgstr ""
+
+msgid "Click to expand/collapse"
+msgstr ""
+
+msgid "Click to select age classes..."
+msgstr ""
+
+msgid "Click to select education levels..."
+msgstr ""
+
+msgid "Click to select political leanings..."
+msgstr ""
+
+msgid "Click to select toxicity levels..."
+msgstr ""
+
+msgid "Client"
+msgstr ""
+
+msgid "Client Compute Time"
+msgstr ""
+
+msgid "Client ID is missing."
+msgstr ""
+
+msgid "Client ID is required."
+msgstr ""
+
+msgid "Client Logs Analysis"
+msgstr ""
+
+msgid "Client Memory"
+msgstr ""
+
+msgid "Client Name"
+msgstr ""
+
+msgid "Client Overview"
+msgstr ""
+
+msgid "Client Recommenders & Large Language Models"
+msgstr ""
+
+msgid "Client Settings"
+msgstr ""
+
+#, python-format
+msgid "Client configuration file not found: %(client_config_file)s"
+msgstr ""
+
+#, python-format
+msgid "Client configuration file updated with extended duration (%(days)s days)."
+msgstr ""
+
+#, python-format
+msgid "Client creation and execution stay disabled until %(b)s is executed."
+msgstr ""
+
+msgid "Client identification and configuration."
+msgstr ""
+
+msgid ""
+"Client log metrics reset and re-parsed. Server metrics unchanged. Client "
+"plots updated."
+msgstr ""
+
+msgid ""
+"Client log metrics reset. Server metrics unchanged. Client plots will "
+"update on next refresh."
+msgstr ""
+
+msgid ""
+"Client metrics reset and re-parsed. Server metrics reset but not re-"
+"parsed yet. Plots will fully update on next refresh."
+msgstr ""
+
+msgid "Client name already exists."
+msgstr ""
+
+msgid "Client name is required"
+msgstr ""
+
+msgid "Client name is required."
+msgstr ""
+
+msgid "Client not found"
+msgstr ""
+
+msgid "Client not found or does not belong to this experiment."
+msgstr ""
+
+msgid "Client not found."
+msgstr ""
+
+msgid "Client simulation parameters updated."
+msgstr ""
+
+msgid "Client:"
+msgstr ""
+
+msgid "Clients"
+msgstr ""
+
+msgid "Clock Timezone"
+msgstr ""
+
+msgid "Clock Timezone:"
+msgstr ""
+
+#, python-format
+msgid "Cloned %(label)s on branch %(branch)s."
+msgstr ""
+
+msgid "Close"
+msgstr ""
+
+msgid "Cmd/Ctrl for multi-select"
+msgstr ""
+
+msgid "Cognitive NetSci"
+msgstr ""
+
+msgid "Cold Start Strategy"
+msgstr ""
+
+msgid "Cold Start Window"
+msgstr ""
+
+msgid "Cold-Start Window"
+msgstr ""
+
+msgid "Collaborative Filtering"
+msgstr ""
+
+msgid "Collapse"
+msgstr ""
+
+msgid "Colombian"
+msgstr ""
+
+msgid "Combine all enabled features"
+msgstr ""
+
+msgid "Comic Relief Agent"
+msgstr ""
+
+msgid "Comma-separated values"
+msgstr ""
+
+msgid "Comment"
+msgstr ""
+
+msgid "Comment / reply"
+msgstr ""
+
+msgid "Comment Image"
+msgstr ""
+
+msgid "Comment a Post"
+msgstr ""
+
+msgid "Comment on a News"
+msgstr ""
+
+msgid "Comment weight"
+msgstr ""
+
+msgid "Comments"
+msgstr ""
+
+msgid "Common Neighbors"
+msgstr ""
+
+msgid "Communities"
+msgstr ""
+
+msgid "Communities where you have recently posted or commented."
+msgstr ""
+
+msgid "Community"
+msgstr ""
+
+msgid "Community Approximation"
+msgstr ""
+
+msgid "Community Models"
+msgstr ""
+
+msgid "Community Page"
+msgstr ""
+
+msgid "Community size exponent (tau2)"
+msgstr ""
+
+msgid ""
+"Compact view of how many hashtags remain active, emerge, and disappear "
+"across the observed horizon."
+msgstr ""
+
+msgid ""
+"Compact view of how many topics remain active, emerge, and disappear "
+"across the observed horizon."
+msgstr ""
+
+msgid "Complete Graph"
+msgstr ""
+
+msgid "Completed"
+msgstr ""
+
+msgid "Components"
+msgstr ""
+
+msgid "Components (independent)"
+msgstr ""
+
+msgid "Compose and publish new posts"
+msgstr ""
+
+msgid "Compound"
+msgstr ""
+
+msgid ""
+"Comprehensive profile of this synthetic agent, including demographics, "
+"personality, and behavioral characteristics."
+msgstr ""
+
+msgid "Computational Social Science"
+msgstr ""
+
+msgid "Configurable Features"
+msgstr ""
+
+msgid "Configuration file not found."
+msgstr ""
+
+#, python-format
+msgid "Configuration file not found: %(cfg_name)s"
+msgstr ""
+
+msgid "Configuration settings controlling simulation behavior and dynamics."
+msgstr ""
+
+msgid "Configure Feed Limits"
+msgstr ""
+
+msgid "Configure Memory Embeddings"
+msgstr ""
+
+msgid "Configure Opinion Dynamics"
+msgstr ""
+
+#, python-format
+msgid "Configure RSS/image feeds and retrieval limits from %(b)s"
+msgstr ""
+
+msgid "Configure Stress / Reward"
+msgstr ""
+
+msgid "Configure Your Client"
+msgstr ""
+
+msgid ""
+"Configure a client dedicated to plugin-backed ad hoc agent families. Each"
+" client targets one custom agent type and one population of the same "
+"type."
+msgstr ""
+
+msgid ""
+"Configure a starting social network among the agents. You can either "
+"generate a synthetic network or upload a custom network file."
+msgstr ""
+
+msgid ""
+"Configure agent activity patterns and engagement behavior. Define when "
+"agents are active during the day by assigning activity profiles, and "
+"specify how many actions users perform once active using statistical "
+"distributions."
+msgstr ""
+
+msgid "Configure behavioral archetypes and transition probabilities for agents."
+msgstr ""
+
+msgid ""
+"Configure default recommendation algorithms and profile/onboarding "
+"options for standard users."
+msgstr ""
+
+msgid ""
+"Configure demographic attributes including age range, nationality, and "
+"language to define the population's basic characteristics."
+msgstr ""
+
+msgid ""
+"Configure demographic characteristics (languages, nationalities) and "
+"social attributes (political leanings, education levels, professions) "
+"that define the agents in your simulations."
+msgstr ""
+
+msgid "Configure duration, agent behavior, and network dynamics."
+msgstr ""
+
+#, python-format
+msgid ""
+"Configure hourly activity rates for the simulation. Default values are "
+"based on %(link)s. Leave empty to use defaults."
+msgstr ""
+
+msgid ""
+"Configure how agents respond to mentions and comments. These settings "
+"help prevent excessive reply loops in conversations."
+msgstr ""
+
+msgid ""
+"Configure how many entries are retrieved from RSS feeds, Reddit "
+"endpoints, and database fallbacks during forum simulations."
+msgstr ""
+
+msgid ""
+"Configure how opinions are distributed across different population "
+"segments for each simulation topic."
+msgstr ""
+
+msgid ""
+"Configure lightweight, run-scoped memory. Agents remember who they "
+"interacted with, how it went (agreement/conflict/trust/humor), and a gist"
+" of threads/community. Memory resets between separate runs."
+msgstr ""
+
+msgid ""
+"Configure opinion groups and distributions for opinion dynamics "
+"simulations. Define opinion ranges and statistical distributions to model"
+" agent opinions."
+msgstr ""
+
+msgid ""
+"Configure optional client-side memory retrieval and summarization for HPC"
+" runs. Memory is disabled by default."
+msgstr ""
+
+msgid ""
+"Configure optional memory retrieval and summarization for Standard "
+"clients. Memory is disabled by default."
+msgstr ""
+
+msgid ""
+"Configure page identity, leaning, feed sources, and upload page "
+"collections in bulk."
+msgstr ""
+
+msgid ""
+"Configure photo-sharing specific fields. Percentages are applied per "
+"generated agent and the favorite filters define the pool used for random "
+"agent tag assignment."
+msgstr ""
+
+msgid ""
+"Configure system and user prompt templates for the HPC simulator. These "
+"templates use structured system/user patterns for LLM interactions."
+msgstr ""
+
+msgid ""
+"Configure system prompts that guide agent and page behavior during "
+"simulation. These instructions are sent to the LLM before each action."
+msgstr ""
+
+msgid ""
+"Configure system-level settings for the YSocial platform, including "
+"telemetry, HPC client monitoring, process monitoring, and system updates."
+msgstr ""
+
+msgid "Configure the LLM backend and model for agent content generation."
+msgstr ""
+
+msgid "Configure the LLM server URL and select a model for text generation tasks."
+msgstr ""
+
+msgid "Configure the LLM server and model for agent content generation."
+msgstr ""
+
+msgid ""
+"Configure the UI shown to participants for each experiment. Select the "
+"experiment type, group and name to adjust interactions, annotations, and "
+"the notification menu."
+msgstr ""
+
+msgid ""
+"Configure the behavioral archetypes and transition probabilities for "
+"agents."
+msgstr ""
+
+#, python-format
+msgid ""
+"Configure the behavioral archetypes and transition probabilities for "
+"agents. Default values are based on %(link)s."
+msgstr ""
+
+msgid ""
+"Configure the diffusion/transformer model used by agents to dynamically "
+"generate images during the simulation."
+msgstr ""
+
+msgid ""
+"Configure the duration and behavioral settings for the ad hoc agent "
+"runtime."
+msgstr ""
+
+msgid "Configure the duration and behavioral settings for the simulation run."
+msgstr ""
+
+#, python-format
+msgid ""
+"Configure the embedding backend used by %(server)s for semantic memory "
+"indexing and retrieval. If left unconfigured, memory falls back to "
+"lexical retrieval only."
+msgstr ""
+
+msgid ""
+"Configure the local diffusion model to dynamically generate images during"
+" the simulation."
+msgstr ""
+
+msgid ""
+"Configure the primary LLM only when it is required by the selected ad hoc"
+" agent type."
+msgstr ""
+
+msgid ""
+"Configure the stress/reward event weights, coupling values, and optional "
+"churn logic used by the experiment client runtime."
+msgstr ""
+
+msgid "Configure the vision LLM for image content analysis and transcription."
+msgstr ""
+
+msgid "Configure this plugin agent from a manifest-driven custom agent page."
+msgstr ""
+
+msgid "Configure vision LLM for image content analysis."
+msgstr ""
+
+msgid "Configured RSS feeds"
+msgstr ""
+
+msgid "Configured image feeds"
+msgstr ""
+
+msgid "Confirm Password"
+msgstr ""
+
+msgid "Congratulations!"
+msgstr ""
+
+msgid "Connect"
+msgstr ""
+
+#, python-format
+msgid "Connection error: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Connection timeout to %(host)s:%(port)s"
+msgstr ""
+
+msgid "Connections"
+msgstr ""
+
+msgid "Conscientiousness"
+msgstr ""
+
+msgid "Conscientiousness."
+msgstr ""
+
+msgid "Consistent/Cautious"
+msgstr ""
+
+msgid "Contacts"
+msgstr ""
+
+msgid "Content"
+msgstr ""
+
+msgid "Content & Behavior"
+msgstr ""
+
+msgid "Content & Behavior:"
+msgstr ""
+
+msgid "Content & Deployment"
+msgstr ""
+
+msgid "Content Analysis"
+msgstr ""
+
+#, python-format
+msgid "Content Creator (~75%% posts/comments)"
+msgstr ""
+
+#, python-format
+msgid "Content Creator - ~75%% of actions are posts/comments"
+msgstr ""
+
+msgid "Content Pages"
+msgstr ""
+
+msgid "Content RecSys"
+msgstr ""
+
+msgid "Content Recommendation"
+msgstr ""
+
+msgid "Content Recommender"
+msgstr ""
+
+msgid "Content Recsys Used"
+msgstr ""
+
+msgid "Content Visibility (hours)"
+msgstr ""
+
+msgid "Content already reported."
+msgstr ""
+
+msgid "Content not found."
+msgstr ""
+
+msgid "Content of a post"
+msgstr ""
+
+msgid "Content reported."
+msgstr ""
+
+msgid "Content-Based Filtering"
+msgstr ""
+
+msgid "Content:"
+msgstr ""
+
+msgid "Contents"
+msgstr ""
+
+msgid "Context Preset"
+msgstr ""
+
+#, python-format
+msgid "Context: %(excerpt)s"
+msgstr ""
+
+msgid "Continue to Experiment"
+msgstr ""
+
+msgid "Control anonymous usage data collection to help improve YSocial."
+msgstr ""
+
+msgid ""
+"Control panel for simulation server, web interface, and data analysis "
+"environment."
+msgstr ""
+
+msgid ""
+"Control which actions participants can perform on posts, and whether the "
+"notification menu is shown."
+msgstr ""
+
+msgid "Conversation"
+msgstr ""
+
+msgid "Conversation info"
+msgstr ""
+
+msgid "Copy Experiment"
+msgstr ""
+
+msgid "Copy Group"
+msgstr ""
+
+msgid ""
+"Core information about this synthetic population, including configuration"
+" and agent demographics."
+msgstr ""
+
+msgid "Core parameters"
+msgstr ""
+
+msgid "Core simulation handler instructions for processing agent actions."
+msgstr ""
+
+#, python-format
+msgid "Could not delete %(failed_paths)s log file(s) due to filesystem errors."
+msgstr ""
+
+#, python-format
+msgid "Could not delete ad hoc client: %(error)s"
+msgstr ""
+
+msgid "Could not prepare the experiment database for this module."
+msgstr ""
+
+#, python-format
+msgid "Could not resolve notebook directory for experiment ID: %(experiment_id)s"
+msgstr ""
+
+msgid "Count"
+msgstr ""
+
+msgid "Coupling"
+msgstr ""
+
+msgid ""
+"Coupling values control how reward buffers stress and how stress dampens "
+"reward accumulation."
+msgstr ""
+
+msgid "Coupling: reward buffers stress"
+msgstr ""
+
+msgid "Coupling: stress reduces reward"
+msgstr ""
+
+msgid "Create"
+msgstr ""
+
+#, python-format
+msgid "Create %(name)s"
+msgstr ""
+
+msgid "Create AdHoc Agent Client"
+msgstr ""
+
+msgid "Create Agent"
+msgstr ""
+
+msgid "Create Empty Population"
+msgstr ""
+
+msgid "Create New AdHoc Agent Client"
+msgstr ""
+
+msgid "Create New Client"
+msgstr ""
+
+msgid "Create New Forum Client"
+msgstr ""
+
+msgid "Create New HPC Client"
+msgstr ""
+
+msgid "Create New Photo Sharing Client"
+msgstr ""
+
+msgid "Create Page"
+msgstr ""
+
+msgid "Create Post"
+msgstr ""
+
+msgid "Create Profile"
+msgstr ""
+
+msgid "Create Synthetic Population"
+msgstr ""
+
+msgid "Create Your Experiment"
+msgstr ""
+
+msgid "Create Your Population"
+msgstr ""
+
+msgid ""
+"Create a new population by merging multiple existing populations. Agents "
+"and pages will be combined without duplicates."
+msgstr ""
+
+msgid "Create a story from your gallery"
+msgstr ""
+
+msgid "Create an account"
+msgstr ""
+
+msgid ""
+"Create and configure one or more clients for the experiment. Each client "
+"manages a population."
+msgstr ""
+
+msgid ""
+"Create experiment groups for sequential batch execution. Experiments "
+"within a group run in parallel; groups run sequentially. HPC experiments "
+"can be grouped without a fixed per-group cap (cannot mix with Standard "
+"experiments). Optional dynamic filling can reuse open slots from later "
+"groups while a batch is running."
+msgstr ""
+
+msgid ""
+"Create feed entries centrally, then reuse them across forum simulations "
+"without revalidating the same source each time."
+msgstr ""
+
+msgid ""
+"Create institutional and media pages that publish content, expose RSS "
+"feeds, and shape the information environment seen by agents."
+msgstr ""
+
+#, python-format
+msgid "Create new %(name)s population..."
+msgstr ""
+
+msgid "Create new Hello World population..."
+msgstr ""
+
+msgid "Create new post"
+msgstr ""
+
+msgid "Create new story"
+msgstr ""
+
+#, python-format
+msgid ""
+"Create or upload a population with username type %(type)s in the "
+"populations page."
+msgstr ""
+
+msgid "Create populations from scratch. Once created, you can add agents to them."
+msgstr ""
+
+msgid "Create story"
+msgstr ""
+
+msgid "Create your account"
+msgstr ""
+
+msgid "Created"
+msgstr ""
+
+#, python-format
+msgid "Created %(created)s matrix experiment(s) in group '%(target_group)s'."
+msgstr ""
+
+#, python-format
+msgid "Created %(created_groups)s groups"
+msgstr ""
+
+msgid "Created using predefined parameters. Agents are automatically generated."
+msgstr ""
+
+msgid "Creates fresh copies of every experiment in the selected group."
+msgstr ""
+
+msgid "Creating ad hoc client..."
+msgstr ""
+
+msgid "Creating agent..."
+msgstr ""
+
+#, python-format
+msgid "Creator Tier %%"
+msgstr ""
+
+msgid "Critical/Judgmental"
+msgstr ""
+
+msgid "Croatian"
+msgstr ""
+
+msgid "Cumulative Trends"
+msgstr ""
+
+msgid "Cumulative Unique Recipients Reached"
+msgstr ""
+
+msgid "Cumulative hashtag-related activity volume for the selected hashtags."
+msgstr ""
+
+msgid ""
+"Cumulative hashtag-related volume up to the selected time, including "
+"content and downstream interactions."
+msgstr ""
+
+msgid ""
+"Cumulative number of distinct authors recommended to the selected user, "
+"plus the average cumulative diversity seen by the people following them "
+"and the people they follow."
+msgstr ""
+
+msgid ""
+"Cumulative number of distinct authors whose contents have been "
+"recommended to the selected user."
+msgstr ""
+
+msgid ""
+"Cumulative reach of the selected author, plus the average cumulative "
+"reach of the authors following them and the authors they follow."
+msgstr ""
+
+msgid ""
+"Cumulative share of the population that has been involved with each "
+"selected hashtag."
+msgstr ""
+
+msgid ""
+"Cumulative share of the population that has been involved with each "
+"selected topic."
+msgstr ""
+
+msgid "Cumulative topic-related activity volume for the selected topics."
+msgstr ""
+
+msgid ""
+"Cumulative topic-related volume up to the selected time, including "
+"content and downstream interactions."
+msgstr ""
+
+msgid "Curious, asks questions, seeks new perspectives"
+msgstr ""
+
+msgid "Current"
+msgstr ""
+
+msgid "Current Day"
+msgstr ""
+
+msgid "Current Day Volume"
+msgstr ""
+
+msgid "Current Email"
+msgstr ""
+
+msgid "Current Hour"
+msgstr ""
+
+msgid "Current LLM"
+msgstr ""
+
+msgid "Current Model Path"
+msgstr ""
+
+msgid "Current Password"
+msgstr ""
+
+msgid "Current Recommender"
+msgstr ""
+
+msgid "Current Researcher Visibility"
+msgstr ""
+
+msgid "Current distribution of annotated photos."
+msgstr ""
+
+msgid "Current distribution of annotated posts."
+msgstr ""
+
+msgid "Current execution progress"
+msgstr ""
+
+msgid ""
+"Current in-degree complementary cumulative distribution in log-log scale "
+"for the follow network."
+msgstr ""
+
+msgid ""
+"Current in-degree complementary cumulative distribution in log-log scale "
+"for the mention network."
+msgstr ""
+
+msgid "Current local time"
+msgstr ""
+
+msgid ""
+"Current out-degree complementary cumulative distribution in log-log scale"
+" for the follow network."
+msgstr ""
+
+msgid ""
+"Current out-degree complementary cumulative distribution in log-log scale"
+" for the mention network."
+msgstr ""
+
+msgid "Current polarity breakdown across annotated photos."
+msgstr ""
+
+msgid "Current polarity breakdown across annotated posts."
+msgstr ""
+
+msgid "Current reward level"
+msgstr ""
+
+msgid "Current stress level"
+msgstr ""
+
+msgid ""
+"Current toxicity score distribution across annotated posts, using 0.1 "
+"bins."
+msgstr ""
+
+msgid "Current value"
+msgstr ""
+
+msgid "Currently Running Experiments"
+msgstr ""
+
+msgid "Custom Fields"
+msgstr ""
+
+msgid "Custom LLM URL"
+msgstr ""
+
+msgid "Custom LLM URL (optional)"
+msgstr ""
+
+msgid "Custom Network:"
+msgstr ""
+
+msgid "Custom Population Overview"
+msgstr ""
+
+msgid "Custom agent type not found."
+msgstr ""
+
+msgid "Custom agents"
+msgstr ""
+
+msgid "Custom behavioral instructions for enhanced agent simulation."
+msgstr ""
+
+msgid "Customize Hourly Rates"
+msgstr ""
+
+msgid "Customize agent activity patterns by hour."
+msgstr ""
+
+msgid "Czech"
+msgstr ""
+
+msgid "DB Fallback Limit"
+msgstr ""
+
+msgid "Daily"
+msgstr ""
+
+msgid "Daily Budget"
+msgstr ""
+
+msgid "Daily Heatmap"
+msgstr ""
+
+msgid "Daily agent creation and removal rates"
+msgstr ""
+
+msgid "Daily average score for each toxicity category up to the selected time."
+msgstr ""
+
+msgid "Daily counts for the most frequent emotions so far."
+msgstr ""
+
+msgid "Daily evolution of active nodes and directed follow edges."
+msgstr ""
+
+msgid "Daily evolution of active nodes and directed mention edges."
+msgstr ""
+
+msgid "Daily evolution of density and transitivity in the follow network."
+msgstr ""
+
+msgid "Daily evolution of density and transitivity in the mention network."
+msgstr ""
+
+#, python-format
+msgid ""
+"Daily percentage of annotated posts crossing the %(threshold)s threshold "
+"for each toxicity category."
+msgstr ""
+
+msgid ""
+"Daily target toxicity, with moderator intervention volume shown on the "
+"secondary axis."
+msgstr ""
+
+msgid "Danish"
+msgstr ""
+
+msgid "Dashboard language"
+msgstr ""
+
+msgid "Database Fallback"
+msgstr ""
+
+#, python-format
+msgid "Database error: %(error)s"
+msgstr ""
+
+msgid "Day"
+msgstr ""
+
+#, python-format
+msgid "Day %(day)s"
+msgstr ""
+
+#, python-format
+msgid "Day %(day)s - %(hour)s:00"
+msgstr ""
+
+#, python-format
+msgid "Day %(day)s · Hour %(hour)s"
+msgstr ""
+
+#, python-format
+msgid "Day %(day)s, Hour %(hour)s"
+msgstr ""
+
+msgid "Days"
+msgstr ""
+
+msgid "Deactivate"
+msgstr ""
+
+msgid "Debug Information:"
+msgstr ""
+
+msgid "Decay Function"
+msgstr ""
+
+msgid "Decay Rate"
+msgstr ""
+
+msgid "Decide Follow (System)"
+msgstr ""
+
+msgid "Decide Follow (User)"
+msgstr ""
+
+msgid "Decide Reaction"
+msgstr ""
+
+msgid "Decide Search Action"
+msgstr ""
+
+msgid "Decide Secondary Follow (System)"
+msgstr ""
+
+msgid "Decide Secondary Follow (User)"
+msgstr ""
+
+msgid "Dedicated creation interface"
+msgstr ""
+
+msgid "Default (English)"
+msgstr ""
+
+msgid "Default content recommender"
+msgstr ""
+
+msgid "Default feed ordering"
+msgstr ""
+
+msgid "Default follow recommender"
+msgstr ""
+
+msgid "Default home tab"
+msgstr ""
+
+msgid "Default values (52-20-28) are based on real-world Bluesky data."
+msgstr ""
+
+msgid ""
+"Default values are based on real-world Bluesky data. Leave empty to use "
+"defaults."
+msgstr ""
+
+#, python-format
+msgid "Default values from %(link)s"
+msgstr ""
+
+#, python-format
+msgid ""
+"Define additional key-value data such as %(example)s. These fields are "
+"exported as %(field)s."
+msgstr ""
+
+msgid "Define agent persona templates and archetype-specific behaviors."
+msgstr ""
+
+msgid ""
+"Define content topics, toxicity levels, and activity patterns to create "
+"realistic agent behaviors and content interactions within your "
+"simulations."
+msgstr ""
+
+msgid "Define initial connections between agents:"
+msgstr ""
+
+#, python-format
+msgid "Define one or more %(link)s."
+msgstr ""
+
+#, python-format
+msgid ""
+"Define the percentage of agents in each behavioral archetype (must sum to"
+" 100%%)."
+msgstr ""
+
+msgid ""
+"Define the population name, description, and size. These settings "
+"identify the population and determine the number of synthetic agents to "
+"generate."
+msgstr ""
+
+msgid "Defines agent persona and context"
+msgstr ""
+
+msgid "Degree exponent (tau1)"
+msgstr ""
+
+msgid "Delay between Reddit requests to reduce throttling risk."
+msgstr ""
+
+msgid "Delete"
+msgstr ""
+
+msgid "Delete All"
+msgstr ""
+
+msgid "Delete Client"
+msgstr ""
+
+msgid "Delete Experiment"
+msgstr ""
+
+msgid "Delete Orphaned Agents"
+msgstr ""
+
+msgid "Delete all completed experiments"
+msgstr ""
+
+msgid "Delete all stopped/scheduled experiments"
+msgstr ""
+
+msgid "Delete photo"
+msgstr ""
+
+#, python-format
+msgid "Deleted %(deleted_count)s experiment(s)."
+msgstr ""
+
+#, python-format
+msgid "Deleted %(label)s."
+msgstr ""
+
+msgid "Democrat"
+msgstr ""
+
+msgid "Demographic Information"
+msgstr ""
+
+msgid "Demographic-Based"
+msgstr ""
+
+msgid "Demographics"
+msgstr ""
+
+msgid "Demographics & Attributes"
+msgstr ""
+
+msgid "Demographics & Attributes:"
+msgstr ""
+
+msgid "Density"
+msgstr ""
+
+msgid "Dependencies"
+msgstr ""
+
+msgid ""
+"Deploy this page to agent populations so they can interact with its "
+"content."
+msgstr ""
+
+msgid "Deployed MoP Agents"
+msgstr ""
+
+msgid "Deployed Moderators"
+msgstr ""
+
+msgid "Deployed Propaganda Agents"
+msgstr ""
+
+msgid "Deployed SA Agents"
+msgstr ""
+
+msgid "Describe Image (System)"
+msgstr ""
+
+msgid "Describe Image (User)"
+msgstr ""
+
+msgid "Describe the problem (optional):"
+msgstr ""
+
+msgid "Describe the story..."
+msgstr ""
+
+#, python-format
+msgid "Describe your simulation with an %(link)s."
+msgstr ""
+
+msgid "Description"
+msgstr ""
+
+msgid "Description:"
+msgstr ""
+
+msgid "Deselect All"
+msgstr ""
+
+msgid ""
+"Design individual user personas with demographics, political leaning, "
+"personality traits, activity profiles, and role-play directives."
+msgstr ""
+
+msgid "Details"
+msgstr ""
+
+msgid "Details:"
+msgstr ""
+
+msgid "Detoxify"
+msgstr ""
+
+msgid "Detoxify Model Download"
+msgstr ""
+
+msgid "Detoxify model download failed."
+msgstr ""
+
+msgid "Detoxify model download in progress."
+msgstr ""
+
+#, python-format
+msgid ""
+"Detoxify model is ready at %(path)s. Future simulations will reuse this "
+"local cache."
+msgstr ""
+
+msgid ""
+"Detoxify model ready. New simulations will reuse this local cache "
+"automatically."
+msgstr ""
+
+msgid "Diffusion, emergence, reach"
+msgstr ""
+
+msgid "Digest Events Limit"
+msgstr ""
+
+msgid "Digest Update Cadence (rounds)"
+msgstr ""
+
+msgid "Dilikes"
+msgstr ""
+
+msgid "Direct Article URLs"
+msgstr ""
+
+msgid "Direct URLs"
+msgstr ""
+
+#, python-format
+msgid ""
+"Direct article URLs remain experiment-specific and are still managed from"
+" %(page)s."
+msgstr ""
+
+msgid ""
+"Direct article URLs remain local to the current experiment because they "
+"are typically campaign- or run-specific."
+msgstr ""
+
+msgid "Disable"
+msgstr ""
+
+msgid "Disabled"
+msgstr ""
+
+msgid "Disabled by default"
+msgstr ""
+
+msgid "Disconnect"
+msgstr ""
+
+msgid "Discussion"
+msgstr ""
+
+msgid "Discussion Board"
+msgstr ""
+
+msgid "Dislike"
+msgstr ""
+
+msgid "Dislikes"
+msgstr ""
+
+msgid "Distinct Participants"
+msgstr ""
+
+msgid "Distinct Recommended Posts"
+msgstr ""
+
+msgid "Distribution Type"
+msgstr ""
+
+msgid "Distribution of Author Recommendation Counts"
+msgstr ""
+
+msgid "Distribution of Content Recommendation Counts"
+msgstr ""
+
+msgid "Distribution of agent opinions across different opinion groups."
+msgstr ""
+
+msgid "Distribution:"
+msgstr ""
+
+msgid "Download"
+msgstr ""
+
+msgid "Download Agent List"
+msgstr ""
+
+msgid "Download All"
+msgstr ""
+
+msgid "Download Experiment"
+msgstr ""
+
+msgid "Download Model"
+msgstr ""
+
+msgid "Download Path"
+msgstr ""
+
+msgid "Download Selected"
+msgstr ""
+
+msgid "Download all completed experiments as a ZIP file"
+msgstr ""
+
+msgid "Download file is no longer available."
+msgstr ""
+
+msgid "Download or remove this experiment."
+msgstr ""
+
+msgid "Download path is required."
+msgstr ""
+
+msgid "Download selected experiments as a ZIP file"
+msgstr ""
+
+msgid ""
+"Download the Detoxify model once and keep it available offline for future"
+" simulations."
+msgstr ""
+
+#, python-format
+msgid ""
+"Drag activity profiles from available to assigned, then set the "
+"percentage for each. Percentages must total 100%%. Green bars identify "
+"the hours of the simulated day when agents assigned to the selected "
+"profile are active."
+msgstr ""
+
+msgid "Drag photos here"
+msgstr ""
+
+msgid "Drag populations here"
+msgstr ""
+
+msgid "Drag profiles here to assign them"
+msgstr ""
+
+msgid "Drinks"
+msgstr ""
+
+msgid "Duration & Growth"
+msgstr ""
+
+msgid "Dutch"
+msgstr ""
+
+msgid "Dynamic fill"
+msgstr ""
+
+msgid "EMA rate for real-time interest updates after reactions."
+msgstr ""
+
+msgid ""
+"Each News Page is associated with an RSS feed - the feed is used to "
+"populate, in real time, the page timeline with real-world articles."
+msgstr ""
+
+msgid ""
+"Each bar is one author, and its height is the total number of times that "
+"author’s posts appeared in recommendation sets."
+msgstr ""
+
+msgid ""
+"Each client can be deployed by imposing a starting social network among "
+"the agents of its populations."
+msgstr ""
+
+msgid ""
+"Each row is a selected hashtag, each column is a day, and color depth is "
+"normalized within each hashtag row. Tooltips report actual daily volume."
+msgstr ""
+
+msgid ""
+"Each row is a selected hashtag, each column is a day, and color depth "
+"reflects the share of the population reached that day."
+msgstr ""
+
+msgid ""
+"Each row is a selected topic, each column is a day, and color depth is "
+"normalized within each topic row. Tooltips report actual daily volume."
+msgstr ""
+
+msgid ""
+"Each row is a selected topic, each column is a day, and color depth "
+"reflects the share of the population reached that day."
+msgstr ""
+
+msgid "Eats"
+msgstr ""
+
+msgid "Edge probability (p)"
+msgstr ""
+
+msgid "Edges"
+msgstr ""
+
+msgid "Edges per node (m)"
+msgstr ""
+
+msgid "Edit"
+msgstr ""
+
+#, python-format
+msgid "Edit %(username)s"
+msgstr ""
+
+msgid "Edit Client Settings"
+msgstr ""
+
+msgid "Edit LLM Prompts"
+msgstr ""
+
+msgid "Edit Profile"
+msgstr ""
+
+msgid "Edit profile"
+msgstr ""
+
+msgid "Edit server settings"
+msgstr ""
+
+msgid "Edit your profile and your interface language."
+msgstr ""
+
+msgid "Edit your profile details"
+msgstr ""
+
+msgid "Education"
+msgstr ""
+
+#, python-format
+msgid "Education %%"
+msgstr ""
+
+msgid "Education Level"
+msgstr ""
+
+msgid "Education Levels"
+msgstr ""
+
+msgid "Education level"
+msgstr ""
+
+msgid "Education level not found."
+msgstr ""
+
+msgid "Efficient/Organized"
+msgstr ""
+
+msgid "Email"
+msgstr ""
+
+msgid "Email is already in use by another user"
+msgstr ""
+
+msgid "Email updated successfully"
+msgstr ""
+
+msgid "Embedding Model"
+msgstr ""
+
+msgid "Embedding Service"
+msgstr ""
+
+msgid "Embedding settings updated successfully."
+msgstr ""
+
+msgid "Emerging Hashtags"
+msgstr ""
+
+msgid "Emerging Topics"
+msgstr ""
+
+msgid "Emotion"
+msgstr ""
+
+msgid "Emotion Distribution"
+msgstr ""
+
+msgid "Emotion Focus"
+msgstr ""
+
+msgid "Emotion Statistics"
+msgstr ""
+
+msgid "Emotion Tags"
+msgstr ""
+
+msgid "Emotion tags and dominant patterns"
+msgstr ""
+
+msgid "Emotional tone chips (joy, anger…)"
+msgstr ""
+
+msgid "Emotions"
+msgstr ""
+
+msgid "Empty Populations"
+msgstr ""
+
+msgid "Enable"
+msgstr ""
+
+#, python-format
+msgid "Enable %(annotation_label)s annotation in Experiment Configuration first."
+msgstr ""
+
+#, python-format
+msgid "Enable %(memory)s in %(link)s before configuring client-level memory."
+msgstr ""
+
+msgid "Enable AI-driven agents in the simulation"
+msgstr ""
+
+msgid "Enable AI-powered agents using a local Ollama server."
+msgstr ""
+
+msgid "Enable Agent Archetypes Distribution"
+msgstr ""
+
+msgid "Enable Agent Downcast"
+msgstr ""
+
+msgid "Enable Archetypes"
+msgstr ""
+
+msgid "Enable FlashAttention"
+msgstr ""
+
+msgid "Enable Image Transcription"
+msgstr ""
+
+msgid "Enable LLM Agents"
+msgstr ""
+
+msgid "Enable Memory"
+msgstr ""
+
+msgid "Enable Memory Annotations"
+msgstr ""
+
+msgid "Enable Redis"
+msgstr ""
+
+msgid "Enable Semantic Retrieval"
+msgstr ""
+
+#, python-format
+msgid ""
+"Enable and configure %(suite)s frontend plugin modules for this "
+"experiment. Install or update the suite itself from %(link)s."
+msgstr ""
+
+#, python-format
+msgid "Enable and configure these modules per experiment from %(link)s."
+msgstr ""
+
+msgid "Enable embedding-backed retrieval"
+msgstr ""
+
+msgid "Enable follow probability decay over time"
+msgstr ""
+
+msgid "Enable local image generation"
+msgstr ""
+
+msgid "Enable or disable every interaction at once"
+msgstr ""
+
+msgid "Enable or disable runtime annotations and memory."
+msgstr ""
+
+msgid ""
+"Enable or disable runtime annotations and memory. Update this "
+"configuration before starting or stopping the server and before managing "
+"clients."
+msgstr ""
+
+msgid "Enable or disable runtime annotations."
+msgstr ""
+
+msgid ""
+"Enable or disable runtime annotations. Update this configuration before "
+"starting or stopping the server and before managing clients."
+msgstr ""
+
+msgid "Enable run-scoped memory"
+msgstr ""
+
+msgid "Enable stress/reward in Experiment Configuration first."
+msgstr ""
+
+msgid "Enable/Disable Toggle:"
+msgstr ""
+
+msgid "Enable/disable anonymous usage data collection for improving YSocial."
+msgstr ""
+
+msgid "Enabled"
+msgstr ""
+
+msgid "Endpoint:"
+msgstr ""
+
+msgid "Engagement boost (γ)"
+msgstr ""
+
+msgid "Engagement first"
+msgstr ""
+
+msgid "Engagement weights"
+msgstr ""
+
+msgid "English"
+msgstr ""
+
+msgid "Ensemble"
+msgstr ""
+
+msgid ""
+"Ensure that the experiment is loaded before applying changes to avoid "
+"overwriting configurations from other simulations, especially if the same"
+" population is deployed across multiple experiments."
+msgstr ""
+
+msgid "Enter a fresh group name..."
+msgstr ""
+
+msgid "Enter a query to search posts, users, and shared links."
+msgstr ""
+
+msgid ""
+"Enter custom values for specific hours (leave empty to use defaults shown"
+" in placeholders)."
+msgstr ""
+
+msgid "Enter description"
+msgstr ""
+
+msgid "Enter name"
+msgstr ""
+
+msgid "Enter new name..."
+msgstr ""
+
+msgid "Enter or select a group..."
+msgstr ""
+
+msgid "Enter the link to the immage you are commenting on..."
+msgstr ""
+
+msgid "Enter the link to the website you want to share..."
+msgstr ""
+
+msgid "Enter topic name"
+msgstr ""
+
+msgid "Enter topics that agents will discuss. Press Enter after each topic."
+msgstr ""
+
+msgid "Entries per Image Feed"
+msgstr ""
+
+msgid "Entries per RSS Feed"
+msgstr ""
+
+msgid "Entries per Reddit Feed"
+msgstr ""
+
+msgid "Epsilon (Confidence Bound)"
+msgstr ""
+
+#, python-format
+msgid "Error %(code)s"
+msgstr ""
+
+#, python-format
+msgid "Error accessing experiment: %(error)s"
+msgstr ""
+
+msgid "Error adding user to experiment: unable to open experiment database."
+msgstr ""
+
+#, python-format
+msgid "Error checking for updates: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Error creating copy '%(copy_name)s': %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Error creating notebook: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Error deleting user: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Error during bulk assignment: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Error loading population file: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Error pausing ad hoc client: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Error sampling from distribution '%(distribution_name)s': %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Error saving population file: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Error setting watchdog interval: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Error starting ad hoc client: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Error starting client: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Error updating client configuration: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Error updating server: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Error: %(error)s"
+msgstr ""
+
+msgid ""
+"Error: No available port found in range 5000-6000. Cannot upload "
+"experiment."
+msgstr ""
+
+msgid "Estimated remaining time:"
+msgstr ""
+
+msgid "Estonian"
+msgstr ""
+
+msgid "Europe/Rome"
+msgstr ""
+
+msgid "Evaluate Opinion (System)"
+msgstr ""
+
+msgid "Evaluation Scope"
+msgstr ""
+
+msgid "Event"
+msgstr ""
+
+msgid "Event weights"
+msgstr ""
+
+msgid "Every unlocked feature needs at least one alternative value."
+msgstr ""
+
+msgid "Evidence Tail Max"
+msgstr ""
+
+msgid "Evolution of average aggregate stress and reward over time."
+msgstr ""
+
+msgid ""
+"Evolution of opinion group volumes (percentage of agents in each group "
+"over time)."
+msgstr ""
+
+msgid "Exception:"
+msgstr ""
+
+msgid "Excerpt"
+msgstr ""
+
+#, python-format
+msgid "Execution: %(progress)s"
+msgstr ""
+
+msgid "Existing unassigned populations are incompatible with this platform type."
+msgstr ""
+
+msgid "Expand plot"
+msgstr ""
+
+msgid "Expanded"
+msgstr ""
+
+msgid "Expected Activity"
+msgstr ""
+
+msgid "Expected Social Behavior"
+msgstr ""
+
+msgid "Experiment"
+msgstr ""
+
+#, python-format
+msgid "Experiment #%(id)s"
+msgstr ""
+
+#, python-format
+msgid ""
+"Experiment '%(created_names)s' successfully created as part of copied "
+"group '%(target_group)s'."
+msgstr ""
+
+#, python-format
+msgid "Experiment '%(exp_name)s' activated."
+msgstr ""
+
+#, python-format
+msgid "Experiment '%(exp_name)s' deactivated."
+msgstr ""
+
+#, python-format
+msgid ""
+"Experiment '%(exp_name)s' moved from completed to stopped (client "
+"duration extended)."
+msgstr ""
+
+#, python-format
+msgid ""
+"Experiment '%(exp_names_to_create)s' successfully created as a copy of "
+"'%(exp_name)s'."
+msgstr ""
+
+#, python-format
+msgid "Experiment '%(experiment_name)s' already exists"
+msgstr ""
+
+msgid "Experiment Clock Mode"
+msgstr ""
+
+msgid "Experiment Clock Mode:"
+msgstr ""
+
+msgid "Experiment Configuration"
+msgstr ""
+
+msgid "Experiment Deployments"
+msgstr ""
+
+msgid "Experiment Group"
+msgstr ""
+
+msgid "Experiment Matrix"
+msgstr ""
+
+msgid "Experiment Name"
+msgstr ""
+
+msgid "Experiment Overview"
+msgstr ""
+
+msgid "Experiment Participation"
+msgstr ""
+
+msgid "Experiment Schedule"
+msgstr ""
+
+msgid "Experiment already in group"
+msgstr ""
+
+msgid "Experiment compatibility"
+msgstr ""
+
+msgid "Experiment configuration updated."
+msgstr ""
+
+msgid "Experiment created successfully!"
+msgstr ""
+
+#, python-format
+msgid "Experiment group shared: %(name)s"
+msgstr ""
+
+msgid "Experiment identification and settings."
+msgstr ""
+
+msgid "Experiment name"
+msgstr ""
+
+msgid "Experiment name is required"
+msgstr ""
+
+msgid "Experiment name is required."
+msgstr ""
+
+msgid "Experiment name must be 50 characters or fewer."
+msgstr ""
+
+msgid "Experiment not found"
+msgstr ""
+
+msgid "Experiment not found or not active."
+msgstr ""
+
+msgid "Experiment not found."
+msgstr ""
+
+#, python-format
+msgid "Experiment not found: %(exp_id)s"
+msgstr ""
+
+#, python-format
+msgid "Experiment not found: %(expid)s"
+msgstr ""
+
+msgid "Experiment owner"
+msgstr ""
+
+#, python-format
+msgid "Experiment renamed to '%(new_exp_name)s'."
+msgstr ""
+
+#, python-format
+msgid "Experiment shared: %(name)s"
+msgstr ""
+
+msgid "Experiment topics updated."
+msgstr ""
+
+msgid "Experiment type"
+msgstr ""
+
+msgid "Experiment-wide setting shared by all clients in this experiment."
+msgstr ""
+
+msgid "Experiment:"
+msgstr ""
+
+msgid "Experiments"
+msgstr ""
+
+msgid "Experiments and their simulation clients."
+msgstr ""
+
+msgid ""
+"Experiments do not assume any embedding backend. Without this "
+"configuration, semantic memory features degrade gracefully to lexical "
+"retrieval."
+msgstr ""
+
+msgid "Experiments grouped by project. Click to expand/collapse."
+msgstr ""
+
+msgid "Experiments per group"
+msgstr ""
+
+msgid "Experiments this user owns or participates in."
+msgstr ""
+
+msgid "Experiments where this custom population is currently deployed."
+msgstr ""
+
+msgid "Experiments where this population is currently deployed."
+msgstr ""
+
+msgid ""
+"Experiments with infinite-duration clients cannot be used in scheduled "
+"experiment groups."
+msgstr ""
+
+msgid "Explore the active social graph around this profile."
+msgstr ""
+
+msgid "Explorer"
+msgstr ""
+
+#, python-format
+msgid "Explorer %%"
+msgstr ""
+
+msgid "Explorer Persona"
+msgstr ""
+
+#, python-format
+msgid ""
+"Explorer transition probabilities must sum to 100%% (current sum: "
+"%(expl_sum)s%%)"
+msgstr ""
+
+msgid "Explorer:"
+msgstr ""
+
+msgid "Exponent parameter"
+msgstr ""
+
+msgid "Exponential"
+msgstr ""
+
+msgid "Exponential decay over simulation rounds. 0 = disabled."
+msgstr ""
+
+#, python-format
+msgid "Export %(name)s"
+msgstr ""
+
+msgid "Extend Simulation"
+msgstr ""
+
+msgid "Extensions"
+msgstr ""
+
+msgid "External Runtimes"
+msgstr ""
+
+msgid "Extract Emotions (System)"
+msgstr ""
+
+msgid "Extract Emotions (User)"
+msgstr ""
+
+msgid "Extract Topics (System)"
+msgstr ""
+
+msgid "Extract Topics (User)"
+msgstr ""
+
+msgid "Extravagant/Careless"
+msgstr ""
+
+msgid "Extraversion"
+msgstr ""
+
+msgid "Extraversion."
+msgstr ""
+
+msgid "Extreme"
+msgstr ""
+
+msgid "Extreme Interest"
+msgstr ""
+
+#, python-format
+msgid "Failed to clear experiment logs: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Failed to connect to %(llm_url)s: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Failed to delete %(failed_ids)s experiment(s): %(join)s"
+msgstr ""
+
+#, python-format
+msgid "Failed to rename experiment: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Failed to reset HPC experiment: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Failed to update configuration: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Failed to update experiment description: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Failed to update experiment topics: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Failed to update stress/reward settings: %(error)s"
+msgstr ""
+
+msgid "False"
+msgstr ""
+
+msgid "Faster"
+msgstr ""
+
+msgid "Favorite Filters"
+msgstr ""
+
+msgid "Feature-rich Modeling"
+msgstr ""
+
+msgid "Feed"
+msgstr ""
+
+msgid "Feed & Profile"
+msgstr ""
+
+msgid "Feed Health"
+msgstr ""
+
+msgid "Feed Limits"
+msgstr ""
+
+msgid "Feed Retrieval Limits"
+msgstr ""
+
+msgid "Feed URL"
+msgstr ""
+
+msgid "Feed algorithm shown to standard users by default"
+msgstr ""
+
+msgid "Feed limits updated successfully."
+msgstr ""
+
+msgid "Feed pagination"
+msgstr ""
+
+msgid "Feed source could not be reached."
+msgstr ""
+
+#, python-format
+msgid "Feed source returned HTTP %(code)s."
+msgstr ""
+
+msgid "Feeds"
+msgstr ""
+
+msgid "Feels"
+msgstr ""
+
+msgid "Female"
+msgstr ""
+
+msgid "Female:"
+msgstr ""
+
+msgid "Fetch Embedding Models"
+msgstr ""
+
+msgid "Fetch Models"
+msgstr ""
+
+msgid "Fetch Vision Models"
+msgstr ""
+
+msgid "Fetch available vision models"
+msgstr ""
+
+#, python-format
+msgid "Fetched %(label)s from branch %(branch)s."
+msgstr ""
+
+#, python-format
+msgid "Field '%(replace)s' contains an invalid value."
+msgstr ""
+
+msgid ""
+"File format error: provide a csv file containing two columns with agent "
+"names. No header required."
+msgstr ""
+
+msgid "Filter"
+msgstr ""
+
+msgid "Filter Methods"
+msgstr ""
+
+msgid "Filter Paths"
+msgstr ""
+
+msgid "Filter by group (all = all groups)"
+msgstr ""
+
+msgid "Filter experiments by group"
+msgstr ""
+
+msgid "Finnish"
+msgstr ""
+
+msgid "First Seen"
+msgstr ""
+
+msgid "First group has no experiments"
+msgstr ""
+
+msgid "Flirtation"
+msgstr ""
+
+msgid "Follow"
+msgstr ""
+
+msgid "Follow Action"
+msgstr ""
+
+msgid "Follow Action Decay"
+msgstr ""
+
+msgid "Follow Decisions"
+msgstr ""
+
+msgid "Follow Network"
+msgstr ""
+
+msgid "Follow Recommendation"
+msgstr ""
+
+msgid "Follow Recommender"
+msgstr ""
+
+msgid "Follow accounts to update your feed and social graph."
+msgstr ""
+
+msgid "Follow these steps to set up and run a simulation:"
+msgstr ""
+
+msgid "Follow:"
+msgstr ""
+
+msgid "Followed"
+msgstr ""
+
+msgid "Follower"
+msgstr ""
+
+msgid "Followers"
+msgstr ""
+
+msgid "Followers:"
+msgstr ""
+
+msgid "Following"
+msgstr ""
+
+msgid "Following the"
+msgstr ""
+
+msgid ""
+"For each topic, select the opinion distribution for every population "
+"segment."
+msgstr ""
+
+msgid "For how long a content can be proposed by recommender systems"
+msgstr ""
+
+msgid "For how long an agent maintain his interest in a topic"
+msgstr ""
+
+msgid ""
+"For the currently selected topic, inspect agents targeted by MoP "
+"campaigns and compare their opinion trajectory with the timing of MoP "
+"interactions."
+msgstr ""
+
+msgid ""
+"For the currently selected topic, inspect targeted agents and compare "
+"their opinion trajectory with the timing of propaganda interactions."
+msgstr ""
+
+msgid "For you"
+msgstr ""
+
+msgid "For you (recommended)"
+msgstr ""
+
+msgid "Forbidden"
+msgstr ""
+
+msgid "Format: username,email,role,password (one per line)"
+msgstr ""
+
+msgid "Forum"
+msgstr ""
+
+msgid "Forum (i.e., Reddit)"
+msgstr ""
+
+msgid "Forum Image Feed Assignment"
+msgstr ""
+
+msgid "Forum Image Feeds"
+msgstr ""
+
+msgid "Forum Image Resources"
+msgstr ""
+
+msgid "Forum Only"
+msgstr ""
+
+msgid "Forum RSS Feed Assignment"
+msgstr ""
+
+msgid "Forum RSS Feeds"
+msgstr ""
+
+msgid "Forum RSS Resources"
+msgstr ""
+
+msgid "Forum avatar mode updated successfully."
+msgstr ""
+
+msgid ""
+"Forum experiments are unavailable because YServerReddit and YClientReddit"
+" are not both present."
+msgstr ""
+
+msgid "Forum experiments assign from the shared registry"
+msgstr ""
+
+msgid "Forum feed assignments updated successfully."
+msgstr ""
+
+msgid "Forum participant"
+msgstr ""
+
+msgid ""
+"Forum simulator (threads and replies). Server and client are installed "
+"and updated independently from its page."
+msgstr ""
+
+msgid ""
+"Forum uses link-sharing to publish content imported from RSS and feed "
+"sources."
+msgstr ""
+
+msgid "French"
+msgstr ""
+
+msgid "Frequently Used Hashtags"
+msgstr ""
+
+msgid "Friendly/Compassionate"
+msgstr ""
+
+msgid "Friends filters"
+msgstr ""
+
+msgid "Friendship RecSys"
+msgstr ""
+
+msgid "From / To"
+msgstr ""
+
+msgid "Frontend Extensions"
+msgstr ""
+
+msgid "Frontend Settings"
+msgstr ""
+
+msgid "Frontend Settings:"
+msgstr ""
+
+msgid ""
+"Full admin panel access. Can manage experiments and participate in "
+"simulations. Can only create regular users (not admin or researcher)."
+msgstr ""
+
+msgid ""
+"Full system access. Can create, edit, and delete users, experiments, and "
+"populations. Can create users with any role and change roles of non-admin"
+" users."
+msgstr ""
+
+msgid "GPU Memory Utilization"
+msgstr ""
+
+msgid "GPU per Actor"
+msgstr ""
+
+msgid "Gamma"
+msgstr ""
+
+msgid "Gaussian bandwidth for opinion alignment. Higher = narrower bubble."
+msgstr ""
+
+msgid "Gender"
+msgstr ""
+
+msgid "Gender Distribution"
+msgstr ""
+
+msgid "Gender distribution must total 100%."
+msgstr ""
+
+msgid "General Settings"
+msgstr ""
+
+msgid "Generate"
+msgstr ""
+
+msgid "Generate Comment"
+msgstr ""
+
+msgid "Generate Experiments"
+msgstr ""
+
+msgid "Generate News Commentary"
+msgstr ""
+
+msgid "Generate Post"
+msgstr ""
+
+msgid "Generate Read Reaction"
+msgstr ""
+
+msgid "Generate Share Commentary"
+msgstr ""
+
+msgid "Generate Synthetic Network"
+msgstr ""
+
+msgid "Generate topics"
+msgstr ""
+
+msgid "Generate topics based on the specified count"
+msgstr ""
+
+msgid "Generate using Random or Scale-Free models"
+msgstr ""
+
+msgid "Generated Configs"
+msgstr ""
+
+msgid "Generated Slug"
+msgstr ""
+
+msgid "Generates text or makes decisions leveraging its profile"
+msgstr ""
+
+msgid "Geometric"
+msgstr ""
+
+msgid "Georgian"
+msgstr ""
+
+msgid "German"
+msgstr ""
+
+msgid "Get Started"
+msgstr ""
+
+msgid "Get in Touch!"
+msgstr ""
+
+msgid "Git checkout"
+msgstr ""
+
+#, python-format
+msgid ""
+"Git is not available on this host. Install %(label)s from a GitHub "
+"release first."
+msgstr ""
+
+#, python-format
+msgid ""
+"Git is not available on this host. Use the release install flow for "
+"%(label)s."
+msgstr ""
+
+#, python-format
+msgid "Git is not available on this host. Use the release source for %(label)s."
+msgstr ""
+
+msgid "GitHub Discussions"
+msgstr ""
+
+msgid "GitHub personal access token"
+msgstr ""
+
+msgid "GitHub release"
+msgstr ""
+
+msgid "GitHub session"
+msgstr ""
+
+msgid "GitHub session cleared."
+msgstr ""
+
+msgid "GitHub session enabled for plugin release access."
+msgstr ""
+
+msgid "GitHub:"
+msgstr ""
+
+msgid ""
+"Gives simulated agents a memory of past interactions: relationship "
+"history, thread continuity and conversation cues used when they reply."
+msgstr ""
+
+msgid "Global"
+msgstr ""
+
+msgid "Global Actions Likelihood"
+msgstr ""
+
+msgid "Go to Homepage"
+msgstr ""
+
+msgid "Go to home feed"
+msgstr ""
+
+msgid "Got it"
+msgstr ""
+
+msgid "Got it! Next →"
+msgstr ""
+
+msgid "Grant Group Visibility"
+msgstr ""
+
+msgid "Grant Visibility"
+msgstr ""
+
+msgid ""
+"Grant or revoke experiment visibility for selected researcher users. "
+"Shared researchers can view and manage stop/delete actions for those "
+"experiments."
+msgstr ""
+
+msgid "Grant this user access to participate in an experiment."
+msgstr ""
+
+#, python-format
+msgid "Granted access to %(count)s researcher(s) for experiment '%(name)s'."
+msgstr ""
+
+#, python-format
+msgid ""
+"Granted group '%(group)s' visibility to selected researchers (%(count)s "
+"new assignment(s))."
+msgstr ""
+
+msgid "Graph Proximity"
+msgstr ""
+
+msgid "Greek"
+msgstr ""
+
+msgid "Group"
+msgstr ""
+
+msgid "Group not found"
+msgstr ""
+
+msgid "Groups"
+msgstr ""
+
+msgid "Guide"
+msgstr ""
+
+msgid "HPC"
+msgstr ""
+
+msgid "HPC LLM Prompts Configuration"
+msgstr ""
+
+msgid "HPC Monitor"
+msgstr ""
+
+msgid "HPC Prompts Guide"
+msgstr ""
+
+msgid "HPC Prompts Structure"
+msgstr ""
+
+msgid "HPC Reset"
+msgstr ""
+
+msgid "HPC Simulator"
+msgstr ""
+
+#, python-format
+msgid "HPC client '%(name)s' created successfully"
+msgstr ""
+
+msgid "HPC client configuration file not found."
+msgstr ""
+
+msgid "HPC clients and process health."
+msgstr ""
+
+#, python-format
+msgid ""
+"HPC experiment reset completed. Restored %(restored_count)s population "
+"backup file(s)."
+msgstr ""
+
+msgid ""
+"HPC microblogging experiments are unavailable because YSimulator is not "
+"present."
+msgstr ""
+
+msgid "HPC prompts updated successfully!"
+msgstr ""
+
+msgid "HPC prompts use a system/user template pattern:"
+msgstr ""
+
+msgid ""
+"HPC reset is available only for experiments that have been started at "
+"least once."
+msgstr ""
+
+msgid "HPC reset is available only when the experiment is stopped."
+msgstr ""
+
+msgid "Half-life Rounds"
+msgstr ""
+
+msgid "Handler Actions Provided Instructions"
+msgstr ""
+
+msgid "Handler Pre-prompts"
+msgstr ""
+
+msgid "Hashtag"
+msgstr ""
+
+msgid "Hashtag Evolution"
+msgstr ""
+
+msgid "Hashtag Focus"
+msgstr ""
+
+msgid "Hashtag Footprint at Selected Time"
+msgstr ""
+
+msgid "Hashtag Lifecycle Over Time"
+msgstr ""
+
+msgid "Hashtag Reach Cumulative Trend"
+msgstr ""
+
+msgid "Hashtag Volume Cumulative Trend"
+msgstr ""
+
+msgid "Hashtag Volume Heatmap"
+msgstr ""
+
+msgid "Hashtag evolution not available"
+msgstr ""
+
+msgid "Hashtag-evolution tables not available"
+msgstr ""
+
+msgid "Hashtags"
+msgstr ""
+
+msgid "Hashtags to Visualize"
+msgstr ""
+
+msgid "Header Image URL"
+msgstr ""
+
+msgid "Hello World"
+msgstr ""
+
+msgid "Hello World Settings"
+msgstr ""
+
+msgid "Hello World agent plugin is not currently installed."
+msgstr ""
+
+msgid "Help us improve YSocial: submit the experiment log!"
+msgstr ""
+
+msgid "Here is the list of available variables:"
+msgstr ""
+
+msgid ""
+"Here, you can bulk update the recommender systems/LLM used by all agents "
+"in the population. Any changes made will apply to all agents within the "
+"specific experimental instance associated with the client."
+msgstr ""
+
+msgid "High"
+msgstr ""
+
+msgid "High Context (24B/Ollama)"
+msgstr ""
+
+msgid "High Interest"
+msgstr ""
+
+msgid "High School"
+msgstr ""
+
+msgid "High energy, viral-focused, controversial"
+msgstr ""
+
+msgid "Higher-order Modeling"
+msgstr ""
+
+msgid "Histogram of how many times individual posts have been recommended."
+msgstr ""
+
+msgid "Hold Cmd/Ctrl to select multiple values."
+msgstr ""
+
+msgid "Hold Ctrl (Cmd on Mac) to select multiple users"
+msgstr ""
+
+msgid "Hold Ctrl (Windows/Linux) or Cmd (Mac) to select multiple users."
+msgstr ""
+
+msgid "Hold Ctrl/Cmd to select multiple interests."
+msgstr ""
+
+msgid "Home"
+msgstr ""
+
+msgid "Host"
+msgstr ""
+
+msgid "Host Address"
+msgstr ""
+
+msgid "Host address is required"
+msgstr ""
+
+msgid "Host and port are required"
+msgstr ""
+
+msgid "Host format"
+msgstr ""
+
+msgid "Host:"
+msgstr ""
+
+msgid "Hosts the forum platform the agents interact with (server side)."
+msgstr ""
+
+msgid "Hosts the microblogging platform the agents interact with (server side)."
+msgstr ""
+
+msgid "Hot"
+msgstr ""
+
+msgid "Hour"
+msgstr ""
+
+#, python-format
+msgid "Hour %(hour)s"
+msgstr ""
+
+msgid "Hourly"
+msgstr ""
+
+msgid "Hourly Activity Percentages:"
+msgstr ""
+
+msgid "Hourly Activity Rates"
+msgstr ""
+
+msgid "Hourly Activity Rates (Optional)"
+msgstr ""
+
+msgid "How do you feel?"
+msgstr ""
+
+msgid "How it works"
+msgstr ""
+
+msgid ""
+"How many recent interaction events to include in LLM context per "
+"user/thread pair."
+msgstr ""
+
+msgid "How much conversation history agents see"
+msgstr ""
+
+msgid "How often and when agents are active."
+msgstr ""
+
+msgid "How often memory reflections are generated."
+msgstr ""
+
+msgid "How to order posts when scores are equal"
+msgstr ""
+
+msgid "Human"
+msgstr ""
+
+msgid "Hungarian"
+msgstr ""
+
+msgid "Hybrid (score × recency)"
+msgstr ""
+
+msgid "Hybrid Human-LLM"
+msgstr ""
+
+msgid "Hybrid Models"
+msgstr ""
+
+msgid "ISTI-CNR"
+msgstr ""
+
+msgid "Identity Attack"
+msgstr ""
+
+msgid "If >1, creates copies named: name_1, name_2, etc. There is no hard cap."
+msgstr ""
+
+#, python-format
+msgid ""
+"If the model you want to use is not available, you can pull it from the "
+"Ollama server. For a list of available models refer to the %(link)s."
+msgstr ""
+
+msgid "Image Commentary (System)"
+msgstr ""
+
+msgid "Image Commentary (User)"
+msgstr ""
+
+msgid "Image Feed Limits"
+msgstr ""
+
+msgid "Image Feeds"
+msgstr ""
+
+msgid "Image Generation Model"
+msgstr ""
+
+msgid "Image Generation Model (Transformer-based)"
+msgstr ""
+
+msgid "Image Processing"
+msgstr ""
+
+msgid "Image Transcription (Optional)"
+msgstr ""
+
+msgid "Image description"
+msgstr ""
+
+msgid "Image feed resource not found."
+msgstr ""
+
+msgid "Image feeds updated successfully."
+msgstr ""
+
+msgid ""
+"Image sharing/commenting is currently disabled. Fetch the available "
+"vision models and select one to enable this feature."
+msgstr ""
+
+msgid "Image-share posts emitted"
+msgstr ""
+
+msgid "Images are cropped to a square preview when needed."
+msgstr ""
+
+msgid "Importance Mode"
+msgstr ""
+
+msgid "In-Degree CCDF"
+msgstr ""
+
+msgid "Inactive Alter"
+msgstr ""
+
+msgid "Inactive modules"
+msgstr ""
+
+msgid "Indian"
+msgstr ""
+
+msgid ""
+"Individual agent opinion trajectories over time (colored by initial "
+"opinion group)."
+msgstr ""
+
+msgid "Indonesian"
+msgstr ""
+
+msgid "Infer Opinion (System)"
+msgstr ""
+
+msgid "Infer Opinion (User)"
+msgstr ""
+
+msgid "Inference Backend"
+msgstr ""
+
+msgid "Infinite"
+msgstr ""
+
+msgid "Infinite scrolling"
+msgstr ""
+
+msgid "Influencer:"
+msgstr ""
+
+msgid ""
+"Information about this content source page, including topics and "
+"populations where it's deployed."
+msgstr ""
+
+msgid ""
+"Information about this simulation client, including assigned population "
+"and content sources."
+msgstr ""
+
+msgid "Inherited"
+msgstr ""
+
+msgid "Initial Number of Agents"
+msgstr ""
+
+msgid "Initial Size"
+msgstr ""
+
+msgid ""
+"Inspect how recommendations of one author’s posts spread across the "
+"population over time."
+msgstr ""
+
+msgid "Inspect how sentiment annotations evolve across the experiment."
+msgstr ""
+
+msgid ""
+"Inspect nested config values, unlock the ones you want to vary, and "
+"generate the full combination set."
+msgstr ""
+
+msgid ""
+"Inspect one SA target at a time using aggregate stress/reward trends and "
+"the timing of SA interactions."
+msgstr ""
+
+msgid ""
+"Inspect one moderated target at a time using their toxicity trend and the"
+" timing of moderator interventions."
+msgstr ""
+
+msgid "Install"
+msgstr ""
+
+#, python-format
+msgid "Install Detoxify first from %(link)s to enable toxicity annotation."
+msgstr ""
+
+msgid "Install Detoxify from Miscellanea before enabling toxicity annotation."
+msgstr ""
+
+msgid "Installed"
+msgstr ""
+
+#, python-format
+msgid "Installed %(label)s from GitHub release %(release_tag)s."
+msgstr ""
+
+#, python-format
+msgid "Installed %(label)s from the archive of branch %(branch)s."
+msgstr ""
+
+#, python-format
+msgid "Installed dependencies for %(label)s."
+msgstr ""
+
+msgid "Instructions"
+msgstr ""
+
+msgid "Instructions (Topics)"
+msgstr ""
+
+msgid "Instructions (simple)"
+msgstr ""
+
+msgid "Instructions for content pages to generate posts and responses."
+msgstr ""
+
+msgid "Instructions that define agent behavior and roleplay characteristics."
+msgstr ""
+
+msgid "Insult"
+msgstr ""
+
+msgid "Inter-block edge probability"
+msgstr ""
+
+msgid "Inter-block probability"
+msgstr ""
+
+msgid "Interactions"
+msgstr ""
+
+msgid "Interest"
+msgstr ""
+
+msgid "Interest learning rate (λ)"
+msgstr ""
+
+msgid "Interest level"
+msgstr ""
+
+msgid "Interest percentage"
+msgstr ""
+
+msgid "Interest tagging"
+msgstr ""
+
+msgid "Interested"
+msgstr ""
+
+msgid "Interested in"
+msgstr ""
+
+msgid "Interests"
+msgstr ""
+
+msgid "Interests & Opinions"
+msgstr ""
+
+msgid ""
+"Interests remain part of the reusable resource so the same subreddit "
+"behaves consistently when reused across forum simulations."
+msgstr ""
+
+msgid ""
+"Interests, opinion hints, and custom key-value data stored in the "
+"dashboard database."
+msgstr ""
+
+msgid "Interface language"
+msgstr ""
+
+msgid "Interlocutor + First-Order Friends"
+msgstr ""
+
+msgid "Interlocutor Only"
+msgstr ""
+
+msgid "Internal Server Error"
+msgstr ""
+
+#, python-format
+msgid "Internal server error: %(error)s"
+msgstr ""
+
+msgid "Interval"
+msgstr ""
+
+msgid "Interview"
+msgstr ""
+
+msgid "Interview an LLM agent with memory context."
+msgstr ""
+
+msgid "Interview is unavailable because memory is disabled for this experiment."
+msgstr ""
+
+msgid "Intra-block edge probability"
+msgstr ""
+
+msgid "Intra-block probability"
+msgstr ""
+
+msgid "Invalid JSON format"
+msgstr ""
+
+#, python-format
+msgid "Invalid JSON parameters for distribution '%(name)s': %(error)s"
+msgstr ""
+
+msgid "Invalid RSS feed URL"
+msgstr ""
+
+msgid "Invalid URL format"
+msgstr ""
+
+msgid "Invalid User ID or Experiment ID."
+msgstr ""
+
+msgid "Invalid age value provided."
+msgstr ""
+
+msgid "Invalid agent or population selection."
+msgstr ""
+
+#, python-format
+msgid "Invalid archetype values: %(error)s"
+msgstr ""
+
+msgid "Invalid bound values. Must be numbers."
+msgstr ""
+
+msgid "Invalid check interval value"
+msgstr ""
+
+msgid "Invalid download path."
+msgstr ""
+
+#, python-format
+msgid "Invalid experiment ID: %(experiment_id)s"
+msgstr ""
+
+msgid "Invalid experiment IDs provided."
+msgstr ""
+
+msgid "Invalid experiment database configuration"
+msgstr ""
+
+msgid "Invalid experiment database path format."
+msgstr ""
+
+msgid "Invalid experiment path format"
+msgstr ""
+
+msgid "Invalid experiments_per_group value"
+msgstr ""
+
+msgid "Invalid host format"
+msgstr ""
+
+#, python-format
+msgid "Invalid hostname: %(host)s"
+msgstr ""
+
+#, python-format
+msgid "Invalid input values: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Invalid instance ID: %(instance_id)s"
+msgstr ""
+
+msgid "Invalid lower_bound value"
+msgstr ""
+
+msgid "Invalid max HPC group value"
+msgstr ""
+
+msgid "Invalid max simulations per vLLM worker value"
+msgstr ""
+
+msgid "Invalid or expired session. Please log in again."
+msgstr ""
+
+msgid "Invalid or expired session. Please try again."
+msgstr ""
+
+msgid "Invalid parameters format. Must be valid JSON."
+msgstr ""
+
+msgid "Invalid population IDs provided."
+msgstr ""
+
+msgid "Invalid port number"
+msgstr ""
+
+msgid "Invalid remote host format. Use IP address or domain name."
+msgstr ""
+
+msgid "Invalid remote port. Please enter a valid number."
+msgstr ""
+
+msgid "Invalid remote port. Port must be between 1 and 65535."
+msgstr ""
+
+msgid "Invalid request."
+msgstr ""
+
+msgid "Invalid revoke request."
+msgstr ""
+
+msgid "Invalid upper_bound value"
+msgstr ""
+
+msgid "Invalid user ID."
+msgstr ""
+
+msgid "Invalid user role. Please contact an administrator."
+msgstr ""
+
+msgid "Invalid user session."
+msgstr ""
+
+msgid "Inventive/Curious"
+msgstr ""
+
+msgid "Iranian"
+msgstr ""
+
+msgid "Irish"
+msgstr ""
+
+#, python-format
+msgid "Is Private %%"
+msgstr ""
+
+#, python-format
+msgid "Is Verified %%"
+msgstr ""
+
+msgid "Israeli"
+msgstr ""
+
+msgid "Italian"
+msgstr ""
+
+msgid "Item not found"
+msgstr ""
+
+msgid "Japanese"
+msgstr ""
+
+msgid "Join"
+msgstr ""
+
+#, python-format
+msgid "Join %(name)s"
+msgstr ""
+
+msgid "Join Simulation"
+msgstr ""
+
+msgid "Join This Experiment"
+msgstr ""
+
+msgid "Join Y Social and choose what you want to take part in."
+msgstr ""
+
+msgid "Joined Experiments"
+msgstr ""
+
+msgid "Jupyter Lab"
+msgstr ""
+
+msgid "Jupyter Notebook functionality is disabled."
+msgstr ""
+
+msgid ""
+"Keep defaults for small and medium experiments. Increase limits only when"
+" you need broader topical variety or longer-running content pools."
+msgstr ""
+
+msgid ""
+"Kernel density estimate of recommendation counts across the selected "
+"author’s posts."
+msgstr ""
+
+msgid "LFR Benchmark"
+msgstr ""
+
+msgid "LFR Benchmark (Community Structure)"
+msgstr ""
+
+msgid "LLLM (Image Transcription)"
+msgstr ""
+
+msgid "LLM"
+msgstr ""
+
+msgid "LLM (Image Transcription)"
+msgstr ""
+
+msgid "LLM Agents"
+msgstr ""
+
+msgid "LLM Backend"
+msgstr ""
+
+msgid "LLM Evaluation"
+msgstr ""
+
+msgid "LLM Evaluation Parameters"
+msgstr ""
+
+msgid "LLM Management"
+msgstr ""
+
+msgid "LLM Management:"
+msgstr ""
+
+msgid "LLM Model"
+msgstr ""
+
+msgid "LLM Prompts Configuration"
+msgstr ""
+
+msgid "LLM Server"
+msgstr ""
+
+msgid "LLM Server URL"
+msgstr ""
+
+#, python-format
+msgid "LLM Server: %(backend)s"
+msgstr ""
+
+msgid "LLM Service"
+msgstr ""
+
+msgid "LLM URL"
+msgstr ""
+
+msgid "LLM and toxicity analysis settings."
+msgstr ""
+
+msgid ""
+"LLM annotations (toxicity, sentiment, emotion) are unavailable for rule-"
+"based experiments."
+msgstr ""
+
+msgid ""
+"LLM annotations (toxicity, sentiment, emotion) are unavailable for rule-"
+"based forum experiments. Opinion dynamics remains available."
+msgstr ""
+
+msgid ""
+"LLM annotations (toxicity, sentiment, emotion) are unavailable for rule-"
+"based forum experiments. Opinion dynamics remains available; memory is "
+"available only for LLM forum experiments."
+msgstr ""
+
+msgid "LLMs & Cognition"
+msgstr ""
+
+msgid "LLMs & Opinion Dynamics"
+msgstr ""
+
+msgid "Lambda (λ):"
+msgstr ""
+
+msgid "Lambda parameter"
+msgstr ""
+
+msgid "Language"
+msgstr ""
+
+msgid "Language Spoken"
+msgstr ""
+
+msgid "Language not found."
+msgstr ""
+
+msgid ""
+"Language of the participant pages in this experiment. Post, comment and "
+"agent texts are never translated."
+msgstr ""
+
+msgid ""
+"Language of the prompts used by the agents of this simulation. Loading a "
+"language replaces the prompts below with that language's version."
+msgstr ""
+
+msgid "Languages"
+msgstr ""
+
+msgid "Languages, nationalities and age classes."
+msgstr ""
+
+msgid "Large Language Models"
+msgstr ""
+
+msgid "Large Language Models (Image Transcription)"
+msgstr ""
+
+msgid "Largest Component"
+msgstr ""
+
+msgid "Largest Component Share"
+msgstr ""
+
+msgid "Largest Component Share Over Time"
+msgstr ""
+
+msgid "Last Check"
+msgstr ""
+
+msgid "Last Run"
+msgstr ""
+
+msgid "Last Seen"
+msgstr ""
+
+msgid "Latest aggregate reward state binned across tracked agents."
+msgstr ""
+
+msgid "Latest aggregate social state."
+msgstr ""
+
+msgid "Latest aggregate stress state binned across tracked agents."
+msgstr ""
+
+msgid "Latest articles from this page's RSS feed."
+msgstr ""
+
+msgid "Latest release"
+msgstr ""
+
+msgid "Latvian"
+msgstr ""
+
+msgid "Launch clients and open the forum interface from the same control panel"
+msgstr ""
+
+msgid "Launch clients and open the web interface from the same control panel"
+msgstr ""
+
+msgid "Leaning not found."
+msgstr ""
+
+msgid "Leave empty for all agents"
+msgstr ""
+
+msgid "Leave empty for no password"
+msgstr ""
+
+msgid "Leave empty to use name from config..."
+msgstr ""
+
+msgid "Leave fields empty to use the default activity profile."
+msgstr ""
+
+msgid "Less"
+msgstr ""
+
+msgid "Let participants change the language"
+msgstr ""
+
+msgid "Let's create your first simulation in just 4 easy steps."
+msgstr ""
+
+msgid "Let's make some updates!"
+msgstr ""
+
+msgid "Let's see what makes us feel"
+msgstr ""
+
+msgid "Let's see what we are saying about"
+msgstr ""
+
+msgid "Like"
+msgstr ""
+
+msgid "Likes"
+msgstr ""
+
+msgid "Limited access to assigned experiments only. Cannot access admin panel."
+msgstr ""
+
+msgid "Linear"
+msgstr ""
+
+msgid "Link"
+msgstr ""
+
+msgid "Link URL*"
+msgstr ""
+
+msgid "Linkedin"
+msgstr ""
+
+msgid "Lithuanian"
+msgstr ""
+
+msgid "Live signals from the current conversation"
+msgstr ""
+
+msgid "Load"
+msgstr ""
+
+msgid "Load Experiment"
+msgstr ""
+
+msgid "Load Matrix"
+msgstr ""
+
+msgid "Load Pages Collection"
+msgstr ""
+
+msgid "Load Population from file"
+msgstr ""
+
+msgid "Load prompts"
+msgstr ""
+
+msgid "Loaded articles"
+msgstr ""
+
+msgid "Loaded image posts"
+msgstr ""
+
+msgid "Loading more posts..."
+msgstr ""
+
+msgid "Loading populations..."
+msgstr ""
+
+msgid "Loading..."
+msgstr ""
+
+msgid "Loading…"
+msgstr ""
+
+msgid "Local Diffusion Model"
+msgstr ""
+
+msgid "Local Toxicity Model"
+msgstr ""
+
+msgid "Local Triadic Closure"
+msgstr ""
+
+msgid "Local models and notes on these settings."
+msgstr ""
+
+msgid "Log"
+msgstr ""
+
+msgid "Log Out"
+msgstr ""
+
+msgid "Log Synchronization:"
+msgstr ""
+
+msgid "Log file not found"
+msgstr ""
+
+msgid ""
+"Log metrics reset and re-parsed. Plots now show data from original run "
+"and will include extended data after client restart."
+msgstr ""
+
+msgid "Log metrics reset. Plots will update with extended data on next refresh."
+msgstr ""
+
+msgid "Log out"
+msgstr ""
+
+msgid "Log out from your account."
+msgstr ""
+
+msgid "Log-Normal"
+msgstr ""
+
+msgid "Login"
+msgstr ""
+
+msgid "Logo"
+msgstr ""
+
+msgid "Logo Image"
+msgstr ""
+
+msgid "Logout"
+msgstr ""
+
+msgid "Low"
+msgstr ""
+
+msgid "Low Interest"
+msgstr ""
+
+msgid "Lower Bound"
+msgstr ""
+
+msgid "Lower bound must be <= upper bound"
+msgstr ""
+
+msgid "Lower bound must be in [0, 1]"
+msgstr ""
+
+msgid "Lower bound must be less than or equal to upper bound."
+msgstr ""
+
+msgid "Maintain the active simulation topics from the overview card"
+msgstr ""
+
+msgid ""
+"Maintain the canonical image-feed catalog here and assign only the feeds "
+"needed by each forum simulation."
+msgstr ""
+
+msgid "Male"
+msgstr ""
+
+msgid "Male:"
+msgstr ""
+
+msgid "Manage Image Resources"
+msgstr ""
+
+msgid "Manage RSS Resources"
+msgstr ""
+
+msgid "Manage Shared Image Resources"
+msgstr ""
+
+msgid "Manage Shared RSS Resources"
+msgstr ""
+
+msgid ""
+"Manage agent-plugin runtimes that can extend this experiment with "
+"dedicated ad hoc agent execution flows."
+msgstr ""
+
+msgid "Manage clients running agent populations for this experiment."
+msgstr ""
+
+msgid ""
+"Manage existing agents, remove orphaned entries, and create fully custom "
+"profiles."
+msgstr ""
+
+msgid ""
+"Manage your self-hosted Large Language Model server, view available "
+"models, and pull new models from the repository."
+msgstr ""
+
+msgid "Management"
+msgstr ""
+
+msgid "Mandatory. Only populations with the same custom type are available."
+msgstr ""
+
+msgid "Mandatory. Select one of the installed custom agent families."
+msgstr ""
+
+msgid "Mark read"
+msgstr ""
+
+msgid "Master"
+msgstr ""
+
+msgid "Master of Puppets"
+msgstr ""
+
+msgid "Master of Puppets Target Drill-down"
+msgstr ""
+
+msgid ""
+"Master of Puppets agents are deployed, but no topic-matched target "
+"interactions have been recorded up to the selected time."
+msgstr ""
+
+msgid "Matrix"
+msgstr ""
+
+msgid "Max HPC experiments per group must be at least 1, or choose unlimited"
+msgstr ""
+
+msgid "Max Model Length"
+msgstr ""
+
+msgid "Max Replies per Round"
+msgstr ""
+
+msgid "Max Tokens"
+msgstr ""
+
+msgid "Max number of thread items (post + comments) to fetch for context."
+msgstr ""
+
+msgid "Max simulations per vLLM worker must be at least 1"
+msgstr ""
+
+msgid "Max tokens"
+msgstr ""
+
+msgid "Max/group"
+msgstr ""
+
+msgid "Max:"
+msgstr ""
+
+#, python-format
+msgid ""
+"Maximum %(max_hpc_per_group)s HPC experiments allowed per group. This "
+"group already has %(hpc_count)s HPC experiments."
+msgstr ""
+
+msgid "Maximum actions"
+msgstr ""
+
+msgid "Maximum articles to process from each standard RSS feed."
+msgstr ""
+
+msgid "Maximum entries to load from the database when live feeds are unavailable."
+msgstr ""
+
+msgid "Maximum images to retrieve from each subreddit-based image feed."
+msgstr ""
+
+msgid "Maximum number of replies an agent can make per simulation round"
+msgstr ""
+
+msgid "Maximum posts to retrieve from Reddit subreddit feeds."
+msgstr ""
+
+msgid "Mean Duration by Path (seconds)"
+msgstr ""
+
+msgid "Mean Execution Time by Method (seconds)"
+msgstr ""
+
+msgid "Media"
+msgstr ""
+
+msgid "Media Page"
+msgstr ""
+
+msgid "Media URL"
+msgstr ""
+
+msgid "Media URL*"
+msgstr ""
+
+msgid "Medium"
+msgstr ""
+
+msgid "Medium-High"
+msgstr ""
+
+msgid "Medium-Low"
+msgstr ""
+
+msgid "Memory"
+msgstr ""
+
+msgid "Memory Embeddings"
+msgstr ""
+
+msgid "Mention Edges"
+msgstr ""
+
+msgid "Mention Network"
+msgstr ""
+
+msgid "Mentioning Posts"
+msgstr ""
+
+msgid "Merge Populations"
+msgstr ""
+
+msgid "Merged population type must match the selected population platform type."
+msgstr ""
+
+msgid "Message"
+msgstr ""
+
+msgid "Message..."
+msgstr ""
+
+msgid "Message:"
+msgstr ""
+
+msgid "Messages"
+msgstr ""
+
+msgid "Method:"
+msgstr ""
+
+msgid "Mexican"
+msgstr ""
+
+msgid "Microblogging"
+msgstr ""
+
+msgid "Microblogging (i.e., X/BlueSky)"
+msgstr ""
+
+msgid "Microblogging Only"
+msgstr ""
+
+msgid ""
+"Microblogging experiments are unavailable because neither YServer/YClient"
+" nor YSimulator is present."
+msgstr ""
+
+msgid ""
+"Microblogging simulator (timeline, posts, follows). Server and client are"
+" installed and updated independently from its page."
+msgstr ""
+
+msgid "Min Probability Ratio"
+msgstr ""
+
+msgid "Min:"
+msgstr ""
+
+msgid "Mine"
+msgstr ""
+
+msgid "Minimum actions"
+msgstr ""
+
+msgid "Miscellanea"
+msgstr ""
+
+msgid "Missing exp_id"
+msgstr ""
+
+msgid "Missing exp_id or module_id"
+msgstr ""
+
+msgid "Missing experiment_id or client_id"
+msgstr ""
+
+msgid "Mixing parameter (mu)"
+msgstr ""
+
+msgid "MoP Accounts"
+msgstr ""
+
+msgid "MoP Interactions"
+msgstr ""
+
+msgid "MoP Puppet"
+msgstr ""
+
+msgid "Model"
+msgstr ""
+
+msgid "Model Name"
+msgstr ""
+
+msgid "Model discovery is enabled only after an Ollama host is provided."
+msgstr ""
+
+msgid "Model selection"
+msgstr ""
+
+msgid "Models & information"
+msgstr ""
+
+msgid "Moderated Target"
+msgstr ""
+
+msgid "Moderator Actions"
+msgstr ""
+
+msgid "Moderator Agent"
+msgstr ""
+
+msgid "Moderator Agents"
+msgstr ""
+
+msgid "Moderator Target Drill-down"
+msgstr ""
+
+msgid ""
+"Moderator agents are deployed, but no moderated targets have been "
+"recorded up to the selected time."
+msgstr ""
+
+msgid "Moderators"
+msgstr ""
+
+msgid "Modules open to new participants."
+msgstr ""
+
+msgid "Monitor and auto-restart hung server/client processes."
+msgstr ""
+
+msgid ""
+"Monitors running experiments and automatically restarts hung processes to"
+" ensure continuous operation."
+msgstr ""
+
+msgid "Monitors server/client processes for hangs and auto-restarts them."
+msgstr ""
+
+msgid "Most Commented"
+msgstr ""
+
+msgid "Most Polarized Photos"
+msgstr ""
+
+msgid "Most Polarized Posts"
+msgstr ""
+
+msgid "Most Reached Authors"
+msgstr ""
+
+msgid "Most Toxic Posts"
+msgstr ""
+
+msgid "Most commented"
+msgstr ""
+
+msgid "Most recently active communities across posts and discussions."
+msgstr ""
+
+msgid ""
+"Mostly posts from the people you follow, newest first, completed with the"
+" newest posts from everybody."
+msgstr ""
+
+msgid ""
+"Mostly posts from the people you follow, the most reacted first, "
+"completed with the newest posts from everybody."
+msgstr ""
+
+msgid "Mu (Averaging Weight)"
+msgstr ""
+
+msgid "Mutual Friends"
+msgstr ""
+
+msgid "Mutual contact"
+msgstr ""
+
+msgid "My Communities"
+msgstr ""
+
+msgid "My Profile"
+msgstr ""
+
+msgid "My profile"
+msgstr ""
+
+msgid "Name"
+msgstr ""
+
+msgid "Name and hours are required."
+msgstr ""
+
+msgid "Name is required"
+msgstr ""
+
+msgid "Name:"
+msgstr ""
+
+msgid "Nationalities"
+msgstr ""
+
+msgid "Nationality"
+msgstr ""
+
+msgid "Nationality not found."
+msgstr ""
+
+msgid "Nearest neighbors (k)"
+msgstr ""
+
+msgid "Negative"
+msgstr ""
+
+msgid "Nepalese"
+msgstr ""
+
+msgid "Network Analysis"
+msgstr ""
+
+msgid "Network Configuration"
+msgstr ""
+
+msgid "Network Growth (focused on connections)."
+msgstr ""
+
+msgid ""
+"Network Growth (focused on connections, enabled only when follow "
+"probabilities > 0)"
+msgstr ""
+
+msgid "Network Growth - Focused on expanding social graph"
+msgstr ""
+
+msgid "Network Model"
+msgstr ""
+
+msgid "Network Science"
+msgstr ""
+
+msgid "Network Size Over Time"
+msgstr ""
+
+msgid "Network Type"
+msgstr ""
+
+msgid "Network analysis not available"
+msgstr ""
+
+msgid ""
+"Network file format error: provide a csv file containing two columns with"
+" agent names. No header required."
+msgstr ""
+
+msgid "Network-analysis tables not available"
+msgstr ""
+
+msgid "Neuroticism"
+msgstr ""
+
+msgid "Neuroticism."
+msgstr ""
+
+msgid "Neutral"
+msgstr ""
+
+msgid "Neutral (0.5)"
+msgstr ""
+
+msgid "Never"
+msgstr ""
+
+msgid "New"
+msgstr ""
+
+msgid "New Activity Profile"
+msgstr ""
+
+msgid "New AdHoc Agent Client"
+msgstr ""
+
+msgid "New Age Class"
+msgstr ""
+
+msgid "New Agents/Churn:"
+msgstr ""
+
+msgid "New Blog Post!"
+msgstr ""
+
+msgid "New Client"
+msgstr ""
+
+msgid "New Education Level"
+msgstr ""
+
+msgid "New Email"
+msgstr ""
+
+msgid "New Experiment"
+msgstr ""
+
+msgid "New Forum Client"
+msgstr ""
+
+msgid "New HPC Client"
+msgstr ""
+
+msgid "New Hashtags"
+msgstr ""
+
+msgid "New Language"
+msgstr ""
+
+msgid "New Name"
+msgstr ""
+
+msgid "New Nationality"
+msgstr ""
+
+msgid "New Opinion Distribution"
+msgstr ""
+
+msgid "New Opinion Group"
+msgstr ""
+
+msgid "New Password"
+msgstr ""
+
+msgid "New Photo Sharing Client"
+msgstr ""
+
+msgid "New Political Leaning"
+msgstr ""
+
+msgid "New Population Description"
+msgstr ""
+
+msgid "New Population Name"
+msgstr ""
+
+msgid "New Profession"
+msgstr ""
+
+msgid "New Release Available!"
+msgstr ""
+
+msgid "New Topic"
+msgstr ""
+
+msgid "New Topics"
+msgstr ""
+
+msgid "New Toxicity Level"
+msgstr ""
+
+msgid "New Zealander"
+msgstr ""
+
+msgid "New here?"
+msgstr ""
+
+msgid "New message"
+msgstr ""
+
+msgid "New post"
+msgstr ""
+
+msgid "New posts available"
+msgstr ""
+
+#, python-format
+msgid "New version available: %(get)s (v%(get2)s)"
+msgstr ""
+
+msgid "Newer"
+msgstr ""
+
+msgid "Newest posts first; within the same hour, the most commented come first."
+msgstr ""
+
+msgid "News"
+msgstr ""
+
+msgid "News Pages"
+msgstr ""
+
+msgid "News article content"
+msgstr ""
+
+msgid "News from the Agents"
+msgstr ""
+
+msgid "News source name"
+msgstr ""
+
+msgid "News."
+msgstr ""
+
+msgid "Next"
+msgstr ""
+
+msgid "Next Page"
+msgstr ""
+
+msgid "Next image"
+msgstr ""
+
+msgid "Next →"
+msgstr ""
+
+msgid "No"
+msgstr ""
+
+msgid "No Active Experiments"
+msgstr ""
+
+msgid "No URL provided"
+msgstr ""
+
+msgid "No active communities detected yet."
+msgstr ""
+
+msgid "No active discussion topics for this experiment."
+msgstr ""
+
+msgid "No active experiment. Please activate an experiment first."
+msgstr ""
+
+msgid "No active experiments available"
+msgstr ""
+
+msgid "No active experiments available. Please contact an administrator."
+msgstr ""
+
+msgid "No active modules."
+msgstr ""
+
+msgid "No active photo-sharing experiment. Please activate one first."
+msgstr ""
+
+msgid "No active topics for this experiment."
+msgstr ""
+
+msgid "No activity profiles available. Create some in the Miscellanea page first."
+msgstr ""
+
+msgid "No ad hoc agent plugins are currently installed."
+msgstr ""
+
+msgid "No ad hoc agents' clients registered yet"
+msgstr ""
+
+msgid "No agent selected"
+msgstr ""
+
+msgid "No articles available yet."
+msgstr ""
+
+msgid "No available experiments to assign"
+msgstr ""
+
+msgid "No available port could be assigned for the new experiment."
+msgstr ""
+
+msgid "No available port found"
+msgstr ""
+
+msgid "No client configuration files were found for this experiment."
+msgstr ""
+
+msgid "No client file found for the population"
+msgstr ""
+
+msgid "No clients available"
+msgstr ""
+
+msgid "No clients registered"
+msgstr ""
+
+msgid "No configurable values found in this file."
+msgstr ""
+
+msgid "No configuration files were found for this experiment."
+msgstr ""
+
+msgid "No data provided"
+msgstr ""
+
+msgid "No description available."
+msgstr ""
+
+msgid "No emotion annotations have been recorded up to the selected time."
+msgstr ""
+
+msgid "No emotions are trending yet."
+msgstr ""
+
+msgid "No experiment matrix combinations were created."
+msgstr ""
+
+msgid "No experiments found in the selected group."
+msgstr ""
+
+msgid "No experiments selected for deletion."
+msgstr ""
+
+msgid "No experiments selected for download."
+msgstr ""
+
+msgid "No experiments yet"
+msgstr ""
+
+msgid "No feed description available."
+msgstr ""
+
+msgid "No file provided"
+msgstr ""
+
+msgid "No file selected"
+msgstr ""
+
+msgid "No followed profiles yet"
+msgstr ""
+
+msgid "No groups created yet"
+msgstr ""
+
+msgid "No groups defined or all groups completed"
+msgstr ""
+
+msgid "No hashtag activity has been recorded up to the selected time."
+msgstr ""
+
+msgid "No hashtags are trending yet."
+msgstr ""
+
+msgid "No hashtags matched yet."
+msgstr ""
+
+msgid "No hashtags yet."
+msgstr ""
+
+msgid "No inactive modules."
+msgstr ""
+
+msgid "No interests assigned"
+msgstr ""
+
+msgid "No log files were found to clear."
+msgstr ""
+
+msgid "No logs available for this repository."
+msgstr ""
+
+msgid "No logs yet"
+msgstr ""
+
+msgid "No matching visibility assignment found."
+msgstr ""
+
+#, python-format
+msgid "No models found at %(llm_url)s"
+msgstr ""
+
+msgid "No notifications yet."
+msgstr ""
+
+msgid "No open run"
+msgstr ""
+
+msgid "No operation has been run on this plugin yet."
+msgstr ""
+
+msgid "No optional parameters declared"
+msgstr ""
+
+msgid "No pages assigned"
+msgstr ""
+
+msgid "No people following this profile yet"
+msgstr ""
+
+msgid "No people matched yet."
+msgstr ""
+
+msgid "No photo selected yet"
+msgstr ""
+
+msgid "No photos available yet."
+msgstr ""
+
+msgid "No photos from your social contacts are available yet."
+msgstr ""
+
+msgid "No photos matched your search yet."
+msgstr ""
+
+msgid "No plugin is available."
+msgstr ""
+
+#, python-format
+msgid "No populations are available for this %(platform)s experiment."
+msgstr ""
+
+msgid "No profiles to show"
+msgstr ""
+
+msgid "No recent interests available."
+msgstr ""
+
+msgid "No recommendation events have been recorded up to the selected time."
+msgstr ""
+
+msgid "No recommended photos are available yet."
+msgstr ""
+
+msgid "No releases available"
+msgstr ""
+
+#, python-format
+msgid ""
+"No reusable RSS resources are available yet. Create them first in "
+"%(link)s."
+msgstr ""
+
+msgid "No reusable RSS resources stored yet."
+msgstr ""
+
+#, python-format
+msgid ""
+"No reusable image resources are available yet. Create them first in "
+"%(link)s."
+msgstr ""
+
+msgid "No reusable image resources stored yet."
+msgstr ""
+
+msgid "No saved photos available yet."
+msgstr ""
+
+msgid "No sentiment annotations have been recorded up to the selected time."
+msgstr ""
+
+msgid "No server configuration file was found for this experiment."
+msgstr ""
+
+msgid "No story previews are available yet."
+msgstr ""
+
+msgid "No tagged photos available yet."
+msgstr ""
+
+msgid "No topic activity has been recorded up to the selected time."
+msgstr ""
+
+msgid "No topics are trending yet."
+msgstr ""
+
+msgid "No topics assigned"
+msgstr ""
+
+msgid "No toxicity annotations have been recorded up to the selected time."
+msgstr ""
+
+msgid "No user data provided."
+msgstr ""
+
+msgid "No users or experiment selected."
+msgstr ""
+
+msgid "No visibility grants configured yet."
+msgstr ""
+
+msgid "Nodes"
+msgstr ""
+
+msgid "None"
+msgstr ""
+
+msgid "Normal"
+msgstr ""
+
+msgid "Norwegian"
+msgstr ""
+
+msgid "Not"
+msgstr ""
+
+msgid "Not Interested"
+msgstr ""
+
+msgid "Not active"
+msgstr ""
+
+msgid "Not assigned"
+msgstr ""
+
+msgid "Not assigned to any population"
+msgstr ""
+
+msgid "Not configured"
+msgstr ""
+
+msgid "Not configured. Semantic memory falls back to lexical retrieval."
+msgstr ""
+
+msgid "Not deployed to any population"
+msgstr ""
+
+msgid "Not installed"
+msgstr ""
+
+msgid "Not owning any experiments"
+msgstr ""
+
+msgid "Not participating in any experiments"
+msgstr ""
+
+msgid "Not set"
+msgstr ""
+
+msgid "Note:"
+msgstr ""
+
+#, python-format
+msgid "Notebook created at %(filepath)s"
+msgstr ""
+
+msgid "Nothing matches your search."
+msgstr ""
+
+msgid "Notice:"
+msgstr ""
+
+msgid "Notification cancelled."
+msgstr ""
+
+msgid "Notification menu"
+msgstr ""
+
+msgid "Notification not found"
+msgstr ""
+
+msgid "Notification not found."
+msgstr ""
+
+msgid "Notifications"
+msgstr ""
+
+msgid "Now"
+msgstr ""
+
+msgid "Number of Actors"
+msgstr ""
+
+msgid "Number of Copies"
+msgstr ""
+
+msgid "Number of blocks"
+msgstr ""
+
+msgid ""
+"Number of days to run. Check \"Run until stopped\" to create an infinite-"
+"duration client that runs until manually stopped."
+msgstr ""
+
+msgid ""
+"Number of initial interactions treated as full memory imprint before "
+"progressive decay starts."
+msgstr ""
+
+msgid "Number of pages to fetch at 100 entries per page."
+msgstr ""
+
+msgid "Number of posts shown per page when infinite scrolling is disabled"
+msgstr ""
+
+msgid ""
+"Number of recommendation events served to receivers grouped by their "
+"configured content recommender."
+msgstr ""
+
+msgid "Number of top semantic memory items considered per retrieval."
+msgstr ""
+
+msgid "Number of topics:"
+msgstr ""
+
+msgid "OR"
+msgstr ""
+
+msgid ""
+"Off keeps the language fixed for everybody, so it does not become a "
+"variable of the experiment."
+msgstr ""
+
+msgid "Older"
+msgstr ""
+
+msgid "Ollama"
+msgstr ""
+
+msgid "Ollama / OpenAI-compatible"
+msgstr ""
+
+msgid "Ollama Host"
+msgstr ""
+
+msgid "Ollama directory"
+msgstr ""
+
+msgid "Onboarding screen"
+msgstr ""
+
+msgid "Only LLM agents are listed."
+msgstr ""
+
+msgid "Only Ollama is currently supported for memory embeddings."
+msgstr ""
+
+msgid ""
+"Only active ones are offered; the sign-up link appears on the login page "
+"when at least one is available."
+msgstr ""
+
+msgid "Only administrators can manage external runtime repositories."
+msgstr ""
+
+msgid ""
+"Only embedding models are listed. Choose one that is actually installed "
+"on the target Ollama instance before saving."
+msgstr ""
+
+msgid "Only embedding-capable models are shown in this selector."
+msgstr ""
+
+msgid "Only installed backend plugins can be enabled or disabled."
+msgstr ""
+
+msgid "Only owner/admin/shared researchers can clear logs"
+msgstr ""
+
+msgid "Only owner/admin/shared researchers can delete"
+msgstr ""
+
+msgid "Only owner/admin/shared researchers can edit avatar mode"
+msgstr ""
+
+msgid "Only owner/admin/shared researchers can edit feed limits"
+msgstr ""
+
+msgid "Only owner/admin/shared researchers can edit forum feeds"
+msgstr ""
+
+msgid "Only owner/admin/shared researchers can edit image feeds"
+msgstr ""
+
+msgid "Only owner/admin/shared researchers can edit memory embeddings"
+msgstr ""
+
+msgid "Only owner/admin/shared researchers can edit stress/reward settings"
+msgstr ""
+
+msgid "Open"
+msgstr ""
+
+#, python-format
+msgid "Open %(name)s Builder"
+msgstr ""
+
+msgid "Open Agent Builder"
+msgstr ""
+
+msgid "Open JupyterLab"
+msgstr ""
+
+msgid "Open JupyterLab for ad hoc inspection and notebook-based analysis"
+msgstr ""
+
+msgid "Open Page Builder"
+msgstr ""
+
+msgid "Open Timeline."
+msgstr ""
+
+msgid "Open profile"
+msgstr ""
+
+#, python-format
+msgid "Open prompt and embedding settings from %(b)s"
+msgstr ""
+
+msgid "Open prompt and embedding settings from the same panel"
+msgstr ""
+
+#, python-format
+msgid "Open prompt settings from %(b)s"
+msgstr ""
+
+msgid "Open prompt settings from the same panel"
+msgstr ""
+
+msgid "Open the active experiment dashboards from a single compact panel."
+msgstr ""
+
+msgid "Openness to Experience"
+msgstr ""
+
+msgid "Openness to Experience."
+msgstr ""
+
+msgid "Operation output"
+msgstr ""
+
+msgid "Opinion"
+msgstr ""
+
+msgid "Opinion Configuration"
+msgstr ""
+
+msgid "Opinion Distribution"
+msgstr ""
+
+msgid "Opinion Distribution Configuration"
+msgstr ""
+
+msgid "Opinion Distributions"
+msgstr ""
+
+msgid "Opinion Dynamics"
+msgstr ""
+
+msgid "Opinion Dynamics:"
+msgstr ""
+
+msgid "Opinion Evolution"
+msgstr ""
+
+msgid "Opinion Group Trends"
+msgstr ""
+
+msgid "Opinion Groups"
+msgstr ""
+
+msgid "Opinion Modeling"
+msgstr ""
+
+msgid "Opinion categories"
+msgstr ""
+
+msgid "Opinion configuration route does not match the experiment modality."
+msgstr ""
+
+msgid "Opinion distribution not found"
+msgstr ""
+
+msgid "Opinion distribution update route does not match the experiment modality."
+msgstr ""
+
+msgid "Opinion dynamics configuration saved successfully."
+msgstr ""
+
+msgid ""
+"Opinion dynamics is enabled for this experiment. After client creation, "
+"you will be redirected to forum opinion configuration."
+msgstr ""
+
+msgid "Opinion dynamics is not enabled for this experiment."
+msgstr ""
+
+msgid "Opinion dynamics not enabled"
+msgstr ""
+
+msgid "Opinion group not found"
+msgstr ""
+
+#, python-format
+msgid ""
+"Opinion group overlaps with existing group '%(name)s' [%(lower_bound)s, "
+"%(upper_bound)s]. Groups must not overlap."
+msgstr ""
+
+msgid "Opinion groups and agent trends"
+msgstr ""
+
+msgid "Opinion scale not yet configured."
+msgstr ""
+
+msgid "Opinion width (α)"
+msgstr ""
+
+#, python-format
+msgid "Opinion: %(value)s"
+msgstr ""
+
+#, python-format
+msgid "Optional parameters: %(names)s"
+msgstr ""
+
+msgid "Optional: Group experiments together"
+msgstr ""
+
+msgid "Optional: Group experiments together (e.g., \"Project A\", \"Study B\")"
+msgstr ""
+
+msgid ""
+"Optionally connect a GitHub token for this admin session, to avoid "
+"anonymous rate limits and reach private release assets."
+msgstr ""
+
+msgid ""
+"Ordering of the forum feed when a participant opens it (they can still "
+"change it)"
+msgstr ""
+
+msgid "Other"
+msgstr ""
+
+msgid "Out-Degree CCDF"
+msgstr ""
+
+msgid "Outgoing/Energetic"
+msgstr ""
+
+msgid "Overall cap for injected memory context across tiers."
+msgstr ""
+
+#, python-format
+msgid "Overlaps with '%(name)s' [%(lower_bound)s, %(upper_bound)s]"
+msgstr ""
+
+msgid "Own Recsys"
+msgstr ""
+
+msgid "Owned Experiments"
+msgstr ""
+
+msgid "Owner"
+msgstr ""
+
+#, python-format
+msgid "Owner: %(owner)s"
+msgstr ""
+
+msgid "Page"
+msgstr ""
+
+#, python-format
+msgid "Page %(page)s"
+msgstr ""
+
+#, python-format
+msgid "Page %(page)s of %(total)s"
+msgstr ""
+
+msgid "Page Name"
+msgstr ""
+
+msgid "Page Not Found"
+msgstr ""
+
+msgid "Page Overview"
+msgstr ""
+
+msgid "Page Pre-prompts"
+msgstr ""
+
+msgid "Page identification and RSS feed configuration."
+msgstr ""
+
+msgid "Page is assigned to a population. Cannot delete."
+msgstr ""
+
+#, python-format
+msgid "Page name '%(name)s' already exists. Please choose a different name."
+msgstr ""
+
+msgid "Pages"
+msgstr ""
+
+msgid "Pages aligned with your feed"
+msgstr ""
+
+msgid "Pair Limit"
+msgstr ""
+
+msgid "Palestinian"
+msgstr ""
+
+msgid "Parent post not found"
+msgstr ""
+
+msgid "Parse"
+msgstr ""
+
+msgid "Partially installed"
+msgstr ""
+
+msgid "Participant"
+msgstr ""
+
+msgid "Password"
+msgstr ""
+
+msgid "Password is optional (will be auto-generated as username123!)"
+msgstr ""
+
+msgid ""
+"Password must be at least 8 characters with one uppercase, one number, "
+"and one special symbol"
+msgstr ""
+
+msgid "Password updated successfully"
+msgstr ""
+
+msgid "Passwords do not match"
+msgstr ""
+
+msgid "Path:"
+msgstr ""
+
+msgid "Pause Client"
+msgstr ""
+
+msgid "Peak Target Toxicity"
+msgstr ""
+
+msgid "Peak Toxicity"
+msgstr ""
+
+msgid "People"
+msgstr ""
+
+msgid "People Following Me"
+msgstr ""
+
+msgid "People I Follow"
+msgstr ""
+
+msgid "People and pages you can follow in this experiment."
+msgstr ""
+
+msgid "People worth following right now"
+msgstr ""
+
+msgid ""
+"Per-post distribution of how often the selected author’s posts have been "
+"recommended."
+msgstr ""
+
+msgid "Persist memory events"
+msgstr ""
+
+msgid "Persona"
+msgstr ""
+
+msgid "Persona Configuration"
+msgstr ""
+
+msgid "Persona Template"
+msgstr ""
+
+msgid "Personalise your account details."
+msgstr ""
+
+msgid "Personalization"
+msgstr ""
+
+msgid "Personalized Feed"
+msgstr ""
+
+msgid "Personalized Feed parameters"
+msgstr ""
+
+msgid "PhD"
+msgstr ""
+
+msgid "PhD Student in AI"
+msgstr ""
+
+msgid "Photo Sharing"
+msgstr ""
+
+msgid "Photo Sharing (e.g., Instagram)"
+msgstr ""
+
+msgid "Photo Sharing Configuration"
+msgstr ""
+
+msgid ""
+"Photo Sharing experiments are unavailable because YPhotoSharing is not "
+"present."
+msgstr ""
+
+msgid "Photo attention budget min/max must be valid integers."
+msgstr ""
+
+msgid "Photo attention budget must use positive min/max values with min <= max."
+msgstr ""
+
+msgid "Photo creator tier percentages must sum to 100%."
+msgstr ""
+
+msgid "Photo details"
+msgstr ""
+
+msgid "Photo sharing"
+msgstr ""
+
+msgid "Photo story visibility percentages must sum to 100%."
+msgstr ""
+
+msgid "Photos"
+msgstr ""
+
+msgid "Pick a source group first, then choose one experiment from that group."
+msgstr ""
+
+msgid "Platform"
+msgstr ""
+
+msgid "Platform Type"
+msgstr ""
+
+msgid "Platform releases and anonymous usage data."
+msgstr ""
+
+#, python-format
+msgid "Platform: %(platform)s"
+msgstr ""
+
+msgid "Play"
+msgstr ""
+
+msgid "Please check the URL or go back to the homepage."
+msgstr ""
+
+msgid "Please check your input and try again."
+msgstr ""
+
+msgid "Please check your login details and try again."
+msgstr ""
+
+msgid "Please contact an administrator if you believe this is an error."
+msgstr ""
+
+msgid ""
+"Please describe what you were doing and what went wrong. This helps us "
+"understand and fix the issue faster."
+msgstr ""
+
+msgid "Please enter a valid email address"
+msgstr ""
+
+msgid "Please enter a valid email address."
+msgstr ""
+
+msgid "Please pick a source experiment from the selected source group."
+msgstr ""
+
+msgid ""
+"Please provide a population name and select at least 2 populations to "
+"merge."
+msgstr ""
+
+msgid "Please provide at least one simulation topic."
+msgstr ""
+
+msgid "Please select at least 2 populations to merge."
+msgstr ""
+
+msgid "Plugin"
+msgstr ""
+
+msgid "Plugin Extensions"
+msgstr ""
+
+msgid "Plugin Manager"
+msgstr ""
+
+msgid "Plugin Source"
+msgstr ""
+
+#, python-format
+msgid "Plugin agent type · %(repo)s"
+msgstr ""
+
+msgid "Plugin-backed resource"
+msgstr ""
+
+msgid "Plugin-defined agent type."
+msgstr ""
+
+msgid "Plugins"
+msgstr ""
+
+msgid ""
+"Plugins from the community registry need an explicit confirmation before "
+"they are installed or updated."
+msgstr ""
+
+msgid "Poisson"
+msgstr ""
+
+msgid "Polarity mix and compound trends"
+msgstr ""
+
+msgid "Polish"
+msgstr ""
+
+#, python-format
+msgid "Political %%"
+msgstr ""
+
+msgid "Political Leaning"
+msgstr ""
+
+msgid "Political Leanings"
+msgstr ""
+
+msgid "Political leaning"
+msgstr ""
+
+msgid "Political leanings, education and professions of the agents."
+msgstr ""
+
+msgid "Popularity & Activity Bias"
+msgstr ""
+
+msgid "Population"
+msgstr ""
+
+#, python-format
+msgid "Population '%(population_name)s' already exists"
+msgstr ""
+
+msgid "Population Memberships"
+msgstr ""
+
+msgid "Population Name"
+msgstr ""
+
+msgid "Population Overview"
+msgstr ""
+
+msgid "Population Platform"
+msgstr ""
+
+msgid "Population Reach Cumulative Trend"
+msgstr ""
+
+msgid "Population Reach Heatmap"
+msgstr ""
+
+msgid "Population Share"
+msgstr ""
+
+msgid "Population Size"
+msgstr ""
+
+msgid "Population Size:"
+msgstr ""
+
+msgid "Population Statistics & Analytics"
+msgstr ""
+
+#, python-format
+msgid ""
+"Population Username Type '%(pop_type)s' is incompatible with experiment "
+"platform 'forum'."
+msgstr ""
+
+#, python-format
+msgid ""
+"Population Username Type '%(pop_type)s' is incompatible with experiment "
+"platform 'microblogging'."
+msgstr ""
+
+msgid "Population and content pages used in this simulation."
+msgstr ""
+
+#, python-format
+msgid "Population file not found: %(population_file)s"
+msgstr ""
+
+#, python-format
+msgid "Population generation failed: %(error)s. No partial population was kept."
+msgstr ""
+
+msgid "Population is assigned to an experiment. Cannot delete."
+msgstr ""
+
+msgid "Population is fixed for an existing ad hoc client."
+msgstr ""
+
+#, python-format
+msgid ""
+"Population name '%(new_population_name)s' already exists. Please choose a"
+" different name."
+msgstr ""
+
+msgid "Population name is required"
+msgstr ""
+
+msgid "Population name is required."
+msgstr ""
+
+msgid "Population name, description, and configuration settings."
+msgstr ""
+
+msgid "Population not found"
+msgstr ""
+
+msgid "Population not found."
+msgstr ""
+
+msgid "Population size must be a valid integer."
+msgstr ""
+
+msgid "Population size must be between 10 and 100"
+msgstr ""
+
+msgid "Population size must be greater than zero."
+msgstr ""
+
+#, python-format
+msgid "Population with ID %(pop_id)s not found."
+msgstr ""
+
+#, python-format
+msgid "Population with name '%(merged_name)s' already exists."
+msgstr ""
+
+msgid "Population:"
+msgstr ""
+
+msgid "Populations"
+msgstr ""
+
+msgid "Populations where this agent is currently deployed."
+msgstr ""
+
+msgid "Port"
+msgstr ""
+
+msgid "Port must be between 1 and 65535"
+msgstr ""
+
+msgid "Port:"
+msgstr ""
+
+#, python-format
+msgid "Port: %(port)s"
+msgstr ""
+
+msgid "Portuguese"
+msgstr ""
+
+msgid "Positive"
+msgstr ""
+
+msgid "Positive / neutral / negative score"
+msgstr ""
+
+msgid "Positive Posts"
+msgstr ""
+
+msgid "Positive, neutral, and negative photo counts by day."
+msgstr ""
+
+msgid "Positive, neutral, and negative post counts by day."
+msgstr ""
+
+msgid "Post"
+msgstr ""
+
+msgid "Post ID"
+msgstr ""
+
+msgid "Post author name"
+msgstr ""
+
+msgid "Post date & time"
+msgstr ""
+
+msgid "Post media placeholder"
+msgstr ""
+
+msgid "Post new content"
+msgstr ""
+
+msgid "Post not found"
+msgstr ""
+
+msgid "PostDoc Researcher"
+msgstr ""
+
+msgid "Posts"
+msgstr ""
+
+msgid "Posts about the topics you are interested in, newest first."
+msgstr ""
+
+msgid "Posts about your topics of interest, newest first, then the most reacted."
+msgstr ""
+
+msgid ""
+"Posts are scored by your topics of interest and by how close the author's"
+" opinion is to yours. Your interests adapt to what you like, share and "
+"comment, so over time the feed can narrow to like-minded content."
+msgstr ""
+
+msgid ""
+"Posts associated with this community, sorted with the same feed modes as "
+"/rfeed."
+msgstr ""
+
+msgid "Posts from other users in random order, regardless of you or the posts."
+msgstr ""
+
+msgid "Posts from other users, the most reacted first."
+msgstr ""
+
+msgid ""
+"Posts from users who share your interests, newest first, completed with "
+"the newest posts from everybody."
+msgstr ""
+
+msgid "Posts liked by users who reacted to the same posts as you, newest first."
+msgstr ""
+
+msgid "Posts per page"
+msgstr ""
+
+msgid "Posts ranked by how many of your topics of interest they cover."
+msgstr ""
+
+msgid ""
+"Posts ranked by how well they match your topics of interest, with a bonus"
+" for popular ones."
+msgstr ""
+
+msgid ""
+"Posts reacted to by the people who reacted to the same posts as you, "
+"newest first."
+msgstr ""
+
+msgid ""
+"Posts reacted to by users with your same political leaning, completed "
+"with the newest posts from everybody."
+msgstr ""
+
+msgid ""
+"Posts written by users with your same political leaning, completed with "
+"the newest posts from everybody."
+msgstr ""
+
+msgid "Powerlaw Cluster"
+msgstr ""
+
+msgid "Preferential Attachment"
+msgstr ""
+
+#, python-format
+msgid "Preparing archive for %(count)s experiment(s) in background..."
+msgstr ""
+
+msgid "Preparing experiment archive in background..."
+msgstr ""
+
+msgid ""
+"Prevents data loss during log rotation by periodically reading logs from "
+"active experiments."
+msgstr ""
+
+msgid "Previous"
+msgstr ""
+
+msgid "Previous Page"
+msgstr ""
+
+msgid "Previous image"
+msgstr ""
+
+msgid "Primary"
+msgstr ""
+
+msgid "Principal Investigator"
+msgstr ""
+
+msgid "Private chat"
+msgstr ""
+
+msgid "Private chats with followed agents"
+msgstr ""
+
+msgid "Private chats with simulation agents"
+msgstr ""
+
+msgid "Private:"
+msgstr ""
+
+msgid "Pro:"
+msgstr ""
+
+msgid "Probability Daily Follow"
+msgstr ""
+
+msgid "Probability Daily Follow:"
+msgstr ""
+
+msgid "Probability Follow/Unfollow Back"
+msgstr ""
+
+msgid "Probability Secondary Follow"
+msgstr ""
+
+msgid "Probability Secondary Follow:"
+msgstr ""
+
+msgid "Probability parameter"
+msgstr ""
+
+msgid ""
+"Probability that an agent is asked if he would like to follow the author "
+"of content he interacted with"
+msgstr ""
+
+#, python-format
+msgid ""
+"Probability that an agent transitions from one archetype to another (each"
+" row must sum to 100%%)."
+msgstr ""
+
+msgid ""
+"Probability that, during a given simulation day, an active agent is asked"
+" if he wants to connect with a peer"
+msgstr ""
+
+msgid "Process Watchdog"
+msgstr ""
+
+msgid "Process Watchdog:"
+msgstr ""
+
+msgid "Profanity"
+msgstr ""
+
+msgid "Profession"
+msgstr ""
+
+msgid "Profession Categories"
+msgstr ""
+
+msgid "Profession not found."
+msgstr ""
+
+msgid "Professional and ideological identity traits."
+msgstr ""
+
+msgid "Professions"
+msgstr ""
+
+msgid "Profile"
+msgstr ""
+
+msgid "Profile & Attribute Homophily"
+msgstr ""
+
+msgid "Profile Header"
+msgstr ""
+
+msgid "Profile Name"
+msgstr ""
+
+msgid "Profile Picture"
+msgstr ""
+
+msgid "Profile Picture URL"
+msgstr ""
+
+msgid "Profile Settings"
+msgstr ""
+
+msgid "Profile activity filters"
+msgstr ""
+
+msgid "Profile picture"
+msgstr ""
+
+msgid "Profile-Based User Similarity"
+msgstr ""
+
+msgid "Profiles and pages matching your search."
+msgstr ""
+
+msgid "Profiles vs. Advanced Roleplay"
+msgstr ""
+
+msgid "Progress"
+msgstr ""
+
+msgid "Prompt Max Chars"
+msgstr ""
+
+msgid "Prompt language"
+msgstr ""
+
+msgid "Prompts"
+msgstr ""
+
+msgid "Prompts (HPC)"
+msgstr ""
+
+msgid "Prompts Customization"
+msgstr ""
+
+#, python-format
+msgid ""
+"Prompts can access agent profile variables and can be customized using "
+"the syntax %(syntax)s."
+msgstr ""
+
+msgid "Prompts for deciding how to react to posts (like, comment, or ignore)."
+msgstr ""
+
+msgid "Prompts for deciding whether to follow users."
+msgstr ""
+
+msgid "Prompts for describing and commenting on images."
+msgstr ""
+
+msgid "Prompts for emotional reactions to discovered content."
+msgstr ""
+
+msgid "Prompts for engagement decisions after searching for content."
+msgstr ""
+
+msgid "Prompts for extracting topics, emotions, and opinions from content."
+msgstr ""
+
+msgid "Prompts for generating comments on posts."
+msgstr ""
+
+msgid "Prompts for generating original social media posts."
+msgstr ""
+
+msgid "Prompts for news pages to share articles."
+msgstr ""
+
+msgid "Prompts for resharing posts with commentary."
+msgstr ""
+
+msgid ""
+"Prompts in the selected language work only if the language model chosen "
+"for the simulation supports that language."
+msgstr ""
+
+msgid "Prompts loaded in the selected language."
+msgstr ""
+
+msgid "Prompts support template variables using curly braces:"
+msgstr ""
+
+msgid "Propaganda Agent"
+msgstr ""
+
+msgid "Propaganda Agents"
+msgstr ""
+
+msgid "Propaganda Interactions"
+msgstr ""
+
+msgid "Propaganda Target Drill-down"
+msgstr ""
+
+msgid ""
+"Propaganda agents are deployed, but no target interactions have been "
+"recorded for the selected topic up to the selected time."
+msgstr ""
+
+msgid "Provide a GitHub token before connecting."
+msgstr ""
+
+msgid ""
+"Provides instructions and evaluates results (e.g., identifying topics, "
+"emotions)"
+msgstr ""
+
+msgid "Provides specific instructions and input"
+msgstr ""
+
+msgid "Public profile attributes and appearance."
+msgstr ""
+
+msgid "Public profile attributes and recommendation preferences."
+msgstr ""
+
+msgid "Public:"
+msgstr ""
+
+msgid "Publish"
+msgstr ""
+
+msgid "Quick Reference Guide"
+msgstr ""
+
+msgid "RSS Feed"
+msgstr ""
+
+msgid "RSS Feed Limits"
+msgstr ""
+
+msgid "RSS Feeds"
+msgstr ""
+
+msgid ""
+"RSS and Reddit JSON feed sources are now stored in the dashboard database"
+" and can be reused across multiple forum experiments."
+msgstr ""
+
+msgid "RSS feed URL is required."
+msgstr ""
+
+msgid "RSS feed resource not found."
+msgstr ""
+
+msgid "RSS-derived posts emitted"
+msgstr ""
+
+msgid "Random"
+msgstr ""
+
+msgid "Random Network (Erdős-Rényi)"
+msgstr ""
+
+msgid "Range: 0-1, Default: 0"
+msgstr ""
+
+msgid "Range: 0-1, Default: 0.25"
+msgstr ""
+
+msgid "Range: 0-1, Default: 0.5"
+msgstr ""
+
+msgid "Ranking mode"
+msgstr ""
+
+msgid "Rate Limit (seconds)"
+msgstr ""
+
+msgid "Rate Limiting"
+msgstr ""
+
+msgid "Rate interest and opinion for each topic."
+msgstr ""
+
+msgid "Rate parameter"
+msgstr ""
+
+msgid "Ray Agents Batch Size"
+msgstr ""
+
+msgid "Reaction weight"
+msgstr ""
+
+msgid "Reactions"
+msgstr ""
+
+msgid "Read"
+msgstr ""
+
+msgid "Read Article"
+msgstr ""
+
+msgid "Read a content"
+msgstr ""
+
+msgid "Reads"
+msgstr ""
+
+msgid "Real-time (one wall-clock hour per round)"
+msgstr ""
+
+msgid "Real-time analysis of server API calls from _server.log file."
+msgstr ""
+
+msgid "Real-time preview of hourly activity distribution."
+msgstr ""
+
+msgid "Recency decay (β)"
+msgstr ""
+
+msgid "Recency first"
+msgstr ""
+
+msgid "Recency horizon for semantic search candidates."
+msgstr ""
+
+msgid "Recent MoP Interactions"
+msgstr ""
+
+msgid "Recent Moderator Interventions"
+msgstr ""
+
+msgid "Recent News"
+msgstr ""
+
+msgid "Recent Propaganda Interactions"
+msgstr ""
+
+msgid "Recent SA Interactions"
+msgstr ""
+
+msgid "Recognition"
+msgstr ""
+
+msgid "Recommendation Appearances"
+msgstr ""
+
+msgid "Recommendation Count"
+msgstr ""
+
+msgid "Recommendation Distribution for Selected Author"
+msgstr ""
+
+msgid "Recommendation Events"
+msgstr ""
+
+msgid "Recommendation Limit"
+msgstr ""
+
+msgid "Recommendation Preferences"
+msgstr ""
+
+msgid "Recommendation System Evolution"
+msgstr ""
+
+msgid "Recommendation Systems"
+msgstr ""
+
+msgid "Recommendation analytics not available"
+msgstr ""
+
+msgid "Recommendation exposure and reach"
+msgstr ""
+
+msgid "Recommendation-tracking tables not available"
+msgstr ""
+
+msgid "Recommendations"
+msgstr ""
+
+msgid "Recommended Posts"
+msgstr ""
+
+msgid "Recommended Slots"
+msgstr ""
+
+msgid "Recommended Use"
+msgstr ""
+
+#, python-format
+msgid "Recommended photos for %(username)s."
+msgstr ""
+
+msgid "Recommender info"
+msgstr ""
+
+msgid "Recsys Evolution"
+msgstr ""
+
+msgid "Recurring tags in this profile's activity."
+msgstr ""
+
+msgid "Reddit Pages to Fetch"
+msgstr ""
+
+msgid "Reddit Retrieval"
+msgstr ""
+
+msgid "Reddit could not be reached. Retry later."
+msgstr ""
+
+#, python-format
+msgid "Reddit returned HTTP %(code)s while loading r/%(subreddit)s. Retry later."
+msgstr ""
+
+#, python-format
+msgid "Reddit returned HTTP %(code)s."
+msgstr ""
+
+msgid "Reddit-like placeholders are enabled across the forum interface."
+msgstr ""
+
+msgid "Redis Configuration"
+msgstr ""
+
+msgid "Reflection Cadence"
+msgstr ""
+
+msgid "Reflection Cadence (rounds)"
+msgstr ""
+
+msgid "Reflection Max Items"
+msgstr ""
+
+msgid "Reflection Min Events"
+msgstr ""
+
+msgid "Reflection Trigger Sum"
+msgstr ""
+
+msgid "Refresh"
+msgstr ""
+
+msgid "Refresh Data"
+msgstr ""
+
+msgid "Refresh Memory"
+msgstr ""
+
+msgid "Refresh interval in seconds (5-300)"
+msgstr ""
+
+msgid ""
+"Register reusable subreddit-based image feeds for forum experiments, "
+"including interest tags used during image ingestion."
+msgstr ""
+
+msgid "Registered Users"
+msgstr ""
+
+msgid "Registration is not available at the moment."
+msgstr ""
+
+msgid "Related:"
+msgstr ""
+
+msgid "Remaining Time Forecast"
+msgstr ""
+
+msgid "Remaining slots:"
+msgstr ""
+
+msgid "Remember me"
+msgstr ""
+
+msgid "Remote"
+msgstr ""
+
+msgid "Remote Experiment"
+msgstr ""
+
+msgid "Remote Server"
+msgstr ""
+
+msgid "Remote host address is required for remote experiments."
+msgstr ""
+
+msgid "Remote port is required for remote experiments."
+msgstr ""
+
+msgid "Remove"
+msgstr ""
+
+msgid "Remove alternative value"
+msgstr ""
+
+msgid "Remove this comment"
+msgstr ""
+
+msgid "Remove this photo from the feed"
+msgstr ""
+
+msgid "Remove this post"
+msgstr ""
+
+msgid "Rename"
+msgstr ""
+
+msgid "Repeat Password"
+msgstr ""
+
+msgid ""
+"Replace the prompts of this experiment with the ones of the selected "
+"language? Changes you made to them will be lost."
+msgstr ""
+
+msgid "Replay Tutorial"
+msgstr ""
+
+msgid "Replies to your posts and comments."
+msgstr ""
+
+msgid "Reply"
+msgstr ""
+
+msgid "Reply Behavior Controls"
+msgstr ""
+
+msgid "Reply Cooldown (rounds)"
+msgstr ""
+
+msgid "Reply to posts and threads"
+msgstr ""
+
+msgid "Report"
+msgstr ""
+
+msgid "Report this comment"
+msgstr ""
+
+msgid "Report this post"
+msgstr ""
+
+msgid "Repository"
+msgstr ""
+
+msgid "Repost another user's content"
+msgstr ""
+
+msgid "Republican"
+msgstr ""
+
+msgid "Request Logs Analysis"
+msgstr ""
+
+msgid "Requested file is not ready for download."
+msgstr ""
+
+msgid "Requests"
+msgstr ""
+
+msgid ""
+"Requires an available Ollama embedding model. Leave disabled for the "
+"safest default setup."
+msgstr ""
+
+msgid "Research Associate"
+msgstr ""
+
+msgid "Researcher"
+msgstr ""
+
+msgid "Researcher Users"
+msgstr ""
+
+msgid "Reset HPC Experiment"
+msgstr ""
+
+msgid ""
+"Reset experiment to initial state: clear logs, delete DB, restore "
+"population backups, and reset dashboard counters."
+msgstr ""
+
+msgid "Reset is available only for HPC experiments."
+msgstr ""
+
+msgid "Reset to default values"
+msgstr ""
+
+msgid "Resilient/Confident"
+msgstr ""
+
+msgid "Restart required"
+msgstr ""
+
+#, python-format
+msgid "Restart required: %(label)s routes are loaded at startup."
+msgstr ""
+
+msgid "Resume Client"
+msgstr ""
+
+msgid "Reusable Forum Image Resources"
+msgstr ""
+
+msgid "Reusable Forum RSS Resources"
+msgstr ""
+
+msgid "Reusable Image Resources"
+msgstr ""
+
+msgid "Reusable RSS Resources"
+msgstr ""
+
+msgid "Reusable RSS feeds"
+msgstr ""
+
+msgid "Reusable forum RSS feed deleted."
+msgstr ""
+
+msgid "Reusable forum RSS feed saved."
+msgstr ""
+
+msgid "Reusable forum image feed deleted."
+msgstr ""
+
+msgid "Reusable forum image feed saved."
+msgstr ""
+
+msgid "Reusable image source"
+msgstr ""
+
+msgid "Reusable subreddit resources"
+msgstr ""
+
+msgid "Reuse Actors"
+msgstr ""
+
+msgid ""
+"Reuse the standard scheduling and runtime controls, without forum-"
+"specific memory, recsys, network, or archetype configuration."
+msgstr ""
+
+msgid "Reverse chronological photos from your social contacts."
+msgstr ""
+
+msgid "Revoke Group Visibility"
+msgstr ""
+
+msgid "Revoke Visibility"
+msgstr ""
+
+#, python-format
+msgid "Revoked access for %(count)s researcher(s) from experiment '%(name)s'."
+msgstr ""
+
+#, python-format
+msgid ""
+"Revoked group '%(group)s' visibility from selected researchers (%(count)s"
+" assignment(s) removed)."
+msgstr ""
+
+msgid "Reward Distribution"
+msgstr ""
+
+msgid "Rewiring probability (p)"
+msgstr ""
+
+msgid "Role"
+msgstr ""
+
+msgid "Role can be: admin, researcher, teacher, user, or student"
+msgstr ""
+
+msgid "Role must be: user or student (you can only create participants)"
+msgstr ""
+
+msgid "Roleplay"
+msgstr ""
+
+msgid "Roleplay (Comment & Share)"
+msgstr ""
+
+msgid "Roleplay (base)"
+msgstr ""
+
+msgid "Roleplay (simple)"
+msgstr ""
+
+msgid "Romanian"
+msgstr ""
+
+msgid "Rounds to wait before replying to the same user again"
+msgstr ""
+
+msgid "Route args:"
+msgstr ""
+
+msgid "Run"
+msgstr ""
+
+msgid "Run Client"
+msgstr ""
+
+msgid "Run Experiment"
+msgstr ""
+
+msgid "Run ID (optional)"
+msgstr ""
+
+msgid "Run Now"
+msgstr ""
+
+msgid "Run until stopped"
+msgstr ""
+
+msgid "Running"
+msgstr ""
+
+msgid "Runs large-scale simulations in a distributed way on HPC clusters."
+msgstr ""
+
+msgid "Runs the agents of a forum simulation (client side)."
+msgstr ""
+
+msgid "Runs the agents of a microblogging simulation (client side)."
+msgstr ""
+
+msgid "Runtime compatibility"
+msgstr ""
+
+msgid "Russian"
+msgstr ""
+
+msgid "SA Interactions"
+msgstr ""
+
+msgid "SHOW"
+msgstr ""
+
+msgid "Same as the experiment"
+msgstr ""
+
+msgid "Sample Images"
+msgstr ""
+
+msgid "Sample Size:"
+msgstr ""
+
+msgid "Saudi"
+msgstr ""
+
+msgid "Save"
+msgstr ""
+
+msgid "Save & Enter My Feed"
+msgstr ""
+
+msgid "Save Actions Likelihood"
+msgstr ""
+
+msgid "Save Archetypes"
+msgstr ""
+
+msgid "Save Changes"
+msgstr ""
+
+msgid "Save Configuration"
+msgstr ""
+
+msgid "Save Embedding Settings"
+msgstr ""
+
+msgid "Save Feed Limits"
+msgstr ""
+
+msgid "Save Forum Feed Assignment"
+msgstr ""
+
+msgid "Save Image Feed Assignment"
+msgstr ""
+
+msgid "Save Memory"
+msgstr ""
+
+msgid "Save Simulation Parameters"
+msgstr ""
+
+msgid "Save Stress / Reward Settings"
+msgstr ""
+
+msgid "Save Topic Preferences"
+msgstr ""
+
+msgid "Save Topics"
+msgstr ""
+
+msgid "Save annotations"
+msgstr ""
+
+msgid "Save feed & profile"
+msgstr ""
+
+msgid "Save interactions"
+msgstr ""
+
+msgid "Save language"
+msgstr ""
+
+msgid "Saved"
+msgstr ""
+
+#, python-format
+msgid "Saved Image Resources (%(n)s)"
+msgstr ""
+
+#, python-format
+msgid "Saved RSS Resources (%(n)s)"
+msgstr ""
+
+msgid ""
+"Saving here validates the feed URL immediately and stores the canonical "
+"metadata returned by the feed source."
+msgstr ""
+
+msgid ""
+"Saving here verifies the subreddit feed can be parsed before it becomes "
+"available to experiments."
+msgstr ""
+
+#, python-format
+msgid ""
+"Saving this page still writes the standard %(file)s experiment file, so "
+"forum execution keeps the same contract."
+msgstr ""
+
+#, python-format
+msgid ""
+"Saving this page still writes the standard %(file)s experiment file, so "
+"the existing forum runtime remains unchanged."
+msgstr ""
+
+msgid "Scale Free (Barabási-Albert)"
+msgstr ""
+
+msgid "Schedule already running"
+msgstr ""
+
+msgid "Schedule not running"
+msgstr ""
+
+msgid "Schedule stopped"
+msgstr ""
+
+#, python-format
+msgid "Schema migration failed: %(error)s"
+msgstr ""
+
+msgid "Scientific Papers"
+msgstr ""
+
+msgid "Score only"
+msgstr ""
+
+msgid "Scores for the five major personality dimensions (0.0 - 1.0 scale)."
+msgstr ""
+
+msgid "Scores, trends, high-toxicity content"
+msgstr ""
+
+msgid "Search"
+msgstr ""
+
+msgid "Search K"
+msgstr ""
+
+msgid "Search Max Chars"
+msgstr ""
+
+msgid "Search Time Window (rounds)"
+msgstr ""
+
+msgid "Search Top-K"
+msgstr ""
+
+msgid "Search Window (rounds)"
+msgstr ""
+
+msgid "Search a Hashtag"
+msgstr ""
+
+msgid "Search agents"
+msgstr ""
+
+msgid "Search by username"
+msgstr ""
+
+msgid "Search experiments"
+msgstr ""
+
+msgid "Search experiments…"
+msgstr ""
+
+msgid "Search filters"
+msgstr ""
+
+msgid "Search followed agents"
+msgstr ""
+
+msgid "Search photos, people, hashtags"
+msgstr ""
+
+msgid "Search posts, users, links..."
+msgstr ""
+
+msgid "Search profiles, hashtags, and topics"
+msgstr ""
+
+msgid "Search profiles, hashtags, topics"
+msgstr ""
+
+msgid "Search results"
+msgstr ""
+
+msgid "Search results for"
+msgstr ""
+
+msgid "Search simulations and modules…"
+msgstr ""
+
+msgid "Search topics and photo tags."
+msgstr ""
+
+msgid "Search..."
+msgstr ""
+
+msgid "Security"
+msgstr ""
+
+msgid "See all"
+msgstr ""
+
+msgid "See all photos."
+msgstr ""
+
+msgid "See full discussion thread"
+msgstr ""
+
+msgid "Select Active Hours (0-23):"
+msgstr ""
+
+msgid "Select All"
+msgstr ""
+
+msgid "Select Client:"
+msgstr ""
+
+msgid "Select Experiment"
+msgstr ""
+
+msgid "Select Image Feeds"
+msgstr ""
+
+msgid "Select RSS Feeds"
+msgstr ""
+
+msgid "Select Users"
+msgstr ""
+
+msgid "Select a conversation"
+msgstr ""
+
+msgid "Select a conversation from the left panel to view and continue the chat."
+msgstr ""
+
+msgid "Select a group first..."
+msgstr ""
+
+msgid "Select a group..."
+msgstr ""
+
+msgid "Select a model"
+msgstr ""
+
+msgid "Select a model to enable the Create button"
+msgstr ""
+
+msgid "Select a network model..."
+msgstr ""
+
+msgid ""
+"Select a photo from your computer, preview it instantly, then add a "
+"description and text before sharing it to the experiment feed."
+msgstr ""
+
+msgid "Select a population compatible with the chosen ad hoc agent type."
+msgstr ""
+
+msgid "Select a source group first..."
+msgstr ""
+
+msgid "Select a valid ad hoc agent type."
+msgstr ""
+
+msgid "Select a valid group."
+msgstr ""
+
+msgid "Select a valid population."
+msgstr ""
+
+msgid "Select an Experiment to Join"
+msgstr ""
+
+msgid ""
+"Select an account to inspect its evolving one-hop ego follow network. "
+"Nodes keep their layout once they appear; the selected account stays "
+"highlighted."
+msgstr ""
+
+msgid ""
+"Select an account to inspect its evolving one-hop ego mention network. "
+"Nodes keep their layout once they appear; the selected account stays "
+"highlighted."
+msgstr ""
+
+msgid "Select an active experiment to continue."
+msgstr ""
+
+msgid "Select an agent type to load compatible populations."
+msgstr ""
+
+msgid ""
+"Select an author to inspect how many unique agents received "
+"recommendations for their posts over time."
+msgstr ""
+
+msgid ""
+"Select an author to inspect the reach and recommendation distribution of "
+"their posts."
+msgstr ""
+
+msgid "Select an embedding model"
+msgstr ""
+
+msgid "Select an embedding model before saving the configuration."
+msgstr ""
+
+msgid "Select an experiment above to inspect its configuration matrix."
+msgstr ""
+
+msgid ""
+"Select an experiment type, group and name to view and edit its frontend "
+"settings."
+msgstr ""
+
+#, python-format
+msgid "Select at least one %(label)s."
+msgstr ""
+
+msgid "Select at least one interest for the image feed."
+msgstr ""
+
+msgid "Select at least one researcher user."
+msgstr ""
+
+msgid "Select community"
+msgstr ""
+
+msgid ""
+"Select diverse values for education, political leanings, and toxicity "
+"levels to create a varied and realistic population. Click to select "
+"multiple options."
+msgstr ""
+
+msgid "Select experiment..."
+msgstr ""
+
+msgid "Select from computer"
+msgstr ""
+
+msgid "Select group..."
+msgstr ""
+
+msgid "Select one of the installed ad hoc agent families."
+msgstr ""
+
+msgid "Select photos"
+msgstr ""
+
+msgid ""
+"Select profession categories to be used during agent generation. By "
+"default, all categories are available."
+msgstr ""
+
+msgid "Select source experiment..."
+msgstr ""
+
+msgid "Select source group..."
+msgstr ""
+
+msgid "Select the Ollama model for agent content generation."
+msgstr ""
+
+msgid "Select the agent population to use"
+msgstr ""
+
+msgid ""
+"Select the recommendation algorithms for content and friendship "
+"suggestions that will influence agent interactions."
+msgstr ""
+
+msgid "Select when this agent can publish its fixed HELLO WORLD post."
+msgstr ""
+
+msgid ""
+"Select when this agent will be active during the day. The default "
+"\"Always On\" profile keeps the agent active 24/7."
+msgstr ""
+
+msgid ""
+"Select when this page will be active for posting content. The default "
+"\"Always On\" profile keeps the page active 24/7."
+msgstr ""
+
+msgid ""
+"Select which reusable RSS resources should be assigned to this forum "
+"experiment. Feed validation and creation now live in the shared forum "
+"resource workspace."
+msgstr ""
+
+msgid ""
+"Select which reusable subreddit image feeds should be assigned to this "
+"forum experiment. Validation and creation now live in the shared forum "
+"image resource workspace."
+msgstr ""
+
+msgid "Select..."
+msgstr ""
+
+msgid "Selected"
+msgstr ""
+
+msgid "Selected Agent"
+msgstr ""
+
+msgid "Selected Author"
+msgstr ""
+
+msgid "Selected Author Recommended Posts"
+msgstr ""
+
+msgid "Selected Experiment"
+msgstr ""
+
+msgid "Selected Hashtag Summary"
+msgstr ""
+
+msgid "Selected Hashtags"
+msgstr ""
+
+msgid "Selected Populations to Merge"
+msgstr ""
+
+msgid "Selected Target"
+msgstr ""
+
+msgid "Selected Target Opinion Trend"
+msgstr ""
+
+msgid "Selected Target Toxicity Trend"
+msgstr ""
+
+msgid "Selected Target Trend"
+msgstr ""
+
+msgid "Selected Topic Summary"
+msgstr ""
+
+msgid "Selected Topics"
+msgstr ""
+
+msgid "Selected User"
+msgstr ""
+
+msgid "Selected image preview"
+msgstr ""
+
+msgid ""
+"Selected populations have incompatible platform types and cannot be "
+"merged."
+msgstr ""
+
+msgid "Selected profile picture"
+msgstr ""
+
+msgid "Selected story preview"
+msgstr ""
+
+#, python-format
+msgid "Self-hosted LLM Server (%(backend)s)"
+msgstr ""
+
+msgid "Self-registration"
+msgstr ""
+
+msgid "Semantic Retrieval"
+msgstr ""
+
+msgid "Send"
+msgstr ""
+
+msgid "Senior Researcher"
+msgstr ""
+
+msgid "Sensitive/Nervous"
+msgstr ""
+
+msgid "Sentiment"
+msgstr ""
+
+msgid "Sentiment Distribution"
+msgstr ""
+
+msgid "Sentiment Evolution"
+msgstr ""
+
+msgid "Sentiment Mix Over Time"
+msgstr ""
+
+msgid "Server & Analysis Controls"
+msgstr ""
+
+msgid "Server Address"
+msgstr ""
+
+msgid "Server Compute Time"
+msgstr ""
+
+msgid "Server Controls"
+msgstr ""
+
+msgid "Server Logs Analysis"
+msgstr ""
+
+msgid "Server Settings"
+msgstr ""
+
+msgid "Server Trends Analysis"
+msgstr ""
+
+msgid ""
+"Server log metrics reset and re-parsed. Client metrics unchanged. Server "
+"plots updated."
+msgstr ""
+
+msgid ""
+"Server log metrics reset. Client metrics unchanged. Server plots will "
+"update on next refresh."
+msgstr ""
+
+msgid ""
+"Server metrics reset and re-parsed. Client metrics reset but not re-"
+"parsed yet. Plots will fully update on next refresh."
+msgstr ""
+
+msgid "Server settings updated successfully"
+msgstr ""
+
+msgid "Server, Clients, and Analytics"
+msgstr ""
+
+msgid "Services & monitoring"
+msgstr ""
+
+msgid "Set LLM"
+msgstr ""
+
+msgid "Set Recommenders"
+msgstr ""
+
+msgid "Set Synthetic Network"
+msgstr ""
+
+msgid ""
+"Set relative probabilities (0-10) for each action type. Higher values "
+"mean more frequent actions. Use 0 to disable an action."
+msgstr ""
+
+msgid "Settings"
+msgstr ""
+
+msgid "Severe Toxicity"
+msgstr ""
+
+msgid "Sexually Explicit"
+msgstr ""
+
+msgid "Share"
+msgstr ""
+
+msgid "Share / repost"
+msgstr ""
+
+msgid "Share Entire Group"
+msgstr ""
+
+msgid "Share Experiments"
+msgstr ""
+
+msgid "Share Image"
+msgstr ""
+
+msgid "Share Link"
+msgstr ""
+
+msgid "Share News from a Page"
+msgstr ""
+
+msgid "Share RSS / Feed Link"
+msgstr ""
+
+msgid "Share Single Experiment"
+msgstr ""
+
+msgid "Share and comment an Image"
+msgstr ""
+
+msgid "Share of nodes contained in the largest weakly connected component by day."
+msgstr ""
+
+msgid "Share weight"
+msgstr ""
+
+msgid "Shared contacts between you and this profile."
+msgstr ""
+
+msgid "Shared from"
+msgstr ""
+
+msgid "Shared from:"
+msgstr ""
+
+#, python-format
+msgid ""
+"Shared image resources can still be created from a subreddit name, "
+"%(name)s, or a Reddit subreddit URL such as %(url)s."
+msgstr ""
+
+msgid "Shared post"
+msgstr ""
+
+msgid "Shares"
+msgstr ""
+
+msgid "Show Advanced Parameters"
+msgstr ""
+
+msgid "Show Tutorial"
+msgstr ""
+
+msgid ""
+"Show a box next to the feed with live charts of the participant's own "
+"annotations (sentiment, toxicity, emotions, topics)"
+msgstr ""
+
+msgid ""
+"Show a box next to the feed with the participant's content recommender "
+"system and a plain-language explanation of how it works"
+msgstr ""
+
+msgid "Show less"
+msgstr ""
+
+msgid "Show or hide every annotation type at once"
+msgstr ""
+
+msgid "Show password"
+msgstr ""
+
+msgid "Show the \"Day X - HH:00\" timestamp below each post and comment"
+msgstr ""
+
+msgid "Show the \"Suggested Friends\" box next to the feed"
+msgstr ""
+
+msgid "Show the \"Trending Hashtags\" box in the side column"
+msgstr ""
+
+msgid "Show the interest / opinion sliders in the Edit Profile page"
+msgstr ""
+
+msgid "Show the profile-setup wizard to users on their first login"
+msgstr ""
+
+#, python-format
+msgid ""
+"Showing %(photos)s photos, %(users)s people and %(hashtags)s hashtags for"
+" \"%(query)s\"."
+msgstr ""
+
+#, python-format
+msgid "Showing %(start)s-%(end)s of %(total)s"
+msgstr ""
+
+msgid "Sign Up"
+msgstr ""
+
+msgid "Sign in to continue to your experiments."
+msgstr ""
+
+msgid "Sign-up page"
+msgstr ""
+
+msgid "Silent Majorities"
+msgstr ""
+
+msgid ""
+"Simplified details for a custom population type that does not expose the "
+"full synthetic-population analytics model."
+msgstr ""
+
+msgid "Simulated (run as fast as possible)"
+msgstr ""
+
+msgid "Simulation"
+msgstr ""
+
+msgid "Simulation Clients"
+msgstr ""
+
+msgid "Simulation Configuration"
+msgstr ""
+
+msgid "Simulation Days"
+msgstr ""
+
+msgid "Simulation Length (days)"
+msgstr ""
+
+msgid "Simulation Length:"
+msgstr ""
+
+msgid "Simulation Parameters"
+msgstr ""
+
+msgid "Simulation Runtime Stack"
+msgstr ""
+
+msgid "Simulation Time Trend"
+msgstr ""
+
+msgid "Simulation Topics"
+msgstr ""
+
+msgid "Simulation length and population dynamics."
+msgstr ""
+
+msgid "Simulation length must be between 1 and 30 days"
+msgstr ""
+
+msgid ""
+"Simulation runtime for photo-sharing experiments, with an Instagram-like "
+"platform."
+msgstr ""
+
+msgid "Simulation started successfully!"
+msgstr ""
+
+msgid "Simulation time context"
+msgstr ""
+
+msgid "Simulation:"
+msgstr ""
+
+#, python-format
+msgid "Simulation: %(name)s"
+msgstr ""
+
+msgid "Simulations"
+msgstr ""
+
+msgid "Site"
+msgstr ""
+
+msgid "Skeptical, fact-checks, brief responses"
+msgstr ""
+
+msgid "Skip"
+msgstr ""
+
+msgid "Skip Tutorial"
+msgstr ""
+
+msgid "Sliding Window Days"
+msgstr ""
+
+msgid "Slovak"
+msgstr ""
+
+msgid "Slovenian"
+msgstr ""
+
+msgid "Slower"
+msgstr ""
+
+msgid "Small World (Watts-Strogatz)"
+msgstr ""
+
+msgid "Social Attributes"
+msgstr ""
+
+msgid "Social Corruption Rate"
+msgstr ""
+
+msgid "Social Decay (lambda)"
+msgstr ""
+
+msgid "Social Interactions"
+msgstr ""
+
+msgid "Social Network Structure"
+msgstr ""
+
+msgid "Social Network Structure (Optional)"
+msgstr ""
+
+msgid "Social Resummarize Every (events)"
+msgstr ""
+
+msgid "Social Timeline"
+msgstr ""
+
+msgid "Social attributes"
+msgstr ""
+
+msgid "Solitary/Reserved"
+msgstr ""
+
+msgid "Something went wrong on our end."
+msgstr ""
+
+msgid "Something went wrong?"
+msgstr ""
+
+msgid "Source"
+msgstr ""
+
+msgid "Source Experiment"
+msgstr ""
+
+msgid "Source Group"
+msgstr ""
+
+msgid "Source experiment not found."
+msgstr ""
+
+msgid "South African"
+msgstr ""
+
+msgid "South Korean"
+msgstr ""
+
+msgid "Spanish"
+msgstr ""
+
+msgid ""
+"Specific prompts for different agent action types (post, comment, share, "
+"etc.)."
+msgstr ""
+
+#, python-format
+msgid ""
+"Specify the percentage of agents interested in each topic. Default is "
+"100%% for all topics."
+msgstr ""
+
+msgid ""
+"Specifying the agent pre-prompt overrides the other configuration "
+"variables."
+msgstr ""
+
+msgid "Spoken Language"
+msgstr ""
+
+msgid "Spoken Languages"
+msgstr ""
+
+msgid "Standard agents can only be assigned to standard populations."
+msgstr ""
+
+msgid "Standard:"
+msgstr ""
+
+msgid "Start"
+msgstr ""
+
+msgid "Start Day"
+msgstr ""
+
+msgid "Start JupyterLab"
+msgstr ""
+
+msgid "Start Ollama"
+msgstr ""
+
+msgid "Start Session"
+msgstr ""
+
+msgid "Start an interview session to load persona details."
+msgstr ""
+
+#, python-format
+msgid "Start or stop the server from %(b)s"
+msgstr ""
+
+msgid "Start the experiment and run the clients to begin your simulation."
+msgstr ""
+
+msgid "Start the experiment server before running ad hoc clients."
+msgstr ""
+
+#, python-format
+msgid "Started %(started_count)s experiments in group '%(name)s'"
+msgstr ""
+
+msgid "State"
+msgstr ""
+
+msgid "Status"
+msgstr ""
+
+msgid "Step 1 of 7"
+msgstr ""
+
+msgid "Step 1 of X"
+msgstr ""
+
+msgid "Stochastic Block Model"
+msgstr ""
+
+msgid "Stop"
+msgstr ""
+
+msgid "Stop Experiment"
+msgstr ""
+
+msgid "Stop JupyterLab"
+msgstr ""
+
+#, python-format
+msgid ""
+"Stop active %(lower)s experiments before modifying %(label)s: "
+"%(names)s%(extra)s."
+msgstr ""
+
+#, python-format
+msgid ""
+"Stop the active experiments that use this plugin before changing it: "
+"%(names)s."
+msgstr ""
+
+msgid "Stop the experiment before clearing logs"
+msgstr ""
+
+msgid "Stop the experiment before clearing logs."
+msgstr ""
+
+msgid "Stop the experiment before deleting it"
+msgstr ""
+
+msgid "Stop the experiment before deleting it."
+msgstr ""
+
+msgid "Stop the experiment before renaming it."
+msgstr ""
+
+msgid "Stopped / Scheduled"
+msgstr ""
+
+msgid "Stories"
+msgstr ""
+
+#, python-format
+msgid "Story Visibility %%"
+msgstr ""
+
+msgid "Story details"
+msgstr ""
+
+msgid "Stress"
+msgstr ""
+
+msgid "Stress / Reward"
+msgstr ""
+
+msgid "Stress / Reward Evolution"
+msgstr ""
+
+msgid "Stress / Reward Settings"
+msgstr ""
+
+msgid "Stress Attacker"
+msgstr ""
+
+msgid "Stress Attacker Target Drill-down"
+msgstr ""
+
+msgid ""
+"Stress Attacker agents are deployed, but no target interactions have been"
+" recorded up to the selected time."
+msgstr ""
+
+msgid "Stress Attacker requires stress/reward to be enabled for this experiment."
+msgstr ""
+
+msgid ""
+"Stress Attacker requires stress/reward to remain enabled for this "
+"experiment."
+msgstr ""
+
+msgid "Stress Distribution"
+msgstr ""
+
+msgid "Stress/Reward"
+msgstr ""
+
+msgid "Stress/Reward Churn"
+msgstr ""
+
+msgid "Stress/reward analytics not available"
+msgstr ""
+
+msgid ""
+"Stress/reward settings are available only for microblogging, forum, and "
+"HPC experiments."
+msgstr ""
+
+msgid "Stress/reward settings updated."
+msgstr ""
+
+msgid "Structural Metrics Over Time"
+msgstr ""
+
+msgid "Structure, density, components"
+msgstr ""
+
+msgid "Structured Features"
+msgstr ""
+
+msgid "Structured Models"
+msgstr ""
+
+msgid "Stubborn"
+msgstr ""
+
+msgid "Student"
+msgstr ""
+
+msgid "Subforum"
+msgstr ""
+
+msgid "Submit Logs"
+msgstr ""
+
+msgid "Subreddit"
+msgstr ""
+
+msgid "Subreddit validation is done before assignment"
+msgstr ""
+
+msgid "Subset of population to activate initially. Leave empty to use all agents."
+msgstr ""
+
+msgid "Success probability (0-1)"
+msgstr ""
+
+#, python-format
+msgid "Successfully assigned %(assigned)s user(s) to experiment '%(exp_name)s'."
+msgstr ""
+
+#, python-format
+msgid "Successfully connected to %(host)s:%(port)s"
+msgstr ""
+
+#, python-format
+msgid "Successfully created %(created)s user(s)."
+msgstr ""
+
+#, python-format
+msgid ""
+"Successfully created merged population '%(merged_name)s' with "
+"%(unique_agent_ids)s agents and %(unique_page_ids)s pages."
+msgstr ""
+
+#, python-format
+msgid "Successfully deleted %(deleted_count)s orphaned agent(s)."
+msgstr ""
+
+#, python-format
+msgid "Successfully updated opinions for %(updated_count)s agent-topic pairs."
+msgstr ""
+
+msgid "Suggested Contacts"
+msgstr ""
+
+msgid "Suggested Friends"
+msgstr ""
+
+msgid "Suggested Pages"
+msgstr ""
+
+msgid "Suggested connection"
+msgstr ""
+
+msgid "Suggested contact"
+msgstr ""
+
+msgid "Suggested contacts are loading."
+msgstr ""
+
+msgid "Suggested page"
+msgstr ""
+
+msgid "Suggestions for you"
+msgstr ""
+
+msgid "Suite modules"
+msgstr ""
+
+#, python-format
+msgid ""
+"Supported sources include standard RSS or Atom feeds and Reddit JSON "
+"listing feeds such as %(url)s."
+msgstr ""
+
+msgid "Supporting Institutions"
+msgstr ""
+
+msgid "Supporting Projects"
+msgstr ""
+
+msgid "Swedish"
+msgstr ""
+
+msgid "Swiss"
+msgstr ""
+
+msgid "Switch photo user"
+msgstr ""
+
+msgid "Switch user"
+msgstr ""
+
+msgid ""
+"Switched off: they accept no new participants. Turn them on again at any "
+"time."
+msgstr ""
+
+msgid "Synthetic Agents"
+msgstr ""
+
+msgid "Synthetic Network:"
+msgstr ""
+
+msgid "Synthetic Populations"
+msgstr ""
+
+msgid ""
+"Synthetic agents define user behavior, while content pages define the "
+"information sources and institutional actors that shape exposure."
+msgstr ""
+
+msgid "System Settings"
+msgstr ""
+
+msgid "System Settings:"
+msgstr ""
+
+msgid "System Template"
+msgstr ""
+
+msgid "System Template:"
+msgstr ""
+
+msgid "System Updates"
+msgstr ""
+
+msgid "System Updates:"
+msgstr ""
+
+msgid ""
+"System settings, the LLM server and the vocabularies used to describe "
+"agents and content."
+msgstr ""
+
+msgid "Tab of the photo feed shown when a participant opens it"
+msgstr ""
+
+msgid "Tags"
+msgstr ""
+
+msgid "Taiwanese"
+msgstr ""
+
+msgid "Target"
+msgstr ""
+
+msgid "Target Group"
+msgstr ""
+
+msgid "Target Opinion"
+msgstr ""
+
+msgid "Target Population"
+msgstr ""
+
+msgid "Target Reward"
+msgstr ""
+
+msgid "Target Stress"
+msgstr ""
+
+msgid ""
+"Target aggregate stress/reward by day, with SA interaction volume shown "
+"on the secondary axis."
+msgstr ""
+
+msgid "Teacher (training modules only)"
+msgstr ""
+
+#, python-format
+msgid "Telemetry %(value)s successfully."
+msgstr ""
+
+msgid "Telemetry Data"
+msgstr ""
+
+msgid "Telemetry Information"
+msgstr ""
+
+msgid "Telemetry Settings"
+msgstr ""
+
+msgid ""
+"Telemetry is disabled. Please enable it in your user settings to submit "
+"logs."
+msgstr ""
+
+msgid "Telemetry:"
+msgstr ""
+
+msgid "Temperature"
+msgstr ""
+
+msgid "Temporal Controls"
+msgstr ""
+
+msgid "Temporal Granularity"
+msgstr ""
+
+msgid "Tensor Parallel Size"
+msgstr ""
+
+msgid "Terminal output of the latest operations on this plugin, newest first."
+msgstr ""
+
+msgid "Test Connection"
+msgstr ""
+
+msgid "Text"
+msgstr ""
+
+msgid "Text (optional)"
+msgstr ""
+
+msgid "Thai"
+msgstr ""
+
+#, python-format
+msgid "The %(label)s percentages must sum to 100%%."
+msgstr ""
+
+msgid "The Agent Memory plugin is not installed."
+msgstr ""
+
+msgid "The Agent:"
+msgstr ""
+
+msgid "The Article summary."
+msgstr ""
+
+msgid "The Article title."
+msgstr ""
+
+msgid "The Broadcaster"
+msgstr ""
+
+msgid "The Broadcaster:"
+msgstr ""
+
+msgid "The Explorer"
+msgstr ""
+
+msgid "The Explorer:"
+msgstr ""
+
+msgid "The Handler:"
+msgstr ""
+
+msgid ""
+"The LLM section appears only for agent types that declare LLM "
+"requirements in their plugin registry."
+msgstr ""
+
+msgid ""
+"The Reddit delay should stay conservative enough to avoid throttling when"
+" multiple feeds are refreshed in sequence."
+msgstr ""
+
+msgid "The Validator"
+msgstr ""
+
+msgid "The Validator:"
+msgstr ""
+
+msgid "The Website name."
+msgstr ""
+
+msgid "The Website political leaning (if available)."
+msgstr ""
+
+msgid "The ad hoc agent type is no longer available."
+msgstr ""
+
+msgid "The agent age."
+msgstr ""
+
+msgid "The agent education level."
+msgstr ""
+
+msgid "The agent expected toxicity."
+msgstr ""
+
+msgid "The agent gender."
+msgstr ""
+
+msgid "The agent name."
+msgstr ""
+
+msgid "The agent nationality."
+msgstr ""
+
+msgid "The agent political leaning."
+msgstr ""
+
+msgid "The agent profession."
+msgstr ""
+
+msgid ""
+"The agent profile is a set of predefined characteristics that can be used"
+" to specify its behavior (through LLM pre-prompts). The advanced roleplay"
+" allows to specify a custom pre-prompt that overrides the other "
+"configuration variables."
+msgstr ""
+
+msgid "The agent spoken language."
+msgstr ""
+
+msgid "The algorithm that picks the posts in your feed"
+msgstr ""
+
+msgid ""
+"The center column controls execution and the lower sections expose logs "
+"and diagnostics for both the server and active clients."
+msgstr ""
+
+msgid ""
+"The changes are saved directly to your experiment profile without leaving"
+" this page."
+msgstr ""
+
+#, python-format
+msgid "The current experiment database does not contain %(lower)s tables."
+msgstr ""
+
+msgid "The current experiment database does not contain hashtag-evolution tables."
+msgstr ""
+
+msgid "The current experiment database does not contain opinion evolution tables."
+msgstr ""
+
+msgid ""
+"The current experiment database does not contain recommendation-tracking "
+"tables."
+msgstr ""
+
+msgid ""
+"The current experiment database does not contain stress/reward evolution "
+"tables."
+msgstr ""
+
+msgid ""
+"The current experiment database does not contain supported network-"
+"analysis tables."
+msgstr ""
+
+msgid "The current experiment database does not contain topic-evolution tables."
+msgstr ""
+
+msgid ""
+"The dashboard database stores the canonical subreddit definitions, "
+"including their mapped interests."
+msgstr ""
+
+msgid ""
+"The experiment already exists. Please check the experiment name and try "
+"again."
+msgstr ""
+
+msgid "The experiment needs to be activated first."
+msgstr ""
+
+msgid "The feelings surfacing most in the feed"
+msgstr ""
+
+msgid "The image textual description."
+msgstr ""
+
+msgid ""
+"The language of the menus and labels of this site. Posts and comments are"
+" never translated."
+msgstr ""
+
+msgid ""
+"The matrix loader searched the experiment folder and its subfolders but "
+"did not find a readable server or client JSON config."
+msgstr ""
+
+msgid ""
+"The network can be either synthetically generated or custom-made and "
+"uploaded. To create a custom network file download the agent name list "
+"using"
+msgstr ""
+
+msgid "The page you are looking for does not exist."
+msgstr ""
+
+#, python-format
+msgid "The password must have at least %(n)s characters."
+msgstr ""
+
+msgid "The post text."
+msgstr ""
+
+msgid "The provided passwords do not match."
+msgstr ""
+
+msgid "The referenced ad hoc agent type is no longer available."
+msgstr ""
+
+msgid "The request could not be understood by the server."
+msgstr ""
+
+msgid "The requested page could not be found."
+msgstr ""
+
+msgid "The same subreddit definition can be reused safely"
+msgstr ""
+
+msgid ""
+"The selected ad hoc agent type requires opinion dynamics to be enabled "
+"for this experiment."
+msgstr ""
+
+msgid ""
+"The selected ad hoc agent type requires opinion dynamics to remain "
+"enabled for this experiment."
+msgstr ""
+
+msgid ""
+"The selected distribution controls how attention budgets are sampled "
+"between min and max."
+msgstr ""
+
+msgid ""
+"The selected image will be copied into the experiment media folder before"
+" publishing."
+msgstr ""
+
+msgid "The selected population does not contain any agents."
+msgstr ""
+
+msgid ""
+"The selected population has no usable agents or is missing age data. "
+"Rebuild or re-upload the population before creating a client."
+msgstr ""
+
+msgid "The server could not understand the request due to invalid syntax."
+msgstr ""
+
+msgid "The server encountered an unexpected condition."
+msgstr ""
+
+msgid "The three agent archetypes have distinct characteristics:"
+msgstr ""
+
+msgid "The topic already exists."
+msgstr ""
+
+msgid "The training area is not available. Please contact an administrator."
+msgstr ""
+
+msgid ""
+"The updated forum feed assignment has been saved. Running clients will "
+"use the new feeds after they are restarted."
+msgstr ""
+
+msgid ""
+"The updated image feed assignment has been saved. Running clients will "
+"use the new feeds after they are restarted."
+msgstr ""
+
+msgid ""
+"The username must have 3 to 15 characters: letters, digits, dots, dashes "
+"or underscores."
+msgstr ""
+
+msgid "Thematic Characterization"
+msgstr ""
+
+msgid "Themes gaining momentum right now"
+msgstr ""
+
+msgid ""
+"There was an error loading the experiment files. Please check the files "
+"and try again."
+msgstr ""
+
+#, python-format
+msgid "There was an error loading the experiment files: %(error)s"
+msgstr ""
+
+#, python-format
+msgid ""
+"These feeds live in the dashboard DB and can be assigned to any forum "
+"experiment from %(page)s."
+msgstr ""
+
+msgid "These options are mutually exclusive."
+msgstr ""
+
+msgid ""
+"These remain experiment-specific. Provide one URL per line for sources "
+"that should be pinned directly into this forum simulation."
+msgstr ""
+
+msgid ""
+"These settings control how much external content is ingested during a "
+"forum simulation. Higher values increase variety but also startup and "
+"refresh costs."
+msgstr ""
+
+#, python-format
+msgid ""
+"These subreddit definitions are stored in the dashboard DB and can be "
+"assigned from %(page)s."
+msgstr ""
+
+msgid ""
+"These values define how much each reaction, comment, share, or moderation"
+" event shifts stress and recognition."
+msgstr ""
+
+msgid "Theta (Backfire Strength)"
+msgstr ""
+
+msgid ""
+"This ad hoc client requires an LLM model because at least one managed "
+"agent uses an LLM-backed behavior."
+msgstr ""
+
+msgid "This experiment has at least one client set to run until manually stopped"
+msgstr ""
+
+msgid ""
+"This experiment has no clients yet, so client log analysis is unavailable"
+" until a client is created."
+msgstr ""
+
+msgid ""
+"This is an experimental simulator that guarantees higher simulation "
+"scalability at the cost of more fine-grained configuration and setting "
+"complexity."
+msgstr ""
+
+msgid "This is not a remote experiment"
+msgstr ""
+
+msgid ""
+"This is the algorithm that decides which posts appear in your feed and in"
+" what order."
+msgstr ""
+
+msgid "This module is not available for this experiment type."
+msgstr ""
+
+msgid "This page is only available for forum experiments."
+msgstr ""
+
+msgid ""
+"This page is only for HPC experiments. Redirecting to standard prompts "
+"page."
+msgstr ""
+
+msgid "This page represents a forum community page."
+msgstr ""
+
+msgid ""
+"This plugin comes from the community plugin registry and is not "
+"maintained by the YSocial team. Its code runs on this computer when it is"
+" installed or updated: review the repository first."
+msgstr ""
+
+msgid ""
+"This profile does not have visible incoming follow ties in the current "
+"simulation state."
+msgstr ""
+
+msgid ""
+"This profile does not have visible outgoing follow ties in the current "
+"simulation state."
+msgstr ""
+
+msgid "This update is only for HPC experiments."
+msgstr ""
+
+msgid ""
+"This will compress and send your experiment's log files and configuration"
+" to help us diagnose issues and improve the platform."
+msgstr ""
+
+msgid "Thread Context Length"
+msgstr ""
+
+msgid "Thread Context Max Chars"
+msgstr ""
+
+msgid "Thread Context:"
+msgstr ""
+
+msgid "Thread Corruption Rate"
+msgstr ""
+
+msgid "Thread Decay (lambda)"
+msgstr ""
+
+msgid "Thread Focus"
+msgstr ""
+
+msgid "Thread Resummarize Every (events)"
+msgstr ""
+
+msgid "Thread not found."
+msgstr ""
+
+msgid "Threat"
+msgstr ""
+
+msgid "Thumbs-down reaction"
+msgstr ""
+
+msgid "Thumbs-up reaction"
+msgstr ""
+
+msgid "Tier A Max Chars"
+msgstr ""
+
+msgid "Tier B Max Chars"
+msgstr ""
+
+msgid "Tier C Max Chars"
+msgstr ""
+
+msgid "Tier C Uncertainty"
+msgstr ""
+
+msgid "Time Period"
+msgstr ""
+
+msgid "Timeline"
+msgstr ""
+
+msgid "Timeline Follower Ratio"
+msgstr ""
+
+msgid "Timeline Ratio:"
+msgstr ""
+
+msgid "Timezone used by real-time mode (experiment-wide across all clients)."
+msgstr ""
+
+msgid "Title"
+msgstr ""
+
+msgid "Title*"
+msgstr ""
+
+#, python-format
+msgid ""
+"To analyze your simulation data use %(link)s, A Python library to "
+"streamline the analysis of YSocial generated data"
+msgstr ""
+
+msgid "Toggle chat panel"
+msgstr ""
+
+msgid "Toggle menu"
+msgstr ""
+
+msgid "Toggle sidebar"
+msgstr ""
+
+msgid "Toggle the generated value between false and true"
+msgstr ""
+
+msgid "Token stored for this session"
+msgstr ""
+
+msgid "Top"
+msgstr ""
+
+msgid "Top Emotion"
+msgstr ""
+
+msgid "Top Emotions"
+msgstr ""
+
+msgid "Top Emotions Over Time"
+msgstr ""
+
+msgid "Topic"
+msgstr ""
+
+msgid "Topic Evolution"
+msgstr ""
+
+msgid "Topic Focus"
+msgstr ""
+
+msgid "Topic Footprint at Selected Time"
+msgstr ""
+
+msgid "Topic Interest Distribution"
+msgstr ""
+
+msgid "Topic Lifecycle Over Time"
+msgstr ""
+
+msgid "Topic Volume Cumulative Trend"
+msgstr ""
+
+msgid "Topic Volume Heatmap"
+msgstr ""
+
+msgid "Topic classification chips"
+msgstr ""
+
+msgid "Topic evolution not available"
+msgstr ""
+
+msgid "Topic guidance"
+msgstr ""
+
+msgid "Topic not found."
+msgstr ""
+
+msgid "Topic-evolution tables not available"
+msgstr ""
+
+msgid ""
+"Topic-specific target opinion over time, with MoP interaction volume "
+"shown on the secondary axis."
+msgstr ""
+
+msgid ""
+"Topic-specific target opinion over time, with propaganda interaction "
+"volume shown on the secondary axis."
+msgstr ""
+
+msgid "Topics"
+msgstr ""
+
+msgid "Topics & Opinions"
+msgstr ""
+
+msgid "Topics & Opinions box in profile"
+msgstr ""
+
+msgid "Topics (select to visualize)"
+msgstr ""
+
+msgid "Topics and toxicity levels of generated content."
+msgstr ""
+
+msgid "Topics covered and population assignments."
+msgstr ""
+
+msgid "Topics to Visualize"
+msgstr ""
+
+msgid "Total Max Chars"
+msgstr ""
+
+msgid "Total Memory Chars"
+msgstr ""
+
+msgid "Total Opinions"
+msgstr ""
+
+msgid "Total Recommendations"
+msgstr ""
+
+msgid "Total Recs"
+msgstr ""
+
+msgid "Total Volume"
+msgstr ""
+
+msgid "Total configurations:"
+msgstr ""
+
+msgid "Total emotion tags versus distinct annotated photos per day."
+msgstr ""
+
+msgid "Total emotion tags versus distinct annotated posts per day."
+msgstr ""
+
+#, python-format
+msgid "Total must equal 100%%"
+msgstr ""
+
+msgid "Total simulation time so far:"
+msgstr ""
+
+#, python-format
+msgid "Totals must equal 100%%."
+msgstr ""
+
+msgid "Toxic content warning chip"
+msgstr ""
+
+msgid "Toxicity"
+msgstr ""
+
+#, python-format
+msgid "Toxicity %%"
+msgstr ""
+
+msgid "Toxicity Category Trends"
+msgstr ""
+
+msgid "Toxicity Distribution"
+msgstr ""
+
+msgid "Toxicity Evolution"
+msgstr ""
+
+msgid "Toxicity Level"
+msgstr ""
+
+msgid "Toxicity Levels"
+msgstr ""
+
+msgid "Toxicity level instruction"
+msgstr ""
+
+msgid "Toxicity level not found."
+msgstr ""
+
+msgid "Trace excerpt:"
+msgstr ""
+
+msgid ""
+"Track hashtag diffusion, emergence, and disappearance through content and"
+" interaction activity."
+msgstr ""
+
+msgid "Track how the follow network evolves across the experiment."
+msgstr ""
+
+msgid "Track how the mention network evolves across the experiment."
+msgstr ""
+
+msgid "Track how toxic content annotations accumulate over time."
+msgstr ""
+
+msgid ""
+"Track topic diffusion, emergence, and disappearance through content and "
+"interaction activity."
+msgstr ""
+
+msgid "Track which emotions are being annotated in experiment content."
+msgstr ""
+
+msgid "Tracked Agents"
+msgstr ""
+
+msgid "Tracked Aggregates"
+msgstr ""
+
+msgid "Training"
+msgstr ""
+
+msgid "Training module"
+msgstr ""
+
+msgid ""
+"Training modules available for your participants. Turn a module on or off"
+" from here."
+msgstr ""
+
+#, python-format
+msgid "Transition Probabilities (%%)"
+msgstr ""
+
+msgid "Transitivity"
+msgstr ""
+
+msgid "Travels"
+msgstr ""
+
+msgid "Trend analysis of server compute time and simulation time progression."
+msgstr ""
+
+msgid "Trending Emotions"
+msgstr ""
+
+msgid "Trending Hashtags"
+msgstr ""
+
+msgid "Trending Topics"
+msgstr ""
+
+msgid "Triangle probability (p)"
+msgstr ""
+
+msgid "True"
+msgstr ""
+
+msgid "Turkish"
+msgstr ""
+
+msgid "Type"
+msgstr ""
+
+msgid "Type a topic and press Enter"
+msgstr ""
+
+msgid "Type a value and press Enter"
+msgstr ""
+
+#, python-format
+msgid "Type id: %(id)s"
+msgstr ""
+
+msgid "Type of Network"
+msgstr ""
+
+msgid "URL"
+msgstr ""
+
+msgid "URL is required"
+msgstr ""
+
+msgid "URL:"
+msgstr ""
+
+msgid "Ukrainian"
+msgstr ""
+
+#, python-format
+msgid "Unable to confirm stop for HPC client '%(name)s'."
+msgstr ""
+
+msgid ""
+"Unable to confirm stop for one or more HPC clients. Experiment remains "
+"active."
+msgstr ""
+
+msgid "Unable to prepare the experiment user."
+msgstr ""
+
+msgid "Unable to prepare your experiment profile."
+msgstr ""
+
+msgid "Unable to resolve current admin user."
+msgstr ""
+
+msgid "Unable to resolve current user."
+msgstr ""
+
+#, python-format
+msgid "Unable to start Detoxify download: %(error)s"
+msgstr ""
+
+msgid "Unavailable"
+msgstr ""
+
+#, python-format
+msgid "Unexpected error pausing ad hoc client: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Unexpected error starting ad hoc client: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Unexpected error starting client: %(error)s"
+msgstr ""
+
+msgid "Unexpected error."
+msgstr ""
+
+msgid "Unfollow"
+msgstr ""
+
+msgid "Uniform"
+msgstr ""
+
+msgid "Unique Agents"
+msgstr ""
+
+msgid "Unique Agents Reached by Recommendations"
+msgstr ""
+
+msgid "Unique Authors Recommended to Selected User"
+msgstr ""
+
+msgid "Unique Recipients"
+msgstr ""
+
+msgid "Unique identifier for this client"
+msgstr ""
+
+msgid "University of Belgrade"
+msgstr ""
+
+msgid "University of Pisa"
+msgstr ""
+
+msgid "University of Trento"
+msgstr ""
+
+msgid "Université Lyon 1"
+msgstr ""
+
+msgid "Unknown external runtime repository."
+msgstr ""
+
+msgid "Unknown module"
+msgstr ""
+
+msgid "Unknown platform type for this experiment."
+msgstr ""
+
+msgid "Unknown suite"
+msgstr ""
+
+msgid "Unlimited when off"
+msgstr ""
+
+msgid ""
+"Unlock a feature and provide alternative values. Turn Cartesian mode on "
+"to combine all enabled features; leave it off to generate independent "
+"variants one feature at a time."
+msgstr ""
+
+msgid "Unsupported GitHub session action."
+msgstr ""
+
+msgid "Unsupported language."
+msgstr ""
+
+msgid "Unsupported report type."
+msgstr ""
+
+msgid "Unsupported runtime action."
+msgstr ""
+
+msgid "Update"
+msgstr ""
+
+#, python-format
+msgid ""
+"Update %(b)s first. Until then, server control actions and client "
+"workflows stay locked."
+msgstr ""
+
+msgid "Update Activity Rates"
+msgstr ""
+
+msgid "Update Available"
+msgstr ""
+
+msgid "Update Configuration"
+msgstr ""
+
+msgid "Update Email"
+msgstr ""
+
+msgid ""
+"Update Experiment Configuration before changing ad hoc client execution "
+"state."
+msgstr ""
+
+msgid "Update Experiment Configuration before changing client execution state."
+msgstr ""
+
+msgid ""
+"Update Experiment Configuration before changing server or client "
+"execution state."
+msgstr ""
+
+msgid ""
+"Update Experiment Configuration before creating clients for this "
+"experiment."
+msgstr ""
+
+msgid ""
+"Update Experiment Configuration before modifying clients for this "
+"experiment."
+msgstr ""
+
+msgid ""
+"Update Experiment Configuration before running ad hoc clients for this "
+"experiment."
+msgstr ""
+
+msgid ""
+"Update Experiment Configuration before running clients for this "
+"experiment."
+msgstr ""
+
+msgid ""
+"Update Experiment Configuration before starting the server or creating "
+"clients."
+msgstr ""
+
+msgid "Update HPC Prompts"
+msgstr ""
+
+msgid "Update LLM Configuration"
+msgstr ""
+
+msgid "Update Password"
+msgstr ""
+
+#, python-format
+msgid "Update available: %(tag)s"
+msgstr ""
+
+msgid "Update configuration first"
+msgstr ""
+
+msgid ""
+"Update profile details, interface language, and account security from one"
+" place."
+msgstr ""
+
+msgid ""
+"Update profile details, recommendations, and account security from one "
+"place."
+msgstr ""
+
+msgid "Update route does not match the experiment modality."
+msgstr ""
+
+#, python-format
+msgid "Update runtime annotations and memory in %(b)s"
+msgstr ""
+
+#, python-format
+msgid "Update runtime annotations in %(b)s"
+msgstr ""
+
+msgid "Update your interest and opinion for each topic."
+msgstr ""
+
+msgid "Update your password while keeping the rest of the profile unchanged."
+msgstr ""
+
+#, python-format
+msgid "Updated %(label)s to branch %(branch)s."
+msgstr ""
+
+#, python-format
+msgid "Updated database values, but failed to sync client config: %(error)s"
+msgstr ""
+
+#, python-format
+msgid ""
+"Updated database values, but failed to sync population config "
+"'%(basename)s': %(error)s"
+msgstr ""
+
+msgid "Updates & privacy"
+msgstr ""
+
+msgid "Updating ad hoc client..."
+msgstr ""
+
+msgid "Upload"
+msgstr ""
+
+msgid "Upload Collection"
+msgstr ""
+
+msgid "Upload Custom Network"
+msgstr ""
+
+msgid "Upload Experiment"
+msgstr ""
+
+msgid "Upload Network"
+msgstr ""
+
+msgid "Upload a CSV edge list file"
+msgstr ""
+
+msgid "Upload a CSV file with edges (one per line: source,target)."
+msgstr ""
+
+msgid "Upload photo"
+msgstr ""
+
+msgid "Upper Bound"
+msgstr ""
+
+msgid "Upper bound must be in [0, 1]"
+msgstr ""
+
+msgid "Usage"
+msgstr ""
+
+#, python-format
+msgid "Use %(b)s to download or remove the experiment"
+msgstr ""
+
+#, python-format
+msgid "Use %(requests)s and %(clients)s to inspect runtime behavior"
+msgstr ""
+
+msgid "Use Local Diffusion"
+msgstr ""
+
+#, python-format
+msgid ""
+"Use a subreddit name, %(name)s, or a Reddit subreddit URL such as "
+"%(url)s. The parse step previews sample images before saving."
+msgstr ""
+
+msgid "Use selected header image"
+msgstr ""
+
+msgid "Use selected profile picture"
+msgstr ""
+
+#, python-format
+msgid ""
+"Use the Ollama base address, for example %(url)s. The admin page will "
+"query the compatible models endpoint automatically."
+msgstr ""
+
+msgid "Use the dedicated HPC client creation route for this experiment."
+msgstr ""
+
+msgid "Use the dedicated forum client creation route for this experiment."
+msgstr ""
+
+msgid "Use the dedicated standard client creation route for this experiment."
+msgstr ""
+
+msgid ""
+"Use the dedicated standard or forum client creation route for this "
+"experiment."
+msgstr ""
+
+msgid ""
+"Use the left column to inspect metadata, update topics, toggle "
+"annotations, and open advanced configuration such as prompts and "
+"stress/reward settings."
+msgstr ""
+
+msgid ""
+"Use the left column to inspect metadata, update topics, toggle "
+"annotations, and open advanced configuration such as prompts, embeddings,"
+" and stress/reward settings."
+msgstr ""
+
+msgid ""
+"Use the left column to inspect metadata, update topics, toggle "
+"annotations, and open forum-specific configuration such as prompts, "
+"feeds, limits, and stress/reward settings."
+msgstr ""
+
+msgid ""
+"Use the left column to inspect metadata, update topics, toggle "
+"annotations, and open forum-specific configuration such as prompts, "
+"feeds, limits, embeddings, and stress/reward settings."
+msgstr ""
+
+msgid ""
+"Use this page as the single entry point for building the entities that "
+"populate and influence your simulations."
+msgstr ""
+
+msgid "Used for real-time wall-hour mapping (IANA timezone)."
+msgstr ""
+
+msgid "Used only when semantic retrieval is enabled."
+msgstr ""
+
+msgid "User"
+msgstr ""
+
+#, python-format
+msgid "User '%(username)s' is already assigned to experiment '%(exp_name)s'."
+msgstr ""
+
+#, python-format
+msgid "User '%(username)s' successfully added to experiment '%(exp_name)s'."
+msgstr ""
+
+msgid "User ID and Experiment ID are required."
+msgstr ""
+
+msgid "User Interactions"
+msgstr ""
+
+msgid "User Profile"
+msgstr ""
+
+msgid "User Template"
+msgstr ""
+
+msgid "User Template:"
+msgstr ""
+
+msgid "User Types"
+msgstr ""
+
+msgid "User deleted successfully."
+msgstr ""
+
+msgid "User not found"
+msgstr ""
+
+msgid "User not found in experiment"
+msgstr ""
+
+msgid "User not found in experiment database."
+msgstr ""
+
+msgid "User not found in experiment. Please contact administrator."
+msgstr ""
+
+msgid "User not found."
+msgstr ""
+
+msgid "Username"
+msgstr ""
+
+msgid "Users"
+msgstr ""
+
+msgid "Users Data"
+msgstr ""
+
+msgid "Users with access to participate in this experiment."
+msgstr ""
+
+msgid "VLM Model"
+msgstr ""
+
+msgid "Validate"
+msgstr ""
+
+msgid "Validate And Save Image Resource"
+msgstr ""
+
+msgid "Validate And Save RSS Resource"
+msgstr ""
+
+msgid ""
+"Validate a source once, save it to the dashboard database, and reuse it "
+"across multiple forum experiments."
+msgstr ""
+
+msgid ""
+"Validate and register reusable RSS sources for forum simulations. Once "
+"saved, the same feed can be assigned across multiple experiments."
+msgstr ""
+
+msgid ""
+"Validate subreddit-based image feeds once, store them centrally, and "
+"assign them to any forum experiment as needed."
+msgstr ""
+
+#, python-format
+msgid "Validated %(label)s."
+msgstr ""
+
+msgid "Validation"
+msgstr ""
+
+msgid "Validation happens once in the dashboard workspace"
+msgstr ""
+
+msgid "Validator"
+msgstr ""
+
+#, python-format
+msgid "Validator %%"
+msgstr ""
+
+msgid "Validator Persona"
+msgstr ""
+
+#, python-format
+msgid ""
+"Validator transition probabilities must sum to 100%% (current sum: "
+"%(val_sum)s%%)"
+msgstr ""
+
+msgid "Validator:"
+msgstr ""
+
+msgid "Vanished Hashtags"
+msgstr ""
+
+msgid "Vanished Topics"
+msgstr ""
+
+msgid "Vanishing Hashtags"
+msgstr ""
+
+msgid "Vanishing Topics"
+msgstr ""
+
+msgid "Version"
+msgstr ""
+
+msgid "Video call"
+msgstr ""
+
+msgid "View Client Details"
+msgstr ""
+
+msgid "View Experiment Details"
+msgstr ""
+
+msgid "View Release"
+msgstr ""
+
+msgid "View all friends."
+msgstr ""
+
+msgid "Viewing as"
+msgstr ""
+
+msgid ""
+"Virtual entities that represent social media users in simulations. They "
+"can be configured with different demographic information, interests, and "
+"personality traits."
+msgstr ""
+
+msgid "Visibility assignment revoked."
+msgstr ""
+
+msgid "Visible Rows"
+msgstr ""
+
+msgid "Visible Tie"
+msgstr ""
+
+msgid "Vision GPU Memory Utilization"
+msgstr ""
+
+msgid "Vision Max Model Length"
+msgstr ""
+
+msgid "Vision Max Tokens"
+msgstr ""
+
+msgid "Vision Model"
+msgstr ""
+
+msgid "Vision Temperature"
+msgstr ""
+
+msgid ""
+"Visitors can create a participant account from the login page and join "
+"the selected, active simulations and training modules."
+msgstr ""
+
+msgid ""
+"Visual analysis of agent distribution across demographics, attributes, "
+"and behavior patterns."
+msgstr ""
+
+msgid "Visualization Mode"
+msgstr ""
+
+msgid "Warning: Client config file not found. Extension applied to database only."
+msgstr ""
+
+msgid ""
+"Warning: Config file missing 'simulation' section. Extension applied to "
+"database only."
+msgstr ""
+
+msgid ""
+"Warning: Could not find population record. Extension applied to database "
+"only."
+msgstr ""
+
+msgid "Warning: Could not reset log metrics. Plots may not show extended data."
+msgstr ""
+
+#, python-format
+msgid ""
+"Warning: Could not reset log metrics: %(error)s. Plots may not show "
+"extended data."
+msgstr ""
+
+#, python-format
+msgid ""
+"Warning: Could not update client config file: %(error)s. Extension "
+"applied to database only."
+msgstr ""
+
+msgid "Warning: Error reading population file. Segment values may be limited."
+msgstr ""
+
+#, python-format
+msgid "Warning: Failed to parse client config %(item)s: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Warning: Failed to read client config %(item)s: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Warning: Failed to update port in client config %(item)s: %(error)s"
+msgstr ""
+
+#, python-format
+msgid "Warning: Failed to write updated client config %(item)s: %(error)s"
+msgstr ""
+
+#, python-format
+msgid ""
+"Warning: Metrics reset but re-parsing failed: %(error)s. Plots will "
+"update on next refresh."
+msgstr ""
+
+msgid "Warning: Population file not found. Segment values may be limited."
+msgstr ""
+
+#, python-format
+msgid "Watchdog %(value)s"
+msgstr ""
+
+#, python-format
+msgid ""
+"Watchdog check complete: %(processes_checked)s checked, "
+"%(processes_restarted)s restarted"
+msgstr ""
+
+#, python-format
+msgid "Watchdog interval set to %(interval_minutes)s minutes."
+msgstr ""
+
+msgid "Watches"
+msgstr ""
+
+msgid ""
+"We are a team of multidisciplinary researchers that share a common "
+"interest in the study of social networks and human behavior."
+msgstr ""
+
+msgid ""
+"We are always looking for new collaborations and opportunities to share "
+"our research. If you are interested in our work, feel free to contact us!"
+msgstr ""
+
+msgid "We're working to fix the issue. Please try again later."
+msgstr ""
+
+msgid "Website:"
+msgstr ""
+
+msgid "Weekly"
+msgstr ""
+
+msgid "Weight for comments / replies"
+msgstr ""
+
+msgid "Weight for likes / reactions"
+msgstr ""
+
+msgid "Weight for shares / reposts"
+msgstr ""
+
+#, python-format
+msgid "Welcome %(username)s!"
+msgstr ""
+
+msgid "Welcome back"
+msgstr ""
+
+msgid "Welcome to YSocial! 🎉"
+msgstr ""
+
+msgid "What are you drinking?"
+msgstr ""
+
+msgid "What are you eating?"
+msgstr ""
+
+msgid "What are you reading?"
+msgstr ""
+
+msgid "What are you watching?"
+msgstr ""
+
+msgid "What is a Client?"
+msgstr ""
+
+msgid "What is a Population?"
+msgstr ""
+
+msgid ""
+"What issue did you encounter? What were you trying to do when the error "
+"occurred?"
+msgstr ""
+
+msgid "What you assigned to posts and comments"
+msgstr ""
+
+msgid "What's Next?"
+msgstr ""
+
+msgid "When"
+msgstr ""
+
+#, python-format
+msgid "When %(b)s is enabled, Detoxify is used automatically."
+msgstr ""
+
+msgid ""
+"When disabled, all agents can perform all actions without archetype "
+"restrictions."
+msgstr ""
+
+msgid ""
+"When disabled, all agents will be able to perform all actions without "
+"archetype restrictions."
+msgstr ""
+
+msgid ""
+"When enabled, agents interpretation can be downcasted from LLM to rule "
+"depending on the assigned archetype. This allows to scale the simulation "
+"while maintaining behavioral diversity."
+msgstr ""
+
+msgid "When enabled, memory can influence posting, commenting, and voting."
+msgstr ""
+
+msgid ""
+"When enabled, the client computes a churn probability from the latest "
+"aggregate stress and reward at activation time and may ask the server to "
+"mark the agent as left."
+msgstr ""
+
+msgid "Where are you going?"
+msgstr ""
+
+msgid "Where the Digital World comes to life."
+msgstr ""
+
+msgid "Where the digital world comes to life."
+msgstr ""
+
+msgid "Who are you with?"
+msgstr ""
+
+msgid "Wrapped exception:"
+msgstr ""
+
+msgid "Write a message..."
+msgstr ""
+
+msgid "Write a short bio about yourself..."
+msgstr ""
+
+msgid "Write a short description for the image..."
+msgstr ""
+
+msgid "Write a short title..."
+msgstr ""
+
+msgid "Write something about you..."
+msgstr ""
+
+msgid "Write the post text..."
+msgstr ""
+
+msgid "Y Social"
+msgstr ""
+
+msgid "Y Social | Dashboard"
+msgstr ""
+
+#, python-format
+msgid "Y Social | Error %(code)s"
+msgstr ""
+
+msgid "Y Social | Login"
+msgstr ""
+
+msgid "Y Social | Setup Your Profile"
+msgstr ""
+
+msgid "Y Social | Sign up"
+msgstr ""
+
+msgid "YServer running on external machine"
+msgstr ""
+
+msgid "YSocial"
+msgstr ""
+
+msgid "YSocial Logo"
+msgstr ""
+
+#, python-format
+msgid ""
+"YSocial collects anonymous usage data to improve the platform. This "
+"includes feature usage patterns and error reports, but %(never)s your "
+"experiment data, personal information, or sensitive content."
+msgstr ""
+
+msgid ""
+"YSocial has been developed thanks to the support of the following "
+"national and european projects"
+msgstr ""
+
+#, python-format
+msgid "YSocial is the result of a joint effort of %(institutions)s."
+msgstr ""
+
+msgid "YSocial simulates agent actions through a chat between two entities:"
+msgstr ""
+
+msgid "YSocial supports three types of users with different access levels:"
+msgstr ""
+
+msgid "YSocialTwin"
+msgstr ""
+
+msgid "Yes"
+msgstr ""
+
+msgid "You are not allowed to access this experiment."
+msgstr ""
+
+msgid "You are not allowed to start this experiment."
+msgstr ""
+
+msgid "You are not allowed to view this experiment."
+msgstr ""
+
+msgid "You are not assigned to any experiments. Please contact an administrator."
+msgstr ""
+
+#, python-format
+msgid "You can add to your population %(pages)s and %(agents)s."
+msgstr ""
+
+msgid ""
+"You can assign the generated experiments to an existing group or create a"
+" new one here."
+msgstr ""
+
+msgid "You can edit your profile later from the Settings menu."
+msgstr ""
+
+msgid "You can only modify your own telemetry settings."
+msgstr ""
+
+msgid "You can only revoke visibility for experiments you own."
+msgstr ""
+
+msgid "You can only share experiments you own."
+msgstr ""
+
+msgid "You cannot delete your own account."
+msgstr ""
+
+msgid "You do not have access to this experiment."
+msgstr ""
+
+msgid "You do not have permission to clear logs for this experiment."
+msgstr ""
+
+msgid ""
+"You do not have permission to create admin, researcher or teacher users. "
+"Only 'user' role is allowed."
+msgstr ""
+
+msgid "You do not have permission to delete this experiment."
+msgstr ""
+
+msgid "You do not have permission to manage this experiment."
+msgstr ""
+
+msgid "You do not have permission to perform this action."
+msgstr ""
+
+msgid "You do not have permission to rename this experiment."
+msgstr ""
+
+msgid "You do not have permission to reset this experiment."
+msgstr ""
+
+msgid "You do not have permission to stop this experiment."
+msgstr ""
+
+msgid "You do not have permission to update experiment topics."
+msgstr ""
+
+msgid "You do not have permission to update this experiment."
+msgstr ""
+
+msgid "You do not have permission to view this page."
+msgstr ""
+
+msgid "You do not have visibility on this plugin repository."
+msgstr ""
+
+msgid "You don't have permission to access this resource."
+msgstr ""
+
+msgid "You got the power!"
+msgstr ""
+
+#, python-format
+msgid "You have access to %(num)s active experiment"
+msgid_plural "You have access to %(num)s active experiments"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "You have not posted in any community yet."
+msgstr ""
+
+msgid "You joined the discussion"
+msgstr ""
+
+msgid "You posted on this topic"
+msgstr ""
+
+msgid "You've reached the end!"
+msgstr ""
+
+msgid "You've successfully created your first YSocial experiment!"
+msgstr ""
+
+msgid "Your Profile"
+msgstr ""
+
+msgid "Your YSocial installation is up to date."
+msgstr ""
+
+#, python-format
+msgid ""
+"Your account has been created, but you could not be added to: %(names)s. "
+"Please contact an administrator."
+msgstr ""
+
+msgid "Your account has been created. You can now sign in."
+msgstr ""
+
+msgid "Your annotations"
+msgstr ""
+
+msgid "Your bulk experiments archive is ready to download."
+msgstr ""
+
+msgid "Your experiment archive is ready to download."
+msgstr ""
+
+msgid "Your recommender system"
+msgstr ""
+
+msgid "ZIP File"
+msgstr ""
+
+msgid "Zipf"
+msgstr ""
+
+msgid ""
+"`Simulated` runs quickly; `Real-time` processes the current wall-clock "
+"hour."
+msgstr ""
+
+msgid "advanced population settings"
+msgstr ""
+
+msgid "agents"
+msgstr ""
+
+msgid "agents.recsys_type / agents.frecsys_type"
+msgstr ""
+
+#, python-format
+msgid "ahead %(ahead)s / behind %(behind)s"
+msgstr ""
+
+msgid "algorithms"
+msgstr ""
+
+msgid "and"
+msgstr ""
+
+msgid "anonymous"
+msgstr ""
+
+msgid "authenticated"
+msgstr ""
+
+msgid "auto-detect from logs"
+msgstr ""
+
+#, python-format
+msgid "branch %(name)s"
+msgstr ""
+
+msgid "branch archive"
+msgstr ""
+
+msgid "cancelled"
+msgstr ""
+
+#, python-format
+msgid "dependencies %(deps)s, validation %(validation)s"
+msgstr ""
+
+msgid "draft"
+msgstr ""
+
+msgid "e.g., 192.168.1.100 or example.com"
+msgstr ""
+
+msgid "e.g., Main Simulation"
+msgstr ""
+
+msgid "e.g., Morning Active"
+msgstr ""
+
+msgid "e.g., My First Experiment"
+msgstr ""
+
+msgid "e.g., My First Population"
+msgstr ""
+
+msgid "e.g., http://localhost:8000/v1"
+msgstr ""
+
+msgid "e.g., localhost:8000"
+msgstr ""
+
+msgid "experiment_id is required"
+msgstr ""
+
+msgid "experiments_per_group is required"
+msgstr ""
+
+msgid "failed"
+msgstr ""
+
+msgid "failure"
+msgstr ""
+
+msgid "follows a branch without git; updates replace local changes"
+msgstr ""
+
+msgid "follows a branch; an installed checkout is updated in place"
+msgstr ""
+
+msgid "full discussion thread"
+msgstr ""
+
+msgid "group_ids is required"
+msgstr ""
+
+msgid "http://127.0.0.1:11434"
+msgstr ""
+
+msgid "http://127.0.0.1:11434/v1"
+msgstr ""
+
+msgid ""
+"https://example.com/feed.xml or "
+"https://www.reddit.com/r/politics/new.json?limit=100"
+msgstr ""
+
+msgid "in context."
+msgstr ""
+
+msgid "llm_url parameter is required"
+msgstr ""
+
+msgid "local changes"
+msgstr ""
+
+msgid "main navigation"
+msgstr ""
+
+msgid "manifest invalid"
+msgstr ""
+
+msgid "manifest valid"
+msgstr ""
+
+msgid "memes or https://www.reddit.com/r/memes/"
+msgstr ""
+
+msgid "mentions"
+msgstr ""
+
+msgid "min"
+msgstr ""
+
+msgid "missing"
+msgstr ""
+
+msgid "multiple clients"
+msgstr ""
+
+msgid "never"
+msgstr ""
+
+msgid "none published"
+msgstr ""
+
+msgid "ok"
+msgstr ""
+
+msgid "or unlimited"
+msgstr ""
+
+msgid "prerelease"
+msgstr ""
+
+msgid "processing"
+msgstr ""
+
+msgid "published"
+msgstr ""
+
+#, python-format
+msgid "r/%(subreddit)s does not exist."
+msgstr ""
+
+#, python-format
+msgid "r/%(subreddit_input)s does not exist."
+msgstr ""
+
+msgid "ready"
+msgstr ""
+
+msgid "recommendation"
+msgstr ""
+
+msgid "release archive"
+msgstr ""
+
+msgid "replied to your comment"
+msgstr ""
+
+msgid "replied to your post"
+msgstr ""
+
+msgid "sec"
+msgstr ""
+
+msgid "server + client"
+msgstr ""
+
+msgid "settings"
+msgstr ""
+
+msgid "signals"
+msgstr ""
+
+msgid "success"
+msgstr ""
+
+msgid "symlink"
+msgstr ""
+
+msgid "to analyze simulation results"
+msgstr ""
+
+msgid "to compare simulation scenarios"
+msgstr ""
+
+msgid "today."
+msgstr ""
+
+msgid "unread"
+msgstr ""
+
+#, python-format
+msgid "update available: %(tag)s"
+msgstr ""
+
+msgid "uses"
+msgstr ""
+
+msgid "vLLM"
+msgstr ""
+
+msgid "vLLM server not running. Start manually:"
+msgstr ""
+
+msgid "y-not.social"
+msgstr ""
+
+msgid "ySights"
+msgstr ""
+
+msgid "— installed and updated independently"
+msgstr ""
+
+msgid "— select experiment —"
+msgstr ""
+
+msgid "— select group —"
+msgstr ""
+
+msgid "— select type —"
+msgstr ""
+
+msgid "ℹ️ A page can be added to multiple populations."
+msgstr ""
+
+msgid "ℹ️ An agent can be added to multiple populations."
+msgstr ""
+
+msgid "ℹ️ Enter a valid email address. Email must be unique across all users."
+msgstr ""
+
+msgid "ℹ️ Multiple topics can be associated with the same page."
+msgstr ""
+
+msgid "ℹ️ Password must be at least 8 characters long and include:"
+msgstr ""
+
+msgid ""
+"ℹ️ Populations are automatically assigned to experiments when creating a "
+"client."
+msgstr ""
+
+msgid "ℹ️ Update the LLM server and model for this user."
+msgstr ""
+
+msgid "← All plugins"
+msgstr ""
+
+msgid "← Back to feed"
+msgstr ""
+
+msgid "∞ Infinite"
+msgstr ""
+
+msgid "⚠ Requires LLM agents enabled"
+msgstr ""
+
+msgid "✔️ Create"
+msgstr ""
+
+msgid "✔️ Experiment with"
+msgstr ""
+
+msgid "✔️ Explore"
+msgstr ""
+
+msgid "✔️ Navigate the Experiment with an OSN like interface"
+msgstr ""
+
+msgid "✔️ Play with"
+msgstr ""
+
+msgid "✔️ Use"
+msgstr ""
+

@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>YSocial</title>
+<link rel="stylesheet" href="assets/login-scene.css">
+<link rel="stylesheet" href="launcher.css">
+</head>
+<body class="yl" data-cascade="off">
+<div id="yl-aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+<canvas id="yl-net" aria-hidden="true"></canvas>
+<div id="yl-layer" aria-hidden="true"></div>
+<div id="yl-halo" aria-hidden="true"></div>
+<div id="yl-casc" aria-hidden="true"></div>
+
+<main class="yl-stage">
+<section class="yl-card" id="yl-card">
+  <div class="yl-brand"><img src="assets/Ysocial.png" alt="YSocial"></div>
+
+  <div id="err" class="yl-error" role="alert"></div>
+
+  <!-- 1. First start: set up -->
+  <section class="view" id="v-setup">
+    <h2 data-i18n="setup.title">Let's get you set up</h2>
+    <p class="yl-sub" data-i18n="setup.sub">A digital social network populated by intelligent agents: observe, experiment, and see how conversations take shape.</p>
+
+    <button class="yl-btn" id="install" type="button"><span class="yl-spin"></span><span data-i18n="setup.install">Install YSocial</span></button>
+
+    <details class="yl-adv" id="setup-advanced">
+      <summary data-i18n="setup.adv">Advanced options</summary>
+      <div class="yl-field">
+        <input id="home" type="text" placeholder=" " spellcheck="false">
+        <label for="home" data-i18n="setup.home">Where to keep your data</label>
+      </div>
+    </details>
+  </section>
+
+  <!-- 2. Installing / updating -->
+  <section class="view" id="v-installing">
+    <h2 id="inst-title" data-i18n="inst.title">Setting things up…</h2>
+    <p class="yl-sub" id="inst-sub" data-i18n="inst.sub">This takes a few minutes the first time. You can leave this window open.</p>
+    <div class="yl-bar"><i id="bar"></i></div>
+    <ol class="yl-steps">
+      <li data-step="python"><span class="dot"></span><span data-i18n="inst.python">Getting Python ready</span></li>
+      <li data-step="env"><span class="dot"></span><span data-i18n="inst.env">Creating a private environment</span></li>
+      <li data-step="app"><span class="dot"></span><span data-i18n="inst.app">Installing YSocial</span></li>
+    </ol>
+  </section>
+
+  <!-- 3. Installed: start / stop -->
+  <section class="view" id="v-ready">
+    <h2 id="ready-title" data-i18n="ready.title">Ready when you are</h2>
+    <p class="yl-sub" id="ready-sub" data-i18n="ready.sub">YSocial is installed. Start it whenever you like.</p>
+    <div class="yl-meta">
+      <div class="yl-status" id="status">Stopped</div>
+      <span class="yl-ver"><span data-i18n="ver.label">Version</span> <b id="ver"></b></span>
+    </div>
+
+    <div class="yl-upd" id="upd" hidden>
+      <div><b id="upd-t"></b><a id="upd-launcher" data-ext href="#" hidden data-i18n="upd.launcher">A new installer is also available: open the release page</a></div>
+      <button class="yl-btn" id="doupdate" type="button"><span data-i18n="upd.btn">Update</span></button>
+    </div>
+    <div class="yl-ok" id="upd-done" hidden></div>
+
+    <div class="yl-row2">
+      <button class="yl-btn" id="launch" type="button" disabled><span class="yl-spin"></span><span id="launch-t">Start YSocial</span></button>
+      <button class="yl-btn ghost" id="stop" type="button" disabled data-i18n="btn.stop">Stop YSocial</button>
+    </div>
+
+    <div class="yl-upd" id="tox-add" hidden>
+      <div><b data-i18n="tox.add.title">Toxicity detection</b><small data-i18n="tox.add.desc">Optional: only needed if your experiments score toxic content. This is a large download (PyTorch, several GB of disk space).</small></div>
+      <button class="yl-btn ghost" id="addtox" type="button"><span class="yl-spin"></span><span data-i18n="tox.add.btn">Add</span></button>
+    </div>
+
+    <div class="yl-where"><span><span data-i18n="ready.data">Data:</span> <code id="where"></code></span>
+      <span><button class="yl-link" id="reinstall" type="button" data-i18n="ready.reinstall">Reinstall</button> · <button class="yl-link" id="uninstall" type="button" data-i18n="ready.uninstall">Uninstall</button></span></div>
+  </section>
+
+  <!-- 4. Uninstall confirmation -->
+  <section class="view" id="v-uninstall">
+    <h2 data-i18n="un.title">Uninstall YSocial?</h2>
+    <p class="yl-sub" data-i18n="un.sub">This removes the program from this computer. Your experiments and data are kept unless you tick a box below.</p>
+    <label class="yl-opt">
+      <input id="deletedata" type="checkbox">
+      <span><b data-i18n="un.data">Also delete my data</b><small data-i18n="un.data.desc">Experiments, databases and settings in the data folder. This cannot be undone.</small></span>
+    </label>
+    <label class="yl-opt" id="um-wrap" hidden>
+      <input id="deletemodels" type="checkbox">
+      <span><b data-i18n="un.models">Also delete the toxicity models</b><small><span data-i18n="un.models.desc">Downloaded language models, kept outside the data folder:</span> <code id="um-path"></code> (<span id="um-size"></span>)</small></span>
+    </label>
+    <div class="yl-row2">
+      <button class="yl-btn" id="confirm-uninstall" type="button"><span class="yl-spin"></span><span data-i18n="un.confirm">Uninstall</span></button>
+      <button class="yl-btn ghost" id="cancel-uninstall" type="button" data-i18n="un.cancel">Cancel</button>
+    </div>
+  </section>
+
+  <!-- Shared options -->
+  <details class="yl-adv" id="advanced">
+    <summary data-i18n="more">More options</summary>
+    <label class="yl-chk"><input id="appwindow" type="checkbox" checked>
+      <span><span data-i18n="opt.window">Open in its own window</span><small data-i18n="opt.window.desc">Untick to use your default browser instead.</small></span></label>
+    <label class="yl-chk"><input id="jupyter" type="checkbox">
+      <span data-i18n="opt.jupyter">Start the Jupyter Notebook server</span></label>
+    <label class="yl-chk"><input id="checkupdates" type="checkbox" checked>
+      <span><span data-i18n="opt.updates">Check for updates</span><small data-i18n="opt.updates.desc">Looks for new YSocial releases when the launcher opens.</small></span></label>
+    <div class="yl-two">
+      <div class="yl-field">
+        <input id="host" type="text" value="127.0.0.1" placeholder=" " spellcheck="false">
+        <label for="host" data-i18n="opt.host">Address</label>
+      </div>
+      <div class="yl-field">
+        <input id="port" type="number" min="1" max="65535" value="8080" placeholder=" ">
+        <label for="port" data-i18n="opt.port">Port</label>
+      </div>
+    </div>
+    <p class="yl-note" data-i18n="opt.hostnote">Use <code>0.0.0.0</code> as address only if you want other computers on your network to reach YSocial.</p>
+  </details>
+
+  <p class="yl-foot yl-links"><span><span data-i18n="release">Release</span> v<span id="launcher-ver"></span></span> · <a href="https://y-not.social" data-ext>y-not.social</a> ·
+    <select id="lang" class="yl-mini" aria-label="Language"><option value="auto">Auto</option><option value="en">English</option><option value="it">Italiano</option></select></p>
+</section>
+</main>
+
+<script src="assets/yi18n-stub.js"></script>
+<script src="assets/login-scene.js" defer></script>
+<script src="i18n.js"></script>
+<script src="main.js"></script>
+</body>
+</html>

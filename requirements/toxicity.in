@@ -1,0 +1,2 @@
+# Optional "toxicity" extra: Detoxify model (pulls in torch, large download)
+detoxify>=0.5.2

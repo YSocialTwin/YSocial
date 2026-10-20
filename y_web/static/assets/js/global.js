@@ -476,9 +476,7 @@ function initUsersAutocomplete() {
                         </div>
                     `
 
-          summary = `
-                        <span class="tagged-friend"><small>&mdash; with</small> <a class="is-inverted" href="#">${newRecipient}</a>,</span>
-                    `
+          summary = '\n                        <span class="tagged-friend"><small>' + '&mdash; ' + YI18n.t('with') + '</small> <a class="is-inverted" href="#">' + newRecipient + '</a>,</span>\n                    '
 
           //Append tag template in list
           $.when($('#tag-list').append(html)).done(function () {

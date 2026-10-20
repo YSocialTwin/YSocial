@@ -204,8 +204,8 @@
             '    <div class="photo-overlay__comment-copy">',
             '      <p><strong>' + (authorHref ? '<a class="photo-inline-link" href="' + escapeHtml(authorHref) + '">' + authorName + '</a>' : authorName) + '</strong> ' + bodyHtml + '</p>',
             '      <div class="photo-overlay__comment-meta-row">',
-            '        <span class="photo-overlay__comment-meta">' + escapeHtml(comment.created_at || '') + ' · ' + escapeHtml(comment.likes || 0) + ' likes</span>',
-            '        <button type="button" class="photo-overlay__comment-toggle" data-photo-comment-reply data-comment-id="' + escapeHtml(comment.id || '') + '" data-comment-author="' + escapeHtml(comment.username || '') + '">Reply</button>',
+            '        <span class="photo-overlay__comment-meta">' + YI18n.t('{when} · {likes} likes', {when: escapeHtml(comment.created_at || ''), likes: escapeHtml(comment.likes || 0)}) + '</span>',
+            '        <button type="button" class="photo-overlay__comment-toggle" data-photo-comment-reply data-comment-id="' + escapeHtml(comment.id || '') + '" data-comment-author="' + escapeHtml(comment.username || '') + '">' + YI18n.t('Reply') + '</button>',
             hasReplies ? '        <button type="button" class="photo-overlay__comment-toggle" data-photo-comment-toggle-replies data-photo-reply-count="' + escapeHtml(replyCount) + '">' + escapeHtml('View replies (' + replyCount + ')') + '</button>' : '',
             '      </div>',
             '    </div>',
@@ -218,7 +218,7 @@
     function renderCommentTree(comments) {
         var items = normalizeComments(comments);
         if (!items.length) {
-            return '<div class="photo-overlay__empty">No comments yet.</div>';
+            return '<div class="photo-overlay__empty">' + YI18n.t('No comments yet.') + '</div>';
         }
         return items.map(function (comment) {
             return renderCommentNode(comment, 0);
@@ -359,8 +359,8 @@
         if (target && targetLabel) {
             target.classList.add('is-visible');
             targetLabel.textContent = state.currentCommentTargetLabel
-                ? 'Replying to @' + state.currentCommentTargetLabel
-                : 'Replying';
+                ? YI18n.t('Replying to @{target}', {target: state.currentCommentTargetLabel})
+                : YI18n.t('Replying');
         }
     }
 
@@ -419,7 +419,7 @@
                     body: JSON.stringify(payload)
                 }).then(function (response) {
                     if (!response.ok) {
-                        throw new Error('Request failed');
+                        throw new Error(YI18n.t('Request failed'));
                     }
                     return response.json();
                 }).then(function (result) {
@@ -439,7 +439,7 @@
                     if (state.postOverlay) {
                         var composerTarget = state.postOverlay.querySelector('[data-photo-comment-target-label]');
                         if (composerTarget) {
-                            composerTarget.textContent = 'Unable to post comment. Please try again.';
+                            composerTarget.textContent = YI18n.t('Unable to post comment. Please try again.');
                             var targetContainer = state.postOverlay.querySelector('[data-photo-comment-target]');
                             if (targetContainer) {
                                 targetContainer.classList.add('is-visible');
@@ -490,7 +490,7 @@
                             toggle.className = 'photo-overlay__comment-toggle';
                             toggle.setAttribute('data-photo-comment-toggle-replies', '');
                             toggle.setAttribute('data-photo-reply-count', '1');
-                            toggle.textContent = 'View replies (1)';
+                            toggle.textContent = YI18n.t('View replies (1)');
                             metaRow.appendChild(toggle);
                         }
                     } else {
@@ -500,11 +500,11 @@
                         }
                         replyCount += 1;
                         toggle.setAttribute('data-photo-reply-count', String(replyCount));
-                        toggle.textContent = 'View replies (' + replyCount + ')';
+                        toggle.textContent = YI18n.t('View replies ({replycount})', {replycount: replyCount});
                     }
                     parentNode.classList.remove('is-collapsed');
                     if (toggle) {
-                        toggle.textContent = 'Hide replies';
+                        toggle.textContent = YI18n.t('Hide replies');
                     }
                 }
             }
@@ -551,9 +551,9 @@
                 }
                 var replyCount = button.getAttribute('data-photo-reply-count') || '';
                 var isCollapsed = comment.classList.toggle('is-collapsed');
-                button.textContent = isCollapsed ? ('View replies (' + replyCount + ')') : 'Hide replies';
+                button.textContent = isCollapsed ? (YI18n.t('View replies ({replycount})', {replycount: replyCount})) : YI18n.t('Hide replies');
                 if (!isCollapsed) {
-                    button.textContent = 'Hide replies';
+                    button.textContent = YI18n.t('Hide replies');
                 }
             });
         });
@@ -612,7 +612,7 @@
 
         list.innerHTML = filtered.length
             ? filtered.map(function (item) { return renderPeopleRow(item, state.currentPeopleKind); }).join('')
-            : '<div class="photo-overlay__empty">No matching accounts found.</div>';
+            : '<div class="photo-overlay__empty">' + YI18n.t('No matching accounts found.') + '</div>';
     }
 
     function renderPeopleOverlay(payload, kind) {
@@ -626,7 +626,7 @@
         var title = state.peopleOverlay.querySelector('[data-photo-people-title]');
         var input = state.peopleOverlay.querySelector('[data-photo-people-search]');
         if (title) {
-            title.textContent = kind === 'followers' ? 'Followers' : 'Following';
+            title.textContent = kind === 'followers' ? YI18n.t('Followers') : YI18n.t('Following');
         }
         if (input) {
             input.value = '';
@@ -677,7 +677,7 @@
 
         list.innerHTML = filtered.length
             ? filtered.map(function (item) { return renderSwitchUserRow(item); }).join('')
-            : '<div class="photo-overlay__empty">No matching users found.</div>';
+            : '<div class="photo-overlay__empty">' + YI18n.t('No matching users found.') + '</div>';
     }
 
     function renderSwitchUserOverlay(payload) {
@@ -691,7 +691,7 @@
         var title = state.switchOverlay.querySelector('[data-photo-switch-user-title]');
         var input = state.switchOverlay.querySelector('[data-photo-switch-user-search]');
         if (title) {
-            title.textContent = 'Switch user';
+            title.textContent = YI18n.t('Switch user');
         }
         if (input) {
             input.value = '';
@@ -722,7 +722,7 @@
             body: JSON.stringify({ user_id: nextUserId })
         }).then(function (response) {
             if (!response.ok) {
-                throw new Error('Request failed');
+                throw new Error(YI18n.t('Request failed'));
             }
             return response.json();
         }).then(function () {
@@ -732,7 +732,7 @@
             if (state.switchOverlay) {
                 var list = state.switchOverlay.querySelector('[data-photo-switch-user-list]');
                 if (list) {
-                    list.innerHTML = '<div class="photo-overlay__empty">Unable to switch user. Please try again.</div>';
+                    list.innerHTML = '<div class="photo-overlay__empty">' + YI18n.t('Unable to switch user. Please try again.') + '</div>';
                 }
             }
         }).finally(function () {
@@ -747,7 +747,7 @@
         if (state.switchOverlay) {
             var list = state.switchOverlay.querySelector('[data-photo-switch-user-list]');
             if (list) {
-                list.innerHTML = '<div class="photo-overlay__empty">Loading users...</div>';
+                list.innerHTML = '<div class="photo-overlay__empty">' + YI18n.t('Loading users...') + '</div>';
             }
             openOverlay(state.switchOverlay);
         }
@@ -760,7 +760,7 @@
                 if (state.switchOverlay) {
                     var list = state.switchOverlay.querySelector('[data-photo-switch-user-list]');
                     if (list) {
-                        list.innerHTML = '<div class="photo-overlay__empty">Unable to load users.</div>';
+                        list.innerHTML = '<div class="photo-overlay__empty">' + YI18n.t('Unable to load users.') + '</div>';
                     }
                     openOverlay(state.switchOverlay);
                 }
@@ -886,7 +886,7 @@
             time.textContent = story.display_time || '';
         }
         if (title) {
-            title.textContent = story.title || 'Story';
+            title.textContent = story.title || YI18n.t('Story');
         }
         if (description) {
             description.textContent = story.description || '';
@@ -978,13 +978,13 @@
         if (!elements.submit) {
             return;
         }
-        elements.submit.textContent = 'Share';
+        elements.submit.textContent = YI18n.t('Share');
         var title = elements.titleInput ? String(elements.titleInput.value || '').trim() : '';
         var description = elements.descriptionInput ? String(elements.descriptionInput.value || '').trim() : '';
         var canSubmit = !state.storyCreateSubmitting && state.currentStoryCreateSelection.length > 0 && Boolean(title) && Boolean(description);
         elements.submit.disabled = !canSubmit;
         if (elements.counter) {
-            elements.counter.textContent = state.currentStoryCreateSelection.length + ' / 5 photos selected';
+            elements.counter.textContent = YI18n.t('{length} / 5 photos selected', {length: state.currentStoryCreateSelection.length});
         }
     }
 
@@ -996,11 +996,11 @@
 
         var selectedItems = getStoryCreateSelectedItems();
         if (!selectedItems.length) {
-            elements.selected.innerHTML = '<div class="photo-story-create-overlay__selected-empty">Select up to 5 photos from your gallery.</div>';
+            elements.selected.innerHTML = '<div class="photo-story-create-overlay__selected-empty">' + YI18n.t('Select up to 5 photos from your gallery.') + '</div>';
             elements.preview.removeAttribute('src');
             elements.preview.alt = 'No photo selected';
             if (elements.previewMeta) {
-                elements.previewMeta.textContent = 'No photo selected yet';
+                elements.previewMeta.textContent = YI18n.t('No photo selected yet');
             }
             updateStoryCreateSubmitState();
             if (window.feather) {
@@ -1024,7 +1024,7 @@
         elements.preview.src = firstImage.url || '';
         elements.preview.alt = firstImage.description || first.post || first.title || 'Selected photo';
         if (elements.previewMeta) {
-            elements.previewMeta.textContent = selectedItems.length + ' selected';
+            elements.previewMeta.textContent = YI18n.t('{length} selected', {length: selectedItems.length});
         }
         updateStoryCreateSubmitState();
         if (window.feather) {
@@ -1040,7 +1040,7 @@
 
         var items = Array.isArray(state.storyGalleryItems) ? state.storyGalleryItems : [];
         if (!items.length) {
-            elements.gallery.innerHTML = '<div class="photo-overlay__empty">No photos are available in your gallery yet.</div>';
+            elements.gallery.innerHTML = '<div class="photo-overlay__empty">' + YI18n.t('No photos are available in your gallery yet.') + '</div>';
             renderStoryCreateSelection();
             return;
         }
@@ -1166,7 +1166,15 @@
             elements.nationality.value = data.nationality || '';
         }
         if (elements.language) {
-            elements.language.value = data.language || '';
+            var spoken = data.language || '';
+            if (elements.language.tagName === 'SELECT' && spoken && !Array.prototype.some.call(elements.language.options, function (o) { return o.value === spoken; })) {
+                // keep a value the list does not offer (e.g. set by the population) instead of blanking it
+                var extra = document.createElement('option');
+                extra.value = spoken;
+                extra.textContent = spoken;
+                elements.language.appendChild(extra);
+            }
+            elements.language.value = spoken;
         }
         if (elements.leaning) {
             elements.leaning.value = data.leaning || '';
@@ -1187,7 +1195,7 @@
         var canSubmit = !state.profileEditSubmitting;
         if (elements.submit) {
             elements.submit.disabled = !canSubmit;
-            elements.submit.textContent = state.profileEditSubmitting ? 'Saving...' : 'Save';
+            elements.submit.textContent = state.profileEditSubmitting ? YI18n.t('Saving...') : YI18n.t('Save');
         }
     }
 
@@ -1208,11 +1216,11 @@
         }
 
         if (count) {
-            count.textContent = items.length ? (items.length + ' available') : 'No options';
+            count.textContent = items.length ? (YI18n.t('{length} available', {length: items.length})) : YI18n.t('No options');
         }
 
         if (!items.length) {
-            gallery.innerHTML = '<div class="photo-overlay__empty">No profile pictures are available yet.</div>';
+            gallery.innerHTML = '<div class="photo-overlay__empty">' + YI18n.t('No profile pictures are available yet.') + '</div>';
         } else {
             gallery.innerHTML = items.map(function (item) {
                 var isSelected = String(item || '') === String(selectedValue || '');
@@ -1265,7 +1273,7 @@
                 resolve(event && event.target ? event.target.result : '');
             };
             reader.onerror = function () {
-                reject(new Error('Unable to read file'));
+                reject(new Error(YI18n.t('Unable to read file')));
             };
             reader.readAsDataURL(file);
         });
@@ -1429,7 +1437,7 @@
             body: formData
         }).then(function (response) {
             if (!response.ok) {
-                throw new Error('Request failed');
+                throw new Error(YI18n.t('Request failed'));
             }
             return response.json();
         }).then(function (result) {
@@ -1439,7 +1447,7 @@
             }
         }).catch(function () {
             if (elements.submit) {
-                elements.submit.textContent = 'Unable to save';
+                elements.submit.textContent = YI18n.t('Unable to save');
             }
         }).finally(function () {
             state.profileEditSubmitting = false;
@@ -1514,7 +1522,7 @@
             })
         }).then(function (response) {
             if (!response.ok) {
-                throw new Error('Request failed');
+                throw new Error(YI18n.t('Request failed'));
             }
             return response.json();
         }).then(function (result) {
@@ -1524,7 +1532,7 @@
             }
         }).catch(function () {
             if (elements.submit) {
-                elements.submit.textContent = 'Unable to share';
+                elements.submit.textContent = YI18n.t('Unable to share');
             }
         }).finally(function () {
             state.storyCreateSubmitting = false;
@@ -1591,9 +1599,9 @@
         elements.editor.classList.toggle('is-visible', editorVisible);
         elements.back.hidden = !editorVisible;
         elements.submit.hidden = !editorVisible;
-        elements.submit.textContent = 'Share';
+        elements.submit.textContent = YI18n.t('Share');
         if (elements.title) {
-            elements.title.textContent = editorVisible ? 'Add details' : 'Create new post';
+            elements.title.textContent = editorVisible ? YI18n.t('Add details') : YI18n.t('Create new post');
         }
     }
 
@@ -1683,7 +1691,7 @@
             body: formData
         }).then(function (response) {
             if (!response.ok) {
-                throw new Error('Request failed');
+                throw new Error(YI18n.t('Request failed'));
             }
             return response.json();
         }).then(function (result) {
@@ -1693,7 +1701,7 @@
             }
         }).catch(function () {
             if (elements.submit) {
-                elements.submit.textContent = 'Unable to share';
+                elements.submit.textContent = YI18n.t('Unable to share');
             }
         }).finally(function () {
             state.currentShareSubmitting = false;
@@ -1729,7 +1737,7 @@
             body: payload ? JSON.stringify(payload) : '{}'
         }).then(function (response) {
             if (!response.ok) {
-                throw new Error('Request failed');
+                throw new Error(YI18n.t('Request failed'));
             }
             return response.json();
         }).then(function (result) {
@@ -1865,7 +1873,7 @@
             if (!empty) {
                 empty = document.createElement('div');
                 empty.className = 'notification is-light photo-feed-stories__empty';
-                empty.textContent = 'No story previews are available yet.';
+                empty.textContent = YI18n.t('No story previews are available yet.');
                 parent.appendChild(empty);
             }
         }
@@ -1945,7 +1953,12 @@
             window.feather.replace();
         }
 
+        // Expose which photo the overlay shows, and tell page add-ons (e.g. post annotation) that it was re-rendered.
+        state.postOverlay.setAttribute('data-photo-post-id', state.currentPhotoId);
         openOverlay(state.postOverlay);
+        try {
+            document.dispatchEvent(new CustomEvent('ys:photo-post-rendered', { detail: { photoId: state.currentPhotoId } }));
+        } catch (e) { /* add-ons are optional */ }
     }
 
     function fetchJson(url) {
@@ -1956,7 +1969,7 @@
             }
         }).then(function (response) {
             if (!response.ok) {
-                throw new Error('Request failed');
+                throw new Error(YI18n.t('Request failed'));
             }
             return response.json();
         });
@@ -1975,7 +1988,7 @@
                 if (state.postOverlay) {
                     var commentsList = state.postOverlay.querySelector('[data-photo-post-comments-list]');
                     if (commentsList) {
-                        commentsList.innerHTML = '<div class="photo-overlay__empty">Unable to load this photo.</div>';
+                        commentsList.innerHTML = '<div class="photo-overlay__empty">' + YI18n.t('Unable to load this photo.') + '</div>';
                     }
                     openOverlay(state.postOverlay);
                 }
@@ -1997,7 +2010,7 @@
                 if (state.peopleOverlay) {
                     var list = state.peopleOverlay.querySelector('[data-photo-people-list]');
                     if (list) {
-                        list.innerHTML = '<div class="photo-overlay__empty">Unable to load this list.</div>';
+                        list.innerHTML = '<div class="photo-overlay__empty">' + YI18n.t('Unable to load this list.') + '</div>';
                     }
                     openOverlay(state.peopleOverlay);
                 }
@@ -2027,7 +2040,7 @@
             }
         }).then(function (response) {
             if (!response.ok) {
-                throw new Error('Request failed');
+                throw new Error(YI18n.t('Request failed'));
             }
             return response.json();
         }).then(function (result) {

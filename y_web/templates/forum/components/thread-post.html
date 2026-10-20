@@ -24,11 +24,11 @@
             <span style="font-weight: 500; color: #1c1c1c; margin-right: 8px;">
  <a href="/{{exp_id}}/profile/{{ thread['author_id'] }}/recent/1" class="ys-link-inherit">{{ thread["author"] }}</a>
             </span>
-            <span style="color: #7c7c7c; font-size: 12px;">
+            <span class="forum-post-time" style="color: #7c7c7c; font-size: 12px;">
                 {% if thread.get("display_time") %}
                     {{ thread.get("display_time") }}
                 {% elif thread.get("day") != "None" %}
-                    Day {{ thread.get("day") }} · Hour {{ "%02d"|format(thread.get("hour")|int) }}
+                    {{ _('Day %(day)s · Hour %(hour)s', day=thread.get("day"), hour="%02d"|format(thread.get("hour")|int)) }}
                 {% endif %}
             </span>
         </div>
@@ -45,8 +45,8 @@
                         <div class="media">
                             <i data-feather="trash-2"></i>
                             <div class="media-content">
-                                <h3>Delete</h3>
-                                <small>Remove this post</small>
+                                <h3>{{ _('Delete') }}</h3>
+                                <small>{{ _('Remove this post') }}</small>
                             </div>
                         </div>
                     </a>
@@ -109,14 +109,14 @@
         
         <button class="toggle-reply-button" type="button" data-reply-target="{{ thread['post_id'] }}" style="display: flex; align-items: center; gap: 4px; background: none; border: none; color: #7c7c7c; cursor: pointer; padding: 4px 8px; border-radius: 2px; font-size: 12px; font-weight: 700;">
  <i data-feather="message-square" class="ys-icon-xs"></i>
-            Reply
+            {{ _('Reply') }}
         </button>
         {% if thread['author_id'] != logged_id %}
         <a href="/{{exp_id}}/report_content?post_id={{ thread['post_id'] }}&type=offensive"
            class="forum-report-button{% if thread.get('is_reported') %} is-active{% endif %}"
            style="display: flex; align-items: center; gap: 4px; background: none; border: none; color: #7c7c7c; cursor: pointer; padding: 4px 8px; border-radius: 2px; font-size: 12px; font-weight: 700; text-decoration: none;">
  <i data-feather="flag" class="ys-icon-xs"></i>
-            <span>Report</span>
+            <span>{{ _('Report') }}</span>
             <span>{{ thread.get("report_count", 0) }}</span>
         </a>
         {% endif %}
@@ -131,7 +131,7 @@
             <button type="button" class="add-comment-button" data-parent-id="{{ thread['post_id'] }}"
                     style="background: #0079d3; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: 600;"
                     >
-                Reply
+                {{ _('Reply') }}
             </button>
         </form>
     </div>

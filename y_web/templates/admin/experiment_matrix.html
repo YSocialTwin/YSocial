@@ -552,14 +552,14 @@
 </style>
 
 <div class="view-wrapper is-dashboard">
-    <div id="creator-dashboard" class="dashboard-container">
+    <div id="creator-dashboard" data-tutorial-page="experiment_matrix" class="dashboard-container">
         {% include "admin/dash_head.html" %}
 
         <div class="dashboard-body">
             <div class="columns">
                 <div class="column is-12">
-                    <div class="dashboard-box">
-                        <a href="/admin/experiments">Experiments</a> > Experiment Matrix
+                    <div class="dashboard-box" data-tut="experiment-matrix">
+                        <a href="/admin/experiments">{{ _('Experiments') }}</a> &gt; {{ _('Experiment Matrix') }}
                         {% if selected_experiment %}
                         : <a href="/admin/experiment_details/{{ selected_experiment.idexp }}">{{ selected_experiment.exp_name }}</a>
                         {% endif %}
@@ -572,16 +572,16 @@
                     <div class="matrix-summary-card">
                         <div class="is-flex is-justify-content-space-between is-align-items-center is-flex-wrap-wrap" style="gap: 0.75rem;">
                             <div>
-                                <h3 class="title is-5 is-thin" style="color:#f8fafc; margin-bottom:0.2rem;">Experiment Matrix</h3>
+                                <h3 class="title is-5 is-thin" style="color:#f8fafc; margin-bottom:0.2rem;">{{ _('Experiment Matrix') }}</h3>
                                 <p style="color: rgba(248,250,252,0.78);">
-                                    Inspect nested config values, unlock the ones you want to vary, and generate the full combination set.
+                                    {{ _('Inspect nested config values, unlock the ones you want to vary, and generate the full combination set.') }}
                                 </p>
                             </div>
                             <div style="min-width: 260px; flex: 0 1 360px;">
                                 <form action="/admin/experiment_matrix" method="GET" class="is-flex is-flex-direction-column" style="gap:0.5rem;">
                                     <div class="select is-fullwidth">
                                         <select id="matrix-source-group" name="source_group">
-                                            <option value="">Select source group...</option>
+                                            <option value="">{{ _('Select source group...') }}</option>
                                             {% for group_name in matrix_exp_groups or [] %}
                                             <option value="{{ group_name }}" {% if selected_source_group == group_name %}selected{% endif %}>{{ group_name }}</option>
                                             {% endfor %}
@@ -589,14 +589,14 @@
                                     </div>
                                     <div class="select is-fullwidth">
                                         <select id="matrix-source-exp" name="source_exp_id" {% if not selected_source_group %}disabled{% endif %} required>
-                                            <option value="">{{ 'Select source experiment...' if selected_source_group else 'Select a source group first...' }}</option>
+                                            <option value="">{{ _('Select source experiment...') if selected_source_group else _('Select a source group first...') }}</option>
                                             {% for exp in grouped_experiments or [] %}
                                             <option value="{{ exp.idexp }}" {% if selected_experiment and selected_experiment.idexp == exp.idexp %}selected{% endif %}>{{ exp.exp_name }}</option>
                                             {% endfor %}
                                         </select>
                                     </div>
                                     <div class="field">
-                                        <label class="label" style="color: rgba(248,250,252,0.85);">Target Group</label>
+                                        <label class="label" style="color: rgba(248,250,252,0.85);">{{ _('Target Group') }}</label>
                                         <div class="control">
                                             <input type="text"
                                                    id="matrix-target-group"
@@ -604,7 +604,7 @@
                                                    list="exp_groups_datalist_matrix"
                                                    class="input"
                                                    value="{{ selected_group or '' }}"
-                                                   placeholder="Choose an existing group or type a new one"
+                                                   placeholder="{{ _('Choose an existing group or type a new one') }}"
                                                    required>
                                         </div>
                                         <datalist id="exp_groups_datalist_matrix">
@@ -612,10 +612,10 @@
                                             <option value="{{ group_name }}">
                                             {% endfor %}
                                         </datalist>
-                                        <p class="matrix-hint" style="margin-top:0.35rem;">You can assign the generated experiments to an existing group or create a new one here.</p>
+                                        <p class="matrix-hint" style="margin-top:0.35rem;">{{ _('You can assign the generated experiments to an existing group or create a new one here.') }}</p>
                                     </div>
-                                    <p class="matrix-hint" style="margin-top:-0.15rem;">Pick a source group first, then choose one experiment from that group.</p>
-                                    <button type="submit" class="button is-info is-fullwidth">Load Matrix</button>
+                                    <p class="matrix-hint" style="margin-top:-0.15rem;">{{ _('Pick a source group first, then choose one experiment from that group.') }}</p>
+                                    <button type="submit" class="button is-info is-fullwidth">{{ _('Load Matrix') }}</button>
                                 </form>
                             </div>
                         </div>
@@ -623,27 +623,27 @@
                         {% if selected_experiment %}
                         <div class="matrix-summary-grid">
                             <div class="matrix-summary-stat">
-                                <span class="label">Selected Experiment</span>
+                                <span class="label">{{ _('Selected Experiment') }}</span>
                                 <span class="value">{{ selected_experiment.exp_name }}</span>
                             </div>
                             <div class="matrix-summary-stat">
-                                <span class="label">Platform</span>
+                                <span class="label">{{ _('Platform') }}</span>
                                 <span class="value">{{ selected_experiment.platform_type }}</span>
                             </div>
                             <div class="matrix-summary-stat">
-                                <span class="label">Target Group</span>
+                                <span class="label">{{ _('Target Group') }}</span>
                                 <span class="value">{{ selected_group or "-" }}</span>
                             </div>
                             <div class="matrix-summary-stat">
-                                <span class="label">Configurable Features</span>
+                                <span class="label">{{ _('Configurable Features') }}</span>
                                 <span class="value">{{ total_features }}</span>
                             </div>
                             <div class="matrix-summary-stat">
-                                <span class="label">Visible Rows</span>
+                                <span class="label">{{ _('Visible Rows') }}</span>
                                 <span class="value">{{ unlockable_features }}</span>
                             </div>
                             <div class="matrix-summary-stat">
-                                <span class="label">Generated Configs</span>
+                                <span class="label">{{ _('Generated Configs') }}</span>
                                 <span class="value" id="matrix-total-configs">1</span>
                             </div>
                         </div>
@@ -687,11 +687,11 @@
                             </div>
                             <div class="matrix-field-stack">
                                 <div class="matrix-value-block">
-                                    <div class="taxonomy-path">Current value</div>
+                                    <div class="taxonomy-path">{{ _('Current value') }}</div>
                                     <span class="matrix-value-pill">{{ feature.value_display }}</span>
                                 </div>
                                 <div class="matrix-value-block">
-                                    <div class="taxonomy-path">Alternative values</div>
+                                    <div class="taxonomy-path">{{ _('Alternative values') }}</div>
                                     <div class="matrix-tag-editor"
                                          data-mode="{{ editor_mode }}"
                                          data-empty-label="{% if allow_custom_values %}Add alternative values{% else %}Select at least one recommender system{% endif %}"
@@ -704,7 +704,7 @@
                                                         <span class="matrix-recsys-option-label">
                                                             <code>{{ option.label or option.name }}</code>
                                                             {% if is_current %}
-                                                                <span class="matrix-current-badge">Current</span>
+                                                                <span class="matrix-current-badge">{{ _('Current') }}</span>
                                                             {% endif %}
                                                         </span>
                                                         <span class="matrix-switch">
@@ -718,14 +718,14 @@
                                             {% set current_bool = feature.value|string|lower in ['true', '1', 'yes', 'on'] %}
                                             <div class="matrix-boolean-options" aria-live="polite">
                                                 <span class="matrix-boolean-label">
-                                                    <span class="matrix-boolean-pill">False</span>
+                                                    <span class="matrix-boolean-pill">{{ _('False') }}</span>
                                                 </span>
-                                                <label class="matrix-switch" title="Toggle the generated value between false and true">
+                                                <label class="matrix-switch" title="{{ _('Toggle the generated value between false and true') }}">
                                                     <input type="checkbox" class="matrix-boolean-toggle matrix-switch-input" data-value-true="true" data-value-false="false" {% if current_bool %}checked{% endif %}>
                                                     <span class="matrix-switch-track" aria-hidden="true"></span>
                                                 </label>
                                                 <span class="matrix-boolean-label">
-                                                    <span class="matrix-boolean-pill">True</span>
+                                                    <span class="matrix-boolean-pill">{{ _('True') }}</span>
                                                 </span>
                                             </div>
                                         {% else %}
@@ -733,14 +733,14 @@
                                                 {% for option in feature.default_values or [] %}
                                                     <span class="matrix-tag-chip" data-value='{{ option.name|tojson }}'>
                                                         <code>{{ option.label or option.name }}</code>
-                                                        <button type="button" class="matrix-tag-remove" aria-label="Remove alternative value">×</button>
+                                                        <button type="button" class="matrix-tag-remove" aria-label="{{ _('Remove alternative value') }}">×</button>
                                                     </span>
                                                 {% endfor %}
                                             </div>
                                             {% if allow_custom_values %}
                                             <div class="matrix-tag-input-row">
-                                                <input type="text" class="input matrix-tag-input" disabled placeholder="Type a value and press Enter">
-                                                <button type="button" class="button is-light matrix-tag-add" disabled>Add</button>
+                                                <input type="text" class="input matrix-tag-input" disabled placeholder="{{ _('Type a value and press Enter') }}">
+                                                <button type="button" class="button is-light matrix-tag-add" disabled>{{ _('Add') }}</button>
                                             </div>
                                             {% endif %}
                                         {% endif %}
@@ -786,15 +786,15 @@
                                     <strong>{{ report.title }}</strong>
                                     <div class="meta">{{ report.file_name }}</div>
                                 </div>
-                                <div class="meta">{{ report.features|selectattr('can_unlock')|list|length }} configurable values</div>
+                                <div class="meta">{{ _('%(n)s configurable values', n=report.features|selectattr('can_unlock')|list|length) }}</div>
                             </div>
                         </summary>
                         <div style="padding: 1rem;">
                             {% if report.kind == 'client' and report.recommendation_features %}
                                 <details class="matrix-taxonomy-group" open>
                                     <summary>
-                                        <span>Recommendations</span>
-                                        <span class="taxonomy-path">agents.recsys_type / agents.frecsys_type</span>
+                                        <span>{{ _('Recommendations') }}</span>
+                                        <span class="taxonomy-path">{{ _('agents.recsys_type / agents.frecsys_type') }}</span>
                                     </summary>
                                     <div class="matrix-taxonomy-children">
                                         <div class="matrix-root-grid">
@@ -826,7 +826,7 @@
                                     {% endfor %}
                                 </div>
                             {% else %}
-                                <p class="has-text-grey">No configurable values found in this file.</p>
+                                <p class="has-text-grey">{{ _('No configurable values found in this file.') }}</p>
                             {% endif %}
                         </div>
                     </details>
@@ -837,8 +837,8 @@
                         <summary>
                             <div class="matrix-report-title">
                                 <div>
-                                    <strong>Server Settings</strong>
-                                    <div class="meta">{{ server_reports|length }} file{{ '' if server_reports|length == 1 else 's' }}</div>
+                                    <strong>{{ _('Server Settings') }}</strong>
+                                    <div class="meta">{{ ngettext('%(num)d file', '%(num)d files', server_reports|length) }}</div>
                                 </div>
                             </div>
                         </summary>
@@ -850,7 +850,7 @@
                                     {% endfor %}
                                 </div>
                             {% else %}
-                                <p class="has-text-grey">No server configuration file was found for this experiment.</p>
+                                <p class="has-text-grey">{{ _('No server configuration file was found for this experiment.') }}</p>
                             {% endif %}
                         </div>
                     </details>
@@ -859,8 +859,8 @@
                         <summary>
                             <div class="matrix-report-title">
                                 <div>
-                                    <strong>Client Settings</strong>
-                                    <div class="meta">{{ client_reports|length }} file{{ '' if client_reports|length == 1 else 's' }}</div>
+                                    <strong>{{ _('Client Settings') }}</strong>
+                                    <div class="meta">{{ ngettext('%(num)d file', '%(num)d files', client_reports|length) }}</div>
                                 </div>
                             </div>
                         </summary>
@@ -872,23 +872,23 @@
                                     {% endfor %}
                                 </div>
                             {% else %}
-                                <p class="has-text-grey">No client configuration files were found for this experiment.</p>
+                                <p class="has-text-grey">{{ _('No client configuration files were found for this experiment.') }}</p>
                             {% endif %}
                         </div>
                     </details>
                 {% else %}
                     <div class="dashboard-box" style="margin-top: 1rem;">
-                        <p class="has-text-weight-semibold">No configuration files were found for this experiment.</p>
-                        <p class="has-text-grey">The matrix loader searched the experiment folder and its subfolders but did not find a readable server or client JSON config.</p>
+                        <p class="has-text-weight-semibold">{{ _('No configuration files were found for this experiment.') }}</p>
+                        <p class="has-text-grey">{{ _('The matrix loader searched the experiment folder and its subfolders but did not find a readable server or client JSON config.') }}</p>
                     </div>
                 {% endif %}
 
                 <div class="matrix-footer">
                     <div class="matrix-footer-grid">
                         <div>
-                            <div class="matrix-count">Total configurations: <span id="matrix-total-configs-inline">1</span></div>
+                            <div class="matrix-count">{{ _('Total configurations:') }} <span id="matrix-total-configs-inline">1</span></div>
                             <div class="matrix-hint">
-                                Unlock a feature and provide alternative values. Turn Cartesian mode on to combine all enabled features; leave it off to generate independent variants one feature at a time.
+                                {{ _('Unlock a feature and provide alternative values. Turn Cartesian mode on to combine all enabled features; leave it off to generate independent variants one feature at a time.') }}
                             </div>
                             <div id="matrix-warning" class="matrix-warning" style="display:none;"></div>
                         </div>
@@ -896,8 +896,8 @@
                             <input type="hidden" id="generation_mode" name="generation_mode" value="independent">
                             <label class="matrix-generation-toggle">
                                 <span class="label-stack">
-                                    <span class="label-title">Cartesian product</span>
-                                    <span class="label-subtitle">Combine all enabled features</span>
+                                    <span class="label-title">{{ _('Cartesian product') }}</span>
+                                    <span class="label-subtitle">{{ _('Combine all enabled features') }}</span>
                                 </span>
                                 <span class="matrix-switch">
                                     <input type="checkbox" id="matrix-generation-toggle" class="matrix-switch-input">
@@ -905,7 +905,7 @@
                                 </span>
                             </label>
                             <div style="min-width: 220px;">
-                                <button id="matrix-submit-btn" type="submit" class="button is-primary is-fullwidth" disabled>Generate Experiments</button>
+                                <button id="matrix-submit-btn" type="submit" class="button is-primary is-fullwidth" disabled>{{ _('Generate Experiments') }}</button>
                             </div>
                         </div>
                     </div>
@@ -915,7 +915,7 @@
             <div class="columns">
                 <div class="column is-12">
                     <div class="dashboard-box">
-                        <p class="has-text-grey">Select an experiment above to inspect its configuration matrix.</p>
+                        <p class="has-text-grey">{{ _('Select an experiment above to inspect its configuration matrix.') }}</p>
                     </div>
                 </div>
             </div>
@@ -1158,7 +1158,7 @@
             if (!empty && unlocked) {
                 const placeholder = document.createElement('span');
                 placeholder.className = 'matrix-tag-empty';
-                placeholder.textContent = elements.editor.dataset.emptyLabel || 'Add alternative values';
+                placeholder.textContent = elements.editor.dataset.emptyLabel || YI18n.t('Add alternative values');
                 elements.list.appendChild(placeholder);
             }
         } else {
@@ -1198,7 +1198,7 @@
         const remove = document.createElement('button');
         remove.type = 'button';
         remove.className = 'matrix-tag-remove';
-        remove.setAttribute('aria-label', 'Remove alternative value');
+        remove.setAttribute('aria-label', YI18n.t('Remove alternative value'));
         remove.textContent = '×';
         remove.addEventListener('click', function() {
             chip.remove();

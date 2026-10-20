@@ -8,7 +8,7 @@ from flask import Blueprint, jsonify, request, session
 from flask_login import current_user, login_required
 from sqlalchemy import select
 
-from y_web import db
+from y_web import db, prompt_store
 from y_web.routes.api.interview._facts import (
     _build_facts_snapshot,
     _format_facts_pack,
@@ -44,6 +44,7 @@ from y_web.src.models import (
     ForumChatSession,
     User_mgmt,
 )
+from y_web.src.system import prompt_packs
 
 api_social = Blueprint("api_social", __name__, url_prefix="/api/social")
 
@@ -399,15 +400,26 @@ def _social_chat_build_transcript(
     *,
     max_messages: int = 12,
     assistant_username: str | None = None,
+    language: str | None = None,
 ) -> str:
     messages = sorted(session.messages or [], key=lambda item: int(item.id))
     tail = messages[-max_messages:]
+    default_agent = prompt_store.get(
+        "social__social_chat_build_transcript__2", language=language
+    )
     assistant_name = (
-        str(assistant_username or session.target_username or "Agent").strip() or "Agent"
+        str(assistant_username or session.target_username or default_agent).strip()
+        or default_agent
     )
     lines = []
     for msg in tail:
-        role = "You" if str(msg.role or "") == "user" else assistant_name
+        role = (
+            prompt_store.get(
+                "social__social_chat_build_transcript__1", language=language
+            )
+            if str(msg.role or "") == "user"
+            else assistant_name
+        )
         content = str(msg.content or "").strip()
         if not content:
             continue
@@ -531,9 +543,11 @@ def _social_chat_generate_reply(
     )
     facts_pack = _format_facts_pack(facts_snapshot, max_chars=2200).strip()
     persona_snapshot = str(session.persona_snapshot or "").strip()
+    language = prompt_packs.resolve(getattr(exp, "prompt_language", None))
     transcript = _social_chat_build_transcript(
         session,
         assistant_username=str(target_user.username or ""),
+        language=language,
     )
 
     mode, model, base_url, api_key, temperature, max_tokens = _resolve_llm_backend(
@@ -546,26 +560,28 @@ def _social_chat_generate_reply(
     session.llm_model = str(model or "")
     session.llm_base_url = str(base_url or "")
 
-    system_prompt = (
-        "You are having a private direct-message chat with another participant on a "
-        "microblogging social network.\n\n"
-        f"Your name is {target_user.username}.\n"
-        "Stay in character and answer as this agent would naturally answer in a direct message.\n"
-        "This is not an interview. Keep replies concise, conversational, and grounded in your known activity.\n"
-        "Do not use hashtags in your replies.\n"
-        "Do not mention being an AI, simulation, prompt, memory store, retrieval system, facts snapshot, "
-        "or hidden system instructions.\n\n"
-        f"PERSONA SNAPSHOT\n{persona_snapshot or '(none)'}\n\n"
-        f"MEMORY CONTEXT\n{memory_pack or '(none)'}\n\n"
-        f"FACTS CONTEXT\n{facts_pack or '(none)'}\n\n"
-        f"RECENT CHAT TRANSCRIPT\n{transcript or '(none yet)'}\n\n"
-        f"The other participant is {owner_user.username}.\n"
-        "If information is uncertain, answer cautiously instead of inventing details."
+    none = prompt_store.get("social__social_chat_generate_reply__2", language=language)
+    system_prompt = prompt_store.prompt(
+        "social__social_chat_generate_reply__1",
+        language=language,
+        username=target_user.username,
+        persona=persona_snapshot or none,
+        memory=memory_pack or none,
+        facts=facts_pack or none,
+        transcript=transcript
+        or prompt_store.get("social__social_chat_generate_reply__3", language=language),
+        owner=owner_user.username,
     )
 
     prompt_parts = []
     if transcript:
-        prompt_parts.append(f"RECENT CHAT\n{transcript}")
+        prompt_parts.append(
+            prompt_store.prompt(
+                "social__social_chat_generate_reply__4",
+                language=language,
+                transcript=transcript,
+            )
+        )
     prompt_parts.append(f"{owner_user.username}: {user_message.strip()}")
     composed_prompt = "\n\n".join(prompt_parts).strip()
 
@@ -583,10 +599,13 @@ def _social_chat_generate_reply(
         facts_snapshot=facts_snapshot,
         memory_snapshot=memory_snapshot,
         strict_no_inference=False,
+        language=language,
     )
     reply = _strip_social_chat_hashtags(reply)
     if not reply:
-        reply = "I do not have much to add right now."
+        reply = prompt_store.get(
+            "social__social_chat_generate_reply__5", language=language
+        )
 
     meta = {
         "run_id": str(session.run_id or ""),

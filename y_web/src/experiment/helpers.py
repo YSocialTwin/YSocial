@@ -176,9 +176,9 @@ def _ensure_photo_sharing_orm_tables(engine, uri: Optional[str] = None) -> None:
     photo database can be repaired on first use.
     """
     try:
-        external_root = (
-            Path(__file__).resolve().parents[3] / "external" / "YPhotoSharing"
-        )
+        from y_web.src.system.path_utils import get_external_repo_dir
+
+        external_root = Path(get_external_repo_dir("YPhotoSharing"))
         external_root_str = str(external_root)
         if external_root.exists() and external_root_str not in sys.path:
             sys.path.insert(0, external_root_str)
@@ -193,7 +193,27 @@ def _ensure_photo_sharing_orm_tables(engine, uri: Optional[str] = None) -> None:
             ensure_experiment_schema_for_uri(uri)
 
 
-def ensure_experiment_user(
+def ensure_experiment_user(experiment: Exps, *, account_id=None, **kwargs):
+    """
+    Ensure a participant row exists in the experiment database.
+
+    Returns ``(user, created)``. When ``account_id`` (the platform account,
+    ``Admin_users.id``) is given and a participant row is returned, the optional
+    plugin hook ``experiment_user_provisioned(exp, account_id, exp_user_id,
+    created)`` is emitted; hook errors never affect the result. Other
+    arguments are those of :func:`_ensure_experiment_user`.
+    """
+    user, created = _ensure_experiment_user(experiment, **kwargs)
+    if account_id is not None and user is not None:
+        from y_web.src.external_runtime.plugin_hooks import emit_hook
+
+        emit_hook(
+            "experiment_user_provisioned", experiment, account_id, user.id, created
+        )
+    return user, created
+
+
+def _ensure_experiment_user(
     experiment: Exps,
     *,
     user_id,

@@ -123,17 +123,13 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Highlight the current page's link and auto-expand its group, if any.
+    // Highlight the current page's link (its group is not auto-expanded).
     var currentPath = window.location.pathname.replace(/\/$/, '');
     document.querySelectorAll('.dashboard-aside-link').forEach(function (link) {
         var href = link.getAttribute('href') || '';
         var linkPath = href.split('?')[0].replace(/\/$/, '');
         if (linkPath && linkPath === currentPath) {
             link.classList.add('is-active');
-            var parentGroup = link.closest('.dashboard-aside-group');
-            if (parentGroup) {
-                openGroup(parentGroup);
-            }
         }
     });
 });

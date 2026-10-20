@@ -1,14 +1,14 @@
 {% include "admin/head.html" %}
 
 <div class="view-wrapper is-dashboard">
-    <div id="creator-dashboard" class="dashboard-container">
+    <div id="creator-dashboard" data-tutorial-page="custom_population_details" class="dashboard-container">
         {% include "admin/dash_head.html" %}
 
         <div class="dashboard-body">
             <div class="columns">
                 <div class="column is-12">
-                    <div class="dashboard-box">
-                        <a href="{{ back_href }}">{{ back_label }}</a> > Details: {{ population.name }}
+                    <div class="dashboard-box" data-tut="custom-population-overview">
+                        <a href="{{ back_href }}">{{ back_label }}</a> &gt; {{ _('Details:') }} {{ population.name }}
                     </div>
                 </div>
             </div>
@@ -16,33 +16,33 @@
             <div class="columns">
                 <div class="column is-6">
                     <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Custom Population Overview</h3>
+                        <h3 class="title is-5 is-thin">{{ _('Custom Population Overview') }}</h3>
                         <p class="ys-text-small">
-                            Simplified details for a custom population type that does not expose the full synthetic-population analytics model.
+                            {{ _('Simplified details for a custom population type that does not expose the full synthetic-population analytics model.') }}
                         </p>
                         <div class="box-content">
                             <div class="box-lines">
                                 <div class="box-line">
-                                    <span class="left">Name</span>
+                                    <span class="left">{{ _('Name') }}</span>
                                     <span class="right">{{ population.name }}</span>
                                 </div>
                                 <div class="box-line">
-                                    <span class="left">Description</span>
+                                    <span class="left">{{ _('Description') }}</span>
                                     <span class="right">{{ population.descr or '' }}</span>
                                 </div>
                                 <div class="box-line">
-                                    <span class="left">Assigned Agents</span>
+                                    <span class="left">{{ _('Assigned Agents') }}</span>
                                     <span class="right">{{ live_size }}</span>
                                 </div>
                             </div>
                             <div class="buttons" style="display: flex; justify-content: right; gap: 10px; margin-top: 20px;">
                                 <a class="button is-info ys-flex-gap-5" href="/admin/download_population/{{ population.id }}">
                                     <i class="mdi mdi-download"></i>
-                                    <span>Download</span>
+                                    <span>{{ _('Download') }}</span>
                                 </a>
                                 <a class="button is-danger ys-flex-gap-5" href="/admin/delete_population/{{ population.id }}">
                                     <i class="mdi mdi-delete"></i>
-                                    <span>Delete</span>
+                                    <span>{{ _('Delete') }}</span>
                                 </a>
                             </div>
                         </div>
@@ -50,16 +50,16 @@
                 </div>
 
                 <div class="column is-6">
-                    <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Experiment Deployments</h3>
+                    <div class="dashboard-box" data-tut="experiment-deployments">
+                        <h3 class="title is-5 is-thin">{{ _('Experiment Deployments') }}</h3>
                         <p class="ys-text-small">
-                            Experiments where this custom population is currently deployed.
+                            {{ _('Experiments where this custom population is currently deployed.') }}
                         </p>
                         <div class="box-content">
                             <div class="box-lines">
                                 {% if population_experiments %}
                                 <div class="box-line">
-                                    <span class="left">Active Experiments</span>
+                                    <span class="left">{{ _('Active Experiments') }}</span>
                                     <span class="right">
                                         <ul>
                                         {% for exp in population_experiments %}
@@ -70,7 +70,7 @@
                                 </div>
                                 {% else %}
                                 <div class="box-line">
-                                    <span class="left">No experiments yet</span>
+                                    <span class="left">{{ _('No experiments yet') }}</span>
                                 </div>
                                 {% endif %}
                             </div>
@@ -81,11 +81,11 @@
 
             <div class="columns">
                 <div class="column is-12">
-                    <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Assigned Agents</h3>
+                    <div class="dashboard-box" data-tut="assigned-agents">
+                        <h3 class="title is-5 is-thin">{{ _('Assigned Agents') }}</h3>
                         <div class="box-content">
                             <div id="custom-population-agents-table"></div>
-                            <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
+                            <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script><script src="{{ url_for('static', filename='assets/js/admin-gridjs-i18n.js') }}"></script>
                         </div>
                     </div>
                 </div>

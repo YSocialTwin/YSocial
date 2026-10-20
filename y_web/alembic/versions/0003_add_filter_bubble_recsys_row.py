@@ -24,8 +24,23 @@ _CATEGORY = "Personalization"
 _ENABLED = "HumanOnly"
 
 
+def _has_table(bind) -> bool:
+    return "content_recsys" in sa.inspect(bind).get_table_names()
+
+
 def upgrade() -> None:
     bind = op.get_bind()
+    if not _has_table(bind):
+        # Nothing to seed yet (a database whose tables are created later by
+        # ``create_all``): the legacy seed runs again once the table exists.
+        return
+    # Legacy databases (created by older releases, then stamped at the baseline)
+    # may lack the ``category``/``enabled`` columns that the seed below writes.
+    existing = {c["name"] for c in sa.inspect(bind).get_columns("content_recsys")}
+    for column in ("category", "enabled"):
+        if column not in existing:
+            op.add_column("content_recsys", sa.Column(column, sa.Text(), nullable=True))
+
     # Check whether the row already exists (migration may have been applied
     # via the legacy run_migrations() path or a manual SQL seed).
     exists = bind.execute(
@@ -61,6 +76,8 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     bind = op.get_bind()
+    if not _has_table(bind):
+        return
     bind.execute(
         sa.text("DELETE FROM content_recsys WHERE name = :name"),
         {"name": _NAME},

@@ -84,6 +84,13 @@
                 </ul>`,
             position: 'overlay',
             isLast: true
+        },
+        {
+            id: 'update-language',
+            selector: '#box-update-language',
+            title: '🌐 Language',
+            description: `<p>Choose the <b>language of the dashboard</b> for this user. The choice is remembered for their next sessions.</p>`,
+            position: 'top'
         }
     ];
     

@@ -273,6 +273,18 @@ def active_modules_context(exp_id: int) -> list[dict]:
     except Exception:
         return []
 
+    try:
+        from y_web.src.models import Exps
+
+        _exp = db.session.get(Exps, exp_id)
+        platform = (
+            (getattr(_exp, "platform_type", None) or "microblogging")
+            if _exp
+            else "microblogging"
+        )
+    except Exception:
+        platform = "microblogging"
+
     results = []
     for repo_key, state in _REGISTERED_SUITES.items():
         modules = state.get("modules", {})
@@ -306,6 +318,7 @@ def active_modules_context(exp_id: int) -> list[dict]:
                 {
                     "module_id": row.module_id,
                     "exp_id": exp_id,
+                    "platform": platform,
                     "api_base": f"/{exp_id}/api/plugins/{repo_key}/{row.module_id}",
                     "frontend_entry": (
                         f"/plugins/{repo_key}/{row.module_id}/static/{frontend_entry}"
@@ -363,3 +376,41 @@ def get_hidden_user_ids(exp_id: int, viewer_user_id: int) -> set[int]:
             except Exception:
                 continue
     return hidden
+
+
+def dispatch_platform_event(app, exp_id: int, event: str, payload: dict) -> int:
+    """Hand a platform event to every installed suite module that opts in.
+
+    Platforms that do not use the ORM models the plugins listen on (photo
+    sharing writes through raw SQL) announce their human actions here
+    instead. A module opts in with
+    ``"platform_event_handler": "<dotted.module>:<func>"`` in its manifest
+    entry; the callable receives ``(app, exp_id, event, payload)`` and runs in
+    a short-lived daemon thread, so the human's request is never held up and
+    a failing plugin never reaches the response. Returns the number of
+    handlers started (``0`` when nothing is installed).
+    """
+    if not _REGISTERED_SUITES:
+        return 0
+
+    import threading
+
+    started = 0
+    for repo_key, state in _REGISTERED_SUITES.items():
+        for module_id, manifest in state.get("modules", {}).items():
+            handler_path = manifest.get("platform_event_handler")
+            if not handler_path or ":" not in handler_path:
+                continue
+            try:
+                dotted, _, func_name = handler_path.partition(":")
+                func = getattr(_import_from_suite(repo_key, dotted), func_name)
+            except Exception:
+                continue
+            threading.Thread(
+                target=func,
+                args=(app, int(exp_id), event, dict(payload or {})),
+                daemon=True,
+                name=f"plugin-event-{module_id}-{event}",
+            ).start()
+            started += 1
+    return started

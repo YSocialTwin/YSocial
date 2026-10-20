@@ -1438,3 +1438,111 @@ def test_post_annotation_recsys_snapshot_and_scoping(frontend_adds_on_app):
     assert r1_again["annotation_id"] == ann_r1["annotation_id"]
     assert r1_again["recsys"] == "R1"
     assert r1_again["sentiment"]["value"] == -1.0
+
+
+def test_my_stats_counts_the_current_users_annotation_distributions(
+    frontend_adds_on_app,
+):
+    """/my_stats feeds the optional "annotation statistics" box: one count per distinct value of every dimension,
+    only for the current user's own annotations."""
+    from y_web.src.models import FrontendAddsOnExpModuleSettings, User_mgmt
+
+    app = frontend_adds_on_app
+    client = app.test_client()
+    _seed_toxicity_levels(app)
+    with app.app_context():
+        exp_id = _make_exp(app)
+        db.session.add(
+            FrontendAddsOnExpModuleSettings(
+                exp_id=exp_id,
+                module_id="post_annotation",
+                enabled=True,
+                config_json=json.dumps(
+                    {
+                        "enable_topic_annotation": True,
+                        "enable_opinion_annotation": True,
+                        "enable_sentiment_annotation": True,
+                        "enable_emotion_annotation": True,
+                        "enable_toxicity_annotation": True,
+                    }
+                ),
+            )
+        )
+        db.session.commit()
+        user_id = (
+            db.session.scalars(db.select(User_mgmt).filter_by(username="testuser"))
+            .first()
+            .id
+        )
+    _login(client, user_id)
+    base = f"/{exp_id}/api/plugins/frontend_adds_on/post_annotation"
+
+    empty = client.get(f"{base}/my_stats").get_json()
+    assert empty["ok"] is True and empty["total"] == 0 and empty["emotions"] == []
+
+    for target_type, target_id, sentiment, tox, emotions in (
+        ("post", 1, -1.0, "low", ["Joy", "Trust"]),
+        ("post", 2, -1.0, "low", ["Joy"]),
+        ("comment", 3, 1.0, "high", []),
+    ):
+        r = client.post(
+            f"{base}/annotations",
+            json={
+                "target_type": target_type,
+                "target_id": target_id,
+                "topics": [{"label": "Climate change", "opinion": 1.0}],
+                "sentiment": sentiment,
+                "toxicity": tox,
+                "emotions": emotions,
+            },
+        )
+        assert r.status_code == 200, r.data
+
+    stats = client.get(f"{base}/my_stats").get_json()
+    assert stats["total"] == 3 and stats["posts"] == 2 and stats["comments"] == 1
+    assert stats["sentiment"] == [
+        {"value": -1.0, "count": 2},
+        {"value": 1.0, "count": 1},
+    ]
+    assert {t["level"]: t["count"] for t in stats["toxicity"]} == {"low": 2, "high": 1}
+    assert {e["label"]: e["count"] for e in stats["emotions"]} == {"Joy": 2, "Trust": 1}
+    assert stats["topics"] == [{"label": "Climate change", "count": 3}]
+    assert stats["sentiment_scale"] == "3point"
+
+    # Only the dimensions currently enabled are reported: switch toxicity and emotions off, keep topics and sentiment.
+    with app.app_context():
+        row = db.session.get(
+            FrontendAddsOnExpModuleSettings, (exp_id, "post_annotation")
+        )
+        row.config_json = json.dumps(
+            {
+                "enable_topic_annotation": True,
+                "enable_sentiment_annotation": True,
+                "enable_emotion_annotation": False,
+                "enable_toxicity_annotation": False,
+            }
+        )
+        db.session.commit()
+    narrowed = client.get(f"{base}/my_stats").get_json()
+    assert narrowed["toxicity"] == [] and narrowed["emotions"] == []
+    assert narrowed["sentiment"] and narrowed["topics"] and narrowed["total"] == 3
+    with app.app_context():
+        row = db.session.get(
+            FrontendAddsOnExpModuleSettings, (exp_id, "post_annotation")
+        )
+        row.config_json = json.dumps(
+            {
+                "enable_topic_annotation": False,
+                "enable_sentiment_annotation": False,
+                "enable_emotion_annotation": False,
+                "enable_toxicity_annotation": True,
+            }
+        )
+        db.session.commit()
+    only_tox = client.get(f"{base}/my_stats").get_json()
+    assert (
+        only_tox["sentiment"] == []
+        and only_tox["topics"] == []
+        and only_tox["toxicity"]
+    )
+    assert only_tox["total"] == 3

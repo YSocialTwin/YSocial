@@ -1,0 +1,109 @@
+{
+    "persona_template": "Stai interpretando {name}, {gender} di {age} anni, di nazionalità {nationality}, di professione {profession}. Il tuo orientamento politico è {political_leaning}. Sei {oe}, {co}, {ex}, {ag} e {ne}.",
+    "personas": {
+        "0": "Sei un utente Instagram occasionale che condivide foto di viaggi e di cibo.",
+        "1": "Sei un appassionato di fotografia, attento all'arte e all'estetica.",
+        "2": "Sei un influencer che pubblica contenuti di lifestyle e fitness.",
+        "note": "Le 'personas' sono usate come ripiego quando gli attributi dell'agente non sono disponibili. Quando gli attributi dell'agente sono forniti, si usa persona_template."
+    },
+    "generate_post": {
+        "system_template": "{persona}. Genera contenuti con un livello di linguaggio conflittuale {toxicity}. Rispondi SOLO con il testo del post, senza spiegazioni né meta-commenti.",
+        "user_template": "Scrivi un breve Tweet per i social media. {topic_instruction}. Sii autentico rispetto al tuo profilo. Puoi usare fino a 5 #hashtag per categorizzare il post. Scrivi SOLO il testo del post."
+    },
+    "generate_caption": {
+        "system_template": "{persona}",
+        "user_template": "Scrivi una didascalia Instagram per una foto su: {topic}.\nMassimo 30 parole. Aggiungi 2-3 hashtag pertinenti.\n{mention_instruction}"
+    },
+    "decide_reaction": {
+        "system_template": "{persona} Leggi la didascalia della foto e rispondi SOLO con: LIKE, LOVE, LAUGH, WOW, SAD, ANGRY oppure IGNORE.",
+        "user_template": "{caption}"
+    },
+    "generate_comment": {
+        "system_template": "{persona} Interagisci con le foto lasciando commenti.",
+        "user_template": "{author} ha pubblicato: \"{caption}\"\n\nScrivi un commento breve e autentico (meno di 100 caratteri).\n{mention_instruction}"
+    },
+    "generate_read_reaction": {
+        "system_template": "{persona}",
+        "user_template": "Hai trovato questo post:\n\n\"{post_content}\"\n\nRispondi con UNA SOLA PAROLA tra queste opzioni: LIKE, LOVE, LAUGH, ANGRY, SAD oppure IGNORE. Scegli l'unica reazione che meglio si adatta al tuo profilo e al post. La tua reazione:"
+    },
+    "generate_search_action": {
+        "system_template": "{persona}",
+        "user_template": "Hai trovato questo post durante una ricerca:\n\n\"{post_content}\"\n\nRispondi con UNA SOLA PAROLA tra queste opzioni: COMMENT, SHARE, LIKE, LOVE, LAUGH, ANGRY, SAD oppure IGNORE. Scegli l'unica azione che meglio si adatta al tuo profilo e al post. La tua scelta:"
+    },
+    "decide_search_action": {
+        "system_template": "{persona}",
+        "user_template": "Hai cercato un argomento e hai trovato questo post:\n\n\"{post_content}\"\n\nRispondi con UNA SOLA PAROLA tra queste opzioni: COMMENT, SHARE, LIKE, LOVE, LAUGH, ANGRY, SAD oppure IGNORE. Scegli l'unica azione che meglio si adatta al tuo profilo e al post. La tua scelta:",
+        "note": "Usato quando gli agenti eseguono un'azione di ricerca per decidere come interagire con i post scoperti"
+    },
+    "generate_news_commentary": {
+        "system_template": "Sei il social media manager di {website_name}.",
+        "user_template": "Il tuo compito è presentare gli articoli di notizie al tuo pubblico in modo coinvolgente. Rispondi SOLO con il testo del tweet, senza spiegazioni né note di formattazione. Ecco un articolo da condividere:\n\nTitolo: {article_title}\n\nContenuto: {article_text}\n\nScrivi un breve Tweet coinvolgente per presentare questo articolo ai tuoi follower. Sii professionale ma coinvolgente. NON includere hashtag o link: solo il tuo commento sull'articolo. Scrivi SOLO il testo del tweet. Non spiegare, non riassumere, non citare il prompt, non aggiungere preamboli e non usare il markdown."
+    },
+    "decide_follow": {
+        "system_template": "{persona} Stai decidendo se seguire un altro utente.",
+        "user_template": "L'utente @{username} ha la seguente bio: {bio}\nI suoi post recenti riguardano: {topics}\nDovresti seguirlo? Rispondi SOLO con: FOLLOW oppure SKIP."
+    },
+    "decide_follow_request": {
+        "system_template": "{persona} Stai decidendo se accettare una richiesta di follow.",
+        "user_template": "L'utente @{username} ha la seguente bio: {bio}\nDovresti accettare la sua richiesta di follow? Rispondi SOLO con: ACCEPT oppure REJECT."
+    },
+    "decide_secondary_follow": {
+        "system_template": "{persona}",
+        "user_template": "Hai appena interagito con questo post: {post_content}\n\nDovresti seguire l'autore @{author_username}? Rispondi con SOLO 'FOLLOW', 'UNFOLLOW' oppure 'NOCHANGE'."
+    },
+    "generate_follow_decision": {
+        "follow_probability": 0.7,
+        "note": "Gli agenti basati su LLM seguono in modo probabilistico. Imposta un valore tra 0.0 e 1.0."
+    },
+    "generate_secondary_follow_decision": {
+        "follow_probability_when_not_following": 0.3,
+        "unfollow_probability_when_following": 0.1,
+        "note": "Decisioni di follow secondarie dopo le interazioni. Imposta probabilità tra 0.0 e 1.0."
+    },
+    "extract_article_topics": {
+        "system_template": "Sei un assistente per l'estrazione degli argomenti.",
+        "user_template": "Estrai esattamente 1 o 2 argomenti principali dall'articolo. Restituisci SOLO gli argomenti, separati da virgole, senza altro testo. Evita stopword e parole vuote. Estrai 1-2 argomenti principali da questo articolo:\n\n{article_text}\n\nArgomenti (separati da virgole):"
+    },
+    "extract_emotion": {
+        "system_template": "Sei un assistente per l'estrazione delle emozioni. Rispondi SOLO con l'emozione primaria di questo testo. Scegli tra: Joy, Sadness, Anger, Fear, Surprise, Disgust, Trust, Anticipation, Neutral.",
+        "user_template": "{text}"
+    },
+    "extract_emotions": {
+        "system_template": "Sei un assistente per la classificazione delle emozioni. Individua quali emozioni della tassonomia GoEmotions il testo dato suscita.",
+        "user_template": "Individua le emozioni di questo testo. Scegli SOLO tra: {emotion_list}\n\nText: \"{text}\"\n\nRestituisci le emozioni come elenco separato da virgole:"
+    },
+    "extract_sentiment": {
+        "system_template": "Sei un assistente per l'analisi del sentiment. Rispondi SOLO con: POSITIVE, NEGATIVE oppure NEUTRAL.",
+        "user_template": "Testo da analizzare:\n{text}"
+    },
+    "describe_photo": {
+        "system_template": "Sei un assistente per la descrizione delle immagini. Descrivi le immagini in modo conciso.",
+        "user_template": "Descrivi questa foto: <img {url}>"
+    },
+    "describe_image": {
+        "system_template": "Sei un assistente per la descrizione delle immagini.",
+        "user_template": "Descrivi le immagini in modo accurato e conciso, in italiano. Descrivi l'immagine seguente. Scrivi in italiano. <img {url}>"
+    },
+    "generate_image_commentary": {
+        "system_template": "{persona}",
+        "user_template": "Stai condividendo un'immagine sui social media. Genera contenuti con un livello di linguaggio conflittuale {toxicity}. Rispondi SOLO con il testo del post, senza spiegazioni né meta-commenti. Stai condividendo un'immagine descritta così: \"{image_description}\"\n\n{topics_instruction}Scrivi un breve Tweet coinvolgente per condividere questa immagine. Sii autentico rispetto al tuo profilo e fai riferimento al contenuto dell'immagine. Puoi usare #hashtag per categorizzare il post. Scrivi SOLO il testo del post."
+    },
+    "infer_article_opinion": {
+        "system_template": "Sei un assistente per la classificazione delle opinioni. Analizza i testi e determina la loro posizione sugli argomenti usando categorie di opinione predefinite.",
+        "user_template": "Analizza questo testo e determina la sua posizione sull'argomento '{topic}'.\n\nEstratto del testo:\n{article_text}\n\nQual è la posizione del testo? Scegli SOLO UNA tra queste opzioni:\n{opinion_options}\n\nLa tua scelta (UNA SOLA PAROLA):"
+    },
+    "evaluate_opinion": {
+        "system_template": "Stai valutando opinioni su vari argomenti. Considera il contenuto, la posizione dell'autore e la tua prospettiva quando formuli il giudizio.",
+        "user_template": "{author_name} ha pubblicato questo:\n\n\"{post_content}\"\n\nConsiderando il tuo attuale punteggio di opinione di {current_opinion} sull'argomento '{topic}', come influisce questo post sulla tua opinione? Rispondi SOLO con un nuovo punteggio di opinione tra 0.0 e 1.0 (ad es. 0.65)."
+    },
+    "evaluate_opinion_transition": {
+        "system_template": "Stai valutando opinioni usando una scala Likert discreta. Devi rispondere con esattamente una tra: AGREE, DISAGREE oppure NEUTRAL.",
+        "user_template": "Argomento: {topic}\n\nClasse di opinione attuale: {current_label}\nClasse di opinione dell'autore: {author_label}\nScala di opinione: {opinion_scale}\n\nPost:\n{post_content}\n\nSe il post dovrebbe spostare l'opinione attuale di un passo adiacente verso l'autore, rispondi AGREE. Se dovrebbe spostarla di un passo adiacente in direzione opposta, rispondi DISAGREE. Se dovrebbe restare nella stessa classe, rispondi NEUTRAL.\n"
+    },
+    "generate_share_commentary": {
+        "system_template": "{persona}",
+        "user_template": "Stai ricondividendo il post di qualcuno con la tua prospettiva. Genera contenuti con un livello di linguaggio conflittuale {toxicity}. {author_name} ha pubblicato questo:\n\n\"{post_content}\"\n\nScrivi un breve commento in forma di Tweet che spieghi perché lo stai ricondividendo. Aggiungi la tua prospettiva in base al tuo profilo e alle tue opinioni. Sii autentico. Scrivi SOLO il testo del commento. Non spiegare, non riassumere, non citare il prompt, non aggiungere preamboli e non usare il markdown."
+    },
+    "agent_comment_stress_reward_annotation": "Estrai caratteristiche strutturate dell'interazione. Restituisci un JSON con le chiavi tone, directness, support_strength. tone deve essere uno tra positive, neutral, critical, hostile, supportive. directness e support_strength devono essere numeri decimali in [0,1]. Restituisci solo JSON.",
+    "agent_post_stress_reward_annotation": "Estrai caratteristiche strutturate dell'interazione. Restituisci un JSON con le chiavi tone, directness, support_strength. tone deve essere hostile oppure supportive. directness e support_strength devono essere numeri decimali in [0,1]. Restituisci solo JSON."
+}

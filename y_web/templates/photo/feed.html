@@ -1,6 +1,6 @@
 {% extends "photo/base.html" %}
 
-{% block photo_title %}Y Social | Photo Sharing{% endblock %}
+{% block photo_title %}Y Social | {{ _('Photo Sharing') }}{% endblock %}
 {% block photo_body_class %}photo-feed-body{% endblock %}
 
 {% block photo_extra_head %}
@@ -12,6 +12,11 @@
             max-width: 1280px;
             margin: 0 auto;
             padding: 32px 32px 48px;
+        }
+
+        .photo-feed-layout.photo-feed-layout--no-rail {
+            grid-template-columns: minmax(0, 1fr);
+            max-width: 760px;
         }
 
         .photo-feed-layout > .photo-feed-content {
@@ -441,17 +446,21 @@
 {% endblock %}
 
 {% block photo_content %}
-<div class="photo-feed-layout">
+{% set _rail_friends = not (ui is defined and ui and ui.show_suggested_friends is false) %}
+{% set _rail_recsys = recsys_info is defined and recsys_info %}
+{% set _rail_stats = ui is defined and ui and ui.show_annotation_stats and frontend_adds_on_modules %}
+{% set _rail_any = _rail_friends or _rail_recsys or _rail_stats %}
+<div class="photo-feed-layout{% if not _rail_any %} photo-feed-layout--no-rail{% endif %}">
     <div class="photo-feed-content">
         <div class="photo-feed-main">
             <div class="photo-feed-top">
                 <div>
-                    <h1>{{ 'For you' if active_tab == 'for_you' else 'Follower' }}</h1>
+                    <h1>{{ _('For you') if active_tab == 'for_you' else _('Follower') }}</h1>
                     <p>
                         {% if active_tab == 'for_you' %}
-                            Recommended photos for {{ logged_username }}.
+                            {{ _('Recommended photos for %(username)s.', username=logged_username) }}
                         {% else %}
-                            Reverse chronological photos from your social contacts.
+                            {{ _('Reverse chronological photos from your social contacts.') }}
                         {% endif %}
                     </p>
                 </div>
@@ -460,11 +469,11 @@
             <div class="photo-feed-tabs">
                 <a class="photo-feed-tab{% if active_tab == 'for_you' %} is-active{% endif %}"
                    href="/{{ exp_id }}/photo/feed/{{ user_id }}/{{ timeline }}/{{ mode }}/1?tab=for_you">
-                    For you
+                    {{ _('For you') }}
                 </a>
                 <a class="photo-feed-tab{% if active_tab == 'follower' %} is-active{% endif %}"
                    href="/{{ exp_id }}/photo/feed/{{ user_id }}/{{ timeline }}/{{ mode }}/1?tab=follower">
-                    Follower
+                    {{ _('Follower') }}
                 </a>
             </div>
 
@@ -490,7 +499,7 @@
                 {% endfor %}
                 {% if not stories %}
                 <div class="notification is-light">
-                    No story previews are available yet.
+                    {{ _('No story previews are available yet.') }}
                 </div>
                 {% endif %}
             </div>
@@ -499,9 +508,9 @@
                 {% if not items %}
                 <div class="notification is-light">
                     {% if active_tab == 'for_you' %}
-                        No recommended photos are available yet.
+                        {{ _('No recommended photos are available yet.') }}
                     {% else %}
-                        No photos from your social contacts are available yet.
+                        {{ _('No photos from your social contacts are available yet.') }}
                     {% endif %}
                 </div>
                 {% endif %}
@@ -511,11 +520,15 @@
         </div>
     </div>
 
+    {% if _rail_any %}
     <aside class="photo-right-rail">
+        {% set side_variant = 'photo' %}
+        {% include "shared/annotation_side_boxes.html" %}
+        {% if _rail_friends %}
         <div class="photo-right-rail__card">
             <div class="photo-right-rail__card-header">
                 <div>
-                    <h2>Suggestions for you</h2>
+                    <h2>{{ _('Suggestions for you') }}</h2>
                 </div>
             </div>
 
@@ -534,34 +547,36 @@
                                 <strong>{{ user['username'] }}</strong>
                                 <small>
                                     {% if user.get('kind') == 'page' %}
-                                        Suggested page
+                                        {{ _('Suggested page') }}
                                     {% else %}
-                                        Suggested contact
+                                        {{ _('Suggested contact') }}
                                     {% endif %}
                                 </small>
                             </div>
                         </a>
                         {% if followed_contact_ids and user['id'] in followed_contact_ids %}
-                        <span class="button is-small is-static is-light">Followed</span>
+                        <span class="button is-small is-static is-light">{{ _('Followed') }}</span>
                         {% else %}
                         <a class="button is-small is-link is-light" href="/{{ exp_id }}/follow/{{ user['id'] }}/{{ logged_id }}">
-                            Follow
+                            {{ _('Follow') }}
                         </a>
                         {% endif %}
                     </div>
                     {% endfor %}
                 {% else %}
                 <div class="notification is-light">
-                    Suggested contacts are loading.
+                    {{ _('Suggested contacts are loading.') }}
                 </div>
                 {% endif %}
             </div>
 
             <div class="photo-right-rail__footer">
-                <a href="/{{ exp_id }}/photo/suggestions" class="photo-right-rail__see-all">See all</a>
+                <a href="/{{ exp_id }}/photo/suggestions" class="photo-right-rail__see-all">{{ _('See all') }}</a>
             </div>
         </div>
+        {% endif %}
     </aside>
+    {% endif %}
 {% endblock %}
 
 {% block photo_extra_scripts %}

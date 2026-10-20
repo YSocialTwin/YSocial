@@ -34,11 +34,11 @@ var AdminMiscellanea = (function() {
           { id: 'id', hidden: true },
           {
               id: 'leaning',
-              name: 'Name',
+              name: YI18n.t('Name'),
               attributes: editableCellAttributes
           },
           {
-              name: 'Actions',
+              name: YI18n.t('Actions'),
               attributes: () => ({ style: 'text-align: center;' }),
               formatter: (cell, row) => {
                   return gridjs.h(
@@ -56,12 +56,12 @@ var AdminMiscellanea = (function() {
                                       if (res.ok) {
                                           grid.forceRender();
                                       } else {
-                                          alert("Failed to delete leaning.");
+                                          YNotify.error(YI18n.t('Failed to delete leaning.'));
                                       }
                                   });
                               }
                           },
-                          'Delete'
+                          YI18n.t('Delete')
                       )
                   );
               }
@@ -160,11 +160,11 @@ var AdminMiscellanea = (function() {
           { id: 'id', hidden: true },
           {
               id: 'education_level',
-              name: 'Name',
+              name: YI18n.t('Name'),
               attributes: editableCellAttributes5
           },
           {
-              name: 'Actions',
+              name: YI18n.t('Actions'),
               attributes: () => ({ style: 'text-align: center;' }),
               formatter: (cell, row) => {
                   return gridjs.h(
@@ -182,12 +182,12 @@ var AdminMiscellanea = (function() {
                                       if (res.ok) {
                                           grid5.forceRender();
                                       } else {
-                                          alert("Failed to delete education level.");
+                                          YNotify.error(YI18n.t('Failed to delete education level.'));
                                       }
                                   });
                               }
                           },
-                          'Delete'
+                          YI18n.t('Delete')
                       )
                   );
               }
@@ -287,16 +287,16 @@ var AdminMiscellanea = (function() {
           { id: 'id', hidden: true },
           {
               id: 'profession',
-              name: 'Name',
+              name: YI18n.t('Name'),
               attributes: editableCellAttributes4
           },
           {
               id: 'background',
-              name: 'Category',
+              name: YI18n.t('Category'),
               attributes: editableCellAttributes4
           },
           {
-              name: 'Actions',
+              name: YI18n.t('Actions'),
               attributes: () => ({ style: 'text-align: center;' }),
               formatter: (cell, row) => {
                   return gridjs.h(
@@ -314,12 +314,12 @@ var AdminMiscellanea = (function() {
                                       if (res.ok) {
                                           grid4.forceRender();
                                       } else {
-                                          alert("Failed to delete profession.");
+                                          YNotify.error(YI18n.t('Failed to delete profession.'));
                                       }
                                   });
                               }
                           },
-                          'Delete'
+                          YI18n.t('Delete')
                       )
                   );
               }
@@ -418,11 +418,11 @@ var AdminMiscellanea = (function() {
           { id: 'id', hidden: true },
           {
               id: 'language',
-              name: 'Name',
+              name: YI18n.t('Name'),
               attributes: editableCellAttributes1
           },
           {
-              name: 'Actions',
+              name: YI18n.t('Actions'),
               attributes: () => ({ style: 'text-align: center;' }),
               formatter: (cell, row) => {
                   return gridjs.h(
@@ -440,12 +440,12 @@ var AdminMiscellanea = (function() {
                                       if (res.ok) {
                                           grid1.forceRender();
                                       } else {
-                                          alert("Failed to delete language.");
+                                          YNotify.error(YI18n.t('Failed to delete language.'));
                                       }
                                   });
                               }
                           },
-                          'Delete'
+                          YI18n.t('Delete')
                       )
                   );
               }
@@ -545,11 +545,11 @@ var AdminMiscellanea = (function() {
           { id: 'id', hidden: true },
           {
               id: 'nationality',
-              name: 'Name',
+              name: YI18n.t('Name'),
               attributes: editableCellAttributes2
           },
           {
-              name: 'Actions',
+              name: YI18n.t('Actions'),
               attributes: () => ({ style: 'text-align: center;' }),
               formatter: (cell, row) => {
                   return gridjs.h(
@@ -567,12 +567,12 @@ var AdminMiscellanea = (function() {
                                       if (res.ok) {
                                           grid2.forceRender();
                                       } else {
-                                          alert("Failed to delete nationality.");
+                                          YNotify.error(YI18n.t('Failed to delete nationality.'));
                                       }
                                   });
                               }
                           },
-                          'Delete'
+                          YI18n.t('Delete')
                       )
                   );
               }
@@ -672,21 +672,21 @@ var AdminMiscellanea = (function() {
           { id: 'id', hidden: true },
           {
               id: 'name',
-              name: 'Name',
+              name: YI18n.t('Name'),
               attributes: editableCellAttributesAgeClasses
           },
           {
               id: 'age_start',
-              name: 'Age Start',
+              name: YI18n.t('Age Start'),
               attributes: editableCellAttributesAgeClasses
           },
           {
               id: 'age_end',
-              name: 'Age End',
+              name: YI18n.t('Age End'),
               attributes: editableCellAttributesAgeClasses
           },
           {
-              name: 'Actions',
+              name: YI18n.t('Actions'),
               attributes: () => ({ style: 'text-align: center;' }),
               formatter: (cell, row) => {
                   return gridjs.h(
@@ -704,12 +704,12 @@ var AdminMiscellanea = (function() {
                                       if (res.ok) {
                                           gridAgeClasses.forceRender();
                                       } else {
-                                          alert("Failed to delete age class.");
+                                          YNotify.error(YI18n.t('Failed to delete age class.'));
                                       }
                                   });
                               }
                           },
-                          'Delete'
+                          YI18n.t('Delete')
                       )
                   );
               }
@@ -808,11 +808,11 @@ var AdminMiscellanea = (function() {
           { id: 'id', hidden: true },
           {
               id: 'name',
-              name: 'Name',
+              name: YI18n.t('Name'),
               attributes: editableCellAttributes6
           },
           {
-              name: 'Actions',
+              name: YI18n.t('Actions'),
               attributes: () => ({ style: 'text-align: center;' }),
               formatter: (cell, row) => {
                   return gridjs.h(
@@ -830,12 +830,12 @@ var AdminMiscellanea = (function() {
                                       if (res.ok) {
                                           grid6.forceRender(); // refresh table
                                       } else {
-                                          alert("Failed to delete topic.");
+                                          YNotify.error(YI18n.t('Failed to delete topic.'));
                                       }
                                   });
                               }
                           },
-                          'Delete'
+                          YI18n.t('Delete')
                       )
                   );
               }
@@ -935,11 +935,11 @@ var AdminMiscellanea = (function() {
           { id: 'id', hidden: true },
           {
               id: 'toxicity_level',
-              name: 'Name',
+              name: YI18n.t('Name'),
               attributes: editableCellAttributes3
           },
           {
-              name: 'Actions',
+              name: YI18n.t('Actions'),
               attributes: () => ({ style: 'text-align: center;' }),
               formatter: (cell, row) => {
                   return gridjs.h(
@@ -957,12 +957,12 @@ var AdminMiscellanea = (function() {
                                       if (res.ok) {
                                           grid3.forceRender();
                                       } else {
-                                          alert("Failed to delete toxicity level.");
+                                          YNotify.error(YI18n.t('Failed to delete toxicity level.'));
                                       }
                                   });
                               }
                           },
-                          'Delete'
+                          YI18n.t('Delete')
                       )
                   );
               }
@@ -1060,13 +1060,13 @@ var AdminMiscellanea = (function() {
           { id: 'id', hidden: true },
           {
               id: 'name',
-              name: 'Name',
+              name: YI18n.t('Name'),
               attributes: editableCellAttributesActivity,
               width: '10%'
           },
           {
               id: 'hours',
-              name: 'Activity Hours',
+              name: YI18n.t('Activity Hours'),
               width: '80%',
               formatter: (cell) => {
                   const hours = cell ? cell.split(',').map(h => parseInt(h.trim())) : [];
@@ -1074,13 +1074,13 @@ var AdminMiscellanea = (function() {
                       const isActive = hours.includes(i);
                       const intensity = isActive ? 1 : 0;
                       const bgColor = isActive ? 'rgba(34, 197, 94, 0.8)' : 'rgba(229, 231, 235, 0.5)';
-                      return `<div style="display: inline-block; width: 4%; height: 20px; background-color: ${bgColor}; border: 1px solid #e5e7eb; margin: 0; title='Hour ${i}'" title="Hour ${i}"></div>`;
+                      return '<div style="display: inline-block; width: 4%; height: 20px; background-color: ' + bgColor + '; border: 1px solid #e5e7eb; margin: 0; title=\'Hour ' + i + '\'" title="' + YI18n.t('Hour {i}', {i}) + '"></div>';
                   }).join('');
                   return gridjs.html(`<div style="display: flex; width: 100%; gap: 0;">${barHtml}</div>`);
               }
           },
           {
-              name: 'Actions',
+              name: YI18n.t('Actions'),
               attributes: () => ({ style: 'text-align: center;' }),
               width: '10%',
               formatter: (cell, row) => {
@@ -1099,12 +1099,12 @@ var AdminMiscellanea = (function() {
                                       if (res.ok) {
                                           gridActivity.forceRender();
                                       } else {
-                                          alert("Failed to delete activity profile.");
+                                          YNotify.error(YI18n.t('Failed to delete activity profile.'));
                                       }
                                   });
                               }
                           },
-                          'Delete'
+                          YI18n.t('Delete')
                       )
                   );
               }
@@ -1197,46 +1197,40 @@ var AdminMiscellanea = (function() {
       const statusDiv = document.getElementById('update-status');
     
       btn.disabled = true;
-      btn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Checking...';
-      statusDiv.innerHTML = '<span style="color: #4a90e2;">Checking for updates...</span>';
+      btn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> ' + YI18n.t('Checking...');
+      statusDiv.innerHTML = '<span style="color: #4a90e2;">' + YI18n.t('Checking for updates...') + '</span>';
     
       fetch('/admin/check_for_updates', { method: 'POST' })
       .then(response => {
           btn.disabled = false;
-          btn.innerHTML = '<i class="mdi mdi-update"></i> Check for Updates';
+          btn.innerHTML = '<i class="mdi mdi-update"></i> ' + YI18n.t('Check for Updates');
         
           if (response.redirected) {
               window.location.href = response.url;
           } else {
-              statusDiv.innerHTML = '<span style="color: #22c55e;">✓ Check complete</span>';
-              setTimeout(() => {
-                  statusDiv.innerHTML = 'Click to check if a newer version of YSocial is available.';
-              }, 3000);
+              YNotify.success(YI18n.t('✓ Check complete'));
+              statusDiv.innerHTML = YI18n.t('Click to check if a newer version of YSocial is available.');
           }
       })
       .catch(error => {
           btn.disabled = false;
-          btn.innerHTML = '<i class="mdi mdi-update"></i> Check for Updates';
-          statusDiv.innerHTML = '<span style="color: #dc3545;">✗ Error checking for updates</span>';
+          btn.innerHTML = '<i class="mdi mdi-update"></i> ' + YI18n.t('Check for Updates');
+          YNotify.error(YI18n.t('✗ Error checking for updates'));
+          statusDiv.innerHTML = YI18n.t('Click to check if a newer version of YSocial is available.');
       });
   });
 
   function updateTelemetryStatus(enabled) {
       const status = document.getElementById('telemetry-status');
       if (enabled) {
-          status.innerHTML = '<span style="color: #22c55e;">● Enabled</span>';
+          status.innerHTML = '<span style="color: #22c55e;">' + YI18n.t('● Enabled') + '</span>';
       } else {
-          status.innerHTML = '<span style="color: #dc3545;">● Disabled</span>';
+          status.innerHTML = '<span style="color: #dc3545;">' + YI18n.t('● Disabled') + '</span>';
       }
   }
 
   function showTelemetryMessage(message, isError) {
-      const msgDiv = document.getElementById('telemetry-message');
-      msgDiv.textContent = message;
-      msgDiv.style.display = 'block';
-      msgDiv.style.backgroundColor = isError ? '#fee2e2' : '#dcfce7';
-      msgDiv.style.color = isError ? '#dc3545' : '#16a34a';
-      setTimeout(() => { msgDiv.style.display = 'none'; }, 3000);
+      if (isError) YNotify.error(message); else YNotify.success(message);
   }
 
   bindById('telemetry_enabled', 'change', function() {
@@ -1251,14 +1245,14 @@ var AdminMiscellanea = (function() {
       .then(response => response.json())
       .then(data => {
           if (data.success) {
-              showTelemetryMessage('Telemetry setting updated', false);
+              showTelemetryMessage(YI18n.t('Telemetry setting updated'), false);
           } else {
-              showTelemetryMessage(data.message || 'Failed to update', true);
+              showTelemetryMessage(data.message || YI18n.t('Failed to update'), true);
           }
       })
       .catch(error => {
           console.error('Error:', error);
-          showTelemetryMessage('Error updating setting', true);
+          showTelemetryMessage(YI18n.t('Error updating setting'), true);
       });
   });
 
@@ -1270,6 +1264,7 @@ var AdminMiscellanea = (function() {
           updateTelemetryStatus(telemetryCheckbox.checked);
       }
   })();
+
 
   // Load current HPC monitor settings
   async function loadHpcMonitorSettings() {
@@ -1293,9 +1288,9 @@ var AdminMiscellanea = (function() {
         
           if (data.last_check) {
               const lastCheck = new Date(data.last_check);
-              document.getElementById('last-hpc-check-time').textContent = lastCheck.toLocaleString();
+              document.getElementById('last-hpc-check-time').textContent = lastCheck.toLocaleString(document.documentElement.lang || undefined);
           } else {
-              document.getElementById('last-hpc-check-time').textContent = 'Never';
+              document.getElementById('last-hpc-check-time').textContent = YI18n.t('Never');
           }
       } catch (error) {
           console.error('Error loading HPC monitor settings:', error);
@@ -1305,22 +1300,14 @@ var AdminMiscellanea = (function() {
   function updateHpcMonitorStatusIndicator(enabled) {
       const indicator = document.getElementById('hpc-monitor-status-indicator');
       if (enabled) {
-          indicator.innerHTML = '<span style="color: #22c55e;">● Active</span>';
+          indicator.innerHTML = '<span style="color: #22c55e;">' + YI18n.t('● Active') + '</span>';
       } else {
-          indicator.innerHTML = '<span style="color: #dc3545;">● Disabled</span>';
+          indicator.innerHTML = '<span style="color: #dc3545;">' + YI18n.t('● Disabled') + '</span>';
       }
   }
 
   function showHpcMonitorMessage(message, isError) {
-      const msgDiv = document.getElementById('hpc-monitor-message');
-      msgDiv.textContent = message;
-      msgDiv.style.display = 'block';
-      msgDiv.style.backgroundColor = isError ? '#fee2e2' : '#dcfce7';
-      msgDiv.style.color = isError ? '#dc3545' : '#16a34a';
-    
-      setTimeout(() => {
-          msgDiv.style.display = 'none';
-      }, 5000);
+      if (isError) YNotify.error(message); else YNotify.success(message);
   }
 
   // Save HPC monitor settings
@@ -1334,11 +1321,11 @@ var AdminMiscellanea = (function() {
     
       // Check for NaN or invalid values
       if (isNaN(interval) || interval < 1 || interval > 300) {
-          showHpcMonitorMessage('Check interval must be a valid number between 1 and 300 seconds', true);
+          showHpcMonitorMessage(YI18n.t('Check interval must be a valid number between 1 and 300 seconds'), true);
           return;
       }
       if (groupLimitEnabled && (isNaN(maxPerGroup) || maxPerGroup < 1)) {
-          showHpcMonitorMessage('Max HPC experiments per group must be a valid number greater than 0, or disable the limit', true);
+          showHpcMonitorMessage(YI18n.t('Max HPC experiments per group must be a valid number greater than 0, or disable the limit'), true);
           return;
       }
     
@@ -1357,13 +1344,13 @@ var AdminMiscellanea = (function() {
         
           if (data.success) {
               updateHpcMonitorStatusIndicator(enabled);
-              showHpcMonitorMessage('Settings saved successfully', false);
+              showHpcMonitorMessage(YI18n.t('Settings saved successfully'), false);
           } else {
-              showHpcMonitorMessage(data.message || 'Failed to save settings', true);
+              showHpcMonitorMessage(data.message || YI18n.t('Failed to save settings'), true);
           }
       } catch (error) {
           console.error('Error saving HPC monitor settings:', error);
-          showHpcMonitorMessage('Error saving settings', true);
+          showHpcMonitorMessage(YI18n.t('Error saving settings'), true);
       }
   });
 
@@ -1397,9 +1384,9 @@ var AdminMiscellanea = (function() {
   function updateWatchdogStatusIndicator(enabled) {
       const indicator = document.getElementById('watchdog-status-indicator');
       if (enabled) {
-          indicator.innerHTML = '<span style="color: #22c55e;">● Active</span>';
+          indicator.innerHTML = '<span style="color: #22c55e;">' + YI18n.t('● Active') + '</span>';
       } else {
-          indicator.innerHTML = '<span style="color: #dc3545;">● Disabled</span>';
+          indicator.innerHTML = '<span style="color: #dc3545;">' + YI18n.t('● Disabled') + '</span>';
       }
   }
 
@@ -1411,9 +1398,9 @@ var AdminMiscellanea = (function() {
         
           if (data.last_run) {
               const lastRun = new Date(data.last_run);
-              document.getElementById('watchdog-last-run').textContent = lastRun.toLocaleString();
+              document.getElementById('watchdog-last-run').textContent = lastRun.toLocaleString(document.documentElement.lang || undefined);
           } else {
-              document.getElementById('watchdog-last-run').textContent = 'Never';
+              document.getElementById('watchdog-last-run').textContent = YI18n.t('Never');
           }
         
           if (data.run_interval_minutes) {
@@ -1444,17 +1431,16 @@ var AdminMiscellanea = (function() {
       .then(response => response.json())
       .then(data => {
           if (data.success) {
-              statusDiv.innerHTML = '<span style="color: #22c55e;">✓ Watchdog ' + (enabled ? 'enabled' : 'disabled') + '</span>';
+              YNotify.success(YI18n.t('✓ Watchdog {value}', {value: enabled ? 'enabled' : 'disabled'}));
           } else {
-              statusDiv.innerHTML = '<span style="color: #dc3545;">✗ ' + (data.message || 'Failed to update') + '</span>';
+              YNotify.error(data.message || YI18n.t('Failed to update'));
           }
-          setTimeout(() => {
-              statusDiv.innerHTML = 'Monitors server/client processes for hangs and auto-restarts them.';
-          }, 3000);
+          statusDiv.innerHTML = YI18n.t('Monitors server/client processes for hangs and auto-restarts them.');
       })
       .catch(error => {
           console.error('Error:', error);
-          statusDiv.innerHTML = '<span style="color: #dc3545;">✗ Error updating setting</span>';
+          YNotify.error(YI18n.t('✗ Error updating setting'));
+          statusDiv.innerHTML = YI18n.t('Monitors server/client processes for hangs and auto-restarts them.');
       });
   });
 
@@ -1469,16 +1455,15 @@ var AdminMiscellanea = (function() {
       })
       .then(response => {
           if (response.ok) {
-              statusDiv.innerHTML = '<span style="color: #22c55e;">✓ Interval updated successfully</span>';
+              YNotify.success(YI18n.t('✓ Interval updated successfully'));
           } else {
-              statusDiv.innerHTML = '<span style="color: #dc3545;">✗ Failed to update interval</span>';
+              YNotify.error(YI18n.t('✗ Failed to update interval'));
           }
-          setTimeout(() => {
-              statusDiv.innerHTML = 'Monitors server/client processes for hangs and auto-restarts them.';
-          }, 3000);
+          statusDiv.innerHTML = YI18n.t('Monitors server/client processes for hangs and auto-restarts them.');
       })
       .catch(error => {
-          statusDiv.innerHTML = '<span style="color: #dc3545;">✗ Error: ' + error.message + '</span>';
+          YNotify.error(YI18n.t('✗ Error: {message}', {message: error.message}));
+          statusDiv.innerHTML = YI18n.t('Monitors server/client processes for hangs and auto-restarts them.');
       });
   });
 
@@ -1487,8 +1472,8 @@ var AdminMiscellanea = (function() {
       const statusDiv = document.getElementById('watchdog-status');
     
       btn.disabled = true;
-      btn.innerHTML = 'Running...';
-      statusDiv.innerHTML = '<span style="color: #4a90e2;">Running watchdog check...</span>';
+      btn.innerHTML = YI18n.t('Running...');
+      statusDiv.innerHTML = '<span style="color: #4a90e2;">' + YI18n.t('Running watchdog check...') + '</span>';
     
       fetch('/admin/watchdog_run_now', {
           method: 'POST',
@@ -1497,23 +1482,26 @@ var AdminMiscellanea = (function() {
       .then(response => response.json())
       .then(data => {
           btn.disabled = false;
-          btn.innerHTML = 'Run Now';
+          btn.innerHTML = YI18n.t('Run Now');
         
           if (data.error) {
-              statusDiv.innerHTML = '<span style="color: #dc3545;">✗ Error: ' + data.error + '</span>';
+              YNotify.error(YI18n.t('✗ Error: {error}', {error: data.error}));
+              statusDiv.innerHTML = YI18n.t('Monitors server/client processes for hangs and auto-restarts them.');
           } else {
               const msg = 'Checked: ' + data.processes_checked + 
                          ', Restarted: ' + data.processes_restarted + 
                          ', Healthy: ' + data.processes_healthy;
-              statusDiv.innerHTML = '<span style="color: #22c55e;">✓ ' + msg + '</span>';
+              YNotify.success(msg);
+              statusDiv.innerHTML = YI18n.t('Monitors server/client processes for hangs and auto-restarts them.');
               // Update last run time
               loadWatchdogStatus();
           }
       })
       .catch(error => {
           btn.disabled = false;
-          btn.innerHTML = 'Run Now';
-          statusDiv.innerHTML = '<span style="color: #dc3545;">✗ Error running watchdog</span>';
+          btn.innerHTML = YI18n.t('Run Now');
+          YNotify.error(YI18n.t('✗ Error running watchdog'));
+          statusDiv.innerHTML = YI18n.t('Monitors server/client processes for hangs and auto-restarts them.');
       });
   });
 
@@ -1554,21 +1542,21 @@ var AdminMiscellanea = (function() {
           { id: 'id', hidden: true },
           {
               id: 'name',
-              name: 'Group Name',
+              name: YI18n.t('Group Name'),
               attributes: editableCellAttributesOpinionGroups
           },
           {
               id: 'lower_bound',
-              name: 'Lower Bound',
+              name: YI18n.t('Lower Bound'),
               attributes: editableCellAttributesOpinionGroups
           },
           {
               id: 'upper_bound',
-              name: 'Upper Bound',
+              name: YI18n.t('Upper Bound'),
               attributes: editableCellAttributesOpinionGroups
           },
           {
-              name: 'Actions',
+              name: YI18n.t('Actions'),
               attributes: () => ({ style: 'text-align: center;' }),
               formatter: (cell, row) => {
                   return gridjs.h(
@@ -1586,12 +1574,12 @@ var AdminMiscellanea = (function() {
                                       if (res.ok) {
                                           gridOpinionGroups.forceRender();
                                       } else {
-                                          alert("Failed to delete opinion group.");
+                                          YNotify.error(YI18n.t('Failed to delete opinion group.'));
                                       }
                                   });
                               }
                           },
-                          'Delete'
+                          YI18n.t('Delete')
                       )
                   );
               }
@@ -1690,17 +1678,17 @@ var AdminMiscellanea = (function() {
           { id: 'id', hidden: true },
           {
               id: 'name',
-              name: 'Name',
+              name: YI18n.t('Name'),
               attributes: editableCellAttributesOpinionDistributions
           },
           {
               id: 'distribution_type',
-              name: 'Distribution Type',
+              name: YI18n.t('Distribution Type'),
               width: '20%'
           },
           {
               id: 'parameters',
-              name: 'Parameters',
+              name: YI18n.t('Parameters'),
               width: '40%',
               formatter: (cell) => {
                   try {
@@ -1712,7 +1700,7 @@ var AdminMiscellanea = (function() {
               }
           },
           {
-              name: 'Actions',
+              name: YI18n.t('Actions'),
               attributes: () => ({ style: 'text-align: center;' }),
               formatter: (cell, row) => {
                   return gridjs.h(
@@ -1730,12 +1718,12 @@ var AdminMiscellanea = (function() {
                                       if (res.ok) {
                                           gridOpinionDistributions.forceRender();
                                       } else {
-                                          alert("Failed to delete opinion distribution.");
+                                          YNotify.error(YI18n.t('Failed to delete opinion distribution.'));
                                       }
                                   });
                               }
                           },
-                          'Delete'
+                          YI18n.t('Delete')
                       )
                   );
               }
@@ -1813,34 +1801,34 @@ var AdminMiscellanea = (function() {
 
   const distributionParams = {
       'uniform': [
-          { name: 'low', label: 'Low', type: 'number', step: '0.01', default: '0' },
-          { name: 'high', label: 'High', type: 'number', step: '0.01', default: '1' }
+          { name: 'low', label: YI18n.t('Low'), type: 'number', step: '0.01', default: '0' },
+          { name: 'high', label: YI18n.t('High'), type: 'number', step: '0.01', default: '1' }
       ],
       'beta': [
-          { name: 'a', label: 'Alpha (a)', type: 'number', step: '0.1', default: '2' },
-          { name: 'b', label: 'Beta (b)', type: 'number', step: '0.1', default: '5' }
+          { name: 'a', label: YI18n.t('Alpha (a)'), type: 'number', step: '0.1', default: '2' },
+          { name: 'b', label: YI18n.t('Beta (b)'), type: 'number', step: '0.1', default: '5' }
       ],
       'normal': [
-          { name: 'loc', label: 'Mean (μ)', type: 'number', step: '0.01', default: '0.5' },
-          { name: 'scale', label: 'Std Dev (σ)', type: 'number', step: '0.01', default: '0.1' }
+          { name: 'loc', label: YI18n.t('Mean (μ)'), type: 'number', step: '0.01', default: '0.5' },
+          { name: 'scale', label: YI18n.t('Std Dev (σ)'), type: 'number', step: '0.01', default: '0.1' }
       ],
       'exponential': [
-          { name: 'scale', label: 'Scale (1/λ)', type: 'number', step: '0.01', default: '1' }
+          { name: 'scale', label: YI18n.t('Scale (1/λ)'), type: 'number', step: '0.01', default: '1' }
       ],
       'gamma': [
-          { name: 'shape', label: 'Shape (k)', type: 'number', step: '0.1', default: '2' },
-          { name: 'scale', label: 'Scale (θ)', type: 'number', step: '0.01', default: '1' }
+          { name: 'shape', label: YI18n.t('Shape (k)'), type: 'number', step: '0.1', default: '2' },
+          { name: 'scale', label: YI18n.t('Scale (θ)'), type: 'number', step: '0.01', default: '1' }
       ],
       'binomial': [
-          { name: 'n', label: 'Trials (n)', type: 'number', step: '1', default: '10' },
-          { name: 'p', label: 'Probability (p)', type: 'number', step: '0.01', default: '0.5', min: '0', max: '1' }
+          { name: 'n', label: YI18n.t('Trials (n)'), type: 'number', step: '1', default: '10' },
+          { name: 'p', label: YI18n.t('Probability (p)'), type: 'number', step: '0.01', default: '0.5', min: '0', max: '1' }
       ],
       'poisson': [
-          { name: 'lam', label: 'Lambda (λ)', type: 'number', step: '0.1', default: '3' }
+          { name: 'lam', label: YI18n.t('Lambda (λ)'), type: 'number', step: '0.1', default: '3' }
       ],
       'lognormal': [
-          { name: 'mean', label: 'Mean', type: 'number', step: '0.01', default: '0' },
-          { name: 'sigma', label: 'Sigma (σ)', type: 'number', step: '0.01', default: '1' }
+          { name: 'mean', label: YI18n.t('Mean'), type: 'number', step: '0.01', default: '0' },
+          { name: 'sigma', label: YI18n.t('Sigma (σ)'), type: 'number', step: '0.01', default: '1' }
       ]
   };
 
@@ -1887,7 +1875,7 @@ var AdminMiscellanea = (function() {
           const paramName = input.dataset.paramName;
           const value = parseFloat(input.value);
           if (isNaN(value)) {
-              alert(`Invalid value for ${paramName}: must be a valid number`);
+              YNotify.error(YI18n.t('Invalid value for {paramname}: must be a valid number', {paramname: paramName}));
               hasError = true;
               return;
           }
@@ -1994,7 +1982,7 @@ var AdminMiscellanea = (function() {
           return;
       }
       button.disabled = !!isBusy;
-      button.textContent = isBusy ? 'Downloading...' : 'Download Model';
+      button.textContent = isBusy ? YI18n.t('Downloading...') : YI18n.t('Download Model');
   }
 
   function resetDetoxifyPill(statusPill, status) {
@@ -2047,23 +2035,17 @@ var AdminMiscellanea = (function() {
       if (pathInput && document.activeElement !== pathInput && path) {
           pathInput.value = path;
       }
-      if (readyNotice) {
-          readyNotice.classList.toggle('is-hidden', status !== 'ready');
-      }
-      if (errorNotice) {
-          errorNotice.classList.toggle('is-hidden', status !== 'error');
-          if (status === 'error') {
-              errorNotice.textContent = message;
-          }
-      }
-
       setDetoxifyButtonBusy(status === 'running');
 
-      if (detoxifyState.lastStatus === 'running' && status === 'ready' && readyNotice) {
-          readyNotice.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      // The ready/error outcome is announced as a floating card (the in-page notices stay hidden)
+      if (detoxifyState.lastStatus === 'running' && status === 'ready') {
+          if (readyNotice) {
+              YNotify.success(readyNotice.textContent.replace(/\s+/g, ' ').trim());
+          }
           document.dispatchEvent(new CustomEvent('ys-notifications-refresh'));
       }
       if (detoxifyState.lastStatus === 'running' && status === 'error') {
+          YNotify.error(message);
           document.dispatchEvent(new CustomEvent('ys-notifications-refresh'));
       }
       detoxifyState.lastStatus = status;
@@ -2133,7 +2115,7 @@ var AdminMiscellanea = (function() {
               .then(async response => {
                   const payload = await response.json().catch(() => ({}));
                   if (!response.ok) {
-                      throw new Error(payload.error || 'Unable to start the Detoxify download.');
+                      throw new Error(payload.error || YI18n.t('Unable to start the Detoxify download.'));
                   }
                   return payload;
               })
@@ -2148,7 +2130,7 @@ var AdminMiscellanea = (function() {
                       status: 'error',
                       progress: 0,
                       path: downloadPath,
-                      message: error.message || 'Unable to start the Detoxify download.'
+                      message: error.message || YI18n.t('Unable to start the Detoxify download.')
                   });
               });
       });
@@ -2173,10 +2155,10 @@ var AdminMiscellanea = (function() {
   if (llmModelsTableDiv) {
   new gridjs.Grid({
       columns: [
-          { id: 'model_name', name: 'Model Name', sort: true },
+          { id: 'model_name', name: YI18n.t('Model Name'), sort: true },
           {
               id: 'actions',
-              name: 'Actions',
+              name: YI18n.t('Actions'),
               sort: false,
               formatter: (cell, row) => {
                   const modelName = row.cells[0].data;
@@ -2184,14 +2166,7 @@ var AdminMiscellanea = (function() {
 
                   // Only show delete button for Ollama backend
                   if (backend === 'ollama') {
-                      return gridjs.html(`
-                          <div style="display: flex; gap: 8px; justify-content: center;">
-                              <a href="/admin/delete_model/${encodeURIComponent(modelName)}"
-                                 style="background-color: #dc3545; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">
-                                  Delete
-                              </a>
-                          </div>
-                      `);
+                      return gridjs.html('\n                          <div style="display: flex; gap: 8px; justify-content: center;">\n                              <a href="/admin/delete_model/' + encodeURIComponent(modelName) + '"\n                                 style="background-color: #dc3545; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">\n                                  ' + YI18n.t('Delete') + '\n                              </a>\n                          </div>\n                      ');
                   } else {
                       return gridjs.html(`<div style="text-align: center;">-</div>`);
                   }

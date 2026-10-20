@@ -35,10 +35,13 @@ from flask import (
     request,
     url_for,
 )
+from flask_babel import format_datetime
 from flask_login import current_user, login_required, login_user
 from sqlalchemy import select
 
 from y_web import db  # , app
+from y_web.i18n import N_
+from y_web.i18n import gettext as _
 from y_web.src.content.avatars import normalize_forum_avatar_mode
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
@@ -671,11 +674,11 @@ def _load_forum_experiment_context(uid, require_manage=True):
 
     experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     if not experiment:
-        flash("Experiment not found", "error")
+        flash(_("Experiment not found"), "error")
         return None, None, redirect(url_for("experiments.settings"))
 
     if experiment.platform_type != "forum":
-        flash("This page is only available for forum experiments.", "warning")
+        flash(_("This page is only available for forum experiments."), "warning")
         return (
             None,
             None,
@@ -684,7 +687,7 @@ def _load_forum_experiment_context(uid, require_manage=True):
 
     admin_user = _current_admin_user_or_none()
     if require_manage and not user_can_manage_experiment(admin_user, experiment):
-        flash("You do not have permission to manage this experiment.", "error")
+        flash(_("You do not have permission to manage this experiment."), "error")
         return (
             None,
             None,
@@ -696,7 +699,7 @@ def _load_forum_experiment_context(uid, require_manage=True):
     base_dir = get_writable_path()
     exp_folder = get_experiment_uid_from_db_name(experiment.db_name)
     if not exp_folder:
-        flash("Invalid experiment database configuration", "error")
+        flash(_("Invalid experiment database configuration"), "error")
         return None, None, redirect(url_for("experiments.settings"))
 
     experiment_dir = os.path.join(base_dir, "y_web", "experiments", exp_folder)
@@ -708,14 +711,24 @@ def _load_memory_capable_experiment_context(uid, require_manage=True):
     """Load a memory-capable experiment and its writable directory."""
     check_privileges(current_user.username)
 
+    from y_web.src.system.memory_plugin import agent_memory_plugin_installed
+
+    if not agent_memory_plugin_installed():
+        flash(_("The Agent Memory plugin is not installed."), "error")
+        return (
+            None,
+            None,
+            redirect(url_for("experiments.experiment_details", uid=uid)),
+        )
+
     experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     if not experiment:
-        flash("Experiment not found", "error")
+        flash(_("Experiment not found"), "error")
         return None, None, redirect(url_for("experiments.settings"))
 
     admin_user = _current_admin_user_or_none()
     if require_manage and not user_can_manage_experiment(admin_user, experiment):
-        flash("You do not have permission to manage this experiment.", "error")
+        flash(_("You do not have permission to manage this experiment."), "error")
         return (
             None,
             None,
@@ -727,7 +740,7 @@ def _load_memory_capable_experiment_context(uid, require_manage=True):
     base_dir = get_writable_path()
     exp_folder = get_experiment_uid_from_db_name(experiment.db_name)
     if not exp_folder:
-        flash("Invalid experiment database configuration", "error")
+        flash(_("Invalid experiment database configuration"), "error")
         return None, None, redirect(url_for("experiments.settings"))
 
     experiment_dir = os.path.join(base_dir, "y_web", "experiments", exp_folder)
@@ -741,12 +754,12 @@ def _load_stress_reward_experiment_context(uid, require_manage=True):
 
     experiment = db.session.scalars(select(Exps).filter_by(idexp=uid)).first()
     if not experiment:
-        flash("Experiment not found", "error")
+        flash(_("Experiment not found"), "error")
         return None, None, redirect(url_for("experiments.settings"))
 
     admin_user = _current_admin_user_or_none()
     if require_manage and not user_can_manage_experiment(admin_user, experiment):
-        flash("You do not have permission to manage this experiment.", "error")
+        flash(_("You do not have permission to manage this experiment."), "error")
         return None, None, redirect(url_for("experiments.experiment_details", uid=uid))
 
     if getattr(experiment, "platform_type", "") not in {
@@ -755,7 +768,9 @@ def _load_stress_reward_experiment_context(uid, require_manage=True):
         "hpc",
     }:
         flash(
-            "Stress/reward settings are available only for microblogging, forum, and HPC experiments.",
+            _(
+                "Stress/reward settings are available only for microblogging, forum, and HPC experiments."
+            ),
             "error",
         )
         return None, None, redirect(url_for("experiments.experiment_details", uid=uid))
@@ -765,7 +780,7 @@ def _load_stress_reward_experiment_context(uid, require_manage=True):
     base_dir = get_writable_path()
     exp_folder = get_experiment_uid_from_db_name(experiment.db_name)
     if not exp_folder:
-        flash("Invalid experiment database configuration", "error")
+        flash(_("Invalid experiment database configuration"), "error")
         return None, None, redirect(url_for("experiments.settings"))
 
     experiment_dir = os.path.join(base_dir, "y_web", "experiments", exp_folder)
@@ -789,7 +804,7 @@ def _load_stress_reward_experiment_context(uid, require_manage=True):
 
     stress_reward_cfg = normalize_stress_reward_config(config.get("stress_reward"))
     if not bool(stress_reward_cfg.get("enabled", False)):
-        flash("Enable stress/reward in Experiment Configuration first.", "warning")
+        flash(_("Enable stress/reward in Experiment Configuration first."), "warning")
         return None, None, redirect(url_for("experiments.experiment_details", uid=uid))
 
     return experiment, experiment_dir, None
@@ -992,6 +1007,82 @@ def _read_forum_avatar_settings(experiment_dir):
     return settings
 
 
+_NOTIFICATION_STATUS_LABELS = {
+    "ready": N_("ready"),
+    "failed": N_("failed"),
+    "processing": N_("processing"),
+    "cancelled": N_("cancelled"),
+}
+
+# Notification texts are stored in the database in English (the msgid) and
+# translated when they are shown, in the language of the viewing admin.
+_NOTIFICATION_TEXTS = [
+    N_("Detoxify Model Download"),
+    N_("Bulk export experiments"),
+    N_("Preparing experiment archive in background..."),
+    N_("Your experiment archive is ready to download."),
+    N_("Your bulk experiments archive is ready to download."),
+    N_("Archive generation failed."),
+    N_("Bulk archive generation failed."),
+    N_("Notification cancelled."),
+    N_("Download file is no longer available."),
+    N_("Detoxify model download in progress."),
+    N_("Detoxify model download failed."),
+]
+_NOTIFICATION_PATTERNS = [
+    (re.compile(r"^Export (?P<name>.+)$", re.S), N_("Export %(name)s")),
+    (
+        re.compile(r"^Experiment shared: (?P<name>.+)$", re.S),
+        N_("Experiment shared: %(name)s"),
+    ),
+    (
+        re.compile(r"^Experiment group shared: (?P<name>.+)$", re.S),
+        N_("Experiment group shared: %(name)s"),
+    ),
+    (
+        re.compile(
+            r"^Preparing archive for (?P<count>\d+) experiment\(s\) in background\.\.\.$"
+        ),
+        N_("Preparing archive for %(count)s experiment(s) in background..."),
+    ),
+    (
+        re.compile(
+            r"^(?P<user>.+) granted you visibility to experiment '(?P<name>.+)'\.$",
+            re.S,
+        ),
+        N_("%(user)s granted you visibility to experiment '%(name)s'."),
+    ),
+    (
+        re.compile(
+            r"^(?P<user>.+) granted you visibility to group '(?P<name>.+)'\.$", re.S
+        ),
+        N_("%(user)s granted you visibility to group '%(name)s'."),
+    ),
+    (
+        re.compile(
+            r"^Detoxify model is ready at (?P<path>.+?)\. Future simulations will reuse this local cache\.?$",
+            re.S,
+        ),
+        N_(
+            "Detoxify model is ready at %(path)s. Future simulations will reuse this local cache."
+        ),
+    ),
+]
+
+
+def _localize_notification_text(text):
+    """Translate a stored (English) notification title or message for display."""
+    if not text:
+        return text
+    if text in _NOTIFICATION_TEXTS:
+        return _(text)
+    for pattern, msgid in _NOTIFICATION_PATTERNS:
+        match = pattern.match(text)
+        if match:
+            return _(msgid, **match.groupdict())
+    return text
+
+
 def _serialize_download_notification(notification):
     """Convert notification model to JSON-safe structure."""
     clean_message, related_exp_ids = _extract_related_experiment_ids(
@@ -1024,9 +1115,19 @@ def _serialize_download_notification(notification):
     )
     return {
         "id": notification.id,
-        "title": notification.title,
-        "message": clean_message,
+        "title": _localize_notification_text(notification.title),
+        "message": _localize_notification_text(clean_message),
         "status": notification.status,
+        "status_label": (
+            _(_NOTIFICATION_STATUS_LABELS[notification.status])
+            if notification.status in _NOTIFICATION_STATUS_LABELS
+            else notification.status
+        ),
+        "created_label": (
+            format_datetime(notification.created_at, "short")
+            if notification.created_at
+            else ""
+        ),
         "resource_name": notification.resource_name,
         "is_read": bool(notification.is_read),
         "created_at": (
@@ -1166,7 +1267,7 @@ def get_suggested_port():
     # Fall back to an OS-assigned free port if the configured range is exhausted.
     # This prevents older servers from failing hard when a large historical
     # experiment catalog has saturated the common port range.
-    for _ in range(32):
+    for _attempt in range(32):
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                 sock.bind(("127.0.0.1", 0))

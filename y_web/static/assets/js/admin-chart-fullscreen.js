@@ -99,11 +99,7 @@
     if (existing) return existing;
     var toolbar = document.createElement('div');
     toolbar.className = 'ys-chart-fullscreen-toolbar';
-    toolbar.innerHTML = '' +
-      '<button type="button" class="ys-chart-toolbar-button" data-export-format="png">PNG</button>' +
-      '<button type="button" class="ys-chart-toolbar-button" data-export-format="jpg">JPG</button>' +
-      '<button type="button" class="ys-chart-toolbar-button" data-export-format="pdf">PDF</button>' +
-      '<button type="button" class="ys-chart-toolbar-button is-close" data-chart-close="1">Close</button>';
+    toolbar.innerHTML = '<button type="button" class="ys-chart-toolbar-button" data-export-format="png">' + YI18n.t('PNG') + '</button><button type="button" class="ys-chart-toolbar-button" data-export-format="jpg">' + YI18n.t('JPG') + '</button><button type="button" class="ys-chart-toolbar-button" data-export-format="pdf">' + YI18n.t('PDF') + '</button><button type="button" class="ys-chart-toolbar-button is-close" data-chart-close="1">' + YI18n.t('Close') + '</button>';
     toolbar.addEventListener('click', function (event) {
       var button = event.target.closest('.ys-chart-toolbar-button');
       if (!button) return;
@@ -121,7 +117,7 @@
   function updateButtonState(button, isActive) {
     if (!button) return;
     button.classList.toggle('is-active', isActive);
-    button.title = isActive ? 'Collapse plot' : 'Expand plot';
+    button.title = isActive ? YI18n.t('Collapse plot') : YI18n.t('Expand plot');
     var icon = button.querySelector('i');
     if (icon) {
       icon.className = isActive ? 'mdi mdi-fullscreen-exit' : 'mdi mdi-fullscreen';

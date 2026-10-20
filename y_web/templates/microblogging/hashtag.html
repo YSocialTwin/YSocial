@@ -269,15 +269,17 @@
                     {% include "microblogging/components/sidebar_user_card.html" %}
 
 
-                    {% set ranked_card_title = "Trending Hashtags" %}
-                    {% set ranked_card_subtitle = "Live signals from the current conversation" %}
+                    {% if ui is not defined or ui.show_trending_hashtags is not false %}
+                    {% set ranked_card_title = _('Trending Hashtags') %}
+                    {% set ranked_card_subtitle = _('Live signals from the current conversation') %}
                     {% set ranked_card_items = trending_ht %}
                     {% set ranked_card_href_prefix = "hashtag_posts" %}
                     {% set ranked_card_label_key = "hashtag" %}
-                    {% set ranked_card_meta_label = "mentions" %}
+                    {% set ranked_card_meta_label = _('mentions') %}
                     {% set ranked_card_prefix = "#" %}
-                    {% set ranked_card_empty = "No hashtags are trending yet." %}
+                    {% set ranked_card_empty = _('No hashtags are trending yet.') %}
                     {% include "microblogging/components/sidebar_ranked_list_card.html" %}
+                    {% endif %}
 
                 </div>
                 <!-- /Left side column -->
@@ -289,10 +291,10 @@
                     <!-- Post 1 -->
                     <!-- /partials/pages/feed/posts/feed-post1.html -->
                     <!-- POST #1 -->
-                    {% set hero_eyebrow = "Hashtag Focus" %}
-                    {% set hero_prefix = "Let's see what we are saying about" %}
-                    {% set hero_focus = current_hashtag %}
-                    {% set hero_suffix = "today." %}
+                    {% set hero_eyebrow = _('Hashtag Focus') %}
+                    {% set hero_prefix = _("Let's see what we are saying about") %}
+                    {% set hero_focus = '#' ~ (current_hashtag|string|trim('#')) %}
+                    {% set hero_suffix = _('today.') %}
                     {% include "microblogging/components/context_hero_card.html" %}
 
                     <div class="profile-timeline" id="posts-container">
@@ -304,11 +306,10 @@
                     <div class="load-more-wrap narrow-top has-text-centered">
                         {% if page-1>0 %}
                         <a href="#" class="load-more-button"
-                           onclick="window.location.href = '/{{exp_id}}/hashtag_posts/{{hashtag_id}}/{{ page-1 }}';">Previous
-                            Page</a>
+                           onclick="window.location.href = '/{{exp_id}}/hashtag_posts/{{hashtag_id}}/{{ page-1 }}';">{{ _('Previous Page') }}</a>
                         {% endif %}
                         <a href="#" class="load-more-button"
-                           onclick="window.location.href = '/{{exp_id}}/hashtag_posts/{{hashtag_id}}/{{ page+1 }}';">Next Page</a>
+                           onclick="window.location.href = '/{{exp_id}}/hashtag_posts/{{hashtag_id}}/{{ page+1 }}';">{{ _('Next Page') }}</a>
                     </div>
                     <!-- /Load more posts  -->
                 </div>

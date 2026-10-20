@@ -69,7 +69,7 @@ var AdminDashboard = (function() {
   }
 
   const experimentProgressRequests = {};
-  const PROGRESS_REFRESH_INTERVAL = 5000;
+  const PROGRESS_REFRESH_INTERVAL = 30000;
 
   function getRunningExperimentIds() {
       const container = document.getElementById('running-experiments-container');
@@ -213,46 +213,86 @@ var AdminDashboard = (function() {
       }
   }
 
-  async function refreshExperimentSection(status, sectionColor, page) {
+  const SECTION_COLORS = { running: '#28a745', completed: '#17a2b8', stopped: '#6c757d' };
+  // Groups per page (the running box is not paginated: it shows every group)
+  const GROUPS_PER_PAGE = { running: 1000, completed: 5, stopped: 5 };
+
+  function escapeHtmlText(value) {
+      return String(value === null || value === undefined ? '' : value)
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  // Render the groups of one page, each with its header and its experiments
+  // (same markup as render_grouped_experiments in dashboard.html)
+  function renderGroupsFromData(groups, status, sectionColor, openGroups) {
+      const compact = status !== 'running';
+      const collapsedByDefault = status !== 'running';
+      return groups.map(function (group) {
+          const groupId = status + '_' + group.name.replace(/ /g, '_').replace(/\//g, '_');
+          const collapsed = openGroups ? !openGroups.has(groupId) : collapsedByDefault;
+          const renderFunc = compact
+              ? (exp) => renderCompactExperimentBoxFromData(exp, sectionColor)
+              : (exp) => renderExperimentBoxFromData(exp, sectionColor, {}, false, false);
+          const inner = group.experiments.map(renderFunc).join('');
+          return '<div class="experiment-group ys-mb-15">' +
+              '<div class="group-header" style="background: #f8f9fa; border: 1px solid #e0e0e0; border-left: 3px solid ' + sectionColor + '; border-radius: 6px; padding: 10px 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s;" onclick="toggleGroup(\'' + escapeHtmlText(groupId) + '\')">' +
+              '<div class="group-header-main">' +
+              '<i class="mdi mdi-chevron-down" id="icon-' + escapeHtmlText(groupId) + '" style="font-size: 18px; color: #666; transition: transform 0.2s;' + (collapsed ? ' transform: rotate(-90deg);' : '') + '"></i> ' +
+              '<span class="group-header-title">' + escapeHtmlText(group.name) + '</span> ' +
+              '<span style="background: ' + sectionColor + '; color: white; font-size: 0.7em; padding: 2px 8px; border-radius: 12px; font-weight: 600;">' + group.experiments.length + '</span>' +
+              '</div>' +
+              '<span class="group-header-hint">' + YI18n.t('Click to expand/collapse') + '</span>' +
+              '</div>' +
+              '<div id="' + escapeHtmlText(groupId) + '" class="group-content" style="margin-top: 8px; display: ' + (collapsed ? 'none' : 'block') + ';">' + inner + '</div>' +
+              '</div>';
+      }).join('');
+  }
+
+  // Load one page of groups of a box (completed / stopped / running)
+  async function loadExperimentPage(status, page) {
+      const sectionColor = SECTION_COLORS[status];
+      const container = document.getElementById(`${status}-experiments-container`);
+      if (!container) return;
+      const requested = Math.max(1, page || 1);
       try {
-          const currentPage = Math.max(
-              1,
-              page || paginationState[status].page || 1
-          );
           const response = await fetch(
-              `/admin/dashboard/experiments/${status}?page=${currentPage}&per_page=5`
+              `/admin/dashboard/experiments/${status}?page=${requested}&per_page=${GROUPS_PER_PAGE[status]}`
           );
           const data = await response.json();
-        
-          const containerId = `${status === 'running' ? 'running' : status}-experiments-container`;
-          const container = document.getElementById(containerId);
-        
-          if (container && data.experiments) {
-              const totalPages = data.total_pages || 1;
-              paginationState[status].page = Math.min(currentPage, totalPages);
-              paginationState[status].totalPages = totalPages;
+          if (!data.groups) return;
 
-              // Use compact rendering for completed/stopped, full for running
-              const renderFunc = status === 'running' 
-                  ? (exp) => renderExperimentBoxFromData(exp, sectionColor, {}, false, false)
-                  : (exp) => renderCompactExperimentBoxFromData(exp, sectionColor);
-              const html = data.experiments.map(renderFunc).join('');
-              container.innerHTML = html || '<p style="color: #666; text-align: center;">No experiments in this category</p>';
+          const totalPages = data.total_pages || 1;
+          paginationState[status].page = data.page || Math.min(requested, totalPages);
+          paginationState[status].totalPages = totalPages;
 
-              const prevBtn = document.getElementById(`${status}-prev`);
-              const nextBtn = document.getElementById(`${status}-next`);
-              const pageInfo = document.getElementById(`${status}-page-info`);
-              if (prevBtn) prevBtn.disabled = paginationState[status].page <= 1;
-              if (nextBtn) nextBtn.disabled = paginationState[status].page >= totalPages;
-              if (pageInfo) {
-                  pageInfo.textContent = status === 'running'
-                      ? `Page ${paginationState[status].page} of ${totalPages}`
-                      : `${paginationState[status].page}/${totalPages}`;
-              }
+          // keep the groups the user has opened while the content is replaced
+          const openGroups = new Set();
+          container.querySelectorAll('.group-content').forEach(function (el) {
+              if (el.style.display !== 'none') openGroups.add(el.id);
+          });
+          const html = renderGroupsFromData(data.groups, status, sectionColor, openGroups);
+          container.innerHTML = html || '<p style="color: #666; text-align: center;">' + YI18n.t('No experiments in this category') + '</p>';
+
+          const prevBtn = document.getElementById(`${status}-prev`);
+          const nextBtn = document.getElementById(`${status}-next`);
+          const pageInfo = document.getElementById(`${status}-page-info`);
+          const pagination = document.getElementById(`${status}-pagination`);
+          if (prevBtn) prevBtn.disabled = paginationState[status].page <= 1;
+          if (nextBtn) nextBtn.disabled = paginationState[status].page >= totalPages;
+          if (pageInfo) {
+              pageInfo.textContent = status === 'running'
+                  ? YI18n.t('Page {page} of {totalpages}', {page: paginationState[status].page, totalpages: totalPages})
+                  : `${paginationState[status].page}/${totalPages}`;
           }
+          if (pagination) pagination.classList.toggle('is-hidden', totalPages <= 1);
       } catch (error) {
-          console.error(`Error refreshing ${status} experiments:`, error);
+          console.error(`Error loading ${status} experiments:`, error);
       }
+  }
+
+  async function refreshExperimentSection(status, sectionColor, page) {
+      await loadExperimentPage(status, page || paginationState[status].page || 1);
   }
 
   // Start periodic async refresh
@@ -261,22 +301,22 @@ var AdminDashboard = (function() {
 
   // Experiment server control functions
   function startExperimentServer(expId) {
-      showLoading('Starting experiment server...');
+      showLoading(YI18n.t('Starting experiment server...'));
       window.location.href = `/admin/start_experiment/${expId}`;
   }
 
   function stopExperimentServer(expId) {
-      showLoading('Stopping experiment server...');
+      showLoading(YI18n.t('Stopping experiment server...'));
       window.location.href = `/admin/stop_experiment/${expId}`;
   }
 
   function selectExperiment(expId) {
-      showLoading('Loading experiment interface...');
+      showLoading(YI18n.t('Loading experiment interface...'));
       window.location.href = `/admin/select_experiment/${expId}`;
   }
 
   function joinExperiment(expId) {
-      showLoading('Joining experiment...');
+      showLoading(YI18n.t('Joining experiment...'));
       window.location.href = `/admin/join_experiment/${expId}`;
   }
 
@@ -292,69 +332,33 @@ var AdminDashboard = (function() {
           : (hasStartedOnce ? `${expProgress !== null ? expProgress : 0}%` : 'NA');
     
       const infiniteBadge = hasInfiniteClient ? 
-          `<span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="Infinite">∞</span>` : '';
+          '<span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="' + YI18n.t('Infinite') + '">∞</span>' : '';
     
       const clientCountBadge = clientCount > 0 ?
-          `<span style="background: #e0e0e0; color: #666; font-size: 0.6em; padding: 0 4px; border-radius: 6px; line-height: 1.4;" title="Clients">${clientCount}</span>` : '';
+          '<span style="background: #e0e0e0; color: #666; font-size: 0.6em; padding: 0 4px; border-radius: 6px; line-height: 1.4;" title="' + YI18n.t('Clients') + '">' + clientCount + '</span>' : '';
 
       const progressBadge = (expStatus === 'stopped' || expStatus === 'scheduled') ?
-          `<span style="background: linear-gradient(90deg, #039be5 0%, #00b4d8 100%); color: white; font-size: 0.65em; padding: 1px 6px; border-radius: 8px; font-weight: 600; line-height: 1.4; white-space: nowrap;" title="Current execution progress">
-              Execution: ${progressLabel}
-          </span>` : '';
+          '<span style="background: linear-gradient(90deg, #039be5 0%, #00b4d8 100%); color: white; font-size: 0.65em; padding: 1px 6px; border-radius: 8px; font-weight: 600; line-height: 1.4; white-space: nowrap;" title="' + YI18n.t('Current execution progress') + '">\n              ' + YI18n.t('Execution: {progresslabel}', {progresslabel: progressLabel}) + '\n          </span>' : '';
     
       const runButton = exp.running === 0 ?
-          `<a class="link-tooltip" href="#" onclick="startExperimentServer('${exp.idexp}'); return false;" title="Run">
-              <i class="mdi mdi-play-box-outline" style="font-size: 16px;"></i>
-          </a>` :
-          (exp.can_manage ? `<a class="link-tooltip" href="#" onclick="stopExperimentServer('${exp.idexp}'); return false;" title="Stop">
-              <i class="mdi mdi-stop active" style="font-size: 16px;"></i>
-          </a>` : '');
+          '<a class="link-tooltip" href="#" onclick="startExperimentServer(\'' + exp.idexp + '\'); return false;" title="' + YI18n.t('Run') + '">\n              <i class="mdi mdi-play-box-outline" style="font-size: 16px;"></i>\n          </a>' :
+          (exp.can_manage ? '<a class="link-tooltip" href="#" onclick="stopExperimentServer(\'' + exp.idexp + '\'); return false;" title="' + YI18n.t('Stop') + '">\n              <i class="mdi mdi-stop active" style="font-size: 16px;"></i>\n          </a>' : '');
     
       const deleteExpButton = exp.status === 0 && exp.can_manage ?
-          `<a class="link-tooltip" href="javascript:void(0);" 
-             onclick="if(confirm('Are you sure you want to delete this experiment? This action cannot be undone.')) { window.location.href='/admin/delete_simulation/${exp.idexp}'; }" 
-             title="Delete">
-              <i class="mdi mdi-delete" style="font-size: 16px;"></i>
-          </a>` : '';
+          '<a class="link-tooltip" href="javascript:void(0);" \n             onclick="if(confirm(YI18n.t(\'Are you sure you want to delete this experiment? This action cannot be undone.\'))) { window.location.href=\'/admin/delete_simulation/' + exp.idexp + '\'; }" \n             title="' + YI18n.t('Delete') + '">\n              <i class="mdi mdi-delete" style="font-size: 16px;"></i>\n          </a>' : '';
     
       const ownerBadge = exp.owner ? 
-          `<span style="background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="Owner">${exp.owner}</span>` : '';
+          '<span style="background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="' + YI18n.t('Owner') + '">' + exp.owner + '</span>' : '';
 
-      const platformBadge = `<span style="background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="Platform">${exp.platform_type === 'forum' ? 'Forum' : exp.platform_type === 'photo_sharing' ? 'Photo Sharing' : 'Microblogging'}</span>`;
+      const platformBadge = '<span style="background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="' + YI18n.t('Platform') + '">' + (exp.platform_type === 'forum' ? 'Forum' : exp.platform_type === 'photo_sharing' ? 'Photo Sharing' : 'Microblogging') + '</span>';
     
       const hpcBadge = exp.simulator_type === 'HPC' ?
-          `<span style="background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="HPC">HPC</span>` : '';
+          '<span style="background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="' + YI18n.t('HPC') + '">' + YI18n.t('HPC') + '</span>' : '';
     
       const remoteBadge = exp.is_remote === 1 ?
-          `<span style="background: linear-gradient(90deg, #2196F3 0%, #03A9F4 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="Remote">Remote</span>` : '';
+          '<span style="background: linear-gradient(90deg, #2196F3 0%, #03A9F4 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="' + YI18n.t('Remote') + '">' + YI18n.t('Remote') + '</span>' : '';
     
-      return `
-      <div class="box-content" style="background: #fafafa; border: 1px solid #e6e6e6; border-left: 2px solid ${sectionColor}; border-radius: 4px; padding: 4px 8px; margin-bottom: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
-          <div class="box-lines">
-              <div class="box-line" style="padding: 0; display: flex; align-items: center; justify-content: space-between; gap: 4px;">
-                  <span class="left" style="display: flex; align-items: center; gap: 4px; flex: 1; min-width: 0; overflow: hidden;">
-                      <strong style="color: #0d95e8; font-size: 0.85em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;" title="${exp.exp_name}">${exp.exp_name}</strong>
-                      ${ownerBadge}
-                      ${platformBadge}
-                      ${hpcBadge}
-                      ${remoteBadge}
-                      ${clientCountBadge}
-                      ${infiniteBadge}
-                  </span>
-                  <span class="right" style="display: flex; gap: 2px; align-items: center; flex-shrink: 0;">
-                      ${progressBadge}
-                      ${runButton}
-                      <a class="link-tooltip" href="#" onclick="selectExperiment('${exp.idexp}'); return false;" title="Load">
-                          <i class="mdi mdi-select-all ${exp.status === 1 ? 'active' : ''}" style="font-size: 16px;"></i>
-                      </a>
-                      <a href="/admin/experiment_details/${exp.idexp}" class="link-tooltip" title="Details">
-                          <i class="mdi mdi-open-in-new" style="font-size: 14px; color: #039be5;"></i>
-                      </a>
-                      ${deleteExpButton}
-                  </span>
-              </div>
-          </div>
-      </div>`;
+      return '\n      <div class="box-content" style="background: #fafafa; border: 1px solid #e6e6e6; border-left: 2px solid ' + sectionColor + '; border-radius: 4px; padding: 4px 8px; margin-bottom: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">\n          <div class="box-lines">\n              <div class="box-line" style="padding: 0; display: flex; align-items: center; justify-content: space-between; gap: 4px;">\n                  <span class="left" style="display: flex; align-items: center; gap: 4px; flex: 1; min-width: 0; overflow: hidden;">\n                      <strong style="color: #0d95e8; font-size: 0.85em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;" title="' + exp.exp_name + '">' + exp.exp_name + '</strong>\n                      ' + ownerBadge + '\n                      ' + platformBadge + '\n                      ' + hpcBadge + '\n                      ' + remoteBadge + '\n                      ' + clientCountBadge + '\n                      ' + infiniteBadge + '\n                  </span>\n                  <span class="right" style="display: flex; gap: 2px; align-items: center; flex-shrink: 0;">\n                      ' + progressBadge + '\n                      ' + runButton + '\n                      <a class="link-tooltip" href="#" onclick="selectExperiment(\'' + exp.idexp + '\'); return false;" title="' + YI18n.t('Load') + '">\n                          <i class="mdi mdi-select-all ' + (exp.status === 1 ? 'active' : '') + '" style="font-size: 16px;"></i>\n                      </a>\n                      <a href="/admin/experiment_details/' + exp.idexp + '" class="link-tooltip" title="' + YI18n.t('Details') + '">\n                          <i class="mdi mdi-open-in-new" style="font-size: 14px; color: #039be5;"></i>\n                      </a>\n                      ' + deleteExpButton + '\n                  </span>\n              </div>\n          </div>\n      </div>';
   }
 
   // Render a single experiment box from JSON data (full version for running experiments)
@@ -364,227 +368,70 @@ var AdminDashboard = (function() {
           let runButtonHtml = '';
           if (client.status === 0 && exp.running === 1) {
               if (client.elapsed === 0) {
-                  runButtonHtml = `<a class="link-tooltip" href="/admin/run_client/${client.id}/${exp.idexp}" title="Run Client">
-                      <i class="mdi mdi-play-box-outline" style="font-size: 20px;"></i>
-                  </a>`;
+                  runButtonHtml = '<a class="link-tooltip" href="/admin/run_client/' + client.id + '/' + exp.idexp + '" title="' + YI18n.t('Run Client') + '">\n                      <i class="mdi mdi-play-box-outline" style="font-size: 20px;"></i>\n                  </a>';
               } else if (client.expected === -1 || (client.elapsed > 0 && client.elapsed < client.expected)) {
-                  runButtonHtml = `<a class="link-tooltip" href="/admin/resume_client/${client.id}/${exp.idexp}" title="Resume Client">
-                      <i class="mdi mdi-play-box-outline" style="font-size: 20px;"></i>
-                  </a>`;
+                  runButtonHtml = '<a class="link-tooltip" href="/admin/resume_client/' + client.id + '/' + exp.idexp + '" title="' + YI18n.t('Resume Client') + '">\n                      <i class="mdi mdi-play-box-outline" style="font-size: 20px;"></i>\n                  </a>';
               }
           }
         
           const pauseButtonHtml = client.status === 1 ? 
-              `<a class="link-tooltip" href="/admin/pause_client/${client.id}/${exp.idexp}" title="Pause Client">
-                  <i class="mdi mdi-pause active" style="font-size: 20px;"></i>
-              </a>` : '';
+              '<a class="link-tooltip" href="/admin/pause_client/' + client.id + '/' + exp.idexp + '" title="' + YI18n.t('Pause Client') + '">\n                  <i class="mdi mdi-pause active" style="font-size: 20px;"></i>\n              </a>' : '';
         
           const deleteButtonHtml = client.status === 0 ?
-              `<a class="link-tooltip" href="javascript:void(0);" 
-                 onclick="if(confirm('Are you sure you want to delete this client? This action cannot be undone.')) { window.location.href='/admin/delete_client/${client.id}'; }" 
-                 title="Delete Client">
-                  <i class="mdi mdi-delete" style="font-size: 20px;"></i>
-              </a>` : '';
+              '<a class="link-tooltip" href="javascript:void(0);" \n                 onclick="if(confirm(YI18n.t(\'Are you sure you want to delete this client? This action cannot be undone.\'))) { window.location.href=\'/admin/delete_client/' + client.id + '\'; }" \n                 title="' + YI18n.t('Delete Client') + '">\n                  <i class="mdi mdi-delete" style="font-size: 20px;"></i>\n              </a>' : '';
         
           const detailsLink = client.elapsed > 0 ?
-              `<a href="/admin/client_details/${client.id}" class="link-tooltip" title="View Client Details">
-                  <i class="mdi mdi-open-in-new" style="font-size: 16px; color: #039be5;"></i>
-              </a>` : '';
+              '<a href="/admin/client_details/' + client.id + '" class="link-tooltip" title="' + YI18n.t('View Client Details') + '">\n                  <i class="mdi mdi-open-in-new" style="font-size: 16px; color: #039be5;"></i>\n              </a>' : '';
         
-          return `
-          <div class="box-line" style="padding-left: 20px; padding-top: 8px; padding-bottom: 8px;">
-              <span class="left" style="font-size: 0.9em; display: flex; align-items: center; gap: 5px;">Client:
-                  <i class="mdi mdi-account-cog" style="font-size: 16px; color: #7f8c8d;"></i>
-                  <em style="color: #0d95e8">${client.name}</em>
-                  ${detailsLink}
-              </span>
-              <span class="right" style="width: 55%; display: flex; align-items: center; gap: 10px;">
-                  <div class="sleek-progress-container" style="flex: 1; position: relative; background: linear-gradient(to right, #f5f5f5 0%, #e8e8e8 100%); border-radius: 20px; height: 24px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.08);">
-                      <div id="progress-bar-${client.id}" class="sleek-progress-bar" data-exp-id="${exp.idexp}"
-                           style="position: absolute; left: 0; top: 0; height: 100%; width: ${client.progress}%; background: linear-gradient(90deg, #039be5 0%, #4facfe 100%); border-radius: 20px; transition: width 0.4s ease-in-out; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(3,155,229,0.3);">
-                          <span style="font-size: 0.75em; font-weight: 600; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">${client.progress}%</span>
-                      </div>
-                  </div>
-                  <div style="display: flex; gap: 3px;">
-                      ${runButtonHtml}
-                      ${pauseButtonHtml}
-                      ${deleteButtonHtml}
-                  </div>
-              </span>
-          </div>`;
+          return '\n          <div class="box-line" style="padding-left: 20px; padding-top: 8px; padding-bottom: 8px;">\n              <span class="left" style="font-size: 0.9em; display: flex; align-items: center; gap: 5px;">' + YI18n.t('Client:') + '\n                  <i class="mdi mdi-account-cog" style="font-size: 16px; color: #7f8c8d;"></i>\n                  <em style="color: #0d95e8">' + client.name + '</em>\n                  ' + detailsLink + '\n              </span>\n              <span class="right" style="width: 55%; display: flex; align-items: center; gap: 10px;">\n                  <div class="sleek-progress-container" style="flex: 1; position: relative; background: linear-gradient(to right, #f5f5f5 0%, #e8e8e8 100%); border-radius: 20px; height: 24px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.08);">\n                      <div id="progress-bar-' + client.id + '" class="sleek-progress-bar" data-exp-id="' + exp.idexp + '"\n                           style="position: absolute; left: 0; top: 0; height: 100%; width: ' + client.progress + '%; background: linear-gradient(90deg, #039be5 0%, #4facfe 100%); border-radius: 20px; transition: width 0.4s ease-in-out; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(3,155,229,0.3);">\n                          <span style="font-size: 0.75em; font-weight: 600; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">' + client.progress + '%</span>\n                      </div>\n                  </div>\n                  <div style="display: flex; gap: 3px;">\n                      ' + runButtonHtml + '\n                      ' + pauseButtonHtml + '\n                      ' + deleteButtonHtml + '\n                  </div>\n              </span>\n          </div>';
       }).join('');
     
       const infiniteBadge = hasInfiniteClient ? 
-          `<span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="This experiment has at least one client set to run until manually stopped">∞ Infinite</span>` : '';
+          '<span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="' + YI18n.t('This experiment has at least one client set to run until manually stopped') + '">' + YI18n.t('∞ Infinite') + '</span>' : '';
     
       const runButton = exp.running === 0 ?
-          `<a class="link-tooltip" href="#" onclick="startExperimentServer('${exp.idexp}'); return false;" title="Run Experiment">
-              <i class="mdi mdi-play-box-outline" style="font-size: 24px;"></i>
-          </a>` :
-          (exp.can_manage ? `<a class="link-tooltip" href="#" onclick="stopExperimentServer('${exp.idexp}'); return false;" title="Stop Experiment">
-              <i class="mdi mdi-stop active" style="font-size: 24px;"></i>
-          </a>` : '');
+          '<a class="link-tooltip" href="#" onclick="startExperimentServer(\'' + exp.idexp + '\'); return false;" title="' + YI18n.t('Run Experiment') + '">\n              <i class="mdi mdi-play-box-outline" style="font-size: 24px;"></i>\n          </a>' :
+          (exp.can_manage ? '<a class="link-tooltip" href="#" onclick="stopExperimentServer(\'' + exp.idexp + '\'); return false;" title="' + YI18n.t('Stop Experiment') + '">\n              <i class="mdi mdi-stop active" style="font-size: 24px;"></i>\n          </a>' : '');
     
       const joinButton = exp.status === 1 ?
-          `<a class="link-tooltip" href="#" onclick="joinExperiment('${exp.idexp}'); return false;" title="Join This Experiment">
-              <i class="mdi mdi-login" style="font-size: 24px;"></i>
-          </a>` : '';
+          '<a class="link-tooltip" href="#" onclick="joinExperiment(\'' + exp.idexp + '\'); return false;" title="' + YI18n.t('Join This Experiment') + '">\n              <i class="mdi mdi-login" style="font-size: 24px;"></i>\n          </a>' : '';
     
       const deleteExpButton = exp.status === 0 && exp.can_manage ?
-          `<a class="link-tooltip" href="javascript:void(0);" 
-             onclick="if(confirm('Are you sure you want to delete this experiment? This action cannot be undone.')) { window.location.href='/admin/delete_simulation/${exp.idexp}'; }" 
-             title="Delete Experiment">
-              <i class="mdi mdi-delete" style="font-size: 24px;"></i>
-          </a>` : '';
+          '<a class="link-tooltip" href="javascript:void(0);" \n             onclick="if(confirm(YI18n.t(\'Are you sure you want to delete this experiment? This action cannot be undone.\'))) { window.location.href=\'/admin/delete_simulation/' + exp.idexp + '\'; }" \n             title="' + YI18n.t('Delete Experiment') + '">\n              <i class="mdi mdi-delete" style="font-size: 24px;"></i>\n          </a>' : '';
     
       const clientsSeparator = exp.clients.length > 0 ? 
           '<hr style="border-top: 2px solid #e6e6e6; margin-top: 0px; padding-top: 0px; margin-bottom: 0px;">' : '';
     
       const ownerBadgeFull = exp.owner ?
-          `<span style="background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="Experiment owner">${exp.owner}</span>` : '';
+          '<span style="background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="' + YI18n.t('Experiment owner') + '">' + exp.owner + '</span>' : '';
 
-      const platformBadgeFull = `<span style="background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="Platform">${exp.platform_type === 'forum' ? 'Forum' : exp.platform_type === 'photo_sharing' ? 'Photo Sharing' : 'Microblogging'}</span>`;
+      const platformBadgeFull = '<span style="background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="' + YI18n.t('Platform') + '">' + (exp.platform_type === 'forum' ? 'Forum' : exp.platform_type === 'photo_sharing' ? 'Photo Sharing' : 'Microblogging') + '</span>';
     
       const hpcBadgeFull = exp.simulator_type === 'HPC' ?
-          `<span style="background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="HPC Simulator">HPC</span>` : '';
+          '<span style="background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="' + YI18n.t('HPC Simulator') + '">' + YI18n.t('HPC') + '</span>' : '';
     
       const remoteBadgeFull = exp.is_remote === 1 ?
-          `<span style="background: linear-gradient(90deg, #2196F3 0%, #03A9F4 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="Remote Experiment">Remote</span>` : '';
+          '<span style="background: linear-gradient(90deg, #2196F3 0%, #03A9F4 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="' + YI18n.t('Remote Experiment') + '">' + YI18n.t('Remote') + '</span>' : '';
     
-      return `
-      <div class="box-content" style="background: #fafafa; border: 1px solid #e6e6e6; border-left: 4px solid ${sectionColor}; border-radius: 8px; padding-left: 15px; padding-right: 15px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
-          <div class="box-lines">
-              <div class="box-line" style="padding-bottom: 5px; margin-bottom: 5px;">
-                  <span class="left" style="display: flex; align-items: center; gap: 10px;">
-                      Experiment: <strong style="color: #0d95e8">${exp.exp_name}</strong>
-                      ${ownerBadgeFull}
-                      ${platformBadgeFull}
-                      ${hpcBadgeFull}
-                      ${remoteBadgeFull}
-                      ${infiniteBadge}
-                      <a href="/admin/experiment_details/${exp.idexp}" class="link-tooltip" title="View Experiment Details">
-                          <i class="mdi mdi-open-in-new" style="font-size: 16px; color: #039be5;"></i>
-                      </a>
-                  </span>
-                  <span class="right" style="display: flex; gap: 8px; align-items: center;">
-                      <div style="display: flex; gap: 3px; padding-right: 8px; border-right: 1px solid #ddd;">
-                          ${runButton}
-                          <a class="link-tooltip" href="#" onclick="selectExperiment('${exp.idexp}'); return false;" title="Load Experiment">
-                              <i class="mdi mdi-select-all ${exp.status === 1 ? 'active' : ''}" style="font-size: 24px;"></i>
-                          </a>
-                          ${joinButton}
-                          ${deleteExpButton}
-                      </div>
-                  </span>
-              </div>
-              ${clientsSeparator}
-              ${clientsHtml}
-          </div>
-      </div>`;
+      return '\n      <div class="box-content" style="background: #fafafa; border: 1px solid #e6e6e6; border-left: 4px solid ' + sectionColor + '; border-radius: 8px; padding-left: 15px; padding-right: 15px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">\n          <div class="box-lines">\n              <div class="box-line" style="padding-bottom: 5px; margin-bottom: 5px;">\n                  <span class="left" style="display: flex; align-items: center; gap: 10px;">\n                      ' + YI18n.t('Experiment:') + ' <strong style="color: #0d95e8">' + exp.exp_name + '</strong>\n                      ' + ownerBadgeFull + '\n                      ' + platformBadgeFull + '\n                      ' + hpcBadgeFull + '\n                      ' + remoteBadgeFull + '\n                      ' + infiniteBadge + '\n                      <a href="/admin/experiment_details/' + exp.idexp + '" class="link-tooltip" title="' + YI18n.t('View Experiment Details') + '">\n                          <i class="mdi mdi-open-in-new" style="font-size: 16px; color: #039be5;"></i>\n                      </a>\n                  </span>\n                  <span class="right" style="display: flex; gap: 8px; align-items: center;">\n                      <div style="display: flex; gap: 3px; padding-right: 8px; border-right: 1px solid #ddd;">\n                          ' + runButton + '\n                          <a class="link-tooltip" href="#" onclick="selectExperiment(\'' + exp.idexp + '\'); return false;" title="' + YI18n.t('Load Experiment') + '">\n                              <i class="mdi mdi-select-all ' + (exp.status === 1 ? 'active' : '') + '" style="font-size: 24px;"></i>\n                          </a>\n                          ' + joinButton + '\n                          ' + deleteExpButton + '\n                      </div>\n                  </span>\n              </div>\n              ' + clientsSeparator + '\n              ' + clientsHtml + '\n          </div>\n      </div>';
   }
 
-  // Pagination state - will be initialized when experiments exist
+  // Pagination state (the pages are pages of groups)
   let paginationState = {
-      running: { page: 1, totalPages: YS_DATA_DASHBOARD.totalRunning > 0 ? Math.floor((YS_DATA_DASHBOARD.totalRunning - 1) / 5) + 1 : 1 },
-      completed: { page: 1, totalPages: YS_DATA_DASHBOARD.totalCompleted > 0 ? Math.floor((YS_DATA_DASHBOARD.totalCompleted - 1) / 5) + 1 : 1 },
-      stopped: { page: 1, totalPages: YS_DATA_DASHBOARD.totalStopped > 0 ? Math.floor((YS_DATA_DASHBOARD.totalStopped - 1) / 5) + 1 : 1 }
+      running: { page: 1, totalPages: 1 },
+      completed: { page: 1, totalPages: YS_DATA_DASHBOARD.completedPages || 1 },
+      stopped: { page: 1, totalPages: YS_DATA_DASHBOARD.stoppedPages || 1 }
   };
 
-  // Async pagination for running experiments
-  async function paginateRunning(direction) {
-      const newPage = paginationState.running.page + direction;
-      if (newPage < 1 || newPage > paginationState.running.totalPages) return;
-    
-      try {
-          const response = await fetch(`/admin/dashboard/experiments/running?page=${newPage}&per_page=5`);
-          const data = await response.json();
-        
-          if (data.experiments) {
-              paginationState.running.page = newPage;
-              paginationState.running.totalPages = data.total_pages;
-            
-              const container = document.getElementById('running-experiments-container');
-              if (container) {
-                  const html = data.experiments.map(exp => renderExperimentBoxFromData(exp, '#28a745', {}, false, false)).join('');
-                  container.innerHTML = html || '<p style="color: #666; text-align: center;">No experiments</p>';
-              }
-            
-              // Update pagination buttons
-              const prevBtn = document.getElementById('running-prev');
-              const nextBtn = document.getElementById('running-next');
-              const pageInfo = document.getElementById('running-page-info');
-              if (prevBtn) prevBtn.disabled = newPage <= 1;
-              if (nextBtn) nextBtn.disabled = newPage >= data.total_pages;
-              if (pageInfo) pageInfo.textContent = `Page ${newPage} of ${data.total_pages}`;
-          }
-      } catch (error) {
-          console.error('Error paginating running experiments:', error);
-      }
+  async function paginateStatus(status, direction) {
+      const newPage = paginationState[status].page + direction;
+      if (newPage < 1 || newPage > paginationState[status].totalPages) return;
+      await loadExperimentPage(status, newPage);
   }
 
-  // Async pagination for completed experiments
-  async function paginateCompleted(direction) {
-      const newPage = paginationState.completed.page + direction;
-      if (newPage < 1 || newPage > paginationState.completed.totalPages) return;
-    
-      try {
-          const response = await fetch(`/admin/dashboard/experiments/completed?page=${newPage}&per_page=5`);
-          const data = await response.json();
-        
-          if (data.experiments) {
-              paginationState.completed.page = newPage;
-              paginationState.completed.totalPages = data.total_pages;
-            
-              const container = document.getElementById('completed-experiments-container');
-              if (container) {
-                  const html = data.experiments.map(exp => renderCompactExperimentBoxFromData(exp, '#17a2b8')).join('');
-                  container.innerHTML = html || '<p style="color: #666; text-align: center;">No experiments</p>';
-              }
-            
-              // Update pagination buttons
-              const prevBtn = document.getElementById('completed-prev');
-              const nextBtn = document.getElementById('completed-next');
-              const pageInfo = document.getElementById('completed-page-info');
-              if (prevBtn) prevBtn.disabled = newPage <= 1;
-              if (nextBtn) nextBtn.disabled = newPage >= data.total_pages;
-              if (pageInfo) pageInfo.textContent = `${newPage}/${data.total_pages}`;
-          }
-      } catch (error) {
-          console.error('Error paginating completed experiments:', error);
-      }
-  }
-
-  // Async pagination for stopped experiments
-  async function paginateStopped(direction) {
-      const newPage = paginationState.stopped.page + direction;
-      if (newPage < 1 || newPage > paginationState.stopped.totalPages) return;
-    
-      try {
-          const response = await fetch(`/admin/dashboard/experiments/stopped?page=${newPage}&per_page=5`);
-          const data = await response.json();
-        
-          if (data.experiments) {
-              paginationState.stopped.page = newPage;
-              paginationState.stopped.totalPages = data.total_pages;
-            
-              const container = document.getElementById('stopped-experiments-container');
-              if (container) {
-                  const html = data.experiments.map(exp => renderCompactExperimentBoxFromData(exp, '#6c757d')).join('');
-                  container.innerHTML = html || '<p style="color: #666; text-align: center;">No experiments</p>';
-              }
-            
-              // Update pagination buttons
-              const prevBtn = document.getElementById('stopped-prev');
-              const nextBtn = document.getElementById('stopped-next');
-              const pageInfo = document.getElementById('stopped-page-info');
-              if (prevBtn) prevBtn.disabled = newPage <= 1;
-              if (nextBtn) nextBtn.disabled = newPage >= data.total_pages;
-              if (pageInfo) pageInfo.textContent = `${newPage}/${data.total_pages}`;
-          }
-      } catch (error) {
-          console.error('Error paginating stopped experiments:', error);
-      }
-  }
+  function paginateRunning(direction) { return paginateStatus('running', direction); }
+  function paginateCompleted(direction) { return paginateStatus('completed', direction); }
+  function paginateStopped(direction) { return paginateStatus('stopped', direction); }
 
 
 async function markRead(id) {
@@ -602,7 +449,7 @@ async function markRead(id) {
 }
 
 async function deleteNotification(id) {
-    if (!confirm('Delete this notification and remove attached file if present?')) {
+    if (!confirm(YI18n.t('Delete this notification and remove attached file if present?'))) {
         return;
     }
 
@@ -625,10 +472,34 @@ async function deleteNotification(id) {
       if (!frame) return;
       frame.addEventListener('error', function() {
           var config = window.YS_DATA_JUPYTER || {};
-          alert('Jupyter Lab appears to be offline. Redirecting to home...');
+          YNotify.error(YI18n.t('Jupyter Lab appears to be offline. Redirecting to home...'));
           window.location.href = config.homeUrl || '/';
       });
   }, 5000);
+
+  // Training section: switch a module on/off (archive/unarchive in the plugin)
+  function initTrainingToggles() {
+      var section = document.getElementById('section-training');
+      if (!section) return;
+      var token = section.getAttribute('data-csrf') || '';
+      section.addEventListener('click', function(ev) {
+          var btn = ev.target.closest('.dash-module-toggle');
+          if (!btn || btn.disabled) return;
+          btn.disabled = true;
+          fetch('/admin/training/api/modules/' + encodeURIComponent(btn.dataset.moduleUid) + '/' + btn.dataset.moduleAction, {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json', 'X-CSRF-Token': token},
+              body: '{}'
+          }).then(function(resp) {
+              if (!resp.ok) throw new Error(resp.status);
+              window.location.reload();
+          }).catch(function() {
+              btn.disabled = false;
+              YNotify.error(YI18n.t('Could not update the module. Please try again.'));
+          });
+      });
+  }
+  initTrainingToggles();
 
   // Expose globally for HTML onclick attributes
   window.markRead = markRead;

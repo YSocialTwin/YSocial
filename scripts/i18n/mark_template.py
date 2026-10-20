@@ -1,0 +1,131 @@
+"""Mark plain user-visible strings in Jinja templates with ``_()``.
+
+    python scripts/i18n/mark_template.py [--func T] y_web/templates/admin/head.html [more files]
+
+``--func`` names the translation function (default ``_``); plugins use their own, e.g.
+``T`` injected by the plugin blueprint, so the core's ``_()`` stays on the core catalog.
+
+Only the unambiguous cases are rewritten: an element whose whole text is a literal
+string (``<span>Home</span>``) and the attributes title/placeholder/aria-label/alt/
+value-less labels (``title="Close"``). Text mixed with Jinja expressions, fragments
+split by inline tags and anything else are left alone and reported, so they can be
+handled by hand (named placeholders, ``{% trans %}`` blocks...).
+"""
+
+import re
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent))
+from audit_strings import JINJA, TextCollector, read  # noqa: E402
+from scan_unmarked import load_exceptions  # noqa: E402
+
+INLINE = r"(?:a|b|strong|em|code|u|kbd)"
+INLINE_CLOSE = re.compile(r"^</%s\s*>$" % INLINE, re.I)
+INLINE_OPEN = re.compile(r"<%s[\s>]" % INLINE, re.I)
+ATTRS = (
+    "title",
+    "placeholder",
+    "aria-label",
+    "alt",
+    "label",
+    "data-tooltip",
+    "data-title",
+)
+
+
+def word_pattern(word):
+    """Regex for a word that may be written with HTML entities in the template."""
+    from html.entities import codepoint2name
+
+    parts = []
+    for ch in word:
+        names = []
+        if ord(ch) in codepoint2name:
+            names.append("&%s;" % codepoint2name[ord(ch)])
+        if ord(ch) > 127 or ch in "&<>":
+            names.append("&#%d;" % ord(ch))
+        alts = [re.escape(ch)] + [re.escape(n) for n in names]
+        parts.append("(?:%s)" % "|".join(alts) if len(alts) > 1 else alts[0])
+    return "".join(parts)
+
+
+def escape_percent(text):
+    """Template ``_()`` formats with ``%``: a literal percent sign must be ``%%``."""
+    parts = re.split(r"(%%)", text)
+    return "".join(
+        p if p == "%%" else re.sub(r"%(?!\([A-Za-z_]\w*\)[sdif])", "%%", p)
+        for p in parts
+    )
+
+
+FUNC = "_"
+
+
+def quote(text):
+    text = escape_percent(text)
+    if "'" not in text:
+        return "%s('%s')" % (FUNC, text)
+    return '%s("%s")' % (FUNC, text.replace('"', '\\"'))
+
+
+def mark(path, exceptions):
+    src = Path(path).read_text(encoding="utf-8")
+    collector = TextCollector()
+    collector.feed(JINJA.sub("", src))
+    found = {t for t in collector.texts + collector.attrs if t not in exceptions}
+    out = src
+    done = set()
+    for text in sorted(found, key=len, reverse=True):
+        if "\n" in text or "data-cascade" in text:
+            continue
+        esc = r"\s+".join(word_pattern(w) for w in text.split(" "))
+        pat_text = re.compile(r"(<[^<>]*>)(\s*)" + esc + r"(\s*)(?=<)")
+
+        def repl(m, text=text, snapshot=out):
+            before = m.group(1)
+            after = snapshot[m.end() : m.end() + 40]
+            if re.match(r"<(?:code|pre|kbd|script|style)[\s>]", before, re.I):
+                return m.group(0)  # literal code, never translated
+            continues = not text[0].isupper()  # sentence goes on after the tag
+            if (INLINE_CLOSE.search(before) and continues) or INLINE_OPEN.match(after):
+                return m.group(0)  # sentence fragment next to inline markup
+            return "%s%s{{ %s }}%s" % (before, m.group(2), quote(text), m.group(3))
+
+        out, n = pat_text.subn(repl, out)
+        for attr in ATTRS:
+            pat = re.compile(r'(\s%s=)"%s"' % (attr, esc))
+            out, k = pat.subn(
+                lambda m: '%s"{{ %s }}"'
+                % (
+                    m.group(1),
+                    (
+                        quote(text).replace('"', "'")
+                        if "'" not in text
+                        else quote(text).replace('"', "&quot;")
+                    ),
+                ),
+                out,
+            )
+            n += k
+        if n:
+            done.add(text)
+    if out != src:
+        Path(path).write_text(out, encoding="utf-8")
+    return done, sorted(found - done)
+
+
+def main(argv):
+    global FUNC
+    if argv[:1] == ["--func"]:
+        FUNC, argv = argv[1], argv[2:]
+    ex = load_exceptions()
+    for p in argv:
+        done, left = mark(p, ex)
+        print("%s: marked %d, left %d" % (p, len(done), len(left)))
+        for t in left:
+            print("   left:", repr(t)[:100])
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

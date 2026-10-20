@@ -3,7 +3,7 @@
 
 <div class="view-wrapper is-dashboard">
     <!--Dashboard container-->
-    <div id="creator-dashboard" class="dashboard-container">
+    <div id="creator-dashboard" data-tutorial-page="jupyter" class="dashboard-container">
         <!--Toolbar-->
         {% include "admin/dash_head.html" %}
 
@@ -12,7 +12,7 @@
             <div class="columns">
                 <div class="column is-12">
                     <div class="dashboard-box">
-                        <a href="/admin/experiments">Experiments</a> > Simulation: <a href="/admin/experiment_details/{{experiment.idexp}}">{{ experiment.exp_name }}</a> > Jupyter Lab
+                        <a href="/admin/experiments">{{ _('Experiments') }}</a> &gt; {{ _('Simulation:') }} <a href="/admin/experiment_details/{{experiment.idexp}}">{{ experiment.exp_name }}</a> &gt; {{ _('Jupyter Lab') }}
                     </div>
                 </div>
             </div>
@@ -20,8 +20,8 @@
             <div class="columns">
 
                 <div class="column is-12 ">
-                    <h3 class="title is-5 is-thin">Analytical Environment</h3>
-                    <p> To analyze your simulation data use <strong><a href="https://ysocialtwin.github.io/ysights/">ySights</a></strong>, A Python library to streamline the analysis of YSocial generated data</p>
+                    <h3 class="title is-5 is-thin">{{ _('Analytical Environment') }}</h3>
+                    <p> {{ _('To analyze your simulation data use %(link)s, A Python library to streamline the analysis of YSocial generated data', link=wrap('strong', wrap('a', 'ySights', href='https://ysocialtwin.github.io/ysights/'))) }}</p>
                     <!-- src="{{ jupyter_url }}" -->
                     <div class="dashboard-box jupyter-container">
 

@@ -33,10 +33,22 @@ def register_blueprints(app):
     from .api import api_interview, api_reddit, api_social
     from .auth import auth
     from .errors import errors
+    from .i18n import i18n_bp
     from .interactions import user
     from .social import main
 
     app.register_blueprint(auth)
+
+    def _signup_open():
+        # the sign-up link of the login page: never an error for the visitor
+        try:
+            from y_web.src.signup import is_open
+
+            return is_open()
+        except Exception:
+            return False
+
+    app.jinja_env.globals["signup_open"] = _signup_open
     app.register_blueprint(main)
     app.register_blueprint(user)
     app.register_blueprint(admin)
@@ -48,6 +60,7 @@ def register_blueprints(app):
     app.register_blueprint(experiments)
     app.register_blueprint(clientsr)
     app.register_blueprint(errors)
+    app.register_blueprint(i18n_bp)
     app.register_blueprint(lab)
     app.register_blueprint(tutorial)
     app.register_blueprint(api_reddit)

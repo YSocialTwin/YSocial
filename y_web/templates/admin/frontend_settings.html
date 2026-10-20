@@ -289,14 +289,13 @@ input:checked + .slider-small:before { transform: translateX(16px); }
 </style>
 
 <div class="view-wrapper is-dashboard">
-  <div id="creator-dashboard" class="dashboard-container">
+  <div id="creator-dashboard" data-tutorial-page="frontend_settings" class="dashboard-container">
     {% include "admin/dash_head.html" %}
 
     <div class="dashboard-body">
 
       <div class="misc-section-description">
-        <strong>Frontend Settings:</strong> Configure the UI shown to participants for each experiment.
-        Select the experiment type and name to adjust interactions, post annotations, and the notification menu.
+        <strong>{{ _('Frontend Settings:') }}</strong> {{ _('Configure the UI shown to participants for each experiment. Select the experiment type, group and name to adjust interactions, annotations, and the notification menu.') }}
       </div>
 
       <!-- ── Two-step selector ───────────────────────────────── -->
@@ -304,18 +303,25 @@ input:checked + .slider-small:before { transform: translateX(16px); }
 
         <!-- Step 1: type -->
         <div class="ys-fs-step">
-          <label for="type-select">Experiment type</label>
+          <label for="type-select">{{ _('Experiment type') }}</label>
           <select id="type-select" class="input">
-            <option value="">— select type —</option>
-            <option value="microblogging">Microblogging</option>
+            <option value="">{{ _('— select type —') }}</option>
           </select>
         </div>
 
-        <!-- Step 2: name (disabled until type chosen) -->
+        <!-- Step 2: group (disabled until type chosen) -->
         <div class="ys-fs-step">
-          <label for="exp-select">Experiment name</label>
+          <label for="group-select">{{ _('Group') }}</label>
+          <select id="group-select" class="input" disabled>
+            <option value="">{{ _('— select group —') }}</option>
+          </select>
+        </div>
+
+        <!-- Step 3: name (disabled until group chosen) -->
+        <div class="ys-fs-step">
+          <label for="exp-select">{{ _('Experiment name') }}</label>
           <select id="exp-select" class="input" disabled>
-            <option value="">— select experiment —</option>
+            <option value="">{{ _('— select experiment —') }}</option>
           </select>
         </div>
 
@@ -334,16 +340,16 @@ input:checked + .slider-small:before { transform: translateX(16px); }
         <div class="misc-grid misc-grid-2col">
 
           <!-- ══ BOX 1 — Interactions ══════════════════════════ -->
-          <div class="misc-compact-box" id="box-interactions">
-            <h3>User Interactions <span class="ys-fs-exp-badge" id="badge-exp-name"></span></h3>
+          <div class="misc-compact-box" id="box-interactions" data-tut="user-interactions">
+            <h3>{{ _('User Interactions') }} <span class="ys-fs-exp-badge" id="badge-exp-name"></span></h3>
             <div class="box-content">
               <p style="color:#6b7280;font-size:.85rem;margin-bottom:14px;">
-                Control which actions participants can perform on posts, and whether the notification menu is shown.
+                {{ _('Control which actions participants can perform on posts, and whether the notification menu is shown.') }}
               </p>
               <div class="ys-toggle-row is-master">
                 <span class="ys-toggle-label">
-                  All interactions
-                  <small>Enable or disable every interaction at once</small>
+                  {{ _('All interactions') }}
+                  <small>{{ _('Enable or disable every interaction at once') }}</small>
                 </span>
                 <label class="switch-small">
                   <input type="checkbox" id="interactions_enabled"
@@ -352,32 +358,32 @@ input:checked + .slider-small:before { transform: translateX(16px); }
                 </label>
               </div>
               <div class="ys-toggle-children" id="interactions-children">
-                <div class="ys-toggle-row">
-                  <span class="ys-toggle-label">New post <small>Compose and publish new posts</small></span>
+                <div class="ys-toggle-row" data-cap="interaction_post">
+                  <span class="ys-toggle-label">{{ _('New post') }} <small>{{ _('Compose and publish new posts') }}</small></span>
                   <label class="switch-small"><input type="checkbox" id="interaction_post"><span class="slider-small round"></span></label>
                 </div>
-                <div class="ys-toggle-row">
-                  <span class="ys-toggle-label">Comment / reply <small>Reply to posts and threads</small></span>
+                <div class="ys-toggle-row" data-cap="interaction_comment">
+                  <span class="ys-toggle-label">{{ _('Comment / reply') }} <small>{{ _('Reply to posts and threads') }}</small></span>
                   <label class="switch-small"><input type="checkbox" id="interaction_comment"><span class="slider-small round"></span></label>
                 </div>
-                <div class="ys-toggle-row">
-                  <span class="ys-toggle-label">Like <small>Thumbs-up reaction</small></span>
+                <div class="ys-toggle-row" data-cap="interaction_like">
+                  <span class="ys-toggle-label">{{ _('Like') }} <small>{{ _('Thumbs-up reaction') }}</small></span>
                   <label class="switch-small"><input type="checkbox" id="interaction_like"><span class="slider-small round"></span></label>
                 </div>
-                <div class="ys-toggle-row">
-                  <span class="ys-toggle-label">Dislike <small>Thumbs-down reaction</small></span>
+                <div class="ys-toggle-row" data-cap="interaction_dislike">
+                  <span class="ys-toggle-label">{{ _('Dislike') }} <small>{{ _('Thumbs-down reaction') }}</small></span>
                   <label class="switch-small"><input type="checkbox" id="interaction_dislike"><span class="slider-small round"></span></label>
                 </div>
-                <div class="ys-toggle-row">
-                  <span class="ys-toggle-label">Share / repost <small>Repost another user's content</small></span>
+                <div class="ys-toggle-row" data-cap="interaction_share">
+                  <span class="ys-toggle-label">{{ _('Share / repost') }} <small>{{ _("Repost another user's content") }}</small></span>
                   <label class="switch-small"><input type="checkbox" id="interaction_share"><span class="slider-small round"></span></label>
                 </div>
               </div>
               <div style="margin-top:12px;border-top:1px solid #f1f3f5;padding-top:10px;">
-                <div class="ys-toggle-row">
+                <div class="ys-toggle-row" data-cap="notifications_menu">
                   <span class="ys-toggle-label">
-                    Notification menu
-                    <small>Bell / mentions icon in the top bar</small>
+                    {{ _('Notification menu') }}
+                    <small>{{ _('Bell / mentions icon in the top bar') }}</small>
                   </span>
                   <label class="switch-small">
                     <input type="checkbox" id="notifications_menu">
@@ -386,23 +392,23 @@ input:checked + .slider-small:before { transform: translateX(16px); }
                 </div>
               </div>
               <div class="ys-fs-save-row">
-                <button class="button is-solid primary-button" onclick="saveSection(event,'interactions')">Save interactions</button>
+                <button class="button is-solid primary-button" onclick="saveSection(event,'interactions')">{{ _('Save interactions') }}</button>
                 <span class="ys-fs-save-status" id="status-interactions"></span>
               </div>
             </div>
           </div>
 
           <!-- ══ BOX 2 — Annotations ═══════════════════════════ -->
-          <div class="misc-compact-box" id="box-annotations">
-            <h3>Post Annotations</h3>
+          <div class="misc-compact-box" id="box-annotations" data-cap-any="annotations_enabled annotation_agent_type show_post_time show_suggested_friends show_trending_hashtags show_recsys_info show_annotation_stats" data-tut="annotations">
+            <h3>{{ _('Annotations') }}</h3>
             <div class="box-content">
               <p style="color:#6b7280;font-size:.85rem;margin-bottom:14px;">
-                Choose which metadata chips are displayed below each post.
+                {{ _('Choose which metadata chips are displayed below each post.') }}
               </p>
-              <div class="ys-toggle-row is-master">
+              <div class="ys-toggle-row is-master" data-cap="annotations_enabled">
                 <span class="ys-toggle-label">
-                  All annotations
-                  <small>Show or hide every annotation type at once</small>
+                  {{ _('All annotations') }}
+                  <small>{{ _('Show or hide every annotation type at once') }}</small>
                 </span>
                 <label class="switch-small">
                   <input type="checkbox" id="annotations_enabled"
@@ -410,142 +416,159 @@ input:checked + .slider-small:before { transform: translateX(16px); }
                   <span class="slider-small round"></span>
                 </label>
               </div>
-              <div class="ys-toggle-children" id="annotations-children">
-                <div class="ys-toggle-row">
-                  <span class="ys-toggle-label">Emotions <small>Emotional tone chips (joy, anger…)</small></span>
+              <div class="ys-toggle-children" id="annotations-children" data-cap-any="annotation_emotions annotation_topics annotation_agent_type">
+                <div class="ys-toggle-row" data-cap="annotation_emotions">
+                  <span class="ys-toggle-label">{{ _('Emotions') }} <small>{{ _('Emotional tone chips (joy, anger…)') }}</small></span>
                   <label class="switch-small"><input type="checkbox" id="annotation_emotions"><span class="slider-small round"></span></label>
                 </div>
-                <div class="ys-toggle-row">
-                  <span class="ys-toggle-label">Topics <small>Topic classification chips</small></span>
+                <div class="ys-toggle-row" data-cap="annotation_topics">
+                  <span class="ys-toggle-label">{{ _('Topics') }} <small>{{ _('Topic classification chips') }}</small></span>
                   <label class="switch-small"><input type="checkbox" id="annotation_topics"><span class="slider-small round"></span></label>
                 </div>
-                <div class="ys-toggle-row">
-                  <span class="ys-toggle-label">Sentiment <small>Positive / neutral / negative score</small></span>
+                <div class="ys-toggle-row" data-cap="annotation_sentiment">
+                  <span class="ys-toggle-label">{{ _('Sentiment') }} <small>{{ _('Positive / neutral / negative score') }}</small></span>
                   <label class="switch-small"><input type="checkbox" id="annotation_sentiment"><span class="slider-small round"></span></label>
                 </div>
-                <div class="ys-toggle-row">
-                  <span class="ys-toggle-label">Toxicity <small>Toxic content warning chip</small></span>
+                <div class="ys-toggle-row" data-cap="annotation_toxicity">
+                  <span class="ys-toggle-label">{{ _('Toxicity') }} <small>{{ _('Toxic content warning chip') }}</small></span>
                   <label class="switch-small"><input type="checkbox" id="annotation_toxicity"><span class="slider-small round"></span></label>
                 </div>
-                <div class="ys-toggle-row">
-                  <span class="ys-toggle-label">Agent type <small>Badge identifying ad-hoc agents (moderator, propaganda…)</small></span>
+                <div class="ys-toggle-row" data-cap="annotation_agent_type">
+                  <span class="ys-toggle-label">{{ _('Agent type') }} <small>{{ _('Badge identifying ad-hoc agents (moderator, propaganda…)') }}</small></span>
                   <label class="switch-small"><input type="checkbox" id="annotation_agent_type"><span class="slider-small round"></span></label>
                 </div>
-                <div class="ys-toggle-row">
-                  <span class="ys-toggle-label">Author type <small>Badge showing whether content was produced by an AI agent or a Human</small></span>
+                <div class="ys-toggle-row" data-cap="annotation_author_type">
+                  <span class="ys-toggle-label">{{ _('Author type') }} <small>{{ _('Badge showing whether content was produced by an AI agent or a Human') }}</small></span>
                   <label class="switch-small"><input type="checkbox" id="annotation_author_type"><span class="slider-small round"></span></label>
                 </div>
               </div>
-              <div class="ys-toggle-row">
-                <span class="ys-toggle-label">Post date &amp; time <small>Show the "Day X - HH:00" timestamp below each post and comment</small></span>
+              <div class="ys-toggle-row" data-cap="show_post_time">
+                <span class="ys-toggle-label">{{ _('Post date & time') }} <small>{{ _('Show the "Day X - HH:00" timestamp below each post and comment') }}</small></span>
                 <label class="switch-small"><input type="checkbox" id="show_post_time"><span class="slider-small round"></span></label>
               </div>
+              <div class="ys-toggle-row" data-cap="show_suggested_friends">
+                <span class="ys-toggle-label">{{ _('Suggested Friends') }} <small>{{ _('Show the "Suggested Friends" box next to the feed') }}</small></span>
+                <label class="switch-small"><input type="checkbox" id="show_suggested_friends"><span class="slider-small round"></span></label>
+              </div>
+              <div class="ys-toggle-row" data-cap="show_trending_hashtags">
+                <span class="ys-toggle-label">{{ _('Trending Hashtags') }} <small>{{ _('Show the "Trending Hashtags" box in the side column') }}</small></span>
+                <label class="switch-small"><input type="checkbox" id="show_trending_hashtags"><span class="slider-small round"></span></label>
+              </div>
+              <div class="ys-toggle-row" data-cap="show_recsys_info">
+                <span class="ys-toggle-label">{{ _('Recommender info') }} <small>{{ _("Show a box next to the feed with the participant's content recommender system and a plain-language explanation of how it works") }}</small></span>
+                <label class="switch-small"><input type="checkbox" id="show_recsys_info"><span class="slider-small round"></span></label>
+              </div>
+              <div class="ys-toggle-row" data-cap="show_annotation_stats" id="row-show_annotation_stats">
+                <span class="ys-toggle-label">{{ _('Annotation statistics') }} <small>{{ _("Show a box next to the feed with live charts of the participant's own annotations (sentiment, toxicity, emotions, topics)") }}</small>
+                  <small id="annotation-stats-hint" style="display:none;color:#b45309;">{{ _('Available only when the "Post & Comment Annotation" module is enabled for this experiment (Frontend Add-ons).') }}</small></span>
+                <label class="switch-small"><input type="checkbox" id="show_annotation_stats"><span class="slider-small round"></span></label>
+              </div>
               <div class="ys-fs-save-row">
-                <button class="button is-solid primary-button" onclick="saveSection(event,'annotations')">Save annotations</button>
+                <button class="button is-solid primary-button" onclick="saveSection(event,'annotations')">{{ _('Save annotations') }}</button>
                 <span class="ys-fs-save-status" id="status-annotations"></span>
               </div>
             </div>
           </div>
 
           <!-- ══ BOX 4 — Feed & Profile ══════════════════════════ -->
-          <div class="misc-compact-box" id="box-feed-profile">
-            <h3>Feed &amp; Profile</h3>
+          <div class="misc-compact-box" id="box-feed-profile" data-tut="feed-profile">
+            <h3>{{ _('Feed & Profile') }}</h3>
             <div class="box-content">
               <p style="color:#6b7280;font-size:.85rem;margin-bottom:14px;">
-                Configure default recommendation algorithms and profile/onboarding options for standard users.
+                {{ _('Configure default recommendation algorithms and profile/onboarding options for standard users.') }}
               </p>
 
               <!-- Content recsys -->
-              <div class="ys-toggle-row" style="flex-direction:column;align-items:flex-start;gap:6px;padding-bottom:14px;">
+              <div class="ys-toggle-row" data-cap="content_recsys" style="flex-direction:column;align-items:flex-start;gap:6px;padding-bottom:14px;">
                 <span class="ys-toggle-label" style="font-weight:700;color:#1f2937;">
-                  Default content recommender
-                  <small>Feed algorithm shown to standard users by default</small>
+                  {{ _('Default content recommender') }}
+                  <small>{{ _('Feed algorithm shown to standard users by default') }}</small>
                 </span>
                 <select id="default_content_recsys" class="input" style="width:100%;max-width:380px;"></select>
               </div>
 
 
               <!-- ── Personalized Feed nested config (shown only when selected) ── -->
-              <div id="fb-config-section">
+              <div id="fb-config-section" data-cap="content_recsys">
                 <div class="fb-section-title">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-                  Personalized Feed parameters
+                  {{ _('Personalized Feed parameters') }}
                 </div>
                 <div class="fb-inner-grid">
 
                   <!-- Core parameters column -->
                   <div>
-                    <div class="fb-col-title">Core parameters</div>
+                    <div class="fb-col-title">{{ _('Core parameters') }}</div>
 
                     <div class="ys-toggle-row">
-                      <span class="ys-toggle-label">Opinion width (&alpha;)
-                        <small>Gaussian bandwidth for opinion alignment. Higher&nbsp;= narrower bubble.</small>
+                      <span class="ys-toggle-label">{{ _('Opinion width (α)') }}
+                        <small>{{ _('Gaussian bandwidth for opinion alignment. Higher = narrower bubble.') }}</small>
                       </span>
                       <input type="number" id="filter_bubble_alpha" min="0" max="20" step="0.1" value="2.0"
                              style="width:72px;padding:0.25rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;font-size:.9rem;">
                     </div>
 
                     <div class="ys-toggle-row">
-                      <span class="ys-toggle-label">Recency decay (&beta;)
-                        <small>Exponential decay over simulation rounds. 0&nbsp;= disabled.</small>
+                      <span class="ys-toggle-label">{{ _('Recency decay (β)') }}
+                        <small>{{ _('Exponential decay over simulation rounds. 0 = disabled.') }}</small>
                       </span>
                       <input type="number" id="filter_bubble_beta" min="0" max="1" step="0.01" value="0.0"
                              style="width:72px;padding:0.25rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;font-size:.9rem;">
                     </div>
 
                     <div class="ys-toggle-row">
-                      <span class="ys-toggle-label">Engagement boost (&gamma;)
-                        <small>Amplification of popular posts. 0&nbsp;= disabled.</small>
+                      <span class="ys-toggle-label">{{ _('Engagement boost (γ)') }}
+                        <small>{{ _('Amplification of popular posts. 0 = disabled.') }}</small>
                       </span>
                       <input type="number" id="filter_bubble_gamma" min="0" max="5" step="0.1" value="0.0"
                              style="width:72px;padding:0.25rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;font-size:.9rem;">
                     </div>
 
                     <div class="ys-toggle-row">
-                      <span class="ys-toggle-label">Interest learning rate (&lambda;)
-                        <small>EMA rate for real-time interest updates after reactions.</small>
+                      <span class="ys-toggle-label">{{ _('Interest learning rate (λ)') }}
+                        <small>{{ _('EMA rate for real-time interest updates after reactions.') }}</small>
                       </span>
                       <input type="number" id="filter_bubble_lr" min="0" max="1" step="0.01" value="0.05"
                              style="width:72px;padding:0.25rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;font-size:.9rem;">
                     </div>
 
                     <div class="ys-toggle-row" style="flex-direction:column;align-items:flex-start;gap:6px;padding-bottom:8px;">
-                      <span class="ys-toggle-label" style="font-weight:700;color:#1f2937;">Ranking mode
-                        <small>How to order posts when scores are equal</small>
+                      <span class="ys-toggle-label" style="font-weight:700;color:#1f2937;">{{ _('Ranking mode') }}
+                        <small>{{ _('How to order posts when scores are equal') }}</small>
                       </span>
                       <select id="filter_bubble_sort" class="input" style="width:100%;max-width:220px;">
-                        <option value="score">Score only</option>
-                        <option value="recency">Recency first</option>
-                        <option value="engagement">Engagement first</option>
-                        <option value="hybrid">Hybrid (score &times; recency)</option>
+                        <option value="score">{{ _('Score only') }}</option>
+                        <option value="recency">{{ _('Recency first') }}</option>
+                        <option value="engagement">{{ _('Engagement first') }}</option>
+                        <option value="hybrid">{{ _('Hybrid (score × recency)') }}</option>
                       </select>
                     </div>
                   </div>
 
                   <!-- Engagement weights column -->
                   <div>
-                    <div class="fb-col-title">Engagement weights</div>
-                    <p style="color:#9ca3af;font-size:.8rem;margin-bottom:8px;">Applied when engagement boost (&gamma;)&nbsp;&gt;&nbsp;0.</p>
+                    <div class="fb-col-title">{{ _('Engagement weights') }}</div>
+                    <p style="color:#9ca3af;font-size:.8rem;margin-bottom:8px;">{{ _('Applied when engagement boost (γ) > 0.') }}</p>
 
                     <div class="ys-toggle-row">
-                      <span class="ys-toggle-label">Reaction weight (w<sub>r</sub>)
-                        <small>Weight for likes / reactions</small>
+                      <span class="ys-toggle-label">{{ _('Reaction weight') }} (w<sub>r</sub>)
+                        <small>{{ _('Weight for likes / reactions') }}</small>
                       </span>
                       <input type="number" id="filter_bubble_wr" min="0" max="10" step="0.1" value="1.0"
                              style="width:72px;padding:0.25rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;font-size:.9rem;">
                     </div>
 
                     <div class="ys-toggle-row">
-                      <span class="ys-toggle-label">Comment weight (w<sub>c</sub>)
-                        <small>Weight for comments / replies</small>
+                      <span class="ys-toggle-label">{{ _('Comment weight') }} (w<sub>c</sub>)
+                        <small>{{ _('Weight for comments / replies') }}</small>
                       </span>
                       <input type="number" id="filter_bubble_wc" min="0" max="10" step="0.1" value="1.5"
                              style="width:72px;padding:0.25rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;font-size:.9rem;">
                     </div>
 
                     <div class="ys-toggle-row">
-                      <span class="ys-toggle-label">Share weight (w<sub>s</sub>)
-                        <small>Weight for shares / reposts</small>
+                      <span class="ys-toggle-label">{{ _('Share weight') }} (w<sub>s</sub>)
+                        <small>{{ _('Weight for shares / reposts') }}</small>
                       </span>
                       <input type="number" id="filter_bubble_ws" min="0" max="10" step="0.1" value="2.0"
                              style="width:72px;padding:0.25rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;font-size:.9rem;">
@@ -554,20 +577,36 @@ input:checked + .slider-small:before { transform: translateX(16px); }
 
                 </div><!-- /fb-inner-grid -->
               </div><!-- /#fb-config-section -->
-              <!-- Follow recsys -->
-              <div class="ys-toggle-row" style="flex-direction:column;align-items:flex-start;gap:6px;padding-bottom:14px;border-bottom:1px solid #f1f3f5;">
+              <!-- Platform-specific feed defaults: they replace the microblogging recommenders -->
+              <div class="ys-toggle-row" data-cap="default_forum_feed_type" style="flex-direction:column;align-items:flex-start;gap:6px;padding-bottom:14px;">
                 <span class="ys-toggle-label" style="font-weight:700;color:#1f2937;">
-                  Default follow recommender
-                  <small>"Who to follow" algorithm shown to standard users by default</small>
+                  {{ _('Default feed ordering') }}
+                  <small>{{ _('Ordering of the forum feed when a participant opens it (they can still change it)') }}</small>
+                </span>
+                <select id="default_forum_feed_type" class="input" style="width:100%;max-width:380px;"></select>
+              </div>
+              <div class="ys-toggle-row" data-cap="default_photo_feed_tab" style="flex-direction:column;align-items:flex-start;gap:6px;padding-bottom:14px;">
+                <span class="ys-toggle-label" style="font-weight:700;color:#1f2937;">
+                  {{ _('Default home tab') }}
+                  <small>{{ _('Tab of the photo feed shown when a participant opens it') }}</small>
+                </span>
+                <select id="default_photo_feed_tab" class="input" style="width:100%;max-width:380px;"></select>
+              </div>
+
+              <!-- Follow recsys -->
+              <div class="ys-toggle-row" data-cap="follow_recsys" style="flex-direction:column;align-items:flex-start;gap:6px;padding-bottom:14px;border-bottom:1px solid #f1f3f5;">
+                <span class="ys-toggle-label" style="font-weight:700;color:#1f2937;">
+                  {{ _('Default follow recommender') }}
+                  <small>{{ _('"Who to follow" algorithm shown to standard users by default') }}</small>
                 </span>
                 <select id="default_follow_recsys" class="input" style="width:100%;max-width:380px;"></select>
               </div>
 
               <!-- Topics box in profile -->
-              <div class="ys-toggle-row is-master" style="margin-top:10px;">
+              <div class="ys-toggle-row is-master" data-cap="profile_topics_box" style="margin-top:10px;">
                 <span class="ys-toggle-label">
-                  Topics &amp; Opinions box in profile
-                  <small>Show the interest / opinion sliders in the Edit Profile page</small>
+                  {{ _('Topics & Opinions box in profile') }}
+                  <small>{{ _('Show the interest / opinion sliders in the Edit Profile page') }}</small>
                 </span>
                 <label class="switch-small">
                   <input type="checkbox" id="profile_topics_box" checked>
@@ -576,10 +615,10 @@ input:checked + .slider-small:before { transform: translateX(16px); }
               </div>
 
               <!-- Onboarding screen -->
-              <div class="ys-toggle-row is-master">
+              <div class="ys-toggle-row is-master" data-cap="onboarding_enabled">
                 <span class="ys-toggle-label">
-                  Onboarding screen
-                  <small>Show the profile-setup wizard to users on their first login</small>
+                  {{ _('Onboarding screen') }}
+                  <small>{{ _('Show the profile-setup wizard to users on their first login') }}</small>
                 </span>
                 <label class="switch-small">
                   <input type="checkbox" id="onboarding_enabled" checked>
@@ -588,10 +627,10 @@ input:checked + .slider-small:before { transform: translateX(16px); }
               </div>
 
               <!-- Infinite scroll -->
-              <div class="ys-toggle-row is-master">
+              <div class="ys-toggle-row is-master" data-cap="infinite_scroll_enabled">
                 <span class="ys-toggle-label">
-                  Infinite scrolling
-                  <small>Automatically load more posts as the user scrolls down the feed</small>
+                  {{ _('Infinite scrolling') }}
+                  <small>{{ _('Automatically load more posts as the user scrolls down the feed') }}</small>
                 </span>
                 <label class="switch-small">
                   <input type="checkbox" id="infinite_scroll_enabled" checked
@@ -599,17 +638,37 @@ input:checked + .slider-small:before { transform: translateX(16px); }
                   <span class="slider-small round"></span>
                 </label>
               </div>
-              <div id="posts-per-page-row" class="ys-toggle-row" style="margin-left:1.5rem;">
+              <div id="posts-per-page-row" class="ys-toggle-row" data-cap="posts_per_page" style="margin-left:1.5rem;">
                 <span class="ys-toggle-label">
-                  Posts per page
-                  <small>Number of posts shown per page when infinite scrolling is disabled</small>
+                  {{ _('Posts per page') }}
+                  <small id="posts-per-page-hint">{{ _('Number of posts shown per page when infinite scrolling is disabled') }}</small>
                 </span>
                 <input type="number" id="posts_per_page" min="1" max="100" value="10"
                        style="width:70px;padding:0.25rem 0.4rem;border:1px solid #ccc;border-radius:4px;font-size:0.9rem;">
               </div>
 
+              <!-- Interface language of the participant pages -->
+              <div class="ys-toggle-row" data-cap="language">
+                <span class="ys-toggle-label">
+                  {{ _('Interface language') }}
+                  <small>{{ _('Language of the participant pages in this experiment. Post, comment and agent texts are never translated.') }}</small>
+                </span>
+                <select id="language" aria-label="{{ _('Interface language') }}"
+                        style="padding:0.25rem 0.4rem;border:1px solid #ccc;border-radius:4px;font-size:0.9rem;">
+                  <option value="">{{ _('Default (English)') }}</option>
+                  {% for code, name in language_options %}<option value="{{ code }}">{{ name }}</option>{% endfor %}
+                </select>
+              </div>
+              <div class="ys-toggle-row" data-cap="language_switch_allowed">
+                <span class="ys-toggle-label">
+                  {{ _('Let participants change the language') }}
+                  <small>{{ _('Off keeps the language fixed for everybody, so it does not become a variable of the experiment.') }}</small>
+                </span>
+                <label class="switch-small"><input type="checkbox" id="language_switch_allowed"><span class="slider-small round"></span></label>
+              </div>
+
               <div class="ys-fs-save-row">
-                <button class="button is-solid primary-button" onclick="saveSection(event,'feed-profile')">Save feed &amp; profile</button>
+                <button class="button is-solid primary-button" onclick="saveSection(event,'feed-profile')">{{ _('Save feed & profile') }}</button>
                 <span class="ys-fs-save-status" id="status-feed-profile"></span>
               </div>
             </div>
@@ -622,9 +681,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
             <div class="box-content">
               {% if suite.repo_key != "reactive_agents" %}
               <p style="color:#6b7280;font-size:.85rem;margin-bottom:14px;">
-                Enable and configure {{ suite.label }} frontend plugin modules for this experiment.
-                Install or update the suite itself from
-                <a href="{{ url_for('experiments.external_runtimes') }}">External Runtimes</a>.
+                {{ _('Enable and configure %(suite)s frontend plugin modules for this experiment. Install or update the suite itself from %(link)s.', suite=suite.label, link=wrap('a', _('External Runtimes'), href=url_for('experiments.external_runtimes'))) }}
               </p>
               {% endif %}
               <div id="suite-{{ suite.repo_key }}-errors" style="display:none;color:#b91c1c;font-size:.78rem;margin-bottom:10px;"></div>
@@ -641,7 +698,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       <div id="ys-fs-empty" class="misc-compact-box" style="margin-top:0;">
         <div class="ys-fs-placeholder">
           <i data-feather="sliders" style="width:56px;height:56px;"></i>
-          <p>Select an experiment type and name to view and edit its frontend settings.</p>
+          <p>{{ _('Select an experiment type, group and name to view and edit its frontend settings.') }}</p>
         </div>
       </div>
 
@@ -653,10 +710,13 @@ input:checked + .slider-small:before { transform: translateX(16px); }
 (function () {
   /* ── data injected from server ─────────────────────────── */
   const ALL_EXPS   = {{ exps_json | safe }};
+  const PLATFORMS  = {{ platforms_json | safe }};
+  const NO_GROUP   = '__none__';
   const ALL_RECSYS = {{ recsys_json | safe }};
 
   /* ── DOM refs ──────────────────────────────────────────── */
   const typeSelect  = document.getElementById('type-select');
+  const groupSelect = document.getElementById('group-select');
   const expSelect   = document.getElementById('exp-select');
   const grid        = document.getElementById('ys-fs-grid');
   const emptyState  = document.getElementById('ys-fs-empty');
@@ -671,31 +731,154 @@ input:checked + .slider-small:before { transform: translateX(16px); }
   function _suiteUrl(tmpl, repoKey) { return tmpl.replace('__REPO_KEY__', encodeURIComponent(repoKey)); }
 
   let currentExpId = null;
+  let currentPlatform = 'microblogging';
 
-  /* ── Step 1: type selection → populate experiment dropdown ─ */
-  typeSelect.addEventListener('change', function () {
-    const chosen = this.value;
-    expSelect.innerHTML = '<option value="">— select experiment —</option>';
-
-    if (!chosen) {
-      expSelect.disabled = true;
-      showEmpty();
-      return;
+  /* ── Platform adaptation: show only what this platform's templates honour ── */
+  const PLATFORM_LABEL_OVERRIDES = {
+    forum: {
+      interaction_like:    ['Upvote',   'Up-arrow vote on posts and comments'],
+      interaction_dislike: ['Downvote', 'Down-arrow vote on posts and comments'],
+      interaction_comment: ['Comment / reply', 'Reply to threads and to other comments'],
+    },
+    photo_sharing: {
+      interaction_post:    ['New photo', 'Share a new photo'],
+      interaction_like:    ['Like',      'Heart reaction on photos'],
+      interaction_comment: ['Comment',   'Comment on photos and reply to comments'],
+      interaction_share:   ['Send / share', 'Send a photo to others'],
+      annotation_agent_type: ['Agent type', 'Badge identifying ad-hoc agents next to the author name'],
+      show_suggested_friends: ['Suggestions', 'Show the "Suggestions for you" box beside the feed'],
+      show_recsys_info: ['Recommender info', 'Show the content recommender system box beside the feed'],
+      show_annotation_stats: ['Annotation statistics', 'Show the live annotation statistics box beside the feed'],
+    },
+  };
+  const BOX_DESCRIPTIONS = {
+    'box-annotations': {
+      microblogging: 'Choose which metadata chips are displayed below each post.',
+      forum: 'Choose which metadata chips are displayed below each post and comment.',
+      photo_sharing: 'Choose which labels are displayed on photos.',
+    },
+  };
+  function _setLabel(row, label, hint) {
+    const span = row.querySelector('.ys-toggle-label');
+    if (!span) return;
+    const small = span.querySelector('small');
+    if (!row.dataset.origLabel) {
+      row.dataset.origLabel = span.firstChild ? span.firstChild.textContent.trim() : '';
+      row.dataset.origHint = small ? small.textContent : '';
     }
+    if (span.firstChild && span.firstChild.nodeType === 3) span.firstChild.textContent = label + ' ';
+    if (small) small.textContent = hint;
+  }
+  function _restoreLabel(row) {
+    if (!row.dataset.origLabel) return;
+    const span = row.querySelector('.ys-toggle-label');
+    const small = span && span.querySelector('small');
+    if (span && span.firstChild && span.firstChild.nodeType === 3) span.firstChild.textContent = row.dataset.origLabel + ' ';
+    if (small) small.textContent = row.dataset.origHint;
+  }
 
-    const filtered = ALL_EXPS.filter(e => e.type === chosen);
+  function applyPlatform(platform, caps, data) {
+    const allowed = caps ? new Set(caps) : null;      // null = everything (microblogging)
+    // controls of other platforms that a "show everything" platform must not offer
+    const excluded = new Set((data && data.excluded_capabilities) || []);
+    document.querySelectorAll('[data-cap]').forEach(el => {
+      const key = el.getAttribute('data-cap');
+      // keys that exist only in microblogging are not in any other platform's list
+      el.style.display = ((!allowed || allowed.has(key)) && !excluded.has(key)) ? '' : 'none';
+    });
+    document.querySelectorAll('[data-cap-any]').forEach(el => {
+      const keys = el.getAttribute('data-cap-any').split(/\s+/);
+      el.style.display = ((!allowed && keys.some(k => !excluded.has(k))) || (allowed && keys.some(k => allowed.has(k)))) ? '' : 'none';
+    });
+    // labels
+    const overrides = PLATFORM_LABEL_OVERRIDES[platform] || {};
+    document.querySelectorAll('[data-cap]').forEach(row => {
+      const key = row.getAttribute('data-cap');
+      if (overrides[key]) _setLabel(row, overrides[key][0], overrides[key][1]); else _restoreLabel(row);
+    });
+    Object.keys(BOX_DESCRIPTIONS).forEach(id => {
+      const p = document.querySelector('#' + id + ' .box-content > p');
+      if (p) p.textContent = BOX_DESCRIPTIONS[id][platform] || BOX_DESCRIPTIONS[id].microblogging;
+    });
+    // platform-specific selects
+    _fillSimple('default_forum_feed_type', data.forum_feed_types || []);
+    _fillSimple('default_photo_feed_tab', data.photo_feed_tabs || []);
+    const hint = document.getElementById('posts-per-page-hint');
+    if (hint) hint.textContent = platform === 'microblogging'
+      ? YI18n.t('Number of posts shown per page when infinite scrolling is disabled')
+      : YI18n.t('Number of items loaded at a time in the feed');
+    // description of the Feed & Profile box
+    const fp = document.querySelector('#box-feed-profile .box-content > p');
+    if (fp) fp.textContent = platform === 'microblogging'
+      ? YI18n.t('Configure default recommendation algorithms and profile/onboarding options for standard users.')
+      : YI18n.t('Configure the default feed view of this platform. Recommendation algorithms are specific to each platform and are not shared with microblogging.');
+    toggleInfiniteScrollControls(platform === 'microblogging' ? document.getElementById('infinite_scroll_enabled').checked : false);
+  }
+
+  function _fillSimple(selectId, items) {
+    const sel = document.getElementById(selectId);
+    if (!sel) return;
+    const prev = sel.value;
+    sel.innerHTML = '';
+    items.forEach(it => {
+      const o = document.createElement('option');
+      o.value = it.name; o.textContent = it.label; sel.appendChild(o);
+    });
+    if (prev) sel.value = prev;
+  }
+
+  /* ── Step 1: type → groups → experiments ────────────────── */
+  PLATFORMS.forEach(p => {
+    if (!ALL_EXPS.some(e => e.type === p.value)) return;   // only types that have experiments
+    const opt = document.createElement('option');
+    opt.value = p.value;
+    opt.textContent = p.label;
+    typeSelect.appendChild(opt);
+  });
+
+  function _resetSelect(sel, placeholder, disabled) {
+    sel.innerHTML = '<option value="">' + placeholder + '</option>';
+    sel.disabled = disabled;
+  }
+
+  typeSelect.addEventListener('change', function () {
+    _resetSelect(groupSelect, '— select group —', true);
+    _resetSelect(expSelect, '— select experiment —', true);
+    showEmpty();
+    if (!this.value) return;
+
+    const groups = [];
+    ALL_EXPS.filter(e => e.type === this.value).forEach(e => {
+      const g = e.group || NO_GROUP;
+      if (!groups.includes(g)) groups.push(g);
+    });
+    groups.sort((a, b) => (a === NO_GROUP) - (b === NO_GROUP) || a.localeCompare(b));
+    groups.forEach(g => {
+      const opt = document.createElement('option');
+      opt.value = g;
+      opt.textContent = g === NO_GROUP ? YI18n.t('(no group)') : g;
+      groupSelect.appendChild(opt);
+    });
+    groupSelect.disabled = groups.length === 0;
+    if (groups.length === 1) { groupSelect.value = groups[0]; groupSelect.dispatchEvent(new Event('change')); }
+  });
+
+  /* ── Step 2: group selection → populate experiment dropdown ─ */
+  groupSelect.addEventListener('change', function () {
+    _resetSelect(expSelect, '— select experiment —', true);
+    showEmpty();
+    if (!this.value) return;
+    const filtered = ALL_EXPS.filter(e => e.type === typeSelect.value && (e.group || NO_GROUP) === this.value);
     filtered.forEach(e => {
       const opt = document.createElement('option');
       opt.value = e.id;
       opt.textContent = e.name;
       expSelect.appendChild(opt);
     });
-
     expSelect.disabled = filtered.length === 0;
-    showEmpty();
   });
 
-  /* ── Step 2: experiment selection → fetch & render settings ─ */
+  /* ── Step 3: experiment selection → fetch & render settings ─ */
   expSelect.addEventListener('change', function () {
     const expId = parseInt(this.value, 10);
     if (!expId) { showEmpty(); return; }
@@ -710,11 +893,14 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       const data = await resp.json();
       if (!data.ok) { showEmpty(); return; }
       currentExpId = data.exp_id;
+      currentPlatform = data.platform_type || 'microblogging';
+      applyPlatform(currentPlatform, data.capabilities, data);
       // Rebuild recsys dropdowns for this experiment type (HPC shows all modes)
       if (data.recsys_options) {
         _buildRecsysSelects(data.recsys_options);
       }
       applySettings(data.settings, data.exp_name);
+      syncAnnotationStatsAvailability(!!data.annotation_module_enabled);
       FRONTEND_PLUGIN_SUITES.forEach(function (suite) { loadFrontendAddsOnSettings(expId, suite.repo_key); });
       showGrid();
     } catch (e) {
@@ -735,7 +921,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       // Group by category
       const cats = {};
       items.forEach(r => { (cats[r.category] = cats[r.category] || []).push(r); });
-      sel.innerHTML = '<option value="">— system default —</option>';
+      sel.innerHTML = '<option value="">' + YI18n.t('— system default —') + '</option>';
       Object.keys(cats).forEach(cat => {
         const og = document.createElement('optgroup');
         og.label = cat;
@@ -758,6 +944,18 @@ input:checked + .slider-small:before { transform: translateX(16px); }
   document.getElementById('default_content_recsys')
     ?.addEventListener('change', syncFilterBubbleSection);
 
+  /* The statistics box needs the "Post & Comment Annotation" add-on: the toggle is selectable only while it is enabled. */
+  function syncAnnotationStatsAvailability(moduleEnabled) {
+    const el = document.getElementById('show_annotation_stats');
+    const hint = document.getElementById('annotation-stats-hint');
+    if (!el) return;
+    if (!moduleEnabled) el.checked = false;
+    el.disabled = !moduleEnabled;
+    if (hint) hint.style.display = moduleEnabled ? 'none' : 'block';
+    const row = document.getElementById('row-show_annotation_stats');
+    if (row) row.style.opacity = moduleEnabled ? '' : '.6';
+  }
+
   function applySettings(s, expName) {
     badgeName.textContent = expName;
 
@@ -767,9 +965,9 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       'interaction_like','interaction_dislike','interaction_share',
       'annotations_enabled','annotation_emotions','annotation_topics',
       'annotation_sentiment','annotation_toxicity','annotation_agent_type','annotation_author_type',
-      'show_post_time',
+      'show_post_time','show_suggested_friends','show_trending_hashtags','show_recsys_info','show_annotation_stats',
       'notifications_menu','profile_topics_box','onboarding_enabled',
-      'infinite_scroll_enabled',
+      'infinite_scroll_enabled','language_switch_allowed',
     ];
     boolIds.forEach(key => {
       const el = document.getElementById(key);
@@ -796,9 +994,13 @@ input:checked + .slider-small:before { transform: translateX(16px); }
     }
 
     // String selects
-    ['default_content_recsys','default_follow_recsys'].forEach(key => {
+    ['default_content_recsys','default_follow_recsys','language'].forEach(key => {
       const el = document.getElementById(key);
       if (el) el.value = s[key] || '';
+    });
+    ['default_forum_feed_type','default_photo_feed_tab'].forEach(key => {
+      const el = document.getElementById(key);
+      if (el && s[key]) el.value = s[key];
     });
     syncFilterBubbleSection();
 
@@ -871,10 +1073,10 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       'interaction_like','interaction_dislike','interaction_share',
       'annotations_enabled','annotation_emotions','annotation_topics',
       'annotation_sentiment','annotation_toxicity','annotation_agent_type','annotation_author_type',
-      'show_post_time',
+      'show_post_time','show_suggested_friends','show_trending_hashtags','show_recsys_info','show_annotation_stats',
       'notifications_menu',
       'profile_topics_box','onboarding_enabled',
-      'infinite_scroll_enabled',
+      'infinite_scroll_enabled','language_switch_allowed',
     ];
     const out = {};
     boolIds.forEach(id => { const el = document.getElementById(id); out[id] = el ? el.checked : true; });
@@ -887,7 +1089,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       out[id] = el ? parseFloat(el.value) || 0 : 0;
     });
     // String settings (select elements)
-    ['default_content_recsys','default_follow_recsys','filter_bubble_sort'].forEach(id => {
+    ['default_content_recsys','default_follow_recsys','filter_bubble_sort','default_forum_feed_type','default_photo_feed_tab','language'].forEach(id => {
       const el = document.getElementById(id);
       out[id] = el ? el.value : '';
     });
@@ -899,7 +1101,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
     evt.preventDefault();
     if (!currentExpId) return;
     const statusEl = document.getElementById('status-' + section);
-    statusEl.textContent = 'Saving…';
+    statusEl.textContent = YI18n.t('Saving…');
     statusEl.className = 'ys-fs-save-status';
     try {
       const resp = await fetch(SAVE_URL, {
@@ -909,14 +1111,14 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       });
       const data = await resp.json();
       if (data.ok) {
-        statusEl.textContent = 'Saved ✓';
+        statusEl.textContent = YI18n.t('Saved ✓');
         statusEl.className = 'ys-fs-save-status is-ok';
       } else {
-        statusEl.textContent = 'Error: ' + (data.error || 'unknown');
+        statusEl.textContent = YI18n.t('Error: {error}', {error: data.error || 'unknown'});
         statusEl.className = 'ys-fs-save-status is-err';
       }
     } catch (e) {
-      statusEl.textContent = 'Network error';
+      statusEl.textContent = YI18n.t('Network error');
       statusEl.className = 'ys-fs-save-status is-err';
     }
     setTimeout(() => { statusEl.textContent = ''; statusEl.className = 'ys-fs-save-status'; }, 4000);
@@ -926,14 +1128,15 @@ input:checked + .slider-small:before { transform: translateX(16px); }
   /* ══════════════════════════════════════════════════════════════════
    * Frontend Adds-on frontend plugin suite — module list, per-module config
    * ══════════════════════════════════════════════════════════════════ */
-  const STATUS_LABELS = {
-    active: ['Active', 'is-ok'],
-    disabled: ['Disabled', ''],
-    available: ['Available', ''],
-    not_configured: ['Needs configuration', 'is-err'],
-    incompatible: ['Incompatible', 'is-err'],
-    error: ['Error', 'is-err'],
-  };
+  // Built on demand: the browser catalog is fetched asynchronously, after this script runs.
+  const statusLabels = () => ({
+    active: [YI18n.t('Active'), 'is-ok'],
+    disabled: [YI18n.t('Disabled'), ''],
+    available: [YI18n.t('Available'), ''],
+    not_configured: [YI18n.t('Needs configuration'), 'is-err'],
+    incompatible: [YI18n.t('Incompatible'), 'is-err'],
+    error: [YI18n.t('Error'), 'is-err'],
+  });
 
   async function loadFrontendAddsOnSettings(expId, repoKey) {
     const box = document.getElementById('box-suite-' + repoKey);
@@ -958,7 +1161,14 @@ input:checked + .slider-small:before { transform: translateX(16px); }
         errBox.innerHTML = '';
       }
 
-      renderFrontendAddsOnModules(expId, repoKey, data.modules || []);
+      const platform = data.platform_type || 'microblogging';
+      const usable = (data.modules || []).filter(m => m.supported !== false);
+      const hidden = (data.modules || []).length - usable.length;
+      renderFrontendAddsOnModules(expId, repoKey, usable);
+      if (hidden && !usable.length) {
+        document.getElementById('suite-' + repoKey + '-modules-list').innerHTML =
+          '<p class="ys-fs-placeholder" style="padding:20px;">' + YI18n.t('No module of this suite is available for {label} experiments.', {label: (PLATFORMS.find(p => p.value === platform) || {label: platform}).label}) + '</p>';
+      }
     } catch (e) {
       box.style.display = 'none';
     }
@@ -988,20 +1198,13 @@ input:checked + .slider-small:before { transform: translateX(16px); }
     if (param.type === 'string_list') {
       const joined = Array.isArray(value) ? value.join(', ') : '';
       const escaped = joined.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      return '<textarea id="' + id + '" rows="2" placeholder="comma or newline separated" ' +
-        'style="width:100%;padding:0.35rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;' +
-        'font:inherit;resize:vertical;">' + escaped + '</textarea>';
+      return '<textarea id="' + id + '" rows="2" placeholder="' + YI18n.t('comma or newline separated') + '" style="width:100%;padding:0.35rem 0.4rem;border:1px solid #c7d2fe;border-radius:4px;font:inherit;resize:vertical;">' + escaped + '</textarea>';
     }
     if (param.type === 'llm_endpoint_host') {
       const visionArg = param.vision ? 'true' : 'false';
       const btnLabel = param.vision ? 'Fetch Vision Models' : 'Fetch Models';
       const statusId = 'edu-fetch-status-' + repoKey + '-' + moduleId + '-' + param.name;
-      return '<div class="ys-flex-row-mb">' +
-        '<input type="text" id="' + id + '" class="input ys-flex-1" placeholder="e.g., http://127.0.0.1:11434/v1" value="' +
-        (value != null ? String(value).replace(/"/g, '&quot;') : '') + '">' +
-        '<button type="button" class="button is-light" onclick="_eduFetchModelsFor(\'' + repoKey + '\',\'' +
-        moduleId + '\',\'' + param.name + '\',\'' + (param.pairs_with || '') + '\',' + visionArg + ')">' +
-        btnLabel + '</button></div><div id="' + statusId + '" class="ys-badge-min"></div>';
+      return '<div class="ys-flex-row-mb"><input type="text" id="' + id + '" class="input ys-flex-1" placeholder="' + YI18n.t('e.g., http://127.0.0.1:11434/v1') + '" value="' + (value != null ? String(value).replace(/"/g, '&quot;') : '') + '"><button type="button" class="button is-light" onclick="_eduFetchModelsFor(\'' + repoKey + '\',\'' + moduleId + '\',\'' + param.name + '\',\'' + (param.pairs_with || '') + '\',' + visionArg + ')">' + btnLabel + '</button></div><div id="' + statusId + '" class="ys-badge-min"></div>';
     }
     if (param.type === 'llm_endpoint_model') {
       const placeholder = param.vision ? 'Select a vision model' : 'Select a model';
@@ -1041,10 +1244,10 @@ input:checked + .slider-small:before { transform: translateX(16px); }
     const statusEl = document.getElementById('edu-fetch-status-' + repoKey + '-' + moduleId + '-' + hostParamName);
     const llmUrl = hostEl ? hostEl.value.trim() : '';
     if (!llmUrl) {
-      if (statusEl) statusEl.innerHTML = '<span style="color:#b91c1c;">Enter a server URL first</span>';
+      if (statusEl) statusEl.innerHTML = '<span style="color:#b91c1c;">' + YI18n.t('Enter a server URL first') + '</span>';
       return;
     }
-    if (statusEl) statusEl.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Fetching...';
+    if (statusEl) statusEl.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> ' + YI18n.t('Fetching...');
     try {
       const resp = await fetch('/admin/api/fetch_models?llm_url=' + encodeURIComponent(llmUrl));
       const data = await resp.json();
@@ -1064,12 +1267,12 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       }
       if (statusEl) {
         statusEl.innerHTML = models.length
-          ? '<span style="color:green;"><i class="mdi mdi-check"></i> ' + models.length + ' model' + (models.length === 1 ? '' : 's') + ' loaded</span>'
-          : '<span style="color:#b45309;">No ' + (vision ? 'vision ' : '') + 'models found</span>';
+          ? '<span style="color:green;"><i class="mdi mdi-check"></i> ' + (models.length === 1 ? YI18n.t('1 model loaded') : YI18n.t('{length} models loaded', {length: models.length})) + '</span>'
+          : '<span style="color:#b45309;">' + (vision ? YI18n.t('No vision models found') : YI18n.t('No models found')) + '</span>';
         setTimeout(function () { statusEl.innerHTML = ''; }, 4000);
       }
     } catch (e) {
-      if (statusEl) statusEl.innerHTML = '<span style="color:#b91c1c;"><i class="mdi mdi-alert"></i> Connection failed</span>';
+      if (statusEl) statusEl.innerHTML = '<span style="color:#b91c1c;"><i class="mdi mdi-alert"></i> ' + YI18n.t('Connection failed') + '</span>';
     }
   }
 
@@ -1109,15 +1312,15 @@ input:checked + .slider-small:before { transform: translateX(16px); }
   function renderFrontendAddsOnModules(expId, repoKey, modules) {
     const list = document.getElementById('suite-' + repoKey + '-modules-list');
     if (!modules.length) {
-      list.innerHTML = '<p class="ys-fs-placeholder" style="padding:20px;">No modules declared by this suite.</p>';
+      list.innerHTML = '<p class="ys-fs-placeholder" style="padding:20px;">' + YI18n.t('No modules declared by this suite.') + '</p>';
       return;
     }
 
     list.innerHTML = modules.map(function (m, idx) {
-      const statusInfo = STATUS_LABELS[m.status] || [m.status, ''];
+      const statusInfo = statusLabels()[m.status] || [m.status, ''];
       const sections = m.parameter_sections && m.parameter_sections.length
         ? m.parameter_sections
-        : [{ key: 'general', label: 'Parameters' }];
+        : [{ key: 'general', label: YI18n.t('Parameters') }];
       const bySection = {};
       (m.parameters || []).forEach(function (p) {
         const key = p.section || 'general';
@@ -1172,31 +1375,10 @@ input:checked + .slider-small:before { transform: translateX(16px); }
       }).join('');
 
       const memoryEmbeddingsHtml = (repoKey === 'reactive_agents' && m.module_id === 'responsive_agents')
-        ? ('<div class="edu-param-section">' +
-            '<div class="edu-param-section-header">Memory embeddings</div>' +
-            '<div class="edu-param-section-desc">Semantic memory retrieval used by this module\'s persona/memory context is configured once per experiment, not per plugin.</div>' +
-            '<div class="ys-toggle-row"><a class="button is-light" href="/admin/embedding_settings/' + expId + '" target="_blank" rel="noopener">Configure Memory Embeddings</a></div>' +
-            '</div>')
+        ? ('<div class="edu-param-section"><div class="edu-param-section-header">' + YI18n.t('Memory embeddings') + '</div><div class="edu-param-section-desc">' + YI18n.t('Semantic memory retrieval used by this module\'s persona/memory context is configured once per experiment, not per plugin.') + '</div><div class="ys-toggle-row"><a class="button is-light" href="/admin/embedding_settings/' + expId + '" target="_blank" rel="noopener">' + YI18n.t('Configure Memory Embeddings') + '</a></div></div>')
         : '';
 
-      return '<div class="misc-compact-box" style="margin-bottom:12px;" data-edu-module-id="' + m.module_id + '" data-edu-repo-key="' + repoKey + '">' +
-        '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">' +
-        '<div><strong>' + m.display_name + '</strong> ' +
-        '<span class="ys-text-xs-hint">v' + m.version + '</span> ' +
-        '<span class="ys-fs-save-status ' + statusInfo[1] + '" style="display:inline;">' + statusInfo[0] + '</span>' +
-        ((m.description && !(repoKey === 'reactive_agents' && m.module_id === 'responsive_agents')) ? '<div class="ys-text-xs-hint" style="margin-top:2px;">' + m.description + '</div>' : '') +
-        '</div>' +
-        '<div style="display:flex;gap:10px;align-items:center;">' +
-        '<label class="switch-small"><input type="checkbox" class="edu-enable-toggle"' +
-        (m.enabled ? ' checked' : '') + '><span class="slider-small round"></span></label>' +
-        '<button type="button" class="button is-light edu-configure-toggle">Configure</button>' +
-        '</div></div>' +
-        '<div class="edu-configure-panel" style="display:none;margin-top:12px;border-top:1px solid #f1f3f5;padding-top:10px;">' +
-        sectionsHtml + memoryEmbeddingsHtml +
-        '<div class="ys-fs-save-row">' +
-        '<button class="button is-solid primary-button edu-save-btn">Save module</button>' +
-        '<span class="ys-fs-save-status edu-status"></span>' +
-        '</div></div></div>';
+      return '<div class="misc-compact-box" style="margin-bottom:12px;" data-edu-module-id="' + m.module_id + '" data-edu-repo-key="' + repoKey + '"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;"><div><strong>' + m.display_name + '</strong> <span class="ys-text-xs-hint">v' + m.version + '</span> <span class="ys-fs-save-status ' + statusInfo[1] + '" style="display:inline;">' + statusInfo[0] + '</span>' + ((m.description && !(repoKey === 'reactive_agents' && m.module_id === 'responsive_agents')) ? '<div class="ys-text-xs-hint" style="margin-top:2px;">' + m.description + '</div>' : '') + '</div><div style="display:flex;gap:10px;align-items:center;"><label class="switch-small"><input type="checkbox" class="edu-enable-toggle"' + (m.enabled ? ' checked' : '') + '><span class="slider-small round"></span></label><button type="button" class="button is-light edu-configure-toggle">' + YI18n.t('Configure') + '</button></div></div><div class="edu-configure-panel" style="display:none;margin-top:12px;border-top:1px solid #f1f3f5;padding-top:10px;">' + sectionsHtml + memoryEmbeddingsHtml + '<div class="ys-fs-save-row"><button class="button is-solid primary-button edu-save-btn">' + YI18n.t('Save module') + '</button><span class="ys-fs-save-status edu-status"></span></div></div></div>';
     }).join('');
 
     // Wire up per-module interactions (delegation would also work, but the
@@ -1226,7 +1408,7 @@ input:checked + .slider-small:before { transform: translateX(16px); }
           config[p.name] = _eduReadParamValue(cardRepoKey, moduleId, p);
         });
         const statusEl = card.querySelector('.edu-status');
-        statusEl.textContent = 'Saving…';
+        statusEl.textContent = YI18n.t('Saving…');
         statusEl.className = 'ys-fs-save-status edu-status';
         try {
           const resp = await fetch(_suiteUrl(SUITE_SAVE_URL_TEMPLATE, cardRepoKey), {
@@ -1236,15 +1418,15 @@ input:checked + .slider-small:before { transform: translateX(16px); }
           });
           const data = await resp.json();
           if (data.ok) {
-            statusEl.textContent = 'Saved ✓';
+            statusEl.textContent = YI18n.t('Saved ✓');
             statusEl.className = 'ys-fs-save-status edu-status is-ok';
             loadFrontendAddsOnSettings(expId, cardRepoKey);
           } else {
-            statusEl.textContent = 'Error: ' + (data.error || 'unknown');
+            statusEl.textContent = YI18n.t('Error: {error}', {error: data.error || 'unknown'});
             statusEl.className = 'ys-fs-save-status edu-status is-err';
           }
         } catch (e) {
-          statusEl.textContent = 'Network error';
+          statusEl.textContent = YI18n.t('Network error');
           statusEl.className = 'ys-fs-save-status edu-status is-err';
         }
       });
@@ -1261,7 +1443,9 @@ input:checked + .slider-small:before { transform: translateX(16px); }
   showEmpty();
   window.toggleInfiniteScrollControls = function(enabled) {
     const row = document.getElementById('posts-per-page-row');
-    if (row) row.style.display = enabled ? 'none' : '';
+    if (!row) return;
+    // Outside microblogging the "per page" value is the batch size and is always editable.
+    row.style.display = (currentPlatform !== 'microblogging' || !enabled) ? '' : 'none';
   };
 
 })();

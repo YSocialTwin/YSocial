@@ -6,11 +6,12 @@ This directory contains automated workflows for the YSocial project.
 
 ### 1. CI - Run Tests (`ci-tests.yml`)
 
-**Trigger:** Push or pull request to `main` or `develop` branches
+**Trigger:** every push and pull request
 
 This workflow:
-- Checks out the code with submodules
-- Sets up Python 3.10
+- Checks out the code (the repository has no submodules)
+- Checks the i18n catalogs, the prompt packs and the English prompt hashes
+- Sets up Python 3.12
 - Caches pip dependencies for faster builds
 - Installs all project dependencies from `requirements.txt`
 - Runs the test suite using `pytest` directly with coverage reporting
@@ -26,7 +27,7 @@ The test runner executes all pytest tests defined in the `y_web/tests/` director
 
 This workflow:
 - Checks out the code
-- Sets up Python 3.10
+- Sets up Python 3.12
 - Installs `black` and `isort` formatters
 - Sorts imports using `isort` (configured via `pyproject.toml`)
 - Formats code using `black` (configured via `pyproject.toml`)

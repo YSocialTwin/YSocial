@@ -12,6 +12,7 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import OperationalError
 
 from y_web import db
+from y_web.i18n import gettext as _
 from y_web.routes.interactions._blueprint import user
 from y_web.src.experiment.helpers import open_experiment_session
 from y_web.src.models import (
@@ -288,7 +289,7 @@ def share_content(exp_id):
         select(User_mgmt).filter_by(username=current_user.username)
     ).first()
     if not exp_user:
-        flash("User not found in experiment", "error")
+        flash(_("User not found in experiment"), "error")
         return (
             redirect(request.referrer)
             if request.referrer
@@ -373,7 +374,7 @@ def react(exp_id):
         select(User_mgmt).filter_by(username=current_user.username)
     ).first()
     if not exp_user:
-        flash("User not found in experiment", "error")
+        flash(_("User not found in experiment"), "error")
         return (
             redirect(request.referrer)
             if request.referrer
@@ -444,8 +445,11 @@ def report_content(exp_id):
 
     if report_type not in {"offensive", "toxic"}:
         if is_ajax:
-            return jsonify({"message": "Unsupported report type.", "status": 400}), 400
-        flash("Unsupported report type.", "error")
+            return (
+                jsonify({"message": _("Unsupported report type."), "status": 400}),
+                400,
+            )
+        flash(_("Unsupported report type."), "error")
         return redirect(request.referrer or url_for("main.index"))
 
     exp_user = db.session.scalars(
@@ -454,10 +458,10 @@ def report_content(exp_id):
     if not exp_user:
         if is_ajax:
             return (
-                jsonify({"message": "User not found in experiment", "status": 404}),
+                jsonify({"message": _("User not found in experiment"), "status": 404}),
                 404,
             )
-        flash("User not found in experiment", "error")
+        flash(_("User not found in experiment"), "error")
         return redirect(request.referrer or url_for("main.index"))
 
     try:
@@ -473,8 +477,8 @@ def report_content(exp_id):
     ).first()
     if target_post is None or current_round is None:
         if is_ajax:
-            return jsonify({"message": "Content not found.", "status": 404}), 404
-        flash("Content not found.", "error")
+            return jsonify({"message": _("Content not found."), "status": 404}), 404
+        flash(_("Content not found."), "error")
         return redirect(request.referrer or url_for("main.index"))
 
     existing_report = db.session.scalars(
@@ -487,14 +491,14 @@ def report_content(exp_id):
         if is_ajax:
             return jsonify(
                 {
-                    "message": "Content already reported.",
+                    "message": _("Content already reported."),
                     "status": 200,
                     "post_id": target_post.id,
                     "report_count": current_count,
                     "already_reported": True,
                 }
             )
-        flash("Content already reported.", "info")
+        flash(_("Content already reported."), "info")
         return redirect(request.referrer or url_for("main.index"))
 
     report_kwargs = {
@@ -516,14 +520,14 @@ def report_content(exp_id):
     if is_ajax:
         return jsonify(
             {
-                "message": "Content reported.",
+                "message": _("Content reported."),
                 "status": 200,
                 "post_id": target_post.id,
                 "report_count": new_count,
                 "already_reported": False,
             }
         )
-    flash("Content reported.", "success")
+    flash(_("Content reported."), "success")
     return redirect(request.referrer or url_for("main.index"))
 
 

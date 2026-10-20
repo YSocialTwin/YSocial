@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import os
 import signal
 import sys
 import time
@@ -16,13 +17,20 @@ from pathlib import Path
 from sqlalchemy.exc import OperationalError
 
 ROOT = Path(__file__).resolve().parents[3]
-PLUGIN_SRC = ROOT / "external" / "y_agents_plugins" / "src"
+# the plugin is installed under the data folder (the repository root from a checkout)
+PLUGIN_SRC = (
+    Path(os.environ.get("YSOCIAL_HOME") or ROOT)
+    / "external"
+    / "y_agents_plugins"
+    / "src"
+)
 for candidate in (ROOT, PLUGIN_SRC):
     candidate_str = str(candidate)
     if candidate.exists() and candidate_str not in sys.path:
         sys.path.insert(0, candidate_str)
 
 try:
+    from y_agents_plugins import prompt_store  # noqa: E402
     from y_agents_plugins.config import AppConfig  # noqa: E402
     from y_agents_plugins.core import AgentContext, AgentSpec  # noqa: E402
     from y_agents_plugins.db import ExperimentDatabase  # noqa: E402
@@ -37,6 +45,7 @@ try:
     )
 except ModuleNotFoundError:
     # External plugin runtime is optional in base installations and in CI test jobs.
+    prompt_store = None
     AppConfig = None
     AgentContext = None
     AgentSpec = None
@@ -227,6 +236,9 @@ def run(config_path: Path, state_path: Path) -> int:
         )
     logger = logging.getLogger("adhoc_client_runner")
     execution_logger = ExecutionLogger()
+    if prompt_store is not None and hasattr(prompt_store, "use_language_from_folder"):
+        # the prompts of the plugin agents follow the language chosen for the experiment
+        prompt_store.use_language_from_folder(config_path.parent)
     config = AppConfig.from_file(config_path)
     config_mtime = _config_mtime(config_path)
     state = _load_state(state_path)
