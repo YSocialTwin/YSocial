@@ -8,7 +8,9 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def _load_config():
-    spec = importlib.util.spec_from_file_location("ys_config", ROOT / "y_web" / "config.py")
+    spec = importlib.util.spec_from_file_location(
+        "ys_config", ROOT / "y_web" / "config.py"
+    )
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
@@ -41,8 +43,13 @@ def test_pages_hold_whole_groups():
 
 def test_endpoint_and_js_paginate_groups():
     py = (ROOT / "y_web/routes/admin/dashboard.py").read_text(encoding="utf-8")
-    js = (ROOT / "y_web/static/assets/js/admin-dashboard.js").read_text(encoding="utf-8")
-    assert '"groups": groups' in py and "paginated_experiments = [e for g in page_groups" in py
+    js = (ROOT / "y_web/static/assets/js/admin-dashboard.js").read_text(
+        encoding="utf-8"
+    )
+    assert (
+        '"groups": groups' in py
+        and "paginated_experiments = [e for g in page_groups" in py
+    )
     assert "renderGroupsFromData" in js and "loadExperimentPage" in js
     assert "completed: 5, stopped: 5" in js  # groups per page
 

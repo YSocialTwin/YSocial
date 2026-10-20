@@ -43,7 +43,9 @@ def blog(monkeypatch):
 
     monkeypatch.setitem(sys.modules, "y_web", SimpleNamespace(db=db))
     monkeypatch.setitem(sys.modules, "y_web.src", SimpleNamespace())
-    monkeypatch.setitem(sys.modules, "y_web.src.models", SimpleNamespace(BlogPost=BlogPost))
+    monkeypatch.setitem(
+        sys.modules, "y_web.src.models", SimpleNamespace(BlogPost=BlogPost)
+    )
     monkeypatch.setattr(module, "_last_refresh_attempt", None)
     with app.app_context():
         db.create_all()
@@ -65,8 +67,16 @@ def test_parse_atom_and_rss_feeds():
         "<rss><channel><item><title>T</title><link>https://x/t</link>"
         "<pubDate>Wed, 02 Oct 2024 13:00:00 GMT</pubDate></item></channel></rss>"
     )
-    assert rss == [{"title": "T", "link": "https://x/t", "published_at": "Wed, 02 Oct 2024 13:00:00 GMT"}]
-    assert check_blog.parse_blog_feed("<feed xmlns='http://www.w3.org/2005/Atom'/>") == []
+    assert rss == [
+        {
+            "title": "T",
+            "link": "https://x/t",
+            "published_at": "Wed, 02 Oct 2024 13:00:00 GMT",
+        }
+    ]
+    assert (
+        check_blog.parse_blog_feed("<feed xmlns='http://www.w3.org/2005/Atom'/>") == []
+    )
 
 
 def test_parse_blog_date_handles_rss_and_iso():
@@ -78,7 +88,9 @@ def test_parse_blog_date_handles_rss_and_iso():
     assert parse_blog_date("not a date") is None and parse_blog_date(None) is None
 
 
-def test_first_run_stores_the_recent_posts_and_only_the_newest_is_unread(blog, monkeypatch):
+def test_first_run_stores_the_recent_posts_and_only_the_newest_is_unread(
+    blog, monkeypatch
+):
     _feed(blog, monkeypatch)
     has_new, info = blog.module.update_blog_info_in_db()
     assert has_new and info["title"] == "Newest & best"
@@ -88,7 +100,10 @@ def test_first_run_stores_the_recent_posts_and_only_the_newest_is_unread(blog, m
         "https://y-not.social/blog/2025/mid/": True,
         "https://y-not.social/blog/2024/old/": True,
     }
-    assert [p["title"] for p in blog.module.get_recent_blog_posts(2)] == ["Newest & best", "Middle"]
+    assert [p["title"] for p in blog.module.get_recent_blog_posts(2)] == [
+        "Newest & best",
+        "Middle",
+    ]
 
 
 def test_second_check_adds_nothing_and_keeps_the_unread_banner(blog, monkeypatch):
@@ -101,8 +116,12 @@ def test_second_check_adds_nothing_and_keeps_the_unread_banner(blog, monkeypatch
 
 def test_older_post_stored_later_is_ordered_by_date(blog, monkeypatch):
     blog.db.session.add(
-        blog.BlogPost(title="Newest & best", link="https://y-not.social/blog/2026/new/",
-                      published_at="2026-07-23T10:00:00+00:00", is_read=True)
+        blog.BlogPost(
+            title="Newest & best",
+            link="https://y-not.social/blog/2026/new/",
+            published_at="2026-07-23T10:00:00+00:00",
+            is_read=True,
+        )
     )
     blog.db.session.commit()
     _feed(blog, monkeypatch)
@@ -122,16 +141,25 @@ def test_unreachable_feed_keeps_what_is_stored(blog, monkeypatch):
 
 def test_background_refresh_is_throttled_and_skipped_in_tests(blog, monkeypatch):
     started = []
-    monkeypatch.setattr(blog.module.threading, "Thread",
-                        lambda **kw: SimpleNamespace(start=lambda: started.append(kw)))
+    monkeypatch.setattr(
+        blog.module.threading,
+        "Thread",
+        lambda **kw: SimpleNamespace(start=lambda: started.append(kw)),
+    )
     blog.app.config["TESTING"] = True
     assert blog.module.refresh_blog_posts_if_stale(blog.app) is False
     blog.app.config["TESTING"] = False
-    assert blog.module.refresh_blog_posts_if_stale(blog.app) is True  # empty table: stale
+    assert (
+        blog.module.refresh_blog_posts_if_stale(blog.app) is True
+    )  # empty table: stale
     blog.module._refresh_lock.release()
     assert blog.module.refresh_blog_posts_if_stale(blog.app) is False  # throttled
     blog.module._last_refresh_attempt = None
     fresh = (datetime.utcnow() - timedelta(hours=1)).isoformat()
-    blog.db.session.add(blog.BlogPost(title="x", link="https://x", latest_check_on=fresh))
+    blog.db.session.add(
+        blog.BlogPost(title="x", link="https://x", latest_check_on=fresh)
+    )
     blog.db.session.commit()
-    assert blog.module.refresh_blog_posts_if_stale(blog.app) is False  # checked recently
+    assert (
+        blog.module.refresh_blog_posts_if_stale(blog.app) is False
+    )  # checked recently
