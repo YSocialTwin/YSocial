@@ -127,7 +127,13 @@ def test_reddit_feed_fetch_uses_descriptive_user_agent_and_falls_back(monkeypatc
 
     calls.clear()
     other = "https://example.com/feed.xml"
-    monkeypatch.setattr(_helpers.requests, "get", lambda u, headers=None, **k: (calls.append(headers["User-Agent"]), Resp(200))[1])
+    monkeypatch.setattr(
+        _helpers.requests,
+        "get",
+        lambda u, headers=None, **k: (calls.append(headers["User-Agent"]), Resp(200))[
+            1
+        ],
+    )
     _helpers._read_feed_with_headers(other)
     assert calls and "Mozilla" in calls[0]
 
