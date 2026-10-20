@@ -22,7 +22,7 @@ var AdminFeeds = (function() {
 
     function parseSubreddit() {
         var subreddit = document.getElementById('subreddit_name').value.trim().toLowerCase();
-        if (!subreddit) { alert(YI18n.t('Please enter a subreddit name or Reddit URL')); return; }
+        if (!subreddit) { YNotify.warning(YI18n.t('Please enter a subreddit name or Reddit URL')); return; }
         _currentSubreddit = '';
         setParseStatus('loading', YI18n.t('Parsing...'));
         document.getElementById('parse_result').style.display = 'block';
@@ -55,11 +55,11 @@ var AdminFeeds = (function() {
     }
 
     function addParsedSubreddit() {
-        if (!_currentSubreddit) { alert(YI18n.t('Please parse a subreddit first')); return; }
+        if (!_currentSubreddit) { YNotify.warning(YI18n.t('Please parse a subreddit first')); return; }
         var interestsSelect = document.getElementById('parsed_interests');
         var selectedInterests = Array.from(interestsSelect.selectedOptions).map(function(opt) { return opt.value; });
-        if (selectedInterests.length === 0) { alert(YI18n.t('Please select at least one interest')); return; }
-        if (_imageFeeds.some(function(f) { return f.subreddit === _currentSubreddit; })) { alert(YI18n.t('This subreddit is already added')); return; }
+        if (selectedInterests.length === 0) { YNotify.warning(YI18n.t('Please select at least one interest')); return; }
+        if (_imageFeeds.some(function(f) { return f.subreddit === _currentSubreddit; })) { YNotify.warning(YI18n.t('This subreddit is already added')); return; }
         _imageFeeds.push({ subreddit: _currentSubreddit, interests: selectedInterests });
         updateFeedsDisplay();
             document.getElementById('subreddit_name').value = '';
@@ -77,7 +77,7 @@ var AdminFeeds = (function() {
         var expId = config.expId;
         var fileInput = document.getElementById('image_upload_file');
         var mode = document.getElementById('image_upload_mode').value;
-        if (!fileInput.files[0]) { alert(YI18n.t('Please select a file')); return; }
+        if (!fileInput.files[0]) { YNotify.warning(YI18n.t('Please select a file')); return; }
         var formData = new FormData();
         formData.append('file', fileInput.files[0]);
         formData.append('mode', mode);
@@ -87,7 +87,7 @@ var AdminFeeds = (function() {
             if (!res.ok || res.data.error) throw new Error(res.data.error || YI18n.t('Upload failed'));
             window.location.reload();
         })
-        .catch(function(error) { alert(error.message || YI18n.t('Upload failed')); });
+        .catch(function(error) { YNotify.error(error.message || YI18n.t('Upload failed')); });
     }
 
     function exportImageFeeds() {
@@ -171,7 +171,7 @@ var AdminFeeds = (function() {
 
     function parseRssFeed() {
         var feedUrl = document.getElementById('rss_feed_url').value.trim();
-        if (!feedUrl) { alert(YI18n.t('Please enter an RSS feed URL')); return; }
+        if (!feedUrl) { YNotify.warning(YI18n.t('Please enter an RSS feed URL')); return; }
         fetch('/admin/api/parse_rss_feed', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -187,13 +187,13 @@ var AdminFeeds = (function() {
             document.getElementById('rss_parse_entries').textContent = res.data.entries_count;
             document.getElementById('rss_parse_result').style.display = 'block';
         })
-        .catch(function(error) { alert(error.message || YI18n.t('Could not parse RSS feed')); });
+        .catch(function(error) { YNotify.error(error.message || YI18n.t('Could not parse RSS feed')); });
     }
 
     function addParsedRssFeed() {
-        if (!_parsedRssFeed) { alert(YI18n.t('Please parse a feed first')); return; }
+        if (!_parsedRssFeed) { YNotify.warning(YI18n.t('Please parse a feed first')); return; }
         if (_rssFeeds.some(function(feed) { return feed.feed_url === _parsedRssFeed.feed_url; })) {
-            alert(YI18n.t('This RSS feed is already configured')); return;
+            YNotify.warning(YI18n.t('This RSS feed is already configured')); return;
         }
         _rssFeeds.push(_parsedRssFeed);
         updateRssFeedsDisplay();
@@ -269,7 +269,7 @@ var AdminFeeds = (function() {
         var expId = config.expId;
         var fileInput = document.getElementById('rss_upload_file');
         var mode = document.getElementById('rss_upload_mode').value;
-        if (!fileInput.files[0]) { alert(YI18n.t('Please select a file')); return; }
+        if (!fileInput.files[0]) { YNotify.warning(YI18n.t('Please select a file')); return; }
         var formData = new FormData();
         formData.append('file', fileInput.files[0]);
         formData.append('mode', mode);
@@ -279,7 +279,7 @@ var AdminFeeds = (function() {
             if (!res.ok || res.data.error) throw new Error(res.data.error || YI18n.t('Upload failed'));
             window.location.reload();
         })
-        .catch(function(error) { alert(error.message || YI18n.t('Upload failed')); });
+        .catch(function(error) { YNotify.error(error.message || YI18n.t('Upload failed')); });
     }
 
     function initRssFeeds() {

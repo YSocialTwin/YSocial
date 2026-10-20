@@ -1,0 +1,133 @@
+/* Admin notifications: compact, semi-transparent cards stacked in the top-right corner.
+   They float over the page (position: fixed), so they never change the layout. */
+.ys-notify {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 100000;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    width: min(380px, calc(100vw - 28px));
+    margin: 0;
+    padding: 0;
+    pointer-events: none;
+}
+.ys-notify:empty { display: none; }
+
+.ys-toast {
+    --yt-bg: rgba(254, 249, 195, .86);
+    --yt-bd: rgba(202, 138, 4, .38);
+    --yt-fg: #713f12;
+    --yt-ac: #ca8a04;
+    pointer-events: auto;
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    column-gap: 9px;
+    align-items: start;
+    box-sizing: border-box;
+    padding: 9px 8px 9px 11px;
+    border-radius: 12px;
+    border: 1px solid var(--yt-bd);
+    box-shadow: inset 3px 0 0 var(--yt-ac), 0 8px 22px rgba(15, 23, 42, .16);
+    background: var(--yt-bg);
+    color: var(--yt-fg);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
+    backdrop-filter: blur(10px) saturate(140%);
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 1.4;
+    text-align: left;
+    animation: ys-toast-in .22s ease-out both;
+    transition: opacity .2s ease, transform .2s ease;
+}
+.ys-toast.is-error {
+    --yt-bg: rgba(254, 226, 226, .86);
+    --yt-bd: rgba(220, 38, 38, .38);
+    --yt-fg: #7f1d1d;
+    --yt-ac: #dc2626;
+}
+.ys-toast.is-success {
+    --yt-bg: rgba(220, 252, 231, .86);
+    --yt-bd: rgba(22, 163, 74, .38);
+    --yt-fg: #14532d;
+    --yt-ac: #16a34a;
+}
+body.is-dark .ys-toast {
+    --yt-bg: rgba(113, 63, 18, .74);
+    --yt-bd: rgba(250, 204, 21, .35);
+    --yt-fg: #fef9c3;
+    --yt-ac: #facc15;
+    box-shadow: inset 3px 0 0 var(--yt-ac), 0 8px 22px rgba(0, 0, 0, .4);
+}
+body.is-dark .ys-toast.is-error {
+    --yt-bg: rgba(127, 29, 29, .74);
+    --yt-bd: rgba(248, 113, 113, .4);
+    --yt-fg: #fee2e2;
+    --yt-ac: #f87171;
+}
+body.is-dark .ys-toast.is-success {
+    --yt-bg: rgba(20, 83, 45, .74);
+    --yt-bd: rgba(74, 222, 128, .38);
+    --yt-fg: #dcfce7;
+    --yt-ac: #4ade80;
+}
+.ys-toast.is-leaving { opacity: 0; transform: translateX(14px); }
+.ys-toast.is-pulse { animation: ys-toast-pulse .35s ease-out; }
+
+.ys-toast-ic {
+    width: 18px;
+    height: 18px;
+    margin-top: 1px;
+    border-radius: 50%;
+    background: var(--yt-ac);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 18px;
+    text-align: center;
+}
+body.is-dark .ys-toast-ic { color: #111827; }
+.ys-toast-body { min-width: 0; overflow-wrap: anywhere; word-break: break-word; }
+.ys-toast-title { display: block; font-weight: 700; }
+.ys-toast-text { display: block; white-space: pre-line; }
+.ys-toast-details {
+    margin: 5px 0 0;
+    padding: 0 0 0 1.05rem;
+    max-height: 132px;
+    overflow: auto;
+    font-size: 12px;
+    opacity: .92;
+}
+.ys-toast-details li { margin: 0 0 2px; }
+.ys-toast-x {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 22px;
+    height: 22px;
+    margin: -1px 0 0;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    font-size: 17px;
+    line-height: 22px;
+    text-align: center;
+    cursor: pointer;
+    opacity: .65;
+}
+.ys-toast-x:hover, .ys-toast-x:focus-visible { opacity: 1; background: rgba(127, 127, 127, .2); outline: none; }
+
+@keyframes ys-toast-in { from { opacity: 0; transform: translateX(18px); } to { opacity: 1; transform: none; } }
+@keyframes ys-toast-pulse { 50% { transform: scale(1.025); } }
+
+@media (max-width: 600px) {
+    .ys-notify { top: 8px; right: 8px; width: calc(100vw - 16px); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .ys-toast, .ys-toast.is-pulse { animation: none; transition: none; }
+}
+@media print { .ys-notify { display: none; } }

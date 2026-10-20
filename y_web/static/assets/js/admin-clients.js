@@ -310,7 +310,7 @@ var AdminClients = (function() {
       const llmUrl = urlInput.value.trim();
     
       if (!llmUrl) {
-          alert(YI18n.t('Please enter an LLM server URL'));
+          YNotify.warning(YI18n.t('Please enter an LLM server URL'));
           return;
       }
     
@@ -357,7 +357,7 @@ var AdminClients = (function() {
       const modelName = 'minicpm-v:latest';
     
       if (!llmVUrl) {
-          alert(YI18n.t('Please enter an LLM server URL for image transcription'));
+          YNotify.warning(YI18n.t('Please enter an LLM server URL for image transcription'));
           return;
       }
     
@@ -370,7 +370,7 @@ var AdminClients = (function() {
                   status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> ' + data.error + '</span>';
                   validationStatus.value = 'false';
                   disableImageAction();
-                  alert(YI18n.t('Unable to connect to the LLM server. Image sharing/commenting functionality will remain disabled.'));
+                  YNotify.error(YI18n.t('Unable to connect to the LLM server. Image sharing/commenting functionality will remain disabled.'));
                   setTimeout(() => { status.innerHTML = ''; }, 5000);
               } else {
                   // Check if minicpm-v:latest model exists in fetched models
@@ -385,7 +385,7 @@ var AdminClients = (function() {
                       status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> ' + YI18n.t('Model "{modelname}" not found on this server!', {modelname: modelName}) + '</span>';
                       validationStatus.value = 'false';
                       disableImageAction();
-                      alert(YI18n.t('The minicpm-v:latest model is not available on the specified server. Image sharing/commenting functionality will remain disabled.'));
+                      YNotify.error(YI18n.t('The minicpm-v:latest model is not available on the specified server. Image sharing/commenting functionality will remain disabled.'));
                   }
               }
           })
@@ -393,7 +393,7 @@ var AdminClients = (function() {
               status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> ' + YI18n.t('Connection failed') + '</span>';
               validationStatus.value = 'false';
               disableImageAction();
-              alert(YI18n.t('Failed to connect to the LLM server. Image sharing/commenting functionality will remain disabled.'));
+              YNotify.error(YI18n.t('Failed to connect to the LLM server. Image sharing/commenting functionality will remain disabled.'));
               setTimeout(() => { status.innerHTML = ''; }, 5000);
           });
   }
@@ -421,7 +421,8 @@ var AdminClients = (function() {
       }
     
       if (warning) {
-          warning.style.display = 'block';
+          // shown as a floating card, so the form layout does not move
+          YNotify.warning(warning.textContent.replace(/\s+/g, ' ').trim());
       }
   }
 
@@ -831,7 +832,7 @@ var AdminClients = (function() {
       const llmUrl = urlInput.value.trim();
     
       if (!llmUrl) {
-          alert(YI18n.t('Please enter an LLM server URL'));
+          YNotify.warning(YI18n.t('Please enter an LLM server URL'));
           return;
       }
     
@@ -878,7 +879,7 @@ var AdminClients = (function() {
       const modelName = 'minicpm-v:latest';
     
       if (!llmVUrl) {
-          alert(YI18n.t('Please enter an LLM server URL for image transcription'));
+          YNotify.warning(YI18n.t('Please enter an LLM server URL for image transcription'));
           return;
       }
     
@@ -891,7 +892,7 @@ var AdminClients = (function() {
                   status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> ' + data.error + '</span>';
                   validationStatus.value = 'false';
                   disableImageAction();
-                  alert(YI18n.t('Unable to connect to the LLM server. Image sharing/commenting functionality will remain disabled.'));
+                  YNotify.error(YI18n.t('Unable to connect to the LLM server. Image sharing/commenting functionality will remain disabled.'));
                   setTimeout(() => { status.innerHTML = ''; }, 5000);
               } else {
                   // Check if minicpm-v:latest model exists in fetched models
@@ -906,7 +907,7 @@ var AdminClients = (function() {
                       status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> ' + YI18n.t('Model "{modelname}" not found on this server!', {modelname: modelName}) + '</span>';
                       validationStatus.value = 'false';
                       disableImageAction();
-                      alert(YI18n.t('The minicpm-v:latest model is not available on the specified server. Image sharing/commenting functionality will remain disabled.'));
+                      YNotify.error(YI18n.t('The minicpm-v:latest model is not available on the specified server. Image sharing/commenting functionality will remain disabled.'));
                   }
               }
           })
@@ -914,7 +915,7 @@ var AdminClients = (function() {
               status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> ' + YI18n.t('Connection failed') + '</span>';
               validationStatus.value = 'false';
               disableImageAction();
-              alert(YI18n.t('Failed to connect to the LLM server. Image sharing/commenting functionality will remain disabled.'));
+              YNotify.error(YI18n.t('Failed to connect to the LLM server. Image sharing/commenting functionality will remain disabled.'));
               setTimeout(() => { status.innerHTML = ''; }, 5000);
           });
   }
@@ -942,7 +943,8 @@ var AdminClients = (function() {
       }
     
       if (warning) {
-          warning.style.display = 'block';
+          // shown as a floating card, so the form layout does not move
+          YNotify.warning(warning.textContent.replace(/\s+/g, ' ').trim());
       }
   }
 
@@ -1454,7 +1456,7 @@ var AdminClients = (function() {
       const llmUrl = urlInput.value.trim();
     
       if (!llmUrl) {
-          alert(YI18n.t('Please enter an LLM server URL'));
+          YNotify.warning(YI18n.t('Please enter an LLM server URL'));
           return;
       }
     
@@ -1535,7 +1537,7 @@ var AdminClients = (function() {
       const modelSelect = document.getElementById('llm_v_agent');
     
       if (!llmVUrl) {
-          alert(YI18n.t('Please enter an LLM server URL for image transcription'));
+          YNotify.warning(YI18n.t('Please enter an LLM server URL for image transcription'));
           return;
       }
     
@@ -1611,7 +1613,8 @@ var AdminClients = (function() {
       }
     
       if (warning) {
-          warning.style.display = 'block';
+          // shown as a floating card, so the form layout does not move
+          YNotify.warning(warning.textContent.replace(/\s+/g, ' ').trim());
       }
   }
 

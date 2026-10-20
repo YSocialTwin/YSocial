@@ -584,7 +584,7 @@ var AdminPopulations = (function() {
           location.reload(); // Refresh the table
         })
         .catch(err => {
-          alert(YI18n.t('Error deleting population.'));
+          YNotify.error(YI18n.t('Error deleting population.'));
           console.error(err);
         });
       }
@@ -737,7 +737,7 @@ var AdminPopulations = (function() {
   bindById('merge_populations_form', 'submit', function(e) {
       if (mergeSelectedPopulations.length < 2) {
           e.preventDefault();
-          alert(YI18n.t('Please select at least 2 populations to merge'));
+          YNotify.warning(YI18n.t('Please select at least 2 populations to merge'));
           return false;
       }
   });
@@ -786,7 +786,7 @@ var AdminPopulations = (function() {
           // Validate that at least one profession category is selected
           if (selectedProfessionBackgrounds.size === 0) {
               e.preventDefault();
-              alert(YI18n.t('Please select at least one Profession Category. This field is required.'));
+              YNotify.warning(YI18n.t('Please select at least one Profession Category. This field is required.'));
               return false;
           }
         
@@ -1010,7 +1010,7 @@ var AdminPopulations = (function() {
       const femalePercentage = parseInt(document.getElementById('female_percentage').value) || 0;
       if (malePercentage + femalePercentage !== 100) {
           e.preventDefault();
-          alert(YI18n.t('Gender distribution must total 100%'));
+          YNotify.warning(YI18n.t('Gender distribution must total 100%'));
           return false;
       }
     
@@ -1019,7 +1019,7 @@ var AdminPopulations = (function() {
       const ageClassesItems = Object.values(ageClassesData);
       if (ageClassesItems.length === 0) {
           e.preventDefault();
-          alert(YI18n.t('Please select at least one Age Class. This field is required.'));
+          YNotify.warning(YI18n.t('Please select at least one Age Class. This field is required.'));
           return false;
       }
     
@@ -1032,7 +1032,7 @@ var AdminPopulations = (function() {
               const total = items.reduce((sum, item) => sum + item.percentage, 0);
               if (Math.abs(total - 100) > 0.01) {
                   e.preventDefault();
-                  alert(YI18n.t('Please ensure {replace} percentages sum to 100%', {replace: fieldName.replace(/_/g, ' ')}));
+                  YNotify.warning(YI18n.t('Please ensure {replace} percentages sum to 100%', {replace: fieldName.replace(/_/g, ' ')}));
                   return false;
               }
           }
@@ -1041,7 +1041,7 @@ var AdminPopulations = (function() {
       // Validate activity profiles percentages
       if (assignedProfiles.length > 0 && !validatePercentages()) {
           e.preventDefault();
-          alert(YI18n.t('Please ensure that the total percentage of assigned activity profiles equals 100%'));
+          YNotify.warning(YI18n.t('Please ensure that the total percentage of assigned activity profiles equals 100%'));
           return false;
       }
     

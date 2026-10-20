@@ -26,6 +26,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-layout.css') }}"/>
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-responsive.css') }}"/>
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-tutorials.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/ys-notify.css') }}"/>
 
     <link href="{{ url_for('static', filename='assets/vendor/css/gridjs-mermaid.min.css') }}" rel="stylesheet"/>
     <script src="{{ url_for('static', filename='assets/vendor/js/chart.min.js') }}"></script>
@@ -34,6 +35,9 @@
     
     <!-- Loading Indicator - Cache-busting version parameter ensures updates are loaded -->
     <script src="{{ url_for('static', filename='assets/js/loading-indicator.js') }}?v=1.2"></script>
+
+    <!-- Notifications: compact cards in the top-right corner (flash messages, alerts, toasts) -->
+    <script src="{{ url_for('static', filename='assets/js/ys-notify.js') }}?v=1"></script>
     
     <script src="{{ url_for('static', filename='assets/js/i18n.js') }}" data-domains="admin"></script>
 </head>

@@ -263,7 +263,7 @@ var AdminSettings = (function() {
   // Function to download selected experiments
   function downloadSelectedExperiments() {
       if (selectedExperiments.size === 0) {
-          alert(YI18n.t('Please select at least one experiment to download.'));
+          YNotify.warning(YI18n.t('Please select at least one experiment to download.'));
           return;
       }
 
@@ -441,7 +441,7 @@ var AdminSettings = (function() {
               );
             
               if (groupExps.length === 0) {
-                  alert(YI18n.t('No experiments found in this group.'));
+                  YNotify.warning(YI18n.t('No experiments found in this group.'));
                   return;
               }
             
@@ -464,13 +464,13 @@ var AdminSettings = (function() {
           })
           .catch(error => {
               console.error('Error downloading group:', error);
-              alert(YI18n.t('Error downloading group experiments.'));
+              YNotify.error(YI18n.t('Error downloading group experiments.'));
           });
   }
 
   function submitBulkDelete(expIds, buttonId, loadingText) {
       if (!expIds || expIds.length === 0) {
-          alert(YI18n.t('No experiments found to delete.'));
+          YNotify.warning(YI18n.t('No experiments found to delete.'));
           return;
       }
 
@@ -510,7 +510,7 @@ var AdminSettings = (function() {
           .then(results => {
               const expIds = (results.data || []).map(exp => exp.idexp);
               if (expIds.length === 0) {
-                  alert(YI18n.t('No {label} experiments found.', {label}));
+                  YNotify.warning(YI18n.t('No {label} experiments found.', {label}));
                   return;
               }
 
@@ -522,7 +522,7 @@ var AdminSettings = (function() {
           })
           .catch(error => {
               console.error('Error deleting all experiments:', error);
-              alert(YI18n.t('Error deleting experiments.'));
+              YNotify.error(YI18n.t('Error deleting experiments.'));
           });
   }
 
@@ -536,7 +536,7 @@ var AdminSettings = (function() {
               );
 
               if (groupExps.length === 0) {
-                  alert(YI18n.t('No experiments found in this group.'));
+                  YNotify.warning(YI18n.t('No experiments found in this group.'));
                   return;
               }
 
@@ -549,7 +549,7 @@ var AdminSettings = (function() {
           })
           .catch(error => {
               console.error('Error deleting group:', error);
-              alert(YI18n.t('Error deleting group experiments.'));
+              YNotify.error(YI18n.t('Error deleting group experiments.'));
           });
   }
 
@@ -933,7 +933,7 @@ var AdminSettings = (function() {
                   location.reload();
               })
               .catch(err => {
-                  alert(YI18n.t('Error deleting experiment.'));
+                  YNotify.error(YI18n.t('Error deleting experiment.'));
                   console.error(err);
               });
           }
@@ -998,7 +998,7 @@ var AdminSettings = (function() {
       const experimentsPerGroup = parseInt(inputField ? inputField.value : 2);
     
       if (isNaN(experimentsPerGroup) || experimentsPerGroup < 1) {
-          alert(YI18n.t('Please enter a valid number (1 or more)'));
+          YNotify.warning(YI18n.t('Please enter a valid number (1 or more)'));
           return;
       }
 
@@ -1021,10 +1021,10 @@ var AdminSettings = (function() {
               loadAvailableExperiments();
               loadPersistentLogs();
           } else {
-              alert(data.message || YI18n.t('Failed to create groups'));
+              YNotify.error(data.message || YI18n.t('Failed to create groups'));
           }
       })
-      .catch(err => alert(YI18n.t('Error creating groups')));
+      .catch(err => YNotify.error(YI18n.t('Error creating groups')));
   }
 
   function loadAvailableExperiments() {
@@ -1129,15 +1129,15 @@ var AdminSettings = (function() {
           if (data.success) {
               loadScheduleGroups();
           } else {
-              alert(data.message || YI18n.t('Failed to create group'));
+              YNotify.error(data.message || YI18n.t('Failed to create group'));
           }
       })
-      .catch(err => alert(YI18n.t('Error creating group')));
+      .catch(err => YNotify.error(YI18n.t('Error creating group')));
   }
 
   function deleteScheduleGroup(groupId) {
       if (currentRunningGroupId === groupId) {
-          alert(YI18n.t('Cannot delete a running group. Stop the schedule first.'));
+          YNotify.error(YI18n.t('Cannot delete a running group. Stop the schedule first.'));
           return;
       }
 
@@ -1148,7 +1148,7 @@ var AdminSettings = (function() {
                   loadScheduleGroups();
                   loadAvailableExperiments();
               } else {
-                  alert(data.message || YI18n.t('Failed to delete group'));
+                  YNotify.error(data.message || YI18n.t('Failed to delete group'));
               }
           })
           .catch(err => console.error('Error deleting group:', err));
@@ -1182,10 +1182,10 @@ var AdminSettings = (function() {
               loadScheduleGroups();
               loadAvailableExperiments();
           } else {
-              alert(data.message || YI18n.t('Failed to add experiment'));
+              YNotify.error(data.message || YI18n.t('Failed to add experiment'));
           }
       })
-      .catch(err => alert(YI18n.t('Error adding experiment to group')));
+      .catch(err => YNotify.error(YI18n.t('Error adding experiment to group')));
   }
 
   function removeExperimentFromGroup(itemId) {
@@ -1196,7 +1196,7 @@ var AdminSettings = (function() {
                   loadScheduleGroups();
                   loadAvailableExperiments();
               } else {
-                  alert(data.message || YI18n.t('Cannot remove experiment'));
+                  YNotify.error(data.message || YI18n.t('Cannot remove experiment'));
               }
           })
           .catch(err => console.error('Error removing experiment:', err));

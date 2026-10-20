@@ -518,7 +518,7 @@ async function deleteNotification(id) {
       if (!frame) return;
       frame.addEventListener('error', function() {
           var config = window.YS_DATA_JUPYTER || {};
-          alert(YI18n.t('Jupyter Lab appears to be offline. Redirecting to home...'));
+          YNotify.error(YI18n.t('Jupyter Lab appears to be offline. Redirecting to home...'));
           window.location.href = config.homeUrl || '/';
       });
   }, 5000);
@@ -541,7 +541,7 @@ async function deleteNotification(id) {
               window.location.reload();
           }).catch(function() {
               btn.disabled = false;
-              alert(YI18n.t('Could not update the module. Please try again.'));
+              YNotify.error(YI18n.t('Could not update the module. Please try again.'));
           });
       });
   }

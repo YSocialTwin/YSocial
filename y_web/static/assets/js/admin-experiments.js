@@ -549,15 +549,12 @@ var AdminExperiments = (function() {
       .then(response => response.json())
       .then(data => {
           // Show message
-          messageDiv.style.display = 'block';
           if (data.success) {
-              messageDiv.style.color = '#28a745';
-              messageDiv.innerHTML = `<i class="mdi mdi-check-circle"></i> ${data.message}`;
+              YNotify.success(data.message);
               // Clear the textarea on success
               descriptionTextarea.value = '';
           } else {
-              messageDiv.style.color = '#dc3545';
-              messageDiv.innerHTML = `<i class="mdi mdi-alert-circle"></i> ${data.message}`;
+              YNotify.error(data.message);
           }
         
           // Re-enable button
@@ -565,9 +562,7 @@ var AdminExperiments = (function() {
           btn.innerHTML = '<span class="icon"><i class="mdi mdi-upload"></i></span><span>' + YI18n.t('Submit Logs') + '</span>';
       })
       .catch(error => {
-          messageDiv.style.display = 'block';
-          messageDiv.style.color = '#dc3545';
-          messageDiv.innerHTML = '<i class="mdi mdi-alert-circle"></i> ' + YI18n.t('Error: {message}', {message: error.message});
+          YNotify.error(YI18n.t('Error: {message}', {message: error.message}));
         
           // Re-enable button
           btn.disabled = false;
@@ -604,14 +599,17 @@ var AdminExperiments = (function() {
       .then(response => response.json())
       .then(data => {
           if (data.success) {
-              statusDiv.innerHTML = `<div style="background: #d4edda; border: 1px solid #28a745; border-radius: 4px; padding: 8px; font-size: 0.85em; color: #155724;"><i class="mdi mdi-check-circle"></i> ${data.message}</div>`;
+              statusDiv.innerHTML = '';
+          YNotify.success(data.message);
               setTimeout(() => { statusDiv.style.display = 'none'; }, 5000);
           } else {
-              statusDiv.innerHTML = `<div style="background: #f8d7da; border: 1px solid #dc3545; border-radius: 4px; padding: 8px; font-size: 0.85em; color: #721c24;"><i class="mdi mdi-alert-circle"></i> ${data.message}</div>`;
+              statusDiv.innerHTML = '';
+          YNotify.error(data.message);
           }
       })
       .catch(error => {
-          statusDiv.innerHTML = '<div style="background: #f8d7da; border: 1px solid #dc3545; border-radius: 4px; padding: 8px; font-size: 0.85em; color: #721c24;"><i class="mdi mdi-alert-circle"></i> ' + YI18n.t('Error testing connection') + '</div>';
+          statusDiv.innerHTML = '';
+          YNotify.error(YI18n.t('Error testing connection'));
       });
   }
 
@@ -621,12 +619,12 @@ var AdminExperiments = (function() {
       const statusDiv = document.getElementById('remote-status-message');
     
       if (!host) {
-          alert(YI18n.t('Please enter a host address'));
+          YNotify.warning(YI18n.t('Please enter a host address'));
           return;
       }
     
       if (!port || port < 1 || port > 65535) {
-          alert(YI18n.t('Please enter a valid port (1-65535)'));
+          YNotify.warning(YI18n.t('Please enter a valid port (1-65535)'));
           return;
       }
     
@@ -647,14 +645,17 @@ var AdminExperiments = (function() {
               document.getElementById('display-host').textContent = host;
               document.getElementById('display-port').textContent = port;
               cancelRemoteServerEdit();
-              statusDiv.innerHTML = '<div style="background: #d4edda; border: 1px solid #28a745; border-radius: 4px; padding: 8px; font-size: 0.85em; color: #155724;"><i class="mdi mdi-check-circle"></i> ' + YI18n.t('Server settings updated successfully') + '</div>';
+              statusDiv.innerHTML = '';
+          YNotify.success(YI18n.t('Server settings updated successfully'));
               setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
           } else {
-              statusDiv.innerHTML = `<div style="background: #f8d7da; border: 1px solid #dc3545; border-radius: 4px; padding: 8px; font-size: 0.85em; color: #721c24;"><i class="mdi mdi-alert-circle"></i> ${data.message}</div>`;
+              statusDiv.innerHTML = '';
+          YNotify.error(data.message);
           }
       })
       .catch(error => {
-          statusDiv.innerHTML = '<div style="background: #f8d7da; border: 1px solid #dc3545; border-radius: 4px; padding: 8px; font-size: 0.85em; color: #721c24;"><i class="mdi mdi-alert-circle"></i> ' + YI18n.t('Error updating server settings') + '</div>';
+          statusDiv.innerHTML = '';
+          YNotify.error(YI18n.t('Error updating server settings'));
       });
   }
 
@@ -1941,15 +1942,12 @@ var AdminExperimentsForum = (function() {
       .then(response => response.json())
       .then(data => {
           // Show message
-          messageDiv.style.display = 'block';
           if (data.success) {
-              messageDiv.style.color = '#28a745';
-              messageDiv.innerHTML = `<i class="mdi mdi-check-circle"></i> ${data.message}`;
+              YNotify.success(data.message);
               // Clear the textarea on success
               descriptionTextarea.value = '';
           } else {
-              messageDiv.style.color = '#dc3545';
-              messageDiv.innerHTML = `<i class="mdi mdi-alert-circle"></i> ${data.message}`;
+              YNotify.error(data.message);
           }
         
           // Re-enable button
@@ -1957,9 +1955,7 @@ var AdminExperimentsForum = (function() {
           btn.innerHTML = '<span class="icon"><i class="mdi mdi-upload"></i></span><span>' + YI18n.t('Submit Logs') + '</span>';
       })
       .catch(error => {
-          messageDiv.style.display = 'block';
-          messageDiv.style.color = '#dc3545';
-          messageDiv.innerHTML = '<i class="mdi mdi-alert-circle"></i> ' + YI18n.t('Error: {message}', {message: error.message});
+          YNotify.error(YI18n.t('Error: {message}', {message: error.message}));
         
           // Re-enable button
           btn.disabled = false;
@@ -1996,14 +1992,17 @@ var AdminExperimentsForum = (function() {
       .then(response => response.json())
       .then(data => {
           if (data.success) {
-              statusDiv.innerHTML = `<div style="background: #d4edda; border: 1px solid #28a745; border-radius: 4px; padding: 8px; font-size: 0.85em; color: #155724;"><i class="mdi mdi-check-circle"></i> ${data.message}</div>`;
+              statusDiv.innerHTML = '';
+          YNotify.success(data.message);
               setTimeout(() => { statusDiv.style.display = 'none'; }, 5000);
           } else {
-              statusDiv.innerHTML = `<div style="background: #f8d7da; border: 1px solid #dc3545; border-radius: 4px; padding: 8px; font-size: 0.85em; color: #721c24;"><i class="mdi mdi-alert-circle"></i> ${data.message}</div>`;
+              statusDiv.innerHTML = '';
+          YNotify.error(data.message);
           }
       })
       .catch(error => {
-          statusDiv.innerHTML = '<div style="background: #f8d7da; border: 1px solid #dc3545; border-radius: 4px; padding: 8px; font-size: 0.85em; color: #721c24;"><i class="mdi mdi-alert-circle"></i> ' + YI18n.t('Error testing connection') + '</div>';
+          statusDiv.innerHTML = '';
+          YNotify.error(YI18n.t('Error testing connection'));
       });
   }
 
@@ -2013,12 +2012,12 @@ var AdminExperimentsForum = (function() {
       const statusDiv = document.getElementById('remote-status-message');
     
       if (!host) {
-          alert(YI18n.t('Please enter a host address'));
+          YNotify.warning(YI18n.t('Please enter a host address'));
           return;
       }
     
       if (!port || port < 1 || port > 65535) {
-          alert(YI18n.t('Please enter a valid port (1-65535)'));
+          YNotify.warning(YI18n.t('Please enter a valid port (1-65535)'));
           return;
       }
     
@@ -2039,14 +2038,17 @@ var AdminExperimentsForum = (function() {
               document.getElementById('display-host').textContent = host;
               document.getElementById('display-port').textContent = port;
               cancelRemoteServerEdit();
-              statusDiv.innerHTML = '<div style="background: #d4edda; border: 1px solid #28a745; border-radius: 4px; padding: 8px; font-size: 0.85em; color: #155724;"><i class="mdi mdi-check-circle"></i> ' + YI18n.t('Server settings updated successfully') + '</div>';
+              statusDiv.innerHTML = '';
+          YNotify.success(YI18n.t('Server settings updated successfully'));
               setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
           } else {
-              statusDiv.innerHTML = `<div style="background: #f8d7da; border: 1px solid #dc3545; border-radius: 4px; padding: 8px; font-size: 0.85em; color: #721c24;"><i class="mdi mdi-alert-circle"></i> ${data.message}</div>`;
+              statusDiv.innerHTML = '';
+          YNotify.error(data.message);
           }
       })
       .catch(error => {
-          statusDiv.innerHTML = '<div style="background: #f8d7da; border: 1px solid #dc3545; border-radius: 4px; padding: 8px; font-size: 0.85em; color: #721c24;"><i class="mdi mdi-alert-circle"></i> ' + YI18n.t('Error updating server settings') + '</div>';
+          statusDiv.innerHTML = '';
+          YNotify.error(YI18n.t('Error updating server settings'));
       });
   }
 

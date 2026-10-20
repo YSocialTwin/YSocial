@@ -7,7 +7,7 @@ var AdminClientDetails = (function() {
         var llmUrl = urlInput.value.trim();
 
         if (!llmUrl) {
-            alert(YI18n.t('Please enter an LLM server URL'));
+            YNotify.warning(YI18n.t('Please enter an LLM server URL'));
             return;
         }
 

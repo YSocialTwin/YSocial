@@ -138,7 +138,7 @@ var AdminPages = (function() {
                 if (confirm(YI18n.t('Are you sure you want to delete this agent?'))) {
                     fetch(config.deleteUrlPrefix + id, { method: 'DELETE' })
                         .then(function(r) { if (!r.ok) throw new Error(YI18n.t('Failed to delete')); location.reload(); })
-                        .catch(function(err) { alert(YI18n.t('Error deleting agent.')); console.error(err); });
+                        .catch(function(err) { YNotify.error(YI18n.t('Error deleting agent.')); console.error(err); });
                 }
             }
         });
@@ -205,7 +205,7 @@ var AdminPages = (function() {
                 if (confirm(YI18n.t('Are you sure you want to delete this page?'))) {
                     fetch('/admin/delete_page/' + id, { method: 'DELETE' })
                         .then(function(r) { if (!r.ok) throw new Error(YI18n.t('Failed to delete')); location.reload(); })
-                        .catch(function(err) { alert(YI18n.t('Error deleting page.')); console.error(err); });
+                        .catch(function(err) { YNotify.error(YI18n.t('Error deleting page.')); console.error(err); });
                 }
             }
         });

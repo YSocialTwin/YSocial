@@ -584,10 +584,10 @@
                                 <div id="detoxify-status-message" class="ys-text-xs-mt">
                                     {{ detoxify_download_state['message'] or 'The selected path will be reused automatically by new YSocial simulation processes.' }}
                                 </div>
-                                <div id="detoxify-ready-notice" class="notification is-success is-light ys-mt-15 {% if detoxify_download_state['status'] != 'ready' %}is-hidden{% endif %}">
+                                <div id="detoxify-ready-notice" class="notification is-success is-light ys-mt-15 is-hidden">
                                     {{ _('Detoxify model ready. New simulations will reuse this local cache automatically.') }}
                                 </div>
-                                <div id="detoxify-error-notice" class="notification is-danger is-light ys-mt-15 {% if detoxify_download_state['status'] != 'error' %}is-hidden{% endif %}">
+                                <div id="detoxify-error-notice" class="notification is-danger is-light ys-mt-15 is-hidden">
                                     {{ detoxify_download_state['message'] if detoxify_download_state['status'] == 'error' else '' }}
                                 </div>
                                 <div class="ys-flex-gap-mt">

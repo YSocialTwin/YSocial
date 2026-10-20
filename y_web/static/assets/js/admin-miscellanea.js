@@ -56,7 +56,7 @@ var AdminMiscellanea = (function() {
                                       if (res.ok) {
                                           grid.forceRender();
                                       } else {
-                                          alert(YI18n.t('Failed to delete leaning.'));
+                                          YNotify.error(YI18n.t('Failed to delete leaning.'));
                                       }
                                   });
                               }
@@ -182,7 +182,7 @@ var AdminMiscellanea = (function() {
                                       if (res.ok) {
                                           grid5.forceRender();
                                       } else {
-                                          alert(YI18n.t('Failed to delete education level.'));
+                                          YNotify.error(YI18n.t('Failed to delete education level.'));
                                       }
                                   });
                               }
@@ -314,7 +314,7 @@ var AdminMiscellanea = (function() {
                                       if (res.ok) {
                                           grid4.forceRender();
                                       } else {
-                                          alert(YI18n.t('Failed to delete profession.'));
+                                          YNotify.error(YI18n.t('Failed to delete profession.'));
                                       }
                                   });
                               }
@@ -440,7 +440,7 @@ var AdminMiscellanea = (function() {
                                       if (res.ok) {
                                           grid1.forceRender();
                                       } else {
-                                          alert(YI18n.t('Failed to delete language.'));
+                                          YNotify.error(YI18n.t('Failed to delete language.'));
                                       }
                                   });
                               }
@@ -567,7 +567,7 @@ var AdminMiscellanea = (function() {
                                       if (res.ok) {
                                           grid2.forceRender();
                                       } else {
-                                          alert(YI18n.t('Failed to delete nationality.'));
+                                          YNotify.error(YI18n.t('Failed to delete nationality.'));
                                       }
                                   });
                               }
@@ -704,7 +704,7 @@ var AdminMiscellanea = (function() {
                                       if (res.ok) {
                                           gridAgeClasses.forceRender();
                                       } else {
-                                          alert(YI18n.t('Failed to delete age class.'));
+                                          YNotify.error(YI18n.t('Failed to delete age class.'));
                                       }
                                   });
                               }
@@ -830,7 +830,7 @@ var AdminMiscellanea = (function() {
                                       if (res.ok) {
                                           grid6.forceRender(); // refresh table
                                       } else {
-                                          alert(YI18n.t('Failed to delete topic.'));
+                                          YNotify.error(YI18n.t('Failed to delete topic.'));
                                       }
                                   });
                               }
@@ -957,7 +957,7 @@ var AdminMiscellanea = (function() {
                                       if (res.ok) {
                                           grid3.forceRender();
                                       } else {
-                                          alert(YI18n.t('Failed to delete toxicity level.'));
+                                          YNotify.error(YI18n.t('Failed to delete toxicity level.'));
                                       }
                                   });
                               }
@@ -1099,7 +1099,7 @@ var AdminMiscellanea = (function() {
                                       if (res.ok) {
                                           gridActivity.forceRender();
                                       } else {
-                                          alert(YI18n.t('Failed to delete activity profile.'));
+                                          YNotify.error(YI18n.t('Failed to delete activity profile.'));
                                       }
                                   });
                               }
@@ -1208,16 +1208,15 @@ var AdminMiscellanea = (function() {
           if (response.redirected) {
               window.location.href = response.url;
           } else {
-              statusDiv.innerHTML = '<span style="color: #22c55e;">' + YI18n.t('✓ Check complete') + '</span>';
-              setTimeout(() => {
-                  statusDiv.innerHTML = YI18n.t('Click to check if a newer version of YSocial is available.');
-              }, 3000);
+              YNotify.success(YI18n.t('✓ Check complete'));
+              statusDiv.innerHTML = YI18n.t('Click to check if a newer version of YSocial is available.');
           }
       })
       .catch(error => {
           btn.disabled = false;
           btn.innerHTML = '<i class="mdi mdi-update"></i> ' + YI18n.t('Check for Updates');
-          statusDiv.innerHTML = '<span style="color: #dc3545;">' + YI18n.t('✗ Error checking for updates') + '</span>';
+          YNotify.error(YI18n.t('✗ Error checking for updates'));
+          statusDiv.innerHTML = YI18n.t('Click to check if a newer version of YSocial is available.');
       });
   });
 
@@ -1231,12 +1230,7 @@ var AdminMiscellanea = (function() {
   }
 
   function showTelemetryMessage(message, isError) {
-      const msgDiv = document.getElementById('telemetry-message');
-      msgDiv.textContent = message;
-      msgDiv.style.display = 'block';
-      msgDiv.style.backgroundColor = isError ? '#fee2e2' : '#dcfce7';
-      msgDiv.style.color = isError ? '#dc3545' : '#16a34a';
-      setTimeout(() => { msgDiv.style.display = 'none'; }, 3000);
+      if (isError) YNotify.error(message); else YNotify.success(message);
   }
 
   bindById('telemetry_enabled', 'change', function() {
@@ -1313,15 +1307,7 @@ var AdminMiscellanea = (function() {
   }
 
   function showHpcMonitorMessage(message, isError) {
-      const msgDiv = document.getElementById('hpc-monitor-message');
-      msgDiv.textContent = message;
-      msgDiv.style.display = 'block';
-      msgDiv.style.backgroundColor = isError ? '#fee2e2' : '#dcfce7';
-      msgDiv.style.color = isError ? '#dc3545' : '#16a34a';
-    
-      setTimeout(() => {
-          msgDiv.style.display = 'none';
-      }, 5000);
+      if (isError) YNotify.error(message); else YNotify.success(message);
   }
 
   // Save HPC monitor settings
@@ -1445,17 +1431,16 @@ var AdminMiscellanea = (function() {
       .then(response => response.json())
       .then(data => {
           if (data.success) {
-              statusDiv.innerHTML = '<span style="color: #22c55e;">' + YI18n.t('✓ Watchdog {value}', {value: enabled ? 'enabled' : 'disabled'}) + '</span>';
+              YNotify.success(YI18n.t('✓ Watchdog {value}', {value: enabled ? 'enabled' : 'disabled'}));
           } else {
-              statusDiv.innerHTML = '<span style="color: #dc3545;">✗ ' + (data.message || YI18n.t('Failed to update')) + '</span>';
+              YNotify.error(data.message || YI18n.t('Failed to update'));
           }
-          setTimeout(() => {
-              statusDiv.innerHTML = YI18n.t('Monitors server/client processes for hangs and auto-restarts them.');
-          }, 3000);
+          statusDiv.innerHTML = YI18n.t('Monitors server/client processes for hangs and auto-restarts them.');
       })
       .catch(error => {
           console.error('Error:', error);
-          statusDiv.innerHTML = '<span style="color: #dc3545;">' + YI18n.t('✗ Error updating setting') + '</span>';
+          YNotify.error(YI18n.t('✗ Error updating setting'));
+          statusDiv.innerHTML = YI18n.t('Monitors server/client processes for hangs and auto-restarts them.');
       });
   });
 
@@ -1470,16 +1455,15 @@ var AdminMiscellanea = (function() {
       })
       .then(response => {
           if (response.ok) {
-              statusDiv.innerHTML = '<span style="color: #22c55e;">' + YI18n.t('✓ Interval updated successfully') + '</span>';
+              YNotify.success(YI18n.t('✓ Interval updated successfully'));
           } else {
-              statusDiv.innerHTML = '<span style="color: #dc3545;">' + YI18n.t('✗ Failed to update interval') + '</span>';
+              YNotify.error(YI18n.t('✗ Failed to update interval'));
           }
-          setTimeout(() => {
-              statusDiv.innerHTML = YI18n.t('Monitors server/client processes for hangs and auto-restarts them.');
-          }, 3000);
+          statusDiv.innerHTML = YI18n.t('Monitors server/client processes for hangs and auto-restarts them.');
       })
       .catch(error => {
-          statusDiv.innerHTML = '<span style="color: #dc3545;">' + YI18n.t('✗ Error: {message}', {message: error.message}) + '</span>';
+          YNotify.error(YI18n.t('✗ Error: {message}', {message: error.message}));
+          statusDiv.innerHTML = YI18n.t('Monitors server/client processes for hangs and auto-restarts them.');
       });
   });
 
@@ -1501,12 +1485,14 @@ var AdminMiscellanea = (function() {
           btn.innerHTML = YI18n.t('Run Now');
         
           if (data.error) {
-              statusDiv.innerHTML = '<span style="color: #dc3545;">' + YI18n.t('✗ Error: {error}', {error: data.error}) + '</span>';
+              YNotify.error(YI18n.t('✗ Error: {error}', {error: data.error}));
+              statusDiv.innerHTML = YI18n.t('Monitors server/client processes for hangs and auto-restarts them.');
           } else {
               const msg = 'Checked: ' + data.processes_checked + 
                          ', Restarted: ' + data.processes_restarted + 
                          ', Healthy: ' + data.processes_healthy;
-              statusDiv.innerHTML = '<span style="color: #22c55e;">✓ ' + msg + '</span>';
+              YNotify.success(msg);
+              statusDiv.innerHTML = YI18n.t('Monitors server/client processes for hangs and auto-restarts them.');
               // Update last run time
               loadWatchdogStatus();
           }
@@ -1514,7 +1500,8 @@ var AdminMiscellanea = (function() {
       .catch(error => {
           btn.disabled = false;
           btn.innerHTML = YI18n.t('Run Now');
-          statusDiv.innerHTML = '<span style="color: #dc3545;">' + YI18n.t('✗ Error running watchdog') + '</span>';
+          YNotify.error(YI18n.t('✗ Error running watchdog'));
+          statusDiv.innerHTML = YI18n.t('Monitors server/client processes for hangs and auto-restarts them.');
       });
   });
 
@@ -1587,7 +1574,7 @@ var AdminMiscellanea = (function() {
                                       if (res.ok) {
                                           gridOpinionGroups.forceRender();
                                       } else {
-                                          alert(YI18n.t('Failed to delete opinion group.'));
+                                          YNotify.error(YI18n.t('Failed to delete opinion group.'));
                                       }
                                   });
                               }
@@ -1731,7 +1718,7 @@ var AdminMiscellanea = (function() {
                                       if (res.ok) {
                                           gridOpinionDistributions.forceRender();
                                       } else {
-                                          alert(YI18n.t('Failed to delete opinion distribution.'));
+                                          YNotify.error(YI18n.t('Failed to delete opinion distribution.'));
                                       }
                                   });
                               }
@@ -1888,7 +1875,7 @@ var AdminMiscellanea = (function() {
           const paramName = input.dataset.paramName;
           const value = parseFloat(input.value);
           if (isNaN(value)) {
-              alert(YI18n.t('Invalid value for {paramname}: must be a valid number', {paramname: paramName}));
+              YNotify.error(YI18n.t('Invalid value for {paramname}: must be a valid number', {paramname: paramName}));
               hasError = true;
               return;
           }
@@ -2048,23 +2035,17 @@ var AdminMiscellanea = (function() {
       if (pathInput && document.activeElement !== pathInput && path) {
           pathInput.value = path;
       }
-      if (readyNotice) {
-          readyNotice.classList.toggle('is-hidden', status !== 'ready');
-      }
-      if (errorNotice) {
-          errorNotice.classList.toggle('is-hidden', status !== 'error');
-          if (status === 'error') {
-              errorNotice.textContent = message;
-          }
-      }
-
       setDetoxifyButtonBusy(status === 'running');
 
-      if (detoxifyState.lastStatus === 'running' && status === 'ready' && readyNotice) {
-          readyNotice.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      // The ready/error outcome is announced as a floating card (the in-page notices stay hidden)
+      if (detoxifyState.lastStatus === 'running' && status === 'ready') {
+          if (readyNotice) {
+              YNotify.success(readyNotice.textContent.replace(/\s+/g, ' ').trim());
+          }
           document.dispatchEvent(new CustomEvent('ys-notifications-refresh'));
       }
       if (detoxifyState.lastStatus === 'running' && status === 'error') {
+          YNotify.error(message);
           document.dispatchEvent(new CustomEvent('ys-notifications-refresh'));
       }
       detoxifyState.lastStatus = status;
