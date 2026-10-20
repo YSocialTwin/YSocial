@@ -350,6 +350,17 @@ def create_app(db_type="sqlite", desktop_mode=False, config_class=None):
 
     app.context_processor(inject_backend_plugin_visibility)
 
+    @app.after_request
+    def _no_store_dynamic_responses(response):
+        # Embedded web views (the desktop app) cache GET responses heuristically, so a
+        # list fetched right after a change (e.g. a new page) came back stale. Dynamic
+        # JSON/HTML is never cached; static files and explicit policies are untouched.
+        if "Cache-Control" not in response.headers and (
+            response.mimetype in ("application/json", "text/html")
+        ):
+            response.headers["Cache-Control"] = "no-store"
+        return response
+
     from y_web.src.system.startup_migrations import run_startup_migrations
 
     run_startup_migrations(app, db_type)

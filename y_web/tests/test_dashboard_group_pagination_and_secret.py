@@ -61,3 +61,8 @@ def test_secret_key_is_persisted(tmp_path):
     assert first and len(first) >= 32
     assert cfg.load_or_create_secret_key(str(path)) == first
     assert (path.stat().st_mode & 0o777) == 0o600
+
+
+def test_dynamic_responses_are_not_cached():
+    src = (ROOT / "y_web/__init__.py").read_text(encoding="utf-8")
+    assert "_no_store_dynamic_responses" in src and '"no-store"' in src
