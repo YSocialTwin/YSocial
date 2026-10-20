@@ -78,3 +78,34 @@ def test_pyproject_extras_and_python():
     assert "detoxify" in (ROOT / "requirements/toxicity.in").read_text()
     excl = cfg["tool"]["setuptools"]["exclude-package-data"]["y_web"]
     assert "static/assets/img/users/*" in excl
+
+
+def test_partial_download_is_not_ready_and_resumes(tmp_path, monkeypatch):
+    monkeypatch.setattr(av, "bundled_avatars_dir", lambda: str(tmp_path / "none"))
+    monkeypatch.setenv("YSOCIAL_HOME", str(tmp_path / "home"))
+    monkeypatch.setattr(av, "_MIN_BUNDLED", 2)
+    av._invalidate()
+    dest = tmp_path / "home" / "avatars"
+    dest.mkdir(parents=True)
+    for n in ("0.png", "1.png", "2.png"):  # a few images, no completion marker
+        (dest / n).write_bytes(b"old")
+    assert not av.avatars_ready()
+    archive = tmp_path / "a.tar.gz"
+    archive.write_bytes(_make_archive(5))
+    assert av.ensure_avatars(archive.as_uri(), background=False) is True
+    av._invalidate()
+    assert av.avatars_ready() and (tmp_path / "home" / "avatars.complete").exists()
+    assert len(list(dest.iterdir())) == 5
+    assert (dest / "0.png").read_bytes() == b"old"  # existing images are not rewritten
+
+
+def test_directory_scans_are_cached(tmp_path, monkeypatch):
+    monkeypatch.setattr(av, "bundled_avatars_dir", lambda: str(tmp_path / "b"))
+    monkeypatch.setenv("YSOCIAL_HOME", str(tmp_path / "home"))
+    av._invalidate()
+    calls = []
+    real = av._count
+    monkeypatch.setattr(av, "_count", lambda p: calls.append(p) or real(p))
+    for _ in range(50):
+        av.get_avatars_dir()
+    assert len(calls) == 1
