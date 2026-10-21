@@ -353,7 +353,9 @@ def upload_page_collection():
 
     if collection:
         collection.save(os.path.join(temp_data_dir, collection.filename))
-        pages_data = json.load(open(os.path.join(temp_data_dir, collection.filename), encoding="utf-8"))
+        pages_data = json.load(
+            open(os.path.join(temp_data_dir, collection.filename), encoding="utf-8")
+        )
         for page_data in pages_data:
             # check if the page already exists (by name and feed)
             existing_page = db.session.scalars(

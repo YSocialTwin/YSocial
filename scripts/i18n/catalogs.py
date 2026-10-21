@@ -38,7 +38,9 @@ def _pybabel(*args):
         [sys.executable, "-m", "babel.messages.frontend", *args],
         cwd=ROOT,
         capture_output=True,
-        text=True, encoding="utf-8", errors="replace",
+        text=True,
+        encoding="utf-8",
+        errors="replace",
     )
     if result.returncode != 0:
         sys.stderr.write(result.stdout + result.stderr)

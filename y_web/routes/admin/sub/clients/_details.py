@@ -802,7 +802,8 @@ def download_agent_list(uid):
 
     with open(
         f"{BASE}{os.sep}y_web{os.sep}experiments{os.sep}{exp_folder}{os.sep}{client.name}_agent_list.csv",
-        "w", encoding="utf-8",
+        "w",
+        encoding="utf-8",
     ) as f:
         for a in agents:
             agent = db.session.scalars(select(Agent).filter_by(id=a.agent_id)).first()
