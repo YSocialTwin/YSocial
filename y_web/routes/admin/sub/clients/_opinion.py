@@ -847,7 +847,7 @@ def _sync_initial_standard_opinions_to_experiment_db(context):
     if not os.path.exists(experiment_db):
         return
 
-    engine = create_engine(f"sqlite:////{experiment_db}")
+    engine = create_engine(f"sqlite:///{experiment_db}")
     inspector = inspect(engine)
     tables = set(inspector.get_table_names())
     required = {"user_mgmt", "interests", "rounds", "agent_opinion"}
