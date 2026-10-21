@@ -796,6 +796,8 @@ async fn launch(app: AppHandle, home: String, opts: LaunchOptions) -> Result<Str
                 .args(&args)
                 .env("YSOCIAL_HOME", &home)
                 .env("PYTHONUNBUFFERED", "1")
+                .env("PYTHONUTF8", "1")
+                .env("PYTHONIOENCODING", "utf-8")
                 .current_dir(&home)
                 .stdin(Stdio::null())
                 .stdout(Stdio::from(out))

@@ -158,6 +158,15 @@ def start_app(
 
 def main(argv=None):
     """Command line entry point (the ``ysocial`` console script)."""
+    # Windows redirects stdout to a legacy code page (cp1252): the Unicode symbols in the
+    # start-up messages would then crash the process. Use UTF-8 here and in every child.
+    for _s in (sys.stdout, sys.stderr):
+        try:
+            _s.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+    os.environ.setdefault("PYTHONUTF8", "1")
+    os.environ.setdefault("PYTHONIOENCODING", "utf-8")
     # Installed (wheel) runs: plugins and child tools must use this interpreter.
     from y_web.src.system.path_utils import _is_source_checkout, get_base_path
 
