@@ -191,7 +191,9 @@ def ensure_kernel_installed(kernel_name="python3_ysocial"):
         result = subprocess.run(
             [get_python_executable(), "-m", "jupyter", "kernelspec", "list", "--json"],
             capture_output=True,
-            text=True, encoding="utf-8", errors="replace",
+            text=True,
+            encoding="utf-8",
+            errors="replace",
         )
 
         if result.returncode == 0:
@@ -349,7 +351,9 @@ def start_jupyter(
                         [str(jupyter_exe), "lab", "--version"],
                         capture_output=True,
                         text=True,
-                        timeout=5, encoding="utf-8", errors="replace",
+                        timeout=5,
+                        encoding="utf-8",
+                        errors="replace",
                     )
                     if result.returncode == 0:
                         jupyter_lab_cmd = str(jupyter_exe)
@@ -472,7 +476,9 @@ def start_jupyter(
                 stderr=subprocess.PIPE,
                 stdin=subprocess.DEVNULL,
                 creationflags=creationflags,
-                text=True, encoding="utf-8", errors="replace",
+                text=True,
+                encoding="utf-8",
+                errors="replace",
             )
         else:
             # On Unix, use start_new_session for proper detachment
@@ -484,7 +490,9 @@ def start_jupyter(
                 stderr=subprocess.PIPE,
                 stdin=subprocess.DEVNULL,
                 start_new_session=True,
-                text=True, encoding="utf-8", errors="replace",
+                text=True,
+                encoding="utf-8",
+                errors="replace",
             )
 
         # Store instance info

@@ -4540,7 +4540,8 @@ def _create_standard_client_internal():
 
     with open(
         f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}client_{name}-{population.name}.json",
-        "w", encoding="utf-8",
+        "w",
+        encoding="utf-8",
     ) as f:
         json.dump(config, f, indent=4)
 
@@ -5889,7 +5890,8 @@ def _create_forum_client_internal():
 
     with open(
         f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}client_{name}-{population.name}.json",
-        "w", encoding="utf-8",
+        "w",
+        encoding="utf-8",
     ) as f:
         json.dump(config, f, indent=4)
 

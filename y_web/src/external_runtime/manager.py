@@ -311,7 +311,9 @@ def _run_command(
             capture_output=True,
             text=True,
             check=False,
-            timeout=timeout, encoding="utf-8", errors="replace",
+            timeout=timeout,
+            encoding="utf-8",
+            errors="replace",
         )
     except subprocess.TimeoutExpired as exc:
         cmd = " ".join(shlex.quote(part) for part in command)
@@ -568,7 +570,9 @@ def _ensure_pip(python_executable: str) -> str:
         [python_executable, "-m", "pip", "--version"],
         capture_output=True,
         text=True,
-        check=False, encoding="utf-8", errors="replace",
+        check=False,
+        encoding="utf-8",
+        errors="replace",
     )
     if probe.returncode == 0:
         return ""

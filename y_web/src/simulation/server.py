@@ -457,7 +457,9 @@ def _update_server_port_in_configs(exp, new_port):
                             )
                             if client_config.get("stress_reward") != desired_sr:
                                 client_config["stress_reward"] = desired_sr
-                                with open(client_config_path, "w", encoding="utf-8") as f:
+                                with open(
+                                    client_config_path, "w", encoding="utf-8"
+                                ) as f:
                                     json.dump(client_config, f, indent=4)
                                 print(
                                     f"Watchdog: Synchronized stress_reward into {item}"

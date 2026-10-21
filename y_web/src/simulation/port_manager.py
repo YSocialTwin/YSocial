@@ -141,7 +141,12 @@ def terminate_process_on_port(port):
     """
     try:
         result = subprocess.run(
-            ["lsof", "-t", "-i", f":{port}"], capture_output=True, text=True, check=True, encoding="utf-8", errors="replace"
+            ["lsof", "-t", "-i", f":{port}"],
+            capture_output=True,
+            text=True,
+            check=True,
+            encoding="utf-8",
+            errors="replace",
         )
         pid = result.stdout.strip()
 
@@ -174,7 +179,9 @@ def _terminate_processes_on_port(port):
             result = subprocess.run(
                 ["netstat", "-ano"],
                 capture_output=True,
-                text=True, encoding="utf-8", errors="replace",
+                text=True,
+                encoding="utf-8",
+                errors="replace",
             )
             for line in result.stdout.split("\n"):
                 if f":{port}" in line and "LISTENING" in line:
@@ -188,7 +195,9 @@ def _terminate_processes_on_port(port):
             result = subprocess.run(
                 ["lsof", "-t", "-i", f":{port}"],
                 capture_output=True,
-                text=True, encoding="utf-8", errors="replace",
+                text=True,
+                encoding="utf-8",
+                errors="replace",
             )
             pids = result.stdout.strip().split("\n")
             for pid_str in pids:
