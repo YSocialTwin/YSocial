@@ -89,7 +89,7 @@ jobs:
       - name: Check wheel contents
         run: python scripts/packaging/check_wheel.py dist/ysocial-*.whl
       - name: Constraints (used by the launcher to update an existing installation)
-        run: cp requirements.lock dist/constraints.txt
+        run: sed -E 's/^([A-Za-z0-9._-]+)\[[^]]*\]/\1/' requirements.lock > dist/constraints.txt
       - name: Checksums
         run: cd dist && sha256sum *.whl constraints.txt > SHA256SUMS.txt
       - uses: actions/upload-artifact@v4
@@ -132,7 +132,7 @@ jobs:
           python -m pip install build uv
           res=installer/src-tauri/resources
           python -m build --wheel --outdir "$res" .
-          cp requirements.lock "$res/constraints.txt"
+          sed -E 's/^([A-Za-z0-9._-]+)\[[^]]*\]/\1/' requirements.lock > "$res/constraints.txt"
           uvbin="$(python -c 'import shutil;print(shutil.which("uv"))')"
           if [ "$RUNNER_OS" = "Windows" ]; then cp "$uvbin" "$res/uv.exe"; else cp "$uvbin" "$res/uv"; chmod +x "$res/uv"; fi
           ls -la "$res"

@@ -531,7 +531,35 @@ def core_constraints_file() -> Path | None:
         candidates.append(Path(get_home_path()) / "runtime" / "constraints.txt")
     except Exception:
         pass
-    return next((c for c in candidates if c.is_file()), None)
+    found = next((c for c in candidates if c.is_file()), None)
+    return _constraints_without_extras(found) if found else None
+
+
+def _constraints_without_extras(path: Path) -> Path:
+    """Return ``path``, or a copy of it without extras (``ray[default]==1`` -> ``ray==1``).
+
+    pip refuses constraints that carry extras ("Constraints cannot have extras"),
+    and the pinned lock file written by ``pip freeze``/uv contains some.
+    """
+    import re
+    import tempfile
+
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return path
+    cleaned = re.sub(
+        r"^(\s*[A-Za-z0-9][A-Za-z0-9._-]*)\[[^\]\n]*\]", r"\1", text, flags=re.M
+    )
+    if cleaned == text:
+        return path
+    target = path.with_name(path.stem + ".noextras" + path.suffix)
+    try:
+        target.write_text(cleaned, encoding="utf-8")
+    except OSError:
+        target = Path(tempfile.gettempdir()) / "ysocial-constraints.noextras.txt"
+        target.write_text(cleaned, encoding="utf-8")
+    return target
 
 
 def _ensure_pip(python_executable: str) -> str:

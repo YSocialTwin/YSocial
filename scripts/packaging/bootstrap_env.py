@@ -50,7 +50,15 @@ def bootstrap(
     cmd = [uv, "pip", "install", "--python", py]
     if constraints:
         # Same pins the project is tested with; kept for later plugin installs.
-        shutil.copyfile(constraints, runtime / "constraints.txt")
+        import re
+        from pathlib import Path
+
+        # pip rejects extras in constraints ("ray[default]==1" -> "ray==1")
+        text = Path(constraints).read_text(encoding="utf-8")
+        (runtime / "constraints.txt").write_text(
+            re.sub(r"^(\s*[A-Za-z0-9][A-Za-z0-9._-]*)\[[^\]\n]*\]", r"\1", text, flags=re.M),
+            encoding="utf-8",
+        )
         cmd += ["--constraint", runtime / "constraints.txt"]
     if wheelhouse:
         cmd += ["--no-index", "--find-links", wheelhouse]
