@@ -62,6 +62,19 @@ def login_post():
     # check if the user actually exists
     # take the user-supplied password, hash it, and compare it to the hashed password in the database
     if not user or not check_password_hash(user.password, password):
+        # Diagnostics for the launcher log (never the password): which database was
+        # queried, and whether the account exists at all.
+        try:
+            from flask import current_app
+
+            print(
+                f"[login] rejected: account_found={bool(user)} "
+                f"admins_in_db={db.session.query(Admin_users).count()} "
+                f"db={current_app.config.get('SQLALCHEMY_DATABASE_URI')}",
+                flush=True,
+            )
+        except Exception as _diag_err:
+            print(f"[login] rejected (diagnostics failed: {_diag_err})", flush=True)
         flash(_("Please check your login details and try again."))
         return redirect(url_for("auth.login"))
 
