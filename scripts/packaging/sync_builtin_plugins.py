@@ -64,7 +64,7 @@ def from_checkout(path: Path) -> tuple[dict, str]:
 
     def git(*args: str) -> str:
         result = subprocess.run(
-            ["git", "-C", str(path), *args], capture_output=True, text=True
+            ["git", "-C", str(path), *args], capture_output=True, text=True, encoding="utf-8", errors="replace"
         )
         if result.returncode != 0:
             raise SyncError(f"git {' '.join(args)} failed: {result.stderr.strip()}")

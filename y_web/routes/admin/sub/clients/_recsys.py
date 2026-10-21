@@ -194,7 +194,7 @@ def _update_client_simulation_internal(uid, expected_mode):
     )
 
     if os.path.exists(config_path):
-        with open(config_path, "r") as f:
+        with open(config_path, "r", encoding="utf-8") as f:
             config = json.load(f)
         config.setdefault("simulation", {})
         config.setdefault("agents", {})
@@ -301,7 +301,7 @@ def _update_client_simulation_internal(uid, expected_mode):
         config["topic_interest_weights"] = topic_percentages or config.get(
             "topic_interest_weights", {}
         )
-        with open(config_path, "w") as f:
+        with open(config_path, "w", encoding="utf-8") as f:
             json.dump(config, f, indent=2)
     else:
         flash(_("Configuration file not found."), "warning")

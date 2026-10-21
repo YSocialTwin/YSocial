@@ -289,14 +289,14 @@ def get_version():
             base_path = os.path.abspath(".")
 
         version_path = os.path.join(base_path, "VERSION")
-        with open(version_path, "r") as f:
+        with open(version_path, "r", encoding="utf-8") as f:
             return f.read().strip()
     except Exception:
         # Fallback: try relative to this file's location
         try:
             current_dir = Path(__file__).parent.parent.parent
             version_path = current_dir / "VERSION"
-            with open(version_path, "r") as f:
+            with open(version_path, "r", encoding="utf-8") as f:
                 return f.read().strip()
         except Exception:
             return "Unknown"
@@ -329,7 +329,7 @@ def get_or_create_installation_id():
     # Check if installation ID already exists
     if id_file.exists():
         try:
-            with open(id_file, "r") as f:
+            with open(id_file, "r", encoding="utf-8") as f:
                 installation_info = json.load(f)
                 # Validate that it has the required fields
                 if "installation_id" in installation_info:
@@ -399,7 +399,7 @@ def get_or_create_installation_id():
                     # Save updated info if needed
                     if needs_update:
                         try:
-                            with open(id_file, "w") as f_out:
+                            with open(id_file, "w", encoding="utf-8") as f_out:
                                 json.dump(installation_info, f_out, indent=2)
                             print("✓ Updated installation info with new fields")
                         except Exception as e:
@@ -426,7 +426,7 @@ def get_or_create_installation_id():
 
     # Save to file
     try:
-        with open(id_file, "w") as f:
+        with open(id_file, "w", encoding="utf-8") as f:
             json.dump(installation_info, f, indent=2)
         print(f"✓ Created new installation ID: {installation_info['installation_id']}")
         print(f"  Timestamp: {installation_info['timestamp']}")

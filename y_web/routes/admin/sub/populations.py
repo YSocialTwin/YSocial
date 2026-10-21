@@ -1182,7 +1182,7 @@ def download_population(uid):
     os.makedirs(temp_data_dir, exist_ok=True)
 
     filename = os.path.join(temp_data_dir, f"population_{population.name}.json")
-    json.dump(res, open(filename, "w"), indent=4)
+    json.dump(res, open(filename, "w", encoding="utf-8"), indent=4)
 
     return send_file_desktop(filename, as_attachment=True)
 
@@ -1212,7 +1212,7 @@ def upload_population():
     filename = os.path.join(temp_data_dir, population_file.filename)
     population_file.save(filename)
 
-    data = json.load(open(filename, "r"))
+    data = json.load(open(filename, "r", encoding="utf-8"))
     population_type = normalize_population_username_type(
         data.get("population_data", {}).get("username_type")
         or request.form.get("upload_population_type")

@@ -619,7 +619,7 @@ def set_network(uid):
     path = f"{BASE}{os.sep}y_web{os.sep}experiments{os.sep}{exp_folder}{os.sep}{client.name}_network.csv"
 
     # since the network is undirected and Y assume directed relations we need to write the edges in both directions
-    with open(path, "w") as f:
+    with open(path, "w", encoding="utf-8") as f:
         for n in g.edges:
             f.write(f"{agent_ids[n[0]]},{agent_ids[n[1]]}\n")
             f.write(f"{agent_ids[n[1]]},{agent_ids[n[0]]}\n")
@@ -662,9 +662,9 @@ def upload_network(uid):
     path = f"{BASE}{os.sep}y_web{os.sep}experiments{os.sep}{exp_folder}{os.sep}{client.name}"
 
     try:
-        with open(f"{path}_network.csv", "w") as o:
+        with open(f"{path}_network.csv", "w", encoding="utf-8") as o:
             error, error2 = False, False
-            with open(f"{path}_network_temp.csv", "r") as f:
+            with open(f"{path}_network_temp.csv", "r", encoding="utf-8") as f:
                 for l in f:
                     l = l.rstrip().split(",")
 
@@ -802,7 +802,7 @@ def download_agent_list(uid):
 
     with open(
         f"{BASE}{os.sep}y_web{os.sep}experiments{os.sep}{exp_folder}{os.sep}{client.name}_agent_list.csv",
-        "w",
+        "w", encoding="utf-8",
     ) as f:
         for a in agents:
             agent = db.session.scalars(select(Agent).filter_by(id=a.agent_id)).first()

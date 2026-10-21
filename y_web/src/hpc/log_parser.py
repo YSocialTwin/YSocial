@@ -87,7 +87,7 @@ def parse_server_log_incremental(log_file_path, exp_id, start_offset=0, is_hpc=F
     )
 
     try:
-        with open(log_file_path, "r") as f:
+        with open(log_file_path, "r", encoding="utf-8") as f:
             # Seek to the start offset
             f.seek(start_offset)
 
@@ -407,7 +407,7 @@ def parse_client_log_incremental(
     hpc_daily_count = 0
 
     try:
-        with open(log_file_path, "r") as f:
+        with open(log_file_path, "r", encoding="utf-8") as f:
             # Seek to the start offset
             f.seek(start_offset)
 

@@ -166,7 +166,7 @@ def get_forum_avatar_mode(exp_id: int | None = None) -> str:
 
     mode = DEFAULT_FORUM_AVATAR_MODE
     try:
-        with open(config_path, "r") as handle:
+        with open(config_path, "r", encoding="utf-8") as handle:
             config = json.load(handle)
         mode = normalize_forum_avatar_mode(config.get("avatar_mode"))
     except Exception:

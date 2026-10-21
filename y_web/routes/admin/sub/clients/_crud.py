@@ -1625,7 +1625,7 @@ def _build_client_creation_context(idexp, recsys_mode):
                 ),
             )
             if os.path.exists(config_path):
-                with open(config_path, "r") as config_file:
+                with open(config_path, "r", encoding="utf-8") as config_file:
                     experiment_config = json.load(config_file)
                 raw_clock = experiment_config.get("clock", {}) or {}
                 experiment_clock["mode"] = raw_clock.get("mode", "simulated")
@@ -3139,7 +3139,7 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
         config["logging"]["instance_name"] = runtime_client_id
     else:
         config["recommendations"] = {"default_limit": recommendations_default_limit}
-    with open(config_filename, "w") as f:
+    with open(config_filename, "w", encoding="utf-8") as f:
         json.dump(config, f, indent=2)
 
     # Create agent population file (same as standard pipeline)
@@ -3354,7 +3354,7 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
         population_data["agents"].append(page_data)
 
     # Save population file
-    with open(population_filename, "w") as f:
+    with open(population_filename, "w", encoding="utf-8") as f:
         json.dump(population_data, f, indent=4)
 
     # Copy prompts file into the experiment folder.
@@ -3492,9 +3492,9 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
             network_file.save(temp_path)
 
             try:
-                with open(network_path, "w") as o:
+                with open(network_path, "w", encoding="utf-8") as o:
                     error, error2 = False, False
-                    with open(temp_path, "r") as f:
+                    with open(temp_path, "r", encoding="utf-8") as f:
                         for l in f:
                             l = l.rstrip().split(",")
                             if len(l) < 2:
@@ -3694,7 +3694,7 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
             if g:
                 # Since the network is undirected and Y assumes directed relations,
                 # we need to write the edges in both directions (same as Standard)
-                with open(network_path, "w") as f:
+                with open(network_path, "w", encoding="utf-8") as f:
                     for n in g.edges:
                         f.write(f"{all_node_ids[n[0]]},{all_node_ids[n[1]]}\n")
                         f.write(f"{all_node_ids[n[1]]},{all_node_ids[n[0]]}\n")
@@ -4321,7 +4321,7 @@ def _create_standard_client_internal():
     try:
         experiment_config = {}
         if os.path.exists(experiment_config_path):
-            with open(experiment_config_path, "r") as config_file:
+            with open(experiment_config_path, "r", encoding="utf-8") as config_file:
                 experiment_config = json.load(config_file)
         experiment_config["clock"] = {
             "mode": resolved_clock["mode"],
@@ -4335,7 +4335,7 @@ def _create_standard_client_internal():
             experiment_config["clock"]["anchor_date"] = (
                 __import__("datetime").date.today().isoformat()
             )
-        with open(experiment_config_path, "w") as config_file:
+        with open(experiment_config_path, "w", encoding="utf-8") as config_file:
             json.dump(experiment_config, config_file, indent=4)
     except Exception:
         pass
@@ -4540,7 +4540,7 @@ def _create_standard_client_internal():
 
     with open(
         f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}client_{name}-{population.name}.json",
-        "w",
+        "w", encoding="utf-8",
     ) as f:
         json.dump(config, f, indent=4)
 
@@ -4757,7 +4757,7 @@ def _create_standard_client_internal():
         )
 
     print(f"Saving agents to {filename}")
-    json.dump(res, open(filename, "w"), indent=4)
+    json.dump(res, open(filename, "w", encoding="utf-8"), indent=4)
 
     # Handle optional network configuration
     if network_model or network_file:
@@ -4795,9 +4795,9 @@ def _create_standard_client_internal():
             network_file.save(temp_path)
 
             try:
-                with open(network_path, "w") as o:
+                with open(network_path, "w", encoding="utf-8") as o:
                     error, error2 = False, False
-                    with open(temp_path, "r") as f:
+                    with open(temp_path, "r", encoding="utf-8") as f:
                         for l in f:
                             l = l.rstrip().split(",")
                             if len(l) < 2:
@@ -4997,7 +4997,7 @@ def _create_standard_client_internal():
 
             if g:
                 # since the network is undirected and Y assume directed relations we need to write the edges in both directions
-                with open(network_path, "w") as f:
+                with open(network_path, "w", encoding="utf-8") as f:
                     for n in g.edges:
                         f.write(f"{agent_ids[n[0]]},{agent_ids[n[1]]}\n")
                         f.write(f"{agent_ids[n[1]]},{agent_ids[n[0]]}\n")
@@ -5868,7 +5868,7 @@ def _create_forum_client_internal():
     try:
         experiment_config = {}
         if os.path.exists(experiment_config_path):
-            with open(experiment_config_path, "r") as config_file:
+            with open(experiment_config_path, "r", encoding="utf-8") as config_file:
                 experiment_config = json.load(config_file)
         experiment_config["clock"] = {
             "mode": resolved_clock["mode"],
@@ -5882,14 +5882,14 @@ def _create_forum_client_internal():
             experiment_config["clock"]["anchor_date"] = (
                 __import__("datetime").date.today().isoformat()
             )
-        with open(experiment_config_path, "w") as config_file:
+        with open(experiment_config_path, "w", encoding="utf-8") as config_file:
             json.dump(experiment_config, config_file, indent=4)
     except Exception:
         pass
 
     with open(
         f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}client_{name}-{population.name}.json",
-        "w",
+        "w", encoding="utf-8",
     ) as f:
         json.dump(config, f, indent=4)
 
@@ -6090,7 +6090,7 @@ def _create_forum_client_internal():
         )
 
     print(f"Saving agents to {filename}")
-    json.dump(res, open(filename, "w"), indent=4)
+    json.dump(res, open(filename, "w", encoding="utf-8"), indent=4)
 
     # Handle optional network configuration
     if network_model or network_file:
@@ -6128,9 +6128,9 @@ def _create_forum_client_internal():
             network_file.save(temp_path)
 
             try:
-                with open(network_path, "w") as o:
+                with open(network_path, "w", encoding="utf-8") as o:
                     error, error2 = False, False
-                    with open(temp_path, "r") as f:
+                    with open(temp_path, "r", encoding="utf-8") as f:
                         for l in f:
                             l = l.rstrip().split(",")
                             if len(l) < 2:
@@ -6330,7 +6330,7 @@ def _create_forum_client_internal():
 
             if g:
                 # since the network is undirected and Y assume directed relations we need to write the edges in both directions
-                with open(network_path, "w") as f:
+                with open(network_path, "w", encoding="utf-8") as f:
                     for n in g.edges:
                         f.write(f"{agent_ids[n[0]]},{agent_ids[n[1]]}\n")
                         f.write(f"{agent_ids[n[1]]},{agent_ids[n[0]]}\n")
@@ -6548,7 +6548,7 @@ def _read_json_if_exists(path):
     """Load a JSON file if it exists, otherwise return None."""
     if not os.path.exists(path):
         return None
-    with open(path, "r") as handle:
+    with open(path, "r", encoding="utf-8") as handle:
         return json.load(handle)
 
 

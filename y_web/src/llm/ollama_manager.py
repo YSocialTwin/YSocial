@@ -25,7 +25,7 @@ def is_ollama_installed():
     """Handle is ollama installed operation."""
     try:
         subprocess.run(
-            ["ollama", "--version"], capture_output=True, text=True, check=True
+            ["ollama", "--version"], capture_output=True, text=True, check=True, encoding="utf-8", errors="replace"
         )
         print("Ollama is installed.")
         return True

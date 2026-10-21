@@ -86,7 +86,7 @@ def create_postgresql_db(app):
             schema_path = get_resource_path(
                 os.path.join("data_schema", "postgre_dashboard.sql")
             )
-            schema_sql = open(schema_path, "r").read()
+            schema_sql = open(schema_path, "r", encoding="utf-8").read()
             db_conn.execute(text(schema_sql))
 
             # Generate hashed password
@@ -128,7 +128,7 @@ def create_postgresql_db(app):
             schema_path = get_resource_path(
                 os.path.join("data_schema", "postgre_server.sql")
             )
-            schema_sql = open(schema_path, "r").read()
+            schema_sql = open(schema_path, "r", encoding="utf-8").read()
             dummy_conn.execute(text(schema_sql))
 
             # Generate hashed password

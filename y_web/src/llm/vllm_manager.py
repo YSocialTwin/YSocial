@@ -31,7 +31,7 @@ def is_vllm_installed():
 
     try:
         subprocess.run(
-            ["vllm", "--version"], capture_output=True, text=True, check=True
+            ["vllm", "--version"], capture_output=True, text=True, check=True, encoding="utf-8", errors="replace"
         )
         print("vLLM is installed.")
         return True

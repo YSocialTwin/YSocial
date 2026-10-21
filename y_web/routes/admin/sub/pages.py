@@ -353,7 +353,7 @@ def upload_page_collection():
 
     if collection:
         collection.save(os.path.join(temp_data_dir, collection.filename))
-        pages_data = json.load(open(os.path.join(temp_data_dir, collection.filename)))
+        pages_data = json.load(open(os.path.join(temp_data_dir, collection.filename), encoding="utf-8"))
         for page_data in pages_data:
             # check if the page already exists (by name and feed)
             existing_page = db.session.scalars(
@@ -447,7 +447,7 @@ def download_pages():
     temp_data_dir = os.path.join(BASE, f"experiments{os.sep}temp_data")
     os.makedirs(temp_data_dir, exist_ok=True)
 
-    with open(os.path.join(temp_data_dir, "pages.json"), "w") as f:
+    with open(os.path.join(temp_data_dir, "pages.json"), "w", encoding="utf-8") as f:
         json.dump(data, f)
 
     return send_file_desktop(

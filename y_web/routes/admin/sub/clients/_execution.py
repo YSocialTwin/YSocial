@@ -224,7 +224,7 @@ def extend_simulation(id_client):
 
                 if os.path.exists(config_path):
                     # Read existing config
-                    with open(config_path, "r") as f:
+                    with open(config_path, "r", encoding="utf-8") as f:
                         config = json.load(f)
 
                     # Keep every duration field aligned with the new total value.
@@ -233,7 +233,7 @@ def extend_simulation(id_client):
                     if "simulation" in config:
 
                         # Write updated config back to file
-                        with open(config_path, "w") as f:
+                        with open(config_path, "w", encoding="utf-8") as f:
                             json.dump(config, f, indent=2)
 
                         flash(

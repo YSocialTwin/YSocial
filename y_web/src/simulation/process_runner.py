@@ -62,7 +62,7 @@ def run_server_main():
         raise NotImplementedError(f"Unsupported platform {args.platform}")
 
     # Load configuration
-    config = json.load(open(args.config, "r"))
+    config = json.load(open(args.config, "r", encoding="utf-8"))
 
     # Calculate log file path using the same pattern as client runner
     # The config file is at: {writable_path}/y_web/experiments/{uid}/config_server.json
@@ -481,11 +481,11 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
                     f"No client config file found for client '{cli.name}' in {data_base_path}, file=sys.stderr"
                 )
 
-        config_file = json.load(open(client_config_path))
+        config_file = json.load(open(client_config_path, encoding="utf-8"))
         server_config_path = os.path.join(data_base_path, "config_server.json")
         if os.path.exists(server_config_path):
             try:
-                with open(server_config_path, "r") as handle:
+                with open(server_config_path, "r", encoding="utf-8") as handle:
                     server_config = json.load(handle)
                 config_file, changed = (
                     _sync_experiment_stress_reward_into_client_config(
@@ -493,7 +493,7 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
                     )
                 )
                 if changed:
-                    with open(client_config_path, "w") as handle:
+                    with open(client_config_path, "w", encoding="utf-8") as handle:
                         json.dump(config_file, handle, indent=4)
                     print(
                         f"Synchronized stress_reward from experiment config into {os.path.basename(client_config_path)}",

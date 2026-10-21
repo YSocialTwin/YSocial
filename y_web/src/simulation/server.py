@@ -397,14 +397,14 @@ def _update_server_port_in_configs(exp, new_port):
     server_config_path = os.path.join(exp_dir, "config_server.json")
     try:
         if os.path.exists(server_config_path):
-            with open(server_config_path, "r") as f:
+            with open(server_config_path, "r", encoding="utf-8") as f:
                 server_config = json.load(f)
 
             server_config["port"] = new_port
             # Add data_path so YServer knows where to write logs
             server_config["data_path"] = exp_dir + os.sep
 
-            with open(server_config_path, "w") as f:
+            with open(server_config_path, "w", encoding="utf-8") as f:
                 json.dump(server_config, f, indent=4)
 
             print(f"Watchdog: Updated config_server.json with port {new_port}")
@@ -423,7 +423,7 @@ def _update_server_port_in_configs(exp, new_port):
                 if item.startswith("client") and item.endswith(".json"):
                     client_config_path = os.path.join(exp_dir, item)
                     try:
-                        with open(client_config_path, "r") as f:
+                        with open(client_config_path, "r", encoding="utf-8") as f:
                             client_config = json.load(f)
 
                         # Update the API endpoint in servers section
@@ -436,7 +436,7 @@ def _update_server_port_in_configs(exp, new_port):
                             new_api = re.sub(r":(\d+)(/|$)", f":{new_port}\\2", old_api)
                             client_config["servers"]["api"] = new_api
 
-                            with open(client_config_path, "w") as f:
+                            with open(client_config_path, "w", encoding="utf-8") as f:
                                 json.dump(client_config, f, indent=4)
 
                             print(f"Watchdog: Updated {item} with new port")
@@ -457,7 +457,7 @@ def _update_server_port_in_configs(exp, new_port):
                             )
                             if client_config.get("stress_reward") != desired_sr:
                                 client_config["stress_reward"] = desired_sr
-                                with open(client_config_path, "w") as f:
+                                with open(client_config_path, "w", encoding="utf-8") as f:
                                     json.dump(client_config, f, indent=4)
                                 print(
                                     f"Watchdog: Synchronized stress_reward into {item}"

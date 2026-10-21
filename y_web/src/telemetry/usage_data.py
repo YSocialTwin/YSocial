@@ -33,7 +33,7 @@ class Telemetry(object):
 
         if id_file.exists():
             try:
-                with open(id_file, "r") as f:
+                with open(id_file, "r", encoding="utf-8") as f:
                     installation_info = json.load(f)
                     self.uuid = installation_info.get("installation_id", None)
             except Exception:
@@ -80,7 +80,7 @@ class Telemetry(object):
         try:
             config_dir = installation_id.get_installation_config_dir()
             id_file = config_dir / "installation_id.json"
-            with open(id_file, "r") as f:
+            with open(id_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 data["uiid"] = self.uuid
                 if action == "register":

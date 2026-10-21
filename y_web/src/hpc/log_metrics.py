@@ -86,7 +86,7 @@ def _read_execution_log_tail(execution_log_path, tail_bytes: int = 65536):
         return None, None
 
     try:
-        with open(execution_log_path, "r") as f:
+        with open(execution_log_path, "r", encoding="utf-8") as f:
             try:
                 f.seek(0, os.SEEK_END)
                 file_size = f.tell()
@@ -592,7 +592,7 @@ def get_latest_hourly_summary_from_client_log(client_log_path):
     try:
         latest_hourly = None
 
-        with open(client_log_path, "r") as f:
+        with open(client_log_path, "r", encoding="utf-8") as f:
             # Read all lines to find the latest hourly summary
             for line in f:
                 line = line.strip()

@@ -100,7 +100,7 @@ def avatars_ready() -> bool:
     dest = downloaded_avatars_dir()
     if _cached(("downloaded", dest), lambda: _count(dest)) >= _FULL_SET:
         try:  # completed by an earlier version, which wrote no marker
-            open(_marker(), "w").close()
+            open(_marker(), "w", encoding="utf-8").close()
         except OSError:
             pass
         return True
@@ -155,7 +155,7 @@ def ensure_avatars(url: str | None = None, background: bool = True) -> bool:
                 time.sleep(_START_DELAY)
             _download(url, downloaded_avatars_dir(), pause=_PAUSE if background else 0)
             try:
-                open(_marker(), "w").close()
+                open(_marker(), "w", encoding="utf-8").close()
             except OSError:
                 pass
             _invalidate()

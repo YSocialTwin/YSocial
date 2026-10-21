@@ -72,7 +72,7 @@ def run_tests():
                 [sys.executable, "-m", "pytest", test_file, "-v", "--tb=short"],
                 capture_output=True,
                 text=True,
-                timeout=120,
+                timeout=120, encoding="utf-8", errors="replace",
             )
 
             print(result.stdout)

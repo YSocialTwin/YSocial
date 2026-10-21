@@ -55,7 +55,7 @@ def get_version():
     """
     try:
         version_path = get_resource_path("VERSION")
-        with open(version_path, "r") as f:
+        with open(version_path, "r", encoding="utf-8") as f:
             return f.read().strip()
     except Exception:
         return "2.0.0"  # Fallback version

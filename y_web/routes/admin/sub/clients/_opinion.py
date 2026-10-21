@@ -163,7 +163,7 @@ def _opinion_configuration_internal(idexp, expected_mode):
 
     try:
         if os.path.exists(population_file):
-            with open(population_file, "r") as f:
+            with open(population_file, "r", encoding="utf-8") as f:
                 pop_data = json.load(f)
                 for agent in pop_data.get("agents", []):
                     if not agent.get("is_page", 0):  # Exclude pages
@@ -597,7 +597,7 @@ def _resolve_opinion_submission_context(expected_mode):
         return None, redirect(url_for("experiments.experiment_details", uid=idexp))
 
     try:
-        with open(population_file, "r") as handle:
+        with open(population_file, "r", encoding="utf-8") as handle:
             pop_data = json.load(handle)
     except Exception as e:
         flash(_("Error loading population file: %(error)s", error=str(e)), "error")
@@ -696,7 +696,7 @@ def _apply_opinion_distributions_to_population(context):
                 updated_count += 1
 
     try:
-        with open(context["population_file"], "w") as handle:
+        with open(context["population_file"], "w", encoding="utf-8") as handle:
             json.dump(pop_data, handle, indent=4)
         flash(
             _(
@@ -738,12 +738,12 @@ def _persist_non_hpc_opinion_dynamics(context):
 
     if os.path.exists(context["client_config_file"]):
         try:
-            with open(context["client_config_file"], "r") as handle:
+            with open(context["client_config_file"], "r", encoding="utf-8") as handle:
                 client_config = json.load(handle)
             client_config.setdefault("simulation", {})[
                 "opinion_dynamics"
             ] = opinion_dynamics
-            with open(context["client_config_file"], "w") as handle:
+            with open(context["client_config_file"], "w", encoding="utf-8") as handle:
                 json.dump(client_config, handle, indent=4)
             flash(_("Opinion dynamics configuration saved successfully."), "success")
         except Exception as e:
@@ -796,10 +796,10 @@ def _persist_hpc_opinion_dynamics(context):
 
     if os.path.exists(context["client_config_file"]):
         try:
-            with open(context["client_config_file"], "r") as handle:
+            with open(context["client_config_file"], "r", encoding="utf-8") as handle:
                 client_config = json.load(handle)
             client_config["opinion_dynamics"] = opinion_dynamics
-            with open(context["client_config_file"], "w") as handle:
+            with open(context["client_config_file"], "w", encoding="utf-8") as handle:
                 json.dump(client_config, handle, indent=4)
             flash(_("Opinion dynamics configuration saved successfully."), "success")
         except Exception as e:

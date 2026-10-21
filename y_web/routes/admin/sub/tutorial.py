@@ -508,7 +508,7 @@ def create_tutorial_experiment():
                     schema_path = get_resource_path(
                         os.path.join("data_schema", "postgre_server.sql")
                     )
-                    with open(schema_path, "r") as schema_file:
+                    with open(schema_path, "r", encoding="utf-8") as schema_file:
                         schema_sql = schema_file.read()
                         dummy_conn.execute(text(schema_sql))
 
@@ -573,7 +573,7 @@ def create_tutorial_experiment():
         }
 
         config_path = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}config_server.json"
-        with open(config_path, "w") as f:
+        with open(config_path, "w", encoding="utf-8") as f:
             json.dump(config, f, indent=4)
 
         # Create experiment record
@@ -786,7 +786,7 @@ def create_tutorial_experiment():
 
         # Save agent population file
         pop_filename = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}{population_name.replace(' ', '')}.json"
-        with open(pop_filename, "w") as f:
+        with open(pop_filename, "w", encoding="utf-8") as f:
             json.dump(res, f, indent=4)
 
         # Create client config
@@ -885,7 +885,7 @@ def create_tutorial_experiment():
         }
 
         client_config_path = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}client_{client_name}-{population_name}.json"
-        with open(client_config_path, "w") as f:
+        with open(client_config_path, "w", encoding="utf-8") as f:
             json.dump(client_config, f, indent=4)
 
         # Copy prompts file

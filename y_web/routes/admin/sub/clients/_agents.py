@@ -45,11 +45,11 @@ def update_agents_activity(uid):
     path = f"{BASE}{os.sep}y_web{os.sep}experiments{os.sep}{exp_folder}{os.sep}client_{client.name}-{population.name}.json"
 
     if os.path.exists(path):
-        with open(path, "r") as f:
+        with open(path, "r", encoding="utf-8") as f:
             config = json.load(f)
             config["simulation"]["hourly_activity"] = activity
             # save the new configuration
-            json.dump(config, open(path, "w"), indent=4)
+            json.dump(config, open(path, "w", encoding="utf-8"), indent=4)
     else:
         flash(_("Configuration file not found."), "error")
 
@@ -77,7 +77,7 @@ def reset_agents_activity(uid):
     path = f"{BASE}{os.sep}y_web{os.sep}experiments{os.sep}{exp_folder}{os.sep}client_{client.name}-{population.name}.json"
 
     if os.path.exists(path):
-        with open(path, "r") as f:
+        with open(path, "r", encoding="utf-8") as f:
             config = json.load(f)
             config["simulation"]["hourly_activity"] = {
                 "10": 0.021,
@@ -106,7 +106,7 @@ def reset_agents_activity(uid):
                 "19": 0.031,
             }
             # save the new configuration
-            json.dump(config, open(path, "w"), indent=4)
+            json.dump(config, open(path, "w", encoding="utf-8"), indent=4)
     else:
         flash(_("Configuration file not found."), "error")
 
@@ -224,7 +224,7 @@ def update_agent_archetypes(uid):
     path = f"{BASE}{os.sep}y_web{os.sep}experiments{os.sep}{exp_folder}{os.sep}client_{client.name}-{population.name}.json"
 
     if os.path.exists(path):
-        with open(path, "r") as f:
+        with open(path, "r", encoding="utf-8") as f:
             config = json.load(f)
 
             # Add agent archetypes section if not present
@@ -257,7 +257,7 @@ def update_agent_archetypes(uid):
             }
 
             # Save the new configuration
-            with open(path, "w") as f:
+            with open(path, "w", encoding="utf-8") as f:
                 json.dump(config, f, indent=4)
     else:
         flash(_("Configuration file not found."), "error")
@@ -308,7 +308,7 @@ def reset_agent_archetypes(uid):
     path = f"{BASE}{os.sep}y_web{os.sep}experiments{os.sep}{exp_folder}{os.sep}client_{client.name}-{population.name}.json"
 
     if os.path.exists(path):
-        with open(path, "r") as f:
+        with open(path, "r", encoding="utf-8") as f:
             config = json.load(f)
 
             config["agent_archetypes"] = {
@@ -337,7 +337,7 @@ def reset_agent_archetypes(uid):
             }
 
             # Save the new configuration
-            with open(path, "w") as f:
+            with open(path, "w", encoding="utf-8") as f:
                 json.dump(config, f, indent=4)
     else:
         flash(_("Configuration file not found."), "error")
