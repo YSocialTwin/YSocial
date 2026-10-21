@@ -75,3 +75,14 @@ def test_core_constraints_file_from_home(tmp_path, monkeypatch):
     (tmp_path / "runtime").mkdir()
     (tmp_path / "runtime" / "constraints.txt").write_text("x==1\n")
     assert manager.core_constraints_file() == tmp_path / "runtime" / "constraints.txt"
+
+
+def test_core_constraints_extras_are_stripped(tmp_path, monkeypatch):
+    # pip: "Constraints cannot have extras"
+    c = tmp_path / "constraints.txt"
+    c.write_text("ray[default]==2.58.0\ncuda-toolkit[cublas,cudart]==13.0\nflask==3.0\n")
+    monkeypatch.setenv("YSOCIAL_CONSTRAINTS", str(c))
+    found = manager.core_constraints_file()
+    assert found != c
+    assert found.read_text() == "ray==2.58.0\ncuda-toolkit==13.0\nflask==3.0\n"
+    assert c.read_text().startswith("ray[default]")
