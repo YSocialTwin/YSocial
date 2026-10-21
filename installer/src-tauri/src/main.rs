@@ -586,7 +586,8 @@ async fn uninstall(
 }
 
 fn log_tail(path: &Path, n: usize) -> String {
-    let text = std::fs::read_to_string(path).unwrap_or_default();
+    // Lossy: Windows tools may write non-UTF-8 bytes, and a strict read would hide the whole log.
+    let text = std::fs::read(path).map(|b| String::from_utf8_lossy(&b).into_owned()).unwrap_or_default();
     let lines: Vec<&str> = text.lines().collect();
     lines[lines.len().saturating_sub(n)..].join("\n")
 }
