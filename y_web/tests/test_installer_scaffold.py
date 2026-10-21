@@ -204,7 +204,10 @@ def test_update_flow_wiring():
 
 def test_release_workflow_ships_constraints_for_updates():
     wf = (I.parent / ".github/workflows/release-packaging.yml").read_text()
-    assert "cp requirements.lock dist/constraints.txt" in wf
+    # pip rejects extras in constraints: the file is requirements.lock with them stripped
+    assert "requirements.lock > dist/constraints.txt" in wf
+    assert 'requirements.lock > "$res/constraints.txt"' in wf
+    assert "cp requirements.lock" not in wf
 
 
 def test_launcher_toxicity_box_models_and_links():
