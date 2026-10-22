@@ -15,3 +15,4 @@ Big Data & Society # journal name
 use strict
 ys-toast is-
 t|invalid|denied|offline|not available|not found|unexpected)(\W|$)/i.test(s)) return
+progress is-info is-small # CSS classes of the avatars progress bar in the header bell

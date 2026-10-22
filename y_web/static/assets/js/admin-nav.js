@@ -193,25 +193,41 @@ function escapeHtml(text) {
         .replace(/'/g, '&#39;');
 }
 
-function renderDownloadNotifications(items, unreadCount) {
+function renderDownloadNotifications(items, unreadCount, avatars) {
     var list = document.getElementById('download-notifications-list');
     var badge = document.getElementById('download-notifications-badge');
     if (!list || !badge) {
         return;
     }
 
-    if (unreadCount > 0) {
+    var avatarsActive = !!(avatars && avatars.status && avatars.status !== 'ready');
+    if (unreadCount > 0 || avatarsActive) {
         badge.classList.remove('d-none');
         badge.style.display = 'inline-flex';
-        badge.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
+        badge.textContent = unreadCount > 0
+            ? (unreadCount > 99 ? '99+' : String(unreadCount))
+            : '\u2193';  // arrow: only the background download is running
     } else {
         badge.classList.add('d-none');
         badge.style.display = 'none';
     }
 
     var rows = [];
+    if (avatarsActive) {
+        var pct = avatars.percent || 0;
+        rows.push(
+            '<a class="dropdown-item download-notification-item download-item-unread" href="/admin/notifications">' +
+            '<div class="download-notification-title">' + escapeHtml(avatars.title) + '</div>' +
+            '<div class="download-notification-meta"><span class="tag is-info is-light">' + escapeHtml(avatars.label) + '</span> ' +
+            (avatars.status === 'idle' ? '' : pct + '%') + '</div>' +
+            (avatars.status === 'idle' ? '' : '<progress class="progress is-info is-small" value="' + pct + '" max="100" style="margin:.4rem 0 0"></progress>') +
+            '</a>'
+        );
+    }
     if (!items || items.length === 0) {
-        rows.push('<div class="dropdown-item">' + YI18n.t('No notifications yet.') + '</div>');
+        if (!avatarsActive) {
+            rows.push('<div class="dropdown-item">' + YI18n.t('No notifications yet.') + '</div>');
+        }
     } else {
         items.slice(0, 5).forEach(function(item) {
             var statusTagClass =
@@ -260,7 +276,19 @@ async function refreshDownloadNotifications() {
             return;
         }
         var payload = await response.json();
-        renderDownloadNotifications(payload.items || [], payload.unread_count || 0);
+        var avatars = null;
+        try {
+            var ar = await fetch('/admin/avatars/status', { credentials: 'same-origin' });
+            if (ar.ok) { avatars = await ar.json(); }
+        } catch (e) { /* the bell works without it */ }
+        renderDownloadNotifications(payload.items || [], payload.unread_count || 0, avatars);
+        // poll faster while the profile pictures are being downloaded
+        var active = !!(avatars && avatars.status && avatars.status !== 'ready');
+        if (active !== window.__ysAvatarsFast) {
+            window.__ysAvatarsFast = active;
+            if (window.__ysNotifTimer) { clearInterval(window.__ysNotifTimer); }
+            window.__ysNotifTimer = setInterval(refreshDownloadNotifications, active ? 5000 : 30000);
+        }
     } catch (error) {
         console.error('Failed to refresh download notifications:', error);
     }
@@ -268,7 +296,7 @@ async function refreshDownloadNotifications() {
 
 document.addEventListener('DOMContentLoaded', function() {
     refreshDownloadNotifications();
-    setInterval(refreshDownloadNotifications, 30000);
+    window.__ysNotifTimer = setInterval(refreshDownloadNotifications, 30000);
     document.addEventListener('ys-notifications-refresh', function() {
         refreshDownloadNotifications();
     });

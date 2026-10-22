@@ -595,14 +595,28 @@ def download_notifications_data():
     )
 
 
+def _avatars_state():
+    """Download state plus localized title/label, for the page and the header bell."""
+    from y_web.src.system.avatars_store import get_state
+
+    state = get_state()
+    labels = {
+        "downloading": _("Downloading…"),
+        "paused": _("Paused"),
+        "failed": _("Download failed"),
+        "idle": _("Not downloaded yet"),
+    }
+    state["title"] = _("Profile pictures")
+    state["label"] = labels.get(state.get("status"), "")
+    return state
+
+
 @experiments.route("/admin/avatars/status")
 @login_required
 def avatars_download_status():
     """State of the background download of the profile pictures (for the notifications page)."""
     check_privileges(current_user.username)
-    from y_web.src.system.avatars_store import get_state
-
-    return jsonify(get_state())
+    return jsonify(_avatars_state())
 
 
 @experiments.route("/admin/avatars/<action>", methods=["POST"])
@@ -622,7 +636,7 @@ def avatars_download_control(action):
         changed = resume_download()
     else:
         return jsonify({"success": False, "error": _("Unknown action")}), 404
-    return jsonify({"success": True, "changed": changed, **get_state()})
+    return jsonify({"success": True, "changed": changed, **_avatars_state()})
 
 
 @experiments.route("/admin/notifications/<int:notification_id>/read", methods=["POST"])
