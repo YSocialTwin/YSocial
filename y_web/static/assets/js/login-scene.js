@@ -6,6 +6,17 @@
   var tr = function (k, p) { return window.YI18n ? window.YI18n.t(k, p) : k; };
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  /* Lite mode: WebKitGTK (the Linux app window) renders on the CPU and chokes on blurred layers
+     under a moving canvas. Detected from the user agent (Safari-like, X11/Linux, no Chrome);
+     force it with ?lite=1 (or switch it off with ?lite=0) to compare. */
+  var lite = (function () {
+    var q = /[?&]lite=([01])/.exec(location.search);
+    if (q) return q[1] === '1';
+    var ua = navigator.userAgent || '';
+    return /Linux/.test(ua) && /AppleWebKit/.test(ua) && !/Chrome|Chromium|Firefox|Android/.test(ua);
+  })();
+  if (lite && document.body) document.body.classList.add('yl-lite');
+
   /* ---------- helpers del form (funzionano anche senza la scena) ---------- */
   var eye = $('yl-eye'), pass = $('yl-pass');
   if (eye && pass) {
@@ -61,7 +72,7 @@
     { n: 'Elena', h: '@elena_ux', c: 1, t: 'More diverse opinions in the feed, more discussion? #polarization' },
     { n: 'Nico', h: '@nico_sim', c: 2, t: 'Third run with a different seed, surprisingly stable results. #repro' }
   ];
-  var W, H, D = Math.min(window.devicePixelRatio || 1, 2);
+  var W, H, D = lite ? 1 : Math.min(window.devicePixelRatio || 1, 2), lastTs = 0;
   var nodes = [], scr = [], pulses = [], rings = [], posts = [], casc = null;
   var now = 0, nextCasc = 600, nextAmb = 600, pi = Math.floor(Math.random() * POSTS.length), conv = 0;
   var mouse = { x: -999, y: -999 };
@@ -179,7 +190,9 @@
   });
 
   function frame(ts) {
-    now = ts; requestAnimationFrame(frame);
+    requestAnimationFrame(frame);
+    if (lite && ts - lastTs < 33) return;   /* about 30 fps */
+    lastTs = ts; now = ts;
     conv += (convT - conv) * .07;
     cx.clearRect(0, 0, W, H);
     var i, j, a, b, d, n, s, pairs = [];

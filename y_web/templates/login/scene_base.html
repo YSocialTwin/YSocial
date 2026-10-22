@@ -14,7 +14,7 @@
     <script src="{{ url_for('static', filename='assets/js/gtm-snippet.js') }}"></script>
     <!-- End Google Tag Manager -->
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/login-scene.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/login-scene.css') }}?v=2"/>
 </head>
 
 <body class="yl" {% block body_attrs %}{% endblock %}>
@@ -44,7 +44,7 @@
 </main>
 
 <script src="{{ url_for('static', filename='assets/js/i18n.js') }}" data-domains="simulation" defer></script>
-<script src="{{ url_for('static', filename='assets/js/login-scene.js') }}" defer></script>
+<script src="{{ url_for('static', filename='assets/js/login-scene.js') }}?v=2" defer></script>
 {% include "shared/language_switcher.html" %}
 </body>
 </html>

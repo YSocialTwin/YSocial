@@ -128,6 +128,21 @@ body.yl *, body.yl *::before, body.yl *::after { box-sizing: border-box; }
 .yl-foot { margin-top: 16px; color: var(--muted); font-size: .76rem; text-align: center; }
 
 @media (max-width: 560px) { .yl-card { padding: 26px 20px 22px; } #yl-casc { font-size: .78rem; } }
+/* ---- lite mode: WebKitGTK (Linux app window) paints on the CPU, where blurred and
+   backdrop-filtered layers over a moving canvas are redrawn every frame. Same look, no blur,
+   no animated shadows or borders; the network itself keeps moving (see login-scene.js). ---- */
+body.yl-lite #yl-aurora i { filter: none; animation: none; opacity: .5;
+  background: radial-gradient(circle, currentColor, transparent 68%); }
+body.yl-lite #yl-aurora i:nth-child(1) { color: var(--teal); background-color: transparent; }
+body.yl-lite #yl-aurora i:nth-child(2) { color: var(--violet); background-color: transparent; }
+body.yl-lite #yl-aurora i:nth-child(3) { color: var(--orange); background-color: transparent; opacity: .26; }
+body.yl-lite .yl-card, body.yl-lite .yl-post, body.yl-lite #yl-casc {
+  backdrop-filter: none; -webkit-backdrop-filter: none; }
+body.yl-lite .yl-card { animation: none; box-shadow: 0 18px 44px rgba(0, 0, 0, .32); }
+body.yl-lite .yl-card::before { animation: none; }
+body.yl-lite .yl-post { box-shadow: 0 6px 16px rgba(0, 0, 0, .25); }
+body.yl-lite #yl-halo { mix-blend-mode: normal; }
+
 @media (prefers-reduced-motion: reduce) {
   body.yl *, body.yl *::before, body.yl *::after { animation: none !important; transition: none !important; }
 }
