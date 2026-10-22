@@ -16,7 +16,7 @@
                 </div>
             </div>
 
-            <div class="columns" id="avatars-box" hidden
+            <div class="columns" id="avatars-box" style="display:none"
                  data-l-downloading="{{ _('Downloading…') }}"
                  data-l-paused="{{ _('Paused') }}"
                  data-l-failed="{{ _('Download failed') }}"
@@ -117,6 +117,7 @@
 
 
 
+<style>#avatars-box [hidden]{display:none !important}</style>
 <script>
 (function () {
   var box = document.getElementById('avatars-box'); if (!box) return;
@@ -126,7 +127,7 @@
   function mb(n) { return (n / 1048576).toFixed(0); }
   function render(s) {
     var show = s.status && s.status !== 'ready';
-    box.hidden = !show;
+    box.style.display = show ? '' : 'none';  // [hidden] loses against Bulma's .columns{display:flex}
     if (!show) { if (timer) { clearInterval(timer); timer = null; } return; }
     $('avatars-status').textContent = L(s.status);
     $('avatars-bar').value = s.percent || 0;
@@ -141,8 +142,10 @@
     $('avatars-retry').textContent = s.status === 'idle' ? L('start') : L('retry');
     $('avatars-bar').hidden = s.status === 'idle';
   }
-  function poll() { fetch('/admin/avatars/status').then(function (r) { return r.json(); }).then(render).catch(function () {}); }
-  function act(a) { fetch('/admin/avatars/' + a, { method: 'POST' }).then(function (r) { return r.json(); }).then(render).catch(function () {}); }
+  function fail(e) { if (window.console) console.error('avatars status', e); }
+  function json(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }
+  function poll() { fetch('/admin/avatars/status', { credentials: 'same-origin' }).then(json).then(render).catch(fail); }
+  function act(a) { fetch('/admin/avatars/' + a, { method: 'POST', credentials: 'same-origin' }).then(json).then(render).catch(fail); }
   $('avatars-pause').addEventListener('click', function () { act('pause'); });
   $('avatars-resume').addEventListener('click', function () { act('resume'); });
   $('avatars-retry').addEventListener('click', function () { act('resume'); });
