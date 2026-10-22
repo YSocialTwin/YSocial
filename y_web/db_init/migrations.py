@@ -803,6 +803,19 @@ def _run_all_migrations(app, db_type, db):
         print(f"Failed to run FilterBubble recsys migration: {e}")
 
     # ------------------------------------------------------------------
+    # Recommender catalogue: fill empty `enabled` values, add missing recommenders
+    # ------------------------------------------------------------------
+    try:
+        if db_type == "sqlite" and dashboard_db_path:
+            from y_web.migrations.sync_recsys_catalog import (
+                migrate_sqlite as _recsys_catalog_sqlite,
+            )
+
+            _recsys_catalog_sqlite(dashboard_db_path)
+    except Exception as e:
+        print(f"Failed to complete the recommender catalogue: {e}")
+
+    # ------------------------------------------------------------------
     # Ensure all tables defined in models exist (including release_info)
     # ------------------------------------------------------------------
     try:
