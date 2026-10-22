@@ -156,6 +156,39 @@ def start_app(
         app.run(debug=debug, host=host, port=port)
 
 
+def _start_windows_stop_watcher():
+    """Shut down cleanly when ``<data folder>/ysocial.stop`` appears (Windows only)."""
+    import _thread
+    import signal
+    import threading
+    import time
+
+    from y_web.src.system.path_utils import get_home_path
+
+    stop_file = os.path.join(get_home_path(), "ysocial.stop")
+    try:
+        os.remove(stop_file)  # a stale request from an earlier run must not stop this one
+    except OSError:
+        pass
+    try:
+        signal.signal(signal.SIGBREAK, lambda signum, frame: sys.exit(0))
+    except (AttributeError, ValueError):
+        pass
+
+    def watch():
+        while True:
+            time.sleep(0.5)
+            if os.path.exists(stop_file):
+                try:
+                    os.remove(stop_file)  # acknowledge: the launcher waits for this
+                except OSError:
+                    pass
+                _thread.interrupt_main()  # KeyboardInterrupt in the main thread
+                return
+
+    threading.Thread(target=watch, name="stop-file-watcher", daemon=True).start()
+
+
 def main(argv=None):
     """Command line entry point (the ``ysocial`` console script)."""
     # Windows redirects stdout to a legacy code page (cp1252): the Unicode symbols in the
@@ -177,6 +210,11 @@ def main(argv=None):
     import signal
 
     signal.signal(signal.SIGTERM, lambda signum, frame: sys.exit(0))
+    if os.name == "nt":
+        # Windows has no SIGTERM delivery: the installer's Stop button drops a
+        # "stop file" in the data folder; a watcher turns it into the same clean
+        # shutdown as Ctrl+C (servers, simulators and Jupyter are stopped by atexit).
+        _start_windows_stop_watcher()
 
     parser = ArgumentParser()
 

@@ -306,3 +306,13 @@ def test_release_workflow_stamps_the_tag_version_everywhere():
         "gh release upload" in text and "--draft" in text
     )  # attach, or draft if missing
     assert "workflow_dispatch" in text and "tag:" in text
+
+
+def test_windows_stop_is_graceful_with_a_stop_file():
+    # Windows has no SIGTERM: the launcher drops <home>/ysocial.stop, YSocial shuts down
+    # cleanly on it, and taskkill is only the fallback.
+    rs = (I / "src-tauri/src/main.rs").read_text()
+    py = (I.parent / "y_social.py").read_text()
+    assert 'home.join("ysocial.stop")' in rs
+    assert "ysocial.stop" in py and "_start_windows_stop_watcher" in py
+    assert rs.index("ysocial.stop") < rs.index('"taskkill"')

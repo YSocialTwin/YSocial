@@ -395,7 +395,26 @@ fn stop_service(app: &AppHandle, home: &Path, host: &str, port: u16, close_windo
     // Snapshot the descendants now: they are reparented once YSocial exits.
     let descendants = if cfg!(target_os = "windows") { Vec::new() } else { descendant_pids(pid) };
     if cfg!(target_os = "windows") {
-        let _ = new_cmd("taskkill").args(["/PID", &pid.to_string(), "/T", "/F"]).status();
+        // Ask YSocial to shut down by itself (like SIGTERM elsewhere): it watches for this
+        // file and stops its simulators and services. If nobody picks the request up
+        // (an older YSocial), fall back to ending the process tree at once.
+        let stop_file = home.join("ysocial.stop");
+        let acknowledged = std::fs::write(&stop_file, b"stop").is_ok() && {
+            let t0 = Instant::now();
+            let mut taken = false;
+            while t0.elapsed() < Duration::from_secs(6) {
+                if !stop_file.exists() || !pid_alive(pid) {
+                    taken = true;
+                    break;
+                }
+                std::thread::sleep(Duration::from_millis(250));
+            }
+            taken
+        };
+        if !acknowledged {
+            let _ = std::fs::remove_file(&stop_file);
+            let _ = new_cmd("taskkill").args(["/PID", &pid.to_string(), "/T", "/F"]).status();
+        }
     } else {
         let _ = new_cmd("kill").args(["-TERM", &pid.to_string()]).status();
     }
@@ -407,9 +426,14 @@ fn stop_service(app: &AppHandle, home: &Path, host: &str, port: u16, close_windo
         }
         std::thread::sleep(Duration::from_millis(300));
     }
-    if pid_alive(pid) && !cfg!(target_os = "windows") {
+    if pid_alive(pid) {
         let _ = app.emit("progress", "Forcing stop...");
-        let _ = new_cmd("kill").args(["-KILL", &pid.to_string()]).status();
+        if cfg!(target_os = "windows") {
+            // graceful shutdown did not finish in time: end the whole process tree
+            let _ = new_cmd("taskkill").args(["/PID", &pid.to_string(), "/T", "/F"]).status();
+        } else {
+            let _ = new_cmd("kill").args(["-KILL", &pid.to_string()]).status();
+        }
         std::thread::sleep(Duration::from_millis(500));
     }
     if !cfg!(target_os = "windows") {
