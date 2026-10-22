@@ -54,10 +54,14 @@
                                                 {% if current_user_role == 'admin' %}
                                                 <option value="admin">{{ _('Admin') }}</option>
                                                 <option value="researcher" selected>{{ _('Researcher') }}</option>
+                                                {% if training_enabled %}
                                                 <option value="teacher">{{ _('Teacher (training modules only)') }}</option>
                                                 {% endif %}
+                                                {% endif %}
                                                 <option value="user" {% if current_user_role != 'admin' %}selected{% endif %}>{{ _('User') }}</option>
+                                                {% if training_enabled %}
                                                 <option value="student">{{ _('Student') }}</option>
+                                                {% endif %}
                                             </select>
                                         </div>
                                     </div>
@@ -106,9 +110,9 @@
                                             <b>{{ _('Users Data') }}</b><br>
                                             <small>{{ _('Format: username,email,role,password (one per line)') }}<br>
                                             {% if current_user_role == 'admin' %}
-                                            {{ _('Role can be: admin, researcher, teacher, user, or student') }}<br>
+                                            {% if training_enabled %}{{ _('Role can be: admin, researcher, teacher, user, or student') }}{% else %}{{ _('Role can be: admin, researcher, or user') }}{% endif %}<br>
                                             {% else %}
-                                            {{ _('Role must be: user or student (you can only create participants)') }}<br>
+                                            {% if training_enabled %}{{ _('Role must be: user or student (you can only create participants)') }}{% else %}{{ _('Role must be: user (you can only create participants)') }}{% endif %}<br>
                                             {% endif %}
                                             {{ _('Password is optional (will be auto-generated as username123!)') }}</small>
                                         </label>

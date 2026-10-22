@@ -31,6 +31,7 @@ from y_web.i18n import normalize_language
 from y_web.src.content.cover_images import random_cover_image_url
 from y_web.src.experiment.helpers import ensure_experiment_user
 from y_web.src.llm.vllm_manager import get_llm_models
+from y_web.src.external_runtime.backend_plugins import training_modules_available
 from y_web.src.models import Admin_users, Exps, User_Experiment, User_mgmt
 from y_web.src.system.miscellanea import (
     check_privileges,
@@ -97,6 +98,7 @@ def user_data():
         experiments=experiments,
         all_users=all_users,
         current_user_role=user.role,
+        training_enabled=training_modules_available(),
     )
 
 
@@ -317,6 +319,13 @@ def add_user():
             _(
                 "You do not have permission to create admin, researcher or teacher users. Only 'user' role is allowed."
             ),
+            "error",
+        )
+        return redirect(url_for("users.user_data"))
+
+    if role in ("teacher", "student") and not training_modules_available():
+        flash(
+            _("The Teacher and Student roles need the Training Modules plugin."),
             "error",
         )
         return redirect(url_for("users.user_data"))
@@ -812,6 +821,12 @@ def bulk_create_users():
         if role not in ["admin", "researcher", "teacher", "user", "student"]:
             errors.append(
                 f"Line {i}: Invalid role '{role}' (must be admin, researcher, teacher, user, or student)"
+            )
+            continue
+
+        if role in ("teacher", "student") and not training_modules_available():
+            errors.append(
+                f"Line {i}: The '{role}' role needs the Training Modules plugin."
             )
             continue
 

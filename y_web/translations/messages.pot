@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-22 07:32+0000\n"
+"POT-Creation-Date: 2026-10-22 09:14+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -7702,7 +7702,13 @@ msgstr ""
 msgid "Role"
 msgstr ""
 
+msgid "Role can be: admin, researcher, or user"
+msgstr ""
+
 msgid "Role can be: admin, researcher, teacher, user, or student"
+msgstr ""
+
+msgid "Role must be: user (you can only create participants)"
 msgstr ""
 
 msgid "Role must be: user or student (you can only create participants)"
@@ -9048,6 +9054,9 @@ msgstr ""
 msgid ""
 "The Reddit delay should stay conservative enough to avoid throttling when"
 " multiple feeds are refreshed in sequence."
+msgstr ""
+
+msgid "The Teacher and Student roles need the Training Modules plugin."
 msgstr ""
 
 msgid "The Validator"

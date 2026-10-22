@@ -185,7 +185,15 @@ def test_no_hook_registered_leaves_the_flow_unchanged(core_app):
 
 
 # ---------------------------------------------------------------- admin forms
-def test_admin_can_bulk_create_student_accounts(core_app):
+def _training(monkeypatch, available):
+    monkeypatch.setattr(
+        "y_web.routes.admin.sub.users.training_modules_available",
+        lambda: available,
+    )
+
+
+def test_admin_can_bulk_create_student_accounts(core_app, monkeypatch):
+    _training(monkeypatch, True)
     from sqlalchemy import select
 
     from y_web import db
@@ -210,7 +218,8 @@ def test_admin_can_bulk_create_student_accounts(core_app):
         assert row is not None and row.role == "student"
 
 
-def test_users_page_offers_the_student_role(core_app):
+def test_users_page_offers_the_student_role(core_app, monkeypatch):
+    _training(monkeypatch, True)
     with core_app.app_context():
         admin_id = _make_admin_user("admin").get_id()
     client = core_app.test_client()
@@ -219,3 +228,35 @@ def test_users_page_offers_the_student_role(core_app):
         sess["_fresh"] = True
     html = client.get("/admin/users").get_data(as_text=True)
     assert '<option value="student">' in html
+
+
+def test_users_page_hides_student_and_teacher_without_the_plugin(core_app, monkeypatch):
+    _training(monkeypatch, False)
+    with core_app.app_context():
+        admin_id = _make_admin_user("admin").get_id()
+    client = core_app.test_client()
+    with client.session_transaction() as sess:
+        sess["_user_id"] = admin_id
+        sess["_fresh"] = True
+    html = client.get("/admin/users").get_data(as_text=True)
+    assert '<option value="student">' not in html
+    assert '<option value="teacher">' not in html
+    assert '<option value="researcher"' in html
+
+
+def test_student_accounts_are_refused_without_the_plugin(core_app, monkeypatch):
+    _training(monkeypatch, False)
+    with core_app.app_context():
+        admin_id = _make_admin_user("admin").get_id()
+    client = core_app.test_client()
+    with client.session_transaction() as sess:
+        sess["_user_id"] = admin_id
+        sess["_fresh"] = True
+    name = "stud" + uuid.uuid4().hex[:6]
+    client.post(
+        "/admin/bulk_create_users",
+        data={"users_data": f"{name},{name}@example.test,student", "role": "user"},
+        follow_redirects=True,
+    )
+    with core_app.app_context():
+        assert db.session.scalars(select(Admin_users).filter_by(username=name)).first() is None

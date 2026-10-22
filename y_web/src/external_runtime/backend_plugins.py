@@ -1029,6 +1029,19 @@ def training_dashboard_overview(user) -> dict | None:
         return None
 
 
+def training_modules_available() -> bool:
+    """True when the Training Modules plugin is installed and not disabled.
+
+    Gates the *Teacher* and *Student* roles, which only make sense with it. Never raises.
+    """
+    try:
+        return bool(
+            validate_backend_suite(TRAINING_REPO_KEY).get("installed")
+        ) and plugin_enabled(TRAINING_REPO_KEY)
+    except Exception:
+        return False
+
+
 def training_signup_api():
     """The Training Modules self-registration helpers (``candidates()``, ``enroll()``), or ``None``."""
     report = validate_backend_suite(TRAINING_REPO_KEY)

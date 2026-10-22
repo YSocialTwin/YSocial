@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-22 07:32+0000\n"
+"POT-Creation-Date: 2026-10-22 09:14+0000\n"
 "PO-Revision-Date: 2026-10-16 13:06+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
@@ -8450,8 +8450,14 @@ msgstr "Probabilità di ricablaggio (p)"
 msgid "Role"
 msgstr "Ruolo"
 
+msgid "Role can be: admin, researcher, or user"
+msgstr "Il ruolo può essere: admin, researcher o user"
+
 msgid "Role can be: admin, researcher, teacher, user, or student"
 msgstr "Il ruolo può essere: admin, researcher, teacher, user o student"
+
+msgid "Role must be: user (you can only create participants)"
+msgstr "Il ruolo deve essere: user (puoi creare solo partecipanti)"
 
 msgid "Role must be: user or student (you can only create participants)"
 msgstr "Il ruolo deve essere: user o student (puoi creare solo partecipanti)"
@@ -9921,6 +9927,9 @@ msgid ""
 msgstr ""
 "La pausa tra le richieste a Reddit dovrebbe restare abbastanza prudente "
 "da evitare limitazioni quando più feed vengono aggiornati in sequenza."
+
+msgid "The Teacher and Student roles need the Training Modules plugin."
+msgstr "I ruoli Teacher e Student richiedono il plugin Training Modules."
 
 msgid "The Validator"
 msgstr "Il Validatore"
