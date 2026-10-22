@@ -280,29 +280,17 @@
         }, duration);
     };
 
-    // Auto-hide loading on page load/unload
-    window.addEventListener('beforeunload', function() {
-        if (loadingOverlay) {
-            loadingOverlay.style.display = 'none';
-            loadingCount = 0;
-        }
-    });
+    // NOTE: the overlay must NOT be hidden on 'beforeunload': that event fires
+    // as soon as a navigation starts (before the server answers), so hiding
+    // there removes the feedback exactly when it is needed (very visible in the
+    // desktop app window, which has no tab spinner). The next page is a fresh
+    // document and never contains the overlay.
 
     // Handle page shown from back/forward cache
     window.addEventListener('pageshow', function(event) {
         // Only hide loading if page is persisted (restored from cache)
         // Don't hide on normal page load/navigation
         if (event.persisted && loadingOverlay) {
-            loadingOverlay.style.display = 'none';
-            loadingCount = 0;
-        }
-    });
-
-    // Ensure loading is hidden when page becomes visible after being hidden
-    document.addEventListener('visibilitychange', function() {
-        if (!document.hidden && loadingOverlay && loadingOverlay.style.display === 'flex') {
-            // Only hide if loading is actually showing and page was hidden
-            // This prevents hiding during normal navigation
             loadingOverlay.style.display = 'none';
             loadingCount = 0;
         }
