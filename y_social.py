@@ -151,7 +151,10 @@ def start_app(
         pass
 
     if db_type.lower() == "sqlite":
-        app.run(debug=debug, host=host, port=port, threaded=False)
+        # One request at a time keeps SQLite simple. Not on Windows: its web view is
+        # Chromium-based and opens idle "preconnect" sockets; a single-threaded server
+        # waits on them and every page or form submission stalls for a long time.
+        app.run(debug=debug, host=host, port=port, threaded=(os.name == "nt"))
     else:
         app.run(debug=debug, host=host, port=port)
 
