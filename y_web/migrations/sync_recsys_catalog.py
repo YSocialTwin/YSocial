@@ -58,9 +58,7 @@ def migrate_sqlite(db_path, template_path=None):
             for column in ("category", "enabled"):
                 if column not in cols:
                     conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} TEXT")
-            for name, value, category, enabled in _read_template(
-                template_path, table
-            ):
+            for name, value, category, enabled in _read_template(template_path, table):
                 row = conn.execute(
                     f"SELECT id, category, enabled FROM {table} WHERE name = ?",
                     (name,),
