@@ -259,4 +259,7 @@ def test_student_accounts_are_refused_without_the_plugin(core_app, monkeypatch):
         follow_redirects=True,
     )
     with core_app.app_context():
-        assert db.session.scalars(select(Admin_users).filter_by(username=name)).first() is None
+        assert (
+            db.session.scalars(select(Admin_users).filter_by(username=name)).first()
+            is None
+        )
