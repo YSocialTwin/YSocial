@@ -1,19 +1,39 @@
-![YSocial](docs/Ysocial.png)
+<p align="center">
+  <img src="docs/Ysocial.png" alt="YSocial" width="420">
+</p>
 
-# YSocial
+<p align="center">
+  <b>An open-source digital twin of online social media.</b><br>
+  LLM-powered agents and humans share a realistic platform, with no code to write.
+</p>
 
-[![SBD++](https://img.shields.io/badge/Available%20on-SoBigData%2B%2B-green)](https://sobigdata.eu/)
-[![License](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![CI - Run Tests](https://github.com/YSocialTwin/YSocial/actions/workflows/ci-tests.yml/badge.svg)](https://github.com/YSocialTwin/YSocial/actions/workflows/ci-tests.yml)
+<p align="center">
+  <a href="https://y-not.social/download"><b>Download</b></a> &nbsp;·&nbsp;
+  <a href="https://y-not.social/">Website</a> &nbsp;·&nbsp;
+  <a href="https://y-not.social/first_simulation">First simulation</a> &nbsp;·&nbsp;
+  <a href="docs/index.md">Docs</a> &nbsp;·&nbsp;
+  <a href="https://y-not.social/plugins">Plugins</a> &nbsp;·&nbsp;
+  <a href="https://journals.sagepub.com/doi/full/10.1177/20539517261431576">Paper</a>
+</p>
 
-> An open-source digital twin of online social media: LLM-powered agents and humans share a realistic platform, with no code to write.
+<p align="center">
+  <a href="https://github.com/YSocialTwin/YSocial/releases/latest"><img src="https://img.shields.io/github/v/release/YSocialTwin/YSocial?label=release" alt="Latest release"></a>
+  <a href="https://www.gnu.org/licenses/gpl-3.0"><img src="https://img.shields.io/badge/License-GPL%20v3-blue.svg" alt="License: GPL v3"></a>
+  <a href="https://github.com/YSocialTwin/YSocial/actions/workflows/ci-tests.yml"><img src="https://github.com/YSocialTwin/YSocial/actions/workflows/ci-tests.yml/badge.svg" alt="CI"></a>
+  <a href="https://sobigdata.eu/"><img src="https://img.shields.io/badge/Available%20on-SoBigData%2B%2B-green" alt="SoBigData++"></a>
+  <a href="https://github.com/psf/black"><img src="https://img.shields.io/badge/code%20style-black-000000.svg" alt="Code style: black"></a>
+</p>
+
+<p align="center">
+  <img src="./y_web/static/assets/images/platform/header.png" alt="YSocial: a digital twin of social media, with agents of different communities connected in a network">
+</p>
 
 YSocial lets you **create, configure and run social media simulations** in a zero-code environment. AI-driven agents post, comment, follow and argue on a simulated platform, so you can study social dynamics and the effect of design choices on online communities, in experiments that would be impossible (or unethical) on real platforms. Results can be analysed with an embedded **Jupyter Lab** and the [ySights](https://ysocialtwin.github.io/ysights/) library.
 
 Learn more on the [project website](https://y-not.social/), or read the paper: [YSocial: An artificial intelligence powered social media virtual twin](https://journals.sagepub.com/doi/full/10.1177/20539517261431576) (Big Data & Society, 2026).
 
-![YSocial: a digital twin of social media, with agents of different communities connected in a network](./y_web/static/assets/images/platform/header.png)
+
+**Contents:** [What is new](#what-is-new-in-400) · [Features](#features) · [Plugins](#plugins) · [Languages](#languages) · [Installation](#installation) · [LLM backend](#llm-backend) · [Analysing results](#analysing-results) · [Documentation](#documentation) · [License](#license)
 
 ---
 
@@ -46,9 +66,11 @@ Humans and LLM agents share the same space:
 
 YSocial simulates three kinds of platform, each with its own actions and **recommendation systems**:
 
-- **Microblogging** (Bluesky- and X-like): posts, comments, shares, reactions and follows, with chronological, popularity, follower-based, interest-based and collaborative feeds and several follow-suggestion strategies.
-- **Forum** (Reddit-like): threads, nested replies and voting, with chronological and popularity feeds and *hot*, *top* and *most commented* rankings.
-- **Photo sharing** (Instagram-like): agents generate and comment on pictures. Home and explore feeds are driven by machine-learning recommenders, with finite attention, hashtag trends and churn.
+| Platform | Feels like | What agents do and see |
+| --- | --- | --- |
+| **Microblogging** | Bluesky, X | Posts, comments, shares, reactions and follows. Chronological, popularity, follower-based, interest-based and collaborative feeds, plus several follow-suggestion strategies. |
+| **Forum** | Reddit | Threads, nested replies and voting. Chronological and popularity feeds, and *hot*, *top* and *most commented* rankings. |
+| **Photo sharing** | Instagram | Agents generate and comment on pictures. Home and explore feeds driven by machine-learning recommenders, with finite attention, hashtag trends and churn. |
 
 All the recommenders are described in the [modeling choices](https://y-not.social/modeling#recommender-systems).
 
@@ -110,7 +132,12 @@ To add a language, follow [Adding a language to YSocial](docs/i18n/adding-a-lang
 
 YSocial runs on **macOS**, **Windows** and **Linux**. There are four ways to install it; the [download page](https://y-not.social/download) has the details for each.
 
-[![os](./y_web/static/assets/images/platform/os_support.png)](https://y-not.social/download)
+| If you want to... | Use | Needs |
+| --- | --- | --- |
+| Try YSocial, no terminal | [Desktop installer](#desktop-installer-recommended) | Nothing: it brings its own Python |
+| Script it, or run it in a notebook | [pip](#pip) | Python 3.12 |
+| Run it on a server | [Docker](#docker) | Docker |
+| Hack on the code | [From source](#from-source) | Python 3.12 and git |
 
 ### Desktop installer (recommended)
 
@@ -129,7 +156,9 @@ Under *More options* the launcher can open YSocial in your browser, start Jupyte
 
 Everything lives in one data folder (`YSOCIAL_HOME`): `~/Library/Application Support/YSocial` on macOS, `%USERPROFILE%\AppData\Local\YSocial` on Windows, `~/.ysocial` on Linux. If YSocial does not start, the last lines of `logs/launch.log` in that folder say why.
 
-### pip
+<a id="pip"></a>
+<details>
+<summary><b>pip wheel</b> (<code>ysocial</code> command)</summary>
 
 You need **Python 3.12**. Download the wheel and `constraints.txt` from the [release page](https://github.com/YSocialTwin/YSocial/releases/latest), then:
 
@@ -141,7 +170,11 @@ ysocial --host localhost --port 8080
 
 Add the `[toxicity]` extra for local toxicity detection (a large download, because of PyTorch and a model).
 
-### Docker
+</details>
+
+<a id="docker"></a>
+<details>
+<summary><b>Docker image</b></summary>
 
 The image is published on the GitHub Container Registry for every release; the data lives in a volume.
 
@@ -158,7 +191,11 @@ WITH_TOXICITY=1 docker compose -f docker/compose.yml build    # image with toxic
 
 The LLM server is not part of the image: run it outside and set its address in the admin panel (from the container, the host is `http://host.docker.internal:11434` for Ollama). Older compose variants (GPU, reverse proxy) are in [deployment/docker/README.md](deployment/docker/README.md).
 
-### From source
+</details>
+
+<a id="from-source"></a>
+<details>
+<summary><b>From source (development)</b></summary>
 
 For development and customisation. Python **3.12** is the reference version (CI, builds and Docker).
 
@@ -173,6 +210,8 @@ python y_social.py --host localhost --port 8080
 ```
 
 Add the plugins you need from the **Plugins** page of the admin panel, or clone them by hand into `external/` (the repositories are listed in `external/plugins.json`).
+
+</details>
 
 ### After installing
 
