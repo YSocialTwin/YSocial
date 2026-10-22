@@ -192,6 +192,18 @@ def test_stop_hpc_client_deregisters_from_orchestrator(tmp_path):
     mock_actor.deregister_client.remote.assert_called_once_with("exp123:standard_pop")
 
 
+def _record_client_execution(bucket, obj):
+    """Collect only Client_Execution rows added through the patched ``db.session``.
+
+    ``db.session`` is process-wide, so a background thread left over from another test (the
+    experiment scheduler adds ``ExperimentScheduleStatus`` rows) can call the patched ``add``
+    while a test runs; those objects are not what the test is about.
+    """
+    if type(obj).__name__ in ("ExperimentScheduleStatus", "HpcMonitorSettings"):
+        return
+    bucket.append(obj)
+
+
 def test_start_hpc_client_refuses_duplicate_live_pid():
     """Starting an HPC client twice should not spawn a second subprocess."""
     from y_web.src.hpc.client import start_hpc_client
@@ -378,7 +390,8 @@ def test_start_hpc_client_syncs_duration_from_matrix_config(monkeypatch, tmp_pat
     monkeypatch.setattr("y_web.src.hpc.client.Client_Execution", _FakeClientExecution)
     added_objects = []
     monkeypatch.setattr(
-        "y_web.src.hpc.client.db.session.add", lambda obj: added_objects.append(obj)
+        "y_web.src.hpc.client.db.session.add",
+        lambda obj: _record_client_execution(added_objects, obj),
     )
 
     process = start_hpc_client(mock_exp, mock_cli, mock_population)
@@ -476,7 +489,8 @@ def test_start_hpc_client_photo_sharing_uses_top_level_hpc_layout(
     monkeypatch.setattr("y_web.src.hpc.client.Client_Execution", _FakeClientExecution)
     added_objects = []
     monkeypatch.setattr(
-        "y_web.src.hpc.client.db.session.add", lambda obj: added_objects.append(obj)
+        "y_web.src.hpc.client.db.session.add",
+        lambda obj: _record_client_execution(added_objects, obj),
     )
     monkeypatch.setattr("y_web.src.hpc.client.select", lambda *a, **kw: _FakeSelect(*a))
     import y_web.src.hpc.client as _hpc_mod
