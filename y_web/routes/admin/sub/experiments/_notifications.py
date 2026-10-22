@@ -595,6 +595,36 @@ def download_notifications_data():
     )
 
 
+@experiments.route("/admin/avatars/status")
+@login_required
+def avatars_download_status():
+    """State of the background download of the profile pictures (for the notifications page)."""
+    check_privileges(current_user.username)
+    from y_web.src.system.avatars_store import get_state
+
+    return jsonify(get_state())
+
+
+@experiments.route("/admin/avatars/<action>", methods=["POST"])
+@login_required
+def avatars_download_control(action):
+    """Pause or resume the profile pictures download (resume also restarts a failed one)."""
+    check_privileges(current_user.username)
+    from y_web.src.system.avatars_store import (
+        get_state,
+        pause_download,
+        resume_download,
+    )
+
+    if action == "pause":
+        changed = pause_download()
+    elif action == "resume":
+        changed = resume_download()
+    else:
+        return jsonify({"success": False, "error": "unknown action"}), 404
+    return jsonify({"success": True, "changed": changed, **get_state()})
+
+
 @experiments.route("/admin/notifications/<int:notification_id>/read", methods=["POST"])
 @experiments.route(
     "/admin/download_notifications/<int:notification_id>/read", methods=["POST"]

@@ -109,3 +109,43 @@ def test_directory_scans_are_cached(tmp_path, monkeypatch):
     for _ in range(50):
         av.get_avatars_dir()
     assert len(calls) == 1
+
+
+def test_download_reports_progress(tmp_path):
+    archive = tmp_path / "a.tar.gz"
+    data = _make_archive(4)
+    archive.write_bytes(data)
+    av._download(archive.as_uri(), str(tmp_path / "out"))
+    assert av._state["files"] == 4
+    assert av._state["total"] == len(data) and av._state["bytes"] >= len(data) - 1
+
+
+def test_get_state_percent_and_paused(monkeypatch):
+    monkeypatch.setattr(av, "avatars_ready", lambda: False)
+    monkeypatch.setattr(
+        av, "_state", {"status": "downloading", "error": None, "bytes": 25, "total": 100, "files": 7}
+    )
+    av._paused.clear()
+    assert av.get_state()["percent"] == 25 and av.get_state()["status"] == "downloading"
+    assert av.pause_download() is True
+    assert av.get_state()["status"] == "paused"
+    assert av.resume_download() is True
+    assert av.get_state()["status"] == "downloading"
+    monkeypatch.setitem(av._state, "total", 0)
+    assert av.get_state()["percent"] == 7 * 100 // av._FULL_SET
+
+
+def test_pause_blocks_the_download_until_resumed(tmp_path):
+    import threading
+    import time
+
+    archive = tmp_path / "a.tar.gz"
+    archive.write_bytes(_make_archive(3))
+    av._paused.set()
+    t = threading.Thread(target=av._download, args=(archive.as_uri(), str(tmp_path / "out")))
+    t.start()
+    time.sleep(0.5)
+    assert t.is_alive() and not (tmp_path / "out" / "0.png").exists()
+    av._paused.clear()
+    t.join(5)
+    assert not t.is_alive() and (tmp_path / "out" / "2.png").exists()

@@ -29,7 +29,8 @@ _CACHE_TTL = (
 _START_DELAY = 20.0  # let the app finish starting before the download begins
 _PAUSE_EVERY, _PAUSE = 25, 0.04  # breathe every N files so requests are never starved
 _lock = threading.Lock()
-_state = {"status": "idle", "error": None}
+_state = {"status": "idle", "error": None, "bytes": 0, "total": 0, "files": 0}
+_paused = threading.Event()  # set while the user has paused the download
 _cache: dict = {}
 
 _PLACEHOLDER_SVG = (
@@ -108,9 +109,53 @@ def avatars_ready() -> bool:
 
 
 def get_state() -> dict:
+    """Status of the download: ``ready``, ``downloading``, ``paused``, ``failed`` or ``idle``.
+
+    While running it also reports ``percent`` (of the archive when its size is known,
+    otherwise of the expected number of images), ``bytes``/``total`` and ``files``.
+    """
     if avatars_ready():
-        return {"status": "ready", "error": None}
-    return dict(_state)
+        return {"status": "ready", "error": None, "percent": 100}
+    state = dict(_state)
+    if state["status"] == "downloading" and _paused.is_set():
+        state["status"] = "paused"
+    if state["total"]:
+        state["percent"] = min(99, state["bytes"] * 100 // state["total"])
+    else:
+        state["percent"] = min(99, state["files"] * 100 // _FULL_SET)
+    return state
+
+
+def pause_download() -> bool:
+    """Pause a running download (the connection is kept; it continues on resume)."""
+    if _state["status"] == "downloading" and not avatars_ready():
+        _paused.set()
+        return True
+    return False
+
+
+def resume_download() -> bool:
+    """Continue a paused download, or start it again after a failure / when never started."""
+    if _paused.is_set():
+        _paused.clear()
+        return True
+    if _state["status"] in ("idle", "failed") and not avatars_ready():
+        return ensure_avatars(delay=0, force=True)
+    return False
+
+
+class _CountingReader:
+    """File-like wrapper that counts the bytes read and holds while paused."""
+
+    def __init__(self, raw):
+        self._raw = raw
+
+    def read(self, size=-1):
+        while _paused.is_set():
+            time.sleep(0.3)
+        data = self._raw.read(size)
+        _state["bytes"] += len(data)
+        return data
 
 
 def _download(url: str, dest: str, pause: float = _PAUSE) -> None:
@@ -121,39 +166,74 @@ def _download(url: str, dest: str, pause: float = _PAUSE) -> None:
     """
     os.makedirs(dest, exist_ok=True)
     done = 0
+    _state.update(bytes=0, files=0, total=0)
     with urllib.request.urlopen(url, timeout=60) as resp:  # noqa: S310
-        with tarfile.open(fileobj=resp, mode="r|*", bufsize=1 << 20) as tar:
+        try:
+            _state["total"] = int(resp.headers.get("Content-Length") or 0)
+        except (TypeError, ValueError):
+            _state["total"] = 0
+        with tarfile.open(
+            fileobj=_CountingReader(resp), mode="r|*", bufsize=1 << 20
+        ) as tar:
             for member in tar:
                 name = os.path.basename(member.name)
                 if not member.isfile() or not name.lower().endswith(_EXT):
                     continue
                 target = os.path.join(dest, name)
                 if os.path.exists(target):
+                    _state["files"] += 1
                     continue
                 tmp = target + ".part"
                 with open(tmp, "wb") as fh:
                     fh.write(tar.extractfile(member).read())
                 os.replace(tmp, target)
                 done += 1
+                _state["files"] += 1
                 if pause and done % _PAUSE_EVERY == 0:
                     time.sleep(pause)
 
 
-def ensure_avatars(url: str | None = None, background: bool = True) -> bool:
-    """Start the one-off avatar download if needed. Returns True if started."""
-    if avatars_ready() or os.environ.get("YSOCIAL_SKIP_AVATARS_DOWNLOAD") == "1":
+def ensure_avatars(
+    url: str | None = None,
+    background: bool = True,
+    delay: float | None = None,
+    force: bool = False,
+) -> bool:
+    """Start the one-off avatar download if needed. Returns True if started.
+
+    ``force`` (a person pressed the button) ignores ``YSOCIAL_SKIP_AVATARS_DOWNLOAD``;
+    ``delay`` replaces the pause before a background download begins.
+    """
+    if avatars_ready():
+        return False
+    if not force and os.environ.get("YSOCIAL_SKIP_AVATARS_DOWNLOAD") == "1":
         return False
     url = url or os.environ.get("YSOCIAL_AVATARS_URL") or DEFAULT_AVATARS_URL
     with _lock:
         if _state["status"] == "downloading":
             return False
-        _state.update(status="downloading", error=None)
+        _paused.clear()
+        _state.update(status="downloading", error=None, bytes=0, total=0, files=0)
 
     def work():
         try:
             if background:
-                time.sleep(_START_DELAY)
-            _download(url, downloaded_avatars_dir(), pause=_PAUSE if background else 0)
+                time.sleep(_START_DELAY if delay is None else delay)
+            last = None
+            for attempt in range(3):  # a dropped connection restarts; images on disk are skipped
+                try:
+                    _download(
+                        url,
+                        downloaded_avatars_dir(),
+                        pause=_PAUSE if background else 0,
+                    )
+                    last = None
+                    break
+                except Exception as exc:
+                    last = exc
+                    time.sleep(2 * (attempt + 1))
+            if last is not None:
+                raise last
             try:
                 open(_marker(), "w", encoding="utf-8").close()
             except OSError:
