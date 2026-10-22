@@ -59,6 +59,7 @@ window.LAUNCHER_I18N = (function () {
       "opt.updates.desc": "Cerca nuove versioni di YSocial all'apertura del launcher.",
       "err.space": "Spazio su disco insufficiente. Libera spazio e riprova.",
       "err.net": "Impossibile scaricare quanto necessario. Controlla la connessione a internet e riprova.",
+      "err.foreign": "YSocial è già in esecuzione, ma non è stato avviato da questo launcher (per esempio da un terminale). Chiudi quella finestra del terminale o termina quel processo, poi riprova.",
       "err.port": "Quella porta è già in uso. Sceglierne un'altra in Altre opzioni.",
       "err.other": "Qualcosa è andato storto: {msg}"
     }
