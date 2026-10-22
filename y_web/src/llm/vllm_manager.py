@@ -14,6 +14,9 @@ from urllib.parse import urlparse
 
 import requests
 
+_MODELS_DOWN_CACHE = {}
+_MODELS_DOWN_TTL = 10.0  # seconds
+
 
 def is_vllm_installed():
     """Check if a supported embedded vLLM runtime is installed in the current environment."""
@@ -202,6 +205,13 @@ def get_llm_models(llm_url=None):
                 return normalized
         return []
 
+    # Negative cache: when the server is down every admin page would otherwise
+    # retry (on Windows a refused connection alone takes ~2 s).
+    now = time.monotonic()
+    cached = _MODELS_DOWN_CACHE.get(llm_url)
+    if cached and now - cached < _MODELS_DOWN_TTL:
+        return []
+
     last_error = None
     for models_url in _candidate_model_endpoints(llm_url):
         try:
@@ -210,8 +220,16 @@ def get_llm_models(llm_url=None):
             data = response.json()
             models = _models_from_payload(data)
             if models:
+                _MODELS_DOWN_CACHE.pop(llm_url, None)
                 return models
             print(f"No models found in payload from {models_url}.")
+        except requests.exceptions.ConnectionError as e:
+            # Nothing is listening on host:port: the other candidate paths
+            # point to the same socket, so stop here.
+            last_error = e
+            _MODELS_DOWN_CACHE[llm_url] = time.monotonic()
+            print(f"LLM server at {llm_url} is not reachable (is it running?)")
+            return []
         except requests.exceptions.RequestException as e:
             last_error = e
             print(f"LLM server at {models_url} is not accessible: {e}")
