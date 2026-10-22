@@ -136,7 +136,7 @@ def i_at(x, y, s, c): return f'<text x="{x}" y="{y + s * .55}" text-anchor="midd
 def i_img(x, y, s, c): return f'<rect x="{x - s}" y="{y - s * .75}" width="{s * 2}" height="{s * 1.5}" rx="{s * .2}" fill="{c}"/><circle cx="{x - s * .4}" cy="{y - s * .25}" r="{s * .2}" fill="#fff"/><path d="M{x - s},{y + s * .75} L{x - s * .2},{y} L{x + s * .3},{y + s * .5} L{x + s * .6},{y + s * .15} L{x + s},{y + s * .75}Z" fill="#fff" fill-opacity=".9"/>'
 
 
-CHIPS = {"plugin-registry": "The catalog of YSocial plugins"}
+CHIPS = {"plugin-registry": "The catalog of YSocial plugins", "YSocialTwin.github.io": "Jekyll site · GitHub Pages"}
 
 
 # scenes ---------------------------------------------------------------------
@@ -297,6 +297,38 @@ def sc_registry(s):
     s.add(f'<text x="2290" y="425" text-anchor="middle" font-family="{FONT}" font-weight="700" font-size="24" fill="{s.d}" fill-opacity=".8">installs</text>')
 
 
+def sc_site(s):
+    x, y, w, h = 1330, 70, 760, 460
+    s.add(f'<g filter="url(#sh)"><rect x="{x}" y="{y}" width="{w}" height="{h}" rx="26" fill="#fff" stroke="{s.m}" stroke-width="5"/></g>')
+    s.add(f'<rect x="{x}" y="{y}" width="{w}" height="62" rx="26" fill="{s.l}"/><rect x="{x}" y="{y + 36}" width="{w}" height="26" fill="{s.l}"/>')
+    for k, c in enumerate(["#f59e5b", "#e8c25a", "#3aa675"]):
+        s.add(f'<circle cx="{x + 34 + k * 30}" cy="{y + 31}" r="9" fill="{c}"/>')
+    s.add(f'<rect x="{x + 170}" y="{y + 15}" width="{w - 230}" height="32" rx="16" fill="#fff"/><text x="{x + 192}" y="{y + 38}" font-family="{FONT_MONO}" font-size="20" fill="{s.d}">y-not.social</text>')
+    # nav
+    for k, wd in enumerate([70, 90, 60, 80]):
+        s.add(f'<rect x="{x + 34 + k * 110}" y="{y + 92}" width="{wd}" height="12" rx="6" fill="#cfdde1"/>')
+    s.add(f'<circle cx="{x + w - 50}" cy="{y + 98}" r="17" fill="{s.m}"/><circle cx="{x + w - 42}" cy="{y + 93}" r="14" fill="{s.l}"/>')
+    # hero: network + title lines
+    s.add(f'<rect x="{x + 34}" y="{y + 150}" width="300" height="22" rx="11" fill="{s.m}"/>')
+    s.add(f'<rect x="{x + 34}" y="{y + 190}" width="240" height="22" rx="11" fill="{s.m}" fill-opacity=".55"/>')
+    s.add(f'<rect x="{x + 34}" y="{y + 240}" width="320" height="10" rx="5" fill="#cfdde1"/><rect x="{x + 34}" y="{y + 262}" width="270" height="10" rx="5" fill="#cfdde1"/>')
+    s.add(f'<rect x="{x + 34}" y="{y + 300}" width="150" height="46" rx="23" fill="{s.m}"/><rect x="{x + 198}" y="{y + 300}" width="130" height="46" rx="23" fill="none" stroke="{s.m}" stroke-width="4"/>')
+    pts = [(x + 520, y + 190), (x + 640, y + 160), (x + 700, y + 260), (x + 580, y + 290), (x + 470, y + 300)]
+    for a, b in [(0, 1), (1, 2), (2, 3), (3, 4), (0, 3), (0, 4), (1, 3)]:
+        s.line(*pts[a], *pts[b], w=4, op=.35)
+    for i, (px, py) in enumerate(pts):
+        s.node(px, py, 34, bot=i == 2)
+    # feature cards
+    for k in range(3):
+        cx = x + 34 + k * 236
+        s.add(f'<rect x="{cx}" y="{y + 372}" width="212" height="64" rx="14" fill="{s.l}"/><rect x="{cx + 16}" y="{y + 388}" width="90" height="10" rx="5" fill="{s.m}"/><rect x="{cx + 16}" y="{y + 410}" width="150" height="8" rx="4" fill="#fff"/>')
+    s.add(f'<g filter="url(#sh)"><path d="{hexpath(2230, 190, 86)}" fill="#fff" stroke="{s.d}" stroke-width="6" stroke-linejoin="round"/></g>')
+    s.add(f'<text x="2230" y="215" text-anchor="middle" font-family="{FONT_MONO}" font-weight="700" font-size="64" fill="{s.d}">{{ }}</text>')
+    s.arrow(2210, 290, 2130, 380, col=s.m)
+    s.add(f'<text x="2200" y="338" font-family="{FONT}" font-weight="700" font-size="24" fill="{s.d}" fill-opacity=".8">Jekyll build</text>')
+    s.add(f'<g filter="url(#sh)"><rect x="2150" y="400" width="160" height="80" rx="16" fill="#fff" stroke="{s.m}" stroke-width="5"/></g><text x="2230" y="452" text-anchor="middle" font-family="{FONT_MONO}" font-weight="700" font-size="30" fill="{s.d}">docs/</text>')
+
+
 PLUGINS = {
     "YClient": ("#2f8fa3", "Microblogging · client side", sc_client),
     "YServer": ("#2f8fa3", "Microblogging · server side", sc_server),
@@ -310,6 +342,7 @@ PLUGINS = {
     "frontend_adds-on": ("#2b9be0", "Add-ons for the interface", sc_frontend),
     "ScenarioDesign": ("#5b4fd1", "Design scenarios before a run", sc_scenario),
     "TrainingModules": ("#2e9e6a", "Training courses on YSocial", sc_training),
+    "YSocialTwin.github.io": ("#1e7fa8", "The project website", sc_site),
     "plugin-registry": ("#0f8b8d", "Where plugins are listed", sc_registry),
 }
 
