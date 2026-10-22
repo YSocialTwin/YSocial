@@ -197,6 +197,7 @@ jobs:
     needs: [version, wheel, installers, docker]
     runs-on: ubuntu-24.04
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           name: wheel
@@ -206,11 +207,44 @@ jobs:
           pattern: installer-*
           merge-multiple: true
           path: dist
+      - name: Import the release signing key
+        id: gpg
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+        run: |
+          if [ -z "$GPG_PRIVATE_KEY" ]; then
+            echo "No GPG_PRIVATE_KEY secret: the release is published unsigned."
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+          else
+            printf '%s\n' "$GPG_PRIVATE_KEY" | gpg --batch --import
+            echo "signed=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Sign the installers and the wheel (detached .asc)
+        if: steps.gpg.outputs.signed == 'true'
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          cd dist
+          for f in $(ls); do
+            gpg --batch --yes --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE" \
+              --armor --detach-sign --output "$f.asc" "$f"
+          done
+          ls -la
       - name: Checksums for everything attached
         run: |
           cd dist
-          rm -f SHA256SUMS.txt
-          sha256sum $(ls) > SHA256SUMS.txt
+          rm -f SHA256SUMS.txt SHA256SUMS.txt.asc
+          sha256sum $(ls | grep -v '\.asc$') > SHA256SUMS.txt
+          ls -la
+      - name: Sign the checksums file
+        if: steps.gpg.outputs.signed == 'true'
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          cd dist
+          gpg --batch --yes --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE" \
+            --armor --detach-sign --output SHA256SUMS.txt.asc SHA256SUMS.txt
+          if [ -f ../docs/release-signing-key.asc ]; then cp ../docs/release-signing-key.asc ./release-signing-key.asc; fi
           ls -la
       - name: Attach to the release (create a draft if there is none)
         env:

@@ -14,6 +14,7 @@ A tag `v<version>` runs `.github/workflows/release-packaging.yml`, which builds 
 | `constraints.txt` | `wheel` job | copy of `requirements.lock`; the launcher uses it to update an installation |
 | `YSocial-<version>-<platform>.<ext>` | `installers` job (matrix) | `macos-arm64` and `macos-x64` (`.dmg`), `windows-x64` (`.exe`), `linux-x64` and `linux-arm64` (`.AppImage`, `.deb`) |
 | `SHA256SUMS.txt` | `release` job | checksum of every file attached |
+| `<file>.asc`, `SHA256SUMS.txt.asc`, `release-signing-key.asc` | `release` job | detached GPG signatures of every file and of the checksums, and the public key (only when the `GPG_PRIVATE_KEY` and `GPG_PASSPHRASE` secrets exist; without them the release is published unsigned) |
 | `ghcr.io/ysocialtwin/ysocial:<tag>` and `:latest` | `docker` job | image from `docker/Dockerfile` |
 
 Installers are **not code-signed** (decision): macOS shows the Gatekeeper warning, Windows SmartScreen. Document this in the release notes.
@@ -192,3 +193,12 @@ Install the file you built on a clean user account (or a virtual machine), press
 ## History
 
 Until 3.x the application was distributed as PyInstaller executables built from `y_social.spec` (with macOS DMG scripts and code-signing notes). That pipeline, its spec and its docs were removed in 4.0.0. The Python code still contains defensive branches for frozen executables and `y_social_launcher.py` still offers an optional pywebview window when running from a checkout; they are inert in the packaged distribution and can be removed in a later clean-up.
+
+### Verifying a download
+
+```bash
+curl -LO https://github.com/YSocialTwin/YSocial/raw/main/docs/release-signing-key.asc
+gpg --import release-signing-key.asc
+gpg --verify YSocial-<version>-linux-x64.AppImage.asc YSocial-<version>-linux-x64.AppImage
+sha256sum -c SHA256SUMS.txt --ignore-missing
+```
