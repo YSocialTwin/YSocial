@@ -160,6 +160,7 @@ async function init() {
   L.apply();
   $("lang").addEventListener("change", async () => { L.set($("lang").value); await refresh(); });
   $("home").value = await invoke("default_home");
+  $("threaded").checked = /Windows/i.test(navigator.userAgent);   // default: on for Windows only
   await loadOptions();
   await listen("progress", (e) => {
     log(e.payload);

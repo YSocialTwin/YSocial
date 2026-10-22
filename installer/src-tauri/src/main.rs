@@ -638,13 +638,8 @@ struct LaunchOptions {
     extra_args: String,
     /// Open in a borderless application window instead of the system browser
     app_window: bool,
-    /// Serve requests in parallel (`YSOCIAL_THREADED`); on unless the launcher turns it off
-    #[serde(default = "default_true")]
+    /// Serve requests in parallel (`YSOCIAL_THREADED`)
     threaded: bool,
-}
-
-fn default_true() -> bool {
-    true
 }
 
 fn build_args(o: &LaunchOptions) -> Result<Vec<String>, String> {

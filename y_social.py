@@ -150,16 +150,15 @@ def start_app(
     except Exception:
         pass
 
-    # Parallel requests by default: with a single thread every request (page, images,
-    # the header polling, ...) waits for the previous one, and Chromium-based web
-    # views also open idle "preconnect" sockets that stall a single-threaded server.
-    # YSOCIAL_THREADED=0 (launcher: More options) goes back to one request at a time.
-    threaded = os.environ.get("YSOCIAL_THREADED", "1").strip().lower() not in (
-        "0",
-        "false",
-        "no",
-        "off",
-    )
+    # One request at a time keeps SQLite simple, so it is the default, except on
+    # Windows: its web view is Chromium-based and opens idle "preconnect" sockets that
+    # stall a single-threaded server. YSOCIAL_THREADED=1 / 0 (launcher: More options)
+    # chooses explicitly.
+    flag = os.environ.get("YSOCIAL_THREADED")
+    if flag is None:
+        threaded = os.name == "nt"
+    else:
+        threaded = flag.strip().lower() in ("1", "true", "yes", "on")
     app.run(debug=debug, host=host, port=port, threaded=threaded)
 
 
