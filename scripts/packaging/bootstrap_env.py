@@ -41,7 +41,11 @@ def bootstrap(
     venv = runtime / "venv"
     # UV_PYTHON_INSTALL_BIN=0: do not link python3.x into ~/.local/bin (it fails when a file of
     # that name already exists there and is not managed by uv).
-    env = dict(os.environ, UV_PYTHON_INSTALL_DIR=str(runtime / "python"), UV_PYTHON_INSTALL_BIN="0")
+    env = dict(
+        os.environ,
+        UV_PYTHON_INSTALL_DIR=str(runtime / "python"),
+        UV_PYTHON_INSTALL_BIN="0",
+    )
     if wheelhouse:
         env["UV_PYTHON_DOWNLOADS"] = "manual"
     t0 = time.time()
