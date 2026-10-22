@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-22 06:52+0000\n"
+"POT-Creation-Date: 2026-10-22 07:23+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -9785,6 +9785,9 @@ msgid "University of Trento"
 msgstr ""
 
 msgid "Université Lyon 1"
+msgstr ""
+
+msgid "Unknown action"
 msgstr ""
 
 msgid "Unknown external runtime repository."

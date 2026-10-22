@@ -621,7 +621,7 @@ def avatars_download_control(action):
     elif action == "resume":
         changed = resume_download()
     else:
-        return jsonify({"success": False, "error": "unknown action"}), 404
+        return jsonify({"success": False, "error": _("Unknown action")}), 404
     return jsonify({"success": True, "changed": changed, **get_state()})
 
 
