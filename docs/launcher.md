@@ -19,6 +19,11 @@ What is not included, by design: LLM servers (run Ollama, vLLM or any OpenAI-com
 - Under *More options* you can choose to open YSocial in your **default browser** instead of its own window. In that case the launcher stays open and shows **Stop**; use it when you are done.
 - Other options there: start the Jupyter Notebook server (off by default), check for updates at launch, and the address and port (`127.0.0.1:8080` by default; use `0.0.0.0` only if other computers on your network must reach YSocial).
 
+## Downloads and the profile pictures
+
+- **Saving files.** When you download something in the YSocial window (an experiment export, for example), a save dialog asks where to put the file, and a notice at the bottom right tells you when the download starts and where it was saved. Cancel the dialog to cancel the download.
+- **Profile pictures.** The images of the simulated agents (about 490 MB) are downloaded once, in the background, soon after the first start. The *Notifications* page of the admin panel shows a progress bar for it, with **Pause** and **Resume**; an interrupted download continues where it left off.
+
 ## Toxicity detection (optional)
 
 Toxicity detection needs PyTorch and a model, which are large downloads, so they are not part of the base install. After installing, the launcher offers **Add toxicity detection** when it is missing; installing it needs an internet connection and some GB of disk space.

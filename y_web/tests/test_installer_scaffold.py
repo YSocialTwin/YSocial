@@ -316,3 +316,14 @@ def test_windows_stop_is_graceful_with_a_stop_file():
     assert 'home.join("ysocial.stop")' in rs
     assert "ysocial.stop" in py and "_start_windows_stop_watcher" in py
     assert rs.index("ysocial.stop") < rs.index('"taskkill"')
+
+
+def test_app_window_asks_where_to_save_downloads():
+    # downloads started inside the app window (experiment exports...) show a save dialog
+    # and a notice when they start and finish
+    rs = (I / "src-tauri/src/main.rs").read_text()
+    cargo = (I / "src-tauri/Cargo.toml").read_text()
+    assert ".on_download(on_app_download)" in rs
+    assert "DownloadEvent::Requested" in rs and "DownloadEvent::Finished" in rs
+    assert "save_file()" in rs and "fn download_toast" in rs
+    assert "rfd" in cargo

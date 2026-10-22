@@ -13,6 +13,7 @@ use std::net::TcpStream;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Mutex;
 use std::time::{Duration, Instant};
 use serde::Deserialize;
 use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder};
@@ -732,6 +733,95 @@ const CLOSING_OVERLAY: &str = r#"
 /// Set while the app window is shutting down, so repeated close clicks do nothing.
 static CLOSING: AtomicBool = AtomicBool::new(false);
 
+/// Where each running download is being saved (macOS does not report the path when it ends).
+static DOWNLOAD_TARGETS: Mutex<Vec<(String, PathBuf)>> = Mutex::new(Vec::new());
+
+/// Small notice at the bottom right of the page: a download started, ended, failed or was
+/// cancelled. Texts are in English and Italian, chosen from the page language.
+fn download_toast<R: tauri::Runtime>(webview: &tauri::Webview<R>, kind: &str, name: &str, path: &str) {
+    let js = format!(
+        r#"(function () {{
+  var kind = {kind}, name = {name}, path = {path};
+  var it = /^it/i.test(document.documentElement.lang || navigator.language || '');
+  var T = {{
+    start: [it ? 'Download in corso: ' : 'Downloading: ', it ? 'Il file viene salvato nella cartella scelta.' : 'The file is being saved to the folder you chose.'],
+    done: [it ? 'Download completato' : 'Download complete', path],
+    fail: [it ? 'Download non riuscito' : 'Download failed', it ? 'Riprova dalla pagina delle notifiche.' : 'Try again from the notifications page.'],
+    cancel: [it ? 'Download annullato' : 'Download cancelled', '']
+  }}[kind];
+  if (!T) return;
+  var st = document.getElementById('ys-dl-style');
+  if (!st) {{
+    st = document.createElement('style'); st.id = 'ys-dl-style';
+    st.textContent = '@keyframes ys-dl-run{{0%{{margin-left:-40%}}100%{{margin-left:100%}}}}' +
+      '#ys-dl{{position:fixed;right:18px;bottom:18px;z-index:2147483646;max-width:380px;padding:14px 16px;border-radius:12px;' +
+      'background:rgba(14,20,34,.94);color:#fff;font:500 14px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;' +
+      'box-shadow:0 10px 30px rgba(0,0,0,.35);border-left:4px solid #4dabf7}}' +
+      '#ys-dl.done{{border-left-color:#51cf66}}#ys-dl.fail{{border-left-color:#ff6b6b}}#ys-dl.cancel{{border-left-color:#adb5bd}}' +
+      '#ys-dl small{{display:block;margin-top:4px;font-weight:400;opacity:.8;word-break:break-all}}' +
+      '#ys-dl i{{display:block;height:3px;margin-top:8px;border-radius:2px;background:rgba(255,255,255,.2);overflow:hidden}}' +
+      '#ys-dl i b{{display:block;width:40%;height:100%;background:#4dabf7;animation:ys-dl-run 1.1s linear infinite}}';
+    (document.head || document.documentElement).appendChild(st);
+  }}
+  var d = document.getElementById('ys-dl');
+  if (!d) {{ d = document.createElement('div'); d.id = 'ys-dl'; d.setAttribute('role', 'status'); (document.body || document.documentElement).appendChild(d); }}
+  clearTimeout(d._t);
+  d.className = kind;
+  d.textContent = '';
+  var h = document.createElement('div'); h.textContent = T[0] + (kind === 'start' ? name : ''); d.appendChild(h);
+  if (T[1]) {{ var s = document.createElement('small'); s.textContent = T[1]; d.appendChild(s); }}
+  if (kind === 'start') {{ var b = document.createElement('i'); b.innerHTML = '<b></b>'; d.appendChild(b); }}
+  else d._t = setTimeout(function () {{ if (d.parentNode) d.parentNode.removeChild(d); }}, kind === 'done' ? 12000 : 6000);
+}})();"#,
+        kind = serde_json::to_string(kind).unwrap_or_default(),
+        name = serde_json::to_string(name).unwrap_or_default(),
+        path = serde_json::to_string(path).unwrap_or_default(),
+    );
+    let _ = webview.eval(js);
+}
+
+/// Downloads started from the YSocial window (experiment exports, files from the admin
+/// panel): ask where to save the file, then show when it starts and when it is done.
+fn on_app_download<R: tauri::Runtime>(webview: tauri::Webview<R>, event: tauri::webview::DownloadEvent<'_>) -> bool {
+    match event {
+        tauri::webview::DownloadEvent::Requested { url, destination } => {
+            let name = destination
+                .file_name()
+                .map(|n| n.to_string_lossy().into_owned())
+                .unwrap_or_else(|| "download".to_string());
+            let mut dialog = rfd::FileDialog::new().set_file_name(name.as_str());
+            if let Some(dir) = destination.parent() {
+                dialog = dialog.set_directory(dir);
+            }
+            match dialog.save_file() {
+                Some(path) => {
+                    if let Ok(mut targets) = DOWNLOAD_TARGETS.lock() {
+                        targets.push((url.to_string(), path.clone()));
+                    }
+                    let shown = path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or(name);
+                    *destination = path;
+                    download_toast(&webview, "start", &shown, "");
+                    true
+                }
+                None => {
+                    download_toast(&webview, "cancel", &name, "");
+                    false
+                }
+            }
+        }
+        tauri::webview::DownloadEvent::Finished { url, path, success } => {
+            let remembered = DOWNLOAD_TARGETS.lock().ok().and_then(|mut targets| {
+                let key = url.to_string();
+                targets.iter().position(|(u, _)| *u == key).map(|i| targets.remove(i).1)
+            });
+            let shown = path.or(remembered).map(|p| p.display().to_string()).unwrap_or_default();
+            download_toast(&webview, if success { "done" } else { "fail" }, "", &shown);
+            true
+        }
+        _ => true,
+    }
+}
+
 /// Open YSocial in a native window without browser chrome (address bar, tabs).
 /// Embedded third-party frames (e.g. payment widgets) load normally; clicks to other
 /// sites and new-window requests open in the system browser.
@@ -748,6 +838,7 @@ fn open_app_window(app: &AppHandle, url: &str, home: PathBuf, host: String, port
         .min_inner_size(900.0, 600.0)
         .focused(true)
         .initialization_script(LINK_SCRIPT)
+        .on_download(on_app_download)
         .on_new_window(move |target, _features| {
             if target.host_str().map(|h| h != local).unwrap_or(true)
                 && matches!(target.scheme(), "http" | "https")
