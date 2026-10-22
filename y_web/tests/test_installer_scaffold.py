@@ -275,7 +275,30 @@ def test_release_workflow_builds_installers_for_every_platform():
         (I.parent / ".github/workflows/release-packaging.yml").read_text()
     )
     job = wf["jobs"]["installers"]
-    labels = {m["label"] for m in job["strategy"]["matrix"]["include"]}
+    # the matrix is computed by the version job (so a manual run can pick platforms):
+    # run its script with the default input and read the platforms it produces
+    assert "fromJSON(needs.version.outputs.matrix)" in job["strategy"]["matrix"]
+    step = next(s for s in wf["jobs"]["version"]["steps"] if s.get("id") == "m")
+    script = step["run"].split("<<'PY'", 1)[1].split("\n", 1)[1].rsplit("\nPY", 1)[0]
+    ns = {}
+    import contextlib
+    import io
+    import json
+    import os
+
+    out = io.StringIO()
+    old_env = os.environ.get("PLATFORMS")
+    os.environ["PLATFORMS"] = "all"
+    try:
+        with contextlib.redirect_stdout(out):
+            exec(script, ns)
+    finally:
+        if old_env is None:
+            os.environ.pop("PLATFORMS", None)
+        else:
+            os.environ["PLATFORMS"] = old_env
+    matrix = json.loads(out.getvalue().strip().split("matrix=", 1)[1])
+    labels = {m["label"] for m in matrix["include"]}
     assert labels == {
         "macos-arm64",
         "macos-x64",
