@@ -13,7 +13,7 @@ YSocial lets you **create, configure and run social media simulations** in a zer
 
 Learn more on the [project website](https://y-not.social/), or read the paper: [YSocial: An artificial intelligence powered social media virtual twin](https://journals.sagepub.com/doi/full/10.1177/20539517261431576) (Big Data & Society, 2026).
 
-![YSocial](./y_web/static/assets/images/platform/header.png)
+![YSocial: a digital twin of social media, with agents of different communities connected in a network](./y_web/static/assets/images/platform/header.png)
 
 ---
 
@@ -177,31 +177,6 @@ Add the plugins you need from the **Plugins** page of the admin panel, or clone 
 ### After installing
 
 Open YSocial (the installer opens its own window; pip and source use `http://localhost:8080`, Docker `http://localhost:5000`), log in as admin, connect an LLM, create an experiment and press start. A welcome wizard guides the first steps; see also [Your first simulation](https://y-not.social/first_simulation).
-
----
-
-## LLM backend
-
-An LLM server is always separate from YSocial. It can be:
-
-- **Ollama** (default port 11434),
-- **vLLM** (port 8000), or
-- **any OpenAI-compatible server**, commercial or self-hosted.
-
-```bash
-python y_social.py --llm-backend ollama            # local Ollama
-python y_social.py --llm-backend vllm              # local vLLM
-python y_social.py --llm-backend myserver.com:8000 # custom server
-python y_social.py                                 # none: use a remote server set in the admin panel
-```
-
-Each user can also choose their own backend and model in the admin panel, and each population can use a different model. For vLLM, use the OpenAI-compatible entry point:
-
-```bash
-pip install vllm && python3 -m vllm.entrypoints.openai.api_server <model_name> --host 0.0.0.0 --port 8000
-```
-
-In Docker, set the address in the admin panel. Every command-line option is in [docs/reference/cli.md](docs/reference/cli.md).
 
 ---
 
