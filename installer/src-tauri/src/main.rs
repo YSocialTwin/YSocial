@@ -13,7 +13,7 @@ use std::net::TcpStream;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use serde::Deserialize;
 use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder};
@@ -115,17 +115,40 @@ fn run_step(app: &AppHandle, label: &str, cmd: &mut Command) -> Result<(), Strin
         .stderr(Stdio::piped())
         .spawn()
         .map_err(|e| format!("{label}: {e}"))?;
+    // The last lines of output travel with the error: they hold the real reason (uv, pip,
+    // curl...) and the interface otherwise only shows "failed (exit status N)".
+    let tail: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
+    let keep = |tail: &Arc<Mutex<Vec<String>>>, line: &str| {
+        if let Ok(mut t) = tail.lock() {
+            if !line.trim().is_empty() {
+                t.push(line.trim_end().to_string());
+                if t.len() > 8 {
+                    t.remove(0);
+                }
+            }
+        }
+    };
     let stderr = child.stderr.take();
     let app2 = app.clone();
+    let tail2 = tail.clone();
     let t = std::thread::spawn(move || {
         if let Some(s) = stderr {
             for line in BufReader::new(s).lines().flatten() {
+                if let Ok(mut t) = tail2.lock() {
+                    if !line.trim().is_empty() {
+                        t.push(line.trim_end().to_string());
+                        if t.len() > 8 {
+                            t.remove(0);
+                        }
+                    }
+                }
                 let _ = app2.emit("progress", line);
             }
         }
     });
     if let Some(s) = child.stdout.take() {
         for line in BufReader::new(s).lines().flatten() {
+            keep(&tail, &line);
             let _ = app.emit("progress", line);
         }
     }
@@ -134,7 +157,12 @@ fn run_step(app: &AppHandle, label: &str, cmd: &mut Command) -> Result<(), Strin
     if status.success() {
         Ok(())
     } else {
-        Err(format!("{label} failed ({status})"))
+        let lines = tail.lock().map(|t| t.join("\n")).unwrap_or_default();
+        if lines.is_empty() {
+            Err(format!("{label} failed ({status})"))
+        } else {
+            Err(format!("{label} failed ({status})\n{lines}"))
+        }
     }
 }
 

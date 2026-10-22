@@ -65,6 +65,9 @@ const setError = (msg) => { const e = $("err"); e.textContent = msg || ""; e.cla
 const busy = (btn, on) => { btn.classList.toggle("loading", on); btn.disabled = on; };
 const friendly = (err) => {
   const m = String(err);
+  // A failed step carries the last lines of the tool's own output after the first line:
+  // show them as they are, the generic patterns below would misread words such as "port".
+  if (m.includes("\n") && !/ENOSPC|No space/i.test(m)) return I("err.other", "Something went wrong: {msg}", { msg: m });
   if (/ENOSPC|No space/i.test(m)) return I("err.space","There is not enough free disk space. Free some space and try again.");
   if (/network|resolve|connect|timed out|dns/i.test(m)) return I("err.net","Could not download what is needed. Check your internet connection and try again.");
   if (/not started by this installer/i.test(m)) return I("err.foreign","YSocial is already running, but it was not started by this launcher (for example from a terminal). Close that terminal window or end that process, then try again.");
