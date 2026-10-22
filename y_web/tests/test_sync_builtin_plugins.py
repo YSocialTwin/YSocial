@@ -117,6 +117,25 @@ def test_check_reports_drift_and_accepts_a_match(tmp_path, target, monkeypatch):
     assert sync.main(["--check-latest"]) == 1
 
 
+def test_check_latest_ignores_registry_commits_that_do_not_touch_the_list(
+    tmp_path, target, monkeypatch
+):
+    repo = _registry(tmp_path)
+    sync.main(["--source", str(repo)])
+    payload, commit = sync.from_checkout(repo)
+    # a later registry commit (README, banner...): new sha, same plugin list
+    newer = "f" * 40
+    monkeypatch.setattr(sync, "from_github", lambda ref: (payload, newer))
+    assert sync.main(["--check-latest"]) == 0
+    # --check still pins the recorded commit exactly
+    assert commit != newer
+    # a real change of the list, or a hand-edited copy, still fails the gate
+    changed = json.loads(json.dumps(payload))
+    changed["plugins"][0]["description"] = "Different"
+    monkeypatch.setattr(sync, "from_github", lambda ref: (changed, newer))
+    assert sync.main(["--check-latest"]) == 1
+
+
 def test_release_workflow_gates_on_the_sync_check():
     workflow = (ROOT / ".github/workflows/release-packaging.yml").read_text("utf-8")
     assert "sync_builtin_plugins.py --verify" in workflow

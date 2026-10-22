@@ -14,7 +14,8 @@ the registry, then run this script and release.
 
     python scripts/packaging/sync_builtin_plugins.py --verify        # offline: copy not edited by hand
     python scripts/packaging/sync_builtin_plugins.py --check         # copy == registry at the recorded commit
-    python scripts/packaging/sync_builtin_plugins.py --check-latest  # copy == registry main (release gate)
+    python scripts/packaging/sync_builtin_plugins.py --check-latest  # same plugin list as registry main (release gate;
+                                                                     # a registry commit that does not change it passes)
 """
 
 from __future__ import annotations
@@ -163,19 +164,35 @@ def main(argv=None) -> int:
                 raise SyncError("no recorded commit: run the sync script")
             payload, commit = from_github("main" if args.check_latest else recorded)
             check_source(payload)
-            if render(payload, commit) != TARGET.read_text(encoding="utf-8"):
-                what = (
-                    "the registry main"
-                    if args.check_latest
-                    else f"commit {recorded[:7]}"
+            if args.check_latest:
+                # What matters for a release is the plugin list, not the registry commit:
+                # a commit that only touches documentation (README, banner...) leaves the
+                # list identical and must not fail the gate. Compare format and content.
+                same = (
+                    payload["schema_version"] == current().get("schema_version")
+                    and plugins_hash(payload["plugins"])
+                    == plugins_hash(current().get("plugins", []))
                 )
-                print(
-                    f"ERROR: builtin_plugins.json differs from {what}; run "
-                    "'python scripts/packaging/sync_builtin_plugins.py --ref <commit>'"
-                )
-                return 1
-            print(f"OK: builtin_plugins.json is in sync with {commit[:7]}")
-            return 0
+                if same and not verify():
+                    note = ""
+                    if commit != recorded:
+                        note = (
+                            f" (registry main is at {commit[:7]}, the copy records "
+                            f"{str(recorded)[:7]}: no change to the plugin list)"
+                        )
+                    print(f"OK: built-in plugin list is in sync with the registry main{note}")
+                    return 0
+            elif render(payload, commit) == TARGET.read_text(encoding="utf-8"):
+                print(f"OK: builtin_plugins.json is in sync with {commit[:7]}")
+                return 0
+            what = (
+                "the registry main" if args.check_latest else f"commit {recorded[:7]}"
+            )
+            print(
+                f"ERROR: builtin_plugins.json differs from {what}; run "
+                "'python scripts/packaging/sync_builtin_plugins.py --ref <commit>'"
+            )
+            return 1
 
         if args.source:
             payload, commit = from_checkout(args.source)
