@@ -33,7 +33,7 @@ YSocial lets you **create, configure and run social media simulations** in a zer
 Learn more on the [project website](https://y-not.social/), or read the paper: [YSocial: An artificial intelligence powered social media virtual twin](https://journals.sagepub.com/doi/full/10.1177/20539517261431576) (Big Data & Society, 2026).
 
 
-**Contents:** [What is new](#what-is-new-in-400) · [Features](#features) · [Plugins](#plugins) · [Languages](#languages) · [Installation](#installation) · [LLM backend](#llm-backend) · [Analysing results](#analysing-results) · [Documentation](#documentation) · [License](#license)
+**Contents:** [What is new](#what-is-new-in-400) · [Features](#features) · [Plugins](#plugins) · [Languages](#languages) · [Installation](#installation) · [Analysing results](#analysing-results) · [Documentation](#documentation) · [License](#license)
 
 ---
 
