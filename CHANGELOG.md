@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [4.0.0] - 2026-10-20
+## [4.0.0] - 2026-10-23
 
 YSocial 4.0.0 turns the web application into an installable product: a Python
 wheel, a desktop installer, a Docker image and a public plugin registry, with
@@ -104,8 +104,8 @@ a fully localized interface (English and Italian) and prompt packs per language.
 
 | Plugin | Version |
 | --- | --- |
-| YServer, YServerReddit | 2.1.0 |
-| YClient, YClientReddit | 2.1.0 |
+| YServer, YServerReddit | 2.1.1 |
+| YClient, YClientReddit | 2.1.1 |
 | YPhotoSharing | 2.1.0 |
 | YSimulator | 2.1.0 |
 | ScenarioDesign | 1.1.0 |
