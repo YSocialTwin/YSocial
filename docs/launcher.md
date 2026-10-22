@@ -17,6 +17,7 @@ What is not included, by design: LLM servers (run Ollama, vLLM or any OpenAI-com
 
 - **Closing the YSocial window stops YSocial** and every service it started. This can take a few seconds: a "Closing YSocial…" screen tells you it is working, do not force-quit.
 - Under *More options* you can choose to open YSocial in your **default browser** instead of its own window. In that case the launcher stays open and shows **Stop**; use it when you are done.
+- *Serve requests in parallel* (on by default) lets the interface answer while YSocial is busy. Untick it to handle one request at a time; it applies at the next start. From the command line the same switch is `YSOCIAL_THREADED=0`.
 - Other options there: start the Jupyter Notebook server (off by default), check for updates at launch, and the address and port (`127.0.0.1:8080` by default; use `0.0.0.0` only if other computers on your network must reach YSocial).
 
 ## Downloads and the profile pictures

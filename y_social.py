@@ -150,13 +150,17 @@ def start_app(
     except Exception:
         pass
 
-    if db_type.lower() == "sqlite":
-        # One request at a time keeps SQLite simple. Not on Windows: its web view is
-        # Chromium-based and opens idle "preconnect" sockets; a single-threaded server
-        # waits on them and every page or form submission stalls for a long time.
-        app.run(debug=debug, host=host, port=port, threaded=(os.name == "nt"))
-    else:
-        app.run(debug=debug, host=host, port=port)
+    # Parallel requests by default: with a single thread every request (page, images,
+    # the header polling, ...) waits for the previous one, and Chromium-based web
+    # views also open idle "preconnect" sockets that stall a single-threaded server.
+    # YSOCIAL_THREADED=0 (launcher: More options) goes back to one request at a time.
+    threaded = os.environ.get("YSOCIAL_THREADED", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+        "off",
+    )
+    app.run(debug=debug, host=host, port=port, threaded=threaded)
 
 
 def _start_windows_stop_watcher():

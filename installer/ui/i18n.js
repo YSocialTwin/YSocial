@@ -36,6 +36,8 @@ window.LAUNCHER_I18N = (function () {
       "more": "Altre opzioni",
       "opt.window": "Apri in una finestra dedicata",
       "opt.window.desc": "Deseleziona per usare il browser predefinito.",
+      "opt.threaded": "Servi le richieste in parallelo",
+      "opt.threaded.desc": "Mantiene l'interfaccia reattiva mentre YSocial è occupato. Deseleziona per gestire una richiesta alla volta. Vale dal prossimo avvio.",
       "opt.host": "Indirizzo",
       "opt.port": "Porta",
       "opt.hostnote": "Usa <code>0.0.0.0</code> come indirizzo solo se vuoi che altri computer della rete raggiungano YSocial.",

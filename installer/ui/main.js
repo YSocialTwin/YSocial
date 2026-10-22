@@ -89,7 +89,7 @@ function finishSteps() {
 
 // UI field -> setting key (persisted in <data folder>/launcher.json)
 const FIELDS = {
-  host: "host", port: "port", jupyter: "jupyter", appwindow: "app_window", checkupdates: "check_updates",
+  host: "host", port: "port", jupyter: "jupyter", appwindow: "app_window", threaded: "threaded", checkupdates: "check_updates",
 };
 
 function readOptions() {
@@ -99,6 +99,7 @@ function readOptions() {
     jupyter: $("jupyter").checked,
     no_notebook: !$("jupyter").checked,   // Jupyter is off unless asked for
     app_window: $("appwindow").checked,
+    threaded: $("threaded").checked,
     check_updates: $("checkupdates").checked,
   };
   return o;
