@@ -237,7 +237,7 @@ async fn update(
         } else {
             wheel.to_string_lossy().into_owned()
         };
-        c.arg(target).env("UV_PYTHON_INSTALL_DIR", runtime.join("python")).env("YSOCIAL_HOME", &home);
+        c.arg(target).env("UV_PYTHON_INSTALL_DIR", runtime.join("python")).env("UV_PYTHON_INSTALL_BIN", "0").env("YSOCIAL_HOME", &home);
         run_step(&app, "Updating YSocial", &mut c)?;
         std::fs::copy(&constraints, runtime.join("constraints.txt")).map_err(|e| e.to_string())?;
         let _ = std::fs::remove_dir_all(&tmp);
@@ -259,7 +259,10 @@ async fn install(app: AppHandle, home: String, toxicity: bool) -> Result<(), Str
         let venv = runtime.join("venv");
         let py_dir = runtime.join("python");
         let base = |c: &mut Command| {
-            c.env("UV_PYTHON_INSTALL_DIR", &py_dir).env("YSOCIAL_HOME", &home);
+            // UV_PYTHON_INSTALL_BIN=0: do not also link python3.x into ~/.local/bin. If a file
+            // of that name is already there uv fails ("Executable already exists ... not managed
+            // by uv", exit 2) and the install stops; YSocial only needs the managed interpreter.
+            c.env("UV_PYTHON_INSTALL_DIR", &py_dir).env("UV_PYTHON_INSTALL_BIN", "0").env("YSOCIAL_HOME", &home);
         };
 
         let mut c = new_cmd(&uv);
@@ -564,7 +567,7 @@ for r in (m.requires('ysocial') or []):
             c.arg("--constraint").arg(&cons);
         }
         c.args(["--extra-index-url", TORCH_CPU_INDEX, "--index-strategy", "unsafe-best-match"]);
-        c.args(&reqs).env("UV_PYTHON_INSTALL_DIR", runtime.join("python")).env("YSOCIAL_HOME", &home);
+        c.args(&reqs).env("UV_PYTHON_INSTALL_DIR", runtime.join("python")).env("UV_PYTHON_INSTALL_BIN", "0").env("YSOCIAL_HOME", &home);
         run_step(&app, "Installing toxicity detection", &mut c)?;
         let _ = app.emit("progress", "== Done");
         Ok(())
