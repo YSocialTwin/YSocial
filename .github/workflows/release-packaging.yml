@@ -11,6 +11,11 @@ name: Release packaging
 #     repository (VERSION) and keeps the files as workflow artifacts. No release, no push.
 #   - with "tag": same, but versioned as that tag and attached to its release (created as a
 #     draft if missing); the Docker image is pushed too.
+#   - "platforms": all (default) or a comma-separated list (macos-arm64, macos-x64,
+#     windows-x64, linux-x64, linux-arm64) to build only those installers, e.g. to retry one
+#     platform. Files already on the release are kept (same-name files are replaced) and
+#     SHA256SUMS.txt keeps the lines of the files that were not rebuilt.
+#   - "docker": untick to skip the Docker image.
 on:
   push:
     tags: ["v*"]
@@ -20,6 +25,15 @@ on:
         description: "Optional release tag (e.g. v4.1.0): stamp this version and attach the files to its release"
         required: false
         default: ""
+      platforms:
+        description: "Installers to build: all, or a comma-separated list of macos-arm64, macos-x64, windows-x64, linux-x64, linux-arm64 (e.g. linux-x64)"
+        required: false
+        default: "all"
+      docker:
+        description: "Build (and, with a tag, push) the Docker image"
+        type: boolean
+        required: false
+        default: true
 
 permissions:
   contents: write
@@ -33,6 +47,7 @@ jobs:
       tag: ${{ steps.v.outputs.tag }}
       publish: ${{ steps.v.outputs.publish }}
       prerelease: ${{ steps.v.outputs.prerelease }}
+      matrix: ${{ steps.m.outputs.matrix }}
     steps:
       - uses: actions/checkout@v4
       # one source of truth: the built-in plugin list lives in the plugin registry and
@@ -70,6 +85,31 @@ jobs:
             echo "prerelease=$prerelease"
           } >> "$GITHUB_OUTPUT"
           echo "Packaging version $version (publish=$publish)"
+      - id: m
+        env:
+          PLATFORMS: ${{ github.event.inputs.platforms }}
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os
+          all_ = [
+              {"os": "macos-14", "label": "macos-arm64", "bundles": "dmg"},
+              {"os": "macos-15-intel", "label": "macos-x64", "bundles": "dmg"},
+              {"os": "windows-latest", "label": "windows-x64", "bundles": "nsis"},
+              {"os": "ubuntu-24.04", "label": "linux-x64", "bundles": "appimage,deb"},
+              {"os": "ubuntu-24.04-arm", "label": "linux-arm64", "bundles": "appimage,deb"},
+          ]
+          raw = (os.environ.get("PLATFORMS") or "all").strip().lower()
+          if raw in ("", "all"):
+              chosen = all_
+          else:
+              want = [x.strip() for x in raw.split(",") if x.strip()]
+              known = {p["label"] for p in all_}
+              unknown = [w for w in want if w not in known]
+              if unknown:
+                  raise SystemExit("::error::unknown platform(s): %s (known: %s)" % (", ".join(unknown), ", ".join(sorted(known))))
+              chosen = [p for p in all_ if p["label"] in want]
+          print("matrix=" + json.dumps({"include": chosen}))
+          PY
 
   wheel:
     needs: version
@@ -102,13 +142,7 @@ jobs:
     needs: version
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - { os: macos-14,        label: macos-arm64, bundles: dmg }
-          - { os: macos-15-intel,  label: macos-x64,   bundles: dmg }
-          - { os: windows-latest,  label: windows-x64, bundles: nsis }
-          - { os: ubuntu-24.04,    label: linux-x64,   bundles: "appimage,deb" }
-          - { os: ubuntu-24.04-arm, label: linux-arm64, bundles: "appimage,deb" }
+      matrix: ${{ fromJSON(needs.version.outputs.matrix) }}
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -164,6 +198,7 @@ jobs:
 
   docker:
     needs: version
+    if: github.event.inputs.docker != 'false'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -193,7 +228,11 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
   release:
-    if: needs.version.outputs.publish == 'true'
+    # docker may be skipped on purpose (input docker=false), the others must have succeeded
+    if: >-
+      !cancelled() && needs.version.outputs.publish == 'true'
+      && needs.wheel.result == 'success' && needs.installers.result == 'success'
+      && (needs.docker.result == 'success' || needs.docker.result == 'skipped')
     needs: [version, wheel, installers, docker]
     runs-on: ubuntu-24.04
     steps:
@@ -231,10 +270,22 @@ jobs:
           done
           ls -la
       - name: Checksums for everything attached
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.version.outputs.tag }}
         run: |
           cd dist
           rm -f SHA256SUMS.txt SHA256SUMS.txt.asc
           sha256sum $(ls | grep -v '\.asc$') > SHA256SUMS.txt
+          # A partial run (some platforms only) must not drop the checksums of files already on
+          # the release: keep their lines from the existing SHA256SUMS.txt.
+          if gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern SHA256SUMS.txt --dir /tmp/prev 2>/dev/null; then
+            while read -r sum name; do
+              name="${name#\*}"
+              { [ -n "$name" ] && [ ! -e "$name" ] && echo "$sum  $name" >> SHA256SUMS.txt; } || true
+            done < /tmp/prev/SHA256SUMS.txt
+            sort -k2 -o SHA256SUMS.txt SHA256SUMS.txt
+          fi
           ls -la
       - name: Sign the checksums file
         if: steps.gpg.outputs.signed == 'true'

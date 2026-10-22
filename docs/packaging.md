@@ -33,6 +33,8 @@ The version of every package comes from the **tag**: `scripts/packaging/set_vers
 
 **On demand.** *Actions > Release packaging > Run workflow* with the tag field empty builds all the packages from the chosen branch with the version in the repository and keeps them as workflow artifacts: nothing is released or pushed. Filling the tag field (e.g. `v4.1.0`) does the same as pushing that tag (stamping, release and image push) for a tag you want to re-package.
 
+To build only some installers, fill **platforms** with a comma-separated list of `macos-arm64`, `macos-x64`, `windows-x64`, `linux-x64`, `linux-arm64` (default `all`), for example `linux-x64` to retry the Linux build. Untick **docker** to skip the image. The wheel is always built. With a tag, the new files are added to the existing release: files with the same name are replaced, the others stay, and `SHA256SUMS.txt` keeps the lines of the files that were not rebuilt (it is re-signed, so the `.asc` files of the rebuilt ones are replaced too).
+
 ## Building locally
 
 ### Wheel and Docker image
