@@ -112,8 +112,9 @@ class S:
         size = 118 if len(name) <= 14 else (96 if len(name) <= 18 else 80)
         self.add(f'<text x="116" y="{300 + (0 if size > 90 else 10)}" font-family="{FONT_MONO}" font-weight="700" font-size="{size}" fill="{self.m}" letter-spacing="-3">{name}</text>')
         self.add(f'<text x="122" y="378" font-family="{FONT}" font-weight="600" font-size="44" fill="{INK}">{role}</text>')
-        self.add(f'<rect x="122" y="430" width="{len("A plugin for YSocial") * 17 + 60}" height="52" rx="26" fill="{self.l}"/><circle cx="152" cy="456" r="10" fill="{self.m}"/>'
-                 f'<text x="174" y="466" font-family="{FONT}" font-weight="600" font-size="26" fill="{INK}">A plugin for YSocial</text>')
+        chip = CHIPS.get(name, "A plugin for YSocial")
+        self.add(f'<rect x="122" y="430" width="{len(chip) * 17 + 60}" height="52" rx="26" fill="{self.l}"/><circle cx="152" cy="456" r="10" fill="{self.m}"/>'
+                 f'<text x="174" y="466" font-family="{FONT}" font-weight="600" font-size="26" fill="{INK}">{chip}</text>')
         self.add('</svg>')
         out = "\n".join(self.o); self.o = o
         return out
@@ -133,6 +134,9 @@ def i_clock(x, y, s, c): return f'<circle cx="{x}" cy="{y}" r="{s * .9}" fill="n
 def i_plus(x, y, s, c): return f'<path d="M{x - s * .7},{y} L{x + s * .7},{y} M{x},{y - s * .7} L{x},{y + s * .7}" stroke="{c}" stroke-width="{s * .3}" stroke-linecap="round"/>'
 def i_at(x, y, s, c): return f'<text x="{x}" y="{y + s * .55}" text-anchor="middle" font-family="{FONT}" font-weight="700" font-size="{s * 1.7}" fill="{c}">@</text>'
 def i_img(x, y, s, c): return f'<rect x="{x - s}" y="{y - s * .75}" width="{s * 2}" height="{s * 1.5}" rx="{s * .2}" fill="{c}"/><circle cx="{x - s * .4}" cy="{y - s * .25}" r="{s * .2}" fill="#fff"/><path d="M{x - s},{y + s * .75} L{x - s * .2},{y} L{x + s * .3},{y + s * .5} L{x + s * .6},{y + s * .15} L{x + s},{y + s * .75}Z" fill="#fff" fill-opacity=".9"/>'
+
+
+CHIPS = {"plugin-registry": "The catalog of YSocial plugins"}
 
 
 # scenes ---------------------------------------------------------------------
@@ -272,6 +276,27 @@ def sc_training(s):
     s.add(f'<rect x="1390" y="120" width="840" height="22" rx="11" fill="{s.l}"/><rect x="1390" y="120" width="560" height="22" rx="11" fill="{s.m}"/>')
 
 
+def sc_registry(s):
+    x, y, w, h = 1560, 80, 560, 440
+    s.add(f'<g filter="url(#sh)"><rect x="{x}" y="{y}" width="{w}" height="{h}" rx="26" fill="#fff" stroke="{s.m}" stroke-width="5"/></g>')
+    s.add(f'<rect x="{x}" y="{y}" width="{w}" height="62" rx="26" fill="{s.l}"/><rect x="{x}" y="{y + 36}" width="{w}" height="26" fill="{s.l}"/>')
+    s.add(f'<text x="{x + 30}" y="{y + 42}" font-family="{FONT_MONO}" font-weight="700" font-size="28" fill="{s.d}">registry.json</text>')
+    cols = [s.m, "#7c6ff0", "#f59e5b", "#3aa675", "#e0566f"]
+    for i, c in enumerate(cols):
+        yy = y + 100 + i * 66
+        s.add(f'<path d="{hexpath(x + 56, yy + 20, 26)}" fill="{mix(c, "w", .75)}" stroke="{c}" stroke-width="4" stroke-linejoin="round"/>')
+        s.add(f'<rect x="{x + 100}" y="{yy + 4}" width="{[230, 280, 200, 250, 210][i]}" height="14" rx="7" fill="{c}"/>')
+        s.add(f'<rect x="{x + 100}" y="{yy + 26}" width="{[330, 300, 360, 280, 320][i]}" height="10" rx="5" fill="#cfdde1"/>')
+        s.add(i_check(x + w - 52, yy + 20, 16, "#3aa675"))
+    for i, (px, py, c) in enumerate([(1330, 150, "#7c6ff0"), (1280, 300, "#f59e5b"), (1340, 450, "#3aa675")]):
+        s.add(f'<g filter="url(#sh)"><path d="{hexpath(px, py, 56)}" fill="#fff" stroke="{c}" stroke-width="6" stroke-linejoin="round"/></g>')
+        s.add(f'<path d="M{px - 22},{py - 4} L{px - 2},{py - 4} M{px - 22},{py + 14} L{px + 18},{py + 14}" stroke="{c}" stroke-width="8" stroke-linecap="round"/>')
+        s.arrow(px + 62, py, x - 12, y + 140 + i * 110, col=c)
+    s.node(2290, 300, 82, main=s.d)
+    s.arrow(x + w + 10, 300, 2200, 300, col=s.m)
+    s.add(f'<text x="2290" y="425" text-anchor="middle" font-family="{FONT}" font-weight="700" font-size="24" fill="{s.d}" fill-opacity=".8">installs</text>')
+
+
 PLUGINS = {
     "YClient": ("#2f8fa3", "Microblogging · client side", sc_client),
     "YServer": ("#2f8fa3", "Microblogging · server side", sc_server),
@@ -285,6 +310,7 @@ PLUGINS = {
     "frontend_adds-on": ("#2b9be0", "Add-ons for the interface", sc_frontend),
     "ScenarioDesign": ("#5b4fd1", "Design scenarios before a run", sc_scenario),
     "TrainingModules": ("#2e9e6a", "Training courses on YSocial", sc_training),
+    "plugin-registry": ("#0f8b8d", "Where plugins are listed", sc_registry),
 }
 
 if __name__ == "__main__":
