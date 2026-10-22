@@ -44,6 +44,10 @@ fn default_home_path() -> PathBuf {
 fn new_cmd<S: AsRef<std::ffi::OsStr>>(program: S) -> Command {
     #[allow(unused_mut)]
     let mut c = Command::new(program);
+    // The Linux AppImage runtime exports PYTHONHOME/PYTHONPATH pointing into its own mount
+    // (/tmp/.mount_*/usr). Inherited by uv and by YSocial's virtualenv, they make that Python
+    // fail at start ("No module named 'encodings'"). Nothing we launch should use them.
+    c.env_remove("PYTHONHOME").env_remove("PYTHONPATH");
     #[cfg(windows)]
     {
         use std::os::windows::process::CommandExt;
