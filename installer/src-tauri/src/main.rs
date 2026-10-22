@@ -298,6 +298,13 @@ async fn install(app: AppHandle, home: String, toxicity: bool) -> Result<(), Str
         base(&mut c);
         run_step(&app, "Installing Python", &mut c)?;
 
+        // A previous attempt that stopped half way leaves runtime/venv behind, and recent uv
+        // refuses to create a venv over an existing directory ("exit status 2" on every retry).
+        // The venv holds no user data (experiments live in the data folder), so start clean.
+        if venv.exists() {
+            let _ = app.emit("progress", "Removing a leftover environment from a previous attempt");
+            std::fs::remove_dir_all(&venv).map_err(|e| format!("Cannot remove the old environment: {e}"))?;
+        }
         let mut c = new_cmd(&uv);
         c.args(["venv", "--seed", "--python", PYTHON_VERSION]).arg(&venv);
         base(&mut c);

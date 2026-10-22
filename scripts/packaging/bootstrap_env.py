@@ -51,6 +51,8 @@ def bootstrap(
     t0 = time.time()
     run([uv, "python", "install", PYTHON_VERSION], env)
     # --seed: plugins are installed with `python -m pip` (see external_runtime)
+    if venv.exists():
+        shutil.rmtree(venv)  # leftover of an interrupted run: recent uv refuses to reuse it
     run([uv, "venv", "--seed", "--python", PYTHON_VERSION, venv], env)
     py = venv / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
     cmd = [uv, "pip", "install", "--python", py]
