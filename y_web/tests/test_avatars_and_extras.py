@@ -123,7 +123,9 @@ def test_download_reports_progress(tmp_path):
 def test_get_state_percent_and_paused(monkeypatch):
     monkeypatch.setattr(av, "avatars_ready", lambda: False)
     monkeypatch.setattr(
-        av, "_state", {"status": "downloading", "error": None, "bytes": 25, "total": 100, "files": 7}
+        av,
+        "_state",
+        {"status": "downloading", "error": None, "bytes": 25, "total": 100, "files": 7},
     )
     av._paused.clear()
     assert av.get_state()["percent"] == 25 and av.get_state()["status"] == "downloading"
@@ -142,7 +144,9 @@ def test_pause_blocks_the_download_until_resumed(tmp_path):
     archive = tmp_path / "a.tar.gz"
     archive.write_bytes(_make_archive(3))
     av._paused.set()
-    t = threading.Thread(target=av._download, args=(archive.as_uri(), str(tmp_path / "out")))
+    t = threading.Thread(
+        target=av._download, args=(archive.as_uri(), str(tmp_path / "out"))
+    )
     t.start()
     time.sleep(0.5)
     assert t.is_alive() and not (tmp_path / "out" / "0.png").exists()

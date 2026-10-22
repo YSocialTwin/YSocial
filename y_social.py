@@ -170,7 +170,9 @@ def _start_windows_stop_watcher():
 
     stop_file = os.path.join(get_home_path(), "ysocial.stop")
     try:
-        os.remove(stop_file)  # a stale request from an earlier run must not stop this one
+        os.remove(
+            stop_file
+        )  # a stale request from an earlier run must not stop this one
     except OSError:
         pass
     try:

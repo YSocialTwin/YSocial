@@ -220,7 +220,9 @@ def ensure_avatars(
             if background:
                 time.sleep(_START_DELAY if delay is None else delay)
             last = None
-            for attempt in range(3):  # a dropped connection restarts; images on disk are skipped
+            for attempt in range(
+                3
+            ):  # a dropped connection restarts; images on disk are skipped
                 try:
                     _download(
                         url,
