@@ -55,7 +55,9 @@ def test_empty_enabled_values_and_missing_recommenders_are_restored(tmp_path):
 def test_existing_values_and_extra_rows_are_left_alone(tmp_path):
     db = _stale_copy(tmp_path)
     conn = sqlite3.connect(db)
-    conn.execute("UPDATE content_recsys SET enabled = 'Standard' WHERE name = 'Jaccard'")
+    conn.execute(
+        "UPDATE content_recsys SET enabled = 'Standard' WHERE name = 'Jaccard'"
+    )
     conn.execute(
         "UPDATE content_recsys SET enabled = 'Standard' WHERE name = 'ReverseChrono'"
     )
