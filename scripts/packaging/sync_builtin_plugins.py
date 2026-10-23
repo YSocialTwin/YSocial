@@ -168,10 +168,10 @@ def main(argv=None) -> int:
                 # What matters for a release is the plugin list, not the registry commit:
                 # a commit that only touches documentation (README, banner...) leaves the
                 # list identical and must not fail the gate. Compare format and content.
-                same = (
-                    payload["schema_version"] == current().get("schema_version")
-                    and plugins_hash(payload["plugins"])
-                    == plugins_hash(current().get("plugins", []))
+                same = payload["schema_version"] == current().get(
+                    "schema_version"
+                ) and plugins_hash(payload["plugins"]) == plugins_hash(
+                    current().get("plugins", [])
                 )
                 if same and not verify():
                     note = ""
@@ -180,7 +180,9 @@ def main(argv=None) -> int:
                             f" (registry main is at {commit[:7]}, the copy records "
                             f"{str(recorded)[:7]}: no change to the plugin list)"
                         )
-                    print(f"OK: built-in plugin list is in sync with the registry main{note}")
+                    print(
+                        f"OK: built-in plugin list is in sync with the registry main{note}"
+                    )
                     return 0
             elif render(payload, commit) == TARGET.read_text(encoding="utf-8"):
                 print(f"OK: builtin_plugins.json is in sync with {commit[:7]}")
