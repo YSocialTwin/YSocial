@@ -688,46 +688,9 @@ def _forum_resolve_back_url(exp_id):
 # ---------------------------------------------------------------------------
 # Frontend UI settings — loaded per experiment for public-facing pages
 # ---------------------------------------------------------------------------
-_UI_DEFAULTS = {
-    "interactions_enabled": True,
-    "interaction_post": True,
-    "interaction_comment": True,
-    "interaction_like": True,
-    "interaction_dislike": True,
-    "interaction_share": True,
-    "annotations_enabled": True,
-    "annotation_emotions": True,
-    "annotation_topics": True,
-    "annotation_sentiment": True,
-    "annotation_toxicity": True,
-    "annotation_agent_type": True,
-    "annotation_author_type": True,
-    "show_post_time": True,
-    "show_suggested_friends": True,
-    "show_trending_hashtags": True,
-    "show_recsys_info": False,
-    "show_annotation_stats": False,
-    "language": "",
-    "language_switch_allowed": False,
-    "notifications_menu": True,
-    "default_content_recsys": "",
-    "default_follow_recsys": "",
-    "profile_topics_box": True,
-    "onboarding_enabled": True,
-    "infinite_scroll_enabled": True,
-    "posts_per_page": 10,
-    "default_forum_feed_type": "new",
-    "default_photo_feed_tab": "for_you",
-    # FilterBubble (Personalized Feed) parameters
-    "filter_bubble_alpha": 2.0,
-    "filter_bubble_beta": 0.0,
-    "filter_bubble_gamma": 0.0,
-    "filter_bubble_lr": 0.05,
-    "filter_bubble_sort": "score",
-    "filter_bubble_wr": 1.0,
-    "filter_bubble_wc": 1.5,
-    "filter_bubble_ws": 2.0,
-}
+from y_web.src.experiment.frontend_defaults import (  # noqa: E402
+    DEFAULT_SETTINGS as _UI_DEFAULTS,
+)
 
 
 def _load_ui_settings(exp_id: int) -> dict:
