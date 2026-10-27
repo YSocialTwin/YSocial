@@ -37,6 +37,7 @@ from sqlalchemy import select
 
 from y_web import db  # , app
 from y_web.i18n import gettext as _
+from y_web.src.im import is_im_experiment
 from y_web.src.content.avatars import normalize_forum_avatar_mode
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
@@ -1500,7 +1501,13 @@ def reset_hpc_experiment(uid):
         base_dir = get_writable_path()
         exp_folder = _get_experiment_folder(base_dir, exp, _get_database_type())
 
-        deleted_count, failed_paths = clear_experiment_log_files(exp_folder)
+        if is_im_experiment(exp):
+            # the inputs (news snapshot, events, topic catalog) are .jsonl/.json files: keep them
+            from y_web.src.im.clone import clear_im_run_artifacts
+
+            deleted_count, failed_paths = clear_im_run_artifacts(exp_folder)
+        else:
+            deleted_count, failed_paths = clear_experiment_log_files(exp_folder)
         if failed_paths:
             for failed_path in failed_paths:
                 current_app.logger.warning(f"Could not delete log file {failed_path}")

@@ -5267,6 +5267,107 @@ def _matrix_describe_experiment_copy_failure(source_exp):
     return None
 
 
+def _create_im_experiment_copy(
+    source_exp, new_exp_name, exp_group="", config_variations=None, exp_descr=None
+):
+    """Clone an instant messaging experiment: inputs only, no database, state or logs (plan, 5.6)."""
+    from y_web.src.im.clone import copy_im_folder, new_uid, rewrite_server_config
+    from y_web.src.system.path_utils import get_writable_path
+
+    if config_variations:
+        current_app.logger.warning(
+            "Configuration variations are not supported for instant messaging experiments"
+        )
+        return False
+    if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
+        return False
+
+    suggested_port = get_suggested_port()
+    if not suggested_port:
+        return False
+    base = os.path.join(get_writable_path(), "y_web", "experiments")
+    source_parts = source_exp.db_name.split(os.sep)
+    if len(source_parts) < 2:
+        return False
+    source_folder = os.path.join(base, source_parts[1])
+    if not os.path.isdir(source_folder):
+        return False
+
+    uid = new_uid()
+    new_folder = os.path.join(base, uid)
+    new_db_name = f"experiments{os.sep}{uid}{os.sep}database_server.db"
+    try:
+        copy_im_folder(source_folder, new_folder)
+        rewrite_server_config(
+            new_folder,
+            new_exp_name,
+            os.path.join(new_folder, "database_server.db"),
+            new_folder + os.sep,
+        )
+    except Exception:
+        shutil.rmtree(new_folder, ignore_errors=True)
+        raise
+
+    new_exp = Exps(
+        exp_name=new_exp_name,
+        prompt_language=source_exp.prompt_language,
+        platform_type=source_exp.platform_type,
+        db_name=new_db_name,
+        owner=current_user.username,
+        exp_descr=exp_descr if exp_descr is not None else source_exp.exp_descr,
+        status=0,
+        running=0,
+        port=suggested_port,
+        server=source_exp.server,
+        annotations=source_exp.annotations,
+        llm_agents_enabled=source_exp.llm_agents_enabled,
+        simulator_type=source_exp.simulator_type,
+        exp_group=exp_group,
+    )
+    db.session.add(new_exp)
+    db.session.commit()
+
+    for link in db.session.scalars(select(Exp_Topic).filter_by(exp_id=source_exp.idexp)).all():
+        db.session.add(Exp_Topic(exp_id=new_exp.idexp, topic_id=link.topic_id))
+    for link in db.session.scalars(
+        select(Population_Experiment).filter_by(id_exp=source_exp.idexp)
+    ).all():
+        db.session.add(
+            Population_Experiment(id_exp=new_exp.idexp, id_population=link.id_population)
+        )
+    db.session.commit()
+
+    for source_client in db.session.scalars(
+        select(Client).filter_by(id_exp=source_exp.idexp)
+    ).all():
+        new_client = Client(
+            name=source_client.name,
+            prompt_language=source_client.prompt_language,
+            descr=source_client.descr,
+            days=source_client.days,
+            llm=source_client.llm,
+            status=0,
+            id_exp=new_exp.idexp,
+            population_id=source_client.population_id,
+            pid=None,
+        )
+        db.session.add(new_client)
+        db.session.commit()
+        db.session.add(
+            Client_Execution(
+                client_id=new_client.id,
+                last_active_hour=-1,
+                last_active_day=-1,
+                expected_duration_rounds=max(int(source_client.days or 0), 0) * 24,
+            )
+        )
+    db.session.add(
+        Jupyter_instances(port=-1, notebook_dir="", exp_id=new_exp.idexp, status="stopped")
+    )
+    db.session.commit()
+    return True
+
+
 def _create_single_experiment_copy(
     source_exp, new_exp_name, exp_group="", config_variations=None, exp_descr=None
 ):
@@ -5283,6 +5384,11 @@ def _create_single_experiment_copy(
     Returns:
         bool: True if successful, False otherwise
     """
+    if is_im_experiment(source_exp):
+        return _create_im_experiment_copy(
+            source_exp, new_exp_name, exp_group, config_variations, exp_descr
+        )
+
     # Create new unique ID for the folder
     new_uid = str(uuid.uuid4()).replace("-", "_")
 
