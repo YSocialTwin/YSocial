@@ -150,6 +150,7 @@
     var aliases = {
         opinion_configuration_forum: 'opinion_configuration',
         opinion_configuration_hpc: 'opinion_configuration',
+        opinion_configuration_im: 'opinion_configuration',
         prompts_forum: 'prompts'
     };
     Object.keys(aliases).forEach(function (k) { pages[k] = pages[aliases[k]]; });

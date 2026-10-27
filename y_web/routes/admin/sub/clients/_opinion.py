@@ -20,6 +20,7 @@ from sqlalchemy import (
 
 from y_web import db
 from y_web.i18n import gettext as _
+from y_web.src.im import is_im_experiment
 from y_web.src.models import (
     AgeClass,
     Client,
@@ -37,9 +38,28 @@ from y_web.src.system.miscellanea import check_privileges
 from ._blueprint import DISTRIBUTION_SCALE_FACTOR, clientsr
 from ._crud import (
     _get_experiment_folder_name,
-    _get_experiment_mode,
     _opinion_dynamics_enabled_for_client_creation,
 )
+
+
+def _opinion_mode(exp):
+    """The opinion page family of an experiment: instant messaging has its own, the others follow their modality."""
+    if is_im_experiment(exp):
+        return "im"
+    if getattr(exp, "simulator_type", "Standard") == "HPC":
+        return "hpc"
+    return "forum" if exp.platform_type == "forum" else "standard"
+
+
+def _opinion_route(mode):
+    return f"clientsr.opinion_configuration_{mode}"
+
+
+def _population_file_name(exp, population):
+    """The population file of a client: IM keeps the population name as it is, the others drop the spaces."""
+    if is_im_experiment(exp):
+        return f"{population.name}.json"
+    return f"{population.name.replace(' ', '')}.json"
 
 
 def _opinion_configuration_internal(idexp, expected_mode):
@@ -58,38 +78,14 @@ def _opinion_configuration_internal(idexp, expected_mode):
         flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
 
-    actual_mode = (
-        "hpc"
-        if getattr(exp, "simulator_type", "Standard") == "HPC"
-        else ("forum" if exp.platform_type == "forum" else "standard")
-    )
+    actual_mode = _opinion_mode(exp)
     if actual_mode != expected_mode:
         flash(
             _("Opinion configuration route does not match the experiment modality."),
             "error",
         )
-        if actual_mode == "hpc":
-            return redirect(
-                url_for(
-                    "clientsr.opinion_configuration_hpc",
-                    idexp=idexp,
-                    client_id=client_id,
-                )
-            )
-        if actual_mode == "forum":
-            return redirect(
-                url_for(
-                    "clientsr.opinion_configuration_forum",
-                    idexp=idexp,
-                    client_id=client_id,
-                )
-            )
         return redirect(
-            url_for(
-                "clientsr.opinion_configuration_standard",
-                idexp=idexp,
-                client_id=client_id,
-            )
+            url_for(_opinion_route(actual_mode), idexp=idexp, client_id=client_id)
         )
 
     # Get client details
@@ -130,22 +126,13 @@ def _opinion_configuration_internal(idexp, expected_mode):
 
     # For HPC experiments, look for client_{client.name}-{population.name}.json
     # For standard experiments, look for {population.name}.json
-    if exp.simulator_type == "HPC":
-        population_file = os.path.join(
-            writable_base,
-            "y_web",
-            "experiments",
-            exp_folder,
-            f"{population.name.replace(' ', '')}.json",
-        )
-    else:
-        population_file = os.path.join(
-            writable_base,
-            "y_web",
-            "experiments",
-            exp_folder,
-            f"{population.name.replace(' ', '')}.json",
-        )
+    population_file = os.path.join(
+        writable_base,
+        "y_web",
+        "experiments",
+        exp_folder,
+        _population_file_name(exp, population),
+    )
 
     # Load age classes from database to map individual ages to age groups
     age_classes = db.session.scalars(select(AgeClass)).all()
@@ -267,6 +254,7 @@ def _opinion_configuration_internal(idexp, expected_mode):
         "standard": "admin/opinion_configuration.html",
         "forum": "admin/opinion_configuration_forum.html",
         "hpc": "admin/opinion_configuration_hpc.html",
+        "im": "admin/opinion_configuration_im.html",
     }[expected_mode]
 
     return render_template(
@@ -308,6 +296,13 @@ def opinion_configuration_hpc(idexp):
     return _opinion_configuration_internal(idexp, "hpc")
 
 
+@clientsr.route("/admin/opinion_configuration_im/<int:idexp>")
+@login_required
+def opinion_configuration_im(idexp):
+    """Display opinion configuration for an instant messaging experiment."""
+    return _opinion_configuration_internal(idexp, "im")
+
+
 @clientsr.route("/admin/opinion_configuration/<int:idexp>")
 @login_required
 def opinion_configuration(idexp):
@@ -320,23 +315,8 @@ def opinion_configuration(idexp):
         return redirect(url_for("experiments.settings"))
 
     client_id = request.args.get("client_id", type=int)
-    experiment_mode = _get_experiment_mode(exp)
-    if experiment_mode == "hpc":
-        return redirect(
-            url_for(
-                "clientsr.opinion_configuration_hpc", idexp=idexp, client_id=client_id
-            )
-        )
-    if experiment_mode == "forum":
-        return redirect(
-            url_for(
-                "clientsr.opinion_configuration_forum", idexp=idexp, client_id=client_id
-            )
-        )
     return redirect(
-        url_for(
-            "clientsr.opinion_configuration_standard", idexp=idexp, client_id=client_id
-        )
+        url_for(_opinion_route(_opinion_mode(exp)), idexp=idexp, client_id=client_id)
     )
 
 
@@ -508,11 +488,7 @@ def _resolve_opinion_submission_context(expected_mode):
         flash(_("Experiment not found."), "error")
         return None, redirect(url_for("experiments.settings"))
 
-    actual_mode = (
-        "hpc"
-        if getattr(exp, "simulator_type", "Standard") == "HPC"
-        else ("forum" if exp.platform_type == "forum" else "standard")
-    )
+    actual_mode = _opinion_mode(exp)
     if actual_mode != expected_mode:
         flash(
             _(
@@ -520,28 +496,8 @@ def _resolve_opinion_submission_context(expected_mode):
             ),
             "error",
         )
-        if actual_mode == "hpc":
-            return None, redirect(
-                url_for(
-                    "clientsr.opinion_configuration_hpc",
-                    idexp=idexp,
-                    client_id=client_id,
-                )
-            )
-        if actual_mode == "forum":
-            return None, redirect(
-                url_for(
-                    "clientsr.opinion_configuration_forum",
-                    idexp=idexp,
-                    client_id=client_id,
-                )
-            )
         return None, redirect(
-            url_for(
-                "clientsr.opinion_configuration_standard",
-                idexp=idexp,
-                client_id=client_id,
-            )
+            url_for(_opinion_route(actual_mode), idexp=idexp, client_id=client_id)
         )
 
     client = db.session.scalars(select(Client).filter_by(id=client_id)).first()
@@ -584,7 +540,7 @@ def _resolve_opinion_submission_context(expected_mode):
         "y_web",
         "experiments",
         exp_folder,
-        f"{population.name.replace(' ', '')}.json",
+        _population_file_name(exp, population),
     )
     if not os.path.exists(population_file):
         flash(
@@ -817,6 +773,57 @@ def _persist_hpc_opinion_dynamics(context):
         )
 
 
+def _persist_im_opinion_dynamics(context):
+    """Persist the opinion dynamics of an instant messaging client (IM's own keys, validated by its schema)."""
+    update_rule = request.form.get("update_rule", "bounded_confidence")
+    if update_rule not in ("bounded_confidence", "llm_evaluation"):
+        update_rule = "bounded_confidence"
+    if update_rule == "bounded_confidence":
+        parameters = {
+            "epsilon": float(request.form.get("bc_epsilon", "0.25")),
+            "mu": float(request.form.get("bc_mu", "0.5")),
+            "theta": float(request.form.get("bc_theta", "0")),
+            "cold_start": request.form.get("bc_cold_start", "neutral"),
+        }
+    else:
+        parameters = {
+            "cold_start": request.form.get("llm_cold_start", "neutral"),
+            "evaluation_scope": "interlocutor_only",
+        }
+    path = context["client_config_file"]
+    if not os.path.exists(path):
+        flash(
+            _(
+                "Client configuration file not found: %(client_config_file)s",
+                client_config_file=path,
+            ),
+            "warning",
+        )
+        return
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            client_config = json.load(handle)
+        block = client_config.get("opinion_dynamics")
+        block = block if isinstance(block, dict) else {}
+        block.update(
+            {
+                "enabled": True,
+                "model_name": update_rule,
+                "parameters": parameters,
+                "opinion_groups": _build_opinion_groups_dict(),
+            }
+        )
+        client_config["opinion_dynamics"] = block
+        with open(path, "w", encoding="utf-8") as handle:
+            json.dump(client_config, handle, indent=4)
+        flash(_("Opinion dynamics configuration saved successfully."), "success")
+    except (OSError, ValueError) as e:
+        flash(
+            _("Error updating client configuration: %(error)s", error=str(e)),
+            "warning",
+        )
+
+
 def _invalidate_opinion_evolution_cache_for_experiment(exp_id):
     """Clear opinion-evolution cache and stable samples for an experiment."""
     try:
@@ -970,6 +977,19 @@ def _set_hpc_opinion_distributions_internal():
     return redirect(url_for("experiments.experiment_details", uid=context["idexp"]))
 
 
+def _set_im_opinion_distributions_internal():
+    """Persist opinion distributions for instant messaging experiments."""
+    context, error_response = _resolve_opinion_submission_context("im")
+    if error_response is not None:
+        return error_response
+    save_error = _apply_opinion_distributions_to_population(context)
+    if save_error is not None:
+        return save_error
+    _persist_im_opinion_dynamics(context)
+    _invalidate_opinion_evolution_cache_for_experiment(int(context["idexp"]))
+    return redirect(url_for("experiments.experiment_details", uid=context["idexp"]))
+
+
 @clientsr.route("/admin/set_standard_opinion_distributions", methods=["POST"])
 @login_required
 def set_standard_opinion_distributions():
@@ -991,6 +1011,13 @@ def set_hpc_opinion_distributions():
     return _set_hpc_opinion_distributions_internal()
 
 
+@clientsr.route("/admin/set_im_opinion_distributions", methods=["POST"])
+@login_required
+def set_im_opinion_distributions():
+    """Persist opinion distributions for an instant messaging experiment."""
+    return _set_im_opinion_distributions_internal()
+
+
 @clientsr.route("/admin/set_opinion_distributions", methods=["POST"])
 @login_required
 def set_opinion_distributions():
@@ -1003,7 +1030,9 @@ def set_opinion_distributions():
         flash(_("Experiment not found."), "error")
         return redirect(url_for("experiments.settings"))
 
-    experiment_mode = _get_experiment_mode(exp)
+    experiment_mode = _opinion_mode(exp)
+    if experiment_mode == "im":
+        return set_im_opinion_distributions()
     if experiment_mode == "hpc":
         return set_hpc_opinion_distributions()
     if experiment_mode == "forum":
