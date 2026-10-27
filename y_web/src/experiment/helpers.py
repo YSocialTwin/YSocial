@@ -15,6 +15,7 @@ from sqlalchemy.orm import sessionmaker
 
 from y_web import db
 from y_web.src.experiment.schema import ensure_experiment_schema_for_uri
+from y_web.src.im import is_im_experiment
 from y_web.src.models import Exps, User_mgmt
 from y_web.src.system.path_utils import get_writable_path
 
@@ -134,7 +135,9 @@ def open_experiment_session(experiment: Exps):
         return None, None
 
     engine = create_engine(uri, pool_pre_ping=True)
-    if getattr(experiment, "platform_type", "") == "photo_sharing":
+    if is_im_experiment(experiment):
+        pass  # IM owns its schema: YWeb only reads it
+    elif getattr(experiment, "platform_type", "") == "photo_sharing":
         _ensure_photo_sharing_orm_tables(engine, uri)
     else:
         _ensure_experiment_orm_tables(engine)
