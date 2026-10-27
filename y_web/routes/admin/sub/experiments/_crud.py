@@ -45,6 +45,7 @@ from y_web.src.experiment.access import (
     user_can_view_experiment,
 )
 from y_web.src.experiment.helpers import ensure_experiment_user
+from y_web.src.im import is_im_experiment
 from y_web.src.external_runtime import runtime_installed_and_visible
 from y_web.src.hpc.population_backup import restore_population_for_hpc_client
 from y_web.src.models import (
@@ -677,6 +678,10 @@ def join_experiment(exp_id):
             flash(_("You are not allowed to access this experiment."), "error")
             return redirect("/admin/experiments")
 
+    if is_im_experiment(exp):
+        flash(_("The instant messaging viewer is not available yet."), "warning")
+        return redirect("/admin/experiments")
+
     user_id = current_user.id
     user_email = str(getattr(current_user, "email", "") or "")
     user_password = str(getattr(current_user, "password", "") or "")
@@ -761,6 +766,24 @@ def change_active_experiment(exp_id):
 
         # Register the experiment database dynamically
         from y_web.src.experiment.context import register_experiment_database
+
+        if is_im_experiment(exp):
+            # IM owns its database and has no YWeb participant row: nothing to bind or provision here
+            user_exp = (
+                db.session.query(User_Experiment)
+                .filter_by(user_id=admin_user_id, exp_id=exp_id)
+                .first()
+            )
+            if user_exp is None:
+                db.session.add(User_Experiment(user_id=admin_user_id, exp_id=exp_id))
+                db.session.commit()
+            flash(_("Experiment '%(exp_name)s' activated.", exp_name=exp.exp_name))
+            admin_user = db.session.scalars(
+                select(Admin_users).filter_by(username=uname)
+            ).first()
+            if admin_user:
+                login_user(admin_user, remember=True, force=True)
+            return redirect("/admin/dashboard")
 
         register_experiment_database(current_app, exp_id, exp.db_name)
 
@@ -1995,6 +2018,17 @@ def create_experiment():
         )
         return redirect(url_for("experiments.settings"))
 
+    if platform_type == "instant_messaging" and not repo_availability.get(
+        "instant_messaging"
+    ):
+        flash(
+            _(
+                "Instant messaging experiments are unavailable because YInstantMessaging is not present."
+            ),
+            "error",
+        )
+        return redirect(url_for("experiments.settings"))
+
     if platform_type == "microblogging":
         if simulator_type == "HPC":
             if not repo_availability["hpc"]:
@@ -2020,7 +2054,7 @@ def create_experiment():
                         "error",
                     )
                     return redirect(url_for("experiments.settings"))
-    elif platform_type == "photo_sharing":
+    elif platform_type in {"photo_sharing", "instant_messaging"}:
         simulator_type = "HPC"
 
     if platform_type == "forum":
@@ -2116,11 +2150,29 @@ def create_experiment():
         sentiment_annotation = False
         emotion_annotation = False
 
+    if platform_type == "instant_messaging":
+        # IM has its own annotation and analytics model; the YSocial toggles do not apply (plan, 5.2)
+        opinion_dynamics_enabled = False
+        toxicity_annotation = False
+        perspective_api = None
+        sentiment_annotation = False
+        emotion_annotation = False
+        redis_enabled = False
+        if is_remote:
+            flash(_("Remote instant messaging experiments are not supported."), "error")
+            return redirect(url_for("experiments.settings"))
+        if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
+            current_app.logger.info(
+                "Instant messaging experiments use SQLite even if the platform uses PostgreSQL"
+            )
+
     topics = request.form.get("tags").split(",")
 
     # identify db type
     db_type = "sqlite"
-    if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
+    if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith(
+        "postgresql"
+    ) and platform_type != "instant_messaging":
         db_type = "postgresql"
 
     from y_web.src.system.path_utils import get_writable_path
@@ -2135,7 +2187,9 @@ def create_experiment():
     db_uri = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}database_server.db"
 
     # copy the clean database to the experiments folder
-    if platform_type in {"microblogging", "forum", "photo_sharing"}:
+    if platform_type == "instant_messaging":
+        pass  # IM creates its own database on first server start: nothing to copy or ensure
+    elif platform_type in {"microblogging", "forum", "photo_sharing"}:
         if db_type == "sqlite":
             # Only Standard experiments get a pre-created database
             # HPC experiments: database is created automatically by the server on first startup
@@ -2269,7 +2323,24 @@ def create_experiment():
                 "password": parsed_uri.password or "password",
             }
 
-        if platform_type == "photo_sharing":
+        if platform_type == "instant_messaging":
+            from ._im import ImConfigError, generate_im_server_config
+
+            try:
+                config = generate_im_server_config(
+                    exp_name=exp_name,
+                    db_uri=db_uri,
+                    data_path=data_path,
+                    is_remote=is_remote,
+                    num_days=request.form.get("im_num_days"),
+                    start_date=request.form.get("im_start_date"),
+                    ticks_per_round=request.form.get("im_ticks_per_round"),
+                )
+            except ImConfigError as exc:
+                shutil.rmtree(data_path, ignore_errors=True)
+                flash(_("Invalid instant messaging settings: %(why)s", why=str(exc)), "error")
+                return redirect(url_for("experiments.settings"))
+        elif platform_type == "photo_sharing":
             config = generate_photo_sharing_config(
                 exp_name=exp_name,
                 db_type=db_type,
@@ -2338,6 +2409,7 @@ def create_experiment():
                 f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}prompts_ygram.json",
                 prompt_language,
             )
+        # instant messaging: the prompt pack prompts_im.json is added with the clients (Phase 5)
     else:
         with open(
             f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}config_server.json",
@@ -2675,6 +2747,20 @@ def start_experiment(uid):
     # check if the experiment is already running
     if exp.running == 1:
         return experiment_details(uid)
+
+    if is_im_experiment(exp):
+        from y_web.src.hpc.client import _resolve_hpc_experiment_folder
+        from y_web.src.im.validation import ImValidationError, validate_im_folder
+
+        try:
+            validate_im_folder(_resolve_hpc_experiment_folder(exp))
+        except ImValidationError as exc:
+            flash(
+                _("The instant messaging configuration is not valid: %(why)s")
+                % {"why": "; ".join(exc.messages[:5])},
+                "error",
+            )
+            return experiment_details(uid)
 
     # update the experiment status
     exp.running = 1

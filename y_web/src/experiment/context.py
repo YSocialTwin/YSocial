@@ -29,6 +29,19 @@ def get_db_bind_key_for_exp(exp_id):
     return f"db_exp_{exp_id}"
 
 
+def _is_im_experiment_id(exp_id) -> bool:
+    """Whether ``exp_id`` is an instant messaging experiment (False when it cannot be told)."""
+    from y_web.src.im import is_im_platform
+
+    try:
+        from y_web.src.models import Exps
+
+        platform = db.session.scalar(select(Exps.platform_type).filter_by(idexp=exp_id))
+    except Exception:
+        return False
+    return is_im_platform(platform)
+
+
 def register_experiment_database(app, exp_id, db_name):
     """
     Register an experiment database in the app's SQLALCHEMY_BINDS.
@@ -38,6 +51,10 @@ def register_experiment_database(app, exp_id, db_name):
         exp_id: Experiment ID
         db_name: Database name or path (e.g., "experiments/uid/database_server.db")
     """
+    # An instant messaging experiment owns its database: never bind it as ``db_exp`` nor touch its schema.
+    if _is_im_experiment_id(exp_id):
+        return
+
     bind_key = get_db_bind_key_for_exp(exp_id)
 
     # Use get_writable_path to handle both development and PyInstaller modes

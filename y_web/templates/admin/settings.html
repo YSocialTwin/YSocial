@@ -101,6 +101,7 @@
                                                 <select id="platform_type_select" name="platform_type" class="w-100">
                                                     <option value="microblogging">{{ _('Microblogging (i.e., X/BlueSky)') }}</option>
                                                     <option value="photo_sharing" {% if not repo_availability.photo_sharing %}disabled{% endif %}>{{ _('Photo Sharing (e.g., Instagram)') }}{% if not repo_availability.photo_sharing %} - {{ _('Unavailable') }}{% endif %}</option>
+                                                    <option value="instant_messaging" {% if not repo_availability.instant_messaging %}disabled{% endif %}>{{ _('Instant Messaging (e.g., Telegram)') }}{% if not repo_availability.instant_messaging %} - {{ _('Unavailable') }}{% endif %}</option>
                                                     <option value="forum" {% if not repo_availability.forum %}disabled{% endif %}>{{ _('Forum (i.e., Reddit)') }}{% if not repo_availability.forum %} - {{ _('Unavailable') }}{% endif %}</option>
                                                 </select>
                                             </div>
@@ -183,6 +184,27 @@
                                         </div>
 
 
+                                        </span>
+                                    </div>
+
+                                    <!-- Instant messaging settings (shown only for the instant messaging platform) -->
+                                    <div id="im-config-box" class="box-line" style="display: none;">
+                                        <span class="left">{{ _('Instant Messaging') }}</span>
+                                        <span class="right ys-w-70">
+                                            <div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 16px;">
+                                                <div class="ys-mb-12">
+                                                    <label class="ys-field-label">{{ _('Number of days') }}</label>
+                                                    <input type="number" name="im_num_days" value="7" class="input w-100" min="1" max="3650">
+                                                </div>
+                                                <div class="ys-mb-12">
+                                                    <label class="ys-field-label">{{ _('Start date') }}</label>
+                                                    <input type="date" name="im_start_date" value="" class="input w-100">
+                                                </div>
+                                                <div class="mb-0">
+                                                    <label class="ys-field-label">{{ _('Ticks per round') }}</label>
+                                                    <input type="number" name="im_ticks_per_round" value="12" class="input w-100" min="1" max="60">
+                                                </div>
+                                            </div>
                                         </span>
                                     </div>
 
