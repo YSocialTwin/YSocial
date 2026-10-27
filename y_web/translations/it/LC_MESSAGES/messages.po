@@ -12,7 +12,7 @@ msgstr ""
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: it\n"
 "Language-Team: it <LL@li.org>\n"
-"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -421,6 +421,9 @@ msgstr ""
 "impostazioni avanzate, visita la pagina dei dettagli del client dopo la "
 "creazione."
 
+msgid "A client with this name and population already exists."
+msgstr "Esiste già un client con questo nome e questa popolazione."
+
 msgid "A discussion thread."
 msgstr "Una discussione."
 
@@ -450,6 +453,9 @@ msgstr "Configurazione API"
 
 msgid "API Key"
 msgstr "Chiave API"
+
+msgid "API Key Environment Variable"
+msgstr "Variabile d'ambiente della chiave API"
 
 msgid "About"
 msgstr "Informazioni"
@@ -746,6 +752,9 @@ msgstr "Profilo di gioco di ruolo avanzato"
 msgid "Advanced Settings"
 msgstr "Impostazioni avanzate"
 
+msgid "Advanced Settings (JSON)"
+msgstr "Impostazioni avanzate (JSON)"
+
 msgid "Age"
 msgstr "Età"
 
@@ -785,11 +794,17 @@ msgstr "Archetipi degli agenti e transizioni"
 msgid "Agent Archetypes and Transitions (Optional)"
 msgstr "Archetipi degli agenti e transizioni (facoltativo)"
 
+msgid "Agent Behaviour"
+msgstr "Comportamento degli agenti"
+
 msgid "Agent Extensions"
 msgstr "Estensioni per agenti"
 
 msgid "Agent Features"
 msgstr "Caratteristiche degli agenti"
+
+msgid "Agent Memory"
+msgstr "Memoria degli agenti"
 
 msgid "Agent Memory (Run-Scoped)"
 msgstr "Memoria degli agenti (limitata all'esecuzione)"
@@ -2565,6 +2580,9 @@ msgstr "Crea un client di agenti ad hoc"
 msgid "Create Agent"
 msgstr "Crea agente"
 
+msgid "Create Client"
+msgstr "Crea client"
+
 msgid "Create Empty Population"
 msgstr "Crea una popolazione vuota"
 
@@ -2579,6 +2597,9 @@ msgstr "Crea un nuovo client per forum"
 
 msgid "Create New HPC Client"
 msgstr "Crea un nuovo client HPC"
+
+msgid "Create New Instant Messaging Client"
+msgstr "Crea nuovo client di messaggistica istantanea"
 
 msgid "Create New Photo Sharing Client"
 msgstr "Crea un nuovo client per condivisione di foto"
@@ -5198,6 +5219,10 @@ msgstr "Messaggistica istantanea"
 msgid "Instant Messaging (e.g., Telegram)"
 msgstr "Messaggistica istantanea (es. Telegram)"
 
+#, python-format
+msgid "Instant messaging client '%(name)s' created successfully"
+msgstr "Client di messaggistica istantanea '%(name)s' creato con successo"
+
 msgid ""
 "Instant messaging experiments are unavailable because YInstantMessaging "
 "is not present."
@@ -5344,6 +5369,13 @@ msgstr "Valori dei limiti non validi. Devono essere numeri."
 msgid "Invalid check interval value"
 msgstr "Valore dell'intervallo di controllo non valido"
 
+msgid "Invalid client name."
+msgstr "Nome del client non valido."
+
+#, python-format
+msgid "Invalid client settings: %(why)s"
+msgstr "Impostazioni del client non valide: %(why)s"
+
 msgid "Invalid download path."
 msgstr "Percorso di download non valido."
 
@@ -5405,6 +5437,10 @@ msgstr "Formato dei parametri non valido. Deve essere JSON valido."
 
 msgid "Invalid population IDs provided."
 msgstr "ID popolazione non validi."
+
+#, python-format
+msgid "Invalid population: %(why)s"
+msgstr "Popolazione non valida: %(why)s"
 
 msgid "Invalid port number"
 msgstr "Numero di porta non valido"
@@ -5604,6 +5640,9 @@ msgstr "Parametro lambda"
 
 msgid "Language"
 msgstr "Lingua"
+
+msgid "Language Model"
+msgstr "Modello linguistico"
 
 msgid "Language Spoken"
 msgstr "Lingua parlata"
@@ -5949,6 +5988,9 @@ msgstr ""
 msgid "Matrix"
 msgstr "Matrix"
 
+msgid "Max Concurrency"
+msgstr "Concorrenza massima"
+
 msgid "Max HPC experiments per group must be at least 1, or choose unlimited"
 msgstr ""
 "Il numero massimo di esperimenti HPC per gruppo deve essere almeno 1, "
@@ -6054,6 +6096,11 @@ msgstr "Post che ti menzionano"
 
 msgid "Merge Populations"
 msgstr "Unisci le popolazioni"
+
+msgid ""
+"Merged into the client configuration and validated against the instant "
+"messaging schema."
+msgstr "Unite alla configurazione del client e validate rispetto allo schema della messaggistica istantanea."
 
 msgid "Merged population type must match the selected population platform type."
 msgstr ""
@@ -6257,6 +6304,11 @@ msgstr "Nome e ore sono obbligatori."
 msgid "Name is required"
 msgstr "Il nome è obbligatorio"
 
+msgid ""
+"Name of the environment variable holding the key; the key itself is never"
+" written to the configuration."
+msgstr "Nome della variabile d'ambiente che contiene la chiave; la chiave non viene mai scritta nella configurazione."
+
 msgid "Name:"
 msgstr "Nome:"
 
@@ -6375,6 +6427,9 @@ msgstr "Nuovo client HPC"
 
 msgid "New Hashtags"
 msgstr "Nuovi hashtag"
+
+msgid "New Instant Messaging Client"
+msgstr "Nuovo client di messaggistica istantanea"
 
 msgid "New Language"
 msgstr "Nuova lingua"
@@ -7057,6 +7112,9 @@ msgstr "Tendenze dei gruppi di opinione"
 msgid "Opinion Groups"
 msgstr "Gruppi di opinione"
 
+msgid "Opinion Model"
+msgstr "Modello di opinione"
+
 msgid "Opinion Modeling"
 msgstr "Modellazione delle opinioni"
 
@@ -7524,6 +7582,12 @@ msgid ""
 msgstr ""
 "Il tipo di username della popolazione '%(pop_type)s' non è compatibile "
 "con la piattaforma 'forum' dell'esperimento."
+
+#, python-format
+msgid ""
+"Population Username Type '%(pop_type)s' is incompatible with experiment "
+"platform 'instant_messaging'."
+msgstr "Il tipo di username della popolazione '%(pop_type)s' non è compatibile con la piattaforma 'instant_messaging' dell'esperimento."
 
 #, python-format
 msgid ""
@@ -8038,6 +8102,12 @@ msgstr "Casuale"
 
 msgid "Random Network (Erdős-Rényi)"
 msgstr "Rete casuale (Erdős-Rényi)"
+
+msgid "Random Seed"
+msgstr "Seed casuale"
+
+msgid "Random if empty"
+msgstr "Casuale se vuoto"
 
 msgid "Range: 0-1, Default: 0"
 msgstr "Intervallo: 0-1, predefinito: 0"
@@ -9104,6 +9174,9 @@ msgstr "Controlli del server"
 msgid "Server Logs Analysis"
 msgstr "Analisi dei log del server"
 
+msgid "Server Port"
+msgstr "Porta del server"
+
 msgid "Server Settings"
 msgstr "Impostazioni del server"
 
@@ -9638,6 +9711,9 @@ msgstr ""
 msgid "Stress Distribution"
 msgstr "Distribuzione dello stress"
 
+msgid "Stress and Reward"
+msgstr "Stress e ricompensa"
+
 msgid "Stress/Reward"
 msgstr "Stress/ricompensa"
 
@@ -10086,6 +10162,11 @@ msgid ""
 "again."
 msgstr "L'esperimento esiste già. Controlla il nome dell'esperimento e riprova."
 
+msgid ""
+"The experiment already has a topic catalog that differs from the current "
+"topics: it was kept, so that existing runs can resume."
+msgstr "L'esperimento ha già un catalogo dei topic diverso dai topic attuali: è stato mantenuto, così che le esecuzioni esistenti possano riprendere."
+
 msgid "The experiment needs to be activated first."
 msgstr "L'esperimento deve essere prima attivato."
 
@@ -10132,6 +10213,9 @@ msgstr "La pagina che cerchi non esiste."
 #, python-format
 msgid "The password must have at least %(n)s characters."
 msgstr "La password deve avere almeno %(n)s caratteri."
+
+msgid "The population is empty."
+msgstr "La popolazione è vuota."
 
 msgid "The post text."
 msgstr "Il testo del post."
@@ -10308,6 +10392,9 @@ msgstr ""
 "Questo esperimento non ha ancora client, quindi l'analisi dei log dei "
 "client non è disponibile finché non ne viene creato uno."
 
+msgid "This experiment is not an instant messaging experiment."
+msgstr "Questo esperimento non è un esperimento di messaggistica istantanea."
+
 msgid ""
 "This is an experimental simulator that guarantees higher simulation "
 "scalability at the cost of more fine-grained configuration and setting "
@@ -10437,6 +10524,9 @@ msgstr "Rapporto follower nella timeline"
 
 msgid "Timeline Ratio:"
 msgstr "Rapporto della timeline:"
+
+msgid "Timeout (seconds)"
+msgstr "Timeout (secondi)"
 
 msgid "Timezone used by real-time mode (experiment-wide across all clients)."
 msgstr ""
@@ -11961,6 +12051,9 @@ msgstr "più client"
 
 msgid "never"
 msgstr "mai"
+
+msgid "no model, for tests"
+msgstr "nessun modello, per i test"
 
 msgid "none published"
 msgstr "nessuna pubblicata"

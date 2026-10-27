@@ -392,6 +392,9 @@ msgid ""
 " visit the client details page after creation."
 msgstr ""
 
+msgid "A client with this name and population already exists."
+msgstr ""
+
 msgid "A discussion thread."
 msgstr ""
 
@@ -418,6 +421,9 @@ msgid "API Configuration"
 msgstr ""
 
 msgid "API Key"
+msgstr ""
+
+msgid "API Key Environment Variable"
 msgstr ""
 
 msgid "About"
@@ -690,6 +696,9 @@ msgstr ""
 msgid "Advanced Settings"
 msgstr ""
 
+msgid "Advanced Settings (JSON)"
+msgstr ""
+
 msgid "Age"
 msgstr ""
 
@@ -729,10 +738,16 @@ msgstr ""
 msgid "Agent Archetypes and Transitions (Optional)"
 msgstr ""
 
+msgid "Agent Behaviour"
+msgstr ""
+
 msgid "Agent Extensions"
 msgstr ""
 
 msgid "Agent Features"
+msgstr ""
+
+msgid "Agent Memory"
 msgstr ""
 
 msgid "Agent Memory (Run-Scoped)"
@@ -2286,6 +2301,9 @@ msgstr ""
 msgid "Create Agent"
 msgstr ""
 
+msgid "Create Client"
+msgstr ""
+
 msgid "Create Empty Population"
 msgstr ""
 
@@ -2299,6 +2317,9 @@ msgid "Create New Forum Client"
 msgstr ""
 
 msgid "Create New HPC Client"
+msgstr ""
+
+msgid "Create New Instant Messaging Client"
 msgstr ""
 
 msgid "Create New Photo Sharing Client"
@@ -4678,6 +4699,10 @@ msgstr ""
 msgid "Instant Messaging (e.g., Telegram)"
 msgstr ""
 
+#, python-format
+msgid "Instant messaging client '%(name)s' created successfully"
+msgstr ""
+
 msgid ""
 "Instant messaging experiments are unavailable because YInstantMessaging "
 "is not present."
@@ -4813,6 +4838,13 @@ msgstr ""
 msgid "Invalid check interval value"
 msgstr ""
 
+msgid "Invalid client name."
+msgstr ""
+
+#, python-format
+msgid "Invalid client settings: %(why)s"
+msgstr ""
+
 msgid "Invalid download path."
 msgstr ""
 
@@ -4873,6 +4905,10 @@ msgid "Invalid parameters format. Must be valid JSON."
 msgstr ""
 
 msgid "Invalid population IDs provided."
+msgstr ""
+
+#, python-format
+msgid "Invalid population: %(why)s"
 msgstr ""
 
 msgid "Invalid port number"
@@ -5056,6 +5092,9 @@ msgid "Lambda parameter"
 msgstr ""
 
 msgid "Language"
+msgstr ""
+
+msgid "Language Model"
 msgstr ""
 
 msgid "Language Spoken"
@@ -5368,6 +5407,9 @@ msgstr ""
 msgid "Matrix"
 msgstr ""
 
+msgid "Max Concurrency"
+msgstr ""
+
 msgid "Max HPC experiments per group must be at least 1, or choose unlimited"
 msgstr ""
 
@@ -5462,6 +5504,11 @@ msgid "Mentioning Posts"
 msgstr ""
 
 msgid "Merge Populations"
+msgstr ""
+
+msgid ""
+"Merged into the client configuration and validated against the instant "
+"messaging schema."
 msgstr ""
 
 msgid "Merged population type must match the selected population platform type."
@@ -5650,6 +5697,11 @@ msgstr ""
 msgid "Name is required"
 msgstr ""
 
+msgid ""
+"Name of the environment variable holding the key; the key itself is never"
+" written to the configuration."
+msgstr ""
+
 msgid "Name:"
 msgstr ""
 
@@ -5763,6 +5815,9 @@ msgid "New HPC Client"
 msgstr ""
 
 msgid "New Hashtags"
+msgstr ""
+
+msgid "New Instant Messaging Client"
 msgstr ""
 
 msgid "New Language"
@@ -6405,6 +6460,9 @@ msgstr ""
 msgid "Opinion Groups"
 msgstr ""
 
+msgid "Opinion Model"
+msgstr ""
+
 msgid "Opinion Modeling"
 msgstr ""
 
@@ -6837,6 +6895,12 @@ msgstr ""
 msgid ""
 "Population Username Type '%(pop_type)s' is incompatible with experiment "
 "platform 'forum'."
+msgstr ""
+
+#, python-format
+msgid ""
+"Population Username Type '%(pop_type)s' is incompatible with experiment "
+"platform 'instant_messaging'."
 msgstr ""
 
 #, python-format
@@ -7304,6 +7368,12 @@ msgid "Random"
 msgstr ""
 
 msgid "Random Network (Erdős-Rényi)"
+msgstr ""
+
+msgid "Random Seed"
+msgstr ""
+
+msgid "Random if empty"
 msgstr ""
 
 msgid "Range: 0-1, Default: 0"
@@ -8302,6 +8372,9 @@ msgstr ""
 msgid "Server Logs Analysis"
 msgstr ""
 
+msgid "Server Port"
+msgstr ""
+
 msgid "Server Settings"
 msgstr ""
 
@@ -8789,6 +8862,9 @@ msgstr ""
 msgid "Stress Distribution"
 msgstr ""
 
+msgid "Stress and Reward"
+msgstr ""
+
 msgid "Stress/Reward"
 msgstr ""
 
@@ -9188,6 +9264,11 @@ msgid ""
 "again."
 msgstr ""
 
+msgid ""
+"The experiment already has a topic catalog that differs from the current "
+"topics: it was kept, so that existing runs can resume."
+msgstr ""
+
 msgid "The experiment needs to be activated first."
 msgstr ""
 
@@ -9225,6 +9306,9 @@ msgstr ""
 
 #, python-format
 msgid "The password must have at least %(n)s characters."
+msgstr ""
+
+msgid "The population is empty."
 msgstr ""
 
 msgid "The post text."
@@ -9365,6 +9449,9 @@ msgid ""
 " until a client is created."
 msgstr ""
 
+msgid "This experiment is not an instant messaging experiment."
+msgstr ""
+
 msgid ""
 "This is an experimental simulator that guarantees higher simulation "
 "scalability at the cost of more fine-grained configuration and setting "
@@ -9475,6 +9562,9 @@ msgid "Timeline Follower Ratio"
 msgstr ""
 
 msgid "Timeline Ratio:"
+msgstr ""
+
+msgid "Timeout (seconds)"
 msgstr ""
 
 msgid "Timezone used by real-time mode (experiment-wide across all clients)."
@@ -10836,6 +10926,9 @@ msgid "multiple clients"
 msgstr ""
 
 msgid "never"
+msgstr ""
+
+msgid "no model, for tests"
 msgstr ""
 
 msgid "none published"
