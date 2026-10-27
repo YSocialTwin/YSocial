@@ -196,6 +196,27 @@
                                         {% endfor %}
                                     </div>
 
+                                    <div class="tutorial-section" id="section-news">
+                                        <div class="form-section-header">{{ _('News') }}</div>
+                                        <div class="form-section-description">
+                                            {{ _('News pages share articles from their RSS feed in the channels. Pages come from the population; the feeds selected for the experiment become pages too.') }}
+                                            <a href="/admin/rss_feeds/{{ experiment.idexp }}">{{ _('Select RSS Feeds') }}</a>
+                                        </div>
+                                        <div class="box-line">
+                                            <span class="left">{{ _('News source') }}</span>
+                                            <div class="select">
+                                                <select name="news_mode">
+                                                    <option value="snapshot" selected>{{ _('Snapshot: fixed articles, reproducible, no network') }}</option>
+                                                    <option value="live">{{ _('Live: read the feeds at start') }}</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="box-line">
+                                            <span class="left">{{ _('News page for each selected feed') }}</span>
+                                            <span class="right"><input type="checkbox" name="news_pages_from_feeds" value="1" {% if news_feed_count %}checked{% endif %}> <small>{{ _('%(n)s feeds selected', n=news_feed_count) }}</small></span>
+                                        </div>
+                                    </div>
+
                                     <div class="tutorial-section">
                                         <div class="form-section-header">{{ _('Topic Interest Distribution') }}</div>
                                         <div class="form-section-description">

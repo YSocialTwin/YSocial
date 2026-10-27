@@ -16,7 +16,7 @@ from y_web.routes.admin.sub.experiments._helpers import (
 )
 from y_web.src.agents.custom_features import summarize_agent_custom_features_bulk
 from y_web.src.agents.platform import infer_population_username_type
-from y_web.src.im import advanced_settings, is_im_experiment
+from y_web.src.im import advanced_settings, is_im_experiment, news
 from y_web.src.im.experiment_config import (
     TimeParameterError,
     apply_time_parameters,
@@ -105,6 +105,7 @@ def clients_im(idexp):
     context.update(
         {
             "switches": switches,
+            "news_feed_count": len(news.selected_feeds(exp_dir)),
             "experiment_memory_enabled": switches["memory"],
             "experiment_opinion_dynamics_enabled": switches["opinion"],
             "memory_configuration_supported": bool(context.get("llm_agents_enabled")),
@@ -267,6 +268,15 @@ def create_im_client(exp, name, descr, population_id, form_data):
         )
         for page in pages
     ]
+    news_mode = news.parse_news_mode(form_data.get("news_mode"))
+    if _flag_on(form_data.get("news_pages_from_feeds")):
+        accounts += news.feed_pages(
+            news.selected_feeds(exp_dir),
+            used_urls=[a.get("feed_url") for a in accounts],
+            used_usernames=[a["username"] for a in accounts],
+            topics=[t for t in topics if percentages.get(t, 100.0) > 0],
+            activity_profile=news.DEFAULT_PAGE_PROFILE,
+        )
     try:
         check_unique(accounts)
     except ImClientFormError as exc:
@@ -284,6 +294,7 @@ def create_im_client(exp, name, descr, population_id, form_data):
         hourly_activity=hourly,
         prompt_language=prompt_language,
     )
+    config["telegram"].setdefault("news", {})["mode"] = news_mode
     # chats typed in the editor make the client's own catalog; otherwise the shared one is used
     catalog_file = "topic_catalog.json"
     if catalog.get("chats"):
@@ -328,6 +339,8 @@ def create_im_client(exp, name, descr, population_id, form_data):
         json.dump(config, handle, indent=2)
     with open(os.path.join(exp_dir, f"{population.name}.json"), "w", encoding="utf-8") as handle:
         json.dump({"agents": accounts}, handle, indent=2)
+
+    _write_news_snapshot(exp_dir, accounts, news_mode)
 
     shared = {"topics": catalog["topics"]}
     catalog_path = os.path.join(exp_dir, "topic_catalog.json")
@@ -378,6 +391,30 @@ def create_im_client(exp, name, descr, population_id, form_data):
 
     flash(_("Instant messaging client '%(name)s' created successfully", name=name))
     return redirect(f"/admin/experiment_details/{exp.idexp}")
+
+
+def _flag_on(value) -> bool:
+    return str(value or "").strip().lower() in ("1", "true", "on", "yes")
+
+
+def _write_news_snapshot(exp_dir, accounts, mode):
+    """Snapshot mode needs the articles in a file: write it from the feeds of the news pages (fail-soft)."""
+    urls = sorted({a["feed_url"] for a in accounts if a.get("is_page") and a.get("feed_url")})
+    if mode != "snapshot" or not urls:
+        return
+    try:
+        result = news.write_snapshot(exp_dir, urls)
+    except Exception as exc:  # noqa: BLE001 - a feed problem never blocks the client
+        flash(
+            _("The news snapshot could not be written (%(error)s): the news pages will share nothing until it exists.", error=str(exc)),
+            "warning",
+        )
+        return
+    if result["written"] and not result["articles"]:
+        flash(
+            _("The feeds returned no articles: the news pages will share nothing. You can retry from the RSS feeds page."),
+            "warning",
+        )
 
 
 @clientsr.route("/admin/create_im_client", methods=["POST"])

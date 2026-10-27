@@ -689,8 +689,11 @@ def _load_forum_experiment_context(uid, require_manage=True):
         flash(_("Experiment not found"), "error")
         return None, None, redirect(url_for("experiments.settings"))
 
-    if experiment.platform_type != "forum":
-        flash(_("This page is only available for forum experiments."), "warning")
+    if experiment.platform_type not in ("forum", "instant_messaging"):
+        flash(
+            _("This page is only available for forum and instant messaging experiments."),
+            "warning",
+        )
         return (
             None,
             None,

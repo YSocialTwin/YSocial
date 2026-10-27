@@ -90,6 +90,7 @@ def test_saving_writes_distributions_and_im_opinion_keys(im_app, monkeypatch, tm
         "/admin/set_im_opinion_distributions",
         data={"idexp": exp_id, "client_id": client_id, "segmentation": "", "update_rule": "bounded_confidence",
               "bc_epsilon": "0.3", "bc_mu": "0.4", "bc_theta": "0.1", "bc_cold_start": "inherited",
+              "im_inject_into_prompt": "0", "im_topic_source": "annotated",
               f"dist_topic_{topic_id}_segment_0": dist_name},
     )
     assert response.status_code == 302
@@ -98,6 +99,7 @@ def test_saving_writes_distributions_and_im_opinion_keys(im_app, monkeypatch, tm
     assert block["enabled"] is True and block["model_name"] == "bounded_confidence"
     assert block["parameters"] == {"epsilon": 0.3, "mu": 0.4, "theta": 0.1, "cold_start": "inherited"}
     assert block["opinion_groups"]
+    assert block["inject_into_prompt"] is False and block["topic_source"] == "annotated"
     agent = json.loads((folder / "two words.json").read_text())["agents"][0]
     assert 0.0 <= agent["opinions"]["politics"] <= 1.0
     # and what is written is valid for IM

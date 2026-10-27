@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: YSocial VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-27 14:32+0000\n"
+"POT-Creation-Date: 2026-10-27 18:11+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -123,6 +123,10 @@ msgstr ""
 
 #, python-format
 msgid "%(n)s configurable values"
+msgstr ""
+
+#, python-format
+msgid "%(n)s feeds selected"
 msgstr ""
 
 #, python-format
@@ -432,6 +436,9 @@ msgstr ""
 msgid ""
 "A round never closes sooner than this, so that people have time to act. "
 "It is a lower bound: the simulation never waits for a person."
+msgstr ""
+
+msgid "A snapshot exists for this experiment."
 msgstr ""
 
 msgid "A subset of agent's interests."
@@ -1077,6 +1084,9 @@ msgid "Annotated Photos"
 msgstr ""
 
 msgid "Annotated Posts"
+msgstr ""
+
+msgid "Annotated needs topic annotation to be on. Default: intended"
 msgstr ""
 
 msgid "Annotation Volume"
@@ -2475,6 +2485,10 @@ msgstr ""
 msgid "Could not resolve notebook directory for experiment ID: %(experiment_id)s"
 msgstr ""
 
+#, python-format
+msgid "Could not write the news snapshot: %(error)s"
+msgstr ""
+
 msgid "Count"
 msgstr ""
 
@@ -2967,6 +2981,9 @@ msgstr ""
 
 #, python-format
 msgid "Default values from %(link)s"
+msgstr ""
+
+msgid "Default: yes"
 msgstr ""
 
 #, python-format
@@ -4159,6 +4176,9 @@ msgid "Fetch Vision Models"
 msgstr ""
 
 msgid "Fetch available vision models"
+msgstr ""
+
+msgid "Fetch the feeds and write the snapshot"
 msgstr ""
 
 #, python-format
@@ -5652,6 +5672,9 @@ msgstr ""
 msgid "Live signals from the current conversation"
 msgstr ""
 
+msgid "Live: read the feeds at start"
+msgstr ""
+
 msgid "Load"
 msgstr ""
 
@@ -6412,7 +6435,34 @@ msgstr ""
 msgid "News article content"
 msgstr ""
 
+msgid "News feeds (RSS)"
+msgstr ""
+
+msgid ""
+"News feeds updated. Clients created from now on get a news page for each "
+"feed."
+msgstr ""
+
 msgid "News from the Agents"
+msgstr ""
+
+msgid "News page for each selected feed"
+msgstr ""
+
+msgid ""
+"News pages share articles from their RSS feed in the channels. Pages come"
+" from the population; the feeds selected for the experiment become pages "
+"too."
+msgstr ""
+
+msgid "News snapshot"
+msgstr ""
+
+#, python-format
+msgid "News snapshot written: %(n)s articles from %(f)s feeds."
+msgstr ""
+
+msgid "News source"
 msgstr ""
 
 msgid "News source name"
@@ -6482,6 +6532,10 @@ msgid "No agent selected"
 msgstr ""
 
 msgid "No articles available yet."
+msgstr ""
+
+#, python-format
+msgid "No articles from: %(urls)s"
 msgstr ""
 
 msgid "No available experiments to assign"
@@ -6684,6 +6738,9 @@ msgstr ""
 msgid "No server configuration file was found for this experiment."
 msgstr ""
 
+msgid "No snapshot yet."
+msgstr ""
+
 msgid "No story previews are available yet."
 msgstr ""
 
@@ -6712,6 +6769,9 @@ msgid "No visibility grants configured yet."
 msgstr ""
 
 msgid "No visible memberships."
+msgstr ""
+
+msgid "No: opinions evolve but the agent is not told"
 msgstr ""
 
 msgid "Nodes"
@@ -7074,6 +7134,9 @@ msgid "Opinion: %(value)s"
 msgstr ""
 
 msgid "Opinions"
+msgstr ""
+
+msgid "Opinions in conversations"
 msgstr ""
 
 msgid "Optional Agent Actions"
@@ -8645,6 +8708,9 @@ msgstr ""
 msgid "Save language"
 msgstr ""
 
+msgid "Save news feeds"
+msgstr ""
+
 msgid "Saved"
 msgstr ""
 
@@ -8976,6 +9042,13 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Select which reusable RSS resources feed the news pages of this instant "
+"messaging experiment: each selected feed becomes a news page that shares "
+"its articles in the channels. Feed validation and creation live in the "
+"shared resource workspace."
+msgstr ""
+
+msgid ""
 "Select which reusable RSS resources should be assigned to this forum "
 "experiment. Feed validation and creation now live in the shared forum "
 "resource workspace."
@@ -9271,6 +9344,9 @@ msgstr ""
 msgid "Show the interest / opinion sliders in the Edit Profile page"
 msgstr ""
 
+msgid "Show the opinion to the agent"
+msgstr ""
+
 msgid "Show the profile-setup wizard to users on their first login"
 msgstr ""
 
@@ -9423,6 +9499,9 @@ msgid "Slower"
 msgstr ""
 
 msgid "Small World (Watts-Strogatz)"
+msgstr ""
+
+msgid "Snapshot: fixed articles, reproducible, no network"
 msgstr ""
 
 msgid "Social Attributes"
@@ -10098,6 +10177,11 @@ msgid ""
 "been started."
 msgstr ""
 
+msgid ""
+"The feeds returned no articles: the news pages will share nothing. You "
+"can retry from the RSS feeds page."
+msgstr ""
+
 msgid "The feelings surfacing most in the feed"
 msgstr ""
 
@@ -10125,6 +10209,12 @@ msgid ""
 "The network can be either synthetically generated or custom-made and "
 "uploaded. To create a custom network file download the agent name list "
 "using"
+msgstr ""
+
+#, python-format
+msgid ""
+"The news snapshot could not be written (%(error)s): the news pages will "
+"share nothing until it exists."
 msgstr ""
 
 msgid "The page you are looking for does not exist."
@@ -10155,7 +10245,15 @@ msgstr ""
 msgid "The round is closed: try again in a moment."
 msgstr ""
 
+msgid "The run already started: reset the experiment to change its news."
+msgstr ""
+
 msgid "The run already started: reset the experiment to change these settings."
+msgstr ""
+
+msgid ""
+"The run already started: the news cannot change unless the experiment is "
+"reset."
 msgstr ""
 
 msgid "The same subreddit definition can be reused safely"
@@ -10207,6 +10305,12 @@ msgid "The simulation is not running."
 msgstr ""
 
 msgid ""
+"The snapshot is the fixed list of articles the news pages share. With a "
+"snapshot the run is reproducible and does not need the network; without "
+"one, the client reads the feeds at start (live mode)."
+msgstr ""
+
+msgid ""
 "The start date and the round length belong to the experiment: the first "
 "client set them."
 msgstr ""
@@ -10215,6 +10319,12 @@ msgid "The three agent archetypes have distinct characteristics:"
 msgstr ""
 
 msgid "The topic already exists."
+msgstr ""
+
+msgid "The topic found by the annotation"
+msgstr ""
+
+msgid "The topic the agent meant to write about"
 msgstr ""
 
 msgid "The training area is not available. Please contact an administrator."
@@ -10254,6 +10364,9 @@ msgid "Thematic Characterization"
 msgstr ""
 
 msgid "Themes gaining momentum right now"
+msgstr ""
+
+msgid "There are no feeds to read: select some RSS feeds first."
 msgstr ""
 
 msgid "There is no such user."
@@ -10344,7 +10457,7 @@ msgstr ""
 msgid "This module is not available for this experiment type."
 msgstr ""
 
-msgid "This page is only available for forum experiments."
+msgid "This page is only available for forum and instant messaging experiments."
 msgstr ""
 
 msgid ""
@@ -10546,6 +10659,9 @@ msgid "Topic guidance"
 msgstr ""
 
 msgid "Topic not found."
+msgstr ""
+
+msgid "Topic of a message"
 msgstr ""
 
 msgid "Topic-evolution tables not available"
@@ -11638,6 +11754,9 @@ msgid "YSocialTwin"
 msgstr ""
 
 msgid "Yes"
+msgstr ""
+
+msgid "Yes: the current opinion is part of the prompt"
 msgstr ""
 
 msgid "You already own as many chats as allowed."
