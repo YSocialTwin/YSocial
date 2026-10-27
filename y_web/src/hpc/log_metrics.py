@@ -14,7 +14,10 @@ import time
 from sqlalchemy import select
 
 from y_web import db
-from y_web.src.hpc.client import resolve_hpc_client_log_path
+from y_web.src.hpc.client import (
+    resolve_hpc_client_execution_log_path,
+    resolve_hpc_client_log_path,
+)
 from y_web.src.hpc.log_offset import (
     _commit_with_retry,
     _ensure_session_clean,
@@ -1339,6 +1342,16 @@ def monitor_hpc_client_execution_logs():
                     execution_log_path = os.path.join(
                         exp_folder, "logs", f"{client.name}_execution.log"
                     )
+                    if not os.path.exists(execution_log_path):
+                        # runtimes that prefix the log names with the client id (YInstantMessaging)
+                        execution_log_path = (
+                            resolve_hpc_client_execution_log_path(
+                                exp,
+                                client.name,
+                                log_folder=os.path.join(exp_folder, "logs"),
+                            )
+                            or execution_log_path
+                        )
 
                     print(
                         f"[HPC Monitor] Looking for execution log: {execution_log_path}"
@@ -1415,6 +1428,12 @@ def monitor_hpc_client_execution_logs():
                                 f"PID {getattr(client, 'pid', None)} no longer alive "
                                 f"for client {client.name}"
                             )
+                            if getattr(exp, "platform_type", None) == "instant_messaging":
+                                from y_web.src.im.failures import failure_reason
+
+                                logged = failure_reason(execution_log_path)
+                                if logged:
+                                    reason = f"{reason}; {logged}"
                             print(f"[HPC Monitor] {reason}")
                             if _mark_hpc_client_as_failed(
                                 exp.idexp, client.id, reason=reason
