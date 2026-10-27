@@ -816,6 +816,14 @@ def experiment_details(uid):
         except Exception:
             im_advanced = None
 
+    if is_im_experiment(experiment):
+        try:
+            from y_web.src.im.exp_stats import refresh_exp_stats
+
+            refresh_exp_stats(experiment)
+        except Exception:
+            db.session.rollback()
+
     im_humans = None
     if is_im_experiment(experiment):
         try:
